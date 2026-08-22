@@ -40,6 +40,7 @@
 #include "message_parcel.h"
 #include "nlohmann/json.hpp"
 #include "parameters.h"
+#include "scope_guard.h"
 #include "bundle_resource/bundle_resource_process.h"
 
 using namespace testing::ext;
@@ -418,12 +419,13 @@ HWTEST_F(BmsDualModeInstallTest, DualModeUninstallEventFields_0100, Function | S
         std::to_string(ServiceConstants::DUAL_MODE_VALUE_2IN1)));
 
     BaseBundleInstaller installer;
-    InstallParam installParam;
-    installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE;
+    InnerBundleInfo oldInfo = MakeResourceInfo(true);
+    oldInfo.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE);
+    oldInfo.SetAppSandboxPolicy(AppSandboxPolicy::ISOLATED_SANDBOX);
+    installer.SaveDualModeUninstallEventFields(oldInfo);
 
-    // Full-bundle and module-uninstall notifications use the uninstall request, just as install events do.
     NotifyBundleEvents uninstallEvent;
-    installer.FillDualModeUninstallEventFields(installParam, uninstallEvent);
+    installer.FillDualModeUninstallEventFields(uninstallEvent);
     EXPECT_EQ(uninstallEvent.deviceModeDistributionPolicy,
         DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE);
     EXPECT_EQ(uninstallEvent.currentMode, ServiceConstants::DUAL_MODE_VALUE_2IN1);
@@ -436,14 +438,16 @@ HWTEST_F(BmsDualModeInstallTest, DualModeUninstallEventFields_0200, Function | S
     // A non-dual-mode device must not overwrite event fields which are populated by the common path.
     SetDualModeCache(ServiceConstants::DUAL_MODE_VALUE_INVALID, ServiceConstants::DUAL_MODE_VALUE_INVALID);
     BaseBundleInstaller installer;
-    InstallParam installParam;
-    installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::MAIN_ONLY;
+    InnerBundleInfo oldInfo = MakeResourceInfo(true);
+    oldInfo.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE);
+    oldInfo.SetAppSandboxPolicy(AppSandboxPolicy::ISOLATED_SANDBOX);
+    installer.SaveDualModeUninstallEventFields(oldInfo);
     NotifyBundleEvents uninstallEvent;
     uninstallEvent.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::SUB_ONLY;
     uninstallEvent.currentMode = 99;
     uninstallEvent.appSandboxPolicy = AppSandboxPolicy::ISOLATED_SANDBOX;
 
-    installer.FillDualModeUninstallEventFields(installParam, uninstallEvent);
+    installer.FillDualModeUninstallEventFields(uninstallEvent);
 
     EXPECT_EQ(uninstallEvent.deviceModeDistributionPolicy, DeviceModeDistributionPolicy::SUB_ONLY);
     EXPECT_EQ(uninstallEvent.currentMode, 99);
@@ -458,16 +462,86 @@ HWTEST_F(BmsDualModeInstallTest, DualModeUninstallEventFields_0300, Function | S
         std::to_string(ServiceConstants::DUAL_MODE_VALUE_TABLET)));
 
     BaseBundleInstaller installer;
-    InstallParam installParam;
-    installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNIVERSAL_IDENTICAL_PACKAGE;
+    InnerBundleInfo oldInfo = MakeResourceInfo(false);
+    oldInfo.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::UNIVERSAL_IDENTICAL_PACKAGE);
+    oldInfo.SetAppSandboxPolicy(AppSandboxPolicy::SHARED_SANDBOX);
+    installer.SaveDualModeUninstallEventFields(oldInfo);
     NotifyBundleEvents uninstallEvent;
-    installer.FillDualModeUninstallEventFields(installParam, uninstallEvent);
+    installer.FillDualModeUninstallEventFields(uninstallEvent);
 
     EXPECT_EQ(uninstallEvent.deviceModeDistributionPolicy,
         DeviceModeDistributionPolicy::UNIVERSAL_IDENTICAL_PACKAGE);
     EXPECT_EQ(uninstallEvent.currentMode, ServiceConstants::DUAL_MODE_VALUE_TABLET);
     EXPECT_EQ(uninstallEvent.appSandboxPolicy, AppSandboxPolicy::SHARED_SANDBOX);
     OHOS::system::RemoveParameter(ServiceConstants::DUAL_MODE_ISPCMODE_PARAM_KEY);
+}
+
+HWTEST_F(BmsDualModeInstallTest, DualModeFullUninstallDefaultParamEvent_0100, Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    ASSERT_TRUE(OHOS::system::SetParameter(ServiceConstants::DUAL_MODE_ISPCMODE_PARAM_KEY,
+        std::to_string(ServiceConstants::DUAL_MODE_VALUE_2IN1)));
+    ScopeGuard parameterGuard([] {
+        OHOS::system::RemoveParameter(ServiceConstants::DUAL_MODE_ISPCMODE_PARAM_KEY);
+    });
+    auto service = DelayedSingleton<BundleMgrService>::GetInstance();
+    auto savedDataMgr = service->dataMgr_;
+    ScopeGuard dataMgrGuard([service, savedDataMgr] { service->dataMgr_ = savedDataMgr; });
+    auto dataMgr = InstallTestDataMgr(Constants::UNSPECIFIED_USERID);
+    InnerBundleInfo oldInfo = MakeResourceInfo(true);
+    oldInfo.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE);
+    oldInfo.SetAppSandboxPolicy(AppSandboxPolicy::ISOLATED_SANDBOX);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = oldInfo;
+
+    BaseBundleInstaller installer;
+    InstallParam installParam;
+    ASSERT_EQ(installParam.deviceModeDistributionPolicy, DeviceModeDistributionPolicy::UNSPECIFIED);
+    ASSERT_EQ(installParam.userId, Constants::UNSPECIFIED_USERID);
+    int32_t uid = Constants::INVALID_UID;
+    EXPECT_EQ(installer.ProcessBundleUninstall(BUNDLE_NAME, installParam, uid),
+        ERR_APPEXECFWK_USER_NOT_INSTALL_HAP);
+
+    NotifyBundleEvents uninstallEvent;
+    uninstallEvent.type = NotifyType::UNINSTALL_BUNDLE;
+    installer.FillDualModeUninstallEventFields(uninstallEvent);
+    EXPECT_EQ(uninstallEvent.deviceModeDistributionPolicy,
+        DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE);
+    EXPECT_EQ(uninstallEvent.currentMode, ServiceConstants::DUAL_MODE_VALUE_2IN1);
+    EXPECT_EQ(uninstallEvent.appSandboxPolicy, AppSandboxPolicy::ISOLATED_SANDBOX);
+}
+
+HWTEST_F(BmsDualModeInstallTest, DualModeModuleUninstallDefaultParamEvent_0100, Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    ASSERT_TRUE(OHOS::system::SetParameter(ServiceConstants::DUAL_MODE_ISPCMODE_PARAM_KEY,
+        std::to_string(ServiceConstants::DUAL_MODE_VALUE_2IN1)));
+    ScopeGuard parameterGuard([] {
+        OHOS::system::RemoveParameter(ServiceConstants::DUAL_MODE_ISPCMODE_PARAM_KEY);
+    });
+    auto service = DelayedSingleton<BundleMgrService>::GetInstance();
+    auto savedDataMgr = service->dataMgr_;
+    ScopeGuard dataMgrGuard([service, savedDataMgr] { service->dataMgr_ = savedDataMgr; });
+    auto dataMgr = InstallTestDataMgr(Constants::UNSPECIFIED_USERID);
+    InnerBundleInfo oldInfo = MakeResourceInfo(true);
+    oldInfo.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::UNIVERSAL_IDENTICAL_PACKAGE);
+    oldInfo.SetAppSandboxPolicy(AppSandboxPolicy::ISOLATED_SANDBOX);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = oldInfo;
+
+    BaseBundleInstaller installer;
+    InstallParam installParam;
+    ASSERT_EQ(installParam.deviceModeDistributionPolicy, DeviceModeDistributionPolicy::UNSPECIFIED);
+    ASSERT_EQ(installParam.userId, Constants::UNSPECIFIED_USERID);
+    int32_t uid = Constants::INVALID_UID;
+    EXPECT_EQ(installer.ProcessBundleUninstall(BUNDLE_NAME, "entry", installParam, uid),
+        ERR_APPEXECFWK_USER_NOT_INSTALL_HAP);
+
+    NotifyBundleEvents uninstallEvent;
+    uninstallEvent.type = NotifyType::UNINSTALL_MODULE;
+    installer.FillDualModeUninstallEventFields(uninstallEvent);
+    EXPECT_EQ(uninstallEvent.deviceModeDistributionPolicy,
+        DeviceModeDistributionPolicy::UNIVERSAL_IDENTICAL_PACKAGE);
+    EXPECT_EQ(uninstallEvent.currentMode, ServiceConstants::DUAL_MODE_VALUE_2IN1);
+    EXPECT_EQ(uninstallEvent.appSandboxPolicy, AppSandboxPolicy::ISOLATED_SANDBOX);
 }
 
 // ====================== BaseBundleInstaller::SetDualModeAppInfo ======================

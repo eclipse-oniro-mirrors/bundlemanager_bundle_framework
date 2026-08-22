@@ -504,6 +504,9 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
     LOG_I(BMS_TAG_INSTALLER, "begin to process %{public}s bundle uninstall", bundleName.c_str());
     PerfProfile::GetInstance().SetBundleUninstallStartTime(GetTickCount());
     sysEventInfo_.startTime = BundleUtil::GetCurrentTimeMs();
+    // Reset event fields because internal batch uninstalls reuse this installer instance.
+    uninstallDeviceModeDistributionPolicy_ = DeviceModeDistributionPolicy::UNSPECIFIED;
+    uninstallAppSandboxPolicy_ = AppSandboxPolicy::SHARED_SANDBOX;
 
     std::string developerId = GetDeveloperId(bundleName);
     std::string assetAccessGroups = GetAssetAccessGroups(bundleName);
@@ -566,7 +569,7 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
             .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
             .allowListenBundles = allowListenBundles_,
         };
-        FillDualModeUninstallEventFields(installParam, installRes);
+        FillDualModeUninstallEventFields(installRes);
         installRes.SetMetadataConfigInfos(tokenIdMetadataInfos);
 
         if (installParam.concentrateSendEvent) {
@@ -799,6 +802,9 @@ ErrCode BaseBundleInstaller::UninstallBundle(
         modulePackage.c_str(), bundleName.c_str());
     PerfProfile::GetInstance().SetBundleUninstallStartTime(GetTickCount());
     sysEventInfo_.startTime = BundleUtil::GetCurrentTimeMs();
+    // Reset event fields because internal batch uninstalls reuse this installer instance.
+    uninstallDeviceModeDistributionPolicy_ = DeviceModeDistributionPolicy::UNSPECIFIED;
+    uninstallAppSandboxPolicy_ = AppSandboxPolicy::SHARED_SANDBOX;
 
     std::string developerId;
     std::string assetAccessGroups;
@@ -846,7 +852,7 @@ ErrCode BaseBundleInstaller::UninstallBundle(
             .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
             .allowListenBundles = allowListenBundles_,
         };
-        FillDualModeUninstallEventFields(installParam, installRes);
+        FillDualModeUninstallEventFields(installRes);
         installRes.SetMetadataConfigInfos(tokenIdMetadataInfos);
         if (NotifyBundleStatus(installRes) != ERR_OK) {
             LOG_W(BMS_TAG_INSTALLER, "notify status failed for installation");
@@ -2258,6 +2264,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         LOG_W(BMS_TAG_INSTALLER, "uninstall bundle info missing");
         return ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE;
     }
+    SaveDualModeUninstallEventFields(oldInfo);
     InitDualModeBundleName(oldInfo);
     if (installParam.GetIsUninstallAndRecover()) {
         PreInstallBundleInfo preInstallBundleInfo;
@@ -2607,6 +2614,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         LOG_W(BMS_TAG_INSTALLER, "uninstall bundle info missing");
         return ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE;
     }
+    SaveDualModeUninstallEventFields(oldInfo);
     // Resolve physical resources from the persisted clone flag. The active-memory lookup above intentionally
     // keeps the original name, while the install state and dual-mode storage keys use the effective name.
     InitDualModeBundleName(oldInfo);
@@ -5887,13 +5895,18 @@ void BaseBundleInstaller::InitDualModeBundleName(const InnerBundleInfo &bundleIn
         : Constants::EMPTY_STRING;
 }
 
-void BaseBundleInstaller::FillDualModeUninstallEventFields(const InstallParam &installParam,
-    NotifyBundleEvents &uninstallRes) const
+void BaseBundleInstaller::SaveDualModeUninstallEventFields(const InnerBundleInfo &bundleInfo)
+{
+    uninstallDeviceModeDistributionPolicy_ = bundleInfo.GetDeviceModeDistributionPolicy();
+    uninstallAppSandboxPolicy_ = bundleInfo.GetAppSandboxPolicy();
+}
+
+void BaseBundleInstaller::FillDualModeUninstallEventFields(NotifyBundleEvents &uninstallRes) const
 {
     if (DualModeHelper::IsDualModeDevice()) {
-        uninstallRes.deviceModeDistributionPolicy = installParam.deviceModeDistributionPolicy;
+        uninstallRes.deviceModeDistributionPolicy = uninstallDeviceModeDistributionPolicy_;
         uninstallRes.currentMode = DualModeHelper::GetSysMode();
-        uninstallRes.appSandboxPolicy = ComputeCurrentAppSandboxPolicy(installParam.deviceModeDistributionPolicy);
+        uninstallRes.appSandboxPolicy = uninstallAppSandboxPolicy_;
     }
 }
 
