@@ -27,6 +27,7 @@
 #include "bundle_resource_helper.h"
 #include "bundle_util.h"
 #include "datetime_ex.h"
+#include "dual_mode_helper.h"
 #include "hitrace_meter.h"
 #include "installd_client.h"
 #include "perf_profile.h"
@@ -142,6 +143,14 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
     dataMgr_->DisableBundle(bundleName);
     isBundleCrossAppSharedConfig_ = info.IsBundleCrossAppSharedConfig();
     moduleName_ = info.GetEventModuleName();
+
+    // DUAL_MODE: different-package apps need clone-prefix isolation that BundleMultiUserInstaller lacks.
+    if (DualModeHelper::IsDualModeDevice() &&
+        DualModeHelper::IsDiffPackageCategory(info.GetDeviceModeDistributionPolicy())) {
+        APP_LOGE("installPreexistingApp does not support different-package-category app %{public}s",
+            bundleName.c_str());
+        return ERR_APPEXECFWK_INSTALL_DUAL_MODE_CATEGORY_CONFLICT;
+    }
 
     // 2. obtain userId
     if (!dataMgr_->HasUserId(userId)) {

@@ -1940,4 +1940,144 @@ HWTEST_F(BmsDualModeInstallTest, FetchTempBundleInfo_FoundAssign_0300, Function 
     EXPECT_EQ(out.GetBundleName(), BUNDLE_NAME);
     EXPECT_TRUE(out.IsDualModeCloneApp());
 }
+
+// ====================== BaseBundleInstaller::SetDualModeAppInfo ======================
+// Sets deviceModeDistributionPolicy / isDualModeCloneApp / appIndex / appSandboxPolicy on each info.
+// Guards: non-dual-mode device (no-op), invalid policy value (range check -> PARAM_ERROR), non-system
+// app + different-package (NOT_SYSTEM_APP). isCloneApp (clone flag + appIndex=10000) is set only in
+// secondary mode + different-package. BaseBundleInstaller is default-constructed and the private method
+// is reached through #define private public, like FillDualModeEventFields above.
+
+static InnerBundleInfo MakeDualModeInstallInfo(bool isSystemApp)
+{
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->isSystemApp = isSystemApp;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    return info;
+}
+
+HWTEST_F(BmsDualModeInstallTest, SetDualModeAppInfo_NonDualModeDevice_Guard_0100, Function | SmallTest | Level0)
+{
+    // non-dual-mode device (cache invalid) -> guard returns ERR_OK before touching any info; the
+    // policy/clone flag stay at their defaults, proving dual-mode handling is fully skipped.
+    SetDualModeCache(ServiceConstants::DUAL_MODE_VALUE_INVALID, ServiceConstants::DUAL_MODE_VALUE_INVALID);
+    BaseBundleInstaller installer;
+    InstallParam installParam;
+    installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    infos[BUNDLE_NAME] = MakeDualModeInstallInfo(true);
+    EXPECT_EQ(installer.SetDualModeAppInfo(installParam, infos), ERR_OK);
+    EXPECT_FALSE(infos[BUNDLE_NAME].IsDualModeCloneApp());
+    EXPECT_EQ(infos[BUNDLE_NAME].GetDeviceModeDistributionPolicy(), DeviceModeDistributionPolicy::UNSPECIFIED);
+}
+
+HWTEST_F(BmsDualModeInstallTest, SetDualModeAppInfo_InvalidPolicy_RangeCheck_0200, Function | SmallTest | Level0)
+{
+    // out-of-range policy (native IPC caller bypassing the kit-layer value check) is rejected before
+    // any flag is persisted, so the overflow value never reaches the broadcast event fields.
+    EnableSecondaryMode();
+    BaseBundleInstaller installer;
+    InstallParam installParam;
+    installParam.deviceModeDistributionPolicy = static_cast<DeviceModeDistributionPolicy>(999);
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    infos[BUNDLE_NAME] = MakeDualModeInstallInfo(true);
+    EXPECT_EQ(installer.SetDualModeAppInfo(installParam, infos),
+        ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
+}
+
+HWTEST_F(BmsDualModeInstallTest, SetDualModeAppInfo_NonSystemApp_DiffPackage_Rejected_0300,
+    Function | SmallTest | Level0)
+{
+    // different-package is a system-level capability: a non-system app is rejected with
+    // ERR_APPEXECFWK_INSTALL_DUAL_MODE_NOT_SYSTEM_APP before the clone flag is set, and the check runs
+    // before isCloneApp so a failed non-system app leaves no isDualModeCloneApp=true side effect.
+    EnableSecondaryMode();
+    BaseBundleInstaller installer;
+    InstallParam installParam;
+    installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    infos[BUNDLE_NAME] = MakeDualModeInstallInfo(false);  // non-system app
+    EXPECT_EQ(installer.SetDualModeAppInfo(installParam, infos),
+        ERR_APPEXECFWK_INSTALL_DUAL_MODE_NOT_SYSTEM_APP);
+    EXPECT_FALSE(infos[BUNDLE_NAME].IsDualModeCloneApp());  // no side effect on failure
+}
+
+HWTEST_F(BmsDualModeInstallTest, SetDualModeAppInfo_Secondary_DiffPackage_CloneFlagSet_0400,
+    Function | SmallTest | Level0)
+{
+    // secondary mode + different-package + system app -> isCloneApp=true: clone flag set, appIndex=10000,
+    // policy persisted, sandbox derived ISOLATED (diff-package, before=SHARED fresh install).
+    EnableSecondaryMode();
+    BaseBundleInstaller installer;
+    installer.beforeAppSandboxPolicy_ = AppSandboxPolicy::SHARED_SANDBOX;  // fresh-install default
+    InstallParam installParam;
+    installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    infos[BUNDLE_NAME] = MakeDualModeInstallInfo(true);
+    EXPECT_EQ(installer.SetDualModeAppInfo(installParam, infos), ERR_OK);
+    EXPECT_TRUE(infos[BUNDLE_NAME].IsDualModeCloneApp());
+    EXPECT_EQ(infos[BUNDLE_NAME].GetAppIndex(), ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
+    EXPECT_EQ(infos[BUNDLE_NAME].GetDeviceModeDistributionPolicy(),
+        DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE);
+    EXPECT_EQ(infos[BUNDLE_NAME].GetAppSandboxPolicy(), AppSandboxPolicy::ISOLATED_SANDBOX);
+}
+
+HWTEST_F(BmsDualModeInstallTest, SetDualModeAppInfo_Primary_DiffPackage_NoCloneFlag_0500,
+    Function | SmallTest | Level0)
+{
+    // primary mode (ispcmode==mainmode) + different-package -> isCloneApp=false (NeedDualModeHandle is
+    // secondary-only): the policy is still persisted and sandbox derived, but no clone flag/appIndex.
+    EnablePrimaryMode();
+    BaseBundleInstaller installer;
+    installer.beforeAppSandboxPolicy_ = AppSandboxPolicy::SHARED_SANDBOX;
+    InstallParam installParam;
+    installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    infos[BUNDLE_NAME] = MakeDualModeInstallInfo(true);
+    EXPECT_EQ(installer.SetDualModeAppInfo(installParam, infos), ERR_OK);
+    EXPECT_FALSE(infos[BUNDLE_NAME].IsDualModeCloneApp());
+    EXPECT_EQ(infos[BUNDLE_NAME].GetDeviceModeDistributionPolicy(),
+        DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE);
+    EXPECT_EQ(infos[BUNDLE_NAME].GetAppSandboxPolicy(), AppSandboxPolicy::ISOLATED_SANDBOX);
+}
+
+HWTEST_F(BmsDualModeInstallTest, SetDualModeAppInfo_NonDiffPackage_NoCloneFlag_0600,
+    Function | SmallTest | Level0)
+{
+    // non-different-package (same-package) policy -> isCloneApp=false and no system-app gate; sandbox
+    // derives SHARED (same-package, before=SHARED). Proves the clone flag is gated on diff-package.
+    EnableSecondaryMode();
+    BaseBundleInstaller installer;
+    installer.beforeAppSandboxPolicy_ = AppSandboxPolicy::SHARED_SANDBOX;
+    InstallParam installParam;
+    installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNIVERSAL_IDENTICAL_PACKAGE;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    infos[BUNDLE_NAME] = MakeDualModeInstallInfo(false);  // non-system app, but non-diff -> no gate
+    EXPECT_EQ(installer.SetDualModeAppInfo(installParam, infos), ERR_OK);
+    EXPECT_FALSE(infos[BUNDLE_NAME].IsDualModeCloneApp());
+    EXPECT_EQ(infos[BUNDLE_NAME].GetDeviceModeDistributionPolicy(),
+        DeviceModeDistributionPolicy::UNIVERSAL_IDENTICAL_PACKAGE);
+    EXPECT_EQ(infos[BUNDLE_NAME].GetAppSandboxPolicy(), AppSandboxPolicy::SHARED_SANDBOX);
+}
+
+// ====================== bundleInfos_ key contract (ADR-4 / P1 regression guard) ======================
+// bundleInfos_ is keyed by the ORIGINAL bundleName (clone apps are classified in at load time, key
+// stays original). The P1 fix split SaveInstallInfoToCache so FetchInnerBundleInfo/AddInnerBundleInfo
+// receive the original name while directories/installStates_ use the effective name. This guards the
+// data-layer contract the fix relies on: a clone app is findable by its original name and NOT by the
+// effective (prefixed) name, so passing the effective name to these lookups (the original bug) would miss.
+
+HWTEST_F(BmsDualModeInstallTest, FetchInnerBundleInfo_DualModeClone_OriginalNameKey_0100,
+    Function | SmallTest | Level0)
+{
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo cloneInfo = MakeCat7Info(true);
+    cloneInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    dataMgr->bundleInfos_[BUNDLE_NAME] = cloneInfo;  // ADR-4: keyed by original name
+    InnerBundleInfo out;
+    EXPECT_TRUE(dataMgr->FetchInnerBundleInfo(BUNDLE_NAME, out));       // original key -> found
+    EXPECT_TRUE(out.IsDualModeCloneApp());
+    EXPECT_FALSE(dataMgr->FetchInnerBundleInfo(PREFIXED_NAME, out));   // effective key -> not found
+}
 } // OHOS

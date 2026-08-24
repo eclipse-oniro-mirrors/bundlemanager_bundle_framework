@@ -21,6 +21,7 @@
 #include "account_helper.h"
 #include "app_log_tag_wrapper.h"
 #include "bundle_mgr_service.h"
+#include "dual_mode_helper.h"
 #include "pre_install_bundle_info.h"
 #if defined (BUNDLE_FRAMEWORK_SANDBOX_APP) && defined (DLP_PERMISSION_ENABLE)
 #include "dlp_permission_kit.h"
@@ -55,6 +56,19 @@ inline void ReturnIfNewTask(Func func, uint32_t tempTask, Args&&... args)
         return;
     }
     func(std::forward<Args>(args)...);
+}
+
+// dual-mode: effective (prefixed) name for clone apps (else original), matching install-time isolation.
+std::string GetDirBundleName(const BundleInfo &bundleInfo)
+{
+    std::string dirBundleName = bundleInfo.name;
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    InnerBundleInfo innerInfo;
+    if ((dataMgr != nullptr) && dataMgr->FetchInnerBundleInfo(bundleInfo.name, innerInfo) &&
+        innerInfo.IsDualModeCloneApp()) {
+        dirBundleName = DualModeHelper::GetDualModeBundleName(bundleInfo.name);
+    }
+    return dirBundleName;
 }
 }
 UserUnlockedEventSubscriber::UserUnlockedEventSubscriber(
@@ -158,8 +172,9 @@ void UpdateAppDataMgr::CheckPathAttribute(const std::string &path, const BundleI
 bool UpdateAppDataMgr::CreateBundleDataDir(
     const BundleInfo &bundleInfo, int32_t userId, const std::string &elDir)
 {
+    std::string dirBundleName = GetDirBundleName(bundleInfo);
     std::string baseBundleDataDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + elDir +
-        ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::DATABASE + bundleInfo.name;
+        ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::DATABASE + dirBundleName;
     bool isExist = false;
     if (InstalldClient::GetInstance()->IsExistDir(baseBundleDataDir, isExist) != ERR_OK) {
         APP_LOGE("path: %{public}s IsExistDir failed", baseBundleDataDir.c_str());
@@ -172,7 +187,7 @@ bool UpdateAppDataMgr::CreateBundleDataDir(
             bundleInfo.name, userId, std::vector<std::string>{baseBundleDataDir});
         CreateDirParam createDirParam;
         createDirParam.userId = userId;
-        createDirParam.bundleName = bundleInfo.name;
+        createDirParam.bundleName = dirBundleName;
         createDirParam.uid = bundleInfo.uid;
         createDirParam.gid = bundleInfo.gid;
         createDirParam.apl = bundleInfo.applicationInfo.appPrivilegeLevel;
@@ -323,7 +338,9 @@ void UpdateAppDataMgr::ProcessUpdateAppDataDir(
     std::string baseBundleDataDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + elDir +
         ServiceConstants::PATH_SEPARATOR + std::to_string(userId);
     for (const auto &bundleInfo : bundleInfos) {
-        if (bundleInfo.appIndex > 0) {
+        // dual-mode: skip regular clones (1..5) but keep dual-mode clones (10000) for dir recovery.
+        if (bundleInfo.appIndex > 0 &&
+            bundleInfo.appIndex != ServiceConstants::DUAL_MODE_CLONE_APP_INDEX) {
             APP_LOGI("bundleName:%{public}s appIndex:%{public}d clone app no need to change",
                 bundleInfo.name.c_str(), bundleInfo.appIndex);
             continue;
@@ -344,7 +361,9 @@ void UpdateAppDataMgr::ProcessUpdateAppDataDir(
         if (!CreateBundleDataDir(bundleInfo, userId, elDir)) {
             continue;
         }
-        std::string baseDir = baseBundleDataDir + ServiceConstants::BASE + bundleInfo.name;
+        // dual-mode: path uses effective name; SetDirApl label (2nd arg) stays original bundleName.
+        std::string dirBundleName = GetDirBundleName(bundleInfo);
+        std::string baseDir = baseBundleDataDir + ServiceConstants::BASE + dirBundleName;
         if (InstalldClient::GetInstance()->SetDirApl(baseDir, bundleInfo.name,
             bundleInfo.applicationInfo.appPrivilegeLevel, bundleInfo.isPreInstallApp,
             bundleInfo.applicationInfo.appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG,
@@ -352,7 +371,7 @@ void UpdateAppDataMgr::ProcessUpdateAppDataDir(
             APP_LOGW_NOFUNC("failed to SetDirApl baseDir dir");
             continue;
         }
-        std::string baseDataDir = baseBundleDataDir + ServiceConstants::DATABASE + bundleInfo.name;
+        std::string baseDataDir = baseBundleDataDir + ServiceConstants::DATABASE + dirBundleName;
         if (InstalldClient::GetInstance()->SetDirApl(baseDataDir, bundleInfo.name,
             bundleInfo.applicationInfo.appPrivilegeLevel, bundleInfo.isPreInstallApp,
             bundleInfo.applicationInfo.appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG,
@@ -412,10 +431,12 @@ void UpdateAppDataMgr::ProcessNewBackupDir(const std::vector<BundleInfo> &bundle
 
 void UpdateAppDataMgr::CreateNewBackupDir(const BundleInfo &bundleInfo, int32_t userId)
 {
+    // dual-mode: clone apps' backup dir uses the effective (prefixed) name.
+    std::string dirBundleName = GetDirBundleName(bundleInfo);
     std::string parentEl1Dir = BUNDLE_BACKUP_HOME_PATH_EL1_NEW;
-    parentEl1Dir = parentEl1Dir.replace(parentEl1Dir.find("%"), 1, std::to_string(userId)) + bundleInfo.name;
+    parentEl1Dir = parentEl1Dir.replace(parentEl1Dir.find("%"), 1, std::to_string(userId)) + dirBundleName;
     std::string parentEl2Dir = BUNDLE_BACKUP_HOME_PATH_EL2_NEW;
-    parentEl2Dir = parentEl2Dir.replace(parentEl2Dir.find("%"), 1, std::to_string(userId)) + bundleInfo.name;
+    parentEl2Dir = parentEl2Dir.replace(parentEl2Dir.find("%"), 1, std::to_string(userId)) + dirBundleName;
     bool isEl1Existed = false;
     auto result = InstalldClient::GetInstance()->IsExistDir(parentEl1Dir, isEl1Existed);
     if (result == ERR_OK && !isEl1Existed) {
@@ -442,7 +463,7 @@ void UpdateAppDataMgr::CreateNewBackupDir(const BundleInfo &bundleInfo, int32_t 
         }
         APP_LOGI("bundle %{public}s not exist backup dir", bundleInfo.name.c_str());
         CreateDirParam createDirParam;
-        createDirParam.bundleName = bundleInfo.name;
+        createDirParam.bundleName = dirBundleName;
         createDirParam.bundleDirScene = BundleDirScene::BACK_UP_DIR;
         result = InstalldClient::GetInstance()->Mkdir(dir, S_IRWXU | S_IRWXG | S_ISGID,
             bundleInfo.uid, ServiceConstants::BACKU_HOME_GID, createDirParam);
@@ -461,7 +482,9 @@ bool UpdateAppDataMgr::CreateBundleLogDir(const BundleInfo &bundleInfo, int32_t 
         APP_LOGE("parent dir(%{public}s) missing: log", parentDir.c_str());
         return false;
     }
-    std::string bundleLogDir = parentDir + bundleInfo.name;
+    // dual-mode: clone apps' log dir uses the effective (prefixed) name.
+    std::string dirBundleName = GetDirBundleName(bundleInfo);
+    std::string bundleLogDir = parentDir + dirBundleName;
     bool isExist = false;
     if (InstalldClient::GetInstance()->IsExistDir(bundleLogDir, isExist) != ERR_OK) {
         APP_LOGE("path: %{public}s IsExistDir failed", bundleLogDir.c_str());
@@ -472,7 +495,7 @@ bool UpdateAppDataMgr::CreateBundleLogDir(const BundleInfo &bundleInfo, int32_t 
         return false;
     }
     CreateDirParam createDirParam;
-    createDirParam.bundleName = bundleInfo.name;
+    createDirParam.bundleName = dirBundleName;
     createDirParam.bundleDirScene = BundleDirScene::APP_EL2_LOG_DIR;
     if (InstalldClient::GetInstance()->Mkdir(bundleLogDir, S_IRWXU | S_IRWXG | S_ISGID, bundleInfo.uid,
         ServiceConstants::LOG_DIR_GID, createDirParam) != ERR_OK) {
@@ -500,7 +523,9 @@ bool UpdateAppDataMgr::CreateBundleCloudDir(const BundleInfo &bundleInfo, int32_
         APP_LOGE("parent dir(%{public}s) missing: cloud errno:%{public}d", parentDir.c_str(), errno);
         return false;
     }
-    std::string bundleCloudDir = parentDir + bundleInfo.name;
+    // dual-mode: clone apps' cloud dir uses the effective (prefixed) name.
+    std::string dirBundleName = GetDirBundleName(bundleInfo);
+    std::string bundleCloudDir = parentDir + dirBundleName;
     bool isExist = false;
     if (InstalldClient::GetInstance()->IsExistDir(bundleCloudDir, isExist) != ERR_OK) {
         APP_LOGE("path: %{private}s IsExistDir failed", bundleCloudDir.c_str());
@@ -511,7 +536,7 @@ bool UpdateAppDataMgr::CreateBundleCloudDir(const BundleInfo &bundleInfo, int32_
         return false;
     }
     CreateDirParam createDirParam;
-    createDirParam.bundleName = bundleInfo.name;
+    createDirParam.bundleName = dirBundleName;
     createDirParam.bundleDirScene = BundleDirScene::SERVICE_HMDFS_CLOUD_DATA_DIR;
     if (InstalldClient::GetInstance()->Mkdir(bundleCloudDir, S_IRWXU | S_IRWXG | S_ISGID,
         bundleInfo.uid, ServiceConstants::DFS_GID, createDirParam) != ERR_OK) {
@@ -527,7 +552,9 @@ void UpdateAppDataMgr::CreateShareFilesSubDataDirs(const std::vector<BundleInfo>
     std::string parentDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1] +
         ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::SHAREFILES;
     for (const auto &bundleInfo : bundleInfos) {
-        std::string sharefilesDataDir = parentDir + bundleInfo.name;
+        // dual-mode: path uses effective name; SetDirApl/RemoveDir label (bundleInfo.name) stays original.
+        std::string dirBundleName = GetDirBundleName(bundleInfo);
+        std::string sharefilesDataDir = parentDir + dirBundleName;
         if (userId != Constants::DEFAULT_USERID && bundleInfo.singleton) {
             APP_LOGD("Bundle: %{public}s in DEFAULT_USERID, do not create sharefiles for other user",
                 bundleInfo.name.c_str());
@@ -535,7 +562,7 @@ void UpdateAppDataMgr::CreateShareFilesSubDataDirs(const std::vector<BundleInfo>
                 sharefilesDataDir, BundleDirScene::REMOVE_SHARE_FILE_DIR, bundleInfo.name);
             continue;
         }
-        
+
         bool isExist = false;
         if (InstalldClient::GetInstance()->IsExistDir(sharefilesDataDir, isExist) != ERR_OK) {
             APP_LOGW("path: %{public}s IsExistDir failed",
@@ -543,7 +570,7 @@ void UpdateAppDataMgr::CreateShareFilesSubDataDirs(const std::vector<BundleInfo>
             continue;
         }
         CreateDirParam createDirParam;
-        createDirParam.bundleName = bundleInfo.name;
+        createDirParam.bundleName = dirBundleName;
         createDirParam.bundleDirScene = BundleDirScene::EL2_SHARE_FILES_DIR;
         if (InstalldClient::GetInstance()->Mkdir(sharefilesDataDir,
             S_IRWXU, bundleInfo.uid, bundleInfo.gid, createDirParam) != ERR_OK) {
