@@ -22,6 +22,9 @@
 #include "app_log_wrapper.h"
 #include "bundle_mgr_service.h"
 #include "bundle_parser.h"
+#include "inner_bundle_clone_info.h"
+#include "inner_bundle_user_info.h"
+#include "inner_cli_sandbox_info.h"
 #include "ipc_skeleton.h"
 #include "parameter.h"
 #include "privacy_kit.h"
@@ -811,7 +814,7 @@ int32_t BundlePermissionMgr::InitHapToken(const InnerBundleInfo &innerBundleInfo
 
 int32_t BundlePermissionMgr::UpdateHapToken(Security::AccessToken::AccessTokenIDEx& tokenIdeEx,
     const InnerBundleInfo &innerBundleInfo, int32_t userId, Security::AccessToken::HapInfoCheckResult &checkResult,
-    const std::string &appServiceCapabilities, bool dataRefresh, const bool isDebugGrant)
+    const std::string &appServiceCapabilities, bool dataRefresh, const bool isDebugGrant, const bool needInit)
 {
     LOG_NOFUNC_I(BMS_TAG_DEFAULT, "start UpdateHapToken -n %{public}s -t: %{public}s -g: %{public}d",
         innerBundleInfo.GetBundleName().c_str(), innerBundleInfo.GetAppProvisionType().c_str(), isDebugGrant);
@@ -841,11 +844,13 @@ int32_t BundlePermissionMgr::UpdateHapToken(Security::AccessToken::AccessTokenID
         // try again
         ret = AccessToken::AccessTokenKit::UpdateHapToken(tokenIdeEx, updateHapInfoParams, hapPolicy, checkResult);
     }
-    if (AccessToken::AccessTokenError::ERR_TOKENID_NOT_EXIST == ret) {
-        AccessToken::HapInfoParams hapInfo = CreateHapInfoParams(innerBundleInfo, userId, 0);
-        hapInfo.isRestore = true;
-        hapInfo.tokenID = tokenIdeEx.tokenIdExStruct.tokenID;
-        ret = AccessToken::AccessTokenKit::InitHapToken(hapInfo, hapPolicy, tokenIdeEx, checkResult);
+    if (needInit) {
+        if (AccessToken::AccessTokenError::ERR_TOKENID_NOT_EXIST == ret) {
+            AccessToken::HapInfoParams hapInfo = CreateHapInfoParams(innerBundleInfo, userId, 0);
+            hapInfo.isRestore = true;
+            hapInfo.tokenID = tokenIdeEx.tokenIdExStruct.tokenID;
+            ret = AccessToken::AccessTokenKit::InitHapToken(hapInfo, hapPolicy, tokenIdeEx, checkResult);
+        }
     }
     if (ret != AccessToken::AccessTokenKitRet::RET_SUCCESS) {
         LOG_NOFUNC_E(BMS_TAG_DEFAULT, "UpdateHapToken failed, bundleName:%{public}s errCode:%{public}d",
@@ -910,6 +915,106 @@ bool BundlePermissionMgr::CheckUserFromShell(int32_t userId)
         return false;
     }
     return true;
+}
+
+bool BundlePermissionMgr::RefreshPreAuthorizationForOTA()
+{
+    LOG_I(BMS_TAG_DEFAULT, "RefreshPreAuthorizationForOTA start");
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return false;
+    }
+
+    if (defaultPermissions_.empty()) {
+        LOG_I(BMS_TAG_DEFAULT, "No default permissions configured");
+        return true;
+    }
+
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "Processing %{public}zu bundles with default permissions config",
+        defaultPermissions_.size());
+
+    size_t successCount = 0;
+    size_t totalCount = 0;
+    for (const auto &permPair : defaultPermissions_) {
+        const std::string &bundleName = permPair.first;
+        InnerBundleInfo innerBundleInfo;
+        if (!dataMgr->FetchInnerBundleInfo(bundleName, innerBundleInfo)) {
+            LOG_NOFUNC_D(BMS_TAG_DEFAULT, "Bundle %{public}s not installed, skip", bundleName.c_str());
+            continue;
+        }
+
+        auto &userInfos = innerBundleInfo.GetInnerBundleUserInfos();
+        if (userInfos.empty()) {
+            LOG_NOFUNC_D(BMS_TAG_DEFAULT, "Bundle %{public}s has no users, skip", bundleName.c_str());
+            continue;
+        }
+
+        AppProvisionInfo appProvisionInfo;
+        if (dataMgr->GetAppProvisionInfo(bundleName, userInfos.begin()->second.bundleUserInfo.userId,
+            appProvisionInfo) != ERR_OK) {
+            LOG_W(BMS_TAG_DEFAULT, "GetAppProvisionInfo failed -n:%{public}s", bundleName.c_str());
+        }
+
+        for (auto &userInfoPair : userInfos) {
+            const InnerBundleUserInfo &userInfo = userInfoPair.second;
+            int32_t userId = userInfo.bundleUserInfo.userId;
+
+            if (userInfo.accessTokenId != 0) {
+                Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
+                accessTokenIdEx.tokenIDEx = userInfo.accessTokenIdEx;
+                Security::AccessToken::HapInfoCheckResult checkResult;
+                totalCount++;
+                if (BundlePermissionMgr::UpdateHapToken(accessTokenIdEx, innerBundleInfo, userId,
+                    checkResult, appProvisionInfo.appServiceCapabilities, false, false, false) == ERR_OK) {
+                    successCount++;
+                } else {
+                    LOG_NOFUNC_W(BMS_TAG_DEFAULT, "UpdateHapToken failed for %{public}s user %{public}d main app",
+                        bundleName.c_str(), userId);
+                }
+            }
+
+            for (const auto &clonePair : userInfo.cloneInfos) {
+                const InnerBundleCloneInfo &cloneInfo = clonePair.second;
+                if (cloneInfo.accessTokenId == 0) {
+                    continue;
+                }
+                Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
+                accessTokenIdEx.tokenIDEx = cloneInfo.accessTokenIdEx;
+                Security::AccessToken::HapInfoCheckResult checkResult;
+                totalCount++;
+                if (BundlePermissionMgr::UpdateHapToken(accessTokenIdEx, innerBundleInfo, userId,
+                    checkResult, appProvisionInfo.appServiceCapabilities, false, false, false) == ERR_OK) {
+                    successCount++;
+                } else {
+                    LOG_NOFUNC_W(BMS_TAG_DEFAULT, "UpdateHapToken failed for %{public}s user %{public}d "
+                        "clone appIndex %{public}d", bundleName.c_str(), userId, cloneInfo.appIndex);
+                }
+            }
+
+            for (const auto &sandboxPair : userInfo.sandboxInfos) {
+                const InnerCliSandboxInfo &sandboxInfo = sandboxPair.second;
+                if (sandboxInfo.accessTokenId == 0) {
+                    continue;
+                }
+                Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
+                accessTokenIdEx.tokenIDEx = sandboxInfo.accessTokenIdEx;
+                Security::AccessToken::HapInfoCheckResult checkResult;
+                totalCount++;
+                if (BundlePermissionMgr::UpdateHapToken(accessTokenIdEx, innerBundleInfo, userId,
+                    checkResult, appProvisionInfo.appServiceCapabilities, false, false, false) == ERR_OK) {
+                    successCount++;
+                } else {
+                    LOG_NOFUNC_W(BMS_TAG_DEFAULT, "UpdateHapToken failed for %{public}s user %{public}d "
+                        "sandbox appIndex %{public}d", bundleName.c_str(), userId, sandboxInfo.appIndex);
+                }
+            }
+        }
+    }
+
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "RefreshPreAuthorizationForOTA end, updated %{public}zu/%{public}zu tokens",
+        successCount, totalCount);
+    return totalCount == 0 || successCount == totalCount;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

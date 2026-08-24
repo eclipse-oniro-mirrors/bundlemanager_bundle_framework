@@ -1447,6 +1447,12 @@ void BMSEventHandler::ProcessRebootBundle()
     ProcessRebootSkillsUninstall();
     //refresh application permissions
     ProcessUpdatePermissions();
+    //refresh pre-authorization for all installed apps during OTA (every OTA)
+    if (BundlePermissionMgr::RefreshPreAuthorizationForOTA()) {
+        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "Refresh pre-authorization success");
+    } else {
+        LOG_NOFUNC_W(BMS_TAG_DEFAULT, "Refresh pre-authorization failed");
+    }
     ProcessRebootQuickFixBundleInstall(QUICK_FIX_APP_PATH, true);
     ProcessRebootQuickFixUnInstallAndRecover(QUICK_FIX_APP_RECOVER_FILE);
     XCollieHelper::ResumeFoundationWatchdog();
