@@ -114,6 +114,14 @@ const std::string THEME_B_OTHER_ICONS = "/data/service/el1/public/themes/20000/b
 const std::string BUNDLE_NAME_LAYERED_IMAGE = "com.example.thumbnailtest";
 const std::string LAYERED_IMAGE_HAP_PATH = "/data/test/resource/bms/accesstoken_bundle/thumbnail.hap";
 const std::string TEST_BUNDLE_NAME = "testBundleName";
+// test clone app badge resource
+const int32_t CLONE_APP_INDEX = 2;
+const int32_t NOT_EXIST_APP_INDEX = 1000;
+// test theme icon resource
+const std::string THEME_A_FOREGROUND_BUNDLE_NAME =
+    "/data/service/el1/public/themes/20000/a/app/icons/com.example.bmsaccesstoken1/foreground.png";
+const std::string THEME_A_BACKGROUND_BUNDLE_NAME =
+    "/data/service/el1/public/themes/20000/a/app/icons/com.example.bmsaccesstoken1/background.png";
 const int32_t U1 = 1;
 const int32_t INVALID_INDEX = 6;
 const std::string INVALID_ABILITY_NAME = "com.example.bmsaccesstoken.Ability";
@@ -7853,5 +7861,179 @@ HWTEST_F(BmsBundleResourceTest, ParseAndAddAlternateIconResource_0001, Function 
     IconResourceType type = IconResourceType::ALTERNATE_ICON;
     bool ret = manager->ParseAndAddAlternateIconResource(bundleName, alternateIconInfo, type);
     EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: GetIconResourceByHap_0010
+ * Function: GetIconResourceByHap
+ * @tc.name: test GetIconResourceByHap
+ * @tc.desc: 1. system running normally
+ *           2. resourceManager is nullptr, parse icon failed
+ */
+HWTEST_F(BmsBundleResourceTest, GetIconResourceByHap_0010, Function | SmallTest | Level0)
+{
+    BundleResourceDrawable drawable;
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = BUNDLE_NAME;
+    bool ret = drawable.GetIconResourceByHap(1, 0, nullptr, resourceInfo);
+    EXPECT_FALSE(ret);
+    EXPECT_TRUE(resourceInfo.icon_.empty());
+}
+
+/**
+ * @tc.number: GetIconResourceByHap_0020
+ * Function: GetIconResourceByHap
+ * @tc.name: test GetIconResourceByHap
+ * @tc.desc: 1. system running normally
+ *           2. icon is parsed by drawable descriptor, svg resource limit level is set to low
+ */
+HWTEST_F(BmsBundleResourceTest, GetIconResourceByHap_0020, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(LAYERED_IMAGE_HAP_PATH);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    // resourceInfos[0] is bundle resource info, its iconId is adapted to the entry ability icon,
+    // which is a layered image and can only be parsed by drawable descriptor
+    std::vector<ResourceInfo> resourceInfos;
+    bool ans = BundleResourceProcess::GetResourceInfoByBundleName(BUNDLE_NAME_LAYERED_IMAGE, USERID, resourceInfos);
+    EXPECT_TRUE(ans);
+    EXPECT_FALSE(resourceInfos.empty());
+    if (!resourceInfos.empty()) {
+        std::unique_ptr<Global::Resource::ResConfig> resConfig(Global::Resource::CreateResConfig());
+        EXPECT_TRUE(resConfig != nullptr);
+        if (resConfig != nullptr) {
+            std::shared_ptr<Global::Resource::ResourceManager> resourceManager(
+                Global::Resource::CreateResourceManager(BUNDLE_NAME_LAYERED_IMAGE, resourceInfos[0].moduleName_,
+                    resourceInfos[0].hapPath_, resourceInfos[0].overlayHapPaths_, *resConfig, 0, USERID));
+            EXPECT_NE(resourceManager, nullptr);
+            ans = BundleResourceConfiguration::InitResourceGlobalConfig(resourceInfos[0].hapPath_,
+                resourceInfos[0].overlayHapPaths_, resourceManager);
+            EXPECT_TRUE(ans);
+
+            BundleResourceDrawable drawable;
+            ResourceInfo resourceInfo;
+            resourceInfo.bundleName_ = BUNDLE_NAME_LAYERED_IMAGE;
+            bool ret = drawable.GetIconResourceByHap(resourceInfos[0].iconId_, 0, resourceManager, resourceInfo);
+            EXPECT_TRUE(ret);
+            EXPECT_FALSE(resourceInfo.icon_.empty());
+        }
+    }
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME_LAYERED_IMAGE);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: GetIconResourceByTheme_0010
+ * Function: GetIconResourceByTheme
+ * @tc.name: test GetIconResourceByTheme
+ * @tc.desc: 1. system running normally
+ *           2. theme foreground and background exist, icon is created with svg resource limit level
+ */
+HWTEST_F(BmsBundleResourceTest, GetIconResourceByTheme_0010, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    std::vector<ResourceInfo> resourceInfos;
+    bool ans = BundleResourceProcess::GetResourceInfoByBundleName(BUNDLE_NAME, USERID, resourceInfos);
+    EXPECT_TRUE(ans);
+    EXPECT_FALSE(resourceInfos.empty());
+    if (!resourceInfos.empty()) {
+        // construct theme foreground and background resource of BUNDLE_NAME
+        OHOS::ForceCreateDirectory(THEME_A_ICON_BUNDLE_NAME);
+        std::ofstream flagFile(THEME_A_FLAG_BUNDLE_NAME, std::ios::out);
+        flagFile << "" << std::endl;
+        flagFile.close();
+        std::ofstream foregroundFile(THEME_A_FOREGROUND_BUNDLE_NAME, std::ios::out);
+        foregroundFile << "foreground" << std::endl;
+        foregroundFile.close();
+        std::ofstream backgroundFile(THEME_A_BACKGROUND_BUNDLE_NAME, std::ios::out);
+        backgroundFile << "background" << std::endl;
+        backgroundFile.close();
+
+        std::unique_ptr<Global::Resource::ResConfig> resConfig(Global::Resource::CreateResConfig());
+        EXPECT_TRUE(resConfig != nullptr);
+        if (resConfig != nullptr) {
+            std::shared_ptr<Global::Resource::ResourceManager> resourceManager(
+                Global::Resource::CreateResourceManager(BUNDLE_NAME, resourceInfos[0].moduleName_,
+                    resourceInfos[0].hapPath_, resourceInfos[0].overlayHapPaths_, *resConfig, 0, THEME_TEST_USERID));
+            EXPECT_NE(resourceManager, nullptr);
+
+            BundleResourceDrawable drawable;
+            ResourceInfo resourceInfo;
+            resourceInfo.bundleName_ = BUNDLE_NAME;
+            bool ret = drawable.GetIconResourceByTheme(resourceInfos[0].iconId_, 0, resourceManager, resourceInfo);
+            // theme resource data is not a real image, icon can only be parsed when background not exist
+            EXPECT_EQ(ret, !resourceInfo.icon_.empty());
+        }
+        OHOS::ForceRemoveDirectory(THEME_BUNDLE_NAME_PATH);
+    }
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: ParserCloneResourceInfo_0020
+ * Function: ParserCloneResourceInfo
+ * @tc.name: test ParserCloneResourceInfo
+ * @tc.desc: 1. system running normally
+ *           2. test ParserCloneResourceInfo with resourceInfos, badge resource not exist
+ */
+HWTEST_F(BmsBundleResourceTest, ParserCloneResourceInfo_0020, Function | SmallTest | Level0)
+{
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = BUNDLE_NAME;
+    std::vector<ResourceInfo> resourceInfos;
+    resourceInfos.push_back(resourceInfo);
+
+    BundleResourceParser bundleResourceParser;
+    bool ret = bundleResourceParser.ParserCloneResourceInfo(NOT_EXIST_APP_INDEX, resourceInfos);
+    EXPECT_FALSE(ret);
+    EXPECT_TRUE(resourceInfos[0].icon_.empty());
+}
+
+/**
+ * @tc.number: ParserCloneResourceInfo_0030
+ * Function: ParserCloneResourceInfo
+ * @tc.name: test ParserCloneResourceInfo
+ * @tc.desc: 1. system running normally
+ *           2. test ParserCloneResourceInfo with resourceInfos, badge resource exist
+ */
+HWTEST_F(BmsBundleResourceTest, ParserCloneResourceInfo_0030, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = BUNDLE_NAME;
+    // base icon is not a valid base64 icon
+    resourceInfo.icon_ = "111";
+    std::vector<ResourceInfo> resourceInfos;
+    resourceInfos.push_back(resourceInfo);
+
+    BundleResourceParser bundleResourceParser;
+    bool ret = bundleResourceParser.ParserCloneResourceInfo(CLONE_APP_INDEX, resourceInfos);
+    EXPECT_FALSE(ret);
+
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        BundleResourceInfo info;
+        ret = manager->GetBundleResourceInfo(BUNDLE_NAME,
+            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), info);
+        EXPECT_TRUE(ret);
+        EXPECT_FALSE(info.icon.empty());
+        resourceInfos[0].icon_ = info.icon;
+        // base icon and badge icon are both valid
+        ret = bundleResourceParser.ParserCloneResourceInfo(CLONE_APP_INDEX, resourceInfos);
+        EXPECT_TRUE(ret);
+        EXPECT_FALSE(resourceInfos[0].icon_.empty());
+        EXPECT_NE(resourceInfos[0].icon_, info.icon);
+    }
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
 }
 } // OHOS
