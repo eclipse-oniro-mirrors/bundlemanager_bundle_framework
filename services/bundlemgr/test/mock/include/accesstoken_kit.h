@@ -63,6 +63,8 @@ HapInfoParams GetInitHapInfoParamsForTest(size_t index);
 HapPolicyParams GetInitHapPolicyParamsForTest(size_t index);
 int32_t GetResetDatabaseRecoveryStatusCallCountForTest();
 void SetResetDatabaseRecoveryStatusResultForTest(int32_t ret);
+int32_t GetUpdateHapTokenCallCountForTest();
+void SetUpdateHapTokenResultForTest(int32_t ret);
 } // namespace AccessToken
 } // namespace Security
 } // namespace OHOS
