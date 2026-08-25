@@ -55,6 +55,9 @@ constexpr const char* APP_INSTALL_PATH = "/data/app/el1/bundle";
 constexpr int32_t LOCAL_PLUGIN_ACTION_INSTALL = 1;
 constexpr int32_t LOCAL_PLUGIN_ACTION_UPDATE = 2;
 constexpr int32_t LOCAL_PLUGIN_ACTION_UNINSTALL = 3;
+constexpr int32_t PLUGIN_ACTION_INSTALL = 4;
+constexpr int32_t PLUGIN_ACTION_UPDATE = 5;
+constexpr int32_t PLUGIN_ACTION_UNINSTALL = 6;
 constexpr size_t MAX_LOCAL_PLUGIN_EVENT_REPORT_ONCE = 30;
 const int64_t ONE_DAY =  86400;
 constexpr const char* LOCAL_PLUGIN_FILE_PATH_SEPARATOR = "|#|";
@@ -143,6 +146,16 @@ ErrCode PluginInstaller::InstallPlugin(const std::string &hostBundleName,
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "begin to install plugin for %{public}s", hostBundleName.c_str());
 
+    ErrCode result = InstallPluginInner(hostBundleName, pluginFilePaths, installPluginParam);
+    SendLocalPluginSystemEvent(hostBundleName, installPluginParam.userId,
+        isPluginExist_ ? PLUGIN_ACTION_UPDATE : PLUGIN_ACTION_INSTALL, result);
+
+    return result;
+}
+
+ErrCode PluginInstaller::InstallPluginInner(const std::string &hostBundleName,
+    const std::vector<std::string> &pluginFilePaths, const InstallPluginParam &installPluginParam)
+{
     if (!InitDataMgr()) {
         return ERR_APPEXECFWK_NULL_PTR;
     }
@@ -262,7 +275,9 @@ ErrCode PluginInstaller::UninstallPlugin(const std::string &hostBundleName, cons
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "begin to uninstall plugin %{public}s for %{public}s",
         pluginBundleName.c_str(), hostBundleName.c_str());
 
-    return UninstallPluginInner(hostBundleName, pluginBundleName, installPluginParam, true);
+    auto result = UninstallPluginInner(hostBundleName, pluginBundleName, installPluginParam, true);
+    SendLocalPluginSystemEvent(hostBundleName, installPluginParam.userId, PLUGIN_ACTION_UNINSTALL, result);
+    return result;
 }
 
 ErrCode PluginInstaller::UninstallLocalPlugin(const std::string &hostBundleName,
