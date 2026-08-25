@@ -4511,6 +4511,86 @@ HWTEST_F(BmsBundleMgrHostUnitTest, HandleGetTopNLargestItemsInAppDataDir_0100, F
 }
 
 /**
+ * @tc.number: HandleFilterBundleListByDeviceModeDistributionPolicies_0100
+ * @tc.name: test FilterBundleListByDeviceModeDistributionPolicies via OnRemoteRequest
+ * @tc.desc: 1. test FilterBundleListByDeviceModeDistributionPolicies interface through OnRemoteRequest
+ *           2. verify the interface can be called normally: the BundleMgrHost stub falls back to
+ *              the IBundleMgr default implementation and echoes it in the reply
+ */
+HWTEST_F(BmsBundleMgrHostUnitTest, HandleFilterBundleListByDeviceModeDistributionPolicies_0100,
+    Function | SmallTest | Level0)
+{
+    BundleMgrHost bundleMgrHost;
+    uint32_t code = static_cast<uint32_t>(
+        BundleMgrInterfaceCode::FILTER_BUNDLE_LIST_BY_DEVICE_MODE_DISTRIBUTION_POLICIES);
+    MessageParcel data;
+    std::u16string descriptor = BundleMgrHost::GetDescriptor();
+    data.WriteInterfaceToken(descriptor);
+    std::vector<int32_t> policies = {4, 6, 8}; // all different-package policies
+    data.WriteInt32Vector(policies);
+
+    MessageParcel reply;
+    MessageOption option;
+    ErrCode res = bundleMgrHost.OnRemoteRequest(code, data, reply, option);
+    EXPECT_EQ(res, ERR_OK);
+    // No IBundleMgr override is installed on the bare stub: the default implementation's
+    // ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR is written into the reply parcel
+    EXPECT_EQ(reply.ReadInt32(), ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: HandleFilterBundleListByDeviceModeDistributionPolicies_0200
+ * @tc.name: test FilterBundleListByDeviceModeDistributionPolicies with empty policy vector
+ * @tc.desc: 1. test FilterBundleListByDeviceModeDistributionPolicies interface through OnRemoteRequest
+ *           2. verify an empty policy vector is rejected with param error before the service call
+ */
+HWTEST_F(BmsBundleMgrHostUnitTest, HandleFilterBundleListByDeviceModeDistributionPolicies_0200,
+    Function | SmallTest | Level0)
+{
+    BundleMgrHost bundleMgrHost;
+    uint32_t code = static_cast<uint32_t>(
+        BundleMgrInterfaceCode::FILTER_BUNDLE_LIST_BY_DEVICE_MODE_DISTRIBUTION_POLICIES);
+    MessageParcel data;
+    std::u16string descriptor = BundleMgrHost::GetDescriptor();
+    data.WriteInterfaceToken(descriptor);
+    std::vector<int32_t> policies;
+    data.WriteInt32Vector(policies);
+
+    MessageParcel reply;
+    MessageOption option;
+    ErrCode res = bundleMgrHost.OnRemoteRequest(code, data, reply, option);
+    EXPECT_EQ(res, UNKNOWN_ERROR);
+}
+
+/**
+ * @tc.number: HandleFilterBundleListByDeviceModeDistributionPolicies_0300
+ * @tc.name: test FilterBundleListByDeviceModeDistributionPolicies with oversized policy vector
+ * @tc.desc: 1. test FilterBundleListByDeviceModeDistributionPolicies interface through OnRemoteRequest
+ *           2. verify a policy vector exceeding the enum value-range bound (9 distinct
+ *              values, 0~8) is rejected with param error
+ */
+HWTEST_F(BmsBundleMgrHostUnitTest, HandleFilterBundleListByDeviceModeDistributionPolicies_0300,
+    Function | SmallTest | Level0)
+{
+    BundleMgrHost bundleMgrHost;
+    uint32_t code = static_cast<uint32_t>(
+        BundleMgrInterfaceCode::FILTER_BUNDLE_LIST_BY_DEVICE_MODE_DISTRIBUTION_POLICIES);
+    MessageParcel data;
+    std::u16string descriptor = BundleMgrHost::GetDescriptor();
+    data.WriteInterfaceToken(descriptor);
+    std::vector<int32_t> policies;
+    for (int32_t value = 0; value <= 10; ++value) {
+        policies.push_back(value);
+    }
+    data.WriteInt32Vector(policies);
+
+    MessageParcel reply;
+    MessageOption option;
+    ErrCode res = bundleMgrHost.OnRemoteRequest(code, data, reply, option);
+    EXPECT_EQ(res, UNKNOWN_ERROR);
+}
+
+/**
  * @tc.number: HandleCleanBundlePartialCacheAutomatic_0100
  * @tc.name: test the HandleCleanBundlePartialCacheAutomatic
  * @tc.desc: 1. system running normally

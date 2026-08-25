@@ -6677,6 +6677,43 @@ ErrCode BundleMgrProxy::SetAppClonePreference(const std::string &bundleName,
     return reply.ReadInt32();
 }
 
+ErrCode BundleMgrProxy::FilterBundleListByDeviceModeDistributionPolicies(
+    const std::set<DeviceModeDistributionPolicy> &policies)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    APP_LOGD("begin to FilterBundleListByDeviceModeDistributionPolicies size = %{public}zu", policies.size());
+    // Size bound derived from the policy enum: a valid set holds at most one entry per value
+    // (0~8), so anything larger must contain out-of-range values.
+    if (policies.empty() || policies.size() >
+        static_cast<size_t>(DeviceModeDistributionPolicy::FULL_COMPATIBLE_DIFFERENT_PACKAGE) + 1) {
+        APP_LOGE_NOFUNC("FilterBundleListByDeviceModeDistributionPolicies size %{public}zu invalid", policies.size());
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE_NOFUNC("FilterBundleListByDeviceModeDistributionPolicies fail to write InterfaceToken");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    // Parcel has no set serializer — flatten to an int32 vector (wire format).
+    std::vector<int32_t> policyValues;
+    policyValues.reserve(policies.size());
+    for (auto policy : policies) {
+        policyValues.push_back(static_cast<int32_t>(policy));
+    }
+    if (!data.WriteInt32Vector(policyValues)) {
+        APP_LOGE_NOFUNC("FilterBundleListByDeviceModeDistributionPolicies fail to write policies");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    ErrCode ret = SendTransactCmdWithErrCode(
+        BundleMgrInterfaceCode::FILTER_BUNDLE_LIST_BY_DEVICE_MODE_DISTRIBUTION_POLICIES, data, reply);
+    if (ret != ERR_OK) {
+        APP_LOGE_NOFUNC("FilterBundleListByDeviceModeDistributionPolicies SendTransactCmd fail %{public}d", ret);
+        return ret;
+    }
+    return reply.ReadInt32();
+}
+
 ErrCode BundleMgrProxy::GetLaunchWant(Want &want)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);

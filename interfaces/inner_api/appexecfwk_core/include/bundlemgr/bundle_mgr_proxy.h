@@ -18,6 +18,7 @@
 
 #include <string>
 #include <shared_mutex>
+#include <set>
 #include <vector>
 
 #include "bundle_event_callback_interface.h"
@@ -1486,6 +1487,9 @@ public:
         bundleInfoDualMode.appSandboxPolicy = AppSandboxPolicy::SHARED_SANDBOX;
         return ERR_OK;
     }
+
+    virtual ErrCode FilterBundleListByDeviceModeDistributionPolicies(
+        const std::set<DeviceModeDistributionPolicy> &policies) override;
 
 private:
     /**
