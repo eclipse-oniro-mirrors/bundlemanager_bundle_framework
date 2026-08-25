@@ -26,6 +26,26 @@ namespace OHOS {
 namespace AppExecFwk {
 int32_t g_remainingSuccessfulCalls = 2;
 bool g_mockCleanBundleDataDirResult = true;
+namespace {
+bool g_processBinFilesCalled = false;
+VerifyBinParam g_lastVerifyBinParam;
+}
+
+void ResetProcessBinFilesParamForTest()
+{
+    g_processBinFilesCalled = false;
+    g_lastVerifyBinParam = VerifyBinParam();
+}
+
+bool GetProcessBinFilesParamForTest(VerifyBinParam &verifyBinParam)
+{
+    if (!g_processBinFilesCalled) {
+        return false;
+    }
+    verifyBinParam = g_lastVerifyBinParam;
+    return true;
+}
+
 void SetGetBundleInodeCountResult(int32_t remainCalls)
 {
     g_remainingSuccessfulCalls = remainCalls;
@@ -711,6 +731,8 @@ ErrCode InstalldClient::CopyDir(const std::string &sourceDir, const std::string 
 
 ErrCode InstalldClient::ProcessBinFiles(const VerifyBinParam &verifyBinParam)
 {
+    g_processBinFilesCalled = true;
+    g_lastVerifyBinParam = verifyBinParam;
     return CallService(&IInstalld::ProcessBinFiles, verifyBinParam);
 }
 

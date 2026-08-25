@@ -3603,7 +3603,7 @@ ErrCode InstalldHostImpl::ProcessBinFiles(const VerifyBinParam &verifyBinParam)
             continue;
         }
 #ifdef SECURITY_PRIVACY_SERVER_ENABLE
-        ErrCode result = InstalldOperator::SetBinFileLabel(binFilePath);
+        ErrCode result = InstalldOperator::SetBinFileLabel(binFilePath, verifyBinParam.isDebug);
         if (result != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLD, "SetBinFileLabel failed for %{public}s, errcode:%{public}d",
                 binFilePath.c_str(), result);

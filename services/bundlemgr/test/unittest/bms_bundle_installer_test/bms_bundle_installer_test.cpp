@@ -17,6 +17,7 @@
 #define protected public
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <chrono>
 #include <cstdio>
 #include <dirent.h>
@@ -73,6 +74,10 @@ using namespace OHOS::AppExecFwk;
 using OHOS::DelayedSingleton;
 
 namespace OHOS {
+namespace AppExecFwk {
+void ResetProcessBinFilesParamForTest();
+bool GetProcessBinFilesParamForTest(VerifyBinParam &verifyBinParam);
+}
 namespace {
 const std::string SYSTEMFIEID_NAME = "com.query.test";
 const std::string SYSTEMFIEID_BUNDLE = "system_module.hap";
@@ -91,6 +96,9 @@ const std::string BUNDLE_CODE_DIR = "/data/app/el1/bundle/public/com.example.l3j
 const std::string ARK_STARTUP_CACHE_EL1_DIR = "/data/app/el1/100/system_optimize/com.example/ark_startup_cache/";
 const int32_t USERID = 100;
 const int32_t WAIT_TIME = 5; // init mocked bms
+const std::string TEST_BIN_BUNDLE_NAME = "com.example.hapbin";
+const std::string TEST_BIN_CPU_ABI = "arm64-v8a";
+const std::string TEST_BIN_NATIVE_LIBRARY_PATH = "libs/arm64-v8a";
 const std::string BUNDLE_BACKUP_TEST = "backup.hap";
 const std::string BUNDLE_MODULEJSON_TEST = "moduleJsonTest.hap";
 const std::string BUNDLE_PREVIEW_TEST = "preview.hap";
@@ -99,6 +107,43 @@ const std::string BUNDLE_BACKUP_NAME = "com.example.backuptest";
 const std::string BUNDLE_MODULEJSON_NAME = "com.test.modulejsontest";
 const std::string BUNDLE_PREVIEW_NAME = "com.example.previewtest";
 const std::string BUNDLE_THUMBNAIL_NAME = "com.example.thumbnailtest";
+
+void AddBinModule(InnerBundleInfo &info, const std::string &moduleName,
+    const std::vector<std::string> &binFileNames)
+{
+    InnerModuleInfo moduleInfo;
+    moduleInfo.name = moduleName;
+    moduleInfo.compressNativeLibs = true;
+    moduleInfo.cpuAbi = TEST_BIN_CPU_ABI;
+    moduleInfo.nativeLibraryPath = TEST_BIN_NATIVE_LIBRARY_PATH;
+    for (const auto &binFileName : binFileNames) {
+        ExecutableBinaryPath executableBinaryPath;
+        executableBinaryPath.path = ServiceConstants::LIBS + TEST_BIN_CPU_ABI +
+            ServiceConstants::PATH_SEPARATOR + binFileName;
+        moduleInfo.executableBinaryPaths.emplace_back(executableBinaryPath);
+    }
+    std::map<std::string, InnerModuleInfo> moduleInfos;
+    moduleInfos.emplace(moduleName, moduleInfo);
+    info.AddInnerModuleInfo(moduleInfos);
+    info.SetCurrentModulePackage(moduleName);
+}
+
+InnerBundleInfo CreateBinBundleInfo(const std::string &provisionType, const std::string &moduleName,
+    const std::vector<std::string> &binFileNames)
+{
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = TEST_BIN_BUNDLE_NAME;
+    info.SetBaseBundleInfo(bundleInfo);
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = TEST_BIN_BUNDLE_NAME;
+    info.SetBaseApplicationInfo(applicationInfo);
+    info.SetAppProvisionType(provisionType);
+    info.SetCpuAbi(TEST_BIN_CPU_ABI);
+    info.SetNativeLibraryPath(TEST_BIN_NATIVE_LIBRARY_PATH);
+    AddBinModule(info, moduleName, binFileNames);
+    return info;
+}
 const std::string MODULE_NAME = "entry";
 const std::string EXTENSION_ABILITY_NAME = "extensionAbility_A";
 const std::string TEST_STRING = "test.string";
@@ -16468,19 +16513,19 @@ HWTEST_F(BmsBundleInstallerTest, GetBinFilePaths_005, Function | SmallTest | Lev
     InnerBundleInfo info;
     InnerModuleInfo moduleInfo;
     moduleInfo.name = MODULE_NAME;
-    
+
     ExecutableBinaryPath binPath1;
     binPath1.path = "libs/arm64-v8a/test1.bin";
     moduleInfo.executableBinaryPaths.push_back(binPath1);
-    
+
     ExecutableBinaryPath binPath2;
     binPath2.path = "test2.bin";
     moduleInfo.executableBinaryPaths.push_back(binPath2);
-    
+
     ExecutableBinaryPath binPath3;
     binPath3.path = "libs/arm64-v8a/subdir/../test3.bin";
     moduleInfo.executableBinaryPaths.push_back(binPath3);
-    
+
     std::map<std::string, InnerModuleInfo> moduleInfos;
     moduleInfos[MODULE_NAME] = moduleInfo;
     info.AddInnerModuleInfo(moduleInfos);
@@ -16496,34 +16541,140 @@ HWTEST_F(BmsBundleInstallerTest, GetBinFilePaths_005, Function | SmallTest | Lev
 /**
  * @tc.number: ProcessBinFiles_001
  * @tc.name: test ProcessBinFiles with empty infos
- * @tc.desc: 1. infos is empty
- *           2. verify return ERR_OK
+ * @tc.desc: verify empty infos return ERR_OK without IPC
  */
 HWTEST_F(BmsBundleInstallerTest, ProcessBinFiles_001, Function | SmallTest | Level0)
 {
     BaseBundleInstaller baseBundleInstaller;
     std::unordered_map<std::string, InnerBundleInfo> infos;
-
-    auto result = baseBundleInstaller.ProcessBinFiles(infos);
-    EXPECT_EQ(result, ERR_OK);
+    ResetProcessBinFilesParamForTest();
+    EXPECT_EQ(baseBundleInstaller.ProcessBinFiles(infos), ERR_OK);
+    VerifyBinParam verifyBinParam;
+    EXPECT_FALSE(GetProcessBinFilesParamForTest(verifyBinParam));
 }
 
 /**
  * @tc.number: ProcessBinFiles_002
- * @tc.name: test ProcessBinFiles with non-empty infos but no bin files
- * @tc.desc: 1. infos is not empty
- *           2. no bin files to process
- *           3. verify return ERR_OK
+ * @tc.name: test ProcessBinFiles with no bin files
+ * @tc.desc: verify no bin files return ERR_OK without IPC
  */
 HWTEST_F(BmsBundleInstallerTest, ProcessBinFiles_002, Function | SmallTest | Level0)
 {
     BaseBundleInstaller baseBundleInstaller;
-    std::unordered_map<std::string, InnerBundleInfo> infos;
-    InnerBundleInfo info;
-    infos["test"] = info;
+    auto info = CreateBinBundleInfo(Constants::APP_PROVISION_TYPE_RELEASE, MODULE_NAME, {});
+    std::unordered_map<std::string, InnerBundleInfo> infos = {{"test", info}};
+    ResetProcessBinFilesParamForTest();
+    EXPECT_EQ(baseBundleInstaller.ProcessBinFiles(infos), ERR_OK);
+    VerifyBinParam verifyBinParam;
+    EXPECT_FALSE(GetProcessBinFilesParamForTest(verifyBinParam));
+}
 
-    auto result = baseBundleInstaller.ProcessBinFiles(infos);
-    EXPECT_EQ(result, ERR_OK);
+/**
+ * @tc.number: ProcessBinFiles_003
+ * @tc.name: test debug first install
+ * @tc.desc: verify debug provision type from input HAP is sent to installd
+ */
+HWTEST_F(BmsBundleInstallerTest, ProcessBinFiles_003, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller baseBundleInstaller;
+    auto info = CreateBinBundleInfo(Constants::APP_PROVISION_TYPE_DEBUG, "entry", {"debug.bin"});
+    std::unordered_map<std::string, InnerBundleInfo> infos = {{"test", info}};
+    baseBundleInstaller.bundleName_ = TEST_BIN_BUNDLE_NAME;
+    baseBundleInstaller.appIdentifier_ = "debugAppId";
+    baseBundleInstaller.userId_ = USERID;
+    ResetProcessBinFilesParamForTest();
+
+    (void)baseBundleInstaller.ProcessBinFiles(infos);
+    VerifyBinParam verifyBinParam;
+    ASSERT_TRUE(GetProcessBinFilesParamForTest(verifyBinParam));
+    EXPECT_TRUE(verifyBinParam.isDebug);
+    ASSERT_EQ(verifyBinParam.binFilePaths.size(), 1);
+    EXPECT_NE(verifyBinParam.binFilePaths[0].find("debug.bin"), std::string::npos);
+}
+
+/**
+ * @tc.number: ProcessBinFiles_004
+ * @tc.name: test release first install
+ * @tc.desc: verify release provision type from input HAP is sent to installd
+ */
+HWTEST_F(BmsBundleInstallerTest, ProcessBinFiles_004, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller baseBundleInstaller;
+    auto info = CreateBinBundleInfo(Constants::APP_PROVISION_TYPE_RELEASE, "entry", {"release.bin"});
+    std::unordered_map<std::string, InnerBundleInfo> infos = {{"test", info}};
+    baseBundleInstaller.bundleName_ = TEST_BIN_BUNDLE_NAME;
+    baseBundleInstaller.appIdentifier_ = "releaseAppId";
+    baseBundleInstaller.userId_ = USERID;
+    ResetProcessBinFilesParamForTest();
+
+    (void)baseBundleInstaller.ProcessBinFiles(infos);
+    VerifyBinParam verifyBinParam;
+    ASSERT_TRUE(GetProcessBinFilesParamForTest(verifyBinParam));
+    EXPECT_FALSE(verifyBinParam.isDebug);
+    ASSERT_EQ(verifyBinParam.binFilePaths.size(), 1);
+    EXPECT_NE(verifyBinParam.binFilePaths[0].find("release.bin"), std::string::npos);
+}
+
+/**
+ * @tc.number: ProcessBinFiles_005
+ * @tc.name: test release to debug update
+ * @tc.desc: verify only bin files from the new debug HAPs are sent to installd
+ */
+HWTEST_F(BmsBundleInstallerTest, ProcessBinFiles_005, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller baseBundleInstaller;
+    auto entryInfo = CreateBinBundleInfo(Constants::APP_PROVISION_TYPE_DEBUG, "entry", {"entry.bin"});
+    auto featureInfo = CreateBinBundleInfo(Constants::APP_PROVISION_TYPE_DEBUG, "feature", {"feature.bin"});
+    std::unordered_map<std::string, InnerBundleInfo> infos = {
+        {"entry", entryInfo}, {"feature", featureInfo}
+    };
+    baseBundleInstaller.bundleName_ = TEST_BIN_BUNDLE_NAME;
+    baseBundleInstaller.appIdentifier_ = "debugAppId";
+    baseBundleInstaller.userId_ = USERID;
+    ResetProcessBinFilesParamForTest();
+
+    (void)baseBundleInstaller.ProcessBinFiles(infos);
+    VerifyBinParam verifyBinParam;
+    ASSERT_TRUE(GetProcessBinFilesParamForTest(verifyBinParam));
+    EXPECT_TRUE(verifyBinParam.isDebug);
+    ASSERT_EQ(verifyBinParam.binFilePaths.size(), 2);
+    EXPECT_NE(std::find_if(verifyBinParam.binFilePaths.begin(), verifyBinParam.binFilePaths.end(),
+        [](const std::string &path) { return path.find("entry.bin") != std::string::npos; }),
+        verifyBinParam.binFilePaths.end());
+    EXPECT_NE(std::find_if(verifyBinParam.binFilePaths.begin(), verifyBinParam.binFilePaths.end(),
+        [](const std::string &path) { return path.find("feature.bin") != std::string::npos; }),
+        verifyBinParam.binFilePaths.end());
+}
+
+/**
+ * @tc.number: ProcessBinFiles_006
+ * @tc.name: test debug to release update
+ * @tc.desc: verify only bin files from the new release HAPs are sent to installd
+ */
+HWTEST_F(BmsBundleInstallerTest, ProcessBinFiles_006, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller baseBundleInstaller;
+    auto entryInfo = CreateBinBundleInfo(Constants::APP_PROVISION_TYPE_RELEASE, "entry", {"entry.bin"});
+    auto featureInfo = CreateBinBundleInfo(Constants::APP_PROVISION_TYPE_RELEASE, "feature", {"feature.bin"});
+    std::unordered_map<std::string, InnerBundleInfo> infos = {
+        {"entry", entryInfo}, {"feature", featureInfo}
+    };
+    baseBundleInstaller.bundleName_ = TEST_BIN_BUNDLE_NAME;
+    baseBundleInstaller.appIdentifier_ = "releaseAppId";
+    baseBundleInstaller.userId_ = USERID;
+    ResetProcessBinFilesParamForTest();
+
+    (void)baseBundleInstaller.ProcessBinFiles(infos);
+    VerifyBinParam verifyBinParam;
+    ASSERT_TRUE(GetProcessBinFilesParamForTest(verifyBinParam));
+    EXPECT_FALSE(verifyBinParam.isDebug);
+    ASSERT_EQ(verifyBinParam.binFilePaths.size(), 2);
+    EXPECT_NE(std::find_if(verifyBinParam.binFilePaths.begin(), verifyBinParam.binFilePaths.end(),
+        [](const std::string &path) { return path.find("entry.bin") != std::string::npos; }),
+        verifyBinParam.binFilePaths.end());
+    EXPECT_NE(std::find_if(verifyBinParam.binFilePaths.begin(), verifyBinParam.binFilePaths.end(),
+        [](const std::string &path) { return path.find("feature.bin") != std::string::npos; }),
+        verifyBinParam.binFilePaths.end());
 }
 
 /**

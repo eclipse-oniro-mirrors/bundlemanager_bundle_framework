@@ -345,7 +345,7 @@ HWTEST_F(BmsInstalldOperatorTest, InstalldOperatorTest_0011, Function | SmallTes
 HWTEST_F(BmsInstalldOperatorTest, SetBinFileLabel_001, Function | SmallTest | Level0)
 {
     std::string emptyPath = "";
-    auto result = InstalldOperator::SetBinFileLabel(emptyPath);
+    auto result = InstalldOperator::SetBinFileLabel(emptyPath, false);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
@@ -358,7 +358,7 @@ HWTEST_F(BmsInstalldOperatorTest, SetBinFileLabel_001, Function | SmallTest | Le
 HWTEST_F(BmsInstalldOperatorTest, SetBinFileLabel_002, Function | SmallTest | Level0)
 {
     std::string nonExistPath = "/data/test/non_exist_bin_file_12345.bin";
-    auto result = InstalldOperator::SetBinFileLabel(nonExistPath);
+    auto result = InstalldOperator::SetBinFileLabel(nonExistPath, true);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALL_FAILED_ACCESS_BIN_FILE);
 }
 
