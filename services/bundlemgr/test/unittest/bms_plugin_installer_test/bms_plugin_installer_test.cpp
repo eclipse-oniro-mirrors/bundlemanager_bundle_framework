@@ -1283,4 +1283,23 @@ HWTEST_F(BmsPluginInstallerTest, ProcessPluginInstall_0002, Function | SmallTest
     EXPECT_EQ(ret, ERR_OK);
 }
 
+/**
+ * @tc.number: InstallPluginInner_0001
+ * @tc.name: test InstallPluginInner failure paths
+*/
+HWTEST_F(BmsPluginInstallerTest, InstallPluginInner_0001, Function | SmallTest | Level0)
+{
+    PluginInstaller installer;
+    InstallPluginParam pluginParam;
+    pluginParam.userId = USER_ID;
+    std::vector<std::string> pluginFilePaths = {PLUGIN_PATH1};
+    // host bundle not installed → FetchInnerBundleInfo fails
+    ErrCode ret = installer.InstallPluginInner("com.test.demo", pluginFilePaths, pluginParam);
+    EXPECT_NE(ret, ERR_OK);
+
+    // invalid userId → early return before host check
+    pluginParam.userId = -1;
+    ret = installer.InstallPluginInner(HOST_BUNDLE_NAME, pluginFilePaths, pluginParam);
+    EXPECT_NE(ret, ERR_OK);
+}
 } // OHOS

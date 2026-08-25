@@ -138,6 +138,21 @@ bool BundleResourceHelper::DeleteBundleResourceInfo(
 #endif
 }
 
+bool BundleResourceHelper::DeleteBundleResourceInfo(const InnerBundleInfo &info, const int32_t userId,
+    const bool isExistInOtherUser)
+{
+#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    if (manager == nullptr) {
+        APP_LOGE("failed, manager is nullptr");
+        return false;
+    }
+    return manager->DeleteBundleResourceInfo(info, userId, isExistInOtherUser);
+#else
+    return false;
+#endif
+}
+
 void BundleResourceHelper::GetAllBundleResourceName(std::vector<std::string> &resourceNames)
 {
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
@@ -391,6 +406,19 @@ void BundleResourceHelper::AddUninstallBundleResource(const std::string &bundleN
         return;
     }
     (void)manager->AddUninstallBundleResource(bundleName, userId, appIndex);
+#endif
+}
+
+void BundleResourceHelper::AddUninstallBundleResource(const InnerBundleInfo &info, const int32_t userId,
+    const int32_t appIndex)
+{
+#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    if (manager == nullptr) {
+        APP_LOGE("failed, manager is nullptr");
+        return;
+    }
+    (void)manager->AddUninstallBundleResource(info, userId, appIndex);
 #endif
 }
 

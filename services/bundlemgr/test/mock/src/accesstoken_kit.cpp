@@ -36,6 +36,8 @@ std::vector<HapInfoParams> g_initHapTokenCalls;
 std::vector<HapPolicyParams> g_initHapPolicyCalls;
 int32_t g_resetRecoveryStatusRet = 0;
 int32_t g_resetRecoveryStatusCallCount = 0;
+int32_t g_updateHapTokenCallCount = 0;
+int32_t g_updateHapTokenRet = 0;
 
 void SetAccessTokenIDForTest(unsigned int value)
 {
@@ -59,6 +61,8 @@ void ClearInitHapTokenMockStateForTest()
     g_initHapPolicyCalls.clear();
     g_resetRecoveryStatusRet = 0;
     g_resetRecoveryStatusCallCount = 0;
+    g_updateHapTokenCallCount = 0;
+    g_updateHapTokenRet = 0;
 }
 
 size_t GetInitHapTokenCallCountForTest()
@@ -90,6 +94,16 @@ int32_t GetResetDatabaseRecoveryStatusCallCountForTest()
 void SetResetDatabaseRecoveryStatusResultForTest(int32_t ret)
 {
     g_resetRecoveryStatusRet = ret;
+}
+
+int32_t GetUpdateHapTokenCallCountForTest()
+{
+    return g_updateHapTokenCallCount;
+}
+
+void SetUpdateHapTokenResultForTest(int32_t ret)
+{
+    g_updateHapTokenRet = ret;
 }
 
 AccessTokenIDEx AccessTokenKit::AllocHapToken(const HapInfoParams& info, const HapPolicyParams& policy)
@@ -269,6 +283,10 @@ int32_t AccessTokenKit::ResetDatabaseRecoveryStatus()
 int32_t AccessTokenKit::UpdateHapToken(AccessTokenIDEx& tokenIdEx, const UpdateHapInfoParams& info,
     const HapPolicyParams& policy, HapInfoCheckResult& checkResult)
 {
+    ++g_updateHapTokenCallCount;
+    if (g_updateHapTokenRet != 0) {
+        return g_updateHapTokenRet;
+    }
 #ifdef X86_EMULATOR_MODE
     if (policy.checkIgnore != HapPolicyCheckIgnore::ACL_IGNORE_CHECK) {
         return -1;

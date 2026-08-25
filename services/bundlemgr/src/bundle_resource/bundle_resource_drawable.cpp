@@ -50,7 +50,8 @@ bool BundleResourceDrawable::GetIconResourceByTheme(
             return ProcessForegroundIcon(foregroundInfo, resourceInfo);
         }
         auto drawableDescriptor = Ace::Napi::DrawableDescriptorFactory::Create(foregroundInfo, backgroundInfo,
-            themeMask, drawableType, resourceManager, true);
+            themeMask, drawableType, resourceManager, true,
+            static_cast<int32_t>(Media::SVGResourceLimitLevel::SVG_RESOURCE_LIMIT_LOW));
         if ((drawableDescriptor != nullptr) && (drawableDescriptor->GetPixelMap() != nullptr)) {
             // init foreground
             resourceInfo.foreground_.resize(foregroundInfo.second);
@@ -94,6 +95,8 @@ bool BundleResourceDrawable::GetIconResourceByHap(
             resourceInfo.bundleName_.c_str(), static_cast<int32_t>(state));
         return false;
     }
+    drawableDescriptor->SetSVGResourceLimitLevel(
+        static_cast<int32_t>(Media::SVGResourceLimitLevel::SVG_RESOURCE_LIMIT_LOW));
     return info.ConvertToString(drawableDescriptor->GetPixelMap(), resourceInfo.icon_);
 #else
     return false;

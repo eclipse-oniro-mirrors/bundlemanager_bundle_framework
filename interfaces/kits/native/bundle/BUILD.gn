@@ -62,6 +62,7 @@ ohos_shared_library("bundle_ndk") {
 
   external_deps = [
     "ability_base:want",
+    "bounds_checking_function:libsec_shared",
     "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_core",

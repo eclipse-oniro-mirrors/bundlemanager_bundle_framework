@@ -99,6 +99,8 @@ private:
     ErrCode ParseFiles(const std::vector<std::string> &pluginFilePaths, const InstallPluginParam &installPluginParam);
     ErrCode DeliveryProfileToCodeSign(std::vector<Security::Verify::HapVerifyResult> &hapVerifyResults) const;
     ErrCode CheckPluginId(const std::string &hostBundleName);
+    ErrCode InstallPluginInner(const std::string &hostBundleName,
+        const std::vector<std::string> &pluginFilePaths, const InstallPluginParam &installPluginParam);
     ErrCode InstallLocalPluginInner(const std::string &hostBundleName,
         const std::vector<std::string> &pluginFilePaths, const InstallPluginParam &installPluginParam);
     ErrCode ProcessPluginInstall(const InnerBundleInfo &hostBundleInfo);

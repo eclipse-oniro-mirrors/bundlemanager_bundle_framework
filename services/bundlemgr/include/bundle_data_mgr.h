@@ -122,6 +122,50 @@ public:
      * Note: This function does not lock bundleInfoMutex_, caller must hold the lock.
      */
     void ClassifyDualModeAppsNoLock();
+
+    /**
+     * @brief Policy-driven part of dual-mode classification (requirement 2, ADR-7). Reads the
+     * persisted DualModeDeviceModeDistributionPolicies; if present and valid, hides
+     * filterable-policy (1/2/3/5/7) apps whose policy is NOT in the set. UNSPECIFIED (0) stays
+     * visible; different-package policies (4/6/8) are NOT touched (handled by mode-based
+     * classification). On absent/invalid value returns false so the caller falls back to
+     * requirement-1 logic.
+     * Note: This function does not lock bundleInfoMutex_, caller must hold the lock.
+     * @return true if a valid policy set was read and applied, false otherwise.
+     */
+    bool ClassifyDualModeAppsByPolicyNoLock();
+
+    /**
+     * @brief Switch application visibility by device mode distribution policies (dual-mode
+     * requirement 2). Persists the set to bms_param first, then refreshes the cached device
+     * mode from the system params, then migrates apps between bundleInfos_ (queryable) and
+     * tempBundleInfos_ (hidden) per policy set; serialized with install/uninstall by the shared
+     * bundleInfoMutex_ (BUSY fast-fail not implemented in current version).
+     * @param policies set of DeviceModeDistributionPolicy values (0~8). MUST be non-empty, all
+     *        values in range, and contain all different-package policies (4/6/8).
+     * @return ERR_OK / ERR_APPEXECFWK_DUAL_MODE_DEVICE_NOT_SUPPORTED (non-dual-mode device, or
+     *         the mode-param refresh failed — the cache keeps the last-known-good values and
+     *         the migration is skipped; the persisted set stays) / ERR_APPEXECFWK_DUAL_MODE_
+     *         SWITCH_BUSY (reserved, not returned in current version) / ERR_APPEXECFWK_DUAL_
+     *         MODE_PERSIST_FAILED (persist happens before migration, so nothing to roll back)
+     *         / ERR_BUNDLE_MANAGER_INVALID_PARAMETER.
+     */
+    ErrCode FilterBundleListByDeviceModeDistributionPolicies(
+        const std::set<DeviceModeDistributionPolicy> &policies);
+
+    /**
+     * @brief Lock-free body of FilterBundleListByDeviceModeDistributionPolicies: migrate apps
+     * between bundleInfos_ (queryable) and tempBundleInfos_ (hidden) per policy set, WITHOUT
+     * sensing primary/secondary mode (the caller flips the device mode and triggers one switch
+     * per flip). UNSPECIFIED never migrates; same-name different-package (4/6/8) variant pairs
+     * rotate between the two maps on every call (a pair member without a same-name counterpart
+     * stays put); filterable policies (1/2/3/5/7) migrate by set membership.
+     * Note: This function does not lock bundleInfoMutex_, caller must hold the lock.
+     * @param policySet validated set of DeviceModeDistributionPolicy values (contains 4/6/8).
+     */
+    void FilterBundleListByDeviceModeDistributionPoliciesNoLock(
+        const std::set<DeviceModeDistributionPolicy> &policySet);
+
     /**
      * @brief Update internal state for whole bundle.
      *        Dual-mode: the caller passes the effective bundle name (prefixed for clone apps,
@@ -1403,6 +1447,13 @@ public:
     void RemoveInvalidShortcutInfo(std::vector<ShortcutInfo> &shortcutInfos) const;
     ErrCode SetShortcutsEnabled(const std::vector<ShortcutInfo> &shortcutInfos, bool isEnabled);
     ErrCode DeleteShortcutEnabledInfo(const std::string &bundleName);
+    /**
+     * @brief Delete bundle state for a specific user.
+     * @param bundleName Indicates the bundle name.
+     * @param userId Indicates the user id.
+     * @return Returns ERR_OK if successful; returns error code otherwise.
+     */
+    ErrCode DeleteBundleStateByUserId(const std::string &bundleName, int32_t userId);
     ErrCode GetAllCloneAppIndexesAndUidsByInnerBundleInfo(const int32_t userId, std::unordered_map<std::string,
         std::vector<std::pair<int32_t, int32_t>>> &cloneInfos) const;
     void UpdateShortcutInfos(const std::string &bundleName);

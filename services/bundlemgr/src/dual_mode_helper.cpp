@@ -15,10 +15,13 @@
 
 #include "dual_mode_helper.h"
 
+#include <vector>
+
 #include "application_info.h"
 #include "app_log_tag_wrapper.h"
 #include "bundle_service_constants.h"
 #include "parameters.h"
+#include "string_ex.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -123,6 +126,50 @@ bool DualModeHelper::IsDiffPackageCategory(DeviceModeDistributionPolicy policy)
     return policy == DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE ||
         policy == DeviceModeDistributionPolicy::PARTIAL_COMPATIBLE_DIFFERENT_PACKAGE ||
         policy == DeviceModeDistributionPolicy::FULL_COMPATIBLE_DIFFERENT_PACKAGE;
+}
+
+bool DualModeHelper::IsValidPolicySet(const std::set<DeviceModeDistributionPolicy> &policies)
+{
+    if (policies.empty()) {
+        return false;
+    }
+    for (auto policy : policies) {
+        if (static_cast<int32_t>(policy) < static_cast<int32_t>(DeviceModeDistributionPolicy::UNSPECIFIED)
+            || static_cast<int32_t>(policy)
+                > static_cast<int32_t>(DeviceModeDistributionPolicy::FULL_COMPATIBLE_DIFFERENT_PACKAGE)) {
+            return false;
+        }
+    }
+    return policies.count(DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE) > 0
+        && policies.count(DeviceModeDistributionPolicy::PARTIAL_COMPATIBLE_DIFFERENT_PACKAGE) > 0
+        && policies.count(DeviceModeDistributionPolicy::FULL_COMPATIBLE_DIFFERENT_PACKAGE) > 0;
+}
+
+bool DualModeHelper::ParsePersistedPolicies(const std::string &policiesStr,
+    std::set<DeviceModeDistributionPolicy> &policySet)
+{
+    std::vector<std::string> tokens;
+    OHOS::SplitStr(policiesStr, ServiceConstants::COMMA, tokens);
+    for (const auto &token : tokens) {
+        int32_t value = static_cast<int32_t>(DeviceModeDistributionPolicy::UNSPECIFIED) - 1;
+        if (!OHOS::StrToInt(token, value)) {
+            return false;
+        }
+        policySet.insert(static_cast<DeviceModeDistributionPolicy>(value));
+    }
+    return IsValidPolicySet(policySet);
+}
+
+std::string DualModeHelper::PoliciesToCsv(const std::set<DeviceModeDistributionPolicy> &policySet)
+{
+    std::string csv;
+    for (auto policy : policySet) {
+        if (!csv.empty()) {
+            csv += ServiceConstants::COMMA;
+        }
+        csv += std::to_string(static_cast<int32_t>(policy));
+    }
+    return csv;
 }
 
 bool DualModeHelper::NeedDualModeHandle(DeviceModeDistributionPolicy policy)

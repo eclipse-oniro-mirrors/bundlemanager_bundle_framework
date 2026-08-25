@@ -5867,7 +5867,8 @@ bool InnerBundleInfo::GetApplicationInfoAdaptBundleClone(
     int32_t appIndex,
     ApplicationInfo &appInfo) const
 {
-    if (appIndex == 0 || appIndex > Constants::INITIAL_SANDBOX_APP_INDEX) {
+    int32_t appIndexByMode = appIndex % ServiceConstants::DUAL_MODE_CLONE_APP_INDEX;
+    if (appIndexByMode == 0 || appIndexByMode > Constants::INITIAL_SANDBOX_APP_INDEX) {
         if (appInfo.removable && !innerBundleUserInfo.isRemovable) {
             appInfo.removable = false;
         }

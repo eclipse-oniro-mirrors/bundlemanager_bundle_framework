@@ -373,4 +373,49 @@ HWTEST_F(
     ErrCode ret = installer.ProcessBundleInstall(BUNDLE_NAME, Constants::DEFAULT_USERID);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
 }
+
+/**
+ * @tc.number: SendBundleSystemEvent_0100
+ * @tc.name: test SendBundleSystemEvent by BundleMultiUserInstaller
+ * @tc.desc: 1. errCode in EXPECTED_ERROR whitelist → filtered without report
+ *           2. normal errCode → full path with null or valid dataMgr_
+ */
+HWTEST_F(BmsBundleMultiuserInstallPermissionTest, SendBundleSystemEvent_0100, Function | SmallTest | Level0)
+{
+    BundleMultiUserInstaller installer;
+    // expected error → filtered, no report
+    EXPECT_NO_THROW(installer.SendBundleSystemEvent(BUNDLE_NAME, BundleEventType::INSTALL, USERID,
+        ERR_APPEXECFWK_INSTALL_APP_IN_BLACK_LIST));
+    // normal error and success with null dataMgr_
+    EXPECT_NO_THROW(installer.SendBundleSystemEvent(BUNDLE_NAME, BundleEventType::INSTALL, USERID,
+        ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR));
+    EXPECT_NO_THROW(installer.SendBundleSystemEvent(BUNDLE_NAME, BundleEventType::UNINSTALL, USERID, ERR_OK));
+
+    // valid dataMgr_ → odid query path
+    installer.dataMgr_ = std::make_shared<BundleDataMgr>();
+    EXPECT_NE(installer.dataMgr_, nullptr);
+    EXPECT_NO_THROW(installer.SendBundleSystemEvent(BUNDLE_NAME, BundleEventType::INSTALL, USERID,
+        ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR));
+}
+
+/**
+ * @tc.number: GetCallingEventInfo_0100
+ * @tc.name: test GetCallingEventInfo by BundleMultiUserInstaller
+ * @tc.desc: 1. dataMgr_ is nullptr → early return
+ *           2. callingUid is not a hap uid → callingBundleName is empty
+ */
+HWTEST_F(BmsBundleMultiuserInstallPermissionTest, GetCallingEventInfo_0100, Function | SmallTest | Level0)
+{
+    BundleMultiUserInstaller installer;
+    EventInfo eventInfo;
+    // dataMgr_ null → early return
+    EXPECT_NO_THROW(installer.GetCallingEventInfo(eventInfo));
+
+    installer.dataMgr_ = std::make_shared<BundleDataMgr>();
+    EXPECT_NE(installer.dataMgr_, nullptr);
+    // uid 0 is not a hap uid → GetBundleNameForUid fails
+    eventInfo.callingUid = 0;
+    EXPECT_NO_THROW(installer.GetCallingEventInfo(eventInfo));
+    EXPECT_EQ(eventInfo.callingBundleName, Constants::EMPTY_STRING);
+}
 } // OHOS

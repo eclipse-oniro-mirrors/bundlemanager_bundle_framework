@@ -300,6 +300,10 @@ void BMSEventHandler::OnBmsStarting()
                 BundleRebootStartEvent();
             } else {
                 needNotifyBundleScanStatus_ = true;
+                // Guard recover path does not go through BundleRebootStartEvent,
+                // report main bundle status here, otherwise bootevent.bms.main.
+                // bundles.ready will never be set and boot.completed can not fire.
+                BmsKeyEventMgr::ProcessMainBundleStatusFinally();
             }
 
             break;
@@ -307,6 +311,10 @@ void BMSEventHandler::OnBmsStarting()
         case ResultCode::REINSTALL_OK: {
             LOG_NOFUNC_I(BMS_TAG_DEFAULT, "OnBmsStarting ReInstall all haps");
             needNotifyBundleScanStatus_ = true;
+            // Reinstall path does not go through BundleRebootStartEvent,
+            // report main bundle status here, otherwise bootevent.bms.main.
+            // bundles.ready will never be set and boot.completed can not fire.
+            BmsKeyEventMgr::ProcessMainBundleStatusFinally();
             break;
         }
         case ResultCode::NO_INSTALLED_DATA: {
@@ -1439,6 +1447,12 @@ void BMSEventHandler::ProcessRebootBundle()
     ProcessRebootSkillsUninstall();
     //refresh application permissions
     ProcessUpdatePermissions();
+    //refresh pre-authorization for all installed apps during OTA (every OTA)
+    if (BundlePermissionMgr::RefreshPreAuthorizationForOTA()) {
+        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "Refresh pre-authorization success");
+    } else {
+        LOG_NOFUNC_W(BMS_TAG_DEFAULT, "Refresh pre-authorization failed");
+    }
     ProcessRebootQuickFixBundleInstall(QUICK_FIX_APP_PATH, true);
     ProcessRebootQuickFixUnInstallAndRecover(QUICK_FIX_APP_RECOVER_FILE);
     XCollieHelper::ResumeFoundationWatchdog();
@@ -5128,6 +5142,10 @@ void BMSEventHandler::ProcessBundleResourceInfo()
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "dataMgr is nullptr");
+        return;
+    }
+    if (dataMgr->IsBopdModeEnabled()) {
+        LOG_I(BMS_TAG_DEFAULT, "not process bundle resource info due to bopd mode enabled");
         return;
     }
     std::vector<std::string> bundleNames = dataMgr->GetAllBundleName();

@@ -16,6 +16,8 @@
 #ifndef FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_CORE_INCLUDE_BUNDLEMGR_BUNDLE_MGR_INTERFACE_H
 #define FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_CORE_INCLUDE_BUNDLEMGR_BUNDLE_MGR_INTERFACE_H
 
+#include <set>
+
 #include "ability_info.h"
 #include "alternate_icon_info.h"
 #include "appexecfwk_errors.h"
@@ -2280,6 +2282,32 @@ public:
      */
     virtual ErrCode GetBundleInfoDualMode(const std::string &bundleName, int32_t userId,
         BundleInfoDualMode &bundleInfoDualMode)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    /**
+     * @brief Switch the application visibility by device mode distribution policies
+     * (dual-mode requirement 2). Structural hiding only: no bundle event is broadcast;
+     * the caller is responsible for notifying listeners / refreshing UI after success.
+     * Same-name different-package variant pairs rotate on every call (call once per
+     * device-mode flip); single-variant different-package apps are placed by the
+     * reboot classification.
+     * @param policies set of DeviceModeDistributionPolicy values (0~8). MUST be non-empty, all
+     *        values in range, and contain all different-package policies (4/6/8).
+     * @return ERR_OK on success; ERR_APPEXECFWK_DUAL_MODE_DEVICE_NOT_SUPPORTED on a non
+     *         dual-mode device, or when the mode-param refresh inside the switch fails (cache
+     *         keeps the last-known-good values; retry); ERR_APPEXECFWK_DUAL_MODE_SWITCH_BUSY
+     *         if install/uninstall in progress (reserved, not returned in current version —
+     *         concurrent access is serialized by an internal lock);
+     *         ERR_APPEXECFWK_DUAL_MODE_PERSIST_FAILED if persist failed (rolled back);
+     *         ERR_BUNDLE_MANAGER_INVALID_PARAMETER on invalid policy values;
+     *         ERR_BUNDLE_MANAGER_PARAM_ERROR on invalid input size (empty or oversized,
+     *         pre-checked at the proxy entry — the host-side gate result is flattened to a
+     *         generic IPC error by the common OnRemoteRequest wrapper).
+     */
+    virtual ErrCode FilterBundleListByDeviceModeDistributionPolicies(
+        const std::set<DeviceModeDistributionPolicy> &policies)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }

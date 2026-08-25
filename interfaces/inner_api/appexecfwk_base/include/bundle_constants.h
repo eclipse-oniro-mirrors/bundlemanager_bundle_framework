@@ -266,6 +266,7 @@ constexpr const char* DEVICE_MODE_DISTRIBUTION_POLICY_KEY = "ohos.bms.param.devi
 
 constexpr const char* ARKTS_MODE = "arkTSMode";
 constexpr const char* MODULE_ARKTS_MODE = "moduleArkTSMode";
+constexpr const char* ARKTS_RUN_TYPE = "arkTSRunType";
 constexpr const char* AOT_COMPILE_STATUS = "aotCompileStatus";
 constexpr const char* ARKTS_MODE_DYNAMIC = "dynamic";
 constexpr const char* ARKTS_MODE_STATIC = "static";

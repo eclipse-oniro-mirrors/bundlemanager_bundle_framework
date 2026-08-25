@@ -29,6 +29,7 @@
 #include "datetime_ex.h"
 #include "hitrace_meter.h"
 #include "installd_client.h"
+#include "ipc_skeleton.h"
 #include "perf_profile.h"
 #include "share_file_helper.h"
 #include "scope_guard.h"
@@ -82,6 +83,7 @@ ErrCode BundleMultiUserInstaller::InstallExistedApp(const std::string &bundleNam
     }
 
     PerfProfile::GetInstance().SetBundleInstallStartTime(GetTickCount());
+    startTime_ = BundleUtil::GetCurrentTimeMs();
     result = ProcessBundleInstall(bundleName, userId);
     NotifyBundleEvents installRes = {
         .type = NotifyType::INSTALL,
@@ -105,6 +107,8 @@ ErrCode BundleMultiUserInstaller::InstallExistedApp(const std::string &bundleNam
             commonEventMgr->NotifySkillEvents(bundleName, userId, addedSkills, emptySkills, emptySkills);
         }
     }
+
+    SendBundleSystemEvent(bundleName, BundleEventType::INSTALL, userId, result);
 
     ResetInstallProperties();
     PerfProfile::GetInstance().SetBundleInstallEndTime(GetTickCount());
@@ -142,6 +146,7 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
     dataMgr_->DisableBundle(bundleName);
     isBundleCrossAppSharedConfig_ = info.IsBundleCrossAppSharedConfig();
     moduleName_ = info.GetEventModuleName();
+    versionCode_ = info.GetVersionCode();
 
     // 2. obtain userId
     if (!dataMgr_->HasUserId(userId)) {
@@ -377,6 +382,8 @@ void BundleMultiUserInstaller::ResetInstallProperties()
     needNotifyAppSkill_ = false;
     appDistributionType_ = Constants::APP_DISTRIBUTION_TYPE_NONE;
     moduleName_.clear();
+    startTime_ = 0;
+    versionCode_ = 0;
 }
 
 bool BundleMultiUserInstaller::RecoverHapToken(const std::string &bundleName, const int32_t userId,
@@ -463,6 +470,49 @@ ErrCode BundleMultiUserInstaller::ProcessBundleShareFiles(const InnerBundleInfo 
     }
     LOG_D(BMS_TAG_INSTALLER, "No shareFiles configuration found for bundle=%{public}s", bundleName.c_str());
     return ERR_OK;
+}
+
+void BundleMultiUserInstaller::SendBundleSystemEvent(const std::string &bundleName,
+    BundleEventType bundleEventType, int32_t userId, ErrCode errCode)
+{
+    if (std::find(ServiceConstants::EXPECTED_ERROR.begin(), ServiceConstants::EXPECTED_ERROR.end(),
+        errCode) != ServiceConstants::EXPECTED_ERROR.end()) {
+        APP_LOGD("No need report for -e:%{public}d", errCode);
+        return;
+    }
+    EventInfo sysEventInfo;
+    sysEventInfo.bundleName = bundleName;
+    sysEventInfo.errCode = errCode;
+    sysEventInfo.userId = userId;
+    sysEventInfo.callingUid = IPCSkeleton::GetCallingUid();
+    sysEventInfo.versionCode = versionCode_;
+    sysEventInfo.startTime = startTime_;
+    sysEventInfo.endTime = BundleUtil::GetCurrentTimeMs();
+    GetCallingEventInfo(sysEventInfo);
+    if (dataMgr_ != nullptr) {
+        dataMgr_->GetOdidByBundleName(bundleName, sysEventInfo.odid);
+    }
+    EventReport::SendBundleSystemEvent(bundleEventType, sysEventInfo);
+}
+
+void BundleMultiUserInstaller::GetCallingEventInfo(EventInfo &eventInfo)
+{
+    if (dataMgr_ == nullptr) {
+        APP_LOGE("Get dataMgr shared_ptr nullptr");
+        return;
+    }
+    if (!dataMgr_->GetBundleNameForUid(eventInfo.callingUid, eventInfo.callingBundleName)) {
+        APP_LOGD("CallingUid %{public}d is not hap, no bundleName", eventInfo.callingUid);
+        eventInfo.callingBundleName = Constants::EMPTY_STRING;
+        return;
+    }
+    BundleInfo bundleInfo;
+    if (!dataMgr_->GetBundleInfo(eventInfo.callingBundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo,
+        eventInfo.callingUid / Constants::BASE_USER_RANGE)) {
+        APP_LOGE("GetBundleInfo failed, bundleName: %{public}s", eventInfo.callingBundleName.c_str());
+        return;
+    }
+    eventInfo.callingAppId = bundleInfo.appId;
 }
 } // AppExecFwk
 } // OHOS
