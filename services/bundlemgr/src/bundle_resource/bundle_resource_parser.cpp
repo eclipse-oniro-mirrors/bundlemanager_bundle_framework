@@ -80,6 +80,7 @@ bool GetBadgeResource(const std::string &resourceName, std::shared_ptr<Media::Pi
     }
 
     Media::SourceOptions opts;
+    opts.svgResourceLimitLevel = Media::SVGResourceLimitLevel::SVG_RESOURCE_LIMIT_LOW;
     uint32_t errorCode = 0;
     std::unique_ptr<Media::ImageSource> imageSource =
         Media::ImageSource::CreateImageSource(badgeResourceData.get(), badgeResourceDataLength, opts, errorCode);
@@ -486,6 +487,7 @@ bool BundleResourceParser::ParserCloneResourceInfo(
     for (auto &resourceInfo : resourceInfos) {
         uint32_t errorCode = 0;
         Media::SourceOptions opts;
+        opts.svgResourceLimitLevel = Media::SVGResourceLimitLevel::SVG_RESOURCE_LIMIT_LOW;
         std::unique_ptr<Media::ImageSource> imageSource =
             Media::ImageSource::CreateImageSource(resourceInfo.icon_, opts, errorCode); // base64 to image
         Media::DecodeOptions decodeOpts;
