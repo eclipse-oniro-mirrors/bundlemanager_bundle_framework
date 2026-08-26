@@ -25,6 +25,7 @@
 #include "app_service_fwk_installer.h"
 #include "bms_extension_data_mgr.h"
 #include "bms_key_event_mgr.h"
+#include "dual_mode_helper.h"
 #include "independent_skills_installer.h"
 #include "bundle_access_token_recovery_mgr.h"
 #include "bundle_install_checker.h"
@@ -968,6 +969,15 @@ bool BMSEventHandler::CombineBundleInfoAndUserInfo(
     for (auto hasInstallInfo : installInfos) {
         auto bundleName = hasInstallInfo.first;
         auto userIter = userInfoMaps.find(bundleName);
+
+        bool isCloneApp = false;
+        if (userIter == userInfoMaps.end() && DualModeHelper::IsDualModeDevice()) {
+            std::string effectiveName = DualModeHelper::GetDualModeBundleName(bundleName);
+            userIter = userInfoMaps.find(effectiveName);
+            if (userIter != userInfoMaps.end()) {
+                isCloneApp = true;
+            }
+        }
         if (userIter == userInfoMaps.end()) {
             LOG_E(BMS_TAG_DEFAULT, "User data directory missing with bundle %{public}s ", bundleName.c_str());
             needRebootOta_ = true;
@@ -975,6 +985,11 @@ bool BMSEventHandler::CombineBundleInfoAndUserInfo(
         }
 
         for (auto &info : hasInstallInfo.second) {
+            // Set the clone flag so SaveInstallInfoToCache uses the effective name for directories.
+            if (isCloneApp) {
+                info.SetDualModeCloneApp(true);
+                info.SetAppIndex(ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
+            }
             SaveInstallInfoToCache(info);
         }
 
@@ -999,12 +1014,18 @@ void BMSEventHandler::SaveInstallInfoToCache(InnerBundleInfo &info)
         return;
     }
 
-    auto bundleName = info.GetBundleName();
-    auto appCodePath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName;
+    // dual-mode: dirs + installStates_ use the effective name; bundleInfos_ ops + mutex use the
+    // original name (AddInnerBundleInfo derives the installStates_ key from it; passing effective
+    // would double-prefix and break the lookup).
+    const std::string originalName = info.GetBundleName();
+    std::string effectiveName = info.IsDualModeCloneApp()
+        ? DualModeHelper::GetDualModeBundleName(originalName)
+        : originalName;
+    auto appCodePath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + effectiveName;
     info.SetAppCodePath(appCodePath);
 
     std::string dataBaseDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1]
-        + ServiceConstants::DATABASE + bundleName;
+        + ServiceConstants::DATABASE + effectiveName;
     info.SetAppDataBaseDir(dataBaseDir);
 
     auto moduleDir = info.GetAppCodePath() + ServiceConstants::PATH_SEPARATOR + info.GetCurrentModulePackage();
@@ -1014,19 +1035,19 @@ void BMSEventHandler::SaveInstallInfoToCache(InnerBundleInfo &info)
     bool bundleExist = false;
     InnerBundleInfo dbInfo;
     {
-        auto &mtx = dataMgr->GetBundleMutex(bundleName);
+        auto &mtx = dataMgr->GetBundleMutex(originalName);
         std::lock_guard lock { mtx };
-        bundleExist = dataMgr->FetchInnerBundleInfo(bundleName, dbInfo);
+        bundleExist = dataMgr->FetchInnerBundleInfo(originalName, dbInfo);
     }
 
     if (!bundleExist) {
-        dataMgr->UpdateBundleInstallState(bundleName, InstallState::INSTALL_START);
-        if (!dataMgr->AddInnerBundleInfo(bundleName, info)) {
-            LOG_E(BMS_TAG_DEFAULT, "add bundle %{public}s failed", bundleName.c_str());
-            dataMgr->UpdateBundleInstallState(bundleName, InstallState::INSTALL_FAIL);
+        dataMgr->UpdateBundleInstallState(effectiveName, InstallState::INSTALL_START);
+        if (!dataMgr->AddInnerBundleInfo(originalName, info)) {
+            LOG_E(BMS_TAG_DEFAULT, "add bundle %{public}s failed", originalName.c_str());
+            dataMgr->UpdateBundleInstallState(effectiveName, InstallState::INSTALL_FAIL);
             return;
         }
-        dataMgr->UpdateBundleInstallState(bundleName, InstallState::INSTALL_SUCCESS);
+        dataMgr->UpdateBundleInstallState(effectiveName, InstallState::INSTALL_SUCCESS);
         return;
     }
 
@@ -1045,9 +1066,9 @@ void BMSEventHandler::SaveInstallInfoToCache(InnerBundleInfo &info)
         return;
     }
 
-    dataMgr->UpdateBundleInstallState(bundleName, InstallState::UPDATING_START);
-    dataMgr->UpdateBundleInstallState(bundleName, InstallState::UPDATING_SUCCESS);
-    dataMgr->AddNewModuleInfo(bundleName, info, dbInfo);
+    dataMgr->UpdateBundleInstallState(effectiveName, InstallState::UPDATING_START);
+    dataMgr->UpdateBundleInstallState(effectiveName, InstallState::UPDATING_SUCCESS);
+    dataMgr->AddNewModuleInfo(originalName, info, dbInfo);
 }
 
 bool BMSEventHandler::ScanDir(

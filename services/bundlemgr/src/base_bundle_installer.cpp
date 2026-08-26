@@ -1742,6 +1742,17 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     result = CheckUserId(userId_);
     CHECK_RESULT(result, "userId check failed %{public}d");
 
+    // DUAL_MODE: different-package apps only support the current active user; cross-user install is blocked
+    if (DualModeHelper::IsDualModeDevice() &&
+        DualModeHelper::IsDiffPackageCategory(installParam.deviceModeDistributionPolicy)) {
+        int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
+        if (userId_ != currentUserId) {
+            APP_LOGE("Dual mode: different-package app can only be installed for the current user, "
+                "userId=%{public}d, current=%{public}d", userId_, currentUserId);
+            return ERR_APPEXECFWK_INSTALL_DUAL_MODE_CATEGORY_CONFLICT;
+        }
+    }
+
     if (!installParam.isPreInstallApp) {
         result = CheckAppBlackList((newInfos.begin()->second).GetBundleName(), userId_);
         if (result != ERR_OK) {
@@ -5810,6 +5821,13 @@ ErrCode BaseBundleInstaller::SetDualModeAppInfo(const InstallParam &installParam
 {
     if (!DualModeHelper::IsDualModeDevice() || infos.empty()) {
         return ERR_OK;
+    }
+    // Validate deviceModeDistributionPolicy is within valid enum range [0, 8] before persisting
+    int32_t policyValue = static_cast<int32_t>(installParam.deviceModeDistributionPolicy);
+    if (policyValue < static_cast<int32_t>(DeviceModeDistributionPolicy::UNSPECIFIED) ||
+        policyValue > static_cast<int32_t>(DeviceModeDistributionPolicy::FULL_COMPATIBLE_DIFFERENT_PACKAGE)) {
+        APP_LOGE("Dual mode: invalid deviceModeDistributionPolicy value %{public}d", policyValue);
+        return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
     }
     // Dual-mode different-package is a system-level capability: any different-package app (primary or
     // secondary mode) must be a system app; reject non-system apps. isCloneApp (secondary mode) only

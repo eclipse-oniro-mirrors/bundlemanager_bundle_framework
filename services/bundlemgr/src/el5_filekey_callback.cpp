@@ -19,6 +19,7 @@
 #include "ipc/create_dir_param.h"
 #include "bundle_service_constants.h"
 #include "bundle_constants.h"
+#include "dual_mode_helper.h"
 
 #include <sys/stat.h>
 
@@ -60,11 +61,18 @@ void El5FilekeyCallback::ProcessAppEl5Dir(const Security::AccessToken::AppKeyInf
     }
     InnerBundleInfo bundleInfo;
     bool isAppExist = dataMgr->FetchInnerBundleInfo(bundleName, bundleInfo);
+    if (DualModeHelper::IsDualModeCloneKey(info.bundleName) && !bundleInfo.IsDualModeCloneApp()) {
+        InnerBundleInfo tempInfo;
+        if (dataMgr->FetchTempBundleInfo(bundleName, tempInfo) && tempInfo.IsDualModeCloneApp()) {
+            bundleInfo = tempInfo;
+            isAppExist = true;
+        }
+    }
     if (!isAppExist || !bundleInfo.HasInnerBundleUserInfo(info.userId)) {
         APP_LOGE("%{public}s is not exist %{public}d", bundleName.c_str(), info.userId);
         return;
     }
-    if (appIndex != 0) {
+    if (appIndex != 0 && !DualModeHelper::IsDualModeCloneKey(info.bundleName)) {
         bool isAppIndexExisted = false;
         ErrCode res = bundleInfo.IsCloneAppIndexExisted(info.userId, appIndex, isAppIndexExisted);
         if (res != ERR_OK || !isAppIndexExisted) {
@@ -72,9 +80,14 @@ void El5FilekeyCallback::ProcessAppEl5Dir(const Security::AccessToken::AppKeyInf
             return;
         }
     }
-    CheckEl5Dir(info, bundleInfo, bundleName);
+    // DUAL_MODE: clone apps without a prefixed info.bundleName use the effective name for dir/encryption ops.
+    Security::AccessToken::AppKeyInfo effectiveInfo = info;
+    if (bundleInfo.IsDualModeCloneApp() && !DualModeHelper::IsDualModeCloneKey(info.bundleName)) {
+        effectiveInfo.bundleName = DualModeHelper::GetDualModeBundleName(bundleName);
+    }
+    CheckEl5Dir(effectiveInfo, bundleInfo, bundleName);
     std::string keyId = "";
-    EncryptionParam encryptionParam(info.bundleName, "", info.uid, info.userId, EncryptionDirType::APP);
+    EncryptionParam encryptionParam(effectiveInfo.bundleName, "", info.uid, info.userId, EncryptionDirType::APP);
     auto result = InstalldClient::GetInstance()->SetEncryptionPolicy(encryptionParam, keyId);
     if (result != ERR_OK) {
         APP_LOGE("SetEncryptionPolicy failed for %{public}s", info.bundleName.c_str());
