@@ -52,6 +52,7 @@ ohos_unittest("BmsStartAppDetailAbilityTest") {
   sources += [
     "bms_start_app_detail_ability_test.cpp",
     "mock/src/mock_ipc_skeleton.cpp",
+    "${services_path}/bundlemgr/test/mock/src/mock_iservice_registry.cpp",
   ]
 
   configs = [ "${services_path}/bundlemgr/test:bundlemgr_test_config" ]
