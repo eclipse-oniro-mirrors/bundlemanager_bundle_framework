@@ -66,7 +66,9 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     auto ret = bundleMgr->BatchSetApplicationEnabled(
         userId, enableAppIndex, disableAppIndex, killProcess, needSendEvent);
     if (ret != ERR_OK) {
-        std::cout << "[fuzz] BatchSetApplicationEnabled ret=" << ret << std::endl;
+        std::cout << "[fuzz] BatchSetApplicationEnabled userId=" << userId
+                  << " enable=" << enableAppIndex << " disable=" << disableAppIndex
+                  << " ret=" << ret << std::endl;
     }
 
     // Fuzz with boundary appIndex values
@@ -77,7 +79,11 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     bundleMgr->BatchSetApplicationEnabled(userId, 1, 1, false, false);
     bundleMgr->BatchSetApplicationEnabled(userId, maxCloneCount, 1, true, true);
     bundleMgr->BatchSetApplicationEnabled(userId, maxCloneCount + 1, 1, false, false);
+    bundleMgr->BatchSetApplicationEnabled(userId, 1, maxCloneCount, true, true);
+    bundleMgr->BatchSetApplicationEnabled(userId, 1, maxCloneCount + 1, false, false);
+    bundleMgr->BatchSetApplicationEnabled(userId, maxCloneCount, maxCloneCount, false, false);
     bundleMgr->BatchSetApplicationEnabled(userId, INT32_MAX, 1, false, false);
+    bundleMgr->BatchSetApplicationEnabled(userId, INT32_MIN, 1, false, false);
     bundleMgr->BatchSetApplicationEnabled(userId, 1, INT32_MIN, false, false);
 
     return true;
