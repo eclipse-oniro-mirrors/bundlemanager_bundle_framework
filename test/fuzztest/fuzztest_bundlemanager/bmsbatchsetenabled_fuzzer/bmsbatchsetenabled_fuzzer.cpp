@@ -88,6 +88,20 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     bundleMgr->BatchSetApplicationEnabled(userId, 1, INT32_MIN, false, false);
     bundleMgr->BatchSetApplicationEnabled(userId, 1, INT32_MAX, false, false);
 
+    // TEST-001: Dual extreme boundary seeds
+    bundleMgr->BatchSetApplicationEnabled(userId, INT32_MAX, INT32_MAX, false, false);
+    bundleMgr->BatchSetApplicationEnabled(userId, INT32_MIN, INT32_MIN, false, false);
+    bundleMgr->BatchSetApplicationEnabled(userId, maxCloneCount + 1, maxCloneCount + 1, false, false);
+
+    // TEST-002: Mixed boolean combinations
+    bundleMgr->BatchSetApplicationEnabled(userId, 1, 2, true, false);
+    bundleMgr->BatchSetApplicationEnabled(userId, 2, 1, false, true);
+
+    // TEST-003: Deterministic userId boundary seeds
+    bundleMgr->BatchSetApplicationEnabled(Constants::UNSPECIFIED_USERID, 1, 2, false, false);
+    bundleMgr->BatchSetApplicationEnabled(Constants::ALL_USERID, 1, 2, false, false);
+    bundleMgr->BatchSetApplicationEnabled(Constants::ANY_USERID, 1, 2, false, false);
+
     return true;
 }
 }
