@@ -68,6 +68,7 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     if (ret != ERR_OK) {
         std::cout << "[fuzz] BatchSetApplicationEnabled userId=" << userId
                   << " enable=" << enableAppIndex << " disable=" << disableAppIndex
+                  << " kill=" << killProcess << " sendEvent=" << needSendEvent
                   << " ret=" << ret << std::endl;
     }
 
@@ -85,6 +86,7 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     bundleMgr->BatchSetApplicationEnabled(userId, INT32_MAX, 1, false, false);
     bundleMgr->BatchSetApplicationEnabled(userId, INT32_MIN, 1, false, false);
     bundleMgr->BatchSetApplicationEnabled(userId, 1, INT32_MIN, false, false);
+    bundleMgr->BatchSetApplicationEnabled(userId, 1, INT32_MAX, false, false);
 
     return true;
 }
