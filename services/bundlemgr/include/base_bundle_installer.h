@@ -1026,6 +1026,8 @@ private:
     void SaveUninstallBundleInfo(const std::string bundleName, bool isKeepData,
         const UninstallBundleInfo &uninstallBundleInfo);
     void DeleteUninstallBundleInfo(const std::string &bundleName);
+    bool GetUninstallBundleInfoByCurrentMode(const std::string &bundleName,
+        std::string &targetBundleName, UninstallBundleInfo &uninstallBundleInfo) const;
     bool DeleteUninstallBundleInfoFromDb(const std::string &bundleName);
     void SetFirstInstallTime(const std::string &bundleName, const int64_t &time, InnerBundleInfo &info);
     bool SaveFirstInstallBundleInfo(const std::string &bundleName, const int32_t userId,
@@ -1161,6 +1163,12 @@ private:
     // oldInfo is unavailable. Consumed by ComputeCurrentAppSandboxPolicy (sticky) and FillDualModeEventFields.
     DeviceModeDistributionPolicy beforeDeviceModeDistributionPolicy_ = DeviceModeDistributionPolicy::UNSPECIFIED;
     AppSandboxPolicy beforeAppSandboxPolicy_ = AppSandboxPolicy::SHARED_SANDBOX;
+    // Dual-mode preinstall state (instance-scoped, in-process, not marshalled).
+    DualModeInstallRole dualModeInstallRole_ = DualModeInstallRole::NONE;
+    DeviceModeDistributionPolicy resolvedDeviceModeDistributionPolicy_ = DeviceModeDistributionPolicy::UNSPECIFIED;
+    DeviceModeDistributionPolicy uninstallDeviceModeDistributionPolicy_ =
+    DeviceModeDistributionPolicy::UNSPECIFIED;
+    AppSandboxPolicy uninstallAppSandboxPolicy_ = AppSandboxPolicy::SHARED_SANDBOX;
     std::string modulePath_;
     std::string baseDataPath_;
     std::string modulePackage_;

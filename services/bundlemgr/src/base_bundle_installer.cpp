@@ -112,6 +112,13 @@ constexpr const char* PRIVILEGE_ALLOW_HDC_INSTALL = "AllowHdcInstall";
 constexpr const char* KEY_STORAGE_SIZE = "storageSize";
 constexpr int32_t KEEP_DATA_PRELOAD_ENABLED = 1;
 
+bool IsValidDeviceModeDistributionPolicy(DeviceModeDistributionPolicy policy)
+{
+    int32_t value = static_cast<int32_t>(policy);
+    return value >= static_cast<int32_t>(DeviceModeDistributionPolicy::UNSPECIFIED) &&
+        value <= static_cast<int32_t>(DeviceModeDistributionPolicy::FULL_COMPATIBLE_DIFFERENT_PACKAGE);
+}
+
 bool IsSupportedAppSkillBundleType(BundleType bundleType)
 {
     return bundleType == BundleType::APP || bundleType == BundleType::ATOMIC_SERVICE;
@@ -4282,6 +4289,7 @@ void BaseBundleInstaller::GetUninstallBundleInfo(bool isKeepData, int32_t userId
     uninstallBundleInfo.appIdentifier = oldInfo.GetAppIdentifier();
     uninstallBundleInfo.appProvisionType = oldInfo.GetAppProvisionType();
     uninstallBundleInfo.bundleType = oldInfo.GetApplicationBundleType();
+    uninstallBundleInfo.deviceModeDistributionPolicy = oldInfo.GetDeviceModeDistributionPolicy();
     oldInfo.GetModuleNames(uninstallBundleInfo.moduleNames);
 }
 
@@ -4311,14 +4319,57 @@ void BaseBundleInstaller::DeleteUninstallBundleInfo(const std::string &bundleNam
     BundleResourceHelper::DeleteUninstallBundleResource(bundleName, userId_, 0);
 }
 
+bool BaseBundleInstaller::GetUninstallBundleInfoByCurrentMode(const std::string &bundleName,
+    std::string &targetBundleName, UninstallBundleInfo &uninstallBundleInfo) const
+{
+    const bool isSecondaryMode = DualModeHelper::IsDualModeDevice() && DualModeHelper::IsSecondaryMode();
+    if (!isSecondaryMode) {
+        if (!dataMgr_->GetUninstallBundleInfo(bundleName, uninstallBundleInfo)) {
+            return false;
+        }
+        if (!IsValidDeviceModeDistributionPolicy(uninstallBundleInfo.deviceModeDistributionPolicy)) {
+            LOG_E(BMS_TAG_INSTALLER, "invalid keep-data policy for %{public}s", bundleName.c_str());
+            return false;
+        }
+        targetBundleName = bundleName;
+        return true;
+    }
+
+    const std::string effectiveBundleName = DualModeHelper::GetDualModeBundleName(bundleName);
+    if (dataMgr_->GetUninstallBundleInfo(effectiveBundleName, uninstallBundleInfo)) {
+        if (!IsValidDeviceModeDistributionPolicy(uninstallBundleInfo.deviceModeDistributionPolicy) ||
+            !DualModeHelper::IsDiffPackageCategory(uninstallBundleInfo.deviceModeDistributionPolicy)) {
+            LOG_E(BMS_TAG_INSTALLER, "invalid dual-mode keep-data record for %{public}s", bundleName.c_str());
+            return false;
+        }
+        targetBundleName = effectiveBundleName;
+        return true;
+    }
+
+    if (!dataMgr_->GetUninstallBundleInfo(bundleName, uninstallBundleInfo)) {
+        return false;
+    }
+    if (!IsValidDeviceModeDistributionPolicy(uninstallBundleInfo.deviceModeDistributionPolicy)) {
+        LOG_E(BMS_TAG_INSTALLER, "invalid keep-data policy for %{public}s", bundleName.c_str());
+        return false;
+    }
+    if (DualModeHelper::IsDiffPackageCategory(uninstallBundleInfo.deviceModeDistributionPolicy)) {
+        LOG_I(BMS_TAG_INSTALLER, "keep-data record belongs to the other mode for %{public}s", bundleName.c_str());
+        return false;
+    }
+    targetBundleName = bundleName;
+    return true;
+}
+
 bool BaseBundleInstaller::DeleteUninstallBundleInfoFromDb(const std::string &bundleName)
 {
     if (!InitDataMgr()) {
         LOG_E(BMS_TAG_INSTALLER, "init failed");
         return false;
     }
+    std::string targetBundleName;
     UninstallBundleInfo uninstallBundleInfo;
-    if (!dataMgr_->GetUninstallBundleInfo(bundleName, uninstallBundleInfo)) {
+    if (!GetUninstallBundleInfoByCurrentMode(bundleName, targetBundleName, uninstallBundleInfo)) {
         return false;
     }
     auto it = uninstallBundleInfo.userInfos.find(std::to_string(userId_));
@@ -4327,17 +4378,16 @@ bool BaseBundleInstaller::DeleteUninstallBundleInfoFromDb(const std::string &bun
             bundleName.c_str(), userId_);
         return false;
     }
-    ErrCode result = InstalldClient::GetInstance()->RemoveBundleDataDir(bundleName, userId_,
+    ErrCode result = InstalldClient::GetInstance()->RemoveBundleDataDir(targetBundleName, userId_,
         uninstallBundleInfo.bundleType == BundleType::ATOMIC_SERVICE, true);
     LOG_I(BMS_TAG_INSTALLER, "remove dirs res %{public}d", result);
     if (!uninstallBundleInfo.extensionDirs.empty()) {
         result = InstalldClient::GetInstance()->RemoveExtensionDir(userId_, uninstallBundleInfo.extensionDirs);
         LOG_I(BMS_TAG_INSTALLER, "remove extension dirs res %{public}d", result);
     }
-    DeleteEncryptionKeyId(bundleName, true, false);
-    BundleResourceHelper::DeleteUninstallBundleResource(bundleName, userId_, 0);
-    bool ret = dataMgr_->DeleteUninstallBundleInfo(bundleName, userId_);
-    if (!ret) {
+    DeleteEncryptionKeyId(targetBundleName, true, false);
+    BundleResourceHelper::DeleteUninstallBundleResource(targetBundleName, userId_, 0);
+    if (!dataMgr_->DeleteUninstallBundleInfo(targetBundleName, userId_)) {
         LOG_E(BMS_TAG_INSTALLER, "failed %{public}s %{public}d", bundleName.c_str(), userId_);
         return false;
     }
