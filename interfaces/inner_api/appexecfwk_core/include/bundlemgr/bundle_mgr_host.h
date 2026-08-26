@@ -985,6 +985,8 @@ private:
 
     ErrCode HandleSetAppClonePreference(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleFilterBundleListByDeviceModeDistributionPolicies(MessageParcel &data, MessageParcel &reply);
+
     ErrCode HandleGetLaunchWant(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleQueryCloneExtensionAbilityInfoWithAppIndex(MessageParcel &data, MessageParcel &reply);

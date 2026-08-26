@@ -33,6 +33,7 @@
 #include "bundle_mgr_client.h"
 #include "bundle_mgr_client_impl.h"
 #include "bundle_mgr_service.h"
+#include "dual_mode_helper.h"
 #include "first_install_data_mgr/first_install_bundle_info.h"
 #include "get_largest_items_callback_host.h"
 #include "int_wrapper.h"
@@ -40,6 +41,7 @@
 #include "json_serializer.h"
 #include "mime_type_mgr.h"
 #include "mock_ipc_skeleton.h"
+#include "parameters.h"
 #include "parcel.h"
 #include "shortcut_data_storage_rdb.h"
 #include "shortcut_visible_data_storage_rdb.h"
@@ -83,6 +85,9 @@ const int32_t ICON_ID = 2222;
 const std::string HAP_FILE_PATH1 = "/data/test/resource/bms/accesstoken_bundle/bmsAccessTokentest1.hap";
 const uint32_t ACCESS_TOKEN_ID = 1765341;
 const std::string TOKEN_BUNDLE = "tokenBundle";
+constexpr const char *TEST_DUAL_MODE_PARAM = "persist.bms.test_dual_mode";
+constexpr const char *TEST_ISPCMODE_PARAM = "persist.bms.ispcmode";
+constexpr const char *TEST_MAINMODE_PARAM = "persist.bms.mainmode";
 }  // namespace
 
 namespace Security {
@@ -110,6 +115,8 @@ private:
     std::vector<Skill> CreateSkillsForMatchShareTest();
     AAFwk::Want CreateWantForMatchShareTest(std::map<std::string, int32_t> &utds);
     bool MatchShare(std::map<std::string, int32_t> &utds, std::vector<Skill> &skills);
+    void BuildForSetBundleFirstLaunch(const std::string& bundleName, const std::string& userInfoKey,
+        const std::string& cloneKey, BundleDataMgr& bundleDataMgr);
 };
 
 std::shared_ptr<BundleMgrService> BmsDataMgrTest::bundleMgrService_ =
@@ -286,6 +293,26 @@ bool BmsDataMgrTest::MatchShare(std::map<std::string, int32_t> &utds, std::vecto
     auto dataMgr = GetDataMgr();
     AAFwk::Want want = CreateWantForMatchShareTest(utds);
     return dataMgr->MatchShare(want, skills);
+}
+
+void BmsDataMgrTest::BuildForSetBundleFirstLaunch(const std::string& bundleName, const std::string& userInfoKey,
+    const std::string& cloneKey, BundleDataMgr& bundleDataMgr)
+{
+    InnerBundleInfo innerBundleInfo;
+    InnerBundleUserInfo innerBundleUserInfo;
+    InnerBundleCloneInfo innerBundleCloneInfo_1;
+
+    innerBundleInfo.baseBundleInfo_->name = bundleName;
+    innerBundleInfo.baseApplicationInfo_->bundleName = bundleName;
+    innerBundleUserInfo.bundleName = bundleName;
+    innerBundleUserInfo.isBundleFirstLaunched = false;
+    innerBundleCloneInfo_1.isBundleFirstLaunched = false;
+
+    bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
+    auto& ibundleInfo = bundleDataMgr.bundleInfos_[bundleName];
+    ibundleInfo.innerBundleUserInfos_.emplace(userInfoKey, innerBundleUserInfo);
+    auto& userInfo = ibundleInfo.innerBundleUserInfos_[userInfoKey];
+    userInfo.cloneInfos.emplace(cloneKey, innerBundleCloneInfo_1);
 }
 
 /**
@@ -9535,6 +9562,57 @@ HWTEST_F(BmsDataMgrTest, SetBundleFirstLaunch_0002, Function | MediumTest | Leve
 }
 
 /**
+ * @tc.number: SetBundleFirstLaunch_0003
+ * @tc.desc: test SetBundleFirstLaunch for dual mode
+ */
+HWTEST_F(BmsDataMgrTest, SetBundleFirstLaunch_0003, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "com.ohos.test";
+    int32_t userId = Constants::START_USERID;
+    int32_t mainModeAppIndex = 0;
+    bundleDataMgr.AddUserId(userId);
+    ApplicationInfo appInfo;
+
+    OHOS::system::SetParameter(TEST_DUAL_MODE_PARAM, "true");
+    OHOS::system::SetParameter(TEST_ISPCMODE_PARAM, "1");
+    for (int i = 0; i < 2; i++) {
+        bundleDataMgr.bundleInfos_.clear();
+        OHOS::system::SetParameter(TEST_MAINMODE_PARAM, i == 0 ? "0" : "1");
+        DualModeHelper::UpdateModeCache();
+        ASSERT_EQ(DualModeHelper::IsSecondaryMode(), i == 0 ? true : false);
+        int32_t appIndex = i == 0 ? ServiceConstants::DUAL_MODE_CLONE_APP_INDEX : mainModeAppIndex;
+        int32_t errorAppIndex = i == 0 ? mainModeAppIndex : ServiceConstants::DUAL_MODE_CLONE_APP_INDEX;
+        std::string cloneKey = std::to_string(appIndex + 1);
+        std::string userInfoKey = bundleName + Constants::FILE_UNDERLINE + std::to_string(userId);
+
+        BuildForSetBundleFirstLaunch(bundleName, userInfoKey, cloneKey, bundleDataMgr);
+        auto& ibundleInfo = bundleDataMgr.bundleInfos_[bundleName];
+        auto& userInfo = ibundleInfo.innerBundleUserInfos_[userInfoKey];
+
+        appInfo.isBundleFirstLaunched = true;
+        ibundleInfo.GetApplicationInfoAdaptBundleClone(userInfo, appIndex, appInfo);
+        EXPECT_EQ(appInfo.isBundleFirstLaunched, false);
+        ErrCode ret = bundleDataMgr.SetBundleFirstLaunch(bundleName, userId, appIndex, true);
+        EXPECT_EQ(ret, ERR_OK);
+        EXPECT_EQ(userInfo.isBundleFirstLaunched, true);
+        int32_t sandboxAppIndex = appIndex + Constants::INITIAL_SANDBOX_APP_INDEX + 1;
+        ibundleInfo.GetApplicationInfoAdaptBundleClone(userInfo, sandboxAppIndex, appInfo);
+        EXPECT_EQ(appInfo.isBundleFirstLaunched, true);
+
+        ibundleInfo.GetApplicationInfoAdaptBundleClone(userInfo, appIndex + 1, appInfo);
+        EXPECT_EQ(appInfo.isBundleFirstLaunched, false);
+        ret = bundleDataMgr.SetBundleFirstLaunch(bundleName, userId, appIndex + 1, true);
+        EXPECT_EQ(ret, ERR_OK);
+        EXPECT_EQ(userInfo.cloneInfos[cloneKey].isBundleFirstLaunched, true);
+        ibundleInfo.GetApplicationInfoAdaptBundleClone(userInfo, appIndex + 1, appInfo);
+        EXPECT_EQ(appInfo.isBundleFirstLaunched, true);
+        ret = bundleDataMgr.SetBundleFirstLaunch(bundleName, userId, errorAppIndex, false);
+        EXPECT_NE(ret, ERR_OK);
+    }
+}
+
+/**
  * @tc.number: GetResponseUserId_0001
  * @tc.name: test GetResponseUserId with invalid userId
  * @tc.desc: 1.invalid userId
@@ -13059,5 +13137,42 @@ HWTEST_F(BmsDataMgrTest, GetNeedAppDetail_0001, Function | SmallTest | Level0)
     EXPECT_FALSE(dataMgr->GetNeedAppDetail("com.example.not.exist", dummy));
 
     EXPECT_TRUE(dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_START));
+}
+
+/**
+ * @tc.number: DeleteBundleStateByUserId_0001
+ * @tc.name: DeleteBundleStateByUserId
+ * @tc.desc: 1. test DeleteBundleStateByUserId when bundleStateStorage is null
+ *           2. return ERR_APPEXECFWK_NULL_PTR
+ */
+HWTEST_F(BmsDataMgrTest, DeleteBundleStateByUserId_0001, Function | SmallTest | Level0)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "com.ohos.hello";
+    int32_t userId = 100;
+
+    bundleDataMgr.bundleStateStorage_ = nullptr;
+
+    auto ret = bundleDataMgr.DeleteBundleStateByUserId(bundleName, userId);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: DeleteBundleStateByUserId_0002
+ * @tc.name: DeleteBundleStateByUserId
+ * @tc.desc: 1. test DeleteBundleStateByUserId with empty bundleName
+ *           2. BundleStateStorage::DeleteBundleState returns false
+ */
+HWTEST_F(BmsDataMgrTest, DeleteBundleStateByUserId_0002, Function | SmallTest | Level0)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "";
+    int32_t userId = 100;
+
+    auto bundleStateStorage = std::make_shared<BundleStateStorage>();
+    bundleDataMgr.bundleStateStorage_ = bundleStateStorage;
+
+    auto ret = bundleDataMgr.DeleteBundleStateByUserId(bundleName, userId);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_DB_DELETE_ERROR);
 }
 } // OHOS

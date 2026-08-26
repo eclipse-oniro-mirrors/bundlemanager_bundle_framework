@@ -96,6 +96,8 @@ public:
     bool AddResourceInfoByBundleNameWhenCreateUser(const std::string &bundleName, const int32_t userId);
 
     bool DeleteBundleResourceInfo(const std::string &bundleName, const int32_t userId, const bool isExistInOtherUser);
+    bool DeleteBundleResourceInfo(const InnerBundleInfo &info, const int32_t userId,
+        const bool isExistInOtherUser);
 
     bool AddDynamicIconResource(
         const std::string &bundleName, const int32_t userId, const int32_t appIndex, ResourceInfo &resourceInfo,
@@ -126,6 +128,7 @@ public:
     bool ProcessThemeAndDynamicIconWhenOta(const std::set<std::string> &updateBundleNames);
 
     bool AddUninstallBundleResource(const std::string &bundleName, const int32_t userId, const int32_t appIndex);
+    bool AddUninstallBundleResource(const InnerBundleInfo &info, const int32_t userId, const int32_t appIndex);
 
     bool DeleteUninstallBundleResource(const std::string &bundleName, const int32_t userId, const int32_t appIndex);
 

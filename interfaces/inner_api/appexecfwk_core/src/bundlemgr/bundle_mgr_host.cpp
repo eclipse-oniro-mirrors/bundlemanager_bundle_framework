@@ -660,6 +660,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::SET_APP_CLONE_PREFERENCE):
             errCode = this->HandleSetAppClonePreference(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::FILTER_BUNDLE_LIST_BY_DEVICE_MODE_DISTRIBUTION_POLICIES):
+            errCode = this->HandleFilterBundleListByDeviceModeDistributionPolicies(data, reply);
+            break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_LAUNCH_WANT):
             errCode = this->HandleGetLaunchWant(data, reply);
             break;
@@ -5079,6 +5082,37 @@ ErrCode BundleMgrHost::HandleSetAppClonePreference(MessageParcel &data, MessageP
     auto ret = SetAppClonePreference(bundleName, userId, *preferencePtr);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE_NOFUNC("HandleSetAppClonePreference write ret failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleFilterBundleListByDeviceModeDistributionPolicies(MessageParcel &data,
+    MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    std::vector<int32_t> policyValues;
+    if (!data.ReadInt32Vector(&policyValues)) {
+        APP_LOGE_NOFUNC("HandleFilterBundleListByDeviceModeDistributionPolicies read policies failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    // Size bound derived from the policy enum: at most one entry per value (0~8), so a larger
+    // vector must contain invalid entries (duplicates included).
+    if (policyValues.empty() || policyValues.size() >
+        static_cast<size_t>(DeviceModeDistributionPolicy::FULL_COMPATIBLE_DIFFERENT_PACKAGE) + 1) {
+        APP_LOGE_NOFUNC("HandleFilterBundleListByDeviceModeDistributionPolicies size %{public}zu invalid",
+            policyValues.size());
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    // Any int32_t value is a valid cast target (fixed underlying type); range check (0~8)
+    // is enforced later in BundleDataMgr.
+    std::set<DeviceModeDistributionPolicy> policies;
+    for (int32_t value : policyValues) {
+        policies.insert(static_cast<DeviceModeDistributionPolicy>(value));
+    }
+    auto ret = FilterBundleListByDeviceModeDistributionPolicies(policies);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE_NOFUNC("HandleFilterBundleListByDeviceModeDistributionPolicies write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;

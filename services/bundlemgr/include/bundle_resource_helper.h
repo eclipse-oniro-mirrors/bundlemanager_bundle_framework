@@ -50,6 +50,8 @@ public:
 
     static bool DeleteBundleResourceInfo(const std::string &bundleName,
         const int32_t userId, const bool isExistInOtherUser);
+    static bool DeleteBundleResourceInfo(const InnerBundleInfo &info, const int32_t userId,
+        const bool isExistInOtherUser);
 
     static bool DeleteAllResourceInfo();
 
@@ -81,6 +83,8 @@ public:
     static void ProcessBundleResourceChange();
 
     static void AddUninstallBundleResource(const std::string &bundleName, const int32_t userId,
+        const int32_t appIndex);
+    static void AddUninstallBundleResource(const InnerBundleInfo &info, const int32_t userId,
         const int32_t appIndex);
 
     static void DeleteUninstallBundleResource(const std::string &bundleName, const int32_t userId,

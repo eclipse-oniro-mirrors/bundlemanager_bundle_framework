@@ -851,6 +851,38 @@ bool BundleResourceManager::DeleteBundleResourceInfo(
     return ret;
 }
 
+bool BundleResourceManager::DeleteBundleResourceInfo(const InnerBundleInfo &info, const int32_t userId,
+    const bool isExistInOtherUser)
+{
+    const std::string logicalBundleName = info.GetBundleName();
+    const std::string effectiveBundleName = info.IsDualModeCloneApp()
+        ? DualModeHelper::GetDualModeBundleName(logicalBundleName)
+        : logicalBundleName;
+    bool ret = true;
+    if (!isExistInOtherUser) {
+        ret = bundleResourceRdb_->DeleteResourceInfo(effectiveBundleName);
+        if (!ret) {
+            APP_LOGE("delete -n %{public}s -u %{public}d in bundleResourceRdb failed",
+                effectiveBundleName.c_str(), userId);
+        }
+    }
+
+    if (userId == Constants::DEFAULT_USERID || userId == Constants::U1) {
+        if (!bundleResourceIconRdb_->DeleteResourceIconInfos(logicalBundleName)) {
+            LOG_NOFUNC_E(BMS_TAG_INSTALLD, "delete icon resource -n %{public}s -u %{public}d failed",
+                logicalBundleName.c_str(), userId);
+            return false;
+        }
+        return ret;
+    }
+    if (!bundleResourceIconRdb_->DeleteResourceIconInfos(logicalBundleName, userId)) {
+        APP_LOGE("delete -n %{public}s -u %{public}d in bundleResourceIconRdb failed",
+            logicalBundleName.c_str(), userId);
+        return false;
+    }
+    return ret;
+}
+
 bool BundleResourceManager::AddDynamicIconResource(
     const std::string &bundleName, const int32_t userId, const int32_t appIndex, ResourceInfo &resourceInfo,
     const IconResourceType type)
@@ -1514,6 +1546,54 @@ bool BundleResourceManager::AddUninstallBundleResource(const std::string &bundle
     }
     APP_LOGI("-n %{public}s -u %{public}d -i %{public}d add uinstall bundle resource succeed", bundleName.c_str(),
         userId, appIndex);
+    return true;
+}
+
+bool BundleResourceManager::AddUninstallBundleResource(const InnerBundleInfo &info,
+    const int32_t userId, const int32_t appIndex)
+{
+    const std::string logicalBundleName = info.GetBundleName();
+    const std::string effectiveBundleName = info.IsDualModeCloneApp()
+        ? DualModeHelper::GetDualModeBundleName(logicalBundleName)
+        : logicalBundleName;
+    APP_LOGI("-n %{public}s -u %{public}d -i %{public}d add uninstall bundle resource start",
+        logicalBundleName.c_str(), userId, appIndex);
+    std::vector<ResourceInfo> resourceInfos;
+    if (!BundleResourceProcess::GetResourceInfoByBundleName(logicalBundleName, userId, resourceInfos, appIndex,
+        false)) {
+        APP_LOGE("-n %{public}s -u %{public}d -i %{public}d get bundle resourceInfo failed",
+            logicalBundleName.c_str(), userId, appIndex);
+        return false;
+    }
+    ResourceInfo resourceInfo = resourceInfos[0];
+    resourceInfo.appIndex_ = appIndex;
+    uint32_t flag = static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON) |
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR);
+    BundleResourceInfo bundleResourceInfo;
+    if (!bundleResourceRdb_->GetBundleResourceInfo(effectiveBundleName, flag, bundleResourceInfo, appIndex)) {
+        APP_LOGW("-n %{public}s -i %{public}d resource not exist in db", effectiveBundleName.c_str(), appIndex);
+        resourceInfo.iconNeedParse_ = true;
+    } else {
+        resourceInfo.iconNeedParse_ = false;
+    }
+    std::map<std::string, std::string> labelMap;
+    BundleResourceParser parser;
+    if (!parser.ParseUninstallBundleResource(resourceInfo, labelMap)) {
+        APP_LOGE("-n %{public}s -u %{public}d -i %{public}d parse uninstall bundle resource failed",
+            effectiveBundleName.c_str(), userId, appIndex);
+        return false;
+    }
+    if (resourceInfo.iconNeedParse_) {
+        bundleResourceInfo.icon = resourceInfo.icon_;
+        bundleResourceInfo.foreground = resourceInfo.foreground_;
+        bundleResourceInfo.background = resourceInfo.background_;
+    }
+    if (!uninstallBundleResourceRdb_->AddUninstallBundleResource(effectiveBundleName, userId, appIndex,
+        labelMap, bundleResourceInfo)) {
+        APP_LOGE("-n %{public}s -u %{public}d -i %{public}d add uninstall bundle resource failed",
+            effectiveBundleName.c_str(), userId, appIndex);
+        return false;
+    }
     return true;
 }
 

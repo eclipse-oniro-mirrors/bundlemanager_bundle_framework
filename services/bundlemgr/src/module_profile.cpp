@@ -1937,6 +1937,18 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         module.moduleArkTSMode,
         false,
         g_parseResult);
+    std::string arkTSRunType = module.moduleArkTSMode;
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        Constants::ARKTS_RUN_TYPE,
+        arkTSRunType,
+        false,
+        g_parseResult);
+    // In API version 23 and earlier, arkTSRunType may differ from moduleArkTSMode.
+    // Starting from API version 24, the two fields have the same value.
+    if (!arkTSRunType.empty() && arkTSRunType != module.moduleArkTSMode) {
+        module.moduleArkTSMode = arkTSRunType;
+    }
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         Constants::ARKTS_MODE,

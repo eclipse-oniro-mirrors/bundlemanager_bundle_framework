@@ -59,6 +59,7 @@
 #include "bundle_verify_mgr.h"
 #include "common_event_support.h"
 #include "directory_ex.h"
+#include "dual_mode_helper.h"
 #include "inner_bundle_info.h"
 #include "installd/installd_service.h"
 #include "installd_client.h"
@@ -113,6 +114,14 @@ const std::string THEME_B_OTHER_ICONS = "/data/service/el1/public/themes/20000/b
 const std::string BUNDLE_NAME_LAYERED_IMAGE = "com.example.thumbnailtest";
 const std::string LAYERED_IMAGE_HAP_PATH = "/data/test/resource/bms/accesstoken_bundle/thumbnail.hap";
 const std::string TEST_BUNDLE_NAME = "testBundleName";
+// test clone app badge resource
+const int32_t CLONE_APP_INDEX = 2;
+const int32_t NOT_EXIST_APP_INDEX = 1000;
+// test theme icon resource
+const std::string THEME_A_FOREGROUND_BUNDLE_NAME =
+    "/data/service/el1/public/themes/20000/a/app/icons/com.example.bmsaccesstoken1/foreground.png";
+const std::string THEME_A_BACKGROUND_BUNDLE_NAME =
+    "/data/service/el1/public/themes/20000/a/app/icons/com.example.bmsaccesstoken1/background.png";
 const int32_t U1 = 1;
 const int32_t INVALID_INDEX = 6;
 const std::string INVALID_ABILITY_NAME = "com.example.bmsaccesstoken.Ability";
@@ -6219,6 +6228,47 @@ HWTEST_F(BmsBundleResourceTest, AddUninstallBundleResource_0020, Function | Smal
 }
 
 /**
+ * @tc.number: AddUninstallBundleResource_DualMode_0010
+ * @tc.name: test AddUninstallBundleResource with InnerBundleInfo
+ * @tc.desc: 1. reject a bundle which is absent from BundleDataMgr
+ *           2. persist the primary-mode resource under the logical bundle name
+ *           3. persist the secondary-mode resource under the dual-mode effective name
+ */
+HWTEST_F(BmsBundleResourceTest, AddUninstallBundleResource_DualMode_0010, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+
+    InnerBundleInfo absentInfo;
+    ApplicationInfo absentAppInfo;
+    absentAppInfo.bundleName = "com.example.dualmode.resource.absent";
+    absentAppInfo.bundleType = BundleType::APP;
+    absentInfo.SetBaseApplicationInfo(absentAppInfo);
+    absentInfo.SetDualModeCloneApp(true);
+    EXPECT_FALSE(manager->AddUninstallBundleResource(absentInfo, USERID, 0));
+
+    ASSERT_EQ(InstallBundle(HAP_FILE_PATH1), ERR_OK);
+    InnerBundleInfo installedInfo;
+    ASSERT_TRUE(GetBundleDataMgr()->FetchInnerBundleInfo(BUNDLE_NAME, installedInfo));
+
+    ASSERT_TRUE(manager->AddUninstallBundleResource(installedInfo, USERID, 0));
+    BundleResourceInfo primaryResource;
+    EXPECT_TRUE(manager->GetUninstallBundleResource(BUNDLE_NAME, USERID, 0,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), primaryResource));
+    EXPECT_TRUE(manager->DeleteUninstallBundleResource(BUNDLE_NAME, USERID, 0));
+
+    installedInfo.SetDualModeCloneApp(true);
+    const std::string effectiveBundleName = DualModeHelper::GetDualModeBundleName(BUNDLE_NAME);
+    ASSERT_TRUE(manager->AddUninstallBundleResource(installedInfo, USERID, 0));
+    BundleResourceInfo secondaryResource;
+    EXPECT_TRUE(manager->GetUninstallBundleResource(effectiveBundleName, USERID, 0,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), secondaryResource));
+    EXPECT_TRUE(manager->DeleteUninstallBundleResource(effectiveBundleName, USERID, 0));
+
+    EXPECT_EQ(UnInstallBundle(BUNDLE_NAME), ERR_OK);
+}
+
+/**
  * @tc.number: GetAllUninstallBundleResourceInfo_0010
  * Function: AddUninstallBundleResource
  * @tc.name: test
@@ -7496,6 +7546,129 @@ HWTEST_F(BmsBundleResourceTest, DeleteBundleResourceMultiUser_0002, Function | S
 }
 
 /**
+ * @tc.number: DeleteBundleResourceDualMode_0001
+ * @tc.name: delete a dual-mode bundle using separate resource keys
+ * @tc.desc: Main resource RDB uses the effective name while icon RDB uses the logical name.
+ */
+HWTEST_F(BmsBundleResourceTest, DeleteBundleResourceDualMode_0001, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+    const std::string logicalName = "com.example.dualmode.resource.delete1";
+    const std::string effectiveName = DualModeHelper::GetDualModeBundleName(logicalName);
+
+    InnerBundleInfo info;
+    ApplicationInfo appInfo;
+    appInfo.bundleName = logicalName;
+    appInfo.bundleType = BundleType::APP;
+    info.SetBaseApplicationInfo(appInfo);
+    info.SetDualModeCloneApp(true);
+
+    ResourceInfo logicalResource;
+    logicalResource.bundleName_ = logicalName;
+    logicalResource.label_ = "logical";
+    logicalResource.icon_ = "logical_icon";
+    ResourceInfo effectiveResource = logicalResource;
+    effectiveResource.bundleName_ = effectiveName;
+    ASSERT_TRUE(manager->bundleResourceRdb_->AddResourceInfo(logicalResource));
+    ASSERT_TRUE(manager->bundleResourceRdb_->AddResourceInfo(effectiveResource));
+    ASSERT_TRUE(manager->bundleResourceIconRdb_->AddResourceIconInfos(USERID, IconResourceType::THEME_ICON,
+        { logicalResource, effectiveResource }));
+
+    EXPECT_TRUE(manager->DeleteBundleResourceInfo(info, USERID, false));
+
+    BundleResourceInfo resource;
+    EXPECT_FALSE(manager->bundleResourceRdb_->GetBundleResourceInfo(effectiveName,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), resource));
+    EXPECT_TRUE(manager->bundleResourceRdb_->GetBundleResourceInfo(logicalName,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), resource));
+    std::vector<LauncherAbilityResourceInfo> iconInfos;
+    EXPECT_FALSE(manager->bundleResourceIconRdb_->GetResourceIconInfos(logicalName, USERID, 0,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON), iconInfos));
+    EXPECT_TRUE(manager->bundleResourceIconRdb_->GetResourceIconInfos(effectiveName, USERID, 0,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON), iconInfos));
+
+    EXPECT_TRUE(manager->bundleResourceRdb_->DeleteResourceInfo(logicalName));
+    EXPECT_TRUE(manager->bundleResourceIconRdb_->DeleteResourceIconInfos(effectiveName, USERID));
+}
+
+/**
+ * @tc.number: DeleteBundleResourceDualMode_0002
+ * @tc.name: retain main resources while another mode still exists
+ * @tc.desc: isExistInOtherUser skips effective-name main RDB deletion but still removes this user's logical icon.
+ */
+HWTEST_F(BmsBundleResourceTest, DeleteBundleResourceDualMode_0002, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+    const std::string logicalName = "com.example.dualmode.resource.delete2";
+    const std::string effectiveName = DualModeHelper::GetDualModeBundleName(logicalName);
+
+    InnerBundleInfo info;
+    ApplicationInfo appInfo;
+    appInfo.bundleName = logicalName;
+    appInfo.bundleType = BundleType::APP;
+    info.SetBaseApplicationInfo(appInfo);
+    info.SetDualModeCloneApp(true);
+
+    ResourceInfo effectiveResource;
+    effectiveResource.bundleName_ = effectiveName;
+    effectiveResource.label_ = "effective";
+    effectiveResource.icon_ = "effective_icon";
+    ResourceInfo logicalIcon = effectiveResource;
+    logicalIcon.bundleName_ = logicalName;
+    ASSERT_TRUE(manager->bundleResourceRdb_->AddResourceInfo(effectiveResource));
+    ASSERT_TRUE(manager->bundleResourceIconRdb_->AddResourceIconInfos(USERID, IconResourceType::THEME_ICON,
+        { logicalIcon }));
+
+    EXPECT_TRUE(manager->DeleteBundleResourceInfo(info, USERID, true));
+
+    BundleResourceInfo resource;
+    EXPECT_TRUE(manager->bundleResourceRdb_->GetBundleResourceInfo(effectiveName,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), resource));
+    std::vector<LauncherAbilityResourceInfo> iconInfos;
+    EXPECT_FALSE(manager->bundleResourceIconRdb_->GetResourceIconInfos(logicalName, USERID, 0,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON), iconInfos));
+    EXPECT_TRUE(manager->bundleResourceRdb_->DeleteResourceInfo(effectiveName));
+}
+
+/**
+ * @tc.number: DeleteBundleResourceDualMode_0003
+ * @tc.name: delete logical icons for every user from the default-user path
+ * @tc.desc: The InnerBundleInfo overload keeps normal-app naming and exercises the DEFAULT_USERID icon branch.
+ */
+HWTEST_F(BmsBundleResourceTest, DeleteBundleResourceDualMode_0003, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+    const std::string logicalName = "com.example.dualmode.resource.delete3";
+
+    InnerBundleInfo info;
+    ApplicationInfo appInfo;
+    appInfo.bundleName = logicalName;
+    appInfo.bundleType = BundleType::APP;
+    info.SetBaseApplicationInfo(appInfo);
+
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = logicalName;
+    resourceInfo.label_ = "logical";
+    resourceInfo.icon_ = "logical_icon";
+    ASSERT_TRUE(manager->bundleResourceRdb_->AddResourceInfo(resourceInfo));
+    ASSERT_TRUE(manager->bundleResourceIconRdb_->AddResourceIconInfos(USERID, IconResourceType::THEME_ICON,
+        { resourceInfo }));
+    ASSERT_TRUE(manager->bundleResourceIconRdb_->AddResourceIconInfos(Constants::U1, IconResourceType::THEME_ICON,
+        { resourceInfo }));
+
+    EXPECT_TRUE(manager->DeleteBundleResourceInfo(info, Constants::DEFAULT_USERID, false));
+
+    std::vector<LauncherAbilityResourceInfo> iconInfos;
+    EXPECT_FALSE(manager->bundleResourceIconRdb_->GetResourceIconInfos(logicalName, USERID, 0,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON), iconInfos));
+    EXPECT_FALSE(manager->bundleResourceIconRdb_->GetResourceIconInfos(logicalName, Constants::U1, 0,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON), iconInfos));
+}
+
+/**
  * @tc.number: InnerProcessCloneThemeResourceWhenInstall_0001
  * @tc.name: test InnerProcessCloneThemeResourceWhenInstall when theme does not exist
  * @tc.desc: 1. system running normally
@@ -7688,5 +7861,179 @@ HWTEST_F(BmsBundleResourceTest, ParseAndAddAlternateIconResource_0001, Function 
     IconResourceType type = IconResourceType::ALTERNATE_ICON;
     bool ret = manager->ParseAndAddAlternateIconResource(bundleName, alternateIconInfo, type);
     EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: GetIconResourceByHap_0010
+ * Function: GetIconResourceByHap
+ * @tc.name: test GetIconResourceByHap
+ * @tc.desc: 1. system running normally
+ *           2. resourceManager is nullptr, parse icon failed
+ */
+HWTEST_F(BmsBundleResourceTest, GetIconResourceByHap_0010, Function | SmallTest | Level0)
+{
+    BundleResourceDrawable drawable;
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = BUNDLE_NAME;
+    bool ret = drawable.GetIconResourceByHap(1, 0, nullptr, resourceInfo);
+    EXPECT_FALSE(ret);
+    EXPECT_TRUE(resourceInfo.icon_.empty());
+}
+
+/**
+ * @tc.number: GetIconResourceByHap_0020
+ * Function: GetIconResourceByHap
+ * @tc.name: test GetIconResourceByHap
+ * @tc.desc: 1. system running normally
+ *           2. icon is parsed by drawable descriptor, svg resource limit level is set to low
+ */
+HWTEST_F(BmsBundleResourceTest, GetIconResourceByHap_0020, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(LAYERED_IMAGE_HAP_PATH);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    // resourceInfos[0] is bundle resource info, its iconId is adapted to the entry ability icon,
+    // which is a layered image and can only be parsed by drawable descriptor
+    std::vector<ResourceInfo> resourceInfos;
+    bool ans = BundleResourceProcess::GetResourceInfoByBundleName(BUNDLE_NAME_LAYERED_IMAGE, USERID, resourceInfos);
+    EXPECT_TRUE(ans);
+    EXPECT_FALSE(resourceInfos.empty());
+    if (!resourceInfos.empty()) {
+        std::unique_ptr<Global::Resource::ResConfig> resConfig(Global::Resource::CreateResConfig());
+        EXPECT_TRUE(resConfig != nullptr);
+        if (resConfig != nullptr) {
+            std::shared_ptr<Global::Resource::ResourceManager> resourceManager(
+                Global::Resource::CreateResourceManager(BUNDLE_NAME_LAYERED_IMAGE, resourceInfos[0].moduleName_,
+                    resourceInfos[0].hapPath_, resourceInfos[0].overlayHapPaths_, *resConfig, 0, USERID));
+            EXPECT_NE(resourceManager, nullptr);
+            ans = BundleResourceConfiguration::InitResourceGlobalConfig(resourceInfos[0].hapPath_,
+                resourceInfos[0].overlayHapPaths_, resourceManager);
+            EXPECT_TRUE(ans);
+
+            BundleResourceDrawable drawable;
+            ResourceInfo resourceInfo;
+            resourceInfo.bundleName_ = BUNDLE_NAME_LAYERED_IMAGE;
+            bool ret = drawable.GetIconResourceByHap(resourceInfos[0].iconId_, 0, resourceManager, resourceInfo);
+            EXPECT_TRUE(ret);
+            EXPECT_FALSE(resourceInfo.icon_.empty());
+        }
+    }
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME_LAYERED_IMAGE);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: GetIconResourceByTheme_0010
+ * Function: GetIconResourceByTheme
+ * @tc.name: test GetIconResourceByTheme
+ * @tc.desc: 1. system running normally
+ *           2. theme foreground and background exist, icon is created with svg resource limit level
+ */
+HWTEST_F(BmsBundleResourceTest, GetIconResourceByTheme_0010, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    std::vector<ResourceInfo> resourceInfos;
+    bool ans = BundleResourceProcess::GetResourceInfoByBundleName(BUNDLE_NAME, USERID, resourceInfos);
+    EXPECT_TRUE(ans);
+    EXPECT_FALSE(resourceInfos.empty());
+    if (!resourceInfos.empty()) {
+        // construct theme foreground and background resource of BUNDLE_NAME
+        OHOS::ForceCreateDirectory(THEME_A_ICON_BUNDLE_NAME);
+        std::ofstream flagFile(THEME_A_FLAG_BUNDLE_NAME, std::ios::out);
+        flagFile << "" << std::endl;
+        flagFile.close();
+        std::ofstream foregroundFile(THEME_A_FOREGROUND_BUNDLE_NAME, std::ios::out);
+        foregroundFile << "foreground" << std::endl;
+        foregroundFile.close();
+        std::ofstream backgroundFile(THEME_A_BACKGROUND_BUNDLE_NAME, std::ios::out);
+        backgroundFile << "background" << std::endl;
+        backgroundFile.close();
+
+        std::unique_ptr<Global::Resource::ResConfig> resConfig(Global::Resource::CreateResConfig());
+        EXPECT_TRUE(resConfig != nullptr);
+        if (resConfig != nullptr) {
+            std::shared_ptr<Global::Resource::ResourceManager> resourceManager(
+                Global::Resource::CreateResourceManager(BUNDLE_NAME, resourceInfos[0].moduleName_,
+                    resourceInfos[0].hapPath_, resourceInfos[0].overlayHapPaths_, *resConfig, 0, THEME_TEST_USERID));
+            EXPECT_NE(resourceManager, nullptr);
+
+            BundleResourceDrawable drawable;
+            ResourceInfo resourceInfo;
+            resourceInfo.bundleName_ = BUNDLE_NAME;
+            bool ret = drawable.GetIconResourceByTheme(resourceInfos[0].iconId_, 0, resourceManager, resourceInfo);
+            // theme resource data is not a real image, icon can only be parsed when background not exist
+            EXPECT_EQ(ret, !resourceInfo.icon_.empty());
+        }
+        OHOS::ForceRemoveDirectory(THEME_BUNDLE_NAME_PATH);
+    }
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: ParserCloneResourceInfo_0020
+ * Function: ParserCloneResourceInfo
+ * @tc.name: test ParserCloneResourceInfo
+ * @tc.desc: 1. system running normally
+ *           2. test ParserCloneResourceInfo with resourceInfos, badge resource not exist
+ */
+HWTEST_F(BmsBundleResourceTest, ParserCloneResourceInfo_0020, Function | SmallTest | Level0)
+{
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = BUNDLE_NAME;
+    std::vector<ResourceInfo> resourceInfos;
+    resourceInfos.push_back(resourceInfo);
+
+    BundleResourceParser bundleResourceParser;
+    bool ret = bundleResourceParser.ParserCloneResourceInfo(NOT_EXIST_APP_INDEX, resourceInfos);
+    EXPECT_FALSE(ret);
+    EXPECT_TRUE(resourceInfos[0].icon_.empty());
+}
+
+/**
+ * @tc.number: ParserCloneResourceInfo_0030
+ * Function: ParserCloneResourceInfo
+ * @tc.name: test ParserCloneResourceInfo
+ * @tc.desc: 1. system running normally
+ *           2. test ParserCloneResourceInfo with resourceInfos, badge resource exist
+ */
+HWTEST_F(BmsBundleResourceTest, ParserCloneResourceInfo_0030, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = BUNDLE_NAME;
+    // base icon is not a valid base64 icon
+    resourceInfo.icon_ = "111";
+    std::vector<ResourceInfo> resourceInfos;
+    resourceInfos.push_back(resourceInfo);
+
+    BundleResourceParser bundleResourceParser;
+    bool ret = bundleResourceParser.ParserCloneResourceInfo(CLONE_APP_INDEX, resourceInfos);
+    EXPECT_FALSE(ret);
+
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        BundleResourceInfo info;
+        ret = manager->GetBundleResourceInfo(BUNDLE_NAME,
+            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), info);
+        EXPECT_TRUE(ret);
+        EXPECT_FALSE(info.icon.empty());
+        resourceInfos[0].icon_ = info.icon;
+        // base icon and badge icon are both valid
+        ret = bundleResourceParser.ParserCloneResourceInfo(CLONE_APP_INDEX, resourceInfos);
+        EXPECT_TRUE(ret);
+        EXPECT_FALSE(resourceInfos[0].icon_.empty());
+        EXPECT_NE(resourceInfos[0].icon_, info.icon);
+    }
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
 }
 } // OHOS

@@ -458,6 +458,11 @@ bool BundlePermissionMgr::CheckPermissionInDefaultPermissions(const DefaultPermi
     return true;
 }
 
+bool BundlePermissionMgr::RefreshPreAuthorizationForOTA()
+{
+    return true;
+}
+
 void BundlePermissionMgr::AddPermissionUsedRecord(
     const std::string &permission, int32_t successCount, int32_t failCount)
 {
@@ -483,7 +488,7 @@ int32_t BundlePermissionMgr::InitHapToken(const InnerBundleInfo &innerBundleInfo
 int32_t BundlePermissionMgr::UpdateHapToken(Security::AccessToken::AccessTokenIDEx &tokenIdeEx,
     const InnerBundleInfo &innerBundleInfo, int32_t userId, Security::AccessToken::HapInfoCheckResult &checkResult,
     const std::string &appServiceCapabilities, bool dataRefresh,
-    const bool isDebugGrant)
+    const bool isDebugGrant, const bool needInit)
 {
     return -1;
 }
@@ -507,7 +512,7 @@ int32_t BundlePermissionMgr::InitHapToken(const InnerBundleInfo &innerBundleInfo
 int32_t BundlePermissionMgr::UpdateHapToken(Security::AccessToken::AccessTokenIDEx &tokenIdeEx,
     const InnerBundleInfo &innerBundleInfo, int32_t userId, Security::AccessToken::HapInfoCheckResult &checkResult,
     const std::string &appServiceCapabilities, bool dataRefresh,
-    const bool isDebugGrant)
+    const bool isDebugGrant, const bool needInit)
 {
     return 0;
 }

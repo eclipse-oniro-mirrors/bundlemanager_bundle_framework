@@ -915,6 +915,9 @@ private:
     ErrCode CheckDualModeCategoryConsistency(const InnerBundleInfo &oldInfo, const InstallParam &installParam);
     ErrCode CheckDualModeCategoryConsistencyInTemp(const InstallParam &installParam);
     void InitDualModeBundleName(const InstallParam &installParam);
+    void InitDualModeBundleName(const InnerBundleInfo &bundleInfo);
+    void FillDualModeUninstallEventFields(const InstallParam &installParam,
+        NotifyBundleEvents &uninstallRes) const;
     void DeleteUseLessSharefilesForDefaultUser(const std::string &bundleName, int32_t userId) const;
     ErrCode CleanShaderCache(const InnerBundleInfo &oldInfo, const std::string &bundleName, int32_t userId) const;
     ErrCode CleanArkStartupCache(const std::string &bundleName) const;

@@ -19,6 +19,7 @@
 #include <string>
 
 #include "bundle_data_mgr.h"
+#include "event_report.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -49,6 +50,9 @@ private:
         Security::AccessToken::AccessTokenIDEx& accessTokenIdEx, const InnerBundleInfo &innerBundleInfo);
     void DeleteUninstallBundleInfo(const std::string &bundleName, int32_t userId);
     ErrCode ProcessBundleShareFiles(const InnerBundleInfo &info, const int32_t userId, uint32_t tokenId);
+    void SendBundleSystemEvent(const std::string &bundleName, BundleEventType bundleEventType,
+        int32_t userId, ErrCode errCode);
+    void GetCallingEventInfo(EventInfo &eventInfo);
 
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;
     int32_t uid_ = 0;
@@ -57,6 +61,8 @@ private:
     uint32_t accessTokenId_ = 0;
     std::string appDistributionType_ = Constants::APP_DISTRIBUTION_TYPE_NONE;
     std::string moduleName_;
+    int64_t startTime_ = 0;
+    uint32_t versionCode_ = 0;
 };
 } // AppExecFwk
 } // OHOS

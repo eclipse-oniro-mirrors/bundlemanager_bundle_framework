@@ -338,18 +338,21 @@ void BundleDataMgr::ClassifyDualModeAppsNoLock()
     // Primary mode: secondary-mode apps (prefixed) → tempBundleInfos_, primary-mode apps → bundleInfos_
     // Secondary mode: primary-mode apps (non-prefixed) → tempBundleInfos_, secondary-mode apps (prefixed) → bundleInfos_
     // Final result: both maps use original bundle name as key (no prefix)
-    // Note: Only different-package apps need classification; other apps stay in bundleInfos_
+    // Note: Only different-package apps need mode-based classification; other apps stay in bundleInfos_
 
-    // Early return if not a dual-mode device
+    // Early return if not a dual-mode device (requirement-1 behavior)
     if (!DualModeHelper::IsDualModeDevice()) {
         APP_LOGD("Dual mode: not a dual-mode device, skip classification");
         return;
     }
-
     bool isSecondaryMode = DualModeHelper::IsSecondaryMode();
     APP_LOGI("Dual mode: classification start, total=%{public}zu, secondary=%{public}d",
-             bundleInfos_.size(), isSecondaryMode);
-
+        bundleInfos_.size(), isSecondaryMode);
+    // === DUAL_MODE: policy-driven classification (requirement 2, ADR-7) ===
+    // Read the persisted policy set and hide filterable-policy apps not in the set. Runs before
+    // the mode-based classification below (filterable policies 1/2/3/5/7 and different-package
+    // policies 4/6/8 are disjoint, so order is safe). If absent/invalid, requirement-1 logic applies.
+    (void)ClassifyDualModeAppsByPolicyNoLock();
     // Step 1: Move all prefixed apps to tempBundleInfos_ with original name as key
     // Erase prefixed keys immediately during collection to avoid second pass
     for (auto it = bundleInfos_.begin(); it != bundleInfos_.end();) {
@@ -425,6 +428,179 @@ void BundleDataMgr::ClassifyDualModeAppsNoLock()
     APP_LOGI("Dual mode: classification done - bundleInfos=%{public}zu, tempBundleInfos=%{public}zu",
              bundleInfos_.size(), tempBundleInfos_.size());
     // === DUAL_MODE END ===
+}
+
+// === DUAL_MODE: policy-driven classification body (requirement 2, ADR-7) ===
+// Caller must hold bundleInfoMutex_. See ClassifyDualModeAppsNoLock.
+bool BundleDataMgr::ClassifyDualModeAppsByPolicyNoLock()
+{
+    std::string policiesStr;
+    auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    bool hasPolicies = (bmsPara != nullptr)
+        && bmsPara->GetBmsParam(ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICIES_KEY, policiesStr);
+    if (!hasPolicies) {
+        return false;
+    }
+    std::set<DeviceModeDistributionPolicy> policySet;
+    if (!DualModeHelper::ParsePersistedPolicies(policiesStr, policySet)) {
+        // Truncated preview only: the persisted value may be corrupted or arbitrarily long.
+        APP_LOGE_NOFUNC("Dual mode: persisted policies invalid, fall back to requirement-1: %{public}s",
+            policiesStr.substr(0, 20).c_str());
+        return false;
+    }
+
+    // Hide filterable-policy (1/2/3/5/7) apps whose policy is NOT in the set. UNSPECIFIED (0)
+    // always visible; different-package policies (4/6/8) excluded here (handled by mode-based
+    // classification). Same-name temp guard mirrors the runtime path
+    // (FilterBundleListByDeviceModeDistributionPoliciesNoLock): keep both entries on an
+    // inconsistent variant pairing instead of silently overwriting the temp entry. NOTE: this
+    // leaves a should-be-hidden app visible — see the runtime-path note; an occurrence
+    // indicates data inconsistency needing manual investigation.
+    for (auto it = bundleInfos_.begin(); it != bundleInfos_.end();) {
+        DeviceModeDistributionPolicy policy = it->second.GetDeviceModeDistributionPolicy();
+        if (policy != DeviceModeDistributionPolicy::UNSPECIFIED
+            && !DualModeHelper::IsDiffPackageCategory(policy)
+            && policySet.count(policy) == 0) {
+            auto tempItem = tempBundleInfos_.find(it->first);
+            if (tempItem == tempBundleInfos_.end()) {
+                tempBundleInfos_[it->first] = std::move(it->second);
+                it = bundleInfos_.erase(it);
+                continue;
+            }
+            APP_LOGW("Dual mode: inconsistent variant pairing at boot, keep visible bundle=%{public}s",
+                it->first.c_str());
+        }
+        ++it;
+    }
+    return true;
+}
+
+// === DUAL_MODE: runtime visibility switch (requirement 2) ===
+ErrCode BundleDataMgr::FilterBundleListByDeviceModeDistributionPolicies(
+    const std::set<DeviceModeDistributionPolicy> &policies)
+{
+    APP_LOGI("Dual mode: FilterBundleListByDeviceModeDistributionPolicies size=%{public}zu", policies.size());
+
+    // Mode switch only applies to dual-mode devices; on other devices policies never take
+    // effect (all apps stay visible), so reject the switch instead of persisting policies.
+    if (!DualModeHelper::IsDualModeDevice()) {
+        APP_LOGE_NOFUNC("FilterBundleListByDeviceModeDistributionPolicies: not a dual-mode device, reject");
+        return ERR_APPEXECFWK_DUAL_MODE_DEVICE_NOT_SUPPORTED;
+    }
+
+    if (!DualModeHelper::IsValidPolicySet(policies)) {
+        APP_LOGE_NOFUNC("FilterBundleListByDeviceModeDistributionPolicies invalid policies: empty, out-of-range"
+            " value, or missing different-package policies (4/6/8)");
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+    }
+
+    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+
+    // persist first; on failure return PERSIST_FAILED (no migration yet, so rollback
+    // is effectively a no-op — memory stays in pre-switch state).
+    // NOTE (codecheck R2 LOG-04): SaveBmsParam below does a synchronous RDB write inside
+    // this write lock — worst case (E_SQLITE_BUSY 3x500ms retry + lazy DB open) blocks all
+    // shared_lock queries (GetBundleInfo etc.) for up to seconds. Accepted as-is: low-
+    // frequency management op, single-lock ordering (no deadlock), and same-lock I/O
+    // precedents exist (DefragMemory full map copy; GenerateBundleId file write). Moving
+    // the persist out of the lock needs a concurrent-switch TOCTOU design first — deferred.
+    auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    if (bmsPara == nullptr) {
+        APP_LOGE_NOFUNC("FilterBundleListByDeviceModeDistributionPolicies bmsPara is nullptr");
+        return ERR_APPEXECFWK_DUAL_MODE_PERSIST_FAILED;
+    }
+    if (!bmsPara->SaveBmsParam(
+        ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICIES_KEY, DualModeHelper::PoliciesToCsv(policies))) {
+        APP_LOGE_NOFUNC("FilterBundleListByDeviceModeDistributionPolicies SaveBmsParam failed");
+        return ERR_APPEXECFWK_DUAL_MODE_PERSIST_FAILED;
+    }
+    // Re-read the device mode params so install-time dual-mode handling (NeedDualModeHandle)
+    // sees the mode the caller just switched to (spec L-7); the migration itself is mode-free
+    // (same-name different-package pairs rotate per call). UpdateModeCache overwrites the
+    // cache unconditionally — a missing/unreadable/illegal param leaves it no longer reporting
+    // a dual-mode device — so re-verify the gate before migrating: skip the migration and
+    // report DEVICE_NOT_SUPPORTED so the caller can retry (the retry re-reads the params and
+    // heals the cache). The policies persisted above stay in place; the runtime layout
+    // converges on the next successful switch or the reboot classification. (codecheck R3
+    // INP-06, report alternative: post-refresh gate re-verification)
+    DualModeHelper::UpdateModeCache();
+    if (!DualModeHelper::IsDualModeDevice()) {
+        APP_LOGE_NOFUNC("FilterBundleListByDeviceModeDistributionPolicies mode refresh failed");
+        return ERR_APPEXECFWK_DUAL_MODE_DEVICE_NOT_SUPPORTED;
+    }
+    FilterBundleListByDeviceModeDistributionPoliciesNoLock(policies);
+
+    APP_LOGI("Dual mode: FilterBundleListByDeviceModeDistributionPolicies done - "
+             "bundleInfos=%{public}zu, tempBundleInfos=%{public}zu",
+             bundleInfos_.size(), tempBundleInfos_.size());
+    return ERR_OK;
+}
+
+// === DUAL_MODE: lock-free migration body (requirement 2) ===
+// Caller must hold bundleInfoMutex_. See FilterBundleListByDeviceModeDistributionPolicies.
+// Mode-free by design: the migration does NOT sense primary/secondary mode — the caller flips
+// the device mode and triggers one switch per flip. Semantics per policy value:
+// - UNSPECIFIED (0): always visible, never migrated.
+// - filterable policies (1/2/3/5/7): in the set -> bundleInfos_, else -> tempBundleInfos_.
+// - different-package policies (4/6/8): a same-name variant pair ROTATES on every call (the
+//   visible variant goes to tempBundleInfos_, the hidden one into bundleInfos_); a
+//   diff-package entry without a same-name counterpart stays on its side (nothing to rotate
+//   with — mode-based placement of such single-variant apps belongs to the reboot
+//   classification).
+void BundleDataMgr::FilterBundleListByDeviceModeDistributionPoliciesNoLock(
+    const std::set<DeviceModeDistributionPolicy> &policySet)
+{
+    // Hide apps whose policy is NOT in the set by moving them to temp. A same-name temp entry
+    // cannot legitimately pair with a filterable bundle entry (per-app policy is single-valued;
+    // install-time consistency checks block category transitions), so treat it as an
+    // inconsistent variant pairing: skip the migration, keep both entries. NOTE: this leaves a
+    // should-be-hidden app VISIBLE — acceptable for an anomalous state only (unreachable via
+    // normal flow: reinstall is blocked by installStates_ residue and the state transfer
+    // rules); an occurrence indicates data inconsistency needing manual investigation.
+    for (auto it = bundleInfos_.begin(); it != bundleInfos_.end();) {
+        DeviceModeDistributionPolicy policy = it->second.GetDeviceModeDistributionPolicy();
+        if (policy != DeviceModeDistributionPolicy::UNSPECIFIED
+            && !DualModeHelper::IsDiffPackageCategory(policy)
+            && policySet.count(policy) == 0) {
+            auto tempItem = tempBundleInfos_.find(it->first);
+            if (tempItem == tempBundleInfos_.end()) {
+                tempBundleInfos_[it->first] = std::move(it->second);
+                it = bundleInfos_.erase(it);
+                continue;
+            }
+            APP_LOGW("Dual mode: inconsistent variant pairing, keep visible bundle=%{public}s",
+                it->first.c_str());
+        }
+        ++it;
+    }
+    // Show apps whose policy IS in the set (a valid set always contains 4/6/8). A same-name
+    // different-package pair rotates: the temp variant swaps with the bundle one on every call
+    // (mode-free — the caller triggers one switch per mode flip, so the rotation tracks the
+    // mode). Filterable apps migrate in when no same-name entry occupies the slot; a
+    // diff-package temp entry with no counterpart never migrates alone (rotation needs a
+    // pair). Never swap out a non-diff-package occupant — that would hide an in-set app and
+    // oscillate on repeated switches.
+    for (auto it = tempBundleInfos_.begin(); it != tempBundleInfos_.end();) {
+        DeviceModeDistributionPolicy policy = it->second.GetDeviceModeDistributionPolicy();
+        if (policy != DeviceModeDistributionPolicy::UNSPECIFIED
+            && policySet.count(policy) != 0) {
+            auto bundleItem = bundleInfos_.find(it->first);
+            if (bundleItem == bundleInfos_.end()) {
+                if (!DualModeHelper::IsDiffPackageCategory(policy)) {
+                    bundleInfos_[it->first] = std::move(it->second);
+                    it = tempBundleInfos_.erase(it);
+                    continue;
+                }
+            } else if (DualModeHelper::IsDiffPackageCategory(
+                bundleItem->second.GetDeviceModeDistributionPolicy())) {
+                std::swap(it->second, bundleItem->second);
+            } else {
+                APP_LOGW("Dual mode: non-variant entry occupies bundle slot, skip swap bundle=%{public}s",
+                    it->first.c_str());
+            }
+        }
+        ++it;
+    }
 }
 
 bool BundleDataMgr::UpdateBundleInstallState(const std::string &bundleName,
@@ -682,7 +858,9 @@ bool BundleDataMgr::RemoveModuleInfo(
             APP_LOGE("update storage failed bundle:%{public}s", bundleName.c_str());
             return false;
         }
-        DeleteRouterInfo(bundleName, modulePackage);
+        const std::string routerBundleName = oldInfo.IsDualModeCloneApp()
+            ? DualModeHelper::GetDualModeBundleName(bundleName) : bundleName;
+        DeleteRouterInfo(routerBundleName, modulePackage);
         bundleInfos_.at(bundleName) = oldInfo;
         APP_LOGD("update storage success bundle:%{public}s", bundleName.c_str());
     }
@@ -6833,6 +7011,13 @@ ErrCode BundleDataMgr::SetBundleFirstLaunch(const std::string &bundleName, int32
         APP_LOGW("Request userId %{public}d is invalid, bundleName:%{public}s", userId, bundleName.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
+    bool isSecondaryMode = DualModeHelper::IsSecondaryMode();
+    bool isSecondaryAppIndex = (appIndex / ServiceConstants::DUAL_MODE_CLONE_APP_INDEX) > 0;
+    bool isValidAppIndex = (isSecondaryMode && isSecondaryAppIndex) || (!isSecondaryMode && !isSecondaryAppIndex);
+    if (!isValidAppIndex) {
+        APP_LOGW("Request appIndex %{public}d is invalid", appIndex);
+        return ERR_BUNDLE_MANAGER_INVALID_APP_INDEX;
+    }
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGW("can not find bundle %{public}s", bundleName.c_str());
@@ -6850,7 +7035,8 @@ ErrCode BundleDataMgr::SetBundleFirstLaunch(const std::string &bundleName, int32
     }
     // Check if isBundleFirstLaunched value has changed
     bool currentValue = false;
-    if (appIndex == 0) {
+    bool isMainApp = (appIndex % ServiceConstants::DUAL_MODE_CLONE_APP_INDEX) == 0;
+    if (isMainApp) {
         currentValue = innerBundleUserInfoPtr->isBundleFirstLaunched;
     } else {
         auto iter = innerBundleUserInfoPtr->cloneInfos.find(std::to_string(appIndex));
@@ -6865,7 +7051,7 @@ ErrCode BundleDataMgr::SetBundleFirstLaunch(const std::string &bundleName, int32
         return ERR_OK;
     }
     ErrCode ret = ERR_OK;
-    if (appIndex == 0) {
+    if (isMainApp) {
         ret = info.SetBundleFirstLaunch(isBundleFirstLaunched, requestUserId);
     } else {
         ret = info.SetCloneBundleFirstLaunch(isBundleFirstLaunched, appIndex, requestUserId);
@@ -7319,13 +7505,16 @@ void BundleDataMgr::RecycleUidAndGid(const InnerBundleInfo &info)
         return;
     }
 
+    const std::string effectiveBundleName = info.IsDualModeCloneApp()
+        ? DualModeHelper::GetDualModeBundleName(info.GetBundleName())
+        : info.GetBundleName();
     UninstallBundleInfo uninstallBundleInfo;
-    if (GetUninstallBundleInfo(info.GetBundleName(), uninstallBundleInfo)) {
+    if (GetUninstallBundleInfo(effectiveBundleName, uninstallBundleInfo)) {
         return;
     }
     bundleIdMap_.erase(bundleId);
-    BundleUtil::RemoveFsConfig(innerBundleUserInfo.bundleName, ServiceConstants::HMDFS_CONFIG_PATH);
-    BundleUtil::RemoveFsConfig(innerBundleUserInfo.bundleName, ServiceConstants::SHAREFS_CONFIG_PATH);
+    BundleUtil::RemoveFsConfig(effectiveBundleName, ServiceConstants::HMDFS_CONFIG_PATH);
+    BundleUtil::RemoveFsConfig(effectiveBundleName, ServiceConstants::SHAREFS_CONFIG_PATH);
 }
 
 bool BundleDataMgr::RestoreUidAndGid()
@@ -15234,6 +15423,23 @@ ErrCode BundleDataMgr::DeleteShortcutEnabledInfo(const std::string &bundleName)
     if (!shortcutEnabledStorage_->DeleteShortcutEnabledInfo(bundleName)) {
         return ERR_APPEXECFWK_DB_DELETE_ERROR;
     }
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::DeleteBundleStateByUserId(const std::string &bundleName, int32_t userId)
+{
+    APP_LOGD("DeleteBundleStateByUserId, bundleName:%{public}s, userId:%{public}d", bundleName.c_str(), userId);
+    if (bundleStateStorage_ == nullptr) {
+        APP_LOGE("bundleStateStorage is null");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+
+    if (!bundleStateStorage_->DeleteBundleState(bundleName, userId)) {
+        APP_LOGW("DeleteBundleState failed, -n %{public}s -u %{public}d",
+            bundleName.c_str(), userId);
+        return ERR_APPEXECFWK_DB_DELETE_ERROR;
+    }
+
     return ERR_OK;
 }
 

@@ -1259,4 +1259,23 @@ HWTEST_F(BmsSystemAppPermissionDeniedTest, SetAppClonePreference_0001, TestSize.
     auto ret = localBundleMgrHostImpl->SetAppClonePreference(bundleName, userId, preference);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
 }
+
+/**
+ * @tc.number: BundleMgrHostImpl_0059
+ * @tc.name: BmsSystemAppPermissionDeniedTest
+ * @tc.desc: FilterBundleListByDeviceModeDistributionPolicies SystemAppPermission Denied
+ */
+HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleMgrHostImpl_0059, TestSize.Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+
+    std::set<DeviceModeDistributionPolicy> policies = {
+        DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE,
+        DeviceModeDistributionPolicy::PARTIAL_COMPATIBLE_DIFFERENT_PACKAGE,
+        DeviceModeDistributionPolicy::FULL_COMPATIBLE_DIFFERENT_PACKAGE,
+    };
+    auto ret = localBundleMgrHostImpl->FilterBundleListByDeviceModeDistributionPolicies(policies);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
 }  // namespace OHOS

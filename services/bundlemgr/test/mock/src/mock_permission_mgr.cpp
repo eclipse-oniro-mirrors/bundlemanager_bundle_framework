@@ -283,7 +283,7 @@ int32_t BundlePermissionMgr::InitHapToken(const InnerBundleInfo &innerBundleInfo
 
 int32_t BundlePermissionMgr::UpdateHapToken(Security::AccessToken::AccessTokenIDEx& tokenIdeEx,
     const InnerBundleInfo &innerBundleInfo, int32_t userId, Security::AccessToken::HapInfoCheckResult &checkResult,
-    const std::string &appServiceCapabilities, bool dataRefresh, const bool isDebugGrant)
+    const std::string &appServiceCapabilities, bool dataRefresh, const bool isDebugGrant, const bool needInit)
 {
     return ERR_OK;
 }
@@ -313,6 +313,11 @@ bool BundlePermissionMgr::VerifyAcrossUserPermission(const int32_t userId)
 }
 
 bool BundlePermissionMgr::IsCliToolCalling(const uint64_t tokenId)
+{
+    return true;
+}
+
+bool BundlePermissionMgr::RefreshPreAuthorizationForOTA()
 {
     return true;
 }

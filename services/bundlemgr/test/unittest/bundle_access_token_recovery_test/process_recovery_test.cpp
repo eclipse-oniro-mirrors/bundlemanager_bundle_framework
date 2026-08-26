@@ -207,9 +207,11 @@ HWTEST_F(BmsProcessRecoveryTest, BmsProcessRecoveryTest_0500, Function | SmallTe
 
 /**
  * @tc.number: BmsProcessRecoveryTest_0600
- * @tc.name: test app gives up after four failed attempts
- * @tc.desc: 1.InitHapToken fails on every attempt
- *           2.exactly 4 attempts (1 initial + 3 retries per requirement), reset still called
+ * @tc.name: test permanent transient failure keeps the dberror marker
+ * @tc.desc: 1.InitHapToken fails with ERR_SERVICE_ABNORMAL on every attempt
+ *           2.exactly 1 + 3 = 4 attempts (first pass plus three retry rounds)
+ *           3.the app is still pending: ResetDatabaseRecoveryStatus is never called and the
+ *              dberror parameter stays set, so the next boot re-enters recovery
  */
 HWTEST_F(BmsProcessRecoveryTest, BmsProcessRecoveryTest_0600, Function | SmallTest | Level0)
 {
@@ -223,7 +225,8 @@ HWTEST_F(BmsProcessRecoveryTest, BmsProcessRecoveryTest_0600, Function | SmallTe
     BundleAccessTokenRecoveryMgr::ProcessRecovery(dataMgr, "test");
 
     EXPECT_EQ(4U, GetInitHapTokenCallCountForTest());
-    EXPECT_EQ(1, GetResetDatabaseRecoveryStatusCallCountForTest());
+    EXPECT_EQ(0, GetResetDatabaseRecoveryStatusCallCountForTest());
+    EXPECT_TRUE(OHOS::system::GetBoolParameter(DB_ERROR_PARAM, false));
 }
 
 /**
@@ -288,10 +291,12 @@ HWTEST_F(BmsProcessRecoveryTest, BmsProcessRecoveryTest_0900, Function | SmallTe
 /**
  * @tc.number: BmsProcessRecoveryTest_1000
  * @tc.name: test mixed results across apps
- * @tc.desc: 1.three bundles processed in map order a/b/c; the mock result queue is consumed in
- *              that same order: a exhausts the four failures, b gets already-exist, c succeeds
- *           2.total InitHapToken calls = 4 + 1 + 1 = 6, reset called exactly once, and a failed
- *              app does not block the remaining apps
+ * @tc.desc: 1.three bundles processed in map order a/b/c; the mock result queue is consumed
+ *              interleaved: first pass a,b,c, then retry rounds a only — a fails transiently
+ *              on all four attempts (first pass + three rounds), b gets already-exist on the
+ *              first pass, c succeeds on the first pass
+ *           2.total InitHapToken calls = 4 + 1 + 1 = 6; a failed app does not block the others
+ *           3.a is still pending, so the dberror marker is kept: reset is never called
  */
 HWTEST_F(BmsProcessRecoveryTest, BmsProcessRecoveryTest_1000, Function | SmallTest | Level0)
 {
@@ -300,22 +305,26 @@ HWTEST_F(BmsProcessRecoveryTest, BmsProcessRecoveryTest_1000, Function | SmallTe
     AddBundleWithMainToken(dataMgr, TEST_BUNDLE_A, TEST_TOKEN_IDEX);
     AddBundleWithMainToken(dataMgr, TEST_BUNDLE_B, TEST_TOKEN_IDEX + 1);
     AddBundleWithMainToken(dataMgr, TEST_BUNDLE_C, TEST_TOKEN_IDEX + 2);
-    for (int32_t i = 0; i < 4; ++i) {
-        PushInitHapTokenResultForTest(AccessTokenError::ERR_SERVICE_ABNORMAL);  // consumed by bundle a
+    // Consumption order: pass1 a,b,c; retry rounds 1-3 a only.
+    PushInitHapTokenResultForTest(AccessTokenError::ERR_SERVICE_ABNORMAL);  // a fails on the first pass
+    PushInitHapTokenResultForTest(AccessTokenError::ERR_TOKENID_HAS_EXISTED);  // b already exists
+    PushInitHapTokenResultForTest(0);  // c succeeds on the first pass (explicit: keep the queue for a's rounds)
+    for (int32_t i = 0; i < 3; ++i) {
+        PushInitHapTokenResultForTest(AccessTokenError::ERR_SERVICE_ABNORMAL);  // a fails in every round
     }
-    PushInitHapTokenResultForTest(AccessTokenError::ERR_TOKENID_HAS_EXISTED);   // consumed by bundle b
-    // bundle c: queue drained, mock returns success
 
     BundleAccessTokenRecoveryMgr::ProcessRecovery(dataMgr, "test");
 
     EXPECT_EQ(6U, GetInitHapTokenCallCountForTest());
-    EXPECT_EQ(1, GetResetDatabaseRecoveryStatusCallCountForTest());
-    // Every restored entry must carry its own persisted token id (low 32 bits).
+    EXPECT_EQ(0, GetResetDatabaseRecoveryStatusCallCountForTest());
+    EXPECT_TRUE(OHOS::system::GetBoolParameter(DB_ERROR_PARAM, false));
+    // Every restored entry must carry its own persisted token id (low 32 bits):
+    // calls #1/#2/#3 are a/b/c in first-pass order, rounds 4-6 are a again.
     HapInfoParams first = GetInitHapInfoParamsForTest(0);
     EXPECT_EQ(TEST_TOKEN_ID, first.tokenID);
-    HapInfoParams second = GetInitHapInfoParamsForTest(4);
+    HapInfoParams second = GetInitHapInfoParamsForTest(1);
     EXPECT_EQ(TEST_TOKEN_ID + 1, second.tokenID);
-    HapInfoParams last = GetInitHapInfoParamsForTest(5);
+    HapInfoParams last = GetInitHapInfoParamsForTest(2);
     EXPECT_EQ(TEST_TOKEN_ID + 2, last.tokenID);
 }
 
@@ -352,10 +361,11 @@ HWTEST_F(BmsProcessRecoveryTest, BmsProcessRecoveryTest_1100, Function | SmallTe
 
 /**
  * @tc.number: BmsProcessRecoveryTest_1200
- * @tc.name: test retry does not depend on the error code
- * @tc.desc: 1.first InitHapToken returns ERR_PERMISSION_DENIED (not ERR_SERVICE_ABNORMAL)
- *           2.the attempt is still retried and succeeds on the second call (exactly 2 calls),
- *              pinning the "retry regardless of the error code" contract
+ * @tc.name: test definitive failure is terminal without retry
+ * @tc.desc: 1.first InitHapToken returns ERR_PERMISSION_DENIED (not a transient error)
+ *           2.no retry happens (exactly one call), the app does not enter the failed list and
+ *              does not block the recovery completion, pinning the "only the transient error
+ *              codes are retryable" contract
  */
 HWTEST_F(BmsProcessRecoveryTest, BmsProcessRecoveryTest_1200, Function | SmallTest | Level0)
 {
@@ -366,17 +376,19 @@ HWTEST_F(BmsProcessRecoveryTest, BmsProcessRecoveryTest_1200, Function | SmallTe
 
     BundleAccessTokenRecoveryMgr::ProcessRecovery(dataMgr, "test");
 
-    EXPECT_EQ(2U, GetInitHapTokenCallCountForTest());
+    EXPECT_EQ(1U, GetInitHapTokenCallCountForTest());
     EXPECT_EQ(1, GetResetDatabaseRecoveryStatusCallCountForTest());
+    EXPECT_FALSE(OHOS::system::GetBoolParameter(DB_ERROR_PARAM, false));
 }
 
 /**
  * @tc.number: BmsProcessRecoveryTest_1300
- * @tc.name: test second mount point is a no-op after a successful first one
- * @tc.desc: 1.recovery succeeds on mount 1 and ResetDatabaseRecoveryStatus clears the marker
+ * @tc.name: test a second recovery invocation is a no-op after a successful first one
+ * @tc.desc: 1.recovery succeeds on invocation 1 and ResetDatabaseRecoveryStatus clears the marker
  *              (the mock mirrors the access_token service contract: success sets dberror to 0)
- *           2.mount 2 short-circuits on NeedRecovery: no extra InitHapToken, no extra reset,
- *              which is the latch that makes the two startup mount points idempotent
+ *           2.invocation 2 short-circuits on NeedRecovery: no extra InitHapToken, no extra
+ *              reset — the latch that makes repeated recovery passes idempotent (production
+ *              wires a single AfterBmsStart mount point; mountPoint here is log-only)
  */
 HWTEST_F(BmsProcessRecoveryTest, BmsProcessRecoveryTest_1300, Function | SmallTest | Level0)
 {
@@ -398,11 +410,11 @@ HWTEST_F(BmsProcessRecoveryTest, BmsProcessRecoveryTest_1300, Function | SmallTe
 
 /**
  * @tc.number: BmsProcessRecoveryTest_1400
- * @tc.name: test reset failure leaves the marker set so the next mount re-enters
- * @tc.desc: 1.mount 1 restores the app but ResetDatabaseRecoveryStatus fails, so dberror stays
- *              set (the access_token service only clears it on success)
- *           2.mount 2 runs the full pass again (one extra restore) and the now-successful reset
- *              clears the marker: the two mounts converge without breaking startup
+ * @tc.name: test reset failure leaves the marker set so a later invocation re-enters
+ * @tc.desc: 1.invocation 1 restores the app but ResetDatabaseRecoveryStatus fails, so dberror
+ *              stays set (the access_token service only clears it on success)
+ *           2.invocation 2 runs the full pass again (one extra restore) and the now-successful
+ *              reset clears the marker: the two invocations converge without breaking startup
  */
 HWTEST_F(BmsProcessRecoveryTest, BmsProcessRecoveryTest_1400, Function | SmallTest | Level0)
 {
@@ -454,7 +466,7 @@ HWTEST_F(BmsProcessRecoveryTest, BmsProcessRecoveryTest_1500, Function | SmallTe
  * @tc.desc: 1.calls RestoreSingleApp directly with a bundleName absent from bundleInfos_ (the
  *              defensive fetch-failure branch: snapshot and fetch read the same map, so the
  *              public single-threaded ProcessRecovery path cannot reach it)
- *           2.returns failure, alreadyExist stays false and InitHapToken is never reached
+ *           2.returns failure and InitHapToken is never reached
  */
 HWTEST_F(BmsProcessRecoveryTest, BmsProcessRecoveryTest_1600, Function | SmallTest | Level0)
 {
@@ -465,10 +477,81 @@ HWTEST_F(BmsProcessRecoveryTest, BmsProcessRecoveryTest_1600, Function | SmallTe
     restoreInfo.appIndex = 0;
     restoreInfo.accessTokenIdEx = TEST_TOKEN_IDEX;
 
-    bool alreadyExist = false;
-    int32_t ret = BundleAccessTokenRecoveryMgr::RestoreSingleApp(dataMgr, restoreInfo, alreadyExist);
+    int32_t ret = BundleAccessTokenRecoveryMgr::RestoreSingleApp(dataMgr, restoreInfo);
 
     EXPECT_NE(ERR_OK, ret);
-    EXPECT_FALSE(alreadyExist);
     EXPECT_EQ(0U, GetInitHapTokenCallCountForTest());
+}
+
+/**
+ * @tc.number: BmsProcessRecoveryTest_1700
+ * @tc.name: test pending app recovers on the second retry round
+ * @tc.desc: 1.result sequence is ERR_SERVICE_ABNORMAL (first pass), ERR_SERVICE_ABNORMAL
+ *              (retry round 1), then success (retry round 2, queue drained)
+ *           2.exactly 3 calls, the failed list empties and the marker is reset
+ */
+HWTEST_F(BmsProcessRecoveryTest, BmsProcessRecoveryTest_1700, Function | SmallTest | Level0)
+{
+    OHOS::system::SetParameter(DB_ERROR_PARAM, "true");
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    AddBundleWithMainToken(dataMgr, TEST_BUNDLE_A, TEST_TOKEN_IDEX);
+    PushInitHapTokenResultForTest(AccessTokenError::ERR_SERVICE_ABNORMAL);
+    PushInitHapTokenResultForTest(AccessTokenError::ERR_SERVICE_ABNORMAL);
+
+    BundleAccessTokenRecoveryMgr::ProcessRecovery(dataMgr, "test");
+
+    EXPECT_EQ(3U, GetInitHapTokenCallCountForTest());
+    EXPECT_EQ(1, GetResetDatabaseRecoveryStatusCallCountForTest());
+    EXPECT_FALSE(OHOS::system::GetBoolParameter(DB_ERROR_PARAM, false));
+}
+
+/**
+ * @tc.number: BmsProcessRecoveryTest_1800
+ * @tc.name: test definitive failure during retry round removes the app from the list
+ * @tc.desc: 1.result sequence is ERR_SERVICE_ABNORMAL (first pass, app enters the failed list),
+ *              then ERR_PERMISSION_DENIED (retry round 1)
+ *           2.the definitive result removes the app from the list, so the recovery completes
+ *              with exactly 2 calls and the marker is reset
+ */
+HWTEST_F(BmsProcessRecoveryTest, BmsProcessRecoveryTest_1800, Function | SmallTest | Level0)
+{
+    OHOS::system::SetParameter(DB_ERROR_PARAM, "true");
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    AddBundleWithMainToken(dataMgr, TEST_BUNDLE_A, TEST_TOKEN_IDEX);
+    PushInitHapTokenResultForTest(AccessTokenError::ERR_SERVICE_ABNORMAL);
+    PushInitHapTokenResultForTest(AccessTokenError::ERR_PERMISSION_DENIED);
+
+    BundleAccessTokenRecoveryMgr::ProcessRecovery(dataMgr, "test");
+
+    EXPECT_EQ(2U, GetInitHapTokenCallCountForTest());
+    EXPECT_EQ(1, GetResetDatabaseRecoveryStatusCallCountForTest());
+    EXPECT_FALSE(OHOS::system::GetBoolParameter(DB_ERROR_PARAM, false));
+}
+
+/**
+ * @tc.number: BmsProcessRecoveryTest_1900
+ * @tc.name: test mixed pending outcome across two apps
+ * @tc.desc: 1.bundle a fails transiently on all four attempts (first pass + three rounds);
+ *              bundle b fails transiently on the first pass and round 1, then succeeds on
+ *              round 2 (mock queue consumed in map order a/b per phase)
+ *           2.total calls = 4(a) + 3(b) = 7; a stays pending, so the marker is kept
+ */
+HWTEST_F(BmsProcessRecoveryTest, BmsProcessRecoveryTest_1900, Function | SmallTest | Level0)
+{
+    OHOS::system::SetParameter(DB_ERROR_PARAM, "true");
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    AddBundleWithMainToken(dataMgr, TEST_BUNDLE_A, TEST_TOKEN_IDEX);
+    AddBundleWithMainToken(dataMgr, TEST_BUNDLE_B, TEST_TOKEN_IDEX + 1);
+    // Consumption order: pass1 a,b; round1 a,b; round2 a,b; round3 a.
+    for (int32_t i = 0; i < 5; ++i) {
+        PushInitHapTokenResultForTest(AccessTokenError::ERR_SERVICE_ABNORMAL);  // a/b fail slots
+    }
+    PushInitHapTokenResultForTest(0);  // b succeeds on round 2 (call #6)
+    PushInitHapTokenResultForTest(AccessTokenError::ERR_SERVICE_ABNORMAL);  // a fails on round 3
+
+    BundleAccessTokenRecoveryMgr::ProcessRecovery(dataMgr, "test");
+
+    EXPECT_EQ(7U, GetInitHapTokenCallCountForTest());
+    EXPECT_EQ(0, GetResetDatabaseRecoveryStatusCallCountForTest());
+    EXPECT_TRUE(OHOS::system::GetBoolParameter(DB_ERROR_PARAM, false));
 }

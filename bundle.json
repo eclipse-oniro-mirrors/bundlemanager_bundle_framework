@@ -53,6 +53,7 @@
                 "app_file_service",
                 "appverify",
                 "battery_manager",
+                "bounds_checking_function",
                 "common_event_service",
                 "config_policy",
                 "c_utils",

@@ -18,6 +18,7 @@
 
 #include <cstdint>
 #include <mutex>
+#include <set>
 #include <string>
 
 #include "bundle_info.h"
@@ -44,7 +45,8 @@ public:
     static bool IsSecondaryMode();
 
     // Initialize the cached ispcmode/mainmode by reading system parameters.
-    // Called once at process startup (BundleMgrService::Init); no later re-init needed.
+    // Called once at process startup (BundleMgrService::Init); the runtime mode switch
+    // refreshes the cache afterwards via UpdateModeCache (no re-initialization).
     static void InitializeCache();
 
     // Update the cached ispcmode/mainmode by re-reading system parameters.
@@ -60,6 +62,23 @@ public:
     // Whether the policy is a different-package category (UNIVERSAL/PARTIAL_COMPATIBLE/
     // FULL_COMPATIBLE_DIFFERENT_PACKAGE).
     static bool IsDiffPackageCategory(DeviceModeDistributionPolicy policy);
+
+    // Whether a device-mode distribution policy set is valid (single validation source for the
+    // runtime switch input and the persisted value). Rules: non-empty; every value a legal
+    // DeviceModeDistributionPolicy (0~8); all different-package policies (4/6/8) present —
+    // they must stay visible via mode-based variant selection. Deduplication is inherent
+    // to the set.
+    static bool IsValidPolicySet(const std::set<DeviceModeDistributionPolicy> &policies);
+
+    // Parse the persisted policy CSV ("4,6,8,...") into a validated policy set. SplitStr/StrToInt
+    // are no-throw (this build is -fno-exceptions); the persisted value may be corrupted, so on
+    // any malformed token or rule violation (IsValidPolicySet) return false — the caller then
+    // falls back to the requirement-1 degradation.
+    static bool ParsePersistedPolicies(const std::string &policiesStr,
+        std::set<DeviceModeDistributionPolicy> &policySet);
+
+    // Canonical persisted form of a policy set: ascending unique decimal values joined by ",".
+    static std::string PoliciesToCsv(const std::set<DeviceModeDistributionPolicy> &policySet);
 
     // Whether the current install needs dual-mode isolation handling.
     // True only when secondary mode AND different-package category.

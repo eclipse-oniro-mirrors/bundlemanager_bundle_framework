@@ -68,7 +68,7 @@ public:
     static int32_t UpdateHapToken(Security::AccessToken::AccessTokenIDEx &tokenIdeEx,
         const InnerBundleInfo &innerBundleInfo, int32_t userId,
         Security::AccessToken::HapInfoCheckResult &checkResult, const std::string &appServiceCapabilities,
-        bool dataRefresh = false, const bool isDebugGrant = false);
+        bool dataRefresh = false, const bool isDebugGrant = false, const bool needInit = true);
 
     /**
      * @brief Restore one app's hap token into the access token service with the original
@@ -141,6 +141,15 @@ public:
     static bool IsCallingUidValid(int32_t uid);
 
     static bool CheckUserFromShell(int32_t userId);
+
+    /**
+     * @brief Refresh pre-authorization for all installed applications during OTA.
+     * This method iterates through the default permissions configuration and
+     * updates pre-authorization for matching installed applications, including
+     * main apps, clone apps, and CLI sandbox apps.
+     * @return Returns true if the refresh was successful; returns false otherwise.
+     */
+    static bool RefreshPreAuthorizationForOTA();
 
 private:
     static std::vector<Security::AccessToken::PermissionDef> GetPermissionDefList(
