@@ -17,7 +17,9 @@
 #include <cstdint>
 #include <fuzzer/FuzzedDataProvider.h>
 
-#include "bundle_mgr_proxy.h"
+#include "bundle_mgr_interface.h"
+#include "iservice_registry.h"
+#include "system_ability_definition.h"
 
 #include "bmsbatchsetenabled_fuzzer.h"
 #include "bms_fuzztest_util.h"
@@ -25,6 +27,19 @@
 using namespace OHOS::AppExecFwk;
 using namespace OHOS::AppExecFwk::BMSFuzzTestUtil;
 namespace OHOS {
+sptr<IBundleMgr> GetBundleMgr()
+{
+    auto systemAbilityManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (systemAbilityManager == nullptr) {
+        return nullptr;
+    }
+    auto bundleMgrSa = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    if (bundleMgrSa == nullptr) {
+        return nullptr;
+    }
+    return iface_cast<IBundleMgr>(bundleMgrSa);
+}
+
 bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
 {
     FuzzedDataProvider fdp(data, size);
@@ -34,16 +49,19 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     bool killProcess = fdp.ConsumeBool();
     bool needSendEvent = fdp.ConsumeBool();
 
-    // Fuzz BatchSetApplicationEnabled via proxy (null remote, should return parcel error)
-    sptr<IRemoteObject> object;
-    BundleMgrProxy bundleMgrProxy(object);
-    bundleMgrProxy.BatchSetApplicationEnabled(userId, enableAppIndex, disableAppIndex, killProcess, needSendEvent);
+    auto bundleMgr = GetBundleMgr();
+    if (bundleMgr == nullptr) {
+        return false;
+    }
+
+    // Fuzz BatchSetApplicationEnabled via real system proxy
+    bundleMgr->BatchSetApplicationEnabled(userId, enableAppIndex, disableAppIndex, killProcess, needSendEvent);
 
     // Fuzz with boundary appIndex values
-    bundleMgrProxy.BatchSetApplicationEnabled(userId, -1, 1, true, true);
-    bundleMgrProxy.BatchSetApplicationEnabled(userId, 1, -1, true, true);
-    bundleMgrProxy.BatchSetApplicationEnabled(userId, 0, 0, false, false);
-    bundleMgrProxy.BatchSetApplicationEnabled(userId, 1, 1, false, false);
+    bundleMgr->BatchSetApplicationEnabled(userId, -1, 1, true, true);
+    bundleMgr->BatchSetApplicationEnabled(userId, 1, -1, true, true);
+    bundleMgr->BatchSetApplicationEnabled(userId, 0, 0, false, false);
+    bundleMgr->BatchSetApplicationEnabled(userId, 1, 1, false, false);
 
     return true;
 }

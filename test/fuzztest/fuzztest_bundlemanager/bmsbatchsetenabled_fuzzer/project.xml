@@ -1,11 +1,8 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <fuzz_config>
-  <fuzz_test>
-    <fuzz_test_name>BmsBatchSetEnabledFuzzTest</fuzz_test_name>
-    <fuzz_test_type>libfuzzer</fuzz_test_type>
-    <fuzz_test_language>cpp</fuzz_test_language>
-    <fuzz_test_timeout>60</fuzz_test_timeout>
-    <fuzz_test_max_len>1024</fuzz_test_max_len>
-    <fuzz_test_corpus_dir>corpus</fuzz_test_corpus_dir>
-  </fuzz_test>
+  <fuzztest>
+    <max_len>1024</max_len>
+    <max_total_time>300</max_total_time>
+    <rss_limit_mb>4096</rss_limit_mb>
+  </fuzztest>
 </fuzz_config>
