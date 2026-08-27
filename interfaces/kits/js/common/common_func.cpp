@@ -1399,6 +1399,20 @@ void CommonFunc::ConvertAppProvisionInfo(
 
     SetStringProperty(env, objAppProvisionInfo, appProvisionInfo.bundleName, "bundleName");
 
+    SetStringProperty(env, objAppProvisionInfo, appProvisionInfo.appServiceCapabilities, "appServiceCapabilities");
+
+    // appIndex: number
+    napi_value appIndex;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, appProvisionInfo.appIndex, &appIndex));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppProvisionInfo, "appIndex", appIndex));
+
+    // specifiedDistributionType: string
+    SetStringProperty(env, objAppProvisionInfo, appProvisionInfo.specifiedDistributionType,
+        "specifiedDistributionType");
+
+    // additional: string
+    SetStringProperty(env, objAppProvisionInfo, appProvisionInfo.additionalInfo, "additional");
+
     napi_value validity;
     NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &validity));
     ConvertValidity(env, appProvisionInfo.validity, validity);
