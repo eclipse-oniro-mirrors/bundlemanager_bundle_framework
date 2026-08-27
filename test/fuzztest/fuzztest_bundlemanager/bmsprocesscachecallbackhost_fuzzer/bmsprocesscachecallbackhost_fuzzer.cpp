@@ -34,10 +34,11 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     MessageParcel datas;
     MessageParcel reply;
     MessageOption option;
-    processCacheCallbackHost.OnRemoteRequest(code, datas, reply, option);
-    processCacheCallbackHost.OnRemoteRequest(static_cast<uint32_t>
+    datas.WriteInterfaceToken(processCacheCallbackHost.GetDescriptor());
+    FuzzIpcRequest(processCacheCallbackHost, code, datas, reply, option);
+    FuzzIpcRequest(processCacheCallbackHost, static_cast<uint32_t>
         (ProcessCacheCallbackInterfaceCode::GET_ALL_BUNDLE_CACHE), datas, reply, option);
-    processCacheCallbackHost.OnRemoteRequest(static_cast<uint32_t>
+    FuzzIpcRequest(processCacheCallbackHost, static_cast<uint32_t>
         (ProcessCacheCallbackInterfaceCode::CLEAN_ALL_BUNDLE_CACHE), datas, reply, option);
     uint64_t cacheStat = fdp.ConsumeIntegral<uint64_t>();
     processCacheCallbackHost.OnGetAllBundleCacheFinished(cacheStat);

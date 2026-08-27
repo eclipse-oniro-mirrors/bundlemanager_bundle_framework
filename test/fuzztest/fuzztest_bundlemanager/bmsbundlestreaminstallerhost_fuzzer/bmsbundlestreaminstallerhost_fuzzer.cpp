@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,7 +20,6 @@
 #include <fuzzer/FuzzedDataProvider.h>
 #define private public
 #include "bundle_stream_installer_host.h"
-#undef private
 #include "message_parcel.h"
 #include "securec.h"
 #include "bms_fuzztest_util.h"
@@ -28,36 +27,117 @@
 using namespace OHOS::AppExecFwk;
 using namespace OHOS::AppExecFwk::BMSFuzzTestUtil;
 namespace OHOS {
-constexpr uint32_t CODE_MAX = 4;
+constexpr uint32_t CODE_MAX = 5;
+
+// HandleCreateStream: ReadString(fileName)
+void FuzzCreateStream(BundleStreamInstallerHost& host, FuzzedDataProvider& fdp)
+{
+    MessageParcel data;
+    PrepareParcel<BundleStreamInstallerHost>(data);
+    MessageParcel reply;
+    WriteStringField(data, fdp);  // fileName
+    FinishParcel(data);
+    host.HandleCreateStream(data, reply);
+}
+
+// HandleCreateSignatureFileStream: ReadString(moduleName), ReadString(fileName)
+void FuzzCreateSignatureFileStream(BundleStreamInstallerHost& host, FuzzedDataProvider& fdp)
+{
+    MessageParcel data;
+    PrepareParcel<BundleStreamInstallerHost>(data);
+    MessageParcel reply;
+    WritePlainString(data, fdp);  // moduleName
+    WriteStringField(data, fdp);  // fileName
+    FinishParcel(data);
+    host.HandleCreateSignatureFileStream(data, reply);
+}
+
+// HandleCreateSharedBundleStream: ReadString(hspName), ReadUint32(sharedBundleIdx)
+void FuzzCreateSharedBundleStream(BundleStreamInstallerHost& host, FuzzedDataProvider& fdp)
+{
+    MessageParcel data;
+    PrepareParcel<BundleStreamInstallerHost>(data);
+    MessageParcel reply;
+    WriteStringField(data, fdp);  // hspName
+    WriteUint32Field(data, fdp);                   // sharedBundleIdx
+    FinishParcel(data);
+    host.HandleCreateSharedBundleStream(data, reply);
+}
+
+// HandleCreatePgoFileStream: ReadString(moduleName), ReadString(fileName)
+void FuzzCreatePgoFileStream(BundleStreamInstallerHost& host, FuzzedDataProvider& fdp)
+{
+    MessageParcel data;
+    PrepareParcel<BundleStreamInstallerHost>(data);
+    MessageParcel reply;
+    WritePlainString(data, fdp);  // moduleName
+    WriteStringField(data, fdp);  // fileName
+    FinishParcel(data);
+    host.HandleCreatePgoFileStream(data, reply);
+}
+
+// HandleCreateExtProfileFileStream: ReadString(fileName)
+void FuzzCreateExtProfileFileStream(BundleStreamInstallerHost& host, FuzzedDataProvider& fdp)
+{
+    MessageParcel data;
+    PrepareParcel<BundleStreamInstallerHost>(data);
+    MessageParcel reply;
+    WriteStringField(data, fdp);  // fileName
+    FinishParcel(data);
+    host.HandleCreateExtProfileFileStream(data, reply);
+}
+
+// HandleInstall: simplified - uses random data for complex InstallParam
+void FuzzStreamInstall(BundleStreamInstallerHost& host, FuzzedDataProvider& fdp)
+{
+    MessageParcel data;
+    PrepareParcel<BundleStreamInstallerHost>(data);
+    MessageParcel reply;
+    auto remaining = fdp.ConsumeRemainingBytes<uint8_t>();
+    data.WriteBuffer(remaining.data(), remaining.size());
+    FinishParcel(data);
+    host.HandleInstall(data, reply);
+}
 
 bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
 {
-    MessageParcel datas;
-    std::u16string descriptor = BundleStreamInstallerHost::GetDescriptor();
-    datas.WriteInterfaceToken(descriptor);
-    datas.WriteBuffer(data, size);
-    datas.RewindRead(0);
-    MessageParcel reply;
-    MessageOption option;
-    BundleStreamInstallerHost host;
+    if (data == nullptr || size == 0) {
+        return false;
+    }
+
     FuzzedDataProvider fdp(data, size);
-    uint8_t code = fdp.ConsumeIntegralInRange<uint8_t>(0, CODE_MAX);
+    static BundleStreamInstallerHost host;
     host.Init();
-    host.OnRemoteRequest(code, datas, reply, option);
-    host.HandleCreateSharedBundleStream(datas, reply);
-    host.HandleCreateExtProfileFileStream(datas, reply);
-    host.HandleCreatePgoFileStream(datas, reply);
-    host.HandleCreateSignatureFileStream(datas, reply);
-    host.HandleCreateStream(datas, reply);
-    host.HandleInstall(datas, reply);
+
+    // Layer 1: Stub loop
+    FuzzIpcStubLoop(host, data, size, CODE_MAX);
+
+    // Layer 2: method layer - 6 methods with precise Parcel construction
+enum StreamInstallerMethod {
+    FUZZCREATESTREAM = 0,
+    FUZZCREATESIGNATUREFILESTREAM,
+    FUZZCREATESHAREDBUNDLESTREAM,
+    FUZZCREATEPGOFILESTREAM,
+    FUZZCREATEEXTPROFILEFILESTREAM,
+    FUZZSTREAMINSTALL,
+    STREAM_INSTALLER_METHOD_MAX,
+};
+
+    uint8_t methodSelector = fdp.ConsumeIntegral<uint8_t>();
+    switch (methodSelector % STREAM_INSTALLER_METHOD_MAX) {
+        case FUZZCREATESTREAM: FuzzCreateStream(host, fdp);                break;
+        case FUZZCREATESIGNATUREFILESTREAM: FuzzCreateSignatureFileStream(host, fdp);    break;
+        case FUZZCREATESHAREDBUNDLESTREAM: FuzzCreateSharedBundleStream(host, fdp);    break;
+        case FUZZCREATEPGOFILESTREAM: FuzzCreatePgoFileStream(host, fdp);          break;
+        case FUZZCREATEEXTPROFILEFILESTREAM: FuzzCreateExtProfileFileStream(host, fdp);  break;
+        case FUZZSTREAMINSTALL: FuzzStreamInstall(host, fdp);                break;
+    }
     return true;
 }
 }
 
-/* Fuzzer entry point */
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
-    /* Run your code on data */
     OHOS::DoSomethingInterestingWithMyAPI(data, size);
     return 0;
 }

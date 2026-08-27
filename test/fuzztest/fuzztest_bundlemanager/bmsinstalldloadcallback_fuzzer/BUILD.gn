@@ -19,36 +19,48 @@ import("../../../../appexecfwk.gni")
 import("../../../../services/bundlemgr/appexecfwk_bundlemgr.gni")
 module_output_path = fuzz_test_path
 
+config("no_thinlto") {
+  cflags = [ "-fno-lto" ]
+  ldflags = [ "-fno-lto" ]
+}
+
 ##############################fuzztest##########################################
 ohos_fuzztest("BMSInstalldLoadCallbackFuzzTest") {
-  fuzz_config_file = "../../../fuzztest/fuzztest_bundlemanager/bmsinstalldloadcallback_fuzzer"
+  fuzz_config_file =
+      "../../../fuzztest/fuzztest_bundlemanager/bmsinstalldloadcallback_fuzzer"
 
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = [ 
+  include_dirs = [
     "${test_path}/fuzztest",
     "${services_path}/bundlemgr/include/installd",
-    ]
+  ]
   sources = bundle_mgr_source
+  sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
   sources += [
     "${services_path}/bundlemgr/src/aot/aot_executor.cpp",
     "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
-    "${services_path}/bundlemgr/src/installd/installd_service.cpp",
-    "${services_path}/bundlemgr/src/installd/installd_permission_mgr.cpp",
+    "${services_path}/bundlemgr/test/mock/src/installd_service.cpp",
+    "${services_path}/bundlemgr/test/mock/src/installd_permission_mgr.cpp",
+    "${services_path}/bundlemgr/test/mock/src/system_ability_helper.cpp",
   ]
 
   sources += bundle_install_sources
 
   sources += [ "bmsinstalldloadcallback_fuzzer.cpp" ]
 
-  configs = [ "${services_path}/bundlemgr/test:bundlemgr_test_config" ]
+  configs = [
+    "${services_path}/bundlemgr/test:bundlemgr_test_config",
+    ":no_thinlto",
+  ]
   cflags = [
     "-g",
     "-O0",
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
+  ldflags = []
 
   deps = [ "${core_path}:appexecfwk_core" ]
   deps += bundle_install_deps

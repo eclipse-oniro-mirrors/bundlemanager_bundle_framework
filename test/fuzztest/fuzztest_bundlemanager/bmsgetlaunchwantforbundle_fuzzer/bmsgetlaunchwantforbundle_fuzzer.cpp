@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,6 +21,7 @@
 
 #include "bmsgetlaunchwantforbundle_fuzzer.h"
 #include "bms_fuzztest_util.h"
+#include "ipc_object_stub.h"
 
 using Want = OHOS::AAFwk::Want;
 
@@ -29,7 +30,7 @@ using namespace OHOS::AppExecFwk::BMSFuzzTestUtil;
 namespace OHOS {
 bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
 {
-    sptr<IRemoteObject> object;
+    sptr<IRemoteObject> object = new (std::nothrow) IPCObjectStub(u"");
     BundleMgrProxy bundleMgrProxy(object);
     FuzzedDataProvider fdp(data, size);
     std::string bundleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);

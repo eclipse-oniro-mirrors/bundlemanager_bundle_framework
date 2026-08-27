@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2025 Huawei Device Co., Ltd.
+* Copyright (c) 2025-2026 Huawei Device Co., Ltd.
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
@@ -21,17 +21,41 @@
 #include <string>
 #include <vector>
 
+#include "ability_info.h"
+#include "application_info.h"
 #include "bundle_info.h"
 #include "bundle_option.h"
 #include "bundle_user_info.h"
+#include "clean_cache_info.h"
+#include "clone/clone_param.h"
+#include "common_event_info.h"
+#include "disposed_rule.h"
+#include "extension_ability_info.h"
 #include "form_info.h"
+#include "hap_module_info.h"
 #include "install_param.h"
 #include "install_plugin_param.h"
+#include "ipc_object_stub.h"
+#include "message_parcel.h"
 #include "shortcut_info.h"
+#include "want.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 namespace BMSFuzzTestUtil {
+// attack vectortype
+enum AttackVector {
+    ATTACK_PATH_TRAVERSAL = 0,   // pathtraversal
+    ATTACK_SELINUX,              // SELinux privilege escalation
+    ATTACK_CERT_BYPASS,          // signature bypass
+    ATTACK_MEMCPY_OVERFLOW,      // memcpy_soverflow
+    ATTACK_ARCHIVE,              // attack
+};
+
+// Forward declarations (defined later)
+inline std::string GenAttackAwareString(FuzzedDataProvider& fdp, AttackVector type);
+inline void WriteParcelString16(MessageParcel& parcel, const std::string& str);
+
 constexpr size_t STRING_MAX_LENGTH = 128;
 constexpr size_t ARRAY_MAX_LENGTH = 128;
 constexpr int32_t MINUS_ONE = -1;
@@ -448,6 +472,7 @@ void GenerateInstallParam(FuzzedDataProvider& fdp, InstallParam &installParam)
     GenerateMap(fdp, installParam.verifyCodeParams);
 }
 
+// InstallPluginParam: checkactualfieldsandconstruct
 void GenerateInstallPluginParam(FuzzedDataProvider& fdp, InstallPluginParam &installPluginParam)
 {
     installPluginParam.userId = fdp.ConsumeIntegral<int32_t>();
@@ -458,7 +483,7 @@ void GenerateBundleUserInfo(FuzzedDataProvider& fdp, BundleUserInfo &bundleUserI
 {
     bundleUserInfo.enabled = fdp.ConsumeBool();
     bundleUserInfo.userId = fdp.ConsumeIntegral<int32_t>();
-    bundleUserInfo.setEnabledCaller = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    bundleUserInfo.setEnabledCaller = GenAttackAwareString(fdp, ATTACK_PATH_TRAVERSAL);
     bundleUserInfo.disabledAbilities = GenerateStringArray(fdp);
     bundleUserInfo.overlayModulesState = GenerateStringArray(fdp);
 }
@@ -564,7 +589,7 @@ void GenerateExtensionAbilityInfo(FuzzedDataProvider& fdp, ExtensionAbilityInfo 
     extensionAbilityInfo.compileMode = static_cast<CompileMode>(fdp.ConsumeIntegralInRange<uint8_t>(0, CODE_MIN_ONE));
     extensionAbilityInfo.extensionProcessMode =
         static_cast<ExtensionProcessMode>(fdp.ConsumeIntegralInRange<int8_t>(-1, CODE_MAX_THREE));
-    extensionAbilityInfo.bundleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    extensionAbilityInfo.bundleName = GenAttackAwareString(fdp, ATTACK_PATH_TRAVERSAL);
     extensionAbilityInfo.moduleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     extensionAbilityInfo.name = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     extensionAbilityInfo.srcEntrance = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
@@ -597,7 +622,6 @@ void GenerateFormInfo(FuzzedDataProvider& fdp, FormInfo &formInfo)
     formInfo.transparencyEnabled = fdp.ConsumeBool();
     formInfo.fontScaleFollowSystem = fdp.ConsumeBool();
     formInfo.enableBlurBackground = fdp.ConsumeBool();
-    formInfo.appFormVisibleNotify = fdp.ConsumeBool();
     formInfo.colorMode = static_cast<FormsColorMode>(fdp.ConsumeIntegralInRange<uint8_t>(0, CODE_MIN_ONE));
     formInfo.renderingMode = static_cast<FormsRenderingMode>(fdp.ConsumeIntegralInRange<uint8_t>(0, CODE_MAX_TWO));
     formInfo.displayNameId = fdp.ConsumeIntegral<uint32_t>();
@@ -609,8 +633,8 @@ void GenerateFormInfo(FuzzedDataProvider& fdp, FormInfo &formInfo)
     formInfo.type = static_cast<FormType>(fdp.ConsumeIntegralInRange<uint8_t>(0, CODE_MAX_TWO));
     formInfo.uiSyntax = static_cast<FormType>(fdp.ConsumeIntegralInRange<uint8_t>(0, CODE_MAX_TWO));
     formInfo.bundleType = static_cast<BundleType>(fdp.ConsumeIntegralInRange<uint8_t>(0, CODE_MAX_FOUR));
-    formInfo.package = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
-    formInfo.bundleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    formInfo.package = GenAttackAwareString(fdp, ATTACK_PATH_TRAVERSAL);
+    formInfo.bundleName = GenAttackAwareString(fdp, ATTACK_PATH_TRAVERSAL);
     formInfo.originalBundleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     formInfo.relatedBundleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     formInfo.moduleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
@@ -692,7 +716,7 @@ void GenerateHapModuleInfo(FuzzedDataProvider& fdp, HapModuleInfo &hapModuleInfo
     hapModuleInfo.nativeLibraryPath = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     hapModuleInfo.cpuAbi = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     // new version fields
-    hapModuleInfo.bundleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    hapModuleInfo.bundleName = GenAttackAwareString(fdp, ATTACK_PATH_TRAVERSAL);
     hapModuleInfo.mainElementName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     hapModuleInfo.pages = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     hapModuleInfo.systemTheme = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
@@ -723,7 +747,567 @@ void GenerateBundleOptionInfo(FuzzedDataProvider& fdp, BundleOptionInfo &bundleO
     bundleOptionInfo.userId = fdp.ConsumeIntegral<int32_t>();
     bundleOptionInfo.appIndex = fdp.ConsumeIntegral<int32_t>();
 }
+
+// ============ Named constants for fuzz data generation ============
+// Buffer sizes for overflow testing
+constexpr size_t SMALL_BUFFER_SIZE = 64;     // small buffer for overflow
+constexpr size_t TINY_BUFFER_SIZE = 16;      // tiny buffer for overflow
+constexpr size_t MEDIUM_BUFFER_SIZE = 32;    // medium buffer for overflow
+
+// Target buffer sizes for strcpy_s overflow
+constexpr size_t BUNDLE_NAME_MAX_SIZE = 128;         // MAX_BUNDLE_NAME
+constexpr size_t PATH_MAX_SIZE = 4096;                // BMS_MAX_PATH_LENGTH
+constexpr size_t CPU_ABI_MAX_SIZE = 256;             // cpuAbi buffer size
+constexpr size_t APP_IDENTIFIER_MAX_SIZE = 256;      // appIdentifier buffer size
+
+// Filler chars for string construction
+constexpr char FILLER_CHAR_A = 'A';          // filler char for overflow strings
+constexpr char FILLER_CHAR_X = 'X';          // filler char for memcpy overflow
+constexpr char FILLER_CHAR_NULL = '\0';      // NULL filler char
+
+// Filler bytes for buffer padding
+constexpr uint8_t FILLER_BYTE_A = 0xAA;
+constexpr uint8_t FILLER_BYTE_B = 0xBB;
+constexpr uint8_t FILLER_BYTE_C = 0xCC;
+constexpr uint8_t FILLER_BYTE_D = 0xDD;
+constexpr uint8_t FILLER_BYTE_FF = 0xFF;
+constexpr uint8_t FILLER_NULL = 0x00;
+constexpr uint8_t ASN1_SEQUENCE_TAG = 0x30;   // ASN.1 DER SEQUENCE tag
+constexpr uint8_t ASN1_LONG_FORM_LENGTH = 0x82;
+constexpr uint8_t BOMB_FILLER_CHAR = 0x5A;  // Z char for decompression bomb
+
+// Max counts for batch/collection operations
+constexpr uint8_t MAX_DIR_COUNT = 32;        // max dirs in batch clean/scan
+constexpr uint8_t MAX_UID_COUNT = 8;         // max uids in batch stats
+constexpr uint8_t MAX_GROUP_COUNT = 8;       // max data groups/uuids/map entries
+constexpr uint8_t MAX_PATH_COUNT = 16;       // max paths in batch operations
+constexpr uint16_t MAX_SIGN_DATA_SIZE = 256;  // max sign data size
+constexpr uint8_t MAX_WANT_COUNT = 4;        // max wants in batch query
+constexpr uint8_t MAX_TYPE_COUNT = 8;        // max types in batch operations
+constexpr uint16_t PROFILE_DATA_MAX_SIZE = 1024;  // max profile block data size
+constexpr uint16_t CERT_DATA_MAX_SIZE = 512;      // max cert data size
+
+// Security-relevant max values
+constexpr uint32_t UINT32_MAX_VAL = 0xFFFFFFFF;
+constexpr uint32_t PROFILE_BLOCK_MAX_SIZE = 1048576;      // 1M
+constexpr uint32_t PARCEL_CAPACITY_MAX_SIZE = 134217728;  // 128M
+constexpr uint32_t CERT_CAPACITY_MAX_SIZE = 1024000;      // ~1M
+
+// Enum sizes for safe casting
+constexpr uint8_t DATA_DIR_EL_COUNT = 4;     // DataDirEl enum has 4 values
+constexpr uint8_t CREATE_DIR_FLAG_COUNT = 2; // CreateDirFlag enum has 2 values
+constexpr uint8_t MODULE_TYPE_COUNT = 5;     // ModuleType enum has 5 values
+constexpr uint8_t OVERFLOW_TYPE_COUNT = 4;   // profileBlock overflow modes
+constexpr uint8_t STRCPY_OVERFLOW_TYPE_COUNT = 6;  // strcpy overflow modes
+constexpr uint8_t ATTACK_VECTOR_COUNT = 8;  // path traversal vectors
+
+// Overflow mode enums for switch cases
+enum StrcpyOverflowMode {
+    STRCPY_JUST_FITS = 0,
+    STRCPY_OFF_BY_ONE,
+    STRCPY_TWO_BYTE_OVERFLOW,
+    STRCPY_LARGE_OVERFLOW,
+    STRCPY_NULL_FILL,
+    STRCPY_NULL_TRUNCATION,
+};
+enum ProfileBlockOverflowMode {
+    PROFILE_BOUNDARY_MINUS_ONE = 0,
+    PROFILE_EXACT_MAX,
+    PROFILE_INTEGER_OVERFLOW,
+    PROFILE_PARCEL_CAPACITY,
+    PROFILE_EXCEEDS_CAPACITY,
+    PROFILE_LENGTH_ONE_EMPTY,
+    PROFILE_MALICIOUS_ASN1,
+    PROFILE_NULL_TRUNCATION,
+};
+enum MemcpyOverflowMode {
+    MEMCPY_JUST_FITS = 0,
+    MEMCPY_OFF_BY_ONE,
+    MEMCPY_TWO_BYTE_OVERFLOW,
+    MEMCPY_LARGE_OVERFLOW,
+};
+enum DataSizeOverflowMode {
+    DATASIZE_BOUNDARY = 0,
+    DATASIZE_EXCEEDS_CAPACITY,
+    DATASIZE_INTEGER_OVERFLOW,
+    DATASIZE_LENGTH_ONE_EMPTY,
+    DATASIZE_MALICIOUS_PEM,
+    DATASIZE_NULL_TRUNCATION,
+};
+
+// ============ Parcel helper functions for reuse ============
+// Reduce code duplication across Host fuzzers: 660+ repeated patterns consolidated
+
+// Prepare a MessageParcel with interface token pre-written
+template<typename HostType>
+inline void PrepareParcel(MessageParcel& data)
+{
+    data.WriteInterfaceToken(HostType::GetDescriptor());
+}
+
+// Write bundleName/path string field with attack vector (139+ usages)
+inline void WriteStringField(MessageParcel& data, FuzzedDataProvider& fdp,
+    AttackVector type = ATTACK_PATH_TRAVERSAL)
+{
+    data.WriteString(GenAttackAwareString(fdp, type));
+}
+
+// Write String16 field with attack vector (72+ usages, for Installd Host)
+inline void WriteString16Field(MessageParcel& data, FuzzedDataProvider& fdp,
+    AttackVector type = ATTACK_PATH_TRAVERSAL)
+{
+    WriteParcelString16(data, GenAttackAwareString(fdp, type));
+}
+
+// Write plain string field (no attack vector)
+inline void WritePlainString(MessageParcel& data, FuzzedDataProvider& fdp)
+{
+    data.WriteString(fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH));
+}
+
+// Write userId field with special values (65+ usages)
+inline void WriteUserId(MessageParcel& data, FuzzedDataProvider& fdp)
+{
+    data.WriteInt32(GenerateRandomUser(fdp));
+}
+
+// Write bool field (30+ usages)
+inline void WriteBoolField(MessageParcel& data, FuzzedDataProvider& fdp)
+{
+    data.WriteBool(fdp.ConsumeBool());
+}
+
+// Write int32 field
+inline void WriteInt32Field(MessageParcel& data, FuzzedDataProvider& fdp)
+{
+    data.WriteInt32(fdp.ConsumeIntegral<int32_t>());
+}
+
+// Write uint32 field
+inline void WriteUint32Field(MessageParcel& data, FuzzedDataProvider& fdp)
+{
+    data.WriteUint32(fdp.ConsumeIntegral<uint32_t>());
+}
+
+// Write uint64 field
+inline void WriteUint64Field(MessageParcel& data, FuzzedDataProvider& fdp)
+{
+    data.WriteUint64(fdp.ConsumeIntegral<uint64_t>());
+}
+
+// Write uint8 field (for enum types)
+inline void WriteUint8Field(MessageParcel& data, FuzzedDataProvider& fdp)
+{
+    data.WriteUint8(fdp.ConsumeIntegral<uint8_t>());
+}
+
+// Write Want Parcelable with attack vector (8+ usages)
+inline void WriteWant(MessageParcel& data, FuzzedDataProvider& fdp,
+    AttackVector type = ATTACK_PATH_TRAVERSAL)
+{
+    AAFwk::Want want;
+    want.SetBundle(GenAttackAwareString(fdp, type));
+    want.SetAction(GenAttackAwareString(fdp, type));
+    want.Marshalling(data);
+}
+
+// Write remote object (non-null IPCObjectStub)
+inline void WriteRemoteObject(MessageParcel& data)
+{
+    sptr<IRemoteObject> object = new (std::nothrow) IPCObjectStub(u"");
+    data.WriteRemoteObject(object);
+}
+
+// Write string vector field
+inline void WriteStringVectorField(MessageParcel& data, FuzzedDataProvider& fdp)
+{
+    auto vec = GenerateStringArray(fdp);
+    data.WriteStringVector(vec);
+}
+
+// Finalize parcel for Handle method call (178+ usages)
+inline void FinishParcel(MessageParcel& data)
+{
+    data.RewindRead(0);
+}
+
+// ============ attack vector library ============
+// real attack vectors for high-risk vulnerability paths, improving fuzz attack surface reachability
+
+// ---- supplement Parcelable Generate functions, expand input space ----
+// DisposedRule: 6+fields, includingpriority/elementList/callerName/appId/appIndex
+inline void GenerateDisposedRule(FuzzedDataProvider& fdp, DisposedRule& rule)
+{
+    rule.isEdm = fdp.ConsumeBool();
+    rule.priority = fdp.ConsumeIntegral<int32_t>();
+    rule.callerName = GenAttackAwareString(fdp, ATTACK_PATH_TRAVERSAL);
+    uint8_t elemCount = fdp.ConsumeIntegral<uint8_t>() % MAX_GROUP_COUNT;
+    for (uint8_t i = 0; i < elemCount; i++) {
+        ElementName elem;
+        elem.SetBundleName(GenAttackAwareString(fdp, ATTACK_PATH_TRAVERSAL));
+        elem.SetModuleName(fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH));
+        elem.SetAbilityName(fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH));
+        rule.elementList.push_back(elem);
+    }
+}
+
+// DestroyAppCloneParam: userId + parameters map
+inline void GenerateDestroyAppCloneParam(FuzzedDataProvider& fdp, DestroyAppCloneParam& param)
+{
+    param.userId = GenerateRandomUser(fdp);
+    GenerateMap(fdp, param.parameters);
+}
+
+// CommonEventInfo: 7fields, includinguid/name/bundleName/permission/data/type/events
+inline void GenerateCommonEventInfo(FuzzedDataProvider& fdp, CommonEventInfo& info)
+{
+    info.uid = fdp.ConsumeIntegral<int32_t>();
+    info.name = GenAttackAwareString(fdp, ATTACK_PATH_TRAVERSAL);
+    info.bundleName = GenAttackAwareString(fdp, ATTACK_PATH_TRAVERSAL);
+    info.permission = GenAttackAwareString(fdp, ATTACK_SELINUX);
+    info.data = GenerateStringArray(fdp);
+    info.type = GenerateStringArray(fdp);
+    info.events = GenerateStringArray(fdp);
+}
+
+// path traversal attack vector: directory traversal/symlink/overlong path overflow
+inline std::string GenPathTraversalString(FuzzedDataProvider& fdp)
+{
+    static const std::vector<std::string> pathVectors = {
+        "../../etc/passwd",           // classic path traversal
+        "..%2F..%2Fetc%2Fpasswd",     // URL-encoded traversal
+        "/data/app/../../../root",    // absolute path traversal
+        "/proc/self/cwd/../../../",   // symlink traversal
+        "....//....//....//etc/shadow", // dot bypass
+        "/dev/..tmp/../../",          // device file traversal
+        std::string(PATH_MAX_SIZE, FILLER_CHAR_A),  // overlong path
+        std::string(CPU_ABI_MAX_SIZE, '/'),   // overlong nested path
+        "/data/app/",                 // normal path as control
+        "./current/../../../backup",  // relative path traversal
+        "/sys/class/../../../etc",    // sysfs traversal
+        "\x00",                       // NULL byte truncation
+        "$(cat /etc/passwd)",         // command injection
+        "/data/app/el1/bundle/../..\x00malicious", // NULL bypass
+        "/data/app/el2/../el1/../../", // EL cross-level traversal
+        "/data/app/el1/bundle/" + std::string(128, '.') + "/", // deep nesting
+        "/data/service/el1/" + std::string(256, 'X'), // service dir overflow
+        "/mnt/extract/../../tmp/",    // mount point escape
+        "/data/app/../data/bundle/", // app-to-bundle traversal
+    };
+    uint8_t idx = fdp.ConsumeIntegral<uint8_t>() % pathVectors.size();
+    std::string base = pathVectors[idx];
+    // append fuzz data to enhance mutation
+    if (fdp.remaining_bytes() > 0) {
+        base += fdp.ConsumeRandomLengthString(SMALL_BUFFER_SIZE);
+    }
+    return base;
+}
+
+// SELinux privilege escalation: label tampering/restorecon bypass
+inline std::string GenSelinuxLabelString(FuzzedDataProvider& fdp)
+{
+    static const std::vector<std::string> selinuxVectors = {
+        "u:r:su:s0",                  // root SELinux domain
+        "u:r:shell:s0",               // shell domain escalation
+        "u:r:platform_app:s0",       // platform app domain
+        "u:r:system:s0:s0",           // system domain
+        "u:object_r:unlabeled:s0",   // unlabeled bypass
+        "u:r:installd:s0",           // installd domain
+        "u:r:foundation:s0",          // foundation domain
+        "",                           // empty label
+        std::string(256, 'u'),        // overlong label
+        "u:r:test\x00:s0",           // NULL truncation
+        "u:r:hal_default:s0",       // HAL default domain
+        "u:r:hal_bluetooth:s0",      // bluetooth HAL escalation
+        "u:r:untrusted_app:s0",      // untrusted app to bypass
+        "u:r:system_app:s0",         // system app domain
+        "u:r:reserved_disk:s0",     // reserved disk domain
+    };
+    uint8_t idx = fdp.ConsumeIntegral<uint8_t>() % selinuxVectors.size();
+    return selinuxVectors[idx];
+}
+
+// signature bypass: provision/cert parsing overflow
+inline std::string GenCertBypassString(FuzzedDataProvider& fdp)
+{
+    static const std::vector<std::string> certVectors = {
+        "-----BEGIN CERTIFICATE-----\nMIIB\x00\n-----END CERTIFICATE-----",
+        std::string(PROFILE_DATA_MAX_SIZE * 8, 'M'),  // overlong cert
+        "invalid_cert_data",
+        "\x30\x82\x01\x00",            // ASN.1 DER SEQUENCE
+        "",                             // empty certificate
+        "cert_alias\x00malicious",      // NULL truncation
+        std::string(PROFILE_DATA_MAX_SIZE, FILLER_BYTE_FF),  // 0xFF padding
+        "../../../data/app/cert.pem",  // path traversal cert
+        "\x30\x82\x0c\x00" + std::string(PROFILE_DATA_MAX_SIZE, '\x00'), // ASN.1 oversized
+        "-----BEGIN CERTIFICATE-----\n\n-----END CERTIFICATE-----", // empty body
+        "\x30\x06\x03\x02\x01\x00",   // malformed ASN.1 (bad length)
+        "provision\x00bypass",        // provision NULL truncation
+        std::string(2, '\xff') + "EXTRA", // short overflow prefix
+        "keyAlias\x00inject",          // keyAlias injection
+    };
+    uint8_t idx = fdp.ConsumeIntegral<uint8_t>() % certVectors.size();
+    return certVectors[idx];
+}
+
+// memcpy_s overflow: buffer operation overflow
+inline std::string GenOverflowString(FuzzedDataProvider& fdp, size_t targetSize = 0)
+{
+    // constructprecisesizestringtriggermemcpy_sboundarycondition
+    if (targetSize > 0) {
+        // precise matchtargetbuffersize，triggeroff-by-one
+        uint8_t overflowType = fdp.ConsumeIntegral<uint8_t>() % OVERFLOW_TYPE_COUNT;
+        switch (overflowType) {
+            case MEMCPY_JUST_FITS: return std::string(targetSize - 1, FILLER_CHAR_X);   // just fits, no overflow
+            case MEMCPY_OFF_BY_ONE: return std::string(targetSize, FILLER_CHAR_X);        // exact 1-byte overflow
+            case MEMCPY_TWO_BYTE_OVERFLOW: return std::string(targetSize + 1, FILLER_CHAR_X);   // 2-byte overflow
+            default: return std::string(targetSize * 2, FILLER_CHAR_X);   // large overflow
+        }
+    }
+    // default constructionstring
+    static const std::vector<size_t> sizes = {
+        CPU_ABI_MAX_SIZE, CERT_DATA_MAX_SIZE, PROFILE_DATA_MAX_SIZE,
+        PATH_MAX_SIZE, CERT_CAPACITY_MAX_SIZE / MAX_SIGN_DATA_SIZE,
+        MAX_SIGN_DATA_SIZE * MAX_SIGN_DATA_SIZE};
+    uint8_t idx = fdp.ConsumeIntegral<uint8_t>() % sizes.size();
+    return std::string(sizes[idx], fdp.ConsumeIntegral<uint8_t>());
+}
+
+// strcpy_s overflow verification: precisely trigger HapInfo fixed buffer overflow
+// HapInfo.packageName(MAX_BUNDLE_NAME=128) / hapPath(BMS_MAX_PATH_LENGTH=4096) / abi / appIdentifier
+inline std::string GenStrcpyOverflowString(FuzzedDataProvider& fdp, size_t targetBufSize)
+{
+    if (targetBufSize == 0) {
+        return fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    }
+    uint8_t overflowType = fdp.ConsumeIntegral<uint8_t>() % STRCPY_OVERFLOW_TYPE_COUNT;
+    switch (overflowType) {
+        case STRCPY_JUST_FITS: return std::string(targetBufSize - 1, FILLER_CHAR_A);     // just fits, no overflow
+        case STRCPY_OFF_BY_ONE: return std::string(targetBufSize, FILLER_CHAR_A);          // exact off-by-one
+        case STRCPY_TWO_BYTE_OVERFLOW: return std::string(targetBufSize + 1, FILLER_CHAR_A);      // 2-byte overflow
+        case STRCPY_LARGE_OVERFLOW: return std::string(targetBufSize * 2, FILLER_CHAR_A);      // large overflow
+        case STRCPY_NULL_FILL: return std::string(targetBufSize, FILLER_CHAR_NULL);  // NULL fill
+        default: return std::string(targetBufSize, FILLER_CHAR_A) + "\x00malicious"; // NULL truncation bypass
+    }
+}
+
+// malicious HapInfo payload: trigger 4 strcpy_s overflow paths in installd_operator.cpp
+// path1: hapInfo.packageName (MAX_BUNDLE_NAME=128)
+// path2: hapInfo.hapPath (BMS_MAX_PATH_LENGTH=4096)
+// path3: hapInfo.abi
+// path4: hapInfo.appIdentifier
+inline void GenMaliciousHapInfoPayload(FuzzedDataProvider& fdp,
+    std::string& packageName, std::string& hapPath,
+    std::string& cpuAbi, std::string& appIdentifier)
+{
+    // MAX_BUNDLE_NAME=128, construct129-256triggerpackageNameoverflow
+    packageName = GenStrcpyOverflowString(fdp, BUNDLE_NAME_MAX_SIZE);
+    // BMS_MAX_PATH_LENGTH=4096, construct4097-8192triggerhapPathoverflow
+    hapPath = GenStrcpyOverflowString(fdp, PATH_MAX_SIZE);
+    // cpuAbiconstructstring
+    cpuAbi = GenStrcpyOverflowString(fdp, CPU_ABI_MAX_SIZE);
+    // appIdentifierconstructstring+char
+    appIdentifier = GenStrcpyOverflowString(fdp, APP_IDENTIFIER_MAX_SIZE);
+}
+
+// ====== length field overflow: targeting declared length > actual data overflow read paths ======
+// target constants:
+//   MAX_PROFILE_BLOCK_LENGTH = 1*1024*1024 = PROFILE_BLOCK_MAX_SIZE (1M)
+//   MAX_PARCEL_CAPACITY = 128*1024*1024 = PARCEL_CAPACITY_MAX_SIZE (128M)
+// CAPACITY_SIZE = 1*1024*1000 = CERT_CAPACITY_MAX_SIZE (1M)
+
+// malicious profileBlockLength: trigger length overflow in CodeSignatureParam/HandDeliverySignProfile
+// return (profileBlockLength, actual data) pair，length mismatchtrigger overflow read
+struct MaliciousLengthPayload {
+    uint32_t declaredLength;     // declarelength（writeParcel）
+    std::vector<uint8_t> actualData;  // actual data（maydeclare，trigger overflow）
+};
+
+inline MaliciousLengthPayload GenMaliciousProfileBlockLength(FuzzedDataProvider& fdp)
+{
+    MaliciousLengthPayload payload;
+    uint8_t attackType = fdp.ConsumeIntegral<uint8_t>() % ATTACK_VECTOR_COUNT;
+    constexpr uint32_t MAX_PROFILE_BLOCK_LENGTH = PROFILE_BLOCK_MAX_SIZE;      // 1M
+    constexpr uint32_t MAX_PARCEL_CAPACITY = PARCEL_CAPACITY_MAX_SIZE;        // 128M
+    switch (attackType) {
+        case PROFILE_BOUNDARY_MINUS_ONE: // boundary: MAX-1, passes check
+            payload.declaredLength = MAX_PROFILE_BLOCK_LENGTH - 1;
+            payload.actualData.resize(SMALL_BUFFER_SIZE, FILLER_BYTE_A);  // overflow
+            break;
+        case PROFILE_EXACT_MAX: // exactly equalsMAX_PROFILE_BLOCK_LENGTH，skips validation, profileBlock is empty
+            payload.declaredLength = MAX_PROFILE_BLOCK_LENGTH;
+            payload.actualData.resize(0);  // empty data
+            break;
+        case PROFILE_INTEGER_OVERFLOW: // integer overflow: UINT32_MAX，passes >0 check but may truncate
+            payload.declaredLength = UINT32_MAX_VAL;
+            payload.actualData.resize(SMALL_BUFFER_SIZE, FILLER_BYTE_B);
+            break;
+        case PROFILE_PARCEL_CAPACITY: // triggers 128M allocation
+            payload.declaredLength = MAX_PARCEL_CAPACITY;
+            payload.actualData.resize(SMALL_BUFFER_SIZE, FILLER_BYTE_C);  // declares 128M actual 64 bytes -> overflow
+            break;
+        case PROFILE_EXCEEDS_CAPACITY: // MAX_PARCEL_CAPACITY + 1：exceeds validation, should be blocked
+            payload.declaredLength = MAX_PARCEL_CAPACITY + 1;
+            payload.actualData.resize(TINY_BUFFER_SIZE, FILLER_BYTE_D);
+            break;
+        case PROFILE_LENGTH_ONE_EMPTY: // length=1：boundarymin value，actual dataas0 -> 1-byte overflow
+            payload.declaredLength = 1;
+            payload.actualData.resize(0);
+            break;
+        case PROFILE_MALICIOUS_ASN1: {  // ASN.1 DER
+            payload.declaredLength = fdp.ConsumeIntegral<uint32_t>() % PROFILE_DATA_MAX_SIZE + 1;
+            payload.actualData.resize(payload.declaredLength);
+            payload.actualData[0] = ASN1_SEQUENCE_TAG;  // ASN.1 SEQUENCE tag
+            payload.actualData[1] = ASN1_LONG_FORM_LENGTH;  // long form length
+            for (size_t i = 2; i < payload.actualData.size(); i++) {
+                payload.actualData[i] = fdp.ConsumeIntegral<uint8_t>();
+            }
+            break;
+        }
+        default: // lengthwithdata matchesbutincludingNULL byte truncation
+            payload.declaredLength = fdp.ConsumeIntegral<uint32_t>() % MAX_SIGN_DATA_SIZE + 1;
+            payload.actualData.resize(payload.declaredLength, FILLER_NULL);  // all NULL
+            break;
+    }
+    return payload;
+}
+
+// malicious dataSize: trigger std::string(content, dataSize) overflow in HandleAddCertAndEnableKey
+inline MaliciousLengthPayload GenMaliciousDataSize(FuzzedDataProvider& fdp)
+{
+    MaliciousLengthPayload payload;
+    uint8_t attackType = fdp.ConsumeIntegral<uint8_t>() % STRCPY_OVERFLOW_TYPE_COUNT;
+    constexpr uint32_t CAPACITY_SIZE = CERT_CAPACITY_MAX_SIZE;  // 1*1024*1000
+    switch (attackType) {
+        case DATASIZE_BOUNDARY: // boundary: CAPACITY_SIZE, passes check
+            payload.declaredLength = CAPACITY_SIZE;
+            payload.actualData.resize(SMALL_BUFFER_SIZE, FILLER_BYTE_A);  // declares 1M actual 64 bytes -> overflow
+            break;
+        case DATASIZE_EXCEEDS_CAPACITY: // CAPACITY_SIZE + 1：exceeds validation, should be blocked
+            payload.declaredLength = CAPACITY_SIZE + 1;
+            payload.actualData.resize(TINY_BUFFER_SIZE, FILLER_BYTE_B);
+            break;
+        case PROFILE_INTEGER_OVERFLOW: // integer overflow: UINT32_MAX
+            payload.declaredLength = UINT32_MAX_VAL;
+            payload.actualData.resize(MEDIUM_BUFFER_SIZE, FILLER_BYTE_C);
+            break;
+        case DATASIZE_LENGTH_ONE_EMPTY: // length=1 but data empty -> 1-byte overflow
+            payload.declaredLength = 1;
+            payload.actualData.resize(0);
+            break;
+        case DATASIZE_MALICIOUS_PEM: {  // PEM format
+            payload.declaredLength = fdp.ConsumeIntegral<uint32_t>() % CERT_DATA_MAX_SIZE + 1;
+            payload.actualData.resize(payload.declaredLength);
+            const std::string pemHeader = "-----BEGIN CERTIFICATE-----\n";
+            const std::string pemFooter = "\n-----END CERTIFICATE-----";
+            size_t copyLen = std::min(pemHeader.size(), payload.actualData.size());
+            memcpy(payload.actualData.data(), pemHeader.c_str(), copyLen);
+            break;
+        }
+        default: // all NULLdata
+            payload.declaredLength = fdp.ConsumeIntegral<uint32_t>() % MAX_SIGN_DATA_SIZE + 1;
+            payload.actualData.resize(payload.declaredLength, FILLER_NULL);
+            break;
+    }
+    return payload;
+}
+
+// archive attack: ZipSlip/decompression bomb/nested compression
+inline std::string GenArchiveAttackString(FuzzedDataProvider& fdp)
+{
+    static const std::vector<std::string> archiveVectors = {
+        "../../../etc/cron.daily/evil",    // ZipSlip directory traversal
+        "../../root/.ssh/authorized_keys", // SSH key injection
+        std::string(PROFILE_DATA_MAX_SIZE, BOMB_FILLER_CHAR),            // decompression bomb filename
+        "/",                               // root directory
+        "\x00",                            // NULL truncationfile
+        "....//....//....//etc/shadow",   // dot bypass
+        "/dev/null",                       // device file
+        std::string(512, '.'),            // overlong dot path
+    };
+    uint8_t idx = fdp.ConsumeIntegral<uint8_t>() % archiveVectors.size();
+    return archiveVectors[idx];
+}
+
+// probabilistic selection of attack vector or random fuzz data
+inline std::string GenAttackAwareString(FuzzedDataProvider& fdp, AttackVector type = ATTACK_PATH_TRAVERSAL)
+{
+    // 30%makeuseattack vector，70%makeusefuzzdata
+    bool useAttackVector = fdp.ConsumeBool();
+    if (useAttackVector) {
+        switch (type) {
+            case ATTACK_PATH_TRAVERSAL: return GenPathTraversalString(fdp);
+            case ATTACK_SELINUX:        return GenSelinuxLabelString(fdp);
+            case ATTACK_CERT_BYPASS:    return GenCertBypassString(fdp);
+            case ATTACK_MEMCPY_OVERFLOW:return GenOverflowString(fdp);
+            case ATTACK_ARCHIVE:        return GenArchiveAttackString(fdp);
+            default:                    return GenPathTraversalString(fdp);
+        }
+    }
+    return fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+}
+
+// precise MessageParcel construction: write in Handle method real read order
+inline void WriteParcelString16(MessageParcel& parcel, const std::string& str)
+{
+    parcel.WriteString16(Str8ToStr16(str));
+}
+inline void WriteParcelString(MessageParcel& parcel, const std::string& str)
+{
+    parcel.WriteString(str);
+}
+
+// CleanCacheInfo: 4 fields, used by HandleCleanBundlePartialCacheAutomatic
+inline void GenerateCleanCacheInfo(FuzzedDataProvider& fdp, CleanCacheInfo& info)
+{
+    info.bundleName = GenAttackAwareString(fdp, ATTACK_PATH_TRAVERSAL);
+    info.userId = GenerateRandomUser(fdp);
+    info.appIndex = fdp.ConsumeIntegral<int32_t>();
+    info.cacheThreshold = fdp.ConsumeIntegral<uint64_t>();
+}
+
+// IPC Stub loop common template: avoid repetition across fuzzers
+template<typename HostType>
+inline void FuzzIpcStubLoop(HostType& host, const uint8_t* data, size_t size, uint32_t codeMax)
+{
+    for (uint32_t code = 0; code <= codeMax; code++) {
+        MessageParcel datas;
+        MessageParcel reply;
+        MessageOption option;
+        datas.WriteInterfaceToken(HostType::GetDescriptor());
+        datas.WriteBuffer(data, size);
+        datas.RewindRead(0);
+        host.OnRemoteRequest(code, datas, reply, option);
+    }
+}
+
+// Single IPC request with RewindRead (eliminates RewindRead+OnRemoteRequest duplication in callback fuzzers)
+template<typename HostType>
+inline void FuzzIpcRequest(HostType& host, uint32_t code, MessageParcel& datas, MessageParcel& reply,
+    MessageOption& option)
+{
+    datas.RewindRead(0);
+    host.OnRemoteRequest(code, datas, reply, option);
+}
+
 }  // namespace BMSFuzzTestUtil
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif  // BMS_FUZZTEST_UTIL_H
+
+// Parcelable unmarshalling fuzz macro (eliminates ~1140 lines of boilerplate across 57 fuzzers)
+#define BMS_PARCELABLE_UNMARSHAL_FUZZ(className, funcName) \
+bool funcName(const uint8_t* data, size_t size) { \
+    Parcel dataParcel; \
+    FuzzedDataProvider fdp(data, size); \
+    className obj; \
+    (void)fdp; \
+    if (!obj.Marshalling(dataParcel)) { return false; } \
+    dataParcel.RewindRead(0); \
+    className *result = new (std::nothrow) className(); \
+    if (result == nullptr) { return false; } \
+    bool ret = result->ReadFromParcel(dataParcel); \
+    delete result; \
+    result = nullptr; \
+    return ret; \
+}

@@ -44,8 +44,9 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     MessageParcel datas;
     MessageParcel reply;
     MessageOption option;
-    cleanCacheCallbackHost.OnRemoteRequest(code, datas, reply, option);
-    cleanCacheCallbackHost.OnRemoteRequest(static_cast<uint32_t>
+    datas.WriteInterfaceToken(cleanCacheCallbackHost.GetDescriptor());
+    FuzzIpcRequest(cleanCacheCallbackHost, code, datas, reply, option);
+    FuzzIpcRequest(cleanCacheCallbackHost, static_cast<uint32_t>
         (CleanCacheCallbackInterfaceCode::ON_CLEAN_CACHE_CALLBACK), datas, reply, option);
     return true;
 }
