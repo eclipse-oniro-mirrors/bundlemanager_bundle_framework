@@ -17,10 +17,13 @@
 #include "bundle_cache_mgr.h"
 
 #include <cinttypes>
+#include <unordered_map>
 #include "bms_extension_client.h"
 #include "process_cache_callback_host.h"
 #include "bundle_mgr_service.h"
 #include "bundle_util.h"
+#include "res_sched_client.h"
+#include "res_type.h"
 #include "scope_guard.h"
 
 namespace OHOS {
@@ -33,6 +36,16 @@ constexpr size_t INDEX_CLONE_APP_INDEX = 2;
 constexpr int64_t TOTAL_TIMEOUT_MS = 60000;
 constexpr int64_t CACHE_TIMEOUT_MS = 20000;
 constexpr int64_t CLEAN_CACHE_TIMEOUT_MS = 20000;
+constexpr const char* CLEAN_ALL_CACHE_EXT_TYPE_KEY = "extType";
+constexpr const char* CLEAN_ALL_CACHE_EXT_TYPE = "10047";
+
+void ReportCleanAllCachePerfScene(int64_t value)
+{
+    std::unordered_map<std::string, std::string> payload;
+    payload[CLEAN_ALL_CACHE_EXT_TYPE_KEY] = CLEAN_ALL_CACHE_EXT_TYPE;
+    ResourceSchedule::ResSchedClient::GetInstance().ReportData(
+        ResourceSchedule::ResType::RES_TYPE_KEY_PERF_SCENE, value, payload);
+}
 
 // ext returns these two codes when unavailable/not-participating (no-fault); any other non-OK code is a real failure
 bool IsExtRealFailure(ErrCode ret)
@@ -297,6 +310,7 @@ ErrCode BundleCacheMgr::CleanAllBundleCache(const sptr<IProcessCacheCallback> pr
     std::vector<std::tuple<std::string, std::vector<std::string>, std::vector<int32_t>>> validBundles;
     dataMgr->GetBundleCacheInfos(userId, validBundles, true);
     if (!validBundles.empty()) {
+        ReportCleanAllCachePerfScene(0);
         auto CleanAllBundleCache = [validBundles, userId, processCacheCallback, startTime]() {
             BundleCacheMgr::TryMarkCleaning();
             ScopeGuard guard([]() {
@@ -307,6 +321,7 @@ ErrCode BundleCacheMgr::CleanAllBundleCache(const sptr<IProcessCacheCallback> pr
             result = CleanBundleCache(validBundles, userId);
             HandleExtCleanResult(userId, result);
             LOG_I(BMS_TAG_EXT, "ClearAllBundleCache final result: %{public}d", result);
+            ReportCleanAllCachePerfScene(1);
             processCacheCallback->OnCleanAllBundleCacheFinished(result);
             auto endTime = BundleUtil::GetCurrentTimeMs();
             auto elapsedTime = endTime - startTime;

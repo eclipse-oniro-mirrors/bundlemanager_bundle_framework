@@ -193,6 +193,7 @@ bundle_install_external_deps = [
   "memmgr:memmgrclient",
   "openssl:libcrypto_shared",
   "os_account:libaccountkits",
+  "resource_schedule_service:ressched_client",
   "safwk:api_cache_manager",
   "storage_service:storage_manager_acl",
   "window_manager:libmodal_system_ui_extension_client",

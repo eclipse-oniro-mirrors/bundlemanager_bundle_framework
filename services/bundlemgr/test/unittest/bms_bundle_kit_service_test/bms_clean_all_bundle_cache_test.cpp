@@ -50,10 +50,12 @@
 #include "launcher_service.h"
 #include "mock_clean_cache.h"
 #include "mock_bundle_status.h"
+#include "mock_res_sched_client.h"
 #include "nlohmann/json.hpp"
 #include "parameter.h"
 #include "perf_profile.h"
 #include "process_cache_callback_host.h"
+#include "res_type.h"
 #include "scope_guard.h"
 #include "service_control.h"
 #include "shortcut_info.h"
@@ -75,6 +77,7 @@ namespace OHOS {
 namespace AppExecFwk {
     void SetGetBundleInodeCountResult(int32_t remainCalls);
     void SetCleanBundleDataDirResult(bool cleanResult);
+    void SetMockCleanBundleDataDirDelayMs(int32_t delayMs);
 }
 namespace {
 const std::string BUNDLE_NAME_TEST = "com.example.bundlekit.test";
@@ -203,6 +206,11 @@ const int FORMINFO_DESCRIPTIONID = 123;
 const std::string CONTROLMESSAGE = "controlMessage";
 const int32_t DEFAULT_USERID = 100;
 const int32_t WAIT_TIME = 2; // init mocked bms
+const std::string CLEAN_ALL_CACHE_EXT_TYPE_TEST = "10047";
+const int64_t PERF_SCENE_ENTER = 0;
+const int64_t PERF_SCENE_EXIT = 1;
+const int32_t CLEAN_RET_TIMEOUT_MS = 5000;
+const int32_t MOCK_CLEAN_DELAY_MS = 500;
 const std::string URI_SCHEME = "http";
 const std::string URI_HOST = "example.com";
 const std::string URI_PORT = "80";
@@ -283,6 +291,8 @@ void BmsCleanAllBundleCacheTest::SetUp()
     if (!installdService_->IsServiceReady()) {
         installdService_->Start();
     }
+    SetMockCleanBundleDataDirDelayMs(0);
+    OHOS::ResourceSchedule::ResetMockResSchedReports();
     installRes_ = {
         .bundleName = HAP_FILE_PATH,
         .modulePackage = HAP_FILE_PATH,
@@ -1244,5 +1254,111 @@ HWTEST_F(BmsCleanAllBundleCacheTest, CleanAllBundleCache_BestEffort_0100, Functi
     EXPECT_EQ(callback->GetCleanRet(), ERR_OK);  // future blocks until the callback fires or times out
     CleanFileDir();
     MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: CleanAllBundleCache_PerfScene_0100
+ * @tc.name: test perf scene enter/exit events around CleanAllBundleCache
+ * @tc.desc: 1. system run normally
+ *           2. clean all bundle cache successfully
+ *           3. enter(0) reported before cleanup, exit(1) reported after cleanup finished,
+ *              both with resType RES_TYPE_KEY_PERF_SCENE and payload extType=10047
+ */
+HWTEST_F(BmsCleanAllBundleCacheTest, CleanAllBundleCache_PerfScene_0100, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST, true);
+    CreateFileDir();
+
+    auto callback = sptr<ProcessCacheCallbackHost>(new ProcessCacheCallbackHost());
+    auto result = BundleCacheMgr::CleanAllBundleCache(callback);
+    EXPECT_EQ(result, ERR_OK);
+
+    int32_t cleanRet = ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    EXPECT_TRUE(callback->WaitForCleanRet(CLEAN_RET_TIMEOUT_MS, cleanRet));
+    EXPECT_EQ(cleanRet, ERR_OK);
+
+    auto reports = OHOS::ResourceSchedule::GetMockResSchedReports();
+    ASSERT_EQ(reports.size(), 2);
+    EXPECT_EQ(reports[0].resType, OHOS::ResourceSchedule::ResType::RES_TYPE_KEY_PERF_SCENE);
+    EXPECT_EQ(reports[0].value, PERF_SCENE_ENTER);
+    EXPECT_EQ(reports[0].extType, CLEAN_ALL_CACHE_EXT_TYPE_TEST);
+    EXPECT_EQ(reports[1].resType, OHOS::ResourceSchedule::ResType::RES_TYPE_KEY_PERF_SCENE);
+    EXPECT_EQ(reports[1].value, PERF_SCENE_EXIT);
+    EXPECT_EQ(reports[1].extType, CLEAN_ALL_CACHE_EXT_TYPE_TEST);
+
+    CleanFileDir();
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: CleanAllBundleCache_PerfScene_0200
+ * @tc.name: no perf scene event reported when callback is null
+ * @tc.desc: 1. system run normally
+ *           2. processCacheCallback is nullptr
+ *           3. return ERR_BUNDLE_MANAGER_INTERNAL_ERROR and no perf scene event reported
+ */
+HWTEST_F(BmsCleanAllBundleCacheTest, CleanAllBundleCache_PerfScene_0200, Function | SmallTest | Level1)
+{
+    auto result = BundleCacheMgr::CleanAllBundleCache(nullptr);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    EXPECT_TRUE(OHOS::ResourceSchedule::GetMockResSchedReports().empty());
+}
+
+/**
+ * @tc.number: CleanAllBundleCache_PerfScene_0300
+ * @tc.name: test exit event is not reported before async cleanup finishes
+ * @tc.desc: 1. system run normally
+ *           2. slow down mock CleanBundleDataDir by 500ms
+ *           3. after CleanAllBundleCache returns, only enter(0) reported;
+ *              exit(1) reported only after cleanup callback fired
+ *           4. precondition: ABILITY_RUNTIME_ENABLE is not defined for this test target,
+ *              otherwise GetBundleCacheInfos returns early and the async path is unreachable
+ */
+HWTEST_F(BmsCleanAllBundleCacheTest, CleanAllBundleCache_PerfScene_0300, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST, true);
+    CreateFileDir();
+    SetMockCleanBundleDataDirDelayMs(MOCK_CLEAN_DELAY_MS);
+
+    auto callback = sptr<ProcessCacheCallbackHost>(new ProcessCacheCallbackHost());
+    auto result = BundleCacheMgr::CleanAllBundleCache(callback);
+    EXPECT_EQ(result, ERR_OK);
+
+    // cleanup runs asynchronously, exit must not be reported before cleanup finishes
+    auto reports = OHOS::ResourceSchedule::GetMockResSchedReports();
+    ASSERT_EQ(reports.size(), 1);
+    EXPECT_EQ(reports[0].value, PERF_SCENE_ENTER);
+
+    int32_t cleanRet = ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    EXPECT_TRUE(callback->WaitForCleanRet(CLEAN_RET_TIMEOUT_MS, cleanRet));
+    EXPECT_EQ(cleanRet, ERR_OK);
+
+    reports = OHOS::ResourceSchedule::GetMockResSchedReports();
+    ASSERT_EQ(reports.size(), 2);
+    EXPECT_EQ(reports[1].value, PERF_SCENE_EXIT);
+
+    SetMockCleanBundleDataDirDelayMs(0);
+    CleanFileDir();
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: CleanAllBundleCache_PerfScene_0400
+ * @tc.name: no perf scene event when there is no bundle cache to clean
+ * @tc.desc: 1. system run normally
+ *           2. no bundle installed, validBundles is empty
+ *           3. CleanAllBundleCache returns ERR_OK, callback fires with ERR_OK,
+ *              and no perf scene event reported
+ */
+HWTEST_F(BmsCleanAllBundleCacheTest, CleanAllBundleCache_PerfScene_0400, Function | SmallTest | Level1)
+{
+    auto callback = sptr<ProcessCacheCallbackHost>(new ProcessCacheCallbackHost());
+    auto result = BundleCacheMgr::CleanAllBundleCache(callback);
+    EXPECT_EQ(result, ERR_OK);
+
+    int32_t cleanRet = ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    EXPECT_TRUE(callback->WaitForCleanRet(CLEAN_RET_TIMEOUT_MS, cleanRet));
+    EXPECT_EQ(cleanRet, ERR_OK);
+    EXPECT_TRUE(OHOS::ResourceSchedule::GetMockResSchedReports().empty());
 }
 }
