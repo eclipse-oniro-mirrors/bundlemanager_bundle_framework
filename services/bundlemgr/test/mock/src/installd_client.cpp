@@ -15,10 +15,6 @@
 
 #include "installd_client.h"
 
-#include <atomic>
-#include <chrono>
-#include <thread>
-
 #include "bundle_constants.h"
 #include "bundle_service_constants.h"
 #include "installd_death_recipient.h"
@@ -30,7 +26,6 @@ namespace OHOS {
 namespace AppExecFwk {
 int32_t g_remainingSuccessfulCalls = 2;
 bool g_mockCleanBundleDataDirResult = true;
-std::atomic<int32_t> g_mockCleanBundleDataDirDelayMs = 0;
 void SetGetBundleInodeCountResult(int32_t remainCalls)
 {
     g_remainingSuccessfulCalls = remainCalls;
@@ -39,11 +34,6 @@ void SetGetBundleInodeCountResult(int32_t remainCalls)
 void SetCleanBundleDataDirResult(bool cleanResult)
 {
     g_mockCleanBundleDataDirResult = cleanResult;
-}
-
-void SetMockCleanBundleDataDirDelayMs(int32_t delayMs)
-{
-    g_mockCleanBundleDataDirDelayMs = delayMs;
 }
 
 ErrCode InstalldClient::CreateBundleDir(
@@ -203,10 +193,6 @@ ErrCode InstalldClient::CleanBundleDataDir(const std::string &bundleDir, const s
     }
     if (!g_mockCleanBundleDataDirResult) {
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-    }
-    int32_t delayMs = g_mockCleanBundleDataDirDelayMs.load();
-    if (delayMs > 0) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(delayMs));
     }
     return CallService(&IInstalld::CleanBundleDataDir, bundleDir, bundleName, userId);
 }
