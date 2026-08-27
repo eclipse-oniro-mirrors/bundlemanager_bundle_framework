@@ -350,13 +350,15 @@ void EventReport::SendSystemEvent(BMSEventType bmsEventType, const EventInfo& ev
 }
 
 void EventReport::SendLargeFilesMonitorEvent(const std::string &bundleName,
-    int32_t userId, int32_t appIndex, const std::string &largeFiles)
+    int32_t userId, int32_t appIndex, const std::string &largeFiles,
+    const std::string &topCategory)
 {
     EventInfo eventInfo;
     eventInfo.bundleName = bundleName;
     eventInfo.userId = userId;
     eventInfo.appIndex = appIndex;
     eventInfo.largeFiles = largeFiles;
+    eventInfo.topCategory = topCategory;
     EventReport::SendSystemEvent(BMSEventType::BUNDLE_LARGE_FILES_MONITOR, eventInfo);
 }
 }  // namespace AppExecFwk

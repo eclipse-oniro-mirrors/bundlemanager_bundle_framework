@@ -72,3 +72,4 @@ BUNDLE_LARGE_FILES:
   USERID: {type: INT32, desc: userId of the bundle}
   APP_INDEX: {type: INT32, desc: app index}
   LARGE_FILES: {type: STRING, desc: large files info}
+  TOP_CATEGORY: {type: STRING, desc: TOP extension categories with dirs info}

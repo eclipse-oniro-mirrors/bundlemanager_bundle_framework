@@ -377,8 +377,9 @@ void BMSEventHandler::AfterBmsStart()
     NotifyFWKAfterBmsStart();
 #endif
     if (OHOS::system::GetBoolParameter(ServiceConstants::BMS_RELABEL_PARAM, false) ||
-        OHOS::system::GetBoolParameter(ServiceConstants::BMS_SCAN_APP_DATA_PARAM, false)) {
-        APP_LOGI_NOFUNC("relabel or scan_app_data is true");
+        OHOS::system::GetBoolParameter(ServiceConstants::BMS_SCAN_APP_DATA_PARAM, false) ||
+        OHOS::system::GetBoolParameter(ServiceConstants::BMS_SCAN_FILE_CATEGORY_PARAM, false)) {
+        APP_LOGI_NOFUNC("relabel or scan_app_data or scan_file_category is true");
         RegisterIdleConditionEvent();
     }
     MemoryCompactor::RegisterScreenOffListener();

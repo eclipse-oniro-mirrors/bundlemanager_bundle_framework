@@ -480,6 +480,12 @@ ErrCode InstalldHostImpl::GetTopNLargestItemsInAppDataDir(const std::string &bun
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::GetAppDataFileCategoryStats(const std::string &bundleName, const int32_t appIndex,
+    const int32_t userId, const int32_t timeout, std::string &categoryStatsJson)
+{
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::DeleteOldCacheFiles(
     const std::vector<std::string> &paths, const uint64_t cacheSize, uint64_t &cleanedSize)
 {

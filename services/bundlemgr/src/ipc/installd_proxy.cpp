@@ -805,6 +805,44 @@ ErrCode InstalldProxy::GetTopNLargestItemsInAppDataDir(const std::string &bundle
     return ERR_OK;
 }
 
+ErrCode InstalldProxy::GetAppDataFileCategoryStats(const std::string &bundleName, const int32_t appIndex,
+    const int32_t userId, const int32_t timeout, std::string &categoryStatsJson)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
+    INSTALLD_PARCEL_WRITE(data, Int32, appIndex);
+    INSTALLD_PARCEL_WRITE(data, Int32, userId);
+    INSTALLD_PARCEL_WRITE(data, Int32, timeout);
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    auto ret = TransactInstalldCmd(InstalldInterfaceCode::GET_APP_DATA_FILE_CATEGORY_STATS, data, reply, option);
+    if (ret != ERR_OK) {
+        LOG_NOFUNC_E(BMS_TAG_INSTALLD, "TransactInstalldCmd failed");
+        return ret;
+    }
+
+    size_t dataSize = reply.ReadUint64();
+    if (dataSize == 0) {
+        LOG_NOFUNC_D(BMS_TAG_INSTALLD, "GetAppDataFileCategoryStats: no data returned");
+        categoryStatsJson.clear();
+        return ERR_OK;
+    }
+
+    const void *buffer = reply.ReadRawData(dataSize);
+    if (buffer == nullptr) {
+        LOG_NOFUNC_E(BMS_TAG_INSTALLD, "failed to read raw data, size: %{public}zu", dataSize);
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    categoryStatsJson.assign(reinterpret_cast<const char*>(buffer), dataSize);
+
+    LOG_NOFUNC_D(BMS_TAG_INSTALLD, "GetAppDataFileCategoryStats: read JSON string, size: %{public}zu",
+        categoryStatsJson.size());
+    return ERR_OK;
+}
+
 ErrCode InstalldProxy::MoveFile(
     const std::string &oldPath, const std::string &newPath, BundleDirScene scene, const std::string &bundleName)
 {

@@ -3787,4 +3787,333 @@ HWTEST_F(BmsInstalldOperatorTest, IsFileNameValid_0900, Function | SmallTest | L
 {
     EXPECT_FALSE(InstalldOperator::IsFileNameValid("abc/../etc"));
 }
+
+/**
+ * @tc.number: GetAppDataFileCategoryStats_0100
+ * @tc.name: empty dirPaths returns true with empty outputs
+ * @tc.desc: 1. input dirPaths is empty
+ *           2. returns true, extTotalSizes and extDirSizes are empty
+ */
+HWTEST_F(BmsInstalldOperatorTest, GetAppDataFileCategoryStats_0100, Function | SmallTest | Level0)
+{
+    std::vector<std::string> dirPaths;
+    std::vector<std::pair<std::string, uint64_t>> extTotalSizes;
+    std::vector<std::pair<std::string, std::vector<std::pair<std::string, uint64_t>>>> extDirSizes;
+
+    bool ret = InstalldOperator::GetAppDataFileCategoryStats(dirPaths, 30, extTotalSizes, extDirSizes);
+
+    EXPECT_TRUE(ret);
+    EXPECT_TRUE(extTotalSizes.empty());
+    EXPECT_TRUE(extDirSizes.empty());
+}
+
+/**
+ * @tc.number: GetAppDataFileCategoryStats_0200
+ * @tc.name: scan real temp directory classifies files by extension
+ * @tc.desc: 1. create temp dir with .so, .json, .txt files of known sizes
+ *           2. scan returns extensions sorted by total size desc
+ */
+HWTEST_F(BmsInstalldOperatorTest, GetAppDataFileCategoryStats_0200, Function | SmallTest | Level0)
+{
+    std::string baseDir = "/data/test/installd_test_0200";
+    std::filesystem::remove_all(baseDir);
+    std::filesystem::create_directories(baseDir);
+
+    std::ofstream f1(baseDir + "/lib.so", std::ios::binary);
+    f1 << std::string(4096, 'x');
+    f1.close();
+
+    std::ofstream f2(baseDir + "/config.json", std::ios::binary);
+    f2 << std::string(1024, 'y');
+    f2.close();
+
+    std::ofstream f3(baseDir + "/notes.txt", std::ios::binary);
+    f3 << std::string(512, 'z');
+    f3.close();
+
+    std::vector<std::string> dirPaths = {baseDir};
+    std::vector<std::pair<std::string, uint64_t>> extTotalSizes;
+    std::vector<std::pair<std::string, std::vector<std::pair<std::string, uint64_t>>>> extDirSizes;
+
+    bool ret = InstalldOperator::GetAppDataFileCategoryStats(dirPaths, 30, extTotalSizes, extDirSizes);
+
+    EXPECT_TRUE(ret);
+    ASSERT_EQ(extTotalSizes.size(), 3u);
+    EXPECT_EQ(extTotalSizes[0].first, "so");
+    EXPECT_EQ(extTotalSizes[0].second, 4096u);
+    EXPECT_EQ(extTotalSizes[1].first, "json");
+    EXPECT_EQ(extTotalSizes[1].second, 1024u);
+    EXPECT_EQ(extTotalSizes[2].first, "txt");
+    EXPECT_EQ(extTotalSizes[2].second, 512u);
+
+    ASSERT_EQ(extDirSizes.size(), 3u);
+    EXPECT_EQ(extDirSizes[0].first, "so");
+    EXPECT_EQ(extDirSizes[0].second.size(), 1u);
+    EXPECT_EQ(extDirSizes[0].second[0].second, 4096u);
+
+    std::filesystem::remove_all(baseDir);
+}
+
+/**
+ * @tc.number: GetAppDataFileCategoryStats_0300
+ * @tc.name: scan skips non-existent and empty paths
+ * @tc.desc: 1. mix of non-existent path, a file (not dir), and valid dir
+ *           2. valid dir scanned, invalid paths skipped without crash
+ */
+HWTEST_F(BmsInstalldOperatorTest, GetAppDataFileCategoryStats_0300, Function | SmallTest | Level0)
+{
+    std::string baseDir = "/data/test/installd_test_0300";
+    std::filesystem::remove_all(baseDir);
+    std::filesystem::create_directories(baseDir);
+
+    std::ofstream f1(baseDir + "/data.so", std::ios::binary);
+    f1 << std::string(2048, 'a');
+    f1.close();
+
+    std::vector<std::string> dirPaths = {
+        "/data/test/nonexistent_path_0300",
+        "",
+        baseDir,
+    };
+    std::vector<std::pair<std::string, uint64_t>> extTotalSizes;
+    std::vector<std::pair<std::string, std::vector<std::pair<std::string, uint64_t>>>> extDirSizes;
+
+    bool ret = InstalldOperator::GetAppDataFileCategoryStats(dirPaths, 30, extTotalSizes, extDirSizes);
+
+    EXPECT_TRUE(ret);
+    ASSERT_EQ(extTotalSizes.size(), 1u);
+    EXPECT_EQ(extTotalSizes[0].first, "so");
+    EXPECT_EQ(extTotalSizes[0].second, 2048u);
+
+    std::filesystem::remove_all(baseDir);
+}
+
+/**
+ * @tc.number: GetAppDataFileCategoryStats_0400
+ * @tc.name: files with no extension or hidden files produce empty extension key
+ * @tc.desc: 1. create files: no_ext, .hidden, normal.so
+ *           2. "so" extension found; no-extension and hidden files produce "" key
+ */
+HWTEST_F(BmsInstalldOperatorTest, GetAppDataFileCategoryStats_0400, Function | SmallTest | Level0)
+{
+    std::string baseDir = "/data/test/installd_test_0400";
+    std::filesystem::remove_all(baseDir);
+    std::filesystem::create_directories(baseDir);
+
+    std::ofstream f1(baseDir + "/noext", std::ios::binary);
+    f1 << std::string(100, 'a');
+    f1.close();
+
+    std::ofstream f2(baseDir + "/.hidden", std::ios::binary);
+    f2 << std::string(200, 'b');
+    f2.close();
+
+    std::ofstream f3(baseDir + "/real.so", std::ios::binary);
+    f3 << std::string(300, 'c');
+    f3.close();
+
+    std::vector<std::string> dirPaths = {baseDir};
+    std::vector<std::pair<std::string, uint64_t>> extTotalSizes;
+    std::vector<std::pair<std::string, std::vector<std::pair<std::string, uint64_t>>>> extDirSizes;
+
+    bool ret = InstalldOperator::GetAppDataFileCategoryStats(dirPaths, 30, extTotalSizes, extDirSizes);
+
+    EXPECT_TRUE(ret);
+    bool foundSo = false;
+    bool foundEmpty = false;
+    for (const auto &ext : extTotalSizes) {
+        if (ext.first == "so") {
+            foundSo = true;
+            EXPECT_EQ(ext.second, 300u);
+        }
+        if (ext.first.empty()) {
+            foundEmpty = true;
+        }
+    }
+    EXPECT_TRUE(foundSo);
+    EXPECT_TRUE(foundEmpty);
+
+    std::filesystem::remove_all(baseDir);
+}
+
+/**
+ * @tc.number: GetAppDataFileCategoryStats_0500
+ * @tc.name: many extensions capped to FILE_CATEGORY_MAX_EXTENSIONS (100)
+ * @tc.desc: 1. create 150 files with unique extensions
+ *           2. output extTotalSizes has exactly 100, sorted desc
+ */
+HWTEST_F(BmsInstalldOperatorTest, GetAppDataFileCategoryStats_0500, Function | SmallTest | Level0)
+{
+    std::string baseDir = "/data/test/installd_test_0500";
+    std::filesystem::remove_all(baseDir);
+    std::filesystem::create_directories(baseDir);
+
+    for (int i = 0; i < 150; ++i) {
+        std::ofstream f(baseDir + "/file" + std::to_string(i) + ".ext" + std::to_string(i),
+            std::ios::binary);
+        f << std::string(static_cast<size_t>((i + 1) * 10), 'x');
+        f.close();
+    }
+
+    std::vector<std::string> dirPaths = {baseDir};
+    std::vector<std::pair<std::string, uint64_t>> extTotalSizes;
+    std::vector<std::pair<std::string, std::vector<std::pair<std::string, uint64_t>>>> extDirSizes;
+
+    bool ret = InstalldOperator::GetAppDataFileCategoryStats(dirPaths, 30, extTotalSizes, extDirSizes);
+
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(extTotalSizes.size(), 100u);
+    EXPECT_LE(extDirSizes.size(), 5u);
+    bool sortedDesc = true;
+    for (size_t i = 1; i < extTotalSizes.size(); ++i) {
+        if (extTotalSizes[i].second > extTotalSizes[i - 1].second) {
+            sortedDesc = false;
+            break;
+        }
+    }
+    EXPECT_TRUE(sortedDesc);
+
+    std::filesystem::remove_all(baseDir);
+}
+
+/**
+ * @tc.number: GetAppDataFileCategoryStats_0600
+ * @tc.name: timeout clamped to minimum when <= 0
+ * @tc.desc: 1. pass timeout=0 (<= NFTW_TIMEOUT_MIN_SECONDS)
+ *           2. function uses NFTW_TIMEOUT_MIN_SECONDS, scan still succeeds
+ */
+HWTEST_F(BmsInstalldOperatorTest, GetAppDataFileCategoryStats_0600, Function | SmallTest | Level0)
+{
+    std::string baseDir = "/data/test/installd_test_0600";
+    std::filesystem::remove_all(baseDir);
+    std::filesystem::create_directories(baseDir);
+
+    std::ofstream f(baseDir + "/data.so", std::ios::binary);
+    f << std::string(256, 'x');
+    f.close();
+
+    std::vector<std::string> dirPaths = {baseDir};
+    std::vector<std::pair<std::string, uint64_t>> extTotalSizes;
+    std::vector<std::pair<std::string, std::vector<std::pair<std::string, uint64_t>>>> extDirSizes;
+
+    bool ret = InstalldOperator::GetAppDataFileCategoryStats(dirPaths, 0, extTotalSizes, extDirSizes);
+
+    EXPECT_TRUE(ret);
+    ASSERT_EQ(extTotalSizes.size(), 1u);
+    EXPECT_EQ(extTotalSizes[0].first, "so");
+
+    std::filesystem::remove_all(baseDir);
+}
+
+/**
+ * @tc.number: GetAppDataFileCategoryStats_0700
+ * @tc.name: scan caps unique extensions at FILE_CATEGORY_MAX_EXT_ENTRIES
+ * @tc.desc: 1. create 1001 files with unique extensions (> scan cap 1000)
+ *           2. scan does not crash/OOM; report truncated to FILE_CATEGORY_MAX_EXTENSIONS (100)
+ */
+HWTEST_F(BmsInstalldOperatorTest, GetAppDataFileCategoryStats_0700, Function | SmallTest | Level0)
+{
+    std::string baseDir = "/data/test/installd_test_0700";
+    std::filesystem::remove_all(baseDir);
+    std::filesystem::create_directories(baseDir);
+
+    constexpr int32_t extCount = 1001;  // > FILE_CATEGORY_MAX_EXT_ENTRIES (1000)
+    for (int32_t i = 0; i < extCount; ++i) {
+        std::ofstream f(baseDir + "/file" + std::to_string(i) + ".ext" + std::to_string(i),
+            std::ios::binary);
+        f << std::string(10, 'x');
+        f.close();
+    }
+
+    std::vector<std::string> dirPaths = {baseDir};
+    std::vector<std::pair<std::string, uint64_t>> extTotalSizes;
+    std::vector<std::pair<std::string, std::vector<std::pair<std::string, uint64_t>>>> extDirSizes;
+
+    bool ret = InstalldOperator::GetAppDataFileCategoryStats(dirPaths, 30, extTotalSizes, extDirSizes);
+
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(extTotalSizes.size(), 100u);   // scan caps unique exts at 1000, report truncates to 100
+    EXPECT_LE(extDirSizes.size(), 5u);
+
+    std::filesystem::remove_all(baseDir);
+}
+
+/**
+ * @tc.number: GetAppDataFileCategoryStats_0800
+ * @tc.name: scan caps unique dirs per ext at FILE_CATEGORY_MAX_DIRS_PER_EXT
+ * @tc.desc: 1. create 121 subdirs each with a .so file (> dir cap 120 per ext)
+ *           2. scan does not crash; dir breakdown truncated to FILE_CATEGORY_MAX_DIRS_PER_EXTENSION (10)
+ */
+HWTEST_F(BmsInstalldOperatorTest, GetAppDataFileCategoryStats_0800, Function | SmallTest | Level0)
+{
+    std::string baseDir = "/data/test/installd_test_0800";
+    std::filesystem::remove_all(baseDir);
+    std::filesystem::create_directories(baseDir);
+
+    constexpr int32_t dirCount = 121;  // > FILE_CATEGORY_MAX_DIRS_PER_EXT (120)
+    for (int32_t i = 0; i < dirCount; ++i) {
+        std::string subDir = baseDir + "/sub" + std::to_string(i);
+        std::filesystem::create_directories(subDir);
+        std::ofstream f(subDir + "/data.so", std::ios::binary);
+        f << std::string(static_cast<size_t>((i + 1) * 10), 'x');
+        f.close();
+    }
+
+    std::vector<std::string> dirPaths = {baseDir};
+    std::vector<std::pair<std::string, uint64_t>> extTotalSizes;
+    std::vector<std::pair<std::string, std::vector<std::pair<std::string, uint64_t>>>> extDirSizes;
+
+    bool ret = InstalldOperator::GetAppDataFileCategoryStats(dirPaths, 30, extTotalSizes, extDirSizes);
+
+    EXPECT_TRUE(ret);
+    ASSERT_EQ(extTotalSizes.size(), 1u);
+    EXPECT_EQ(extTotalSizes[0].first, "so");
+    ASSERT_EQ(extDirSizes.size(), 1u);
+    EXPECT_EQ(extDirSizes[0].first, "so");
+    EXPECT_EQ(extDirSizes[0].second.size(), 10u);   // scan caps dirs at 120, report truncates to 10
+
+    std::filesystem::remove_all(baseDir);
+}
+
+/**
+ * @tc.number: GetAppDataFileCategoryStats_0900
+ * @tc.name: scan skips files beyond MAX_FTW_DEPTH
+ * @tc.desc: 1. create a top-level .so file (depth 1, within cap)
+ *           2. create a deep .so file (depth > MAX_FTW_DEPTH=1000, beyond cap)
+ *           3. only the top .so is counted; deep .so skipped by depth guard
+ */
+HWTEST_F(BmsInstalldOperatorTest, GetAppDataFileCategoryStats_0900, Function | SmallTest | Level0)
+{
+    std::string baseDir = "/data/test/installd_test_0900";
+    std::filesystem::remove_all(baseDir);
+    std::filesystem::create_directories(baseDir);
+
+    std::ofstream topFile(baseDir + "/top.so", std::ios::binary);
+    topFile << std::string(100, 'x');
+    topFile.close();
+
+    constexpr int32_t depth = 1001;  // > MAX_FTW_DEPTH (1000)
+    std::string deepDir = baseDir;
+    for (int32_t i = 0; i < depth; ++i) {
+        deepDir += "/d";
+        std::filesystem::create_directory(deepDir);
+    }
+    std::ofstream deepFile(deepDir + "/deep.so", std::ios::binary);
+    deepFile << std::string(999, 'x');
+    deepFile.close();
+
+    std::vector<std::string> dirPaths = {baseDir};
+    std::vector<std::pair<std::string, uint64_t>> extTotalSizes;
+    std::vector<std::pair<std::string, std::vector<std::pair<std::string, uint64_t>>>> extDirSizes;
+
+    bool ret = InstalldOperator::GetAppDataFileCategoryStats(dirPaths, 30, extTotalSizes, extDirSizes);
+
+    EXPECT_TRUE(ret);
+    ASSERT_EQ(extTotalSizes.size(), 1u);
+    EXPECT_EQ(extTotalSizes[0].first, "so");
+    EXPECT_EQ(extTotalSizes[0].second, 100u);   // only top.so counted, deep.so skipped by depth guard
+
+    std::filesystem::remove_all(baseDir);
+}
+
 } // OHOS

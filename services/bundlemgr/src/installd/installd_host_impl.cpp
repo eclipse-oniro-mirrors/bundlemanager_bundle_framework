@@ -1587,6 +1587,82 @@ ErrCode InstalldHostImpl::GetTopNLargestItemsInAppDataDir(const std::string &bun
     return ERR_OK;
 }
 
+static std::string SerializeFileCategoryStats(
+    const std::vector<std::pair<std::string, uint64_t>> &extTotalSizes,
+    const std::vector<std::pair<std::string, std::vector<std::pair<std::string, uint64_t>>>> &extDirSizes)
+{
+    nlohmann::json extensionsArray = nlohmann::json::array();
+    for (size_t i = 0; i < extTotalSizes.size(); ++i) {
+        const auto &[ext, totalSize] = extTotalSizes[i];
+        nlohmann::json extCategoryEntry;
+        extCategoryEntry["extension"] = ext;
+        extCategoryEntry["totalSize"] = totalSize;
+
+        nlohmann::json dirsArray = nlohmann::json::array();
+        if (i < extDirSizes.size()) {
+            const auto &[dirExt, dirs] = extDirSizes[i];
+            for (const auto &[dirPath, dirSize] : dirs) {
+                nlohmann::json dirEntry;
+                dirEntry["path"] = InstalldOperator::AnonymizePath(dirPath);
+                dirEntry["size"] = dirSize;
+                dirsArray.push_back(dirEntry);
+            }
+        }
+        extCategoryEntry["dirs"] = dirsArray;
+        extensionsArray.push_back(extCategoryEntry);
+    }
+
+    nlohmann::json resultJson;
+    resultJson["extensions"] = extensionsArray;
+    return resultJson.dump();
+}
+
+ErrCode InstalldHostImpl::GetAppDataFileCategoryStats(const std::string &bundleName, const int32_t appIndex,
+    const int32_t userId, const int32_t timeout, std::string &extStatsJson)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    auto startTime = std::chrono::steady_clock::now();
+    LOG_NOFUNC_I(BMS_TAG_INSTALLD,
+        "GetAppDataFileCategoryStats -n %{public}s, -a %{public}d, -u %{public}d, -t %{public}d",
+        bundleName.c_str(), appIndex, userId, timeout);
+
+    if (!InstalldOperator::IsFileNameValid(bundleName)) {
+        LOG_NOFUNC_E(BMS_TAG_INSTALLD, "GetAppDataFileCategoryStats: bundleName is invalid");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    if (userId < 0) {
+        LOG_NOFUNC_E(BMS_TAG_INSTALLD, "GetAppDataFileCategoryStats: invalid userId=%{public}d", userId);
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    std::vector<std::string> dataDirPaths;
+    if (!InstalldOperator::GetBundleDataDirPaths(bundleName, appIndex, userId, dataDirPaths)) {
+        LOG_NOFUNC_E(BMS_TAG_INSTALLD, "GetAppDataFileCategoryStats: GetBundleDataDirPaths failed");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    std::vector<std::pair<std::string, uint64_t>> extTotalSizes;
+    std::vector<std::pair<std::string, std::vector<std::pair<std::string, uint64_t>>>> extDirSizes;
+    if (!InstalldOperator::GetAppDataFileCategoryStats(dataDirPaths, timeout, extTotalSizes, extDirSizes)) {
+        LOG_NOFUNC_E(BMS_TAG_INSTALLD, "GetAppDataFileCategoryStats: InstalldOperator scan failed");
+        return ERR_APPEXECFWK_INSTALL_STAT_FILE_FAILED;
+    }
+
+    extStatsJson = SerializeFileCategoryStats(extTotalSizes, extDirSizes);
+
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::steady_clock::now() - startTime).count();
+    LOG_NOFUNC_I(BMS_TAG_INSTALLD, "GetAppDataFileCategoryStats: success, bundleName=%{public}s, "
+        "appIndex=%{public}d, userId=%{public}d, found %{public}zu extensions, cost: %{public}lld ms",
+        bundleName.c_str(), appIndex, userId, extTotalSizes.size(), static_cast<long long>(duration));
+
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::GetBundleStats(const std::string &bundleName, const int32_t userId,
     std::vector<int64_t> &bundleStats, const std::unordered_set<int32_t> &uids, const int32_t appIndex,
     const uint32_t statFlag, const std::vector<std::string> &moduleNameList)

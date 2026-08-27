@@ -448,6 +448,23 @@ public:
         const int32_t userId, std::vector<std::string> &dataDirPaths);
 
     /**
+     * @brief Collect application data file category statistics by file extension.
+     *        Performs nftw traversal, per-extension size accumulation, and
+     *        per-parent-directory grouping. Returns raw structured data without
+     *        sorting, truncation, anonymization, or JSON serialization.
+     *        Uses pure STL types: extension -> (totalSize, vector of (dirPath, dirSize)).
+     * @param dirPaths Indicates the vector of data directory paths to scan.
+     * @param timeout Indicates the maximum scan time in seconds.
+     * @param extTotalSizes Output: TOP 100 extensions sorted by totalSize descending.
+     * @param extDirSizes Output: TOP 5 extensions with dirs, each sorted by size descending (TOP 10 per extension).
+     * @return Returns true if successfully; returns false otherwise.
+     */
+    static bool GetAppDataFileCategoryStats(const std::vector<std::string> &dirPaths,
+        const int32_t timeout,
+        std::vector<std::pair<std::string, uint64_t>> &extTotalSizes,
+        std::vector<std::pair<std::string, std::vector<std::pair<std::string, uint64_t>>>> &extDirSizes);
+
+    /**
      * @brief Anonymize a file path by replacing every other character in directory and file names with '*'.
      * @param path Indicates the file path to be anonymized.
      * @return Returns the anonymized path string.

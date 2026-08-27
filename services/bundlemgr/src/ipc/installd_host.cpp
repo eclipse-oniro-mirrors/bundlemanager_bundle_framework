@@ -197,6 +197,9 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::GET_TOP_N_LARGEST_ITEMS_IN_APP_DATA_DIR):
             result = this->HandleGetTopNLargestItemsInAppDataDir(data, reply);
             break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::GET_APP_DATA_FILE_CATEGORY_STATS):
+            result = this->HandleGetAppDataFileCategoryStats(data, reply);
+            break;
         case static_cast<uint32_t>(InstalldInterfaceCode::MOVE_FILE):
             result = this->HandleMoveFile(data, reply);
             break;
@@ -966,6 +969,39 @@ bool InstalldHost::HandleGetTopNLargestItemsInAppDataDir(MessageParcel &data, Me
 
     LOG_D(BMS_TAG_INSTALLD, "HandleGetTopNLargestItemsInAppDataDir: returned JSON string, size: %{public}zu",
         largestItems.size());
+
+    return true;
+}
+
+bool InstalldHost::HandleGetAppDataFileCategoryStats(MessageParcel &data, MessageParcel &reply)
+{
+    std::string bundleName = Str16ToStr8(data.ReadString16());
+    int32_t appIndex = data.ReadInt32();
+    int32_t userId = data.ReadInt32();
+    int32_t timeout = data.ReadInt32();
+
+    LOG_NOFUNC_D(BMS_TAG_INSTALLD,
+        "GetAppDataFileCategoryStats -n %{public}s, -a %{public}d, -u %{public}d, -t %{public}d",
+        bundleName.c_str(), appIndex, userId, timeout);
+
+    std::string categoryStatsJson;
+    ErrCode result = GetAppDataFileCategoryStats(bundleName, appIndex, userId, timeout, categoryStatsJson);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+
+    size_t dataSize = categoryStatsJson.size();
+    if (!reply.WriteUint64(dataSize)) {
+        LOG_NOFUNC_E(BMS_TAG_INSTALLD, "failed to write categoryStatsJson data size");
+        return false;
+    }
+    if (dataSize > 0) {
+        if (!reply.WriteRawData(reinterpret_cast<const uint8_t *>(categoryStatsJson.c_str()), dataSize)) {
+            LOG_NOFUNC_E(BMS_TAG_INSTALLD, "failed to write categoryStatsJson raw data, size: %{public}zu", dataSize);
+            return false;
+        }
+    }
+
+    LOG_NOFUNC_D(BMS_TAG_INSTALLD, "HandleGetAppDataFileCategoryStats: returned JSON string, size: %{public}zu",
+        categoryStatsJson.size());
 
     return true;
 }

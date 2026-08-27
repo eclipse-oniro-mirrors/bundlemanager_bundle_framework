@@ -45,6 +45,8 @@ public:
     void InterruptRelabel(const std::string stopReason);
     void TryStartScanAppData();
     void InterruptScanAppData(const std::string &stopReason);
+    void TryStartScanFileCategory();
+    void InterruptScanFileCategory(const std::string &stopReason);
     void OnConfigChanged();
 
 private:
@@ -55,6 +57,10 @@ private:
     bool SetIsRelabeling();
     bool CheckScanConditions(const int32_t userId);
     bool SetIsScanActive();
+    bool CheckFileCategoryScanConditions(const int32_t userId);
+    bool SetIsFileCategoryScanActive();
+    void StartFileCategoryScanTask();
+    void StartScanAppDataTask();
     void ReloadParam();
 
 private:
@@ -64,11 +70,13 @@ private:
     std::unordered_map<int32_t, std::atomic<bool>> userUnlockedMap_;
     std::atomic<bool> featureEnabled_{true};
     std::atomic<bool> scanFeatureEnabled_{true};
+    std::atomic<bool> fileCategoryScanFeatureEnabled_{true};
     std::atomic<bool> screenLocked_{false};
     std::atomic<bool> powerConnected_{false};
     std::atomic<bool> batterySatisfied_{false};
     std::atomic<bool> isRelabeling_{false};
     std::atomic<bool> isScanActive_{false};
+    std::atomic<bool> isFileCategoryScanActive_{false};
     std::atomic<bool> powerConnectedThreadActive_{false};
     std::shared_ptr<IdleConditionListener> idleConditionListener_;
 };

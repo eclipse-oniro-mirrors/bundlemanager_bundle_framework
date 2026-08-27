@@ -45,6 +45,8 @@
 #endif
 #include "hitrace_meter.h"
 #include "installd_client.h"
+#include "app_data_monitor/app_data_monitor.h"
+#include "idle_condition_mgr/idle_condition_mgr.h"
 #include "ipc_skeleton.h"
 #include "iservice_registry.h"
 #include "new_bundle_data_dir_mgr.h"
