@@ -1570,7 +1570,7 @@ private:
     void GetCloneAppInfoV9(const InnerBundleInfo &info, int32_t userId, int32_t flags,
         std::vector<ApplicationInfo> &appInfos) const;
     void GetListForBundleInfo(const int32_t userId,
-        bool isCurrentMode, std::vector<std::pair<std::string, bool>>& bundleInfoList)
+        bool isCurrentMode, std::vector<std::pair<std::string, bool>>& bundleInfoList);
 #ifdef GLOBAL_RESMGR_ENABLE
     std::shared_ptr<Global::Resource::ResourceManager> GetResourceManager(const std::string &bundleName,
         const std::string &moduleName, int32_t userId, const std::string &localeInfo = Constants::EMPTY_STRING) const;

@@ -9955,34 +9955,21 @@ void BundleDataMgr::GetListForBundleInfo(const int32_t userId,
     bool isCurrentMode, std::vector<std::pair<std::string, bool>>& bundleInfoList)
 {
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
-    for (const auto& [bundleName, infoItem] : bundleInfos_) {
-        auto bundleType = infoItem.GetApplicationBundleType();
-        if (bundleType == BundleType::SHARED || bundleType == BundleType::SKILL) {
-            continue;
-        } else {
+    auto filterAndAppend = [&] (const std::unordered_map<std::string , InnerBundleInfo> &infos) {
+        for (const auto& [bundleName, infoItem] : infos) {
+            auto bundleType = infoItem.GetApplicationBundleType();
             int32_t responseUserId = infoItem.GetResponseUserId(userId);
-            if (responseUserId == Constants::INVALID_USERID) {
+            if (bundleType == BundleType::SHARED || bundleType == BundleType::SKILL ||
+                responseUserId == Constants::INVALID_USERID) {
                 continue;
             }
+            bool isDualModeCloneApp = infoItem.IsDualModeCloneApp();
+            bundleInfoList.emplace_back(bundleName, isDualModeCloneApp);
         }
-        bool isDualModeCloneApp = infoItem.IsDualModeCloneApp();
-        bundleInfoList.emplace_back(bundleName, isDualModeCloneApp);
     }
-    if (isCurrentMode) {
-        return;
-    }
-    for (const auto& [bundleName, infoItem] : tempBundleInfos_) {
-        auto bundleType = infoItem.GetApplicationBundleType();
-        if (bundleType == BundleType::SHARED || bundleType == BundleType::SKILL) {
-            continue;
-        } else {
-            int32_t responseUserId = infoItem.GetResponseUserId(userId);
-            if (responseUserId == Constants::INVALID_USERID) {
-                continue;
-            }
-        }
-        bool isDualModeCloneApp = infoItem.IsDualModeCloneApp();
-        bundleInfoList.emplace_back(bundleName, isDualModeCloneApp);
+    filterAndAppend(bundleInfos_);
+    if (!isCurrentMode) {
+        filterAndAppend(tempBundleInfos_);
     }
 }
 
