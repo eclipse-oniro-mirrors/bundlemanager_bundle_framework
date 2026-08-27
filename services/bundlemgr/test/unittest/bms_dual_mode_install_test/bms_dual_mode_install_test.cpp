@@ -520,16 +520,19 @@ HWTEST_F(BmsDualModeInstallTest, SetDualModeAppInfo_0300, Function | SmallTest |
 
 HWTEST_F(BmsDualModeInstallTest, SetDualModeAppInfo_0400, Function | SmallTest | Level0)
 {
-    // dual-mode device + non-different-package -> deviceModeDistributionPolicy set, isDualModeCloneApp stays false
+    // dual-mode device + non-different-package (non-mode-exclusive) -> deviceModeDistributionPolicy set,
+    // isDualModeCloneApp stays false. UNIVERSAL_IDENTICAL_PACKAGE is neither a different-package category
+    // nor a mode-exclusive policy, so it is admissible in either mode.
     EnableSecondaryMode();
     BaseBundleInstaller installer;
     std::unordered_map<std::string, InnerBundleInfo> infos;
     infos[BUNDLE_NAME] = InnerBundleInfo();
     InstallParam installParam;
-    installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::MAIN_ONLY;
+    installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNIVERSAL_IDENTICAL_PACKAGE;
     installer.SetDualModeAppInfo(installParam, infos);
     EXPECT_FALSE(infos[BUNDLE_NAME].IsDualModeCloneApp());
-    EXPECT_EQ(infos[BUNDLE_NAME].GetDeviceModeDistributionPolicy(), DeviceModeDistributionPolicy::MAIN_ONLY);
+    EXPECT_EQ(infos[BUNDLE_NAME].GetDeviceModeDistributionPolicy(),
+        DeviceModeDistributionPolicy::UNIVERSAL_IDENTICAL_PACKAGE);
 }
 
 HWTEST_F(BmsDualModeInstallTest, SetDualModeAppInfo_0500, Function | SmallTest | Level0)
@@ -637,9 +640,77 @@ HWTEST_F(BmsDualModeInstallTest, SetDualModeAppInfo_0900, Function | SmallTest |
     systemInfo2.SetBaseApplicationInfo(appInfo2);
     infos2[BUNDLE_NAME] = systemInfo2;
     InstallParam installParam2;
-    installParam2.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::MAIN_ONLY;
+    installParam2.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNIVERSAL_IDENTICAL_PACKAGE;
     EXPECT_EQ(installer.SetDualModeAppInfo(installParam2, infos2), OHOS::ERR_OK);
     EXPECT_EQ(infos2[BUNDLE_NAME].GetAppSandboxPolicy(), AppSandboxPolicy::SHARED_SANDBOX);
+}
+
+HWTEST_F(BmsDualModeInstallTest, SetDualModeAppInfo_1000, Function | SmallTest | Level0)
+{
+    // MAIN_ONLY is primary-mode-only; installing it in secondary mode is rejected (the policy is not
+    // supported in the current device mode) and no info is mutated (the check runs before the set-loop).
+    EnableSecondaryMode();
+    BaseBundleInstaller installer;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo normalInfo;
+    normalInfo.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::UNSPECIFIED);
+    infos[BUNDLE_NAME] = normalInfo;
+    InstallParam installParam;
+    installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::MAIN_ONLY;
+    EXPECT_EQ(installer.SetDualModeAppInfo(installParam, infos),
+        OHOS::ERR_APPEXECFWK_INSTALL_DUAL_MODE_POLICY_NOT_SUPPORTED);
+    EXPECT_FALSE(infos[BUNDLE_NAME].IsDualModeCloneApp());
+    EXPECT_EQ(infos[BUNDLE_NAME].GetDeviceModeDistributionPolicy(), DeviceModeDistributionPolicy::UNSPECIFIED);
+}
+
+HWTEST_F(BmsDualModeInstallTest, SetDualModeAppInfo_1100, Function | SmallTest | Level0)
+{
+    // SUB_ONLY is secondary-mode-only; installing it in primary mode is rejected (the policy is not
+    // supported in the current device mode) and no info is mutated.
+    EnablePrimaryMode();
+    BaseBundleInstaller installer;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo normalInfo;
+    normalInfo.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::UNSPECIFIED);
+    infos[BUNDLE_NAME] = normalInfo;
+    InstallParam installParam;
+    installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::SUB_ONLY;
+    EXPECT_EQ(installer.SetDualModeAppInfo(installParam, infos),
+        OHOS::ERR_APPEXECFWK_INSTALL_DUAL_MODE_POLICY_NOT_SUPPORTED);
+    EXPECT_FALSE(infos[BUNDLE_NAME].IsDualModeCloneApp());
+    EXPECT_EQ(infos[BUNDLE_NAME].GetDeviceModeDistributionPolicy(), DeviceModeDistributionPolicy::UNSPECIFIED);
+}
+
+HWTEST_F(BmsDualModeInstallTest, SetDualModeAppInfo_1200, Function | SmallTest | Level0)
+{
+    // MAIN_ONLY in primary mode is admissible; policy is set, clone flag stays false (primary mode
+    // is not a clone), sandbox policy derives SHARED (non-different-package).
+    EnablePrimaryMode();
+    BaseBundleInstaller installer;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    infos[BUNDLE_NAME] = InnerBundleInfo();
+    InstallParam installParam;
+    installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::MAIN_ONLY;
+    EXPECT_EQ(installer.SetDualModeAppInfo(installParam, infos), OHOS::ERR_OK);
+    EXPECT_FALSE(infos[BUNDLE_NAME].IsDualModeCloneApp());
+    EXPECT_EQ(infos[BUNDLE_NAME].GetDeviceModeDistributionPolicy(), DeviceModeDistributionPolicy::MAIN_ONLY);
+    EXPECT_EQ(infos[BUNDLE_NAME].GetAppSandboxPolicy(), AppSandboxPolicy::SHARED_SANDBOX);
+}
+
+HWTEST_F(BmsDualModeInstallTest, SetDualModeAppInfo_1300, Function | SmallTest | Level0)
+{
+    // SUB_ONLY in secondary mode is admissible; policy is set, clone flag stays false (SUB_ONLY is
+    // not a different-package category so it does not trigger clone isolation), sandbox policy SHARED.
+    EnableSecondaryMode();
+    BaseBundleInstaller installer;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    infos[BUNDLE_NAME] = InnerBundleInfo();
+    InstallParam installParam;
+    installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::SUB_ONLY;
+    EXPECT_EQ(installer.SetDualModeAppInfo(installParam, infos), OHOS::ERR_OK);
+    EXPECT_FALSE(infos[BUNDLE_NAME].IsDualModeCloneApp());
+    EXPECT_EQ(infos[BUNDLE_NAME].GetDeviceModeDistributionPolicy(), DeviceModeDistributionPolicy::SUB_ONLY);
+    EXPECT_EQ(infos[BUNDLE_NAME].GetAppSandboxPolicy(), AppSandboxPolicy::SHARED_SANDBOX);
 }
 
 // ====================== BaseBundleInstaller::CheckDualModeCategoryConsistency ======================

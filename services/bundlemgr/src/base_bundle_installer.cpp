@@ -5822,12 +5822,21 @@ ErrCode BaseBundleInstaller::SetDualModeAppInfo(const InstallParam &installParam
     if (!DualModeHelper::IsDualModeDevice() || infos.empty()) {
         return ERR_OK;
     }
+
     // Validate deviceModeDistributionPolicy is within valid enum range [0, 8] before persisting
     int32_t policyValue = static_cast<int32_t>(installParam.deviceModeDistributionPolicy);
     if (policyValue < static_cast<int32_t>(DeviceModeDistributionPolicy::UNSPECIFIED) ||
         policyValue > static_cast<int32_t>(DeviceModeDistributionPolicy::FULL_COMPATIBLE_DIFFERENT_PACKAGE)) {
         APP_LOGE("Dual mode: invalid deviceModeDistributionPolicy value %{public}d", policyValue);
         return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
+    }
+
+    bool isSecondary = DualModeHelper::IsSecondaryMode();
+    if ((policyValue == static_cast<int32_t>(DeviceModeDistributionPolicy::MAIN_ONLY) && isSecondary) ||
+        (policyValue == static_cast<int32_t>(DeviceModeDistributionPolicy::SUB_ONLY) && !isSecondary)) {
+        APP_LOGE("Dual mode: policy %{public}d is mode-exclusive and not supported in current mode "
+            "(isSecondary=%{public}d)", policyValue, isSecondary);
+        return ERR_APPEXECFWK_INSTALL_DUAL_MODE_POLICY_NOT_SUPPORTED;
     }
     // Dual-mode different-package is a system-level capability: any different-package app (primary or
     // secondary mode) must be a system app; reject non-system apps. isCloneApp (secondary mode) only
