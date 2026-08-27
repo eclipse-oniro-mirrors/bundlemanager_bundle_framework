@@ -1378,7 +1378,10 @@ ohos_unittest("BmsCleanAllBundleCacheTest") {
   ]
   sources = bundle_mgr_source
 
-  sources += [ "mock/src/mock_ipc_skeleton.cpp" ]
+  sources += [
+    "mock/src/mock_ipc_skeleton.cpp",
+    "mock/src/mock_res_sched_client.cpp",
+  ]
   sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/bms_param.cpp" ]
   sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]

@@ -85,6 +85,7 @@
                 "power_manager",
                 "safwk",
                 "resource_management",
+                "resource_schedule_service",
                 "samgr",
                 "sandbox_manager",
                 "selinux",

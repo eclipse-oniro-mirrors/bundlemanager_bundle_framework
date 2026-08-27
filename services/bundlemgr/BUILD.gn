@@ -385,6 +385,7 @@ ohos_shared_library("libbms") {
     "libxml2:libxml2",
     "memmgr:memmgrclient",
     "os_account:libaccountkits",
+    "resource_schedule_service:ressched_client",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "syscap_codec:syscap_interface_shared",
