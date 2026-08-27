@@ -9587,6 +9587,10 @@ HWTEST_F(BmsDataMgrTest, SetBundleFirstLaunch_0003, Function | MediumTest | Leve
         std::string userInfoKey = bundleName + Constants::FILE_UNDERLINE + std::to_string(userId);
 
         BuildForSetBundleFirstLaunch(bundleName, userInfoKey, cloneKey, bundleDataMgr);
+        if (i == 0) {
+            // secondary mode: record under original name is the dual-mode clone
+            bundleDataMgr.bundleInfos_[bundleName].SetDualModeCloneApp(true);
+        }
         auto& ibundleInfo = bundleDataMgr.bundleInfos_[bundleName];
         auto& userInfo = ibundleInfo.innerBundleUserInfos_[userInfoKey];
 

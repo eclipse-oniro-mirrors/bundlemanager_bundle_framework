@@ -54,6 +54,7 @@
 #include "param_validator.h"
 #include "system_ability_helper.h"
 #include "inner_bundle_clone_common.h"
+#include "dual_mode_helper.h"
 #ifdef DEVICE_USAGE_STATISTICS_ENABLED
 #include "bundle_active_client.h"
 #include "bundle_active_period_stats.h"
@@ -501,7 +502,13 @@ ErrCode BundleMgrHostImpl::GetBundleInfoForException(const std::string &bundleNa
     std::string nativeLibraryPath = innerBundleInfo.GetNativeLibraryPath();
     if (!nativeLibraryPath.empty()) {
         std::string soPath = std::string(ServiceConstants::SO_PATH_PREFIX) + bundleName +
-            ServiceConstants::PATH_SEPARATOR + nativeLibraryPath;
+                ServiceConstants::PATH_SEPARATOR + nativeLibraryPath;
+        if (DualModeHelper::IsDualModeDevice()) {
+            std::string effectiveName = innerBundleInfo.IsDualModeCloneApp()
+                ? DualModeHelper::GetDualModeBundleName(bundleName) : bundleName;
+            soPath = std::string(ServiceConstants::SO_PATH_PREFIX) + effectiveName +
+                ServiceConstants::PATH_SEPARATOR + nativeLibraryPath;
+        }
         std::vector<std::string> soName;
         std::vector<std::string> soHash;
         InstalldClient::GetInstance()->HashSoFile(soPath, catchSoNum, catchSoMaxSize, soName, soHash);
@@ -2198,6 +2205,11 @@ bool BundleMgrHostImpl::CheckAppIndex(const std::string &bundleName, int32_t use
         APP_LOGE("DataMgr is nullptr");
         return false;
     }
+    // dual-mode: allow appIndex=10000 for dual-mode clone apps
+    if (appIndex == ServiceConstants::DUAL_MODE_CLONE_APP_INDEX) {
+        InnerBundleInfo info;
+        return dataMgr->FetchInnerBundleInfo(bundleName, info) && info.IsDualModeCloneApp();
+    }
     std::vector<int32_t> appIndexes = dataMgr->GetCloneAppIndexes(bundleName, userId);
     bool isAppIndexValid = std::find(appIndexes.cbegin(), appIndexes.cend(), appIndex) == appIndexes.cend();
     if (isAppIndexValid) {
@@ -2529,7 +2541,8 @@ void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
             NotifyBundleStatus(installRes);
             return;
         }
-        if (appIndex >= ServiceConstants::CLI_SANDBOX_APP_INDEX_MIN) {
+        if (appIndex >= ServiceConstants::CLI_SANDBOX_APP_INDEX_MIN &&
+            appIndex != ServiceConstants::DUAL_MODE_CLONE_APP_INDEX) {
             std::map<std::string, InnerCliSandboxInfo> sandboxInfos = innerBundleUserInfo.sandboxInfos;
             auto iter = sandboxInfos.find(std::to_string(appIndex));
             if (iter == sandboxInfos.end()) {
@@ -2661,7 +2674,17 @@ bool BundleMgrHostImpl::CleanBundleDataFiles(const std::string &bundleName, cons
     auto ret = bmsExtensionClient->BackupBundleData(bundleName, userId, appIndex);
     APP_LOGI_NOFUNC("BackupBundleData ret : %{public}d", ret);
     bool isAtomicService = applicationInfo.bundleType == BundleType::ATOMIC_SERVICE;
-    if (InstalldClient::GetInstance()->CleanBundleDataDirByName(bundleName, userId, appIndex,
+    // dual-mode: clone app's data dir is keyed by the effective (prefixed) name.
+    std::string effectiveName = bundleName;
+    if (DualModeHelper::IsDualModeDevice()) {
+        if (appIndex == Constants::MAIN_APP_INDEX) {
+            InnerBundleInfo info;
+            if (dataMgr->FetchInnerBundleInfo(bundleName, info) && info.IsDualModeCloneApp()) {
+                effectiveName = DualModeHelper::GetDualModeBundleName(bundleName);
+            }
+        }
+    }
+    if (InstalldClient::GetInstance()->CleanBundleDataDirByName(effectiveName, userId, appIndex,
         isAtomicService) != ERR_OK) {
         APP_LOGE("%{public}s, CleanBundleDataDirByName failed", bundleName.c_str());
         EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, true,
@@ -3853,7 +3876,8 @@ ErrCode BundleMgrHostImpl::GetShortcutInfoByAbility(const std::string &bundleNam
         APP_LOGE_NOFUNC("impl fail to GetShortcutInfoByAbility due to abilityName empty");
         return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
     }
-    if (appIndex < Constants::MAIN_APP_INDEX || appIndex > BundleFileUtil::GetCloneMaxCount()) {
+    if (appIndex < Constants::MAIN_APP_INDEX || (appIndex > BundleFileUtil::GetCloneMaxCount() &&
+        appIndex != ServiceConstants::DUAL_MODE_CLONE_APP_INDEX)) {
         APP_LOGE_NOFUNC("impl fail to GetShortcutInfoByAbility due to appIndex out of range");
         return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
     }
@@ -4679,15 +4703,24 @@ void BundleMgrHostImpl::GetTopNLargestItemsTask(const std::string &bundleName, i
 {
     LOG_I(BMS_TAG_DEFAULT, "GetTopNLargestItemsTask started, -n: %{public}s, -a: %{public}d, -u: %{public}d",
         bundleName.c_str(), appIndex, userId);
-
+    std::string effectiveName = bundleName;
+    if (DualModeHelper::IsDualModeDevice() && appIndex == Constants::MAIN_APP_INDEX) {
+        auto dataMgr = GetDataMgrFromService();
+        if (dataMgr != nullptr) {
+            InnerBundleInfo info;
+            if (dataMgr->FetchInnerBundleInfo(bundleName, info) && info.IsDualModeCloneApp()) {
+                effectiveName = DualModeHelper::GetDualModeBundleName(bundleName);
+            }
+        }
+    }
     auto traceId = HiviewDFX::HiTraceChain::GetId();
-    auto getLargestItemsFunc = [bundleName, appIndex, userId, getLargestItemsCallback, traceId]() {
+    auto getLargestItemsFunc = [effectiveName, appIndex, userId, getLargestItemsCallback, traceId]() {
         BUNDLE_MANAGER_TASK_CHAIN_ID(traceId);
         LOG_I(BMS_TAG_DEFAULT, "async task getLargestItemsFunc started, -n: %{public}s, "
-            "-a: %{public}d, -u: %{public}d", bundleName.c_str(), appIndex, userId);
+            "-a: %{public}d, -u: %{public}d", effectiveName.c_str(), appIndex, userId);
         if (getLargestItemsCallback == nullptr) {
             LOG_E(BMS_TAG_DEFAULT, "async task getLargestItemsFunc nullptr error, -n: %{public}s, "
-                "-a: %{public}d, -u: %{public}d", bundleName.c_str(), appIndex, userId);
+                "-a: %{public}d, -u: %{public}d", effectiveName.c_str(), appIndex, userId);
             return;
         }
         auto installdClient = DelayedSingleton<InstalldClient>::GetInstance();
@@ -4700,7 +4733,7 @@ void BundleMgrHostImpl::GetTopNLargestItemsTask(const std::string &bundleName, i
         std::string largestItems;
         // Use fixed timeout value of 180 seconds for installd layer
         constexpr int32_t FIXED_TIMEOUT = 180;
-        ErrCode errCode = installdClient->GetTopNLargestItemsInAppDataDir(bundleName, appIndex, userId,
+        ErrCode errCode = installdClient->GetTopNLargestItemsInAppDataDir(effectiveName, appIndex, userId,
             FIXED_TIMEOUT, largestItems);
 
         auto endTime = std::chrono::steady_clock::now();
@@ -4709,11 +4742,11 @@ void BundleMgrHostImpl::GetTopNLargestItemsTask(const std::string &bundleName, i
         if (errCode != ERR_OK) {
             LOG_E(BMS_TAG_DEFAULT, "async task getLargestItemsFunc failed, -n: %{public}s, "
                 "-u: %{public}d, -a: %{public}d, -e: %{public}d, cost: %{public}lld ms",
-                bundleName.c_str(), userId, appIndex, errCode, static_cast<long long>(duration));
+                effectiveName.c_str(), userId, appIndex, errCode, static_cast<long long>(duration));
         } else {
             LOG_I(BMS_TAG_DEFAULT, "async task getLargestItemsFunc succeed, -n: %{public}s, "
                 "-u: %{public}d, -a: %{public}d, cost: %{public}lld ms",
-                bundleName.c_str(), userId, appIndex, static_cast<long long>(duration));
+                effectiveName.c_str(), userId, appIndex, static_cast<long long>(duration));
         }
 
         getLargestItemsCallback->OnGetLargestItemsFinished(errCode, largestItems);
@@ -7387,7 +7420,27 @@ ErrCode BundleMgrHostImpl::GetDirByBundleNameAndAppIndex(const std::string &bund
     BundleType type;
     dataMgr->GetBundleType(bundleName, type);
     if (type != BundleType::ATOMIC_SERVICE) {
-        return GetDirForApp(bundleName, appIndex, dataDir);
+        if (DualModeHelper::IsDualModeDevice()) {
+            // dual-mode: reject appIndex=10000 for non dual-mode clone apps
+            if (appIndex == ServiceConstants::DUAL_MODE_CLONE_APP_INDEX) {
+                InnerBundleInfo info;
+                if (!dataMgr->FetchInnerBundleInfo(bundleName, info) || !info.IsDualModeCloneApp()) {
+                    APP_LOGE("bundle %{public}s invalid appIndex %{public}d", bundleName.c_str(), appIndex);
+                    return ERR_BUNDLE_MANAGER_GET_DIR_INVALID_APP_INDEX;
+                }
+            }
+            // dual-mode: clone app's data dir is keyed by the effective (prefixed) name.
+            std::string effectiveName = bundleName;
+            if (appIndex == Constants::MAIN_APP_INDEX) {
+                InnerBundleInfo info;
+                if (dataMgr->FetchInnerBundleInfo(bundleName, info) && info.IsDualModeCloneApp()) {
+                    effectiveName = DualModeHelper::GetDualModeBundleName(bundleName);
+                }
+            }
+            return GetDirForApp(effectiveName, appIndex, dataDir);
+        } else {
+            return GetDirForApp(bundleName, appIndex, dataDir);
+        }
     }
 
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)
@@ -8086,7 +8139,8 @@ ErrCode BundleMgrHostImpl::RecoverBackupBundleData(const std::string &bundleName
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
 
-    if (appIndex > BundleFileUtil::GetCloneMaxCount() || !CheckAppIndex(bundleName, userId, appIndex)) {
+    if ((appIndex > BundleFileUtil::GetCloneMaxCount() &&
+        appIndex != ServiceConstants::DUAL_MODE_CLONE_APP_INDEX) || !CheckAppIndex(bundleName, userId, appIndex)) {
         APP_LOGE("invalid appIndex or appIndex not exist");
         return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
     }
@@ -8129,7 +8183,8 @@ ErrCode BundleMgrHostImpl::RemoveBackupBundleData(const std::string &bundleName,
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
 
-    if (appIndex > BundleFileUtil::GetCloneMaxCount() || !CheckAppIndex(bundleName, userId, appIndex)) {
+    if ((appIndex > BundleFileUtil::GetCloneMaxCount() &&
+        appIndex != ServiceConstants::DUAL_MODE_CLONE_APP_INDEX) || !CheckAppIndex(bundleName, userId, appIndex)) {
         APP_LOGE("invalid appIndex or appIndex not exist");
         return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
     }

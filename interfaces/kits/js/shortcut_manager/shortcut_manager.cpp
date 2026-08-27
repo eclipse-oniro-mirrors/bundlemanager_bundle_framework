@@ -509,7 +509,8 @@ static bool CheckShortcutInfo(napi_env env, const std::string &referenceBundleNa
         return false;
     }
     if (shortcutInfo.appIndex < Constants::MAIN_APP_INDEX ||
-        shortcutInfo.appIndex > BundleFileUtil::GetCloneMaxCount()) {
+        (shortcutInfo.appIndex > BundleFileUtil::GetCloneMaxCount() &&
+         shortcutInfo.appIndex != Constants::DUAL_MODE_CLONE_APP_INDEX)) {
         APP_LOGE("appIndex: %{public}d not in valid range", shortcutInfo.appIndex);
         BusinessError::ThrowParameterTypeError(env, ERROR_INVALID_APPINDEX, APP_INDEX, TYPE_NUMBER);
         return false;
@@ -862,7 +863,8 @@ static bool ParseDeleteDynamicParam(
         return false;
     }
     if (callbackInfo.appIndex < Constants::MAIN_APP_INDEX ||
-        callbackInfo.appIndex > BundleFileUtil::GetCloneMaxCount()) {
+        (callbackInfo.appIndex > BundleFileUtil::GetCloneMaxCount() &&
+         callbackInfo.appIndex != Constants::DUAL_MODE_CLONE_APP_INDEX)) {
         APP_LOGE("appIndex:%{public}d not in valid range", callbackInfo.appIndex);
         BusinessError::ThrowParameterTypeError(env, ERROR_INVALID_APPINDEX, APP_INDEX, TYPE_NUMBER);
         return false;

@@ -3032,7 +3032,13 @@ HWTEST_F(BmsBundleDataMgrTest3, IsBundleInstalled_0001, Function | SmallTest | L
         EXPECT_EQ(ret, ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX);
         EXPECT_FALSE(isInstalled);
 
+        // dual-mode: appIndex=10000 is a valid index now, but no dual-mode clone installed
+        // under this empty dataMgr → ERR_OK + not installed
         ret = bundleDataMgr->IsBundleInstalled(BUNDLE_NAME_TEST, 0, 10000, isInstalled);
+        EXPECT_EQ(ret, ERR_OK);
+        EXPECT_FALSE(isInstalled);
+
+        ret = bundleDataMgr->IsBundleInstalled(BUNDLE_NAME_TEST, 0, 9999, isInstalled);
         EXPECT_EQ(ret, ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX);
         EXPECT_FALSE(isInstalled);
 

@@ -912,6 +912,16 @@ public:
      * @return
      */
     void LoadAllBundleStateDataFromJsonDb();
+    void LoadAllBundleStateDataFromJsonDbDualMode();
+    /**
+     * @brief Apply a dual-mode clone app's persisted state (prefixed state key) onto its
+     *        InnerBundleInfo record only, so the state never leaks onto the primary variant.
+     * @param stateKey Indicates the prefixed state key (+clone-10000+{bundleName}).
+     * @param bundleUserStates Indicates the persisted per-user bundle states.
+     * @return
+     */
+    void ApplyDualModeCloneBundleState(const std::string &stateKey,
+        const std::map<int32_t, BundleUserInfo> &bundleUserStates);
 
     bool QueryExtensionAbilityInfos(const ExtensionAbilityType &extensionType, const int32_t &userId,
         std::vector<ExtensionAbilityInfo> &extensionInfos) const;
@@ -1789,6 +1799,9 @@ private:
         std::vector<int64_t> &bundleStats) const;
     ErrCode BatchGetBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,
         std::unordered_map<std::string, std::unordered_set<int32_t>> &uidMap,
+        std::vector<BundleStorageStats> &bundleStats) const;
+    ErrCode BatchGetBundleStatsDualMode(const std::vector<std::string> &bundleNames,
+        const std::unordered_map<std::string, std::unordered_set<int32_t>> &uidMap,
         std::vector<BundleStorageStats> &bundleStats) const;
     void GetAllInstallBundleUids(const int32_t userId, const int32_t requestUserId, int32_t &responseUserId,
         std::unordered_set<int32_t> &uids, std::vector<std::string> &bundleNames) const;

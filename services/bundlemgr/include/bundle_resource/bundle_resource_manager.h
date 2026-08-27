@@ -185,6 +185,11 @@ private:
 
     bool IsNeedProcessResourceIconInfo(const uint32_t resourceFlags);
 
+    // dual-mode: dual-mode clone records are stored under "+clone-10000+{bundleName}"
+    // without numeric app-index prefix. Normalize the query name and appIndex (10000 -> 0)
+    // for RDB lookups. Non-dual-mode records keep the original params (zero regression).
+    bool GetDualModeQueryName(const std::string &bundleName, int32_t &appIndex, std::string &queryName);
+
     bool InnerProcessThemeIconWhenOta(const std::string &bundleName, const std::set<int32_t> userIds,
         const bool hasBundleUpdated = false);
 

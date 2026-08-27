@@ -14,6 +14,7 @@
  */
 
 #include "inner_bundle_info.h"
+#include "dual_mode_helper.h"
 
 #include <regex>
 
@@ -2409,6 +2410,16 @@ ErrCode InnerBundleInfo::GetApplicationEnabledV9(int32_t userId, bool &isEnabled
         PrintSetEnabledInfo(isEnabled, userId, appIndex, innerBundleUserInfoPtr->bundleName,
             innerBundleUserInfoPtr->bundleUserInfo.setEnabledCaller);
         return ERR_OK;
+    } else if (appIndex == ServiceConstants::DUAL_MODE_CLONE_APP_INDEX) {
+        if (isDualModeCloneApp_) {
+            isEnabled = innerBundleUserInfoPtr->bundleUserInfo.enabled;
+            PrintSetEnabledInfo(isEnabled, userId, appIndex, innerBundleUserInfoPtr->bundleName,
+                innerBundleUserInfoPtr->bundleUserInfo.setEnabledCaller);
+            return ERR_OK;
+        } else {
+            APP_LOGE("appIndex %{public}d is only for dual-mode clone app", appIndex);
+            return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
+        }
     } else if (appIndex > 0 && appIndex <= Constants::INITIAL_SANDBOX_APP_INDEX) {
         const std::map<std::string, InnerBundleCloneInfo>& mpCloneInfos = innerBundleUserInfoPtr->cloneInfos;
         std::string key = InnerBundleUserInfo::AppIndexToKey(appIndex);
@@ -2906,6 +2917,9 @@ void InnerBundleInfo::GetApplicationInfo(int32_t flags, int32_t userId, Applicat
         RemoveDuplicateName(appInfo.permissions);
     }
     appInfo.appIndex = appIndex;
+    if (isDualModeCloneApp_) {
+        appInfo.appIndex = ServiceConstants::DUAL_MODE_CLONE_APP_INDEX;
+    }
     appInfo.hasPlugin = innerBundleUserInfoPtr->installedPluginSet.empty() ? false : true;
     // set skillEnabled based on skillProfiles
     appInfo.skillEnabled = false;
@@ -3242,6 +3256,9 @@ void InnerBundleInfo::ProcessBundleFlags(
         }
     }
     bundleInfo.applicationInfo.appIndex = appIndex;
+    if (isDualModeCloneApp_) {
+        bundleInfo.applicationInfo.appIndex = ServiceConstants::DUAL_MODE_CLONE_APP_INDEX;
+    }
     GetBundleWithReqPermissionsV9(flags, userId, bundleInfo, appIndex);
     ProcessBundleWithHapModuleInfoFlag(flags, bundleInfo, userId, appIndex);
     if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO))
@@ -3857,7 +3874,8 @@ bool InnerBundleInfo::IsAbilityEnabled(const std::string &bundleName, const std:
         return false;
     }
 
-    if (appIndex == 0) {
+    if (appIndex == 0 ||
+        (appIndex == ServiceConstants::DUAL_MODE_CLONE_APP_INDEX && isDualModeCloneApp_)) {
         auto disabledAbilities = infoItem->second.bundleUserInfo.disabledAbilities;
         if (std::find(disabledAbilities.begin(), disabledAbilities.end(), abilityName)
             != disabledAbilities.end()) {
@@ -4007,6 +4025,22 @@ ErrCode InnerBundleInfo::IsAbilityEnabledV9(const AbilityInfo &abilityInfo,
             isEnable = true;
         }
         return ERR_OK;
+    } else if (appIndex == ServiceConstants::DUAL_MODE_CLONE_APP_INDEX) {
+        if (isDualModeCloneApp_) {
+            auto disabledAbilities = infoItem->second.bundleUserInfo.disabledAbilities;
+            if (std::find(disabledAbilities.begin(), disabledAbilities.end(), abilityInfo.name)
+                != disabledAbilities.end()) {
+                APP_LOGW_NOFUNC("-n %{public}s -a %{public}s disabled",
+                    abilityInfo.bundleName.c_str(), abilityInfo.name.c_str());
+                isEnable = false;
+            } else {
+                isEnable = true;
+            }
+            return ERR_OK;
+        } else {
+            APP_LOGE("appIndex %{public}d is only for dual-mode clone app", appIndex);
+            return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
+        }
     }
     const std::map<std::string, InnerBundleCloneInfo> &mpCloneInfos = infoItem->second.cloneInfos;
     std::string appIndexKey = InnerBundleUserInfo::AppIndexToKey(appIndex);
@@ -5867,6 +5901,11 @@ bool InnerBundleInfo::GetApplicationInfoAdaptBundleClone(
     int32_t appIndex,
     ApplicationInfo &appInfo) const
 {
+    // dual-mode: reject non-clone app with appIndex=10000 (primary mode must not see clone data)
+    if (appIndex == ServiceConstants::DUAL_MODE_CLONE_APP_INDEX && !isDualModeCloneApp_) {
+        APP_LOGE("appIndex %{public}d is only for dual-mode clone app", appIndex);
+        return false;
+    }
     int32_t appIndexByMode = appIndex % ServiceConstants::DUAL_MODE_CLONE_APP_INDEX;
     if (appIndexByMode == 0 || appIndexByMode > Constants::INITIAL_SANDBOX_APP_INDEX) {
         if (appInfo.removable && !innerBundleUserInfo.isRemovable) {
@@ -5878,6 +5917,11 @@ bool InnerBundleInfo::GetApplicationInfoAdaptBundleClone(
         appInfo.enabled = innerBundleUserInfo.bundleUserInfo.enabled;
         appInfo.isBundleFirstLaunched = innerBundleUserInfo.isBundleFirstLaunched;
         appInfo.uid = innerBundleUserInfo.uid;
+        // dual-mode: clone app's appIndex is persisted as appIndex_ member (10000)
+        if (isDualModeCloneApp_ &&
+            (appIndex == Constants::MAIN_APP_INDEX || appIndex == ServiceConstants::DUAL_MODE_CLONE_APP_INDEX)) {
+            appInfo.appIndex = appIndex_;
+        }
         return true;
     }
     APP_LOGD("start appIndex: %{public}d", appIndex);
@@ -5901,6 +5945,11 @@ bool InnerBundleInfo::GetBundleInfoAdaptBundleClone(
     BundleInfo &bundleInfo) const
 {
     bundleInfo.firstInstallTime = innerBundleUserInfo.firstInstallTime;
+    // dual-mode: reject non-clone app with appIndex=10000 (primary mode must not see clone data)
+    if (appIndex == ServiceConstants::DUAL_MODE_CLONE_APP_INDEX && !isDualModeCloneApp_) {
+        APP_LOGE("appIndex %{public}d is only for dual-mode clone app", appIndex);
+        return false;
+    }
     if (appIndex == 0 || appIndex > Constants::INITIAL_SANDBOX_APP_INDEX) {
         bundleInfo.uid = innerBundleUserInfo.uid;
         if (!innerBundleUserInfo.gids.empty()) {
