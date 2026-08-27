@@ -860,6 +860,89 @@ HWTEST_F(BmsDualModeInstallTest, CheckDualModeCategoryConsistencyInTemp_0500, Fu
         OHOS::ERR_APPEXECFWK_INSTALL_DUAL_MODE_CATEGORY_CONFLICT);
 }
 
+// ====================== BaseBundleInstaller::InitTempBundleFromCache ======================
+// Clone-key input (+clone-10000+X) is parsed back to the original name for the storage lookup.
+// crossMode is decided by IsCrossModeInstall() (fan-out) or, for the user-100 path (role=NONE +
+// policy=UNSPECIFIED), by the second branch: a clone-named secondary variant is cross (hidden in
+// tempBundleInfos_) when the device is NOT in secondary mode. The second branch is guarded by
+// IsDualModeDevice() so a stray clone key on a non-dual-mode device falls through to
+// FetchInnerBundleInfo (tempBundleInfos_ is empty there).
+
+static InnerBundleInfo MakeNamedInfo(const std::string &name)
+{
+    InnerBundleInfo info;
+    ApplicationInfo appInfo;
+    appInfo.bundleName = name;
+    info.SetBaseApplicationInfo(appInfo);
+    return info;
+}
+
+HWTEST_F(BmsDualModeInstallTest, InitTempBundleFromCache_0100, Function | SmallTest | Level0)
+{
+    // Non-dual-mode device + clone key (data residue) + package in bundleInfos_ (original name):
+    // must fall through to FetchInnerBundleInfo. Before the IsDualModeDevice() guard,
+    // !IsSecondaryMode() (always true on non-dual-mode) wrongly set crossMode=true and queried the
+    // empty tempBundleInfos_, returning isAppExist=false.
+    SetDualModeCache(ServiceConstants::DUAL_MODE_VALUE_INVALID, ServiceConstants::DUAL_MODE_VALUE_INVALID);
+    BaseBundleInstaller installer;
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    dataMgr->bundleInfos_[BUNDLE_NAME] = MakeNamedInfo(BUNDLE_NAME);
+    installer.dataMgr_ = dataMgr;
+    InnerBundleInfo info;
+    bool isAppExist = false;
+    EXPECT_TRUE(installer.InitTempBundleFromCache(info, isAppExist, PREFIXED_NAME));
+    EXPECT_TRUE(isAppExist);                         // found via FetchInnerBundleInfo(lookupKey)
+    EXPECT_EQ(installer.bundleName_, BUNDLE_NAME);  // clone key parsed back to original name
+}
+
+HWTEST_F(BmsDualModeInstallTest, InitTempBundleFromCache_0200, Function | SmallTest | Level0)
+{
+    // Non-dual-mode device + clone key + package absent: crossMode stays false (not wrongly true),
+    // isAppExist=false, bundleName_ normalized to the original name.
+    SetDualModeCache(ServiceConstants::DUAL_MODE_VALUE_INVALID, ServiceConstants::DUAL_MODE_VALUE_INVALID);
+    BaseBundleInstaller installer;
+    installer.dataMgr_ = std::make_shared<BundleDataMgr>();  // both maps empty
+    InnerBundleInfo info;
+    bool isAppExist = true;  // poisoned to detect the pre-fix misclassification
+    EXPECT_TRUE(installer.InitTempBundleFromCache(info, isAppExist, PREFIXED_NAME));
+    EXPECT_FALSE(isAppExist);
+    EXPECT_EQ(installer.bundleName_, BUNDLE_NAME);
+}
+
+HWTEST_F(BmsDualModeInstallTest, InitTempBundleFromCache_0300, Function | SmallTest | Level0)
+{
+    // Dual-mode primary device + clone key: secondary variant is hidden in tempBundleInfos_
+    // (original-name key); the second branch sets crossMode=true (NOT secondary mode) ->
+    // FetchTempBundleInfo finds it.
+    EnablePrimaryMode();
+    BaseBundleInstaller installer;
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] = MakeNamedInfo(BUNDLE_NAME);
+    installer.dataMgr_ = dataMgr;
+    InnerBundleInfo info;
+    bool isAppExist = false;
+    EXPECT_TRUE(installer.InitTempBundleFromCache(info, isAppExist, PREFIXED_NAME));
+    EXPECT_TRUE(isAppExist);
+    EXPECT_EQ(installer.bundleName_, BUNDLE_NAME);
+}
+
+HWTEST_F(BmsDualModeInstallTest, InitTempBundleFromCache_0400, Function | SmallTest | Level0)
+{
+    // Dual-mode secondary device + clone key: secondary variant is visible in bundleInfos_
+    // (original-name key); the second branch leaves crossMode=false (IS secondary mode) ->
+    // FetchInnerBundleInfo finds it.
+    EnableSecondaryMode();
+    BaseBundleInstaller installer;
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    dataMgr->bundleInfos_[BUNDLE_NAME] = MakeNamedInfo(BUNDLE_NAME);
+    installer.dataMgr_ = dataMgr;
+    InnerBundleInfo info;
+    bool isAppExist = false;
+    EXPECT_TRUE(installer.InitTempBundleFromCache(info, isAppExist, PREFIXED_NAME));
+    EXPECT_TRUE(isAppExist);
+    EXPECT_EQ(installer.bundleName_, BUNDLE_NAME);
+}
+
 // ====================== BaseBundleInstaller::DeliveryProfileToCodeSign ======================
 // Lines 8530-8532 (dual-mode effective-name selection for DeliverySignProfile):
 //   deliveryBundleName = dualModeBundleName_.empty() ? provisionInfo.bundleInfo.bundleName
@@ -962,8 +1045,8 @@ HWTEST_F(BmsDualModeInstallTest, ClassifyDualModeAppsNoLock_0400, Function | Sma
     normal.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::MAIN_ONLY);
     dataMgr->bundleInfos_[BUNDLE_NAME] = normal;
     dataMgr->ClassifyDualModeAppsNoLock();
-    EXPECT_EQ(dataMgr->bundleInfos_.count(BUNDLE_NAME), 1u);
-    EXPECT_TRUE(dataMgr->tempBundleInfos_.empty());
+    EXPECT_EQ(dataMgr->tempBundleInfos_.count(BUNDLE_NAME), 1u);
+    EXPECT_TRUE(dataMgr->bundleInfos_.empty());
 }
 
 HWTEST_F(BmsDualModeInstallTest, ClassifyDualModeAppsNoLock_0500, Function | SmallTest | Level0)

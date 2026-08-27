@@ -182,7 +182,8 @@ public:
      * @param info Indicates the InnerBundleInfo object to be save.
      * @return Returns true if this function is successfully called; returns false otherwise.
      */
-    bool AddInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info, bool checkStatus = true);
+    bool AddInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info, bool checkStatus = true,
+        bool toTempBundle = false);
     /**
      * @brief Add new module info to an exist InnerBundleInfo.
      * @param bundleName Indicates the bundle name.
@@ -214,7 +215,8 @@ public:
     bool UpdateInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo);
     bool UpdateInnerBundleInfo(InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo);
     void UpdateBaseBundleInfoIntoOld(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo);
-    bool UpdateInnerBundleInfo(InnerBundleInfo &innerBundleInfo, bool needSaveStorage = true);
+    bool UpdateInnerBundleInfo(InnerBundleInfo &innerBundleInfo, bool needSaveStorage = true,
+        bool toTempBundle = false);
     bool UpdatePartialInnerBundleInfo(const InnerBundleInfo &info);
     /**
      * @brief Generate UID and GID for a bundle.

@@ -414,6 +414,32 @@ public:
         u1Enable_ = u1Enable;
     }
 
+    // Dual-mode: true for the secondary (clone) variant record, false for the primary. Same semantics
+    // as InnerBundleInfo::IsDualModeCloneApp. Persisted so the user-100 install path can tell the
+    // secondary PreInstallBundleInfo from the primary without inferring it from the bundle name.
+    bool IsDualModeCloneApp() const
+    {
+        return isDualModeCloneApp_;
+    }
+
+    void SetIsDualModeCloneApp(bool isDualModeCloneApp)
+    {
+        isDualModeCloneApp_ = isDualModeCloneApp;
+    }
+
+    // Dual-mode distribution policy (MAIN_ONLY / SUB_ONLY / *_DIFFERENT_PACKAGE / ...). Persisted so the
+    // user-100 install path can decide cross-mode storage (tempBundleInfos_ vs bundleInfos_) without
+    // re-querying ERMS. UNSPECIFIED for non-dual-mode apps.
+    DeviceModeDistributionPolicy GetDeviceModeDistributionPolicy() const
+    {
+        return deviceModeDistributionPolicy_;
+    }
+
+    void SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy policy)
+    {
+        deviceModeDistributionPolicy_ = policy;
+    }
+
 private:
     bool removable_ = true;
     bool isUninstalled_ = false;
@@ -421,6 +447,8 @@ private:
     // non pre-installed driver app also need to be pre-installed for new user
     bool isAdditionalApp_ = false;
     bool u1Enable_ = false;
+    bool isDualModeCloneApp_ = false;
+    DeviceModeDistributionPolicy deviceModeDistributionPolicy_ = DeviceModeDistributionPolicy::UNSPECIFIED;
     uint32_t versionCode_;
     uint32_t labelId_ = 0;
     uint32_t iconId_ = 0;

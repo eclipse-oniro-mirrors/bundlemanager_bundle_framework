@@ -349,10 +349,10 @@ void BundleDataMgr::ClassifyDualModeAppsNoLock()
     APP_LOGI("Dual mode: classification start, total=%{public}zu, secondary=%{public}d",
         bundleInfos_.size(), isSecondaryMode);
     // === DUAL_MODE: policy-driven classification (requirement 2, ADR-7) ===
-    // Read the persisted policy set and hide filterable-policy apps not in the set. Runs before
-    // the mode-based classification below (filterable policies 1/2/3/5/7 and different-package
-    // policies 4/6/8 are disjoint, so order is safe). If absent/invalid, requirement-1 logic applies.
-    (void)ClassifyDualModeAppsByPolicyNoLock();
+    // Read the persisted policy set and hide filterable-policy apps not in the set. If the policy
+    // set is valid, MAIN_ONLY/SUB_ONLY visibility is policy-driven (mode-based Step 3 below is
+    // skipped to avoid overriding the policy set). If absent/invalid, mode-based Step 3 applies.
+    bool hasValidPolicySet = ClassifyDualModeAppsByPolicyNoLock();
     // Step 1: Move all prefixed apps to tempBundleInfos_ with original name as key
     // Erase prefixed keys immediately during collection to avoid second pass
     for (auto it = bundleInfos_.begin(); it != bundleInfos_.end();) {
@@ -419,6 +419,45 @@ void BundleDataMgr::ClassifyDualModeAppsNoLock()
                 && !it->second.IsDualModeCloneApp()) {
                 tempBundleInfos_[it->first] = it->second;
                 it = bundleInfos_.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+
+    // Step 3: MAIN_ONLY / SUB_ONLY single-mode apps — move between bundleInfos_ and
+    // tempBundleInfos_ by the original name (no clone key, one package) based on the current mode.
+    // MAIN_ONLY: visible in main mode, hidden in secondary. SUB_ONLY: visible in secondary, hidden
+    // in main. Different-package apps are already classified above and are left untouched here.
+    // Skipped when a valid policy set exists: Step 0 already classified MAIN_ONLY/SUB_ONLY by the
+    // policy set (in-set → visible, not-in-set → hidden), and mode-based defaults would override
+    // that (e.g. MAIN_ONLY hidden in secondary mode despite being in the policy set).
+    if (!hasValidPolicySet) {
+        auto shouldBeHidden = [isSecondaryMode](DeviceModeDistributionPolicy policy) {
+            if (policy == DeviceModeDistributionPolicy::MAIN_ONLY) {
+                return isSecondaryMode; // main-only hidden in secondary mode
+            }
+            if (policy == DeviceModeDistributionPolicy::SUB_ONLY) {
+                return !isSecondaryMode; // sub-only hidden in main mode
+            }
+            return false;
+        };
+        // Move MAIN_ONLY/SUB_ONLY apps that should be hidden from bundleInfos_ to tempBundleInfos_.
+        for (auto it = bundleInfos_.begin(); it != bundleInfos_.end();) {
+            if (shouldBeHidden(it->second.GetDeviceModeDistributionPolicy())) {
+                tempBundleInfos_[it->first] = it->second;
+                it = bundleInfos_.erase(it);
+            } else {
+                ++it;
+            }
+        }
+        // Move MAIN_ONLY/SUB_ONLY apps that should be visible from tempBundleInfos_ to bundleInfos_.
+        for (auto it = tempBundleInfos_.begin(); it != tempBundleInfos_.end();) {
+            DeviceModeDistributionPolicy policy = it->second.GetDeviceModeDistributionPolicy();
+            if ((policy == DeviceModeDistributionPolicy::MAIN_ONLY ||
+                policy == DeviceModeDistributionPolicy::SUB_ONLY) && !shouldBeHidden(policy)) {
+                bundleInfos_[it->first] = it->second;
+                it = tempBundleInfos_.erase(it);
             } else {
                 ++it;
             }
@@ -652,7 +691,8 @@ bool BundleDataMgr::UpdateBundleInstallState(const std::string &bundleName,
     return false;
 }
 
-bool BundleDataMgr::AddInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info, bool checkStatus)
+bool BundleDataMgr::AddInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info, bool checkStatus,
+    bool toTempBundle)
 {
     APP_LOGD("to save info:%{public}s", info.GetBundleName().c_str());
     if (bundleName.empty()) {
@@ -661,8 +701,11 @@ bool BundleDataMgr::AddInnerBundleInfo(const std::string &bundleName, InnerBundl
     }
 
     std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
-    auto infoItem = bundleInfos_.find(bundleName);
-    if (infoItem != bundleInfos_.end()) {
+    // Dual-mode cross-mode install: the other-mode package is stored in tempBundleInfos_ (hidden,
+    // original-name key) instead of bundleInfos_ (which holds the current-mode variant).
+    std::map<std::string, InnerBundleInfo> &targetMap = toTempBundle ? tempBundleInfos_ : bundleInfos_;
+    auto infoItem = targetMap.find(bundleName);
+    if (infoItem != targetMap.end()) {
         APP_LOGW("bundleName: %{public}s : bundle info already exist", bundleName.c_str());
         return false;
     }
@@ -721,7 +764,7 @@ bool BundleDataMgr::AddInnerBundleInfo(const std::string &bundleName, InnerBundl
             BuildExternalOverlayConnection(info.GetCurrentModulePackage(), info, info.GetUserId());
         }
 #endif
-        bundleInfos_.emplace(bundleName, info);
+        targetMap.emplace(bundleName, info);
         AddAppHspBundleName(info.GetApplicationBundleType(), bundleName);
         return true;
     }
@@ -10158,7 +10201,8 @@ bool BundleDataMgr::UpdateQuickFixInnerBundleInfo(const std::string &bundleName,
     return false;
 }
 
-bool BundleDataMgr::UpdateInnerBundleInfo(InnerBundleInfo &innerBundleInfo, bool needSaveStorage)
+bool BundleDataMgr::UpdateInnerBundleInfo(InnerBundleInfo &innerBundleInfo, bool needSaveStorage,
+    bool toTempBundle)
 {
     std::string bundleName = innerBundleInfo.GetBundleName();
     if (bundleName.empty()) {
@@ -10169,8 +10213,9 @@ bool BundleDataMgr::UpdateInnerBundleInfo(InnerBundleInfo &innerBundleInfo, bool
     std::string lastOdid;
     {
         std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
-        auto infoItem = bundleInfos_.find(bundleName);
-        if (infoItem == bundleInfos_.end()) {
+        auto &targetMap = toTempBundle ? tempBundleInfos_ : bundleInfos_;
+        auto infoItem = targetMap.find(bundleName);
+        if (infoItem == targetMap.end()) {
             APP_LOGW("bundle:%{public}s info is not existed", bundleName.c_str());
             return false;
         }
@@ -10197,7 +10242,8 @@ bool BundleDataMgr::UpdateInnerBundleInfo(InnerBundleInfo &innerBundleInfo, bool
     }
     {
         std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
-        bundleInfos_.at(bundleName) = innerBundleInfo; 
+        auto &targetMap = toTempBundle ? tempBundleInfos_ : bundleInfos_;
+        targetMap.at(bundleName) = innerBundleInfo;
     }
     return true;
 }

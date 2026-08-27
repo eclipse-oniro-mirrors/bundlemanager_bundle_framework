@@ -17,9 +17,11 @@
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_DUAL_MODE_HELPER_H
 
 #include <cstdint>
+#include <map>
 #include <mutex>
 #include <set>
 #include <string>
+#include <vector>
 
 #include "bundle_info.h"
 #include "inner_bundle_clone_common.h"
@@ -30,6 +32,9 @@ namespace AppExecFwk {
 // Helper for dual-mode (PC/PAD) application installation.
 // Only *_DIFFERENT_PACKAGE policy apps (same bundle name, different package body)
 // need directory/key isolation in the secondary mode.
+using ErmsGetPolicyFunc = int32_t (*)(std::string, std::string, std::string, int32_t &,
+    std::map<std::string, std::vector<std::string>> &);
+
 class DualModeHelper {
 public:
     // Read current system mode from "persist.sceneboard.ispcmode".
@@ -52,6 +57,14 @@ public:
     // Update the cached ispcmode/mainmode by re-reading system parameters.
     // Should be called when system mode may have changed (e.g., device mode switch).
     static void UpdateModeCache();
+
+    // Read the cached main mode (const.sceneboard.mainmode): 0=tablet, 1=2in1, -1=invalid.
+    // Used by the dual-mode preinstall fan-out to tell the primary deviceType from the secondary one.
+    static int32_t GetMainmode();
+
+    // Map an ERMS-returned deviceType string to a mode value (0=tablet, 1=2in1).
+    // Returns DUAL_MODE_VALUE_INVALID (-1) when the string is not a recognized device type.
+    static int32_t MapDeviceTypeToMode(const std::string &deviceType);
 
     // Test-injection switch (persist.bms.test_dual_mode). When true, ispcmode/mainmode are read
     // from persist.bms.ispcmode / persist.bms.mainmode instead of the production sceneboard params
@@ -94,6 +107,20 @@ public:
     // Whether the given db/storage key starts with the dual-mode clone prefix "+clone-".
     static bool IsDualModeCloneKey(const std::string &key);
 
+    // Query ERMS for device model distribution policy via dlopen of liberms_sdk.z.so.
+    // bundleName:          bundle name of the app to query
+    // bundleDir:           absolute path of the pre-installed directory
+    // appDistributionType: distribution type string (e.g. "os_integration")
+    // policy:              output DeviceModeDistributionPolicy value
+    // modeHapMap:          output map (key=deviceType, value=hap paths of that mode)
+    // Returns true on success, false if the library/symbol is unavailable or the call fails.
+    static bool GetDeviceModelDistributionPolicy(
+        const std::string &bundleName,
+        const std::string &bundleDir,
+        const std::string &appDistributionType,
+        int32_t &policy,
+        std::map<std::string, std::vector<std::string>> &modeHapMap);
+
 private:
     // Cached ispcmode value (persist.sceneboard.ispcmode): 0=tablet, 1=2in1, -1=not read/illegal
     static int32_t cachedIspcmode_;
@@ -103,6 +130,11 @@ private:
 
     // Mutex for thread-safe cache access
     static std::mutex cacheMutex_;
+
+    static std::mutex ermsMutex_;
+    static void *ermsHandle_;
+    static ErmsGetPolicyFunc ermsGetPolicyFunc_;
+    static bool OpenErmsHandle();
 };
 
 }  // namespace AppExecFwk

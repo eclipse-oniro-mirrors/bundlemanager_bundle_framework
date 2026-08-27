@@ -73,6 +73,10 @@ struct InstallParam : public Parcelable {
     bool isDataPreloadHap = false;
     // device mode distribution policy for dual-mode (2IN1/TABLET), default UNSPECIFIED
     DeviceModeDistributionPolicy deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNSPECIFIED;
+    // dual-mode preinstall only: force this install to use the dual-mode clone bundle name
+    // (+clone-10000+{bundleName}) regardless of the current device mode. Set only by the
+    // SystemBundleInstaller dual-mode fan-out (in-process); not marshalled over IPC.
+    bool forceDualModeCloneInstall = false;
     // allow patch app downgrade install
     bool allowPatchDowngrade = false;
     bool isCheckDebugApp = false;

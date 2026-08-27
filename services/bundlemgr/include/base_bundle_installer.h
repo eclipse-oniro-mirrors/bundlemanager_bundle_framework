@@ -50,6 +50,28 @@ struct ArkStartupCache {
     std::string bundleName;
     std::string cacheDir;
 };
+
+// Role of the current ProcessBundleInstall pass on a dual-mode device.
+// NONE: non-preinstall (or not a dual-mode device) - existing NeedDualModeHandle behavior applies.
+// PRIMARY: preinstall primary-mode pass of a different-package app - always uses the original bundle name.
+// SECONDARY: preinstall secondary-mode pass - always uses the +clone-10000+ clone bundle name.
+enum class DualModeInstallRole {
+    NONE = 0,
+    PRIMARY = 1,
+    SECONDARY = 2,
+};
+
+// Cached result of the ERMS GetDeviceModelDistributionPolicy call, shared between the primary
+// ProcessBundleInstall pass (which queries ERMS) and the SystemBundleInstaller fan-out that
+// drives the secondary pass. Instance-scoped, in-process only, not persisted, not marshalled.
+struct DualModeErmsCache {
+    bool isDifferentPackage = false;
+    bool ermsQueried = false;
+    DeviceModeDistributionPolicy policy = DeviceModeDistributionPolicy::UNSPECIFIED;
+    std::string bundleName;
+    std::string bundleDir;
+    std::vector<std::string> secondaryHaps;
+};
 class BaseBundleInstaller {
 public:
     BaseBundleInstaller();
@@ -228,6 +250,11 @@ protected:
      * otherwise bundleInfo.GetBundleName().
      */
     std::string GetEffectiveBundleName(const InnerBundleInfo &bundleInfo) const;
+
+    // Cached ERMS result shared between the primary ProcessBundleInstall pass (which queries ERMS) and
+    // the SystemBundleInstaller fan-out that drives the secondary pass. Protected so the subclass
+    // SystemBundleInstaller can read it to drive the secondary-mode install.
+    DualModeErmsCache dualModeErmsCache_;
 
 private:
     // Delete the (bundleName, userId) preference row when the main app is uninstalled.
@@ -918,6 +945,27 @@ private:
     void InitDualModeBundleName(const InnerBundleInfo &bundleInfo);
     void FillDualModeUninstallEventFields(const InstallParam &installParam,
         NotifyBundleEvents &uninstallRes) const;
+    // Resolve the dual-mode distribution policy via ERMS after signature verification (hapVerifyResults
+    // carries appDistributionType + bundleName from provision info) and before ParseHapFiles. For a
+    // dual-mode preinstall of a different-package app, filters bundlePaths/hapVerifyResults in-place to
+    // keep only the primary-mode haps (ParseHapFiles would otherwise conflict on the cross-mode modules)
+    // and caches the secondary-mode hap list + policy for the SystemBundleInstaller fan-out. No-op for
+    // non-dual-mode devices, non-preinstall installs, and the secondary pass (forceDualModeCloneInstall).
+    void ResolveDualModePolicy(const std::vector<std::string> &inBundlePaths,
+        std::vector<std::string> &bundlePaths,
+        const InstallParam &installParam,
+        std::vector<Security::Verify::HapVerifyResult> &hapVerifyResults);
+    // Effective policy: installParam.deviceModeDistributionPolicy when explicitly set by the caller
+    // (e.g. OTA / secondary pass), otherwise the value resolved by ResolveDualModePolicy on this pass.
+    DeviceModeDistributionPolicy GetEffectiveDualModePolicy(const InstallParam &installParam) const;
+    // Whether the current pass must install under the +clone-10000+ clone bundle name. Driven by
+    // dualModeInstallRole_ for preinstall (PRIMARY=original, SECONDARY=clone) and falls back to
+    // NeedDualModeHandle for non-preinstall (existing behavior).
+    bool ShouldUseDualModeCloneName(const InstallParam &installParam) const;
+    // Cross-mode install: the package being installed belongs to the mode that is NOT the current
+    // device mode (primary-mode package installed while in secondary mode, or vice-versa). Such a
+    // package is stored in tempBundleInfos_ (hidden) under the original bundle name, not bundleInfos_.
+    bool IsCrossModeInstall() const;
     void DeleteUseLessSharefilesForDefaultUser(const std::string &bundleName, int32_t userId) const;
     ErrCode CleanShaderCache(const InnerBundleInfo &oldInfo, const std::string &bundleName, int32_t userId) const;
     ErrCode CleanArkStartupCache(const std::string &bundleName) const;
@@ -1111,6 +1159,9 @@ private:
     // oldInfo is unavailable. Consumed by ComputeCurrentAppSandboxPolicy (sticky) and FillDualModeEventFields.
     DeviceModeDistributionPolicy beforeDeviceModeDistributionPolicy_ = DeviceModeDistributionPolicy::UNSPECIFIED;
     AppSandboxPolicy beforeAppSandboxPolicy_ = AppSandboxPolicy::SHARED_SANDBOX;
+    // Dual-mode preinstall state (instance-scoped, in-process, not marshalled).
+    DualModeInstallRole dualModeInstallRole_ = DualModeInstallRole::NONE;
+    DeviceModeDistributionPolicy resolvedDeviceModeDistributionPolicy_ = DeviceModeDistributionPolicy::UNSPECIFIED;
     std::string modulePath_;
     std::string baseDataPath_;
     std::string modulePackage_;
