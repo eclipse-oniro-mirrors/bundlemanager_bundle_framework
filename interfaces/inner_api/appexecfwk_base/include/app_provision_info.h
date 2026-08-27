@@ -17,7 +17,7 @@
 #define FOUNDATION_BUNDLEMANAGER_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_APP_PROVISION_INFO_H
 
 #include <string>
-include <vector>
+#include <vector>
 
 #include "parcel.h"
 
