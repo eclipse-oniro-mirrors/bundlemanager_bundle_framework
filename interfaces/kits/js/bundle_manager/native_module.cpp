@@ -209,6 +209,8 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getAllBundleInstallInfo", GetAllInstallInfo),
         DECLARE_NAPI_FUNCTION("isApplicationDisableForbidden", IsApplicationDisableForbidden),
         DECLARE_NAPI_FUNCTION("getAlternateIcons", GetAlternateIcons),
+        DECLARE_NAPI_FUNCTION("filterBundleListByDeviceModeDistributionPolicies",
+            FilterBundleListByDeviceModeDistributionPolicies),
     };
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));
