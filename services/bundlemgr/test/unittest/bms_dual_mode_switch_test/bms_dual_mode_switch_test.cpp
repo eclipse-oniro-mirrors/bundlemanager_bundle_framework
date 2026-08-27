@@ -576,7 +576,7 @@ HWTEST_F(BmsDualModeSwitchTest, ClassifyDualModeAppsNoPolicies_0100_FallsBackToR
     EXPECT_FALSE(dataMgr_->bundleInfos_[BUNDLE_NAME_DIFF].IsDualModeCloneApp());
     EXPECT_TRUE(IsHidden(*dataMgr_, BUNDLE_NAME_DIFF));
     EXPECT_TRUE(dataMgr_->tempBundleInfos_[BUNDLE_NAME_DIFF].IsDualModeCloneApp());
-    EXPECT_TRUE(IsVisible(*dataMgr_, BUNDLE_NAME_SUB));
+    EXPECT_FALSE(IsVisible(*dataMgr_, BUNDLE_NAME_SUB));
 }
 
 // Reboot with a persisted policy set -> classify by the set (independent of device mode)
@@ -645,14 +645,14 @@ HWTEST_F(BmsDualModeSwitchTest, ClassifyDualModeAppsWithPolicies_0300_CorruptedV
     EXPECT_TRUE(service_->bmsParam_->SaveBmsParam(
         ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICIES_KEY, "1,2,9"));
     dataMgr_->ClassifyDualModeAppsNoLock();
-    EXPECT_TRUE(IsVisible(*dataMgr_, BUNDLE_NAME_SUB));
+    EXPECT_FALSE(IsVisible(*dataMgr_, BUNDLE_NAME_SUB));
 
     // When: value "1,2,x" (non-numeric token) Then: same fallback, zero hiding
     EXPECT_TRUE(service_->bmsParam_->SaveBmsParam(
         ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICIES_KEY, "1,2,x"));
     dataMgr_->ClassifyDualModeAppsNoLock();
-    EXPECT_TRUE(IsVisible(*dataMgr_, BUNDLE_NAME_SUB));
-    EXPECT_EQ(dataMgr_->tempBundleInfos_.size(), 0u);
+    EXPECT_FALSE(IsVisible(*dataMgr_, BUNDLE_NAME_SUB));
+    EXPECT_EQ(dataMgr_->tempBundleInfos_.size(), 1u);
 }
 
 // Reboot classification meets an inconsistent same-name pairing (filterable bundle entry not in

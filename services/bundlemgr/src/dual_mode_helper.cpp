@@ -15,6 +15,8 @@
 
 #include "dual_mode_helper.h"
 
+#include <dlfcn.h>
+#include <unordered_map>
 #include <vector>
 
 #include "application_info.h"
@@ -30,6 +32,9 @@ namespace AppExecFwk {
 int32_t DualModeHelper::cachedIspcmode_ = ServiceConstants::DUAL_MODE_VALUE_INVALID;
 int32_t DualModeHelper::cachedMainmode_ = ServiceConstants::DUAL_MODE_VALUE_INVALID;
 std::mutex DualModeHelper::cacheMutex_;
+std::mutex DualModeHelper::ermsMutex_;
+void *DualModeHelper::ermsHandle_ = nullptr;
+ErmsGetPolicyFunc DualModeHelper::ermsGetPolicyFunc_ = nullptr;
 
 namespace {
 // Test-injection params (kept in this file, not in ServiceConstants). When persist.bms.test_dual_mode
@@ -40,6 +45,10 @@ namespace {
 constexpr const char *TEST_DUAL_MODE_PARAM = "persist.bms.test_dual_mode";
 constexpr const char *TEST_ISPCMODE_PARAM = "persist.bms.ispcmode";
 constexpr const char *TEST_MAINMODE_PARAM = "persist.bms.mainmode";
+// ERMS SDK library paths (try 64-bit first, then 32-bit).
+constexpr const char *ERMS_LIB_PATH_64 = "/system/lib64/liberms_dual_mode_policy.z.so";
+constexpr const char *ERMS_LIB_PATH_32 = "/system/lib/liberms_dual_mode_policy.z.so";
+constexpr const char *ERMS_GET_POLICY_FUNC_NAME = "ErmsGetDeviceModelDistributionPolicy";
 
 // Whether a mode value is valid (0=tablet or 1=2in1). -1 (not read) and any other value are invalid.
 bool IsValidModeValue(int32_t v)
@@ -103,6 +112,26 @@ void DualModeHelper::UpdateModeCache()
     cachedMainmode_ = ReadValidModeParam(GetMainmodeParamKey());
     LOG_I(BMS_TAG_INSTALLER, "DualModeHelper cache updated: ispcmode=%{public}d, mainmode=%{public}d",
         cachedIspcmode_, cachedMainmode_);
+}
+
+int32_t DualModeHelper::GetMainmode()
+{
+    std::lock_guard<std::mutex> lock(cacheMutex_);
+    return cachedMainmode_;
+}
+
+int32_t DualModeHelper::MapDeviceTypeToMode(const std::string &deviceType)
+{
+    static const std::unordered_map<std::string, int32_t> DEVICE_TYPE_MAP = {
+        { "tablet", ServiceConstants::DUAL_MODE_VALUE_TABLET },
+        { "2in1", ServiceConstants::DUAL_MODE_VALUE_2IN1 },
+    };
+    auto it = DEVICE_TYPE_MAP.find(deviceType);
+    if (it == DEVICE_TYPE_MAP.end()) {
+        LOG_W(BMS_TAG_INSTALLER, "unknown deviceType %{public}s", deviceType.c_str());
+        return ServiceConstants::DUAL_MODE_VALUE_INVALID;
+    }
+    return it->second;
 }
 
 bool DualModeHelper::IsSecondaryMode()
@@ -205,6 +234,54 @@ bool DualModeHelper::IsDualModeCloneKey(const std::string &key)
     std::string dualModePrefix = std::string(ServiceConstants::CLONE_PREFIX) +
         std::to_string(ServiceConstants::DUAL_MODE_CLONE_APP_INDEX) + "+";
     return key.find(dualModePrefix) == 0;
+}
+
+bool DualModeHelper::OpenErmsHandle()
+{
+    std::lock_guard<std::mutex> lock(ermsMutex_);
+    if (ermsHandle_ != nullptr && ermsGetPolicyFunc_ != nullptr) {
+        return true;
+    }
+    ermsHandle_ = dlopen(ERMS_LIB_PATH_64, RTLD_NOW | RTLD_GLOBAL);
+    if (ermsHandle_ == nullptr) {
+        LOG_NOFUNC_W(BMS_TAG_INSTALLER, "dlopen lib64 failed, try lib: %{public}s", dlerror());
+        ermsHandle_ = dlopen(ERMS_LIB_PATH_32, RTLD_NOW | RTLD_GLOBAL);
+    }
+    if (ermsHandle_ == nullptr) {
+        LOG_NOFUNC_W(BMS_TAG_INSTALLER, "dlopen liberms_sdk.z.so failed: %{public}s", dlerror());
+        return false;
+    }
+    ermsGetPolicyFunc_ = reinterpret_cast<ErmsGetPolicyFunc>(dlsym(ermsHandle_, ERMS_GET_POLICY_FUNC_NAME));
+    if (ermsGetPolicyFunc_ == nullptr) {
+        LOG_NOFUNC_W(BMS_TAG_INSTALLER, "dlsym GetDeviceModelDistributionPolicy failed: %{public}s", dlerror());
+        dlclose(ermsHandle_);
+        ermsHandle_ = nullptr;
+        return false;
+    }
+    return true;
+}
+
+bool DualModeHelper::GetDeviceModelDistributionPolicy(
+    const std::string &bundleName,
+    const std::string &bundleDir,
+    const std::string &appDistributionType,
+    int32_t &policy,
+    std::map<std::string, std::vector<std::string>> &modeHapMap)
+{
+    if (!OpenErmsHandle()) {
+        LOG_NOFUNC_E(BMS_TAG_INSTALLER, "OpenErmsHandle error");
+        return false;
+    }
+
+    if (!ermsGetPolicyFunc_) {
+        LOG_NOFUNC_E(BMS_TAG_INSTALLER, "ermsGetPolicyFunc_ null");
+        return false;
+    }
+
+    int32_t err = ermsGetPolicyFunc_(bundleName, bundleDir, appDistributionType, policy, modeHapMap);
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "GetDeviceModelDistributionPolicy -n:%{public}s result:%{public}d,"
+        "policy:%{public}d", bundleName.c_str(), err, policy);
+    return err == 0;
 }
 
 }  // namespace AppExecFwk

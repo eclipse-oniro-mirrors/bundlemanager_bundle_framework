@@ -35,6 +35,8 @@ constexpr const char* FORCE_UNINSTALL_USERS = "forceUninstallUsers";
 constexpr const char* U1_ENABLE = "u1Enable";
 constexpr const char* OTA_NEW_INSTALL_USERS = "otaNewInstallUsers";
 constexpr const char* DESCRIPTION_ID = "descriptionId";
+constexpr const char* IS_DUAL_MODE_CLONE_APP = "isDualModeCloneApp";
+constexpr const char* DEVICE_MODE_DISTRIBUTION_POLICY = "deviceModeDistributionPolicy";
 
 }  // namespace
 
@@ -55,6 +57,8 @@ void PreInstallBundleInfo::ToJson(nlohmann::json &jsonObject) const
     jsonObject[SYSTEM_APP] = systemApp_;
     jsonObject[BUNDLE_TYPE] = bundleType_;
     jsonObject[U1_ENABLE] = u1Enable_;
+    jsonObject[IS_DUAL_MODE_CLONE_APP] = isDualModeCloneApp_;
+    jsonObject[DEVICE_MODE_DISTRIBUTION_POLICY] = static_cast<int32_t>(deviceModeDistributionPolicy_);
 }
 
 int32_t PreInstallBundleInfo::FromJson(const nlohmann::json &jsonObject)
@@ -91,6 +95,12 @@ int32_t PreInstallBundleInfo::FromJson(const nlohmann::json &jsonObject)
         bundleType_, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, U1_ENABLE,
         u1Enable_, false, parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, IS_DUAL_MODE_CLONE_APP,
+        isDualModeCloneApp_, false, parseResult);
+    int32_t policyValue = static_cast<int32_t>(DeviceModeDistributionPolicy::UNSPECIFIED);
+    GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, DEVICE_MODE_DISTRIBUTION_POLICY,
+        policyValue, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    deviceModeDistributionPolicy_ = static_cast<DeviceModeDistributionPolicy>(policyValue);
     return parseResult;
 }
 
@@ -112,6 +122,8 @@ std::string PreInstallBundleInfo::ToString() const
     jsonObject[SYSTEM_APP] = systemApp_;
     jsonObject[BUNDLE_TYPE] = bundleType_;
     jsonObject[U1_ENABLE] = u1Enable_;
+    jsonObject[IS_DUAL_MODE_CLONE_APP] = isDualModeCloneApp_;
+    jsonObject[DEVICE_MODE_DISTRIBUTION_POLICY] = static_cast<int32_t>(deviceModeDistributionPolicy_);
     return jsonObject.dump();
 }
 

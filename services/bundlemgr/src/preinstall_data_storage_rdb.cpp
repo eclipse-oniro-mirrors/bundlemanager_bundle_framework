@@ -15,10 +15,24 @@
 
 #include "preinstall_data_storage_rdb.h"
 
+#include "dual_mode_helper.h"
+
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr const char* PRE_BUNDLE_RDB_TABLE_NAME = "preinstalled_bundle";
+
+// The RDB key for a PreInstallBundleInfo: the clone-prefixed name for the secondary variant
+// (IsDualModeCloneApp=true) so primary and secondary are two independent rows, the original name
+// otherwise. The value's bundleName field stays the original (app real name).
+std::string GetPreInstallStorageKey(const PreInstallBundleInfo &info)
+{
+    std::string bundleName = info.GetBundleName();
+    if (bundleName.empty()) {
+        return bundleName;
+    }
+    return info.IsDualModeCloneApp() ? DualModeHelper::GetDualModeBundleName(bundleName) : bundleName;
+}
 }
 PreInstallDataStorageRdb::PreInstallDataStorageRdb()
 {
@@ -81,9 +95,12 @@ void PreInstallDataStorageRdb::TransformStrToInfo(
         }
 
         preInstallBundleInfos.emplace_back(preInstallBundleInfo);
-        // database update
+        // database update: only fix records whose key drifted from the value's bundleName. Dual-mode
+        // secondary records are keyed by the clone-prefixed name by design (key != value.bundleName),
+        // so skip them — re-saving would be a no-op (same derived key) and a failed re-save would
+        // wrongly delete the record.
         std::string key = data.first;
-        if (key != preInstallBundleInfo.GetBundleName()) {
+        if (key != preInstallBundleInfo.GetBundleName() && !preInstallBundleInfo.IsDualModeCloneApp()) {
             updateInfos.emplace(key, preInstallBundleInfo);
         }
     }
@@ -124,7 +141,7 @@ bool PreInstallDataStorageRdb::SavePreInstallStorageBundleInfo(
     }
 
     bool ret = rdbDataManager_->InsertData(
-        preInstallBundleInfo.GetBundleName(), preInstallBundleInfo.ToString());
+        GetPreInstallStorageKey(preInstallBundleInfo), preInstallBundleInfo.ToString());
     APP_LOGD("SavePreInstallStorageBundleInfo %{public}d", ret);
     return ret;
 }
@@ -142,7 +159,7 @@ bool PreInstallDataStorageRdb::DeletePreInstallStorageBundleInfo(
         return false;
     }
 
-    bool ret = rdbDataManager_->DeleteData(preInstallBundleInfo.GetBundleName());
+    bool ret = rdbDataManager_->DeleteData(GetPreInstallStorageKey(preInstallBundleInfo));
     APP_LOGD("DeletePreInstallStorageBundleInfo %{public}d", ret);
     return ret;
 }

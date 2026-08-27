@@ -38,14 +38,53 @@ ErrCode SystemBundleInstaller::InstallSystemBundle(
     Constants::AppType appType)
 {
     MarkPreBundleSyeEventBootTag(true);
-    ErrCode result = InstallBundle(filePath, installParam, appType);
-    if (result != ERR_OK) {
-        APP_LOGE_NOFUNC("install system bundle fail error: %{public}d", result);
-        if (result != ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON) {
-            BmsKeyEventMgr::ProcessMainBundleInstallFailed(filePath, result);
+    ErrCode primaryResult = InstallBundle(filePath, installParam, appType);
+    auto isSideFailed = [](ErrCode r) {
+        return r != ERR_OK && r != ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON;
+    };
+    bool primaryFailed = isSideFailed(primaryResult);
+    if (primaryFailed) {
+        APP_LOGE_NOFUNC("install system bundle fail error: %{public}d", primaryResult);
+        if (primaryResult != ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON) {
+            BmsKeyEventMgr::ProcessMainBundleInstallFailed(filePath, primaryResult);
         }
     }
-    return result;
+
+    // Dual-mode fan-out: the primary pass queried ERMS inside ProcessBundleInstall and, for a
+    // different-package app, cached the secondary-mode hap list + policy. Install that list under the
+    // +clone-10000+ clone bundle name. The two sides are independent: a failure on one side does not
+    // roll back the other. Per-side pre-install exception recording is deferred until the OTA retry
+    // path is made dual-mode aware (a clone-key retry without OTA handling would mis-install the
+    // secondary haps under the original name), so for now only the both-failed case surfaces to the
+    // caller's path-based retry.
+    bool secondaryAttempted = false;
+    ErrCode secondaryResult = ERR_OK;
+    bool secondaryFailed = false;
+    if (dualModeErmsCache_.isDifferentPackage && !dualModeErmsCache_.secondaryHaps.empty()) {
+        secondaryAttempted = true;
+        DeviceModeDistributionPolicy policy = dualModeErmsCache_.policy;
+        std::vector<std::string> secondaryHaps = dualModeErmsCache_.secondaryHaps;
+        // Reuse installParam for the secondary pass: force the clone install and carry the resolved
+        // policy so the inner hook skips ERMS and the clone-name path is taken.
+        installParam.forceDualModeCloneInstall = true;
+        installParam.deviceModeDistributionPolicy = policy;
+        // The primary pass left per-install state on this reused instance (e.g. the checker's
+        // isContainEntry_ would make the secondary's entry hap trip "more than one entry hap"). Reset
+        // before the secondary pass, same as the OTA per-user loop does between InstallBundle calls.
+        ResetInstallProperties();
+        secondaryResult = InstallBundle(secondaryHaps, installParam, appType);
+        installParam.forceDualModeCloneInstall = false;
+        secondaryFailed = isSideFailed(secondaryResult);
+        if (secondaryFailed) {
+            APP_LOGE_NOFUNC("install secondary mode bundle fail error: %{public}d", secondaryResult);
+        }
+    }
+
+    if (!secondaryAttempted) {
+        return primaryResult;
+    }
+    // Both sides must fail for the overall install to be considered failed.
+    return (primaryFailed && secondaryFailed) ? primaryResult : ERR_OK;
 }
 
 bool SystemBundleInstaller::InstallSystemSharedBundle(
