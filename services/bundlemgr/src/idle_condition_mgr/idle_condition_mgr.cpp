@@ -73,6 +73,7 @@ void IdleConditionMgr::OnScreenLocked()
     }
     TryStartRelabel();
     TryStartScanAppData();
+    TryStartScanFileCategory();
 }
 
 void IdleConditionMgr::OnScreenUnlocked()
@@ -84,6 +85,7 @@ void IdleConditionMgr::OnScreenUnlocked()
     }
     InterruptRelabel("OnScreenUnlocked called");
     InterruptScanAppData("ScanSystemAppSize OnScreenUnlocked called");
+    InterruptScanFileCategory("AppFileCategory OnScreenUnlocked called");
 }
 
 void IdleConditionMgr::OnUserUnlocked(const int32_t userId)
@@ -95,6 +97,7 @@ void IdleConditionMgr::OnUserUnlocked(const int32_t userId)
     }
     TryStartRelabel();
     TryStartScanAppData();
+    TryStartScanFileCategory();
 }
 
 void IdleConditionMgr::OnUserStopping(const int32_t userId)
@@ -106,6 +109,7 @@ void IdleConditionMgr::OnUserStopping(const int32_t userId)
     }
     InterruptRelabel("OnUserStopping called");
     InterruptScanAppData("ScanSystemAppSize OnUserStopping called");
+    InterruptScanFileCategory("AppFileCategory OnUserStopping called");
 }
 
 void IdleConditionMgr::OnPowerConnected()
@@ -139,6 +143,7 @@ void IdleConditionMgr::OnPowerConnected()
         }
         sharedPtr->TryStartRelabel();
         sharedPtr->TryStartScanAppData();
+        sharedPtr->TryStartScanFileCategory();
         sharedPtr->powerConnectedThreadActive_ = false;
         APP_LOGI("power connected task done");
     };
@@ -155,6 +160,7 @@ void IdleConditionMgr::OnPowerDisconnected()
     powerConnectedThreadActive_ = false;
     InterruptRelabel("OnPowerDisconnected called");
     InterruptScanAppData("ScanSystemAppSize OnPowerDisconnected called");
+    InterruptScanFileCategory("AppFileCategory OnPowerDisconnected called");
 }
 
 void IdleConditionMgr::HandleOnTrim(Memory::SystemMemoryLevel level)
@@ -168,12 +174,14 @@ void IdleConditionMgr::HandleOnTrim(Memory::SystemMemoryLevel level)
         case Memory::SystemMemoryLevel::MEMORY_LEVEL_MODERATE:
             TryStartRelabel();
             TryStartScanAppData();
+            TryStartScanFileCategory();
             break;
         case Memory::SystemMemoryLevel::MEMORY_LEVEL_LOW:
             [[fallthrough]];
         case Memory::SystemMemoryLevel::MEMORY_LEVEL_CRITICAL:
             InterruptRelabel("memory level critical");
             InterruptScanAppData("ScanSystemAppSize memory level critical");
+            InterruptScanFileCategory("AppFileCategory memory level critical");
             break;
         default:
             break;
@@ -249,6 +257,7 @@ void IdleConditionMgr::OnBatteryChanged()
         }
         InterruptRelabel("battery capacity low");
         InterruptScanAppData("ScanSystemAppSize battery capacity low");
+        InterruptScanFileCategory("AppFileCategory battery capacity low");
     } else {
         {
             std::lock_guard<std::mutex> lock(mutex_);
@@ -256,6 +265,7 @@ void IdleConditionMgr::OnBatteryChanged()
         }
         TryStartRelabel();
         TryStartScanAppData();
+        TryStartScanFileCategory();
     }
 }
 
@@ -265,11 +275,13 @@ void IdleConditionMgr::OnThermalLevelChanged(PowerMgr::ThermalLevel level)
     if (level < PowerMgr::ThermalLevel::WARM) {
         TryStartRelabel();
         TryStartScanAppData();
+        TryStartScanFileCategory();
     } else {
         APP_LOGD("thermal level %{public}d greater than %{public}d interrupt relabel",
             level, PowerMgr::ThermalLevel::WARM);
         InterruptRelabel("OnThermalLevelChanged called");
         InterruptScanAppData("ScanSystemAppSize OnThermalLevelChanged called");
+        InterruptScanFileCategory("AppFileCategory OnThermalLevelChanged called");
     }
 }
 
@@ -287,13 +299,14 @@ bool IdleConditionMgr::CheckRelabelConditions(const int32_t userId)
         userUnlocked = true;
     }
     if (userUnlocked && screenLocked_ && powerConnected_ && batterySatisfied_
-        && g_taskCounter.load() == 0 && !isScanActive_) {
+        && g_taskCounter.load() == 0 && !isScanActive_ && !isFileCategoryScanActive_) {
         return true;
     }
     APP_LOGI_NOFUNC("relabel state: -u %{public}d, %{public}d, %{public}d, %{public}d, %{public}d, %{public}d, "
-        "isScanActive=%{public}d",
+        "isScanActive=%{public}d, isFileCategoryScanActive=%{public}d",
         userId, userUnlocked, screenLocked_.load(),
-        powerConnected_.load(), batterySatisfied_.load(), g_taskCounter.load(), isScanActive_.load());
+        powerConnected_.load(), batterySatisfied_.load(), g_taskCounter.load(),
+        isScanActive_.load(), isFileCategoryScanActive_.load());
     return false;
 }
 
@@ -423,14 +436,15 @@ bool IdleConditionMgr::CheckScanConditions(const int32_t userId)
         userUnlocked = true;
     }
     if (userUnlocked && screenLocked_ && powerConnected_ && batterySatisfied_
-        && !monitor->IsScanning() && g_taskCounter.load() == 0 && !isRelabeling_) {
+        && !monitor->IsScanning() && g_taskCounter.load() == 0 && !isRelabeling_
+        && !isFileCategoryScanActive_) {
         return true;
     }
     APP_LOGI("ScanSystemAppSize scan conditions not met: userId=%{public}d, userUnlocked=%{public}d, "
         "screenLocked=%{public}d, powerConnected=%{public}d, battery=%{public}d, taskCounter=%{public}d, "
-        "isRelabeling=%{public}d",
+        "isRelabeling=%{public}d, isFileCategoryScanActive=%{public}d",
         userId, userUnlocked, screenLocked_.load(), powerConnected_.load(), batterySatisfied_.load(),
-        g_taskCounter.load(), isRelabeling_.load());
+        g_taskCounter.load(), isRelabeling_.load(), isFileCategoryScanActive_.load());
     return false;
 }
 
@@ -446,6 +460,14 @@ void IdleConditionMgr::TryStartScanAppData()
     if (!CheckScanConditions(currentUserId)) {
         return;
     }
+    auto mon = DelayedSingleton<AppDataMonitor>::GetInstance();
+    if (mon == nullptr) {
+        APP_LOGE("ScanSystemAppSize AppDataMonitor is null");
+        return;
+    }
+    if (mon->IsInCooldown() || mon->IsInLargeFilesReportCooldown()) {
+        return;
+    }
     if (!IsBufferSufficient()) {
         APP_LOGI("ScanSystemAppSize Buffer not sufficient for scan");
         return;
@@ -458,6 +480,11 @@ void IdleConditionMgr::TryStartScanAppData()
         APP_LOGI("ScanSystemAppSize Scan already active");
         return;
     }
+    StartScanAppDataTask();
+}
+
+void IdleConditionMgr::StartScanAppDataTask()
+{
     std::weak_ptr<IdleConditionMgr> weakPtr = shared_from_this();
     auto task = [weakPtr] {
         APP_LOGI("ScanSystemAppSize App data scan task started");
@@ -512,6 +539,134 @@ void IdleConditionMgr::InterruptScanAppData(const std::string &stopReason)
     APP_LOGI_NOFUNC("ScanSystemAppSize Scan interrupted");
 }
 
+bool IdleConditionMgr::CheckFileCategoryScanConditions(const int32_t userId)
+{
+    auto monitor = DelayedSingleton<AppDataMonitor>::GetInstance();
+    if (monitor == nullptr) {
+        APP_LOGE_NOFUNC("AppFileCategory AppDataMonitor is null");
+        return false;
+    }
+    std::lock_guard<std::mutex> lock(mutex_);
+    bool userUnlocked = false;
+    auto iter = userUnlockedMap_.find(userId);
+    if (iter != userUnlockedMap_.end() && iter->second) {
+        userUnlocked = true;
+    }
+    if (userUnlocked && screenLocked_ && powerConnected_ && batterySatisfied_
+        && !monitor->IsFileCategoryScanning() && g_taskCounter.load() == 0
+        && !isRelabeling_ && !isScanActive_) {
+        return true;
+    }
+    APP_LOGI_NOFUNC("AppFileCategory scan conditions not met: userId=%{public}d, userUnlocked=%{public}d, "
+        "screenLocked=%{public}d, powerConnected=%{public}d, battery=%{public}d, taskCounter=%{public}d, "
+        "isRelabeling=%{public}d, isScanActive=%{public}d",
+        userId, userUnlocked, screenLocked_.load(), powerConnected_.load(), batterySatisfied_.load(),
+        g_taskCounter.load(), isRelabeling_.load(), isScanActive_.load());
+    return false;
+}
+
+bool IdleConditionMgr::SetIsFileCategoryScanActive()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (isFileCategoryScanActive_) {
+        APP_LOGI_NOFUNC("AppFileCategory Scan already active");
+        return false;
+    }
+    isFileCategoryScanActive_ = true;
+    return true;
+}
+
+void IdleConditionMgr::TryStartScanFileCategory()
+{
+    if (!OHOS::system::GetBoolParameter(ServiceConstants::BMS_SCAN_FILE_CATEGORY_PARAM, false)) {
+        return;
+    }
+    if (!fileCategoryScanFeatureEnabled_.load()) {
+        return;
+    }
+    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
+    if (!CheckFileCategoryScanConditions(currentUserId)) {
+        return;
+    }
+    auto mon = DelayedSingleton<AppDataMonitor>::GetInstance();
+    if (mon == nullptr) {
+        APP_LOGE("AppFileCategory AppDataMonitor is null");
+        return;
+    }
+    if (mon->IsInFileCategoryCooldown() || mon->IsInLargeFilesReportCooldown()) {
+        return;
+    }
+    if (!IsBufferSufficient()) {
+        APP_LOGI_NOFUNC("AppFileCategory Buffer not sufficient for scan");
+        return;
+    }
+    if (!IsThermalSatisfied()) {
+        APP_LOGI_NOFUNC("AppFileCategory Thermal not satisfied for scan");
+        return;
+    }
+    if (!SetIsFileCategoryScanActive()) {
+        APP_LOGI_NOFUNC("AppFileCategory Scan already active");
+        return;
+    }
+    StartFileCategoryScanTask();
+}
+
+void IdleConditionMgr::StartFileCategoryScanTask()
+{
+    std::weak_ptr<IdleConditionMgr> weakPtr = shared_from_this();
+    auto task = [weakPtr] {
+        APP_LOGI_NOFUNC("AppFileCategory scan task started");
+        auto sharedPtr = weakPtr.lock();
+        if (sharedPtr == nullptr) {
+            APP_LOGI_NOFUNC("AppFileCategory stop scan task, mgr destroyed");
+            return;
+        }
+        ScopeGuard scanActiveGuard([sharedPtr] {
+            std::lock_guard<std::mutex> lock(sharedPtr->mutex_);
+            sharedPtr->isFileCategoryScanActive_ = false;
+        });
+        int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
+        if (!sharedPtr->CheckFileCategoryScanConditions(currentUserId)) {
+            APP_LOGI_NOFUNC("AppFileCategory scan conditions not met in task, skip");
+            return;
+        }
+        if (!sharedPtr->IsBufferSufficient()) {
+            APP_LOGI_NOFUNC("AppFileCategory Buffer not sufficient in task, skip");
+            return;
+        }
+        if (!sharedPtr->IsThermalSatisfied()) {
+            APP_LOGI_NOFUNC("AppFileCategory Thermal not satisfied in task, skip");
+            return;
+        }
+        auto mon = DelayedSingleton<AppDataMonitor>::GetInstance();
+        if (mon == nullptr) {
+            APP_LOGE_NOFUNC("AppFileCategory AppDataMonitor is null in task");
+            return;
+        }
+        mon->StartFileCategoryScan(currentUserId);
+        APP_LOGI_NOFUNC("AppFileCategory scan task finished");
+    };
+    std::thread(task).detach();
+}
+
+void IdleConditionMgr::InterruptScanFileCategory(const std::string &stopReason)
+{
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (!isFileCategoryScanActive_) {
+            APP_LOGI_NOFUNC("AppFileCategory No scan in progress");
+            return;
+        }
+    }
+    auto monitor = DelayedSingleton<AppDataMonitor>::GetInstance();
+    if (monitor == nullptr) {
+        APP_LOGE_NOFUNC("AppFileCategory AppDataMonitor is null");
+        return;
+    }
+    monitor->StopFileCategoryScan(stopReason);
+    APP_LOGI_NOFUNC("AppFileCategory Scan interrupted");
+}
+
 void IdleConditionMgr::OnConfigChanged()
 {
     APP_LOGI("OnConfigChanged called");
@@ -533,6 +688,13 @@ void IdleConditionMgr::ReloadParam()
     } else {
         scanFeatureEnabled_ = true;
         APP_LOGI("ScanSystemAppSize Scan app data feature enabled");
+    }
+    if (IdleParamUtil::IsFileCategoryScanDisabled()) {
+        fileCategoryScanFeatureEnabled_ = false;
+        APP_LOGI_NOFUNC("AppFileCategory Scan file category scan feature disabled");
+    } else {
+        fileCategoryScanFeatureEnabled_ = true;
+        APP_LOGI_NOFUNC("AppFileCategory Scan file category scan feature enabled");
     }
 }
 } // namespace AppExecFwk

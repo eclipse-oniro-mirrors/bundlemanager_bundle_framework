@@ -21,6 +21,13 @@
 
 #include "bundle_mgr_service.h"
 #include "installd_host.h"
+#define private public
+#include "installd/installd_host_impl.h"
+#include "installd/installd_operator.h"
+#undef private
+#include <filesystem>
+#include <fstream>
+#include <nlohmann/json.hpp>
 
 using namespace testing::ext;
 using namespace OHOS;
@@ -1110,6 +1117,133 @@ HWTEST_F(BmsInstalldHostTest, HandleCheckHspPluginCertValidity_0100, Function | 
     data.WriteInt32(sessionId);
     bool res = installdHost.HandleCheckHspPluginCertValidity(data, reply);
     EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: InstalldHostImpl_GetAppDataFileCategoryStats_0100
+ * @tc.name: invalid bundleName returns PARAM_ERROR
+ * @tc.desc: 1. bundleName contains path traversal chars
+ *           2. IsFileNameValid fails, returns ERR_APPEXECFWK_INSTALLD_PARAM_ERROR
+ */
+HWTEST_F(BmsInstalldHostTest, InstalldHostImpl_GetAppDataFileCategoryStats_0100, Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    std::string extStatsJson;
+    ErrCode ret = hostImpl.GetAppDataFileCategoryStats("abc/../etc", 0, 100, 30, extStatsJson);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: InstalldHostImpl_GetAppDataFileCategoryStats_0200
+ * @tc.name: invalid userId returns PARAM_ERROR
+ * @tc.desc: 1. valid bundleName but userId < 0
+ *           2. returns ERR_APPEXECFWK_INSTALLD_PARAM_ERROR
+ */
+HWTEST_F(BmsInstalldHostTest, InstalldHostImpl_GetAppDataFileCategoryStats_0200, Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    std::string extStatsJson;
+    ErrCode ret = hostImpl.GetAppDataFileCategoryStats("com.test.valid", 0, -1, 30, extStatsJson);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: InstalldHostImpl_GetAppDataFileCategoryStats_0300
+ * @tc.name: valid input with non-existent paths returns ERR_OK with empty extensions
+ * @tc.desc: 1. valid bundleName and userId, but data dir paths don't exist
+ *           2. GetBundleDataDirPaths succeeds, scan finds no files, returns ERR_OK
+ */
+HWTEST_F(BmsInstalldHostTest, InstalldHostImpl_GetAppDataFileCategoryStats_0300, Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    std::string extStatsJson;
+    ErrCode ret = hostImpl.GetAppDataFileCategoryStats("com.test.nodata", 0, 999, 30, extStatsJson);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_FALSE(extStatsJson.empty());
+
+    nlohmann::json parsed = nlohmann::json::parse(extStatsJson, nullptr, false, true);
+    ASSERT_FALSE(parsed.is_discarded());
+    ASSERT_TRUE(parsed.is_object());
+    ASSERT_TRUE(parsed.contains("extensions"));
+    ASSERT_TRUE(parsed["extensions"].is_array());
+    EXPECT_EQ(parsed["extensions"].size(), 0u);
+}
+
+/**
+ * @tc.number: InstalldHostImpl_GetAppDataFileCategoryStats_0400
+ * @tc.name: empty bundleName returns PARAM_ERROR
+ * @tc.desc: 1. bundleName is empty string
+ *           2. IsFileNameValid returns false for empty string
+ *           3. returns ERR_APPEXECFWK_INSTALLD_PARAM_ERROR
+ */
+HWTEST_F(BmsInstalldHostTest, InstalldHostImpl_GetAppDataFileCategoryStats_0400, Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    std::string extStatsJson;
+    ErrCode ret = hostImpl.GetAppDataFileCategoryStats("", 0, 100, 30, extStatsJson);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: InstalldHost_HandleGetAppDataFileCategoryStats_0100
+ * @tc.name: test HandleGetAppDataFileCategoryStats with valid parcel data
+ * @tc.desc: 1. write valid bundleName/appIndex/userId/timeout to parcel
+ *           2. handler reads them, calls GetAppDataFileCategoryStats, writes result
+ *           3. returns true
+ */
+HWTEST_F(BmsInstalldHostTest, InstalldHost_HandleGetAppDataFileCategoryStats_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    std::string bundleName = "com.test.valid";
+    int32_t appIndex = 0;
+    int32_t userId = 999;
+    int32_t timeout = 30;
+
+    data.WriteInterfaceToken(installdHost.GetDescriptor());
+    data.WriteString16(Str8ToStr16(bundleName));
+    data.WriteInt32(appIndex);
+    data.WriteInt32(userId);
+    data.WriteInt32(timeout);
+
+    bool res = installdHost.HandleGetAppDataFileCategoryStats(data, reply);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: InstalldHost_HandleGetAppDataFileCategoryStats_0200
+ * @tc.name: handler handles empty parcel without crashing
+ * @tc.desc: 1. empty parcel (no fields) -> reads defaults (bundleName="", ints=0)
+ *           2. stub GetAppDataFileCategoryStats returns ERR_OK (default impl)
+ *           3. handler writes result to reply, returns true
+ */
+HWTEST_F(BmsInstalldHostTest, InstalldHost_HandleGetAppDataFileCategoryStats_0200, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+
+    bool res = installdHost.HandleGetAppDataFileCategoryStats(data, reply);
+    EXPECT_TRUE(res);
+    ErrCode result = reply.ReadInt32();
+    EXPECT_EQ(result, ERR_OK);
+    uint64_t dataSize = reply.ReadUint64();
+    EXPECT_EQ(dataSize, 0u);
+}
+
+/**
+ * @tc.number: InstalldOperator_GetBundleDataDirPaths_Failure_0100
+ * @tc.name: GetBundleDataDirPaths returns false for invalid input
+ * @tc.desc: 1. empty bundleName -> returns false
+ *           2. negative userId -> returns false
+ */
+HWTEST_F(BmsInstalldHostTest, InstalldOperator_GetBundleDataDirPaths_Failure_0100, Function | SmallTest | Level1)
+{
+    std::vector<std::string> paths;
+    EXPECT_FALSE(InstalldOperator::GetBundleDataDirPaths("", 0, 100, paths));
+    EXPECT_TRUE(paths.empty());
+    EXPECT_FALSE(InstalldOperator::GetBundleDataDirPaths("com.test", 0, -1, paths));
 }
 
 } // OHOS

@@ -236,6 +236,9 @@ constexpr const char* BMS_SCAN_APP_DATA_PARAM = "const.bms.scan_app_data";
 // "0" by access_token service through ResetDatabaseRecoveryStatus after BMS restores hap tokens on boot
 constexpr const char* ACCESS_TOKEN_DB_ERROR_PARAM = "persist.accesstoken.permission.dberror";
 constexpr const char* SCAN_APP_DATA_TEST_PARAM = "persist.bms.test.scan_app_data";
+constexpr const char* BMS_SCAN_FILE_CATEGORY_PARAM = "const.bms.scan_file_category";
+constexpr const char* SCAN_FILE_CATEGORY_TEST_PARAM = "persist.bms.test.scan_file_category";
+constexpr const char* LARGE_FILES_REPORT_COOLDOWN_TEST_PARAM = "persist.bms.test.large_files_report_cooldown";
 constexpr const char* HAP_BIN_INSTALL_ENABLE = "const.bms.bin_install";
 constexpr const char* KEEP_DATA_PRELOAD_HAP = "const.vendor.atcmd.cust_preload_flag";
 constexpr const char* ENABLE_HMOS_SERVICE_BROKER = "persist.hmos_fusion_mgr.ctl.support_hmos";

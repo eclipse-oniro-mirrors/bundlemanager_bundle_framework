@@ -233,6 +233,18 @@ public:
     virtual ErrCode GetTopNLargestItemsInAppDataDir(const std::string &bundleName, const int32_t appIndex,
         const int32_t userId, const int32_t timeout, std::string &largestItems) override;
 
+    /**
+     * @brief Get application data size category statistics by file extension.
+     * @param bundleName Indicates the bundle name.
+     * @param appIndex Indicates the app index.
+     * @param userId Indicates the user ID.
+     * @param timeout Indicates the maximum scan time in seconds.
+     * @param categoryStatsJson Output parameter containing JSON string of extension-based size category statistics.
+     * @return Returns ERR_OK if get successfully; returns error code otherwise.
+     */
+    virtual ErrCode GetAppDataFileCategoryStats(const std::string &bundleName, const int32_t appIndex,
+        const int32_t userId, const int32_t timeout, std::string &categoryStatsJson) override;
+
     virtual ErrCode MoveFile(const std::string &oldPath, const std::string &newPath, BundleDirScene scene,
         const std::string &bundleName) override;
 

@@ -41,6 +41,18 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     std::string payload = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     std::string truncated;
     monitor->TruncateLargeFilesJson(payload, truncated);
+
+    // Fuzz the file category scan path.
+    monitor->IsFileCategoryScanning();
+    monitor->StartFileCategoryScan(userId);
+    std::string catReason = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    monitor->StopFileCategoryScan(catReason);
+    monitor->StartFileCategoryScan(userId);
+    // Fuzz the ExtractTopFileCategories path with arbitrary bytes; it must never crash or throw.
+    std::string catPayload = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    std::string catExts;
+    std::string catExtsWithDirs;
+    monitor->ExtractTopFileCategories(catPayload, catExts, catExtsWithDirs);
     return true;
 }
 } // namespace OHOS

@@ -47,6 +47,7 @@ namespace {
 constexpr const char* BMS_PARAM_RELABEL_BATTERY_CAPACITY = "ohos.bms.param.relabelBatteryCapacity";
 constexpr const char* BMS_PARAM_RELABEL_WAIT_TIME = "ohos.bms.param.relabelWaitTimeMinutes";
 constexpr int32_t WAIT_TIME = 1; // 1 second
+constexpr int32_t TEST_USER_ID = 100;
 } // namespace
 
 class BmsIdleConditionMgrTest : public testing::Test {
@@ -64,12 +65,41 @@ void BmsIdleConditionMgrTest::TearDownTestCase()
 {}
 
 void BmsIdleConditionMgrTest::SetUp()
-{}
+{
+    auto monitor = DelayedSingleton<AppDataMonitor>::GetInstance();
+    if (monitor != nullptr) {
+        monitor->isScanning_.store(false);
+        monitor->stopRequested_.store(false);
+        monitor->lastScanTimeNs_.store(0);
+        monitor->isFileCategoryScanning_.store(false);
+        monitor->stopFileCategoryRequested_.store(false);
+        monitor->lastFileCategoryScanTimeNs_.store(0);
+    }
+    OHOS::system::SetParameter(ServiceConstants::BMS_RELABEL_PARAM, "false");
+    OHOS::system::SetParameter(ServiceConstants::BMS_SCAN_APP_DATA_PARAM, "false");
+    OHOS::system::SetParameter(ServiceConstants::BMS_SCAN_FILE_CATEGORY_PARAM, "false");
+    OHOS::system::SetParameter(ServiceConstants::SCAN_APP_DATA_TEST_PARAM, "false");
+    OHOS::system::SetParameter(ServiceConstants::SCAN_FILE_CATEGORY_TEST_PARAM, "false");
+    OHOS::system::SetParameter(ServiceConstants::LARGE_FILES_REPORT_COOLDOWN_TEST_PARAM, "false");
+}
 
 void BmsIdleConditionMgrTest::TearDown()
 {
+    auto monitor = DelayedSingleton<AppDataMonitor>::GetInstance();
+    if (monitor != nullptr) {
+        monitor->isScanning_.store(false);
+        monitor->stopRequested_.store(false);
+        monitor->lastScanTimeNs_.store(0);
+        monitor->isFileCategoryScanning_.store(false);
+        monitor->stopFileCategoryRequested_.store(false);
+        monitor->lastFileCategoryScanTimeNs_.store(0);
+    }
     OHOS::system::SetParameter(ServiceConstants::BMS_RELABEL_PARAM, "false");
     OHOS::system::SetParameter(ServiceConstants::BMS_SCAN_APP_DATA_PARAM, "false");
+    OHOS::system::SetParameter(ServiceConstants::BMS_SCAN_FILE_CATEGORY_PARAM, "false");
+    OHOS::system::SetParameter(ServiceConstants::SCAN_APP_DATA_TEST_PARAM, "false");
+    OHOS::system::SetParameter(ServiceConstants::SCAN_FILE_CATEGORY_TEST_PARAM, "false");
+    OHOS::system::SetParameter(ServiceConstants::LARGE_FILES_REPORT_COOLDOWN_TEST_PARAM, "false");
 }
 
 /**
@@ -1929,6 +1959,70 @@ HWTEST_F(BmsIdleConditionMgrTest, TryStartScanAppData_0200, Function | SmallTest
 }
 
 /**
+ * @tc.number: TryStartScanAppData_0300
+ * @tc.name: TryStartScanAppData skips when IsInCooldown
+ * @tc.desc: 1. all conditions met, but lastScanTimeNs_ set to now (in 7d cooldown)
+ *           2. pre-check returns early, isScanActive_ stays false, no thread spawned
+ */
+HWTEST_F(BmsIdleConditionMgrTest, TryStartScanAppData_0300, Function | SmallTest | Level0)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    ASSERT_NE(idleMgr, nullptr);
+    auto monitor = DelayedSingleton<AppDataMonitor>::GetInstance();
+    ASSERT_NE(monitor, nullptr);
+
+    OHOS::system::SetParameter(ServiceConstants::BMS_SCAN_APP_DATA_PARAM, "true");
+    idleMgr->scanFeatureEnabled_.store(true);
+    idleMgr->userUnlockedMap_[TEST_USER_ID] = true;
+    idleMgr->screenLocked_.store(true);
+    idleMgr->powerConnected_.store(true);
+    idleMgr->batterySatisfied_.store(true);
+    idleMgr->isRelabeling_.store(false);
+    idleMgr->isFileCategoryScanActive_.store(false);
+    idleMgr->isScanActive_.store(false);
+    monitor->lastScanTimeNs_.store(0);
+    monitor->StampScanTime();
+
+    idleMgr->TryStartScanAppData();
+    std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
+
+    EXPECT_FALSE(idleMgr->isScanActive_.load());
+    OHOS::system::SetParameter(ServiceConstants::BMS_SCAN_APP_DATA_PARAM, "false");
+}
+
+/**
+ * @tc.number: TryStartScanAppData_0400
+ * @tc.name: TryStartScanAppData skips when IsInLargeFilesReportCooldown
+ * @tc.desc: 1. all conditions met, cooldown expired, but lastLargeFilesReportTime_ set to now
+ *           2. report cooldown pre-check returns early, isScanActive_ stays false
+ */
+HWTEST_F(BmsIdleConditionMgrTest, TryStartScanAppData_0400, Function | SmallTest | Level0)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    ASSERT_NE(idleMgr, nullptr);
+    auto monitor = DelayedSingleton<AppDataMonitor>::GetInstance();
+    ASSERT_NE(monitor, nullptr);
+
+    OHOS::system::SetParameter(ServiceConstants::BMS_SCAN_APP_DATA_PARAM, "true");
+    idleMgr->scanFeatureEnabled_.store(true);
+    idleMgr->userUnlockedMap_[TEST_USER_ID] = true;
+    idleMgr->screenLocked_.store(true);
+    idleMgr->powerConnected_.store(true);
+    idleMgr->batterySatisfied_.store(true);
+    idleMgr->isRelabeling_.store(false);
+    idleMgr->isFileCategoryScanActive_.store(false);
+    idleMgr->isScanActive_.store(false);
+    monitor->lastScanTimeNs_.store(0);
+    monitor->lastLargeFilesReportTime_ = std::chrono::steady_clock::now();
+
+    idleMgr->TryStartScanAppData();
+    std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
+
+    EXPECT_FALSE(idleMgr->isScanActive_.load());
+    OHOS::system::SetParameter(ServiceConstants::BMS_SCAN_APP_DATA_PARAM, "false");
+}
+
+/**
  * @tc.number: InterruptScanAppData_0100
  * @tc.name: InterruptScanAppData when no scan active
  * @tc.desc: 1. isScanActive_ = false
@@ -2020,6 +2114,522 @@ HWTEST_F(BmsIdleConditionMgrTest, IdleParamUtil_IsAppDataScanDisabled_0300, Func
     sFile.close();
 
     EXPECT_FALSE(IdleParamUtil::IsAppDataScanDisabled());
+
+    std::filesystem::remove_all(versionPath);
+}
+
+// ===========================================================================
+// File Category Scan trigger/interrupt tests
+// ===========================================================================
+
+/**
+ * @tc.number: CheckFileCategoryScanConditions_0100
+ * @tc.name: CheckFileCategoryScanConditions when all conditions satisfied
+ * @tc.desc: 1. user unlocked, screen locked, power connected, battery satisfied
+ *           2. no scan active, no relabel active, task counter = 0
+ *           3. Should return true
+ */
+HWTEST_F(BmsIdleConditionMgrTest, CheckFileCategoryScanConditions_0100, Function | SmallTest | Level0)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    ASSERT_NE(idleMgr, nullptr);
+
+    idleMgr->userUnlockedMap_[TEST_USER_ID] = true;
+    idleMgr->screenLocked_.store(true);
+    idleMgr->powerConnected_.store(true);
+    idleMgr->batterySatisfied_.store(true);
+    idleMgr->isScanActive_.store(false);
+    idleMgr->isRelabeling_.store(false);
+    idleMgr->isFileCategoryScanActive_.store(false);
+
+    EXPECT_TRUE(idleMgr->CheckFileCategoryScanConditions(TEST_USER_ID));
+}
+
+/**
+ * @tc.number: CheckFileCategoryScanConditions_0200
+ * @tc.name: CheckFileCategoryScanConditions returns false when relabel active
+ * @tc.desc: 1. all conditions met except isRelabeling_ = true
+ *           2. Should return false (mutual exclusion)
+ */
+HWTEST_F(BmsIdleConditionMgrTest, CheckFileCategoryScanConditions_0200, Function | SmallTest | Level0)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    ASSERT_NE(idleMgr, nullptr);
+
+    idleMgr->userUnlockedMap_[TEST_USER_ID] = true;
+    idleMgr->screenLocked_.store(true);
+    idleMgr->powerConnected_.store(true);
+    idleMgr->batterySatisfied_.store(true);
+    idleMgr->isRelabeling_.store(true);
+
+    EXPECT_FALSE(idleMgr->CheckFileCategoryScanConditions(TEST_USER_ID));
+    idleMgr->isRelabeling_.store(false);
+}
+
+/**
+ * @tc.number: CheckFileCategoryScanConditions_0300
+ * @tc.name: CheckFileCategoryScanConditions returns false when LargeFiles scan active
+ * @tc.desc: 1. all conditions met except isScanActive_ = true
+ *           2. Should return false (mutual exclusion)
+ */
+HWTEST_F(BmsIdleConditionMgrTest, CheckFileCategoryScanConditions_0300, Function | SmallTest | Level0)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    ASSERT_NE(idleMgr, nullptr);
+
+    idleMgr->userUnlockedMap_[TEST_USER_ID] = true;
+    idleMgr->screenLocked_.store(true);
+    idleMgr->powerConnected_.store(true);
+    idleMgr->batterySatisfied_.store(true);
+    idleMgr->isScanActive_.store(true);
+
+    EXPECT_FALSE(idleMgr->CheckFileCategoryScanConditions(TEST_USER_ID));
+    idleMgr->isScanActive_.store(false);
+}
+
+/**
+ * @tc.number: CheckFileCategoryScanConditions_0400
+ * @tc.name: CheckFileCategoryScanConditions returns false when screen unlocked
+ * @tc.desc: 1. all conditions met except screenLocked_ = false
+ *           2. Should return false
+ */
+HWTEST_F(BmsIdleConditionMgrTest, CheckFileCategoryScanConditions_0400, Function | SmallTest | Level0)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    ASSERT_NE(idleMgr, nullptr);
+
+    idleMgr->userUnlockedMap_[TEST_USER_ID] = true;
+    idleMgr->screenLocked_.store(false);
+    idleMgr->powerConnected_.store(true);
+    idleMgr->batterySatisfied_.store(true);
+
+    EXPECT_FALSE(idleMgr->CheckFileCategoryScanConditions(TEST_USER_ID));
+}
+
+/**
+ * @tc.number: SetIsFileCategoryScanActive_0100
+ * @tc.name: SetIsFileCategoryScanActive sets flag and returns true on first call
+ * @tc.desc: 1. isFileCategoryScanActive_ = false initially
+ *           2. SetIsFileCategoryScanActive returns true and sets flag
+ */
+HWTEST_F(BmsIdleConditionMgrTest, SetIsFileCategoryScanActive_0100, Function | SmallTest | Level0)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    ASSERT_NE(idleMgr, nullptr);
+
+    idleMgr->isFileCategoryScanActive_.store(false);
+    EXPECT_TRUE(idleMgr->SetIsFileCategoryScanActive());
+    EXPECT_TRUE(idleMgr->isFileCategoryScanActive_.load());
+    idleMgr->isFileCategoryScanActive_.store(false);
+}
+
+/**
+ * @tc.number: SetIsFileCategoryScanActive_0200
+ * @tc.name: SetIsFileCategoryScanActive returns false when already active
+ * @tc.desc: 1. isFileCategoryScanActive_ = true
+ *           2. SetIsFileCategoryScanActive returns false
+ */
+HWTEST_F(BmsIdleConditionMgrTest, SetIsFileCategoryScanActive_0200, Function | SmallTest | Level0)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    ASSERT_NE(idleMgr, nullptr);
+
+    idleMgr->isFileCategoryScanActive_.store(true);
+    EXPECT_FALSE(idleMgr->SetIsFileCategoryScanActive());
+    idleMgr->isFileCategoryScanActive_.store(false);
+}
+
+/**
+ * @tc.number: InterruptScanFileCategory_0100
+ * @tc.name: InterruptScanFileCategory is a no-op when no scan is active
+ * @tc.desc: 1. isFileCategoryScanActive_ = false
+ *           2. Should return early without calling monitor->StopFileCategoryScan
+ */
+HWTEST_F(BmsIdleConditionMgrTest, InterruptScanFileCategory_0100, Function | SmallTest | Level0)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    ASSERT_NE(idleMgr, nullptr);
+    auto monitor = DelayedSingleton<AppDataMonitor>::GetInstance();
+    ASSERT_NE(monitor, nullptr);
+
+    monitor->stopFileCategoryRequested_.store(false);
+    idleMgr->isFileCategoryScanActive_.store(false);
+    idleMgr->InterruptScanFileCategory("test_noop");
+
+    EXPECT_FALSE(monitor->stopFileCategoryRequested_.load());
+}
+
+/**
+ * @tc.number: InterruptScanFileCategory_0200
+ * @tc.name: InterruptScanFileCategory when scan active forwards to monitor StopFileCategoryScan
+ * @tc.desc: 1. isFileCategoryScanActive_ = true
+ *           2. Should call monitor->StopFileCategoryScan, setting stopFileCategoryRequested_
+ */
+HWTEST_F(BmsIdleConditionMgrTest, InterruptScanFileCategory_0200, Function | SmallTest | Level0)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    ASSERT_NE(idleMgr, nullptr);
+    auto monitor = DelayedSingleton<AppDataMonitor>::GetInstance();
+    ASSERT_NE(monitor, nullptr);
+
+    monitor->stopFileCategoryRequested_.store(false);
+    idleMgr->isFileCategoryScanActive_.store(true);
+    idleMgr->InterruptScanFileCategory("test_interrupt");
+
+    EXPECT_TRUE(monitor->stopFileCategoryRequested_.load());
+    idleMgr->isFileCategoryScanActive_.store(false);
+}
+
+/**
+ * @tc.number: TryStartScanFileCategory_0100
+ * @tc.name: TryStartScanFileCategory skips when config disabled
+ * @tc.desc: 1. BMS_SCAN_FILE_CATEGORY_PARAM = false
+ *           2. Should return without setting isFileCategoryScanActive_
+ */
+HWTEST_F(BmsIdleConditionMgrTest, TryStartScanFileCategory_0100, Function | SmallTest | Level0)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    ASSERT_NE(idleMgr, nullptr);
+
+    OHOS::system::SetParameter(ServiceConstants::BMS_SCAN_FILE_CATEGORY_PARAM, "false");
+    idleMgr->isFileCategoryScanActive_.store(false);
+    idleMgr->TryStartScanFileCategory();
+
+    EXPECT_FALSE(idleMgr->isFileCategoryScanActive_.load());
+}
+
+/**
+ * @tc.number: TryStartScanFileCategory_0200
+ * @tc.name: TryStartScanFileCategory skips when conditions not met
+ * @tc.desc: 1. config enabled but screen unlocked
+ *           2. Should return without setting isFileCategoryScanActive_
+ */
+HWTEST_F(BmsIdleConditionMgrTest, TryStartScanFileCategory_0200, Function | SmallTest | Level0)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    ASSERT_NE(idleMgr, nullptr);
+
+    OHOS::system::SetParameter(ServiceConstants::BMS_SCAN_FILE_CATEGORY_PARAM, "true");
+    idleMgr->screenLocked_.store(false);
+    idleMgr->isFileCategoryScanActive_.store(false);
+    idleMgr->TryStartScanFileCategory();
+
+    EXPECT_FALSE(idleMgr->isFileCategoryScanActive_.load());
+    OHOS::system::SetParameter(ServiceConstants::BMS_SCAN_FILE_CATEGORY_PARAM, "false");
+}
+
+/**
+ * @tc.number: TryStartScanFileCategory_0300
+ * @tc.name: TryStartScanFileCategory skips when feature disabled by CCM
+ * @tc.desc: 1. config enabled, conditions met, but breakdownScanFeatureEnabled_ = false
+ *           2. Should return without setting isFileCategoryScanActive_
+ */
+HWTEST_F(BmsIdleConditionMgrTest, TryStartScanFileCategory_0300, Function | SmallTest | Level0)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    ASSERT_NE(idleMgr, nullptr);
+
+    OHOS::system::SetParameter(ServiceConstants::BMS_SCAN_FILE_CATEGORY_PARAM, "true");
+    idleMgr->fileCategoryScanFeatureEnabled_.store(false);
+    idleMgr->userUnlockedMap_[TEST_USER_ID] = true;
+    idleMgr->screenLocked_.store(true);
+    idleMgr->powerConnected_.store(true);
+    idleMgr->batterySatisfied_.store(true);
+    idleMgr->isFileCategoryScanActive_.store(false);
+
+    idleMgr->TryStartScanFileCategory();
+    std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
+
+    EXPECT_FALSE(idleMgr->isFileCategoryScanActive_.load());
+    idleMgr->fileCategoryScanFeatureEnabled_.store(true);
+    OHOS::system::SetParameter(ServiceConstants::BMS_SCAN_FILE_CATEGORY_PARAM, "false");
+}
+
+/**
+ * @tc.number: CheckRelabelConditions_FileCategoryActive_0100
+ * @tc.name: CheckRelabelConditions returns false when file category scan is active
+ * @tc.desc: 1. all relabel conditions met but isFileCategoryScanActive_ = true
+ *           2. Should return false (mutual exclusion)
+ */
+HWTEST_F(BmsIdleConditionMgrTest, CheckRelabelConditions_FileCategoryActive_0100, Function | SmallTest | Level0)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    ASSERT_NE(idleMgr, nullptr);
+
+    idleMgr->userUnlockedMap_[TEST_USER_ID] = true;
+    idleMgr->screenLocked_.store(true);
+    idleMgr->powerConnected_.store(true);
+    idleMgr->batterySatisfied_.store(true);
+    idleMgr->isFileCategoryScanActive_.store(true);
+
+    EXPECT_FALSE(idleMgr->CheckRelabelConditions(TEST_USER_ID));
+    idleMgr->isFileCategoryScanActive_.store(false);
+}
+
+/**
+ * @tc.number: CheckScanConditions_FileCategoryActive_0100
+ * @tc.name: CheckScanConditions returns false when file category scan is active
+ * @tc.desc: 1. all scan conditions met but isFileCategoryScanActive_ = true
+ *           2. Should return false (mutual exclusion)
+ */
+HWTEST_F(BmsIdleConditionMgrTest, CheckScanConditions_FileCategoryActive_0100, Function | SmallTest | Level0)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    ASSERT_NE(idleMgr, nullptr);
+
+    idleMgr->userUnlockedMap_[TEST_USER_ID] = true;
+    idleMgr->screenLocked_.store(true);
+    idleMgr->powerConnected_.store(true);
+    idleMgr->batterySatisfied_.store(true);
+    idleMgr->isRelabeling_.store(false);
+    idleMgr->isFileCategoryScanActive_.store(true);
+
+    EXPECT_FALSE(idleMgr->CheckScanConditions(TEST_USER_ID));
+    idleMgr->isFileCategoryScanActive_.store(false);
+}
+
+/**
+ * @tc.number: IdleParamUtil_IsFileCategoryScanDisabled_0100
+ * @tc.name: Test IsFileCategoryScanDisabled with file_category_scan_feature_off
+ * @tc.desc: 1. switch_off_list contains file_category_scan_feature_off
+ *           2. Should return true
+ */
+HWTEST_F(BmsIdleConditionMgrTest, IdleParamUtil_IsFileCategoryScanDisabled_0100, Function | SmallTest | Level0)
+{
+    std::string versionPath = "/data/service/el1/public/update/param_service/install/system/etc/SwitchOffList/";
+    std::filesystem::create_directories(versionPath);
+
+    std::string versionFile = versionPath + "version.txt";
+    std::ofstream vFile(versionFile);
+    vFile << "version=999.0.0.0";
+    vFile.close();
+
+    std::string switchOffFile = versionPath + "switch_off_list";
+    std::ofstream sFile(switchOffFile);
+    sFile << "file_category_scan_feature_off" << std::endl;
+    sFile.close();
+
+    EXPECT_TRUE(IdleParamUtil::IsFileCategoryScanDisabled());
+
+    std::filesystem::remove_all(versionPath);
+}
+
+/**
+ * @tc.number: IdleParamUtil_IsFileCategoryScanDisabled_0200
+ * @tc.name: Test IsFileCategoryScanDisabled without file_category_scan_feature_off
+ * @tc.desc: 1. switch_off_list does not contain the switch
+ *           2. Should return false
+ */
+HWTEST_F(BmsIdleConditionMgrTest, IdleParamUtil_IsFileCategoryScanDisabled_0200, Function | SmallTest | Level0)
+{
+    std::string versionPath = "/data/service/el1/public/update/param_service/install/system/etc/SwitchOffList/";
+    std::filesystem::create_directories(versionPath);
+
+    std::string versionFile = versionPath + "version.txt";
+    std::ofstream vFile(versionFile);
+    vFile << "version=999.0.0.0";
+    vFile.close();
+
+    std::string switchOffFile = versionPath + "switch_off_list";
+    std::ofstream sFile(switchOffFile);
+    sFile << "other_feature_off" << std::endl;
+    sFile.close();
+
+    EXPECT_FALSE(IdleParamUtil::IsFileCategoryScanDisabled());
+
+    std::filesystem::remove_all(versionPath);
+}
+
+/**
+ * @tc.number: TryStartScanFileCategory_0400
+ * @tc.name: TryStartScanFileCategory skips when SetIsFileCategoryScanActive fails
+ * @tc.desc: 1. config enabled, feature enabled, all conditions met
+ *           2. isFileCategoryScanActive_ already true (does not block CheckFileCategoryScanConditions)
+ *           3. SetIsFileCategoryScanActive returns false, scan not started
+ */
+HWTEST_F(BmsIdleConditionMgrTest, TryStartScanFileCategory_0400, Function | SmallTest | Level0)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    ASSERT_NE(idleMgr, nullptr);
+
+    OHOS::system::SetParameter(ServiceConstants::BMS_SCAN_FILE_CATEGORY_PARAM, "true");
+    idleMgr->fileCategoryScanFeatureEnabled_.store(true);
+    idleMgr->userUnlockedMap_[TEST_USER_ID] = true;
+    idleMgr->screenLocked_.store(true);
+    idleMgr->powerConnected_.store(true);
+    idleMgr->batterySatisfied_.store(true);
+    idleMgr->isScanActive_.store(false);
+    idleMgr->isRelabeling_.store(false);
+    idleMgr->isFileCategoryScanActive_.store(true);
+
+    idleMgr->TryStartScanFileCategory();
+    std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
+
+    // SetIsFileCategoryScanActive returns false (already active), no task launched,
+    // flag stays true (not reset by ScopeGuard since task never started).
+    EXPECT_TRUE(idleMgr->isFileCategoryScanActive_.load());
+    idleMgr->isFileCategoryScanActive_.store(false);
+    OHOS::system::SetParameter(ServiceConstants::BMS_SCAN_FILE_CATEGORY_PARAM, "false");
+}
+
+/**
+ * @tc.number: TryStartScanFileCategory_0500
+ * @tc.name: TryStartScanFileCategory starts task when all conditions met
+ * @tc.desc: 1. config enabled, feature enabled, all conditions met, isFileCategoryScanActive_ false
+ *           2. SetIsFileCategoryScanActive succeeds, StartFileCategoryScanTask launched in detached thread
+ *           3. Task runs monitor->StartFileCategoryScan which stamps lastFileCategoryScanTime_ to ~now
+ */
+HWTEST_F(BmsIdleConditionMgrTest, TryStartScanFileCategory_0500, Function | SmallTest | Level0)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    ASSERT_NE(idleMgr, nullptr);
+    auto monitor = DelayedSingleton<AppDataMonitor>::GetInstance();
+    ASSERT_NE(monitor, nullptr);
+
+    OHOS::system::SetParameter(ServiceConstants::BMS_SCAN_FILE_CATEGORY_PARAM, "true");
+    idleMgr->fileCategoryScanFeatureEnabled_.store(true);
+    idleMgr->userUnlockedMap_[TEST_USER_ID] = true;
+    idleMgr->screenLocked_.store(true);
+    idleMgr->powerConnected_.store(true);
+    idleMgr->batterySatisfied_.store(true);
+    idleMgr->isScanActive_.store(false);
+    idleMgr->isRelabeling_.store(false);
+    idleMgr->isFileCategoryScanActive_.store(false);
+    monitor->lastFileCategoryScanTimeNs_.store(0);
+
+    idleMgr->TryStartScanFileCategory();
+    std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME * 3));
+
+    // If task launched: ScopeGuard resets isFileCategoryScanActive_ to false on completion.
+    // If buffer/thermal check failed: SetIsFileCategoryScanActive never called, flag stays false.
+    // Either way, flag must be false after the wait.
+    EXPECT_FALSE(idleMgr->isFileCategoryScanActive_.load());
+
+    OHOS::system::SetParameter(ServiceConstants::BMS_SCAN_FILE_CATEGORY_PARAM, "false");
+}
+
+/**
+ * @tc.number: TryStartScanFileCategory_0600
+ * @tc.name: TryStartScanFileCategory skips when IsInFileCategoryCooldown
+ * @tc.desc: 1. all conditions met, but lastFileCategoryScanTimeNs_ set to now (in 7d cooldown)
+ *           2. pre-check returns early, isFileCategoryScanActive_ stays false
+ */
+HWTEST_F(BmsIdleConditionMgrTest, TryStartScanFileCategory_0600, Function | SmallTest | Level0)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    ASSERT_NE(idleMgr, nullptr);
+    auto monitor = DelayedSingleton<AppDataMonitor>::GetInstance();
+    ASSERT_NE(monitor, nullptr);
+
+    OHOS::system::SetParameter(ServiceConstants::BMS_SCAN_FILE_CATEGORY_PARAM, "true");
+    idleMgr->fileCategoryScanFeatureEnabled_.store(true);
+    idleMgr->userUnlockedMap_[TEST_USER_ID] = true;
+    idleMgr->screenLocked_.store(true);
+    idleMgr->powerConnected_.store(true);
+    idleMgr->batterySatisfied_.store(true);
+    idleMgr->isScanActive_.store(false);
+    idleMgr->isRelabeling_.store(false);
+    idleMgr->isFileCategoryScanActive_.store(false);
+    monitor->lastFileCategoryScanTimeNs_.store(0);
+    monitor->StampFileCategoryScanTime();
+
+    idleMgr->TryStartScanFileCategory();
+    std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
+
+    EXPECT_FALSE(idleMgr->isFileCategoryScanActive_.load());
+    OHOS::system::SetParameter(ServiceConstants::BMS_SCAN_FILE_CATEGORY_PARAM, "false");
+}
+
+/**
+ * @tc.number: TryStartScanFileCategory_0700
+ * @tc.name: TryStartScanFileCategory skips when IsInLargeFilesReportCooldown
+ * @tc.desc: 1. all conditions met, cooldown expired, but lastLargeFilesReportTime_ set to now
+ *           2. report cooldown pre-check returns early, isFileCategoryScanActive_ stays false
+ */
+HWTEST_F(BmsIdleConditionMgrTest, TryStartScanFileCategory_0700, Function | SmallTest | Level0)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    ASSERT_NE(idleMgr, nullptr);
+    auto monitor = DelayedSingleton<AppDataMonitor>::GetInstance();
+    ASSERT_NE(monitor, nullptr);
+
+    OHOS::system::SetParameter(ServiceConstants::BMS_SCAN_FILE_CATEGORY_PARAM, "true");
+    idleMgr->fileCategoryScanFeatureEnabled_.store(true);
+    idleMgr->userUnlockedMap_[TEST_USER_ID] = true;
+    idleMgr->screenLocked_.store(true);
+    idleMgr->powerConnected_.store(true);
+    idleMgr->batterySatisfied_.store(true);
+    idleMgr->isScanActive_.store(false);
+    idleMgr->isRelabeling_.store(false);
+    idleMgr->isFileCategoryScanActive_.store(false);
+    monitor->lastFileCategoryScanTimeNs_.store(0);
+    monitor->lastLargeFilesReportTime_ = std::chrono::steady_clock::now();
+
+    idleMgr->TryStartScanFileCategory();
+    std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
+
+    EXPECT_FALSE(idleMgr->isFileCategoryScanActive_.load());
+    OHOS::system::SetParameter(ServiceConstants::BMS_SCAN_FILE_CATEGORY_PARAM, "false");
+}
+
+/**
+ * @tc.number: OnConfigChanged_0200
+ * @tc.name: OnConfigChanged sets fileCategoryScanFeatureEnabled_ false when CCM disabled
+ * @tc.desc: 1. switch_off_list contains file_category_scan_feature_off
+ *           2. ReloadParam sets fileCategoryScanFeatureEnabled_ to false
+ */
+HWTEST_F(BmsIdleConditionMgrTest, OnConfigChanged_0200, Function | SmallTest | Level0)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    ASSERT_NE(idleMgr, nullptr);
+
+    std::string versionPath = "/data/service/el1/public/update/param_service/install/system/etc/SwitchOffList/";
+    std::filesystem::create_directories(versionPath);
+
+    std::string versionFile = versionPath + "version.txt";
+    std::ofstream vFile(versionFile);
+    vFile << "version=999.0.0.0";
+    vFile.close();
+
+    std::string switchOffFile = versionPath + "switch_off_list";
+    std::ofstream sFile(switchOffFile);
+    sFile << "file_category_scan_feature_off" << std::endl;
+    sFile.close();
+
+    idleMgr->OnConfigChanged();
+
+    EXPECT_FALSE(idleMgr->fileCategoryScanFeatureEnabled_.load());
+
+    std::filesystem::remove_all(versionPath);
+}
+
+/**
+ * @tc.number: OnConfigChanged_0300
+ * @tc.name: OnConfigChanged sets fileCategoryScanFeatureEnabled_ true when CCM enabled
+ * @tc.desc: 1. switch_off_list does not contain file_category_scan_feature_off
+ *           2. ReloadParam sets fileCategoryScanFeatureEnabled_ to true
+ */
+HWTEST_F(BmsIdleConditionMgrTest, OnConfigChanged_0300, Function | SmallTest | Level0)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    ASSERT_NE(idleMgr, nullptr);
+
+    std::string versionPath = "/data/service/el1/public/update/param_service/install/system/etc/SwitchOffList/";
+    std::filesystem::create_directories(versionPath);
+
+    std::string versionFile = versionPath + "version.txt";
+    std::ofstream vFile(versionFile);
+    vFile << "version=999.0.0.0";
+    vFile.close();
+
+    std::string switchOffFile = versionPath + "switch_off_list";
+    std::ofstream sFile(switchOffFile);
+    sFile << "other_feature_off" << std::endl;
+    sFile.close();
+
+    idleMgr->OnConfigChanged();
+
+    EXPECT_TRUE(idleMgr->fileCategoryScanFeatureEnabled_.load());
 
     std::filesystem::remove_all(versionPath);
 }

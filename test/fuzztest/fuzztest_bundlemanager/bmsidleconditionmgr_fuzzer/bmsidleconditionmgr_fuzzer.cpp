@@ -54,6 +54,18 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     std::string stopReason = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     idleMgr->InterruptRelabel(stopReason);
     idleMgr->OnThermalLevelChanged(PowerMgr::ThermalLevel::WARM);
+
+    // Fuzz the file category scan path: trigger, interrupt, and condition checks.
+    OHOS::system::SetParameter(ServiceConstants::BMS_SCAN_FILE_CATEGORY_PARAM, "true");
+    idleMgr->OnConfigChanged();
+    idleMgr->CheckFileCategoryScanConditions(userId);
+    idleMgr->SetIsFileCategoryScanActive();
+    idleMgr->TryStartScanFileCategory();
+    std::string fcStopReason = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    idleMgr->InterruptScanFileCategory(fcStopReason);
+    idleMgr->OnThermalLevelChanged(PowerMgr::ThermalLevel::COOL);
+    idleMgr->OnBatteryChanged();
+    OHOS::system::SetParameter(ServiceConstants::BMS_SCAN_FILE_CATEGORY_PARAM, "false");
     return true;
 }
 }

@@ -749,6 +749,26 @@ ErrCode InstalldClient::GetTopNLargestItemsInAppDataDir(const std::string &bundl
         largestItems);
 }
 
+ErrCode InstalldClient::GetAppDataFileCategoryStats(const std::string &bundleName, const int32_t appIndex,
+    const int32_t userId, const int32_t timeout, std::string &extStatsJson)
+{
+    if (bundleName.empty()) {
+        APP_LOGE_NOFUNC("bundleName is empty");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    if (OHOS::system::GetBoolParameter(ServiceConstants::SCAN_FILE_CATEGORY_TEST_PARAM, false)) {
+        extStatsJson = R"({"extensions":[)"
+            R"({"extension":"so","totalSize":5242880,"dirs":[)"
+            R"({"path":"/d**a/app/el2/100/base/com.test/files","size":3145728},)"
+            R"({"path":"/d**a/app/el2/100/base/com.test/cache","size":2097152}]},)"
+            R"({"extension":"json","totalSize":1048576,"dirs":[)"
+            R"({"path":"/d**a/app/el2/100/base/com.test/data","size":1048576}]}]})";
+        return ERR_OK;
+    }
+    return CallService(&IInstalld::GetAppDataFileCategoryStats, bundleName, appIndex, userId, timeout,
+        extStatsJson);
+}
+
 ErrCode InstalldClient::DeleteOldCacheFiles(
     const std::vector<std::string> &paths, const uint64_t cacheSize, uint64_t &cleanedSize)
 {
