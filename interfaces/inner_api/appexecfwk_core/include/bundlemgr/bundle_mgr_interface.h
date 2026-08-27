@@ -1094,6 +1094,20 @@ public:
         return ERR_OK;
     }
     /**
+     * @brief Batch set application enabled status for clone apps under a specific user.
+     * @param userId Indicates the user id.
+     * @param enableAppIndex Indicates the app index to enable.
+     * @param disableAppIndex Indicates the app index to disable.
+     * @param killProcess Indicates whether to kill the process when disabling.
+     * @param needSendEvent Indicates whether to send broadcast events.
+     * @return Returns ERR_OK if successful; returns error code otherwise.
+     */
+    virtual ErrCode BatchSetApplicationEnabled(int32_t userId, int32_t enableAppIndex,
+        int32_t disableAppIndex, bool killProcess, bool needSendEvent)
+    {
+        return ERR_OK;
+    }
+    /**
      * @brief Sets whether to enable a specified ability.
      * @param abilityInfo Indicates information about the ability to check.
      * @param isEnable Indicates the ability status is enabled.

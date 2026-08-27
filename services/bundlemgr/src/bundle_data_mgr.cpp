@@ -28,6 +28,8 @@
 #include "accesstoken_kit.h"
 #include "account_helper.h"
 #include "app_install_extended_info.h"
+#include "app_mgr_client.h"
+#include "app_disable_forbidden/app_disable_forbidden_mgr.h"
 #include "app_log_tag_wrapper.h"
 #include "app_provision_info_manager.h"
 #include "bms_extension_client.h"
@@ -6685,6 +6687,317 @@ ErrCode BundleDataMgr::SetApplicationEnabled(const std::string &bundleName,
             bundleName, requestUserId, innerBundleUserInfoPtr->bundleUserInfo);
     }
     return ERR_OK;
+}
+
+ErrCode BundleDataMgr::BatchSetApplicationEnabled(int32_t userId, int32_t enableAppIndex,
+    int32_t disableAppIndex, const std::string &caller, bool killProcess, bool needSendEvent,
+    bool skipDisableForbidden)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    APP_LOGI("BatchSetApplicationEnabled userId=%{public}d, enableAppIndex=%{public}d, "
+        "disableAppIndex=%{public}d, killProcess=%{public}d, needSendEvent=%{public}d, "
+        "skipDisableForbidden=%{public}d",
+        userId, enableAppIndex, disableAppIndex, killProcess, needSendEvent, skipDisableForbidden);
+
+    auto validateRet = ValidateBatchSetAppIndex(enableAppIndex, disableAppIndex);
+    if (validateRet != ERR_OK) {
+        return validateRet;
+    }
+
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        APP_LOGE("userId %{public}d is invalid", userId);
+        return ERR_APPEXECFWK_USER_NOT_EXIST;
+    }
+
+    std::vector<NotifyBundleEvents> eventsToSend;
+    std::vector<std::tuple<std::string, int32_t, int32_t>> disabledBundles;
+    std::vector<std::tuple<std::string, int32_t, bool, int32_t, std::string>> sysEventsToSend;
+
+    auto processRet = ProcessBatchForAllBundles(requestUserId, enableAppIndex, disableAppIndex, caller,
+        needSendEvent, skipDisableForbidden, eventsToSend, disabledBundles, sysEventsToSend);
+    if (processRet != ERR_OK) {
+        return processRet;
+    }
+
+    for (const auto &[evtBundleName, evtUserId, evtIsEnable, evtAppIndex, evtCaller] : sysEventsToSend) {
+        EventReport::SendComponentStateSysEvent(evtBundleName, "", evtUserId, evtIsEnable, evtAppIndex, evtCaller);
+    }
+
+    if (killProcess) {
+        KillDisabledBundleProcesses(disabledBundles, caller);
+    }
+    if (needSendEvent && !eventsToSend.empty()) {
+        SendBatchNotifyEventsAsync(std::move(eventsToSend));
+    }
+
+    APP_LOGI("BatchSetApplicationEnabled completed successfully");
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::ProcessBatchForAllBundles(int32_t requestUserId, int32_t enableAppIndex,
+    int32_t disableAppIndex, const std::string &caller, bool needSendEvent,
+    bool skipDisableForbidden,
+    std::vector<NotifyBundleEvents> &eventsToSend,
+    std::vector<std::tuple<std::string, int32_t, int32_t>> &disabledBundles,
+    std::vector<std::tuple<std::string, int32_t, bool, int32_t, std::string>> &sysEventsToSend)
+{
+    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::vector<std::tuple<std::string, int32_t, bool, std::string>> rollbackList;
+    for (auto &item : bundleInfos_) {
+        InnerBundleInfo &innerBundleInfo = item.second;
+        if (innerBundleInfo.GetAppIndex() != 0) {
+            continue;
+        }
+        const InnerBundleUserInfo *innerBundleUserInfoPtr = nullptr;
+        if (!innerBundleInfo.GetInnerBundleUserInfo(requestUserId, innerBundleUserInfoPtr) ||
+            !innerBundleUserInfoPtr || innerBundleUserInfoPtr->cloneInfos.empty()) {
+            continue;
+        }
+        const std::string &bundleName = item.first;
+
+        auto ret = ProcessDisableForBundle(innerBundleInfo, innerBundleUserInfoPtr, bundleName,
+            disableAppIndex, caller, requestUserId, needSendEvent, skipDisableForbidden,
+            eventsToSend, disabledBundles, rollbackList, sysEventsToSend);
+        if (ret != ERR_OK) {
+            return ret;
+        }
+        ret = ProcessEnableForBundle(innerBundleInfo, innerBundleUserInfoPtr, bundleName,
+            enableAppIndex, caller, requestUserId, needSendEvent,
+            eventsToSend, rollbackList, sysEventsToSend);
+        if (ret != ERR_OK) {
+            return ret;
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::ProcessDisableForBundle(InnerBundleInfo &innerBundleInfo,
+    const InnerBundleUserInfo *innerBundleUserInfoPtr, const std::string &bundleName,
+    int32_t disableAppIndex, const std::string &caller, int32_t requestUserId,
+    bool needSendEvent, bool skipDisableForbidden,
+    std::vector<NotifyBundleEvents> &eventsToSend,
+    std::vector<std::tuple<std::string, int32_t, int32_t>> &disabledBundles,
+    std::vector<std::tuple<std::string, int32_t, bool, std::string>> &rollbackList,
+    std::vector<std::tuple<std::string, int32_t, bool, int32_t, std::string>> &sysEventsToSend)
+{
+    auto cloneIter = innerBundleUserInfoPtr->cloneInfos.find(std::to_string(disableAppIndex));
+    if (cloneIter == innerBundleUserInfoPtr->cloneInfos.end()) {
+        return ERR_OK;
+    }
+    bool currentEnabled = false;
+    auto enabledRet = innerBundleInfo.GetApplicationEnabledV9(requestUserId, currentEnabled, disableAppIndex);
+    if (enabledRet != ERR_OK || !currentEnabled) {
+        return ERR_OK;
+    }
+    auto forbidRet = CheckDisableForbidden(bundleName, requestUserId, disableAppIndex, skipDisableForbidden);
+    if (forbidRet == ERR_BUNDLE_MANAGER_PERMISSION_DENIED) {
+        return ERR_OK; // forbidden, skip this bundle
+    }
+    if (forbidRet != ERR_OK) {
+        APP_LOGE("CheckDisableForbidden failed for %{public}s appIndex %{public}d, ret=%{public}d",
+            bundleName.c_str(), disableAppIndex, forbidRet);
+        ReportErrorAndRollback(bundleName, requestUserId, false, disableAppIndex, caller, rollbackList);
+        return forbidRet;
+    }
+    auto ret = innerBundleInfo.SetCloneApplicationEnabled(false, disableAppIndex, caller, requestUserId);
+    if (ret != ERR_OK) {
+        APP_LOGE("disable appIndex %{public}d failed for %{public}s, ret=%{public}d",
+            disableAppIndex, bundleName.c_str(), ret);
+        ReportErrorAndRollback(bundleName, requestUserId, false, disableAppIndex, caller, rollbackList);
+        return ret;
+    }
+    rollbackList.emplace_back(bundleName, disableAppIndex, false, caller);
+    if (!dataStorage_->SaveStorageBundleInfo(innerBundleInfo)) {
+        APP_LOGE("SaveStorageBundleInfo failed for %{public}s appIndex %{public}d",
+            bundleName.c_str(), disableAppIndex);
+        ReportErrorAndRollback(bundleName, requestUserId, false, disableAppIndex, caller, rollbackList);
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    disabledBundles.emplace_back(bundleName, requestUserId, disableAppIndex);
+    if (needSendEvent) {
+        eventsToSend.push_back(BuildBatchNotifyEvent(
+            innerBundleInfo, *innerBundleUserInfoPtr, bundleName, disableAppIndex, requestUserId));
+    }
+    sysEventsToSend.emplace_back(bundleName, requestUserId, false, disableAppIndex, caller);
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::ProcessEnableForBundle(InnerBundleInfo &innerBundleInfo,
+    const InnerBundleUserInfo *innerBundleUserInfoPtr, const std::string &bundleName,
+    int32_t enableAppIndex, const std::string &caller, int32_t requestUserId,
+    bool needSendEvent,
+    std::vector<NotifyBundleEvents> &eventsToSend,
+    std::vector<std::tuple<std::string, int32_t, bool, std::string>> &rollbackList,
+    std::vector<std::tuple<std::string, int32_t, bool, int32_t, std::string>> &sysEventsToSend)
+{
+    auto cloneIter = innerBundleUserInfoPtr->cloneInfos.find(std::to_string(enableAppIndex));
+    if (cloneIter == innerBundleUserInfoPtr->cloneInfos.end()) {
+        return ERR_OK;
+    }
+    bool currentEnabled = false;
+    auto enabledRet = innerBundleInfo.GetApplicationEnabledV9(requestUserId, currentEnabled, enableAppIndex);
+    if (enabledRet != ERR_OK || currentEnabled) {
+        return ERR_OK;
+    }
+    auto ret = innerBundleInfo.SetCloneApplicationEnabled(true, enableAppIndex, caller, requestUserId);
+    if (ret != ERR_OK) {
+        APP_LOGE("enable appIndex %{public}d failed for %{public}s, ret=%{public}d",
+            enableAppIndex, bundleName.c_str(), ret);
+        ReportErrorAndRollback(bundleName, requestUserId, true, enableAppIndex, caller, rollbackList);
+        return ret;
+    }
+    rollbackList.emplace_back(bundleName, enableAppIndex, true, caller);
+    if (!dataStorage_->SaveStorageBundleInfo(innerBundleInfo)) {
+        APP_LOGE("SaveStorageBundleInfo failed for %{public}s appIndex %{public}d",
+            bundleName.c_str(), enableAppIndex);
+        ReportErrorAndRollback(bundleName, requestUserId, true, enableAppIndex, caller, rollbackList);
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    if (needSendEvent) {
+        eventsToSend.push_back(BuildBatchNotifyEvent(
+            innerBundleInfo, *innerBundleUserInfoPtr, bundleName, enableAppIndex, requestUserId));
+    }
+    sysEventsToSend.emplace_back(bundleName, requestUserId, true, enableAppIndex, caller);
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::CheckDisableForbidden(const std::string &bundleName, int32_t requestUserId,
+    int32_t disableAppIndex, bool skipDisableForbidden)
+{
+    if (skipDisableForbidden) {
+        return ERR_OK;
+    }
+    auto forbiddenMgr = DelayedSingleton<AppDisableForbiddenMgr>::GetInstance();
+    if (forbiddenMgr == nullptr) {
+        APP_LOGE("AppDisableForbiddenMgr is nullptr");
+        return ERR_APPEXECFWK_SERVICE_NOT_READY;
+    }
+    bool forbidden = false;
+    auto forbidRet = forbiddenMgr->IsApplicationDisableForbiddenNoCheck(
+        bundleName, requestUserId, disableAppIndex, forbidden);
+    if (forbidRet != ERR_OK) {
+        APP_LOGE("DisableForbiddenRdb get data failed for %{public}s, ret=%{public}d",
+            bundleName.c_str(), forbidRet);
+        return ERR_APPEXECFWK_SERVICE_NOT_READY;
+    }
+    if (forbidden) {
+        APP_LOGW("bundle: %{public}s appIndex: %{public}d is forbidden to be disabled, skip",
+            bundleName.c_str(), disableAppIndex);
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    return ERR_OK;
+}
+
+NotifyBundleEvents BundleDataMgr::BuildBatchNotifyEvent(const InnerBundleInfo &innerBundleInfo,
+    const InnerBundleUserInfo &userInfo, const std::string &bundleName,
+    int32_t appIndex, int32_t userId)
+{
+    return NotifyBundleEvents {
+        .type = NotifyType::APPLICATION_ENABLE,
+        .changeType = ChangeType::BATCH_SET_APPLICATION_ENABLED,
+        .resultCode = ERR_OK,
+        .accessTokenId = userInfo.accessTokenId,
+        .uid = userInfo.uid,
+        .appIndex = appIndex,
+        .userId = userId,
+        .bundleName = bundleName,
+        .appDistributionType = innerBundleInfo.GetAppDistributionType(),
+    };
+}
+
+void BundleDataMgr::ReportErrorAndRollback(const std::string &bundleName, int32_t userId,
+    bool isEnable, int32_t appIndex, const std::string &caller,
+    std::vector<std::tuple<std::string, int32_t, bool, std::string>> &rollbackList)
+{
+    EventReport::SendComponentStateSysEventForException(bundleName, "", userId, isEnable, appIndex, caller);
+    RollbackBatchSetEnabled(rollbackList, userId);
+}
+
+void BundleDataMgr::RollbackBatchSetEnabled(
+    const std::vector<std::tuple<std::string, int32_t, bool, std::string>> &rollbackList,
+    int32_t userId)
+{
+    APP_LOGI("RollbackBatchSetEnabled rollback %{public}zu items", rollbackList.size());
+    for (auto it = rollbackList.rbegin(); it != rollbackList.rend(); ++it) {
+        const auto &[bundleName, appIndex, setEnabled, caller] = *it;
+        auto infoItem = bundleInfos_.find(bundleName);
+        if (infoItem == bundleInfos_.end()) {
+            continue;
+        }
+        auto ret = infoItem->second.SetCloneApplicationEnabled(!setEnabled, appIndex, caller, userId);
+        if (ret != ERR_OK) {
+            APP_LOGE("rollback failed for %{public}s appIndex %{public}d, ret=%{public}d",
+                bundleName.c_str(), appIndex, ret);
+            EventReport::SendComponentStateSysEventForException(
+                bundleName, "", userId, !setEnabled, appIndex, caller + "_rollback_fail");
+            continue;
+        }
+        if (!dataStorage_->SaveStorageBundleInfo(infoItem->second)) {
+            APP_LOGE("rollback SaveStorageBundleInfo failed for %{public}s", bundleName.c_str());
+            EventReport::SendComponentStateSysEventForException(
+                bundleName, "", userId, !setEnabled, appIndex, caller + "_rollback_save_fail");
+        }
+    }
+}
+
+ErrCode BundleDataMgr::ValidateBatchSetAppIndex(int32_t enableAppIndex, int32_t disableAppIndex)
+{
+    if (enableAppIndex <= 0 || disableAppIndex <= 0) {
+        APP_LOGE("enableAppIndex and disableAppIndex must be greater than 0, enable:%{public}d disable:%{public}d",
+            enableAppIndex, disableAppIndex);
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+    }
+    int32_t maxCloneCount = BundleFileUtil::GetCloneMaxCount();
+    if (enableAppIndex > maxCloneCount || disableAppIndex > maxCloneCount) {
+        APP_LOGE("appIndex exceeds max clone count %{public}d, enable:%{public}d disable:%{public}d",
+            maxCloneCount, enableAppIndex, disableAppIndex);
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+    }
+    if (enableAppIndex == disableAppIndex) {
+        APP_LOGE("enableAppIndex and disableAppIndex cannot be the same: %{public}d", enableAppIndex);
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+    }
+    return ERR_OK;
+}
+
+void BundleDataMgr::KillDisabledBundleProcesses(
+    const std::vector<std::tuple<std::string, int32_t, int32_t>> &disabledBundles,
+    const std::string &caller)
+{
+    auto appMgrClient = DelayedSingleton<AppMgrClient>::GetInstance();
+    if (appMgrClient == nullptr) {
+        APP_LOGE("AppMgrClient is nullptr, kill app process failed");
+        return;
+    }
+    for (const auto &[bundleName, userId, appIndex] : disabledBundles) {
+        APP_LOGD("kill process, -n %{public}s -u %{public}d -i %{public}d", bundleName.c_str(), userId, appIndex);
+        std::string identity = IPCSkeleton::ResetCallingIdentity();
+        auto ret = appMgrClient->KillApplicationWithUserId(bundleName, userId, appIndex);
+        IPCSkeleton::SetCallingIdentity(identity);
+        if (ret != ERR_OK) {
+            APP_LOGE("kill app process failed for %{public}s", bundleName.c_str());
+            EventReport::SendComponentStateSysEventForException(
+                bundleName, "", userId, false, appIndex, caller + "_kill_process_fail");
+        }
+    }
+}
+
+void BundleDataMgr::SendBatchNotifyEventsAsync(std::vector<NotifyBundleEvents> &&eventsToSend)
+{
+    auto commonEventMgr = DelayedSingleton<BundleCommonEventMgr>::GetInstance();
+    if (commonEventMgr == nullptr) {
+        APP_LOGE("BundleCommonEventMgr is nullptr");
+        return;
+    }
+    auto dataMgr = DelayedSingleton<BundleDataMgr>::GetInstance();
+    if (dataMgr == nullptr) {
+        APP_LOGE("BundleDataMgr is nullptr");
+        return;
+    }
+    for (const auto &event : eventsToSend) {
+        commonEventMgr->NotifyBundleStatusAsync(event, dataMgr);
+    }
 }
 
 ErrCode BundleDataMgr::SetBundleFirstLaunch(const std::string &bundleName, int32_t userId,
