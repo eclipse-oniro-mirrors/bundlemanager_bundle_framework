@@ -1905,6 +1905,11 @@ void CommonFunc::ConvertApplicationInfo(napi_env env, napi_value objAppInfo, con
     napi_value nFlags;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, appInfo.applicationFlags, &nFlags));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, FLAGS, nFlags));
+
+    napi_value nApplicationReservedFlag;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, appInfo.applicationReservedFlag, &nApplicationReservedFlag));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "applicationReservedFlag",
+        nApplicationReservedFlag));
 }
 
 void CommonFunc::ConvertPermissionDef(napi_env env, napi_value result, const PermissionDef &permissionDef)
@@ -2421,6 +2426,16 @@ void CommonFunc::ConvertBundleInfo(napi_env env, const BundleInfo &bundleInfo, n
         NAPI_AUTO_LENGTH, &nsandboxCreatorBundleName));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objBundleInfo, "sandboxCreatorBundleName",
         nsandboxCreatorBundleName));
+    
+    napi_value nDeviceModeDistributionPolicy;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(bundleInfo.deviceModeDistributionPolicy),
+        &nDeviceModeDistributionPolicy));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objBundleInfo, "deviceModeDistributionPolicy",
+        nDeviceModeDistributionPolicy));
+    napi_value nAppSandboxPolicy;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(bundleInfo.appSandboxPolicy),
+        &nAppSandboxPolicy));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objBundleInfo, "appSandboxPolicy", nAppSandboxPolicy));
 }
 
 void CommonFunc::ConvertBundleChangeInfo(napi_env env, const std::string &bundleName,
@@ -3174,6 +3189,27 @@ void CommonFunc::ConvertAppCloneIdentity(
     napi_value nAppIndex;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, appIndex, &nAppIndex));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nAppCloneIdentity, APP_INDEX, nAppIndex));
+}
+
+void CommonFunc::ConvertBundleInfoDualMode(napi_env env, const DualModeBundleInfo& dualModeBundleInfo,
+    napi_value objDualModeBundleInfo)
+{
+    AutoHandleScope scopeGuard(env);
+    napi_value nAppIndex;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, dualModeBundleInfo.appIndex, &nAppIndex));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objDualModeBundleInfo, APP_INDEX, nAppIndex));
+
+    napi_value nDeviceModeDistributionPolicy;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
+        static_cast<int32_t>(dualModeBundleInfo.deviceModeDistributionPolicy), &nDeviceModeDistributionPolicy));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objDualModeBundleInfo, "deviceModeDistributionPolicy",
+        nDeviceModeDistributionPolicy));
+
+    napi_value nAppSandboxPolicy;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(dualModeBundleInfo.appSandboxPolicy),
+        &nAppSandboxPolicy));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objDualModeBundleInfo, "appSandboxPolicy",
+        nAppSandboxPolicy));
 }
 
 void CommonFunc::GetBundleNameAndIndexByName(const std::string& keyName, std::string& bundleName, int32_t& appIndex)

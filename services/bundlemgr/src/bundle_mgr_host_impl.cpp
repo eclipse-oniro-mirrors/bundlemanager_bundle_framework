@@ -93,6 +93,7 @@ const std::string FUNCTION_GET_SHARED_BUNDLE_INFO_BY_SELF = "BundleMgrHostImpl::
 const std::string FUNCTION_GET_HAP_MODULE_INFO = "BundleMgrHostImpl::GetHapModuleInfo";
 const std::string FUNCTION_BATCH_BUNDLE_INFO = "BundleMgrHostImpl::BatchGetBundleInfo";
 const std::string FUNCTION_GET_BUNDLE_INFO = "BundleMgrHostImpl::GetBundleInfo";
+const std::string FUNCTION_GET_DUAL_MODE_BUNDLE_INFO = "BundleMgrHostImpl::GetDualModeBundleInfo";
 const std::string FUNCTION_GET_BUNDLE_INFO_V9 = "BundleMgrHostImpl::GetBundleInfoV9";
 const std::string FUNCTION_GET_BUNDLE_INFO_FOR_SELF = "BundleMgrHostImpl::GetBundleInfoForSelf";
 const std::string FUNCTION_GREAT_OR_EQUAL_API_TARGET_VERSION = "BundleMgrHostImpl::GreatOrEqualTargetAPIVersion";
@@ -120,7 +121,8 @@ const std::unordered_map<std::string, int32_t> QUERY_FUNC_MAP = {
     {"GetBundleNameForUid", 2},
     {"GetBundleInfoV9", 3},
     {"GetBundleInfo", 4},
-    {"GetAppProvisionInfo", 5}
+    {"GetAppProvisionInfo", 5},
+    {"GetDualModeBundleInfo", 6}
 };
 const std::vector<int32_t> QUERY_EXPECTED_ERR = {
     ERR_OK,
@@ -8815,13 +8817,45 @@ ErrCode BundleMgrHostImpl::GetBundleArchiveInfoFromApp(
     return ERR_OK;
 }
 
-ErrCode BundleMgrHostImpl::GetBundleInfoDualMode(const std::string &bundleName, int32_t userId,
-    BundleInfoDualMode &bundleInfoDualMode)
+ErrCode BundleMgrHostImpl::GetDualModeBundleInfo(const std::string &bundleName, int32_t userId,
+    DualModeBundleInfo &dualModeBundleInfo)
 {
-    bundleInfoDualMode.appIndex = 0;
-    bundleInfoDualMode.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::FULL_COMPATIBLE_DIFFERENT_PACKAGE;
-    bundleInfoDualMode.appSandboxPolicy = AppSandboxPolicy::SHARED_SANDBOX;
-    return ERR_OK;
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    LOG_D(BMS_TAG_QUERY, "GetDualModeBundleInfo, bundleName:%{public}s, userId:%{public}d", bundleName.c_str(), userId);
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    int32_t timerId = XCollieHelper::SetRecoveryTimer(FUNCTION_GET_DUAL_MODE_BUNDLE_INFO);
+    ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE_NOFUNC("GetDualModeBundleInfo permission denied %{public}d %{public}d", IPCSkeleton::GetCallingUid(),
+            IPCSkeleton::GetCallingPid());
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (!CheckAcrossUserPermission(userId)) {
+        APP_LOGE("verify permission across local account failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    LOG_D(BMS_TAG_QUERY, "verify permission success, begin to GetDualModeBundleInfo");
+
+    int64_t intervalTime = ONE_DAY;
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_QUERY, "DataMgr is nullptr");
+        QueryEventInfo info = PrepareQueryEvent(ERR_BUNDLE_MANAGER_INTERNAL_ERROR, bundleName, "GetDualModeBundleInfo",
+            -1, userId, 0, 0);
+        SendQueryBundleInfoEvent(info, intervalTime, true);
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+
+    ErrCode res = dataMgr->GetDualModeBundleInfo(bundleName, userId, dualModeBundleInfo);
+    if (res != ERR_OK) {
+        QueryEventInfo info = PrepareQueryEvent(res, bundleName, "GetDualModeBundleInfo", -1, userId, 0, 0);
+        SendQueryBundleInfoEvent(info, intervalTime, false);
+    }
+    return res;
 }
 
 }  // namespace AppExecFwk

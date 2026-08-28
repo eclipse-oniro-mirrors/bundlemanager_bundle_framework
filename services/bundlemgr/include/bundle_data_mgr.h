@@ -1558,6 +1558,9 @@ public:
     bool MoveBundleInfoToTemp(const std::string &bundleName);
     bool UpdateBundleInfoPolicy(const std::string &bundleName,
         DeviceModeDistributionPolicy deviceModeDistributionPolicy, AppSandboxPolicy appSandboxPolicy);
+
+    ErrCode GetDualModeBundleInfo(const std::string &bundleName, int32_t userId,
+        DualModeBundleInfo &dualModeBundleInfo);
 private:
     /**
      * @brief Init transferStates.

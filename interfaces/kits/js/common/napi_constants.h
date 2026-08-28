@@ -76,6 +76,7 @@ constexpr const char* ERR_MSG_BUNDLE_SERVICE_EXCEPTION = "Bundle manager service
 constexpr const char* IS_APPLICATION_ENABLED_SYNC = "IsApplicationEnabledSync";
 constexpr const char* GET_BUNDLE_INFO_FOR_SELF_SYNC = "GetBundleInfoForSelfSync";
 constexpr const char* GET_BUNDLE_INFO_SYNC = "GetBundleInfoSync";
+constexpr const char* GET_BUNDLE_INFO_DUAL_MODE = "GetBundleInfoDualMode";
 constexpr const char* GET_APPLICATION_INFO_SYNC = "GetApplicationInfoSync";
 constexpr const char* BUNDLE_PERMISSIONS =
     "ohos.permission.GET_BUNDLE_INFO or ohos.permission.GET_BUNDLE_INFO_PRIVILEGED";

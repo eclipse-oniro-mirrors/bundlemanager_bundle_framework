@@ -266,8 +266,8 @@ struct AssetGroupInfo : public Parcelable {
     static AssetGroupInfo *Unmarshalling(Parcel &parcel);
 };
 
-struct BundleInfoDualMode : public Parcelable {
-    uint32_t appIndex = 0;    // 0, mainMode; 10000, secondMode
+struct DualModeBundleInfo : public Parcelable {
+    int32_t appIndex = 0;    // 0, mainMode; 10000, secondMode
     // device mode distribution policy for dual-mode (2IN1/TABLET), default UNSPECIFIED
     DeviceModeDistributionPolicy deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNSPECIFIED;
     // app sandbox policy for dual-mode (2IN1/TABLET), default SHARED_SANDBOX
@@ -275,7 +275,7 @@ struct BundleInfoDualMode : public Parcelable {
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
-    static BundleInfoDualMode *Unmarshalling(Parcel &parcel);
+    static DualModeBundleInfo *Unmarshalling(Parcel &parcel);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

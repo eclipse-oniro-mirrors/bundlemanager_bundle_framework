@@ -486,6 +486,7 @@ napi_value IsApplicationDisableForbidden(napi_env env, napi_callback_info info);
 napi_value SetAlternateIcon(napi_env env, napi_callback_info info);
 napi_value GetAlternateIcons(napi_env env, napi_callback_info info);
 napi_value FilterBundleListByDeviceModeDistributionPolicies(napi_env env, napi_callback_info info);
+napi_value GetBundleInfoDualMode(napi_env env, napi_callback_info info);
 void CreateApplicationFlagObject(napi_env env, napi_value value);
 void CreateAbilityFlagObject(napi_env env, napi_value value);
 void CreateExtensionAbilityFlagObject(napi_env env, napi_value value);

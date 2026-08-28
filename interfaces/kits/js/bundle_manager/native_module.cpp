@@ -218,6 +218,7 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("filterBundleListByDeviceModeDistributionPolicies",
             FilterBundleListByDeviceModeDistributionPolicies),
         DECLARE_NAPI_PROPERTY("DeviceModeDistributionPolicy", nDeviceModeDistributionPolicy),
+        DECLARE_NAPI_FUNCTION("getBundleInfoDualMode", GetBundleInfoDualMode),
     };
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));
