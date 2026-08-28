@@ -3398,7 +3398,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetListForBundleInfo_0300, Function | SmallTest |
     GetBundleDataMgr()->bundleInfos_["com.test.current"] = CreateTestBundleInfo(
         "com.test.current", BundleType::APP, false, Constants::START_USERID);
     GetBundleDataMgr()->bundleInfos_["com.test.temp"] = CreateTestBundleInfo(
-        "com.test.temp", BundleType::APP, false, Constants::START_USERID);
+        "com.test.temp", BundleType::APP, true, Constants::START_USERID);
 
     std::vector<std::pair<std::string, bool>> bundleInfoList;
     GetBundleDataMgr()->GetListForBundleInfo(Constants::START_USERID, false, bundleInfoList);
@@ -3411,7 +3411,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetListForBundleInfo_0300, Function | SmallTest |
             EXPECT_FALSE(isDualModeApp);
         }
         if (name == "com.test.temp") {
-            hasCurrent = true;
+            hasTemp = true;
             EXPECT_TRUE(isDualModeApp);
         }
     }
