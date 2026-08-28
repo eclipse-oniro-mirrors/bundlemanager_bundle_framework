@@ -26,6 +26,7 @@ const char* const KEY_APP_ID = "appId";
 const char* const KEY_BUNDLE_TYPE = "bundleType";
 const char* const KEY_APP_IDENTIFIER = "appIdentifier";
 const char* const KEY_APP_PROVISION_TYPE = "appProvisionType";
+const char* const KEY_DEVICE_MODE_DISTRIBUTION_POLICY = "deviceModeDistributionPolicy";
 const char* const KEY_EXTENSION_DIRS = "extensionDirs";
 const char* const KEY_MODULE_NAMES = "moduleNames";
 } // namespace
@@ -48,6 +49,7 @@ void to_json(nlohmann::json& jsonObject, const UninstallBundleInfo& uninstallBun
         {KEY_APP_IDENTIFIER, uninstallBundleInfo.appIdentifier},
         {KEY_APP_PROVISION_TYPE, uninstallBundleInfo.appProvisionType},
         {KEY_BUNDLE_TYPE, uninstallBundleInfo.bundleType},
+        {KEY_DEVICE_MODE_DISTRIBUTION_POLICY, uninstallBundleInfo.deviceModeDistributionPolicy},
         {KEY_EXTENSION_DIRS, uninstallBundleInfo.extensionDirs},
         {KEY_MODULE_NAMES, uninstallBundleInfo.moduleNames}
     };
@@ -90,6 +92,10 @@ void from_json(const nlohmann::json& jsonObject, UninstallBundleInfo& uninstallB
         uninstallBundleInfo.appProvisionType, false, parseResult);
     GetValueIfFindKey<BundleType>(jsonObject, jsonObjectEnd, KEY_BUNDLE_TYPE,
         uninstallBundleInfo.bundleType, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    uninstallBundleInfo.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNSPECIFIED;
+    GetValueIfFindKey<DeviceModeDistributionPolicy>(jsonObject, jsonObjectEnd,
+        KEY_DEVICE_MODE_DISTRIBUTION_POLICY, uninstallBundleInfo.deviceModeDistributionPolicy,
+        JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject, jsonObjectEnd, KEY_EXTENSION_DIRS,
         uninstallBundleInfo.extensionDirs, JsonType::ARRAY, false, parseResult, ArrayType::STRING);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject, jsonObjectEnd, KEY_MODULE_NAMES,
@@ -113,6 +119,7 @@ void UninstallBundleInfo::Init()
     appIdentifier.clear();
     appProvisionType.clear();
     bundleType = BundleType::APP;
+    deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNSPECIFIED;
     extensionDirs.clear();
     moduleNames.clear();
 }

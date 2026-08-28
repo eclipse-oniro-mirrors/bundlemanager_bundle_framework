@@ -1105,6 +1105,7 @@ bool BundleDataMgr::UpdateUninstallBundleInfo(const std::string &bundleName,
             return false;
         }
         oldUninstallBundleInfo.userInfos[newUser] = uninstallBundleInfo.userInfos.begin()->second;
+        oldUninstallBundleInfo.deviceModeDistributionPolicy = uninstallBundleInfo.deviceModeDistributionPolicy;
         return uninstallDataMgr_->UpdateUninstallBundleInfo(bundleName, oldUninstallBundleInfo);
     }
     return uninstallDataMgr_->UpdateUninstallBundleInfo(bundleName, uninstallBundleInfo);

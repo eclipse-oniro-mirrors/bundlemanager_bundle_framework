@@ -943,8 +943,6 @@ private:
     ErrCode CheckDualModeCategoryConsistencyInTemp(const InstallParam &installParam);
     void InitDualModeBundleName(const InstallParam &installParam);
     void InitDualModeBundleName(const InnerBundleInfo &bundleInfo);
-    void FillDualModeUninstallEventFields(const InstallParam &installParam,
-        NotifyBundleEvents &uninstallRes) const;
     // Resolve the dual-mode distribution policy via ERMS after signature verification (hapVerifyResults
     // carries appDistributionType + bundleName from provision info) and before ParseHapFiles. For a
     // dual-mode preinstall of a different-package app, filters bundlePaths/hapVerifyResults in-place to
@@ -966,6 +964,10 @@ private:
     // device mode (primary-mode package installed while in secondary mode, or vice-versa). Such a
     // package is stored in tempBundleInfos_ (hidden) under the original bundle name, not bundleInfos_.
     bool IsCrossModeInstall() const;
+    // Capture persisted values before uninstall mutates/removes InnerBundleInfo. Uninstall requests normally carry
+    // an UNSPECIFIED policy, so the event must not derive these fields from InstallParam.
+    void SaveDualModeUninstallEventFields(const InnerBundleInfo &bundleInfo);
+    void FillDualModeUninstallEventFields(NotifyBundleEvents &uninstallRes) const;
     void DeleteUseLessSharefilesForDefaultUser(const std::string &bundleName, int32_t userId) const;
     ErrCode CleanShaderCache(const InnerBundleInfo &oldInfo, const std::string &bundleName, int32_t userId) const;
     ErrCode CleanArkStartupCache(const std::string &bundleName) const;
@@ -1024,6 +1026,8 @@ private:
     void SaveUninstallBundleInfo(const std::string bundleName, bool isKeepData,
         const UninstallBundleInfo &uninstallBundleInfo);
     void DeleteUninstallBundleInfo(const std::string &bundleName);
+    bool GetUninstallBundleInfoByCurrentMode(const std::string &bundleName,
+        std::string &targetBundleName, UninstallBundleInfo &uninstallBundleInfo) const;
     bool DeleteUninstallBundleInfoFromDb(const std::string &bundleName);
     void SetFirstInstallTime(const std::string &bundleName, const int64_t &time, InnerBundleInfo &info);
     bool SaveFirstInstallBundleInfo(const std::string &bundleName, const int32_t userId,
@@ -1162,6 +1166,9 @@ private:
     // Dual-mode preinstall state (instance-scoped, in-process, not marshalled).
     DualModeInstallRole dualModeInstallRole_ = DualModeInstallRole::NONE;
     DeviceModeDistributionPolicy resolvedDeviceModeDistributionPolicy_ = DeviceModeDistributionPolicy::UNSPECIFIED;
+    DeviceModeDistributionPolicy uninstallDeviceModeDistributionPolicy_ =
+    DeviceModeDistributionPolicy::UNSPECIFIED;
+    AppSandboxPolicy uninstallAppSandboxPolicy_ = AppSandboxPolicy::SHARED_SANDBOX;
     std::string modulePath_;
     std::string baseDataPath_;
     std::string modulePackage_;

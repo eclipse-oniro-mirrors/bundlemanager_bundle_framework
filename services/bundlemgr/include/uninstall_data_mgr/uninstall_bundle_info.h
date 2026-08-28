@@ -18,6 +18,7 @@
 
 #include "application_info.h"
 #include "bundle_constants.h"
+#include "bundle_info.h"
 #include "json_util.h"
 
 namespace OHOS {
@@ -33,6 +34,7 @@ struct UninstallBundleInfo {
     std::string appIdentifier;
     std::string appProvisionType;
     BundleType bundleType = BundleType::APP;
+    DeviceModeDistributionPolicy deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNSPECIFIED;
     std::vector<std::string> extensionDirs;
     std::vector<std::string> moduleNames;
     std::map<std::string, UninstallDataUserInfo> userInfos;
