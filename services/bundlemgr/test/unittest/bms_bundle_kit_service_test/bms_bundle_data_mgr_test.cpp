@@ -6674,8 +6674,9 @@ HWTEST_F(BmsBundleDataMgrTest, GetAllAppProvisionInfo_1001, Function | SmallTest
     int32_t userId = Constants::ANY_USERID;
     std::vector<AppProvisionInfo> appProvisionInfos;
     ErrCode ret = GetBundleDataMgr()->GetAllAppProvisionInfo(userId, appProvisionInfos);
-    EXPECT_TRUE(appProvisionInfos.empty());
     EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(appProvisionInfos.size(), 1u);
+    EXPECT_EQ(appProvisionInfos[0].bundleName, bundleName0);
     GetBundleDataMgr()->bundleInfos_.clear();
 }
 
