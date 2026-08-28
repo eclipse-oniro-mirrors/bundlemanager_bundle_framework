@@ -29,9 +29,6 @@ namespace OHOS {
 namespace AppExecFwk {
 
 // Static member initialization
-int32_t DualModeHelper::cachedIspcmode_ = ServiceConstants::DUAL_MODE_VALUE_INVALID;
-int32_t DualModeHelper::cachedMainmode_ = ServiceConstants::DUAL_MODE_VALUE_INVALID;
-std::mutex DualModeHelper::cacheMutex_;
 std::mutex DualModeHelper::ermsMutex_;
 void *DualModeHelper::ermsHandle_ = nullptr;
 ErmsGetPolicyFunc DualModeHelper::ermsGetPolicyFunc_ = nullptr;
@@ -91,33 +88,17 @@ int32_t DualModeHelper::GetSysMode()
 
 bool DualModeHelper::IsDualModeDevice()
 {
-    std::lock_guard<std::mutex> lock(cacheMutex_);
+    // Read system parameters directly each call (no cache).
     // A dual-mode device requires both ispcmode and mainmode to be valid (0 or 1).
-    return IsValidModeValue(cachedIspcmode_) && IsValidModeValue(cachedMainmode_);
-}
-
-void DualModeHelper::InitializeCache()
-{
-    std::lock_guard<std::mutex> lock(cacheMutex_);
-    cachedIspcmode_ = ReadValidModeParam(GetIspcmodeParamKey());
-    cachedMainmode_ = ReadValidModeParam(GetMainmodeParamKey());
-    LOG_I(BMS_TAG_INSTALLER, "DualModeHelper cache initialized: ispcmode=%{public}d, mainmode=%{public}d",
-        cachedIspcmode_, cachedMainmode_);
-}
-
-void DualModeHelper::UpdateModeCache()
-{
-    std::lock_guard<std::mutex> lock(cacheMutex_);
-    cachedIspcmode_ = ReadValidModeParam(GetIspcmodeParamKey());
-    cachedMainmode_ = ReadValidModeParam(GetMainmodeParamKey());
-    LOG_I(BMS_TAG_INSTALLER, "DualModeHelper cache updated: ispcmode=%{public}d, mainmode=%{public}d",
-        cachedIspcmode_, cachedMainmode_);
+    int32_t ispcmode = ReadValidModeParam(GetIspcmodeParamKey());
+    int32_t mainmode = ReadValidModeParam(GetMainmodeParamKey());
+    return IsValidModeValue(ispcmode) && IsValidModeValue(mainmode);
 }
 
 int32_t DualModeHelper::GetMainmode()
 {
-    std::lock_guard<std::mutex> lock(cacheMutex_);
-    return cachedMainmode_;
+    // Read system parameter directly (no cache).
+    return ReadValidModeParam(GetMainmodeParamKey());
 }
 
 int32_t DualModeHelper::MapDeviceTypeToMode(const std::string &deviceType)
@@ -136,13 +117,15 @@ int32_t DualModeHelper::MapDeviceTypeToMode(const std::string &deviceType)
 
 bool DualModeHelper::IsSecondaryMode()
 {
-    std::lock_guard<std::mutex> lock(cacheMutex_);
+    // Read system parameters directly each call (no cache).
     // Non-dual-mode device (either param invalid) is never secondary.
-    if (!IsValidModeValue(cachedIspcmode_) || !IsValidModeValue(cachedMainmode_)) {
+    int32_t ispcmode = ReadValidModeParam(GetIspcmodeParamKey());
+    int32_t mainmode = ReadValidModeParam(GetMainmodeParamKey());
+    if (!IsValidModeValue(ispcmode) || !IsValidModeValue(mainmode)) {
         return false;
     }
     // Secondary mode: current mode differs from main mode.
-    return cachedIspcmode_ != cachedMainmode_;
+    return ispcmode != mainmode;
 }
 
 bool DualModeHelper::IsTestDualMode()
