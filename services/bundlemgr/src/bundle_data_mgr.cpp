@@ -522,35 +522,7 @@ void BundleDataMgr::ClassifyDualModeAppsNoLock()
     // policy set (in-set → visible, not-in-set → hidden), and mode-based defaults would override
     // that (e.g. MAIN_ONLY hidden in secondary mode despite being in the policy set).
     if (!hasValidPolicySet) {
-        auto shouldBeHidden = [isSecondaryMode](DeviceModeDistributionPolicy policy) {
-            if (policy == DeviceModeDistributionPolicy::MAIN_ONLY) {
-                return isSecondaryMode; // main-only hidden in secondary mode
-            }
-            if (policy == DeviceModeDistributionPolicy::SUB_ONLY) {
-                return !isSecondaryMode; // sub-only hidden in main mode
-            }
-            return false;
-        };
-        // Move MAIN_ONLY/SUB_ONLY apps that should be hidden from bundleInfos_ to tempBundleInfos_.
-        for (auto it = bundleInfos_.begin(); it != bundleInfos_.end();) {
-            if (shouldBeHidden(it->second.GetDeviceModeDistributionPolicy())) {
-                tempBundleInfos_[it->first] = it->second;
-                it = bundleInfos_.erase(it);
-            } else {
-                ++it;
-            }
-        }
-        // Move MAIN_ONLY/SUB_ONLY apps that should be visible from tempBundleInfos_ to bundleInfos_.
-        for (auto it = tempBundleInfos_.begin(); it != tempBundleInfos_.end();) {
-            DeviceModeDistributionPolicy policy = it->second.GetDeviceModeDistributionPolicy();
-            if ((policy == DeviceModeDistributionPolicy::MAIN_ONLY ||
-                policy == DeviceModeDistributionPolicy::SUB_ONLY) && !shouldBeHidden(policy)) {
-                bundleInfos_[it->first] = it->second;
-                it = tempBundleInfos_.erase(it);
-            } else {
-                ++it;
-            }
-        }
+        ClassifyDualModeAppsByDeviceModeNoLock(isSecondaryMode);
     }
 
     APP_LOGI("Dual mode: classification done - bundleInfos=%{public}zu, tempBundleInfos=%{public}zu",
@@ -603,6 +575,48 @@ bool BundleDataMgr::ClassifyDualModeAppsByPolicyNoLock()
     return true;
 }
 
+// === DUAL_MODE: mode-based classification body (requirement 1 fallback, shared since r16) ===
+// Caller must hold bundleInfoMutex_. Places MAIN_ONLY/SUB_ONLY single-mode apps by the given
+// mode (MAIN_ONLY visible in main mode, SUB_ONLY in secondary; the mismatched side moves to
+// tempBundleInfos_). The symmetric hide/show passes converge from any starting state, so this
+// is safe to call both at boot classification (no valid persisted policy set — param absent
+// or parse failed) and at switch rollback (SaveBmsParam failed with no valid baseline:
+// single-mode apps return to the initialization-time placement while different-package and
+// filterable entries keep the failed switch's placement, converging on the next successful
+// switch or reboot).
+void BundleDataMgr::ClassifyDualModeAppsByDeviceModeNoLock(bool isSecondaryMode)
+{
+    auto shouldBeHidden = [isSecondaryMode](DeviceModeDistributionPolicy policy) {
+        if (policy == DeviceModeDistributionPolicy::MAIN_ONLY) {
+            return isSecondaryMode; // main-only hidden in secondary mode
+        }
+        if (policy == DeviceModeDistributionPolicy::SUB_ONLY) {
+            return !isSecondaryMode; // sub-only hidden in main mode
+        }
+        return false;
+    };
+    // Move MAIN_ONLY/SUB_ONLY apps that should be hidden from bundleInfos_ to tempBundleInfos_.
+    for (auto it = bundleInfos_.begin(); it != bundleInfos_.end();) {
+        if (shouldBeHidden(it->second.GetDeviceModeDistributionPolicy())) {
+            tempBundleInfos_[it->first] = it->second;
+            it = bundleInfos_.erase(it);
+        } else {
+            ++it;
+        }
+    }
+    // Move MAIN_ONLY/SUB_ONLY apps that should be visible from tempBundleInfos_ to bundleInfos_.
+    for (auto it = tempBundleInfos_.begin(); it != tempBundleInfos_.end();) {
+        DeviceModeDistributionPolicy policy = it->second.GetDeviceModeDistributionPolicy();
+        if ((policy == DeviceModeDistributionPolicy::MAIN_ONLY ||
+            policy == DeviceModeDistributionPolicy::SUB_ONLY) && !shouldBeHidden(policy)) {
+            bundleInfos_[it->first] = it->second;
+            it = tempBundleInfos_.erase(it);
+        } else {
+            ++it;
+        }
+    }
+}
+
 // === DUAL_MODE: runtime visibility switch (requirement 2) ===
 ErrCode BundleDataMgr::FilterBundleListByDeviceModeDistributionPolicies(
     const std::set<DeviceModeDistributionPolicy> &policies)
@@ -619,7 +633,7 @@ ErrCode BundleDataMgr::FilterBundleListByDeviceModeDistributionPolicies(
     if (!DualModeHelper::IsValidPolicySet(policies)) {
         APP_LOGE_NOFUNC("FilterBundleListByDeviceModeDistributionPolicies invalid policies: empty, out-of-range"
             " value, or missing different-package policies (4/6/8)");
-        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+        return ERR_APPEXECFWK_DUAL_MODE_POLICY_INVALID;
     }
 
     // Dual-mode switch is mutually exclusive with install/update/uninstall (and with another
@@ -648,8 +662,9 @@ ErrCode BundleDataMgr::FilterBundleListByDeviceModeDistributionPolicies(
     // migrates first, the value is persisted afterwards). A missing or corrupted baseline
     // (first switch after boot with no persisted set, or a damaged value the boot
     // classification already fell back from) cannot be replayed through the migration body —
-    // on a later save failure the switched memory simply stays and converges on the next
-    // successful switch or reboot.
+    // on a later save failure single-mode apps fall back to the initialization-time
+    // mode-based placement (r16); the other entries keep this switch's placement and converge
+    // on the next successful switch or reboot.
     std::string oldPoliciesCsv;
     std::set<DeviceModeDistributionPolicy> oldPolicies;
     bool rollbackPossible = bmsPara->GetBmsParam(
@@ -680,6 +695,10 @@ ErrCode BundleDataMgr::FilterBundleListByDeviceModeDistributionPolicies(
         APP_LOGE_NOFUNC("FilterBundleListByDeviceModeDistributionPolicies SaveBmsParam failed, rollback");
         if (rollbackPossible) {
             FilterBundleListByDeviceModeDistributionPoliciesNoLock(oldPolicies);
+        } else {
+            // No valid baseline to replay: single-mode apps converge to the initialization-time
+            // mode-based placement (r16); the other entries keep this switch's placement.
+            ClassifyDualModeAppsByDeviceModeNoLock(DualModeHelper::IsSecondaryMode());
         }
         return ERR_APPEXECFWK_DUAL_MODE_PERSIST_FAILED;
     }
@@ -700,6 +719,7 @@ std::unique_ptr<std::shared_lock<std::shared_mutex>> BundleDataMgr::TryLockForBu
 {
     auto lock = std::make_unique<std::shared_lock<std::shared_mutex>>(dualModeSwitchMutex_, std::try_to_lock);
     if (!lock->owns_lock()) {
+        APP_LOGE_NOFUNC("Dual mode: TryLockForBundleOperation failed, a mode switch is in flight");
         return nullptr;  // a mode switch holds the exclusive side: caller fails fast (r13)
     }
     return lock;
