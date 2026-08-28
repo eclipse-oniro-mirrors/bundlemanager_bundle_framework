@@ -511,7 +511,8 @@ void BmsBundleDataMgrTest::ResetDataMgr()
     EXPECT_NE(bundleMgrService_->dataMgr_, nullptr);
 }
 
-void SetDualModeCache(int ispcmode, int mainmode) {
+void SetDualModeCache(int ispcmode, int mainmode)
+{
     DualModeHelper::cachedIspcmode_ = ispcmode;
     DualModeHelper::cachedMainmode_ = mainmode;
 }
