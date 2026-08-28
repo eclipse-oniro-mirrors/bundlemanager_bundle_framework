@@ -1720,7 +1720,8 @@ ErrCode BundleMgrProxy::GetApplicationLabel(const std::string &bundleName, int32
         APP_LOGE("fail to GetApplicationLabel due to bundleName empty");
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
-    if (appIndex < Constants::MAIN_APP_INDEX || appIndex > BundleFileUtil::GetCloneMaxCount()) {
+    if (appIndex < Constants::MAIN_APP_INDEX || (appIndex > BundleFileUtil::GetCloneMaxCount() &&
+        appIndex != Constants::DUAL_MODE_CLONE_APP_INDEX)) {
         APP_LOGW("appIndex: %{public}d not in valid range", appIndex);
         return ERR_BUNDLE_MANAGER_APPINDEX_NOT_EXIST;
     }
@@ -3230,7 +3231,8 @@ ErrCode BundleMgrProxy::GetShortcutInfoByAbility(const std::string &bundleName,
         APP_LOGE_NOFUNC("fail to GetShortcutInfoByAbility due to abilityName empty");
         return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
     }
-    if (appIndex < Constants::MAIN_APP_INDEX || appIndex > BundleFileUtil::GetCloneMaxCount()) {
+    if (appIndex < Constants::MAIN_APP_INDEX || (appIndex > BundleFileUtil::GetCloneMaxCount() &&
+        appIndex != Constants::DUAL_MODE_CLONE_APP_INDEX)) {
         APP_LOGE_NOFUNC("fail to GetShortcutInfoByAbility due to appIndex out of range");
         return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
     }

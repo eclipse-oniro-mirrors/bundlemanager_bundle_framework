@@ -350,6 +350,17 @@ HWTEST_F(BmsBundleInstallParametersTest, CheckAppIndexIsValid_0500, Function | S
 }
 
 /**
+ * @tc.number: CheckAppIndexIsValid_0600
+ * @tc.name: test CheckAppIndexIsValid with dual-mode clone app index
+ * @tc.desc: 1. test dual-mode clone app index (10000) should return true
+ */
+HWTEST_F(BmsBundleInstallParametersTest, CheckAppIndexIsValid_0600, Function | SmallTest | Level0)
+{
+    bool result = InstalldOperator::IsValidAppIndex(Constants::DUAL_MODE_CLONE_APP_INDEX);
+    EXPECT_TRUE(result);
+}
+
+/**
  * @tc.number: CheckAplIsValid_0100
  * @tc.name: test CheckAplIsValid with normal apl
  * @tc.desc: 1. test normal apl should return true

@@ -4191,7 +4191,8 @@ bool InstalldOperator::IsValidUid(const int32_t uid)
 bool InstalldOperator::IsValidAppIndex(const int32_t appIndex)
 {
     return ((appIndex >= Constants::MAIN_APP_INDEX) && (appIndex <= BundleFileUtil::GetCloneMaxCount())) ||
-        ((appIndex >= Constants::CLI_SANDBOX_APP_INDEX_MIN) && (appIndex <= Constants::CLI_SANDBOX_APP_INDEX_MAX));
+        ((appIndex >= Constants::CLI_SANDBOX_APP_INDEX_MIN) && (appIndex <= Constants::CLI_SANDBOX_APP_INDEX_MAX)) ||
+        (appIndex == ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
 }
 
 bool InstalldOperator::IsValidApl(const std::string &apl)

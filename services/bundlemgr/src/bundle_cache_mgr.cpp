@@ -19,6 +19,7 @@
 #include <cinttypes>
 #include <unordered_map>
 #include "bms_extension_client.h"
+#include "dual_mode_helper.h"
 #include "process_cache_callback_host.h"
 #include "bundle_mgr_service.h"
 #include "bundle_util.h"
@@ -87,6 +88,17 @@ std::vector<std::string> BundleCacheMgr::GetBundleCachePath(const std::string &b
     }
     if (appIndex > 0) {
         bundleNameDir = BundleCloneCommonHelper::GetCloneDataDir(bundleName, appIndex);
+    } else {
+        // dual-mode: clone app's cache paths are keyed by the effective (prefixed) name.
+        if (DualModeHelper::IsDualModeDevice()) {
+            auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+            if (dataMgr != nullptr) {
+                InnerBundleInfo info;
+                if (dataMgr->FetchInnerBundleInfo(bundleName, info) && info.IsDualModeCloneApp()) {
+                    bundleNameDir = DualModeHelper::GetDualModeBundleName(bundleName);
+                }
+            }
+        }
     }
     
     std::string elBase;

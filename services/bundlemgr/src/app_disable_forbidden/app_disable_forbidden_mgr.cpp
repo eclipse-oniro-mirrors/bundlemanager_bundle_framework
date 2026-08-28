@@ -18,6 +18,7 @@
 #include "app_log_wrapper.h"
 #include "bundle_file_util.h"
 #include "bundle_mgr_service.h"
+#include "bundle_service_constants.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -69,7 +70,8 @@ ErrCode AppDisableForbiddenMgr::SetApplicationDisableForbidden(const std::string
         APP_LOGE_NOFUNC("userId less than 0");
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
-    if (appIndex < 0 || appIndex > BundleFileUtil::GetCloneMaxCount()) {
+    if (appIndex < 0 || (appIndex > BundleFileUtil::GetCloneMaxCount() &&
+        appIndex != ServiceConstants::DUAL_MODE_CLONE_APP_INDEX)) {
         APP_LOGE_NOFUNC("appindex out of range");
         return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
     }

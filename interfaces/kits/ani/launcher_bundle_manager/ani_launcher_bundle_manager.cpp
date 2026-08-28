@@ -213,7 +213,8 @@ static ani_object GetShortcutInfoByAppIndex(ani_env* env, ani_string aniBundleNa
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
         return nullptr;
     }
-    if (aniAppIndex < Constants::MAIN_APP_INDEX || aniAppIndex > BundleFileUtil::GetCloneMaxCount()) {
+    if (aniAppIndex < Constants::MAIN_APP_INDEX || (aniAppIndex > BundleFileUtil::GetCloneMaxCount() &&
+        aniAppIndex != Constants::DUAL_MODE_CLONE_APP_INDEX)) {
         APP_LOGE("appIndex: %{public}d not in valid range", aniAppIndex);
         BusinessErrorAni::ThrowCommonError(env, ERROR_INVALID_APPINDEX, APP_INDEX, TYPE_NUMBER);
         return nullptr;

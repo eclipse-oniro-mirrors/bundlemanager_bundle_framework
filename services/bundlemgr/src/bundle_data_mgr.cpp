@@ -261,7 +261,11 @@ bool BundleDataMgr::LoadDataFromPersistentStorage()
     } else {
         ResetBundleStateData();
         // Load all bundle status from json db.
-        LoadAllBundleStateDataFromJsonDb();
+        if (DualModeHelper::IsDualModeDevice()) {
+            LoadAllBundleStateDataFromJsonDbDualMode();
+        } else {
+            LoadAllBundleStateDataFromJsonDb();
+        }
     }
 
     SetInitialUserFlag(true);
@@ -287,10 +291,17 @@ void BundleDataMgr::CompatibleOldBundleStateInKvDb()
             if (bundleUserInfo.IsInitialState()) {
                 continue;
             }
-
-            // save old bundle state to json db
-            bundleStateStorage_->SaveBundleStateStorage(
-                bundleInfoItem.first, bundleUserInfo.userId, bundleUserInfo);
+            if (DualModeHelper::IsDualModeDevice()) {
+                // dual-mode: clone app's state uses the prefixed key.
+                std::string stateKey = bundleInfoItem.second.IsDualModeCloneApp()
+                    ? DualModeHelper::GetDualModeBundleName(bundleInfoItem.first) : bundleInfoItem.first;
+                bundleStateStorage_->SaveBundleStateStorage(
+                    stateKey, bundleUserInfo.userId, bundleUserInfo);
+            } else {
+                // save old bundle state to json db
+                bundleStateStorage_->SaveBundleStateStorage(
+                    bundleInfoItem.first, bundleUserInfo.userId, bundleUserInfo);
+            }
         }
     }
 }
@@ -325,10 +336,88 @@ void BundleDataMgr::LoadAllBundleStateDataFromJsonDb()
     APP_LOGD("Load all bundle state end");
 }
 
+void BundleDataMgr::LoadAllBundleStateDataFromJsonDbDualMode()
+{
+    APP_LOGD("dual-mode Load all bundle state start");
+    std::map<std::string, std::map<int32_t, BundleUserInfo>> bundleStateInfos;
+    if (!bundleStateStorage_->LoadAllBundleStateData(bundleStateInfos) || bundleStateInfos.empty()) {
+        APP_LOGW("Load all bundle state failed");
+        return;
+    }
+
+    for (const auto& bundleState : bundleStateInfos) {
+        // dual-mode: prefixed keys hold the clone variant's state, route to the clone record only.
+        if (DualModeHelper::IsDualModeCloneKey(bundleState.first)) {
+            ApplyDualModeCloneBundleState(bundleState.first, bundleState.second);
+            continue;
+        }
+        auto infoItem = bundleInfos_.find(bundleState.first);
+        if (infoItem == bundleInfos_.end()) {
+            APP_LOGW("BundleName(%{public}s) not exist in cache", bundleState.first.c_str());
+            continue;
+        }
+
+        InnerBundleInfo& newInfo = infoItem->second;
+        if (newInfo.IsDualModeCloneApp()) {
+            APP_LOGW("BundleName(%{public}s) is dual-mode clone, skip", bundleState.first.c_str());
+            continue;
+        }
+        for (auto& bundleUserState : bundleState.second) {
+            auto& tempUserInfo = bundleUserState.second;
+            newInfo.SetApplicationEnabled(tempUserInfo.enabled, bundleUserState.second.setEnabledCaller,
+                bundleUserState.first);
+            for (auto& disabledAbility : tempUserInfo.disabledAbilities) {
+                newInfo.SetAbilityEnabled("", disabledAbility, false, bundleUserState.first);
+            }
+        }
+    }
+
+    APP_LOGD("dual-mode Load all bundle state end");
+}
+
+void BundleDataMgr::ApplyDualModeCloneBundleState(const std::string &stateKey,
+    const std::map<int32_t, BundleUserInfo> &bundleUserStates)
+{
+    std::string originalName;
+    if (!DualModeHelper::ParseDualModeBundleName(stateKey, originalName)) {
+        APP_LOGW("dual-mode state key(%{public}s) parse failed, skip", stateKey.c_str());
+        return;
+    }
+    InnerBundleInfo *targetInfo = nullptr;
+    auto infoItem = bundleInfos_.find(originalName);
+    if (infoItem != bundleInfos_.end() && infoItem->second.IsDualModeCloneApp()) {
+        targetInfo = &infoItem->second;
+    } else {
+        auto tempItem = tempBundleInfos_.find(originalName);
+        if (tempItem != tempBundleInfos_.end() && tempItem->second.IsDualModeCloneApp()) {
+            targetInfo = &tempItem->second;
+        }
+    }
+    if (targetInfo == nullptr) {
+        APP_LOGW("dual-mode clone record(%{public}s) not found for state key(%{public}s), skip",
+            originalName.c_str(), stateKey.c_str());
+        return;
+    }
+    for (auto& bundleUserState : bundleUserStates) {
+        auto& tempUserInfo = bundleUserState.second;
+        targetInfo->SetApplicationEnabled(tempUserInfo.enabled, bundleUserState.second.setEnabledCaller,
+            bundleUserState.first);
+        for (auto& disabledAbility : tempUserInfo.disabledAbilities) {
+            targetInfo->SetAbilityEnabled("", disabledAbility, false, bundleUserState.first);
+        }
+    }
+}
+
 void BundleDataMgr::ResetBundleStateData()
 {
     for (auto& bundleInfoItem : bundleInfos_) {
         bundleInfoItem.second.ResetBundleState(Constants::ALL_USERID);
+    }
+    if (DualModeHelper::IsDualModeDevice()) {
+        // dual-mode: hidden variants need a clean baseline as well.
+        for (auto& bundleInfoItem : tempBundleInfos_) {
+            bundleInfoItem.second.ResetBundleState(Constants::ALL_USERID);
+        }
     }
 }
 
@@ -1276,7 +1365,14 @@ bool BundleDataMgr::RemoveInnerBundleUserInfo(
     }
     infoItem->second = info;
 
-    bundleStateStorage_->DeleteBundleState(bundleName, userId);
+    if (DualModeHelper::IsDualModeDevice()) {
+        // dual-mode: clone app's state was stored under the prefixed key.
+        std::string stateKey = info.IsDualModeCloneApp()
+            ? DualModeHelper::GetDualModeBundleName(bundleName) : bundleName;
+        bundleStateStorage_->DeleteBundleState(stateKey, userId);
+    } else {
+        bundleStateStorage_->DeleteBundleState(bundleName, userId);
+    }
     return true;
 }
 
@@ -2208,6 +2304,14 @@ ErrCode BundleDataMgr::QueryAbilityInfoWithFlagsV9(const std::optional<AbilityIn
         }
         if (appIndex == 0) {
             info.uid = innerBundleUserInfoPtr->uid;
+        } else if (appIndex == ServiceConstants::DUAL_MODE_CLONE_APP_INDEX) {
+            // dual-mode: clone app's uid is stored in userInfo itself, not in cloneInfos.
+            if (!innerBundleInfo.IsDualModeCloneApp()) {
+                LOG_W(BMS_TAG_QUERY, "appIndex %{public}d is only for dual-mode clone app", appIndex);
+                return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
+            }
+            info.uid = innerBundleUserInfoPtr->uid;
+            info.appIndex = innerBundleInfo.GetAppIndex();
         } else {
             std::string appIndexKey = InnerBundleUserInfo::AppIndexToKey(appIndex);
             if (appIndex >= Constants::CLI_SANDBOX_APP_INDEX_MIN && appIndex <= Constants::CLI_SANDBOX_APP_INDEX_MAX) {
@@ -5336,6 +5440,17 @@ ErrCode BundleDataMgr::GetBundleNameAndIndex(const int32_t uid, std::string &bun
         }
     }
 
+    // dual-mode clone: keyName format "+clone-10000+{bundleName}"
+    if (DualModeHelper::IsDualModeCloneKey(keyName)) {
+        std::string originalName;
+        if (DualModeHelper::ParseDualModeBundleName(keyName, originalName)) {
+            bundleName = originalName;
+            appIndex = ServiceConstants::DUAL_MODE_CLONE_APP_INDEX;
+            return ERR_OK;
+        }
+        APP_LOGW("dual-mode clone key parse failed, keyName:%{public}s", keyName.c_str());
+    }
+
     bundleName = keyName;
     appIndex = 0;
     return ERR_OK;
@@ -5638,6 +5753,9 @@ bool BundleDataMgr::GetBundleStats(const std::string &bundleName,
     int32_t responseUserId = -1;
     int32_t uid = Constants::INVALID_UID;
     std::vector<std::string> moduleNameList;
+    // dual-mode: clone app's code dir is keyed by the effective (prefixed) name.
+    std::string effectiveName = bundleName;
+    bool isDualModeClone = false;
     {
         std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
         const auto infoItem = bundleInfos_.find(bundleName);
@@ -5645,6 +5763,10 @@ bool BundleDataMgr::GetBundleStats(const std::string &bundleName,
             responseUserId = infoItem->second.GetResponseUserId(userId);
             uid = infoItem->second.GetUid(responseUserId, appIndex);
             infoItem->second.GetModuleNames(moduleNameList);
+            if (infoItem->second.IsDualModeCloneApp()) {
+                effectiveName = DualModeHelper::GetDualModeBundleName(bundleName);
+                isDualModeClone = true;
+            }
         }
     }
     if (uid == Constants::INVALID_UID) {
@@ -5673,8 +5795,9 @@ bool BundleDataMgr::GetBundleStats(const std::string &bundleName,
         auto saUids = GetBindingSAUidsByBundleName(bundleName, saUidMap);
         uids.insert(saUids.begin(), saUids.end());
     }
+    int32_t installdAppIndex = isDualModeClone ? Constants::MAIN_APP_INDEX : appIndex;
     ErrCode ret = InstalldClient::GetInstance()->GetBundleStats(
-        bundleName, responseUserId, bundleStats, uids, appIndex, statFlag, moduleNameList);
+        effectiveName, responseUserId, bundleStats, uids, installdAppIndex, statFlag, moduleNameList);
     if (ret != ERR_OK) {
         APP_LOGW("%{public}s getStats failed", bundleName.c_str());
         return false;
@@ -5704,7 +5827,11 @@ ErrCode BundleDataMgr::BatchGetBundleStats(const std::vector<std::string> &bundl
 {
     auto activeUserId = AccountHelper::GetUserIdByCallerType();
     if (activeUserId != userId) {
-        return InstalldClient::GetInstance()->BatchGetBundleStats(bundleNames, uidMap, bundleStats);
+        if (DualModeHelper::IsDualModeDevice()) {
+            return BatchGetBundleStatsDualMode(bundleNames, uidMap, bundleStats);
+        } else {
+            return InstalldClient::GetInstance()->BatchGetBundleStats(bundleNames, uidMap, bundleStats);
+        }
     }
     std::map<std::string, std::set<int32_t>> saUidMap;
     LoadSaUidMap(saUidMap);
@@ -5716,7 +5843,56 @@ ErrCode BundleDataMgr::BatchGetBundleStats(const std::vector<std::string> &bundl
             }
         }
     }
-    return InstalldClient::GetInstance()->BatchGetBundleStats(bundleNames, uidMap, bundleStats);
+    if (DualModeHelper::IsDualModeDevice()) {
+        return BatchGetBundleStatsDualMode(bundleNames, uidMap, bundleStats);
+    } else {
+        return InstalldClient::GetInstance()->BatchGetBundleStats(bundleNames, uidMap, bundleStats);
+    }
+}
+
+ErrCode BundleDataMgr::BatchGetBundleStatsDualMode(const std::vector<std::string> &bundleNames,
+    const std::unordered_map<std::string, std::unordered_set<int32_t>> &uidMap,
+    std::vector<BundleStorageStats> &bundleStats) const
+{
+    // dual-mode: clone app's code dir is keyed by the effective (prefixed) name.
+    std::vector<std::string> effectiveNames;
+    std::unordered_map<std::string, std::unordered_set<int32_t>> effectiveUidMap;
+    // Restore original bundleName in results so callers can correlate by original name.
+    std::unordered_map<std::string, std::string> effectiveToOriginal;
+    {
+        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        for (const auto &name : bundleNames) {
+            auto infoItem = bundleInfos_.find(name);
+            if (infoItem != bundleInfos_.end() && infoItem->second.IsDualModeCloneApp()) {
+                std::string effectiveName = DualModeHelper::GetDualModeBundleName(name);
+                effectiveNames.push_back(effectiveName);
+                effectiveToOriginal[effectiveName] = name;
+                auto uidIt = uidMap.find(name);
+                if (uidIt != uidMap.end()) {
+                    effectiveUidMap[effectiveName] = uidIt->second;
+                }
+            } else {
+                effectiveNames.push_back(name);
+                auto uidIt = uidMap.find(name);
+                if (uidIt != uidMap.end()) {
+                    effectiveUidMap[name] = uidIt->second;
+                }
+            }
+        }
+    }
+    ErrCode ret = InstalldClient::GetInstance()->BatchGetBundleStats(
+        effectiveNames, effectiveUidMap, bundleStats);
+    if (ret != ERR_OK) {
+        APP_LOGW("BatchGetBundleStatsDualMode failed, ret:%{public}d", ret);
+        return ret;
+    }
+    for (auto &stats : bundleStats) {
+        auto it = effectiveToOriginal.find(stats.bundleName);
+        if (it != effectiveToOriginal.end()) {
+            stats.bundleName = it->second;
+        }
+    }
+    return ERR_OK;
 }
 
 ErrCode BundleDataMgr::BatchGetBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,
@@ -6633,7 +6809,9 @@ ErrCode BundleDataMgr::GetInnerBundleInfoForClone(const std::string &bundleName,
         return ERR_BUNDLE_MANAGER_BUNDLE_DISABLED;
     }
     if (appIndex != Constants::MAIN_APP_INDEX &&
-        (appIndex <= Constants::MAIN_APP_INDEX || appIndex > Constants::INITIAL_SANDBOX_APP_INDEX)) {
+        (appIndex <= Constants::MAIN_APP_INDEX || appIndex > Constants::INITIAL_SANDBOX_APP_INDEX) &&
+        !(innerBundleInfo.IsDualModeCloneApp() &&
+          appIndex == ServiceConstants::DUAL_MODE_CLONE_APP_INDEX)) {
         LOG_NOFUNC_W(BMS_TAG_COMMON, "appIndex out of range -n %{public}s -u %{public}d -i %{public}d",
             bundleName.c_str(), requestUserId, appIndex);
         return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
@@ -6711,6 +6889,14 @@ ErrCode BundleDataMgr::IsApplicationEnabled(
             APP_LOGW("GetApplicationEnabled failed: %{public}s", bundleName.c_str());
         }
         return ret;
+    } else if (appIndex == ServiceConstants::DUAL_MODE_CLONE_APP_INDEX && infoItem->second.IsDualModeCloneApp()) {
+        // dual-mode: clone app with appIndex=10000 reads its own userInfo state.
+        ErrCode ret = infoItem->second.GetApplicationEnabledV9(responseUserId, isEnabled, appIndex);
+        if (ret != ERR_OK) {
+            APP_LOGW("GetApplicationEnabled failed: %{public}s, appIndex: %{public}d",
+                bundleName.c_str(), appIndex);
+        }
+        return ret;
     }
     const InnerBundleInfo &bundleInfo = infoItem->second;
     const InnerBundleUserInfo *innerBundleUserInfoPtr = nullptr;
@@ -6754,7 +6940,8 @@ ErrCode BundleDataMgr::SetApplicationEnabled(const std::string &bundleName,
     (void)newInfo.GetApplicationEnabledV9(requestUserId, currentEnabled, appIndex);
     stateChanged = (currentEnabled != isEnable);
 
-    if (appIndex != 0) {
+    if (appIndex != 0 &&
+        !(newInfo.IsDualModeCloneApp() && appIndex == ServiceConstants::DUAL_MODE_CLONE_APP_INDEX)) {
         auto ret = newInfo.SetCloneApplicationEnabled(isEnable, appIndex, caller, requestUserId);
         if (ret != ERR_OK) {
             APP_LOGW("SetCloneApplicationEnabled for innerBundleInfo fail, errCode is %{public}d", ret);
@@ -6783,11 +6970,23 @@ ErrCode BundleDataMgr::SetApplicationEnabled(const std::string &bundleName,
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
 
-    if (innerBundleUserInfoPtr->bundleUserInfo.IsInitialState()) {
-        bundleStateStorage_->DeleteBundleState(bundleName, requestUserId);
+    if (DualModeHelper::IsDualModeDevice()) {
+        // dual-mode: clone app's state is stored under the prefixed key.
+        std::string stateKey = newInfo.IsDualModeCloneApp()
+            ? DualModeHelper::GetDualModeBundleName(bundleName) : bundleName;
+        if (innerBundleUserInfoPtr->bundleUserInfo.IsInitialState()) {
+            bundleStateStorage_->DeleteBundleState(stateKey, requestUserId);
+        } else {
+            bundleStateStorage_->SaveBundleStateStorage(
+                stateKey, requestUserId, innerBundleUserInfoPtr->bundleUserInfo);
+        }
     } else {
-        bundleStateStorage_->SaveBundleStateStorage(
-            bundleName, requestUserId, innerBundleUserInfoPtr->bundleUserInfo);
+        if (innerBundleUserInfoPtr->bundleUserInfo.IsInitialState()) {
+            bundleStateStorage_->DeleteBundleState(bundleName, requestUserId);
+        } else {
+            bundleStateStorage_->SaveBundleStateStorage(
+                bundleName, requestUserId, innerBundleUserInfoPtr->bundleUserInfo);
+        }
     }
     return ERR_OK;
 }
@@ -7251,7 +7450,10 @@ ErrCode BundleDataMgr::IsAbilityEnabled(const AbilityInfo &abilityInfo, int32_t 
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     std::vector<int32_t> appIndexVec = GetCloneAppIndexesNoLock(abilityInfo.bundleName, Constants::ALL_USERID);
-    if ((appIndex != 0) && (std::find(appIndexVec.begin(), appIndexVec.end(), appIndex) == appIndexVec.end())) {
+    // dual-mode: allow appIndex=10000 for dual-mode clone apps
+    if ((appIndex != 0) && (std::find(appIndexVec.begin(), appIndexVec.end(), appIndex) == appIndexVec.end()) &&
+        !(infoItem->second.IsDualModeCloneApp() &&
+          appIndex == ServiceConstants::DUAL_MODE_CLONE_APP_INDEX)) {
         APP_LOGE("appIndex %{public}d is invalid", appIndex);
         return ERR_APPEXECFWK_SANDBOX_INSTALL_INVALID_APP_INDEX;
     }
@@ -7289,7 +7491,8 @@ ErrCode BundleDataMgr::SetAbilityEnabled(const AbilityInfo &abilityInfo, int32_t
     (void)newInfo.IsAbilityEnabledV9(abilityInfo, requestUserId, currentEnabled, appIndex);
     stateChanged = (currentEnabled != isEnabled);
 
-    if (appIndex != 0) {
+    if (appIndex != 0 &&
+        !(newInfo.IsDualModeCloneApp() && appIndex == ServiceConstants::DUAL_MODE_CLONE_APP_INDEX)) {
         ErrCode ret = newInfo.SetCloneAbilityEnabled(
             abilityInfo.moduleName, abilityInfo.name, isEnabled, userId, appIndex);
         if (ret != ERR_OK) {
@@ -7321,11 +7524,23 @@ ErrCode BundleDataMgr::SetAbilityEnabled(const AbilityInfo &abilityInfo, int32_t
         LOG_NOFUNC_E(BMS_TAG_QUERY, "The InnerBundleInfo obtained by SetAbilityEnabled is null");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    if (innerBundleUserInfoPtr->bundleUserInfo.IsInitialState()) {
-        bundleStateStorage_->DeleteBundleState(abilityInfo.bundleName, requestUserId);
+    if (DualModeHelper::IsDualModeDevice()) {
+        // dual-mode: clone app's state is stored under the prefixed key.
+        std::string stateKey = newInfo.IsDualModeCloneApp()
+            ? DualModeHelper::GetDualModeBundleName(abilityInfo.bundleName) : abilityInfo.bundleName;
+        if (innerBundleUserInfoPtr->bundleUserInfo.IsInitialState()) {
+            bundleStateStorage_->DeleteBundleState(stateKey, requestUserId);
+        } else {
+            bundleStateStorage_->SaveBundleStateStorage(
+                stateKey, requestUserId, innerBundleUserInfoPtr->bundleUserInfo);
+        }
     } else {
-        bundleStateStorage_->SaveBundleStateStorage(
-            abilityInfo.bundleName, requestUserId, innerBundleUserInfoPtr->bundleUserInfo);
+        if (innerBundleUserInfoPtr->bundleUserInfo.IsInitialState()) {
+            bundleStateStorage_->DeleteBundleState(abilityInfo.bundleName, requestUserId);
+        } else {
+            bundleStateStorage_->SaveBundleStateStorage(
+                abilityInfo.bundleName, requestUserId, innerBundleUserInfoPtr->bundleUserInfo);
+        }
     }
     return ERR_OK;
 }
@@ -8189,7 +8404,8 @@ ErrCode BundleDataMgr::GetShortcutInfoV9(
 ErrCode BundleDataMgr::GetShortcutInfoByAppIndex(const std::string &bundleName, const int32_t appIndex,
     std::vector<ShortcutInfo> &shortcutInfos) const
 {
-    if ((appIndex < 0) || (appIndex > BundleFileUtil::GetCloneMaxCount())) {
+    if ((appIndex < 0) || (appIndex > BundleFileUtil::GetCloneMaxCount() &&
+        appIndex != ServiceConstants::DUAL_MODE_CLONE_APP_INDEX)) {
         APP_LOGE("name %{public}s invalid appIndex :%{public}d", bundleName.c_str(), appIndex);
         return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
     }
@@ -8232,7 +8448,8 @@ ErrCode BundleDataMgr::GetShortcutInfoByAbility(const std::string &bundleName,
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
 
-    if ((appIndex < 0) || (appIndex > BundleFileUtil::GetCloneMaxCount())) {
+    if ((appIndex < 0) || (appIndex > BundleFileUtil::GetCloneMaxCount() &&
+        appIndex != ServiceConstants::DUAL_MODE_CLONE_APP_INDEX)) {
         APP_LOGE("name %{public}s invalid appIndex:%{public}d", bundleName.c_str(), appIndex);
         return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
     }
@@ -8839,8 +9056,8 @@ ErrCode BundleDataMgr::ExplicitQueryExtensionInfoV9(const Want &want, int32_t fl
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     const InnerBundleInfo *innerBundleInfo = nullptr;
     InnerBundleInfo sandboxInfo;
-    if (appIndex == 0) {
-        ErrCode ret = GetInnerBundleInfoWithFlagsV9(bundleName, flags, innerBundleInfo, requestUserId);
+    if (appIndex == 0 || appIndex == Constants::DUAL_MODE_CLONE_APP_INDEX) {
+        ErrCode ret = GetInnerBundleInfoWithFlagsV9(bundleName, flags, innerBundleInfo, requestUserId, appIndex);
         if (ret != ERR_OK) {
             LOG_D(BMS_TAG_QUERY, "ExplicitQueryExtensionInfoV9 failed");
             return ret;
@@ -14161,7 +14378,8 @@ ErrCode BundleDataMgr::IsBundleInstalled(const std::string &bundleName, int32_t 
     bool isValidAppIndex = (appIndex >= Constants::MAIN_APP_INDEX &&
         appIndex <= BundleFileUtil::GetCloneMaxCount()) ||
         (appIndex >= Constants::CLI_SANDBOX_APP_INDEX_MIN &&
-        appIndex <= Constants::CLI_SANDBOX_APP_INDEX_MAX);
+        appIndex <= Constants::CLI_SANDBOX_APP_INDEX_MAX) ||
+        (appIndex == ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
     if (!isValidAppIndex) {
         APP_LOGE("name %{public}s invalid appIndex :%{public}d", bundleName.c_str(), appIndex);
         return ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX;
@@ -14189,6 +14407,12 @@ ErrCode BundleDataMgr::IsBundleInstalled(const std::string &bundleName, int32_t 
         return ERR_OK;
     }
     if (appIndex == 0) {
+        isInstalled = true;
+        return ERR_OK;
+    }
+    // dual-mode: clone app's uid is stored in userInfo itself, not in cloneInfos
+    if (item->second.IsDualModeCloneApp() &&
+        appIndex == ServiceConstants::DUAL_MODE_CLONE_APP_INDEX) {
         isInstalled = true;
         return ERR_OK;
     }
@@ -14298,7 +14522,19 @@ ErrCode BundleDataMgr::GetDirByBundleNameAndAppIndex(const std::string &bundleNa
         appIndex <= BundleFileUtil::GetCloneMaxCount()) ||
         (appIndex >= Constants::CLI_SANDBOX_APP_INDEX_MIN && appIndex <= Constants::CLI_SANDBOX_APP_INDEX_MAX);
     if (!isValidCloneAppIndex) {
-        return ERR_BUNDLE_MANAGER_GET_DIR_INVALID_APP_INDEX;
+        if (DualModeHelper::IsDualModeDevice()) {
+            // dual-mode: allow appIndex=10000 for dual-mode clone apps
+            if (appIndex == ServiceConstants::DUAL_MODE_CLONE_APP_INDEX) {
+                InnerBundleInfo info;
+                isValidCloneAppIndex = FetchInnerBundleInfo(bundleName, info) && info.IsDualModeCloneApp();
+            }
+            if (!isValidCloneAppIndex) {
+                return ERR_BUNDLE_MANAGER_GET_DIR_INVALID_APP_INDEX;
+            }
+        } else {
+            return ERR_BUNDLE_MANAGER_GET_DIR_INVALID_APP_INDEX;
+        }
+        
     }
     if (!BundlePermissionMgr::IsNativeTokenType()) {
         int32_t callingUid = IPCSkeleton::GetCallingUid();
@@ -14319,7 +14555,19 @@ ErrCode BundleDataMgr::GetDirByBundleNameAndAppIndex(const std::string &bundleNa
     if (type == BundleType::ATOMIC_SERVICE) {
         return GetDirForAtomicService(bundleName, dataDir);
     }
-    dataDir = GetDirForApp(bundleName, appIndex);
+    if (DualModeHelper::IsDualModeDevice()) {
+        // dual-mode: clone app's data dir is keyed by the effective (prefixed) name.
+        std::string effectiveName = bundleName;
+        if (appIndex == Constants::MAIN_APP_INDEX) {
+            InnerBundleInfo info;
+            if (FetchInnerBundleInfo(bundleName, info) && info.IsDualModeCloneApp()) {
+                effectiveName = DualModeHelper::GetDualModeBundleName(bundleName);
+            }
+        }
+        dataDir = GetDirForApp(effectiveName, appIndex);
+    } else {
+        dataDir = GetDirForApp(bundleName, appIndex);
+    }
     return ERR_OK;
 }
 
@@ -16159,7 +16407,8 @@ ErrCode BundleDataMgr::CheckBundleExist(const std::string &bundleName, int32_t u
         APP_LOGE_NOFUNC("check bundle invalid -u %{public}d", userId);
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
-    if (appIndex < 0 || appIndex > BundleFileUtil::GetCloneMaxCount()) {
+    if (appIndex < 0 || (appIndex > BundleFileUtil::GetCloneMaxCount() &&
+        appIndex != ServiceConstants::DUAL_MODE_CLONE_APP_INDEX)) {
         APP_LOGE_NOFUNC("check bundle invalid appIndex -n %{public}s -a %{public}d", bundleName.c_str(), appIndex);
         return ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX;
     }
@@ -16175,7 +16424,9 @@ ErrCode BundleDataMgr::CheckBundleExist(const std::string &bundleName, int32_t u
         APP_LOGE_NOFUNC("-n: %{public}s is not installed in user %{public}d", bundleName.c_str(), userId);
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
-    if (appIndex > 0) {
+    if (appIndex > 0 &&
+        !(innerBundleInfo.IsDualModeCloneApp() &&
+          appIndex == ServiceConstants::DUAL_MODE_CLONE_APP_INDEX)) {
         InnerBundleUserInfo innerBundleUserInfo;
         if (!innerBundleInfo.GetInnerBundleUserInfo(responseUserId, innerBundleUserInfo)) {
             APP_LOGE_NOFUNC("check bundle GetInnerBundleUserInfo failed");

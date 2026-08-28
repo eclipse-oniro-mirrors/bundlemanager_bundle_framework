@@ -132,7 +132,8 @@ ErrCode BundleResourceProxy::CheckBundleOptionInfoInvalid(const std::vector<Bund
             return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
         } else if (options.abilityName.empty()) {
             return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
-        } else if (options.appIndex < 0 || options.appIndex > BundleFileUtil::GetCloneMaxCount()) {
+        } else if (options.appIndex < 0 || (options.appIndex > BundleFileUtil::GetCloneMaxCount() &&
+            options.appIndex != Constants::DUAL_MODE_CLONE_APP_INDEX)) {
             return ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX;
         }
     }
