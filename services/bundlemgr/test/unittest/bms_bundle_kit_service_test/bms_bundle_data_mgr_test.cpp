@@ -522,12 +522,13 @@ InnerBundleInfo CreateTestBundleInfo(const std::string &bundleName,
 {
     InnerBundleInfo info;
     info.baseApplicationInfo_->bundleName = bundleName;
-    info.SetAppplicationBundleType(bundleType);
+    info.SetApplicationBundleType(bundleType);
     info.SetDualModeCloneApp(isDualModeCloneApp);
     if (userId >= Constants::START_USERID) {
         InnerBundleUserInfo userInfo;
         userInfo.bundleName = bundleName;
-        info.AddInnerModuleInfo(userInfo);
+        userInfo.bundleUserInfo.userId = userId;
+        info.AddInnerBundleUserInfo(userInfo);
     }
     return info;
 }
@@ -6664,7 +6665,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetAllAppProvisionInfo_1001, Function | SmallTest
     GetBundleDataMgr()->bundleInfos_[bundleName0] = CreateTestBundleInfo(
         bundleName0, BundleType::APP, false, Constants::START_USERID);
     AppProvisionInfo appProvisionInfo;
-    DelayedSingleton<AppProvisionInfoManager>::GetInstance()->AddAppProvitionInfo(bundleName0, appProvisionInfo);
+    DelayedSingleton<AppProvisionInfoManager>::GetInstance()->AddAppProvisionInfo(bundleName0, appProvisionInfo);
 
     std::string bundleName1 = "com.test.current1";
     GetBundleDataMgr()->bundleInfos_[bundleName1] = CreateTestBundleInfo(
