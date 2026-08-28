@@ -137,29 +137,53 @@ public:
 
     /**
      * @brief Switch application visibility by device mode distribution policies (dual-mode
-     * requirement 2). Persists the set to bms_param first, then refreshes the cached device
-     * mode from the system params, then migrates apps between bundleInfos_ (queryable) and
-     * tempBundleInfos_ (hidden) per policy set; serialized with install/uninstall by the shared
-     * bundleInfoMutex_ (BUSY fast-fail not implemented in current version).
+     * requirement 2). Validates the set, migrates apps between bundleInfos_ (queryable) and
+     * tempBundleInfos_ (hidden) per policy set, then persists the set to bms_param; if the
+     * persist fails, the migration is re-run with the previously persisted set (rollback
+     * baseline), restoring the pre-switch memory state. Mutually exclusive with queued
+     * install/update/uninstall tasks via dualModeSwitchMutex_: the switch takes the exclusive
+     * lock with try_to_lock and fails fast with ERR_APPEXECFWK_DUAL_MODE_SWITCH_BUSY when any
+     * task is running (or another switch is in flight); bundle operations try the shared lock
+     * (TryLockForBundleOperation) and fail fast with the same error while a switch is in
+     * flight (change r13: both sides fast-fail, first holder proceeds). Lock order:
+     * dualModeSwitchMutex_ -> bundleInfoMutex_ -> stateMutex_.
      * @param policies set of DeviceModeDistributionPolicy values (0~8). MUST be non-empty, all
      *        values in range, and contain all different-package policies (4/6/8).
-     * @return ERR_OK / ERR_APPEXECFWK_DUAL_MODE_DEVICE_NOT_SUPPORTED (non-dual-mode device, or
-     *         the mode-param refresh failed — the cache keeps the last-known-good values and
-     *         the migration is skipped; the persisted set stays) / ERR_APPEXECFWK_DUAL_MODE_
-     *         SWITCH_BUSY (reserved, not returned in current version) / ERR_APPEXECFWK_DUAL_
-     *         MODE_PERSIST_FAILED (persist happens before migration, so nothing to roll back)
-     *         / ERR_BUNDLE_MANAGER_INVALID_PARAMETER.
+     * @return ERR_OK / ERR_APPEXECFWK_DUAL_MODE_DEVICE_NOT_SUPPORTED (non-dual-mode device) /
+     *         ERR_APPEXECFWK_DUAL_MODE_SWITCH_BUSY (an install/update/uninstall task or another
+     *         switch is running; no state is touched) / ERR_APPEXECFWK_DUAL_MODE_PERSIST_FAILED
+     *         (memory is rolled back to the pre-switch state when a valid baseline exists;
+     *         without one — first switch, or corrupted baseline — the switched memory stays and
+     *         converges on the next successful switch or reboot) / ERR_BUNDLE_MANAGER_INVALID_PARAMETER.
      */
     ErrCode FilterBundleListByDeviceModeDistributionPolicies(
         const std::set<DeviceModeDistributionPolicy> &policies);
 
     /**
+     * @brief Try to acquire the shared side of the dual-mode switch mutex for a bundle
+     * operation (install/update/uninstall task body or direct synchronous entry). Uses
+     * try_lock_shared: while a mode switch holds the exclusive side the acquisition fails
+     * immediately — the caller must fail fast with ERR_APPEXECFWK_DUAL_MODE_SWITCH_BUSY
+     * (change r13: operations no longer wait for an in-flight switch; shared holders keep
+     * running concurrently with each other, install parallelism is kept). Multiple
+     * operations may hold the shared side concurrently. The returned guard must be kept
+     * alive for the whole operation body. Lock order: dualModeSwitchMutex_ ->
+     * bundleInfoMutex_ -> stateMutex_ (never acquire in reverse).
+     * @return RAII shared guard, or nullptr when a switch is in flight (caller fails fast;
+     *         the degraded non-dual-mode / missing-data-manager cases are resolved by the
+     *         caller BEFORE calling this, so nullptr only means "switch in flight").
+     */
+    std::unique_ptr<std::shared_lock<std::shared_mutex>> TryLockForBundleOperation();
+
+    /**
      * @brief Lock-free body of FilterBundleListByDeviceModeDistributionPolicies: migrate apps
      * between bundleInfos_ (queryable) and tempBundleInfos_ (hidden) per policy set, WITHOUT
      * sensing primary/secondary mode (the caller flips the device mode and triggers one switch
-     * per flip). UNSPECIFIED never migrates; same-name different-package (4/6/8) variant pairs
-     * rotate between the two maps on every call (a pair member without a same-name counterpart
-     * stays put); filterable policies (1/2/3/5/7) migrate by set membership.
+     * per flip). UNSPECIFIED never migrates; filterable policies (1/2/3/5/7) follow set
+     * membership (in the set -> bundleInfos_, else -> tempBundleInfos_, idempotent per set);
+     * different-package policies (4/6/8) rotate once per call regardless of side — a same-name
+     * pair swaps, a single variant on either side crosses over. Every bundle name moves at
+     * most once per call.
      * Note: This function does not lock bundleInfoMutex_, caller must hold the lock.
      * @param policySet validated set of DeviceModeDistributionPolicy values (contains 4/6/8).
      */
@@ -1831,6 +1855,13 @@ private:
     mutable std::mutex pluginCallbackMutex_;
     mutable std::mutex eventCallbackMutex_;
     mutable std::shared_mutex bundleInfoMutex_;
+    // === DUAL_MODE: switch <-> install/update/uninstall mutual exclusion ===
+    // Switch takes the exclusive side with try_to_lock (BUSY fast-fail, 8519944); bundle
+    // operations (queued tasks via the BundleInstallerManager::AddTask wrapper, plus the
+    // direct BundleInstallerHost entries) try the shared side without blocking and fail
+    // fast with the same error while a switch is in flight (r13: both sides fast-fail).
+    // Lock order (one-way, no deadlock): dualModeSwitchMutex_ -> bundleInfoMutex_ -> stateMutex_.
+    mutable std::shared_mutex dualModeSwitchMutex_;
     mutable std::shared_mutex bundleIdMapMutex_;
     mutable std::shared_mutex callbackMutex_;
     mutable std::shared_mutex bundleMutex_;

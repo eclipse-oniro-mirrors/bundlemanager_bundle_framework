@@ -37,6 +37,7 @@
 #include "bundle_permission_mgr.h"
 #include "bundle_util.h"
 #include "datetime_ex.h"
+#include "dual_mode_helper.h"
 #include "directory_ex.h"
 #include "installd_client.h"
 #include "ipc_skeleton.h"
@@ -800,6 +801,10 @@ ErrCode BundleInstallerHost::InstallSandboxApp(const std::string &bundleName, in
         LOG_E(BMS_TAG_INSTALLER, "InstallSandboxApp permission denied");
         return ERR_APPEXECFWK_PERMISSION_DENIED;
     }
+    DualModeSwitchGuard dualModeGuard;
+    if (dualModeGuard.IsRejected()) {
+        return ERR_APPEXECFWK_DUAL_MODE_SWITCH_BUSY;  // r13: switch in flight, fail fast
+    }
     auto helper = DelayedSingleton<BundleSandboxAppHelper>::GetInstance();
     if (helper == nullptr) {
         return ERR_APPEXECFWK_SANDBOX_INSTALL_INTERNAL_ERROR;
@@ -831,6 +836,10 @@ ErrCode BundleInstallerHost::UninstallSandboxApp(const std::string &bundleName, 
         !BundlePermissionMgr::VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_UNINSTALL_SANDBOX_BUNDLE)) {
         LOG_E(BMS_TAG_INSTALLER, "UninstallSandboxApp permission denied");
         return ERR_APPEXECFWK_PERMISSION_DENIED;
+    }
+    DualModeSwitchGuard dualModeGuard;
+    if (dualModeGuard.IsRejected()) {
+        return ERR_APPEXECFWK_DUAL_MODE_SWITCH_BUSY;  // r13: switch in flight, fail fast
     }
     auto helper = DelayedSingleton<BundleSandboxAppHelper>::GetInstance();
     if (helper == nullptr) {
@@ -866,6 +875,10 @@ ErrCode BundleInstallerHost::InstallPlugin(const std::string &hostBundleName,
         LOG_E(BMS_TAG_INSTALLER, "InstallPlugin permission denied");
         return ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED;
     }
+    DualModeSwitchGuard dualModeGuard;
+    if (dualModeGuard.IsRejected()) {
+        return ERR_APPEXECFWK_DUAL_MODE_SWITCH_BUSY;  // r13: switch in flight, fail fast
+    }
     std::shared_ptr<PluginInstaller> pluginInstaller = std::make_shared<PluginInstaller>();
     auto ret = pluginInstaller->InstallPlugin(hostBundleName, pluginFilePaths, installPluginParam);
     if (ret != ERR_OK) {
@@ -892,6 +905,10 @@ ErrCode BundleInstallerHost::UninstallPlugin(const std::string &hostBundleName, 
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_UNINSTALL_PLUGIN)) {
         LOG_E(BMS_TAG_INSTALLER, "UninstallPlugin permission denied");
         return ERR_APPEXECFWK_UNINSTALL_PERMISSION_DENIED;
+    }
+    DualModeSwitchGuard dualModeGuard;
+    if (dualModeGuard.IsRejected()) {
+        return ERR_APPEXECFWK_DUAL_MODE_SWITCH_BUSY;  // r13: switch in flight, fail fast
     }
     std::shared_ptr<PluginInstaller> pluginInstaller = std::make_shared<PluginInstaller>();
     auto ret = pluginInstaller->UninstallPlugin(hostBundleName, pluginBundleName, installPluginParam);
@@ -1043,6 +1060,31 @@ bool BundleInstallerHost::CheckBundleInstallerManager(const sptr<IStatusReceiver
     return true;
 }
 
+// DUAL_MODE (L-9): the synchronous direct-connection entries below run entirely on the IPC
+// thread and bypass the BundleInstallerManager queue, so the AddTask wrapper's shared lock
+// never covers them — without this guard a clone create/delete (or sandbox/plugin/existed/
+// preinstall-uninstall/cli-sandbox call) could interleave with a mode switch. Construction
+// keeps the empty-guard skip paths local to this definition: non-dual-mode devices never
+// touch the mutex at all (the switch entry rejects them at the device gate, so the exclusive
+// side can never be held there), a missing data manager degrades to running without the
+// mutex (the guard must never block the install path itself), and an in-flight switch makes
+// the entry fail fast — the shared side is TRIED without blocking and IsRejected() returns
+// true (r13): the caller returns ERR_APPEXECFWK_DUAL_MODE_SWITCH_BUSY immediately instead
+// of waiting out the switch.
+BundleInstallerHost::DualModeSwitchGuard::DualModeSwitchGuard()
+{
+    if (!DualModeHelper::IsDualModeDevice()) {
+        return;
+    }
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_INSTALLER, "get dataMgr failed, run without dual mode mutex");
+        return;
+    }
+    guard_ = dataMgr->TryLockForBundleOperation();
+    rejected_ = (guard_ == nullptr);
+}
+
 InstallParam BundleInstallerHost::CheckInstallParam(const InstallParam &installParam)
 {
     if (installParam.userId == Constants::UNSPECIFIED_USERID) {
@@ -1142,6 +1184,10 @@ ErrCode BundleInstallerHost::InstallCloneApp(const std::string &bundleName, int3
         LOG_E(BMS_TAG_INSTALLER, "InstallCloneApp permission denied");
         return ERR_APPEXECFWK_PERMISSION_DENIED;
     }
+    DualModeSwitchGuard dualModeGuard;
+    if (dualModeGuard.IsRejected()) {
+        return ERR_APPEXECFWK_DUAL_MODE_SWITCH_BUSY;  // r13: switch in flight, fail fast
+    }
     std::shared_ptr<BundleCloneInstaller> installer = std::make_shared<BundleCloneInstaller>();
     return installer->InstallCloneApp(bundleName, userId, appIndex, parameters);
 }
@@ -1213,6 +1259,10 @@ ErrCode BundleInstallerHost::UninstallCloneApp(const std::string &bundleName, in
         LOG_E(BMS_TAG_INSTALLER, "UninstallCloneApp permission denied");
         return ERR_APPEXECFWK_PERMISSION_DENIED;
     }
+    DualModeSwitchGuard dualModeGuard;
+    if (dualModeGuard.IsRejected()) {
+        return ERR_APPEXECFWK_DUAL_MODE_SWITCH_BUSY;  // r13: switch in flight, fail fast
+    }
     if (appIndex >= ServiceConstants::CLI_SANDBOX_APP_INDEX_MIN &&
         appIndex <= ServiceConstants::CLI_SANDBOX_APP_INDEX_MAX) {
         auto installer = std::make_shared<BundleCliSandboxInstaller>();
@@ -1271,6 +1321,10 @@ ErrCode BundleInstallerHost::InstallExisted(const std::string &bundleName, int32
         LOG_E(BMS_TAG_INSTALLER, "InstallExisted permission denied");
         return ERR_APPEXECFWK_PERMISSION_DENIED;
     }
+    DualModeSwitchGuard dualModeGuard;
+    if (dualModeGuard.IsRejected()) {
+        return ERR_APPEXECFWK_DUAL_MODE_SWITCH_BUSY;  // r13: switch in flight, fail fast
+    }
     std::shared_ptr<BundleMultiUserInstaller> installer = std::make_shared<BundleMultiUserInstaller>();
     return installer->InstallExistedApp(bundleName, userId);
 }
@@ -1304,6 +1358,10 @@ ErrCode BundleInstallerHost::UninstallNewPreinstalledApps(const std::vector<std:
     if (bundleNames.size() > Constants::MAX_UNINSTALL_PREINSTALLED_APP_NUM) {
         LOG_E(BMS_TAG_INSTALLER, "the number of bundles to uninstall exceeds the limit");
         return ERR_APPEXECFWK_UNINSTALL_PARAM_ERROR;
+    }
+    DualModeSwitchGuard dualModeGuard;
+    if (dualModeGuard.IsRejected()) {
+        return ERR_APPEXECFWK_DUAL_MODE_SWITCH_BUSY;  // r13: switch in flight, fail fast
     }
     auto installer = std::make_shared<BundleInstaller>(GetMicroTickCount(), nullptr);
     installer->SetCallingUid(IPCSkeleton::GetCallingUid());
@@ -1696,6 +1754,10 @@ ErrCode BundleInstallerHost::CreateCliSandboxApp(const std::string &creatorBundl
         finalCreatorBundleName = envCreatorBundleName;
     }
 
+    DualModeSwitchGuard dualModeGuard;
+    if (dualModeGuard.IsRejected()) {
+        return ERR_APPEXECFWK_DUAL_MODE_SWITCH_BUSY;  // r13: switch in flight, fail fast
+    }
     auto installer = std::make_shared<BundleCliSandboxInstaller>();
     return installer->CreateCliSandboxApp(finalCreatorBundleName, bundleName, userId, appIndex);
 }
@@ -1729,6 +1791,10 @@ ErrCode BundleInstallerHost::DestroyCliSandboxApp(const std::string &creatorBund
         return ERR_APPEXECFWK_PERMISSION_DENIED;
     }
 
+    DualModeSwitchGuard dualModeGuard;
+    if (dualModeGuard.IsRejected()) {
+        return ERR_APPEXECFWK_DUAL_MODE_SWITCH_BUSY;  // r13: switch in flight, fail fast
+    }
     auto installer = std::make_shared<BundleCliSandboxInstaller>();
     return installer->DestroyCliSandboxApp(creatorBundleName, envCallerBundleName,
         bundleName, userId, appIndex, false);

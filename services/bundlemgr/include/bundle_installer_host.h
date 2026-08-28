@@ -18,6 +18,7 @@
 
 #include <atomic>
 #include <memory>
+#include <shared_mutex>
 #include <string>
 
 #include "iremote_stub.h"
@@ -279,6 +280,38 @@ private:
     ErrCode VerifyCreateStreamInstallerPermission(const InstallParam &installParam, InstallParam &verifiedInstallParam);
     bool VerifyDestoryBundleStreamInstallerPermission();
     ErrCode CheckIsDebugAppProvisionType(const std::string &bundleName, int32_t userId, bool isHsp = false);
+    /**
+     * @brief DUAL_MODE: scoped entry guard for the synchronous direct-connection installer
+     * entries (clone/sandbox/plugin/installExisted/preinstall-uninstall/cli sandbox — they
+     * bypass the BundleInstallerManager task queue, so the AddTask wrapper cannot cover
+     * them). Construction is the whole contract — on a dual-mode device it TRIES the shared
+     * side of BundleDataMgr's dualModeSwitchMutex_ without blocking (r13): when a mode
+     * switch is in flight the try fails, IsRejected() returns true, and the entry returns
+     * ERR_APPEXECFWK_DUAL_MODE_SWITCH_BUSY immediately; when the shared side is acquired
+     * the guard holds it until the entry returns, and any concurrent mode switch fails
+     * fast with the same error. Non-dual-mode devices construct an EMPTY guard — no mutex
+     * is ever touched, the entry runs exactly as before the mutual exclusion existed; an
+     * unavailable data manager degrades the same way (the guard must never block the
+     * install path itself).
+     */
+    class DualModeSwitchGuard {
+    public:
+        DualModeSwitchGuard();
+        ~DualModeSwitchGuard() = default;
+        DualModeSwitchGuard(const DualModeSwitchGuard&) = delete;
+        DualModeSwitchGuard& operator=(const DualModeSwitchGuard&) = delete;
+
+        // true when a mode switch was in flight at construction: the caller fails fast
+        // with ERR_APPEXECFWK_DUAL_MODE_SWITCH_BUSY without running the entry body
+        bool IsRejected() const
+        {
+            return rejected_;
+        }
+
+    private:
+        std::unique_ptr<std::shared_lock<std::shared_mutex>> guard_;
+        bool rejected_ = false;
+    };
     std::atomic<uint32_t> streamInstallerIds_ = 0;
     std::mutex streamInstallMutex_;
     std::shared_mutex enterpriseCertMutex_;

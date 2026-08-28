@@ -533,41 +533,67 @@ ErrCode BundleDataMgr::FilterBundleListByDeviceModeDistributionPolicies(
         return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
 
-    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    // Dual-mode switch is mutually exclusive with install/update/uninstall (and with another
+    // switch): take the exclusive side without blocking. A queued task holding the shared side
+    // (or another in-flight switch) makes this fail fast with SWITCH_BUSY — before any lock on
+    // the bundle maps, before any migration or persist, so nothing changes. Permanent errors
+    // (device gate / parameter) are checked above on purpose: callers must not retry into BUSY
+    // on a non-dual-mode device or with an invalid set.
+    std::unique_lock<std::shared_mutex> switchLock(dualModeSwitchMutex_, std::try_to_lock);
+    if (!switchLock.owns_lock()) {
+        APP_LOGW("Dual mode: switch rejected, install/uninstall task or another switch in flight");
+        return ERR_APPEXECFWK_DUAL_MODE_SWITCH_BUSY;
+    }
 
-    // persist first; on failure return PERSIST_FAILED (no migration yet, so rollback
-    // is effectively a no-op — memory stays in pre-switch state).
+    // Resolve the param helper and read the rollback baseline BEFORE taking
+    // bundleInfoMutex_ (codecheck R4 INP-01): the RDB read no longer sits inside the map
+    // write lock, which is then held only for the migration and the save. Reading here is
+    // still race-free — the exclusive switch lock is already held and this key has no other
+    // production writer.
+    auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    if (bmsPara == nullptr) {
+        APP_LOGE_NOFUNC("FilterBundleListByDeviceModeDistributionPolicies bmsPara is nullptr");
+        return ERR_APPEXECFWK_DUAL_MODE_PERSIST_FAILED;
+    }
+    // Keep the persisted policy set as the rollback baseline (2026-08-26 order change: memory
+    // migrates first, the value is persisted afterwards). A missing or corrupted baseline
+    // (first switch after boot with no persisted set, or a damaged value the boot
+    // classification already fell back from) cannot be replayed through the migration body —
+    // on a later save failure the switched memory simply stays and converges on the next
+    // successful switch or reboot.
+    std::string oldPoliciesCsv;
+    std::set<DeviceModeDistributionPolicy> oldPolicies;
+    bool rollbackPossible = bmsPara->GetBmsParam(
+        ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICIES_KEY, oldPoliciesCsv)
+        && DualModeHelper::ParsePersistedPolicies(oldPoliciesCsv, oldPolicies);
+    if (!rollbackPossible) {
+        APP_LOGW("Dual mode: no valid persisted policy set as rollback baseline");
+    }
+
+    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    // Migrate first, persist last; on save failure re-run the migration body with the
+    // baseline set: filterable policies re-place by set membership and different-package
+    // entries rotate a second time — the per-call rotation is an involution, so the two
+    // calls land back on the pre-switch state (memory and the persisted value stay
+    // consistent).
     // NOTE (codecheck R2 LOG-04): SaveBmsParam below does a synchronous RDB write inside
     // this write lock — worst case (E_SQLITE_BUSY 3x500ms retry + lazy DB open) blocks all
     // shared_lock queries (GetBundleInfo etc.) for up to seconds. Accepted as-is: low-
     // frequency management op, single-lock ordering (no deadlock), and same-lock I/O
     // precedents exist (DefragMemory full map copy; GenerateBundleId file write). Moving
     // the persist out of the lock needs a concurrent-switch TOCTOU design first — deferred.
-    auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
-    if (bmsPara == nullptr) {
-        APP_LOGE_NOFUNC("FilterBundleListByDeviceModeDistributionPolicies bmsPara is nullptr");
-        return ERR_APPEXECFWK_DUAL_MODE_PERSIST_FAILED;
-    }
-    if (!bmsPara->SaveBmsParam(
-        ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICIES_KEY, DualModeHelper::PoliciesToCsv(policies))) {
-        APP_LOGE_NOFUNC("FilterBundleListByDeviceModeDistributionPolicies SaveBmsParam failed");
-        return ERR_APPEXECFWK_DUAL_MODE_PERSIST_FAILED;
-    }
-    // Re-read the device mode params so install-time dual-mode handling (NeedDualModeHandle)
-    // sees the mode the caller just switched to (spec L-7); the migration itself is mode-free
-    // (same-name different-package pairs rotate per call). UpdateModeCache overwrites the
-    // cache unconditionally — a missing/unreadable/illegal param leaves it no longer reporting
-    // a dual-mode device — so re-verify the gate before migrating: skip the migration and
-    // report DEVICE_NOT_SUPPORTED so the caller can retry (the retry re-reads the params and
-    // heals the cache). The policies persisted above stay in place; the runtime layout
-    // converges on the next successful switch or the reboot classification. (codecheck R3
-    // INP-06, report alternative: post-refresh gate re-verification)
-    DualModeHelper::UpdateModeCache();
-    if (!DualModeHelper::IsDualModeDevice()) {
-        APP_LOGE_NOFUNC("FilterBundleListByDeviceModeDistributionPolicies mode refresh failed");
-        return ERR_APPEXECFWK_DUAL_MODE_DEVICE_NOT_SUPPORTED;
-    }
+    // (The baseline RDB read used to sit inside this lock too; moved above it in codecheck
+    // R4 INP-01 to keep the map lock window to the migration + save only.)
     FilterBundleListByDeviceModeDistributionPoliciesNoLock(policies);
+    if (!bmsPara->SaveBmsParam(
+        ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICIES_KEY,
+        DualModeHelper::PoliciesToCsv(policies))) {
+        APP_LOGE_NOFUNC("FilterBundleListByDeviceModeDistributionPolicies SaveBmsParam failed, rollback");
+        if (rollbackPossible) {
+            FilterBundleListByDeviceModeDistributionPoliciesNoLock(oldPolicies);
+        }
+        return ERR_APPEXECFWK_DUAL_MODE_PERSIST_FAILED;
+    }
 
     APP_LOGI("Dual mode: FilterBundleListByDeviceModeDistributionPolicies done - "
              "bundleInfos=%{public}zu, tempBundleInfos=%{public}zu",
@@ -575,68 +601,102 @@ ErrCode BundleDataMgr::FilterBundleListByDeviceModeDistributionPolicies(
     return ERR_OK;
 }
 
+// === DUAL_MODE: shared side of the switch <-> install/update/uninstall mutual exclusion ===
+// Called by the BundleInstallerManager::AddTask wrapper (queued task bodies) and the
+// BundleInstallerHost direct-entry guard. Tries the shared side WITHOUT blocking (r13):
+// returns nullptr when a mode switch holds the exclusive side and the caller fails fast
+// with ERR_APPEXECFWK_DUAL_MODE_SWITCH_BUSY; multiple operations share this side
+// concurrently. See FilterBundleListByDeviceModeDistributionPolicies for the lock order.
+std::unique_ptr<std::shared_lock<std::shared_mutex>> BundleDataMgr::TryLockForBundleOperation()
+{
+    auto lock = std::make_unique<std::shared_lock<std::shared_mutex>>(dualModeSwitchMutex_, std::try_to_lock);
+    if (!lock->owns_lock()) {
+        return nullptr;  // a mode switch holds the exclusive side: caller fails fast (r13)
+    }
+    return lock;
+}
+
 // === DUAL_MODE: lock-free migration body (requirement 2) ===
 // Caller must hold bundleInfoMutex_. See FilterBundleListByDeviceModeDistributionPolicies.
 // Mode-free by design: the migration does NOT sense primary/secondary mode — the caller flips
-// the device mode and triggers one switch per flip. Semantics per policy value:
+// the device mode and triggers one switch per flip. Invariant: every bundle name moves at
+// most once per call (a name hidden by the hide pass never re-enters bundleInfos_ in the same
+// call), so a repeated call without a mode flip flips every rotated name again (not
+// idempotent — one switch per flip is the contract). Semantics per policy value (2026-08-26
+// design change: different-package policies rotate per call instead of following the set):
 // - UNSPECIFIED (0): always visible, never migrated.
-// - filterable policies (1/2/3/5/7): in the set -> bundleInfos_, else -> tempBundleInfos_.
-// - different-package policies (4/6/8): a same-name variant pair ROTATES on every call (the
-//   visible variant goes to tempBundleInfos_, the hidden one into bundleInfos_); a
-//   diff-package entry without a same-name counterpart stays on its side (nothing to rotate
-//   with — mode-based placement of such single-variant apps belongs to the reboot
-//   classification).
+// - filterable policies (1/2/3/5/7): set membership decides — in the set -> bundleInfos_,
+//   else -> tempBundleInfos_ (idempotent while the set is unchanged).
+// - different-package policies (4/6/8; a valid set always contains them): ROTATE once per
+//   call, regardless of which side the entry is on — a same-name pair (entry on both sides)
+//   swaps, a single variant on either side crosses over. One switch per mode flip makes the
+//   rotation track the mode.
 void BundleDataMgr::FilterBundleListByDeviceModeDistributionPoliciesNoLock(
     const std::set<DeviceModeDistributionPolicy> &policySet)
 {
-    // Hide apps whose policy is NOT in the set by moving them to temp. A same-name temp entry
-    // cannot legitimately pair with a filterable bundle entry (per-app policy is single-valued;
-    // install-time consistency checks block category transitions), so treat it as an
-    // inconsistent variant pairing: skip the migration, keep both entries. NOTE: this leaves a
-    // should-be-hidden app VISIBLE — acceptable for an anomalous state only (unreachable via
-    // normal flow: reinstall is blocked by installStates_ residue and the state transfer
-    // rules); an occurrence indicates data inconsistency needing manual investigation.
+    // Hide pass: move entries that must leave bundleInfos_ into tempBundleInfos_.
+    std::set<std::string> hiddenNames;
     for (auto it = bundleInfos_.begin(); it != bundleInfos_.end();) {
         DeviceModeDistributionPolicy policy = it->second.GetDeviceModeDistributionPolicy();
-        if (policy != DeviceModeDistributionPolicy::UNSPECIFIED
-            && !DualModeHelper::IsDiffPackageCategory(policy)
-            && policySet.count(policy) == 0) {
-            auto tempItem = tempBundleInfos_.find(it->first);
-            if (tempItem == tempBundleInfos_.end()) {
-                tempBundleInfos_[it->first] = std::move(it->second);
-                it = bundleInfos_.erase(it);
+        if (policy == DeviceModeDistributionPolicy::UNSPECIFIED) {
+            ++it;  // always visible, never migrated
+            continue;
+        }
+        bool hasSameNameTemp = tempBundleInfos_.find(it->first) != tempBundleInfos_.end();
+        if (DualModeHelper::IsDiffPackageCategory(policy)) {
+            // Different-package single variant: rotate out on every call. A same-name temp
+            // entry is a variant pair — the show pass rotates the pair as a unit (swap), so
+            // keep both sides untouched here (the pair must rotate exactly once).
+            if (hasSameNameTemp) {
+                ++it;
                 continue;
             }
-            APP_LOGW("Dual mode: inconsistent variant pairing, keep visible bundle=%{public}s",
-                it->first.c_str());
+        } else if (policySet.count(policy) != 0 || hasSameNameTemp) {
+            // In the set -> stays visible. A same-name temp entry cannot legitimately pair
+            // with a filterable bundle entry (per-app policy is single-valued; install-time
+            // consistency checks block category transitions) — inconsistent variant pairing:
+            // the hide pass keeps both entries; the show pass below may rotate the pair
+            // (temp variant in the set) or leave it. Reachable only in this anomalous state
+            // (unreachable via normal flow: reinstall is blocked by installStates_ residue
+            // and the state transfer rules); an occurrence indicates data inconsistency
+            // needing manual investigation.
+            if (hasSameNameTemp) {
+                APP_LOGW("Dual mode: inconsistent variant pairing, hide pass keeps entry, "
+                    "show pass may rotate pair, bundle=%{public}s",
+                    it->first.c_str());
+            }
+            ++it;
+            continue;
         }
-        ++it;
+        hiddenNames.insert(it->first);
+        tempBundleInfos_[it->first] = std::move(it->second);
+        it = bundleInfos_.erase(it);
     }
-    // Show apps whose policy IS in the set (a valid set always contains 4/6/8). A same-name
-    // different-package pair rotates: the temp variant swaps with the bundle one on every call
-    // (mode-free — the caller triggers one switch per mode flip, so the rotation tracks the
-    // mode). Filterable apps migrate in when no same-name entry occupies the slot; a
-    // diff-package temp entry with no counterpart never migrates alone (rotation needs a
-    // pair). Never swap out a non-diff-package occupant — that would hide an in-set app and
-    // oscillate on repeated switches.
+    // Show pass: rotate entries in tempBundleInfos_ whose policy is in the set (a valid set
+    // always contains 4/6/8). No same-name occupant: the entry crosses over alone (a
+    // different-package single variant rotates in). Same-name occupant: swap — one rotation
+    // for the pair, regardless of the occupant's policy category (mode-free — the caller
+    // triggers one switch per mode flip, so the rotation tracks the mode). Trade-off: an
+    // anomalous occupant (e.g. an UNSPECIFIED entry) rotated out to temp has no return path —
+    // unreachable via normal flow (see the hide-pass note); an occurrence indicates data
+    // inconsistency needing manual investigation. Entries hidden by the hide pass are
+    // skipped: without this, a different-package single variant rotated out above would be
+    // rotated back in below within the same call (two moves instead of one).
     for (auto it = tempBundleInfos_.begin(); it != tempBundleInfos_.end();) {
+        if (hiddenNames.count(it->first) != 0) {
+            ++it;
+            continue;
+        }
         DeviceModeDistributionPolicy policy = it->second.GetDeviceModeDistributionPolicy();
         if (policy != DeviceModeDistributionPolicy::UNSPECIFIED
             && policySet.count(policy) != 0) {
             auto bundleItem = bundleInfos_.find(it->first);
             if (bundleItem == bundleInfos_.end()) {
-                if (!DualModeHelper::IsDiffPackageCategory(policy)) {
-                    bundleInfos_[it->first] = std::move(it->second);
-                    it = tempBundleInfos_.erase(it);
-                    continue;
-                }
-            } else if (DualModeHelper::IsDiffPackageCategory(
-                bundleItem->second.GetDeviceModeDistributionPolicy())) {
-                std::swap(it->second, bundleItem->second);
-            } else {
-                APP_LOGW("Dual mode: non-variant entry occupies bundle slot, skip swap bundle=%{public}s",
-                    it->first.c_str());
+                bundleInfos_[it->first] = std::move(it->second);
+                it = tempBundleInfos_.erase(it);
+                continue;
             }
+            std::swap(it->second, bundleItem->second);
         }
         ++it;
     }

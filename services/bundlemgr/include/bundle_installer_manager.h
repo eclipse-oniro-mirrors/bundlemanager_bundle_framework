@@ -120,7 +120,18 @@ public:
         const InstallPluginParam &installPluginParam,
         const sptr<IStatusReceiver> &statusReceiver);
 
-    void AddTask(const ThreadPoolTask &task, const std::string &taskName);
+    /**
+     * @brief Enqueue a task on the installer thread pool. DUAL_MODE (r13): on a dual-mode
+     * device the wrapped task body TRIES the shared switch mutex at execution time; when a
+     * mode switch is in flight the task is dropped (never run, never waits) and onReject is
+     * called instead — receivers notify the caller with ERR_APPEXECFWK_DUAL_MODE_SWITCH_BUSY.
+     * @param task Task body; MUST decrement g_taskCounter when it completes.
+     * @param taskName Label used in logs.
+     * @param onReject Called instead of task when a switch is in flight at execution time;
+     *        default null drops the task with an error log (internal receiver-less tasks).
+     */
+    void AddTask(const ThreadPoolTask &task, const std::string &taskName,
+        const std::function<void()> &onReject = nullptr);
     size_t GetCurTaskNum();
     int32_t GetThreadsNum()
     {
@@ -136,6 +147,15 @@ private:
     std::shared_ptr<BundleInstaller> CreateInstaller(const sptr<IStatusReceiver> &statusReceiver);
 
     void DelayStopThreadPool();
+
+    /**
+     * @brief DUAL_MODE (r13): entry-time probe for the Create*Task methods — when a mode
+     * switch is in flight the task is not enqueued at all; the statusReceiver (may be null)
+     * is notified with ERR_APPEXECFWK_DUAL_MODE_SWITCH_BUSY immediately. Non-dual-mode
+     * devices and an unavailable data manager never reject.
+     * @return true when the task was rejected (caller returns without enqueueing).
+     */
+    bool RejectTaskIfSwitchInFlight(const sptr<IStatusReceiver> &statusReceiver);
 
     DISALLOW_COPY_AND_MOVE(BundleInstallerManager);
 
