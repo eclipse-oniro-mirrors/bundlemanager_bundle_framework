@@ -1064,11 +1064,10 @@ HWTEST_F(BmsDualModeSwitchTest, ClassifyDualModeAppsWithPolicies_0200_DiffPackag
 HWTEST_F(BmsDualModeSwitchTest, ClassifyDualModeAppsWithPolicies_0300_CorruptedValueFallsBack,
     TestSize.Level0)
 {
-    // Given: a filterable non-mode-exclusive app (UNIVERSAL_IDENTICAL_PACKAGE) is visible;
-    //        persisted value is corrupted
+    // Given: a filterable SUB_ONLY app is visible; persisted value is corrupted
     EnablePrimaryMode();
-    dataMgr_->bundleInfos_[BUNDLE_NAME_GENERIC] = MakePolicyInfo(
-        BUNDLE_NAME_GENERIC, DeviceModeDistributionPolicy::UNIVERSAL_IDENTICAL_PACKAGE);
+    dataMgr_->bundleInfos_[BUNDLE_NAME_SUB] = MakePolicyInfo(
+        BUNDLE_NAME_SUB, DeviceModeDistributionPolicy::SUB_ONLY);
 
     // When: value "1,2,9" (out-of-range token) Then: parse fails -> no policy-based hiding
     EXPECT_TRUE(service_->bmsParam_->SaveBmsParam(
