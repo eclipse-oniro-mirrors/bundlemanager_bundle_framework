@@ -14,15 +14,23 @@
  */
 
 #include <gtest/gtest.h>
+#include <atomic>
+#include <chrono>
 #include <map>
 #include <string>
+#include <thread>
 #include "mock_status_receiver.h"
+#include "parameters.h"
+#include "appexecfwk_errors.h"
 
 #define private public
 #define protected public
 #include "ability_event_handler.h"
+#include "bundle_data_mgr.h"
 #include "bundle_installer_manager.h"
 #include "bundle_mgr_service.h"
+#include "bundle_service_constants.h"
+#include "dual_mode_helper.h"
 #include "event_runner.h"
 #include "inner_event.h"
 #undef public
@@ -270,6 +278,122 @@ HWTEST_F(BundleInstallerManagerTest, BundleInstallerManagerTest_GetCurTaskNum_00
     auto bundleInstallerManager = std::make_shared<BundleInstallerManager>();
     EXPECT_EQ(bundleInstallerManager->GetCurTaskNum(), 0U);
     EXPECT_GT(bundleInstallerManager->GetThreadsNum(), 0);
+}
+
+/**
+ * @tc.number: BundleInstallerManagerTest_DualModeMutex_0001
+ * @tc.name: test AddTask task fails fast while a dual-mode switch is in flight
+ * @tc.desc: 1. on a non-dual-mode device AddTask skips the wrapping at enqueue time and posts
+ *              the task as-is (it runs even while the exclusive side is held — the switch entry
+ *              rejects such devices at the device gate, so the lock can never matter there)
+ *           2. on a dual-mode device a task queued through AddTask tries the shared side of
+ *              BundleDataMgr's dualModeSwitchMutex_ at execution time: while a switch holds the
+ *              exclusive side the task is DROPPED (never runs, never waits) and onReject is
+ *              called instead (r13)
+ *           3. after the switch releases, the dropped task stays dropped — the caller was
+ *              already notified at rejection time
+ */
+HWTEST_F(BundleInstallerManagerTest, BundleInstallerManagerTest_DualModeMutex_0001, TestSize.Level0)
+{
+    // The wrapper resolves the data manager at task execution time through the service singleton
+    auto service = DelayedSingleton<BundleMgrService>::GetInstance();
+    ASSERT_NE(service, nullptr);
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    service->dataMgr_ = dataMgr;
+    auto bundleInstallerManager = std::make_shared<BundleInstallerManager>();
+    auto waitTaskRan = [](const std::atomic<bool> &ran) {
+        for (int i = 0; i < 100 && !ran.load(); ++i) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+        return ran.load();
+    };
+
+    // Part 1 — non-dual-mode device (mode cache still the static INVALID default: no test keys
+    // seeded, InitializeCache never ran in this binary): AddTask posts the task unwrapped and it
+    // runs even while the exclusive side is held
+    std::unique_lock<std::shared_mutex> switchGuard(dataMgr->dualModeSwitchMutex_);
+    std::atomic<bool> bypassRan(false);
+    bundleInstallerManager->AddTask([&bypassRan] { bypassRan = true; }, "DualModeMutexBypass");
+    EXPECT_TRUE(waitTaskRan(bypassRan));
+
+    // Part 2 — dual-mode device (seed the same persist.bms.* test keys the switch suite uses,
+    // refresh the cache through the production UpdateModeCache path): the queued task is
+    // wrapped; its execution-time try of the shared side fails while the switch holds the
+    // exclusive side, so the task is dropped and onReject is called instead
+    OHOS::system::SetParameter("persist.bms.test_dual_mode", "true");
+    OHOS::system::SetParameter("persist.bms.ispcmode",
+        std::to_string(ServiceConstants::DUAL_MODE_VALUE_TABLET));
+    OHOS::system::SetParameter("persist.bms.mainmode",
+        std::to_string(ServiceConstants::DUAL_MODE_VALUE_TABLET));
+    DualModeHelper::UpdateModeCache();
+    ASSERT_TRUE(DualModeHelper::IsDualModeDevice());
+    std::atomic<bool> taskRan(false);
+    std::atomic<bool> onRejectCalled(false);
+    bundleInstallerManager->AddTask([&taskRan] { taskRan = true; }, "DualModeMutexProve",
+        [&onRejectCalled] { onRejectCalled = true; });
+
+    // While the switch is in flight the queued task is dropped without running — no waiting
+    // state exists on the operation side (r13); the rejection hook fires instead
+    EXPECT_TRUE(waitTaskRan(onRejectCalled));
+    EXPECT_FALSE(taskRan.load());
+
+    // The switch completes: the dropped task stays dropped — the caller was already notified
+    switchGuard.unlock();
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    EXPECT_FALSE(taskRan.load());
+
+    // Restore the non-dual-mode default so the static mode cache cannot leak into later cases
+    OHOS::system::RemoveParameter("persist.bms.test_dual_mode");
+    OHOS::system::RemoveParameter("persist.bms.ispcmode");
+    OHOS::system::RemoveParameter("persist.bms.mainmode");
+    DualModeHelper::UpdateModeCache();
+}
+
+/**
+ * @tc.number: BundleInstallerManagerTest_DualModeMutex_0002
+ * @tc.name: test CreateInstallTask rejects at call time while a dual-mode switch is in flight
+ * @tc.desc: on a dual-mode device with the exclusive side held, CreateInstallTask never
+ *           enqueues anything: the entry-time probe (RejectTaskIfSwitchInFlight) notifies the
+ *           statusReceiver with ERR_APPEXECFWK_DUAL_MODE_SWITCH_BUSY synchronously, before
+ *           any installer object is created (r13)
+ */
+HWTEST_F(BundleInstallerManagerTest, BundleInstallerManagerTest_DualModeMutex_0002, TestSize.Level0)
+{
+    auto service = DelayedSingleton<BundleMgrService>::GetInstance();
+    ASSERT_NE(service, nullptr);
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    service->dataMgr_ = dataMgr;
+
+    // Dual-mode device (same persist.bms.* test-key seeding as DualModeMutex_0001); an
+    // in-flight switch holds the exclusive side
+    OHOS::system::SetParameter("persist.bms.test_dual_mode", "true");
+    OHOS::system::SetParameter("persist.bms.ispcmode",
+        std::to_string(ServiceConstants::DUAL_MODE_VALUE_TABLET));
+    OHOS::system::SetParameter("persist.bms.mainmode",
+        std::to_string(ServiceConstants::DUAL_MODE_VALUE_TABLET));
+    DualModeHelper::UpdateModeCache();
+    ASSERT_TRUE(DualModeHelper::IsDualModeDevice());
+    std::unique_lock<std::shared_mutex> switchGuard(dataMgr->dualModeSwitchMutex_);
+
+    sptr<MockStatusReceiver> receiver = new (std::nothrow) MockStatusReceiver();
+    ASSERT_NE(receiver, nullptr);
+    InstallParam installParam;
+    installParam.userId = USERID;
+    auto bundleInstallerManager = std::make_shared<BundleInstallerManager>();
+    bundleInstallerManager->CreateInstallTask(RESOURCE_ROOT_PATH + RIGHT_BUNDLE, installParam, receiver);
+
+    // Rejected at call time: BUSY delivered to the receiver synchronously — no enqueue, no
+    // task body, no 2s timeout wait (the promise was already set inside CreateInstallTask)
+    EXPECT_EQ(receiver->GetResultCode(), ERR_APPEXECFWK_DUAL_MODE_SWITCH_BUSY);
+
+    switchGuard.unlock();
+    // Restore the non-dual-mode default so the static mode cache cannot leak into later cases
+    OHOS::system::RemoveParameter("persist.bms.test_dual_mode");
+    OHOS::system::RemoveParameter("persist.bms.ispcmode");
+    OHOS::system::RemoveParameter("persist.bms.mainmode");
+    DualModeHelper::UpdateModeCache();
 }
 }  // AppExecFwk
 }  // OHOS

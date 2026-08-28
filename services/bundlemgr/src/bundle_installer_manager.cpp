@@ -16,10 +16,12 @@
 #include "bundle_installer_manager.h"
 
 #include "app_log_tag_wrapper.h"
+#include "appexecfwk_errors.h"
 #include "bundle_hitrace_chain.h"
 #include "bundle_memory_guard.h"
 #include "bundle_mgr_service.h"
 #include "datetime_ex.h"
+#include "dual_mode_helper.h"
 #include "idle_condition_mgr/idle_condition_mgr.h"
 #include "ipc_skeleton.h"
 #include "parameters.h"
@@ -37,6 +39,15 @@ constexpr unsigned int TIME_OUT_SECONDS = 60 * 25;
 constexpr int8_t MAX_TASK_NUMBER = 10;
 constexpr int8_t RETAIL_MODE_THREAD_NUMBER = 1;
 constexpr int8_t DELAY_INTERVAL_SECONDS = 60;
+constexpr const char* DUAL_MODE_SWITCH_IN_FLIGHT = "dual mode switch in flight, operation rejected";
+
+// r13: report the switch-in-flight rejection to the caller's receiver (no-op when null).
+void NotifyDualModeSwitchBusy(const sptr<IStatusReceiver> &statusReceiver)
+{
+    if (statusReceiver != nullptr) {
+        statusReceiver->OnFinished(ERR_APPEXECFWK_DUAL_MODE_SWITCH_BUSY, DUAL_MODE_SWITCH_IN_FLIGHT);
+    }
+}
 }
 
 BundleInstallerManager::BundleInstallerManager()
@@ -56,6 +67,9 @@ BundleInstallerManager::~BundleInstallerManager()
 void BundleInstallerManager::CreateInstallTask(
     const std::string &bundleFilePath, const InstallParam &installParam, const sptr<IStatusReceiver> &statusReceiver)
 {
+    if (RejectTaskIfSwitchInFlight(statusReceiver)) {
+        return;
+    }
     auto installer = CreateInstaller(statusReceiver);
     if (installer == nullptr) {
         LOG_E(BMS_TAG_INSTALLER, "create installer failed");
@@ -71,12 +85,16 @@ void BundleInstallerManager::CreateInstallTask(
         g_taskCounter--;
         XCollieHelper::CancelTimer(timerId);
     };
-    AddTask(task, "InstallTask path:" + bundleFilePath);
+    AddTask(task, "InstallTask path:" + bundleFilePath,
+        [statusReceiver] { NotifyDualModeSwitchBusy(statusReceiver); });
 }
 
 void BundleInstallerManager::CreateRecoverTask(
     const std::string &bundleName, const InstallParam &installParam, const sptr<IStatusReceiver> &statusReceiver)
 {
+    if (RejectTaskIfSwitchInFlight(statusReceiver)) {
+        return;
+    }
     auto installer = CreateInstaller(statusReceiver);
     if (installer == nullptr) {
         LOG_E(BMS_TAG_INSTALLER, "create installer failed");
@@ -91,12 +109,16 @@ void BundleInstallerManager::CreateRecoverTask(
         g_taskCounter--;
         XCollieHelper::CancelTimer(timerId);
     };
-    AddTask(task, "RecoverTask -n " + bundleName);
+    AddTask(task, "RecoverTask -n " + bundleName,
+        [statusReceiver] { NotifyDualModeSwitchBusy(statusReceiver); });
 }
 
 void BundleInstallerManager::CreateInstallTask(const std::vector<std::string> &bundleFilePaths,
     const InstallParam &installParam, const sptr<IStatusReceiver> &statusReceiver)
 {
+    if (RejectTaskIfSwitchInFlight(statusReceiver)) {
+        return;
+    }
     auto installer = CreateInstaller(statusReceiver);
     if (installer == nullptr) {
         LOG_E(BMS_TAG_INSTALLER, "create installer failed");
@@ -116,12 +138,16 @@ void BundleInstallerManager::CreateInstallTask(const std::vector<std::string> &b
     for (const auto &bundleFilePath : bundleFilePaths) {
         paths.append(bundleFilePath).append(" ");
     }
-    AddTask(task, "InstallTask path:" + paths);
+    AddTask(task, "InstallTask path:" + paths,
+        [statusReceiver] { NotifyDualModeSwitchBusy(statusReceiver); });
 }
 
 void BundleInstallerManager::CreateInstallByBundleNameTask(const std::string &bundleName,
     const InstallParam &installParam, const sptr<IStatusReceiver> &statusReceiver)
 {
+    if (RejectTaskIfSwitchInFlight(statusReceiver)) {
+        return;
+    }
     auto installer = CreateInstaller(statusReceiver);
     if (installer == nullptr) {
         LOG_E(BMS_TAG_INSTALLER, "create installer failed");
@@ -136,12 +162,16 @@ void BundleInstallerManager::CreateInstallByBundleNameTask(const std::string &bu
         g_taskCounter--;
         XCollieHelper::CancelTimer(timerId);
     };
-    AddTask(task, "InstallTask -n " + bundleName);
+    AddTask(task, "InstallTask -n " + bundleName,
+        [statusReceiver] { NotifyDualModeSwitchBusy(statusReceiver); });
 }
 
 void BundleInstallerManager::CreateUninstallTask(
     const std::string &bundleName, const InstallParam &installParam, const sptr<IStatusReceiver> &statusReceiver)
 {
+    if (RejectTaskIfSwitchInFlight(statusReceiver)) {
+        return;
+    }
     auto installer = CreateInstaller(statusReceiver);
     if (installer == nullptr) {
         LOG_E(BMS_TAG_INSTALLER, "create installer failed");
@@ -156,12 +186,16 @@ void BundleInstallerManager::CreateUninstallTask(
         g_taskCounter--;
         XCollieHelper::CancelTimer(timerId);
     };
-    AddTask(task, "UninstallTask -n " + bundleName);
+    AddTask(task, "UninstallTask -n " + bundleName,
+        [statusReceiver] { NotifyDualModeSwitchBusy(statusReceiver); });
 }
 
 void BundleInstallerManager::CreateUninstallTask(const std::string &bundleName, const std::string &modulePackage,
     const InstallParam &installParam, const sptr<IStatusReceiver> &statusReceiver)
 {
+    if (RejectTaskIfSwitchInFlight(statusReceiver)) {
+        return;
+    }
     auto installer = CreateInstaller(statusReceiver);
     if (installer == nullptr) {
         LOG_E(BMS_TAG_INSTALLER, "create installer failed");
@@ -176,12 +210,16 @@ void BundleInstallerManager::CreateUninstallTask(const std::string &bundleName, 
         g_taskCounter--;
         XCollieHelper::CancelTimer(timerId);
     };
-    AddTask(task, "UninstallTask -n " + bundleName);
+    AddTask(task, "UninstallTask -n " + bundleName,
+        [statusReceiver] { NotifyDualModeSwitchBusy(statusReceiver); });
 }
 
 void BundleInstallerManager::CreateUninstallTask(const UninstallParam &uninstallParam,
     const sptr<IStatusReceiver> &statusReceive)
 {
+    if (RejectTaskIfSwitchInFlight(statusReceive)) {
+        return;
+    }
     auto installer = CreateInstaller(statusReceive);
     if (installer == nullptr) {
         LOG_E(BMS_TAG_INSTALLER, "create installer failed");
@@ -196,12 +234,16 @@ void BundleInstallerManager::CreateUninstallTask(const UninstallParam &uninstall
         g_taskCounter--;
         XCollieHelper::CancelTimer(timerId);
     };
-    AddTask(task, "UninstallTask -n " + uninstallParam.bundleName);
+    AddTask(task, "UninstallTask -n " + uninstallParam.bundleName,
+        [statusReceive] { NotifyDualModeSwitchBusy(statusReceive); });
 }
 
 void BundleInstallerManager::CreateUninstallAndRecoverTask(const std::string &bundleName,
     const InstallParam &installParam, const sptr<IStatusReceiver> &statusReceiver)
 {
+    if (RejectTaskIfSwitchInFlight(statusReceiver)) {
+        return;
+    }
     auto installer = CreateInstaller(statusReceiver);
     if (installer == nullptr) {
         LOG_E(BMS_TAG_INSTALLER, "create installer failed");
@@ -216,7 +258,8 @@ void BundleInstallerManager::CreateUninstallAndRecoverTask(const std::string &bu
         g_taskCounter--;
         XCollieHelper::CancelTimer(timerId);
     };
-    AddTask(task, "UninstallAndRecover -n " + bundleName);
+    AddTask(task, "UninstallAndRecover -n " + bundleName,
+        [statusReceiver] { NotifyDualModeSwitchBusy(statusReceiver); });
 }
 
 void BundleInstallerManager::CreateInstallLocalPluginTask(const std::string &hostBundleName,
@@ -224,6 +267,9 @@ void BundleInstallerManager::CreateInstallLocalPluginTask(const std::string &hos
     const InstallPluginParam &installPluginParam,
     const sptr<IStatusReceiver> &statusReceiver)
 {
+    if (RejectTaskIfSwitchInFlight(statusReceiver)) {
+        return;
+    }
     auto traceId = HiviewDFX::HiTraceChain::GetId();
     auto task = [hostBundleName, pluginFilePaths, installPluginParam, statusReceiver, traceId] {
         BUNDLE_MANAGER_TASK_CHAIN_ID(traceId);
@@ -241,7 +287,8 @@ void BundleInstallerManager::CreateInstallLocalPluginTask(const std::string &hos
     for (const auto &path : pluginFilePaths) {
         paths.append(path).append(" ");
     }
-    AddTask(task, "InstallLocalPluginTask host:" + hostBundleName + " paths:" + paths);
+    AddTask(task, "InstallLocalPluginTask host:" + hostBundleName + " paths:" + paths,
+        [statusReceiver] { NotifyDualModeSwitchBusy(statusReceiver); });
 }
 
 void BundleInstallerManager::CreateUninstallLocalPluginTask(const std::string &hostBundleName,
@@ -249,6 +296,9 @@ void BundleInstallerManager::CreateUninstallLocalPluginTask(const std::string &h
     const InstallPluginParam &installPluginParam,
     const sptr<IStatusReceiver> &statusReceiver)
 {
+    if (RejectTaskIfSwitchInFlight(statusReceiver)) {
+        return;
+    }
     auto traceId = HiviewDFX::HiTraceChain::GetId();
     auto task = [hostBundleName, pluginBundleName, installPluginParam, statusReceiver, traceId] {
         BUNDLE_MANAGER_TASK_CHAIN_ID(traceId);
@@ -262,7 +312,8 @@ void BundleInstallerManager::CreateUninstallLocalPluginTask(const std::string &h
         g_taskCounter--;
         XCollieHelper::CancelTimer(timerId);
     };
-    AddTask(task, "UninstallLocalPluginTask host:" + hostBundleName + " plugin:" + pluginBundleName);
+    AddTask(task, "UninstallLocalPluginTask host:" + hostBundleName + " plugin:" + pluginBundleName,
+        [statusReceiver] { NotifyDualModeSwitchBusy(statusReceiver); });
 }
 
 std::shared_ptr<BundleInstaller> BundleInstallerManager::CreateInstaller(const sptr<IStatusReceiver> &statusReceiver)
@@ -274,7 +325,34 @@ std::shared_ptr<BundleInstaller> BundleInstallerManager::CreateInstaller(const s
     return installer;
 }
 
-void BundleInstallerManager::AddTask(const ThreadPoolTask &task, const std::string &taskName)
+// DUAL_MODE (r13): enqueue-time rejection probe — try the shared switch mutex and release
+// it immediately: nullptr means a switch is in flight, so the task is never created or
+// enqueued and the receiver gets BUSY right at call time (the AddTask wrapper's
+// execution-time try only closes the switch-starts-after-enqueue window). The empty-guard
+// skip paths mirror the wrapper: non-dual-mode devices never touch the mutex (the switch
+// entry rejects them at the device gate, so the exclusive side can never be held there),
+// and a missing data manager degrades to enqueueing — the mutex must never block the
+// install path itself.
+bool BundleInstallerManager::RejectTaskIfSwitchInFlight(const sptr<IStatusReceiver> &statusReceiver)
+{
+    if (!DualModeHelper::IsDualModeDevice()) {
+        return false;
+    }
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        return false;
+    }
+    auto probe = dataMgr->TryLockForBundleOperation();
+    if (probe != nullptr) {
+        return false;  // acquired and released: no switch in flight, proceed to enqueue
+    }
+    LOG_NOFUNC_E(BMS_TAG_INSTALLER, "dual mode switch in flight, reject task at enqueue");
+    NotifyDualModeSwitchBusy(statusReceiver);
+    return true;
+}
+
+void BundleInstallerManager::AddTask(const ThreadPoolTask &task, const std::string &taskName,
+    const std::function<void()> &onReject)
 {
     std::lock_guard<std::mutex> guard(mutex_);
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "hold mutex");
@@ -291,7 +369,46 @@ void BundleInstallerManager::AddTask(const ThreadPoolTask &task, const std::stri
     g_taskCounter++;
     auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
     idleMgr->InterruptRelabel(taskName);
-    threadPool_->AddTask(task);
+    // DUAL_MODE mutual exclusion (shared side, r13 fast-fail): every queued
+    // install/update/uninstall task TRIES the shared side of BundleDataMgr's switch mutex
+    // for its whole body — while it runs, a concurrent mode switch fails fast with BUSY;
+    // when a switch is already in flight the try fails and the task is DROPPED (never
+    // waits): onReject notifies the caller with the same error when provided, and the
+    // wrapper balances the enqueue-time g_taskCounter++ itself so DelayStopThreadPool
+    // still terminates. The CreateXxxTask entry probe already rejected the common case at
+    // call time; this execution-time try only closes the switch-starts-after-enqueue
+    // window. Non-dual-mode devices (the overwhelming majority) skip the wrapping entirely
+    // — the task is enqueued as-is, byte-identical to the pre-mutex path: the switch entry
+    // rejects such devices at the device gate (8519946, before try_to_lock), so the
+    // exclusive side can never be held there. Both sides read the same mode cache (never
+    // refreshed in production, L-8), so the enqueue-time verdict here cannot diverge from
+    // the switch-side verdict. Resolving the data manager at task execution time (not
+    // enqueue time); if it is unavailable the original task runs as-is — the mutex must
+    // never block the install path itself.
+    if (!DualModeHelper::IsDualModeDevice()) {
+        threadPool_->AddTask(task);
+        return;
+    }
+    ThreadPoolTask wrappedTask = [task, taskName, onReject] {
+        auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+        if (dataMgr == nullptr) {
+            LOG_NOFUNC_E(BMS_TAG_INSTALLER, "get dataMgr failed, run without dual-mode mutex, task:%{public}s",
+                taskName.c_str());
+            task();
+            return;
+        }
+        auto switchGuard = dataMgr->TryLockForBundleOperation();
+        if (switchGuard == nullptr) {
+            LOG_NOFUNC_E(BMS_TAG_INSTALLER, "dual mode switch in flight, drop task:%{public}s", taskName.c_str());
+            if (onReject) {
+                onReject();
+            }
+            g_taskCounter--;  // task body never runs: the wrapper owns this decrement
+            return;
+        }
+        task();
+    };
+    threadPool_->AddTask(wrappedTask);
 }
 
 void BundleInstallerManager::DelayStopThreadPool()
