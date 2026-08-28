@@ -1864,11 +1864,11 @@ ani_object CommonFunAni::ConvertAppProvisionInfo(ani_env* env, const AppProvisio
     // appServiceCapabilities: string
     ani_string appServiceCapabilities = nullptr;
     RETURN_NULL_IF_FALSE(StringToAniStr(env, appProvisionInfo.appServiceCapabilities, appServiceCapabilities));
- 
+
     // specifiedDistributionType: string
     ani_string specifiedDistributionType = nullptr;
     RETURN_NULL_IF_FALSE(StringToAniStr(env, appProvisionInfo.specifiedDistributionType, specifiedDistributionType));
- 
+
     // additional: string
     ani_string additional = nullptr;
     RETURN_NULL_IF_FALSE(StringToAniStr(env, appProvisionInfo.additionalInfo, additional));

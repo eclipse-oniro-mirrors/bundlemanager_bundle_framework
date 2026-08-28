@@ -9955,7 +9955,7 @@ void BundleDataMgr::GetListForBundleInfo(const int32_t userId,
     bool isCurrentMode, std::vector<std::pair<std::string, bool>>& bundleInfoList)
 {
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
-    auto filterAndAppend = [&] (const std::unordered_map<std::string , InnerBundleInfo> &infos) {
+    auto filterAndAppend = [&] (const std::map<std::string , InnerBundleInfo> &infos) {
         for (const auto& [bundleName, infoItem] : infos) {
             auto bundleType = infoItem.GetApplicationBundleType();
             int32_t responseUserId = infoItem.GetResponseUserId(userId);
@@ -10701,7 +10701,8 @@ ErrCode BundleDataMgr::GetSpecifiedDistributionType(
     }
     std::string provisionKey = bundleName;
     if (DualModeHelper::IsDualModeDevice()) {
-        provisionKey = isDualModeCloneApp ? DualModeHelper::GetDualModeBundleName(bundleName) : bundleName;
+        provisionKey = infoItem->second.IsDualModeCloneApp() ?
+            DualModeHelper::GetDualModeBundleName(bundleName) : bundleName;
     }
     if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetSpecifiedDistributionType(provisionKey,
         specifiedDistributionType)) {

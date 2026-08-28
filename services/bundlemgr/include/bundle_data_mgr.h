@@ -1571,6 +1571,7 @@ private:
         std::vector<ApplicationInfo> &appInfos) const;
     void GetListForBundleInfo(const int32_t userId,
         bool isCurrentMode, std::vector<std::pair<std::string, bool>>& bundleInfoList);
+    ErrCode GetAllAppProvisionInfoForDualMode(const int32_t userId, std::vector<AppProvisionInfo> &appProvisionInfos);
 #ifdef GLOBAL_RESMGR_ENABLE
     std::shared_ptr<Global::Resource::ResourceManager> GetResourceManager(const std::string &bundleName,
         const std::string &moduleName, int32_t userId, const std::string &localeInfo = Constants::EMPTY_STRING) const;
