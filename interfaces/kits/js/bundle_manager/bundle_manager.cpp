@@ -6905,19 +6905,18 @@ void FilterBundleListByDeviceModeDistributionPoliciesComplete(napi_env env, napi
     napi_value result[CALLBACK_PARAM_SIZE] = {0};
     if (asyncCallbackInfo->err == NO_ERROR) {
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
-        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ONE]));
     } else {
         result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
             FILTER_BUNDLE_LIST_BY_DEVICE_MODE_DISTRIBUTION_POLICIES);
     }
-    CommonFunc::NapiReturnDeferred<DeviceModePoliciesCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
+    CommonFunc::NapiReturnDeferred<DeviceModePoliciesCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_ONE);
 }
 
 napi_value FilterBundleListByDeviceModeDistributionPolicies(napi_env env, napi_callback_info info)
 {
     APP_LOGD("NAPI FilterBundleListByDeviceModeDistributionPolicies call");
     NapiArg args(env, info);
-    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
         APP_LOGE_NOFUNC("FilterBundleListByDeviceModeDistributionPolicies param count invalid");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
@@ -6938,9 +6937,10 @@ napi_value FilterBundleListByDeviceModeDistributionPolicies(napi_env env, napi_c
     }
     uint32_t arrayLength = 0;
     NAPI_CALL(env, napi_get_array_length(env, args[ARGS_POS_ZERO], &arrayLength));
-    if (arrayLength == 0) {
-        APP_LOGE_NOFUNC("FilterBundleListByDeviceModeDistributionPolicies policies is empty");
-        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, "policies array is empty");
+    if (arrayLength == 0 || arrayLength > MAX_POLICY_ARRAY_SIZE) {
+        APP_LOGE_NOFUNC("FilterBundleListByDeviceModeDistributionPolicies policies length %{public}u invalid",
+            arrayLength);
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, "policies array length invalid");
         return nullptr;
     }
     for (uint32_t i = 0; i < arrayLength; i++) {
@@ -6957,11 +6957,6 @@ napi_value FilterBundleListByDeviceModeDistributionPolicies(napi_env env, napi_c
         int32_t policyValue = 0;
         NAPI_CALL(env, napi_get_value_int32(env, element, &policyValue));
         asyncCallbackInfo->policies.push_back(policyValue);
-    }
-    napi_valuetype valueType = napi_undefined;
-    napi_typeof(env, args[ARGS_POS_ONE], &valueType);
-    if (valueType == napi_function) {
-        napi_create_reference(env, args[ARGS_POS_ONE], 1, &asyncCallbackInfo->callback);
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<DeviceModePoliciesCallbackInfo>(
         env, asyncCallbackInfo.get(), FILTER_BUNDLE_LIST_BY_DEVICE_MODE_DISTRIBUTION_POLICIES,

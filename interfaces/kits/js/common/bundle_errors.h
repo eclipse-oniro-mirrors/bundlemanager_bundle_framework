@@ -145,6 +145,11 @@ constexpr ErrCode ERROR_GET_ALTERNATE_ICONS = 17700311;
 // setAbilityFileTypesForSelf
 constexpr ErrCode ERROR_SET_ABILITY_FILE_TYPES_FOR_SELF = 17700351;
 
+// dual mode device mode distribution
+constexpr ErrCode ERROR_DUAL_MODE_DEVICE_NOT_SUPPORTED = 17700401;
+constexpr ErrCode ERROR_DUAL_MODE_POLICY_INVALID = 17700402;
+constexpr ErrCode ERROR_DUAL_MODE_SWITCH_BUSY = 17700403;
+
 // dynamicShortcutInfo
 constexpr ErrCode ERROR_BUNDLENAME_APPINDEX_NOT_UNIQUE = 18100001;
 constexpr ErrCode ERROR_SHORTCUT_MANAGER_NOT_EXIST = 18100002;

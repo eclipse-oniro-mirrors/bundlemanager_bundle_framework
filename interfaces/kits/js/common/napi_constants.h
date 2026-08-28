@@ -204,6 +204,7 @@ constexpr const char* GET_ALTERNATE_ICONS = "GetAlternateIcons";
 constexpr const char* GET_ALL_LOCAL_PLUGIN_INFO_FOR_SELF = "GetAllLocalPluginInfoForSelf";
 constexpr const char* FILTER_BUNDLE_LIST_BY_DEVICE_MODE_DISTRIBUTION_POLICIES =
     "FilterBundleListByDeviceModeDistributionPolicies";
+constexpr uint32_t MAX_POLICY_ARRAY_SIZE = 1000;
 
 inline const std::set<int32_t> SUPPORTED_PROFILE_LIST = { 1, 8 };
 inline const std::set<int32_t> UNINSTALL_COMPONENT_TYPE_LIST = { 1, 2 };
