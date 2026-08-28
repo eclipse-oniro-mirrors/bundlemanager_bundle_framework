@@ -511,7 +511,7 @@ void BmsBundleDataMgrTest::ResetDataMgr()
     EXPECT_NE(bundleMgrService_->dataMgr_, nullptr);
 }
 
-void SetDualModeCache(int ispcmode, int mainmode)
+void SetDualModeCache(int32_t ispcmode, int32_t mainmode)
 {
     DualModeHelper::cachedIspcmode_ = ispcmode;
     DualModeHelper::cachedMainmode_ = mainmode;
@@ -3405,7 +3405,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetListForBundleInfo_0300, Function | SmallTest |
     ASSERT_EQ(bundleInfoList.size(), 2u);
     bool hasCurrent = false;
     bool hasTemp = false;
-    for (const auto &[name, isDualModeApp] : bundleInfoList){
+    for (const auto &[name, isDualModeApp] : bundleInfoList) {
         if (name == "com.test.current") {
             hasCurrent = true;
             EXPECT_FALSE(isDualModeApp);

@@ -9966,7 +9966,7 @@ void BundleDataMgr::GetListForBundleInfo(const int32_t userId,
             bool isDualModeCloneApp = infoItem.IsDualModeCloneApp();
             bundleInfoList.emplace_back(bundleName, isDualModeCloneApp);
         }
-    }
+    };
     filterAndAppend(bundleInfos_);
     if (!isCurrentMode) {
         filterAndAppend(tempBundleInfos_);
