@@ -309,16 +309,16 @@ HWTEST_F(BundleInstallerManagerTest, BundleInstallerManagerTest_DualModeMutex_00
         return ran.load();
     };
 
-    // Part 1 — non-dual-mode device (mode cache still the static INVALID default: no test keys
-    // seeded, InitializeCache never ran in this binary): AddTask posts the task unwrapped and it
-    // runs even while the exclusive side is held
+    // Part 1 — non-dual-mode device (no test keys seeded, so IsDualModeDevice() reads missing
+    // params and returns false): AddTask posts the task unwrapped and it runs even while the
+    // exclusive side is held
     std::unique_lock<std::shared_mutex> switchGuard(dataMgr->dualModeSwitchMutex_);
     std::atomic<bool> bypassRan(false);
     bundleInstallerManager->AddTask([&bypassRan] { bypassRan = true; }, "DualModeMutexBypass");
     EXPECT_TRUE(waitTaskRan(bypassRan));
 
-    // Part 2 — dual-mode device (seed the same persist.bms.* test keys the switch suite uses,
-    // refresh the cache through the production UpdateModeCache path): the queued task is
+    // Part 2 — dual-mode device (seed the same persist.bms.* test keys the switch suite uses;
+    // DualModeHelper reads them directly each call, no refresh needed): the queued task is
     // wrapped; its execution-time try of the shared side fails while the switch holds the
     // exclusive side, so the task is dropped and onReject is called instead
     OHOS::system::SetParameter("persist.bms.test_dual_mode", "true");
@@ -326,7 +326,6 @@ HWTEST_F(BundleInstallerManagerTest, BundleInstallerManagerTest_DualModeMutex_00
         std::to_string(ServiceConstants::DUAL_MODE_VALUE_TABLET));
     OHOS::system::SetParameter("persist.bms.mainmode",
         std::to_string(ServiceConstants::DUAL_MODE_VALUE_TABLET));
-    DualModeHelper::UpdateModeCache();
     ASSERT_TRUE(DualModeHelper::IsDualModeDevice());
     std::atomic<bool> taskRan(false);
     std::atomic<bool> onRejectCalled(false);
@@ -343,11 +342,10 @@ HWTEST_F(BundleInstallerManagerTest, BundleInstallerManagerTest_DualModeMutex_00
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
     EXPECT_FALSE(taskRan.load());
 
-    // Restore the non-dual-mode default so the static mode cache cannot leak into later cases
+    // Restore the non-dual-mode default so the mode params cannot leak into later cases
     OHOS::system::RemoveParameter("persist.bms.test_dual_mode");
     OHOS::system::RemoveParameter("persist.bms.ispcmode");
     OHOS::system::RemoveParameter("persist.bms.mainmode");
-    DualModeHelper::UpdateModeCache();
 }
 
 /**
@@ -366,14 +364,14 @@ HWTEST_F(BundleInstallerManagerTest, BundleInstallerManagerTest_DualModeMutex_00
     ASSERT_NE(dataMgr, nullptr);
     service->dataMgr_ = dataMgr;
 
-    // Dual-mode device (same persist.bms.* test-key seeding as DualModeMutex_0001); an
-    // in-flight switch holds the exclusive side
+    // Dual-mode device (same persist.bms.* test-key seeding as DualModeMutex_0001;
+    // DualModeHelper reads them directly each call, no refresh needed); an in-flight switch
+    // holds the exclusive side
     OHOS::system::SetParameter("persist.bms.test_dual_mode", "true");
     OHOS::system::SetParameter("persist.bms.ispcmode",
         std::to_string(ServiceConstants::DUAL_MODE_VALUE_TABLET));
     OHOS::system::SetParameter("persist.bms.mainmode",
         std::to_string(ServiceConstants::DUAL_MODE_VALUE_TABLET));
-    DualModeHelper::UpdateModeCache();
     ASSERT_TRUE(DualModeHelper::IsDualModeDevice());
     std::unique_lock<std::shared_mutex> switchGuard(dataMgr->dualModeSwitchMutex_);
 
@@ -389,11 +387,10 @@ HWTEST_F(BundleInstallerManagerTest, BundleInstallerManagerTest_DualModeMutex_00
     EXPECT_EQ(receiver->GetResultCode(), ERR_APPEXECFWK_DUAL_MODE_SWITCH_BUSY);
 
     switchGuard.unlock();
-    // Restore the non-dual-mode default so the static mode cache cannot leak into later cases
+    // Restore the non-dual-mode default so the mode params cannot leak into later cases
     OHOS::system::RemoveParameter("persist.bms.test_dual_mode");
     OHOS::system::RemoveParameter("persist.bms.ispcmode");
     OHOS::system::RemoveParameter("persist.bms.mainmode");
-    DualModeHelper::UpdateModeCache();
 }
 }  // AppExecFwk
 }  // OHOS

@@ -42,23 +42,16 @@ public:
     static int32_t GetSysMode();
 
     // Whether the device is a dual-mode device.
-    // Returns true only when both cached ispcmode and mainmode are valid (0 or 1).
+    // Reads system parameters directly each call (no cache); returns true only when both
+    // ispcmode and mainmode are valid (0 or 1).
     static bool IsDualModeDevice();
 
     // Whether the device is currently in secondary mode.
+    // Reads system parameters directly each call (no cache).
     // Secondary: isDualModeDevice && (ispcmode != mainmode). Other cases are primary / non-dual-mode.
     static bool IsSecondaryMode();
 
-    // Initialize the cached ispcmode/mainmode by reading system parameters.
-    // Called once at process startup (BundleMgrService::Init); the runtime mode switch
-    // refreshes the cache afterwards via UpdateModeCache (no re-initialization).
-    static void InitializeCache();
-
-    // Update the cached ispcmode/mainmode by re-reading system parameters.
-    // Should be called when system mode may have changed (e.g., device mode switch).
-    static void UpdateModeCache();
-
-    // Read the cached main mode (const.sceneboard.mainmode): 0=tablet, 1=2in1, -1=invalid.
+    // Read the main mode (const.sceneboard.mainmode) directly: 0=tablet, 1=2in1, -1=invalid.
     // Used by the dual-mode preinstall fan-out to tell the primary deviceType from the secondary one.
     static int32_t GetMainmode();
 
@@ -122,15 +115,6 @@ public:
         std::map<std::string, std::vector<std::string>> &modeHapMap);
 
 private:
-    // Cached ispcmode value (persist.sceneboard.ispcmode): 0=tablet, 1=2in1, -1=not read/illegal
-    static int32_t cachedIspcmode_;
-
-    // Cached mainmode value (const.sceneboard.mainmode): 0=main tablet, 1=main 2in1, -1=not read/illegal
-    static int32_t cachedMainmode_;
-
-    // Mutex for thread-safe cache access
-    static std::mutex cacheMutex_;
-
     static std::mutex ermsMutex_;
     static void *ermsHandle_;
     static ErmsGetPolicyFunc ermsGetPolicyFunc_;

@@ -21,12 +21,11 @@
 // BundleDataMgr::TryLockForBundleOperation), and the reboot-classification policy branch
 // (ClassifyDualModeAppsNoLock).
 // Follows the bms_dual_mode_install_test paradigm:
-// #define private public exposes the DualModeHelper mode cache (cachedIspcmode_/cachedMainmode_)
-// and the BundleDataMgr maps. Mode is driven through the mocked parameter map (SeedModeParams:
-// persist.bms.test_dual_mode switches DualModeHelper to the persist.bms.* test keys, and the
-// cache is refreshed via the production UpdateModeCache path — the switch itself no longer
-// refreshes the cache, so seeding is the only refresh); the device-gate cases keep
-// writing the cache directly via SetDualModeCache. No real system parameter is touched.
+// #define private public exposes the BundleDataMgr maps. Mode is driven through the test-injection
+// system parameters (SeedModeParams: persist.bms.test_dual_mode switches DualModeHelper to the
+// persist.bms.* test keys; DualModeHelper reads these directly each call — no cache, no refresh
+// step needed); the device-gate cases (rejected before the switch runs) set params directly via
+// SetDualModeCache. No real system parameter is touched.
 // Persistence goes through the mocked BmsParam (test/mock/src/bms_param.cpp, swapped
 // in by this suite's BUILD.gn): a static in-memory map that lives for the whole test binary, so
 // SetUp deletes the policy key first and cases cannot leak into each other.
@@ -99,26 +98,23 @@ const std::vector<int32_t> POLICIES_INVALID_EMPTY = {};
 
 }  // namespace
 
-// Write the int mode cache directly (no system parameter). Only for the device-gate cases
-// (non-dual-mode device): they are rejected before the switch's own param refresh, so no
-// parameter state is involved. ispcmode: 0=tablet, 1=2in1 (current mode); mainmode: 0=main
+// Set the mode params via the test-injection system parameters. DualModeHelper reads these
+// directly each call (no cache). ispcmode: 0=tablet, 1=2in1 (current mode); mainmode: 0=main
 // tablet, 1=main 2in1; -1=invalid. A dual-mode device requires BOTH values valid.
 static void SetDualModeCache(int32_t ispcmode, int32_t mainmode)
 {
-    DualModeHelper::cachedIspcmode_ = ispcmode;
-    DualModeHelper::cachedMainmode_ = mainmode;
+    OHOS::system::SetParameter(TEST_DUAL_MODE_PARAM, "true");
+    OHOS::system::SetParameter(TEST_ISPCMODE_PARAM, std::to_string(ispcmode));
+    OHOS::system::SetParameter(TEST_MAINMODE_PARAM, std::to_string(mainmode));
 }
 
-// Seed the mode params in the mocked parameter map and refresh the cache through the
-// production path (UpdateModeCache) — the switch itself does not refresh the cache, so this
-// seeding is what keeps the cache and params aligned for the switch cases
-// (cf. bms_data_mgr_test.cpp SetBundleFirstLaunch_0003).
+// Seed the mode params in the mocked parameter map. DualModeHelper reads these directly each
+// call (no cache, no refresh step needed).
 static void SeedModeParams(int32_t ispcmode, int32_t mainmode)
 {
     OHOS::system::SetParameter(TEST_DUAL_MODE_PARAM, "true");
     OHOS::system::SetParameter(TEST_ISPCMODE_PARAM, std::to_string(ispcmode));
     OHOS::system::SetParameter(TEST_MAINMODE_PARAM, std::to_string(mainmode));
-    DualModeHelper::UpdateModeCache();
 }
 
 // Primary mode: ispcmode == mainmode (both tablet) -> IsDualModeDevice() true, IsSecondaryMode() false.
@@ -415,13 +411,11 @@ HWTEST_F(BmsDualModeSwitchTest,
     EXPECT_TRUE(dataMgr_->tempBundleInfos_[BUNDLE_NAME_SUB].IsDualModeCloneApp());
 }
 
-// Device mode flipped between switches: the switch itself no longer re-reads the mode params
-// (the UpdateModeCache call was removed from the flow), so the mode cache keeps the value from
-// the last explicit refresh (boot init / test seeding) — install-time dual-mode handling
-// (NeedDualModeHandle) only sees the new mode after that next refresh (known gap, spec L-7).
-// The migration body stays mode-free: the pair rotates on every call regardless of the mode,
-// and a single-variant different-package app rotates with it — out on one call, back in on the
-// next
+// Device mode flipped between switches (spec L-7): DualModeHelper reads mode params directly
+// each call, so install-time dual-mode handling (NeedDualModeHandle) sees the new mode without
+// a reboot. The migration body stays mode-free: the pair rotates on every call regardless of
+// the mode, and a single-variant different-package app rotates with it — out on one call, back
+// in the next
 HWTEST_F(BmsDualModeSwitchTest,
     FilterBundleListByDeviceModeDistributionPolicies_0490_ModeFlipCacheStalePairStillRotates,
     TestSize.Level1)
@@ -445,16 +439,15 @@ HWTEST_F(BmsDualModeSwitchTest,
     EXPECT_TRUE(IsHidden(*dataMgr_, BUNDLE_NAME_DIFFONLY));
 
     // When: the mode params flip to secondary (as the mode switcher does) and the switch runs
-    //       again — only the params changed; the cache still holds the primary-mode value
+    //       again — DualModeHelper reads params directly, so the new mode takes effect immediately
     OHOS::system::SetParameter(TEST_ISPCMODE_PARAM,
         std::to_string(ServiceConstants::DUAL_MODE_VALUE_2IN1));
 
-    // Then: the switch does not refresh the mode cache (stale primary value kept — the refresh
-    //       call was removed from the flow), while the migration keeps rotating every
-    //       diff-package name per call — the pair flips back (primary visible) and the
-    //       single-variant app rotates in again
+    // Then: the switch sees secondary mode (direct read, no cache refresh needed) while the
+    //       migration keeps rotating every diff-package name per call — the pair flips back
+    //       (primary visible) and the single-variant app rotates in again
     EXPECT_EQ(Switch(POLICIES_VALID_MINIMAL), ERR_OK);
-    EXPECT_FALSE(DualModeHelper::IsSecondaryMode());
+    EXPECT_TRUE(DualModeHelper::IsSecondaryMode());
     EXPECT_FALSE(dataMgr_->bundleInfos_[BUNDLE_NAME_DIFF].IsDualModeCloneApp());
     EXPECT_TRUE(dataMgr_->tempBundleInfos_[BUNDLE_NAME_DIFF].IsDualModeCloneApp());
     EXPECT_TRUE(IsVisible(*dataMgr_, BUNDLE_NAME_DIFFONLY));
@@ -772,31 +765,32 @@ HWTEST_F(BmsDualModeSwitchTest,
         ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICIES_KEY, persisted));
 }
 
-// The switch no longer touches the mode cache (the UpdateModeCache call was removed from the
-// flow): a transient mode-param read failure (here the ispcmode param disappears) can neither
-// block the switch nor poison the cache — the entry device gate reads the pre-existing cache
-// only and nothing inside the flow overwrites it, so the cache stays valid for install-time
-// dual-mode handling. Replaces the former refresh-failure fail-closed pin (that path is gone)
+// Mode param disappears (transient read failure): DualModeHelper reads system parameters
+// directly each call (no cache), so the missing param is detected immediately at the device
+// gate — the switch fails closed before persistence, caller gets DEVICE_NOT_SUPPORTED to retry
 HWTEST_F(BmsDualModeSwitchTest,
-    FilterBundleListByDeviceModeDistributionPolicies_0960_SwitchDoesNotTouchModeCache,
+    FilterBundleListByDeviceModeDistributionPolicies_0960_ModeRefreshFailureFailsClosed,
     TestSize.Level1)
 {
-    // Given: a valid primary-mode device (params seeded, cache valid); the ispcmode param then
-    //        disappears; a SUB_ONLY app is visible (hidden once the migration runs)
+    // Given: a valid primary-mode device; the ispcmode param then disappears; a SUB_ONLY app
+    //        is visible (would be hidden if the migration ran)
     EnablePrimaryMode();
     OHOS::system::RemoveParameter(TEST_ISPCMODE_PARAM);
     dataMgr_->bundleInfos_[BUNDLE_NAME_SUB] = MakePolicyInfo(
         BUNDLE_NAME_SUB, DeviceModeDistributionPolicy::SUB_ONLY);
 
-    // When/Then: the entry gate passes on the intact cache and the flow never re-reads the
-    //             params — the switch succeeds, hides the SUB_ONLY app and persists the set
+    // When/Then: the device gate reads params directly and fails immediately (ispcmode missing)
+    //             -> 8519946, no persistence, no migration
+    EXPECT_EQ(Switch(POLICIES_VALID_MAIN_SET), ERR_APPEXECFWK_DUAL_MODE_DEVICE_NOT_SUPPORTED);
+    EXPECT_TRUE(IsVisible(*dataMgr_, BUNDLE_NAME_SUB));
+    EXPECT_EQ(dataMgr_->tempBundleInfos_.size(), 0u);
+
+    // And: the gate rejects further switches until the param is restored; then it succeeds
+    EXPECT_FALSE(DualModeHelper::IsDualModeDevice());
+    EXPECT_FALSE(DualModeHelper::IsSecondaryMode());
+    EnablePrimaryMode();
     EXPECT_EQ(Switch(POLICIES_VALID_MAIN_SET), ERR_OK);
     EXPECT_TRUE(IsHidden(*dataMgr_, BUNDLE_NAME_SUB));
-
-    // And: the cache was left untouched (still reporting the seeded primary mode) — no
-    //      unconditional overwrite anywhere in the flow
-    EXPECT_TRUE(DualModeHelper::IsDualModeDevice());
-    EXPECT_FALSE(DualModeHelper::IsSecondaryMode());
 }
 
 // === Switch <-> install/update/uninstall mutual exclusion (TASK-7, L-1 / L-9, r13 fast-fail) ===
@@ -1075,7 +1069,7 @@ HWTEST_F(BmsDualModeSwitchTest, ClassifyDualModeAppsWithPolicies_0300_CorruptedV
     dataMgr_->ClassifyDualModeAppsNoLock();
     EXPECT_FALSE(IsVisible(*dataMgr_, BUNDLE_NAME_SUB));
 
-    // When: value "1,2,x" (non-numeric token) Then: same fallback, zero hiding
+    // When: value "1,2,x" (non-numeric token) Then: same fallback, SUB_ONLY stays hidden
     EXPECT_TRUE(service_->bmsParam_->SaveBmsParam(
         ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICIES_KEY, "1,2,x"));
     dataMgr_->ClassifyDualModeAppsNoLock();

@@ -14,10 +14,10 @@
  */
 
 // Unified unit tests for dual-mode app install: DualModeHelper utility + BaseBundleInstaller
-// dual-mode hooks. Expose private/protected members so we can drive every branch directly via the
-// DualModeHelper cache (cachedIspcmode_/cachedMainmode_) and BaseBundleInstaller members, without
-// reading or modifying real system parameters. The system-parameter read paths
-// (GetSysMode/InitializeCache/UpdateModeCache) are intentionally not covered.
+// dual-mode hooks. Expose private/protected members so we can drive every branch directly.
+// Mode is driven through the test-injection system parameters (persist.bms.test_dual_mode
+// switches DualModeHelper to the persist.bms.* test keys); DualModeHelper reads these
+// directly each call (no cache), so no refresh step is needed.
 #define private public
 #define protected public
 #include <gtest/gtest.h>
@@ -52,6 +52,9 @@ const std::string BUNDLE_NAME = "com.example.test";
 const std::string PREFIXED_NAME = "+clone-10000+" + BUNDLE_NAME;
 const std::string CLONE_APP_NAME = "+clone-1+" + BUNDLE_NAME;  // regular clone (appIndex 1..5), not dual-mode
 const int32_t TEST_USERID = 100;
+constexpr const char *TEST_DUAL_MODE_PARAM = "persist.bms.test_dual_mode";
+constexpr const char *TEST_ISPCMODE_PARAM = "persist.bms.ispcmode";
+constexpr const char *TEST_MAINMODE_PARAM = "persist.bms.mainmode";
 }  // namespace
 
 class BmsDualModeInstallTest : public testing::Test {
@@ -62,19 +65,25 @@ public:
     void TearDown() {}
 };
 
-// Reset DualModeHelper cache before each case so cases do not affect each other. No system parameter.
+// Reset mode params before each case so cases do not affect each other. Both params set to
+// invalid (-1) so IsDualModeDevice() returns false unless a case explicitly sets a valid mode.
 void BmsDualModeInstallTest::SetUp()
 {
-    DualModeHelper::cachedIspcmode_ = ServiceConstants::DUAL_MODE_VALUE_INVALID;
-    DualModeHelper::cachedMainmode_ = ServiceConstants::DUAL_MODE_VALUE_INVALID;
+    OHOS::system::SetParameter(TEST_DUAL_MODE_PARAM, "true");
+    OHOS::system::SetParameter(TEST_ISPCMODE_PARAM,
+        std::to_string(ServiceConstants::DUAL_MODE_VALUE_INVALID));
+    OHOS::system::SetParameter(TEST_MAINMODE_PARAM,
+        std::to_string(ServiceConstants::DUAL_MODE_VALUE_INVALID));
 }
 
-// Drive DualModeHelper mode judgment by writing the int cache directly (no system parameter).
+// Drive DualModeHelper mode judgment by setting test-injection system parameters.
 // ispcmode: 0=tablet, 1=2in1 (current mode); mainmode: 0=main tablet, 1=main 2in1; -1=invalid (non-dual-mode).
+// DualModeHelper reads these directly each call (no cache, no refresh needed).
 static void SetDualModeCache(int ispcmode, int mainmode)
 {
-    DualModeHelper::cachedIspcmode_ = ispcmode;
-    DualModeHelper::cachedMainmode_ = mainmode;
+    OHOS::system::SetParameter(TEST_DUAL_MODE_PARAM, "true");
+    OHOS::system::SetParameter(TEST_ISPCMODE_PARAM, std::to_string(ispcmode));
+    OHOS::system::SetParameter(TEST_MAINMODE_PARAM, std::to_string(mainmode));
 }
 
 static void EnableSecondaryMode()
