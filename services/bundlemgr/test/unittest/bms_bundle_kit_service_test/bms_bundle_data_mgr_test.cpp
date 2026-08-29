@@ -56,6 +56,7 @@
 #include "mock_clean_cache.h"
 #include "mock_bundle_status.h"
 #include "nlohmann/json.hpp"
+#include "parameters.h"
 #include "perf_profile.h"
 #include "plugin/plugin_bundle_info.h"
 #include "pre_bundle_profile.h"
@@ -482,8 +483,9 @@ void BmsBundleDataMgrTest::TearDownTestCase()
 
 void BmsBundleDataMgrTest::SetUp()
 {
-    DualModeHelper::cachedIspcmode_ = ServiceConstants::DUAL_MODE_VALUE_INVALID;
-    DualModeHelper::cachedMainmode_ = ServiceConstants::DUAL_MODE_VALUE_INVALID;
+    OHOS::system::RemoveParameter("persist.bms.test_dual_mode");
+    OHOS::system::RemoveParameter("persist.bms.ispcmode");
+    OHOS::system::RemoveParameter("persist.bms.mainmode");
     installRes_ = {
         .bundleName = HAP_FILE_PATH,
         .modulePackage = HAP_FILE_PATH,
@@ -513,8 +515,9 @@ void BmsBundleDataMgrTest::ResetDataMgr()
 
 void SetDualModeCache(int32_t ispcmode, int32_t mainmode)
 {
-    DualModeHelper::cachedIspcmode_ = ispcmode;
-    DualModeHelper::cachedMainmode_ = mainmode;
+    OHOS::system::SetParameter("persist.bms.test_dual_mode", "true");
+    OHOS::system::SetParameter("persist.bms.ispcmode", std::to_string(ispcmode));
+    OHOS::system::SetParameter("persist.bms.mainmode", std::to_string(mainmode));
 }
 
 InnerBundleInfo CreateTestBundleInfo(const std::string &bundleName,
