@@ -2228,6 +2228,10 @@ bool BundleDataMgr::QueryAbilityInfoWithFlags(const std::optional<AbilityInfo> &
         }
         if (appIndex == 0) {
             info.uid = innerBundleUserInfoPtr->uid;
+            // dual-mode: a clone record always echoes DUAL_MODE_CLONE_APP_INDEX
+            if (innerBundleInfo.IsDualModeCloneApp()) {
+                info.appIndex = innerBundleInfo.GetAppIndex();
+            }
         } else {
             std::string appIndexKey = InnerBundleUserInfo::AppIndexToKey(appIndex);
             if (innerBundleUserInfoPtr->cloneInfos.find(appIndexKey) != innerBundleUserInfoPtr->cloneInfos.end()) {
@@ -2305,6 +2309,10 @@ ErrCode BundleDataMgr::QueryAbilityInfoWithFlagsV9(const std::optional<AbilityIn
         }
         if (appIndex == 0) {
             info.uid = innerBundleUserInfoPtr->uid;
+            // dual-mode: a clone record always echoes DUAL_MODE_CLONE_APP_INDEX
+            if (innerBundleInfo.IsDualModeCloneApp()) {
+                info.appIndex = innerBundleInfo.GetAppIndex();
+            }
         } else if (appIndex == ServiceConstants::DUAL_MODE_CLONE_APP_INDEX) {
             // dual-mode: clone app's uid is stored in userInfo itself, not in cloneInfos.
             if (!innerBundleInfo.IsDualModeCloneApp()) {
@@ -2747,7 +2755,8 @@ void BundleDataMgr::GetMatchAbilityInfos(const Want &want, int32_t flags, const 
                 if (CheckAbilityInfoFlagExist(flags, GET_ABILITY_INFO_WITH_SKILL_URI)) {
                     AddSkillUrisInfo(skills, abilityinfo.skillUri, skillIndex, matchUriIndex);
                 }
-                abilityinfo.appIndex = appIndex;
+                // dual-mode: a clone record always echoes DUAL_MODE_CLONE_APP_INDEX
+                abilityinfo.appIndex = info.ResolveDualModeResponseAppIndex(appIndex);
                 abilityInfos.emplace_back(abilityinfo);
                 break;
             }
@@ -2837,6 +2846,10 @@ void BundleDataMgr::EmplaceAbilityInfo(const InnerBundleInfo &info, const std::v
                 LOG_NOFUNC_E(BMS_TAG_QUERY, "The InnerBundleInfo obtained by EmplaceAbilityInfo is null");
             }
         }
+    }
+    // dual-mode: a clone record always echoes DUAL_MODE_CLONE_APP_INDEX
+    if (info.IsDualModeCloneApp()) {
+        abilityInfo.appIndex = info.GetAppIndex();
     }
     infos.emplace_back(abilityInfo);
 }
@@ -3076,6 +3089,10 @@ void BundleDataMgr::GetMatchLauncherAbilityInfos(const Want& want,
             ability->applicationInfo.label = info.GetBundleName();
         }
         ability->installTime = installTime;
+        // dual-mode: ability infos of a dual-mode clone record carry appIndex 10000
+        if (info.IsDualModeCloneApp()) {
+            ability->appIndex = ServiceConstants::DUAL_MODE_CLONE_APP_INDEX;
+        }
         abilityInfos.emplace_back(*ability);
         GetMatchLauncherAbilityInfosForCloneInfos(info, *ability, *bundleUserInfoPtr, abilityInfos);
     }
@@ -3097,6 +3114,10 @@ void BundleDataMgr::GetMultiLauncherAbilityInfo(const Want& want,
                 info.GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT,
                     bundleUserInfo.bundleUserInfo.userId, abilityInfo.applicationInfo);
                 abilityInfo.installTime = installTime;
+                // dual-mode: ability infos of a dual-mode clone record carry appIndex 10000
+                if (info.IsDualModeCloneApp()) {
+                    abilityInfo.appIndex = ServiceConstants::DUAL_MODE_CLONE_APP_INDEX;
+                }
                 // fix labelId or iconId is equal 0
                 ModifyLauncherAbilityInfo(info.GetIsNewVersion(), abilityInfo);
                 abilityInfos.emplace_back(abilityInfo);
@@ -3194,6 +3215,13 @@ void BundleDataMgr::GetBundleNameAndIndexByName(
 {
     bundleName = keyName;
     appIndex = 0;
+    // dual-mode clone: keyName format "+clone-10000+{bundleName}"
+    std::string dualModeBundleName;
+    if (DualModeHelper::ParseDualModeBundleName(keyName, dualModeBundleName)) {
+        bundleName = dualModeBundleName;
+        appIndex = ServiceConstants::DUAL_MODE_CLONE_APP_INDEX;
+        return;
+    }
     // for clone bundle name
     auto pos = keyName.find(CLONE_BUNDLE_PREFIX);
     if ((pos == std::string::npos) || (pos == 0)) {
@@ -3617,6 +3645,8 @@ bool BundleDataMgr::QueryAbilityInfoByUri(
         }
 
         abilityInfo = (*ability);
+        // dual-mode: a clone record always echoes DUAL_MODE_CLONE_APP_INDEX
+        abilityInfo.appIndex = info.ResolveDualModeResponseAppIndex(abilityInfo.appIndex);
         info.GetApplicationInfo(
             ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, responseUserId,
             abilityInfo.applicationInfo);
@@ -8150,8 +8180,11 @@ bool BundleDataMgr::GetShortcutInfos(
     }
     GetShortcutInfosByInnerBundleInfo(*innerBundleInfo, shortcutInfos);
 
+    // dual-mode: the clone record reads/writes its shortcut visibility rows with appIndex 10000
+    int32_t storageAppIndex = innerBundleInfo->IsDualModeCloneApp() ?
+        ServiceConstants::DUAL_MODE_CLONE_APP_INDEX : Constants::MAIN_APP_INDEX;
     shortcutVisibleStorage_->GetStorageShortcutInfos(
-        bundleName, Constants::MAIN_APP_INDEX, requestUserId, shortcutInfos);
+        bundleName, storageAppIndex, requestUserId, shortcutInfos);
     RemoveInvalidShortcutInfo(shortcutInfos);
     shortcutEnabledStorage_->FilterShortcutInfosEnabled(bundleName, shortcutInfos);
     return true;
@@ -8228,6 +8261,7 @@ bool BundleDataMgr::GetShortcutInfosByInnerBundleInfo(
 {
     if (!info.GetIsNewVersion()) {
         info.GetShortcutInfos(shortcutInfos);
+        SetDualModeCloneShortcutAppIndex(info, shortcutInfos);
         return true;
     }
     AbilityInfo abilityInfo;
@@ -8235,7 +8269,7 @@ bool BundleDataMgr::GetShortcutInfosByInnerBundleInfo(
     if (abilityInfo.hapPath.empty() || abilityInfo.metadata.size() <= 0) {
         return false;
     }
-    
+
     ShortcutJson shortcutJson;
     if (!ProcessShortcutInfo(abilityInfo, shortcutJson)) {
         return false;
@@ -8251,7 +8285,20 @@ bool BundleDataMgr::GetShortcutInfosByInnerBundleInfo(
         shortcutInfos.emplace_back(shortcutInfo);
     }
     (void)InnerProcessShortcutId(info.GetBundleUpdateTime(Constants::ALL_USERID), abilityInfo.hapPath, shortcutInfos);
+    SetDualModeCloneShortcutAppIndex(info, shortcutInfos);
     return true;
+}
+
+void BundleDataMgr::SetDualModeCloneShortcutAppIndex(
+    const InnerBundleInfo &info, std::vector<ShortcutInfo> &shortcutInfos) const
+{
+    // dual-mode: shortcut infos of a dual-mode clone record carry appIndex 10000
+    if (!info.IsDualModeCloneApp()) {
+        return;
+    }
+    for (auto &shortcutInfo : shortcutInfos) {
+        shortcutInfo.appIndex = ServiceConstants::DUAL_MODE_CLONE_APP_INDEX;
+    }
 }
 
 bool BundleDataMgr::GetShortcutInfosByAbilityInfo(const InnerBundleInfo &info, const AbilityInfo &abilityInfo,
@@ -8395,8 +8442,11 @@ ErrCode BundleDataMgr::GetShortcutInfoV9(
 
     GetShortcutInfosByInnerBundleInfo(*innerBundleInfo, shortcutInfos);
 
+    // dual-mode: the clone record reads/writes its shortcut visibility rows with appIndex 10000
+    int32_t storageAppIndex = innerBundleInfo->IsDualModeCloneApp() ?
+        ServiceConstants::DUAL_MODE_CLONE_APP_INDEX : Constants::MAIN_APP_INDEX;
     shortcutVisibleStorage_->GetStorageShortcutInfos(
-        bundleName, Constants::MAIN_APP_INDEX, requestUserId, shortcutInfos);
+        bundleName, storageAppIndex, requestUserId, shortcutInfos);
     RemoveInvalidShortcutInfo(shortcutInfos);
     shortcutEnabledStorage_->FilterShortcutInfosEnabled(bundleName, shortcutInfos);
     return ERR_OK;
@@ -8429,11 +8479,14 @@ ErrCode BundleDataMgr::GetShortcutInfoByAppIndex(const std::string &bundleName, 
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
 
+    // dual-mode: a clone record always resolves to appIndex 10000 regardless of the request
+    int32_t queryAppIndex = innerBundleInfo->IsDualModeCloneApp() ?
+        ServiceConstants::DUAL_MODE_CLONE_APP_INDEX : appIndex;
     GetShortcutInfosByInnerBundleInfo(*innerBundleInfo, shortcutInfos);
     for (auto &info : shortcutInfos) {
-        info.appIndex = appIndex;
+        info.appIndex = queryAppIndex;
     }
-    shortcutVisibleStorage_->GetStorageShortcutInfos(bundleName, appIndex, requestUserId, shortcutInfos);
+    shortcutVisibleStorage_->GetStorageShortcutInfos(bundleName, queryAppIndex, requestUserId, shortcutInfos);
     RemoveInvalidShortcutInfo(shortcutInfos);
     shortcutEnabledStorage_->FilterShortcutInfosEnabled(bundleName, shortcutInfos);
     return ERR_OK;
@@ -8486,11 +8539,14 @@ ErrCode BundleDataMgr::GetShortcutInfoByAbility(const std::string &bundleName,
         (void)GetShortcutInfosByAbilityInfo(*innerBundleInfo, abilityInfo, allShortcutInfos);
     }
     
+    // dual-mode: a clone record always resolves to appIndex 10000 regardless of the request
+    int32_t queryAppIndex = innerBundleInfo->IsDualModeCloneApp() ?
+        ServiceConstants::DUAL_MODE_CLONE_APP_INDEX : appIndex;
     for (auto &info : allShortcutInfos) {
-        info.appIndex = appIndex;
+        info.appIndex = queryAppIndex;
     }
 
-    ProcessShortcutInfos(*innerBundleInfo, moduleName, abilityName, appIndex, requestUserId, allShortcutInfos);
+    ProcessShortcutInfos(*innerBundleInfo, moduleName, abilityName, queryAppIndex, requestUserId, allShortcutInfos);
 
     // Filter by host ability
     for (const auto &shortcutInfo : allShortcutInfos) {
@@ -8947,7 +9003,10 @@ void BundleDataMgr::GetOneExtensionInfosByExtensionTypeName(const std::string &t
         if (typeName != item.second.extensionTypeName) {
             continue;
         }
-        infos.emplace_back(InnerExtensionInfo::ConvertToExtensionInfo(item.second));
+        ExtensionAbilityInfo extensionInfo = InnerExtensionInfo::ConvertToExtensionInfo(item.second);
+        // dual-mode: a clone record always echoes DUAL_MODE_CLONE_APP_INDEX
+        extensionInfo.appIndex = info.ResolveDualModeResponseAppIndex(extensionInfo.appIndex);
+        infos.emplace_back(extensionInfo);
         return;
     }
 }
@@ -9031,7 +9090,8 @@ bool BundleDataMgr::ExplicitQueryExtensionInfo(const Want &want, int32_t flags, 
             LOG_NOFUNC_E(BMS_TAG_QUERY, "The InnerBundleInfo obtained by ExplicitQueryExtensionInfo is null");
         }
     }
-    extensionInfo.appIndex = appIndex;
+    // dual-mode: a clone record always echoes DUAL_MODE_CLONE_APP_INDEX
+    extensionInfo.appIndex = innerBundleInfo->ResolveDualModeResponseAppIndex(appIndex);
     return true;
 }
 
@@ -9130,7 +9190,8 @@ ErrCode BundleDataMgr::ExplicitQueryExtensionInfoV9(const Want &want, int32_t fl
             LOG_NOFUNC_E(BMS_TAG_QUERY, "The InnerBundleInfo obtained by ExplicitQueryExtensionInfoV9 is null");
         }
     }
-    extensionInfo.appIndex = appIndex;
+    // dual-mode: a clone record always echoes DUAL_MODE_CLONE_APP_INDEX
+    extensionInfo.appIndex = innerBundleInfo->ResolveDualModeResponseAppIndex(appIndex);
     return ERR_OK;
 }
 
@@ -9565,7 +9626,8 @@ void BundleDataMgr::GetMatchExtensionInfos(const Want &want, int32_t flags, cons
                 GET_EXTENSION_INFO_WITH_SKILL_URI) == GET_EXTENSION_INFO_WITH_SKILL_URI) {
                 AddSkillUrisInfo(extensionSkillInfos, extensionInfo.skillUri, skillIndex, matchUriIndex);
             }
-            extensionInfo.appIndex = appIndex;
+            // dual-mode: a clone record always echoes DUAL_MODE_CLONE_APP_INDEX
+            extensionInfo.appIndex = info.ResolveDualModeResponseAppIndex(appIndex);
             infos.emplace_back(std::move(extensionInfo));
             break;
         }
@@ -9602,7 +9664,8 @@ void BundleDataMgr::EmplaceExtensionInfo(const InnerBundleInfo &info, const std:
         static_cast<uint32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_SKILL_URI)) {
         AddSkillUrisInfo(skills, extensionInfo.skillUri, matchSkillIndex, matchUriIndex);
     }
-    extensionInfo.appIndex = appIndex;
+    // dual-mode: a clone record always echoes DUAL_MODE_CLONE_APP_INDEX
+    extensionInfo.appIndex = info.ResolveDualModeResponseAppIndex(appIndex);
     infos.emplace_back(extensionInfo);
 }
 
@@ -9664,7 +9727,8 @@ void BundleDataMgr::GetAllExtensionInfos(uint32_t flags, int32_t userId,
             static_cast<uint32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_SKILL)) {
             extensionInfo.skills.clear();
         }
-        extensionInfo.appIndex = appIndex;
+        // dual-mode: a clone record always echoes DUAL_MODE_CLONE_APP_INDEX
+        extensionInfo.appIndex = info.ResolveDualModeResponseAppIndex(appIndex);
         infos.emplace_back(extensionInfo);
     }
 }
@@ -9691,6 +9755,8 @@ bool BundleDataMgr::QueryExtensionAbilityInfos(const ExtensionAbilityType &exten
                 innerBundleInfo.GetApplicationInfo(
                     ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, responseUserId,
                     extensionAbilityInfo.applicationInfo);
+                // dual-mode: a clone record always echoes DUAL_MODE_CLONE_APP_INDEX
+                extensionAbilityInfo.appIndex = innerBundleInfo.ResolveDualModeResponseAppIndex(extensionAbilityInfo.appIndex);
                 extensionInfos.emplace_back(extensionAbilityInfo);
             }
         }
@@ -9752,6 +9818,8 @@ bool BundleDataMgr::QueryExtensionAbilityInfoByUri(const std::string &uri, int32
         info.GetApplicationInfo(
             ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, responseUserId,
             extensionAbilityInfo.applicationInfo);
+        // dual-mode: a clone record always echoes DUAL_MODE_CLONE_APP_INDEX
+        extensionAbilityInfo.appIndex = info.ResolveDualModeResponseAppIndex(extensionAbilityInfo.appIndex);
         return true;
     }
     LOG_NOFUNC_W(BMS_TAG_QUERY, "QueryExtensionAbilityInfoByUri %{public}s %{public}d failed",
@@ -9811,6 +9879,8 @@ bool BundleDataMgr::QueryExtensionAbilityInfoByUriOptimal(const std::string &uri
         info.GetApplicationInfo(
             ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, responseUserId,
             tmpInfo.applicationInfo);
+        // dual-mode: a clone record always echoes DUAL_MODE_CLONE_APP_INDEX
+        tmpInfo.appIndex = info.ResolveDualModeResponseAppIndex(tmpInfo.appIndex);
         if (info.IsSystemApp()) {
             extensionAbilityInfo = tmpInfo;
             return true;
@@ -13481,6 +13551,10 @@ ErrCode BundleDataMgr::QueryAbilityInfoByContinueType(const std::string &bundleN
         }
         abilityInfo.uid = innerBundleUserInfoPtr->uid;
     }
+    // dual-mode: a clone record always echoes DUAL_MODE_CLONE_APP_INDEX
+    if (innerBundleInfo->IsDualModeCloneApp()) {
+        abilityInfo.appIndex = innerBundleInfo->GetAppIndex();
+    }
     return ERR_OK;
 }
 
@@ -14660,7 +14734,10 @@ ErrCode BundleDataMgr::GetAllBundleDirs(int32_t userId, std::vector<BundleDir> &
         }
 
         std::vector<int32_t> allAppIndexes = {0};
-        if (type == BundleType::APP) {
+        if (info.IsDualModeCloneApp()) {
+            // dual-mode: the visible clone record only owns the "+clone-10000+" data dir
+            allAppIndexes = {ServiceConstants::DUAL_MODE_CLONE_APP_INDEX};
+        } else if (type == BundleType::APP) {
             std::vector<int32_t> cloneAppIndexes = GetCloneAppIndexesByInnerBundleInfo(info, responseUserId);
             allAppIndexes.insert(allAppIndexes.end(), cloneAppIndexes.begin(), cloneAppIndexes.end());
         }

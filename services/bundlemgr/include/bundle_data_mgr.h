@@ -1798,6 +1798,8 @@ private:
     bool ProcessShortcutInfo(const AbilityInfo &abilityInfo, ShortcutJson &shortcutJson) const;
     bool GetShortcutInfosByInnerBundleInfo(
         const InnerBundleInfo &info, std::vector<ShortcutInfo> &shortcutInfos) const;
+    void SetDualModeCloneShortcutAppIndex(
+        const InnerBundleInfo &info, std::vector<ShortcutInfo> &shortcutInfos) const;
     bool GetShortcutInfosByAbilityInfo(const InnerBundleInfo &info, const AbilityInfo &abilityInfo,
         std::vector<ShortcutInfo> &shortcutInfos) const;
     std::string TryGetRawDataByExtractor(const std::string &hapPath, const std::string &profileName,

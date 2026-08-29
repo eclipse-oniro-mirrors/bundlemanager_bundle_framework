@@ -687,6 +687,10 @@ public:
             APP_LOGI("configUri is %{public}s", configUri.c_str());
             if (configUri == abilityUri) {
                 AbilityInfo abilityInfo = InnerAbilityInfo::ConvertToAbilityInfo(item.second);
+                // dual-mode: ability infos of a dual-mode clone record carry appIndex 10000
+                if (isDualModeCloneApp_) {
+                    abilityInfo.appIndex = appIndex_;
+                }
                 GetApplicationInfo(
                     ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION, userId, abilityInfo.applicationInfo);
                 abilityInfos.emplace_back(abilityInfo);
@@ -1748,6 +1752,13 @@ public:
     int32_t GetAppIndex() const
     {
         return appIndex_;
+    }
+
+    // dual-mode: response appIndex of a dual-mode clone record is always
+    // DUAL_MODE_CLONE_APP_INDEX, regardless of the requested index.
+    int32_t ResolveDualModeResponseAppIndex(int32_t requestedAppIndex) const
+    {
+        return isDualModeCloneApp_ ? ServiceConstants::DUAL_MODE_CLONE_APP_INDEX : requestedAppIndex;
     }
 
     void SetIsSandbox(bool isSandbox)
