@@ -31,6 +31,7 @@
 #include "base_bundle_installer.h"
 #include "bundle_data_mgr.h"
 #include "bundle_data_storage_rdb.h"
+#include "bundle_installer.h"
 #include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_service_constants.h"
@@ -39,8 +40,10 @@
 #include "install_param.h"
 #include "pre_install_bundle_info.h"
 #include "message_parcel.h"
+#include "mock_status_receiver.h"
 #include "nlohmann/json.hpp"
 #include "parameters.h"
+#include "preinstall_data_storage_interface.h"
 #include "scope_guard.h"
 #include "bundle_resource/bundle_resource_process.h"
 
@@ -214,6 +217,39 @@ HWTEST_F(BmsDualModeInstallTest, MapDeviceTypeToMode_0300, Function | SmallTest 
 HWTEST_F(BmsDualModeInstallTest, MapDeviceTypeToMode_0400, Function | SmallTest | Level0)
 {
     EXPECT_EQ(DualModeHelper::MapDeviceTypeToMode(""), ServiceConstants::DUAL_MODE_VALUE_INVALID);
+}
+
+class PreInstallStorageSpy final : public IPreInstallDataStorage {
+public:
+    bool SavePreInstallStorageBundleInfo(const PreInstallBundleInfo &) override
+    {
+        return false;
+    }
+
+    bool LoadAllPreInstallBundleInfos(std::vector<PreInstallBundleInfo> &) override
+    {
+        return false;
+    }
+
+    bool DeletePreInstallStorageBundleInfo(const PreInstallBundleInfo &) override
+    {
+        return false;
+    }
+
+    bool LoadPreInstallBundleInfo(const std::string &bundleName, PreInstallBundleInfo &) override
+    {
+        queriedBundleNames.emplace_back(bundleName);
+        return false;
+    }
+
+    std::vector<std::string> queriedBundleNames;
+};
+
+static std::shared_ptr<PreInstallStorageSpy> InstallPreInstallStorageSpy(const std::shared_ptr<BundleDataMgr> &dataMgr)
+{
+    auto storageSpy = std::make_shared<PreInstallStorageSpy>();
+    dataMgr->preInstallDataStorage_ = storageSpy;
+    return storageSpy;
 }
 
 // ====================== DualModeHelper::IsDualModeDevice ======================
@@ -1205,6 +1241,126 @@ HWTEST_F(BmsDualModeInstallTest, CheckDualModeCategoryConsistencyInTemp_0500, Fu
     installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE;
     EXPECT_EQ(installer.CheckDualModeCategoryConsistencyInTemp(installParam),
         OHOS::ERR_APPEXECFWK_INSTALL_DUAL_MODE_CATEGORY_CONFLICT);
+}
+
+// ====================== BundleInstaller::UninstallAndRecover ======================
+
+HWTEST_F(BmsDualModeInstallTest, UninstallAndRecover_0100, Function | SmallTest | Level0)
+{
+    InstallTestDataMgr(TEST_USERID);
+    sptr<MockStatusReceiver> receiver = new (std::nothrow) MockStatusReceiver();
+    ASSERT_NE(receiver, nullptr);
+    BundleInstaller installer(0, receiver);
+    InstallParam installParam;
+    installParam.isOTA = true;
+
+    installer.UninstallAndRecover(BUNDLE_NAME, installParam);
+
+    EXPECT_EQ(receiver->GetResultCode(), ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE);
+}
+
+// ====================== BaseBundleInstaller::InnerProcessInstallByPreInstallInfo ======================
+
+HWTEST_F(BmsDualModeInstallTest, InnerProcessInstallByPreInstallInfo_0100, Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    const std::vector<DeviceModeDistributionPolicy> differentPackagePolicies = {
+        DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE,
+        DeviceModeDistributionPolicy::PARTIAL_COMPATIBLE_DIFFERENT_PACKAGE,
+        DeviceModeDistributionPolicy::FULL_COMPATIBLE_DIFFERENT_PACKAGE,
+    };
+    for (const auto policy : differentPackagePolicies) {
+        auto dataMgr = std::make_shared<BundleDataMgr>();
+        dataMgr->multiUserIdsSet_.insert(TEST_USERID);
+        auto storageSpy = InstallPreInstallStorageSpy(dataMgr);
+        BaseBundleInstaller installer;
+        installer.dataMgr_ = dataMgr;
+        InstallParam installParam;
+        installParam.userId = TEST_USERID;
+        installParam.deviceModeDistributionPolicy = policy;
+        int32_t uid = Constants::INVALID_UID;
+
+        EXPECT_EQ(installer.InnerProcessInstallByPreInstallInfo(BUNDLE_NAME, installParam, uid),
+            ERR_APPEXECFWK_RECOVER_INVALID_BUNDLE_NAME);
+        ASSERT_EQ(storageSpy->queriedBundleNames.size(), 1u);
+        EXPECT_EQ(storageSpy->queriedBundleNames.front(), PREFIXED_NAME);
+    }
+}
+
+HWTEST_F(BmsDualModeInstallTest, InnerProcessInstallByPreInstallInfo_0200, Function | SmallTest | Level0)
+{
+    EnablePrimaryMode();
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    dataMgr->multiUserIdsSet_.insert(TEST_USERID);
+    auto storageSpy = InstallPreInstallStorageSpy(dataMgr);
+    BaseBundleInstaller installer;
+    installer.dataMgr_ = dataMgr;
+    InstallParam installParam;
+    installParam.userId = TEST_USERID;
+    installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE;
+    int32_t uid = Constants::INVALID_UID;
+
+    EXPECT_EQ(installer.InnerProcessInstallByPreInstallInfo(BUNDLE_NAME, installParam, uid),
+        ERR_APPEXECFWK_RECOVER_INVALID_BUNDLE_NAME);
+    ASSERT_EQ(storageSpy->queriedBundleNames.size(), 1u);
+    EXPECT_EQ(storageSpy->queriedBundleNames.front(), BUNDLE_NAME);
+}
+
+HWTEST_F(BmsDualModeInstallTest, InnerProcessInstallByPreInstallInfo_0300, Function | SmallTest | Level0)
+{
+    SetDualModeCache(ServiceConstants::DUAL_MODE_VALUE_INVALID, ServiceConstants::DUAL_MODE_VALUE_INVALID);
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    dataMgr->multiUserIdsSet_.insert(TEST_USERID);
+    auto storageSpy = InstallPreInstallStorageSpy(dataMgr);
+    BaseBundleInstaller installer;
+    installer.dataMgr_ = dataMgr;
+    InstallParam installParam;
+    installParam.userId = TEST_USERID;
+    installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE;
+    int32_t uid = Constants::INVALID_UID;
+
+    EXPECT_EQ(installer.InnerProcessInstallByPreInstallInfo(BUNDLE_NAME, installParam, uid),
+        ERR_APPEXECFWK_RECOVER_INVALID_BUNDLE_NAME);
+    ASSERT_EQ(storageSpy->queriedBundleNames.size(), 1u);
+    EXPECT_EQ(storageSpy->queriedBundleNames.front(), BUNDLE_NAME);
+}
+
+HWTEST_F(BmsDualModeInstallTest, InnerProcessInstallByPreInstallInfo_0400, Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    dataMgr->multiUserIdsSet_.insert(TEST_USERID);
+    auto storageSpy = InstallPreInstallStorageSpy(dataMgr);
+    BaseBundleInstaller installer;
+    installer.dataMgr_ = dataMgr;
+    InstallParam installParam;
+    installParam.userId = TEST_USERID;
+    installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::MAIN_ONLY;
+    int32_t uid = Constants::INVALID_UID;
+
+    EXPECT_EQ(installer.InnerProcessInstallByPreInstallInfo(BUNDLE_NAME, installParam, uid),
+        ERR_APPEXECFWK_RECOVER_INVALID_BUNDLE_NAME);
+    ASSERT_EQ(storageSpy->queriedBundleNames.size(), 1u);
+    EXPECT_EQ(storageSpy->queriedBundleNames.front(), BUNDLE_NAME);
+}
+
+HWTEST_F(BmsDualModeInstallTest, InnerProcessInstallByPreInstallInfo_0500, Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    dataMgr->multiUserIdsSet_.insert(TEST_USERID);
+    auto storageSpy = InstallPreInstallStorageSpy(dataMgr);
+    BaseBundleInstaller installer;
+    installer.dataMgr_ = dataMgr;
+    InstallParam installParam;
+    installParam.userId = TEST_USERID;
+    installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE;
+    int32_t uid = Constants::INVALID_UID;
+
+    EXPECT_EQ(installer.InnerProcessInstallByPreInstallInfo(PREFIXED_NAME, installParam, uid),
+        ERR_APPEXECFWK_RECOVER_INVALID_BUNDLE_NAME);
+    ASSERT_EQ(storageSpy->queriedBundleNames.size(), 1u);
+    EXPECT_EQ(storageSpy->queriedBundleNames.front(), PREFIXED_NAME);
 }
 
 // ====================== BaseBundleInstaller::InitTempBundleFromCache ======================

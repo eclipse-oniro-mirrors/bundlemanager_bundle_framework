@@ -369,6 +369,15 @@ void BundleInstaller::UninstallAndRecover(const std::string &bundleName, const I
     }
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr != nullptr) {
+        InnerBundleInfo info;
+        if (!dataMgr->FetchInnerBundleInfo(bundleName, info)) {
+            APP_LOGE("FetchInnerBundleInfo failed, bundleName: %{public}s", bundleName.c_str());
+            if (statusReceiver_ != nullptr) {
+                statusReceiver_->OnFinished(ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE, "");
+            }
+            return;
+        }
+        userInstallParam.deviceModeDistributionPolicy = info.GetDeviceModeDistributionPolicy();
         userIds = dataMgr->GetUserIds(bundleName);
     }
     for (auto userId : userIds) {
