@@ -102,6 +102,18 @@ namespace bundleManager {
     GET_EXTENSION_ABILITY_INFO_WITH_SKILL = 0x00000010,
   }
 
+  enum DeviceModeDistributionPolicy {
+    UNSPECIFIED = 0,
+    MAIN_ONLY = 1,
+    SUB_ONLY = 2,
+    UNIVERSAL_IDENTICAL_PACKAGE = 3,
+    UNIVERSAL_DIFFERENT_PACKAGE = 4,
+    PARTIAL_COMPATIBLE_IDENTICAL_PACKAGE = 5,
+    PARTIAL_COMPATIBLE_DIFFERENT_PACKAGE = 6,
+    FULL_COMPATIBLE_IDENTICAL_PACKAGE = 7,
+    FULL_COMPATIBLE_DIFFERENT_PACKAGE = 8,
+  }
+
   export enum ExtensionAbilityType {
     FORM = 0,
     WORK_SCHEDULER = 1,
@@ -398,6 +410,9 @@ namespace bundleManager {
   native function getAbilityInfoNative(uri: string, abilityFlags: int): Array<AbilityInfo>;
 
   native function getAlternateIconsNative(): Array<AlternateIconInfo>;
+
+  native function filterBundleListByDeviceModeDistributionPoliciesNative(
+    policies: Array<DeviceModeDistributionPolicy>): void;
 
   function isApplicationEnabledSync(bundleName: string): boolean {
     return isApplicationEnabledNative(bundleName, 0, true);
@@ -1999,6 +2014,23 @@ namespace bundleManager {
         reject(err as BusinessError);
       });
     });
+    return p;
+  }
+
+  function filterBundleListByDeviceModeDistributionPolicies(
+    policies: Array<DeviceModeDistributionPolicy>): Promise<void> {
+    let p = new Promise<void>((resolve: (v: PromiseLike<void>) => void, reject: (error: BusinessError) => void) : void => {
+      let execFun = (): void => {
+        return filterBundleListByDeviceModeDistributionPoliciesNative(policies);
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((): void => {
+        resolve(Promise.resolve());
+      }, (err: Error): void => {
+        reject(err as BusinessError);
+      });
+    }
+    );
     return p;
   }
 }
