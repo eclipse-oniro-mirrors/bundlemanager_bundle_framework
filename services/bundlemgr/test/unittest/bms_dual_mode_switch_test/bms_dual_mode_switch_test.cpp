@@ -658,7 +658,8 @@ HWTEST_F(BmsDualModeSwitchTest,
 // fallen back to requirement-1 logic), so no rollback baseline exists. The switch is NOT
 // blocked: it still migrates and succeeds, and the successful persist heals the stored value
 // to the new normalized CSV (replacing the corrupted one). The no-baseline trade-off only
-// surfaces on a later save failure (memory stays switched), which the mock cannot drive
+// surfaces on a later save failure (single-mode apps fall back to the mode-based placement
+// while the other entries stay switched — pinned by _0780), which the mock cannot drive
 HWTEST_F(BmsDualModeSwitchTest,
     FilterBundleListByDeviceModeDistributionPolicies_0760_CorruptedBaselineSwitchSucceedsAndHealsValue,
     TestSize.Level1)
@@ -716,24 +717,75 @@ HWTEST_F(BmsDualModeSwitchTest,
     EXPECT_EQ(persisted, "1,3,4,5,6,7,8");
 }
 
-// Missing any different-package policy (4/6/8) -> INVALID_PARAMETER
+// No-baseline save-failure fallback (r16): with no valid persisted baseline the rollback
+// cannot replay the migration body, so single-mode apps converge to the initialization-time
+// mode-based placement instead of keeping the failed switch's set placement. The mocked
+// BmsParam never fails a save (_0700 drives only the null-param entry), so — like _0750 —
+// this case performs the exact two calls the rollback makes: migrate to the new set, then
+// the mode-based fallback. Different-package/filterable entries are NOT restored (they keep
+// the failed switch's placement; full convergence needs the next successful switch/reboot).
+HWTEST_F(BmsDualModeSwitchTest,
+    FilterBundleListByDeviceModeDistributionPolicies_0780_NoBaselineFallbackConvergesSingleModeByMode,
+    TestSize.Level1)
+{
+    // Given: secondary mode; no persisted baseline (SetUp deleted the key); memory sits in the
+    //        no-param boot state for secondary mode — MAIN_ONLY hidden, SUB_ONLY/UNSPECIFIED
+    //        visible, the different-package pair's clone visible / primary hidden (Step 2
+    //        swap), the single variant hidden
+    EnableSecondaryMode();
+    dataMgr_->tempBundleInfos_[BUNDLE_NAME_MAIN] = MakePolicyInfo(
+        BUNDLE_NAME_MAIN, DeviceModeDistributionPolicy::MAIN_ONLY);
+    dataMgr_->bundleInfos_[BUNDLE_NAME_SUB] = MakePolicyInfo(
+        BUNDLE_NAME_SUB, DeviceModeDistributionPolicy::SUB_ONLY);
+    dataMgr_->bundleInfos_[BUNDLE_NAME_GENERIC] = MakePolicyInfo(
+        BUNDLE_NAME_GENERIC, DeviceModeDistributionPolicy::UNSPECIFIED);
+    dataMgr_->bundleInfos_[BUNDLE_NAME_DIFF] = MakePolicyInfo(
+        BUNDLE_NAME_DIFF, DeviceModeDistributionPolicy::FULL_COMPATIBLE_DIFFERENT_PACKAGE, true);
+    dataMgr_->tempBundleInfos_[BUNDLE_NAME_DIFF] = MakePolicyInfo(
+        BUNDLE_NAME_DIFF, DeviceModeDistributionPolicy::FULL_COMPATIBLE_DIFFERENT_PACKAGE);
+    dataMgr_->tempBundleInfos_[BUNDLE_NAME_DIFFONLY] = MakePolicyInfo(
+        BUNDLE_NAME_DIFFONLY, DeviceModeDistributionPolicy::FULL_COMPATIBLE_DIFFERENT_PACKAGE);
+
+    // When: the switch migrated memory to the main set (MAIN_ONLY in-set -> shown, SUB_ONLY
+    //       excluded -> hidden, pair swapped, single variant rotated in) and the save then
+    //       failed with no valid baseline -> the r16 fallback (the two NoLock calls below are
+    //       exactly the wrapper's migrate + no-baseline rollback pair; the mode argument is
+    //       read exactly as the production rollback reads it)
+    dataMgr_->FilterBundleListByDeviceModeDistributionPoliciesNoLock(ToPolicySet(POLICIES_VALID_MAIN_SET));
+    dataMgr_->ClassifyDualModeAppsByDeviceModeNoLock(DualModeHelper::IsSecondaryMode());
+
+    // Then: single-mode apps return to the mode-based placement — MAIN_ONLY hidden again
+    //       (secondary mode) even though the failed set contained it, SUB_ONLY visible again
+    //       even though the failed set excluded it; UNSPECIFIED stays. The different-package
+    //       entries keep the failed switch's placement (partial convergence by design).
+    EXPECT_EQ(dataMgr_->bundleInfos_.size(), 4u);
+    EXPECT_EQ(dataMgr_->tempBundleInfos_.size(), 2u);
+    EXPECT_TRUE(IsHidden(*dataMgr_, BUNDLE_NAME_MAIN));
+    EXPECT_TRUE(IsVisible(*dataMgr_, BUNDLE_NAME_SUB));
+    EXPECT_TRUE(IsVisible(*dataMgr_, BUNDLE_NAME_GENERIC));
+    EXPECT_FALSE(dataMgr_->bundleInfos_[BUNDLE_NAME_DIFF].IsDualModeCloneApp());
+    EXPECT_TRUE(dataMgr_->tempBundleInfos_[BUNDLE_NAME_DIFF].IsDualModeCloneApp());
+    EXPECT_TRUE(IsVisible(*dataMgr_, BUNDLE_NAME_DIFFONLY));
+}
+
+// Missing any different-package policy (4/6/8) -> POLICY_INVALID (dual-mode param error)
 HWTEST_F(BmsDualModeSwitchTest, FilterBundleListByDeviceModeDistributionPolicies_0800_MissingDiffRejected,
     TestSize.Level1)
 {
     EnablePrimaryMode();
-    EXPECT_EQ(Switch(POLICIES_INVALID_MISSING_DIFF), ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+    EXPECT_EQ(Switch(POLICIES_INVALID_MISSING_DIFF), ERR_APPEXECFWK_DUAL_MODE_POLICY_INVALID);
     std::string persisted;
     EXPECT_FALSE(service_->bmsParam_->GetBmsParam(
         ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICIES_KEY, persisted));
 }
 
-// Out-of-range value (not in [0,8]) or empty array -> INVALID_PARAMETER
+// Out-of-range value (not in [0,8]) or empty array -> POLICY_INVALID (dual-mode param error)
 HWTEST_F(BmsDualModeSwitchTest, FilterBundleListByDeviceModeDistributionPolicies_0900_IllegalValuesRejected,
     TestSize.Level1)
 {
     EnablePrimaryMode();
-    EXPECT_EQ(Switch(POLICIES_INVALID_OUT_OF_RANGE), ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
-    EXPECT_EQ(Switch(POLICIES_INVALID_EMPTY), ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+    EXPECT_EQ(Switch(POLICIES_INVALID_OUT_OF_RANGE), ERR_APPEXECFWK_DUAL_MODE_POLICY_INVALID);
+    EXPECT_EQ(Switch(POLICIES_INVALID_EMPTY), ERR_APPEXECFWK_DUAL_MODE_POLICY_INVALID);
 }
 
 // Non-dual-mode device -> rejected with ERR_APPEXECFWK_DUAL_MODE_DEVICE_NOT_SUPPORTED (8519946)
@@ -753,7 +805,7 @@ HWTEST_F(BmsDualModeSwitchTest,
     EXPECT_EQ(Switch(POLICIES_VALID_MAIN_SET), ERR_APPEXECFWK_DUAL_MODE_DEVICE_NOT_SUPPORTED);
 
     // The device gate precedes validation and the busy check: invalid policies + an operation
-    // holding the lock still yield DEVICE_NOT_SUPPORTED (not INVALID_PARAMETER / SWITCH_BUSY)
+    // holding the lock still yield DEVICE_NOT_SUPPORTED (not POLICY_INVALID / SWITCH_BUSY)
     SetDualModeCache(ServiceConstants::DUAL_MODE_VALUE_INVALID, ServiceConstants::DUAL_MODE_VALUE_INVALID);
     EXPECT_EQ(Switch(POLICIES_INVALID_MISSING_DIFF), ERR_APPEXECFWK_DUAL_MODE_DEVICE_NOT_SUPPORTED);
 

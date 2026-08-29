@@ -2298,13 +2298,14 @@ public:
      * @return ERR_OK on success; ERR_APPEXECFWK_DUAL_MODE_DEVICE_NOT_SUPPORTED on a non
      *         dual-mode device, or when the mode-param refresh inside the switch fails (cache
      *         keeps the last-known-good values; retry); ERR_APPEXECFWK_DUAL_MODE_SWITCH_BUSY
-     *         if install/uninstall in progress (reserved, not returned in current version —
-     *         concurrent access is serialized by an internal lock);
-     *         ERR_APPEXECFWK_DUAL_MODE_PERSIST_FAILED if persist failed (rolled back);
-     *         ERR_BUNDLE_MANAGER_INVALID_PARAMETER on invalid policy values;
-     *         ERR_BUNDLE_MANAGER_PARAM_ERROR on invalid input size (empty or oversized,
-     *         pre-checked at the proxy entry — the host-side gate result is flattened to a
-     *         generic IPC error by the common OnRemoteRequest wrapper).
+     *         when an install/update/uninstall task or another switch is in flight (fail fast
+     *         without touching any state; retry); ERR_APPEXECFWK_DUAL_MODE_PERSIST_FAILED if
+     *         persist failed (rolled back); ERR_APPEXECFWK_DUAL_MODE_POLICY_INVALID on any
+     *         invalid parameter (dedicated dual-mode code, unified for TS mapping): out-of-range
+     *         values or a set missing the different-package policies (4/6/8) are rejected
+     *         server-side, an empty or oversized set is pre-checked at the proxy entry (the
+     *         host-side gate result is flattened to a generic IPC error by the common
+     *         OnRemoteRequest wrapper).
      */
     virtual ErrCode FilterBundleListByDeviceModeDistributionPolicies(
         const std::set<DeviceModeDistributionPolicy> &policies)

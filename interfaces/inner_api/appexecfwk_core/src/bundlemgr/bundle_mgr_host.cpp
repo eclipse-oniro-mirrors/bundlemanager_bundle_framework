@@ -5104,7 +5104,7 @@ ErrCode BundleMgrHost::HandleFilterBundleListByDeviceModeDistributionPolicies(Me
         static_cast<size_t>(DeviceModeDistributionPolicy::FULL_COMPATIBLE_DIFFERENT_PACKAGE) + 1) {
         APP_LOGE_NOFUNC("HandleFilterBundleListByDeviceModeDistributionPolicies size %{public}zu invalid",
             policyValues.size());
-        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+        return ERR_APPEXECFWK_DUAL_MODE_POLICY_INVALID;
     }
     // Any int32_t value is a valid cast target (fixed underlying type); range check (0~8)
     // is enforced later in BundleDataMgr.

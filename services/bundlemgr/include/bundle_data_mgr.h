@@ -136,6 +136,21 @@ public:
     bool ClassifyDualModeAppsByPolicyNoLock();
 
     /**
+     * @brief Mode-based part of dual-mode classification (requirement 1 fallback, shared since
+     * change r16). Places MAIN_ONLY/SUB_ONLY single-mode apps by the given mode: MAIN_ONLY
+     * visible in main mode, SUB_ONLY visible in secondary mode; the mismatched side moves to
+     * tempBundleInfos_. Symmetric hide/show passes converge from any starting state. Called
+     * whenever the persisted DualModeDeviceModeDistributionPolicies is absent or fails to
+     * parse: at boot classification (fallback after ClassifyDualModeAppsByPolicyNoLock
+     * returns false) and at switch rollback (SaveBmsParam failed with no valid baseline —
+     * single-mode apps return to the initialization-time placement; different-package and
+     * filterable entries are not touched and converge on the next successful switch/reboot).
+     * Note: This function does not lock bundleInfoMutex_, caller must hold the lock.
+     * @param isSecondaryMode current live mode, read once by the caller.
+     */
+    void ClassifyDualModeAppsByDeviceModeNoLock(bool isSecondaryMode);
+
+    /**
      * @brief Switch application visibility by device mode distribution policies (dual-mode
      * requirement 2). Validates the set, migrates apps between bundleInfos_ (queryable) and
      * tempBundleInfos_ (hidden) per policy set, then persists the set to bms_param; if the
@@ -153,8 +168,11 @@ public:
      *         ERR_APPEXECFWK_DUAL_MODE_SWITCH_BUSY (an install/update/uninstall task or another
      *         switch is running; no state is touched) / ERR_APPEXECFWK_DUAL_MODE_PERSIST_FAILED
      *         (memory is rolled back to the pre-switch state when a valid baseline exists;
-     *         without one — first switch, or corrupted baseline — the switched memory stays and
-     *         converges on the next successful switch or reboot) / ERR_BUNDLE_MANAGER_INVALID_PARAMETER.
+     *         without one — first switch, or corrupted baseline — single-mode apps fall back
+     *         to the mode-based placement and the other entries keep the switched placement
+     *         until the next successful switch or reboot) /
+     *         ERR_APPEXECFWK_DUAL_MODE_POLICY_INVALID (unified dual-mode parameter error, same
+     *         code as the proxy-side size pre-check).
      */
     ErrCode FilterBundleListByDeviceModeDistributionPolicies(
         const std::set<DeviceModeDistributionPolicy> &policies);

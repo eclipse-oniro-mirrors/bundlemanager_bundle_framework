@@ -6728,7 +6728,7 @@ ErrCode BundleMgrProxy::FilterBundleListByDeviceModeDistributionPolicies(
     if (policies.empty() || policies.size() >
         static_cast<size_t>(DeviceModeDistributionPolicy::FULL_COMPATIBLE_DIFFERENT_PACKAGE) + 1) {
         APP_LOGE_NOFUNC("FilterBundleListByDeviceModeDistributionPolicies size %{public}zu invalid", policies.size());
-        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+        return ERR_APPEXECFWK_DUAL_MODE_POLICY_INVALID;
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
