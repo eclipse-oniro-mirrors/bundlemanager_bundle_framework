@@ -203,7 +203,10 @@ constexpr const char* ERR_MSG_ERROR_NO_ALTERNATE_ICON_ENABLED = "No alternate ic
 constexpr const char* ERROR_MSG_GET_ALTERNATE_ICONS_FAILED = "Failed to obtain alternate icon.";
 constexpr const char* ERR_MSG_DUAL_MODE_DEVICE_NOT_SUPPORTED = "The device does not support the dual mode.";
 constexpr const char* ERR_MSG_DUAL_MODE_POLICY_INVALID =
-    "The input parameter is invalid: out of the valid enum range or missing the required different-package policies.";
+    "The input parameter is invalid. It is either outside the range of valid enum values or does not "
+    "include the following required enum values: [DeviceModeDistributionPolicy.UNIVERSAL_DIFFERENT_PACKAGE, "
+    "DeviceModeDistributionPolicy.PARTIAL_COMPATIBLE_DIFFERENT_PACKAGE, "
+    "DeviceModeDistributionPolicy.FULL_COMPATIBLE_DIFFERENT_PACKAGE].";
 constexpr const char* ERR_MSG_DUAL_MODE_SWITCH_BUSY =
     "The device is installing or uninstalling an application, or a previous API call is still being "
     "processed. Please try again.";
