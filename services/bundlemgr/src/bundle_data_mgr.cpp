@@ -10683,7 +10683,7 @@ ErrCode BundleDataMgr::GetAllAppProvisionInfoForDualMode(const int32_t userId, s
         std::string effectiveBundleName = isDualModeCloneApp ? DualModeHelper::GetDualModeBundleName(bundleName) : bundleName;
         AppProvisionInfo appProvisionInfo;
         if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAppProvisionInfo(effectiveBundleName, appProvisionInfo)) {
-            APP_LOGW("effectiveBundleName:%{public}s GetAllAppProvisionInfo failed", provieffectiveBundleNamesionKey.c_str());
+            APP_LOGW("effectiveBundleName:%{public}s GetAllAppProvisionInfo failed", effectiveBundleName.c_str());
             continue;
         }
         appProvisionInfo.bundleName = bundleName;
