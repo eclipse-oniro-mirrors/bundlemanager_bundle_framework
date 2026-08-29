@@ -497,6 +497,7 @@ void RegisterClearCacheListener();
 void CreateMultiAppModeTypeObject(napi_env env, napi_value value);
 void CreateAppClonePreferenceModeObject(napi_env env, napi_value value);
 void CreateApplicationInfoFlagObject(napi_env env, napi_value value);
+void CreateDeviceModeDistributionPolicyObject(napi_env env, napi_value value);
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif // BUNDLE_FRAMEWORK_INTERFACES_KITS_JS_BUNDLE_MANAGER_BUNDLE_MANAGER_H
