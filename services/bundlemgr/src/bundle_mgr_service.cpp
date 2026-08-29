@@ -132,7 +132,6 @@ bool BundleMgrService::Init()
     CreateBmsServiceDir();
     APP_LOGI_NOFUNC("BundleMgrService InitBmsParam");
     InitBmsParam();
-    DualModeHelper::InitializeCache();
     APP_LOGI_NOFUNC("BundleMgrService InitPreInstallExceptionMgr");
     InitPreInstallExceptionMgr();
     CHECK_INIT_RESULT(InitBundleMgrHost(), "Init bundleMgr fail");

@@ -826,5 +826,13 @@ void BundleCommonEventMgr::PublishCommonEventForEnterpriseAsync(
         self->PublishCommonEventForEnterprise(bundleName, publishUserId, commonData);
     });
 }
+
+void BundleCommonEventMgr::NotifyBundleStatusAsync(const NotifyBundleEvents &event,
+    const std::shared_ptr<BundleDataMgr> &dataMgr)
+{
+    SubmitEventAsync([self = shared_from_this(), event, dataMgr]() {
+        self->NotifyBundleStatus(event, dataMgr);
+    });
+}
 } // AppExecFwk
 } // OHOS

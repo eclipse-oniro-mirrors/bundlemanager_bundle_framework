@@ -282,6 +282,7 @@ struct EventInfo {
     std::vector<uint64_t> fileSize;
     std::vector<uint64_t> partitionSize;
     std::string largeFiles;
+    std::string topCategory;
 
     void Reset()
     {
@@ -341,6 +342,7 @@ struct EventInfo {
         funcIdList.clear();
         uidList.clear();
         largeFiles.clear();
+        topCategory.clear();
         userIdList.clear();
         appIndexList.clear();
         callingUidList.clear();
@@ -534,7 +536,8 @@ public:
     static void SendScanTimeoutEvent(HighRiskOperationType operation, int64_t startTime, int64_t endTime);
 
     static void SendLargeFilesMonitorEvent(const std::string &bundleName,
-        int32_t userId, int32_t appIndex, const std::string &largeFiles);
+        int32_t userId, int32_t appIndex, const std::string &largeFiles,
+        const std::string &topCategory = "");
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

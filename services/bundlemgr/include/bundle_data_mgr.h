@@ -25,6 +25,7 @@
 #include <set>
 #include <shared_mutex>
 #include <string>
+#include <tuple>
 #include <unordered_set>
 
 #include "bundle_dir.h"
@@ -75,6 +76,7 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+struct NotifyBundleEvents;
 enum class InstallState {
     INSTALL_START = 1,
     INSTALL_SUCCESS,
@@ -134,30 +136,72 @@ public:
     bool ClassifyDualModeAppsByPolicyNoLock();
 
     /**
+     * @brief Mode-based part of dual-mode classification (requirement 1 fallback, shared since
+     * change r16). Places MAIN_ONLY/SUB_ONLY single-mode apps by the given mode: MAIN_ONLY
+     * visible in main mode, SUB_ONLY visible in secondary mode; the mismatched side moves to
+     * tempBundleInfos_. Symmetric hide/show passes converge from any starting state. Called
+     * whenever the persisted DualModeDeviceModeDistributionPolicies is absent or fails to
+     * parse: at boot classification (fallback after ClassifyDualModeAppsByPolicyNoLock
+     * returns false) and at switch rollback (SaveBmsParam failed with no valid baseline —
+     * single-mode apps return to the initialization-time placement; different-package and
+     * filterable entries are not touched and converge on the next successful switch/reboot).
+     * Note: This function does not lock bundleInfoMutex_, caller must hold the lock.
+     * @param isSecondaryMode current live mode, read once by the caller.
+     */
+    void ClassifyDualModeAppsByDeviceModeNoLock(bool isSecondaryMode);
+
+    /**
      * @brief Switch application visibility by device mode distribution policies (dual-mode
-     * requirement 2). Persists the set to bms_param first, then refreshes the cached device
-     * mode from the system params, then migrates apps between bundleInfos_ (queryable) and
-     * tempBundleInfos_ (hidden) per policy set; serialized with install/uninstall by the shared
-     * bundleInfoMutex_ (BUSY fast-fail not implemented in current version).
+     * requirement 2). Validates the set, migrates apps between bundleInfos_ (queryable) and
+     * tempBundleInfos_ (hidden) per policy set, then persists the set to bms_param; if the
+     * persist fails, the migration is re-run with the previously persisted set (rollback
+     * baseline), restoring the pre-switch memory state. Mutually exclusive with queued
+     * install/update/uninstall tasks via dualModeSwitchMutex_: the switch takes the exclusive
+     * lock with try_to_lock and fails fast with ERR_APPEXECFWK_DUAL_MODE_SWITCH_BUSY when any
+     * task is running (or another switch is in flight); bundle operations try the shared lock
+     * (TryLockForBundleOperation) and fail fast with the same error while a switch is in
+     * flight (change r13: both sides fast-fail, first holder proceeds). Lock order:
+     * dualModeSwitchMutex_ -> bundleInfoMutex_ -> stateMutex_.
      * @param policies set of DeviceModeDistributionPolicy values (0~8). MUST be non-empty, all
      *        values in range, and contain all different-package policies (4/6/8).
-     * @return ERR_OK / ERR_APPEXECFWK_DUAL_MODE_DEVICE_NOT_SUPPORTED (non-dual-mode device, or
-     *         the mode-param refresh failed — the cache keeps the last-known-good values and
-     *         the migration is skipped; the persisted set stays) / ERR_APPEXECFWK_DUAL_MODE_
-     *         SWITCH_BUSY (reserved, not returned in current version) / ERR_APPEXECFWK_DUAL_
-     *         MODE_PERSIST_FAILED (persist happens before migration, so nothing to roll back)
-     *         / ERR_BUNDLE_MANAGER_INVALID_PARAMETER.
+     * @return ERR_OK / ERR_APPEXECFWK_DUAL_MODE_DEVICE_NOT_SUPPORTED (non-dual-mode device) /
+     *         ERR_APPEXECFWK_DUAL_MODE_SWITCH_BUSY (an install/update/uninstall task or another
+     *         switch is running; no state is touched) / ERR_APPEXECFWK_DUAL_MODE_PERSIST_FAILED
+     *         (memory is rolled back to the pre-switch state when a valid baseline exists;
+     *         without one — first switch, or corrupted baseline — single-mode apps fall back
+     *         to the mode-based placement and the other entries keep the switched placement
+     *         until the next successful switch or reboot) /
+     *         ERR_APPEXECFWK_DUAL_MODE_POLICY_INVALID (unified dual-mode parameter error, same
+     *         code as the proxy-side size pre-check).
      */
     ErrCode FilterBundleListByDeviceModeDistributionPolicies(
         const std::set<DeviceModeDistributionPolicy> &policies);
 
     /**
+     * @brief Try to acquire the shared side of the dual-mode switch mutex for a bundle
+     * operation (install/update/uninstall task body or direct synchronous entry). Uses
+     * try_lock_shared: while a mode switch holds the exclusive side the acquisition fails
+     * immediately — the caller must fail fast with ERR_APPEXECFWK_DUAL_MODE_SWITCH_BUSY
+     * (change r13: operations no longer wait for an in-flight switch; shared holders keep
+     * running concurrently with each other, install parallelism is kept). Multiple
+     * operations may hold the shared side concurrently. The returned guard must be kept
+     * alive for the whole operation body. Lock order: dualModeSwitchMutex_ ->
+     * bundleInfoMutex_ -> stateMutex_ (never acquire in reverse).
+     * @return RAII shared guard, or nullptr when a switch is in flight (caller fails fast;
+     *         the degraded non-dual-mode / missing-data-manager cases are resolved by the
+     *         caller BEFORE calling this, so nullptr only means "switch in flight").
+     */
+    std::unique_ptr<std::shared_lock<std::shared_mutex>> TryLockForBundleOperation();
+
+    /**
      * @brief Lock-free body of FilterBundleListByDeviceModeDistributionPolicies: migrate apps
      * between bundleInfos_ (queryable) and tempBundleInfos_ (hidden) per policy set, WITHOUT
      * sensing primary/secondary mode (the caller flips the device mode and triggers one switch
-     * per flip). UNSPECIFIED never migrates; same-name different-package (4/6/8) variant pairs
-     * rotate between the two maps on every call (a pair member without a same-name counterpart
-     * stays put); filterable policies (1/2/3/5/7) migrate by set membership.
+     * per flip). UNSPECIFIED never migrates; filterable policies (1/2/3/5/7) follow set
+     * membership (in the set -> bundleInfos_, else -> tempBundleInfos_, idempotent per set);
+     * different-package policies (4/6/8) rotate once per call regardless of side — a same-name
+     * pair swaps, a single variant on either side crosses over. Every bundle name moves at
+     * most once per call.
      * Note: This function does not lock bundleInfoMutex_, caller must hold the lock.
      * @param policySet validated set of DeviceModeDistributionPolicy values (contains 4/6/8).
      */
@@ -180,7 +224,8 @@ public:
      * @param info Indicates the InnerBundleInfo object to be save.
      * @return Returns true if this function is successfully called; returns false otherwise.
      */
-    bool AddInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info, bool checkStatus = true);
+    bool AddInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info, bool checkStatus = true,
+        bool toTempBundle = false);
     /**
      * @brief Add new module info to an exist InnerBundleInfo.
      * @param bundleName Indicates the bundle name.
@@ -212,7 +257,8 @@ public:
     bool UpdateInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo);
     bool UpdateInnerBundleInfo(InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo);
     void UpdateBaseBundleInfoIntoOld(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo);
-    bool UpdateInnerBundleInfo(InnerBundleInfo &innerBundleInfo, bool needSaveStorage = true);
+    bool UpdateInnerBundleInfo(InnerBundleInfo &innerBundleInfo, bool needSaveStorage = true,
+        bool toTempBundle = false);
     bool UpdatePartialInnerBundleInfo(const InnerBundleInfo &info);
     /**
      * @brief Generate UID and GID for a bundle.
@@ -594,6 +640,20 @@ public:
     ErrCode SetApplicationEnabled(const std::string &bundleName, int32_t appIndex, bool isEnable,
         const std::string &caller, int32_t userId, bool &stateChanged);
     /**
+     * @brief Batch set application enabled status for clone apps under a specific user.
+     * @param userId Indicates the user id.
+     * @param enableAppIndex Indicates the app index to enable.
+     * @param disableAppIndex Indicates the app index to disable.
+     * @param caller Indicates the caller name.
+     * @param killProcess Indicates whether to kill the process when disabling.
+     * @param needSendEvent Indicates whether to send broadcast events.
+     * @param skipDisableForbidden Indicates whether to skip the disable forbidden check.
+     * @return Returns ERR_OK if successful; returns error code otherwise.
+     */
+    ErrCode BatchSetApplicationEnabled(int32_t userId, int32_t enableAppIndex,
+        int32_t disableAppIndex, const std::string &caller, bool killProcess, bool needSendEvent,
+        bool skipDisableForbidden);
+    /**
      * @brief Sets whether the bundle is first launch.
      * @param bundleName Indicates the bundle name.
      * @param userId Indicates the user id.
@@ -896,6 +956,16 @@ public:
      * @return
      */
     void LoadAllBundleStateDataFromJsonDb();
+    void LoadAllBundleStateDataFromJsonDbDualMode();
+    /**
+     * @brief Apply a dual-mode clone app's persisted state (prefixed state key) onto its
+     *        InnerBundleInfo record only, so the state never leaks onto the primary variant.
+     * @param stateKey Indicates the prefixed state key (+clone-10000+{bundleName}).
+     * @param bundleUserStates Indicates the persisted per-user bundle states.
+     * @return
+     */
+    void ApplyDualModeCloneBundleState(const std::string &stateKey,
+        const std::map<int32_t, BundleUserInfo> &bundleUserStates);
 
     bool QueryExtensionAbilityInfos(const ExtensionAbilityType &extensionType, const int32_t &userId,
         std::vector<ExtensionAbilityInfo> &extensionInfos) const;
@@ -1565,6 +1635,43 @@ private:
     bool MatchUtd(const std::string &skillUtd, const std::string &wantUtd) const;
     bool MatchTypeWithUtd(const std::string &mimeType, const std::string &wantUtd) const;
     std::vector<int32_t> GetCloneAppIndexesNoLock(const std::string &bundleName, int32_t userId) const;
+    ErrCode ProcessDisableForBundle(InnerBundleInfo &innerBundleInfo,
+        const InnerBundleUserInfo *innerBundleUserInfoPtr, const std::string &bundleName,
+        int32_t disableAppIndex, const std::string &caller, int32_t requestUserId,
+        bool needSendEvent, bool skipDisableForbidden,
+        std::vector<NotifyBundleEvents> &eventsToSend,
+        std::vector<std::tuple<std::string, int32_t, int32_t>> &disabledBundles,
+        std::vector<std::tuple<std::string, int32_t, bool, std::string>> &rollbackList,
+        std::vector<std::tuple<std::string, int32_t, bool, int32_t, std::string>> &sysEventsToSend);
+    ErrCode ProcessEnableForBundle(InnerBundleInfo &innerBundleInfo,
+        const InnerBundleUserInfo *innerBundleUserInfoPtr, const std::string &bundleName,
+        int32_t enableAppIndex, const std::string &caller, int32_t requestUserId,
+        bool needSendEvent,
+        std::vector<NotifyBundleEvents> &eventsToSend,
+        std::vector<std::tuple<std::string, int32_t, bool, std::string>> &rollbackList,
+        std::vector<std::tuple<std::string, int32_t, bool, int32_t, std::string>> &sysEventsToSend);
+    ErrCode CheckDisableForbidden(const std::string &bundleName, int32_t requestUserId,
+        int32_t disableAppIndex, bool skipDisableForbidden);
+    NotifyBundleEvents BuildBatchNotifyEvent(const InnerBundleInfo &innerBundleInfo,
+        const InnerBundleUserInfo &userInfo, const std::string &bundleName,
+        int32_t appIndex, int32_t userId);
+    void RollbackBatchSetEnabled(
+        const std::vector<std::tuple<std::string, int32_t, bool, std::string>> &rollbackList,
+        int32_t userId);
+    ErrCode ValidateBatchSetAppIndex(int32_t enableAppIndex, int32_t disableAppIndex);
+    void ReportErrorAndRollback(const std::string &bundleName, int32_t userId, bool isEnable,
+        int32_t appIndex, const std::string &caller,
+        std::vector<std::tuple<std::string, int32_t, bool, std::string>> &rollbackList);
+    ErrCode ProcessBatchForAllBundles(int32_t requestUserId, int32_t enableAppIndex,
+        int32_t disableAppIndex, const std::string &caller, bool needSendEvent,
+        bool skipDisableForbidden,
+        std::vector<NotifyBundleEvents> &eventsToSend,
+        std::vector<std::tuple<std::string, int32_t, int32_t>> &disabledBundles,
+        std::vector<std::tuple<std::string, int32_t, bool, int32_t, std::string>> &sysEventsToSend);
+    void KillDisabledBundleProcesses(
+        const std::vector<std::tuple<std::string, int32_t, int32_t>> &disabledBundles,
+        const std::string &caller);
+    void SendBatchNotifyEventsAsync(std::vector<NotifyBundleEvents> &&eventsToSend);
     void GetCloneAppInfo(const InnerBundleInfo &info, int32_t userId, int32_t flags,
         std::vector<ApplicationInfo> &appInfos) const;
     void GetCloneAppInfoV9(const InnerBundleInfo &info, int32_t userId, int32_t flags,
@@ -1740,6 +1847,9 @@ private:
     ErrCode BatchGetBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,
         std::unordered_map<std::string, std::unordered_set<int32_t>> &uidMap,
         std::vector<BundleStorageStats> &bundleStats) const;
+    ErrCode BatchGetBundleStatsDualMode(const std::vector<std::string> &bundleNames,
+        const std::unordered_map<std::string, std::unordered_set<int32_t>> &uidMap,
+        std::vector<BundleStorageStats> &bundleStats) const;
     void GetAllInstallBundleUids(const int32_t userId, const int32_t requestUserId, int32_t &responseUserId,
         std::unordered_set<int32_t> &uids, std::vector<std::string> &bundleNames) const;
     bool ProcessUninstallBundle(std::vector<BundleOptionInfo> &bundleOptionInfos) const;
@@ -1779,6 +1889,13 @@ private:
     mutable std::mutex pluginCallbackMutex_;
     mutable std::mutex eventCallbackMutex_;
     mutable std::shared_mutex bundleInfoMutex_;
+    // === DUAL_MODE: switch <-> install/update/uninstall mutual exclusion ===
+    // Switch takes the exclusive side with try_to_lock (BUSY fast-fail, 8519944); bundle
+    // operations (queued tasks via the BundleInstallerManager::AddTask wrapper, plus the
+    // direct BundleInstallerHost entries) try the shared side without blocking and fail
+    // fast with the same error while a switch is in flight (r13: both sides fast-fail).
+    // Lock order (one-way, no deadlock): dualModeSwitchMutex_ -> bundleInfoMutex_ -> stateMutex_.
+    mutable std::shared_mutex dualModeSwitchMutex_;
     mutable std::shared_mutex bundleIdMapMutex_;
     mutable std::shared_mutex callbackMutex_;
     mutable std::shared_mutex bundleMutex_;

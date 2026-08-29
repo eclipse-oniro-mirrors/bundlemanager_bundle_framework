@@ -2350,8 +2350,8 @@ HWTEST_F(BmsBundleMgrProxyTest, FilterBundleListByDeviceModeDistributionPolicies
  * @tc.number: FilterBundleListByDeviceModeDistributionPolicies_0200
  * @tc.name: test FilterBundleListByDeviceModeDistributionPolicies with empty policy set
  * @tc.desc: 1. BundleMgrProxy constructed with null IRemoteObject
- *           2. verify FilterBundleListByDeviceModeDistributionPolicies returns param
- *              error before any IPC when the policy set is empty
+ *           2. verify FilterBundleListByDeviceModeDistributionPolicies returns the dual-mode
+ *              policy-invalid error before any IPC when the policy set is empty
  */
 HWTEST_F(BmsBundleMgrProxyTest, FilterBundleListByDeviceModeDistributionPolicies_0200,
     Function | MediumTest | Level1)
@@ -2361,16 +2361,16 @@ HWTEST_F(BmsBundleMgrProxyTest, FilterBundleListByDeviceModeDistributionPolicies
 
     std::set<DeviceModeDistributionPolicy> policies;
     ErrCode ret = bundleMgrProxy.FilterBundleListByDeviceModeDistributionPolicies(policies);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_DUAL_MODE_POLICY_INVALID);
 }
 
 /**
  * @tc.number: FilterBundleListByDeviceModeDistributionPolicies_0300
  * @tc.name: test FilterBundleListByDeviceModeDistributionPolicies with oversized policy set
  * @tc.desc: 1. BundleMgrProxy constructed with null IRemoteObject
- *           2. verify FilterBundleListByDeviceModeDistributionPolicies returns param
- *              error when the policy set exceeds the enum value-range bound (9 distinct
- *              values, 0~8) before any IPC
+ *           2. verify FilterBundleListByDeviceModeDistributionPolicies returns the dual-mode
+ *              policy-invalid error when the policy set exceeds the enum value-range bound
+ *              (9 distinct values, 0~8) before any IPC
  */
 HWTEST_F(BmsBundleMgrProxyTest, FilterBundleListByDeviceModeDistributionPolicies_0300,
     Function | MediumTest | Level1)
@@ -2386,7 +2386,7 @@ HWTEST_F(BmsBundleMgrProxyTest, FilterBundleListByDeviceModeDistributionPolicies
     ASSERT_EQ(policies.size(), 11u);
 
     ErrCode ret = bundleMgrProxy.FilterBundleListByDeviceModeDistributionPolicies(policies);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_DUAL_MODE_POLICY_INVALID);
 }
 
 /**
@@ -2394,7 +2394,8 @@ HWTEST_F(BmsBundleMgrProxyTest, FilterBundleListByDeviceModeDistributionPolicies
  * @tc.name: test FilterBundleListByDeviceModeDistributionPolicies at the size boundary
  * @tc.desc: 1. BundleMgrProxy constructed with null IRemoteObject
  *           2. verify a 10-value set (one more than the 9 distinct enum values 0~8) is
- *              rejected with param error before any IPC (enum-derived size bound)
+ *              rejected with the dual-mode policy-invalid error before any IPC
+ *              (enum-derived size bound)
  */
 HWTEST_F(BmsBundleMgrProxyTest, FilterBundleListByDeviceModeDistributionPolicies_0350,
     Function | MediumTest | Level1)
@@ -2410,7 +2411,7 @@ HWTEST_F(BmsBundleMgrProxyTest, FilterBundleListByDeviceModeDistributionPolicies
     ASSERT_EQ(policies.size(), 10u);
 
     ErrCode ret = bundleMgrProxy.FilterBundleListByDeviceModeDistributionPolicies(policies);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_DUAL_MODE_POLICY_INVALID);
 }
 }
 }

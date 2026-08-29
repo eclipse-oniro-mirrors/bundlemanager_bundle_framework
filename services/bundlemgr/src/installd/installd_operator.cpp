@@ -33,6 +33,7 @@
 #include <ftw.h>
 #include <iostream>
 #include <map>
+#include <unordered_set>
 #include <regex>
 #include <sstream>
 #include <string.h>
@@ -296,6 +297,19 @@ public:
 
 constexpr int32_t MAX_FTW_DEPTH = 1000;  // Maximum directory traversal depth to prevent stack overflow
 constexpr uint64_t MAX_DIRECTORY_SIZE = UINT64_MAX - 1024ULL * 1024ULL * 1024ULL;  // 1GB less than max
+// Nftw scan timeout bounds (seconds). If the caller passes <= 0, MIN is used; if > MAX, MAX is used.
+constexpr int32_t NFTW_TIMEOUT_MIN_SECONDS = 3;
+constexpr int32_t NFTW_TIMEOUT_MAX_SECONDS = 180;
+// Maximum number of file descriptors that nftw may use simultaneously.
+constexpr int32_t NFTW_OPEN_FDS = 10;
+// File category scan limits
+constexpr int32_t FILE_CATEGORY_MAX_EXTENSIONS = 100;
+constexpr int32_t FILE_CATEGORY_MAX_EXTENSIONS_WITH_DIRS = 5;
+constexpr int32_t FILE_CATEGORY_MAX_DIRS_PER_EXTENSION = 10;
+// Scan-time entry caps for the 2D map (ext -> (parentDir -> size)); each dimension judged
+// independently per insert (log-only flags, no abort). 120000 total = 1/8 of million-level OOM trigger.
+constexpr int32_t FILE_CATEGORY_MAX_EXT_ENTRIES = 1000;   // outer: unique extensions
+constexpr int32_t FILE_CATEGORY_MAX_DIRS_PER_EXT = 120;   // inner: unique parentDirs per ext
 // Check the deadline every N callback invocations (avoids a clock syscall per entry).
 constexpr uint64_t CHECK_TIMEOUT_INTERVAL = 512;
 
@@ -346,6 +360,137 @@ static int32_t AccumulateEntry(DirSizeData *data, const char *path, const struct
     }
 
     return 0;  // Continue traversal
+}
+
+// ---------------------------------------------------------------------------
+// File category scan: classify files by extension, accumulate per-root-dir sizes.
+// ---------------------------------------------------------------------------
+
+struct FileCategoryScanData {
+    // ext -> total size across all root dirs
+    std::unordered_map<std::string, uint64_t> extTotalSizes;
+    // ext -> (rootDir -> size)
+    std::unordered_map<std::string, std::unordered_map<std::string, uint64_t>> extDirSizes;
+    uint64_t entryCounter = 0;
+    bool timedOut = false;
+    bool extCapHit = false;
+    std::unordered_set<std::string> dirCapHitExts;
+    std::string currentRootDir;
+};
+
+static thread_local FileCategoryScanData *g_fileCategoryData = nullptr;
+
+class FileCategoryDataGuard {
+public:
+    explicit FileCategoryDataGuard(FileCategoryScanData *data) : data_(data) {}
+    ~FileCategoryDataGuard() { g_fileCategoryData = nullptr; }
+    FileCategoryDataGuard(const FileCategoryDataGuard&) = delete;
+    FileCategoryDataGuard& operator=(const FileCategoryDataGuard&) = delete;
+private:
+    FileCategoryScanData *data_;
+};
+
+static std::string ExtractExtension(const char *path)
+{
+    if (path == nullptr) {
+        return "";
+    }
+    std::string p(path);
+    size_t lastSlash = p.find_last_of('/');
+    std::string basename = (lastSlash != std::string::npos) ? p.substr(lastSlash + 1) : p;
+    if (basename.empty() || basename[0] == '.') {
+        return "";
+    }
+    size_t lastDot = basename.find_last_of('.');
+    if (lastDot == std::string::npos || lastDot == 0) {
+        return "";
+    }
+    return basename.substr(lastDot + 1);
+}
+
+static std::string ExtractParentDir(const char *path)
+{
+    if (path == nullptr) {
+        return "";
+    }
+    std::string p(path);
+    size_t lastSlash = p.find_last_of('/');
+    if (lastSlash == std::string::npos || lastSlash == 0) {
+        return "/";
+    }
+    return p.substr(0, lastSlash);
+}
+
+static bool AccumulateExtTotal(FileCategoryScanData *data, const std::string &ext, uint64_t fileSize)
+{
+    bool newExt = data->extTotalSizes.find(ext) == data->extTotalSizes.end();
+    if (newExt && static_cast<int32_t>(data->extTotalSizes.size()) >= FILE_CATEGORY_MAX_EXT_ENTRIES) {
+        if (!data->extCapHit) {
+            data->extCapHit = true;
+            LOG_NOFUNC_W(BMS_TAG_INSTALLD, "FileCategoryCallback: ext entries cap reached, skip new ext");
+        }
+        return false;
+    }
+    uint64_t &extTotal = data->extTotalSizes[ext];
+    if (extTotal > UINT64_MAX - fileSize) {
+        extTotal = UINT64_MAX;
+    } else {
+        extTotal += fileSize;
+    }
+    return true;
+}
+
+static void AccumulateDirTotal(FileCategoryScanData *data, const std::string &ext,
+    const std::string &parentDir, uint64_t fileSize)
+{
+    auto &dirMap = data->extDirSizes[ext];
+    bool newDir = dirMap.find(parentDir) == dirMap.end();
+    if (newDir && static_cast<int32_t>(dirMap.size()) >= FILE_CATEGORY_MAX_DIRS_PER_EXT) {
+        if (data->dirCapHitExts.find(ext) == data->dirCapHitExts.end()) {
+            data->dirCapHitExts.insert(ext);
+            LOG_NOFUNC_W(BMS_TAG_INSTALLD,
+                "FileCategoryCallback: dirs-per-ext cap reached for ext=%{public}s, skip new dir",
+                ext.c_str());
+        }
+        return;
+    }
+    uint64_t &dirTotal = dirMap[parentDir];
+    if (dirTotal > UINT64_MAX - fileSize) {
+        dirTotal = UINT64_MAX;
+    } else {
+        dirTotal += fileSize;
+    }
+}
+
+static int32_t FileCategoryCallback(const char *path, const struct stat *sb, int typeflag, struct FTW *ftwbuf)
+{
+    FileCategoryScanData *data = g_fileCategoryData;
+    if (data == nullptr) {
+        return 1;
+    }
+    if (g_dirSizeHasDeadline && (++data->entryCounter % CHECK_TIMEOUT_INTERVAL) == 0) {
+        if (std::chrono::steady_clock::now() > g_dirSizeDeadline) {
+            data->timedOut = true;
+            g_dirSizeTimedOut = true;
+            LOG_NOFUNC_W(BMS_TAG_INSTALLD, "FileCategoryCallback: timeout, rootDir: %{public}s",
+                InstalldOperator::AnonymizePath(data->currentRootDir).c_str());
+            return 1;
+        }
+    }
+    if (ftwbuf->level > MAX_FTW_DEPTH) {
+        return 0;
+    }
+    if (typeflag != FTW_F || sb->st_size < 0) {
+        return 0;
+    }
+    std::string ext = ExtractExtension(path);
+    uint64_t fileSize = static_cast<uint64_t>(sb->st_size);
+    if (!AccumulateExtTotal(data, ext, fileSize)) {
+        return 0;
+    }
+    std::string parentDir = ExtractParentDir(path);
+    AccumulateDirTotal(data, ext, parentDir, fileSize);
+    return 0;
 }
 
 /**
@@ -4046,7 +4191,8 @@ bool InstalldOperator::IsValidUid(const int32_t uid)
 bool InstalldOperator::IsValidAppIndex(const int32_t appIndex)
 {
     return ((appIndex >= Constants::MAIN_APP_INDEX) && (appIndex <= BundleFileUtil::GetCloneMaxCount())) ||
-        ((appIndex >= Constants::CLI_SANDBOX_APP_INDEX_MIN) && (appIndex <= Constants::CLI_SANDBOX_APP_INDEX_MAX));
+        ((appIndex >= Constants::CLI_SANDBOX_APP_INDEX_MIN) && (appIndex <= Constants::CLI_SANDBOX_APP_INDEX_MAX)) ||
+        (appIndex == ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
 }
 
 bool InstalldOperator::IsValidApl(const std::string &apl)
@@ -4831,6 +4977,108 @@ bool InstalldOperator::GetBundleDataDirPaths(const std::string &bundleName, cons
     dataDirPaths.emplace_back(servicePath);
     LOG_D(BMS_TAG_INSTALLD, "GetBundleDataDirPaths: collected %{public}zu data directory paths",
         dataDirPaths.size());
+    return true;
+}
+
+static void ScanDirsForFileCategory(const std::vector<std::string> &dirPaths,
+    FileCategoryScanData &scanData)
+{
+    for (const auto &dirPath : dirPaths) {
+        if (scanData.timedOut) {
+            LOG_NOFUNC_W(BMS_TAG_INSTALLD, "GetAppDataFileCategoryStats: timed out before scanning %{public}s",
+                InstalldOperator::AnonymizePath(dirPath).c_str());
+            break;
+        }
+        if (dirPath.empty() || dirPath.size() > ServiceConstants::PATH_MAX_SIZE) {
+            LOG_NOFUNC_W(BMS_TAG_INSTALLD, "GetAppDataFileCategoryStats: skip invalid path");
+            continue;
+        }
+        std::string realPath;
+        if (!PathToRealPath(dirPath, realPath)) {
+            LOG_NOFUNC_D(BMS_TAG_INSTALLD, "GetAppDataFileCategoryStats: path is not real path: %{public}s",
+                InstalldOperator::AnonymizePath(dirPath).c_str());
+            continue;
+        }
+        struct stat rootStat;
+        if (stat(realPath.c_str(), &rootStat) != 0 || !S_ISDIR(rootStat.st_mode)) {
+            LOG_NOFUNC_D(BMS_TAG_INSTALLD, "GetAppDataFileCategoryStats: skip non-existent or non-dir: %{public}s",
+                InstalldOperator::AnonymizePath(dirPath).c_str());
+            continue;
+        }
+        scanData.currentRootDir = realPath;
+        nftw(realPath.c_str(), FileCategoryCallback, NFTW_OPEN_FDS, FTW_PHYS | FTW_MOUNT | FTW_DEPTH);
+    }
+}
+
+static void SortAndTruncateFileCategory(FileCategoryScanData &scanData,
+    std::vector<std::pair<std::string, uint64_t>> &extTotalSizes,
+    std::vector<std::pair<std::string, std::vector<std::pair<std::string, uint64_t>>>> &extDirSizes)
+{
+    std::vector<std::pair<std::string, uint64_t>> sortedExts(scanData.extTotalSizes.begin(),
+        scanData.extTotalSizes.end());
+    std::sort(sortedExts.begin(), sortedExts.end(),
+        [](const auto &a, const auto &b) { return a.second > b.second; });
+
+    int32_t extCount = std::min(static_cast<int32_t>(sortedExts.size()), FILE_CATEGORY_MAX_EXTENSIONS);
+    int32_t extWithDirsCount = std::min(extCount, FILE_CATEGORY_MAX_EXTENSIONS_WITH_DIRS);
+
+    extTotalSizes.reserve(extCount);
+    for (int32_t i = 0; i < extCount; ++i) {
+        extTotalSizes.push_back(sortedExts[i]);
+    }
+
+    extDirSizes.reserve(extWithDirsCount);
+    for (int32_t i = 0; i < extWithDirsCount; ++i) {
+        const auto &ext = sortedExts[i].first;
+        std::vector<std::pair<std::string, uint64_t>> sortedDirs;
+        auto dirIt = scanData.extDirSizes.find(ext);
+        if (dirIt != scanData.extDirSizes.end()) {
+            sortedDirs.assign(dirIt->second.begin(), dirIt->second.end());
+            std::sort(sortedDirs.begin(), sortedDirs.end(),
+                [](const auto &a, const auto &b) { return a.second > b.second; });
+            int32_t dirCount = std::min(static_cast<int32_t>(sortedDirs.size()),
+                FILE_CATEGORY_MAX_DIRS_PER_EXTENSION);
+            sortedDirs.resize(dirCount);
+        }
+        extDirSizes.emplace_back(ext, std::move(sortedDirs));
+    }
+}
+
+bool InstalldOperator::GetAppDataFileCategoryStats(const std::vector<std::string> &dirPaths,
+    const int32_t timeout,
+    std::vector<std::pair<std::string, uint64_t>> &extTotalSizes,
+    std::vector<std::pair<std::string, std::vector<std::pair<std::string, uint64_t>>>> &extDirSizes)
+{
+    LOG_NOFUNC_D(BMS_TAG_INSTALLD,
+        "GetAppDataFileCategoryStats start, dirPaths count: %{public}zu, timeout(sec): %{public}d",
+        dirPaths.size(), timeout);
+
+    extTotalSizes.clear();
+    extDirSizes.clear();
+
+    if (dirPaths.empty()) {
+        LOG_NOFUNC_D(BMS_TAG_INSTALLD, "GetAppDataFileCategoryStats: input dirPaths is empty");
+        return true;
+    }
+
+    // Clamp timeout to [NFTW_TIMEOUT_MIN_SECONDS, NFTW_TIMEOUT_MAX_SECONDS] to avoid unbounded scans.
+    const int32_t actualTimeout = (timeout <= NFTW_TIMEOUT_MIN_SECONDS) ? NFTW_TIMEOUT_MIN_SECONDS :
+        ((timeout > NFTW_TIMEOUT_MAX_SECONDS) ? NFTW_TIMEOUT_MAX_SECONDS : timeout);
+    g_dirSizeDeadline = std::chrono::steady_clock::now() + std::chrono::seconds(actualTimeout);
+    DirSizeDeadlineGuard deadlineGuard;
+
+    FileCategoryScanData scanData;
+    FileCategoryDataGuard dataGuard(&scanData);
+    g_fileCategoryData = &scanData;
+
+    ScanDirsForFileCategory(dirPaths, scanData);
+    SortAndTruncateFileCategory(scanData, extTotalSizes, extDirSizes);
+
+    LOG_NOFUNC_I(BMS_TAG_INSTALLD, "GetAppDataFileCategoryStats success, found %{public}zu extensions, "
+        "reported %{public}zu topExtensions, %{public}zu withDirs, "
+        "scanned %{public}lld entries, timedOut=%{public}d",
+        scanData.extTotalSizes.size(), extTotalSizes.size(), extDirSizes.size(),
+        static_cast<long long>(scanData.entryCounter), scanData.timedOut);
     return true;
 }
 

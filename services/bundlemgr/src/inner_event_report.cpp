@@ -110,6 +110,7 @@ const char* PARTITION_NAME_KEY = "PARTITION_NAME";
 const char* REMAIN_PARTITION_SIZE_KEY = "REMAIN_PARTITION_SIZE";
 const char* USER_DATA_SIZE = "USER_DATA_SIZE";
 const char* EVENT_PARAM_LARGE_FILES = "LARGE_FILES";
+const char* EVENT_PARAM_TOP_CATEGORY = "TOP_CATEGORY";
 const char* EVENT_PARAM_IS_KEEPDATA = "IS_KEEPDATA";
 const char* EVENT_PARAM_DISABLE_FORBIDDEN = "DISABLE_FORBIDDEN";
 const char* EVENT_PARAM_ODID = "ODID";
@@ -840,7 +841,8 @@ void InnerEventReport::InnerSendLargeFilesMonitorEvent(const EventInfo& eventInf
         EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
         EVENT_PARAM_USERID, eventInfo.userId,
         EVENT_PARAM_APP_INDEX, eventInfo.appIndex,
-        EVENT_PARAM_LARGE_FILES, eventInfo.largeFiles);
+        EVENT_PARAM_LARGE_FILES, eventInfo.largeFiles,
+        EVENT_PARAM_TOP_CATEGORY, eventInfo.topCategory);
 }
 
 void InnerEventReport::InnerSendDataPartitionUsageEvent(const EventInfo& eventInfo)

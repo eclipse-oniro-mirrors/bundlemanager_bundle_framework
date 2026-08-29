@@ -1094,6 +1094,20 @@ public:
         return ERR_OK;
     }
     /**
+     * @brief Batch set application enabled status for clone apps under a specific user.
+     * @param userId Indicates the user id.
+     * @param enableAppIndex Indicates the app index to enable.
+     * @param disableAppIndex Indicates the app index to disable.
+     * @param killProcess Indicates whether to kill the process when disabling.
+     * @param needSendEvent Indicates whether to send broadcast events.
+     * @return Returns ERR_OK if successful; returns error code otherwise.
+     */
+    virtual ErrCode BatchSetApplicationEnabled(int32_t userId, int32_t enableAppIndex,
+        int32_t disableAppIndex, bool killProcess, bool needSendEvent)
+    {
+        return ERR_OK;
+    }
+    /**
      * @brief Sets whether to enable a specified ability.
      * @param abilityInfo Indicates information about the ability to check.
      * @param isEnable Indicates the ability status is enabled.
@@ -2284,13 +2298,14 @@ public:
      * @return ERR_OK on success; ERR_APPEXECFWK_DUAL_MODE_DEVICE_NOT_SUPPORTED on a non
      *         dual-mode device, or when the mode-param refresh inside the switch fails (cache
      *         keeps the last-known-good values; retry); ERR_APPEXECFWK_DUAL_MODE_SWITCH_BUSY
-     *         if install/uninstall in progress (reserved, not returned in current version —
-     *         concurrent access is serialized by an internal lock);
-     *         ERR_APPEXECFWK_DUAL_MODE_PERSIST_FAILED if persist failed (rolled back);
-     *         ERR_BUNDLE_MANAGER_INVALID_PARAMETER on invalid policy values;
-     *         ERR_BUNDLE_MANAGER_PARAM_ERROR on invalid input size (empty or oversized,
-     *         pre-checked at the proxy entry — the host-side gate result is flattened to a
-     *         generic IPC error by the common OnRemoteRequest wrapper).
+     *         when an install/update/uninstall task or another switch is in flight (fail fast
+     *         without touching any state; retry); ERR_APPEXECFWK_DUAL_MODE_PERSIST_FAILED if
+     *         persist failed (rolled back); ERR_APPEXECFWK_DUAL_MODE_POLICY_INVALID on any
+     *         invalid parameter (dedicated dual-mode code, unified for TS mapping): out-of-range
+     *         values or a set missing the different-package policies (4/6/8) are rejected
+     *         server-side, an empty or oversized set is pre-checked at the proxy entry (the
+     *         host-side gate result is flattened to a generic IPC error by the common
+     *         OnRemoteRequest wrapper).
      */
     virtual ErrCode FilterBundleListByDeviceModeDistributionPolicies(
         const std::set<DeviceModeDistributionPolicy> &policies)

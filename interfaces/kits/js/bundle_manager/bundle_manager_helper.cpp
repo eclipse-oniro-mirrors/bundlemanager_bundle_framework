@@ -630,5 +630,24 @@ ErrCode BundleManagerHelper::InnerGetBundleInstallStatus(
     }
     return CommonFunc::ConvertErrCode(result);
 }
+
+ErrCode BundleManagerHelper::InnerFilterBundleListByDeviceModeDistributionPolicies(
+    const std::vector<int32_t> &policies)
+{
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    std::set<DeviceModeDistributionPolicy> policySet;
+    for (int32_t value : policies) {
+        policySet.insert(static_cast<DeviceModeDistributionPolicy>(value));
+    }
+    ErrCode result = iBundleMgr->FilterBundleListByDeviceModeDistributionPolicies(policySet);
+    if (result != ERR_OK) {
+        APP_LOGE("FilterBundleListByDeviceModeDistributionPolicies ErrCode: %{public}d", result);
+    }
+    return CommonFunc::ConvertErrCode(result);
+}
 } // AppExecFwk
 } // OHOS

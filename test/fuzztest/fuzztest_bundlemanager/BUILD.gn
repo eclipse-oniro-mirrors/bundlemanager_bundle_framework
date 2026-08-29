@@ -65,6 +65,7 @@ group("bundlemanagerfuzztest") {
     "bmsbundlemgrproxyfuzzpartonetest_fuzzer:BMSBundleMgrProxyFuzzPartOneTest",
     "bmsbundlemgrproxyfuzzpartthreetest_fuzzer:BMSBundleMgrProxyFuzzPartThreeTest",
     "bmsbundlemgrproxyfuzzparttwotest_fuzzer:BMSBundleMgrProxyFuzzPartTwoTest",
+    "bmsbatchsetenabled_fuzzer:BmsBatchSetEnabledFuzzTest",
     "bmsbundlemultiuserinstaller_fuzzer:BMSBundleMultiUserInstallerFuzzTest",
     "bmsbundleoverlay_fuzzer:BMSBundleOverlayFuzzTest",
     "bmsbundleoverlaydatamgr_fuzzer:BMSBundleOverlayDataMgrFuzzTest",

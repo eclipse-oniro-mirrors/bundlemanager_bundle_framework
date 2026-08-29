@@ -36,6 +36,7 @@ namespace bundleManager {
   const EMPTY_STRING: string = "ani empty string";
   const MAIN_APP_INDEX: int = 0;
   const CLONE_APP_INDEX_MAX: int = 5;
+  const DUAL_MODE_CLONE_APP_INDEX: int = 10000;
   const CLI_SANDBOX_APP_INDEX_MIN: int = 2000;
   const CLI_SANDBOX_APP_INDEX_MAX: int = 3000;
   const ERROR_INVALID_APPINDEX_CODE: int = 17700061;
@@ -99,6 +100,18 @@ namespace bundleManager {
     GET_EXTENSION_ABILITY_INFO_WITH_APPLICATION = 0x00000002,
     GET_EXTENSION_ABILITY_INFO_WITH_METADATA = 0x00000004,
     GET_EXTENSION_ABILITY_INFO_WITH_SKILL = 0x00000010,
+  }
+
+  enum DeviceModeDistributionPolicy {
+    UNSPECIFIED = 0,
+    MAIN_ONLY = 1,
+    SUB_ONLY = 2,
+    UNIVERSAL_IDENTICAL_PACKAGE = 3,
+    UNIVERSAL_DIFFERENT_PACKAGE = 4,
+    PARTIAL_COMPATIBLE_IDENTICAL_PACKAGE = 5,
+    PARTIAL_COMPATIBLE_DIFFERENT_PACKAGE = 6,
+    FULL_COMPATIBLE_IDENTICAL_PACKAGE = 7,
+    FULL_COMPATIBLE_DIFFERENT_PACKAGE = 8,
   }
 
   export enum ExtensionAbilityType {
@@ -397,6 +410,9 @@ namespace bundleManager {
   native function getAbilityInfoNative(uri: string, abilityFlags: int): Array<AbilityInfo>;
 
   native function getAlternateIconsNative(): Array<AlternateIconInfo>;
+
+  native function filterBundleListByDeviceModeDistributionPoliciesNative(
+    policies: Array<DeviceModeDistributionPolicy>): void;
 
   function isApplicationEnabledSync(bundleName: string): boolean {
     return isApplicationEnabledNative(bundleName, 0, true);
@@ -1447,7 +1463,8 @@ namespace bundleManager {
   function cleanBundleCacheFiles(bundleName: string, appIndex: int): Promise<void> {
     if (appIndex < MAIN_APP_INDEX ||
       (appIndex > getCloneMaxCountNative() && appIndex < CLI_SANDBOX_APP_INDEX_MIN) ||
-      appIndex > CLI_SANDBOX_APP_INDEX_MAX) {
+      (appIndex > CLI_SANDBOX_APP_INDEX_MAX &&
+       appIndex != DUAL_MODE_CLONE_APP_INDEX)) {
       throw createBusinessError(ERROR_INVALID_APPINDEX_CODE, ERROR_INVALID_APPINDEX_MSG);
     }
     let p = new Promise<void>((resolve: (v: PromiseLike<void>) => void, reject: (error: Error) => void) : void => {
@@ -1997,6 +2014,23 @@ namespace bundleManager {
         reject(err as BusinessError);
       });
     });
+    return p;
+  }
+
+  function filterBundleListByDeviceModeDistributionPolicies(
+    policies: Array<DeviceModeDistributionPolicy>): Promise<void> {
+    let p = new Promise<void>((resolve: (v: PromiseLike<void>) => void, reject: (error: BusinessError) => void) : void => {
+      let execFun = (): void => {
+        return filterBundleListByDeviceModeDistributionPoliciesNative(policies);
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((): void => {
+        resolve(Promise.resolve());
+      }, (err: Error): void => {
+        reject(err as BusinessError);
+      });
+    }
+    );
     return p;
   }
 }

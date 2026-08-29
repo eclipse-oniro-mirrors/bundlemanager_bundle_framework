@@ -362,6 +362,18 @@ public:
         const int32_t userId, const int32_t timeout, std::string &largestItems);
 
     /**
+     * @brief Get application data size category statistics by file extension.
+     * @param bundleName Indicates the bundle name.
+     * @param appIndex Indicates the app index.
+     * @param userId Indicates the user ID.
+     * @param timeout Indicates the maximum scan time in seconds.
+     * @param categoryStatsJson Output parameter containing JSON string of extension-based size category statistics.
+     * @return Returns ERR_OK if get successfully; returns error code otherwise.
+     */
+    ErrCode GetAppDataFileCategoryStats(const std::string &bundleName, const int32_t appIndex,
+        const int32_t userId, const int32_t timeout, std::string &categoryStatsJson);
+
+    /**
      * @brief Delete older cache files until the desired cache size is achieved.
      * @param paths Indicates the paths of cache files to be deleted.
      * @param cacheSize Indicates the size of cache files that need to be deleted.

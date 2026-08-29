@@ -9579,7 +9579,6 @@ HWTEST_F(BmsDataMgrTest, SetBundleFirstLaunch_0003, Function | MediumTest | Leve
     for (int i = 0; i < 2; i++) {
         bundleDataMgr.bundleInfos_.clear();
         OHOS::system::SetParameter(TEST_MAINMODE_PARAM, i == 0 ? "0" : "1");
-        DualModeHelper::UpdateModeCache();
         ASSERT_EQ(DualModeHelper::IsSecondaryMode(), i == 0 ? true : false);
         int32_t appIndex = i == 0 ? ServiceConstants::DUAL_MODE_CLONE_APP_INDEX : mainModeAppIndex;
         int32_t errorAppIndex = i == 0 ? mainModeAppIndex : ServiceConstants::DUAL_MODE_CLONE_APP_INDEX;
@@ -9587,6 +9586,10 @@ HWTEST_F(BmsDataMgrTest, SetBundleFirstLaunch_0003, Function | MediumTest | Leve
         std::string userInfoKey = bundleName + Constants::FILE_UNDERLINE + std::to_string(userId);
 
         BuildForSetBundleFirstLaunch(bundleName, userInfoKey, cloneKey, bundleDataMgr);
+        if (i == 0) {
+            // secondary mode: record under original name is the dual-mode clone
+            bundleDataMgr.bundleInfos_[bundleName].SetDualModeCloneApp(true);
+        }
         auto& ibundleInfo = bundleDataMgr.bundleInfos_[bundleName];
         auto& userInfo = ibundleInfo.innerBundleUserInfos_[userInfoKey];
 

@@ -395,7 +395,8 @@ bool ParseGetShortcutInfoAppIndex(napi_env env, napi_value args, int32_t &appInd
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_INDEX, TYPE_NUMBER);
         return false;
     }
-    if (appIndex < Constants::MAIN_APP_INDEX || appIndex > BundleFileUtil::GetCloneMaxCount()) {
+    if (appIndex < Constants::MAIN_APP_INDEX || (appIndex > BundleFileUtil::GetCloneMaxCount() &&
+        appIndex != Constants::DUAL_MODE_CLONE_APP_INDEX)) {
         APP_LOGE("appIndex: %{public}d not in valid range", appIndex);
         BusinessError::ThrowParameterTypeError(env, ERROR_INVALID_APPINDEX, APP_INDEX, TYPE_NUMBER);
         return false;

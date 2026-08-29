@@ -15,10 +15,6 @@
 
 #include "installd_client.h"
 
-#include <atomic>
-#include <chrono>
-#include <thread>
-
 #include "bundle_constants.h"
 #include "bundle_service_constants.h"
 #include "installd_death_recipient.h"
@@ -30,7 +26,6 @@ namespace OHOS {
 namespace AppExecFwk {
 int32_t g_remainingSuccessfulCalls = 2;
 bool g_mockCleanBundleDataDirResult = true;
-std::atomic<int32_t> g_mockCleanBundleDataDirDelayMs = 0;
 void SetGetBundleInodeCountResult(int32_t remainCalls)
 {
     g_remainingSuccessfulCalls = remainCalls;
@@ -39,11 +34,6 @@ void SetGetBundleInodeCountResult(int32_t remainCalls)
 void SetCleanBundleDataDirResult(bool cleanResult)
 {
     g_mockCleanBundleDataDirResult = cleanResult;
-}
-
-void SetMockCleanBundleDataDirDelayMs(int32_t delayMs)
-{
-    g_mockCleanBundleDataDirDelayMs = delayMs;
 }
 
 ErrCode InstalldClient::CreateBundleDir(
@@ -203,10 +193,6 @@ ErrCode InstalldClient::CleanBundleDataDir(const std::string &bundleDir, const s
     }
     if (!g_mockCleanBundleDataDirResult) {
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-    }
-    int32_t delayMs = g_mockCleanBundleDataDirDelayMs.load();
-    if (delayMs > 0) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(delayMs));
     }
     return CallService(&IInstalld::CleanBundleDataDir, bundleDir, bundleName, userId);
 }
@@ -761,6 +747,26 @@ ErrCode InstalldClient::GetTopNLargestItemsInAppDataDir(const std::string &bundl
     }
     return CallService(&IInstalld::GetTopNLargestItemsInAppDataDir, bundleName, appIndex, userId, timeout,
         largestItems);
+}
+
+ErrCode InstalldClient::GetAppDataFileCategoryStats(const std::string &bundleName, const int32_t appIndex,
+    const int32_t userId, const int32_t timeout, std::string &extStatsJson)
+{
+    if (bundleName.empty()) {
+        APP_LOGE_NOFUNC("bundleName is empty");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    if (OHOS::system::GetBoolParameter(ServiceConstants::SCAN_FILE_CATEGORY_TEST_PARAM, false)) {
+        extStatsJson = R"({"extensions":[)"
+            R"({"extension":"so","totalSize":5242880,"dirs":[)"
+            R"({"path":"/d**a/app/el2/100/base/com.test/files","size":3145728},)"
+            R"({"path":"/d**a/app/el2/100/base/com.test/cache","size":2097152}]},)"
+            R"({"extension":"json","totalSize":1048576,"dirs":[)"
+            R"({"path":"/d**a/app/el2/100/base/com.test/data","size":1048576}]}]})";
+        return ERR_OK;
+    }
+    return CallService(&IInstalld::GetAppDataFileCategoryStats, bundleName, appIndex, userId, timeout,
+        extStatsJson);
 }
 
 ErrCode InstalldClient::DeleteOldCacheFiles(

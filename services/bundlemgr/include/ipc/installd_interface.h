@@ -642,6 +642,21 @@ public:
     }
 
     /**
+     * @brief Get application data size category statistics by file extension.
+     * @param bundleName Indicates the bundle name.
+     * @param appIndex Indicates the app index.
+     * @param userId Indicates the user ID.
+     * @param timeout Indicates the maximum scan time in seconds.
+     * @param categoryStatsJson Output parameter containing JSON string of extension-based size category statistics.
+     * @return Returns ERR_OK if get successfully; returns error code otherwise.
+     */
+    virtual ErrCode GetAppDataFileCategoryStats(const std::string &bundleName, const int32_t appIndex,
+        const int32_t userId, const int32_t timeout, std::string &categoryStatsJson)
+    {
+        return ERR_OK;
+    }
+
+    /**
      * @brief Extract skills package with validation.
      * @param param Contains bundleName, moduleName, hspPath and skillNameList.
      * @param skillInfoList Output parameter containing skill extraction results with description.

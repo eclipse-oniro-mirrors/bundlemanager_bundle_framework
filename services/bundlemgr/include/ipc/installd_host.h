@@ -217,6 +217,14 @@ private:
      */
     bool HandleGetTopNLargestItemsInAppDataDir(MessageParcel &data, MessageParcel &reply);
 
+    /**
+     * @brief Handles the GetAppDataFileCategoryStats function.
+     * @param data Indicates the data to be read.
+     * @param reply Indicates the reply to be sent;
+     * @return Returns true if called successfully; returns false otherwise.
+     */
+    bool HandleGetAppDataFileCategoryStats(MessageParcel &data, MessageParcel &reply);
+
     bool HandleMoveFile(MessageParcel &data, MessageParcel &reply);
 
     bool HandleRenameFile(MessageParcel &data, MessageParcel &reply);

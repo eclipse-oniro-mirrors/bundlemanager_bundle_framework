@@ -141,18 +141,48 @@ bool BundleResourceManager::GetAllResourceName(std::vector<std::string> &keyName
     return bundleResourceRdb_->GetAllResourceName(keyNames);
 }
 
+bool BundleResourceManager::GetDualModeQueryName(
+    const std::string &bundleName, int32_t &appIndex, std::string &queryName)
+{
+    queryName = bundleName;
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is nullptr");
+        return false;
+    }
+    InnerBundleInfo innerBundleInfo;
+    if (!dataMgr->FetchInnerBundleInfo(bundleName, innerBundleInfo)) {
+        return false;
+    }
+    if (!innerBundleInfo.IsDualModeCloneApp()) {
+        return false;
+    }
+    // dual-mode: clone resource rows are stored under the prefixed effective name
+    // with appIndex 0 (no numeric index prefix in the stored key).
+    queryName = DualModeHelper::GetDualModeBundleName(bundleName);
+    if (appIndex == ServiceConstants::DUAL_MODE_CLONE_APP_INDEX) {
+        appIndex = 0;
+    }
+    return true;
+}
+
 bool BundleResourceManager::GetBundleResourceInfo(const std::string &bundleName, const uint32_t flags,
     BundleResourceInfo &bundleResourceInfo, int32_t appIndex)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("start, bundleName:%{public}s", bundleName.c_str());
     uint32_t resourceFlags = CheckResourceFlags(flags);
-    if (bundleResourceRdb_->GetBundleResourceInfo(bundleName, resourceFlags, bundleResourceInfo, appIndex)) {
+    std::string queryName = bundleName;
+    int32_t queryAppIndex = appIndex;
+    if (DualModeHelper::IsDualModeDevice()) {
+        (void)GetDualModeQueryName(bundleName, queryAppIndex, queryName);
+    }
+    if (bundleResourceRdb_->GetBundleResourceInfo(queryName, resourceFlags, bundleResourceInfo, queryAppIndex)) {
         APP_LOGD("success, bundleName:%{public}s", bundleName.c_str());
         if (IsNeedProcessResourceIconInfo(resourceFlags)) {
             int32_t userId = GetUserId();
             std::vector<LauncherAbilityResourceInfo> resourceIconInfos;
-            if (!bundleResourceIconRdb_->GetResourceIconInfos(bundleName, userId, appIndex, resourceFlags,
+            if (!bundleResourceIconRdb_->GetResourceIconInfos(bundleName, userId, queryAppIndex, resourceFlags,
                 resourceIconInfos) || resourceIconInfos.empty()) {
                 return true;
             }
@@ -161,9 +191,9 @@ bool BundleResourceManager::GetBundleResourceInfo(const std::string &bundleName,
                 return true;
             }
             auto iter = std::find_if(resourceIconInfos.begin(), resourceIconInfos.end(),
-                [bundleName, appIndex](const auto &resourceIconInfo) {
+                [bundleName, queryAppIndex](const auto &resourceIconInfo) {
                     return ((resourceIconInfo.bundleName == bundleName) &&
-                        (resourceIconInfo.appIndex == appIndex));
+                        (resourceIconInfo.appIndex == queryAppIndex));
                 });
             if (iter != resourceIconInfos.end()) {
                 bundleResourceInfo.icon = iter->icon;
@@ -188,12 +218,17 @@ bool BundleResourceManager::GetSingleLauncherAbilityResourceInfo(const std::stri
 {
     APP_LOGD("start, bundleName:%{public}s", bundleName.c_str());
     uint32_t resourceFlags = CheckResourceFlags(flags);
-    if (bundleResourceRdb_->GetLauncherAbilityResourceInfo(bundleName, flags,
-        launcherAbilityResourceInfo, appIndex)) {
+    std::string queryName = bundleName;
+    int32_t queryAppIndex = appIndex;
+    if (DualModeHelper::IsDualModeDevice()) {
+        (void)GetDualModeQueryName(bundleName, queryAppIndex, queryName);
+    }
+    if (bundleResourceRdb_->GetLauncherAbilityResourceInfo(queryName, flags,
+        launcherAbilityResourceInfo, queryAppIndex)) {
         if (IsNeedProcessResourceIconInfo(flags)) {
             int32_t userId = GetUserId();
             std::vector<LauncherAbilityResourceInfo> resourceIconInfos;
-            if (!bundleResourceIconRdb_->GetResourceIconInfos(bundleName, userId, appIndex, flags,
+            if (!bundleResourceIconRdb_->GetResourceIconInfos(bundleName, userId, queryAppIndex, flags,
                 resourceIconInfos) || resourceIconInfos.empty()) {
                 return true;
             }
@@ -503,8 +538,13 @@ bool BundleResourceManager::GetExtensionAbilityResourceInfo(const std::string &b
 {
     APP_LOGD("start, bundleName:%{public}s", bundleName.c_str());
     uint32_t resourceFlags = CheckResourceFlags(flags);
-    if (bundleResourceRdb_->GetExtensionAbilityResourceInfo(bundleName, extensionAbilityType, resourceFlags,
-        extensionAbilityResourceInfo, appIndex)) {
+    std::string queryName = bundleName;
+    int32_t queryAppIndex = appIndex;
+    if (DualModeHelper::IsDualModeDevice()) {
+        (void)GetDualModeQueryName(bundleName, queryAppIndex, queryName);
+    }
+    if (bundleResourceRdb_->GetExtensionAbilityResourceInfo(queryName, extensionAbilityType, resourceFlags,
+        extensionAbilityResourceInfo, queryAppIndex)) {
         return true;
     }
     APP_LOGE_NOFUNC("%{public}s extension ability %{public}d not exist in resource rdb", bundleName.c_str(),

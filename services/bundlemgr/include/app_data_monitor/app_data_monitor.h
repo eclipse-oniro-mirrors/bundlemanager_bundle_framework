@@ -40,8 +40,14 @@ public:
     void StopScan(const std::string &reason);
     bool IsScanning() const;
 
-private:
+    void StartFileCategoryScan(int32_t userId);
+    void StopFileCategoryScan(const std::string &reason);
+    bool IsFileCategoryScanning() const;
     bool IsInCooldown() const;
+    bool IsInFileCategoryCooldown() const;
+    bool IsInLargeFilesReportCooldown() const;
+
+private:
     bool GetAndSortAppDataSize(int32_t userId,
         const std::shared_ptr<BundleDataMgr> &dataMgr,
         const std::vector<std::string> &bundleNames,
@@ -56,12 +62,41 @@ private:
     // already returns size-descending); when trimming is needed the smallest tail is dropped.
     static void TruncateLargeFilesJson(const std::string &input, std::string &output);
 
+    void RecordLargeFilesReportTime();
+    void StampScanTime();
+    void StampFileCategoryScanTime();
+    bool GetAndSortAllAppDataSize(int32_t userId,
+        const std::shared_ptr<BundleDataMgr> &dataMgr,
+        const std::vector<std::string> &bundleNames,
+        std::vector<std::pair<std::string, int64_t>> &sortedApps);
+    void ScanTopApps(int32_t userId,
+        const std::vector<std::pair<std::string, int64_t>> &sortedApps);
+    void ReportFileCategoryEvent(const std::string &bundleName,
+        int32_t userId, int32_t appIndex,
+        const std::string &extStatsJson);
+    // Process the raw extension statistics JSON returned by HostImpl. The HostImpl
+    // outputs all extensions with anonymized directory paths (unsorted). This method
+    // sorts extensions by totalSize descending, then produces two separate JSON strings:
+    // - topExtensionsJson: TOP 100 extensions (extension + totalSize only)
+    // - topExtensionsWithDirsJson: TOP 5 extensions with TOP 10 directories each
+    static void ExtractTopFileCategories(const std::string &input,
+        std::string &topExtensionsJson, std::string &topExtensionsWithDirsJson);
+
     std::atomic<bool> isScanning_{false};
     std::atomic<bool> stopRequested_{false};
-    std::chrono::steady_clock::time_point lastScanTime_;
+    std::atomic<int64_t> lastScanTimeNs_{0};
     // Count of events actually reported in the current scan (incremented per successful base-app
     // report). Reset at ScanLargeApps entry.
     int32_t reportedCountInScan_ = 0;
+
+    std::atomic<bool> isFileCategoryScanning_{false};
+    std::atomic<bool> stopFileCategoryRequested_{false};
+    std::atomic<int64_t> lastFileCategoryScanTimeNs_{0};
+    // Records the last time LargeFiles scan successfully reported an event.
+    // FileCategory scan must wait at least LARGE_FILES_REPORT_COOLDOWN_SECONDS after this
+    // before triggering, since both reuse the same BUNDLE_LARGE_FILES HiSysEvent.
+    std::chrono::steady_clock::time_point lastLargeFilesReportTime_;
+    int32_t reportedFileCategoryCountInScan_ = 0;
 
     static constexpr int64_t LARGE_APP_THRESHOLD = 1024LL * 1024 * 1024; // 1GB
     // One scan fires at most every 7*24h (idle-triggered). Combined with MAX_REPORT_COUNT_PER_SCAN
@@ -74,6 +109,17 @@ private:
     // Safety ceiling for a single LARGE_FILES payload (HiSysEvent STRING field). The cap is
     // applied to the items JSON value reported in one event; output is always <= this and valid.
     static constexpr size_t MAX_LARGE_FILES_LENGTH = 380 * 1024; // 380K
+
+    // File category scan constants
+    static constexpr int64_t FILE_CATEGORY_COOLDOWN_SECONDS = 7 * 24 * 60 * 60; // 7d
+    static constexpr int32_t MAX_FILE_CATEGORY_APPS = 20; // TOP 20 apps
+    static constexpr int32_t FILE_CATEGORY_SCAN_TIMEOUT = 30; // 30 seconds per app
+    static constexpr int32_t MAX_TOP_EXTENSIONS = 100; // TOP 100 extensions (size only)
+    static constexpr int32_t MAX_TOP_EXTENSIONS_WITH_DIRS = 5; // TOP 5 extensions with dirs
+    // Minimum gap between LargeFiles event report and FileCategory scan trigger,
+    // since both reuse BUNDLE_LARGE_FILES HiSysEvent and EventReport has rate limiting.
+    static constexpr int64_t LARGE_FILES_REPORT_COOLDOWN_SECONDS = 24 * 60 * 60; // 24h
+    static constexpr size_t MAX_FILE_CATEGORY_PAYLOAD_LENGTH = 380 * 1024; // 380K
 };
 
 } // namespace AppExecFwk

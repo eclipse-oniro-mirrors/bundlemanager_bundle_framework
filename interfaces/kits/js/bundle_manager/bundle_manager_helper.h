@@ -79,6 +79,7 @@ public:
     static ErrCode InnerCleanBundleCacheForSelfCallback(const OHOS::sptr<CleanCacheCallback> cleanCacheCallback);
     static ErrCode InnerGetPluginBundlePathForSelf(const std::string &pluginBundleName, std::string &codePath);
     static ErrCode InnerGetBundleInstallStatus(const std::string &bundleName, BundleInstallStatus &bundleInstallStatus);
+    static ErrCode InnerFilterBundleListByDeviceModeDistributionPolicies(const std::vector<int32_t> &policies);
 };
 } // AppExecFwk
 } // OHOS

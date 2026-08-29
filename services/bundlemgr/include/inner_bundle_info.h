@@ -865,6 +865,9 @@ public:
             APP_LOGE_NOFUNC("The InnerBundleInfo obtained by GetUid is null");
             return Constants::INVALID_UID;
         }
+        if (isDualModeCloneApp_ && appIndex == ServiceConstants::DUAL_MODE_CLONE_APP_INDEX) {
+            return innerBundleUserInfoPtr->uid;
+        }
         if (appIndex != 0) {
             // Check clone app first
             auto iter = innerBundleUserInfoPtr->cloneInfos.find(std::to_string(appIndex));

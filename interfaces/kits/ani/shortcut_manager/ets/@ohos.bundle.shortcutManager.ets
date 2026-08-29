@@ -32,6 +32,7 @@ namespace shortcutManager {
   const ERROR_SOURCETYPE : int = -1;
   const MAIN_APP_INDEX: int = 0;
   const CLONE_APP_INDEX_MAX: int = 5;
+  const DUAL_MODE_CLONE_APP_INDEX: int = 10000;
   const ERROR_PARAM_CHECK_ERROR: int = 401;
   const MAX_SHORTCUT_INFO_SIZE: int = 100;
   const ERROR_SHORTCUT_ID_ILLEGAL_ERROR: int = 17700070;
@@ -173,7 +174,8 @@ namespace shortcutManager {
       if (shortcutInfo[i].id === "" || idSet.has(shortcutInfo[i].id)) {
         throw createBusinessError(ERROR_SHORTCUT_ID_ILLEGAL_ERROR, SHORTCUT_ID_ILLEGAL);
       }
-      if (shortcutInfo[i].appIndex < MAIN_APP_INDEX || shortcutInfo[i].appIndex > getCloneMaxCountNative()) {
+      if (shortcutInfo[i].appIndex < MAIN_APP_INDEX || (shortcutInfo[i].appIndex > getCloneMaxCountNative() &&
+          shortcutInfo[i].appIndex != DUAL_MODE_CLONE_APP_INDEX)) {
         throw createBusinessError(ERROR_INVALID_APPINDEX_CODE, ERROR_INVALID_APPINDEX_MSG);
       }
       if (shortcutInfo[i].sourceType < DEFAULT_SHORTCUT ||
@@ -207,7 +209,8 @@ namespace shortcutManager {
   }
 
   function deleteDynamicShortcutInfos(bundleName: string, appIndex: int, userId: int, ids?: Array<string>): Promise<void> {
-    if (appIndex < MAIN_APP_INDEX || appIndex > getCloneMaxCountNative()) {
+    if (appIndex < MAIN_APP_INDEX || (appIndex > getCloneMaxCountNative() &&
+        appIndex != DUAL_MODE_CLONE_APP_INDEX)) {
       throw createBusinessError(ERROR_INVALID_APPINDEX_CODE, ERROR_INVALID_APPINDEX_MSG);
     }
     const idsValue: Array<string> = ids ?? [];
@@ -258,7 +261,8 @@ namespace shortcutManager {
   function getShortcutInfoByAbility(bundleName: string, moduleName: string, abilityName: string, userId?: int, appIndex?: int): Array<ShortcutInfo> {
     let userIdInfo: int = userId ?? EMPTY_USER_ID;
     let appIndexInfo: int = appIndex ?? 0;
-    if (appIndexInfo < MAIN_APP_INDEX || appIndexInfo > getCloneMaxCountNative()) {
+    if (appIndexInfo < MAIN_APP_INDEX || (appIndexInfo > getCloneMaxCountNative() &&
+        appIndexInfo != DUAL_MODE_CLONE_APP_INDEX)) {
       throw createBusinessError(ERROR_INVALID_APPINDEX_CODE, ERROR_INVALID_APPINDEX_MSG);
     }
     return getShortcutInfoByAbilityNative(bundleName, moduleName, abilityName, userIdInfo, appIndexInfo);

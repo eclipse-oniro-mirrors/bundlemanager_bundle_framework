@@ -240,6 +240,9 @@ constexpr int32_t MAIN_APP_INDEX = 0;
 constexpr int32_t CLONE_APP_INDEX_MAX = 5;
 constexpr int32_t ALL_CLONE_APP_INDEX = -1;
 
+// dual mode clone application
+constexpr int32_t DUAL_MODE_CLONE_APP_INDEX = 10000;
+
 // cli sandbox application
 constexpr int32_t CLI_SANDBOX_APP_INDEX_MIN = 2000;
 constexpr int32_t CLI_SANDBOX_APP_INDEX_MAX = 3000;

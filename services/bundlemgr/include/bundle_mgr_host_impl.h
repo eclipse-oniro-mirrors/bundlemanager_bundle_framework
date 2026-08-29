@@ -748,6 +748,17 @@ public:
     virtual ErrCode SetCloneApplicationEnabled(const std::string &bundleName, int32_t appIndex, bool isEnable,
         int32_t userId = Constants::UNSPECIFIED_USERID, bool killProcess = false) override;
     /**
+     * @brief Batch set application enabled status for clone apps under a specific user.
+     * @param userId Indicates the user id.
+     * @param enableAppIndex Indicates the app index to enable.
+     * @param disableAppIndex Indicates the app index to disable.
+     * @param killProcess Indicates whether to kill the process when disabling.
+     * @param needSendEvent Indicates whether to send broadcast events.
+     * @return Returns ERR_OK if successful; returns error code otherwise.
+     */
+    virtual ErrCode BatchSetApplicationEnabled(int32_t userId, int32_t enableAppIndex,
+        int32_t disableAppIndex, bool killProcess, bool needSendEvent) override;
+    /**
      * @brief Sets whether to enable a specified ability through the proxy object.
      * @param abilityInfo Indicates information about the ability to check.
      * @param isEnable Indicates the ability status is enabled.
@@ -1479,6 +1490,8 @@ private:
 
     ErrCode HandleKillProcess(const std::string &bundleName, int32_t userId, int32_t appIndex,
         bool isEnable, bool killProcess);
+
+    ErrCode CheckBatchSetPermission();
 
     // Check frequency limit for GetTopNLargestItemsInAppDataDir
     ErrCode CheckGetTopNLargestItemsFrequencyLimit();

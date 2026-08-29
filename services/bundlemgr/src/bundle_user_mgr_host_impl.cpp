@@ -30,6 +30,7 @@
 #include "bundle_mgr_service.h"
 #include "bundle_resource_helper.h"
 #include "bundle_util.h"
+#include "dual_mode_helper.h"
 #include "hitrace_meter.h"
 #include "independent_skills_installer.h"
 #include "installd_client.h"
@@ -245,28 +246,35 @@ ErrCode BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId, bool needToSkipPr
         installParam.isCreateUser = true;
         installParam.installFlag = InstallFlag::NORMAL;
         installParam.preinstallSourceFlag = ApplicationInfoFlag::FLAG_BOOT_INSTALLED;
+        // Dual-mode: PreInstallBundleInfo.bundleName is the app's original name; the secondary variant
+        // (isDualModeCloneApp=true) is stored under the clone-prefixed key, so derive the install key
+        // (used for InstallBundleByBundleName / GetPreInstallBundleInfo / exception records).
+        std::string installKey = info.GetBundleName();
+        if (info.IsDualModeCloneApp() && !DualModeHelper::IsDualModeCloneKey(installKey)) {
+            installKey = DualModeHelper::GetDualModeBundleName(installKey);
+        }
         if (info.GetBundleType() == BundleType::SKILL) {
             IndependentSkillsInstaller installer;
-            auto ret = installer.InstallBundleByBundleName(info.GetBundleName(), installParam);
+            auto ret = installer.InstallBundleByBundleName(installKey, installParam);
             if (ret != ERR_OK) {
-                APP_LOGE("-n %{public}s -u %{public}d install skills failed", info.GetBundleName().c_str(), userId);
+                APP_LOGE("-n %{public}s -u %{public}d install skills failed", installKey.c_str(), userId);
             }
             g_installedHapNum++;
             continue;
         }
         sptr<UserReceiverImpl> userReceiverImpl(
-            new (std::nothrow) UserReceiverImpl(info.GetBundleName(), needReinstall));
+            new (std::nothrow) UserReceiverImpl(installKey, needReinstall));
         if (userReceiverImpl == nullptr) {
-            APP_LOGE("userReceiverImpl is nullptr, -n %{public}s", info.GetBundleName().c_str());
+            APP_LOGE("userReceiverImpl is nullptr, -n %{public}s", installKey.c_str());
             g_installedHapNum++;
             if (needReinstall) {
-                SavePreInstallException(info.GetBundleName());
+                SavePreInstallException(installKey);
             }
             continue;
         }
         userReceiverImpl->SetBundlePromise(bundlePromise);
         userReceiverImpl->SetTotalHapNum(totalHapNum);
-        installer->InstallByBundleName(info.GetBundleName(), installParam, userReceiverImpl);
+        installer->InstallByBundleName(installKey, installParam, userReceiverImpl);
     }
     if (static_cast<int32_t>(g_installedHapNum) < totalHapNum) {
         bundlePromise->WaitForAllTasksExecute();

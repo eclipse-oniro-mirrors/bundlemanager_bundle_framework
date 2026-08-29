@@ -830,6 +830,17 @@ ErrCode InstalldClient::GetTopNLargestItemsInAppDataDir(const std::string &bundl
         timeout, largestItems);
 }
 
+ErrCode InstalldClient::GetAppDataFileCategoryStats(const std::string &bundleName, const int32_t appIndex,
+    const int32_t userId, const int32_t timeout, std::string &categoryStatsJson)
+{
+    if (bundleName.empty()) {
+        APP_LOGE_NOFUNC("bundleName is empty");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::GetAppDataFileCategoryStats, bundleName, appIndex, userId,
+        timeout, categoryStatsJson);
+}
+
 ErrCode InstalldClient::DeleteOldCacheFiles(
     const std::vector<std::string> &paths, const uint64_t cacheSize, uint64_t &cleanedSize)
 {

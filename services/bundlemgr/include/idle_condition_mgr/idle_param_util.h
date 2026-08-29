@@ -25,6 +25,7 @@ class IdleParamUtil {
 public:
     static bool IsRelabelFeatureDisabled();
     static bool IsAppDataScanDisabled();
+    static bool IsFileCategoryScanDisabled();
 private:
     static std::string GetHigherVersionPath();
     static std::vector<int32_t> GetVersionNums(const std::string& filePath);

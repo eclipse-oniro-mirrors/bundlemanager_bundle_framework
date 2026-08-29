@@ -258,6 +258,11 @@ struct MigrateDataCallbackInfo : public BaseCallbackInfo {
     std::string destinationPath;
 };
 
+struct DeviceModePoliciesCallbackInfo : public BaseCallbackInfo {
+    explicit DeviceModePoliciesCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
+    std::vector<int32_t> policies;
+};
+
 struct Query {
     std::string bundleName_;
     std::string interfaceType_;
@@ -471,6 +476,7 @@ napi_value RemoveBackupBundleData(napi_env env, napi_callback_info info);
 napi_value IsApplicationDisableForbidden(napi_env env, napi_callback_info info);
 napi_value SetAlternateIcon(napi_env env, napi_callback_info info);
 napi_value GetAlternateIcons(napi_env env, napi_callback_info info);
+napi_value FilterBundleListByDeviceModeDistributionPolicies(napi_env env, napi_callback_info info);
 void CreateApplicationFlagObject(napi_env env, napi_value value);
 void CreateAbilityFlagObject(napi_env env, napi_value value);
 void CreateExtensionAbilityFlagObject(napi_env env, napi_value value);

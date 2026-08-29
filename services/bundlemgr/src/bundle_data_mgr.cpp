@@ -28,6 +28,8 @@
 #include "accesstoken_kit.h"
 #include "account_helper.h"
 #include "app_install_extended_info.h"
+#include "app_mgr_client.h"
+#include "app_disable_forbidden/app_disable_forbidden_mgr.h"
 #include "app_log_tag_wrapper.h"
 #include "app_provision_info_manager.h"
 #include "bms_extension_client.h"
@@ -259,7 +261,11 @@ bool BundleDataMgr::LoadDataFromPersistentStorage()
     } else {
         ResetBundleStateData();
         // Load all bundle status from json db.
-        LoadAllBundleStateDataFromJsonDb();
+        if (DualModeHelper::IsDualModeDevice()) {
+            LoadAllBundleStateDataFromJsonDbDualMode();
+        } else {
+            LoadAllBundleStateDataFromJsonDb();
+        }
     }
 
     SetInitialUserFlag(true);
@@ -285,10 +291,17 @@ void BundleDataMgr::CompatibleOldBundleStateInKvDb()
             if (bundleUserInfo.IsInitialState()) {
                 continue;
             }
-
-            // save old bundle state to json db
-            bundleStateStorage_->SaveBundleStateStorage(
-                bundleInfoItem.first, bundleUserInfo.userId, bundleUserInfo);
+            if (DualModeHelper::IsDualModeDevice()) {
+                // dual-mode: clone app's state uses the prefixed key.
+                std::string stateKey = bundleInfoItem.second.IsDualModeCloneApp()
+                    ? DualModeHelper::GetDualModeBundleName(bundleInfoItem.first) : bundleInfoItem.first;
+                bundleStateStorage_->SaveBundleStateStorage(
+                    stateKey, bundleUserInfo.userId, bundleUserInfo);
+            } else {
+                // save old bundle state to json db
+                bundleStateStorage_->SaveBundleStateStorage(
+                    bundleInfoItem.first, bundleUserInfo.userId, bundleUserInfo);
+            }
         }
     }
 }
@@ -323,10 +336,88 @@ void BundleDataMgr::LoadAllBundleStateDataFromJsonDb()
     APP_LOGD("Load all bundle state end");
 }
 
+void BundleDataMgr::LoadAllBundleStateDataFromJsonDbDualMode()
+{
+    APP_LOGD("dual-mode Load all bundle state start");
+    std::map<std::string, std::map<int32_t, BundleUserInfo>> bundleStateInfos;
+    if (!bundleStateStorage_->LoadAllBundleStateData(bundleStateInfos) || bundleStateInfos.empty()) {
+        APP_LOGW("Load all bundle state failed");
+        return;
+    }
+
+    for (const auto& bundleState : bundleStateInfos) {
+        // dual-mode: prefixed keys hold the clone variant's state, route to the clone record only.
+        if (DualModeHelper::IsDualModeCloneKey(bundleState.first)) {
+            ApplyDualModeCloneBundleState(bundleState.first, bundleState.second);
+            continue;
+        }
+        auto infoItem = bundleInfos_.find(bundleState.first);
+        if (infoItem == bundleInfos_.end()) {
+            APP_LOGW("BundleName(%{public}s) not exist in cache", bundleState.first.c_str());
+            continue;
+        }
+
+        InnerBundleInfo& newInfo = infoItem->second;
+        if (newInfo.IsDualModeCloneApp()) {
+            APP_LOGW("BundleName(%{public}s) is dual-mode clone, skip", bundleState.first.c_str());
+            continue;
+        }
+        for (auto& bundleUserState : bundleState.second) {
+            auto& tempUserInfo = bundleUserState.second;
+            newInfo.SetApplicationEnabled(tempUserInfo.enabled, bundleUserState.second.setEnabledCaller,
+                bundleUserState.first);
+            for (auto& disabledAbility : tempUserInfo.disabledAbilities) {
+                newInfo.SetAbilityEnabled("", disabledAbility, false, bundleUserState.first);
+            }
+        }
+    }
+
+    APP_LOGD("dual-mode Load all bundle state end");
+}
+
+void BundleDataMgr::ApplyDualModeCloneBundleState(const std::string &stateKey,
+    const std::map<int32_t, BundleUserInfo> &bundleUserStates)
+{
+    std::string originalName;
+    if (!DualModeHelper::ParseDualModeBundleName(stateKey, originalName)) {
+        APP_LOGW("dual-mode state key(%{public}s) parse failed, skip", stateKey.c_str());
+        return;
+    }
+    InnerBundleInfo *targetInfo = nullptr;
+    auto infoItem = bundleInfos_.find(originalName);
+    if (infoItem != bundleInfos_.end() && infoItem->second.IsDualModeCloneApp()) {
+        targetInfo = &infoItem->second;
+    } else {
+        auto tempItem = tempBundleInfos_.find(originalName);
+        if (tempItem != tempBundleInfos_.end() && tempItem->second.IsDualModeCloneApp()) {
+            targetInfo = &tempItem->second;
+        }
+    }
+    if (targetInfo == nullptr) {
+        APP_LOGW("dual-mode clone record(%{public}s) not found for state key(%{public}s), skip",
+            originalName.c_str(), stateKey.c_str());
+        return;
+    }
+    for (auto& bundleUserState : bundleUserStates) {
+        auto& tempUserInfo = bundleUserState.second;
+        targetInfo->SetApplicationEnabled(tempUserInfo.enabled, bundleUserState.second.setEnabledCaller,
+            bundleUserState.first);
+        for (auto& disabledAbility : tempUserInfo.disabledAbilities) {
+            targetInfo->SetAbilityEnabled("", disabledAbility, false, bundleUserState.first);
+        }
+    }
+}
+
 void BundleDataMgr::ResetBundleStateData()
 {
     for (auto& bundleInfoItem : bundleInfos_) {
         bundleInfoItem.second.ResetBundleState(Constants::ALL_USERID);
+    }
+    if (DualModeHelper::IsDualModeDevice()) {
+        // dual-mode: hidden variants need a clean baseline as well.
+        for (auto& bundleInfoItem : tempBundleInfos_) {
+            bundleInfoItem.second.ResetBundleState(Constants::ALL_USERID);
+        }
     }
 }
 
@@ -347,10 +438,10 @@ void BundleDataMgr::ClassifyDualModeAppsNoLock()
     APP_LOGI("Dual mode: classification start, total=%{public}zu, secondary=%{public}d",
         bundleInfos_.size(), isSecondaryMode);
     // === DUAL_MODE: policy-driven classification (requirement 2, ADR-7) ===
-    // Read the persisted policy set and hide filterable-policy apps not in the set. Runs before
-    // the mode-based classification below (filterable policies 1/2/3/5/7 and different-package
-    // policies 4/6/8 are disjoint, so order is safe). If absent/invalid, requirement-1 logic applies.
-    (void)ClassifyDualModeAppsByPolicyNoLock();
+    // Read the persisted policy set and hide filterable-policy apps not in the set. If the policy
+    // set is valid, MAIN_ONLY/SUB_ONLY visibility is policy-driven (mode-based Step 3 below is
+    // skipped to avoid overriding the policy set). If absent/invalid, mode-based Step 3 applies.
+    bool hasValidPolicySet = ClassifyDualModeAppsByPolicyNoLock();
     // Step 1: Move all prefixed apps to tempBundleInfos_ with original name as key
     // Erase prefixed keys immediately during collection to avoid second pass
     for (auto it = bundleInfos_.begin(); it != bundleInfos_.end();) {
@@ -423,6 +514,17 @@ void BundleDataMgr::ClassifyDualModeAppsNoLock()
         }
     }
 
+    // Step 3: MAIN_ONLY / SUB_ONLY single-mode apps — move between bundleInfos_ and
+    // tempBundleInfos_ by the original name (no clone key, one package) based on the current mode.
+    // MAIN_ONLY: visible in main mode, hidden in secondary. SUB_ONLY: visible in secondary, hidden
+    // in main. Different-package apps are already classified above and are left untouched here.
+    // Skipped when a valid policy set exists: Step 0 already classified MAIN_ONLY/SUB_ONLY by the
+    // policy set (in-set → visible, not-in-set → hidden), and mode-based defaults would override
+    // that (e.g. MAIN_ONLY hidden in secondary mode despite being in the policy set).
+    if (!hasValidPolicySet) {
+        ClassifyDualModeAppsByDeviceModeNoLock(isSecondaryMode);
+    }
+
     APP_LOGI("Dual mode: classification done - bundleInfos=%{public}zu, tempBundleInfos=%{public}zu",
              bundleInfos_.size(), tempBundleInfos_.size());
     // === DUAL_MODE END ===
@@ -473,6 +575,48 @@ bool BundleDataMgr::ClassifyDualModeAppsByPolicyNoLock()
     return true;
 }
 
+// === DUAL_MODE: mode-based classification body (requirement 1 fallback, shared since r16) ===
+// Caller must hold bundleInfoMutex_. Places MAIN_ONLY/SUB_ONLY single-mode apps by the given
+// mode (MAIN_ONLY visible in main mode, SUB_ONLY in secondary; the mismatched side moves to
+// tempBundleInfos_). The symmetric hide/show passes converge from any starting state, so this
+// is safe to call both at boot classification (no valid persisted policy set — param absent
+// or parse failed) and at switch rollback (SaveBmsParam failed with no valid baseline:
+// single-mode apps return to the initialization-time placement while different-package and
+// filterable entries keep the failed switch's placement, converging on the next successful
+// switch or reboot).
+void BundleDataMgr::ClassifyDualModeAppsByDeviceModeNoLock(bool isSecondaryMode)
+{
+    auto shouldBeHidden = [isSecondaryMode](DeviceModeDistributionPolicy policy) {
+        if (policy == DeviceModeDistributionPolicy::MAIN_ONLY) {
+            return isSecondaryMode; // main-only hidden in secondary mode
+        }
+        if (policy == DeviceModeDistributionPolicy::SUB_ONLY) {
+            return !isSecondaryMode; // sub-only hidden in main mode
+        }
+        return false;
+    };
+    // Move MAIN_ONLY/SUB_ONLY apps that should be hidden from bundleInfos_ to tempBundleInfos_.
+    for (auto it = bundleInfos_.begin(); it != bundleInfos_.end();) {
+        if (shouldBeHidden(it->second.GetDeviceModeDistributionPolicy())) {
+            tempBundleInfos_[it->first] = it->second;
+            it = bundleInfos_.erase(it);
+        } else {
+            ++it;
+        }
+    }
+    // Move MAIN_ONLY/SUB_ONLY apps that should be visible from tempBundleInfos_ to bundleInfos_.
+    for (auto it = tempBundleInfos_.begin(); it != tempBundleInfos_.end();) {
+        DeviceModeDistributionPolicy policy = it->second.GetDeviceModeDistributionPolicy();
+        if ((policy == DeviceModeDistributionPolicy::MAIN_ONLY ||
+            policy == DeviceModeDistributionPolicy::SUB_ONLY) && !shouldBeHidden(policy)) {
+            bundleInfos_[it->first] = it->second;
+            it = tempBundleInfos_.erase(it);
+        } else {
+            ++it;
+        }
+    }
+}
+
 // === DUAL_MODE: runtime visibility switch (requirement 2) ===
 ErrCode BundleDataMgr::FilterBundleListByDeviceModeDistributionPolicies(
     const std::set<DeviceModeDistributionPolicy> &policies)
@@ -489,44 +633,75 @@ ErrCode BundleDataMgr::FilterBundleListByDeviceModeDistributionPolicies(
     if (!DualModeHelper::IsValidPolicySet(policies)) {
         APP_LOGE_NOFUNC("FilterBundleListByDeviceModeDistributionPolicies invalid policies: empty, out-of-range"
             " value, or missing different-package policies (4/6/8)");
-        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+        return ERR_APPEXECFWK_DUAL_MODE_POLICY_INVALID;
+    }
+
+    // Dual-mode switch is mutually exclusive with install/update/uninstall (and with another
+    // switch): take the exclusive side without blocking. A queued task holding the shared side
+    // (or another in-flight switch) makes this fail fast with SWITCH_BUSY — before any lock on
+    // the bundle maps, before any migration or persist, so nothing changes. Permanent errors
+    // (device gate / parameter) are checked above on purpose: callers must not retry into BUSY
+    // on a non-dual-mode device or with an invalid set.
+    std::unique_lock<std::shared_mutex> switchLock(dualModeSwitchMutex_, std::try_to_lock);
+    if (!switchLock.owns_lock()) {
+        APP_LOGW("Dual mode: switch rejected, install/uninstall task or another switch in flight");
+        return ERR_APPEXECFWK_DUAL_MODE_SWITCH_BUSY;
+    }
+
+    // Resolve the param helper and read the rollback baseline BEFORE taking
+    // bundleInfoMutex_ (codecheck R4 INP-01): the RDB read no longer sits inside the map
+    // write lock, which is then held only for the migration and the save. Reading here is
+    // still race-free — the exclusive switch lock is already held and this key has no other
+    // production writer.
+    auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    if (bmsPara == nullptr) {
+        APP_LOGE_NOFUNC("FilterBundleListByDeviceModeDistributionPolicies bmsPara is nullptr");
+        return ERR_APPEXECFWK_DUAL_MODE_PERSIST_FAILED;
+    }
+    // Keep the persisted policy set as the rollback baseline (2026-08-26 order change: memory
+    // migrates first, the value is persisted afterwards). A missing or corrupted baseline
+    // (first switch after boot with no persisted set, or a damaged value the boot
+    // classification already fell back from) cannot be replayed through the migration body —
+    // on a later save failure single-mode apps fall back to the initialization-time
+    // mode-based placement (r16); the other entries keep this switch's placement and converge
+    // on the next successful switch or reboot.
+    std::string oldPoliciesCsv;
+    std::set<DeviceModeDistributionPolicy> oldPolicies;
+    bool rollbackPossible = bmsPara->GetBmsParam(
+        ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICIES_KEY, oldPoliciesCsv)
+        && DualModeHelper::ParsePersistedPolicies(oldPoliciesCsv, oldPolicies);
+    if (!rollbackPossible) {
+        APP_LOGW("Dual mode: no valid persisted policy set as rollback baseline");
     }
 
     std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
-
-    // persist first; on failure return PERSIST_FAILED (no migration yet, so rollback
-    // is effectively a no-op — memory stays in pre-switch state).
+    // Migrate first, persist last; on save failure re-run the migration body with the
+    // baseline set: filterable policies re-place by set membership and different-package
+    // entries rotate a second time — the per-call rotation is an involution, so the two
+    // calls land back on the pre-switch state (memory and the persisted value stay
+    // consistent).
     // NOTE (codecheck R2 LOG-04): SaveBmsParam below does a synchronous RDB write inside
     // this write lock — worst case (E_SQLITE_BUSY 3x500ms retry + lazy DB open) blocks all
     // shared_lock queries (GetBundleInfo etc.) for up to seconds. Accepted as-is: low-
     // frequency management op, single-lock ordering (no deadlock), and same-lock I/O
     // precedents exist (DefragMemory full map copy; GenerateBundleId file write). Moving
     // the persist out of the lock needs a concurrent-switch TOCTOU design first — deferred.
-    auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
-    if (bmsPara == nullptr) {
-        APP_LOGE_NOFUNC("FilterBundleListByDeviceModeDistributionPolicies bmsPara is nullptr");
-        return ERR_APPEXECFWK_DUAL_MODE_PERSIST_FAILED;
-    }
-    if (!bmsPara->SaveBmsParam(
-        ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICIES_KEY, DualModeHelper::PoliciesToCsv(policies))) {
-        APP_LOGE_NOFUNC("FilterBundleListByDeviceModeDistributionPolicies SaveBmsParam failed");
-        return ERR_APPEXECFWK_DUAL_MODE_PERSIST_FAILED;
-    }
-    // Re-read the device mode params so install-time dual-mode handling (NeedDualModeHandle)
-    // sees the mode the caller just switched to (spec L-7); the migration itself is mode-free
-    // (same-name different-package pairs rotate per call). UpdateModeCache overwrites the
-    // cache unconditionally — a missing/unreadable/illegal param leaves it no longer reporting
-    // a dual-mode device — so re-verify the gate before migrating: skip the migration and
-    // report DEVICE_NOT_SUPPORTED so the caller can retry (the retry re-reads the params and
-    // heals the cache). The policies persisted above stay in place; the runtime layout
-    // converges on the next successful switch or the reboot classification. (codecheck R3
-    // INP-06, report alternative: post-refresh gate re-verification)
-    DualModeHelper::UpdateModeCache();
-    if (!DualModeHelper::IsDualModeDevice()) {
-        APP_LOGE_NOFUNC("FilterBundleListByDeviceModeDistributionPolicies mode refresh failed");
-        return ERR_APPEXECFWK_DUAL_MODE_DEVICE_NOT_SUPPORTED;
-    }
+    // (The baseline RDB read used to sit inside this lock too; moved above it in codecheck
+    // R4 INP-01 to keep the map lock window to the migration + save only.)
     FilterBundleListByDeviceModeDistributionPoliciesNoLock(policies);
+    if (!bmsPara->SaveBmsParam(
+        ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICIES_KEY,
+        DualModeHelper::PoliciesToCsv(policies))) {
+        APP_LOGE_NOFUNC("FilterBundleListByDeviceModeDistributionPolicies SaveBmsParam failed, rollback");
+        if (rollbackPossible) {
+            FilterBundleListByDeviceModeDistributionPoliciesNoLock(oldPolicies);
+        } else {
+            // No valid baseline to replay: single-mode apps converge to the initialization-time
+            // mode-based placement (r16); the other entries keep this switch's placement.
+            ClassifyDualModeAppsByDeviceModeNoLock(DualModeHelper::IsSecondaryMode());
+        }
+        return ERR_APPEXECFWK_DUAL_MODE_PERSIST_FAILED;
+    }
 
     APP_LOGI("Dual mode: FilterBundleListByDeviceModeDistributionPolicies done - "
              "bundleInfos=%{public}zu, tempBundleInfos=%{public}zu",
@@ -534,68 +709,103 @@ ErrCode BundleDataMgr::FilterBundleListByDeviceModeDistributionPolicies(
     return ERR_OK;
 }
 
+// === DUAL_MODE: shared side of the switch <-> install/update/uninstall mutual exclusion ===
+// Called by the BundleInstallerManager::AddTask wrapper (queued task bodies) and the
+// BundleInstallerHost direct-entry guard. Tries the shared side WITHOUT blocking (r13):
+// returns nullptr when a mode switch holds the exclusive side and the caller fails fast
+// with ERR_APPEXECFWK_DUAL_MODE_SWITCH_BUSY; multiple operations share this side
+// concurrently. See FilterBundleListByDeviceModeDistributionPolicies for the lock order.
+std::unique_ptr<std::shared_lock<std::shared_mutex>> BundleDataMgr::TryLockForBundleOperation()
+{
+    auto lock = std::make_unique<std::shared_lock<std::shared_mutex>>(dualModeSwitchMutex_, std::try_to_lock);
+    if (!lock->owns_lock()) {
+        APP_LOGE_NOFUNC("Dual mode: TryLockForBundleOperation failed, a mode switch is in flight");
+        return nullptr;  // a mode switch holds the exclusive side: caller fails fast (r13)
+    }
+    return lock;
+}
+
 // === DUAL_MODE: lock-free migration body (requirement 2) ===
 // Caller must hold bundleInfoMutex_. See FilterBundleListByDeviceModeDistributionPolicies.
 // Mode-free by design: the migration does NOT sense primary/secondary mode — the caller flips
-// the device mode and triggers one switch per flip. Semantics per policy value:
+// the device mode and triggers one switch per flip. Invariant: every bundle name moves at
+// most once per call (a name hidden by the hide pass never re-enters bundleInfos_ in the same
+// call), so a repeated call without a mode flip flips every rotated name again (not
+// idempotent — one switch per flip is the contract). Semantics per policy value (2026-08-26
+// design change: different-package policies rotate per call instead of following the set):
 // - UNSPECIFIED (0): always visible, never migrated.
-// - filterable policies (1/2/3/5/7): in the set -> bundleInfos_, else -> tempBundleInfos_.
-// - different-package policies (4/6/8): a same-name variant pair ROTATES on every call (the
-//   visible variant goes to tempBundleInfos_, the hidden one into bundleInfos_); a
-//   diff-package entry without a same-name counterpart stays on its side (nothing to rotate
-//   with — mode-based placement of such single-variant apps belongs to the reboot
-//   classification).
+// - filterable policies (1/2/3/5/7): set membership decides — in the set -> bundleInfos_,
+//   else -> tempBundleInfos_ (idempotent while the set is unchanged).
+// - different-package policies (4/6/8; a valid set always contains them): ROTATE once per
+//   call, regardless of which side the entry is on — a same-name pair (entry on both sides)
+//   swaps, a single variant on either side crosses over. One switch per mode flip makes the
+//   rotation track the mode.
 void BundleDataMgr::FilterBundleListByDeviceModeDistributionPoliciesNoLock(
     const std::set<DeviceModeDistributionPolicy> &policySet)
 {
-    // Hide apps whose policy is NOT in the set by moving them to temp. A same-name temp entry
-    // cannot legitimately pair with a filterable bundle entry (per-app policy is single-valued;
-    // install-time consistency checks block category transitions), so treat it as an
-    // inconsistent variant pairing: skip the migration, keep both entries. NOTE: this leaves a
-    // should-be-hidden app VISIBLE — acceptable for an anomalous state only (unreachable via
-    // normal flow: reinstall is blocked by installStates_ residue and the state transfer
-    // rules); an occurrence indicates data inconsistency needing manual investigation.
+    // Hide pass: move entries that must leave bundleInfos_ into tempBundleInfos_.
+    std::set<std::string> hiddenNames;
     for (auto it = bundleInfos_.begin(); it != bundleInfos_.end();) {
         DeviceModeDistributionPolicy policy = it->second.GetDeviceModeDistributionPolicy();
-        if (policy != DeviceModeDistributionPolicy::UNSPECIFIED
-            && !DualModeHelper::IsDiffPackageCategory(policy)
-            && policySet.count(policy) == 0) {
-            auto tempItem = tempBundleInfos_.find(it->first);
-            if (tempItem == tempBundleInfos_.end()) {
-                tempBundleInfos_[it->first] = std::move(it->second);
-                it = bundleInfos_.erase(it);
+        if (policy == DeviceModeDistributionPolicy::UNSPECIFIED) {
+            ++it;  // always visible, never migrated
+            continue;
+        }
+        bool hasSameNameTemp = tempBundleInfos_.find(it->first) != tempBundleInfos_.end();
+        if (DualModeHelper::IsDiffPackageCategory(policy)) {
+            // Different-package single variant: rotate out on every call. A same-name temp
+            // entry is a variant pair — the show pass rotates the pair as a unit (swap), so
+            // keep both sides untouched here (the pair must rotate exactly once).
+            if (hasSameNameTemp) {
+                ++it;
                 continue;
             }
-            APP_LOGW("Dual mode: inconsistent variant pairing, keep visible bundle=%{public}s",
-                it->first.c_str());
+        } else if (policySet.count(policy) != 0 || hasSameNameTemp) {
+            // In the set -> stays visible. A same-name temp entry cannot legitimately pair
+            // with a filterable bundle entry (per-app policy is single-valued; install-time
+            // consistency checks block category transitions) — inconsistent variant pairing:
+            // the hide pass keeps both entries; the show pass below may rotate the pair
+            // (temp variant in the set) or leave it. Reachable only in this anomalous state
+            // (unreachable via normal flow: reinstall is blocked by installStates_ residue
+            // and the state transfer rules); an occurrence indicates data inconsistency
+            // needing manual investigation.
+            if (hasSameNameTemp) {
+                APP_LOGW("Dual mode: inconsistent variant pairing, hide pass keeps entry, "
+                    "show pass may rotate pair, bundle=%{public}s",
+                    it->first.c_str());
+            }
+            ++it;
+            continue;
         }
-        ++it;
+        hiddenNames.insert(it->first);
+        tempBundleInfos_[it->first] = std::move(it->second);
+        it = bundleInfos_.erase(it);
     }
-    // Show apps whose policy IS in the set (a valid set always contains 4/6/8). A same-name
-    // different-package pair rotates: the temp variant swaps with the bundle one on every call
-    // (mode-free — the caller triggers one switch per mode flip, so the rotation tracks the
-    // mode). Filterable apps migrate in when no same-name entry occupies the slot; a
-    // diff-package temp entry with no counterpart never migrates alone (rotation needs a
-    // pair). Never swap out a non-diff-package occupant — that would hide an in-set app and
-    // oscillate on repeated switches.
+    // Show pass: rotate entries in tempBundleInfos_ whose policy is in the set (a valid set
+    // always contains 4/6/8). No same-name occupant: the entry crosses over alone (a
+    // different-package single variant rotates in). Same-name occupant: swap — one rotation
+    // for the pair, regardless of the occupant's policy category (mode-free — the caller
+    // triggers one switch per mode flip, so the rotation tracks the mode). Trade-off: an
+    // anomalous occupant (e.g. an UNSPECIFIED entry) rotated out to temp has no return path —
+    // unreachable via normal flow (see the hide-pass note); an occurrence indicates data
+    // inconsistency needing manual investigation. Entries hidden by the hide pass are
+    // skipped: without this, a different-package single variant rotated out above would be
+    // rotated back in below within the same call (two moves instead of one).
     for (auto it = tempBundleInfos_.begin(); it != tempBundleInfos_.end();) {
+        if (hiddenNames.count(it->first) != 0) {
+            ++it;
+            continue;
+        }
         DeviceModeDistributionPolicy policy = it->second.GetDeviceModeDistributionPolicy();
         if (policy != DeviceModeDistributionPolicy::UNSPECIFIED
             && policySet.count(policy) != 0) {
             auto bundleItem = bundleInfos_.find(it->first);
             if (bundleItem == bundleInfos_.end()) {
-                if (!DualModeHelper::IsDiffPackageCategory(policy)) {
-                    bundleInfos_[it->first] = std::move(it->second);
-                    it = tempBundleInfos_.erase(it);
-                    continue;
-                }
-            } else if (DualModeHelper::IsDiffPackageCategory(
-                bundleItem->second.GetDeviceModeDistributionPolicy())) {
-                std::swap(it->second, bundleItem->second);
-            } else {
-                APP_LOGW("Dual mode: non-variant entry occupies bundle slot, skip swap bundle=%{public}s",
-                    it->first.c_str());
+                bundleInfos_[it->first] = std::move(it->second);
+                it = tempBundleInfos_.erase(it);
+                continue;
             }
+            std::swap(it->second, bundleItem->second);
         }
         ++it;
     }
@@ -650,7 +860,8 @@ bool BundleDataMgr::UpdateBundleInstallState(const std::string &bundleName,
     return false;
 }
 
-bool BundleDataMgr::AddInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info, bool checkStatus)
+bool BundleDataMgr::AddInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info, bool checkStatus,
+    bool toTempBundle)
 {
     APP_LOGD("to save info:%{public}s", info.GetBundleName().c_str());
     if (bundleName.empty()) {
@@ -659,8 +870,11 @@ bool BundleDataMgr::AddInnerBundleInfo(const std::string &bundleName, InnerBundl
     }
 
     std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
-    auto infoItem = bundleInfos_.find(bundleName);
-    if (infoItem != bundleInfos_.end()) {
+    // Dual-mode cross-mode install: the other-mode package is stored in tempBundleInfos_ (hidden,
+    // original-name key) instead of bundleInfos_ (which holds the current-mode variant).
+    std::map<std::string, InnerBundleInfo> &targetMap = toTempBundle ? tempBundleInfos_ : bundleInfos_;
+    auto infoItem = targetMap.find(bundleName);
+    if (infoItem != targetMap.end()) {
         APP_LOGW("bundleName: %{public}s : bundle info already exist", bundleName.c_str());
         return false;
     }
@@ -719,7 +933,7 @@ bool BundleDataMgr::AddInnerBundleInfo(const std::string &bundleName, InnerBundl
             BuildExternalOverlayConnection(info.GetCurrentModulePackage(), info, info.GetUserId());
         }
 #endif
-        bundleInfos_.emplace(bundleName, info);
+        targetMap.emplace(bundleName, info);
         AddAppHspBundleName(info.GetApplicationBundleType(), bundleName);
         return true;
     }
@@ -911,6 +1125,7 @@ bool BundleDataMgr::UpdateUninstallBundleInfo(const std::string &bundleName,
             return false;
         }
         oldUninstallBundleInfo.userInfos[newUser] = uninstallBundleInfo.userInfos.begin()->second;
+        oldUninstallBundleInfo.deviceModeDistributionPolicy = uninstallBundleInfo.deviceModeDistributionPolicy;
         return uninstallDataMgr_->UpdateUninstallBundleInfo(bundleName, oldUninstallBundleInfo);
     }
     return uninstallDataMgr_->UpdateUninstallBundleInfo(bundleName, uninstallBundleInfo);
@@ -1171,7 +1386,14 @@ bool BundleDataMgr::RemoveInnerBundleUserInfo(
     }
     infoItem->second = info;
 
-    bundleStateStorage_->DeleteBundleState(bundleName, userId);
+    if (DualModeHelper::IsDualModeDevice()) {
+        // dual-mode: clone app's state was stored under the prefixed key.
+        std::string stateKey = info.IsDualModeCloneApp()
+            ? DualModeHelper::GetDualModeBundleName(bundleName) : bundleName;
+        bundleStateStorage_->DeleteBundleState(stateKey, userId);
+    } else {
+        bundleStateStorage_->DeleteBundleState(bundleName, userId);
+    }
     return true;
 }
 
@@ -2103,6 +2325,14 @@ ErrCode BundleDataMgr::QueryAbilityInfoWithFlagsV9(const std::optional<AbilityIn
         }
         if (appIndex == 0) {
             info.uid = innerBundleUserInfoPtr->uid;
+        } else if (appIndex == ServiceConstants::DUAL_MODE_CLONE_APP_INDEX) {
+            // dual-mode: clone app's uid is stored in userInfo itself, not in cloneInfos.
+            if (!innerBundleInfo.IsDualModeCloneApp()) {
+                LOG_W(BMS_TAG_QUERY, "appIndex %{public}d is only for dual-mode clone app", appIndex);
+                return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
+            }
+            info.uid = innerBundleUserInfoPtr->uid;
+            info.appIndex = innerBundleInfo.GetAppIndex();
         } else {
             std::string appIndexKey = InnerBundleUserInfo::AppIndexToKey(appIndex);
             if (appIndex >= Constants::CLI_SANDBOX_APP_INDEX_MIN && appIndex <= Constants::CLI_SANDBOX_APP_INDEX_MAX) {
@@ -5231,6 +5461,17 @@ ErrCode BundleDataMgr::GetBundleNameAndIndex(const int32_t uid, std::string &bun
         }
     }
 
+    // dual-mode clone: keyName format "+clone-10000+{bundleName}"
+    if (DualModeHelper::IsDualModeCloneKey(keyName)) {
+        std::string originalName;
+        if (DualModeHelper::ParseDualModeBundleName(keyName, originalName)) {
+            bundleName = originalName;
+            appIndex = ServiceConstants::DUAL_MODE_CLONE_APP_INDEX;
+            return ERR_OK;
+        }
+        APP_LOGW("dual-mode clone key parse failed, keyName:%{public}s", keyName.c_str());
+    }
+
     bundleName = keyName;
     appIndex = 0;
     return ERR_OK;
@@ -5533,6 +5774,9 @@ bool BundleDataMgr::GetBundleStats(const std::string &bundleName,
     int32_t responseUserId = -1;
     int32_t uid = Constants::INVALID_UID;
     std::vector<std::string> moduleNameList;
+    // dual-mode: clone app's code dir is keyed by the effective (prefixed) name.
+    std::string effectiveName = bundleName;
+    bool isDualModeClone = false;
     {
         std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
         const auto infoItem = bundleInfos_.find(bundleName);
@@ -5540,6 +5784,10 @@ bool BundleDataMgr::GetBundleStats(const std::string &bundleName,
             responseUserId = infoItem->second.GetResponseUserId(userId);
             uid = infoItem->second.GetUid(responseUserId, appIndex);
             infoItem->second.GetModuleNames(moduleNameList);
+            if (infoItem->second.IsDualModeCloneApp()) {
+                effectiveName = DualModeHelper::GetDualModeBundleName(bundleName);
+                isDualModeClone = true;
+            }
         }
     }
     if (uid == Constants::INVALID_UID) {
@@ -5568,8 +5816,9 @@ bool BundleDataMgr::GetBundleStats(const std::string &bundleName,
         auto saUids = GetBindingSAUidsByBundleName(bundleName, saUidMap);
         uids.insert(saUids.begin(), saUids.end());
     }
+    int32_t installdAppIndex = isDualModeClone ? Constants::MAIN_APP_INDEX : appIndex;
     ErrCode ret = InstalldClient::GetInstance()->GetBundleStats(
-        bundleName, responseUserId, bundleStats, uids, appIndex, statFlag, moduleNameList);
+        effectiveName, responseUserId, bundleStats, uids, installdAppIndex, statFlag, moduleNameList);
     if (ret != ERR_OK) {
         APP_LOGW("%{public}s getStats failed", bundleName.c_str());
         return false;
@@ -5599,7 +5848,11 @@ ErrCode BundleDataMgr::BatchGetBundleStats(const std::vector<std::string> &bundl
 {
     auto activeUserId = AccountHelper::GetUserIdByCallerType();
     if (activeUserId != userId) {
-        return InstalldClient::GetInstance()->BatchGetBundleStats(bundleNames, uidMap, bundleStats);
+        if (DualModeHelper::IsDualModeDevice()) {
+            return BatchGetBundleStatsDualMode(bundleNames, uidMap, bundleStats);
+        } else {
+            return InstalldClient::GetInstance()->BatchGetBundleStats(bundleNames, uidMap, bundleStats);
+        }
     }
     std::map<std::string, std::set<int32_t>> saUidMap;
     LoadSaUidMap(saUidMap);
@@ -5611,7 +5864,56 @@ ErrCode BundleDataMgr::BatchGetBundleStats(const std::vector<std::string> &bundl
             }
         }
     }
-    return InstalldClient::GetInstance()->BatchGetBundleStats(bundleNames, uidMap, bundleStats);
+    if (DualModeHelper::IsDualModeDevice()) {
+        return BatchGetBundleStatsDualMode(bundleNames, uidMap, bundleStats);
+    } else {
+        return InstalldClient::GetInstance()->BatchGetBundleStats(bundleNames, uidMap, bundleStats);
+    }
+}
+
+ErrCode BundleDataMgr::BatchGetBundleStatsDualMode(const std::vector<std::string> &bundleNames,
+    const std::unordered_map<std::string, std::unordered_set<int32_t>> &uidMap,
+    std::vector<BundleStorageStats> &bundleStats) const
+{
+    // dual-mode: clone app's code dir is keyed by the effective (prefixed) name.
+    std::vector<std::string> effectiveNames;
+    std::unordered_map<std::string, std::unordered_set<int32_t>> effectiveUidMap;
+    // Restore original bundleName in results so callers can correlate by original name.
+    std::unordered_map<std::string, std::string> effectiveToOriginal;
+    {
+        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        for (const auto &name : bundleNames) {
+            auto infoItem = bundleInfos_.find(name);
+            if (infoItem != bundleInfos_.end() && infoItem->second.IsDualModeCloneApp()) {
+                std::string effectiveName = DualModeHelper::GetDualModeBundleName(name);
+                effectiveNames.push_back(effectiveName);
+                effectiveToOriginal[effectiveName] = name;
+                auto uidIt = uidMap.find(name);
+                if (uidIt != uidMap.end()) {
+                    effectiveUidMap[effectiveName] = uidIt->second;
+                }
+            } else {
+                effectiveNames.push_back(name);
+                auto uidIt = uidMap.find(name);
+                if (uidIt != uidMap.end()) {
+                    effectiveUidMap[name] = uidIt->second;
+                }
+            }
+        }
+    }
+    ErrCode ret = InstalldClient::GetInstance()->BatchGetBundleStats(
+        effectiveNames, effectiveUidMap, bundleStats);
+    if (ret != ERR_OK) {
+        APP_LOGW("BatchGetBundleStatsDualMode failed, ret:%{public}d", ret);
+        return ret;
+    }
+    for (auto &stats : bundleStats) {
+        auto it = effectiveToOriginal.find(stats.bundleName);
+        if (it != effectiveToOriginal.end()) {
+            stats.bundleName = it->second;
+        }
+    }
+    return ERR_OK;
 }
 
 ErrCode BundleDataMgr::BatchGetBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,
@@ -6528,7 +6830,9 @@ ErrCode BundleDataMgr::GetInnerBundleInfoForClone(const std::string &bundleName,
         return ERR_BUNDLE_MANAGER_BUNDLE_DISABLED;
     }
     if (appIndex != Constants::MAIN_APP_INDEX &&
-        (appIndex <= Constants::MAIN_APP_INDEX || appIndex > Constants::INITIAL_SANDBOX_APP_INDEX)) {
+        (appIndex <= Constants::MAIN_APP_INDEX || appIndex > Constants::INITIAL_SANDBOX_APP_INDEX) &&
+        !(innerBundleInfo.IsDualModeCloneApp() &&
+          appIndex == ServiceConstants::DUAL_MODE_CLONE_APP_INDEX)) {
         LOG_NOFUNC_W(BMS_TAG_COMMON, "appIndex out of range -n %{public}s -u %{public}d -i %{public}d",
             bundleName.c_str(), requestUserId, appIndex);
         return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
@@ -6606,6 +6910,14 @@ ErrCode BundleDataMgr::IsApplicationEnabled(
             APP_LOGW("GetApplicationEnabled failed: %{public}s", bundleName.c_str());
         }
         return ret;
+    } else if (appIndex == ServiceConstants::DUAL_MODE_CLONE_APP_INDEX && infoItem->second.IsDualModeCloneApp()) {
+        // dual-mode: clone app with appIndex=10000 reads its own userInfo state.
+        ErrCode ret = infoItem->second.GetApplicationEnabledV9(responseUserId, isEnabled, appIndex);
+        if (ret != ERR_OK) {
+            APP_LOGW("GetApplicationEnabled failed: %{public}s, appIndex: %{public}d",
+                bundleName.c_str(), appIndex);
+        }
+        return ret;
     }
     const InnerBundleInfo &bundleInfo = infoItem->second;
     const InnerBundleUserInfo *innerBundleUserInfoPtr = nullptr;
@@ -6649,7 +6961,8 @@ ErrCode BundleDataMgr::SetApplicationEnabled(const std::string &bundleName,
     (void)newInfo.GetApplicationEnabledV9(requestUserId, currentEnabled, appIndex);
     stateChanged = (currentEnabled != isEnable);
 
-    if (appIndex != 0) {
+    if (appIndex != 0 &&
+        !(newInfo.IsDualModeCloneApp() && appIndex == ServiceConstants::DUAL_MODE_CLONE_APP_INDEX)) {
         auto ret = newInfo.SetCloneApplicationEnabled(isEnable, appIndex, caller, requestUserId);
         if (ret != ERR_OK) {
             APP_LOGW("SetCloneApplicationEnabled for innerBundleInfo fail, errCode is %{public}d", ret);
@@ -6678,13 +6991,336 @@ ErrCode BundleDataMgr::SetApplicationEnabled(const std::string &bundleName,
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
 
-    if (innerBundleUserInfoPtr->bundleUserInfo.IsInitialState()) {
-        bundleStateStorage_->DeleteBundleState(bundleName, requestUserId);
+    if (DualModeHelper::IsDualModeDevice()) {
+        // dual-mode: clone app's state is stored under the prefixed key.
+        std::string stateKey = newInfo.IsDualModeCloneApp()
+            ? DualModeHelper::GetDualModeBundleName(bundleName) : bundleName;
+        if (innerBundleUserInfoPtr->bundleUserInfo.IsInitialState()) {
+            bundleStateStorage_->DeleteBundleState(stateKey, requestUserId);
+        } else {
+            bundleStateStorage_->SaveBundleStateStorage(
+                stateKey, requestUserId, innerBundleUserInfoPtr->bundleUserInfo);
+        }
     } else {
-        bundleStateStorage_->SaveBundleStateStorage(
-            bundleName, requestUserId, innerBundleUserInfoPtr->bundleUserInfo);
+        if (innerBundleUserInfoPtr->bundleUserInfo.IsInitialState()) {
+            bundleStateStorage_->DeleteBundleState(bundleName, requestUserId);
+        } else {
+            bundleStateStorage_->SaveBundleStateStorage(
+                bundleName, requestUserId, innerBundleUserInfoPtr->bundleUserInfo);
+        }
     }
     return ERR_OK;
+}
+
+ErrCode BundleDataMgr::BatchSetApplicationEnabled(int32_t userId, int32_t enableAppIndex,
+    int32_t disableAppIndex, const std::string &caller, bool killProcess, bool needSendEvent,
+    bool skipDisableForbidden)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    APP_LOGI("BatchSetApplicationEnabled userId=%{public}d, enableAppIndex=%{public}d, "
+        "disableAppIndex=%{public}d, killProcess=%{public}d, needSendEvent=%{public}d, "
+        "skipDisableForbidden=%{public}d",
+        userId, enableAppIndex, disableAppIndex, killProcess, needSendEvent, skipDisableForbidden);
+
+    auto validateRet = ValidateBatchSetAppIndex(enableAppIndex, disableAppIndex);
+    if (validateRet != ERR_OK) {
+        return validateRet;
+    }
+
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        APP_LOGE("userId %{public}d is invalid", userId);
+        return ERR_APPEXECFWK_USER_NOT_EXIST;
+    }
+
+    std::vector<NotifyBundleEvents> eventsToSend;
+    std::vector<std::tuple<std::string, int32_t, int32_t>> disabledBundles;
+    std::vector<std::tuple<std::string, int32_t, bool, int32_t, std::string>> sysEventsToSend;
+
+    auto processRet = ProcessBatchForAllBundles(requestUserId, enableAppIndex, disableAppIndex, caller,
+        needSendEvent, skipDisableForbidden, eventsToSend, disabledBundles, sysEventsToSend);
+    if (processRet != ERR_OK) {
+        return processRet;
+    }
+
+    for (const auto &[evtBundleName, evtUserId, evtIsEnable, evtAppIndex, evtCaller] : sysEventsToSend) {
+        EventReport::SendComponentStateSysEvent(evtBundleName, "", evtUserId, evtIsEnable, evtAppIndex, evtCaller);
+    }
+
+    if (killProcess) {
+        KillDisabledBundleProcesses(disabledBundles, caller);
+    }
+    if (needSendEvent && !eventsToSend.empty()) {
+        SendBatchNotifyEventsAsync(std::move(eventsToSend));
+    }
+
+    APP_LOGI("BatchSetApplicationEnabled completed successfully");
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::ProcessBatchForAllBundles(int32_t requestUserId, int32_t enableAppIndex,
+    int32_t disableAppIndex, const std::string &caller, bool needSendEvent,
+    bool skipDisableForbidden,
+    std::vector<NotifyBundleEvents> &eventsToSend,
+    std::vector<std::tuple<std::string, int32_t, int32_t>> &disabledBundles,
+    std::vector<std::tuple<std::string, int32_t, bool, int32_t, std::string>> &sysEventsToSend)
+{
+    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::vector<std::tuple<std::string, int32_t, bool, std::string>> rollbackList;
+    for (auto &item : bundleInfos_) {
+        InnerBundleInfo &innerBundleInfo = item.second;
+        if (innerBundleInfo.GetAppIndex() != 0) {
+            continue;
+        }
+        const InnerBundleUserInfo *innerBundleUserInfoPtr = nullptr;
+        if (!innerBundleInfo.GetInnerBundleUserInfo(requestUserId, innerBundleUserInfoPtr) ||
+            !innerBundleUserInfoPtr || innerBundleUserInfoPtr->cloneInfos.empty()) {
+            continue;
+        }
+        const std::string &bundleName = item.first;
+
+        auto ret = ProcessDisableForBundle(innerBundleInfo, innerBundleUserInfoPtr, bundleName,
+            disableAppIndex, caller, requestUserId, needSendEvent, skipDisableForbidden,
+            eventsToSend, disabledBundles, rollbackList, sysEventsToSend);
+        if (ret != ERR_OK) {
+            return ret;
+        }
+        ret = ProcessEnableForBundle(innerBundleInfo, innerBundleUserInfoPtr, bundleName,
+            enableAppIndex, caller, requestUserId, needSendEvent,
+            eventsToSend, rollbackList, sysEventsToSend);
+        if (ret != ERR_OK) {
+            return ret;
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::ProcessDisableForBundle(InnerBundleInfo &innerBundleInfo,
+    const InnerBundleUserInfo *innerBundleUserInfoPtr, const std::string &bundleName,
+    int32_t disableAppIndex, const std::string &caller, int32_t requestUserId,
+    bool needSendEvent, bool skipDisableForbidden,
+    std::vector<NotifyBundleEvents> &eventsToSend,
+    std::vector<std::tuple<std::string, int32_t, int32_t>> &disabledBundles,
+    std::vector<std::tuple<std::string, int32_t, bool, std::string>> &rollbackList,
+    std::vector<std::tuple<std::string, int32_t, bool, int32_t, std::string>> &sysEventsToSend)
+{
+    auto cloneIter = innerBundleUserInfoPtr->cloneInfos.find(std::to_string(disableAppIndex));
+    if (cloneIter == innerBundleUserInfoPtr->cloneInfos.end()) {
+        return ERR_OK;
+    }
+    bool currentEnabled = false;
+    auto enabledRet = innerBundleInfo.GetApplicationEnabledV9(requestUserId, currentEnabled, disableAppIndex);
+    if (enabledRet != ERR_OK || !currentEnabled) {
+        return ERR_OK;
+    }
+    auto forbidRet = CheckDisableForbidden(bundleName, requestUserId, disableAppIndex, skipDisableForbidden);
+    if (forbidRet == ERR_BUNDLE_MANAGER_PERMISSION_DENIED) {
+        return ERR_OK; // forbidden, skip this bundle
+    }
+    if (forbidRet != ERR_OK) {
+        APP_LOGE("CheckDisableForbidden failed for %{public}s appIndex %{public}d, ret=%{public}d",
+            bundleName.c_str(), disableAppIndex, forbidRet);
+        ReportErrorAndRollback(bundleName, requestUserId, false, disableAppIndex, caller, rollbackList);
+        return forbidRet;
+    }
+    auto ret = innerBundleInfo.SetCloneApplicationEnabled(false, disableAppIndex, caller, requestUserId);
+    if (ret != ERR_OK) {
+        APP_LOGE("disable appIndex %{public}d failed for %{public}s, ret=%{public}d",
+            disableAppIndex, bundleName.c_str(), ret);
+        ReportErrorAndRollback(bundleName, requestUserId, false, disableAppIndex, caller, rollbackList);
+        return ret;
+    }
+    rollbackList.emplace_back(bundleName, disableAppIndex, false, caller);
+    if (!dataStorage_->SaveStorageBundleInfo(innerBundleInfo)) {
+        APP_LOGE("SaveStorageBundleInfo failed for %{public}s appIndex %{public}d",
+            bundleName.c_str(), disableAppIndex);
+        ReportErrorAndRollback(bundleName, requestUserId, false, disableAppIndex, caller, rollbackList);
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    disabledBundles.emplace_back(bundleName, requestUserId, disableAppIndex);
+    if (needSendEvent) {
+        eventsToSend.push_back(BuildBatchNotifyEvent(
+            innerBundleInfo, *innerBundleUserInfoPtr, bundleName, disableAppIndex, requestUserId));
+    }
+    sysEventsToSend.emplace_back(bundleName, requestUserId, false, disableAppIndex, caller);
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::ProcessEnableForBundle(InnerBundleInfo &innerBundleInfo,
+    const InnerBundleUserInfo *innerBundleUserInfoPtr, const std::string &bundleName,
+    int32_t enableAppIndex, const std::string &caller, int32_t requestUserId,
+    bool needSendEvent,
+    std::vector<NotifyBundleEvents> &eventsToSend,
+    std::vector<std::tuple<std::string, int32_t, bool, std::string>> &rollbackList,
+    std::vector<std::tuple<std::string, int32_t, bool, int32_t, std::string>> &sysEventsToSend)
+{
+    auto cloneIter = innerBundleUserInfoPtr->cloneInfos.find(std::to_string(enableAppIndex));
+    if (cloneIter == innerBundleUserInfoPtr->cloneInfos.end()) {
+        return ERR_OK;
+    }
+    bool currentEnabled = false;
+    auto enabledRet = innerBundleInfo.GetApplicationEnabledV9(requestUserId, currentEnabled, enableAppIndex);
+    if (enabledRet != ERR_OK || currentEnabled) {
+        return ERR_OK;
+    }
+    auto ret = innerBundleInfo.SetCloneApplicationEnabled(true, enableAppIndex, caller, requestUserId);
+    if (ret != ERR_OK) {
+        APP_LOGE("enable appIndex %{public}d failed for %{public}s, ret=%{public}d",
+            enableAppIndex, bundleName.c_str(), ret);
+        ReportErrorAndRollback(bundleName, requestUserId, true, enableAppIndex, caller, rollbackList);
+        return ret;
+    }
+    rollbackList.emplace_back(bundleName, enableAppIndex, true, caller);
+    if (!dataStorage_->SaveStorageBundleInfo(innerBundleInfo)) {
+        APP_LOGE("SaveStorageBundleInfo failed for %{public}s appIndex %{public}d",
+            bundleName.c_str(), enableAppIndex);
+        ReportErrorAndRollback(bundleName, requestUserId, true, enableAppIndex, caller, rollbackList);
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    if (needSendEvent) {
+        eventsToSend.push_back(BuildBatchNotifyEvent(
+            innerBundleInfo, *innerBundleUserInfoPtr, bundleName, enableAppIndex, requestUserId));
+    }
+    sysEventsToSend.emplace_back(bundleName, requestUserId, true, enableAppIndex, caller);
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::CheckDisableForbidden(const std::string &bundleName, int32_t requestUserId,
+    int32_t disableAppIndex, bool skipDisableForbidden)
+{
+    if (skipDisableForbidden) {
+        return ERR_OK;
+    }
+    auto forbiddenMgr = DelayedSingleton<AppDisableForbiddenMgr>::GetInstance();
+    if (forbiddenMgr == nullptr) {
+        APP_LOGE("AppDisableForbiddenMgr is nullptr");
+        return ERR_APPEXECFWK_SERVICE_NOT_READY;
+    }
+    bool forbidden = false;
+    auto forbidRet = forbiddenMgr->IsApplicationDisableForbiddenNoCheck(
+        bundleName, requestUserId, disableAppIndex, forbidden);
+    if (forbidRet != ERR_OK) {
+        APP_LOGE("DisableForbiddenRdb get data failed for %{public}s, ret=%{public}d",
+            bundleName.c_str(), forbidRet);
+        return ERR_APPEXECFWK_SERVICE_NOT_READY;
+    }
+    if (forbidden) {
+        APP_LOGW("bundle: %{public}s appIndex: %{public}d is forbidden to be disabled, skip",
+            bundleName.c_str(), disableAppIndex);
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    return ERR_OK;
+}
+
+NotifyBundleEvents BundleDataMgr::BuildBatchNotifyEvent(const InnerBundleInfo &innerBundleInfo,
+    const InnerBundleUserInfo &userInfo, const std::string &bundleName,
+    int32_t appIndex, int32_t userId)
+{
+    return NotifyBundleEvents {
+        .type = NotifyType::APPLICATION_ENABLE,
+        .changeType = ChangeType::BATCH_SET_APPLICATION_ENABLED,
+        .resultCode = ERR_OK,
+        .accessTokenId = userInfo.accessTokenId,
+        .uid = userInfo.uid,
+        .appIndex = appIndex,
+        .userId = userId,
+        .bundleName = bundleName,
+        .appDistributionType = innerBundleInfo.GetAppDistributionType(),
+    };
+}
+
+void BundleDataMgr::ReportErrorAndRollback(const std::string &bundleName, int32_t userId,
+    bool isEnable, int32_t appIndex, const std::string &caller,
+    std::vector<std::tuple<std::string, int32_t, bool, std::string>> &rollbackList)
+{
+    EventReport::SendComponentStateSysEventForException(bundleName, "", userId, isEnable, appIndex, caller);
+    RollbackBatchSetEnabled(rollbackList, userId);
+}
+
+void BundleDataMgr::RollbackBatchSetEnabled(
+    const std::vector<std::tuple<std::string, int32_t, bool, std::string>> &rollbackList,
+    int32_t userId)
+{
+    APP_LOGI("RollbackBatchSetEnabled rollback %{public}zu items", rollbackList.size());
+    for (auto it = rollbackList.rbegin(); it != rollbackList.rend(); ++it) {
+        const auto &[bundleName, appIndex, setEnabled, caller] = *it;
+        auto infoItem = bundleInfos_.find(bundleName);
+        if (infoItem == bundleInfos_.end()) {
+            continue;
+        }
+        auto ret = infoItem->second.SetCloneApplicationEnabled(!setEnabled, appIndex, caller, userId);
+        if (ret != ERR_OK) {
+            APP_LOGE("rollback failed for %{public}s appIndex %{public}d, ret=%{public}d",
+                bundleName.c_str(), appIndex, ret);
+            EventReport::SendComponentStateSysEventForException(
+                bundleName, "", userId, !setEnabled, appIndex, caller + "_rollback_fail");
+            continue;
+        }
+        if (!dataStorage_->SaveStorageBundleInfo(infoItem->second)) {
+            APP_LOGE("rollback SaveStorageBundleInfo failed for %{public}s", bundleName.c_str());
+            EventReport::SendComponentStateSysEventForException(
+                bundleName, "", userId, !setEnabled, appIndex, caller + "_rollback_save_fail");
+        }
+    }
+}
+
+ErrCode BundleDataMgr::ValidateBatchSetAppIndex(int32_t enableAppIndex, int32_t disableAppIndex)
+{
+    if (enableAppIndex <= 0 || disableAppIndex <= 0) {
+        APP_LOGE("enableAppIndex and disableAppIndex must be greater than 0, enable:%{public}d disable:%{public}d",
+            enableAppIndex, disableAppIndex);
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+    }
+    int32_t maxCloneCount = BundleFileUtil::GetCloneMaxCount();
+    if (enableAppIndex > maxCloneCount || disableAppIndex > maxCloneCount) {
+        APP_LOGE("appIndex exceeds max clone count %{public}d, enable:%{public}d disable:%{public}d",
+            maxCloneCount, enableAppIndex, disableAppIndex);
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+    }
+    if (enableAppIndex == disableAppIndex) {
+        APP_LOGE("enableAppIndex and disableAppIndex cannot be the same: %{public}d", enableAppIndex);
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+    }
+    return ERR_OK;
+}
+
+void BundleDataMgr::KillDisabledBundleProcesses(
+    const std::vector<std::tuple<std::string, int32_t, int32_t>> &disabledBundles,
+    const std::string &caller)
+{
+    auto appMgrClient = DelayedSingleton<AppMgrClient>::GetInstance();
+    if (appMgrClient == nullptr) {
+        APP_LOGE("AppMgrClient is nullptr, kill app process failed");
+        return;
+    }
+    for (const auto &[bundleName, userId, appIndex] : disabledBundles) {
+        APP_LOGD("kill process, -n %{public}s -u %{public}d -i %{public}d", bundleName.c_str(), userId, appIndex);
+        std::string identity = IPCSkeleton::ResetCallingIdentity();
+        auto ret = appMgrClient->KillApplicationWithUserId(bundleName, userId, appIndex);
+        IPCSkeleton::SetCallingIdentity(identity);
+        if (ret != ERR_OK) {
+            APP_LOGE("kill app process failed for %{public}s", bundleName.c_str());
+            EventReport::SendComponentStateSysEventForException(
+                bundleName, "", userId, false, appIndex, caller + "_kill_process_fail");
+        }
+    }
+}
+
+void BundleDataMgr::SendBatchNotifyEventsAsync(std::vector<NotifyBundleEvents> &&eventsToSend)
+{
+    auto commonEventMgr = DelayedSingleton<BundleCommonEventMgr>::GetInstance();
+    if (commonEventMgr == nullptr) {
+        APP_LOGE("BundleCommonEventMgr is nullptr");
+        return;
+    }
+    auto dataMgr = DelayedSingleton<BundleDataMgr>::GetInstance();
+    if (dataMgr == nullptr) {
+        APP_LOGE("BundleDataMgr is nullptr");
+        return;
+    }
+    for (const auto &event : eventsToSend) {
+        commonEventMgr->NotifyBundleStatusAsync(event, dataMgr);
+    }
 }
 
 ErrCode BundleDataMgr::SetBundleFirstLaunch(const std::string &bundleName, int32_t userId,
@@ -6835,7 +7471,10 @@ ErrCode BundleDataMgr::IsAbilityEnabled(const AbilityInfo &abilityInfo, int32_t 
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     std::vector<int32_t> appIndexVec = GetCloneAppIndexesNoLock(abilityInfo.bundleName, Constants::ALL_USERID);
-    if ((appIndex != 0) && (std::find(appIndexVec.begin(), appIndexVec.end(), appIndex) == appIndexVec.end())) {
+    // dual-mode: allow appIndex=10000 for dual-mode clone apps
+    if ((appIndex != 0) && (std::find(appIndexVec.begin(), appIndexVec.end(), appIndex) == appIndexVec.end()) &&
+        !(infoItem->second.IsDualModeCloneApp() &&
+          appIndex == ServiceConstants::DUAL_MODE_CLONE_APP_INDEX)) {
         APP_LOGE("appIndex %{public}d is invalid", appIndex);
         return ERR_APPEXECFWK_SANDBOX_INSTALL_INVALID_APP_INDEX;
     }
@@ -6873,7 +7512,8 @@ ErrCode BundleDataMgr::SetAbilityEnabled(const AbilityInfo &abilityInfo, int32_t
     (void)newInfo.IsAbilityEnabledV9(abilityInfo, requestUserId, currentEnabled, appIndex);
     stateChanged = (currentEnabled != isEnabled);
 
-    if (appIndex != 0) {
+    if (appIndex != 0 &&
+        !(newInfo.IsDualModeCloneApp() && appIndex == ServiceConstants::DUAL_MODE_CLONE_APP_INDEX)) {
         ErrCode ret = newInfo.SetCloneAbilityEnabled(
             abilityInfo.moduleName, abilityInfo.name, isEnabled, userId, appIndex);
         if (ret != ERR_OK) {
@@ -6905,11 +7545,23 @@ ErrCode BundleDataMgr::SetAbilityEnabled(const AbilityInfo &abilityInfo, int32_t
         LOG_NOFUNC_E(BMS_TAG_QUERY, "The InnerBundleInfo obtained by SetAbilityEnabled is null");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    if (innerBundleUserInfoPtr->bundleUserInfo.IsInitialState()) {
-        bundleStateStorage_->DeleteBundleState(abilityInfo.bundleName, requestUserId);
+    if (DualModeHelper::IsDualModeDevice()) {
+        // dual-mode: clone app's state is stored under the prefixed key.
+        std::string stateKey = newInfo.IsDualModeCloneApp()
+            ? DualModeHelper::GetDualModeBundleName(abilityInfo.bundleName) : abilityInfo.bundleName;
+        if (innerBundleUserInfoPtr->bundleUserInfo.IsInitialState()) {
+            bundleStateStorage_->DeleteBundleState(stateKey, requestUserId);
+        } else {
+            bundleStateStorage_->SaveBundleStateStorage(
+                stateKey, requestUserId, innerBundleUserInfoPtr->bundleUserInfo);
+        }
     } else {
-        bundleStateStorage_->SaveBundleStateStorage(
-            abilityInfo.bundleName, requestUserId, innerBundleUserInfoPtr->bundleUserInfo);
+        if (innerBundleUserInfoPtr->bundleUserInfo.IsInitialState()) {
+            bundleStateStorage_->DeleteBundleState(abilityInfo.bundleName, requestUserId);
+        } else {
+            bundleStateStorage_->SaveBundleStateStorage(
+                abilityInfo.bundleName, requestUserId, innerBundleUserInfoPtr->bundleUserInfo);
+        }
     }
     return ERR_OK;
 }
@@ -7773,7 +8425,8 @@ ErrCode BundleDataMgr::GetShortcutInfoV9(
 ErrCode BundleDataMgr::GetShortcutInfoByAppIndex(const std::string &bundleName, const int32_t appIndex,
     std::vector<ShortcutInfo> &shortcutInfos) const
 {
-    if ((appIndex < 0) || (appIndex > BundleFileUtil::GetCloneMaxCount())) {
+    if ((appIndex < 0) || (appIndex > BundleFileUtil::GetCloneMaxCount() &&
+        appIndex != ServiceConstants::DUAL_MODE_CLONE_APP_INDEX)) {
         APP_LOGE("name %{public}s invalid appIndex :%{public}d", bundleName.c_str(), appIndex);
         return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
     }
@@ -7816,7 +8469,8 @@ ErrCode BundleDataMgr::GetShortcutInfoByAbility(const std::string &bundleName,
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
 
-    if ((appIndex < 0) || (appIndex > BundleFileUtil::GetCloneMaxCount())) {
+    if ((appIndex < 0) || (appIndex > BundleFileUtil::GetCloneMaxCount() &&
+        appIndex != ServiceConstants::DUAL_MODE_CLONE_APP_INDEX)) {
         APP_LOGE("name %{public}s invalid appIndex:%{public}d", bundleName.c_str(), appIndex);
         return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
     }
@@ -8423,8 +9077,8 @@ ErrCode BundleDataMgr::ExplicitQueryExtensionInfoV9(const Want &want, int32_t fl
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     const InnerBundleInfo *innerBundleInfo = nullptr;
     InnerBundleInfo sandboxInfo;
-    if (appIndex == 0) {
-        ErrCode ret = GetInnerBundleInfoWithFlagsV9(bundleName, flags, innerBundleInfo, requestUserId);
+    if (appIndex == 0 || appIndex == Constants::DUAL_MODE_CLONE_APP_INDEX) {
+        ErrCode ret = GetInnerBundleInfoWithFlagsV9(bundleName, flags, innerBundleInfo, requestUserId, appIndex);
         if (ret != ERR_OK) {
             LOG_D(BMS_TAG_QUERY, "ExplicitQueryExtensionInfoV9 failed");
             return ret;
@@ -9845,7 +10499,8 @@ bool BundleDataMgr::UpdateQuickFixInnerBundleInfo(const std::string &bundleName,
     return false;
 }
 
-bool BundleDataMgr::UpdateInnerBundleInfo(InnerBundleInfo &innerBundleInfo, bool needSaveStorage)
+bool BundleDataMgr::UpdateInnerBundleInfo(InnerBundleInfo &innerBundleInfo, bool needSaveStorage,
+    bool toTempBundle)
 {
     std::string bundleName = innerBundleInfo.GetBundleName();
     if (bundleName.empty()) {
@@ -9856,8 +10511,9 @@ bool BundleDataMgr::UpdateInnerBundleInfo(InnerBundleInfo &innerBundleInfo, bool
     std::string lastOdid;
     {
         std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
-        auto infoItem = bundleInfos_.find(bundleName);
-        if (infoItem == bundleInfos_.end()) {
+        auto &targetMap = toTempBundle ? tempBundleInfos_ : bundleInfos_;
+        auto infoItem = targetMap.find(bundleName);
+        if (infoItem == targetMap.end()) {
             APP_LOGW("bundle:%{public}s info is not existed", bundleName.c_str());
             return false;
         }
@@ -9884,7 +10540,8 @@ bool BundleDataMgr::UpdateInnerBundleInfo(InnerBundleInfo &innerBundleInfo, bool
     }
     {
         std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
-        bundleInfos_.at(bundleName) = innerBundleInfo; 
+        auto &targetMap = toTempBundle ? tempBundleInfos_ : bundleInfos_;
+        targetMap.at(bundleName) = innerBundleInfo;
     }
     return true;
 }
@@ -13800,7 +14457,8 @@ ErrCode BundleDataMgr::IsBundleInstalled(const std::string &bundleName, int32_t 
     bool isValidAppIndex = (appIndex >= Constants::MAIN_APP_INDEX &&
         appIndex <= BundleFileUtil::GetCloneMaxCount()) ||
         (appIndex >= Constants::CLI_SANDBOX_APP_INDEX_MIN &&
-        appIndex <= Constants::CLI_SANDBOX_APP_INDEX_MAX);
+        appIndex <= Constants::CLI_SANDBOX_APP_INDEX_MAX) ||
+        (appIndex == ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
     if (!isValidAppIndex) {
         APP_LOGE("name %{public}s invalid appIndex :%{public}d", bundleName.c_str(), appIndex);
         return ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX;
@@ -13828,6 +14486,12 @@ ErrCode BundleDataMgr::IsBundleInstalled(const std::string &bundleName, int32_t 
         return ERR_OK;
     }
     if (appIndex == 0) {
+        isInstalled = true;
+        return ERR_OK;
+    }
+    // dual-mode: clone app's uid is stored in userInfo itself, not in cloneInfos
+    if (item->second.IsDualModeCloneApp() &&
+        appIndex == ServiceConstants::DUAL_MODE_CLONE_APP_INDEX) {
         isInstalled = true;
         return ERR_OK;
     }
@@ -13937,7 +14601,19 @@ ErrCode BundleDataMgr::GetDirByBundleNameAndAppIndex(const std::string &bundleNa
         appIndex <= BundleFileUtil::GetCloneMaxCount()) ||
         (appIndex >= Constants::CLI_SANDBOX_APP_INDEX_MIN && appIndex <= Constants::CLI_SANDBOX_APP_INDEX_MAX);
     if (!isValidCloneAppIndex) {
-        return ERR_BUNDLE_MANAGER_GET_DIR_INVALID_APP_INDEX;
+        if (DualModeHelper::IsDualModeDevice()) {
+            // dual-mode: allow appIndex=10000 for dual-mode clone apps
+            if (appIndex == ServiceConstants::DUAL_MODE_CLONE_APP_INDEX) {
+                InnerBundleInfo info;
+                isValidCloneAppIndex = FetchInnerBundleInfo(bundleName, info) && info.IsDualModeCloneApp();
+            }
+            if (!isValidCloneAppIndex) {
+                return ERR_BUNDLE_MANAGER_GET_DIR_INVALID_APP_INDEX;
+            }
+        } else {
+            return ERR_BUNDLE_MANAGER_GET_DIR_INVALID_APP_INDEX;
+        }
+        
     }
     if (!BundlePermissionMgr::IsNativeTokenType()) {
         int32_t callingUid = IPCSkeleton::GetCallingUid();
@@ -13958,7 +14634,19 @@ ErrCode BundleDataMgr::GetDirByBundleNameAndAppIndex(const std::string &bundleNa
     if (type == BundleType::ATOMIC_SERVICE) {
         return GetDirForAtomicService(bundleName, dataDir);
     }
-    dataDir = GetDirForApp(bundleName, appIndex);
+    if (DualModeHelper::IsDualModeDevice()) {
+        // dual-mode: clone app's data dir is keyed by the effective (prefixed) name.
+        std::string effectiveName = bundleName;
+        if (appIndex == Constants::MAIN_APP_INDEX) {
+            InnerBundleInfo info;
+            if (FetchInnerBundleInfo(bundleName, info) && info.IsDualModeCloneApp()) {
+                effectiveName = DualModeHelper::GetDualModeBundleName(bundleName);
+            }
+        }
+        dataDir = GetDirForApp(effectiveName, appIndex);
+    } else {
+        dataDir = GetDirForApp(bundleName, appIndex);
+    }
     return ERR_OK;
 }
 
@@ -15798,7 +16486,8 @@ ErrCode BundleDataMgr::CheckBundleExist(const std::string &bundleName, int32_t u
         APP_LOGE_NOFUNC("check bundle invalid -u %{public}d", userId);
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
-    if (appIndex < 0 || appIndex > BundleFileUtil::GetCloneMaxCount()) {
+    if (appIndex < 0 || (appIndex > BundleFileUtil::GetCloneMaxCount() &&
+        appIndex != ServiceConstants::DUAL_MODE_CLONE_APP_INDEX)) {
         APP_LOGE_NOFUNC("check bundle invalid appIndex -n %{public}s -a %{public}d", bundleName.c_str(), appIndex);
         return ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX;
     }
@@ -15814,7 +16503,9 @@ ErrCode BundleDataMgr::CheckBundleExist(const std::string &bundleName, int32_t u
         APP_LOGE_NOFUNC("-n: %{public}s is not installed in user %{public}d", bundleName.c_str(), userId);
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
-    if (appIndex > 0) {
+    if (appIndex > 0 &&
+        !(innerBundleInfo.IsDualModeCloneApp() &&
+          appIndex == ServiceConstants::DUAL_MODE_CLONE_APP_INDEX)) {
         InnerBundleUserInfo innerBundleUserInfo;
         if (!innerBundleInfo.GetInnerBundleUserInfo(responseUserId, innerBundleUserInfo)) {
             APP_LOGE_NOFUNC("check bundle GetInnerBundleUserInfo failed");

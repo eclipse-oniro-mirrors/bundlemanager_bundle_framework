@@ -19,6 +19,7 @@
 #include <iostream>
 #include <limits>
 #include <mutex>
+#include <set>
 #include <shared_mutex>
 #include <string>
 #include <unistd.h>
@@ -1354,7 +1355,8 @@ static void CleanBundleCacheFilesNative(ani_env* env, ani_string aniBundleName, 
     }
     if (aniAppIndex < Constants::MAIN_APP_INDEX ||
         (aniAppIndex > BundleFileUtil::GetCloneMaxCount() && aniAppIndex < Constants::CLI_SANDBOX_APP_INDEX_MIN) ||
-        aniAppIndex > Constants::CLI_SANDBOX_APP_INDEX_MAX) {
+        (aniAppIndex > Constants::CLI_SANDBOX_APP_INDEX_MAX &&
+         aniAppIndex != Constants::DUAL_MODE_CLONE_APP_INDEX)) {
         APP_LOGE("appIndex: %{public}d not in valid range", aniAppIndex);
         BusinessErrorAni::ThrowCommonError(env, ERROR_INVALID_APPINDEX, Constants::APP_INDEX, TYPE_NUMBER);
         return;
@@ -2300,7 +2302,8 @@ static ani_string GetSandboxDataDir(ani_env* env, ani_string aniBundleName, ani_
     }
     bool isValidCloneAppIndex = (aniAppIndex >= Constants::MAIN_APP_INDEX &&
         aniAppIndex <= BundleFileUtil::GetCloneMaxCount()) ||
-        (aniAppIndex >= Constants::CLI_SANDBOX_APP_INDEX_MIN && aniAppIndex <= Constants::CLI_SANDBOX_APP_INDEX_MAX);
+        (aniAppIndex >= Constants::CLI_SANDBOX_APP_INDEX_MIN && aniAppIndex <= Constants::CLI_SANDBOX_APP_INDEX_MAX) ||
+        (aniAppIndex == Constants::DUAL_MODE_CLONE_APP_INDEX);
     if (!isValidCloneAppIndex) {
         APP_LOGE("appIndex: %{public}d not in valid range", aniAppIndex);
         BusinessErrorAni::ThrowCommonError(env, ERROR_INVALID_APPINDEX, Constants::APP_INDEX, TYPE_NUMBER);
@@ -2580,6 +2583,36 @@ static ani_object GetAlternateIconsNative(ani_env* env)
     return CommonFunAni::ConvertAniArray(env, alternateIcons, CommonFunAni::ConvertAlternateIconInfo);
 }
 
+static void FilterBundleListByDeviceModeDistributionPoliciesNative(ani_env* env, ani_array arrayObj)
+{
+    APP_LOGD("ani FilterBundleListByDeviceModeDistributionPolicies called");
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("Can not get iBundleMgr");
+        BusinessErrorAni::ThrowError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION);
+        return;
+    }
+    std::vector<DeviceModeDistributionPolicy> policyVec;
+    if (!CommonFunAni::ParseEnumArray<DeviceModeDistributionPolicy>(env, arrayObj, policyVec)) {
+        APP_LOGE_NOFUNC("FilterBundleListByDeviceModeDistributionPolicies policies parse invalid");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, CORRESPONDING_TYPE);
+        return;
+    }
+    if (policyVec.empty() || policyVec.size() > MAX_POLICY_ARRAY_SIZE) {
+        APP_LOGE_NOFUNC("FilterBundleListByDeviceModeDistributionPolicies policies size %{public}zu invalid",
+            policyVec.size());
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, CORRESPONDING_TYPE);
+        return;
+    }
+    std::set<DeviceModeDistributionPolicy> policySet(policyVec.begin(), policyVec.end());
+    ErrCode ret = iBundleMgr->FilterBundleListByDeviceModeDistributionPolicies(policySet);
+    if (ret != ERR_OK) {
+        APP_LOGE_NOFUNC("FilterBundleListByDeviceModeDistributionPolicies failed ret:%{public}d", ret);
+        BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret),
+            FILTER_BUNDLE_LIST_BY_DEVICE_MODE_DISTRIBUTION_POLICIES, "");
+    }
+}
+
 extern "C" {
 ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
 {
@@ -2705,6 +2738,8 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
             reinterpret_cast<void*>(GetBundleInstallStatusNative) },
         ani_native_function { "getAlternateIconsNative", nullptr,
             reinterpret_cast<void*>(GetAlternateIconsNative) },
+        ani_native_function { "filterBundleListByDeviceModeDistributionPoliciesNative", nullptr,
+            reinterpret_cast<void*>(FilterBundleListByDeviceModeDistributionPoliciesNative) },
         ani_native_function { "getCloneMaxCountNative", nullptr,
             reinterpret_cast<void*>(GetCloneMaxCountNative) },
     };

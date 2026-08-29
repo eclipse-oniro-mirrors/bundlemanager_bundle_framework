@@ -870,6 +870,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_STRING_BY_ID_LIST):
             errCode = this->HandleGetStringByIdList(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::BATCH_SET_CLONE_APPLICATION_ENABLED):
+            errCode = this->HandleBatchSetApplicationEnabled(data, reply);
+            break;
         default :
             APP_LOGW("bundleMgr host receives unknown code %{public}u", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -1873,7 +1876,8 @@ ErrCode BundleMgrHost::HandleGetApplicationLabel(MessageParcel &data, MessagePar
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     int32_t appIndex = data.ReadInt32();
-    if (appIndex < Constants::MAIN_APP_INDEX || appIndex > BundleFileUtil::GetCloneMaxCount()) {
+    if (appIndex < Constants::MAIN_APP_INDEX || (appIndex > BundleFileUtil::GetCloneMaxCount() &&
+        appIndex != Constants::DUAL_MODE_CLONE_APP_INDEX)) {
         APP_LOGW("appIndex: %{public}d not in valid range", appIndex);
         return ERR_BUNDLE_MANAGER_APPINDEX_NOT_EXIST;
     }
@@ -2463,6 +2467,21 @@ ErrCode BundleMgrHost::HandleSetCloneApplicationEnabled(MessageParcel &data, Mes
     return ERR_OK;
 }
 
+ErrCode BundleMgrHost::HandleBatchSetApplicationEnabled(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    int32_t userId = data.ReadInt32();
+    int32_t enableAppIndex = data.ReadInt32();
+    int32_t disableAppIndex = data.ReadInt32();
+    bool killProcess = data.ReadBool();
+    bool needSendEvent = data.ReadBool();
+    ErrCode ret = BatchSetApplicationEnabled(userId, enableAppIndex, disableAppIndex, killProcess, needSendEvent);
+    if (!reply.WriteInt32(ret)) {
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
 ErrCode BundleMgrHost::HandleIsAbilityEnabled(MessageParcel &data, MessageParcel &reply)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
@@ -2801,7 +2820,8 @@ ErrCode BundleMgrHost::HandleGetShortcutInfoByAbility(MessageParcel &data, Messa
         APP_LOGE_NOFUNC("GetShortcutInfoByAbility failed due to abilityName empty");
         return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
     }
-    if (appIndex < Constants::MAIN_APP_INDEX || appIndex > BundleFileUtil::GetCloneMaxCount()) {
+    if (appIndex < Constants::MAIN_APP_INDEX || (appIndex > BundleFileUtil::GetCloneMaxCount() &&
+        appIndex != Constants::DUAL_MODE_CLONE_APP_INDEX)) {
         APP_LOGE_NOFUNC("GetShortcutInfoByAbility failed due to appIndex out of range");
         return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
     }
@@ -5084,7 +5104,7 @@ ErrCode BundleMgrHost::HandleFilterBundleListByDeviceModeDistributionPolicies(Me
         static_cast<size_t>(DeviceModeDistributionPolicy::FULL_COMPATIBLE_DIFFERENT_PACKAGE) + 1) {
         APP_LOGE_NOFUNC("HandleFilterBundleListByDeviceModeDistributionPolicies size %{public}zu invalid",
             policyValues.size());
-        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+        return ERR_APPEXECFWK_DUAL_MODE_POLICY_INVALID;
     }
     // Any int32_t value is a valid cast target (fixed underlying type); range check (0~8)
     // is enforced later in BundleDataMgr.
