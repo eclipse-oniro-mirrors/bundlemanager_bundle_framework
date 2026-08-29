@@ -808,6 +808,10 @@ ErrCode ExtendResourceManagerHostImpl::CheckParamInvalid(const InnerBundleInfo &
     if (appIndex == 0) {
         return ERR_OK;
     }
+    // dual-mode: the clone identity is stored on the bundleInfo itself, not in cloneInfos
+    if (appIndex == Constants::DUAL_MODE_CLONE_APP_INDEX && bundleInfo.IsDualModeCloneApp()) {
+        return ERR_OK;
+    }
     std::string cloneInfoKey = InnerBundleUserInfo::AppIndexToKey(appIndex);
     if (userInfo.cloneInfos.find(cloneInfoKey) == userInfo.cloneInfos.end()) {
         APP_LOGE("bundle %{public}s not exist in userId %{public}d appIndex %{public}d",

@@ -26,6 +26,8 @@
 
 #include "appexecfwk_errors.h"
 #include "application_info.h"
+#include "bundle_constants.h"
+#include "bundle_dir.h"
 #include "bundle_info.h"
 #include "base_bundle_installer.h"
 #include "bundle_data_mgr.h"
@@ -34,11 +36,13 @@
 #include "bundle_permission_mgr.h"
 #include "bundle_service_constants.h"
 #include "dual_mode_helper.h"
+#include "extend_resource/extend_resource_manager_host_impl.h"
 #include "inner_bundle_info.h"
 #include "install_param.h"
 #include "message_parcel.h"
 #include "nlohmann/json.hpp"
 #include "parameters.h"
+#include "shortcut_info.h"
 #include "bundle_resource/bundle_resource_manager.h"
 
 using namespace testing::ext;
@@ -917,6 +921,13 @@ static ElementName MakeQueryCloneElement()
     return element;
 }
 
+static Want MakeQueryCloneWant()
+{
+    Want want;
+    want.SetElement(MakeQueryCloneElement());
+    return want;
+}
+
 HWTEST_F(BmsDualModeQueryTest, QueryCloneAbilityInfo_DualModeClone10000_0100, Function | SmallTest | Level0)
 {
     auto dataMgr = std::make_shared<BundleDataMgr>();
@@ -956,6 +967,8 @@ HWTEST_F(BmsDualModeQueryTest, QueryCloneAbilityInfo_DualModeCloneIndex0_0300,
     auto ret = dataMgr->QueryCloneAbilityInfo(MakeQueryCloneElement(), 0, TEST_USERID, 0, abilityInfo);
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_EQ(abilityInfo.uid, 200000);
+    // dual-mode: a clone record echoes DUAL_MODE_CLONE_APP_INDEX even when requested with 0
+    EXPECT_EQ(abilityInfo.appIndex, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
 }
 
 HWTEST_F(BmsDualModeQueryTest, QueryCloneAbilityInfo_NonClone10000_0400, Function | SmallTest | Level0)
@@ -1087,6 +1100,8 @@ HWTEST_F(BmsDualModeQueryTest, ExplicitQueryExtensionInfoV9_DualModeCloneIndex0_
         extensionInfo, 0);
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_EQ(extensionInfo.uid, 200000);
+    // dual-mode: a clone record echoes DUAL_MODE_CLONE_APP_INDEX even when requested with 0
+    EXPECT_EQ(extensionInfo.appIndex, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
 }
 
 HWTEST_F(BmsDualModeQueryTest, ExplicitQueryExtensionInfoV9_DualModeClone10000WithApplication_0400,
@@ -1158,5 +1173,581 @@ HWTEST_F(BmsDualModeQueryTest, GetDualModeQueryName_BundleNotExist_0400, Functio
     EXPECT_FALSE(manager->GetDualModeQueryName(BUNDLE_NAME, queryAppIndex, queryName));
     EXPECT_EQ(queryName, BUNDLE_NAME);
     EXPECT_EQ(queryAppIndex, 0);
+}
+
+// ====================== BundleDataMgr::GetBundleNameAndIndexByName dual-mode ======================
+
+HWTEST_F(BmsDualModeQueryTest, GetBundleNameAndIndexByName_DualModeCloneKey_0100, Function | SmallTest | Level0)
+{
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    std::string bundleName;
+    int32_t appIndex = -1;
+    dataMgr->GetBundleNameAndIndexByName(PREFIXED_NAME, bundleName, appIndex);
+    EXPECT_EQ(bundleName, BUNDLE_NAME);
+    EXPECT_EQ(appIndex, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
+}
+
+HWTEST_F(BmsDualModeQueryTest, GetBundleNameAndIndexByName_RegularCloneKey_0200, Function | SmallTest | Level0)
+{
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    // regular clone key format: "{index}clone_{bundleName}", must keep the legacy parse result
+    std::string bundleName;
+    int32_t appIndex = -1;
+    dataMgr->GetBundleNameAndIndexByName("1clone_" + BUNDLE_NAME, bundleName, appIndex);
+    EXPECT_EQ(bundleName, BUNDLE_NAME);
+    EXPECT_EQ(appIndex, 1);
+}
+
+HWTEST_F(BmsDualModeQueryTest, GetBundleNameAndIndexByName_PlainName_0300, Function | SmallTest | Level0)
+{
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    std::string bundleName;
+    int32_t appIndex = -1;
+    dataMgr->GetBundleNameAndIndexByName(BUNDLE_NAME, bundleName, appIndex);
+    EXPECT_EQ(bundleName, BUNDLE_NAME);
+    EXPECT_EQ(appIndex, 0);
+}
+
+// ====================== BundleDataMgr::GetInnerBundleInfoAndIndexByUid dual-mode ======================
+
+HWTEST_F(BmsDualModeQueryTest, GetInnerBundleInfoAndIndexByUid_DualModeCloneUid_0100,
+    Function | SmallTest | Level0)
+{
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->multiUserIdsSet_.insert(TEST_USERID);
+    const int32_t bundleId = 99;
+    const int32_t cloneUid = TEST_USERID * Constants::BASE_USER_RANGE + bundleId;
+    dataMgr->bundleIdMap_.emplace(bundleId, PREFIXED_NAME);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = MakeQueryCloneInfo(true, TEST_USERID, cloneUid, false);
+    InnerBundleInfo resultInfo;
+    int32_t appIndex = 0;
+    EXPECT_EQ(dataMgr->GetInnerBundleInfoAndIndexByUid(cloneUid, resultInfo, appIndex), ERR_OK);
+    EXPECT_EQ(appIndex, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
+    EXPECT_EQ(resultInfo.GetBundleName(), BUNDLE_NAME);
+}
+
+HWTEST_F(BmsDualModeQueryTest, GetInnerBundleInfoAndIndexByUid_NonCloneRecordRejectsCloneUid_0200,
+    Function | SmallTest | Level0)
+{
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->multiUserIdsSet_.insert(TEST_USERID);
+    const int32_t bundleId = 99;
+    const int32_t cloneUid = TEST_USERID * Constants::BASE_USER_RANGE + bundleId;
+    dataMgr->bundleIdMap_.emplace(bundleId, PREFIXED_NAME);
+    // main-mode (non-clone) record holds the uid itself, but appIndex 10000 must be rejected
+    dataMgr->bundleInfos_[BUNDLE_NAME] = MakeQueryCloneInfo(false, TEST_USERID, cloneUid, false);
+    InnerBundleInfo resultInfo;
+    int32_t appIndex = 0;
+    EXPECT_EQ(dataMgr->GetInnerBundleInfoAndIndexByUid(cloneUid, resultInfo, appIndex),
+        ERR_BUNDLE_MANAGER_INVALID_UID);
+}
+
+// ====================== BundleDataMgr::GetAllBundleDirs dual-mode ======================
+
+HWTEST_F(BmsDualModeQueryTest, GetAllBundleDirs_DualModeCloneRecord_0100, Function | SmallTest | Level0)
+{
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->multiUserIdsSet_.insert(TEST_USERID);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = MakeQueryCloneInfo(true, TEST_USERID, 200000, false);
+    std::vector<BundleDir> bundleDirs;
+    EXPECT_EQ(dataMgr->GetAllBundleDirs(TEST_USERID, bundleDirs), ERR_OK);
+    ASSERT_EQ(bundleDirs.size(), 1u);
+    EXPECT_EQ(bundleDirs[0].bundleName, BUNDLE_NAME);
+    EXPECT_EQ(bundleDirs[0].appIndex, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
+    EXPECT_EQ(bundleDirs[0].dir, PREFIXED_NAME);
+}
+
+HWTEST_F(BmsDualModeQueryTest, GetAllBundleDirs_NonCloneRecordKeepsMainIndex_0200,
+    Function | SmallTest | Level0)
+{
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->multiUserIdsSet_.insert(TEST_USERID);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = MakeQueryCloneInfo(false, TEST_USERID, 200000, false);
+    std::vector<BundleDir> bundleDirs;
+    EXPECT_EQ(dataMgr->GetAllBundleDirs(TEST_USERID, bundleDirs), ERR_OK);
+    ASSERT_EQ(bundleDirs.size(), 1u);
+    EXPECT_EQ(bundleDirs[0].bundleName, BUNDLE_NAME);
+    EXPECT_EQ(bundleDirs[0].appIndex, 0);
+    EXPECT_EQ(bundleDirs[0].dir, BUNDLE_NAME);
+}
+
+// ====================== InnerBundleInfo curDynamicIconModule dual-mode ======================
+
+static InnerBundleInfo MakeDynamicIconCloneInfo(bool isClone)
+{
+    InnerBundleInfo info;
+    info.SetDualModeCloneApp(isClone);
+    if (isClone) {
+        info.SetAppIndex(ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
+    }
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    auto userInfo = MakeUserInfo(BUNDLE_NAME, TEST_USERID, true);
+    std::string key = BUNDLE_NAME + "_" + std::to_string(TEST_USERID);
+    info.innerBundleUserInfos_.try_emplace(key, userInfo);
+    return info;
+}
+
+HWTEST_F(BmsDualModeQueryTest, CurDynamicIconModule_DualModeClone10000Roundtrip_0100,
+    Function | SmallTest | Level0)
+{
+    auto info = MakeDynamicIconCloneInfo(true);
+    EXPECT_TRUE(info.SetCurDynamicIconModule("dyn_module", TEST_USERID,
+        ServiceConstants::DUAL_MODE_CLONE_APP_INDEX));
+    EXPECT_EQ(info.GetCurDynamicIconModule(TEST_USERID, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX),
+        "dyn_module");
+    // appIndex 0 addresses the same base slot on the clone record
+    EXPECT_EQ(info.GetCurDynamicIconModule(TEST_USERID, 0), "dyn_module");
+    EXPECT_TRUE(info.SetCurDynamicIconModule("dyn_module_zero", TEST_USERID, 0));
+    EXPECT_EQ(info.GetCurDynamicIconModule(TEST_USERID, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX),
+        "dyn_module_zero");
+}
+
+HWTEST_F(BmsDualModeQueryTest, CurDynamicIconModule_NonCloneReject10000_0200,
+    Function | SmallTest | Level0)
+{
+    auto info = MakeDynamicIconCloneInfo(false);
+    EXPECT_FALSE(info.SetCurDynamicIconModule("dyn_module", TEST_USERID,
+        ServiceConstants::DUAL_MODE_CLONE_APP_INDEX));
+    EXPECT_TRUE(info.GetCurDynamicIconModule(TEST_USERID,
+        ServiceConstants::DUAL_MODE_CLONE_APP_INDEX).empty());
+}
+
+// ====================== ExtendResourceManagerHostImpl::CheckParamInvalid dual-mode ======================
+
+HWTEST_F(BmsDualModeQueryTest, CheckParamInvalid_DualModeClone10000_0100, Function | SmallTest | Level0)
+{
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = MakeDynamicIconCloneInfo(true);
+    ExtendResourceManagerHostImpl impl;
+    InnerBundleInfo info = dataMgr->bundleInfos_[BUNDLE_NAME];
+    EXPECT_EQ(impl.CheckParamInvalid(info, TEST_USERID, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX),
+        ERR_OK);
+    DelayedSingleton<BundleMgrService>::GetInstance()->RegisterDataMgr(nullptr);
+}
+
+HWTEST_F(BmsDualModeQueryTest, CheckParamInvalid_NonCloneReject10000_0200, Function | SmallTest | Level0)
+{
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = MakeDynamicIconCloneInfo(false);
+    ExtendResourceManagerHostImpl impl;
+    InnerBundleInfo info = dataMgr->bundleInfos_[BUNDLE_NAME];
+    EXPECT_EQ(impl.CheckParamInvalid(info, TEST_USERID, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX),
+        ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
+    DelayedSingleton<BundleMgrService>::GetInstance()->RegisterDataMgr(nullptr);
+}
+
+// ====================== BundleDataMgr::GetShortcutInfosByInnerBundleInfo dual-mode ======================
+
+HWTEST_F(BmsDualModeQueryTest, GetShortcutInfosByInnerBundleInfo_DualModeClone_0100,
+    Function | SmallTest | Level0)
+{
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    auto info = MakeQueryCloneInfo(true, TEST_USERID, 200000, false);
+    // old version branch (default isNewVersion_ = false)
+    ShortcutInfo shortcut;
+    shortcut.bundleName = BUNDLE_NAME;
+    shortcut.id = "id_test";
+    shortcut.sourceType = 1;
+    info.shortcutInfos_.emplace("id_test", shortcut);
+    std::vector<ShortcutInfo> shortcutInfos;
+    EXPECT_TRUE(dataMgr->GetShortcutInfosByInnerBundleInfo(info, shortcutInfos));
+    ASSERT_EQ(shortcutInfos.size(), 1u);
+    EXPECT_EQ(shortcutInfos[0].appIndex, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
+}
+
+HWTEST_F(BmsDualModeQueryTest, GetShortcutInfosByInnerBundleInfo_NonCloneKeepsIndex0_0200,
+    Function | SmallTest | Level0)
+{
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    auto info = MakeQueryCloneInfo(false, TEST_USERID, 200000, false);
+    ShortcutInfo shortcut;
+    shortcut.bundleName = BUNDLE_NAME;
+    shortcut.id = "id_test";
+    shortcut.sourceType = 1;
+    info.shortcutInfos_.emplace("id_test", shortcut);
+    std::vector<ShortcutInfo> shortcutInfos;
+    EXPECT_TRUE(dataMgr->GetShortcutInfosByInnerBundleInfo(info, shortcutInfos));
+    ASSERT_EQ(shortcutInfos.size(), 1u);
+    EXPECT_EQ(shortcutInfos[0].appIndex, 0);
+}
+
+HWTEST_F(BmsDualModeQueryTest, GetShortcutInfoByAbility_DualModeCloneIndex0Echoes10000_0100,
+    Function | SmallTest | Level0)
+{
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->multiUserIdsSet_.insert(TEST_USERID);
+    auto info = MakeQueryCloneInfo(true, TEST_USERID, 200000, false);
+    // old version branch: static shortcut from the base shortcutInfos_ map
+    ShortcutInfo shortcut;
+    shortcut.bundleName = BUNDLE_NAME;
+    shortcut.moduleName = "entry";
+    shortcut.hostAbility = "MainAbility";
+    shortcut.id = "id_test";
+    shortcut.sourceType = 1;
+    info.shortcutInfos_.emplace("id_test", shortcut);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = info;
+    std::vector<ShortcutInfo> shortcutInfos;
+    EXPECT_EQ(dataMgr->GetShortcutInfoByAbility(BUNDLE_NAME, "entry", "MainAbility",
+        TEST_USERID, 0, shortcutInfos), ERR_OK);
+    ASSERT_EQ(shortcutInfos.size(), 1u);
+    EXPECT_EQ(shortcutInfos[0].appIndex, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
+}
+
+// ====================== InnerBundleInfo::GetMainAbilityInfo dual-mode ======================
+
+static void AddEntryModule(InnerBundleInfo &info)
+{
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = "entry";
+    moduleInfo.isEntry = true;
+    moduleInfo.entryAbilityKey = "entry_MainAbility";
+    info.innerModuleInfos_.emplace("entry", moduleInfo);
+}
+
+HWTEST_F(BmsDualModeQueryTest, GetMainAbilityInfo_DualModeClone_0100, Function | SmallTest | Level0)
+{
+    auto info = MakeQueryCloneInfo(true, TEST_USERID, 200000, false);
+    AddEntryModule(info);
+    AbilityInfo abilityInfo;
+    info.GetMainAbilityInfo(abilityInfo);
+    EXPECT_EQ(abilityInfo.name, "MainAbility");
+    EXPECT_EQ(abilityInfo.appIndex, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
+}
+
+HWTEST_F(BmsDualModeQueryTest, GetMainAbilityInfo_NonCloneKeepsIndex0_0200, Function | SmallTest | Level0)
+{
+    auto info = MakeQueryCloneInfo(false, TEST_USERID, 200000, false);
+    AddEntryModule(info);
+    AbilityInfo abilityInfo;
+    info.GetMainAbilityInfo(abilityInfo);
+    EXPECT_EQ(abilityInfo.name, "MainAbility");
+    EXPECT_EQ(abilityInfo.appIndex, 0);
+}
+
+// ====================== BundleDataMgr::QueryAbilityInfo / QueryAbilityInfos dual-mode ======================
+
+static constexpr const char* IMPLICIT_ACTION = "action.test.dual";
+
+// Clone info whose abilities carry a skill matching the implicit want action.
+static InnerBundleInfo MakeQueryCloneInfoWithSkills(bool isClone, int32_t userId, int32_t uid)
+{
+    auto info = MakeQueryCloneInfo(isClone, userId, uid, false);
+    for (auto &item : info.baseAbilityInfos_) {
+        Skill skill;
+        skill.actions.emplace_back(IMPLICIT_ACTION);
+        item.second.skills.emplace_back(skill);
+    }
+    return info;
+}
+
+static Want MakeImplicitWant()
+{
+    Want want;
+    want.SetAction(IMPLICIT_ACTION);
+    return want;
+}
+
+HWTEST_F(BmsDualModeQueryTest, QueryAbilityInfo_ExplicitIndex0Echoes10000_0100, Function | SmallTest | Level0)
+{
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->multiUserIdsSet_.insert(TEST_USERID);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = MakeQueryCloneInfo(true, TEST_USERID, 200000, false);
+    AbilityInfo abilityInfo;
+    EXPECT_TRUE(dataMgr->QueryAbilityInfo(MakeQueryCloneWant(), 0, TEST_USERID, abilityInfo));
+    EXPECT_EQ(abilityInfo.uid, 200000);
+    EXPECT_EQ(abilityInfo.appIndex, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
+}
+
+HWTEST_F(BmsDualModeQueryTest, QueryAbilityInfosV9_ExplicitIndex0Echoes10000_0200, Function | SmallTest | Level0)
+{
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->multiUserIdsSet_.insert(TEST_USERID);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = MakeQueryCloneInfo(true, TEST_USERID, 200000, false);
+    std::vector<AbilityInfo> abilityInfos;
+    EXPECT_EQ(dataMgr->QueryAbilityInfosV9(MakeQueryCloneWant(), 0, TEST_USERID, abilityInfos), ERR_OK);
+    ASSERT_EQ(abilityInfos.size(), static_cast<size_t>(1));
+    EXPECT_EQ(abilityInfos[0].appIndex, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
+}
+
+HWTEST_F(BmsDualModeQueryTest, QueryAbilityInfos_ImplicitEchoes10000_0300, Function | SmallTest | Level0)
+{
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->multiUserIdsSet_.insert(TEST_USERID);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = MakeQueryCloneInfoWithSkills(true, TEST_USERID, 200000);
+    std::vector<AbilityInfo> abilityInfos;
+    EXPECT_TRUE(dataMgr->QueryAbilityInfos(MakeImplicitWant(), 0, TEST_USERID, abilityInfos));
+    ASSERT_EQ(abilityInfos.size(), static_cast<size_t>(1));
+    EXPECT_EQ(abilityInfos[0].appIndex, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
+}
+
+HWTEST_F(BmsDualModeQueryTest, QueryAbilityInfosV9_ImplicitEchoes10000_0400, Function | SmallTest | Level0)
+{
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->multiUserIdsSet_.insert(TEST_USERID);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = MakeQueryCloneInfoWithSkills(true, TEST_USERID, 200000);
+    std::vector<AbilityInfo> abilityInfos;
+    EXPECT_EQ(dataMgr->QueryAbilityInfosV9(MakeImplicitWant(), 0, TEST_USERID, abilityInfos), ERR_OK);
+    ASSERT_EQ(abilityInfos.size(), static_cast<size_t>(1));
+    EXPECT_EQ(abilityInfos[0].appIndex, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
+}
+
+HWTEST_F(BmsDualModeQueryTest, QueryAbilityInfo_NonCloneKeepsIndex0_0500, Function | SmallTest | Level0)
+{
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->multiUserIdsSet_.insert(TEST_USERID);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = MakeQueryCloneInfo(false, TEST_USERID, 200000, false);
+    AbilityInfo abilityInfo;
+    EXPECT_TRUE(dataMgr->QueryAbilityInfo(MakeQueryCloneWant(), 0, TEST_USERID, abilityInfo));
+    EXPECT_EQ(abilityInfo.appIndex, 0);
+}
+
+HWTEST_F(BmsDualModeQueryTest, QueryAbilityInfoByContinueType_Echoes10000_0600, Function | SmallTest | Level0)
+{
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->multiUserIdsSet_.insert(TEST_USERID);
+    auto info = MakeQueryCloneInfo(true, TEST_USERID, 200000, false);
+    info.baseAbilityInfos_.begin()->second.continueType.emplace_back("continue.test");
+    dataMgr->bundleInfos_[BUNDLE_NAME] = info;
+    AbilityInfo abilityInfo;
+    EXPECT_EQ(dataMgr->QueryAbilityInfoByContinueType(
+        BUNDLE_NAME, "continue.test", abilityInfo, TEST_USERID), ERR_OK);
+    EXPECT_EQ(abilityInfo.uid, 200000);
+    EXPECT_EQ(abilityInfo.appIndex, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
+}
+
+HWTEST_F(BmsDualModeQueryTest, QueryAbilityInfoByUri_Echoes10000_0700, Function | SmallTest | Level0)
+{
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->multiUserIdsSet_.insert(TEST_USERID);
+    auto info = MakeQueryCloneInfo(true, TEST_USERID, 200000, false);
+    info.baseAbilityInfos_.begin()->second.uri = "dataability://testuri";
+    dataMgr->bundleInfos_[BUNDLE_NAME] = info;
+    AbilityInfo abilityInfo;
+    EXPECT_TRUE(dataMgr->QueryAbilityInfoByUri(
+        "dataability://" + BUNDLE_NAME + "/testuri", TEST_USERID, abilityInfo));
+    EXPECT_EQ(abilityInfo.appIndex, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
+}
+
+// ====================== BundleDataMgr::QueryExtensionAbilityInfos dual-mode ======================
+
+static InnerBundleInfo MakeQueryCloneExtensionInfoWithSkills(bool isClone, int32_t userId, int32_t uid)
+{
+    auto info = MakeQueryCloneExtensionInfo(isClone, userId, uid);
+    for (auto &item : info.baseExtensionInfos_) {
+        Skill skill;
+        skill.actions.emplace_back(IMPLICIT_ACTION);
+        item.second.skills.emplace_back(skill);
+    }
+    return info;
+}
+
+HWTEST_F(BmsDualModeQueryTest, QueryExtensionAbilityInfos_ExplicitIndex0Echoes10000_0100,
+    Function | SmallTest | Level0)
+{
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->multiUserIdsSet_.insert(TEST_USERID);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = MakeQueryCloneExtensionInfo(true, TEST_USERID, 200000);
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    EXPECT_TRUE(dataMgr->QueryExtensionAbilityInfos(
+        MakeQueryCloneExtensionWant(), 0, TEST_USERID, extensionInfos));
+    ASSERT_EQ(extensionInfos.size(), static_cast<size_t>(1));
+    EXPECT_EQ(extensionInfos[0].appIndex, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
+}
+
+HWTEST_F(BmsDualModeQueryTest, QueryExtensionAbilityInfosV9_ExplicitIndex0Echoes10000_0200,
+    Function | SmallTest | Level0)
+{
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->multiUserIdsSet_.insert(TEST_USERID);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = MakeQueryCloneExtensionInfo(true, TEST_USERID, 200000);
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    EXPECT_EQ(dataMgr->QueryExtensionAbilityInfosV9(
+        MakeQueryCloneExtensionWant(), 0, TEST_USERID, extensionInfos), ERR_OK);
+    ASSERT_EQ(extensionInfos.size(), static_cast<size_t>(1));
+    EXPECT_EQ(extensionInfos[0].appIndex, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
+}
+
+HWTEST_F(BmsDualModeQueryTest, QueryExtensionAbilityInfos_ImplicitEchoes10000_0300,
+    Function | SmallTest | Level0)
+{
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->multiUserIdsSet_.insert(TEST_USERID);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = MakeQueryCloneExtensionInfoWithSkills(true, TEST_USERID, 200000);
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    EXPECT_TRUE(dataMgr->QueryExtensionAbilityInfos(
+        MakeImplicitWant(), 0, TEST_USERID, extensionInfos));
+    ASSERT_EQ(extensionInfos.size(), static_cast<size_t>(1));
+    EXPECT_EQ(extensionInfos[0].appIndex, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
+}
+
+HWTEST_F(BmsDualModeQueryTest, QueryExtensionAbilityInfosV9_ImplicitEchoes10000_0400,
+    Function | SmallTest | Level0)
+{
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->multiUserIdsSet_.insert(TEST_USERID);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = MakeQueryCloneExtensionInfoWithSkills(true, TEST_USERID, 200000);
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    EXPECT_EQ(dataMgr->QueryExtensionAbilityInfosV9(
+        MakeImplicitWant(), 0, TEST_USERID, extensionInfos), ERR_OK);
+    ASSERT_EQ(extensionInfos.size(), static_cast<size_t>(1));
+    EXPECT_EQ(extensionInfos[0].appIndex, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
+}
+
+HWTEST_F(BmsDualModeQueryTest, QueryExtensionAbilityInfosByType_Echoes10000_0500, Function | SmallTest | Level0)
+{
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->multiUserIdsSet_.insert(TEST_USERID);
+    auto info = MakeQueryCloneExtensionInfo(true, TEST_USERID, 200000);
+    info.baseExtensionInfos_.begin()->second.type = ExtensionAbilityType::FORM;
+    dataMgr->bundleInfos_[BUNDLE_NAME] = info;
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    EXPECT_TRUE(dataMgr->QueryExtensionAbilityInfos(
+        ExtensionAbilityType::FORM, TEST_USERID, extensionInfos));
+    ASSERT_EQ(extensionInfos.size(), static_cast<size_t>(1));
+    EXPECT_EQ(extensionInfos[0].appIndex, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
+}
+
+HWTEST_F(BmsDualModeQueryTest, QueryExtensionAbilityInfosByType_NonCloneKeepsIndex0_0600,
+    Function | SmallTest | Level0)
+{
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->multiUserIdsSet_.insert(TEST_USERID);
+    auto info = MakeQueryCloneExtensionInfo(false, TEST_USERID, 200000);
+    info.baseExtensionInfos_.begin()->second.type = ExtensionAbilityType::FORM;
+    dataMgr->bundleInfos_[BUNDLE_NAME] = info;
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    EXPECT_TRUE(dataMgr->QueryExtensionAbilityInfos(
+        ExtensionAbilityType::FORM, TEST_USERID, extensionInfos));
+    ASSERT_EQ(extensionInfos.size(), static_cast<size_t>(1));
+    EXPECT_EQ(extensionInfos[0].appIndex, 0);
+}
+
+// ====================== InnerBundleInfo::GetBundleInfoV9 / GetBundleInfo nested dual-mode ======================
+
+// Module info matching the V9 nested-array path (modulePackage keyed, moduleName matched by field).
+static void AddQueryCloneModule(InnerBundleInfo &info)
+{
+    InnerModuleInfo moduleInfo;
+    moduleInfo.modulePackage = "entry";
+    moduleInfo.moduleName = "entry";
+    moduleInfo.name = "entry";
+    info.innerModuleInfos_.emplace("entry", moduleInfo);
+}
+
+HWTEST_F(BmsDualModeQueryTest, GetBundleInfoV9_NestedAbilitiesIndex0Echoes10000_0100,
+    Function | SmallTest | Level0)
+{
+    auto info = MakeQueryCloneInfo(true, TEST_USERID, 200000, false);
+    AddQueryCloneModule(info);
+    InnerExtensionInfo innerExtensionInfo;
+    innerExtensionInfo.bundleName = BUNDLE_NAME;
+    innerExtensionInfo.name = "MainExtension";
+    innerExtensionInfo.moduleName = "entry";
+    info.baseExtensionInfos_.emplace(BUNDLE_NAME + ".entry.MainExtension", innerExtensionInfo);
+    BundleInfo bundleInfo;
+    int32_t flags = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE) |
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ABILITY) |
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_EXTENSION_ABILITY);
+    EXPECT_EQ(info.GetBundleInfoV9(flags, bundleInfo, TEST_USERID, 0), ERR_OK);
+    ASSERT_EQ(bundleInfo.hapModuleInfos.size(), static_cast<size_t>(1));
+    ASSERT_EQ(bundleInfo.hapModuleInfos[0].abilityInfos.size(), static_cast<size_t>(1));
+    EXPECT_EQ(bundleInfo.hapModuleInfos[0].abilityInfos[0].appIndex,
+        ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
+    ASSERT_EQ(bundleInfo.hapModuleInfos[0].extensionInfos.size(), static_cast<size_t>(1));
+    EXPECT_EQ(bundleInfo.hapModuleInfos[0].extensionInfos[0].appIndex,
+        ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
+    // top-level applicationInfo stays consistent with the nested arrays
+    EXPECT_EQ(bundleInfo.applicationInfo.appIndex, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
+}
+
+HWTEST_F(BmsDualModeQueryTest, GetBundleInfoV9_NonCloneNestedKeepsIndex0_0200,
+    Function | SmallTest | Level0)
+{
+    auto info = MakeQueryCloneInfo(false, TEST_USERID, 200000, false);
+    AddQueryCloneModule(info);
+    BundleInfo bundleInfo;
+    int32_t flags = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE) |
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ABILITY);
+    EXPECT_EQ(info.GetBundleInfoV9(flags, bundleInfo, TEST_USERID, 0), ERR_OK);
+    ASSERT_EQ(bundleInfo.hapModuleInfos.size(), static_cast<size_t>(1));
+    ASSERT_EQ(bundleInfo.hapModuleInfos[0].abilityInfos.size(), static_cast<size_t>(1));
+    EXPECT_EQ(bundleInfo.hapModuleInfos[0].abilityInfos[0].appIndex, 0);
+}
+
+HWTEST_F(BmsDualModeQueryTest, GetBundleInfo_OldPathNestedEchoes10000_0300,
+    Function | SmallTest | Level0)
+{
+    // old BundleFlag path: ability/extension keys must use the dotted format
+    // "{bundleName}.{moduleName}.{name}" for FindHapModuleInfo key matching
+    auto info = MakeQueryCloneInfo(true, TEST_USERID, 200000, false);
+    info.baseAbilityInfos_.begin()->second.skills.clear();
+    AddQueryCloneModule(info);
+    InnerExtensionInfo innerExtensionInfo;
+    innerExtensionInfo.bundleName = BUNDLE_NAME;
+    innerExtensionInfo.name = "MainExtension";
+    innerExtensionInfo.moduleName = "entry";
+    innerExtensionInfo.enabled = true;
+    info.baseExtensionInfos_.clear();
+    info.baseExtensionInfos_.emplace(BUNDLE_NAME + ".entry.MainExtension", innerExtensionInfo);
+    // rebuild the ability key in dotted format
+    auto innerAbility = info.baseAbilityInfos_.begin()->second;
+    info.baseAbilityInfos_.clear();
+    info.baseAbilityInfos_.emplace(BUNDLE_NAME + ".entry.MainAbility", innerAbility);
+    BundleInfo bundleInfo;
+    int32_t flags = GET_BUNDLE_WITH_ABILITIES | GET_BUNDLE_WITH_EXTENSION_INFO;
+    EXPECT_TRUE(info.GetBundleInfo(flags, bundleInfo, TEST_USERID, 0));
+    ASSERT_EQ(bundleInfo.abilityInfos.size(), static_cast<size_t>(1));
+    EXPECT_EQ(bundleInfo.abilityInfos[0].appIndex, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
+    ASSERT_EQ(bundleInfo.extensionInfos.size(), static_cast<size_t>(1));
+    EXPECT_EQ(bundleInfo.extensionInfos[0].appIndex, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
+    // old path also fills hapModuleInfos via FindHapModuleInfo
+    ASSERT_EQ(bundleInfo.hapModuleInfos.size(), static_cast<size_t>(1));
+    ASSERT_EQ(bundleInfo.hapModuleInfos[0].abilityInfos.size(), static_cast<size_t>(1));
+    EXPECT_EQ(bundleInfo.hapModuleInfos[0].abilityInfos[0].appIndex,
+        ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
+    ASSERT_EQ(bundleInfo.hapModuleInfos[0].extensionInfos.size(), static_cast<size_t>(1));
+    EXPECT_EQ(bundleInfo.hapModuleInfos[0].extensionInfos[0].appIndex,
+        ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
+}
+
+HWTEST_F(BmsDualModeQueryTest, GetBundleInfo_OldPathNonCloneNestedKeepsIndex0_0400,
+    Function | SmallTest | Level0)
+{
+    auto info = MakeQueryCloneInfo(false, TEST_USERID, 200000, false);
+    AddQueryCloneModule(info);
+    auto innerAbility = info.baseAbilityInfos_.begin()->second;
+    info.baseAbilityInfos_.clear();
+    info.baseAbilityInfos_.emplace(BUNDLE_NAME + ".entry.MainAbility", innerAbility);
+    BundleInfo bundleInfo;
+    int32_t flags = GET_BUNDLE_WITH_ABILITIES;
+    EXPECT_TRUE(info.GetBundleInfo(flags, bundleInfo, TEST_USERID, 0));
+    ASSERT_EQ(bundleInfo.abilityInfos.size(), static_cast<size_t>(1));
+    EXPECT_EQ(bundleInfo.abilityInfos[0].appIndex, 0);
+    ASSERT_EQ(bundleInfo.hapModuleInfos.size(), static_cast<size_t>(1));
+    ASSERT_EQ(bundleInfo.hapModuleInfos[0].abilityInfos.size(), static_cast<size_t>(1));
+    EXPECT_EQ(bundleInfo.hapModuleInfos[0].abilityInfos[0].appIndex, 0);
 }
 } // OHOS

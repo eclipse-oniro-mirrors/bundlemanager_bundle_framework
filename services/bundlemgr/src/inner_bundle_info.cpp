@@ -1863,7 +1863,10 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(
         for (const auto &extension : baseExtensionInfos_) {
             if ((extension.second.moduleName == hapInfo.moduleName) &&
                 (extension.first.find(key) != std::string::npos)) {
-                hapInfo.extensionInfos.emplace_back(InnerExtensionInfo::ConvertToExtensionInfo(extension.second));
+                ExtensionAbilityInfo extensionInfo = InnerExtensionInfo::ConvertToExtensionInfo(extension.second);
+                // dual-mode: a clone record always echoes DUAL_MODE_CLONE_APP_INDEX
+                extensionInfo.appIndex = ResolveDualModeResponseAppIndex(extensionInfo.appIndex);
+                hapInfo.extensionInfos.emplace_back(std::move(extensionInfo));
             }
         }
 
@@ -1880,6 +1883,8 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(
                 AbilityInfo abilityInfo = InnerAbilityInfo::ConvertToAbilityInfo(ability.second);
                 AppendDynamicSkillsToAbilityIfExist(abilityInfo);
                 abilityInfo.applicationInfo = appInfo;
+                // dual-mode: a clone record always echoes DUAL_MODE_CLONE_APP_INDEX
+                abilityInfo.appIndex = ResolveDualModeResponseAppIndex(abilityInfo.appIndex);
                 hapInfo.abilityInfos.emplace_back(std::move(abilityInfo));
             }
         }
@@ -3423,7 +3428,8 @@ void InnerBundleInfo::GetBundleWithAbilitiesV9(
             }
             abilityInfo.enabled = isEnabled;
         }
-        abilityInfo.appIndex = appIndex;
+        // dual-mode: a clone record always echoes DUAL_MODE_CLONE_APP_INDEX
+        abilityInfo.appIndex = ResolveDualModeResponseAppIndex(appIndex);
 
         if (!withMetadata) {
             abilityInfo.metaData.customizeData.clear();
@@ -3461,7 +3467,8 @@ void InnerBundleInfo::GetBundleWithExtensionAbilitiesV9(
             continue;
         }
         ExtensionAbilityInfo info = InnerExtensionInfo::ConvertToExtensionInfo(extensionInfo.second);
-        info.appIndex = appIndex;
+        // dual-mode: a clone record always echoes DUAL_MODE_CLONE_APP_INDEX
+        info.appIndex = ResolveDualModeResponseAppIndex(info.appIndex);
 
         if (!withMetadata) {
             info.metadata.clear();
@@ -3495,7 +3502,8 @@ void InnerBundleInfo::GetBundleWithAbilities(
             } else {
                 AppendDynamicSkillsToAbilityIfExist(abilityInfo);
             }
-            abilityInfo.appIndex = appIndex;
+            // dual-mode: a clone record always echoes DUAL_MODE_CLONE_APP_INDEX
+            abilityInfo.appIndex = ResolveDualModeResponseAppIndex(appIndex);
             bundleInfo.abilityInfos.emplace_back(std::move(abilityInfo));
         }
     }
@@ -3515,7 +3523,8 @@ void InnerBundleInfo::GetBundleWithExtension(
             if ((static_cast<uint32_t>(flags) & GET_BUNDLE_WITH_SKILL) != GET_BUNDLE_WITH_SKILL) {
                 info.skills.clear();
             }
-            info.appIndex = appIndex;
+            // dual-mode: a clone record always echoes DUAL_MODE_CLONE_APP_INDEX
+            info.appIndex = ResolveDualModeResponseAppIndex(appIndex);
             bundleInfo.extensionInfos.emplace_back(std::move(info));
         }
     }
@@ -4725,6 +4734,10 @@ void InnerBundleInfo::GetMainAbilityInfo(AbilityInfo &abilityInfo) const
         const std::string& key = item.second.entryAbilityKey;
         if (!key.empty() && (baseAbilityInfos_.count(key) != 0)) {
             abilityInfo = InnerAbilityInfo::ConvertToAbilityInfo(baseAbilityInfos_.at(key));
+            // dual-mode: ability infos of a dual-mode clone record carry appIndex 10000
+            if (isDualModeCloneApp_) {
+                abilityInfo.appIndex = appIndex_;
+            }
             if (item.second.isEntry) {
                 return;
             }
@@ -6348,7 +6361,9 @@ const std::string InnerBundleInfo::GetCurDynamicIconModule(const int32_t userId,
         APP_LOGE("can not find bundleUserInfo in userId: %{public}d", userId);
         return "";
     }
-    if (appIndex == 0) {
+    // dual-mode: the clone identity is stored on the bundleInfo itself, not in cloneInfos
+    if (appIndex == 0 || (isDualModeCloneApp_ &&
+        appIndex == ServiceConstants::DUAL_MODE_CLONE_APP_INDEX)) {
         return infoItem->second.curDynamicIconModule;
     }
 
@@ -6446,7 +6461,9 @@ bool InnerBundleInfo::SetCurDynamicIconModule(
         APP_LOGE("can not find bundleUserInfo in userId: %{public}d", userId);
         return false;
     }
-    if (appIndex == 0) {
+    // dual-mode: the clone identity is stored on the bundleInfo itself, not in cloneInfos
+    if (appIndex == 0 || (isDualModeCloneApp_ &&
+        appIndex == ServiceConstants::DUAL_MODE_CLONE_APP_INDEX)) {
         infoItem->second.curDynamicIconModule = curDynamicIconModule;
         return true;
     }
