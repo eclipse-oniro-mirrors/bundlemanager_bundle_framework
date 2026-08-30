@@ -6226,6 +6226,66 @@ void CreateAppClonePreferenceModeObject(napi_env env, napi_value value)
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "CLONE_APP", nClone));
 }
 
+void CreateDeviceModeDistributionPolicyObject(napi_env env, napi_value value)
+{
+    napi_value nUnspecified;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
+        static_cast<int32_t>(DeviceModeDistributionPolicy::UNSPECIFIED), &nUnspecified));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "UNSPECIFIED", nUnspecified));
+
+    napi_value nMainOnly;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
+        static_cast<int32_t>(DeviceModeDistributionPolicy::MAIN_ONLY), &nMainOnly));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "MAIN_ONLY", nMainOnly));
+
+    napi_value nSubOnly;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
+        static_cast<int32_t>(DeviceModeDistributionPolicy::SUB_ONLY), &nSubOnly));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "SUB_ONLY", nSubOnly));
+
+    napi_value nUniversalIdentical;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
+        static_cast<int32_t>(DeviceModeDistributionPolicy::UNIVERSAL_IDENTICAL_PACKAGE),
+        &nUniversalIdentical));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value,
+        "UNIVERSAL_IDENTICAL_PACKAGE", nUniversalIdentical));
+
+    napi_value nUniversalDifferent;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
+        static_cast<int32_t>(DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE),
+        &nUniversalDifferent));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value,
+        "UNIVERSAL_DIFFERENT_PACKAGE", nUniversalDifferent));
+
+    napi_value nPartialIdentical;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
+        static_cast<int32_t>(DeviceModeDistributionPolicy::PARTIAL_COMPATIBLE_IDENTICAL_PACKAGE),
+        &nPartialIdentical));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value,
+        "PARTIAL_COMPATIBLE_IDENTICAL_PACKAGE", nPartialIdentical));
+
+    napi_value nPartialDifferent;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
+        static_cast<int32_t>(DeviceModeDistributionPolicy::PARTIAL_COMPATIBLE_DIFFERENT_PACKAGE),
+        &nPartialDifferent));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value,
+        "PARTIAL_COMPATIBLE_DIFFERENT_PACKAGE", nPartialDifferent));
+
+    napi_value nFullIdentical;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
+        static_cast<int32_t>(DeviceModeDistributionPolicy::FULL_COMPATIBLE_IDENTICAL_PACKAGE),
+        &nFullIdentical));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value,
+        "FULL_COMPATIBLE_IDENTICAL_PACKAGE", nFullIdentical));
+
+    napi_value nFullDifferent;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
+        static_cast<int32_t>(DeviceModeDistributionPolicy::FULL_COMPATIBLE_DIFFERENT_PACKAGE),
+        &nFullDifferent));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value,
+        "FULL_COMPATIBLE_DIFFERENT_PACKAGE", nFullDifferent));
+}
+
 void MigrateDataExec(napi_env env, void *data)
 {
     MigrateDataCallbackInfo *asyncCallbackInfo = reinterpret_cast<MigrateDataCallbackInfo *>(data);

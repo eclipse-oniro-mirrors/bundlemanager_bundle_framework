@@ -103,6 +103,10 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
     NAPI_CALL(env, napi_create_object(env, &nBundleInstallStatus));
     CreateBundleInstallStatusObject(env, nBundleInstallStatus);
 
+    napi_value nDeviceModeDistributionPolicy = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &nDeviceModeDistributionPolicy));
+    CreateDeviceModeDistributionPolicyObject(env, nDeviceModeDistributionPolicy);
+
     napi_property_descriptor desc[] = {
         DECLARE_NAPI_FUNCTION("getBundleArchiveInfo", GetBundleArchiveInfo),
         DECLARE_NAPI_FUNCTION("getBundleArchiveInfoSync", GetBundleArchiveInfoSync),
@@ -211,6 +215,7 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getAlternateIcons", GetAlternateIcons),
         DECLARE_NAPI_FUNCTION("filterBundleListByDeviceModeDistributionPolicies",
             FilterBundleListByDeviceModeDistributionPolicies),
+        DECLARE_NAPI_PROPERTY("DeviceModeDistributionPolicy", nDeviceModeDistributionPolicy),
     };
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));
