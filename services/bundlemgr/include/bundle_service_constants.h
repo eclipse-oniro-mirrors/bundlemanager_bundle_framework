@@ -258,8 +258,8 @@ constexpr const char* CLONE_PREFIX = "+clone-";
 constexpr const char* BMS_PARA_CLONE_IS_KEEP_DATA = "ohos.bms.param.clone.isKeepData";
 // dual mode (PC/PAD) application
 constexpr int32_t DUAL_MODE_CLONE_APP_INDEX = 10000;
-// Dual-mode params (int): persist.sceneboard.ispcmode (current mode, 0=tablet/1=2in1),
-// const.sceneboard.mainmode (main mode, 0=tablet/1=2in1). Missing/unreadable/illegal -> non-dual-mode device.
+// Dual-mode params: persist.sceneboard.ispcmode (bool: true=2in1/false=tablet, current mode),
+// const.sceneboard.mainmode (int: 0=tablet/1=2in1, main mode). Missing/unreadable/illegal -> non-dual-mode device.
 constexpr const char* DUAL_MODE_ISPCMODE_PARAM_KEY = "persist.sceneboard.ispcmode";
 constexpr const char* DUAL_MODE_MAINMODE_PARAM_KEY = "const.sceneboard.mainmode";
 constexpr int32_t DUAL_MODE_VALUE_INVALID = -1;  // param not exist / read failed / value illegal

@@ -37,7 +37,7 @@ using ErmsGetPolicyFunc = int32_t (*)(std::string, std::string, std::string, int
 
 class DualModeHelper {
 public:
-    // Read current system mode from "persist.sceneboard.ispcmode".
+    // Read current system mode from "persist.sceneboard.ispcmode" (bool: true=2in1, false=tablet).
     // Returns 0 (tablet), 1 (2in1), or -1 (param not exist / read failed / illegal).
     static int32_t GetSysMode();
 
@@ -62,7 +62,8 @@ public:
     // Test-injection switch (persist.bms.test_dual_mode). When true, ispcmode/mainmode are read
     // from persist.bms.ispcmode / persist.bms.mainmode instead of the production sceneboard params
     // (persist.sceneboard.ispcmode / const.sceneboard.mainmode) for test
-    // verification; production (unset/false) is unaffected.
+    // verification; production (unset/false) is unaffected. The production ispcmode key is
+    // bool-typed (true=2in1, false=tablet); the test key is int-typed (0/1).
     static bool IsTestDualMode();
 
     // Whether the policy is a different-package category (UNIVERSAL/PARTIAL_COMPATIBLE/
