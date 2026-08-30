@@ -21,7 +21,10 @@
 
 #include "application_info.h"
 #include "app_log_tag_wrapper.h"
+#include "bundle_constants.h"
+#include "bundle_data_mgr.h"
 #include "bundle_service_constants.h"
+#include "inner_bundle_info.h"
 #include "parameters.h"
 #include "string_ex.h"
 
@@ -47,6 +50,13 @@ constexpr const char *TEST_MAINMODE_PARAM = "persist.bms.mainmode";
 constexpr const char *ERMS_LIB_PATH_64 = "/system/lib64/liberms_dual_mode_policy.z.so";
 constexpr const char *ERMS_LIB_PATH_32 = "/system/lib/liberms_dual_mode_policy.z.so";
 constexpr const char *ERMS_GET_POLICY_FUNC_NAME = "ErmsGetDeviceModelDistributionPolicy";
+
+// Whether an erms-returned policy is a valid DeviceModeDistributionPolicy value (0..8).
+bool IsValidErmsPolicy(int32_t policy)
+{
+    return policy >= static_cast<int32_t>(DeviceModeDistributionPolicy::UNSPECIFIED) &&
+        policy <= static_cast<int32_t>(DeviceModeDistributionPolicy::FULL_COMPATIBLE_DIFFERENT_PACKAGE);
+}
 
 // Whether a mode value is valid (0=tablet or 1=2in1). -1 (not read) and any other value are invalid.
 bool IsValidModeValue(int32_t v)
@@ -96,6 +106,100 @@ int32_t ReadValidIspcmodeParam()
     bool isPcMode = OHOS::system::GetBoolParameter(key, false);
     return isPcMode ? ServiceConstants::DUAL_MODE_VALUE_2IN1
                     : ServiceConstants::DUAL_MODE_VALUE_TABLET;
+}
+
+// Only plain "enterprise" counts as in-house (team decision): the enterprise_* / *testing variants
+// are not erms-eligible unless the app is preinstalled.
+bool IsInHouseDistributionType(const std::string &distributionType)
+{
+    return distributionType == Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE;
+}
+
+// Architect decision (2026-08-29): erms dir = hapPath minus the file name — the preset root for
+// preinstall apps (installed in place), the install root for others. A preinstall app partially
+// updated online prefers its first hap still outside BUNDLE_CODE_DIR (preset partition); falls
+// back to the code path when no usable hapPath exists.
+std::string GetErmsBundleDir(const InnerBundleInfo &info)
+{
+    std::string firstHap;
+    std::string presetHap;  // first hap outside BUNDLE_CODE_DIR (still on a preset partition)
+    for (const auto &hapPath : info.GetAllHapPaths()) {
+        if (hapPath.empty()) {
+            continue;
+        }
+        if (firstHap.empty()) {
+            firstHap = hapPath;
+        }
+        if (presetHap.empty() && hapPath.rfind(Constants::BUNDLE_CODE_DIR, 0) != 0) {
+            presetHap = hapPath;
+        }
+    }
+    if (info.IsPreInstallApp() && !presetHap.empty()) {
+        const auto pos = presetHap.find_last_of('/');
+        return (pos == std::string::npos || pos == 0) ? info.GetAppCodePath()
+                                                      : presetHap.substr(0, pos);
+    }
+    if (info.IsPreInstallApp() && !firstHap.empty()) {
+        LOG_W(BMS_TAG_INSTALLER, "DualOTARefresh: preinstall app fully updated online, erms gets "
+            "install root: %{public}s", info.GetBundleName().c_str());
+    }
+    const auto pos = firstHap.find_last_of('/');
+    return (pos == std::string::npos || pos == 0) ? info.GetAppCodePath() : firstHap.substr(0, pos);
+}
+
+// Pass metrics for the summary log: already categorized / persisted / resolved default /
+// vanished (concurrent uninstall).
+struct StockRefreshStats {
+    size_t alreadySetCnt = 0;
+    size_t persistedCnt = 0;
+    size_t defaultCnt = 0;
+    size_t vanishedCnt = 0;
+};
+
+// Refresh one stock app's category (per-app step of DualModeHelper::RefreshStockAppCategories).
+// Idempotent: only refresh apps with no policy yet; never overwrite AG/caller-set policy.
+// Default (UNSPECIFIED) resolutions are NOT persisted — 0 is value-identical to the
+// never-touched state; non-default resolutions persist immediately.
+// Returns false only on a genuine persist failure (app still in map). A vanished app
+// (concurrent uninstall) is a terminal state, not a retryable failure — skipping it must
+// not fail the pass, else the marker never gets set.
+bool RefreshOneStockApp(BundleDataMgr &dataMgr, const std::string &bundleName,
+    const DualModeHelper::ErmsCategoryQueryFunc &ermsQuery, StockRefreshStats &stats)
+{
+    InnerBundleInfo info;
+    if (!dataMgr.FetchInnerBundleInfo(bundleName, info)) {
+        stats.vanishedCnt++;
+        LOG_D(BMS_TAG_INSTALLER, "DualOTARefresh: app gone during pass, skip: %{public}s",
+            bundleName.c_str());
+        return true;
+    }
+    if (info.GetDeviceModeDistributionPolicy() != DeviceModeDistributionPolicy::UNSPECIFIED) {
+        stats.alreadySetCnt++;
+        return true;
+    }
+    DeviceModeDistributionPolicy category = DualModeHelper::ResolveStockAppCategory(info, ermsQuery);
+    if (category == DeviceModeDistributionPolicy::UNSPECIFIED) {
+        stats.defaultCnt++;
+        LOG_D(BMS_TAG_INSTALLER, "DualOTARefresh: app resolved default, no persist: %{public}s",
+            bundleName.c_str());
+        return true;
+    }
+    if (dataMgr.UpdateAppCategoryAndPersist(bundleName, category)) {
+        stats.persistedCnt++;
+        LOG_I(BMS_TAG_INSTALLER, "DualOTARefresh: app categorized: %{public}s -> policy %{public}u",
+            bundleName.c_str(), static_cast<uint32_t>(category));
+        return true;
+    }
+    InnerBundleInfo probe;
+    if (!dataMgr.FetchInnerBundleInfo(bundleName, probe)) {
+        stats.vanishedCnt++;
+        LOG_D(BMS_TAG_INSTALLER, "DualOTARefresh: app gone during persist, skip: %{public}s",
+            bundleName.c_str());
+        return true;
+    }
+    LOG_W(BMS_TAG_INSTALLER, "DualOTARefresh: persist fail: %{public}s -> policy %{public}u",
+        bundleName.c_str(), static_cast<uint32_t>(category));
+    return false;  // still in map -> genuine persist failure -> marker stays unset
 }
 }  // namespace
 
@@ -284,6 +388,96 @@ bool DualModeHelper::GetDeviceModelDistributionPolicy(
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "GetDeviceModelDistributionPolicy -n:%{public}s result:%{public}d,"
         "policy:%{public}d", bundleName.c_str(), err, policy);
     return err == 0;
+}
+
+DeviceModeDistributionPolicy DualModeHelper::ToDeviceModePolicy(int32_t ermsPolicy)
+{
+    if (!IsValidErmsPolicy(ermsPolicy)) {
+        LOG_NOFUNC_W(BMS_TAG_INSTALLER, "DualOTARefresh: erms policy out of range: %{public}d",
+            ermsPolicy);
+        return DeviceModeDistributionPolicy::UNSPECIFIED;
+    }
+    return static_cast<DeviceModeDistributionPolicy>(ermsPolicy);
+}
+
+DeviceModeDistributionPolicy DualModeHelper::QueryAppCategoryFromErms(const std::string &bundleName,
+    const std::string &bundleDir, const std::string &distributionType)
+{
+    // An installed eligible app always has both; empty input cannot produce a meaningful query.
+    if (bundleName.empty() || bundleDir.empty()) {
+        LOG_NOFUNC_W(BMS_TAG_INSTALLER, "DualOTARefresh: erms query skipped, empty bundleName/bundleDir");
+        return DeviceModeDistributionPolicy::UNSPECIFIED;
+    }
+    int32_t policy = static_cast<int32_t>(DeviceModeDistributionPolicy::UNSPECIFIED);
+    // Split-package info (modeHapMap) is not used by the stock-app category refresh.
+    std::map<std::string, std::vector<std::string>> modeHapMap;
+    LOG_NOFUNC_D(BMS_TAG_INSTALLER, "DualOTARefresh: erms query, bundle=%{public}s dir=%{public}s "
+        "type=%{public}s", bundleName.c_str(), bundleDir.c_str(), distributionType.c_str());
+    if (!GetDeviceModelDistributionPolicy(bundleName, bundleDir, distributionType, policy, modeHapMap)) {
+        // Requirement: erms interface failure -> the app category defaults to 0 (UNSPECIFIED).
+        LOG_NOFUNC_W(BMS_TAG_INSTALLER, "DualOTARefresh: erms call failed, use default policy, "
+            "bundle=%{public}s", bundleName.c_str());
+        return DeviceModeDistributionPolicy::UNSPECIFIED;
+    }
+    return ToDeviceModePolicy(policy);
+}
+
+DeviceModeDistributionPolicy DualModeHelper::ResolveStockAppCategory(const InnerBundleInfo &info)
+{
+    // Production wires the real erms query into the injectable core resolver.
+    auto prodErms = [](const std::string &bundleName, const std::string &bundleDir,
+        const std::string &distributionType) -> DeviceModeDistributionPolicy {
+        return QueryAppCategoryFromErms(bundleName, bundleDir, distributionType);
+    };
+    return ResolveStockAppCategory(info, prodErms);
+}
+
+DeviceModeDistributionPolicy DualModeHelper::ResolveStockAppCategory(const InnerBundleInfo &info,
+    const ErmsCategoryQueryFunc &ermsQuery)
+{
+    // Rule: preinstall/preload OR in-house -> ask erms; other -> UNSPECIFIED, no erms call.
+    std::string distributionType = info.GetAppDistributionType();
+    bool ermsEligible = info.IsPreInstallApp() || IsInHouseDistributionType(distributionType);
+    if (!ermsEligible || !ermsQuery) {
+        return DeviceModeDistributionPolicy::UNSPECIFIED;  // other app / no query -> default 0
+    }
+    // erms input "fileRootPath": hapPath parent dir — preset root for preinstall apps, install
+    // root for in-house apps (architect decision, see GetErmsBundleDir).
+    return ermsQuery(info.GetBundleName(), GetErmsBundleDir(info), distributionType);
+}
+
+void DualModeHelper::RefreshStockAppCategories(BundleDataMgr &dataMgr,
+    const std::function<bool()> &isMarkerSet, const std::function<void()> &markDone,
+    const ErmsCategoryQueryFunc &ermsQuery)
+{
+    // Non-dual-mode: skip and do NOT set marker (a future single->dual OTA still triggers it).
+    if (!IsDualModeDevice()) {
+        LOG_D(BMS_TAG_INSTALLER, "DualOTARefresh: not a dual-mode device, skip");
+        return;
+    }
+    if (isMarkerSet && isMarkerSet()) {
+        return;  // already refreshed (the caller's fast path logs this)
+    }
+    LOG_I(BMS_TAG_INSTALLER, "DualOTARefresh: pass start");
+    bool allOk = true;
+    StockRefreshStats stats;
+    // Only iterate bundleInfos_; tempBundleInfos_ holds already-categorized apps.
+    std::vector<std::string> bundleNames = dataMgr.GetAllBundleName();
+    for (const auto &bundleName : bundleNames) {
+        if (!RefreshOneStockApp(dataMgr, bundleName, ermsQuery, stats)) {
+            allOk = false;  // genuine persist failure -> marker stays unset
+        }
+    }
+    LOG_I(BMS_TAG_INSTALLER, "DualOTARefresh: pass end, total=%{public}zu alreadySet=%{public}zu "
+        "persisted=%{public}zu default=%{public}zu vanished=%{public}zu",
+        bundleNames.size(), stats.alreadySetCnt, stats.persistedCnt, stats.defaultCnt,
+        stats.vanishedCnt);
+    if (allOk && markDone) {
+        markDone();
+        LOG_I(BMS_TAG_INSTALLER, "DualOTARefresh: marker set, refresh complete");
+    } else {
+        LOG_W(BMS_TAG_INSTALLER, "DualOTARefresh: marker NOT set, will retry next boot");
+    }
 }
 
 }  // namespace AppExecFwk

@@ -10616,6 +10616,36 @@ bool BundleDataMgr::UpdateInnerBundleInfo(InnerBundleInfo &innerBundleInfo, bool
     return true;
 }
 
+bool BundleDataMgr::UpdateAppCategoryAndPersist(const std::string &bundleName,
+    DeviceModeDistributionPolicy deviceModeDistributionPolicy)
+{
+    if (bundleName.empty()) {
+        APP_LOGW("DualOTARefresh: empty bundle name");
+        return false;
+    }
+    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto it = bundleInfos_.find(bundleName);
+    if (it != bundleInfos_.end()) {
+        it->second.SetDeviceModeDistributionPolicy(deviceModeDistributionPolicy);
+        if (dataStorage_ && !dataStorage_->SaveStorageBundleInfo(it->second)) {
+            APP_LOGE("DualOTARefresh: persist failed: %{public}s", bundleName.c_str());
+            return false;
+        }
+        return true;
+    }
+    auto tempIt = tempBundleInfos_.find(bundleName);
+    if (tempIt != tempBundleInfos_.end()) {
+        tempIt->second.SetDeviceModeDistributionPolicy(deviceModeDistributionPolicy);
+        if (dataStorage_ && !dataStorage_->SaveStorageBundleInfo(tempIt->second)) {
+            APP_LOGE("DualOTARefresh: persist failed: %{public}s", bundleName.c_str());
+            return false;
+        }
+        return true;
+    }
+    APP_LOGW("DualOTARefresh: bundle not found: %{public}s", bundleName.c_str());
+    return false;
+}
+
 bool BundleDataMgr::UpdatePartialInnerBundleInfo(const InnerBundleInfo &info)
 {
     std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
