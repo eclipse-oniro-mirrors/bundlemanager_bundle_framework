@@ -5976,8 +5976,9 @@ ErrCode BaseBundleInstaller::SetDualModeAppInfo(const InstallParam &installParam
     }
 
     bool isSecondary = DualModeHelper::IsSecondaryMode();
-    if ((policyValue == static_cast<int32_t>(DeviceModeDistributionPolicy::MAIN_ONLY) && isSecondary) ||
-        (policyValue == static_cast<int32_t>(DeviceModeDistributionPolicy::SUB_ONLY) && !isSecondary)) {
+    if (!installParam.isPreInstallApp &&
+        ((policyValue == static_cast<int32_t>(DeviceModeDistributionPolicy::MAIN_ONLY) && isSecondary) ||
+        (policyValue == static_cast<int32_t>(DeviceModeDistributionPolicy::SUB_ONLY) && !isSecondary))) {
         APP_LOGE("Dual mode: policy %{public}d is mode-exclusive and not supported in current mode "
             "(isSecondary=%{public}d)", policyValue, isSecondary);
         return ERR_APPEXECFWK_INSTALL_DUAL_MODE_POLICY_NOT_SUPPORTED;
