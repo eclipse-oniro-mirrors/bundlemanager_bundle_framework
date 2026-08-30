@@ -38,6 +38,7 @@ namespace {
 // is true, ispcmode/mainmode are read from persist.bms.ispcmode / persist.bms.mainmode instead of
 // the production sceneboard params (persist.sceneboard.ispcmode / const.sceneboard.mainmode), so
 // dual-mode logic can be exercised without dual-mode hardware.
+// The production ispcmode key is bool-typed (true=2in1, false=tablet); the test key is int-typed.
 // Production (unset/false) is fully unaffected.
 constexpr const char *TEST_DUAL_MODE_PARAM = "persist.bms.test_dual_mode";
 constexpr const char *TEST_ISPCMODE_PARAM = "persist.bms.ispcmode";
@@ -53,18 +54,6 @@ bool IsValidModeValue(int32_t v)
     return v == ServiceConstants::DUAL_MODE_VALUE_TABLET || v == ServiceConstants::DUAL_MODE_VALUE_2IN1;
 }
 
-// Read an int system parameter and validate it is 0 (tablet) or 1 (2in1).
-// Returns DUAL_MODE_VALUE_INVALID (-1) if the parameter is missing, unreadable, or illegal.
-int32_t ReadValidModeParam(const char *key)
-{
-    int32_t value = OHOS::system::GetIntParameter(key, ServiceConstants::DUAL_MODE_VALUE_INVALID);
-    if (!IsValidModeValue(value)) {
-        LOG_D(BMS_TAG_INSTALLER, "dual mode param %{public}s invalid value %{public}d", key, value);
-        return ServiceConstants::DUAL_MODE_VALUE_INVALID;
-    }
-    return value;
-}
-
 // Effective ispcmode param key: test key when the switch is on, real sceneboard key otherwise.
 const char *GetIspcmodeParamKey()
 {
@@ -78,19 +67,49 @@ const char *GetMainmodeParamKey()
     return DualModeHelper::IsTestDualMode() ? TEST_MAINMODE_PARAM
                                             : ServiceConstants::DUAL_MODE_MAINMODE_PARAM_KEY;
 }
+
+// Read an int system parameter and validate it is 0 (tablet) or 1 (2in1).
+// Returns DUAL_MODE_VALUE_INVALID (-1) if the parameter is missing, unreadable, or illegal.
+int32_t ReadValidModeParam(const char *key)
+{
+    int32_t value = OHOS::system::GetIntParameter(key, ServiceConstants::DUAL_MODE_VALUE_INVALID);
+    if (!IsValidModeValue(value)) {
+        LOG_D(BMS_TAG_INSTALLER, "dual mode param %{public}s invalid value %{public}d", key, value);
+        return ServiceConstants::DUAL_MODE_VALUE_INVALID;
+    }
+    return value;
+}
+
+// Read the ispcmode parameter. The production key (persist.sceneboard.ispcmode) is bool-typed
+// (true=2in1, false=tablet); the test key (persist.bms.ispcmode) is int-typed (0/1/-1).
+// Returns DUAL_MODE_VALUE_TABLET (0), DUAL_MODE_VALUE_2IN1 (1), or DUAL_MODE_VALUE_INVALID (-1).
+int32_t ReadValidIspcmodeParam()
+{
+    const char *key = GetIspcmodeParamKey();
+    if (DualModeHelper::IsTestDualMode()) {
+        return ReadValidModeParam(key);
+    }
+    if (OHOS::system::GetParameter(key, "").empty()) {
+        LOG_D(BMS_TAG_INSTALLER, "dual mode param %{public}s not present", key);
+        return ServiceConstants::DUAL_MODE_VALUE_INVALID;
+    }
+    bool isPcMode = OHOS::system::GetBoolParameter(key, false);
+    return isPcMode ? ServiceConstants::DUAL_MODE_VALUE_2IN1
+                    : ServiceConstants::DUAL_MODE_VALUE_TABLET;
+}
 }  // namespace
 
 int32_t DualModeHelper::GetSysMode()
 {
     // Current mode = ispcmode (0=tablet, 1=2in1, -1=not read/illegal).
-    return ReadValidModeParam(GetIspcmodeParamKey());
+    return ReadValidIspcmodeParam();
 }
 
 bool DualModeHelper::IsDualModeDevice()
 {
     // Read system parameters directly each call (no cache).
     // A dual-mode device requires both ispcmode and mainmode to be valid (0 or 1).
-    int32_t ispcmode = ReadValidModeParam(GetIspcmodeParamKey());
+    int32_t ispcmode = ReadValidIspcmodeParam();
     int32_t mainmode = ReadValidModeParam(GetMainmodeParamKey());
     return IsValidModeValue(ispcmode) && IsValidModeValue(mainmode);
 }
@@ -119,7 +138,7 @@ bool DualModeHelper::IsSecondaryMode()
 {
     // Read system parameters directly each call (no cache).
     // Non-dual-mode device (either param invalid) is never secondary.
-    int32_t ispcmode = ReadValidModeParam(GetIspcmodeParamKey());
+    int32_t ispcmode = ReadValidIspcmodeParam();
     int32_t mainmode = ReadValidModeParam(GetMainmodeParamKey());
     if (!IsValidModeValue(ispcmode) || !IsValidModeValue(mainmode)) {
         return false;
