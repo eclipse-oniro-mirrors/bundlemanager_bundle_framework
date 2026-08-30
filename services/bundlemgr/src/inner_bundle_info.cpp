@@ -2208,6 +2208,8 @@ void InnerBundleInfo::UpdateBaseBundleInfo(const BundleInfo &bundleInfo, bool is
         baseBundleInfo_->mainEntry = bundleInfo.mainEntry;
         baseBundleInfo_->entryModuleName = bundleInfo.entryModuleName;
     }
+    baseBundleInfo_->deviceModeDistributionPolicy = bundleInfo.deviceModeDistributionPolicy;
+    baseBundleInfo_->appSandboxPolicy = bundleInfo.appSandboxPolicy;
 }
 
 void InnerBundleInfo::UpdateBaseApplicationInfo(const InnerBundleInfo &newInfo)
