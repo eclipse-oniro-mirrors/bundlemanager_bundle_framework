@@ -2908,6 +2908,25 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
         std::lock_guard lock {mtx};
         InnerBundleInfo oldInfo;
         InitTempBundleFromCache(oldInfo, isAppExist_, bundleName);
+        // Preset primary variant (original name) in secondary mode: a generic lookup hits the
+        // clone variant in bundleInfos_, but the primary is actually in tempBundleInfos_.
+        // Re-fetch the primary (the clone key was already routed by InitTempBundleFromCache).
+        if (isAppExist_ && DualModeHelper::IsSecondaryMode()
+            && !DualModeHelper::IsDualModeCloneKey(bundleName)
+            && oldInfo.IsDualModeCloneApp()) {
+            InnerBundleInfo primaryInfo;
+            if (dataMgr_->FetchTempBundleInfo(bundleName, primaryInfo)) {
+                oldInfo = primaryInfo;
+                tempInfo_.SetTempBundleInfo(oldInfo);
+            } else {
+                // Primary variant is absent (first-boot primary failed but clone succeeded):
+                // treat as a fresh install so the !isAppExist_ branch re-installs the primary
+                // instead of silently misrouting user-data creation to the clone.
+                LOG_W(BMS_TAG_INSTALLER, "primary variant absent for %{public}s, fallback to fresh install",
+                    bundleName.c_str());
+                isAppExist_ = false;
+            }
+        }
         if (isAppExist_) {
             if (oldInfo.GetApplicationBundleType() == BundleType::SHARED) {
                 LOG_D(BMS_TAG_INSTALLER, "shared bundle (%{public}s) is irrelevant to user", bundleName.c_str());
@@ -2990,8 +3009,24 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
             userGuard.Dismiss();
             uid = oldInfo.GetUid(userId_);
             GetInstallEventInfo(oldInfo, sysEventInfo_);
-            if (!dataMgr_->UpdateInnerBundleInfo(oldInfo, true)) {
-                if (!dataMgr_->UpdateInnerBundleInfo(oldInfo, true)) {
+            bool toTempBundle = false;
+            if (DualModeHelper::IsDualModeDevice()) {
+                DeviceModeDistributionPolicy oldPolicy = oldInfo.GetDeviceModeDistributionPolicy();
+                if (DualModeHelper::IsDiffPackageCategory(oldPolicy)) {
+                    // Different-package: clone/primary variant routing (4-case truth table).
+                    toTempBundle = oldInfo.IsDualModeCloneApp()
+                        ? !DualModeHelper::IsSecondaryMode()
+                        : DualModeHelper::IsSecondaryMode();
+                } else if (oldPolicy == DeviceModeDistributionPolicy::MAIN_ONLY) {
+                    // MAIN_ONLY belongs to primary mode; hide when currently in secondary.
+                    toTempBundle = DualModeHelper::IsSecondaryMode();
+                } else if (oldPolicy == DeviceModeDistributionPolicy::SUB_ONLY) {
+                    // SUB_ONLY belongs to secondary mode; hide when currently in primary.
+                    toTempBundle = !DualModeHelper::IsSecondaryMode();
+                }
+            }
+            if (!dataMgr_->UpdateInnerBundleInfo(oldInfo, true, toTempBundle)) {
+                if (!dataMgr_->UpdateInnerBundleInfo(oldInfo, true, toTempBundle)) {
                     LOG_W(BMS_TAG_INSTALLER, "save mark failed, -n:%{public}s", bundleName_.c_str());
                     return ERR_APPEXECFWK_UPDATE_BUNDLE_ERROR;
                 }
@@ -5894,8 +5929,11 @@ bool BaseBundleInstaller::ShouldUseDualModeCloneName(const InstallParam &install
     if (dualModeInstallRole_ == DualModeInstallRole::PRIMARY) {
         return false;
     }
-    // Non-preinstall (NONE): existing behavior - clone only when currently in secondary mode and the
-    // policy is a different-package category.
+    // role=NONE: preset primary variant keeps the original name; normal install follows
+    // NeedDualModeHandle (secondary + different-package -> clone name).
+    if (installParam.isPreInstallApp) {
+        return false;
+    }
     return DualModeHelper::NeedDualModeHandle(GetEffectiveDualModePolicy(installParam));
 }
 
@@ -5928,6 +5966,12 @@ void BaseBundleInstaller::InitDualModeBundleName(const InstallParam &installPara
     // === DUAL_MODE: Handle bundle name prefix for secondary mode different-package apps ===
     // Set dualModeBundleName_ early so that GetEffectiveBundleName() works correctly
     // in all subsequent operations (CreateBundleCodeDir, RenameModuleDir, etc.)
+    // OTA/pre-install retry with forceDualModeCloneInstall: ResolveDualModePolicy is skipped for
+    // OTA (isOTA gates its call), so set the role here to enable both clone naming
+    // (ShouldUseDualModeCloneName) and cross-mode storage detection (IsCrossModeInstall).
+    if (installParam.forceDualModeCloneInstall && dualModeInstallRole_ == DualModeInstallRole::NONE) {
+        dualModeInstallRole_ = DualModeInstallRole::SECONDARY;
+    }
     if (ShouldUseDualModeCloneName(installParam)) {
         dualModeBundleName_ = DualModeHelper::GetDualModeBundleName(bundleName_);
         LOG_I(BMS_TAG_INSTALLER, "Dual mode install: original=%{public}s -> prefixed=%{public}s",
@@ -5975,6 +6019,11 @@ ErrCode BaseBundleInstaller::SetDualModeAppInfo(const InstallParam &installParam
         return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
     }
 
+    // MAIN_ONLY / SUB_ONLY are mode-exclusive policies: the app belongs to the "other" mode when
+    // the current mode doesn't match. Normal installs reject this (the app wouldn't be visible after
+    // install). Pre-install must install both modes' apps regardless of the current boot mode —
+    // cross-mode storage (IsCrossModeInstall + tempBundleInfos_) handles hiding the other-mode
+    // variant until a mode switch makes it visible.
     bool isSecondary = DualModeHelper::IsSecondaryMode();
     if ((policyValue == static_cast<int32_t>(DeviceModeDistributionPolicy::MAIN_ONLY) && isSecondary) ||
         (policyValue == static_cast<int32_t>(DeviceModeDistributionPolicy::SUB_ONLY) && !isSecondary)) {
@@ -5982,6 +6031,7 @@ ErrCode BaseBundleInstaller::SetDualModeAppInfo(const InstallParam &installParam
             "(isSecondary=%{public}d)", policyValue, isSecondary);
         return ERR_APPEXECFWK_INSTALL_DUAL_MODE_POLICY_NOT_SUPPORTED;
     }
+
     // Dual-mode different-package is a system-level capability: any different-package app (primary or
     // secondary mode) must be a system app; reject non-system apps. isCloneApp (secondary mode) only
     // additionally sets the clone flag below.
@@ -5994,6 +6044,14 @@ ErrCode BaseBundleInstaller::SetDualModeAppInfo(const InstallParam &installParam
                 return ERR_APPEXECFWK_INSTALL_DUAL_MODE_NOT_SYSTEM_APP;
             }
         }
+    }
+    // OTA/pre-install retry with forceDualModeCloneInstall: ResolveDualModePolicy is skipped for
+    // OTA (isOTA gates its call), and InitDualModeBundleName runs after ParseHapFiles. Set the
+    // role here so ShouldUseDualModeCloneName returns true and IsDualModeCloneApp is set on the
+    // info — without this, AddInnerBundleInfo would look up installStates_ by the original name
+    // instead of the clone key and fail ("bundle is not installed").
+    if (installParam.forceDualModeCloneInstall && dualModeInstallRole_ == DualModeInstallRole::NONE) {
+        dualModeInstallRole_ = DualModeInstallRole::SECONDARY;
     }
     bool isCloneApp = ShouldUseDualModeCloneName(installParam);
     for (auto &infoPair : infos) {
@@ -6070,10 +6128,8 @@ void BaseBundleInstaller::ResolveDualModePolicy(const std::vector<std::string> &
     }
     DeviceModeDistributionPolicy distPolicy = static_cast<DeviceModeDistributionPolicy>(policy);
     resolvedDeviceModeDistributionPolicy_ = distPolicy;
-    dualModeErmsCache_.ermsQueried = true;
     dualModeErmsCache_.policy = distPolicy;
     dualModeErmsCache_.bundleName = bundleName;
-    dualModeErmsCache_.bundleDir = bundleDir;
 
     if (!DualModeHelper::IsDiffPackageCategory(distPolicy) || modeHapMap.empty()) {
         // Same package or no per-mode split: install the whole directory as one bundle.
@@ -7639,6 +7695,10 @@ void BaseBundleInstaller::ResetInstallProperties()
     dualModeBundleName_.clear();
     beforeDeviceModeDistributionPolicy_ = DeviceModeDistributionPolicy::UNSPECIFIED;
     beforeAppSandboxPolicy_ = AppSandboxPolicy::SHARED_SANDBOX;
+    dualModeInstallRole_ = DualModeInstallRole::NONE;
+    resolvedDeviceModeDistributionPolicy_ = DeviceModeDistributionPolicy::UNSPECIFIED;
+    dualModeErmsCache_ = DualModeErmsCache{};
+    tempInfo_ = InstallerBundleTempInfo{};
     isModuleUpdate_ = false;
     isEntryInstalled_ = false;
     isHnpInstalled_ = false;

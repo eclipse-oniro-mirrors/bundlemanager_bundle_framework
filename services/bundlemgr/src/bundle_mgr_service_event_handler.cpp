@@ -2012,8 +2012,15 @@ bool BMSEventHandler::LoadAllPreInstallBundleInfos()
 
     std::vector<PreInstallBundleInfo> preInstallBundleInfos = dataMgr->GetAllPreInstallBundleInfos();
     for (auto &iter : preInstallBundleInfos) {
-        LOG_D(BMS_TAG_DEFAULT, "load preInstallBundleInfos: %{public}s ", iter.GetBundleName().c_str());
-        loadExistData_.emplace(iter.GetBundleName(), iter);
+        // Dual-mode: key by the storage key (clone-prefixed name for the secondary variant) so
+        // primary and clone entries — both carrying the same original bundleName — coexist in
+        // the map. HandlePreInstallBundleNamesException looks up by the exception bundle name
+        // (clone key for the secondary variant), so the clone entry must be findable.
+        std::string storageKey = iter.IsDualModeCloneApp()
+            ? DualModeHelper::GetDualModeBundleName(iter.GetBundleName())
+            : iter.GetBundleName();
+        LOG_D(BMS_TAG_DEFAULT, "load preInstallBundleInfos: %{public}s ", storageKey.c_str());
+        loadExistData_.emplace(storageKey, iter);
     }
 
     hasLoadAllPreInstallBundleInfosFromDb_ = true;
@@ -4127,16 +4134,19 @@ void BMSEventHandler::HandlePreInstallBundleNamesException(
         }
 
         const auto &preInstallBundleInfo = iter->second;
+        bool forceClone = preInstallBundleInfo.IsDualModeCloneApp();
+        auto distPolicy = preInstallBundleInfo.GetDeviceModeDistributionPolicy();
         bool ret = false;
         if (!xmlMap_.empty()) {
             std::vector<int32_t> userIds;
             std::string bundleName = bundleNameIter;
             GetBundleNameAndUserIdFromPath(preInstallBundleInfo.GetBundlePaths().front(), userIds, bundleName);
             ret = OTAInstallSystemBundleTargetUser(preInstallBundleInfo.GetBundlePaths(), bundleNameIter,
-                Constants::AppType::SYSTEM_APP, preInstallBundleInfo.IsRemovable(), userIds);
+                Constants::AppType::SYSTEM_APP, preInstallBundleInfo.IsRemovable(), userIds, false, forceClone,
+                distPolicy);
         } else {
             ret = OTAInstallSystemBundle(preInstallBundleInfo.GetBundlePaths(),
-                Constants::AppType::SYSTEM_APP, preInstallBundleInfo.IsRemovable());
+                Constants::AppType::SYSTEM_APP, preInstallBundleInfo.IsRemovable(), forceClone, distPolicy);
         }
         if (!ret) {
             LOG_NOFUNC_W(BMS_TAG_DEFAULT, "HandlePreInstallException bundleName(%{public}s) error",
@@ -4154,7 +4164,9 @@ void BMSEventHandler::HandlePreInstallBundleNamesException(
 bool BMSEventHandler::OTAInstallSystemBundle(
     const std::vector<std::string> &filePaths,
     Constants::AppType appType,
-    bool removable)
+    bool removable,
+    bool forceDualModeCloneInstall,
+    DeviceModeDistributionPolicy deviceModeDistributionPolicy)
 {
     if (filePaths.empty()) {
         LOG_E(BMS_TAG_DEFAULT, "File path is empty");
@@ -4170,6 +4182,8 @@ bool BMSEventHandler::OTAInstallSystemBundle(
     installParam.copyHapToInstallPath = false;
     installParam.isOTA = true;
     installParam.preinstallSourceFlag = ApplicationInfoFlag::FLAG_OTA_INSTALLED;
+    installParam.forceDualModeCloneInstall = forceDualModeCloneInstall;
+    installParam.deviceModeDistributionPolicy = deviceModeDistributionPolicy;
     SystemBundleInstaller installer;
     ErrCode ret = installer.OTAInstallSystemBundle(filePaths, installParam, appType);
     if (ret == ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON) {
@@ -4215,7 +4229,8 @@ bool BMSEventHandler::OTAInstallSystemBundleNeedCheckUser(
 
 bool BMSEventHandler::OTAInstallSystemBundleTargetUser(const std::vector<std::string> &filePaths,
     const std::string &bundleName, Constants::AppType appType, bool removable, const std::vector<int32_t> &userIds,
-    bool isPatchDowngrade)
+    bool isPatchDowngrade, bool forceDualModeCloneInstall,
+    DeviceModeDistributionPolicy deviceModeDistributionPolicy)
 {
     if (filePaths.empty()) {
         LOG_E(BMS_TAG_DEFAULT, "File path is empty");
@@ -4235,6 +4250,8 @@ bool BMSEventHandler::OTAInstallSystemBundleTargetUser(const std::vector<std::st
     installParam.copyHapToInstallPath = false;
     installParam.isOTA = true;
     installParam.preinstallSourceFlag = ApplicationInfoFlag::FLAG_OTA_INSTALLED;
+    installParam.forceDualModeCloneInstall = forceDualModeCloneInstall;
+    installParam.deviceModeDistributionPolicy = deviceModeDistributionPolicy;
     // support patch app downgrade install
     if (isPatchDowngrade) {
         installParam.allowPatchDowngrade = true;

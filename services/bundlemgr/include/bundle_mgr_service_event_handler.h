@@ -472,7 +472,9 @@ private:
     bool OTAInstallSystemBundle(
         const std::vector<std::string> &filePaths,
         Constants::AppType appType,
-        bool removable);
+        bool removable,
+        bool forceDualModeCloneInstall = false,
+        DeviceModeDistributionPolicy deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNSPECIFIED);
 
     /**
      * @brief OTA Install system app and system vendor bundles.
@@ -503,7 +505,9 @@ private:
         Constants::AppType appType,
         bool removable,
         const std::vector<int32_t> &userIds,
-        bool isPatchDowngrade = false);
+        bool isPatchDowngrade = false,
+        bool forceDualModeCloneInstall = false,
+        DeviceModeDistributionPolicy deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNSPECIFIED);
     /**
      * @brief OTA Install system app and system vendor shared bundles.
      * @param filePaths Indicates the filePaths.

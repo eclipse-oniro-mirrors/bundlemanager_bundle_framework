@@ -66,10 +66,8 @@ enum class DualModeInstallRole {
 // drives the secondary pass. Instance-scoped, in-process only, not persisted, not marshalled.
 struct DualModeErmsCache {
     bool isDifferentPackage = false;
-    bool ermsQueried = false;
     DeviceModeDistributionPolicy policy = DeviceModeDistributionPolicy::UNSPECIFIED;
     std::string bundleName;
-    std::string bundleDir;
     std::vector<std::string> secondaryHaps;
 };
 class BaseBundleInstaller {
