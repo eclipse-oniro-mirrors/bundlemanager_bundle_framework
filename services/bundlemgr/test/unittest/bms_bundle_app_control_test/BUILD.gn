@@ -24,10 +24,17 @@ ohos_unittest("BmsBundleAppControlTest") {
   }
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = [ "${services_path}/bundlemgr/include/app_control" ]
+  include_dirs = [
+    "${services_path}/bundlemgr/include/app_control",
+    "${services_path}/bundlemgr/test/mock/include/parameter",
+  ]
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/bms_param.cpp" ]
+  sources += [
+    "${services_path}/bundlemgr/test/mock/src/parameter/parameter.cpp",
+    "${services_path}/bundlemgr/test/mock/src/parameter/parameters.cpp",
+  ]
   sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
   sources += [
     "${services_path}/bundlemgr/src/aot/aot_executor.cpp",
@@ -125,7 +132,10 @@ ohos_unittest("BmsBundleAppControlTest") {
       "${services_path}/bundlemgr/src/app_control/app_control_manager.cpp",
       "${services_path}/bundlemgr/src/app_control/app_control_manager_host_impl.cpp",
     ]
-    include_dirs += [ "${services_path}/bundlemgr/include/app_control" ]
+    include_dirs += [
+      "${services_path}/bundlemgr/include/app_control",
+      "${services_path}/bundlemgr/include",
+    ]
     external_deps += [ "c_utils:utils" ]
   }
   if (bundle_framework_free_install) {
@@ -294,7 +304,10 @@ ohos_unittest("BmsBundleMockAppControlTest") {
       "${services_path}/bundlemgr/src/app_control/app_control_manager.cpp",
       "${services_path}/bundlemgr/src/app_control/app_control_manager_host_impl.cpp",
     ]
-    include_dirs += [ "${services_path}/bundlemgr/include/app_control" ]
+    include_dirs += [
+      "${services_path}/bundlemgr/include/app_control",
+      "${services_path}/bundlemgr/include",
+    ]
     external_deps += [ "c_utils:utils" ]
   }
   if (bundle_framework_free_install) {
@@ -471,7 +484,10 @@ ohos_unittest("BmsBundleAppApiVersionTest") {
       "${services_path}/bundlemgr/src/app_control/app_control_manager.cpp",
       "${services_path}/bundlemgr/src/app_control/app_control_manager_host_impl.cpp",
     ]
-    include_dirs += [ "${services_path}/bundlemgr/include/app_control" ]
+    include_dirs += [
+      "${services_path}/bundlemgr/include/app_control",
+      "${services_path}/bundlemgr/include",
+    ]
     external_deps += [ "c_utils:utils" ]
   }
   if (bundle_framework_free_install) {
