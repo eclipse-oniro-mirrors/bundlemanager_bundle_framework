@@ -5078,17 +5078,24 @@ bool BundleDataMgr::GetBundleInfos(
         }
 
         int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
+        bool mainAppEnabled = true;
         if (CheckInnerBundleInfoWithFlags(innerBundleInfo, flags, responseUserId) != ERR_OK) {
-            continue;
+            if (innerBundleInfo.IsDisabled()) {
+                continue;
+            } else {
+                // main app is application-disabled, skip main app but still process clones
+                mainAppEnabled = false;
+            }
         }
 
-        BundleInfo bundleInfo;
-        if (!innerBundleInfo.GetBundleInfo(flags, bundleInfo, responseUserId)) {
-            continue;
+        if (mainAppEnabled) {
+            BundleInfo bundleInfo;
+            if (!innerBundleInfo.GetBundleInfo(flags, bundleInfo, responseUserId)) {
+                continue;
+            }
+            bundleInfos.emplace_back(std::move(bundleInfo));
+            find = true;
         }
-
-        bundleInfos.emplace_back(std::move(bundleInfo));
-        find = true;
         // add clone bundle info
         // flags convert
         GetCloneBundleInfos(innerBundleInfo, flags, responseUserId, bundleInfos);
@@ -6858,6 +6865,12 @@ ErrCode BundleDataMgr::GetInnerBundleInfoForClone(const std::string &bundleName,
     if (innerBundleInfo.IsDisabled()) {
         APP_LOGW("bundleName: %{public}s status is disabled", innerBundleInfo.GetBundleName().c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_DISABLED;
+    }
+    int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
+    bool isEnabled = false;
+    auto ret = innerBundleInfo.GetApplicationEnabledV9(responseUserId, isEnabled, appIndex);
+    if (ret != ERR_OK) {
+        return ret;
     }
     if (appIndex != Constants::MAIN_APP_INDEX &&
         (appIndex <= Constants::MAIN_APP_INDEX || appIndex > Constants::INITIAL_SANDBOX_APP_INDEX) &&
