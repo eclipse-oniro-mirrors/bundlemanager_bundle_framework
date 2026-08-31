@@ -16,6 +16,7 @@
 #ifndef FOUNDATION_DEFAULT_APPLICATION_FRAMEWORK_DEFAULT_APP_MGR
 #define FOUNDATION_DEFAULT_APPLICATION_FRAMEWORK_DEFAULT_APP_MGR
 
+#include <map>
 #include <mutex>
 #include <set>
 
@@ -24,11 +25,13 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+class BundleDataMgr;
 class DefaultAppMgr {
 public:
     static DefaultAppMgr& GetInstance();
     static bool VerifyElementFormat(const Element& element);
     static std::vector<std::string> Normalize(const std::string& param);
+    static bool HasDefaultAppPermission(int32_t userId, const std::string& normalizedType, const Element& element);
 
     ErrCode IsDefaultApplication(int32_t userId, const std::string& type, bool& isDefaultApp) const;
     ErrCode GetDefaultApplication(
@@ -37,6 +40,11 @@ public:
     ErrCode SetDefaultApplicationForCustom(int32_t userId, const std::string& type,
         const Element& element) const;
     ErrCode ResetDefaultApplication(int32_t userId, const std::string& type) const;
+
+    ErrCode GetDefaultApplicationCandidates(int32_t userId, const std::string& type,
+        int32_t abilityFlags, std::vector<AbilityInfo>& abilityInfos) const;
+
+    ErrCode VerifyPermission(const std::string& permissionName) const;
 
     void HandleUninstallBundle(int32_t userId, const std::string& bundleName, const int32_t appIndex) const;
     void HandleInstallBundle(int32_t userId, const std::string& bundleName) const;
@@ -53,6 +61,8 @@ private:
     static bool IsAppType(const std::string& param);
     static bool IsSpecificMimeType(const std::string& param);
 
+    void CollectBrowserCandidates(int32_t userId, int32_t abilityFlags, const std::shared_ptr<BundleDataMgr> dataMgr,
+        std::vector<AbilityInfo>& result) const;
     void Init();
     ErrCode GetBundleInfoByAppType(
         int32_t userId, const std::string& appType, BundleInfo& bundleInfo, bool backup = false) const;
@@ -63,7 +73,7 @@ private:
     bool MatchAppType(const std::string& type, const std::vector<Skill>& skills) const;
     bool MatchUtd(const std::string& utd, const std::vector<Skill>& skills) const;
     bool IsElementEmpty(const Element& element) const;
-    bool IsElementValid(int32_t userId, const std::string& type, const Element& element) const;
+    ErrCode IsElementValid(int32_t userId, const std::string& type, const Element& element) const;
     bool IsUserIdExist(int32_t userId) const;
     bool IsBrowserSkillsValid(const std::vector<Skill>& skills) const;
     bool IsEmailSkillsValid(const std::vector<Skill>& skills) const;
@@ -72,7 +82,7 @@ private:
     std::string GetTypeFromWant(const AAFwk::Want& want) const;
     bool MatchActionAndType(const std::string& action, const std::string& type, const std::vector<Skill>& skills) const;
     bool GetBrokerBundleInfo(const Element& element, BundleInfo& bundleInfo) const;
-    ErrCode VerifyPermission(const std::string& permissionName) const;
+    bool IsPresetDefaultApp(const std::string& type, const Element& element) const;
 
     ErrCode IsDefaultApplicationInternal(int32_t userId, const std::string& normalizedType, bool& isDefaultApp) const;
     ErrCode GetDefaultApplicationInternal(
@@ -92,6 +102,9 @@ private:
     int32_t GetEdcUserId(int32_t userId) const;
 
     mutable std::mutex mutex_;
+    mutable std::mutex presetMutex_;
+    mutable std::map<std::string, Element> presetCache_;
+    mutable bool presetCacheLoaded_ = false;
     std::shared_ptr<IDefaultAppDb> defaultAppDb_;
 };
 }

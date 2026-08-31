@@ -349,6 +349,17 @@ ohos_unittest("BmsBundleDefaultAppMgrTest") {
   if (bundle_framework_default_app) {
     sources += default_app
     defines += [ "BUNDLE_FRAMEWORK_DEFAULT_APP" ]
+    # link-time stand-in for the cloud-push switch: the production version reads a conf file that
+    # does not exist in the test sandbox, this mock lets cases drive the granted/denied branch
+    sources -= [ "${services_path}/bundlemgr/src/default_app/browser_permission_config.cpp" ]
+    sources += [
+      "${services_path}/bundlemgr/test/unittest/bms_bundle_default_app_test/mock/mock_browser_permission_config.cpp",
+    ]
+    # the browser-permission cases drive VerifyPermissionByCallingTokenId via the seam declared in
+    # test/mock/src/bundle_permission_mgr.cpp; the real src/bundle_permission_mgr.cpp does not
+    # define it, so swap in the mock like every other default-app-adjacent test target does.
+    sources -= [ "${services_path}/bundlemgr/src/bundle_permission_mgr.cpp" ]
+    sources += [ "${services_path}/bundlemgr/test/mock/src/bundle_permission_mgr.cpp" ]
   }
 
   if (storage_service_enable) {

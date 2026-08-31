@@ -31,6 +31,8 @@ public:
         const std::string& type, const Want& want) override;
     virtual ErrCode SetDefaultApplicationForCustom(const int32_t userId, const std::string& type,
         const Want& want) override;
+    virtual ErrCode GetDefaultApplicationCandidates(int32_t userId, const std::string& type,
+        int32_t abilityFlags, std::vector<AbilityInfo>& abilityInfos) override;
 private:
     std::string GetCallerName();
     ErrCode InnerSetDefaultApplication(const int32_t userId, const int32_t appIndex, const std::string& type,

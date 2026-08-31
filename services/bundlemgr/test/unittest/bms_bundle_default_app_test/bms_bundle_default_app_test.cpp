@@ -170,6 +170,8 @@ void BmsBundleDefaultAppTest::SetUp()
 {
     StartInstalldService();
     InstallBundle(BUNDLE_PATH);
+    // reset the preset cache so cases with different -1 slot contents stay isolated
+    DefaultAppMgr::GetInstance().presetCacheLoaded_ = false;
 }
 
 void BmsBundleDefaultAppTest::TearDown()
@@ -1828,8 +1830,7 @@ HWTEST_F(BmsBundleDefaultAppTest, IsElementValid_0100, Function | MediumTest | L
 
     ClearDataMgr();
     ScopeGuard stateGuard([&] { ResetDataMgr(); });
-    ret = DefaultAppMgr::GetInstance().IsElementValid(USER_ID, "", element);
-    EXPECT_EQ(ret, false);
+    EXPECT_NE(DefaultAppMgr::GetInstance().IsElementValid(USER_ID, "", element), ERR_OK);
 }
 
 /**

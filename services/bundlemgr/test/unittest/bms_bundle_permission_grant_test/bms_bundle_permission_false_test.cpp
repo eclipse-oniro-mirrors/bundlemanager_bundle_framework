@@ -1676,25 +1676,25 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_14000, Funct
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_15000, Function | SmallTest | Level1)
 {
     Element element;
-    bool ret = DefaultAppMgr::GetInstance().IsElementValid(
+    ErrCode ret = DefaultAppMgr::GetInstance().IsElementValid(
         USERID, DEFAULT_APP_VIDEO, element);
-    EXPECT_EQ(ret, false);
+    EXPECT_NE(ret, ERR_OK);
 
     element.bundleName = BUNDLE_NAME;
     ret = DefaultAppMgr::GetInstance().IsElementValid(
         USERID, DEFAULT_APP_VIDEO, element);
-    EXPECT_EQ(ret, false);
+    EXPECT_NE(ret, ERR_OK);
 
     element.moduleName = BUNDLE_NAME;
     ret = DefaultAppMgr::GetInstance().IsElementValid(
         USERID, DEFAULT_APP_VIDEO, element);
-    EXPECT_EQ(ret, false);
+    EXPECT_NE(ret, ERR_OK);
 
     element.abilityName = BUNDLE_NAME;
     element.extensionName = BUNDLE_NAME;
     ret = DefaultAppMgr::GetInstance().IsElementValid(
         USERID, DEFAULT_APP_VIDEO, element);
-    EXPECT_EQ(ret, false);
+    EXPECT_NE(ret, ERR_OK);
 }
 
 /**
@@ -1709,9 +1709,9 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_16000, Funct
     element.moduleName = BUNDLE_NAME;
     element.abilityName = BUNDLE_NAME;
     element.extensionName = "";
-    bool ret = DefaultAppMgr::GetInstance().IsElementValid(
+    ErrCode ret = DefaultAppMgr::GetInstance().IsElementValid(
         USERID, DEFAULT_APP_VIDEO, element);
-    EXPECT_EQ(ret, false);
+    EXPECT_NE(ret, ERR_OK);
 }
 
 /**

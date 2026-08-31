@@ -106,5 +106,14 @@ napi_value SetDefaultApplicationForAppClone(napi_env env, napi_callback_info inf
     napi_throw(env, error);
     return nullptr;
 }
+
+napi_value GetDefaultApplicationCandidates(napi_env env, napi_callback_info info)
+{
+    APP_LOGE("SystemCapability.BundleManager.BundleFramework.DefaultApp not supported");
+    napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
+        GET_DEFAULT_APPLICATION_CANDIDATES);
+    napi_throw(env, error);
+    return nullptr;
+}
 } // AppExecFwk
 } // OHOS

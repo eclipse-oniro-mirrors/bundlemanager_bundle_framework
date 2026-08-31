@@ -406,6 +406,7 @@ enum class DefaultAppInterfaceCode : uint8_t {
     RESET_DEFAULT_APPLICATION = 3,
     SET_DEFAULT_APPLICATION_FOR_APP_CLONE = 4,
     SET_DEFAULT_APPLICATION_FOR_CUSTOM = 5,
+    GET_DEFAULT_APPLICATION_CANDIDATES = 6,
 };
 
 /* SAID: 401-100 Interface No.100 subservice also provides the following interfaces */

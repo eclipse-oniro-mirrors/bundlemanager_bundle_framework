@@ -37,6 +37,31 @@ ErrCode DefaultAppHostImpl::GetDefaultApplication(int32_t userId, const std::str
     return DefaultAppMgr::GetInstance().GetDefaultApplication(userId, type, bundleInfo);
 }
 
+ErrCode DefaultAppHostImpl::GetDefaultApplicationCandidates(int32_t userId, const std::string& type,
+    int32_t abilityFlags, std::vector<AbilityInfo>& abilityInfos)
+{
+    ErrCode permRet = DefaultAppMgr::GetInstance().VerifyPermission(
+        Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+    if (permRet != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "verify permission failed");
+        return permRet;
+    }
+    if (!BundlePermissionMgr::VerifyAcrossUserPermission(userId)) {
+        LOG_E(BMS_TAG_DEFAULT, "verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    if (!dataMgr->HasUserId(userId)) {
+        LOG_E(BMS_TAG_DEFAULT, "userId not exist");
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    return DefaultAppMgr::GetInstance().GetDefaultApplicationCandidates(userId, type, abilityFlags, abilityInfos);
+}
+
 ErrCode DefaultAppHostImpl::SetDefaultApplication(int32_t userId, const std::string& type, const Want& want)
 {
     return InnerSetDefaultApplication(userId, Constants::DEFAULT_APP_INDEX, type, want);

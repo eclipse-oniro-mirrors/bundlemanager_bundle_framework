@@ -46,6 +46,15 @@ static ani_object AniGetDefaultApplication(ani_env *env,
     return nullptr;
 }
 
+static ani_object AniGetDefaultApplicationCandidates(ani_env *env,
+    ani_string aniType, ani_int aniAbilityFlags, ani_int aniUserId)
+{
+    APP_LOGI("SystemCapability.BundleManager.BundleFramework.DefaultApp not supported");
+    BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
+        GET_DEFAULT_APPLICATION_CANDIDATES, "");
+    return nullptr;
+}
+
 static void AniSetDefaultApplication(ani_env *env,
     ani_string aniType, ani_object aniElementName, ani_int aniUserId, ani_boolean aniIsSync)
 {
@@ -92,6 +101,8 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
         ani_native_function { "isDefaultApplicationNative", nullptr, reinterpret_cast<void*>(AniIsDefaultApplication) },
         ani_native_function { "getDefaultApplicationNative", nullptr,
             reinterpret_cast<void*>(AniGetDefaultApplication) },
+        ani_native_function { "getDefaultApplicationCandidatesNative", nullptr,
+            reinterpret_cast<void*>(AniGetDefaultApplicationCandidates) },
         ani_native_function { "setDefaultApplicationNative", nullptr,
             reinterpret_cast<void*>(AniSetDefaultApplication) },
         ani_native_function { "resetDefaultApplicationNative", nullptr,

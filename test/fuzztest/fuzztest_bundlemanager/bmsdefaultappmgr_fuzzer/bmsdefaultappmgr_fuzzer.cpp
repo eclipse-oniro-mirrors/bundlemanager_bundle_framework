@@ -60,7 +60,7 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     ret = DefaultAppMgr::GetInstance().IsMatch(type, skills);
     ret = DefaultAppMgr::GetInstance().IsUserIdExist(userId);
     ret = DefaultAppMgr::GetInstance().IsElementEmpty(element);
-    ret = DefaultAppMgr::GetInstance().IsElementValid(userId, type, element);
+    (void)DefaultAppMgr::GetInstance().IsElementValid(userId, type, element);
     ret = DefaultAppMgr::GetInstance().IsEmailWant(want);
     auto str = DefaultAppMgr::GetInstance().GetTypeFromWant(want);
     ret = DefaultAppMgr::GetInstance().IsEmailSkillsValid(skills);

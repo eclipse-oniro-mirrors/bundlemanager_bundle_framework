@@ -25,6 +25,11 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+constexpr size_t MAX_PARCEL_CAPACITY_OF_ASHMEM = 1024 * 1024 * 1024; // max allow 1 GB resource size
+constexpr size_t MAX_IPC_ALLOWED_CAPACITY = 100 * 1024 * 1024; // max ipc size 100MB
+const std::string DEFAULT_APP_ASHMEM_NAME = "defaultAppAshmemName";
+}
 DefaultAppHost::DefaultAppHost()
 {
     LOG_D(BMS_TAG_DEFAULT, "create DefaultAppHost");
@@ -60,6 +65,8 @@ int DefaultAppHost::OnRemoteRequest(
             return HandleSetDefaultApplicationForAppClone(data, reply);
         case static_cast<uint32_t>(DefaultAppInterfaceCode::SET_DEFAULT_APPLICATION_FOR_CUSTOM):
             return HandleSetDefaultApplicationForCustom(data, reply);
+        case static_cast<uint32_t>(DefaultAppInterfaceCode::GET_DEFAULT_APPLICATION_CANDIDATES):
+            return HandleGetDefaultApplicationCandidates(data, reply);
         default:
             LOG_W(BMS_TAG_DEFAULT, "DefaultAppHost receive unknown code, code =  %{public}d", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -174,6 +181,93 @@ ErrCode DefaultAppHost::HandleSetDefaultApplicationForCustom(Parcel& data, Parce
     ErrCode ret = SetDefaultApplicationForCustom(userId, type, *want);
     if (!reply.WriteInt32(ret)) {
         LOG_NOFUNC_E(BMS_TAG_DEFAULT, "write ret failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode DefaultAppHost::HandleGetDefaultApplicationCandidates(MessageParcel& data, MessageParcel& reply)
+{
+    LOG_I(BMS_TAG_DEFAULT, "begin to HandleGetDefaultApplicationCandidates");
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    int32_t userId = data.ReadInt32();
+    std::string type = data.ReadString();
+    int32_t abilityFlags = data.ReadInt32();
+    std::vector<AbilityInfo> abilityInfos;
+    ErrCode ret = GetDefaultApplicationCandidates(userId, type, abilityFlags, abilityInfos);
+    if (!reply.WriteInt32(ret)) {
+        LOG_E(BMS_TAG_DEFAULT, "write ret failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret != ERR_OK) {
+        return ERR_OK;
+    }
+    return WriteVectorToParcel<AbilityInfo>(abilityInfos, reply);
+}
+
+int32_t DefaultAppHost::AllocatAshmemNum()
+{
+    std::lock_guard<std::mutex> lock(bundleAshmemMutex_);
+    return ashmemNum_++;
+}
+
+ErrCode DefaultAppHost::WriteParcelableIntoAshmem(MessageParcel& tempParcel, MessageParcel& reply)
+{
+    size_t dataSize = tempParcel.GetDataSize();
+    sptr<Ashmem> ashmem = Ashmem::CreateAshmem(
+        (DEFAULT_APP_ASHMEM_NAME + std::to_string(AllocatAshmemNum())).c_str(), dataSize);
+    if (ashmem == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "Create shared memory failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    if (!ashmem->MapReadAndWriteAshmem()) {
+        LOG_E(BMS_TAG_DEFAULT, "Map shared memory fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    int32_t offset = 0;
+    if (!ashmem->WriteToAshmem(reinterpret_cast<uint8_t *>(tempParcel.GetData()), dataSize, offset)) {
+        LOG_E(BMS_TAG_DEFAULT, "Write info to shared memory fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    if (!reply.WriteAshmem(ashmem)) {
+        LOG_E(BMS_TAG_DEFAULT, "Write ashmem to reply fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+template<typename T>
+ErrCode DefaultAppHost::WriteVectorToParcel(std::vector<T>& parcelVector, MessageParcel& reply)
+{
+    MessageParcel tempParcel;
+    (void)tempParcel.SetMaxCapacity(MAX_PARCEL_CAPACITY_OF_ASHMEM);
+    if (!tempParcel.WriteInt32(parcelVector.size())) {
+        LOG_E(BMS_TAG_DEFAULT, "write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    for (auto &parcel : parcelVector) {
+        if (!tempParcel.WriteParcelable(&parcel)) {
+            LOG_E(BMS_TAG_DEFAULT, "write failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+    std::vector<T>().swap(parcelVector);
+
+    size_t dataSize = tempParcel.GetDataSize();
+    if (!reply.WriteUint32(dataSize)) {
+        LOG_E(BMS_TAG_DEFAULT, "write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    if (dataSize > MAX_IPC_ALLOWED_CAPACITY) {
+        LOG_I(BMS_TAG_DEFAULT, "datasize is too large, use ashmem");
+        return WriteParcelableIntoAshmem(tempParcel, reply);
+    }
+    if (!reply.WriteRawData(reinterpret_cast<uint8_t *>(tempParcel.GetData()), dataSize)) {
+        LOG_E(BMS_TAG_DEFAULT, "write parcel failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;

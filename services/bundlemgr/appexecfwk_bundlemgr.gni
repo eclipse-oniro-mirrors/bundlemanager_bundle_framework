@@ -130,6 +130,7 @@ default_app = [
   "${services_path}/bundlemgr/src/default_app/default_app_data.cpp",
   "${services_path}/bundlemgr/src/default_app/default_app_host_impl.cpp",
   "${services_path}/bundlemgr/src/default_app/default_app_mgr.cpp",
+  "${services_path}/bundlemgr/src/default_app/browser_permission_config.cpp",
 ]
 
 sandbox_app = [

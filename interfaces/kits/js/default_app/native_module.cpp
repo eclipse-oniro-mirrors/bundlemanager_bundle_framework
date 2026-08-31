@@ -54,6 +54,7 @@ static napi_value DefaultAppExport(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("isDefaultApplicationSync", IsDefaultApplicationSync),
         DECLARE_NAPI_FUNCTION("getDefaultApplication", GetDefaultApplication),
         DECLARE_NAPI_FUNCTION("getDefaultApplicationSync", GetDefaultApplicationSync),
+        DECLARE_NAPI_FUNCTION("getDefaultApplicationCandidates", GetDefaultApplicationCandidates),
         DECLARE_NAPI_FUNCTION("setDefaultApplication", SetDefaultApplication),
         DECLARE_NAPI_FUNCTION("setDefaultApplicationSync", SetDefaultApplicationSync),
         DECLARE_NAPI_FUNCTION("resetDefaultApplication", ResetDefaultApplication),

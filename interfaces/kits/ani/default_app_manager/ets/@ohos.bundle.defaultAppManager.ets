@@ -21,6 +21,7 @@
 import { AsyncCallback, BusinessError } from '@ohos.base';
 import { BundleInfo } from 'bundleManager.BundleInfo';
 import { ElementName } from 'bundleManager.ElementName';
+import { AbilityInfo } from 'bundleManager.AbilityInfo';
 
 export default namespace defaultAppManager {
 
@@ -42,6 +43,7 @@ export default namespace defaultAppManager {
 
   native function isDefaultApplicationNative(type: string, isSync: boolean): boolean;
   native function getDefaultApplicationNative(type: string, userId: int, isSync: boolean): BundleInfo;
+  native function getDefaultApplicationCandidatesNative(type: string, abilityFlags: int, userId: int): Array<AbilityInfo>;
   native function setDefaultApplicationNative(type: string, elementName: ElementName, userId: int, isSync: boolean): void;
   native function resetDefaultApplicationNative(type: string, userId: int, isSync: boolean): void;
   native function setDefaultApplicationForAppCloneNative(type: string, elementName: ElementName, appIndex: int,
@@ -128,6 +130,24 @@ export default namespace defaultAppManager {
   function getDefaultApplicationSync(type: string, userId?: int): BundleInfo {
     let userIdInfo: int = userId ?? EMPTY_USER_ID;
     return getDefaultApplicationNative(type, userIdInfo, true);
+  }
+
+  function getDefaultApplicationCandidates(type: ApplicationType, abilityFlags: int, userId?: int): Promise<Array<AbilityInfo>> {
+    let userIdInfo: int = userId ?? EMPTY_USER_ID;
+    let p = new Promise<Array<AbilityInfo>>(
+      (resolve: (abilityInfos: Array<AbilityInfo>) => void, reject: (error: BusinessError) => void) => {
+      let cb = (): Array<AbilityInfo> => {
+        return getDefaultApplicationCandidatesNative(type, abilityFlags, userIdInfo);
+      };
+      let p1 = taskpool.execute(cb);
+      p1.then((e: Any) => {
+        let result: Array<AbilityInfo> = e as Array<AbilityInfo>;
+        resolve(result);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
+      });
+    });
+    return p;
   }
 
   function setDefaultApplication(type: string, elementName: ElementName, userId: int, callback: AsyncCallback<void>): void {

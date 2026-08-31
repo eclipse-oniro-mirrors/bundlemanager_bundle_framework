@@ -110,6 +110,41 @@ static ani_object AniGetDefaultApplication(ani_env *env,
     return CommonFunAni::ConvertDefaultAppBundleInfo(env, bundleInfo);
 }
 
+static ani_object AniGetDefaultApplicationCandidates(ani_env *env,
+    ani_string aniType, ani_int aniAbilityFlags, ani_int aniUserId)
+{
+    APP_LOGD("ani GetDefaultApplicationCandidates called");
+    std::string type;
+    if (!ParseType(env, aniType, type)) {
+        APP_LOGE("type invalid");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, TYPE_CHECK, TYPE_STRING);
+        return nullptr;
+    }
+    int32_t abilityFlags = static_cast<int32_t>(aniAbilityFlags);
+    if (aniUserId == EMPTY_USER_ID) {
+        aniUserId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    }
+    auto defaultAppProxy = CommonFunc::GetDefaultAppProxy();
+    if (defaultAppProxy == nullptr) {
+        APP_LOGE("defaultAppProxy is null");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_BUNDLE_SERVICE_EXCEPTION,
+            GET_DEFAULT_APPLICATION_CANDIDATES, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+        return nullptr;
+    }
+
+    std::vector<AbilityInfo> abilityInfos;
+    ErrCode ret = defaultAppProxy->GetDefaultApplicationCandidates(
+        aniUserId, type, abilityFlags, abilityInfos);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetDefaultApplicationCandidates failed ret: %{public}d", ret);
+        BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret),
+            GET_DEFAULT_APPLICATION_CANDIDATES, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+        return nullptr;
+    }
+
+    return CommonFunAni::ConvertAniArray(env, abilityInfos, CommonFunAni::ConvertAbilityInfo);
+}
+
 static void AniSetDefaultApplication(ani_env *env,
     ani_string aniType, ani_object aniElementName, ani_int aniUserId, ani_boolean aniIsSync)
 {
@@ -238,6 +273,8 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
         ani_native_function { "isDefaultApplicationNative", nullptr, reinterpret_cast<void*>(AniIsDefaultApplication) },
         ani_native_function { "getDefaultApplicationNative", nullptr,
             reinterpret_cast<void*>(AniGetDefaultApplication) },
+        ani_native_function { "getDefaultApplicationCandidatesNative", nullptr,
+            reinterpret_cast<void*>(AniGetDefaultApplicationCandidates) },
         ani_native_function { "setDefaultApplicationNative", nullptr,
             reinterpret_cast<void*>(AniSetDefaultApplication) },
         ani_native_function { "resetDefaultApplicationNative", nullptr,
