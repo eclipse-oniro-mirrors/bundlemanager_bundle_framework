@@ -37,6 +37,7 @@
 #include "dual_mode_helper.h"
 #include "inner_bundle_info.h"
 #include "install_param.h"
+#include "pre_install_bundle_info.h"
 #include "message_parcel.h"
 #include "nlohmann/json.hpp"
 #include "parameters.h"
@@ -171,6 +172,48 @@ static void DeleteUninstallBundleInfoForTest(const std::shared_ptr<BundleDataMgr
     for (const auto &bundleName : bundleNames) {
         (void)dataMgr->uninstallDataMgr_->DeleteUninstallBundleInfo(bundleName);
     }
+}
+
+// ====================== DualModeHelper::GetMainmode ======================
+
+HWTEST_F(BmsDualModeInstallTest, GetMainmode_0100, Function | SmallTest | Level0)
+{
+    SetDualModeCache(ServiceConstants::DUAL_MODE_VALUE_TABLET, ServiceConstants::DUAL_MODE_VALUE_TABLET);
+    EXPECT_EQ(DualModeHelper::GetMainmode(), ServiceConstants::DUAL_MODE_VALUE_TABLET);
+}
+
+HWTEST_F(BmsDualModeInstallTest, GetMainmode_0200, Function | SmallTest | Level0)
+{
+    SetDualModeCache(ServiceConstants::DUAL_MODE_VALUE_TABLET, ServiceConstants::DUAL_MODE_VALUE_2IN1);
+    EXPECT_EQ(DualModeHelper::GetMainmode(), ServiceConstants::DUAL_MODE_VALUE_2IN1);
+}
+
+HWTEST_F(BmsDualModeInstallTest, GetMainmode_0300, Function | SmallTest | Level0)
+{
+    SetDualModeCache(ServiceConstants::DUAL_MODE_VALUE_TABLET, ServiceConstants::DUAL_MODE_VALUE_INVALID);
+    EXPECT_EQ(DualModeHelper::GetMainmode(), ServiceConstants::DUAL_MODE_VALUE_INVALID);
+}
+
+// ====================== DualModeHelper::MapDeviceTypeToMode ======================
+
+HWTEST_F(BmsDualModeInstallTest, MapDeviceTypeToMode_0100, Function | SmallTest | Level0)
+{
+    EXPECT_EQ(DualModeHelper::MapDeviceTypeToMode("tablet"), ServiceConstants::DUAL_MODE_VALUE_TABLET);
+}
+
+HWTEST_F(BmsDualModeInstallTest, MapDeviceTypeToMode_0200, Function | SmallTest | Level0)
+{
+    EXPECT_EQ(DualModeHelper::MapDeviceTypeToMode("2in1"), ServiceConstants::DUAL_MODE_VALUE_2IN1);
+}
+
+HWTEST_F(BmsDualModeInstallTest, MapDeviceTypeToMode_0300, Function | SmallTest | Level0)
+{
+    EXPECT_EQ(DualModeHelper::MapDeviceTypeToMode("unknown"), ServiceConstants::DUAL_MODE_VALUE_INVALID);
+}
+
+HWTEST_F(BmsDualModeInstallTest, MapDeviceTypeToMode_0400, Function | SmallTest | Level0)
+{
+    EXPECT_EQ(DualModeHelper::MapDeviceTypeToMode(""), ServiceConstants::DUAL_MODE_VALUE_INVALID);
 }
 
 // ====================== DualModeHelper::IsDualModeDevice ======================
@@ -337,6 +380,29 @@ HWTEST_F(BmsDualModeInstallTest, IsDualModeCloneKey_0400, Function | SmallTest |
     EXPECT_FALSE(DualModeHelper::IsDualModeCloneKey(""));
 }
 
+// ====================== PreInstallBundleInfo dual-mode fields ======================
+
+HWTEST_F(BmsDualModeInstallTest, PreInstallBundleInfo_DualModeCloneApp_0100, Function | SmallTest | Level0)
+{
+    PreInstallBundleInfo info;
+    EXPECT_FALSE(info.IsDualModeCloneApp());
+    info.SetIsDualModeCloneApp(true);
+    EXPECT_TRUE(info.IsDualModeCloneApp());
+    info.SetIsDualModeCloneApp(false);
+    EXPECT_FALSE(info.IsDualModeCloneApp());
+}
+
+HWTEST_F(BmsDualModeInstallTest, PreInstallBundleInfo_DistributionPolicy_0200, Function | SmallTest | Level0)
+{
+    PreInstallBundleInfo info;
+    EXPECT_EQ(info.GetDeviceModeDistributionPolicy(), DeviceModeDistributionPolicy::UNSPECIFIED);
+    info.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE);
+    EXPECT_EQ(info.GetDeviceModeDistributionPolicy(),
+        DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE);
+    info.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::MAIN_ONLY);
+    EXPECT_EQ(info.GetDeviceModeDistributionPolicy(), DeviceModeDistributionPolicy::MAIN_ONLY);
+}
+
 // ====================== BaseBundleInstaller::GetEffectiveBundleName ======================
 
 HWTEST_F(BmsDualModeInstallTest, GetEffectiveBundleName_0100, Function | SmallTest | Level0)
@@ -427,6 +493,20 @@ HWTEST_F(BmsDualModeInstallTest, InitDualModeBundleName_0300, Function | SmallTe
     installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::MAIN_ONLY;
     installer.InitDualModeBundleName(installParam);
     EXPECT_TRUE(installer.dualModeBundleName_.empty());
+}
+
+HWTEST_F(BmsDualModeInstallTest, InitDualModeBundleName_ForceCloneInstall_0400, Function | SmallTest | Level0)
+{
+    // forceDualModeCloneInstall sets role to SECONDARY even in primary mode (OTA retry),
+    // so ShouldUseDualModeCloneName returns true and the clone name is used.
+    EnablePrimaryMode();
+    BaseBundleInstaller installer;
+    installer.bundleName_ = BUNDLE_NAME;
+    InstallParam installParam;
+    installParam.forceDualModeCloneInstall = true;
+    installer.InitDualModeBundleName(installParam);
+    EXPECT_EQ(installer.dualModeInstallRole_, DualModeInstallRole::SECONDARY);
+    EXPECT_EQ(installer.dualModeBundleName_, DualModeHelper::GetDualModeBundleName(BUNDLE_NAME));
 }
 
 HWTEST_F(BmsDualModeInstallTest, InitDualModeBundleNameByInfo_0100, Function | SmallTest | Level0)
@@ -574,6 +654,145 @@ HWTEST_F(BmsDualModeInstallTest, DualModeModuleUninstallDefaultParamEvent_0100, 
         DeviceModeDistributionPolicy::UNIVERSAL_IDENTICAL_PACKAGE);
     EXPECT_EQ(uninstallEvent.currentMode, ServiceConstants::DUAL_MODE_VALUE_2IN1);
     EXPECT_EQ(uninstallEvent.appSandboxPolicy, AppSandboxPolicy::ISOLATED_SANDBOX);
+}
+
+// ====================== BaseBundleInstaller::GetEffectiveDualModePolicy ======================
+
+HWTEST_F(BmsDualModeInstallTest, GetEffectiveDualModePolicy_CallerSetWins_0100, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.resolvedDeviceModeDistributionPolicy_ = DeviceModeDistributionPolicy::MAIN_ONLY;
+    InstallParam installParam;
+    installParam.isPreInstallApp = true;
+    installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE;
+    EXPECT_EQ(installer.GetEffectiveDualModePolicy(installParam),
+        DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE);
+}
+
+HWTEST_F(BmsDualModeInstallTest, GetEffectiveDualModePolicy_PreInstallFallback_0200, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.resolvedDeviceModeDistributionPolicy_ = DeviceModeDistributionPolicy::SUB_ONLY;
+    InstallParam installParam;
+    installParam.isPreInstallApp = true;
+    installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNSPECIFIED;
+    EXPECT_EQ(installer.GetEffectiveDualModePolicy(installParam), DeviceModeDistributionPolicy::SUB_ONLY);
+}
+
+HWTEST_F(BmsDualModeInstallTest, GetEffectiveDualModePolicy_NonPreInstallUsesCaller_0300, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.resolvedDeviceModeDistributionPolicy_ = DeviceModeDistributionPolicy::MAIN_ONLY;
+    InstallParam installParam;
+    installParam.isPreInstallApp = false;
+    installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNSPECIFIED;
+    EXPECT_EQ(installer.GetEffectiveDualModePolicy(installParam), DeviceModeDistributionPolicy::UNSPECIFIED);
+}
+
+// ====================== BaseBundleInstaller::ShouldUseDualModeCloneName ======================
+
+HWTEST_F(BmsDualModeInstallTest, ShouldUseDualModeCloneName_NonDualMode_0100, Function | SmallTest | Level0)
+{
+    SetDualModeCache(ServiceConstants::DUAL_MODE_VALUE_INVALID, ServiceConstants::DUAL_MODE_VALUE_INVALID);
+    BaseBundleInstaller installer;
+    InstallParam installParam;
+    EXPECT_FALSE(installer.ShouldUseDualModeCloneName(installParam));
+}
+
+HWTEST_F(BmsDualModeInstallTest, ShouldUseDualModeCloneName_SecondaryRole_0200, Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    BaseBundleInstaller installer;
+    installer.dualModeInstallRole_ = DualModeInstallRole::SECONDARY;
+    InstallParam installParam;
+    EXPECT_TRUE(installer.ShouldUseDualModeCloneName(installParam));
+}
+
+HWTEST_F(BmsDualModeInstallTest, ShouldUseDualModeCloneName_PrimaryRole_0300, Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    BaseBundleInstaller installer;
+    installer.dualModeInstallRole_ = DualModeInstallRole::PRIMARY;
+    InstallParam installParam;
+    EXPECT_FALSE(installer.ShouldUseDualModeCloneName(installParam));
+}
+
+HWTEST_F(BmsDualModeInstallTest, ShouldUseDualModeCloneName_PreInstallNoneKeepsOriginal_0400,
+    Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    BaseBundleInstaller installer;
+    installer.dualModeInstallRole_ = DualModeInstallRole::NONE;
+    InstallParam installParam;
+    installParam.isPreInstallApp = true;
+    installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE;
+    EXPECT_FALSE(installer.ShouldUseDualModeCloneName(installParam));
+}
+
+HWTEST_F(BmsDualModeInstallTest, ShouldUseDualModeCloneName_NoneNormalInstallFollowsMode_0500,
+    Function | SmallTest | Level0)
+{
+    // role=NONE, non-preinstall: NeedDualModeHandle (secondary + different-package -> clone name).
+    // For non-preinstall, GetEffectiveDualModePolicy returns the caller-set policy, so set it to a
+    // different-package category to drive NeedDualModeHandle true in secondary mode.
+    EnableSecondaryMode();
+    BaseBundleInstaller installer;
+    installer.dualModeInstallRole_ = DualModeInstallRole::NONE;
+    InstallParam installParam;
+    installParam.isPreInstallApp = false;
+    installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE;
+    EXPECT_TRUE(installer.ShouldUseDualModeCloneName(installParam));
+}
+
+// ====================== BaseBundleInstaller::IsCrossModeInstall ======================
+
+HWTEST_F(BmsDualModeInstallTest, IsCrossModeInstall_NonDualMode_0100, Function | SmallTest | Level0)
+{
+    SetDualModeCache(ServiceConstants::DUAL_MODE_VALUE_INVALID, ServiceConstants::DUAL_MODE_VALUE_INVALID);
+    BaseBundleInstaller installer;
+    EXPECT_FALSE(installer.IsCrossModeInstall());
+}
+
+HWTEST_F(BmsDualModeInstallTest, IsCrossModeInstall_SecondaryRoleInSecondary_0200, Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    BaseBundleInstaller installer;
+    installer.dualModeInstallRole_ = DualModeInstallRole::SECONDARY;
+    EXPECT_FALSE(installer.IsCrossModeInstall());
+}
+
+HWTEST_F(BmsDualModeInstallTest, IsCrossModeInstall_SecondaryRoleInPrimary_0300, Function | SmallTest | Level0)
+{
+    EnablePrimaryMode();
+    BaseBundleInstaller installer;
+    installer.dualModeInstallRole_ = DualModeInstallRole::SECONDARY;
+    EXPECT_TRUE(installer.IsCrossModeInstall());
+}
+
+HWTEST_F(BmsDualModeInstallTest, IsCrossModeInstall_PrimaryRoleInSecondary_0400, Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    BaseBundleInstaller installer;
+    installer.dualModeInstallRole_ = DualModeInstallRole::PRIMARY;
+    EXPECT_TRUE(installer.IsCrossModeInstall());
+}
+
+HWTEST_F(BmsDualModeInstallTest, IsCrossModeInstall_MainOnlyInSecondary_0500, Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    BaseBundleInstaller installer;
+    installer.dualModeInstallRole_ = DualModeInstallRole::NONE;
+    installer.resolvedDeviceModeDistributionPolicy_ = DeviceModeDistributionPolicy::MAIN_ONLY;
+    EXPECT_TRUE(installer.IsCrossModeInstall());
+}
+
+HWTEST_F(BmsDualModeInstallTest, IsCrossModeInstall_SubOnlyInPrimary_0600, Function | SmallTest | Level0)
+{
+    EnablePrimaryMode();
+    BaseBundleInstaller installer;
+    installer.dualModeInstallRole_ = DualModeInstallRole::NONE;
+    installer.resolvedDeviceModeDistributionPolicy_ = DeviceModeDistributionPolicy::SUB_ONLY;
+    EXPECT_TRUE(installer.IsCrossModeInstall());
 }
 
 // ====================== BaseBundleInstaller::SetDualModeAppInfo ======================
@@ -817,6 +1036,28 @@ HWTEST_F(BmsDualModeInstallTest, SetDualModeAppInfo_1300, Function | SmallTest |
     EXPECT_FALSE(infos[BUNDLE_NAME].IsDualModeCloneApp());
     EXPECT_EQ(infos[BUNDLE_NAME].GetDeviceModeDistributionPolicy(), DeviceModeDistributionPolicy::SUB_ONLY);
     EXPECT_EQ(infos[BUNDLE_NAME].GetAppSandboxPolicy(), AppSandboxPolicy::SHARED_SANDBOX);
+}
+
+HWTEST_F(BmsDualModeInstallTest, SetDualModeAppInfo_ForceCloneInstallPrimaryMode_1400,
+    Function | SmallTest | Level0)
+{
+    // forceDualModeCloneInstall sets role to SECONDARY even in primary mode (OTA retry),
+    // so clone flag is set though IsSecondaryMode() is false.
+    EnablePrimaryMode();
+    BaseBundleInstaller installer;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo systemInfo;
+    ApplicationInfo appInfo;
+    appInfo.isSystemApp = true;
+    systemInfo.SetBaseApplicationInfo(appInfo);
+    infos[BUNDLE_NAME] = systemInfo;
+    InstallParam installParam;
+    installParam.forceDualModeCloneInstall = true;
+    installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE;
+    EXPECT_EQ(installer.SetDualModeAppInfo(installParam, infos), OHOS::ERR_OK);
+    EXPECT_EQ(installer.dualModeInstallRole_, DualModeInstallRole::SECONDARY);
+    EXPECT_TRUE(infos[BUNDLE_NAME].IsDualModeCloneApp());
+    EXPECT_EQ(infos[BUNDLE_NAME].GetAppIndex(), ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
 }
 
 // ====================== BaseBundleInstaller::CheckDualModeCategoryConsistency ======================
@@ -1950,6 +2191,26 @@ HWTEST_F(BmsDualModeInstallTest, ResetInstallProperties_ClearsStickySandbox_0200
     // different-package still derives ISOLATED from the policy (not from a sticky before-value)
     EXPECT_EQ(installer.ComputeCurrentAppSandboxPolicy(
         DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE), AppSandboxPolicy::ISOLATED_SANDBOX);
+}
+
+HWTEST_F(BmsDualModeInstallTest, ResetInstallProperties_ClearsDualModeState_0300, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.dualModeInstallRole_ = DualModeInstallRole::SECONDARY;
+    installer.resolvedDeviceModeDistributionPolicy_ = DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE;
+    installer.dualModeErmsCache_.isDifferentPackage = true;
+    installer.dualModeErmsCache_.policy = DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE;
+    installer.dualModeErmsCache_.bundleName = "stale";
+    installer.dualModeErmsCache_.secondaryHaps = {"hap1", "hap2"};
+    installer.tempInfo_.bundleInit_ = true;
+    installer.ResetInstallProperties();
+    EXPECT_EQ(installer.dualModeInstallRole_, DualModeInstallRole::NONE);
+    EXPECT_EQ(installer.resolvedDeviceModeDistributionPolicy_, DeviceModeDistributionPolicy::UNSPECIFIED);
+    EXPECT_FALSE(installer.dualModeErmsCache_.isDifferentPackage);
+    EXPECT_EQ(installer.dualModeErmsCache_.policy, DeviceModeDistributionPolicy::UNSPECIFIED);
+    EXPECT_TRUE(installer.dualModeErmsCache_.bundleName.empty());
+    EXPECT_TRUE(installer.dualModeErmsCache_.secondaryHaps.empty());
+    EXPECT_FALSE(installer.tempInfo_.bundleInit_);
 }
 
 // InnerBundleInfo sandbox-policy accessor (Sync-27): default SHARED_SANDBOX + round-trip.

@@ -531,7 +531,9 @@ void BMSEventHandler::SavePreInstallException(const std::string& bundleDir) {}
 void BMSEventHandler::HandlePreInstallException(bool needDeleteRecord) {}
 
 bool BMSEventHandler::OTAInstallSystemBundle(
-    const std::vector<std::string>& filePaths, Constants::AppType appType, bool removable)
+    const std::vector<std::string>& filePaths, Constants::AppType appType, bool removable,
+    bool forceDualModeCloneInstall,
+    DeviceModeDistributionPolicy deviceModeDistributionPolicy)
 {
     return true;
 }
@@ -544,7 +546,9 @@ bool BMSEventHandler::OTAInstallSystemBundleNeedCheckUser(const std::vector<std:
 
 bool BMSEventHandler::OTAInstallSystemBundleTargetUser(const std::vector<std::string> &filePaths,
     const std::string &bundleName, Constants::AppType appType,
-    bool removable, const std::vector<int32_t> &userIds, bool isPatchDowngrade)
+    bool removable, const std::vector<int32_t> &userIds, bool isPatchDowngrade,
+    bool forceDualModeCloneInstall,
+    DeviceModeDistributionPolicy deviceModeDistributionPolicy)
 {
     return true;
 }

@@ -884,7 +884,7 @@ bool BundleDataMgr::AddInnerBundleInfo(const std::string &bundleName, InnerBundl
         ? DualModeHelper::GetDualModeBundleName(bundleName) : bundleName;
     auto statusItem = installStates_.find(stateKey);
     if (statusItem == installStates_.end()) {
-        APP_LOGW("save info fail, bundleName:%{public}s is not installed", bundleName.c_str());
+        APP_LOGW("save info fail, bundleName:%{public}s is not installed", stateKey.c_str());
         return false;
     }
     std::string developerId = info.GetDeveloperId();
