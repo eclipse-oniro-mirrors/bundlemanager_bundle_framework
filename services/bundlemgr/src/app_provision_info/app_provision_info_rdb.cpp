@@ -212,6 +212,10 @@ bool AppProvisionInfoManagerRdb::ConvertToAppProvision(
     CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetString appServiceCapabilities failed, ret: %{public}d");
     ret = absSharedResultSet->GetString(INDEX_ORGANIZATION, appProvisionInfo.organization);
     CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetString organization failed, ret: %{public}d");
+    ret = absSharedResultSet->GetString(INDEX_SPECIFIED_DISTRIBUTED_TYPE, appProvisionInfo.specifiedDistributionType);
+    CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetString specifiedDistributionType failed, ret: %{public}d");
+    ret = absSharedResultSet->GetString(INDEX_ADDITIONAL_INFO, appProvisionInfo.additionalInfo);
+    CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetString additionalInfo failed, ret: %{public}d");
     return true;
 }
 

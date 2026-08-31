@@ -45,6 +45,9 @@ bool AppProvisionInfo::ReadFromParcel(Parcel &parcel)
     appServiceCapabilities = Str16ToStr8(parcel.ReadString16());
     organization = Str16ToStr8(parcel.ReadString16());
     bundleName = Str16ToStr8(parcel.ReadString16());
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appIndex);
+    specifiedDistributionType = Str16ToStr8(parcel.ReadString16());
+    additionalInfo = Str16ToStr8(parcel.ReadString16());
     return true;
 }
 
@@ -66,6 +69,9 @@ bool AppProvisionInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appServiceCapabilities));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(organization));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(bundleName));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appIndex);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(specifiedDistributionType));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(additionalInfo));
     return true;
 }
 

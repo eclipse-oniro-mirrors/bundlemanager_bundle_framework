@@ -1861,6 +1861,18 @@ ani_object CommonFunAni::ConvertAppProvisionInfo(ani_env* env, const AppProvisio
     ani_string organization = nullptr;
     RETURN_NULL_IF_FALSE(StringToAniStr(env, appProvisionInfo.organization, organization));
 
+    // appServiceCapabilities: string
+    ani_string appServiceCapabilities = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, appProvisionInfo.appServiceCapabilities, appServiceCapabilities));
+
+    // specifiedDistributionType: string
+    ani_string specifiedDistributionType = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, appProvisionInfo.specifiedDistributionType, specifiedDistributionType));
+
+    // additional: string
+    ani_string additional = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, appProvisionInfo.additionalInfo, additional));
+
     // bundleName: string
     ani_string bundleName = nullptr;
     RETURN_NULL_IF_FALSE(StringToAniStr(env, appProvisionInfo.bundleName, bundleName));
@@ -1878,6 +1890,10 @@ ani_object CommonFunAni::ConvertAppProvisionInfo(ani_env* env, const AppProvisio
         { .r = issuer },
         { .r = appIdentifier },
         { .r = organization },
+        { .r = appServiceCapabilities },
+        { .i = appProvisionInfo.appIndex },
+        { .r = specifiedDistributionType },
+        { .r = additional },
         { .r = bundleName},
     };
     static const std::string ctorSig = SignatureBuilder()
@@ -1893,6 +1909,10 @@ ani_object CommonFunAni::ConvertAppProvisionInfo(ani_env* env, const AppProvisio
         .AddClass(CommonFunAniNS::CLASSNAME_STRING) // issuer: string
         .AddClass(CommonFunAniNS::CLASSNAME_STRING) // appIdentifier: string
         .AddClass(CommonFunAniNS::CLASSNAME_STRING) // organization: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // appServiceCapabilities: string
+        .AddInt()                                   // appIndex: int
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // specifiedDistributionType: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // additional: string
         .AddClass(CommonFunAniNS::CLASSNAME_STRING) // bundleName: string
         .BuildSignatureDescriptor();
     return CreateNewObjectByClassV2(env, CLASSNAME_APP_PROVISION_INFO_INNER, ctorSig, args);

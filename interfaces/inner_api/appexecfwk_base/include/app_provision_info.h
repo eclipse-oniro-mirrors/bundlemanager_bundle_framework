@@ -17,6 +17,7 @@
 #define FOUNDATION_BUNDLEMANAGER_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_APP_PROVISION_INFO_H
 
 #include <string>
+#include <vector>
 
 #include "parcel.h"
 
@@ -41,6 +42,9 @@ struct AppProvisionInfo : public Parcelable {
     std::string appIdentifier;
     std::string appServiceCapabilities;
     std::string organization;
+    int32_t appIndex = 0;
+    std::string specifiedDistributionType;
+    std::string additionalInfo;
     std::string bundleName;
     Validity validity;
     bool ReadFromParcel(Parcel &parcel);

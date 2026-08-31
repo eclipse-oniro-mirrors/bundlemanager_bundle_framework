@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { AppProvisionInfo, Validity } from 'bundleManager.AppProvisionInfo'
+import { AppProvisionInfo, Validity } from './AppProvisionInfo'
 
 export class AppProvisionInfoInner implements AppProvisionInfo {
   public readonly versionCode: long;
@@ -28,6 +28,10 @@ export class AppProvisionInfoInner implements AppProvisionInfo {
   public readonly issuer: string = '';
   public readonly appIdentifier: string = '';
   public readonly organization: string = '';
+  public readonly appServiceCapabilities?: string | undefined;
+  public readonly appIndex?: int | undefined;
+  public readonly specifiedDistributionType?: string | undefined;
+  public readonly additional?: string | undefined;
   public readonly bundleName?: string | undefined;
 
   constructor() { }
@@ -43,6 +47,10 @@ export class AppProvisionInfoInner implements AppProvisionInfo {
     issuer: string,
     appIdentifier: string,
     organization: string,
+    appServiceCapabilities?: string,
+    appIndex?: int,
+    specifiedDistributionType?: string,
+    additional?: string,
     bundleName?: string) {
       this.versionCode = versionCode;
       this.versionName = versionName;
@@ -56,6 +64,10 @@ export class AppProvisionInfoInner implements AppProvisionInfo {
       this.issuer = issuer;
       this.appIdentifier = appIdentifier;
       this.organization = organization;
+      this.appServiceCapabilities = appServiceCapabilities;
+      this.appIndex = appIndex;
+      this.specifiedDistributionType = specifiedDistributionType;
+      this.additional = additional;
       this.bundleName = bundleName;
   }
 }
