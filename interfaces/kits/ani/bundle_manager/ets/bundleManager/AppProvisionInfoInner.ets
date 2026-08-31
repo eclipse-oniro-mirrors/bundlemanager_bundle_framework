@@ -28,10 +28,10 @@ export class AppProvisionInfoInner implements AppProvisionInfo {
   public readonly issuer: string = '';
   public readonly appIdentifier: string = '';
   public readonly organization: string = '';
-  public readonly appServiceCapabilities: string = '';
-  public readonly appIndex: int = 0;
-  public readonly specifiedDistributionType: string = '';
-  public readonly additional: string = '';
+  public readonly appServiceCapabilities?: string = '';
+  public readonly appIndex?: int = 0;
+  public readonly specifiedDistributionType?: string = '';
+  public readonly additional?: string = '';
   public readonly bundleName?: string | undefined;
 
   constructor() { }
@@ -47,10 +47,10 @@ export class AppProvisionInfoInner implements AppProvisionInfo {
     issuer: string,
     appIdentifier: string,
     organization: string,
-    appServiceCapabilities: string = '',
-    appIndex: int = 0,
-    specifiedDistributionType: string = '',
-    additional: string = '',
+    appServiceCapabilities?: string = '',
+    appIndex?: int = 0,
+    specifiedDistributionType?: string = '',
+    additional?: string = '',
     bundleName?: string) {
       this.versionCode = versionCode;
       this.versionName = versionName;

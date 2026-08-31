@@ -26,10 +26,10 @@ export interface AppProvisionInfo {
   readonly issuer: string;
   readonly appIdentifier: string;
   readonly organization: string;
-  readonly appServiceCapabilities: string;
-  readonly appIndex: int;
-  readonly specifiedDistributionType: string;
-  readonly additional: string;
+  readonly appServiceCapabilities?: string;
+  readonly appIndex?: int;
+  readonly specifiedDistributionType?: string;
+  readonly additional?: string;
   readonly bundleName?: string;
 }
 
