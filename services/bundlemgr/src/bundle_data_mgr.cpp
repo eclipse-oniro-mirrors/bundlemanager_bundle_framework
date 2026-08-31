@@ -11470,9 +11470,14 @@ ErrCode BundleDataMgr::GetAdditionalInfo(
             return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
         }
     }
-    if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAdditionalInfo(bundleName,
+    std::string effectiveBundleName = bundleName;
+    if (DualModeHelper::IsDualModeDevice()) {
+        effectiveBundleName = infoItem->second.IsDualModeCloneApp() ?
+            DualModeHelper::GetDualModeBundleName(bundleName) : bundleName;
+    }
+    if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAdditionalInfo(effectiveBundleName,
         additionalInfo)) {
-        APP_LOGW("bundleName:%{public}s GetAdditionalInfo failed", bundleName.c_str());
+        APP_LOGW("effectiveBundleName:%{public}s GetAdditionalInfo failed", effectiveBundleName.c_str());
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     return ERR_OK;
@@ -11482,6 +11487,10 @@ ErrCode BundleDataMgr::GetAdditionalInfoForAllUser(
     const std::string &bundleName, std::string &additionalInfo)
 {
     APP_LOGD("GetAdditionalInfo bundleName: %{public}s", bundleName.c_str());
+    if (DualModeHelper::IsDualModeDevice()) {
+        APP_LOGW("IsDualModeDevice, not surpport this function.");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
@@ -12653,8 +12662,12 @@ std::string BundleDataMgr::GetModuleNameByBundleAndAbility(
     return abilityInfo->moduleName;
 }
 
-ErrCode BundleDataMgr::SetAdditionalInfo(const std::string& bundleName, const std::string& additionalInfo) const
+ErrCode BundleDataMgr::SetAdditionalInfo(const std::string& bundleName,
+    const std::string& additionalInfo, int32_t appIndex) const
 {
+    if (DualModeHelper::IsDualModeDevice()) {
+        return SetAdditionalInfoForDualMode(bundleName, additionalInfo, appIndex);
+    }
     APP_LOGD("Called. BundleName: %{public}s", bundleName.c_str());
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
@@ -12680,6 +12693,58 @@ ErrCode BundleDataMgr::SetAdditionalInfo(const std::string& bundleName, const st
 
     if (!appProvisionInfoManager->SetAdditionalInfo(bundleName, additionalInfo)) {
         APP_LOGE("BundleName: %{public}s set additional info failed", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+
+    ElementName element;
+    element.SetBundleName(bundleName);
+    OHOS::AAFwk::Want want;
+    want.SetAction(BMS_EVENT_ADDITIONAL_INFO_CHANGED);
+    want.SetElement(element);
+    EventFwk::CommonEventData commonData { want };
+    NotifyBundleEventCallback(commonData);
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::SetAdditionalInfoForDualMode(const std::string& bundleName,
+    const std::string& additionalInfo, int32_t appIndex) const
+{
+    APP_LOGD("Called. BundleName: %{public}s", bundleName.c_str());
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::string effectiveBundleName;
+    bool needDualModeCloneApp = (appIndex == ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
+    auto filterAndAppend = [&] (const std::map<std::string, InnerBundleInfo> &infos) {
+        for (const auto &[innerBundleName, infoItem] : infos) {
+            if (innerBundleName != bundleName || needDualModeCloneApp != infoItem.IsDualModeCloneApp()) {
+                continue;
+            }
+            int32_t userId = AccountHelper::GetOsAccountLocalIdFromUid(IPCSkeleton::GetCallingUid());
+            int32_t responseUserId = infoItem.GetResponseUserId(userId);
+            if (infoItem.GetApplicationBundleType() != BundleType::SHARED &&
+                responseUserId == Constants::INVALID_USERID) {
+                    continue;
+            }
+            effectiveBundleName = needDualModeCloneApp ?
+                DualModeHelper::GetDualModeBundleName(bundleName) : bundleName;
+        }
+    };
+    filterAndAppend(bundleInfos_);
+    if (effectiveBundleName.empty()) {
+        filterAndAppend(tempBundleInfos_);
+    }
+    if (effectiveBundleName.empty()) {
+        APP_LOGE("bundleName: %{public}s does not exist.", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+
+    auto appProvisionInfoManager = DelayedSingleton<AppProvisionInfoManager>::GetInstance();
+    if (appProvisionInfoManager == nullptr) {
+        APP_LOGE("Failed, appProvisionInfoManager is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+
+    if (!appProvisionInfoManager->SetAdditionalInfo(effectiveBundleName, additionalInfo)) {
+        APP_LOGE("effectiveBundleName: %{public}s set additional info failed", effectiveBundleName.c_str());
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
 

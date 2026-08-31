@@ -1674,7 +1674,7 @@ HWTEST_F(BmsBundleManagerTest3, SetAdditionalInfo_0100, Function | SmallTest | L
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     std::string additionalInfo = "additionalInfo";
-    ErrCode ret = hostImpl->SetAdditionalInfo(BUNDLE_NAME, additionalInfo);
+    ErrCode ret = hostImpl->SetAdditionalInfo(BUNDLE_NAME, additionalInfo, 0);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_NOT_APP_GALLERY_CALL);
 }
 

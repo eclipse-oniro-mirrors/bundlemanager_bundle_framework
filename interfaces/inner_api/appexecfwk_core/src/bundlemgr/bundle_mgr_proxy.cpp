@@ -5380,7 +5380,8 @@ ErrCode BundleMgrProxy::GetUninstalledBundleInfo(const std::string bundleName, B
     return ERR_OK;
 }
 
-ErrCode BundleMgrProxy::SetAdditionalInfo(const std::string &bundleName, const std::string &additionalInfo)
+ErrCode BundleMgrProxy::SetAdditionalInfo(const std::string &bundleName,
+    const std::string &additionalInfo, int32_t appIndex)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("Called. BundleName : %{public}s", bundleName.c_str());
@@ -5399,6 +5400,10 @@ ErrCode BundleMgrProxy::SetAdditionalInfo(const std::string &bundleName, const s
     }
     if (!data.WriteString(additionalInfo)) {
         APP_LOGE("Write additionalInfo failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(appIndex)) {
+        APP_LOGE("Write appIndex failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 

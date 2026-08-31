@@ -1766,7 +1766,7 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_8200
 HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_8300, Function | SmallTest | Level1)
 {
     std::string additionalInfo;
-    ErrCode ret = bundleMgrHostImpl_->SetAdditionalInfo("", additionalInfo);
+    ErrCode ret = bundleMgrHostImpl_->SetAdditionalInfo("", additionalInfo, 0);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
 }
 

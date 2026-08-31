@@ -1280,7 +1280,8 @@ public:
         int32_t &appIndex) const;
     std::string GetModuleNameByBundleAndAbility(const std::string& bundleName, const std::string& abilityName);
     const std::vector<PreInstallBundleInfo> GetRecoverablePreInstallBundleInfos(int32_t userId);
-    ErrCode SetAdditionalInfo(const std::string& bundleName, const std::string& additionalInfo) const;
+    ErrCode SetAdditionalInfo(const std::string& bundleName,
+        const std::string& additionalInfo, int32_t appIndex) const;
     ErrCode GetAppServiceHspBundleInfo(const std::string &bundleName, BundleInfo &bundleInfo);
     ErrCode CreateBundleDataDir(int32_t userId);
     ErrCode CreateBundleDataDirWithEl(int32_t userId, DataDirEl dirEl);
@@ -1861,6 +1862,8 @@ private:
     void MergeRouterItems(const std::vector<RouterItem>& sharedBundleRouterInfos,
         std::vector<RouterItem>& pluginRouterInfos) const;
     bool ParseUserKey(const std::string &userKey, int32_t &userId, int32_t &appIndex) const;
+    ErrCode SetAdditionalInfoForDualMode(const std::string& bundleName,
+        const std::string& additionalInfo, int32_t appIndex) const;
 
 private:
     enum class SkillQueryAccessLevel {

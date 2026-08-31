@@ -5375,7 +5375,7 @@ napi_value SetAdditionalInfo(napi_env env, napi_callback_info info)
 {
     APP_LOGD("Called");
     NapiArg args(env, info);
-    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_TWO)) {
+    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_THREE)) {
         APP_LOGE("Param count invalid");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
@@ -5393,13 +5393,21 @@ napi_value SetAdditionalInfo(napi_env env, napi_callback_info info)
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, ADDITIONAL_INFO, TYPE_STRING);
         return nullptr;
     }
+    int32_t appIndex = Constants::DEFAULT_APP_INDEX;
+    if (args.GetMaxArgc() >= ARGS_SIZE_THREE) {
+        napi_valuetype valueType = napi_undefined;
+        NAPI_CALL(env, napi_typeof(env, args[ARGS_POS_TWO], &valueType));
+        if (valueType == napi_number) {
+            NAPI_CALL(env, napi_get_value_int32(env, args[ARGS_POS_TWO], &appIndex));
+        }
+    }
     auto iBundleMgr = CommonFunc::GetBundleMgr();
     if (iBundleMgr == nullptr) {
         APP_LOGE("Can not get iBundleMgr");
         BusinessError::ThrowError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION);
         return nullptr;
     }
-    ErrCode ret = CommonFunc::ConvertErrCode(iBundleMgr->SetAdditionalInfo(bundleName, additionalInfo));
+    ErrCode ret = CommonFunc::ConvertErrCode(iBundleMgr->SetAdditionalInfo(bundleName, additionalInfo, appIndex));
     if (ret != NO_ERROR) {
         APP_LOGE("Call failed, bundleName is %{public}s", bundleName.c_str());
         napi_value businessError = BusinessError::CreateCommonError(

@@ -3603,7 +3603,7 @@ HWTEST_F(BmsBundleDataMgrTest2, SetAdditionalInfo_0100, Function | SmallTest | L
 {
     std::string additionalInfo = "additionalInfoTest";
     GetBundleDataMgr()->bundleInfos_.clear();
-    ErrCode res = GetBundleDataMgr()->SetAdditionalInfo(BUNDLE_TEST1, additionalInfo);
+    ErrCode res = GetBundleDataMgr()->SetAdditionalInfo(BUNDLE_TEST1, additionalInfo, 0);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
@@ -3623,7 +3623,7 @@ HWTEST_F(BmsBundleDataMgrTest2, SetAdditionalInfo_0200, Function | SmallTest | L
     innerBundleInfo.innerBundleUserInfos_.clear();
     GetBundleDataMgr()->bundleInfos_.clear();
     GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
-    ErrCode res = GetBundleDataMgr()->SetAdditionalInfo(BUNDLE_TEST1, additionalInfo);
+    ErrCode res = GetBundleDataMgr()->SetAdditionalInfo(BUNDLE_TEST1, additionalInfo, 0);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
@@ -3643,7 +3643,7 @@ HWTEST_F(BmsBundleDataMgrTest2, SetAdditionalInfo_0300, Function | SmallTest | L
     innerBundleInfo.innerBundleUserInfos_.clear();
     GetBundleDataMgr()->bundleInfos_.clear();
     GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
-    ErrCode res = GetBundleDataMgr()->SetAdditionalInfo(BUNDLE_TEST1, additionalInfo);
+    ErrCode res = GetBundleDataMgr()->SetAdditionalInfo(BUNDLE_TEST1, additionalInfo, 0);
     EXPECT_EQ(res, ERR_OK);
 }
 

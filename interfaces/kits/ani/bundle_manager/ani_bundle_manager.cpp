@@ -2194,13 +2194,14 @@ static void SetAdditionalInfo(ani_env* env, ani_string aniBundleName, ani_string
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, ADDITIONAL_INFO, TYPE_STRING);
         return;
     }
+    int32_t appIndex = Constants::DEFAULT_APP_INDEX;
     auto iBundleMgr = CommonFunc::GetBundleMgr();
     if (iBundleMgr == nullptr) {
         APP_LOGE("GetBundleMgr failed");
         BusinessErrorAni::ThrowError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION);
         return;
     }
-    ErrCode ret = iBundleMgr->SetAdditionalInfo(bundleName, additionalInfo);
+    ErrCode ret = iBundleMgr->SetAdditionalInfo(bundleName, additionalInfo, appIndex);
     if (ret != ERR_OK) {
         APP_LOGE("SetAdditionalInfo failed ret: %{public}d", ret);
         BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret), RESOURCE_NAME_OF_SET_ADDITIONAL_INFO,
