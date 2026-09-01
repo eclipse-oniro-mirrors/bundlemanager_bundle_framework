@@ -3594,7 +3594,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetAdditionalInfoForAllUser_0100, Function | Smal
     std::string additionalInfo = "";
     ErrCode res = GetBundleDataMgr()->GetAdditionalInfoForAllUser(
         "com.addition.isshare", additionalInfo);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_DUAL_MODE_DEVICE_NOT_SUPPORTED);
 }
 
 /**
@@ -3633,7 +3633,7 @@ HWTEST_F(BmsBundleDataMgrTest, SetAdditionalInfo_0200, Function | SmallTest | Le
     std::string bundleName1 = "com.setaddition.current1";
     GetBundleDataMgr()->bundleInfos_[bundleName1] = CreateTestBundleInfo(
         bundleName1, BundleType::APP, true, Constants::START_USERID);
-    std::string bundleName2 = "com.setaddition.current1";
+    std::string bundleName2 = "com.setaddition.current2";
     GetBundleDataMgr()->bundleInfos_[bundleName2] = CreateTestBundleInfo(
         bundleName2, BundleType::APP, true, Constants::INVALID_USERID);
     std::string additionalInfo = "additionalInfo";
