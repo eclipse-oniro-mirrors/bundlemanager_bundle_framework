@@ -1134,6 +1134,12 @@ public:
     virtual ErrCode GetAllAppProvisionInfo(const int32_t userId,
         std::vector<AppProvisionInfo> &appProvisionInfos) override;
 
+    virtual ErrCode GetAppProvisionInfoInDevice(const std::string &bundleName, int32_t userId,
+        std::vector<AppProvisionInfo> &appProvisionInfos) override;
+
+    virtual ErrCode GetAllAppProvisionInfoInDevice(const int32_t userId,
+        std::vector<AppProvisionInfo> &appProvisionInfos) override;
+
     virtual ErrCode GetAllAppInstallExtendedInfo(
         std::vector<AppInstallExtendedInfo> &appInstallExtendedInfos) override;
 

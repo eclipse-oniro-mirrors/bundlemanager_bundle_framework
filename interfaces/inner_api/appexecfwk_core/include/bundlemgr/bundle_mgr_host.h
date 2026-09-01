@@ -861,6 +861,10 @@ private:
 
     ErrCode HandleGetAllAppProvisionInfo(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleGetAppProvisionInfoInDevice(MessageParcel &data, MessageParcel &reply);
+
+    ErrCode HandleGetAllAppProvisionInfoInDevice(MessageParcel &data, MessageParcel &reply);
+
     ErrCode HandleGetProvisionMetadata(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetBaseSharedBundleInfos(MessageParcel &data, MessageParcel &reply);

@@ -1508,6 +1508,51 @@ static ani_object GetAllAppProvisionInfoNative(ani_env* env, ani_int aniUserId)
     return CommonFunAni::ConvertAniArray(env, appProvisionInfos, CommonFunAni::ConvertAppProvisionInfo);
 }
 
+static ani_object GetAppProvisionInfoInDeviceNative(
+    ani_env* env, ani_string aniBundleName, ani_int aniUserId)
+{
+    APP_LOGD("ani GetAppProvisionInfoInDeviceNative called");
+    std::string bundleName;
+    if (!CommonFunAni::ParseString(env, aniBundleName, bundleName) || bundleName.empty()) {
+        APP_LOGE("bundleName parse failed or empty");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, Constants::BUNDLE_NAME, TYPE_STRING);
+        return nullptr;
+    }
+    if (aniUserId == EMPTY_USER_ID) {
+        APP_LOGE("userId invalid");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, Constants::USER_ID, TYPE_NUMBER);
+        return nullptr;
+    }
+    std::vector<AppProvisionInfo> &appProvisionInfos;
+    ErrCode ret = BundleManagerHelper::InnerGetAppProvisionInfoInDevice(bundleName, aniUserId, appProvisionInfos);
+    if (ret != ERR_OK) {
+        APP_LOGE("InnerGetAppProvisionInfoInDevice failed ret: %{public}d", ret);
+        BusinessErrorAni::ThrowCommonNewError(env, ret, GET_APP_PROVISION_INFO_IN_DEVICE,
+            Constants::PERMISSION_GET_BUNDLE_INFO_AND_INTERACT_ACROSS_LOCAL_ACCOUNTS);
+        return nullptr;
+    }
+    return CommonFunAni::ConvertAniArray(env, appProvisionInfos, CommonFunAni::ConvertAppProvisionInfo);
+}
+
+static ani_object GetAllAppProvisionInfoNativeInDevice(ani_env* env, ani_int aniUserId)
+{
+    APP_LOGD("ani GetAllAppProvisionInfoNativeInDevice called");
+    if (aniUserId == EMPTY_USER_ID) {
+        APP_LOGE("userId invalid");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, Constants::USER_ID, TYPE_NUMBER);
+        return nullptr;
+    }
+    std::vector<AppProvisionInfo> appProvisionInfos;
+    ErrCode ret = BundleManagerHelper::InnerGetAllAppProvisionInfoInDevice(aniUserId, appProvisionInfos);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetAllAppProvisionInfoNativeInDevice failed ret: %{public}d", ret);
+        BusinessErrorAni::ThrowCommonNewError(env, ret, GET_ALL_APP_PROVISION_INFO_IN_DEVICE,
+            Constants::PERMISSION_GET_BUNDLE_INFO_AND_INTERACT_ACROSS_LOCAL_ACCOUNTS);
+        return nullptr;
+    }
+    return CommonFunAni::ConvertAniArray(env, appProvisionInfos, CommonFunAni::ConvertAppProvisionInfo);
+}
+
 static ani_boolean CanOpenLink(ani_env* env, ani_string aniLink)
 {
     APP_LOGD("ani CanOpenLink called");
@@ -2686,6 +2731,10 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
             reinterpret_cast<void*>(GetAppProvisionInfoNative) },
         ani_native_function { "getAllAppProvisionInfoNative", nullptr,
             reinterpret_cast<void*>(GetAllAppProvisionInfoNative) },
+        ani_native_function { "getAppProvisionInfoInDeviceNative", nullptr,
+            reinterpret_cast<void*>(GetAppProvisionInfoInDeviceNative) },
+        ani_native_function { "getAllAppProvisionInfoInDeviceNative", nullptr,
+            reinterpret_cast<void*>(GetAllAppProvisionInfoInDeviceNative) },
         ani_native_function { "canOpenLink", nullptr, reinterpret_cast<void*>(CanOpenLink) },
         ani_native_function { "getAllPreinstalledApplicationInfoNative", nullptr,
             reinterpret_cast<void*>(GetAllPreinstalledApplicationInfoNative) },

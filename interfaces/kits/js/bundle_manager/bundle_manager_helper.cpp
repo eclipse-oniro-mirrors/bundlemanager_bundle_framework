@@ -276,6 +276,32 @@ ErrCode BundleManagerHelper::InnerGetAllAppProvisionInfo(const int32_t userId,
     return CommonFunc::ConvertErrCode(ret);
 }
 
+ErrCode BundleManagerHelper::InnerGetAppProvisionInfoInDevice(
+    const std::string& bundleName, int32_t userId, std::vector<AppProvisionInfo>& appProvisionInfos)
+{
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("iBundleMgr is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode ret = iBundleMgr->GetAppProvisionInfoInDevice(bundleName, userId, appProvisionInfos);
+    APP_LOGD("GetAppProvisionInfoInDevice ErrCode : %{public}d", ret);
+    return CommonFunc::ConvertErrCode(ret);
+}
+
+ErrCode BundleManagerHelper::InnerGetAllAppProvisionInfoInDevice(const int32_t userId,
+    std::vector<AppProvisionInfo>& appProvisionInfos)
+{
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("iBundleMgr is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode ret = iBundleMgr->GetAllAppProvisionInfoInDevice(userId, appProvisionInfos);
+    APP_LOGD("GetAllAppProvisionInfoInDevice ErrCode : %{public}d", ret);
+    return CommonFunc::ConvertErrCode(ret);
+}
+
 ErrCode BundleManagerHelper::InnerSetAlternateIcon(const std::string& alternateIconName)
 {
     auto extResourceManager = CommonFunc::GetExtendResourceManager();

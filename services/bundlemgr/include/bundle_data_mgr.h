@@ -1164,6 +1164,9 @@ public:
     void GetBundleNameList(const int32_t userId, std::vector<std::string>& bundleNameList);
     std::vector<std::string> GetSystemAppNames(int32_t userId) const;
     ErrCode GetAllAppProvisionInfo(const int32_t userId, std::vector<AppProvisionInfo> &appProvisionInfos);
+    ErrCode GetAppProvisionInfoInDevice(const std::string &bundleName, int32_t userId,
+        std::vector<AppProvisionInfo> &appProvisionInfos);
+    ErrCode GetAllAppProvisionInfoInDevice(const int32_t userId, std::vector<AppProvisionInfo> &appProvisionInfos);
     virtual ErrCode GetProvisionMetadata(const std::string &bundleName, int32_t userId,
         std::vector<Metadata> &provisionMetadatas) const;
 

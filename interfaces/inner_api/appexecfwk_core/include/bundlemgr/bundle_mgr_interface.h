@@ -1664,6 +1664,17 @@ public:
         return ERR_OK;
     }
 
+    virtual ErrCode GetAppProvisionInfoInDevice(const std::string &bundleName, int32_t userId,
+        std::vector<AppProvisionInfo> &appProvisionInfos)
+    {
+        return ERR_OK;
+    }
+
+    virtual ErrCode GetAllAppProvisionInfoInDevice(int32_t userId, std::vector<AppProvisionInfo> &appProvisionInfos)
+    {
+        return ERR_OK;
+    }
+
     virtual ErrCode GetProvisionMetadata(const std::string &bundleName, int32_t userId,
         std::vector<Metadata> &provisionMetadatas)
     {
