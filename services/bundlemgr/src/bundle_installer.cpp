@@ -25,6 +25,7 @@
 #include "app_log_tag_wrapper.h"
 #include "bundle_mgr_service.h"
 #include "datetime_ex.h"
+#include "dual_mode_helper.h"
 #include "ffrt.h"
 #include "parameter.h"
 #include "parameters.h"
@@ -354,6 +355,28 @@ void BundleInstaller::RecoverDriverForAllUsers(const std::string &bundleName, co
     }
 }
 
+bool BundleInstaller::InitUninstallAndRecoverInfo(const std::string &bundleName, InstallParam &installParam,
+    std::vector<int32_t> &userIds)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr != nullptr) {
+        userIds = dataMgr->GetUserIds(bundleName);
+        if (!DualModeHelper::IsDualModeDevice()) {
+            return true;
+        }
+        InnerBundleInfo info;
+        if (!dataMgr->FetchInnerBundleInfo(bundleName, info)) {
+            APP_LOGE("FetchInnerBundleInfo failed, bundleName: %{public}s", bundleName.c_str());
+            if (statusReceiver_ != nullptr) {
+                statusReceiver_->OnFinished(ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE, "");
+            }
+            return false;
+        }
+        installParam.deviceModeDistributionPolicy = info.GetDeviceModeDistributionPolicy();
+    }
+    return true;
+}
+
 void BundleInstaller::UninstallAndRecover(const std::string &bundleName, const InstallParam &installParam)
 {
     ErrCode resultCode = ERR_OK;
@@ -367,18 +390,8 @@ void BundleInstaller::UninstallAndRecover(const std::string &bundleName, const I
         }
         return;
     }
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (dataMgr != nullptr) {
-        InnerBundleInfo info;
-        if (!dataMgr->FetchInnerBundleInfo(bundleName, info)) {
-            APP_LOGE("FetchInnerBundleInfo failed, bundleName: %{public}s", bundleName.c_str());
-            if (statusReceiver_ != nullptr) {
-                statusReceiver_->OnFinished(ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE, "");
-            }
-            return;
-        }
-        userInstallParam.deviceModeDistributionPolicy = info.GetDeviceModeDistributionPolicy();
-        userIds = dataMgr->GetUserIds(bundleName);
+    if (!InitUninstallAndRecoverInfo(bundleName, userInstallParam, userIds)) {
+        return;
     }
     for (auto userId : userIds) {
         userInstallParam.userId = userId;

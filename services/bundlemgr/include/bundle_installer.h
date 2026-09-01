@@ -114,6 +114,9 @@ private:
 
     void RecoverDriverForAllUsers(const std::string &bundleName, const InstallParam &installParam);
 
+    bool InitUninstallAndRecoverInfo(const std::string &bundleName, InstallParam &installParam,
+        std::vector<int32_t> &userIds);
+
 private:
     const int64_t installerId_ = 0;
     const sptr<IStatusReceiver> statusReceiver_;
