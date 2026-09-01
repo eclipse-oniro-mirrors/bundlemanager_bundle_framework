@@ -11489,7 +11489,7 @@ ErrCode BundleDataMgr::GetAdditionalInfoForAllUser(
     APP_LOGD("GetAdditionalInfo bundleName: %{public}s", bundleName.c_str());
     if (DualModeHelper::IsDualModeDevice()) {
         APP_LOGW("IsDualModeDevice, not surpport this function.");
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+        return ERR_APPEXECFWK_DUAL_MODE_DEVICE_NOT_SUPPORTED;
     }
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);

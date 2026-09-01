@@ -1842,7 +1842,7 @@ public:
     }
 
     virtual ErrCode SetAdditionalInfo(const std::string &bundleName,
-        const std::string &additionalInfo, int32_t appIndex)
+        const std::string &additionalInfo, int32_t appIndex = Constants::DEFAULT_APP_INDEX)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }

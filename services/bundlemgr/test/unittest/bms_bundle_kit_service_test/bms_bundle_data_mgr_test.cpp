@@ -500,7 +500,11 @@ void BmsBundleDataMgrTest::SetUp()
 }
 
 void BmsBundleDataMgrTest::TearDown()
-{}
+{
+    OHOS::system::RemoveParameter("persist.bms.test_dual_mode");
+    OHOS::system::RemoveParameter("persist.bms.ispcmode");
+    OHOS::system::RemoveParameter("persist.bms.mainmode");
+}
 
 void BmsBundleDataMgrTest::ClearDataMgr()
 {
