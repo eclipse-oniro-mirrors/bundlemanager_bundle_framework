@@ -1534,9 +1534,9 @@ static ani_object GetAppProvisionInfoInDeviceNative(
     return CommonFunAni::ConvertAniArray(env, appProvisionInfos, CommonFunAni::ConvertAppProvisionInfo);
 }
 
-static ani_object GetAllAppProvisionInfoNativeInDevice(ani_env* env, ani_int aniUserId)
+static ani_object GetAllAppProvisionInfoInDeviceNative(ani_env* env, ani_int aniUserId)
 {
-    APP_LOGD("ani GetAllAppProvisionInfoNativeInDevice called");
+    APP_LOGD("ani GetAllAppProvisionInfoInDeviceNative called");
     if (aniUserId == EMPTY_USER_ID) {
         APP_LOGE("userId invalid");
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, Constants::USER_ID, TYPE_NUMBER);
@@ -1545,7 +1545,7 @@ static ani_object GetAllAppProvisionInfoNativeInDevice(ani_env* env, ani_int ani
     std::vector<AppProvisionInfo> appProvisionInfos;
     ErrCode ret = BundleManagerHelper::InnerGetAllAppProvisionInfoInDevice(aniUserId, appProvisionInfos);
     if (ret != ERR_OK) {
-        APP_LOGE("GetAllAppProvisionInfoNativeInDevice failed ret: %{public}d", ret);
+        APP_LOGE("GetAllAppProvisionInfoInDeviceNative failed ret: %{public}d", ret);
         BusinessErrorAni::ThrowCommonNewError(env, ret, GET_ALL_APP_PROVISION_INFO_IN_DEVICE,
             Constants::PERMISSION_GET_BUNDLE_INFO_AND_INTERACT_ACROSS_LOCAL_ACCOUNTS);
         return nullptr;
