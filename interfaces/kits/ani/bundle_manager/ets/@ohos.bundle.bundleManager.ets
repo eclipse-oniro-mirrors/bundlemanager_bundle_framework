@@ -1545,7 +1545,7 @@ namespace bundleManager {
     let p = new Promise<Array<AppProvisionInfo>>((resolve: (appProvisionInfos: Array<AppProvisionInfo>)
       => void, reject: (error: Error) => void) => {
       let execFun = (): Array<AppProvisionInfo> => {
-        return getAppProvisionInfoInDeviceNative(bundleName, userId, false);
+        return getAppProvisionInfoInDeviceNative(bundleName, userId);
       };
       let p1 = taskpool.execute(execFun);
       p1.then((e: Any) => {
@@ -1559,11 +1559,11 @@ namespace bundleManager {
     return p;
   }
 
-  function getAllAppProvisionInfo(userId: int): Promise<Array<AppProvisionInfo>>{
+  function getAllAppProvisionInfoInDevice(userId: int): Promise<Array<AppProvisionInfo>>{
     let p = new Promise<Array<AppProvisionInfo>>((resolve: (appProvisionInfos: Array<AppProvisionInfo>)
       => void, reject: (error: Error) => void) => {
       let execFun = (): Array<AppProvisionInfo> => {
-        return getAllAppProvisionInfoNative(userId);
+        return getAllAppProvisionInfoInDeviceNative(userId);
       };
       let p1 = taskpool.execute(execFun);
       p1.then((e: Any) => {

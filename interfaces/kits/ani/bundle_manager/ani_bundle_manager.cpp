@@ -1523,7 +1523,7 @@ static ani_object GetAppProvisionInfoInDeviceNative(
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, Constants::USER_ID, TYPE_NUMBER);
         return nullptr;
     }
-    std::vector<AppProvisionInfo> &appProvisionInfos;
+    std::vector<AppProvisionInfo> appProvisionInfos;
     ErrCode ret = BundleManagerHelper::InnerGetAppProvisionInfoInDevice(bundleName, aniUserId, appProvisionInfos);
     if (ret != ERR_OK) {
         APP_LOGE("InnerGetAppProvisionInfoInDevice failed ret: %{public}d", ret);

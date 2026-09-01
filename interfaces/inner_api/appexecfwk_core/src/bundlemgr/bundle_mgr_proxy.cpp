@@ -4679,7 +4679,7 @@ ErrCode BundleMgrProxy::GetAppProvisionInfoInDevice(const std::string &bundleNam
         APP_LOGE("fail to GetAppProvisionInfoInDevice due to write userId fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    return GetParcelableInfoWithErrCode<AppProvisionInfo>(
+    return GetVectorFromParcelIntelligentWithErrCode<AppProvisionInfo>(
         BundleMgrInterfaceCode::GET_APP_PROVISION_INFO_IN_DEVICE, data, appProvisionInfos);
 }
 

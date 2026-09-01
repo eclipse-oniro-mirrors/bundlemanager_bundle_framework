@@ -5092,7 +5092,7 @@ void GetAppProvisionInfoInDeviceComplete(napi_env env, napi_status status, void 
         CommonFunc::ConvertAllAppProvisionInfo(env, asyncCallbackInfo->appProvisionInfos, result[ARGS_POS_ONE]);
     } else {
         result[ARGS_POS_ZERO] = BusinessError::CreateNewCommonError(env, asyncCallbackInfo->err,
-            GET_ALL_APP_PROVISION_INFO_IN_DEVICE, 
+            GET_APP_PROVISION_INFO_IN_DEVICE, 
             Constants::PERMISSION_GET_BUNDLE_INFO_AND_INTERACT_ACROSS_LOCAL_ACCOUNTS);
     }
     CommonFunc::NapiReturnDeferred<AppProvisionInfoInDeviceCallbackInfo>(
@@ -5121,13 +5121,13 @@ napi_value GetAppProvisionInfoInDevice(napi_env env, napi_callback_info info)
         return nullptr;
     }
     CHECK_STRING_EMPTY(env, asyncCallbackInfo->bundleName, std::string{ BUNDLE_NAME });
-    if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId)) {
+    if (!CommonFunc::ParseInt(env, args[ARGS_POS_ONE], asyncCallbackInfo->userId)) {
         APP_LOGE("userId invalid");
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, TYPE_NUMBER);
         return nullptr;
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<AppProvisionInfoInDeviceCallbackInfo>(
-        env, asyncCallbackInfo, GET_APP_PROVISION_INFO_IN_DEVICE, 
+        env, asyncCallbackInfo, GET_APP_PROVISION_INFO_IN_DEVICE,
         GetAppProvisionInfoInDeviceExec, GetAppProvisionInfoInDeviceComplete);
     callbackPtr.release();
     APP_LOGD("call GetAppProvisionInfoInDevice done");
