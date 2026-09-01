@@ -3072,7 +3072,13 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
     if (onDemandInstall) {
         return RecoverOnDemandInstallBundle(bundleName, installParam, uid);
     }
-    if (!dataMgr_->GetPreInstallBundleInfo(bundleName, preInstallBundleInfo)
+    std::string effectiveBundleName = bundleName;
+    if (!DualModeHelper::IsDualModeCloneKey(bundleName) && DualModeHelper::IsDualModeDevice() &&
+        DualModeHelper::IsSecondaryMode() &&
+        DualModeHelper::IsDiffPackageCategory(installParam.deviceModeDistributionPolicy)) {
+        effectiveBundleName = DualModeHelper::GetDualModeBundleName(bundleName);
+    }
+    if (!dataMgr_->GetPreInstallBundleInfo(effectiveBundleName, preInstallBundleInfo)
         || preInstallBundleInfo.GetBundlePaths().empty()) {
         LOG_E(BMS_TAG_INSTALLER, "Get PreInstallBundleInfo failed, bundleName: %{public}s", bundleName.c_str());
         return ERR_APPEXECFWK_RECOVER_INVALID_BUNDLE_NAME;
