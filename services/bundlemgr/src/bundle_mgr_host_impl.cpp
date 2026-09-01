@@ -5988,7 +5988,8 @@ ErrCode BundleMgrHostImpl::GetJsonProfileForSelf(ProfileType profileType, const 
         Constants::UNSPECIFIED_USERID);
 }
 
-ErrCode BundleMgrHostImpl::SetAdditionalInfo(const std::string &bundleName, const std::string &additionalInfo)
+ErrCode BundleMgrHostImpl::SetAdditionalInfo(const std::string &bundleName,
+    const std::string &additionalInfo, int32_t appIndex)
 {
     APP_LOGD("Called. BundleName: %{public}s", bundleName.c_str());
     if (!BundlePermissionMgr::IsSystemApp()) {
@@ -6019,7 +6020,7 @@ ErrCode BundleMgrHostImpl::SetAdditionalInfo(const std::string &bundleName, cons
         APP_LOGE("DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    return dataMgr->SetAdditionalInfo(bundleName, additionalInfo);
+    return dataMgr->SetAdditionalInfo(bundleName, additionalInfo, appIndex);
 }
 
 ErrCode BundleMgrHostImpl::CreateBundleDataDir(int32_t userId)

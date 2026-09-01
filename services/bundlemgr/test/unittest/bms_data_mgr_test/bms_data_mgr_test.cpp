@@ -5866,7 +5866,7 @@ HWTEST_F(BmsDataMgrTest, SetAdditionalInfo_0001, TestSize.Level1)
     std::string bundleName = "bundleName";
     std::string abilityName = "abilityName";
     std::string additionalInfo;
-    auto ret = dataMgr->SetAdditionalInfo(bundleName, additionalInfo);
+    auto ret = dataMgr->SetAdditionalInfo(bundleName, additionalInfo, 0);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 
     InnerBundleInfo innerBundleInfo;
@@ -5882,11 +5882,11 @@ HWTEST_F(BmsDataMgrTest, SetAdditionalInfo_0001, TestSize.Level1)
     EXPECT_EQ(ret2, true);
     bool ret3 = dataMgr->AddInnerBundleInfo(bundleName, innerBundleInfo);
     EXPECT_EQ(ret3, true);
-    auto ret4 = dataMgr->SetAdditionalInfo(bundleName, additionalInfo);
+    auto ret4 = dataMgr->SetAdditionalInfo(bundleName, additionalInfo, 0);
     EXPECT_EQ(ret4, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 
     innerBundleInfo.SetApplicationBundleType(BundleType::SHARED);
-    auto ret6 = dataMgr->SetAdditionalInfo(bundleName, additionalInfo);
+    auto ret6 = dataMgr->SetAdditionalInfo(bundleName, additionalInfo, 0);
     EXPECT_EQ(ret6, ERR_OK);
     dataMgr->bundleInfos_.erase(bundleName);
     dataMgr->installStates_.erase(bundleName);

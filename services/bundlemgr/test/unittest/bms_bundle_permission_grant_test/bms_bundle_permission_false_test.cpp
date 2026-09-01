@@ -1724,7 +1724,7 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_18000, Funct
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_21000, Function | SmallTest | Level1)
 {
     std::string additionalInfo = "abc";
-    ErrCode ret = bundleMgrHostImpl_->SetAdditionalInfo("", additionalInfo);
+    ErrCode ret = bundleMgrHostImpl_->SetAdditionalInfo("", additionalInfo, 0);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 

@@ -5941,7 +5941,7 @@ HWTEST_F(BmsBundleKitServiceTest, SetAdditionalInfo_0001, Function | SmallTest |
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     ASSERT_NE(nullptr, bundleMgrProxy);
     std::string additionalInfo = "additionalInfo";
-    auto ret = bundleMgrProxy->SetAdditionalInfo("", additionalInfo);
+    auto ret = bundleMgrProxy->SetAdditionalInfo("", additionalInfo, 0);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
 }
 
@@ -5956,7 +5956,7 @@ HWTEST_F(BmsBundleKitServiceTest, SetAdditionalInfo_0002, Function | SmallTest |
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     ASSERT_NE(nullptr, bundleMgrProxy);
     std::string additionalInfo = "additionalInfo";
-    auto ret = bundleMgrProxy->SetAdditionalInfo(BUNDLE_NAME_TEST, additionalInfo);
+    auto ret = bundleMgrProxy->SetAdditionalInfo(BUNDLE_NAME_TEST, additionalInfo, 0);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_NOT_APP_GALLERY_CALL);
 }
 

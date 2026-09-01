@@ -4477,7 +4477,8 @@ ErrCode BundleMgrHost::HandleSetAdditionalInfo(MessageParcel &data, MessageParce
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     std::string additionalInfo = data.ReadString();
-    ErrCode ret = SetAdditionalInfo(bundleName, additionalInfo);
+    int32_t appIndex = data.ReadInt32();
+    ErrCode ret = SetAdditionalInfo(bundleName, additionalInfo, appIndex);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("Write reply failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
