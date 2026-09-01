@@ -49,7 +49,8 @@ public:
     static ErrCode InnerGetAllAppProvisionInfo(const int32_t userId, std::vector<AppProvisionInfo>& appProvisionInfos);
     static ErrCode InnerGetAppProvisionInfoInDevice(
         const std::string& bundleName, int32_t userId, std::vector<AppProvisionInfo>& appProvisionInfos);
-    static ErrCode InnerGetAllAppProvisionInfoInDevice(const int32_t userId, std::vector<AppProvisionInfo>& appProvisionInfos);
+    static ErrCode InnerGetAllAppProvisionInfoInDevice(
+        const int32_t userId, std::vector<AppProvisionInfo>& appProvisionInfos);
     static ErrCode InnerSetAlternateIcon(const std::string& alternateIconName);
     static ErrCode InnerGetAllAppInstallExtendedInfo(std::vector<AppInstallExtendedInfo>& appInstallExtendedInfos);
     static ErrCode InnerGetAllPreinstalledApplicationInfos(

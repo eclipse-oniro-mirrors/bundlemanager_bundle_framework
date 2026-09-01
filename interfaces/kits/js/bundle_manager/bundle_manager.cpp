@@ -5092,7 +5092,7 @@ void GetAppProvisionInfoInDeviceComplete(napi_env env, napi_status status, void 
         CommonFunc::ConvertAllAppProvisionInfo(env, asyncCallbackInfo->appProvisionInfos, result[ARGS_POS_ONE]);
     } else {
         result[ARGS_POS_ZERO] = BusinessError::CreateNewCommonError(env, asyncCallbackInfo->err,
-            GET_APP_PROVISION_INFO_IN_DEVICE, 
+            GET_APP_PROVISION_INFO_IN_DEVICE,
             Constants::PERMISSION_GET_BUNDLE_INFO_AND_INTERACT_ACROSS_LOCAL_ACCOUNTS);
     }
     CommonFunc::NapiReturnDeferred<AppProvisionInfoInDeviceCallbackInfo>(
