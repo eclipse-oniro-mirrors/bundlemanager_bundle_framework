@@ -3973,7 +3973,7 @@ ErrCode BundleMgrHost::HandleGetAppProvisionInfoInDevice(MessageParcel &data, Me
         APP_LOGE("HandleGetAppProvisionInfoInDevice write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if ((ret == ERR_OK) && !reply.WriteParcelable(&appProvisionInfo)) {
+    if ((ret == ERR_OK) && !reply.WriteParcelable(&appProvisionInfos)) {
         APP_LOGE("write appProvisionInfos failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
