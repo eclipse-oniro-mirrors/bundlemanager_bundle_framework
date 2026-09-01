@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,6 +22,7 @@
 #include "bmsbundleeventcallbackproxy_fuzzer.h"
 #include "securec.h"
 #include "bms_fuzztest_util.h"
+#include "ipc_object_stub.h"
 
 using namespace OHOS::AppExecFwk;
 using namespace OHOS::AppExecFwk::BMSFuzzTestUtil;
@@ -29,7 +30,7 @@ namespace OHOS {
 bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
 {
     FuzzedDataProvider fdp(data, size);
-    sptr<IRemoteObject> object;
+    sptr<IRemoteObject> object = new (std::nothrow) IPCObjectStub(u"");
     BundleEventCallbackProxy bundleEventCallbackProxy(object);
     int32_t userId = GenerateRandomUser(fdp);
     std::string uid = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);

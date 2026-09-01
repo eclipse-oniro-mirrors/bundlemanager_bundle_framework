@@ -41,6 +41,10 @@ ohos_fuzztest("BMSBundleUserMgrHostFuzzTest") {
   external_deps = [
     "ability_base:want",
     "c_utils:utils",
+    "ffrt:libffrt",
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
     "ipc:ipc_core",
+    "samgr:samgr_proxy",
   ]
 }

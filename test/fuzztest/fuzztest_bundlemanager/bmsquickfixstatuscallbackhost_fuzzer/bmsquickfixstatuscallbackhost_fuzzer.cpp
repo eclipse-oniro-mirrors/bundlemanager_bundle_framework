@@ -52,12 +52,13 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     MessageParcel datas;
     MessageParcel reply;
     MessageOption option;
-    quickFixStatusCallbackHost.OnRemoteRequest(code, datas, reply, option);
-    quickFixStatusCallbackHost.OnRemoteRequest(static_cast<uint32_t>
+    datas.WriteInterfaceToken(quickFixStatusCallbackHost.GetDescriptor());
+    FuzzIpcRequest(quickFixStatusCallbackHost, code, datas, reply, option);
+    FuzzIpcRequest(quickFixStatusCallbackHost, static_cast<uint32_t>
         (QuickFixStatusCallbackInterfaceCode::ON_PATCH_DEPLOYED), datas, reply, option);
-    quickFixStatusCallbackHost.OnRemoteRequest(static_cast<uint32_t>
+    FuzzIpcRequest(quickFixStatusCallbackHost, static_cast<uint32_t>
         (QuickFixStatusCallbackInterfaceCode::ON_PATCH_SWITCHED), datas, reply, option);
-    quickFixStatusCallbackHost.OnRemoteRequest(static_cast<uint32_t>
+    FuzzIpcRequest(quickFixStatusCallbackHost, static_cast<uint32_t>
         (QuickFixStatusCallbackInterfaceCode::ON_PATCH_DELETED), datas, reply, option);
     quickFixStatusCallbackHost.HandleOnPatchDeployed(datas, reply);
     quickFixStatusCallbackHost.HandleOnPatchSwitched(datas, reply);

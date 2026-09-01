@@ -43,8 +43,9 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     MessageParcel datas;
     MessageParcel reply;
     MessageOption option;
-    bundleEventCallbackHost.OnRemoteRequest(code, datas, reply, option);
-    bundleEventCallbackHost.OnRemoteRequest(static_cast<uint32_t>(BundleEventCallbackInterfaceCode::ON_RECEIVE_EVENT),
+    datas.WriteInterfaceToken(bundleEventCallbackHost.GetDescriptor());
+    FuzzIpcRequest(bundleEventCallbackHost, code, datas, reply, option);
+    FuzzIpcRequest(bundleEventCallbackHost, static_cast<uint32_t>(BundleEventCallbackInterfaceCode::ON_RECEIVE_EVENT),
         datas, reply, option);
     return true;
 }

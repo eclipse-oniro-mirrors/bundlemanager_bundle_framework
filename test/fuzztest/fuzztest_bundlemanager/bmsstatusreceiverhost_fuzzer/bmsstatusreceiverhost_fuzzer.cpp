@@ -49,10 +49,11 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     MessageParcel datas;
     MessageParcel reply;
     MessageOption option;
-    statusReceiverHost.OnRemoteRequest(code, datas, reply, option);
-    statusReceiverHost.OnRemoteRequest(static_cast<uint32_t>(StatusReceiverInterfaceCode::ON_FINISHED),
+    datas.WriteInterfaceToken(statusReceiverHost.GetDescriptor());
+    FuzzIpcRequest(statusReceiverHost, code, datas, reply, option);
+    FuzzIpcRequest(statusReceiverHost, static_cast<uint32_t>(StatusReceiverInterfaceCode::ON_FINISHED),
         datas, reply, option);
-    statusReceiverHost.OnRemoteRequest(static_cast<uint32_t>(StatusReceiverInterfaceCode::ON_STATUS_NOTIFY),
+    FuzzIpcRequest(statusReceiverHost, static_cast<uint32_t>(StatusReceiverInterfaceCode::ON_STATUS_NOTIFY),
         datas, reply, option);
     return true;
 }

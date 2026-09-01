@@ -39,7 +39,12 @@ ohos_fuzztest("BMSBundleStreamInstallerHostFuzzTest") {
     "${core_path}:appexecfwk_core",
   ]
   external_deps = [
+    "ability_base:want",
     "c_utils:utils",
     "ipc:ipc_core",
+    "ffrt:libffrt",
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
+    "samgr:samgr_proxy",
   ]
 }

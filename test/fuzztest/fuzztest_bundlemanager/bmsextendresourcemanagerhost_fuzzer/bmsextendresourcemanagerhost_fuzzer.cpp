@@ -34,24 +34,25 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     MessageParcel datas;
     MessageParcel reply;
     MessageOption option;
-    host.OnRemoteRequest(code, datas, reply, option);
-    host.OnRemoteRequest(static_cast<uint32_t>
+    datas.WriteInterfaceToken(host.GetDescriptor());
+    FuzzIpcRequest(host, code, datas, reply, option);
+    FuzzIpcRequest(host, static_cast<uint32_t>
         (ExtendResourceManagerInterfaceCode::ADD_EXT_RESOURCE), datas, reply, option);
-    host.OnRemoteRequest(static_cast<uint32_t>
+    FuzzIpcRequest(host, static_cast<uint32_t>
         (ExtendResourceManagerInterfaceCode::REMOVE_EXT_RESOURCE), datas, reply, option);
-    host.OnRemoteRequest(static_cast<uint32_t>
+    FuzzIpcRequest(host, static_cast<uint32_t>
         (ExtendResourceManagerInterfaceCode::GET_EXT_RESOURCE), datas, reply, option);
-    host.OnRemoteRequest(static_cast<uint32_t>
+    FuzzIpcRequest(host, static_cast<uint32_t>
         (ExtendResourceManagerInterfaceCode::ENABLE_DYNAMIC_ICON), datas, reply, option);
-    host.OnRemoteRequest(static_cast<uint32_t>
+    FuzzIpcRequest(host, static_cast<uint32_t>
         (ExtendResourceManagerInterfaceCode::DISABLE_DYNAMIC_ICON), datas, reply, option);
-    host.OnRemoteRequest(static_cast<uint32_t>
+    FuzzIpcRequest(host, static_cast<uint32_t>
         (ExtendResourceManagerInterfaceCode::GET_DYNAMIC_ICON), datas, reply, option);
-    host.OnRemoteRequest(static_cast<uint32_t>
+    FuzzIpcRequest(host, static_cast<uint32_t>
         (ExtendResourceManagerInterfaceCode::CREATE_FD), datas, reply, option);
-    host.OnRemoteRequest(static_cast<uint32_t>
+    FuzzIpcRequest(host, static_cast<uint32_t>
         (ExtendResourceManagerInterfaceCode::GET_ALL_DYNAMIC_ICON_INFO), datas, reply, option);
-    host.OnRemoteRequest(static_cast<uint32_t>
+    FuzzIpcRequest(host, static_cast<uint32_t>
         (ExtendResourceManagerInterfaceCode::GET_DYNAMIC_ICON_INFO), datas, reply, option);
     host.HandleAddExtResource(datas, reply);
     host.HandleRemoveExtResource(datas, reply);
@@ -62,6 +63,7 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     host.HandleCreateFd(datas, reply);
     host.HandleGetAllDynamicIconInfo(datas, reply);
     host.HandleGetDynamicIconInfo(datas, reply);
+    host.HandleSetAlternateIcon(datas, reply);
     return true;
 }
 }
