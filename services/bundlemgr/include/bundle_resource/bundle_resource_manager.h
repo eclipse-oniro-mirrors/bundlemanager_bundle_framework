@@ -140,6 +140,10 @@ public:
     bool GetAllUninstallBundleResourceInfo(const int32_t userId, const uint32_t flags,
         std::vector<BundleResourceInfo> &bundleResourceInfos);
 
+    // dual-mode: normalize prefixed storage names in uninstall rows to the logical
+    // bundleName + DUAL_MODE_CLONE_APP_INDEX; call AFTER the keep-data filter.
+    static void NormalizeDualModeUninstallResourceInfos(std::vector<BundleResourceInfo> &bundleResourceInfos);
+
     bool MigrateUninstallBundleResource();
 
     int32_t GetUserId();
@@ -185,10 +189,20 @@ private:
 
     bool IsNeedProcessResourceIconInfo(const uint32_t resourceFlags);
 
-    // dual-mode: dual-mode clone records are stored under "+clone-10000+{bundleName}"
-    // without numeric app-index prefix. Normalize the query name and appIndex (10000 -> 0)
-    // for RDB lookups. Non-dual-mode records keep the original params (zero regression).
-    bool GetDualModeQueryName(const std::string &bundleName, int32_t &appIndex, std::string &queryName);
+    enum class DualModeQueryRoute {
+        // visible record is not a dual-mode clone: query with the original params
+        NOT_DUAL_MODE = 0,
+        // dual-mode clone addressed by DUAL_MODE_CLONE_APP_INDEX: redirect to the
+        // prefixed effective name with appIndex 10000 -> 0 for RDB lookup
+        CLONE_ROW = 1,
+        // dual-mode clone with any other appIndex (including 0): refused
+        REFUSED = 2,
+    };
+
+    // dual-mode: classify a single query request on a dual-mode device; clone rows are
+    // only addressed by DUAL_MODE_CLONE_APP_INDEX.
+    DualModeQueryRoute GetDualModeQueryRoute(
+        const std::string &bundleName, int32_t &appIndex, std::string &queryName);
 
     bool InnerProcessThemeIconWhenOta(const std::string &bundleName, const std::set<int32_t> userIds,
         const bool hasBundleUpdated = false);

@@ -45,6 +45,15 @@ constexpr const char* TASK_NAME = "ReleaseResourceTask";
 constexpr uint64_t DELAY_TIME_MILLI_SECONDS = 3 * 60 * 1000; // 3mins
 constexpr const char* CONTACTS_BUNDLE_NAME = "com.ohos.contacts";
 using Want = OHOS::AAFwk::Want;
+
+// dual-mode: icon rows are stored without dual-mode isolation, so a clone row (appIndex
+// 10000) shares the (logicalName, 0) icon row with the primary-mode row.
+inline bool IsIconAppIndexMatched(const int32_t resourceAppIndex, const int32_t iconAppIndex)
+{
+    return (resourceAppIndex == iconAppIndex) ||
+        (resourceAppIndex == ServiceConstants::DUAL_MODE_CLONE_APP_INDEX &&
+            iconAppIndex == Constants::DEFAULT_APP_INDEX);
+}
 }
 std::mutex BundleResourceManager::g_sysResMutex;
 std::shared_ptr<Global::Resource::ResourceManager> BundleResourceManager::g_resMgr = nullptr;
@@ -141,29 +150,32 @@ bool BundleResourceManager::GetAllResourceName(std::vector<std::string> &keyName
     return bundleResourceRdb_->GetAllResourceName(keyNames);
 }
 
-bool BundleResourceManager::GetDualModeQueryName(
+BundleResourceManager::DualModeQueryRoute BundleResourceManager::GetDualModeQueryRoute(
     const std::string &bundleName, int32_t &appIndex, std::string &queryName)
 {
     queryName = bundleName;
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         APP_LOGE("dataMgr is nullptr");
-        return false;
+        return DualModeQueryRoute::NOT_DUAL_MODE;
     }
     InnerBundleInfo innerBundleInfo;
     if (!dataMgr->FetchInnerBundleInfo(bundleName, innerBundleInfo)) {
-        return false;
+        return DualModeQueryRoute::NOT_DUAL_MODE;
     }
     if (!innerBundleInfo.IsDualModeCloneApp()) {
-        return false;
+        return DualModeQueryRoute::NOT_DUAL_MODE;
     }
-    // dual-mode: clone resource rows are stored under the prefixed effective name
-    // with appIndex 0 (no numeric index prefix in the stored key).
+    if (appIndex != ServiceConstants::DUAL_MODE_CLONE_APP_INDEX) {
+        // dual-mode: clone rows are only addressed by DUAL_MODE_CLONE_APP_INDEX
+        APP_LOGW("dual-mode clone -n %{public}s only accepts appIndex %{public}d, refuse appIndex %{public}d",
+            bundleName.c_str(), ServiceConstants::DUAL_MODE_CLONE_APP_INDEX, appIndex);
+        return DualModeQueryRoute::REFUSED;
+    }
+    // dual-mode: clone rows are stored under the prefixed effective name with appIndex 0
     queryName = DualModeHelper::GetDualModeBundleName(bundleName);
-    if (appIndex == ServiceConstants::DUAL_MODE_CLONE_APP_INDEX) {
-        appIndex = 0;
-    }
-    return true;
+    appIndex = 0;
+    return DualModeQueryRoute::CLONE_ROW;
 }
 
 bool BundleResourceManager::GetBundleResourceInfo(const std::string &bundleName, const uint32_t flags,
@@ -174,8 +186,9 @@ bool BundleResourceManager::GetBundleResourceInfo(const std::string &bundleName,
     uint32_t resourceFlags = CheckResourceFlags(flags);
     std::string queryName = bundleName;
     int32_t queryAppIndex = appIndex;
-    if (DualModeHelper::IsDualModeDevice()) {
-        (void)GetDualModeQueryName(bundleName, queryAppIndex, queryName);
+    if (DualModeHelper::IsDualModeDevice() &&
+        GetDualModeQueryRoute(bundleName, queryAppIndex, queryName) == DualModeQueryRoute::REFUSED) {
+        return false;
     }
     if (bundleResourceRdb_->GetBundleResourceInfo(queryName, resourceFlags, bundleResourceInfo, queryAppIndex)) {
         APP_LOGD("success, bundleName:%{public}s", bundleName.c_str());
@@ -220,8 +233,9 @@ bool BundleResourceManager::GetSingleLauncherAbilityResourceInfo(const std::stri
     uint32_t resourceFlags = CheckResourceFlags(flags);
     std::string queryName = bundleName;
     int32_t queryAppIndex = appIndex;
-    if (DualModeHelper::IsDualModeDevice()) {
-        (void)GetDualModeQueryName(bundleName, queryAppIndex, queryName);
+    if (DualModeHelper::IsDualModeDevice() &&
+        GetDualModeQueryRoute(bundleName, queryAppIndex, queryName) == DualModeQueryRoute::REFUSED) {
+        return false;
     }
     if (bundleResourceRdb_->GetLauncherAbilityResourceInfo(queryName, flags,
         launcherAbilityResourceInfo, queryAppIndex)) {
@@ -238,13 +252,13 @@ bool BundleResourceManager::GetSingleLauncherAbilityResourceInfo(const std::stri
                         return ((resource.bundleName == resourceIconInfo.bundleName) &&
                             (resource.moduleName == resourceIconInfo.moduleName) &&
                             (resource.abilityName == resourceIconInfo.abilityName) &&
-                            (resource.appIndex == resourceIconInfo.appIndex));
+                            IsIconAppIndexMatched(resource.appIndex, resourceIconInfo.appIndex));
                     });
                 if (iter == resourceIconInfos.end()) {
                     iter = std::find_if(resourceIconInfos.begin(), resourceIconInfos.end(),
                         [&resource](const auto &resourceIconInfo) {
                             return ((resource.bundleName == resourceIconInfo.bundleName) &&
-                                (resource.appIndex == resourceIconInfo.appIndex));
+                                IsIconAppIndexMatched(resource.appIndex, resourceIconInfo.appIndex));
                         });
                 }
                 if (iter != resourceIconInfos.end()) {
@@ -264,6 +278,14 @@ bool BundleResourceManager::GetLauncherAbilityResourceInfo(const std::string &bu
 {
     APP_LOGD("start, bundleName:%{public}s", bundleName.c_str());
     uint32_t resourceFlags = CheckResourceFlags(flags);
+    // dual-mode: refuse before the cloud fallback
+    if (DualModeHelper::IsDualModeDevice()) {
+        std::string queryName = bundleName;
+        int32_t queryAppIndex = appIndex;
+        if (GetDualModeQueryRoute(bundleName, queryAppIndex, queryName) == DualModeQueryRoute::REFUSED) {
+            return false;
+        }
+    }
     if (GetSingleLauncherAbilityResourceInfo(bundleName, resourceFlags, launcherAbilityResourceInfo, appIndex)) {
         return true;
     }
@@ -299,7 +321,7 @@ bool BundleResourceManager::GetAllBundleResourceInfo(const uint32_t flags,
                 auto iter = std::find_if(resourceIconInfos.begin(), resourceIconInfos.end(),
                     [&resource](const auto &resourceIconInfo) {
                         return ((resource.bundleName == resourceIconInfo.bundleName) &&
-                            (resource.appIndex == resourceIconInfo.appIndex));
+                            IsIconAppIndexMatched(resource.appIndex, resourceIconInfo.appIndex));
                     });
                 if (iter != resourceIconInfos.end()) {
                     resource.icon = iter->icon;
@@ -332,13 +354,13 @@ bool BundleResourceManager::GetAllLauncherAbilityResourceInfo(const uint32_t fla
                         return ((resource.bundleName == resourceIconInfo.bundleName) &&
                             (resource.moduleName == resourceIconInfo.moduleName) &&
                             (resource.abilityName == resourceIconInfo.abilityName) &&
-                            (resource.appIndex == resourceIconInfo.appIndex));
+                            IsIconAppIndexMatched(resource.appIndex, resourceIconInfo.appIndex));
                     });
                 if (iter == resourceIconInfos.end()) {
                     iter = std::find_if(resourceIconInfos.begin(), resourceIconInfos.end(),
                         [&resource](const auto &resourceIconInfo) {
                             return ((resource.bundleName == resourceIconInfo.bundleName) &&
-                                (resource.appIndex == resourceIconInfo.appIndex));
+                                IsIconAppIndexMatched(resource.appIndex, resourceIconInfo.appIndex));
                         });
                 }
                 if (iter != resourceIconInfos.end()) {
@@ -540,8 +562,9 @@ bool BundleResourceManager::GetExtensionAbilityResourceInfo(const std::string &b
     uint32_t resourceFlags = CheckResourceFlags(flags);
     std::string queryName = bundleName;
     int32_t queryAppIndex = appIndex;
-    if (DualModeHelper::IsDualModeDevice()) {
-        (void)GetDualModeQueryName(bundleName, queryAppIndex, queryName);
+    if (DualModeHelper::IsDualModeDevice() &&
+        GetDualModeQueryRoute(bundleName, queryAppIndex, queryName) == DualModeQueryRoute::REFUSED) {
+        return false;
     }
     if (bundleResourceRdb_->GetExtensionAbilityResourceInfo(queryName, extensionAbilityType, resourceFlags,
         extensionAbilityResourceInfo, queryAppIndex)) {
@@ -1680,6 +1703,18 @@ bool BundleResourceManager::GetAllUninstallBundleResourceInfo(const int32_t user
         return false;
     }
     return true;
+}
+
+void BundleResourceManager::NormalizeDualModeUninstallResourceInfos(
+    std::vector<BundleResourceInfo> &bundleResourceInfos)
+{
+    for (auto &bundleResourceInfo : bundleResourceInfos) {
+        std::string originalName;
+        if (DualModeHelper::ParseDualModeBundleName(bundleResourceInfo.bundleName, originalName)) {
+            bundleResourceInfo.bundleName = originalName;
+            bundleResourceInfo.appIndex = ServiceConstants::DUAL_MODE_CLONE_APP_INDEX;
+        }
+    }
 }
 
 void BundleResourceManager::RebuildResourceDb()
