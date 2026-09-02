@@ -22,6 +22,7 @@
 #include "bundle_mgr_service.h"
 #include "bundle_resource_constants.h"
 #include "bundle_resource_manager.h"
+#include "bundle_service_constants.h"
 #include "bundle_util.h"
 #include "hitrace_meter.h"
 #include "scope_guard.h"
@@ -764,7 +765,8 @@ void BundleResourceRdb::ParseKey(const std::string &key,
     launcherAbilityResourceInfo.bundleName = info.bundleName_;
     launcherAbilityResourceInfo.moduleName = info.moduleName_;
     launcherAbilityResourceInfo.abilityName = info.abilityName_;
-    launcherAbilityResourceInfo.appIndex = info.appIndex_;
+    launcherAbilityResourceInfo.appIndex =
+        info.isDualModeCloneApp_ ? ServiceConstants::DUAL_MODE_CLONE_APP_INDEX : info.appIndex_;
     launcherAbilityResourceInfo.extensionAbilityType = info.extensionAbilityType_;
 }
 
@@ -774,7 +776,8 @@ void BundleResourceRdb::ParseKey(const std::string &key,
     ResourceInfo info;
     info.ParseKey(key);
     bundleResourceInfo.bundleName = info.bundleName_;
-    bundleResourceInfo.appIndex = info.appIndex_;
+    bundleResourceInfo.appIndex =
+        info.isDualModeCloneApp_ ? ServiceConstants::DUAL_MODE_CLONE_APP_INDEX : info.appIndex_;
 }
 
 void BundleResourceRdb::CheckDbError(const BmsRdbConfig &bmsRdbConfig)

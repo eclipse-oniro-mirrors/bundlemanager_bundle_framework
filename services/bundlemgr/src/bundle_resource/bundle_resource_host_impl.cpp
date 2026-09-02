@@ -507,7 +507,8 @@ ErrCode BundleResourceHostImpl::GetAllUninstallBundleResourceInfo(const int32_t 
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     FilterUninstallResource(userId, bundleResourceInfos);
-    
+    // dual-mode: normalize after the keep-data filter (it matches prefixed storage names)
+    BundleResourceManager::NormalizeDualModeUninstallResourceInfos(bundleResourceInfos);
     if ((flags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL)) ==
         static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL)) {
         APP_LOGD("need sort by label");

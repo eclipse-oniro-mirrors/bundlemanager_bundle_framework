@@ -1121,9 +1121,9 @@ HWTEST_F(BmsDualModeQueryTest, ExplicitQueryExtensionInfoV9_DualModeClone10000Wi
     EXPECT_EQ(extensionInfo.uid, 200000);
 }
 
-// ====================== BundleResourceManager::GetDualModeQueryName dual-mode ======================
+// ====================== BundleResourceManager::GetDualModeQueryRoute dual-mode ======================
 
-HWTEST_F(BmsDualModeQueryTest, GetDualModeQueryName_DualModeClone10000_0100, Function | SmallTest | Level0)
+HWTEST_F(BmsDualModeQueryTest, GetDualModeQueryRoute_DualModeClone10000_0100, Function | SmallTest | Level0)
 {
     auto dataMgr = InstallTestDataMgr(TEST_USERID);
     dataMgr->bundleInfos_[BUNDLE_NAME] = MakeQueryCloneInfo(true, TEST_USERID, 200000, false);
@@ -1131,25 +1131,28 @@ HWTEST_F(BmsDualModeQueryTest, GetDualModeQueryName_DualModeClone10000_0100, Fun
     ASSERT_NE(manager, nullptr);
     std::string queryName;
     int32_t queryAppIndex = ServiceConstants::DUAL_MODE_CLONE_APP_INDEX;
-    EXPECT_TRUE(manager->GetDualModeQueryName(BUNDLE_NAME, queryAppIndex, queryName));
+    EXPECT_EQ(manager->GetDualModeQueryRoute(BUNDLE_NAME, queryAppIndex, queryName),
+        BundleResourceManager::DualModeQueryRoute::CLONE_ROW);
     EXPECT_EQ(queryName, DualModeHelper::GetDualModeBundleName(BUNDLE_NAME));
     EXPECT_EQ(queryAppIndex, 0);
 }
 
-HWTEST_F(BmsDualModeQueryTest, GetDualModeQueryName_DualModeCloneIndex0_0200, Function | SmallTest | Level0)
+HWTEST_F(BmsDualModeQueryTest, GetDualModeQueryRoute_DualModeCloneIndex0_0200, Function | SmallTest | Level0)
 {
+    // dual-mode clone rows are only addressed by appIndex 10000; appIndex 0 is refused
     auto dataMgr = InstallTestDataMgr(TEST_USERID);
     dataMgr->bundleInfos_[BUNDLE_NAME] = MakeQueryCloneInfo(true, TEST_USERID, 200000, false);
     auto manager = std::make_shared<BundleResourceManager>();
     ASSERT_NE(manager, nullptr);
     std::string queryName;
     int32_t queryAppIndex = 0;
-    EXPECT_TRUE(manager->GetDualModeQueryName(BUNDLE_NAME, queryAppIndex, queryName));
-    EXPECT_EQ(queryName, DualModeHelper::GetDualModeBundleName(BUNDLE_NAME));
+    EXPECT_EQ(manager->GetDualModeQueryRoute(BUNDLE_NAME, queryAppIndex, queryName),
+        BundleResourceManager::DualModeQueryRoute::REFUSED);
+    EXPECT_EQ(queryName, BUNDLE_NAME);
     EXPECT_EQ(queryAppIndex, 0);
 }
 
-HWTEST_F(BmsDualModeQueryTest, GetDualModeQueryName_NonClone_0300, Function | SmallTest | Level0)
+HWTEST_F(BmsDualModeQueryTest, GetDualModeQueryRoute_NonClone_0300, Function | SmallTest | Level0)
 {
     auto dataMgr = InstallTestDataMgr(TEST_USERID);
     dataMgr->bundleInfos_[BUNDLE_NAME] = MakeQueryCloneInfo(false, TEST_USERID, 200000, false);
@@ -1157,12 +1160,13 @@ HWTEST_F(BmsDualModeQueryTest, GetDualModeQueryName_NonClone_0300, Function | Sm
     ASSERT_NE(manager, nullptr);
     std::string queryName;
     int32_t queryAppIndex = ServiceConstants::DUAL_MODE_CLONE_APP_INDEX;
-    EXPECT_FALSE(manager->GetDualModeQueryName(BUNDLE_NAME, queryAppIndex, queryName));
+    EXPECT_EQ(manager->GetDualModeQueryRoute(BUNDLE_NAME, queryAppIndex, queryName),
+        BundleResourceManager::DualModeQueryRoute::NOT_DUAL_MODE);
     EXPECT_EQ(queryName, BUNDLE_NAME);
     EXPECT_EQ(queryAppIndex, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
 }
 
-HWTEST_F(BmsDualModeQueryTest, GetDualModeQueryName_BundleNotExist_0400, Function | SmallTest | Level0)
+HWTEST_F(BmsDualModeQueryTest, GetDualModeQueryRoute_BundleNotExist_0400, Function | SmallTest | Level0)
 {
     auto dataMgr = InstallTestDataMgr(TEST_USERID);
     (void)dataMgr;
@@ -1170,7 +1174,8 @@ HWTEST_F(BmsDualModeQueryTest, GetDualModeQueryName_BundleNotExist_0400, Functio
     ASSERT_NE(manager, nullptr);
     std::string queryName;
     int32_t queryAppIndex = 0;
-    EXPECT_FALSE(manager->GetDualModeQueryName(BUNDLE_NAME, queryAppIndex, queryName));
+    EXPECT_EQ(manager->GetDualModeQueryRoute(BUNDLE_NAME, queryAppIndex, queryName),
+        BundleResourceManager::DualModeQueryRoute::NOT_DUAL_MODE);
     EXPECT_EQ(queryName, BUNDLE_NAME);
     EXPECT_EQ(queryAppIndex, 0);
 }
@@ -1749,5 +1754,68 @@ HWTEST_F(BmsDualModeQueryTest, GetBundleInfo_OldPathNonCloneNestedKeepsIndex0_04
     ASSERT_EQ(bundleInfo.hapModuleInfos.size(), static_cast<size_t>(1));
     ASSERT_EQ(bundleInfo.hapModuleInfos[0].abilityInfos.size(), static_cast<size_t>(1));
     EXPECT_EQ(bundleInfo.hapModuleInfos[0].abilityInfos[0].appIndex, 0);
+}
+
+// ====================== NormalizeDualModeUninstallResourceInfos (uninstall rows) ======================
+
+HWTEST_F(BmsDualModeQueryTest, NormalizeDualModeUninstallResourceInfos_BothModeRows_0100,
+    Function | SmallTest | Level0)
+{
+    // clone row stored under the prefixed name with appIndex 0 is normalized to the logical
+    // bundleName + DUAL_MODE_CLONE_APP_INDEX; the primary row stays untouched
+    std::vector<BundleResourceInfo> infos;
+    BundleResourceInfo primary;
+    primary.bundleName = BUNDLE_NAME;
+    primary.appIndex = 0;
+    BundleResourceInfo clone;
+    clone.bundleName = PREFIXED_NAME;
+    clone.appIndex = 0;
+    infos.push_back(primary);
+    infos.push_back(clone);
+    BundleResourceManager::NormalizeDualModeUninstallResourceInfos(infos);
+    ASSERT_EQ(infos.size(), static_cast<size_t>(2));
+    EXPECT_EQ(infos[0].bundleName, BUNDLE_NAME);
+    EXPECT_EQ(infos[0].appIndex, 0);
+    EXPECT_EQ(infos[1].bundleName, BUNDLE_NAME);
+    EXPECT_EQ(infos[1].appIndex, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
+}
+
+HWTEST_F(BmsDualModeQueryTest, NormalizeDualModeUninstallResourceInfos_RegularCloneKept_0200,
+    Function | SmallTest | Level0)
+{
+    // regular clone (appIndex 1..5) keep-data rows stay untouched
+    std::vector<BundleResourceInfo> infos;
+    BundleResourceInfo clone;
+    clone.bundleName = BUNDLE_NAME;
+    clone.appIndex = 1;
+    infos.push_back(clone);
+    BundleResourceManager::NormalizeDualModeUninstallResourceInfos(infos);
+    ASSERT_EQ(infos.size(), static_cast<size_t>(1));
+    EXPECT_EQ(infos[0].bundleName, BUNDLE_NAME);
+    EXPECT_EQ(infos[0].appIndex, 1);
+}
+
+HWTEST_F(BmsDualModeQueryTest, NormalizeDualModeUninstallResourceInfos_RegularClonePrefixKept_0300,
+    Function | SmallTest | Level0)
+{
+    // "+clone-1+" is a regular clone storage name, not a dual-mode one; it must NOT be
+    // normalized (ParseDualModeBundleName only accepts appIndex==10000)
+    std::vector<BundleResourceInfo> infos;
+    BundleResourceInfo clone;
+    clone.bundleName = CLONE_APP_NAME;
+    clone.appIndex = 1;
+    infos.push_back(clone);
+    BundleResourceManager::NormalizeDualModeUninstallResourceInfos(infos);
+    ASSERT_EQ(infos.size(), static_cast<size_t>(1));
+    EXPECT_EQ(infos[0].bundleName, CLONE_APP_NAME);
+    EXPECT_EQ(infos[0].appIndex, 1);
+}
+
+HWTEST_F(BmsDualModeQueryTest, NormalizeDualModeUninstallResourceInfos_Empty_0400,
+    Function | SmallTest | Level0)
+{
+    std::vector<BundleResourceInfo> infos;
+    BundleResourceManager::NormalizeDualModeUninstallResourceInfos(infos);
+    EXPECT_TRUE(infos.empty());
 }
 } // OHOS
