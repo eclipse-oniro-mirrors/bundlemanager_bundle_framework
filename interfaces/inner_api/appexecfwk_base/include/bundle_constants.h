@@ -141,6 +141,9 @@ constexpr const char* PERMISSION_MANAGE_SANDBOX_BUNDLE =
     "ohos.permission.MANAGE_SANDBOX_BUNDLE";
 constexpr const char* PERMISSION_CLI_MANAGE_WEB_SANDBOX =
     "ohos.permission.CLI_MANAGE_WEB_SANDBOX";
+constexpr const char* PERMISSION_GET_INSTALLED_BUNDLE_LIST_AND_INTERACT_ACROSS_LOCAL_ACCOUNTS =
+    "ohos.permission.PERMISSION_GET_INSTALLED_BUNDLE_LIST or "
+    "(ohos.permission.PERMISSION_GET_INSTALLED_BUNDLE_LIST and ohos.permission.INTERACT_ACROSS_LOCAL_ACCOUNTS)";
 
 enum class AppType {
     SYSTEM_APP = 0,
