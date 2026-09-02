@@ -1007,12 +1007,12 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_6401, Functi
 }
 
 /**
- * @tc.number: GetAllAppProvisionInfoInDevice_0001
+ * @tc.number: BmsBundlePermissionFalseTest_6402
  * @tc.name: test GetAllAppProvisionInfoInDevice of BundleMgrHostImpl
  * @tc.desc: 1. system running normally
  *           2. GetAllAppProvisionInfo false by no permission
  */
-HWTEST_F(BmsBundlePermissionFalseTest, GetAllAppProvisionInfoInDevice_0001, Function | SmallTest | Level0)
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_6402, Function | SmallTest | Level0)
 {
     std::vector<AppProvisionInfo> appProvisionInfos;
     ErrCode ret = bundleMgrHostImpl_->GetAllAppProvisionInfoInDevice(USERID, appProvisionInfos);
