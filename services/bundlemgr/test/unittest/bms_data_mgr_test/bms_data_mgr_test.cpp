@@ -7400,6 +7400,86 @@ HWTEST_F(BmsDataMgrTest, ProcessCertificate_0002, TestSize.Level1)
 }
 
 /**
+ * @tc.number: GetAppProvisionInfoInDevice_0001
+ * @tc.name: get app provision info in device with invalid userId
+ * @tc.desc: 1. system running normally
+ *           2. get app provision info in device of invalid userId
+ */
+HWTEST_F(BmsDataMgrTest, GetAppProvisionInfoInDevice_0001, TestSize.Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::vector<AppProvisionInfo> appProvisionInfos;
+    ErrCode ret = dataMgr->GetAppProvisionInfoInDevice(BUNDLE_NAME, Constants::INVALID_USERID, appProvisionInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+/**
+ * @tc.number: GetAppProvisionInfoInDevice_0002
+ * @tc.name: get app provision info in device with empty bundleName
+ * @tc.desc: 1. system running normally
+ *           2. get app provision info in device of empty bundleName
+ */
+HWTEST_F(BmsDataMgrTest, GetAppProvisionInfoInDevice_0002, TestSize.Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(USERID);
+    std::vector<AppProvisionInfo> appProvisionInfos;
+    ErrCode ret = dataMgr->GetAppProvisionInfoInDevice("", USERID, appProvisionInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: GetAppProvisionInfoInDevice_0003
+ * @tc.name: get app provision info in device of not installed bundle
+ * @tc.desc: 1. system running normally
+ *           2. get app provision info in device of not installed bundle, returns ERR_OK with empty vector
+ */
+HWTEST_F(BmsDataMgrTest, GetAppProvisionInfoInDevice_0003, TestSize.Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(USERID);
+    std::vector<AppProvisionInfo> appProvisionInfos;
+    ErrCode ret = dataMgr->GetAppProvisionInfoInDevice("com.not.installed", USERID, appProvisionInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_TRUE(appProvisionInfos.empty());
+}
+
+/**
+ * @tc.number: GetAllAppProvisionInfoInDevice_0001
+ * @tc.name: get all app provision info in device with invalid userId
+ * @tc.desc: 1. system running normally
+ *           2. get all app provision info in device of invalid userId
+ */
+HWTEST_F(BmsDataMgrTest, GetAllAppProvisionInfoInDevice_0001, TestSize.Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::vector<AppProvisionInfo> appProvisionInfos;
+    ErrCode ret = dataMgr->GetAllAppProvisionInfoInDevice(Constants::INVALID_USERID, appProvisionInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+/**
+ * @tc.number: GetAllAppProvisionInfoInDevice_0002
+ * @tc.name: get all app provision info in device of valid userId
+ * @tc.desc: 1. system running normally
+ *           2. get all app provision info in device of valid userId without installed apps
+ */
+HWTEST_F(BmsDataMgrTest, GetAllAppProvisionInfoInDevice_0002, TestSize.Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(USERID);
+    std::vector<AppProvisionInfo> appProvisionInfos;
+    ErrCode ret = dataMgr->GetAllAppProvisionInfoInDevice(USERID, appProvisionInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_TRUE(appProvisionInfos.empty());
+}
+
+/**
  * @tc.number: GenerateUuid_0001
  * @tc.name: GenerateUuid
  * @tc.desc: test GenerateUuid

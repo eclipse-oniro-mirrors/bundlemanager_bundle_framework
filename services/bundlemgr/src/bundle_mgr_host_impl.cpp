@@ -5360,7 +5360,7 @@ ErrCode BundleMgrHostImpl::GetAllAppProvisionInfoInDevice(const int32_t userId,
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST)) {
         APP_LOGE_NOFUNC("GetAllAppProvisionInfoInDevice permission denied %{public}d %{public}d",
             IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;

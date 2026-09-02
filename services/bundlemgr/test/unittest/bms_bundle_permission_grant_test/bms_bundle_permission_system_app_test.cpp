@@ -2413,6 +2413,32 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_8800
 }
 
 /**
+ * @tc.number: BmsBundleSyetemAppFalseTest_8801
+ * @tc.name: test GetAppProvisionInfoInDevice of BundleMgrHostImpl
+ * @tc.desc: 1. system running normally
+ *           2. GetAppProvisionInfoInDevice false by no permission
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_8801, Function | SmallTest | Level0)
+{
+    std::vector<AppProvisionInfo> appProvisionInfos;
+    ErrCode ret = bundleMgrHostImpl_->GetAppProvisionInfoInDevice(BUNDLE_NAME, USERID, appProvisionInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_8802
+ * @tc.name: test GetAllAppProvisionInfoInDevice of BundleMgrHostImpl
+ * @tc.desc: 1. system running normally
+ *           2. GetAllAppProvisionInfoInDevice false by no permission
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_8802, Function | SmallTest | Level0)
+{
+    std::vector<AppProvisionInfo> appProvisionInfos;
+    ErrCode ret = bundleMgrHostImpl_->GetAllAppProvisionInfoInDevice(USERID, appProvisionInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
+
+/**
  * @tc.number: BmsBundleSyetemAppFalseTest_getInstall
  * @tc.name: test GetAllAppInstallExtendedInfo of BundleMgrHostImpl
  * @tc.desc: 1. system running normally
