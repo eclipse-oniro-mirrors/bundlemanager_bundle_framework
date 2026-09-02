@@ -54,6 +54,10 @@ config("bundlemgr_sdk_config") {
     "include/bundlemgr_ext",
     "${target_gen_dir}",
   ]
+
+  ldflags = [
+    "-Wl,--lto-O2",
+  ]
 }
 
 config("appexecfwk_core_config") {

@@ -27,6 +27,10 @@ config("appexecfwk_base_sdk_config") {
     "include/quick_fix",
     "include/shared",
   ]
+
+  ldflags = [
+    "-Wl,--lto-O2",
+  ]
 }
 
 ohos_shared_library("appexecfwk_base") {

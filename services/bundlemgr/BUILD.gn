@@ -61,6 +61,10 @@ config("bundlemgr_common_config") {
     "APP_LOG_TAG = \"BMS\"",
     "LOG_DOMAIN = 0xD001120",
   ]
+
+  ldflags = [
+    "-Wl,--lto-O2",
+  ]
 }
 
 config("rdb_config") {
