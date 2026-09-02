@@ -350,7 +350,7 @@ struct AppProvisionInfoCallbackInfo : public BaseCallbackInfo {
 };
 
 struct AppProvisionInfoInDeviceCallbackInfo : public BaseCallbackInfo {
-    explicit AppProvisionInfoCallbackInfo(napi_env env) : BaseCallbackInfo(env) {}
+    explicit AppProvisionInfoInDeviceCallbackInfo(napi_env env) : BaseCallbackInfo(env) {}
     int32_t userId = Constants::UNSPECIFIED_USERID;
     std::string bundleName;
     std::vector<AppProvisionInfo> appProvisionInfos;
