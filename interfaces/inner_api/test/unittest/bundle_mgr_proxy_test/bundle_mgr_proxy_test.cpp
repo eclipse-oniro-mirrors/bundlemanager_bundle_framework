@@ -871,5 +871,68 @@ HWTEST_F(BundleMgrProxyTest, Bundle_Mgr_Proxy_Test_4100, Function | SmallTest | 
     auto ret = bundleMgrProxy.StartAppDetailAbility();
     EXPECT_EQ(ret, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
 }
+
+/**
+ * @tc.number: Bundle_Mgr_Proxy_Test_4200
+ * @tc.name: test the BatchSetApplicationEnabled with default parameters
+ * @tc.desc: 1. BundleMgrProxy constructed with null IRemoteObject
+ *           2. SendTransactCmd returns false when remote object is null
+ *           3. verify BatchSetApplicationEnabled returns ERR_BUNDLE_MANAGER_IPC_TRANSACTION
+ */
+HWTEST_F(BundleMgrProxyTest, Bundle_Mgr_Proxy_Test_4200, Function | SmallTest | Level0)
+{
+    sptr<IRemoteObject> impl = nullptr;
+    BundleMgrProxy bundleMgrProxy(impl);
+    int32_t userId = 0;
+    int32_t enableAppIndex = 0;
+    int32_t disableAppIndex = 0;
+    bool killProcess = false;
+    bool needSendEvent = false;
+    auto ret = bundleMgrProxy.BatchSetApplicationEnabled(userId, enableAppIndex, disableAppIndex,
+        killProcess, needSendEvent);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_IPC_TRANSACTION);
+}
+
+/**
+ * @tc.number: Bundle_Mgr_Proxy_Test_4300
+ * @tc.name: test the BatchSetApplicationEnabled with killProcess true
+ * @tc.desc: 1. BundleMgrProxy constructed with null IRemoteObject
+ *           2. SendTransactCmd returns false when remote object is null
+ *           3. verify BatchSetApplicationEnabled returns ERR_BUNDLE_MANAGER_IPC_TRANSACTION
+ */
+HWTEST_F(BundleMgrProxyTest, Bundle_Mgr_Proxy_Test_4300, Function | SmallTest | Level0)
+{
+    sptr<IRemoteObject> impl = nullptr;
+    BundleMgrProxy bundleMgrProxy(impl);
+    int32_t userId = 100;
+    int32_t enableAppIndex = 1;
+    int32_t disableAppIndex = 2;
+    bool killProcess = true;
+    bool needSendEvent = true;
+    auto ret = bundleMgrProxy.BatchSetApplicationEnabled(userId, enableAppIndex, disableAppIndex,
+        killProcess, needSendEvent);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_IPC_TRANSACTION);
+}
+
+/**
+ * @tc.number: Bundle_Mgr_Proxy_Test_4400
+ * @tc.name: test the BatchSetApplicationEnabled with negative index
+ * @tc.desc: 1. BundleMgrProxy constructed with null IRemoteObject
+ *           2. SendTransactCmd returns false when remote object is null
+ *           3. verify BatchSetApplicationEnabled returns ERR_BUNDLE_MANAGER_IPC_TRANSACTION
+ */
+HWTEST_F(BundleMgrProxyTest, Bundle_Mgr_Proxy_Test_4400, Function | SmallTest | Level0)
+{
+    sptr<IRemoteObject> impl = nullptr;
+    BundleMgrProxy bundleMgrProxy(impl);
+    int32_t userId = -1;
+    int32_t enableAppIndex = -1;
+    int32_t disableAppIndex = -1;
+    bool killProcess = false;
+    bool needSendEvent = true;
+    auto ret = bundleMgrProxy.BatchSetApplicationEnabled(userId, enableAppIndex, disableAppIndex,
+        killProcess, needSendEvent);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_IPC_TRANSACTION);
+}
 } // AppExecFwk
 } // OHOS
