@@ -354,6 +354,10 @@ namespace bundleManager {
 
   native function getAllAppProvisionInfoNative(userId: int): Array<AppProvisionInfo>;
 
+  native function getAppProvisionInfoInDeviceNative(bundleName: string, userId: int): Array<AppProvisionInfo>;
+
+  native function getAllAppProvisionInfoInDeviceNative(userId: int): Array<AppProvisionInfo>;
+
   native function setAlternateIconNative(alternateIconName: string): void;
 
   native function canOpenLink(link: string): boolean;
@@ -1526,6 +1530,45 @@ namespace bundleManager {
       p1.then((e: Any) => {
         let appProvisionInfo: Array<AppProvisionInfo> = e as Array<AppProvisionInfo>;
         resolve(appProvisionInfo);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
+      });
+    }
+    );
+    return p;
+  }
+
+  function getAppProvisionInfoInDevice(bundleName: string, userId: int): Promise<Array<AppProvisionInfo>> {
+    if (bundleName === "") {
+      throw createBusinessError(ERROR_PARAM_CHECK_ERROR, PARAM_BUNDLENAME_EMPTY_ERROR);
+    }
+    let p = new Promise<Array<AppProvisionInfo>>((resolve: (appProvisionInfos: Array<AppProvisionInfo>)
+      => void, reject: (error: Error) => void) => {
+      let execFun = (): Array<AppProvisionInfo> => {
+        return getAppProvisionInfoInDeviceNative(bundleName, userId);
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((e: Any) => {
+        let appProvisionInfos: Array<AppProvisionInfo> = e as Array<AppProvisionInfo>;
+        resolve(appProvisionInfos);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
+      });
+    }
+    );
+    return p;
+  }
+
+  function getAllAppProvisionInfoInDevice(userId: int): Promise<Array<AppProvisionInfo>>{
+    let p = new Promise<Array<AppProvisionInfo>>((resolve: (appProvisionInfos: Array<AppProvisionInfo>)
+      => void, reject: (error: Error) => void) => {
+      let execFun = (): Array<AppProvisionInfo> => {
+        return getAllAppProvisionInfoInDeviceNative(userId);
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((e: Any) => {
+        let appProvisionInfos: Array<AppProvisionInfo> = e as Array<AppProvisionInfo>;
+        resolve(appProvisionInfos);
       }, (err: Error): void => {
         reject(err as BusinessError);
       });

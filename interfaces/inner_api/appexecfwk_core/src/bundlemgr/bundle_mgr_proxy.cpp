@@ -4656,6 +4656,50 @@ ErrCode BundleMgrProxy::GetAllAppProvisionInfo(const int32_t userId, std::vector
         (BundleMgrInterfaceCode::GET_ALL_APP_PROVISION_INFO, data, appProvisionInfos);
 }
 
+ErrCode BundleMgrProxy::GetAppProvisionInfoInDevice(const std::string &bundleName, int32_t userId,
+    std::vector<AppProvisionInfo> &appProvisionInfos)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    APP_LOGD("begin to get AppProvisionInfo of %{public}s", bundleName.c_str());
+    if (bundleName.empty()) {
+        APP_LOGE("fail to GetAppProvisionInfoInDevice due to params empty");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetAppProvisionInfoInDevice due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to GetAppProvisionInfoInDevice due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to GetAppProvisionInfoInDevice due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetVectorFromParcelIntelligentWithErrCode<AppProvisionInfo>(
+        BundleMgrInterfaceCode::GET_APP_PROVISION_INFO_IN_DEVICE, data, appProvisionInfos);
+}
+
+ErrCode BundleMgrProxy::GetAllAppProvisionInfoInDevice(
+    const int32_t userId, std::vector<AppProvisionInfo> &appProvisionInfos)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetAllAppProvisionInfoInDevice due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to GetAllAppProvisionInfoInDevice due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetVectorFromParcelIntelligentWithErrCode<AppProvisionInfo>(
+        BundleMgrInterfaceCode::GET_ALL_APP_PROVISION_INFO_IN_DEVICE, data, appProvisionInfos);
+}
+
 ErrCode BundleMgrProxy::GetBaseSharedBundleInfos(const std::string &bundleName,
     std::vector<BaseSharedBundleInfo> &baseSharedBundleInfos, GetDependentBundleInfoFlag flag)
 {

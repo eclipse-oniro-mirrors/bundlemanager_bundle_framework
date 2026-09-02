@@ -1573,6 +1573,39 @@ HWTEST_F(BmsBundleMgrProxyTest, GetAllAppProvisionInfo_0001, Function | MediumTe
 }
 
 /**
+ * @tc.number: GetAppProvisionInfoInDevice_0001
+ * @tc.name: test the GetAppProvisionInfoInDevice
+ * @tc.desc: 1. system running normally
+ *           2. test GetAppProvisionInfoInDevice
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetAppProvisionInfoInDevice_0001, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::vector<AppProvisionInfo> appProvisionInfos;
+    std::string bundleName = "bundleName";
+    int32_t userId = 100;
+    auto ret = bundleMgrProxy.GetAppProvisionInfoInDevice(bundleName, userId, appProvisionInfos);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetAllAppProvisionInfoInDevice_0001
+ * @tc.name: test the GetAllAppProvisionInfoInDevice
+ * @tc.desc: 1. system running normally
+ *           2. test GetAllAppProvisionInfoInDevice
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetAllAppProvisionInfoInDevice_0001, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::vector<AppProvisionInfo> appProvisionInfos;
+    int32_t userId = 100;
+    auto ret = bundleMgrProxy.GetAllAppProvisionInfoInDevice(userId, appProvisionInfos);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
  * @tc.number: RecoverBackupBundleData_0001
  * @tc.name: test the RecoverBackupBundleData
  * @tc.desc: 1. system running normally

@@ -994,6 +994,32 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_6400, Functi
 }
 
 /**
+ * @tc.number: BmsBundlePermissionFalseTest_6401
+ * @tc.name: test GetAppProvisionInfoInDevice of BundleMgrHostImpl
+ * @tc.desc: 1. system running normally
+ *           2. GetAppProvisionInfoInDevice false by no privilege permission
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_6401, Function | SmallTest | Level0)
+{
+    std::vector<AppProvisionInfo> appProvisionInfos;
+    ErrCode ret = bundleMgrHostImpl_->GetAppProvisionInfoInDevice(BUNDLE_NAME, USERID, appProvisionInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: BmsBundlePermissionFalseTest_6402
+ * @tc.name: test GetAllAppProvisionInfoInDevice of BundleMgrHostImpl
+ * @tc.desc: 1. system running normally
+ *           2. GetAllAppProvisionInfo false by no permission
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_6402, Function | SmallTest | Level0)
+{
+    std::vector<AppProvisionInfo> appProvisionInfos;
+    ErrCode ret = bundleMgrHostImpl_->GetAllAppProvisionInfoInDevice(USERID, appProvisionInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
  * @tc.number: GetAllAppInstallExtendedInfo_0001
  * @tc.name: test GetAllAppInstallExtendedInfo of BundleMgrHostImpl
  * @tc.desc: 1. system running normally

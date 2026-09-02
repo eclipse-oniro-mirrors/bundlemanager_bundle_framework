@@ -5321,6 +5321,66 @@ ErrCode BundleMgrHostImpl::GetAppProvisionInfo(const std::string &bundleName, in
     return ret;
 }
 
+ErrCode BundleMgrHostImpl::GetAppProvisionInfoInDevice(const std::string &bundleName, int32_t userId,
+    std::vector<AppProvisionInfo> &appProvisionInfos)
+{
+    APP_LOGD("begin to GetAppProvisionInfoInDevice bundleName: %{public}s, userId: %{public}d",
+        bundleName.c_str(), userId);
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE_NOFUNC("GetAppProvisionInfoInDevice permission denied %{public}d %{public}d",
+            IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (!CheckAcrossUserPermission(userId)) {
+        APP_LOGE("verify permission across local account failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    ErrCode ret = dataMgr->GetAppProvisionInfoInDevice(bundleName, userId, appProvisionInfos);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetAppProvisionInfoInDevice ErrCode: %{public}d", ret);
+    }
+    return ret;
+}
+
+ErrCode BundleMgrHostImpl::GetAllAppProvisionInfoInDevice(const int32_t userId,
+    std::vector<AppProvisionInfo> &appProvisionInfos)
+{
+    APP_LOGD("begin to GetAllAppProvisionInfoInDevice userId: %{public}d", userId);
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST)) {
+        APP_LOGE_NOFUNC("GetAllAppProvisionInfoInDevice permission denied %{public}d %{public}d",
+            IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (!CheckAcrossUserPermission(userId)) {
+        APP_LOGE("verify permission across local account failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    ErrCode ret = dataMgr->GetAllAppProvisionInfoInDevice(userId, appProvisionInfos);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetAllAppProvisionInfoInDevice ErrCode: %{public}d", ret);
+    }
+    return ret;
+}
+
 ErrCode BundleMgrHostImpl::GetProvisionMetadata(const std::string &bundleName, int32_t userId,
     std::vector<Metadata> &provisionMetadatas)
 {
