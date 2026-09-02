@@ -5161,7 +5161,7 @@ void GetAllAppProvisionInfoInDeviceComplete(napi_env env, napi_status status, vo
     } else {
         result[ARGS_POS_ZERO] = BusinessError::CreateNewCommonError(env, asyncCallbackInfo->err,
             GET_ALL_APP_PROVISION_INFO_IN_DEVICE,
-            Constants::PERMISSION_GET_BUNDLE_INFO_AND_INTERACT_ACROSS_LOCAL_ACCOUNTS);
+            Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST_AND_INTERACT_ACROSS_LOCAL_ACCOUNTS);
     }
     CommonFunc::NapiReturnDeferred<AllAppProvisionInfoCallbackInfo>(
         env, asyncCallbackInfo, result, ARGS_SIZE_TWO);

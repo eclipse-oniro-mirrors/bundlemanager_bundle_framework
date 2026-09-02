@@ -1528,7 +1528,7 @@ static ani_object GetAppProvisionInfoInDeviceNative(
     if (ret != ERR_OK) {
         APP_LOGE("InnerGetAppProvisionInfoInDevice failed ret: %{public}d", ret);
         BusinessErrorAni::ThrowCommonNewError(env, ret, GET_APP_PROVISION_INFO_IN_DEVICE,
-            Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST_AND_INTERACT_ACROSS_LOCAL_ACCOUNTS);
+            Constants::PERMISSION_GET_BUNDLE_INFO_AND_INTERACT_ACROSS_LOCAL_ACCOUNTS);
         return nullptr;
     }
     return CommonFunAni::ConvertAniArray(env, appProvisionInfos, CommonFunAni::ConvertAppProvisionInfo);
@@ -1547,7 +1547,7 @@ static ani_object GetAllAppProvisionInfoInDeviceNative(ani_env* env, ani_int ani
     if (ret != ERR_OK) {
         APP_LOGE("GetAllAppProvisionInfoInDeviceNative failed ret: %{public}d", ret);
         BusinessErrorAni::ThrowCommonNewError(env, ret, GET_ALL_APP_PROVISION_INFO_IN_DEVICE,
-            Constants::PERMISSION_GET_BUNDLE_INFO_AND_INTERACT_ACROSS_LOCAL_ACCOUNTS);
+            Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST_AND_INTERACT_ACROSS_LOCAL_ACCOUNTS);
         return nullptr;
     }
     return CommonFunAni::ConvertAniArray(env, appProvisionInfos, CommonFunAni::ConvertAppProvisionInfo);
