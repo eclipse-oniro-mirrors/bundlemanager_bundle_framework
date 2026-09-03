@@ -5725,7 +5725,7 @@ ErrCode BundleMgrHostImpl::BatchGetAdditionalInfo(const std::vector<std::string>
 ErrCode BundleMgrHostImpl::GetAdditionalInfoForAllUser(const std::string &bundleName,
     std::string &additionalInfo)
 {
-    APP_LOGD("GetAdditionalInfo bundleName: %{public}s", bundleName.c_str());
+    APP_LOGD("GetAdditionalInfoForAllUser bundleName: %{public}s", bundleName.c_str());
     int32_t uid = OHOS::IPCSkeleton::GetCallingUid();
     if (uid != Constants::FOUNDATION_UID) {
         LOG_E(BMS_TAG_DEFAULT, "uid: %{public}d not foundation", uid);

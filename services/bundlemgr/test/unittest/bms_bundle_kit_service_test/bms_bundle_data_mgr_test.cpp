@@ -3608,7 +3608,7 @@ HWTEST_F(BmsBundleDataMgrTest, SetAdditionalInfo_0100, Function | SmallTest | Le
     GetBundleDataMgr()->bundleInfos_.clear();
     GetBundleDataMgr()->tempBundleInfos_.clear();
     std::string bundleName0 = "com.setaddition.current0";
-    std::string bundleName1 = "com.setaddition.current0";
+    std::string bundleName1 = "com.setaddition.current1";
     std::string additionalInfo = "additionalInfo";
     ErrCode res = GetBundleDataMgr()->SetAdditionalInfo(
         bundleName0, additionalInfo, Constants::DUAL_MODE_CLONE_APP_INDEX);

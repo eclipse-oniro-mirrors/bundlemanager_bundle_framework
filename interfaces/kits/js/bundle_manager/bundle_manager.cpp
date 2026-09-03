@@ -5185,7 +5185,9 @@ napi_value GetAllAppProvisionInfoInDevice(napi_env env, napi_callback_info info)
     asyncCallbackInfo->userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
     if (args.GetMaxArgc() > ARGS_POS_ZERO) {
         if (!CommonFunc::ParseInt(env, args[0], asyncCallbackInfo->userId)) {
-            APP_LOGW("userId is invalid");
+            APP_LOGE("userId invalid");
+            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, TYPE_NUMBER);
+            return nullptr;
         }
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<AllAppProvisionInfoCallbackInfo>(

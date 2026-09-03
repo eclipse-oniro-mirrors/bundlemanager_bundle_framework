@@ -44,6 +44,7 @@
 #include "launcher_ability_resource_info.h"
 #include "nativetoken_kit.h"
 #include "nlohmann/json.hpp"
+#include "parameters.h"
 #include "process_cache_callback_host.h"
 #include "status_receiver_host.h"
 #include "system_ability_definition.h"
@@ -415,7 +416,12 @@ void ActsBmsKitSystemTest::TearDownTestCase()
 }
 
 void ActsBmsKitSystemTest::SetUp()
-{}
+{
+    bool ret = OHOS::system::SetParameter("persist.bms.test_dual_mode", "false");
+    if (!ret) {
+        std::cout << "ActsBmsKitSystemTest SetParameter persist.bms.test_dual_mode to false failed" << std::endl;
+    }
+}
 
 void ActsBmsKitSystemTest::TearDown()
 {}

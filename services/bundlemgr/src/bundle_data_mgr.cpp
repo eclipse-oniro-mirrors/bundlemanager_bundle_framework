@@ -10823,7 +10823,7 @@ ErrCode BundleDataMgr::GetAppProvisionInfoInDevice(const std::string &bundleName
     }
     if (bundleName.empty()) {
         APP_LOGW("GetAppProvisionInfoInDevice bundleName is empty.");
-        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     std::vector<std::pair<std::string, bool>> bundleInfoList;
     GetListForBundleInfo(userId, false, bundleInfoList);
@@ -11545,7 +11545,7 @@ ErrCode BundleDataMgr::GetAdditionalInfo(
 ErrCode BundleDataMgr::GetAdditionalInfoForAllUser(
     const std::string &bundleName, std::string &additionalInfo)
 {
-    APP_LOGD("GetAdditionalInfo bundleName: %{public}s", bundleName.c_str());
+    APP_LOGD("GetAdditionalInfoForAllUser bundleName: %{public}s", bundleName.c_str());
     if (DualModeHelper::IsDualModeDevice()) {
         APP_LOGW("IsDualModeDevice, not surpport this function.");
         return ERR_APPEXECFWK_DUAL_MODE_DEVICE_NOT_SUPPORTED;
