@@ -7427,7 +7427,7 @@ HWTEST_F(BmsDataMgrTest, GetAppProvisionInfoInDevice_0002, TestSize.Level1)
     dataMgr->AddUserId(USERID);
     std::vector<AppProvisionInfo> appProvisionInfos;
     ErrCode ret = dataMgr->GetAppProvisionInfoInDevice("", USERID, appProvisionInfos);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
 /**
