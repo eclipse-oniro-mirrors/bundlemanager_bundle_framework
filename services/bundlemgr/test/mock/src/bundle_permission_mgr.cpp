@@ -34,6 +34,10 @@ bool g_isCallingUidValid = true;
 bool g_verifyPermissionFalse = false;
 bool g_isBundleSelfCallingFalse = false;
 bool g_isNativeTokenTypeOnly = true;
+bool g_enableGetDistributedBundleInfoPermissionTest = false;
+bool g_isCliToolCallingForDistributedTest = true;
+bool g_isBundleSelfCallingForDistributedTest = false;
+int32_t g_isBundleSelfCallingForDistributedCount = 0;
 // controllable return value for VerifyPermissionByCallingTokenId, default true (granted)
 bool g_verifyPermissionByCallingTokenId = true;
 
@@ -153,6 +157,15 @@ void SetPermissionResultForTest(const std::string &permissionName, bool granted)
     g_permissionResults[permissionName] = granted;
 }
 
+void SetGetDistributedBundleInfoCallingForTest(
+    bool isCliToolCalling, bool isBundleSelfCalling)
+{
+    g_enableGetDistributedBundleInfoPermissionTest = true;
+    g_isCliToolCallingForDistributedTest = isCliToolCalling;
+    g_isBundleSelfCallingForDistributedTest = isBundleSelfCalling;
+    g_isBundleSelfCallingForDistributedCount = 0;
+}
+
 int32_t GetPermissionCheckCountForTest(const std::string &permissionName)
 {
     auto iter = g_permissionCheckCounts.find(permissionName);
@@ -174,6 +187,11 @@ int32_t GetPermissionFailCountForTest(const std::string &permissionName)
 void SetVerifyPermissionByCallingTokenIdForTest(bool value)
 {
     g_verifyPermissionByCallingTokenId = value;
+}
+
+int32_t GetIsBundleSelfCallingForDistributedCountForTest()
+{
+    return g_isBundleSelfCallingForDistributedCount;
 }
 
 void ResetTestValues()
@@ -199,6 +217,10 @@ void ResetTestValues()
     g_permissionSuccessCounts.clear();
     g_permissionFailCounts.clear();
     g_verifyPermissionByCallingTokenId = true;
+    g_enableGetDistributedBundleInfoPermissionTest = false;
+    g_isCliToolCallingForDistributedTest = true;
+    g_isBundleSelfCallingForDistributedTest = false;
+    g_isBundleSelfCallingForDistributedCount = 0;
 }
 namespace OHOS {
 int32_t g_testVerifyPermission = 0;
@@ -314,6 +336,9 @@ bool BundlePermissionMgr::VerifyCallingPermissionsForAll(const std::vector<std::
 
 bool BundlePermissionMgr::IsCliToolCalling(const uint64_t callerToken)
 {
+    if (g_enableGetDistributedBundleInfoPermissionTest) {
+        return g_isCliToolCallingForDistributedTest;
+    }
     return true;
 }
 
@@ -334,6 +359,10 @@ bool BundlePermissionMgr::VerifyUninstallPermission()
 
 bool BundlePermissionMgr::IsBundleSelfCalling(const std::string &bundleName)
 {
+    if (g_enableGetDistributedBundleInfoPermissionTest) {
+        ++g_isBundleSelfCallingForDistributedCount;
+        return g_isBundleSelfCallingForDistributedTest;
+    }
     return g_isBundleSelfCalling;
 }
 

@@ -4029,8 +4029,16 @@ bool BundleMgrHostImpl::GetDistributedBundleInfo(const std::string &networkId, c
         APP_LOGE("Non-system app calling system api");
         return false;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED,
-        Constants::PERMISSION_GET_BUNDLE_INFO}) &&
+    const bool hasLegacyPermission = BundlePermissionMgr::VerifyCallingPermissionsForAll({
+            Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED, Constants::PERMISSION_GET_BUNDLE_INFO
+        });
+    bool hasGetAllBundleInfoPermission = false;
+    if (!hasLegacyPermission) {
+        const uint64_t callerToken = IPCSkeleton::GetCallingFullTokenID();
+        hasGetAllBundleInfoPermission = BundlePermissionMgr::IsCliToolCalling(callerToken) &&
+            BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_ALL_BUNDLE_INFO);
+    }
+    if (!hasLegacyPermission && !hasGetAllBundleInfoPermission &&
         !BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
         APP_LOGE_NOFUNC("GetDistributedBundleInfo permission denied %{public}d %{public}d",
             IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());

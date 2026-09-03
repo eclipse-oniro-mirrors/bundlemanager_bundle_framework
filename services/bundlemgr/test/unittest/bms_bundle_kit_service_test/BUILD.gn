@@ -613,6 +613,14 @@ ohos_unittest("BmsBundleKitServiceTwoTest") {
     ]
     defines += [ "BMS_DEVICE_INFO_MANAGER_ENABLE" ]
   }
+
+  if (distributed_bundle_framework) {
+    external_deps += [
+      "device_manager:devicemanagersdk",
+      "distributed_bundle_framework:dbms_fwk",
+    ]
+    defines += [ "DISTRIBUTED_BUNDLE_FRAMEWORK" ]
+  }
 }
 
 ohos_unittest("BmsBundleGetWindowPropertiesTest") {
