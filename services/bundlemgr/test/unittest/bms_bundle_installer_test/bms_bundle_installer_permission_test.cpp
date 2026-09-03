@@ -1135,12 +1135,17 @@ HWTEST_F(BmsBundleInstallerPermissionTest, BundleSandboxInstaller_0002, Function
  */
 HWTEST_F(BmsBundleInstallerPermissionTest, BundleMgrHostImpl_0001, Function | SmallTest | Level1)
 {
+    SetSystemAppForTest(false);
+    ScopeGuard guard([] { SetSystemAppForTest(true); });
+
     std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
     ASSERT_NE(localBundleMgrHostImpl, nullptr);
-    int32_t userId = 100;
+    int32_t userId = USERID;
     std::string labels;
     bool ret = localBundleMgrHostImpl->GetAllBundleLabel(userId, labels);
-    EXPECT_EQ(ret, false);
+
+    EXPECT_FALSE(ret);
+    EXPECT_TRUE(labels.empty());
 }
 
 /**
@@ -1150,13 +1155,18 @@ HWTEST_F(BmsBundleInstallerPermissionTest, BundleMgrHostImpl_0001, Function | Sm
  */
 HWTEST_F(BmsBundleInstallerPermissionTest, BundleMgrHostImpl_0002, Function | SmallTest | Level1)
 {
+    SetSystemAppForTest(false);
+    ScopeGuard guard([] { SetSystemAppForTest(true); });
+
     std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
     ASSERT_NE(localBundleMgrHostImpl, nullptr);
-    std::string bundleName;
-    int32_t userId = 100;
+    std::string bundleName = BUNDLE_NAME;
+    int32_t userId = USERID;
     std::string result;
     bool ret = localBundleMgrHostImpl->GetLabelByBundleName(bundleName, userId, result);
-    EXPECT_EQ(ret, false);
+
+    EXPECT_FALSE(ret);
+    EXPECT_TRUE(result.empty());
 }
  
 /**

@@ -2932,11 +2932,15 @@ bool BundleMgrHostImpl::DumpInfos(
         LOG_E(BMS_TAG_INSTALLER, "check shell user fail");
         return false;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+    const bool hasGetAllBundleInfoPermission = BundlePermissionMgr::VerifyCallingPermissionForAll(
+        Constants::PERMISSION_GET_ALL_BUNDLE_INFO);
+    if (!hasGetAllBundleInfoPermission &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE_NOFUNC("DumpInfos permission denied %{public}d %{public}d",
             IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
         return false;
     }
+
     bool ret = false;
     switch (flag) {
         case DumpFlag::DUMP_BUNDLE_LIST: {
@@ -2965,7 +2969,11 @@ bool BundleMgrHostImpl::DumpInfos(
         }
         default:
             APP_LOGE("dump flag error");
-            return false;
+            break;
+    }
+    if (hasGetAllBundleInfoPermission) {
+        BundlePermissionMgr::AddPermissionUsedRecord(
+            Constants::PERMISSION_GET_ALL_BUNDLE_INFO, ret ? 1 : 0, ret ? 0 : 1);
     }
     return ret;
 }
@@ -3056,17 +3064,44 @@ bool BundleMgrHostImpl::DumpDebugBundleInfoNamesByUserId(int32_t userId, std::st
     return true;
 }
 
+bool BundleMgrHostImpl::GetBundleInfoForDump(const std::shared_ptr<BundleDataMgr> &dataMgr,
+    const std::string &bundleName, int32_t flags, BundleInfo &bundleInfo, int32_t userId)
+{
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return false;
+    }
+    if (dataMgr->GetBundleInfo(bundleName, flags, bundleInfo, userId)) {
+        return true;
+    }
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    return bmsExtensionClient->GetBundleInfo(bundleName, flags, bundleInfo, userId) == ERR_OK;
+}
+
+bool BundleMgrHostImpl::GetShortcutInfosForDump(
+    const std::string &bundleName, int32_t userId, std::vector<ShortcutInfo> &shortcutInfos)
+{
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return false;
+    }
+    return dataMgr->GetShortcutInfos(bundleName, userId, shortcutInfos);
+}
+
 bool BundleMgrHostImpl::DumpBundleInfo(
     const std::string &bundleName, int32_t userId, std::string &result)
 {
     APP_LOGD("DumpBundleInfo begin");
     auto dataMgr = GetDataMgrFromService();
-    if (dataMgr != nullptr) {
-        BundleType bundleType;
-        if (dataMgr->GetBundleType(bundleName, bundleType) && bundleType == BundleType::SKILL) {
-            APP_LOGW("DumpBundleInfo skip skill bundle: %{public}s", bundleName.c_str());
-            return false;
-        }
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return false;
+    }
+    BundleType bundleType;
+    if (dataMgr->GetBundleType(bundleName, bundleType) && bundleType == BundleType::SKILL) {
+        APP_LOGW("DumpBundleInfo skip skill bundle: %{public}s", bundleName.c_str());
+        return false;
     }
     std::vector<InnerBundleUserInfo> innerBundleUserInfos;
     InnerBundleUserInfo innerBundleUserInfo;
@@ -3084,13 +3119,14 @@ bool BundleMgrHostImpl::DumpBundleInfo(
         APP_LOGE("get plugin info in bundle(%{public}s) failed", bundleName.c_str());
     }
     BundleInfo bundleInfo;
-    if (!GetBundleInfo(bundleName,
+    const int32_t flags =
         BundleFlag::GET_BUNDLE_WITH_ABILITIES |
         BundleFlag::GET_BUNDLE_WITH_REQUESTED_PERMISSION |
         BundleFlag::GET_BUNDLE_WITH_EXTENSION_INFO |
         BundleFlag::GET_BUNDLE_WITH_HASH_VALUE |
         BundleFlag::GET_BUNDLE_WITH_MENU |
-        BundleFlag::GET_BUNDLE_WITH_ROUTER_MAP, bundleInfo, userId)) {
+        BundleFlag::GET_BUNDLE_WITH_ROUTER_MAP;
+    if (!GetBundleInfoForDump(dataMgr, bundleName, flags, bundleInfo, userId)) {
         APP_LOGE("get bundleInfo(%{public}s) failed", bundleName.c_str());
         return false;
     }
@@ -3130,7 +3166,7 @@ bool BundleMgrHostImpl::DumpShortcutInfo(
         userId = innerBundleUserInfos.begin()->bundleUserInfo.userId;
     }
 
-    if (!GetShortcutInfos(bundleName, userId, shortcutInfos)) {
+    if (!GetShortcutInfosForDump(bundleName, userId, shortcutInfos)) {
         APP_LOGE("get all shortcut info by bundle(%{public}s) failed", bundleName.c_str());
         return false;
     }
@@ -5792,11 +5828,6 @@ bool BundleMgrHostImpl::GetLabelByBundleName(const std::string &bundleName, int3
         return false;
     }
 
-    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
-        APP_LOGE_NOFUNC("GetLabelByBundleName permission denied %{public}d %{public}d",
-            IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
-        return false;
-    }
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
@@ -5835,11 +5866,6 @@ bool BundleMgrHostImpl::GetAllBundleLabel(int32_t userId, std::string &labels)
     APP_LOGI("GetAllBundleLabel -u %{public}d", userId);
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("Non-system app calling system api");
-        return false;
-    }
-    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
-        APP_LOGE_NOFUNC("GetAllBundleLabel permission denied %{public}d %{public}d",
-            IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
         return false;
     }
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
