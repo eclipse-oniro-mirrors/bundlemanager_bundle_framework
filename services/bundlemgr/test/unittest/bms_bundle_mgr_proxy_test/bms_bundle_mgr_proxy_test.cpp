@@ -1593,7 +1593,8 @@ HWTEST_F(BmsBundleMgrProxyTest, GetAppProvisionInfoInDevice_0001, Function | Med
  * @tc.number: GetAppProvisionInfoInDevice_0002
  * @tc.name: test the GetAppProvisionInfoInDevice with empty bundleName
  * @tc.desc: 1. system running normally
- *           2. test GetAppProvisionInfoInDevice with empty bundleName returns BUNDLE_NOT_EXIST
+ *           2. test the proxy-level early return of GetAppProvisionInfoInDevice with empty
+ *              bundleName, before any remote/IPC call, returns BUNDLE_NOT_EXIST
  */
 HWTEST_F(BmsBundleMgrProxyTest, GetAppProvisionInfoInDevice_0002, Function | MediumTest | Level1)
 {
@@ -1603,6 +1604,7 @@ HWTEST_F(BmsBundleMgrProxyTest, GetAppProvisionInfoInDevice_0002, Function | Med
     int32_t userId = 100;
     auto ret = bundleMgrProxy.GetAppProvisionInfoInDevice("", userId, appProvisionInfos);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_TRUE(appProvisionInfos.empty());
 }
 
 /**
