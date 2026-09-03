@@ -43,6 +43,7 @@
 #include "nlohmann/json.hpp"
 #include "parameters.h"
 #include "shortcut_info.h"
+#include "bundle_resource/bundle_resource_host_impl.h"
 #include "bundle_resource/bundle_resource_manager.h"
 
 using namespace testing::ext;
@@ -1139,7 +1140,7 @@ HWTEST_F(BmsDualModeQueryTest, GetDualModeQueryRoute_DualModeClone10000_0100, Fu
 
 HWTEST_F(BmsDualModeQueryTest, GetDualModeQueryRoute_DualModeCloneIndex0_0200, Function | SmallTest | Level0)
 {
-    // dual-mode clone rows are only addressed by appIndex 10000; appIndex 0 is refused
+    // dual-mode: appIndex 0 and 10000 are equivalent for the clone record
     auto dataMgr = InstallTestDataMgr(TEST_USERID);
     dataMgr->bundleInfos_[BUNDLE_NAME] = MakeQueryCloneInfo(true, TEST_USERID, 200000, false);
     auto manager = std::make_shared<BundleResourceManager>();
@@ -1147,9 +1148,24 @@ HWTEST_F(BmsDualModeQueryTest, GetDualModeQueryRoute_DualModeCloneIndex0_0200, F
     std::string queryName;
     int32_t queryAppIndex = 0;
     EXPECT_EQ(manager->GetDualModeQueryRoute(BUNDLE_NAME, queryAppIndex, queryName),
+        BundleResourceManager::DualModeQueryRoute::CLONE_ROW);
+    EXPECT_EQ(queryName, DualModeHelper::GetDualModeBundleName(BUNDLE_NAME));
+    EXPECT_EQ(queryAppIndex, 0);
+}
+
+HWTEST_F(BmsDualModeQueryTest, GetDualModeQueryRoute_DualModeCloneOtherIndex_0500, Function | SmallTest | Level0)
+{
+    // dual-mode clone rows refuse appIndex values other than 0 and 10000
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = MakeQueryCloneInfo(true, TEST_USERID, 200000, false);
+    auto manager = std::make_shared<BundleResourceManager>();
+    ASSERT_NE(manager, nullptr);
+    std::string queryName;
+    int32_t queryAppIndex = 3; // regular clone index never addresses a dual-mode clone row
+    EXPECT_EQ(manager->GetDualModeQueryRoute(BUNDLE_NAME, queryAppIndex, queryName),
         BundleResourceManager::DualModeQueryRoute::REFUSED);
     EXPECT_EQ(queryName, BUNDLE_NAME);
-    EXPECT_EQ(queryAppIndex, 0);
+    EXPECT_EQ(queryAppIndex, 3);
 }
 
 HWTEST_F(BmsDualModeQueryTest, GetDualModeQueryRoute_NonClone_0300, Function | SmallTest | Level0)
@@ -1178,6 +1194,78 @@ HWTEST_F(BmsDualModeQueryTest, GetDualModeQueryRoute_BundleNotExist_0400, Functi
         BundleResourceManager::DualModeQueryRoute::NOT_DUAL_MODE);
     EXPECT_EQ(queryName, BUNDLE_NAME);
     EXPECT_EQ(queryAppIndex, 0);
+}
+
+// ====================== BundleResourceHostImpl::GetElementLauncherAbilityResourceInfo dual-mode ======================
+
+static LauncherAbilityResourceInfo MakeListResourceInfo(int32_t appIndex)
+{
+    LauncherAbilityResourceInfo info;
+    info.bundleName = BUNDLE_NAME;
+    info.moduleName = "entry";
+    info.abilityName = "MainAbility";
+    info.appIndex = appIndex;
+    info.label = "label_" + std::to_string(appIndex);
+    return info;
+}
+
+HWTEST_F(BmsDualModeQueryTest, GetElementLauncherAbilityResourceInfo_Index0MatchesCloneRow_0100,
+    Function | SmallTest | Level0)
+{
+    // dual-mode: request appIndex 0 matches the clone row and echoes appIndex 10000
+    BundleResourceHostImpl impl;
+    std::vector<LauncherAbilityResourceInfo> allResources;
+    allResources.emplace_back(MakeListResourceInfo(ServiceConstants::DUAL_MODE_CLONE_APP_INDEX));
+    LauncherAbilityResourceInfo resourceInfo;
+    ErrCode ret = impl.GetElementLauncherAbilityResourceInfo(
+        allResources, "entry", "MainAbility", Constants::MAIN_APP_INDEX, resourceInfo);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(resourceInfo.appIndex, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
+    EXPECT_EQ(resourceInfo.label, "label_10000");
+}
+
+HWTEST_F(BmsDualModeQueryTest, GetElementLauncherAbilityResourceInfo_Index10000MatchesCloneRow_0200,
+    Function | SmallTest | Level0)
+{
+    // request appIndex 10000 still matches the clone row directly
+    BundleResourceHostImpl impl;
+    std::vector<LauncherAbilityResourceInfo> allResources;
+    allResources.emplace_back(MakeListResourceInfo(ServiceConstants::DUAL_MODE_CLONE_APP_INDEX));
+    LauncherAbilityResourceInfo resourceInfo;
+    ErrCode ret = impl.GetElementLauncherAbilityResourceInfo(
+        allResources, "entry", "MainAbility", ServiceConstants::DUAL_MODE_CLONE_APP_INDEX, resourceInfo);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(resourceInfo.appIndex, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
+}
+
+HWTEST_F(BmsDualModeQueryTest, GetElementLauncherAbilityResourceInfo_OtherIndexRefused_0300,
+    Function | SmallTest | Level0)
+{
+    // a regular clone appIndex never addresses a dual-mode clone row
+    BundleResourceHostImpl impl;
+    std::vector<LauncherAbilityResourceInfo> allResources;
+    allResources.emplace_back(MakeListResourceInfo(ServiceConstants::DUAL_MODE_CLONE_APP_INDEX));
+    LauncherAbilityResourceInfo resourceInfo;
+    ErrCode ret = impl.GetElementLauncherAbilityResourceInfo(allResources, "entry", "MainAbility", 5,
+        resourceInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_APPINDEX_NOT_EXIST);
+}
+
+HWTEST_F(BmsDualModeQueryTest, GetElementLauncherAbilityResourceInfo_Index0KeepsLegacyRow_0400,
+    Function | SmallTest | Level0)
+{
+    // non-dual-mode regression: request 0 matches the normal row; 10000 does not
+    BundleResourceHostImpl impl;
+    std::vector<LauncherAbilityResourceInfo> allResources;
+    allResources.emplace_back(MakeListResourceInfo(Constants::MAIN_APP_INDEX));
+    LauncherAbilityResourceInfo resourceInfo;
+    ErrCode ret = impl.GetElementLauncherAbilityResourceInfo(
+        allResources, "entry", "MainAbility", Constants::MAIN_APP_INDEX, resourceInfo);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(resourceInfo.appIndex, Constants::MAIN_APP_INDEX);
+    ret = impl.GetElementLauncherAbilityResourceInfo(
+        allResources, "entry", "MainAbility", ServiceConstants::DUAL_MODE_CLONE_APP_INDEX, resourceInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_APPINDEX_NOT_EXIST);
 }
 
 // ====================== BundleDataMgr::GetBundleNameAndIndexByName dual-mode ======================

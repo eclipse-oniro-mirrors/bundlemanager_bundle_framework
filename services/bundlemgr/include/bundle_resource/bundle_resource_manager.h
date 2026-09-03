@@ -192,15 +192,15 @@ private:
     enum class DualModeQueryRoute {
         // visible record is not a dual-mode clone: query with the original params
         NOT_DUAL_MODE = 0,
-        // dual-mode clone addressed by DUAL_MODE_CLONE_APP_INDEX: redirect to the
-        // prefixed effective name with appIndex 10000 -> 0 for RDB lookup
+        // dual-mode clone addressed by appIndex 0 or 10000: redirect to the prefixed
+        // effective name with appIndex 10000 -> 0 for RDB lookup
         CLONE_ROW = 1,
-        // dual-mode clone with any other appIndex (including 0): refused
+        // dual-mode clone with any other appIndex: refused
         REFUSED = 2,
     };
 
     // dual-mode: classify a single query request on a dual-mode device; clone rows are
-    // only addressed by DUAL_MODE_CLONE_APP_INDEX.
+    // addressed by appIndex 0 or 10000.
     DualModeQueryRoute GetDualModeQueryRoute(
         const std::string &bundleName, int32_t &appIndex, std::string &queryName);
 
