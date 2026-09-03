@@ -89,6 +89,25 @@ struct HmpBundlePathInfo {
     std::string hspDir;
 };
 
+// === Dual-mode OTA support ===
+// Dual-mode information of a package (the step-1 parse result).
+// Same-name-same-package (IDENTICAL policies): the haps are the scan path itself; same-name-different-package
+// (policies 4/6/8): haps are split into two groups by mode.
+struct DualModePackageInfo {
+    DeviceModeDistributionPolicy policy = DeviceModeDistributionPolicy::UNSPECIFIED;
+    bool isDiffPackage = false;             // policy is 4/6/8 (same-name different-package)
+    std::vector<std::string> mainModeHaps;  // absolute hap paths of the primary-mode side
+    std::vector<std::string> subModeHaps;   // absolute hap paths of the secondary-mode side
+};
+
+// A pending cross-mode install/update task.
+struct CrossModeOtaTask {
+    std::vector<std::string> filePaths;
+    bool removable = false;
+    DeviceModeDistributionPolicy policy = DeviceModeDistributionPolicy::UNSPECIFIED;
+    bool forceCrossModeOTAInstall = false;
+};
+
 class BMSEventHandler {
 public:
     BMSEventHandler();
@@ -467,6 +486,7 @@ private:
      * @param filePaths Indicates the filePaths.
      * @param appType Indicates the bundle type.
      * @param removable Indicates whether it can be removed.
+     * @param deviceModeDistributionPolicy Dual-mode distribution policy; UNSPECIFIED keeps original behavior.
      * @return Returns true if this function called successfully; returns false otherwise.
      */
     bool OTAInstallSystemBundle(
@@ -482,13 +502,16 @@ private:
      * @param bundleName Indicates the bundleName.
      * @param appType Indicates the bundle type.
      * @param removable Indicates whether it can be removed.
+     * @param deviceModeDistributionPolicy Dual-mode distribution policy; UNSPECIFIED keeps original behavior.
      * @return Returns true if this function called successfully; returns false otherwise.
      */
     static bool OTAInstallSystemBundleNeedCheckUser(
         const std::vector<std::string> &filePaths,
         const std::string &bundleName,
         Constants::AppType appType,
-        bool removable);
+        bool removable,
+        DeviceModeDistributionPolicy deviceModeDistributionPolicy =
+            DeviceModeDistributionPolicy::UNSPECIFIED);
     /**
      * @brief OTA Install system app and system vendor bundles.
      * @param filePaths Indicates the filePaths.
@@ -574,7 +597,8 @@ private:
 
     bool InnerMultiProcessBundleInstall(
         const std::unordered_map<std::string, std::pair<std::vector<std::string>, bool>> &otaMultiProcessUpgradeMap,
-        Constants::AppType appType);
+        Constants::AppType appType,
+        const std::unordered_map<std::string, DeviceModeDistributionPolicy> &dualModePolicyForNewMap);
 
     static bool InstallSystemBundleNeedCheckUserForPatch(const std::vector<std::string> &filePaths,
         const std::string &bundleName, bool isOta);
@@ -774,6 +798,49 @@ private:
     bool ProcessNewInstallForBlackList(const std::string &bundleName, const std::set<int32_t> &allUsers,
         std::vector<int32_t> &userIds);
 
+    DualModePackageInfo ParseDualModePackageInfo(
+        const std::string &bundleName,
+        const std::string &scanPathIter,
+        const std::unordered_map<std::string, InnerBundleInfo> &infos);
+
+    void HandleDualModeNewInstall(
+        const DualModePackageInfo &pkgInfo,
+        const std::string &bundleName,
+        const std::string &scanPathIter,
+        bool removable,
+        std::unordered_map<std::string, std::pair<std::vector<std::string>, bool>> &needInstallSysMap,
+        std::unordered_map<std::string, DeviceModeDistributionPolicy> &dualModePolicyForNewMap,
+        std::unordered_map<std::string, CrossModeOtaTask> &crossModeOtaTasks);
+
+    // Judge whether the OTA update should also cover the other mode's side. Two scenarios:
+    // a) same-name-different-package (policies 4/6/8): the other side is the clone-/original-named
+    //    counterpart package;
+    // b) MAIN_ONLY/SUB_ONLY apps of the same-name-same-package kind: when the policy does not match
+    //    the current mode, the hidden side needs a cross-mode update too.
+    void ProcessDualModeCrossUpdateIfNeeded(
+        const DualModePackageInfo &pkgInfo,
+        const std::unordered_map<std::string, InnerBundleInfo> &infos,
+        const std::string &bundleName,
+        bool removable,
+        uint32_t hapVersionCode,
+        std::unordered_map<std::string, CrossModeOtaTask> &crossModeOtaTasks);
+
+    // skip the current-mode flow for MAIN_ONLY/SUB_ONLY apps whose policy does not
+    // match the current mode (their cross-mode install/update is decided separately).
+    bool IsSkipNormalOtaFlow(const DualModePackageInfo &pkgInfo);
+
+    // Cross-mode install entry. Unlike OTAInstallSystemBundle, installParam carries
+    // forceCrossModeOTAInstall and deviceModeDistributionPolicy.
+    bool OTAInstallSystemBundleForDualApp(
+        const std::vector<std::string> &filePaths,
+        const CrossModeOtaTask &task,
+        Constants::AppType appType);
+    
+    // For existing dual‑mode devices upgraded to the new‑version dual‑mode in the sub‑mode:
+    // different packages bundle need to be installed separately under the sub‑mode,
+    // main mode bundle info should switch to tempBundleInfos_ accordingly.
+    void ProcessUpdateDualPolicy(const DualModePackageInfo &pkgInfo, const std::string &bundleName);
+    
     // Used to mark Whether trigger OTA check
     bool needRebootOta_ = false;
     // Used to notify bundle scan status

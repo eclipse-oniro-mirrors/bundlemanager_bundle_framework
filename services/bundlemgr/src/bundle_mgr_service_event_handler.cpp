@@ -42,6 +42,7 @@
 #endif
 #include "datetime_ex.h"
 #include "directory_ex.h"
+#include "dual_mode_helper.h"
 #if defined (BUNDLE_FRAMEWORK_SANDBOX_APP) && defined (DLP_PERMISSION_ENABLE)
 #include "dlp_permission_kit.h"
 #endif
@@ -2246,6 +2247,11 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
     GetInstallAndRecoverListForAllUser(userInstallAndRecoverMap_);
     std::unordered_map<std::string, std::pair<std::vector<std::string>, bool>> needInstallMap;
     std::unordered_map<std::string, std::pair<std::vector<std::string>, bool>> needInstallSysMap;
+    // Dual-mode OTA: record bundleName -> distribution policy for new installs, passed to installParam.
+    std::unordered_map<std::string, DeviceModeDistributionPolicy> dualModePolicyForNewMap;
+    // Dual-mode OTA: pending cross-mode install/update tasks (key is the target-side storage name,
+    // the +clone-10000+ prefixed name for the secondary-mode side).
+    std::unordered_map<std::string, CrossModeOtaTask> crossModeOtaTasks;
     std::unordered_set<std::string> overlayBundles;
     // new OTA bundles, install for target users
     std::unordered_map<std::string, std::vector<int32_t>> blackListBundles;
@@ -2305,6 +2311,11 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
         auto hapVersionCode = bundleInstallChecker->GetVersionCode(infos);
         bool needOtaNewInstall = NeedProcessOtaNewPreloadInstall(bundleName, scanPathIter);
         AddParseInfosToMap(bundleName, infos);
+        // 1. Parse the distribution policy of the haps. Same-name-different-package yields two
+        // per-mode hap lists (the package paths of each mode); same-name-same-package keeps the hap
+        // path as scanPathIter itself. Different-package policies are 4/6/8.
+        DualModePackageInfo pkgInfo = ParseDualModePackageInfo(bundleName, scanPathIter, infos);
+
         auto mapIter = loadExistData_.find(bundleName);
         if (mapIter == loadExistData_.end()) {
             if (dataMgr->GetAllUser().size() > USER_ID_SIZE
@@ -2341,6 +2352,15 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             if (ProcessNewInstallForBlackList(bundleName, allUsers, userIdsForNewInstall)) {
                 blackListBundles[bundleName] = userIdsForNewInstall;
             }
+            // 2. Judge the current mode. For same-name-different-package, put the current-mode haps
+            // into needInstallSysMap and the cross-mode package into a separate task map; for
+            // MAIN_ONLY/SUB_ONLY packages, install directly when the policy matches the current mode,
+            // otherwise queue a cross-mode task.
+            if (DualModeHelper::IsDualModeDevice() && pkgInfo.policy != DeviceModeDistributionPolicy::UNSPECIFIED) {
+                HandleDualModeNewInstall(pkgInfo, bundleName, scanPathIter, removable,
+                    needInstallSysMap, dualModePolicyForNewMap, crossModeOtaTasks);
+                continue;
+            }
             std::vector<std::string> filePaths { scanPathIter };
             auto iter = needInstallSysMap.find(bundleName);
             if (iter == needInstallSysMap.end()) {
@@ -2364,6 +2384,13 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
                 LOG_E(BMS_TAG_DEFAULT, "OTA force Install bundle(%{public}s) error", bundleName.c_str());
                 SavePreInstallException(scanPathIter);
             }
+            continue;
+        }
+        ProcessUpdateDualPolicy(pkgInfo, bundleName);
+        ProcessDualModeCrossUpdateIfNeeded(pkgInfo, infos, bundleName,
+            removable, hapVersionCode, crossModeOtaTasks);
+        // MAIN_ONLY/SUB_ONLY package that does not match the current mode: skip the remaining flow.
+        if (IsSkipNormalOtaFlow(pkgInfo)) {
             continue;
         }
         BundleInfo hasInstalledInfo;
@@ -2529,13 +2556,19 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
         if (infos.begin()->second.GetOverlayType() == OverlayType::OVERLAY_EXTERNAL_BUNDLE) {
             overlayBundles.insert(bundleName);
         }
+        std::vector<std::string> bundlePaths;
+        if (DualModeHelper::IsDualModeDevice() && pkgInfo.isDiffPackage) {
+            bundlePaths = DualModeHelper::IsSecondaryMode() ? pkgInfo.subModeHaps : pkgInfo.mainModeHaps;
+        } else {
+            bundlePaths.push_back(scanPathIter);
+        }
         auto iter = needInstallMap.find(bundleName);
         if (iter == needInstallMap.end()) {
-            std::vector<std::string> filePaths = {scanPathIter};
-            needInstallMap[bundleName] = std::make_pair(filePaths, removable);
+            needInstallMap[bundleName] = std::make_pair(bundlePaths, removable);
         } else {
-            iter->second.first.emplace_back(scanPathIter);
+            iter->second.first.insert(iter->second.first.end(), bundlePaths.begin(), bundlePaths.end());
         }
+        dualModePolicyForNewMap[bundleName] = pkgInfo.policy;
     }
     for (auto &item : needInstallSysMap) {
         std::string bundleName = item.first;
@@ -2548,6 +2581,12 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
         bool ret = false;
         int32_t timerId = XCollieHelper::SetOTATimer(OTA_PREINSTALL_BUNDLE_TASK, OTA_TIMEOUT_SECONDS);
         ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
+        // Dual-mode: pass the policy recorded for the new install (UNSPECIFIED means original flow).
+        DeviceModeDistributionPolicy newPolicy = DeviceModeDistributionPolicy::UNSPECIFIED;
+        auto policyIter = dualModePolicyForNewMap.find(bundleName);
+        if (policyIter != dualModePolicyForNewMap.end()) {
+            newPolicy = policyIter->second;
+        }
         auto targetUsersIter = otaNewInstallTargetUsersForNew.find(bundleName);
         bool hasinstalledOnStartUser = dataMgr->HasUserInstallInBundle(bundleName, Constants::START_USERID);
         auto blackListIter = blackListBundles.find(bundleName);
@@ -2562,7 +2601,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             ret = OTAInstallSystemBundleTargetUser(path, bundleName, appType, item.second.second,
                 blackListIter->second);
         } else {
-            ret = OTAInstallSystemBundle(path, appType, item.second.second);
+            ret = OTAInstallSystemBundle(path, appType, item.second.second, false, newPolicy);
         }
         if (!ret) {
             LOG_E(BMS_TAG_DEFAULT, "OTA Install new bundle(%{public}s) error", bundleName.c_str());
@@ -2579,6 +2618,21 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             }
         }
     }
+    // Process cross-mode installation map for dual mode OTA
+    for (auto &item : crossModeOtaTasks) {
+        const std::string &taskKey = item.first;
+        const CrossModeOtaTask &task = item.second;
+        int32_t timerId = XCollieHelper::SetOTATimer(OTA_PREINSTALL_BUNDLE_TASK, OTA_TIMEOUT_SECONDS);
+        ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
+        bool ret = OTAInstallSystemBundleForDualApp(task.filePaths, task, appType);
+        if (!ret) {
+            LOG_E(BMS_TAG_DEFAULT, "OTA cross-mode install(%{public}s) error", taskKey.c_str());
+            SavePreInstallExceptionBundleName(taskKey);
+        } else {
+            LOG_I(BMS_TAG_DEFAULT, "OTA cross-mode install(%{public}s) success", taskKey.c_str());
+        }
+    }
+
     std::unordered_map<std::string, std::pair<std::vector<std::string>, bool>> needInstallMapFirst;
     std::unordered_map<std::string, std::pair<std::vector<std::string>, bool>> needInstallMapOverlay;
     for (auto &item : needInstallMap) {
@@ -2589,7 +2643,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             needInstallMapFirst[item.first] = item.second;
         }
     }
-    if (!InnerMultiProcessBundleInstall(needInstallMapFirst, appType)) {
+    if (!InnerMultiProcessBundleInstall(needInstallMapFirst, appType, dualModePolicyForNewMap)) {
         LOG_E(BMS_TAG_DEFAULT, "multi needInstallMapFirst failed");
     }
     for (auto iter = needInstallMapOverlay.begin(); iter != needInstallMapOverlay.end(); ++iter) {
@@ -2667,7 +2721,8 @@ std::vector<std::string> BMSEventHandler::ObtainRealPath(const std::vector<std::
 
 bool BMSEventHandler::InnerMultiProcessBundleInstall(
     const std::unordered_map<std::string, std::pair<std::vector<std::string>, bool>> &needInstallMap,
-    Constants::AppType appType)
+    Constants::AppType appType,
+    const std::unordered_map<std::string, DeviceModeDistributionPolicy> &dualModePolicyForNewMap)
 {
     if (needInstallMap.empty()) {
         LOG_I(BMS_TAG_DEFAULT, "no bundle need to update when ota");
@@ -2694,8 +2749,14 @@ bool BMSEventHandler::InnerMultiProcessBundleInstall(
         std::string bundleName = iter->first;
         std::pair pair = iter->second;
         std::vector<std::string> filePaths = BMSEventHandler::ObtainRealPath(pair.first);
-        auto task = [bundleName, pair, filePaths, taskTotalNum, appType, &taskEndNum, &bundlePromise]() {
-            (void)BMSEventHandler::OTAInstallSystemBundleNeedCheckUser(filePaths, bundleName, appType, pair.second);
+        DeviceModeDistributionPolicy newPolicy = DeviceModeDistributionPolicy::UNSPECIFIED;
+        auto policyIter = dualModePolicyForNewMap.find(bundleName);
+        if (policyIter != dualModePolicyForNewMap.end()) {
+            newPolicy = policyIter->second;
+        }
+        auto task = [bundleName, pair, filePaths, taskTotalNum, appType, newPolicy, &taskEndNum, &bundlePromise]() {
+            (void)BMSEventHandler::OTAInstallSystemBundleNeedCheckUser(filePaths, bundleName, appType,
+                pair.second, newPolicy);
             taskEndNum++;
             if (bundlePromise && taskEndNum >= taskTotalNum) {
                 bundlePromise->NotifyAllTasksExecuteFinished();
@@ -4196,7 +4257,8 @@ bool BMSEventHandler::OTAInstallSystemBundleNeedCheckUser(
     const std::vector<std::string> &filePaths,
     const std::string &bundleName,
     Constants::AppType appType,
-    bool removable)
+    bool removable,
+    DeviceModeDistributionPolicy deviceModeDistributionPolicy)
 {
     if (filePaths.empty()) {
         LOG_E(BMS_TAG_DEFAULT, "File path is empty");
@@ -4214,6 +4276,7 @@ bool BMSEventHandler::OTAInstallSystemBundleNeedCheckUser(
     installParam.copyHapToInstallPath = false;
     installParam.isOTA = true;
     installParam.preinstallSourceFlag = ApplicationInfoFlag::FLAG_OTA_INSTALLED;
+    installParam.deviceModeDistributionPolicy = deviceModeDistributionPolicy;
     SystemBundleInstaller installer;
     ErrCode ret = installer.OTAInstallSystemBundleNeedCheckUser(filePaths, installParam, bundleName, appType);
     LOG_NOFUNC_I(BMS_TAG_DEFAULT, "bundle %{public}s with return code: %{public}d", bundleName.c_str(), ret);
@@ -6320,6 +6383,389 @@ void BMSEventHandler::ProcessMigrateUninstallBundleResource()
         UpdateOtaFlag(OTAFlag::MIGRATE_UNINSTALL_BUNDLE_RESOURCE);
     } else {
         LOG_E(BMS_TAG_DEFAULT, "migrate failed");
+    }
+}
+
+DualModePackageInfo BMSEventHandler::ParseDualModePackageInfo(
+    const std::string &bundleName,
+    const std::string &scanPathIter,
+    const std::unordered_map<std::string, InnerBundleInfo> &infos)
+{
+    DualModePackageInfo pkgInfo;
+    // Non-dual-mode device: return the default (policy=UNSPECIFIED); the caller keeps the original flow.
+    if (!DualModeHelper::IsDualModeDevice()) {
+        return pkgInfo;
+    }
+    std::string bundleDir = scanPathIter;
+
+    int32_t policy = 0;
+    std::map<std::string, std::vector<std::string>> modeHapMap;
+    if (!DualModeHelper::GetDeviceModelDistributionPolicy(bundleName, scanPathIter,
+        Constants::APP_DISTRIBUTION_TYPE_OS_INTEGRATION, policy, modeHapMap)) {
+        LOG_W(BMS_TAG_DEFAULT, "ERMS query failed for %{public}s, fallback to original flow", bundleName.c_str());
+        return pkgInfo;
+    }
+    pkgInfo.policy = static_cast<DeviceModeDistributionPolicy>(policy);
+    // Different-package policies are 4/6/8 (UNIVERSAL/PARTIAL_COMPATIBLE/FULL_COMPATIBLE_DIFFERENT_PACKAGE)
+    pkgInfo.isDiffPackage = DualModeHelper::IsDiffPackageCategory(pkgInfo.policy);
+    LOG_I(BMS_TAG_DEFAULT, "dual-mode parse: bundle=%{public}s policy=%{public}d isDiffPackage=%{public}d",
+        bundleName.c_str(), static_cast<int>(pkgInfo.policy), pkgInfo.isDiffPackage);
+
+    if (!pkgInfo.isDiffPackage || modeHapMap.empty()) {
+        // Same-name-same-package app: the hap path is scanPathIter itself, both lists stay empty and
+        // the original flow applies.
+        return pkgInfo;
+    }
+
+    // Same-name-different-package: modeHapMap holds hap file names relative to the preinstall
+    // directory. Split the two sides by mainmode (not the current mode) to stay consistent with
+    // ResolveDualModePolicy's classification.
+    auto joinPath = [](const std::string &dir, const std::string &name) -> std::string {
+        if (dir.empty() || dir.back() == '/') {
+            return dir + name;
+        }
+        return dir + "/" + name;
+    };
+    int32_t mainmode = DualModeHelper::GetMainmode();
+    for (const auto &entry : modeHapMap) {
+        bool isMainSide = (DualModeHelper::MapDeviceTypeToMode(entry.first) == mainmode);
+        for (const auto &name : entry.second) {
+            if (isMainSide) {
+                pkgInfo.mainModeHaps.push_back(joinPath(scanPathIter, name));
+            } else {
+                pkgInfo.subModeHaps.push_back(joinPath(scanPathIter, name));
+            }
+        }
+    }
+    LOG_I(BMS_TAG_DEFAULT, "dual-mode split: bundle=%{public}s mainHaps=%{public}zu subHaps=%{public}zu",
+        bundleName.c_str(), pkgInfo.mainModeHaps.size(), pkgInfo.subModeHaps.size());
+    return pkgInfo;
+}
+
+void BMSEventHandler::HandleDualModeNewInstall(
+    const DualModePackageInfo &pkgInfo,
+    const std::string &bundleName,
+    const std::string &scanPathIter,
+    bool removable,
+    std::unordered_map<std::string, std::pair<std::vector<std::string>, bool>> &needInstallSysMap,
+    std::unordered_map<std::string, DeviceModeDistributionPolicy> &dualModePolicyForNewMap,
+    std::unordered_map<std::string, CrossModeOtaTask> &crossModeOtaTasks)
+{
+    bool isCurrentSecondary = DualModeHelper::IsSecondaryMode();
+    if (!pkgInfo.isDiffPackage) {
+        if (pkgInfo.policy == DeviceModeDistributionPolicy::MAIN_ONLY ||
+            pkgInfo.policy == DeviceModeDistributionPolicy::SUB_ONLY) {
+            // MAIN_ONLY/SUB_ONLY package: matching the current mode installs directly; otherwise cross-mode.
+            bool matchCurrentMode =
+                (pkgInfo.policy == DeviceModeDistributionPolicy::MAIN_ONLY && !isCurrentSecondary) ||
+                (pkgInfo.policy == DeviceModeDistributionPolicy::SUB_ONLY && isCurrentSecondary);
+            if (matchCurrentMode) {
+                dualModePolicyForNewMap[bundleName] = pkgInfo.policy;
+                needInstallSysMap[bundleName] = std::make_pair(std::vector<std::string>{scanPathIter}, removable);
+                LOG_I(BMS_TAG_DEFAULT, "dual-mode new install (single-mode, current mode): %{public}s",
+                    bundleName.c_str());
+            } else {
+                CrossModeOtaTask task;
+                task.filePaths = {scanPathIter};
+                task.removable = removable;
+                task.policy = pkgInfo.policy;
+                task.forceCrossModeOTAInstall = true;
+                crossModeOtaTasks[bundleName] = task;
+                LOG_I(BMS_TAG_DEFAULT, "dual-mode new install (single-mode, cross mode): %{public}s",
+                    bundleName.c_str());
+            }
+        } else {
+            // Same-name-same-package (UNIVERSAL/PARTIAL/FULL_COMPATIBLE_IDENTICAL_PACKAGE, policies 3/5/7):
+            // one package serves both modes, no separate counterpart exists, so install through the
+            // current-mode normal flow without cross-mode handling.
+            dualModePolicyForNewMap[bundleName] = pkgInfo.policy;
+            needInstallSysMap[bundleName] = std::make_pair(std::vector<std::string>{scanPathIter}, removable);
+            LOG_I(BMS_TAG_DEFAULT, "dual-mode new install (identical package): %{public}s", bundleName.c_str());
+        }
+        return;
+    }
+
+    // Same-name-different-package (policies 4/6/8): the current-mode side goes into needInstallSysMap,
+    // the other side into the cross-mode task map. Task keys are always the original name
+    // (tempBundleInfos_ is keyed the same way); the prefix is decided by install-time flags.
+    const auto &currentHaps = isCurrentSecondary ? pkgInfo.subModeHaps : pkgInfo.mainModeHaps;
+    if (!currentHaps.empty()) {
+        dualModePolicyForNewMap[bundleName] = pkgInfo.policy;
+        needInstallSysMap[bundleName] = std::make_pair(currentHaps, removable);
+        LOG_I(BMS_TAG_DEFAULT, "dual-mode new install (diff package, current side): %{public}s haps=%{public}zu",
+            bundleName.c_str(), currentHaps.size());
+    } else {
+        LOG_W(BMS_TAG_DEFAULT, "no haps for current mode: %{public}s, skip normal install", bundleName.c_str());
+    }
+
+    const auto &otherHaps = isCurrentSecondary ? pkgInfo.mainModeHaps : pkgInfo.subModeHaps;
+    if (!otherHaps.empty()) {
+        CrossModeOtaTask task;
+        task.filePaths = otherHaps;
+        task.removable = removable;
+        task.policy = pkgInfo.policy;
+        task.forceCrossModeOTAInstall = true;
+        crossModeOtaTasks[bundleName] = task;
+        LOG_I(BMS_TAG_DEFAULT, "dual-mode new install (diff package, cross side): key=%{public}s haps=%{public}zu",
+            bundleName.c_str(), otherHaps.size());
+    }
+}
+
+void BMSEventHandler::ProcessDualModeCrossUpdateIfNeeded(
+    const DualModePackageInfo &pkgInfo,
+    const std::unordered_map<std::string, InnerBundleInfo> &infos,
+    const std::string &bundleName,
+    bool removable,
+    uint32_t hapVersionCode,
+    std::unordered_map<std::string, CrossModeOtaTask> &crossModeOtaTasks)
+{
+    if (!DualModeHelper::IsDualModeDevice() ||
+        pkgInfo.policy == DeviceModeDistributionPolicy::UNSPECIFIED) {
+        return;
+    }
+    bool isCurrentSecondary = DualModeHelper::IsSecondaryMode();
+
+    // Cross-mode scenarios covered:
+    // a) same-name-different-package (policies 4/6/8): the other mode's package needs an update with the
+    //    opposite-side haps; when that side is not installed (legacy devices upgraded from a build without
+    //    the dual-mode mechanism), re-install it unless the user uninstalled it;
+    // b) MAIN_ONLY/SUB_ONLY apps of the same-name-same-package kind: when the policy does not match the
+    //    current mode, the hidden side also needs a cross-mode update;
+    // c) IDENTICAL same-name-same-package (3/5/7): one package serves both modes, no counterpart exists,
+    //    the current-mode flow handles it; skipped here.
+    const bool isDiffPackage = pkgInfo.isDiffPackage;
+    const bool isSingleMode =
+        pkgInfo.policy == DeviceModeDistributionPolicy::MAIN_ONLY ||
+        pkgInfo.policy == DeviceModeDistributionPolicy::SUB_ONLY;
+    if (!isDiffPackage && !isSingleMode) {
+        return;
+    }
+    const bool singleModeMismatch =
+        isSingleMode &&
+        ((pkgInfo.policy == DeviceModeDistributionPolicy::MAIN_ONLY && isCurrentSecondary) ||
+         (pkgInfo.policy == DeviceModeDistributionPolicy::SUB_ONLY && !isCurrentSecondary));
+    if (isSingleMode && !singleModeMismatch) {
+        // MAIN_ONLY/SUB_ONLY matching the current mode: normal current-mode update, no cross task.
+        return;
+    }
+    // Cross-mode task haps: the opposite-side list for different-package; for a mismatched single-mode
+    // app the whole parsed package is the cross-mode hap (keys of the parsed infos).
+    std::vector<std::string> otherHaps;
+    if (isDiffPackage) {
+        otherHaps = isCurrentSecondary ? pkgInfo.mainModeHaps : pkgInfo.subModeHaps;
+    } else {
+        for (const auto &item : infos) {
+            otherHaps.push_back(item.first);
+        }
+    }
+    if (otherHaps.empty()) {
+        return;
+    }
+
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        return;
+    }
+    // Cross-mode package info is queried through FetchTempBundleInfo: tempBundleInfos_ stores the
+    // non-current-mode variants (the different-package counterpart and hidden MAIN_ONLY/SUB_ONLY apps)
+    // keyed by the original bundleName; never query the RDB with a prefixed name here.
+    InnerBundleInfo crossInnerInfo;
+    if (!dataMgr->FetchTempBundleInfo(bundleName, crossInnerInfo)) {
+        if (!isDiffPackage) {
+            // Mismatched MAIN_ONLY/SUB_ONLY with no hidden side: the app was never installed in the
+            // other mode; its install is handled by the current-mode flow (IsCrossModeInstall decides
+            // cross-mode storage by policy), so nothing to do here.
+            LOG_D(BMS_TAG_DEFAULT, "single-mode app has no hidden side, no cross task: %{public}s",
+                bundleName.c_str());
+            return;
+        }
+        // Different-package with the other side missing. Re-install on legacy upgrades (the other mode
+        // never had it); respect a user uninstall and skip. Judge the uninstall state from the
+        // preinstall bundle info: the primary side is keyed by bundleName, the secondary side by the
+        // +clone-10000+ prefixed name.
+        const std::string effectiveBundleName = isCurrentSecondary ?
+            bundleName : DualModeHelper::GetDualModeBundleName(bundleName);
+        PreInstallBundleInfo preInstallBundleInfo;
+        if (dataMgr->GetPreInstallBundleInfo(effectiveBundleName, preInstallBundleInfo)) {
+            LOG_I(BMS_TAG_DEFAULT, "cross-side missing, no preinstall info or uninstalled, skip: %{public}s",
+                bundleName.c_str());
+            return;
+        }
+        CrossModeOtaTask task;
+        task.filePaths = otherHaps;
+        task.removable = removable;
+        task.policy = pkgInfo.policy;
+        // Same convention as HandleDualModeNewInstall: in secondary mode the target is the primary
+        // side (keep the original name); in primary mode installing the secondary side uses the clone key.
+        task.forceCrossModeOTAInstall = true;
+        crossModeOtaTasks[bundleName] = task;
+        LOG_I(BMS_TAG_DEFAULT, "legacy upgrade: cross-side install needed: %{public}s haps=%{public}zu",
+            bundleName.c_str(), otherHaps.size());
+        return;
+    }
+
+    // Version comparison mirrors the current-mode OTA flow, evaluated against the other side, via
+    // GetBaseBundleInfo's BundleInfo view reusing IsPathExistInInstalledBundleInfo / UpdateModuleByHash
+    // / hapModuleNames / applicationInfo.accessTokenIdEx.
+    BundleInfo crossInstalledInfo;
+    crossInnerInfo.GetBundleInfo(static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE),
+        crossInstalledInfo, Constants::ALL_USERID);
+    uint32_t crossVersionCode = crossInnerInfo.GetVersionCode();
+    bool updateCrossBundle = false;
+    bool hasEntry = false;
+    for (const auto &item : infos) {
+        if (item.second.HasEntry()) {
+            hasEntry = true;
+            break;
+        }
+    }
+    for (const auto &item : infos) {
+        auto parserModuleNames = item.second.GetModuleNameVec();
+        if (parserModuleNames.empty()) {
+            continue;
+        }
+        // Installed versionCode lower than the hap version: upgrade directly.
+        if (crossVersionCode < hapVersionCode) {
+            LOG_I(BMS_TAG_DEFAULT, "OTA cross update module(%{public}s) for(%{public}s)",
+                parserModuleNames[0].c_str(), bundleName.c_str());
+            updateCrossBundle = true;
+            break;
+        }
+        // Legacy app with accessTokenIdEx == 0 needs an update.
+        if (crossInstalledInfo.applicationInfo.accessTokenIdEx == 0) {
+            LOG_I(BMS_TAG_DEFAULT, "OTA cross update module(%{public}s) accessTokenIdEx=0 for(%{public}s)",
+                parserModuleNames[0].c_str(), bundleName.c_str());
+            updateCrossBundle = true;
+            break;
+        }
+        // Equal versionCode: update only for a new module or a changed build hash.
+        if (crossVersionCode == hapVersionCode) {
+            if (crossInnerInfo.GetInstallMark().status != InstallExceptionStatus::INSTALL_FINISH) {
+                LOG_I(BMS_TAG_DEFAULT, "OTA cross status error: %{public}s %{public}d",
+                    bundleName.c_str(), crossInnerInfo.GetInstallMark().status);
+                updateCrossBundle = true;
+                break;
+            }
+            if (!IsPathExistInInstalledBundleInfo(item.first, crossInstalledInfo)) {
+                LOG_I(BMS_TAG_DEFAULT, "OTA cross install new module(%{public}s) for(%{public}s)",
+                    parserModuleNames[0].c_str(), bundleName.c_str());
+                updateCrossBundle = true;
+                break;
+            }
+            bool hasModuleInstalled = std::find(
+                crossInstalledInfo.hapModuleNames.begin(), crossInstalledInfo.hapModuleNames.end(),
+                parserModuleNames[0]) != crossInstalledInfo.hapModuleNames.end();
+            if (hasModuleInstalled) {
+                if (UpdateModuleByHash(crossInstalledInfo, item.second) || (!hasEntry && item.second.IsHsp())) {
+                    updateCrossBundle = true;
+                    break;
+                }
+                continue;
+            }
+            updateCrossBundle = true;
+            break;
+        }
+        // Installed versionCode higher than the hap version: downgrade, do not update.
+        if (crossVersionCode > hapVersionCode) {
+            LOG_E(BMS_TAG_DEFAULT, "-n %{public}s cross update failed version:%{public}d lower than "
+                "current:%{public}d", bundleName.c_str(), hapVersionCode, crossVersionCode);
+            updateCrossBundle = false;
+            break;
+        }
+    }
+
+    if (!updateCrossBundle) {
+        return;
+    }
+    CrossModeOtaTask task;
+    task.filePaths = otherHaps;
+    task.removable = removable;
+    task.policy = pkgInfo.policy;
+    // Same convention as HandleDualModeNewInstall: cross-installing the secondary side forces the
+    // clone key; in secondary mode the target is the primary side and keeps the original name
+    // (different-package suppresses the NeedDualModeHandle fallback; MAIN_ONLY/SUB_ONLY are stored
+    // under the original name anyway).
+    task.forceCrossModeOTAInstall = true;
+    crossModeOtaTasks[bundleName] = task;
+    LOG_I(BMS_TAG_DEFAULT, "OTA cross-mode update needed: %{public}s haps=%{public}zu policy=%{public}d",
+        bundleName.c_str(), otherHaps.size(), static_cast<int>(task.policy));
+}
+
+bool BMSEventHandler::IsSkipNormalOtaFlow(const DualModePackageInfo &pkgInfo)
+{
+    if (!DualModeHelper::IsDualModeDevice()) {
+        return false;
+    }
+    bool isCurrentSecondary = DualModeHelper::IsSecondaryMode();
+    // MAIN_ONLY in secondary mode / SUB_ONLY in primary mode: the current-mode flow does nothing
+    // (their cross-mode install/update is decided separately in HandleDualModeNewInstall /
+    // ProcessDualModeCrossUpdateIfNeeded).
+    if ((pkgInfo.policy == DeviceModeDistributionPolicy::MAIN_ONLY && isCurrentSecondary) ||
+        (pkgInfo.policy == DeviceModeDistributionPolicy::SUB_ONLY && !isCurrentSecondary)) {
+        LOG_D(BMS_TAG_DEFAULT, "skip normal ota flow, single-mode app not for current mode");
+        return true;
+    }
+    return false;
+}
+
+bool BMSEventHandler::OTAInstallSystemBundleForDualApp(
+    const std::vector<std::string> &filePaths,
+    const CrossModeOtaTask &task,
+    Constants::AppType appType)
+{
+    if (filePaths.empty()) {
+        LOG_E(BMS_TAG_DEFAULT, "File path is empty");
+        return false;
+    }
+    InstallParam installParam;
+    installParam.isPreInstallApp = true;
+    installParam.SetKillProcess(false);
+    installParam.needSendEvent = false;
+    installParam.installFlag = InstallFlag::REPLACE_EXISTING;
+    installParam.removable = task.removable;
+    installParam.needSavePreInstallInfo = true;
+    installParam.copyHapToInstallPath = false;
+    installParam.isOTA = true;
+    installParam.preinstallSourceFlag = ApplicationInfoFlag::FLAG_OTA_INSTALLED;
+    // Dual-mode key parameters: the policy is passed through so ResolveDualModePolicy skips the ERMS
+    // query; the cross-mode flag drives the target-side storage key (+clone-10000+ for the secondary
+    // side, the original name for the primary side).
+    installParam.deviceModeDistributionPolicy = task.policy;
+    installParam.forceCrossModeOTAInstall = task.forceCrossModeOTAInstall;
+    SystemBundleInstaller installer;
+    ErrCode ret = installer.OTAInstallSystemBundle(filePaths, installParam, appType);
+    if (ret == ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON) {
+        ret = ERR_OK;
+    }
+    LOG_I(BMS_TAG_DEFAULT, "dual-app ota install ret=%{public}d forceClone=%{public}d policy=%{public}d",
+        ret, task.forceCrossModeOTAInstall, static_cast<int>(task.policy));
+    return ret == ERR_OK;
+}
+
+void BMSEventHandler::ProcessUpdateDualPolicy(const DualModePackageInfo &pkgInfo, const std::string &bundleName)
+{
+    if (!DualModeHelper::IsDualModeDevice() || !pkgInfo.isDiffPackage) {
+        return;
+    }
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        return;
+    }
+    InnerBundleInfo crossInnerInfo;
+    PreInstallBundleInfo preInstallBundleInfo;
+    const std::string effectiveBundleName = DualModeHelper::GetDualModeBundleName(bundleName);
+    //same package change to diff packages during ota, need update policy firstly
+    if (dataMgr->FetchTempBundleInfo(bundleName, crossInnerInfo) ||
+        dataMgr->GetPreInstallBundleInfo(effectiveBundleName, preInstallBundleInfo)) {
+        return;
+    }
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "%{public}s update policy", bundleName.c_str());
+    AppSandboxPolicy appSandboxPolicy =
+        pkgInfo.isDiffPackage ? AppSandboxPolicy::ISOLATED_SANDBOX : AppSandboxPolicy::SHARED_SANDBOX;
+    dataMgr->UpdateBundleInfoPolicy(bundleName, pkgInfo.policy, appSandboxPolicy);
+    if (DualModeHelper::IsSecondaryMode()) {
+        dataMgr->MoveBundleInfoToTemp(bundleName);
+        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "%{public}s move to tempBundleInfos", bundleName.c_str());
     }
 }
 }  // namespace AppExecFwk

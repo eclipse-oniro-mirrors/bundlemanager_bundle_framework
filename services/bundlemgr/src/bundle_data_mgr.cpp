@@ -811,6 +811,45 @@ void BundleDataMgr::FilterBundleListByDeviceModeDistributionPoliciesNoLock(
     }
 }
 
+bool BundleDataMgr::MoveBundleInfoToTemp(const std::string &bundleName)
+{
+    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto it = bundleInfos_.find(bundleName);
+    if (it == bundleInfos_.end()) {
+        return false;
+    }
+    auto item = tempBundleInfos_.find(bundleName);
+    if (item != tempBundleInfos_.end()) {
+        return false;
+    }
+    tempBundleInfos_[bundleName] = it->second;
+    bundleInfos_.erase(it);
+    return true;
+}
+
+bool BundleDataMgr::UpdateBundleInfoPolicy(const std::string &bundleName,
+    DeviceModeDistributionPolicy deviceModeDistributionPolicy,
+    AppSandboxPolicy appSandboxPolicy)
+{
+    if (bundleName.empty()) {
+        APP_LOGE("bundleName empty");
+        return false;
+    }
+    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        APP_LOGE("%{public}s not exist", bundleName.c_str());
+        return false;
+    }
+    item->second.SetDeviceModeDistributionPolicy(deviceModeDistributionPolicy);
+    item->second.SetAppSandboxPolicy(appSandboxPolicy);
+    if (!dataStorage_->SaveStorageBundleInfo(item->second)) {
+        APP_LOGE("save %{public}s to db failed", bundleName.c_str());
+        return false;
+    }
+    return true;
+}
+
 bool BundleDataMgr::UpdateBundleInstallState(const std::string &bundleName,
     const InstallState state, const bool isKeepData)
 {

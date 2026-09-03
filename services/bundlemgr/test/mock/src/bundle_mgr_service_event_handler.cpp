@@ -539,7 +539,8 @@ bool BMSEventHandler::OTAInstallSystemBundle(
 }
 
 bool BMSEventHandler::OTAInstallSystemBundleNeedCheckUser(const std::vector<std::string>& filePaths,
-    const std::string& bundleName, Constants::AppType appType, bool removable)
+    const std::string& bundleName, Constants::AppType appType, bool removable,
+    DeviceModeDistributionPolicy deviceModeDistributionPolicy)
 {
     return true;
 }

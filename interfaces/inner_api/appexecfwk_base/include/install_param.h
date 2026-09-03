@@ -77,6 +77,11 @@ struct InstallParam : public Parcelable {
     // (+clone-10000+{bundleName}) regardless of the current device mode. Set only by the
     // SystemBundleInstaller dual-mode fan-out (in-process); not marshalled over IPC.
     bool forceDualModeCloneInstall = false;
+    // dual-mode cross-mode OTA: the haps being installed belong to the PRIMARY mode while the
+    // device currently runs in secondary mode, so the original (non-prefixed) name must be kept
+    // even though NeedDualModeHandle(policy) would be true. Mutually exclusive with
+    // forceCrossModeOTAInstall; in-process only, not marshalled over IPC.
+    bool forceCrossModeOTAInstall = false;
     // allow patch app downgrade install
     bool allowPatchDowngrade = false;
     bool isCheckDebugApp = false;

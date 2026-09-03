@@ -1404,11 +1404,13 @@ HWTEST_F(BmsEventHandlerTest, InnerMultiProcessBundleInstall_0100, Function | Sm
     EXPECT_NE(handler, nullptr);
     if (handler) {
         std::unordered_map<std::string, std::pair<std::vector<std::string>, bool>> needInstallMap;
-        bool ret = handler->InnerMultiProcessBundleInstall(needInstallMap, Constants::AppType::SYSTEM_APP);
+        bool ret = handler->InnerMultiProcessBundleInstall(needInstallMap, Constants::AppType::SYSTEM_APP,
+            std::unordered_map<std::string, DeviceModeDistributionPolicy>());
         EXPECT_TRUE(ret);
         std::vector<std::string> filePaths = {"notExist"};
         needInstallMap["testName"] = std::make_pair(filePaths, true);
-        ret = handler->InnerMultiProcessBundleInstall(needInstallMap, Constants::AppType::SYSTEM_APP);
+        ret = handler->InnerMultiProcessBundleInstall(needInstallMap, Constants::AppType::SYSTEM_APP,
+            std::unordered_map<std::string, DeviceModeDistributionPolicy>());
         EXPECT_TRUE(ret);
     }
 }
@@ -1424,11 +1426,13 @@ HWTEST_F(BmsEventHandlerTest, InnerMultiProcessBundleInstall_0200, Function | Sm
     EXPECT_NE(handler, nullptr);
     if (handler) {
         std::unordered_map<std::string, std::pair<std::vector<std::string>, bool>> needInstallMap;
-        bool ret = handler->InnerMultiProcessBundleInstall(needInstallMap, Constants::AppType::SYSTEM_APP);
+        bool ret = handler->InnerMultiProcessBundleInstall(needInstallMap, Constants::AppType::SYSTEM_APP,
+            std::unordered_map<std::string, DeviceModeDistributionPolicy>());
         EXPECT_TRUE(ret);
         std::vector<std::string> filePaths = {"notExist", "notExist2"};
         needInstallMap["testName"] = std::make_pair(filePaths, true);
-        ret = handler->InnerMultiProcessBundleInstall(needInstallMap, Constants::AppType::SYSTEM_APP);
+        ret = handler->InnerMultiProcessBundleInstall(needInstallMap, Constants::AppType::SYSTEM_APP,
+            std::unordered_map<std::string, DeviceModeDistributionPolicy>());
         EXPECT_TRUE(ret);
     }
 }
