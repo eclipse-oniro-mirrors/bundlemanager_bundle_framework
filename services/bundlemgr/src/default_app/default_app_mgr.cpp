@@ -17,6 +17,7 @@
 
 #include "app_log_tag_wrapper.h"
 #include "bms_extension_client.h"
+#include "browser_permission_config.h"
 #include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
 #include "default_app_rdb.h"
@@ -322,10 +323,10 @@ ErrCode DefaultAppMgr::SetDefaultApplicationInternal(
         return ERR_OK;
     }
     // set default app
-    ret = IsElementValid(userId, normalizedType, element);
-    if (!ret) {
+    ErrCode validRet = IsElementValid(userId, normalizedType, element);
+    if (validRet != ERR_OK) {
         LOG_W(BMS_TAG_DEFAULT, "invalid element");
-        return ERR_BUNDLE_MANAGER_ABILITY_AND_TYPE_MISMATCH;
+        return validRet;
     }
     ret = defaultAppDb_->SetDefaultApplicationInfo(userId, normalizedType, element);
     if (!ret) {
@@ -393,7 +394,7 @@ ErrCode DefaultAppMgr::ResetDefaultApplicationInternal(int32_t userId, const std
     // Priority 1: Try to restore to enterprise customization configuration
     ret = defaultAppDb_->GetDefaultApplicationInfo(edcUserId, normalizedType, element);
     if (ret) {
-        if (IsElementValid(userId, normalizedType, element)) {
+        if (IsElementValid(userId, normalizedType, element) == ERR_OK) {
             ret = defaultAppDb_->SetDefaultApplicationInfo(userId, normalizedType, element);
             if (!ret) {
                 LOG_NOFUNC_W(BMS_TAG_DEFAULT, "SetDefaultApplicationInfo to edc failed");
@@ -406,8 +407,8 @@ ErrCode DefaultAppMgr::ResetDefaultApplicationInternal(int32_t userId, const std
     // Priority 2: Try to restore to system preset configuration
     ret = defaultAppDb_->GetDefaultApplicationInfo(INITIAL_USER_ID, normalizedType, element);
     if (ret) {
-        ret = IsElementValid(userId, normalizedType, element);
-        if (!ret) {
+        ErrCode validRet = IsElementValid(userId, normalizedType, element);
+        if (validRet != ERR_OK) {
             LOG_NOFUNC_W(BMS_TAG_DEFAULT, "invalid element");
             return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
         }
@@ -450,7 +451,7 @@ void DefaultAppMgr::HandleUninstallBundle(int32_t userId, const std::string& bun
         }
         Element element;
         if (customInfos.find(item.first) != customInfos.end() &&
-            IsElementValid(userId, item.first, customInfos[item.first])) {
+            IsElementValid(userId, item.first, customInfos[item.first]) == ERR_OK) {
             LOG_NOFUNC_D(BMS_TAG_DEFAULT, "fallback to edc, type:%{public}s", item.first.c_str());
             newInfos.emplace(item.first, customInfos[item.first]);
         } else if (defaultAppDb_->GetDefaultApplicationInfo(INITIAL_USER_ID, item.first, element)) {
@@ -894,17 +895,17 @@ bool DefaultAppMgr::VerifyElementFormat(const Element& element)
     return true;
 }
 
-bool DefaultAppMgr::IsElementValid(int32_t userId, const std::string& type, const Element& element) const
+ErrCode DefaultAppMgr::IsElementValid(int32_t userId, const std::string& type, const Element& element) const
 {
     bool ret = VerifyElementFormat(element);
     if (!ret) {
         LOG_W(BMS_TAG_DEFAULT, "VerifyElementFormat failed");
-        return false;
+        return ERR_BUNDLE_MANAGER_ABILITY_AND_TYPE_MISMATCH;
     }
     std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         LOG_W(BMS_TAG_DEFAULT, "dataMgr is null");
-        return false;
+        return ERR_BUNDLE_MANAGER_ABILITY_AND_TYPE_MISMATCH;
     }
     AbilityInfo abilityInfo;
     ExtensionAbilityInfo extensionInfo;
@@ -914,15 +915,76 @@ bool DefaultAppMgr::IsElementValid(int32_t userId, const std::string& type, cons
     if (!ret) {
         LOG_W(BMS_TAG_DEFAULT, "QueryInfoAndSkillsByElement failed");
         BundleInfo bundleInfo;
-        return GetBrokerBundleInfo(element, bundleInfo);
+        if (!GetBrokerBundleInfo(element, bundleInfo)) {
+            return ERR_BUNDLE_MANAGER_ABILITY_AND_TYPE_MISMATCH;
+        }
+        // broker apps cannot be granted the permission, deny them as the default browser
+        if (!HasDefaultAppPermission(userId, type, element)) {
+            return ERR_BUNDLE_MANAGER_DEFAULT_APP_PERMISSION_DENIED;
+        }
+        return ERR_OK;
     }
     // match type and skills
     ret = IsMatch(type, skills);
     if (!ret) {
         LOG_W(BMS_TAG_DEFAULT, "type and skills not match");
-        return false;
+        return ERR_BUNDLE_MANAGER_ABILITY_AND_TYPE_MISMATCH;
+    }
+    // the default browser must have been granted the DEFAULT_WEB_BROWSER permission
+    if (!HasDefaultAppPermission(userId, type, element)) {
+        return ERR_BUNDLE_MANAGER_DEFAULT_APP_PERMISSION_DENIED;
     }
     LOG_D(BMS_TAG_DEFAULT, "Element is valid");
+    return ERR_OK;
+}
+
+bool DefaultAppMgr::HasDefaultAppPermission(
+    int32_t userId, const std::string& normalizedType, const Element& element)
+{
+    // non-BROWSER types are not affected by the permission check
+    if (normalizedType != BROWSER) {
+        return true;
+    }
+    // exempt: system preset apps registered in default_app.json bypass the whole check
+    if (DefaultAppMgr::GetInstance().IsPresetDefaultApp(normalizedType, element)) {
+        LOG_I(BMS_TAG_DEFAULT,
+            "browser exempted by preset default_app.json, -n:%{public}s -i:%{public}d",
+            element.bundleName.c_str(), element.appIndex);
+        return true;
+    }
+    // the cloud-push switch short-circuits to true when disabled
+    if (!BrowserPermissionConfig::IsPermissionCheckEnabled()) {
+        return true;
+    }
+
+    std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_W(BMS_TAG_DEFAULT, "dataMgr is null");
+        return false;
+    }
+
+    BundleInfo bundleInfo;
+    int32_t flag = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION);
+    ErrCode errCode = dataMgr->GetCloneBundleInfo(element.bundleName, flag, element.appIndex, bundleInfo, userId);
+    if (errCode != ERR_OK) {
+        LOG_W(BMS_TAG_DEFAULT, "GetCloneBundleInfo failed, -n:%{public}s -i:%{public}d errCode:%{public}d",
+            element.bundleName.c_str(), element.appIndex, errCode);
+        return false;
+    }
+
+    uint32_t tokenId = bundleInfo.applicationInfo.accessTokenId;
+    if (tokenId == 0) {
+        LOG_W(BMS_TAG_DEFAULT, "invalid tokenId, -n:%{public}s -i:%{public}d",
+            element.bundleName.c_str(), element.appIndex);
+        return false;
+    }
+    // verify the DEFAULT_WEB_BROWSER permission
+    if (!BundlePermissionMgr::VerifyPermissionByCallingTokenId(
+        ServiceConstants::PERMISSION_DEFAULT_WEB_BROWSER, tokenId)) {
+        LOG_W(BMS_TAG_DEFAULT, "no DEFAULT_WEB_BROWSER permission, -n:%{public}s -i:%{public}d",
+            element.bundleName.c_str(), element.appIndex);
+        return false;
+    }
     return true;
 }
 
@@ -947,6 +1009,22 @@ bool DefaultAppMgr::GetBrokerBundleInfo(const Element& element, BundleInfo& bund
     bundleInfo.abilityInfos.emplace_back(abilityInfo);
     LOG_I(BMS_TAG_DEFAULT, "get broker bundleInfo success");
     return true;
+}
+
+bool DefaultAppMgr::IsPresetDefaultApp(const std::string& type, const Element& element) const
+{
+    std::lock_guard<std::mutex> lock(presetMutex_);
+    if (!presetCacheLoaded_) {
+        std::map<std::string, Element> infos;
+        // fail-closed: do not cache a transient query failure
+        if (!defaultAppDb_->GetDefaultApplicationInfos(INITIAL_USER_ID, infos)) {
+            return false;
+        }
+        presetCache_ = std::move(infos);
+        presetCacheLoaded_ = true;
+    }
+    auto it = presetCache_.find(type);
+    return it != presetCache_.end() && it->second == element;
 }
 
 ErrCode DefaultAppMgr::VerifyPermission(const std::string& permissionName) const
@@ -1089,6 +1167,48 @@ int32_t DefaultAppMgr::GetEdcUserId(int32_t userId) const
         return EDC_DEFAULT_USER_ID;
     }
     return -userId;
+}
+
+void DefaultAppMgr::CollectBrowserCandidates(int32_t userId, int32_t abilityFlags,
+    const std::shared_ptr<BundleDataMgr> dataMgr, std::vector<AbilityInfo>& result) const
+{
+    Want want;
+    want.SetAction(ServiceConstants::ACTION_VIEW_DATA);
+    want.AddEntity(ENTITY_BROWSER);
+    want.SetUri(HTTP);
+
+    std::vector<AbilityInfo> infos;
+    // browser candidates only collect abilities; skip the redundant extension query
+    (void)dataMgr->QueryAbilityInfosV9(want, abilityFlags, userId, infos);
+    for (const AbilityInfo& info : infos) {
+        Element element;
+        element.bundleName = info.bundleName;
+        element.moduleName = info.moduleName;
+        element.abilityName = info.name;
+        element.appIndex = info.appIndex;
+        if (!HasDefaultAppPermission(userId, BROWSER, element)) {
+            continue;
+        }
+        result.emplace_back(info);
+    }
+}
+
+ErrCode DefaultAppMgr::GetDefaultApplicationCandidates(int32_t userId, const std::string& type,
+    int32_t abilityFlags, std::vector<AbilityInfo>& abilityInfos) const
+{
+    if (type != BROWSER) {
+        LOG_E(BMS_TAG_DEFAULT, "invalid type, only BROWSER is supported");
+        return ERR_BUNDLE_MANAGER_INVALID_TYPE;
+    }
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    std::vector<AbilityInfo> result;
+    CollectBrowserCandidates(userId, abilityFlags, dataMgr, result);
+    abilityInfos = std::move(result);
+    return ERR_OK;
 }
 }
 }

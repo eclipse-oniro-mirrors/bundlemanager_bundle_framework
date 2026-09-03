@@ -34,6 +34,8 @@ bool g_isCallingUidValid = true;
 bool g_verifyPermissionFalse = false;
 bool g_isBundleSelfCallingFalse = false;
 bool g_isNativeTokenTypeOnly = true;
+// controllable return value for VerifyPermissionByCallingTokenId, default true (granted)
+bool g_verifyPermissionByCallingTokenId = true;
 
 namespace {
 std::unordered_map<std::string, bool> g_permissionResults;
@@ -169,6 +171,11 @@ int32_t GetPermissionFailCountForTest(const std::string &permissionName)
     return iter == g_permissionFailCounts.end() ? 0 : iter->second;
 }
 
+void SetVerifyPermissionByCallingTokenIdForTest(bool value)
+{
+    g_verifyPermissionByCallingTokenId = value;
+}
+
 void ResetTestValues()
 {
     g_isNativeTokenType = true;
@@ -191,6 +198,7 @@ void ResetTestValues()
     g_permissionCheckCounts.clear();
     g_permissionSuccessCounts.clear();
     g_permissionFailCounts.clear();
+    g_verifyPermissionByCallingTokenId = true;
 }
 namespace OHOS {
 int32_t g_testVerifyPermission = 0;
@@ -291,7 +299,7 @@ bool BundlePermissionMgr::IsCallingUidValid(int32_t uid)
 bool BundlePermissionMgr::VerifyPermissionByCallingTokenId(const std::string &permissionName,
     const Security::AccessToken::AccessTokenID callerToken)
 {
-    return true;
+    return g_verifyPermissionByCallingTokenId;
 }
 
 bool BundlePermissionMgr::VerifyCallingPermissionForAll(const std::string &permissionName)

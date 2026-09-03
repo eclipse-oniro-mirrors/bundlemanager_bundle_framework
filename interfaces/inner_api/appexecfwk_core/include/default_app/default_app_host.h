@@ -17,6 +17,8 @@
 #define FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_CORE_INCLUDE_DEFAULT_APP_HOST_H
 
 
+#include <mutex>
+
 #include "default_app_interface.h"
 #include "iremote_stub.h"
 #include "nocopyable.h"
@@ -37,6 +39,15 @@ private:
     ErrCode HandleResetDefaultApplication(Parcel& data, Parcel& reply);
     ErrCode HandleSetDefaultApplicationForAppClone(Parcel& data, Parcel& reply);
     ErrCode HandleSetDefaultApplicationForCustom(Parcel& data, Parcel& reply);
+    ErrCode HandleGetDefaultApplicationCandidates(MessageParcel& data, MessageParcel& reply);
+
+    int32_t AllocatAshmemNum();
+    ErrCode WriteParcelableIntoAshmem(MessageParcel& tempParcel, MessageParcel& reply);
+    template<typename T>
+    ErrCode WriteVectorToParcel(std::vector<T>& parcelVector, MessageParcel& reply);
+
+    int32_t ashmemNum_ = 0;
+    std::mutex bundleAshmemMutex_;
 
     DISALLOW_COPY_AND_MOVE(DefaultAppHost);
 };

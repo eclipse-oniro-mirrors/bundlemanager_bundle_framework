@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#define private public
+
 #include <gtest/gtest.h>
 #include "default_app_host.h"
 #include "bundle_framework_core_ipc_interface_code.h"
@@ -37,6 +39,8 @@ public:
     ErrCode retResetDefault_ = ERR_OK;
     ErrCode retSetAppClone_ = ERR_OK;
     ErrCode retSetCustom_ = ERR_OK;
+    ErrCode retGetCandidates_ = ERR_OK;
+    std::vector<AbilityInfo> candidates_;
 
     ErrCode IsDefaultApplication(const std::string &type, bool &isDefaultApp) override
     {
@@ -65,6 +69,12 @@ public:
         const Want &want) override
     {
         return retSetCustom_;
+    }
+    ErrCode GetDefaultApplicationCandidates(int32_t userId, const std::string &type,
+        int32_t abilityFlags, std::vector<AbilityInfo> &abilityInfos) override
+    {
+        abilityInfos = candidates_;
+        return retGetCandidates_;
     }
 };
 
@@ -233,4 +243,85 @@ TEST_F(BmsDefaultAppHostTest, HandleSetDefaultApplicationForCustom_Success)
     int32_t ret = host_->OnRemoteRequest(
         static_cast<uint32_t>(DefaultAppInterfaceCode::SET_DEFAULT_APPLICATION_FOR_CUSTOM), data, reply, option);
     EXPECT_EQ(ret, NO_ERROR);
+}
+
+// === HandleGetDefaultApplicationCandidates ===
+
+TEST_F(BmsDefaultAppHostTest, HandleGetDefaultApplicationCandidates_Success_Empty)
+{
+    MessageParcel data;
+    WriteInterfaceToken(data);
+    data.WriteInt32(TEST_USER_ID);
+    data.WriteString("browser");
+    data.WriteInt32(0);
+    MessageParcel reply;
+    MessageOption option;
+    int32_t ret = host_->OnRemoteRequest(
+        static_cast<uint32_t>(DefaultAppInterfaceCode::GET_DEFAULT_APPLICATION_CANDIDATES), data, reply, option);
+    EXPECT_EQ(ret, NO_ERROR);
+    // vector payload: ret(ERR_OK) then uint32 dataSize(4) + count int32(0)
+    ErrCode errCode = reply.ReadInt32();
+    EXPECT_EQ(errCode, ERR_OK);
+    uint32_t dataSize = reply.ReadUint32();
+    EXPECT_GT(dataSize, 0);
+}
+
+TEST_F(BmsDefaultAppHostTest, HandleGetDefaultApplicationCandidates_Success_OneItem)
+{
+    AbilityInfo info;
+    info.bundleName = "com.test.browser";
+    info.name = "MainAbility";
+    host_->candidates_.emplace_back(info);
+
+    MessageParcel data;
+    WriteInterfaceToken(data);
+    data.WriteInt32(TEST_USER_ID);
+    data.WriteString("browser");
+    data.WriteInt32(0);
+    MessageParcel reply;
+    MessageOption option;
+    int32_t ret = host_->OnRemoteRequest(
+        static_cast<uint32_t>(DefaultAppInterfaceCode::GET_DEFAULT_APPLICATION_CANDIDATES), data, reply, option);
+    EXPECT_EQ(ret, NO_ERROR);
+    ErrCode errCode = reply.ReadInt32();
+    EXPECT_EQ(errCode, ERR_OK);
+    uint32_t dataSize = reply.ReadUint32();
+    EXPECT_GT(dataSize, 0);
+}
+
+TEST_F(BmsDefaultAppHostTest, HandleGetDefaultApplicationCandidates_HostError)
+{
+    host_->retGetCandidates_ = ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+
+    MessageParcel data;
+    WriteInterfaceToken(data);
+    data.WriteInt32(TEST_USER_ID);
+    data.WriteString("browser");
+    data.WriteInt32(0);
+    MessageParcel reply;
+    MessageOption option;
+    int32_t ret = host_->OnRemoteRequest(
+        static_cast<uint32_t>(DefaultAppInterfaceCode::GET_DEFAULT_APPLICATION_CANDIDATES), data, reply, option);
+    EXPECT_EQ(ret, NO_ERROR);
+    ErrCode errCode = reply.ReadInt32();
+    EXPECT_EQ(errCode, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+// === AllocatAshmemNum / WriteParcelableIntoAshmem ===
+
+TEST_F(BmsDefaultAppHostTest, AllocatAshmemNum_Sequence)
+{
+    int32_t first = host_->AllocatAshmemNum();
+    int32_t second = host_->AllocatAshmemNum();
+    EXPECT_EQ(second, first + 1);
+}
+
+TEST_F(BmsDefaultAppHostTest, WriteParcelableIntoAshmem_EmptyParcel)
+{
+    MessageParcel tempParcel;
+    MessageParcel reply;
+    // An empty source parcel makes CreateAshmem return nullptr, so the
+    // function surfaces ERR_APPEXECFWK_PARCEL_ERROR.
+    ErrCode ret = host_->WriteParcelableIntoAshmem(tempParcel, reply);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
 }

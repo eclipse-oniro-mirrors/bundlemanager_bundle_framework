@@ -35,10 +35,17 @@ public:
         const std::string& type, const Want& want) override;
     virtual ErrCode SetDefaultApplicationForCustom(const int32_t userId, const std::string& type,
         const Want& want) override;
+    virtual ErrCode GetDefaultApplicationCandidates(int32_t userId, const std::string& type,
+        int32_t abilityFlags, std::vector<AbilityInfo>& abilityInfos) override;
 
 private:
     template <typename T>
     ErrCode GetParcelableInfo(DefaultAppInterfaceCode code, MessageParcel& data, T& parcelableInfo);
+    template <typename T>
+    ErrCode GetVectorParcelInfo(MessageParcel& reply, std::vector<T>& parcelInfos);
+    template <typename T>
+    ErrCode ParseVectorFromBuffer(void* buffer, size_t dataSize, std::vector<T>& parcelInfos);
+    ErrCode GetParcelInfoFromAshMem(MessageParcel& reply, size_t dataSize, void*& data);
     bool SendRequest(DefaultAppInterfaceCode code, MessageParcel& data, MessageParcel& reply);
     static inline BrokerDelegator<DefaultAppProxy> delegator_;
 };

@@ -17,6 +17,7 @@
 #define NAPI_JS_DEFAULT_APP_H
 
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
+#include "ability_info.h"
 #include "bundle_info.h"
 #include "want.h"
 #endif
@@ -33,9 +34,11 @@ struct DefaultAppCallbackInfo : public BaseCallbackInfo {
 
     bool isDefaultApp = false;
     int32_t userId = 0;
+    int32_t abilityFlags = 0;
     std::string type;
     OHOS::AAFwk::Want want;
     BundleInfo bundleInfo;
+    std::vector<AbilityInfo> abilityInfos;
 };
 #endif
 
@@ -43,6 +46,7 @@ napi_value IsDefaultApplication(napi_env env, napi_callback_info info);
 napi_value IsDefaultApplicationSync(napi_env env, napi_callback_info info);
 napi_value GetDefaultApplication(napi_env env, napi_callback_info info);
 napi_value GetDefaultApplicationSync(napi_env env, napi_callback_info info);
+napi_value GetDefaultApplicationCandidates(napi_env env, napi_callback_info info);
 napi_value SetDefaultApplication(napi_env env, napi_callback_info info);
 napi_value SetDefaultApplicationSync(napi_env env, napi_callback_info info);
 napi_value ResetDefaultApplication(napi_env env, napi_callback_info info);

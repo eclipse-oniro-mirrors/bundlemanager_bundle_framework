@@ -70,6 +70,8 @@ constexpr const char* ERROR_DEFAULT_APP_NOT_EXIST_MSG = "The specified default a
 constexpr const char* ERROR_INVALID_TYPE_MSG = "The specified type is invalid.";
 constexpr const char* ERROR_MSG_DISTRIBUTED_SERVICE_NOT_RUNNING = "The distributed service is not running.";
 constexpr const char* ERROR_ABILITY_AND_TYPE_MISMATCH_MSG = "The specified ability and type do not match.";
+constexpr const char* ERROR_DEFAULT_APP_PERMISSION_DENIED_MSG =
+    "The specified application does not have the ohos.permission.DEFAULT_WEB_BROWSER permission.";
 constexpr const char* ERROR_MSG_CLEAR_CACHE_FILES_UNSUPPORTED =
     "The specified bundle does not support clearing cache files.";
 constexpr const char* ERROR_MSG_INSTALL_HAP_OVERLAY_CHECK_FAILED =
@@ -247,6 +249,7 @@ static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_INVALID_TYPE, ERROR_INVALID_TYPE_MSG },
     { ERROR_DISTRIBUTED_SERVICE_NOT_RUNNING, ERROR_MSG_DISTRIBUTED_SERVICE_NOT_RUNNING },
     { ERROR_ABILITY_AND_TYPE_MISMATCH, ERROR_ABILITY_AND_TYPE_MISMATCH_MSG },
+    { ERROR_DEFAULT_APP_PERMISSION_DENIED, ERROR_DEFAULT_APP_PERMISSION_DENIED_MSG },
     { ERROR_CLEAR_CACHE_FILES_UNSUPPORTED, ERROR_MSG_CLEAR_CACHE_FILES_UNSUPPORTED },
     { ERROR_INSTALL_HAP_OVERLAY_CHECK_FAILED, ERROR_MSG_INSTALL_HAP_OVERLAY_CHECK_FAILED },
     { ERROR_SPECIFIED_MODULE_NOT_OVERLAY_MODULE, ERROR_MSG_SPECIFIED_MODULE_NOT_OVERLAY_MODULE },

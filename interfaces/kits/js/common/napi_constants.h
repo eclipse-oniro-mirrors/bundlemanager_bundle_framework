@@ -378,6 +378,7 @@ constexpr const char* IS_DEFAULT_APPLICATION = "IsDefaultApplication";
 constexpr const char* IS_DEFAULT_APPLICATION_SYNC = "IsDefaultApplicationSync";
 constexpr const char* GET_DEFAULT_APPLICATION = "GetDefaultApplication";
 constexpr const char* GET_DEFAULT_APPLICATION_SYNC = "GetDefaultApplicationSync";
+constexpr const char* GET_DEFAULT_APPLICATION_CANDIDATES = "GetDefaultApplicationCandidates";
 constexpr const char* SET_DEFAULT_APPLICATION = "SetDefaultApplication";
 constexpr const char* SET_DEFAULT_APPLICATION_SYNC = "SetDefaultApplicationSync";
 constexpr const char* RESET_DEFAULT_APPLICATION = "ResetDefaultApplication";

@@ -433,6 +433,112 @@ napi_value GetDefaultApplication(napi_env env, napi_callback_info info)
     return promise;
 }
 
+static ErrCode InnerGetDefaultApplicationCandidates(DefaultAppCallbackInfo *info)
+{
+    if (info == nullptr) {
+        APP_LOGE("info is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    auto defaultAppProxy = CommonFunc::GetDefaultAppProxy();
+    if (defaultAppProxy == nullptr) {
+        APP_LOGE("defaultAppProxy is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode ret = defaultAppProxy->GetDefaultApplicationCandidates(
+        info->userId, info->type, info->abilityFlags, info->abilityInfos);
+    APP_LOGD("GetDefaultApplicationCandidates ErrCode : %{public}d", ret);
+    return CommonFunc::ConvertErrCode(ret);
+}
+
+void GetDefaultApplicationCandidatesExec(napi_env env, void *data)
+{
+    DefaultAppCallbackInfo *asyncCallbackInfo = reinterpret_cast<DefaultAppCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+    asyncCallbackInfo->err = InnerGetDefaultApplicationCandidates(asyncCallbackInfo);
+}
+
+void GetDefaultApplicationCandidatesComplete(napi_env env, napi_status status, void *data)
+{
+    DefaultAppCallbackInfo *asyncCallbackInfo = reinterpret_cast<DefaultAppCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+    std::unique_ptr<DefaultAppCallbackInfo> callbackPtr {asyncCallbackInfo};
+    napi_value result[ARGS_SIZE_TWO] = {0};
+    if (asyncCallbackInfo->err == NO_ERROR) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
+        NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[ARGS_POS_ONE]));
+        CommonFunc::ConvertAbilityInfos(env, asyncCallbackInfo->abilityInfos, result[ARGS_POS_ONE]);
+    } else {
+        result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
+            GET_DEFAULT_APPLICATION_CANDIDATES, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+    }
+    CommonFunc::NapiReturnDeferred<DefaultAppCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
+}
+
+static bool ParseCandidatesArgs(napi_env env, NapiArg& args, DefaultAppCallbackInfo *asyncCallbackInfo)
+{
+    for (size_t i = 0; i < args.GetMaxArgc(); ++i) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, args[i], &valueType);
+        if ((i == ARGS_POS_ZERO) && (valueType == napi_string)) {
+            if (!ParseType(env, args[i], asyncCallbackInfo->type)) {
+                APP_LOGE("type invalid");
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+                return false;
+            }
+        } else if (i == ARGS_POS_ONE) {
+            if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->abilityFlags)) {
+                APP_LOGE("abilityFlags invalid");
+                std::string errMsg = PARAM_TYPE_CHECK_ERROR_WITH_POS + std::to_string(i + 1);
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, errMsg);
+                return false;
+            }
+        } else if (i == ARGS_POS_TWO) {
+            if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId)) {
+                APP_LOGW("Parse userId failed, set this parameter to the caller userId");
+            }
+        } else {
+            APP_LOGE("param check error");
+            std::string errMsg = PARAM_TYPE_CHECK_ERROR_WITH_POS + std::to_string(i + 1);
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, errMsg);
+            return false;
+        }
+    }
+    return true;
+}
+
+napi_value GetDefaultApplicationCandidates(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("begin to GetDefaultApplicationCandidates");
+    NapiArg args(env, info);
+    DefaultAppCallbackInfo *asyncCallbackInfo = new (std::nothrow) DefaultAppCallbackInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return nullptr;
+    }
+    asyncCallbackInfo->userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    std::unique_ptr<DefaultAppCallbackInfo> callbackPtr {asyncCallbackInfo};
+    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_THREE)) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    if (!ParseCandidatesArgs(env, args, asyncCallbackInfo)) {
+        return nullptr;
+    }
+    auto promise = CommonFunc::AsyncCallNativeMethod<DefaultAppCallbackInfo>(env, asyncCallbackInfo,
+        GET_DEFAULT_APPLICATION_CANDIDATES, GetDefaultApplicationCandidatesExec,
+        GetDefaultApplicationCandidatesComplete);
+    callbackPtr.release();
+    APP_LOGD("call GetDefaultApplicationCandidates done");
+    return promise;
+}
+
 ErrCode ParamsProcessGetDefaultApplicationSync(napi_env env, napi_callback_info info,
     std::string& type, int32_t& userId)
 {

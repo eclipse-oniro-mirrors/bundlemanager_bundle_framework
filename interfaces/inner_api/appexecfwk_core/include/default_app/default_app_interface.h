@@ -16,10 +16,13 @@
 #ifndef FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_CORE_INCLUDE_DEFAULT_APP_INTERFACE_H
 #define FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_CORE_INCLUDE_DEFAULT_APP_INTERFACE_H
 
+#include "ability_info.h"
 #include "appexecfwk_errors.h"
 #include "bundle_info.h"
 #include "iremote_broker.h"
 #include "want.h"
+
+#include <vector>
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -59,6 +62,11 @@ public:
      * @note This method is called by system during setup wizard for enterprise customization.
      */
     virtual ErrCode SetDefaultApplicationForCustom(const int32_t userId, const std::string& type, const Want& want)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    virtual ErrCode GetDefaultApplicationCandidates(int32_t userId, const std::string& type,
+        int32_t abilityFlags, std::vector<AbilityInfo>& abilityInfos)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
