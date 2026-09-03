@@ -1869,6 +1869,9 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     if (!InitTempBundleFromCache(oldInfo, isAppExist_)) {
         return ERR_APPEXECFWK_INIT_INSTALL_TEMP_BUNDLE_ERROR;
     }
+    // Record the pre-update appId: it differs from the newly parsed one when the app is
+    // re-signed on update, and app_control rows keyed by it need to be migrated afterwards.
+    std::string oldAppId = oldInfo.GetAppId();
     // === DUAL_MODE: capture pre-update sandbox/policy for the before-value broadcast (Sync-27) ===
     // On update (app exists) read the prior values so the event can report before vs. current and so the
     // sticky-isolation rule can see whether the app was already isolated. Fresh install leaves defaults.
@@ -2026,6 +2029,9 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
         PatchDataMgr::GetInstance().DeleteInnerPatchInfo(bundleName_);
     }
     CHECK_RESULT_WITH_ROLLBACK(result, "mark install finish failed %{public}d", newInfos, oldInfo);
+    // appId may change when the app is updated and re-signed; migrate app_control rows
+    // keyed by the old appId after the update is durably committed.
+    UpdateAppControlAppIdWhenBundleUpdate(oldInfo, oldAppId, (newInfos.begin()->second).GetAppId());
     // delete app_tmp
     (void)DeleteAppGalleryHapFromTempPath();
     DeleteUninstallBundleInfo(GetEffectiveBundleName());
@@ -9758,6 +9764,42 @@ bool BaseBundleInstaller::DeleteDisposedRuleWhenBundleUpdateEnd(const InnerBundl
 #else
     LOG_W(BMS_TAG_INSTALLER, "app control is disable");
     return false;
+#endif
+}
+
+void BaseBundleInstaller::UpdateAppControlAppIdWhenBundleUpdate(const InnerBundleInfo &oldBundleInfo,
+    const std::string &oldAppId, const std::string &newAppId)
+{
+#ifdef BUNDLE_FRAMEWORK_APP_CONTROL
+    auto migrateAppIds = oldBundleInfo.GetOldAppIds();
+    // Skip only when this is a fresh install, or a plain update of a bundle that was never
+    // re-signed (empty history and unchanged appId). A non-empty history means the bundle
+    // was re-signed before, so the sweep also runs for ordinary updates to repair rows
+    // stranded by re-signs that happened before this migration was introduced.
+    if (!isAppExist_ || newAppId.empty() || (oldAppId == newAppId && migrateAppIds.empty())) {
+        LOG_NOFUNC_D(BMS_TAG_INSTALLER,
+            "skip app control appId update, bundle:%{public}s, isAppExist:%{public}d, "
+            "appIdChanged:%{public}d, historyCount:%{public}zu",
+            bundleName_.c_str(), isAppExist_ ? 1 : 0, oldAppId != newAppId ? 1 : 0, migrateAppIds.size());
+        return;
+    }
+    std::shared_ptr<AppControlManager> appControlMgr = DelayedSingleton<AppControlManager>::GetInstance();
+    if (appControlMgr == nullptr) {
+        LOG_NOFUNC_E(BMS_TAG_INSTALLER, "appControlMgr is nullptr, bundle:%{public}s", bundleName_.c_str());
+        return;
+    }
+    migrateAppIds.push_back(oldAppId);
+    ErrCode ret = appControlMgr->UpdateAppControlAppId(migrateAppIds, newAppId);
+    if (ret != ERR_OK) {
+        // best-effort: never fail the install because rule migration failed; stranded rows
+        // stay keyed by the old appIds below and are repaired by the next update's sweep.
+        LOG_NOFUNC_W(BMS_TAG_INSTALLER,
+            "update app control appId failed ret:%{public}d, bundle:%{public}s, "
+            "oldAppId:%{private}s, newAppId:%{private}s",
+            ret, bundleName_.c_str(), oldAppId.c_str(), newAppId.c_str());
+    }
+#else
+    LOG_W(BMS_TAG_INSTALLER, "app control is disable");
 #endif
 }
 

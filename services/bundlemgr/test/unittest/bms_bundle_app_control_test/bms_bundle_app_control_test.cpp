@@ -56,6 +56,8 @@ const std::string CALLER_BUNDLE_NAME = "callerBundleName";
 const std::string TARGET_BUNDLE_NAME = "targetBundleName";
 const std::string APPID = "com.third.hiworld.example1_BNtg4JBClbl92Rgc3jm/"
     "RfcAdrHXaM8F0QOiwVEhnV5ebE5jNIYnAx+weFRT3QTyUjRNdhmc2aAzWyi+5t5CoBM=";
+const std::string NEW_APPID = "com.third.hiworld.example1_NewProvisionIdForResign";
+const std::string OTHER_APPID = "com.other.bundle_OtherProvisionId";
 const std::string CONTROL_MESSAGE = "this is control message";
 const std::string CALLING_NAME = "ohos.permission.MANAGE_DISPOSED_APP_STATUS";
 const std::string APP_CONTROL_EDM_DEFAULT_MESSAGE = "The app has been disabled by EDM";
@@ -4633,6 +4635,276 @@ HWTEST_F(BmsBundleAppControlTest, DeleteDisposedRules_0200, Function | SmallTest
 }
 
 /**
+ * @tc.number: UpdateAppControlAppId_0100
+ * @tc.name: test UpdateAppControlAppId by AppControlManager
+ * @tc.desc: 1.disposed rule keyed by old appId is migrated to new appId
+ */
+HWTEST_F(BmsBundleAppControlTest, UpdateAppControlAppId_0100, Function | SmallTest | Level1)
+{
+    ASSERT_NE(appControlManagerDb_, nullptr);
+    DisposedRule disposedRule;
+    disposedRule.componentType = ComponentType::UI_ABILITY;
+    disposedRule.disposedType = DisposedType::BLOCK_APPLICATION;
+    disposedRule.controlType = ControlType::DISALLOWED_LIST;
+    ErrCode ret = appControlManagerDb_->SetDisposedRule(CALLING_NAME, APPID, disposedRule,
+        Constants::MAIN_APP_INDEX, USERID);
+    EXPECT_EQ(ret, ERR_OK);
+
+    auto appControlManager = DelayedSingleton<AppControlManager>::GetInstance();
+    ASSERT_NE(appControlManager, nullptr);
+    ret = appControlManager->UpdateAppControlAppId({ APPID }, NEW_APPID);
+    EXPECT_EQ(ret, ERR_OK);
+
+    std::vector<DisposedRule> disposedRules;
+    ret = appControlManagerDb_->GetAbilityRunningControlRule({ NEW_APPID }, Constants::MAIN_APP_INDEX, USERID,
+        disposedRules);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(disposedRules.size(), static_cast<size_t>(1));
+    if (disposedRules.size() == 1) {
+        EXPECT_EQ(disposedRules[0].componentType, ComponentType::UI_ABILITY);
+        EXPECT_EQ(disposedRules[0].disposedType, DisposedType::BLOCK_APPLICATION);
+        EXPECT_EQ(disposedRules[0].controlType, ControlType::DISALLOWED_LIST);
+    }
+    std::vector<DisposedRule> oldRules;
+    ret = appControlManagerDb_->GetAbilityRunningControlRule({ APPID }, Constants::MAIN_APP_INDEX, USERID, oldRules);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_TRUE(oldRules.empty());
+
+    appControlManagerDb_->DeleteDisposedRule(CALLING_NAME, { NEW_APPID }, Constants::MAIN_APP_INDEX, USERID);
+}
+
+/**
+ * @tc.number: UpdateAppControlAppId_0200
+ * @tc.name: test UpdateAppControlAppId for multi user, clone appIndex and running control rule
+ * @tc.desc: 1.rules keyed by old appId for all users/indexes/rule types are migrated
+ */
+HWTEST_F(BmsBundleAppControlTest, UpdateAppControlAppId_0200, Function | SmallTest | Level1)
+{
+    ASSERT_NE(appControlManagerDb_, nullptr);
+    DisposedRule disposedRule;
+    disposedRule.componentType = ComponentType::UI_ABILITY;
+    disposedRule.disposedType = DisposedType::BLOCK_APPLICATION;
+    disposedRule.controlType = ControlType::DISALLOWED_LIST;
+    ErrCode ret = appControlManagerDb_->SetDisposedRule(CALLING_NAME, APPID, disposedRule,
+        Constants::MAIN_APP_INDEX, USERID);
+    EXPECT_EQ(ret, ERR_OK);
+    ret = appControlManagerDb_->SetDisposedRule(CALLING_NAME, APPID, disposedRule, 1, USERID2);
+    EXPECT_EQ(ret, ERR_OK);
+    AppRunningControlRule runningRule;
+    runningRule.appId = APPID;
+    runningRule.controlMessage = CONTROL_MESSAGE;
+    ret = appControlManagerDb_->AddAppRunningControlRule(AppControlConstants::EDM_CALLING, { runningRule }, USERID);
+    EXPECT_EQ(ret, ERR_OK);
+
+    auto appControlManager = DelayedSingleton<AppControlManager>::GetInstance();
+    ASSERT_NE(appControlManager, nullptr);
+    ret = appControlManager->UpdateAppControlAppId({ APPID }, NEW_APPID);
+    EXPECT_EQ(ret, ERR_OK);
+
+    std::vector<DisposedRule> mainRules;
+    ret = appControlManagerDb_->GetAbilityRunningControlRule({ NEW_APPID }, Constants::MAIN_APP_INDEX, USERID,
+        mainRules);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(mainRules.size(), static_cast<size_t>(1));
+    std::vector<DisposedRule> cloneRules;
+    ret = appControlManagerDb_->GetAbilityRunningControlRule({ NEW_APPID }, 1, USERID2, cloneRules);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(cloneRules.size(), static_cast<size_t>(1));
+    AppRunningControlRuleResult controlRuleResult;
+    ret = appControlManagerDb_->GetAppRunningControlRule(NEW_APPID, USERID, controlRuleResult);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(controlRuleResult.controlMessage, CONTROL_MESSAGE);
+    std::vector<DisposedRule> oldRules;
+    ret = appControlManagerDb_->GetAbilityRunningControlRule({ APPID }, Constants::MAIN_APP_INDEX, USERID, oldRules);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_TRUE(oldRules.empty());
+    // the running control row keyed by the old appId must be gone as well
+    AppRunningControlRuleResult oldControlRuleResult;
+    ret = appControlManagerDb_->GetAppRunningControlRule(APPID, USERID, oldControlRuleResult);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_SET_CONTROL);
+
+    appControlManagerDb_->DeleteDisposedRule(CALLING_NAME, { NEW_APPID }, Constants::MAIN_APP_INDEX, USERID);
+    appControlManagerDb_->DeleteDisposedRule(CALLING_NAME, { NEW_APPID }, 1, USERID2);
+    appControlManagerDb_->DeleteAppRunningControlRule(AppControlConstants::EDM_CALLING, USERID);
+}
+
+/**
+ * @tc.number: UpdateAppControlAppId_0300
+ * @tc.name: test UpdateAppControlAppId with no matched rows
+ * @tc.desc: 1.no rule keyed by old appId, update succeeds with no changed rows and
+ *           no rule appears under the new appId
+ */
+HWTEST_F(BmsBundleAppControlTest, UpdateAppControlAppId_0300, Function | SmallTest | Level1)
+{
+    ASSERT_NE(appControlManagerDb_, nullptr);
+    auto appControlManager = DelayedSingleton<AppControlManager>::GetInstance();
+    ASSERT_NE(appControlManager, nullptr);
+    ErrCode ret = appControlManager->UpdateAppControlAppId({ OTHER_APPID }, NEW_APPID);
+    EXPECT_EQ(ret, ERR_OK);
+    std::vector<DisposedRule> disposedRules;
+    ret = appControlManagerDb_->GetAbilityRunningControlRule({ NEW_APPID }, Constants::MAIN_APP_INDEX, USERID,
+        disposedRules);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_TRUE(disposedRules.empty());
+    ret = appControlManagerDb_->GetAbilityRunningControlRule({ OTHER_APPID }, Constants::MAIN_APP_INDEX, USERID,
+        disposedRules);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_TRUE(disposedRules.empty());
+}
+
+/**
+ * @tc.number: UpdateAppControlAppId_0400
+ * @tc.name: test UpdateAppControlAppId does not affect other bundles
+ * @tc.desc: 1.rules keyed by another appId are kept
+ */
+HWTEST_F(BmsBundleAppControlTest, UpdateAppControlAppId_0400, Function | SmallTest | Level1)
+{
+    ASSERT_NE(appControlManagerDb_, nullptr);
+    DisposedRule disposedRule;
+    disposedRule.componentType = ComponentType::UI_ABILITY;
+    disposedRule.disposedType = DisposedType::BLOCK_APPLICATION;
+    disposedRule.controlType = ControlType::DISALLOWED_LIST;
+    ErrCode ret = appControlManagerDb_->SetDisposedRule(CALLING_NAME, APPID, disposedRule,
+        Constants::MAIN_APP_INDEX, USERID);
+    EXPECT_EQ(ret, ERR_OK);
+    ret = appControlManagerDb_->SetDisposedRule(CALLING_NAME, OTHER_APPID, disposedRule,
+        Constants::MAIN_APP_INDEX, USERID);
+    EXPECT_EQ(ret, ERR_OK);
+
+    auto appControlManager = DelayedSingleton<AppControlManager>::GetInstance();
+    ASSERT_NE(appControlManager, nullptr);
+    ret = appControlManager->UpdateAppControlAppId({ APPID }, NEW_APPID);
+    EXPECT_EQ(ret, ERR_OK);
+
+    std::vector<DisposedRule> otherRules;
+    ret = appControlManagerDb_->GetAbilityRunningControlRule({ OTHER_APPID }, Constants::MAIN_APP_INDEX, USERID,
+        otherRules);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(otherRules.size(), static_cast<size_t>(1));
+    std::vector<DisposedRule> newRules;
+    ret = appControlManagerDb_->GetAbilityRunningControlRule({ NEW_APPID }, Constants::MAIN_APP_INDEX, USERID,
+        newRules);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(newRules.size(), static_cast<size_t>(1));
+
+    appControlManagerDb_->DeleteDisposedRule(CALLING_NAME, { NEW_APPID }, Constants::MAIN_APP_INDEX, USERID);
+    appControlManagerDb_->DeleteDisposedRule(CALLING_NAME, { OTHER_APPID }, Constants::MAIN_APP_INDEX, USERID);
+}
+
+/**
+ * @tc.number: UpdateAppControlAppId_0500
+ * @tc.name: test UpdateAppControlAppId invalidates caches keyed by migrated appIds
+ * @tc.desc: 1.cache entries keyed by any migrated appId or the new appId are dropped when
+ *           rows actually migrated, and are kept when no row migrated
+ */
+HWTEST_F(BmsBundleAppControlTest, UpdateAppControlAppId_0500, Function | SmallTest | Level1)
+{
+    ASSERT_NE(appControlManagerDb_, nullptr);
+    DisposedRule disposedRule;
+    disposedRule.componentType = ComponentType::UI_ABILITY;
+    disposedRule.disposedType = DisposedType::BLOCK_APPLICATION;
+    disposedRule.controlType = ControlType::DISALLOWED_LIST;
+    ErrCode ret = appControlManagerDb_->SetDisposedRule(CALLING_NAME, APPID, disposedRule,
+        Constants::MAIN_APP_INDEX, USERID);
+    EXPECT_EQ(ret, ERR_OK);
+
+    auto appControlManager = DelayedSingleton<AppControlManager>::GetInstance();
+    ASSERT_NE(appControlManager, nullptr);
+    std::vector<DisposedRule> disposedRules;
+    std::string ruleCacheKey = APPID + std::string("_") + std::to_string(USERID) + std::string("_") +
+        std::to_string(Constants::MAIN_APP_INDEX);
+    appControlManager->abilityRunningControlRuleCache_[ruleCacheKey] = disposedRules;
+    std::string runningRuleCacheKey = APPID + std::string("_") + std::to_string(USERID);
+    appControlManager->appRunningControlRuleResult_[runningRuleCacheKey] = AppRunningControlRuleResult();
+    // OTHER_APPID has no rule row, but any migrated appId's stale entries are dropped together
+    std::string otherRuleCacheKey = OTHER_APPID + std::string("_") + std::to_string(USERID) + std::string("_") +
+        std::to_string(Constants::MAIN_APP_INDEX);
+    appControlManager->abilityRunningControlRuleCache_[otherRuleCacheKey] = disposedRules;
+    // an entry cached under the new appId during the commit-to-update window must also be dropped
+    std::string newRuleCacheKey = NEW_APPID + std::string("_") + std::to_string(USERID) + std::string("_") +
+        std::to_string(Constants::MAIN_APP_INDEX);
+    appControlManager->abilityRunningControlRuleCache_[newRuleCacheKey] = disposedRules;
+
+    ret = appControlManager->UpdateAppControlAppId({ APPID, OTHER_APPID }, NEW_APPID);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(appControlManager->abilityRunningControlRuleCache_.find(ruleCacheKey),
+        appControlManager->abilityRunningControlRuleCache_.end());
+    EXPECT_EQ(appControlManager->appRunningControlRuleResult_.find(runningRuleCacheKey),
+        appControlManager->appRunningControlRuleResult_.end());
+    EXPECT_EQ(appControlManager->abilityRunningControlRuleCache_.find(otherRuleCacheKey),
+        appControlManager->abilityRunningControlRuleCache_.end());
+    EXPECT_EQ(appControlManager->abilityRunningControlRuleCache_.find(newRuleCacheKey),
+        appControlManager->abilityRunningControlRuleCache_.end());
+
+    // no rule row exists for NO_ROW_APPID: changedRows stays 0 and its cache entry survives
+    const std::string noRowAppId = "com.third.hiworld.example1_NoRowProvisionId";
+    const std::string secondNewAppId = "com.third.hiworld.example1_SecondNewProvisionId";
+    std::string noRowRuleCacheKey = noRowAppId + std::string("_") + std::to_string(USERID) + std::string("_") +
+        std::to_string(Constants::MAIN_APP_INDEX);
+    appControlManager->abilityRunningControlRuleCache_[noRowRuleCacheKey] = disposedRules;
+    ret = appControlManager->UpdateAppControlAppId({ noRowAppId }, secondNewAppId);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_NE(appControlManager->abilityRunningControlRuleCache_.find(noRowRuleCacheKey),
+        appControlManager->abilityRunningControlRuleCache_.end());
+
+    appControlManager->abilityRunningControlRuleCache_.erase(noRowRuleCacheKey);
+    appControlManagerDb_->DeleteDisposedRule(CALLING_NAME, { NEW_APPID }, Constants::MAIN_APP_INDEX, USERID);
+}
+
+/**
+ * @tc.number: UpdateAppControlAppId_0600
+ * @tc.name: test UpdateAppControlAppId when appControlManagerDb is nullptr
+ * @tc.desc: 1.update fails with internal error and the db pointer is restored afterwards
+ */
+HWTEST_F(BmsBundleAppControlTest, UpdateAppControlAppId_0600, Function | SmallTest | Level1)
+{
+    auto appControlManager = DelayedSingleton<AppControlManager>::GetInstance();
+    ASSERT_NE(appControlManager, nullptr);
+    auto db = appControlManager->appControlManagerDb_;
+    appControlManager->appControlManagerDb_ = nullptr;
+    auto ret = appControlManager->UpdateAppControlAppId({ APPID }, NEW_APPID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    // restore the shared singleton, otherwise all subsequent tests see a null db
+    appControlManager->appControlManagerDb_ = db;
+}
+
+/**
+ * @tc.number: UpdateAppControlAppId_0700
+ * @tc.name: test UpdateAppControlAppId migrates uninstall disposed rules
+ * @tc.desc: 1.uninstall disposed rule keyed by old appId is migrated to the new appId
+ *           and the old key no longer resolves
+ */
+HWTEST_F(BmsBundleAppControlTest, UpdateAppControlAppId_0700, Function | SmallTest | Level1)
+{
+    ASSERT_NE(appControlManagerDb_, nullptr);
+    UninstallDisposedRule uninstallDisposedRule;
+    uninstallDisposedRule.uninstallComponentType = UninstallComponentType::UI_EXTENSION;
+    ErrCode ret = appControlManagerDb_->SetUninstallDisposedRule(CALLING_NAME, APPID, uninstallDisposedRule,
+        Constants::MAIN_APP_INDEX, USERID);
+    EXPECT_EQ(ret, ERR_OK);
+
+    auto appControlManager = DelayedSingleton<AppControlManager>::GetInstance();
+    ASSERT_NE(appControlManager, nullptr);
+    ret = appControlManager->UpdateAppControlAppId({ APPID }, NEW_APPID);
+    EXPECT_EQ(ret, ERR_OK);
+
+    UninstallDisposedRule migratedRule;
+    migratedRule.uninstallComponentType = UninstallComponentType::EXTENSION;
+    ret = appControlManagerDb_->GetUninstallDisposedRule(NEW_APPID, Constants::MAIN_APP_INDEX, USERID,
+        migratedRule);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(migratedRule.uninstallComponentType, UninstallComponentType::UI_EXTENSION);
+    UninstallDisposedRule oldRule;
+    oldRule.uninstallComponentType = UninstallComponentType::EXTENSION;
+    ret = appControlManagerDb_->GetUninstallDisposedRule(APPID, Constants::MAIN_APP_INDEX, USERID, oldRule);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(oldRule.uninstallComponentType, UninstallComponentType::EXTENSION);
+
+    appControlManagerDb_->DeleteUninstallDisposedRule(CALLING_NAME, NEW_APPID,
+        Constants::MAIN_APP_INDEX, USERID);
+}
+
+/**
  * @tc.number: GetDisposedRules_0100
  * @tc.name: test GetDisposedRules by AppControlProxy
  * @tc.desc: 1.GetDisposedRules test
@@ -5278,10 +5550,13 @@ HWTEST_F(BmsBundleAppControlTest, DeleteAllDisposedRulesForUser_0100, Function |
 {
     auto appControlManager = DelayedSingleton<AppControlManager>::GetInstance();
     ASSERT_NE(appControlManager, nullptr);
+    auto db = appControlManager->appControlManagerDb_;
     appControlManager->appRunningControlRuleResult_.clear();
     appControlManager->appControlManagerDb_ = nullptr;
     auto ret = appControlManager->DeleteAllDisposedRulesForUser(USERID);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    // restore the shared singleton, otherwise all subsequent tests see a null db
+    appControlManager->appControlManagerDb_ = db;
 }
 
 /**
@@ -5293,9 +5568,13 @@ HWTEST_F(BmsBundleAppControlTest, DeleteAllDisposedRulesForUser_0200, Function |
 {
     auto appControlManager = DelayedSingleton<AppControlManager>::GetInstance();
     ASSERT_NE(appControlManager, nullptr);
+    auto db = appControlManager->appControlManagerDb_;
     appControlManager->appRunningControlRuleResult_.clear();
+    appControlManager->appControlManagerDb_ = nullptr;
     auto ret = appControlManager->DeleteAllDisposedRulesForUser(USERID);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    // restore the shared singleton, otherwise all subsequent tests see a null db
+    appControlManager->appControlManagerDb_ = db;
 }
 
 /**

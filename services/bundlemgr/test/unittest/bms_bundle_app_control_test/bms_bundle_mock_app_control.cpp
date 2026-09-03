@@ -22,6 +22,7 @@
 #include "ability_info.h"
 #include "application_info.h"
 #include "app_control_constants.h"
+#include "app_control_manager.h"
 #include "app_control_manager_rdb.h"
 #include "app_control_manager_host_impl.h"
 #include "app_jump_interceptor_manager_rdb.h"
@@ -40,6 +41,8 @@ namespace {
 const std::string BUNDLE_TEST = "app_bundleName";
 const std::string APPID = "com.third.hiworld.example1_BNtg4JBClbl92Rgc3jm/"
     "RfcAdrHXaM8F0QOiwVEhnV5ebE5jNIYnAx+weFRT3QTyUjRNdhmc2aAzWyi+5t5CoBM=";
+const std::string NEW_APPID = "com.third.hiworld.example1_NewProvisionIdForResign";
+const std::string OTHER_APPID = "com.other.bundle_OtherProvisionId";
 const std::string CALLER_BUNDLE_NAME = "callerBundleName";
 const std::string TARGET_BUNDLE_NAME = "targetBundleName";
 const int32_t APP_INDEX = 1;
@@ -773,5 +776,95 @@ HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerRdb_0210, Function | Smal
     controlRules.push_back(appRunningControlRule2);
     ErrCode res = rdb.AddAppRunningControlRule("", controlRules, USERID);
     EXPECT_EQ(res, ERR_APPEXECFWK_DB_DELETE_ERROR);
+}
+
+/**
+ * @tc.number: AppControlManagerRdb_0220
+ * @tc.name: Test UpdateAppControlAppId with rdb update failed by AppControlManagerRdb
+ * @tc.desc: 1.UpdateAppControlAppId test
+ */
+HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerRdb_0220, Function | SmallTest | Level1)
+{
+    AppControlManagerRdb rdb;
+    int32_t changedRows = -1;
+    ErrCode res = rdb.UpdateAppControlAppId({ APPID }, NEW_APPID, changedRows);
+    EXPECT_EQ(res, ERR_APPEXECFWK_DB_UPDATE_ERROR);
+    EXPECT_EQ(changedRows, 0);
+    changedRows = -1;
+    res = rdb.UpdateAppControlAppId({ APPID, NEW_APPID }, OTHER_APPID, changedRows);
+    EXPECT_EQ(res, ERR_APPEXECFWK_DB_UPDATE_ERROR);
+    EXPECT_EQ(changedRows, 0);
+}
+
+/**
+ * @tc.number: AppControlManager_0060
+ * @tc.name: Test UpdateAppControlAppId failed by AppControlManager
+ * @tc.desc: 1.update appId failed when db update fails and rule cache is kept
+ */
+HWTEST_F(BmsBundleMockAppControlTest, AppControlManager_0060, Function | SmallTest | Level1)
+{
+    auto appControlManager = DelayedSingleton<AppControlManager>::GetInstance();
+    ASSERT_NE(appControlManager, nullptr);
+    std::vector<DisposedRule> disposedRules;
+    std::string ruleCacheKey = APPID + std::string("_") + std::to_string(USERID) + std::string("_") +
+        std::to_string(Constants::MAIN_APP_INDEX);
+    appControlManager->abilityRunningControlRuleCache_[ruleCacheKey] = disposedRules;
+    ErrCode res = appControlManager->UpdateAppControlAppId({ APPID }, NEW_APPID);
+    EXPECT_EQ(res, ERR_APPEXECFWK_DB_UPDATE_ERROR);
+    EXPECT_NE(appControlManager->abilityRunningControlRuleCache_.find(ruleCacheKey),
+        appControlManager->abilityRunningControlRuleCache_.end());
+    appControlManager->abilityRunningControlRuleCache_.erase(ruleCacheKey);
+}
+
+/**
+ * @tc.number: AppControlManager_0070
+ * @tc.name: Test UpdateAppControlAppId with invalid params by AppControlManager
+ * @tc.desc: 1.empty oldAppId or same appId, no need to update
+ */
+HWTEST_F(BmsBundleMockAppControlTest, AppControlManager_0070, Function | SmallTest | Level1)
+{
+    auto appControlManager = DelayedSingleton<AppControlManager>::GetInstance();
+    ASSERT_NE(appControlManager, nullptr);
+    ErrCode res = appControlManager->UpdateAppControlAppId({ "" }, NEW_APPID);
+    EXPECT_EQ(res, ERR_OK);
+    res = appControlManager->UpdateAppControlAppId({ APPID }, "");
+    EXPECT_EQ(res, ERR_OK);
+    res = appControlManager->UpdateAppControlAppId({ APPID }, APPID);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: AppControlManagerRdb_0250
+ * @tc.name: Test UpdateAppControlAppId with empty list by AppControlManagerRdb
+ * @tc.desc: 1.empty appId list or empty new appId, no db operation
+ */
+HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerRdb_0250, Function | SmallTest | Level1)
+{
+    AppControlManagerRdb rdb;
+    int32_t changedRows = -1;
+    ErrCode res = rdb.UpdateAppControlAppId({}, NEW_APPID, changedRows);
+    EXPECT_EQ(res, ERR_OK);
+    EXPECT_EQ(changedRows, 0);
+    res = rdb.UpdateAppControlAppId({ APPID }, "", changedRows);
+    EXPECT_EQ(res, ERR_OK);
+    EXPECT_EQ(changedRows, 0);
+}
+
+/**
+ * @tc.number: AppControlManagerRdb_0260
+ * @tc.name: Test UpdateAppControlAppId with null rdbDataManager by AppControlManagerRdb
+ * @tc.desc: 1.update fails with db update error when rdbDataManager is null
+ */
+HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerRdb_0260, Function | SmallTest | Level1)
+{
+    AppControlManagerRdb rdb;
+    ASSERT_NE(rdb.rdbDataManager_, nullptr);
+    auto dataManager = rdb.rdbDataManager_;
+    rdb.rdbDataManager_ = nullptr;
+    int32_t changedRows = -1;
+    ErrCode res = rdb.UpdateAppControlAppId({ APPID }, NEW_APPID, changedRows);
+    EXPECT_EQ(res, ERR_APPEXECFWK_DB_UPDATE_ERROR);
+    EXPECT_EQ(changedRows, 0);
+    rdb.rdbDataManager_ = dataManager;
 }
 } // OHOS

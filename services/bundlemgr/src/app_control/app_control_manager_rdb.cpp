@@ -697,6 +697,43 @@ ErrCode AppControlManagerRdb::DeleteAllDisposedRulesForUser(int32_t userId)
     return ERR_OK;
 }
 
+ErrCode AppControlManagerRdb::UpdateAppControlAppId(const std::vector<std::string> &oldAppIdList,
+    const std::string &newAppId, int32_t &changedRows)
+{
+    changedRows = 0;
+    if (oldAppIdList.empty() || newAppId.empty()) {
+        LOG_NOFUNC_D(BMS_TAG_DEFAULT, "no need to update appId in db");
+        return ERR_OK;
+    }
+    if (rdbDataManager_ == nullptr) {
+        LOG_NOFUNC_E(BMS_TAG_DEFAULT, "rdbDataManager is null");
+        return ERR_APPEXECFWK_DB_UPDATE_ERROR;
+    }
+    // No filters on USER_ID / APP_INDEX / APP_CONTROL_LIST: every rule keyed by an old appId
+    // (DisposedRule / RunningControl / install control, all users, all clone indexes)
+    // belongs to this bundle; appId embeds bundleName so cross-bundle collision is impossible.
+    NativeRdb::AbsRdbPredicates absRdbPredicates(APP_CONTROL_RDB_TABLE_NAME);
+    absRdbPredicates.In(APP_ID, oldAppIdList);
+    NativeRdb::ValuesBucket valuesBucket;
+    valuesBucket.PutString(APP_ID, newAppId);
+    bool ret = rdbDataManager_->UpdateData(valuesBucket, absRdbPredicates, changedRows);
+    if (!ret) {
+        changedRows = 0;
+        LOG_NOFUNC_E(BMS_TAG_DEFAULT, "update appId to %{public}s in db failed, idsCount:%{public}zu",
+            newAppId.c_str(), oldAppIdList.size());
+        return ERR_APPEXECFWK_DB_UPDATE_ERROR;
+    }
+    if (changedRows > 0) {
+        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "update appId in db successful, changedRows:%{public}d, idsCount:%{public}zu",
+            changedRows, oldAppIdList.size());
+    } else {
+        // Re-signed bundles sweep on every ordinary update; keep the empty scan quiet.
+        LOG_NOFUNC_D(BMS_TAG_DEFAULT, "update appId in db finished with no matched rows, idsCount:%{public}zu",
+            oldAppIdList.size());
+    }
+    return ERR_OK;
+}
+
 ErrCode AppControlManagerRdb::OptimizeDisposedPredicates(const std::string &callingName, const std::string &appId,
     int32_t userId, int32_t appIndex, NativeRdb::AbsRdbPredicates &absRdbPredicates)
 {

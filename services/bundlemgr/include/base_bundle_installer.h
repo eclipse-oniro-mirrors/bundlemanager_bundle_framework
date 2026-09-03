@@ -1051,6 +1051,9 @@ private:
 
     bool DeleteDisposedRuleWhenBundleUpdateEnd(const InnerBundleInfo &oldBundleInfo);
 
+    void UpdateAppControlAppIdWhenBundleUpdate(const InnerBundleInfo &oldBundleInfo,
+        const std::string &oldAppId, const std::string &newAppId);
+
     bool SetDisposedRuleWhenBundleUninstallStart(const std::string &bundleName,
         const std::string &appId, bool isMultiUser);
     bool DeleteDisposedRuleWhenBundleUninstallEnd(const std::string &bundleName,

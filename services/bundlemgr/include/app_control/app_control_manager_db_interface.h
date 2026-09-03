@@ -80,6 +80,8 @@ public:
     virtual ErrCode GetAllUserIdsForRunningControl(std::vector<int32_t> &outUserIds) = 0;
     virtual ErrCode GetAppIdsByUserId(int32_t userId, std::vector<std::string> &appIds) = 0;
     virtual ErrCode DeleteAllDisposedRulesForUser(int32_t userId) = 0;
+    virtual ErrCode UpdateAppControlAppId(const std::vector<std::string> &oldAppIdList,
+        const std::string &newAppId, int32_t &changedRows) = 0;
 };
 } // namespace AppExecFwk
 } // namespace OHOS
