@@ -1526,6 +1526,10 @@ int64_t InstalldHostImpl::GetAppCacheSize(const std::string &bundleName,
 ErrCode InstalldHostImpl::GetTopNLargestItemsInAppDataDir(const std::string &bundleName, const int32_t appIndex,
     const int32_t userId, const int32_t timeout, std::string &largestItems)
 {
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
     auto startTime = std::chrono::steady_clock::now();
     LOG_I(BMS_TAG_INSTALLD, "-n %{public}s, -a %{public}d, -u %{public}d, -t %{public}d get top N",
         bundleName.c_str(), appIndex, userId, timeout);
@@ -1575,7 +1579,8 @@ ErrCode InstalldHostImpl::GetTopNLargestItemsInAppDataDir(const std::string &bun
     }
 
     resultJson["items"] = itemsArray;
-    largestItems = resultJson.dump();
+    // use replace error handler to avoid throwing on invalid UTF-8 bytes in file names
+    largestItems = resultJson.dump(-1, ' ', false, nlohmann::json::error_handler_t::replace);
 
     auto endTime = std::chrono::steady_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
@@ -1614,7 +1619,8 @@ static std::string SerializeFileCategoryStats(
 
     nlohmann::json resultJson;
     resultJson["extensions"] = extensionsArray;
-    return resultJson.dump();
+    // use replace error handler to avoid throwing on invalid UTF-8 bytes in file names
+    return resultJson.dump(-1, ' ', false, nlohmann::json::error_handler_t::replace);
 }
 
 ErrCode InstalldHostImpl::GetAppDataFileCategoryStats(const std::string &bundleName, const int32_t appIndex,
