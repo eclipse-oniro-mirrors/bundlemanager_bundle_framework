@@ -90,7 +90,8 @@ void SetPermissionResultForTest(const std::string &permissionName, bool granted)
 int32_t GetPermissionCheckCountForTest(const std::string &permissionName);
 int32_t GetPermissionSuccessCountForTest(const std::string &permissionName);
 int32_t GetPermissionFailCountForTest(const std::string &permissionName);
-
+void SetGetDistributedBundleInfoCallingForTest(bool isCliToolCalling, bool isBundleSelfCalling);
+int32_t GetIsBundleSelfCallingForDistributedCountForTest();
 namespace OHOS {
 namespace {
 const std::string BUNDLE_NAME_TEST = "com.example.bundlekit.test";
@@ -340,6 +341,24 @@ void PrepareDumpPermissionTest(bool hasNewPermission, bool hasOldPermission)
 void ResetDumpPermissionTest()
 {
     ResetTestValues();
+}
+
+void PrepareGetDistributedBundleInfoPermissionTest(bool isCliToolCalling, bool hasGetAllBundleInfoPermission,
+    bool hasPrivilegedPermission, bool hasBundleInfoPermission, bool isBundleSelfCalling)
+{
+    ResetTestValues();
+    SetGetDistributedBundleInfoCallingForTest(
+        isCliToolCalling, isBundleSelfCalling);
+
+    SetPermissionResultForTest(
+        Constants::PERMISSION_GET_ALL_BUNDLE_INFO,
+        hasGetAllBundleInfoPermission);
+    SetPermissionResultForTest(
+        Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED,
+        hasPrivilegedPermission);
+    SetPermissionResultForTest(
+        Constants::PERMISSION_GET_BUNDLE_INFO,
+        hasBundleInfoPermission);
 }
 
 class BmsBundleKitServiceTest : public testing::Test {
@@ -13319,4 +13338,211 @@ HWTEST_F(BmsBundleKitServiceTest, VerifySystemApi_0100, Function | SmallTest | L
     ASSERT_NE(hostImpl, nullptr);
     EXPECT_TRUE(hostImpl->VerifySystemApi());
 }
+
+#ifdef DISTRIBUTED_BUNDLE_FRAMEWORK
+/**
+ * @tc.number: GetDistributedBundleInfo_0200
+ * @tc.name: GetDistributedBundleInfoLegacyPermissionFirst
+ * @tc.desc: Caller with both legacy and new permissions should be
+ *           authorized by the legacy permission without checking
+ *           the new permission or self-calling identity.
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetDistributedBundleInfo_0200, Function | SmallTest | Level1)
+{
+    PrepareGetDistributedBundleInfoPermissionTest(true, true, true, true, true);
+    ScopeGuard permissionGuard([] { ResetTestValues(); });
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+
+    DistributedBundleInfo distributedBundleInfo;
+    (void)hostImpl->GetDistributedBundleInfo(DEVICE_ID, BUNDLE_NAME_TEST, distributedBundleInfo);
+
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO), 0);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
+    EXPECT_EQ(GetIsBundleSelfCallingForDistributedCountForTest(), 0);
+    EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
+    EXPECT_EQ(GetPermissionFailCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
+}
+
+/**
+ * @tc.number: GetDistributedBundleInfo_0300
+ * @tc.name: GetDistributedBundleInfoFallbackToNewPermission
+ * @tc.desc: CLI caller should use GET_ALL_BUNDLE_INFO after both
+ *           legacy permissions fail.
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetDistributedBundleInfo_0300, Function | SmallTest | Level1)
+{
+    PrepareGetDistributedBundleInfoPermissionTest(true, true, false, false, false);
+    ScopeGuard permissionGuard([] { ResetTestValues(); });
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+
+    DistributedBundleInfo distributedBundleInfo;
+    (void)hostImpl->GetDistributedBundleInfo(DEVICE_ID, BUNDLE_NAME_TEST, distributedBundleInfo);
+
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetIsBundleSelfCallingForDistributedCountForTest(), 0);
+    EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
+    EXPECT_EQ(GetPermissionFailCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
+}
+
+/**
+ * @tc.number: GetDistributedBundleInfo_0400
+ * @tc.name: GetDistributedBundleInfoFallbackToSelfCalling
+ * @tc.desc: CLI caller without new or legacy permissions should fall back
+ *           to the bundle self-calling check.
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetDistributedBundleInfo_0400, Function | SmallTest | Level1)
+{
+    PrepareGetDistributedBundleInfoPermissionTest(true, false, false, false, true);
+    ScopeGuard permissionGuard([] { ResetTestValues(); });
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+
+    DistributedBundleInfo distributedBundleInfo;
+    (void)hostImpl->GetDistributedBundleInfo(DEVICE_ID, BUNDLE_NAME_TEST, distributedBundleInfo);
+
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetIsBundleSelfCallingForDistributedCountForTest(), 1);
+    EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
+    EXPECT_EQ(GetPermissionFailCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
+}
+
+/**
+ * @tc.number: GetDistributedBundleInfo_0500
+ * @tc.name: GetDistributedBundleInfoPermissionDenied
+ * @tc.desc: CLI caller without new permission, legacy permissions or
+ *           self-calling identity should be denied.
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetDistributedBundleInfo_0500, Function | SmallTest | Level1)
+{
+    PrepareGetDistributedBundleInfoPermissionTest(true, false, false, false, false);
+    ScopeGuard permissionGuard([] { ResetTestValues(); });
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+
+    DistributedBundleInfo distributedBundleInfo;
+    bool ret = hostImpl->GetDistributedBundleInfo(DEVICE_ID, BUNDLE_NAME_TEST, distributedBundleInfo);
+
+    EXPECT_FALSE(ret);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetIsBundleSelfCallingForDistributedCountForTest(), 1);
+    EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
+    EXPECT_EQ(GetPermissionFailCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
+}
+
+/**
+ * @tc.number: GetDistributedBundleInfo_0600
+ * @tc.name: GetDistributedBundleInfoNewPermissionRestrictedToCli
+ * @tc.desc: Non-CLI caller should not enter the GET_ALL_BUNDLE_INFO
+ *           permission path.
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetDistributedBundleInfo_0600, Function | SmallTest | Level1)
+{
+    PrepareGetDistributedBundleInfoPermissionTest(false, true, false, false, false);
+    ScopeGuard permissionGuard([] { ResetTestValues(); });
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+
+    DistributedBundleInfo distributedBundleInfo;
+    bool ret = hostImpl->GetDistributedBundleInfo(DEVICE_ID, BUNDLE_NAME_TEST, distributedBundleInfo);
+
+    EXPECT_FALSE(ret);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetIsBundleSelfCallingForDistributedCountForTest(), 1);
+    EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
+    EXPECT_EQ(GetPermissionFailCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
+}
+
+/**
+ * @tc.number: GetDistributedBundleInfo_0700
+ * @tc.name: GetDistributedBundleInfoNonCliWithLegacyPermission
+ * @tc.desc: Non-CLI caller should retain compatibility with the
+ *           original privileged bundle-info permission.
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetDistributedBundleInfo_0700, Function | SmallTest | Level1)
+{
+    PrepareGetDistributedBundleInfoPermissionTest(false, false, true, false, false);
+    ScopeGuard permissionGuard([] { ResetTestValues(); });
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+
+    DistributedBundleInfo distributedBundleInfo;
+    (void)hostImpl->GetDistributedBundleInfo(DEVICE_ID, BUNDLE_NAME_TEST, distributedBundleInfo);
+
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO), 0);
+    EXPECT_EQ(GetIsBundleSelfCallingForDistributedCountForTest(), 0);
+    EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
+    EXPECT_EQ(GetPermissionFailCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
+}
+
+/**
+ * @tc.number: GetDistributedBundleInfo_0800
+ * @tc.name: GetDistributedBundleInfoBundleInfoPermissionFirst
+ * @tc.desc: GET_BUNDLE_INFO should authorize the caller without checking
+ *           GET_ALL_BUNDLE_INFO or the bundle self-calling identity.
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetDistributedBundleInfo_0800, Function | SmallTest | Level1)
+{
+    PrepareGetDistributedBundleInfoPermissionTest(true, false, false, true, false);
+    ScopeGuard permissionGuard([] { ResetTestValues(); });
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+
+    DistributedBundleInfo distributedBundleInfo;
+    (void)hostImpl->GetDistributedBundleInfo(DEVICE_ID, BUNDLE_NAME_TEST, distributedBundleInfo);
+
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
+    EXPECT_EQ(GetIsBundleSelfCallingForDistributedCountForTest(), 0);
+    EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
+    EXPECT_EQ(GetPermissionFailCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
+}
+
+/**
+ * @tc.number: GetDistributedBundleInfo_0900
+ * @tc.name: GetDistributedBundleInfoNonSystemApp
+ * @tc.desc: Non-system application should be denied before all
+ *           permission checks.
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetDistributedBundleInfo_0900, Function | SmallTest | Level1)
+{
+    PrepareGetDistributedBundleInfoPermissionTest(true, true, true, true, true);
+    SetSystemAppForTest(false);
+    ScopeGuard permissionGuard([] { ResetTestValues(); });
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+
+    DistributedBundleInfo distributedBundleInfo;
+    bool ret = hostImpl->GetDistributedBundleInfo(DEVICE_ID, BUNDLE_NAME_TEST, distributedBundleInfo);
+
+    EXPECT_FALSE(ret);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 0);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO), 0);
+    EXPECT_EQ(GetIsBundleSelfCallingForDistributedCountForTest(), 0);
+    EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
+    EXPECT_EQ(GetPermissionFailCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
+}
+#endif
 }
