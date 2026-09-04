@@ -22,6 +22,13 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+
+#if defined(__GNUC__) && __GNUC__ >= 4
+    #define BUNDLE_RESOURCE_HIDDEN __attribute__((visibility("hidden")))
+#else
+    #define BUNDLE_RESOURCE_HIDDEN
+#endif
+
 class BundleResourceProxy : public IRemoteProxy<IBundleResource> {
 public:
     explicit BundleResourceProxy(const sptr<IRemoteObject>& object);
@@ -71,7 +78,7 @@ private:
 
     bool SendRequest(BundleResourceInterfaceCode code, MessageParcel &data, MessageParcel &reply);
 
-    static inline BrokerDelegator<BundleResourceProxy> delegator_;
+    BUNDLE_RESOURCE_HIDDEN static inline BrokerDelegator<BundleResourceProxy> delegator_;
 
     ErrCode CheckBundleOptionInfoInvalid(const std::vector<BundleOptionInfo>& optionsList);
 };
