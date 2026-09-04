@@ -374,7 +374,7 @@ public:
 
     static bool RestoreconPath(const std::string &path);
 
-    static ErrCode SetBinFileLabel(const std::string &binFilePath);
+    static ErrCode SetBinFileLabel(const std::string &binFilePath, bool isDebug);
 
     static bool CheckElfFile(const std::string &filePath);
 

@@ -19,6 +19,26 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+bool g_processBinFilesCalled = false;
+VerifyBinParam g_lastVerifyBinParam;
+}
+
+void ResetMockInstalldProcessBinFilesParam()
+{
+    g_processBinFilesCalled = false;
+    g_lastVerifyBinParam = VerifyBinParam();
+}
+
+bool GetMockInstalldProcessBinFilesParam(VerifyBinParam &verifyBinParam)
+{
+    if (!g_processBinFilesCalled) {
+        return false;
+    }
+    verifyBinParam = g_lastVerifyBinParam;
+    return true;
+}
+
 InstalldHostImpl::InstalldHostImpl()
 {
     APP_LOGI("installd service instance is created");
@@ -465,6 +485,8 @@ ErrCode InstalldHostImpl::CheckHspPluginCertValidity(const std::string &bundleNa
 
 ErrCode InstalldHostImpl::ProcessBinFiles(const VerifyBinParam &verifyBinParam)
 {
+    g_processBinFilesCalled = true;
+    g_lastVerifyBinParam = verifyBinParam;
     return ERR_OK;
 }
 

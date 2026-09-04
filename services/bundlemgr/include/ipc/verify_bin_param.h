@@ -28,6 +28,7 @@ struct VerifyBinParam : public Parcelable {
     std::string appIdentifier;
     int32_t userId;
     std::vector<std::string> binFilePaths;
+    bool isDebug = false;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

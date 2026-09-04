@@ -2217,6 +2217,7 @@ HWTEST_F(BmsInstallDaemonTest, ProcessBinFiles_InvalidBundleName_0100, Function 
     param.appIdentifier = "test";
     param.userId = 100;
     param.binFilePaths = {"/data/app/el1/bundle/public/com.example.test/bin/test"};
+    param.isDebug = false;
     auto ret = ProcessBinFiles(param);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 
@@ -2237,6 +2238,7 @@ HWTEST_F(BmsInstallDaemonTest, ProcessBinFiles_InvalidBinFilePathsSize_0100, Fun
     param.appIdentifier = "test";
     param.userId = 100;
     param.binFilePaths.resize(101, "/data/app/el1/bundle/public/com.example.test/bin/test");
+    param.isDebug = false;
     auto ret = ProcessBinFiles(param);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
@@ -2603,6 +2605,7 @@ HWTEST_F(BmsInstallDaemonTest, ProcessBinFiles_EmptyPaths_0100, Function | Small
     param.appIdentifier = "test";
     param.userId = 100;
     param.binFilePaths = {};
+    param.isDebug = false;
     auto ret = hostImpl.ProcessBinFiles(param);
     EXPECT_EQ(ret, ERR_OK);
 }
@@ -2620,6 +2623,7 @@ HWTEST_F(BmsInstallDaemonTest, ProcessBinFiles_FilePathNotMatchBundleName_0100, 
     param.appIdentifier = "test";
     param.userId = 100;
     param.binFilePaths = {"/data/app/el1/bundle/public/com.other.test/bin/test"};
+    param.isDebug = false;
     auto ret = hostImpl.ProcessBinFiles(param);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
@@ -2637,6 +2641,7 @@ HWTEST_F(BmsInstallDaemonTest, ProcessBinFiles_InvalidFilePathWithDotDot_0100, F
     param.appIdentifier = "test";
     param.userId = 100;
     param.binFilePaths = {"/data/app/el1/bundle/public/com.example.test/bin/../test"};
+    param.isDebug = true;
     auto ret = hostImpl.ProcessBinFiles(param);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
@@ -2654,6 +2659,7 @@ HWTEST_F(BmsInstallDaemonTest, ProcessBinFiles_InvalidFilePath_0100, Function | 
     param.appIdentifier = "test";
     param.userId = 100;
     param.binFilePaths = {"/data/app/invalid/path/test"};
+    param.isDebug = false;
     auto ret = hostImpl.ProcessBinFiles(param);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
@@ -2671,6 +2677,7 @@ HWTEST_F(BmsInstallDaemonTest, ProcessBinFiles_InvalidPathPrefix_0100, Function 
     param.appIdentifier = "test";
     param.userId = 100;
     param.binFilePaths = {"/tmp/invalid/bin/test"};
+    param.isDebug = true;
     auto ret = hostImpl.ProcessBinFiles(param);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
@@ -2792,6 +2799,7 @@ HWTEST_F(BmsInstallDaemonTest, ProcessBinFiles_EmptyPathItem_0100, Function | Sm
     param.appIdentifier = "test";
     param.userId = 100;
     param.binFilePaths = {"/data/app/el1/bundle/public/com.example.test/bin/test", ""};
+    param.isDebug = false;
     auto ret = hostImpl.ProcessBinFiles(param);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }

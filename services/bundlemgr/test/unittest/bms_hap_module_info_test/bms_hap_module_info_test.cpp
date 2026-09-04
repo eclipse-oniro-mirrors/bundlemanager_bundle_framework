@@ -957,6 +957,7 @@ HWTEST_F(BmsHapModuleInfoTest, VerifyBinParam_Marshalling_001, Function | SmallT
     param.appIdentifier = "testAppId";
     param.userId = 100;
     param.binFilePaths = {"/data/app/libs/test1.bin", "/data/app/libs/test2.bin"};
+    param.isDebug = false;
 
     Parcel parcel;
     bool result = param.Marshalling(parcel);
@@ -976,6 +977,7 @@ HWTEST_F(BmsHapModuleInfoTest, VerifyBinParam_ReadFromParcel_001, Function | Sma
     originalParam.appIdentifier = "testAppId";
     originalParam.userId = 100;
     originalParam.binFilePaths = {"/data/app/libs/test1.bin", "/data/app/libs/test2.bin"};
+    originalParam.isDebug = false;
 
     Parcel parcel;
     ASSERT_TRUE(originalParam.Marshalling(parcel));
@@ -990,6 +992,7 @@ HWTEST_F(BmsHapModuleInfoTest, VerifyBinParam_ReadFromParcel_001, Function | Sma
     EXPECT_EQ(resultParam.binFilePaths.size(), originalParam.binFilePaths.size());
     EXPECT_EQ(resultParam.binFilePaths[0], originalParam.binFilePaths[0]);
     EXPECT_EQ(resultParam.binFilePaths[1], originalParam.binFilePaths[1]);
+    EXPECT_EQ(resultParam.isDebug, originalParam.isDebug);
 }
 
 /**
@@ -1005,6 +1008,7 @@ HWTEST_F(BmsHapModuleInfoTest, VerifyBinParam_Unmarshalling_001, Function | Smal
     originalParam.appIdentifier = "testAppId";
     originalParam.userId = 100;
     originalParam.binFilePaths = {"/data/app/libs/test.bin"};
+    originalParam.isDebug = true;
 
     Parcel parcel;
     ASSERT_TRUE(originalParam.Marshalling(parcel));
@@ -1017,6 +1021,7 @@ HWTEST_F(BmsHapModuleInfoTest, VerifyBinParam_Unmarshalling_001, Function | Smal
     EXPECT_EQ(unmarshalledParam->userId, originalParam.userId);
     EXPECT_EQ(unmarshalledParam->binFilePaths.size(), originalParam.binFilePaths.size());
     EXPECT_EQ(unmarshalledParam->binFilePaths[0], originalParam.binFilePaths[0]);
+    EXPECT_EQ(unmarshalledParam->isDebug, originalParam.isDebug);
     delete unmarshalledParam;
 }
 

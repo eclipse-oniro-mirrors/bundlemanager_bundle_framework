@@ -6730,6 +6730,8 @@ ErrCode BaseBundleInstaller::ProcessBinFiles(
     verifyBinParam.appIdentifier = appIdentifier_;
     verifyBinParam.userId = userId_;
     verifyBinParam.binFilePaths = binFilePaths;
+    // The provision type of all input HAPs has been checked for consistency.
+    verifyBinParam.isDebug = infos.begin()->second.GetAppProvisionType() == Constants::APP_PROVISION_TYPE_DEBUG;
 
     return InstalldClient::GetInstance()->ProcessBinFiles(verifyBinParam);
 }

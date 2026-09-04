@@ -117,6 +117,10 @@ constexpr const char* LIBS_TMP_DIR = "libs+tmp";
 constexpr const char* DEPRECATED_ARK_CACHE_PATH = "/data/local/ark-cache";
 constexpr const char* DEPRECATED_ARK_PROFILE_PATH = "/data/local/ark-profile";
 constexpr const char* FRAMEWORK_ARK_CACHE_PATH = "framework_ark_cache/";
+#ifdef WITH_SELINUX
+constexpr const char* APP_BIN_FILE_CONTEXT = "u:object_r:app_bin_file:s0";
+constexpr const char* DEBUG_APP_BIN_FILE_CONTEXT = "u:object_r:debug_app_bin_file:s0";
+#endif
 #if defined(CODE_ENCRYPTION_ENABLE)
 static const char LIB_CODE_CRYPTO_SO_PATH[] = "system/lib/libcode_crypto_metadata_process_utils.z.so";
 static const char LIB64_CODE_CRYPTO_SO_PATH[] = "system/lib64/libcode_crypto_metadata_process_utils.z.so";
@@ -3925,7 +3929,7 @@ bool InstalldOperator::RestoreconPath(const std::string &path)
     return false;
 }
 
-ErrCode InstalldOperator::SetBinFileLabel(const std::string &binFilePath)
+ErrCode InstalldOperator::SetBinFileLabel(const std::string &binFilePath, bool isDebug)
 {
     if (binFilePath.empty()) {
         LOG_E(BMS_TAG_INSTALLD, "binFilePath is empty");
@@ -3939,12 +3943,16 @@ ErrCode InstalldOperator::SetBinFileLabel(const std::string &binFilePath)
 
 #ifdef WITH_SELINUX
     // Set SELinux context for executable files
-    const char* context = "u:object_r:app_bin_file:s0";
+    const char* context = isDebug ? DEBUG_APP_BIN_FILE_CONTEXT : APP_BIN_FILE_CONTEXT;
     if (lsetfilecon(binFilePath.c_str(), context) < 0) {
         LOG_E(BMS_TAG_INSTALLD, "setcon for %{public}s failed, errno:%{public}d",
             binFilePath.c_str(), errno);
         return ERR_APPEXECFWK_INSTALLD_SET_SELINUX_LABEL_FAILED;
     }
+#else
+    // Avoid an unused-parameter warning when SELinux support is disabled.
+    (void)isDebug;
+    LOG_I(BMS_TAG_INSTALLD, "SELinux support is disabled, skip setting bin file label");
 #endif
 
     LOG_I(BMS_TAG_INSTALLD, "SetBinFileLabel success %{public}s", binFilePath.c_str());

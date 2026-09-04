@@ -1746,6 +1746,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, ProcessBinFilesTest_001, Function | Small
     verifyBinParam.appIdentifier = "test";
     verifyBinParam.userId = 100;
     verifyBinParam.binFilePaths = {"/data/app/el1/bundle/public/com.ohos.test/bin/test"};
+    verifyBinParam.isDebug = true;
     auto ret = hostImpl->ProcessBinFiles(verifyBinParam);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }

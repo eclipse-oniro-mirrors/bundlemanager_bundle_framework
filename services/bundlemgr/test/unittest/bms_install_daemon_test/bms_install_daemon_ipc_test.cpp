@@ -24,6 +24,10 @@
 using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
 namespace OHOS {
+namespace AppExecFwk {
+void ResetMockInstalldProcessBinFilesParam();
+bool GetMockInstalldProcessBinFilesParam(VerifyBinParam &verifyBinParam);
+}
 namespace {
 constexpr int32_t UID = 100;
 constexpr int32_t GID = 100;
@@ -1621,8 +1625,14 @@ HWTEST_F(BmsInstallDaemonIpcTest, ProcessBinFilesTest_001, Function | SmallTest 
     verifyBinParam.appIdentifier = "test";
     verifyBinParam.userId = 100;
     verifyBinParam.binFilePaths = {"/data/app/el1/bundle/public/com.ohos.test/bin/test"};
+    verifyBinParam.isDebug = true;
+    ResetMockInstalldProcessBinFilesParam();
     auto ret = proxy->ProcessBinFiles(verifyBinParam);
     EXPECT_EQ(ret, ERR_OK);
+    VerifyBinParam receivedParam;
+    ASSERT_TRUE(GetMockInstalldProcessBinFilesParam(receivedParam));
+    EXPECT_TRUE(receivedParam.isDebug);
+    EXPECT_EQ(receivedParam.binFilePaths, verifyBinParam.binFilePaths);
 }
 
 /**
