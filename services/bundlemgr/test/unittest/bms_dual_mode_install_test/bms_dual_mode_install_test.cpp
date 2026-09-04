@@ -46,6 +46,8 @@
 #include "preinstall_data_storage_interface.h"
 #include "scope_guard.h"
 #include "bundle_resource/bundle_resource_process.h"
+#include "bundle_resource/bundle_resource_manager.h"
+#include "bundle_resource_helper.h"
 
 using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
@@ -1795,6 +1797,293 @@ HWTEST_F(BmsDualModeInstallTest, GetAllResourceInfo_0900, Function | SmallTest |
     EXPECT_FALSE(BundleResourceProcess::GetAllResourceInfo(TEST_USERID, resourceInfos));
     EXPECT_TRUE(resourceInfos.empty());
     service->dataMgr_ = saved;
+}
+
+// ====================== BundleResourceProcess::GetResourceInfoByBundleName (findInTempBundle) ======================
+// The findInTempBundle flag (added for dual-mode icon fix) selects which map to fetch from:
+// findInTempBundle=true -> tempBundleInfos_ only; findInTempBundle=false -> bundleInfos_ only.
+// No fallback: a miss in the preferred map returns false, exposing storage inconsistencies
+// rather than silently fetching the wrong-mode variant. The preferred-map selection matters
+// when the same bundleName exists in both maps (cross-mode clone): true yields the clone
+// variant (isDualModeCloneApp_=true), false yields the primary variant (isDualModeCloneApp_=false).
+// appIndex=0 / needParseDynamic=false match the production call site in AddResourceInfoByBundleNameWhenInstall.
+
+HWTEST_F(BmsDualModeInstallTest, GetResourceInfoByBundleName_FindTemp_FoundInTemp_0100, Function | SmallTest | Level0)
+{
+    // findInTempBundle=true, bundle lives ONLY in tempBundleInfos_ -> fetched from temp, returns true;
+    // the clone flag propagates onto the ResourceInfo.
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    dataMgr->bundleInfos_.clear();
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] = MakeResourceInfo(true);
+    std::vector<ResourceInfo> resourceInfos;
+    EXPECT_TRUE(BundleResourceProcess::GetResourceInfoByBundleName(
+        BUNDLE_NAME, TEST_USERID, resourceInfos, 0, false, true));
+    ASSERT_FALSE(resourceInfos.empty());
+    EXPECT_TRUE(resourceInfos.front().isDualModeCloneApp_);
+}
+
+HWTEST_F(BmsDualModeInstallTest, GetResourceInfoByBundleName_FindTemp_NotInTemp_0200,
+    Function | SmallTest | Level0)
+{
+    // findInTempBundle=true but bundle absent from temp, present only in bundleInfos_ -> strict
+    // miss: returns false (no fallback to wrong-mode variant).
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = MakeResourceInfo(false);
+    dataMgr->tempBundleInfos_.clear();
+    std::vector<ResourceInfo> resourceInfos;
+    EXPECT_FALSE(BundleResourceProcess::GetResourceInfoByBundleName(
+        BUNDLE_NAME, TEST_USERID, resourceInfos, 0, false, true));
+    EXPECT_TRUE(resourceInfos.empty());
+}
+
+HWTEST_F(BmsDualModeInstallTest, GetResourceInfoByBundleName_FindTemp_NotFound_0300,
+    Function | SmallTest | Level0)
+{
+    // findInTempBundle=true, bundle in neither map -> false.
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    dataMgr->bundleInfos_.clear();
+    dataMgr->tempBundleInfos_.clear();
+    std::vector<ResourceInfo> resourceInfos;
+    EXPECT_FALSE(BundleResourceProcess::GetResourceInfoByBundleName(
+        BUNDLE_NAME, TEST_USERID, resourceInfos, 0, false, true));
+    EXPECT_TRUE(resourceInfos.empty());
+}
+
+HWTEST_F(BmsDualModeInstallTest, GetResourceInfoByBundleName_Default_FoundInBundleInfos_0400,
+    Function | SmallTest | Level0)
+{
+    // findInTempBundle=false (default), bundle lives ONLY in bundleInfos_ -> fetched directly, returns true.
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = MakeResourceInfo(false);
+    dataMgr->tempBundleInfos_.clear();
+    std::vector<ResourceInfo> resourceInfos;
+    EXPECT_TRUE(BundleResourceProcess::GetResourceInfoByBundleName(
+        BUNDLE_NAME, TEST_USERID, resourceInfos, 0, false, false));
+    ASSERT_FALSE(resourceInfos.empty());
+    EXPECT_FALSE(resourceInfos.front().isDualModeCloneApp_);
+}
+
+HWTEST_F(BmsDualModeInstallTest, GetResourceInfoByBundleName_Default_NotInBundleInfos_0500,
+    Function | SmallTest | Level0)
+{
+    // findInTempBundle=false but bundle absent from bundleInfos_, present only in tempBundleInfos_ ->
+    // strict miss: returns false (no fallback to wrong-mode variant).
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    dataMgr->bundleInfos_.clear();
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] = MakeResourceInfo(true);
+    std::vector<ResourceInfo> resourceInfos;
+    EXPECT_FALSE(BundleResourceProcess::GetResourceInfoByBundleName(
+        BUNDLE_NAME, TEST_USERID, resourceInfos, 0, false, false));
+    EXPECT_TRUE(resourceInfos.empty());
+}
+
+HWTEST_F(BmsDualModeInstallTest, GetResourceInfoByBundleName_Default_NotFound_0600,
+    Function | SmallTest | Level0)
+{
+    // findInTempBundle=false, bundle in neither map -> false.
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    dataMgr->bundleInfos_.clear();
+    dataMgr->tempBundleInfos_.clear();
+    std::vector<ResourceInfo> resourceInfos;
+    EXPECT_FALSE(BundleResourceProcess::GetResourceInfoByBundleName(
+        BUNDLE_NAME, TEST_USERID, resourceInfos, 0, false, false));
+    EXPECT_TRUE(resourceInfos.empty());
+}
+
+HWTEST_F(BmsDualModeInstallTest, GetResourceInfoByBundleName_BothMaps_PrefersTemp_0700,
+    Function | SmallTest | Level0)
+{
+    // Same bundleName in both maps: findInTempBundle=true -> temp (clone) wins; the returned
+    // ResourceInfo carries isDualModeCloneApp_=true.
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = MakeResourceInfo(false);
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] = MakeResourceInfo(true);
+    std::vector<ResourceInfo> resourceInfos;
+    EXPECT_TRUE(BundleResourceProcess::GetResourceInfoByBundleName(
+        BUNDLE_NAME, TEST_USERID, resourceInfos, 0, false, true));
+    ASSERT_FALSE(resourceInfos.empty());
+    EXPECT_TRUE(resourceInfos.front().isDualModeCloneApp_);
+}
+
+HWTEST_F(BmsDualModeInstallTest, GetResourceInfoByBundleName_BothMaps_PrefersBundleInfos_0800,
+    Function | SmallTest | Level0)
+{
+    // Same bundleName in both maps: findInTempBundle=false -> bundleInfos_ (primary) wins; the
+    // returned ResourceInfo carries isDualModeCloneApp_=false.
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = MakeResourceInfo(false);
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] = MakeResourceInfo(true);
+    std::vector<ResourceInfo> resourceInfos;
+    EXPECT_TRUE(BundleResourceProcess::GetResourceInfoByBundleName(
+        BUNDLE_NAME, TEST_USERID, resourceInfos, 0, false, false));
+    ASSERT_FALSE(resourceInfos.empty());
+    EXPECT_FALSE(resourceInfos.front().isDualModeCloneApp_);
+}
+
+HWTEST_F(BmsDualModeInstallTest, GetResourceInfoByBundleName_FindTemp_SharedType_Skipped_0900,
+    Function | SmallTest | Level0)
+{
+    // findInTempBundle=true, temp entry BundleType::SHARED -> fetched from temp but the SHARED/SKILL
+    // guard returns false.
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    dataMgr->bundleInfos_.clear();
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] = MakeResourceInfo(false, BundleType::SHARED);
+    std::vector<ResourceInfo> resourceInfos;
+    EXPECT_FALSE(BundleResourceProcess::GetResourceInfoByBundleName(
+        BUNDLE_NAME, TEST_USERID, resourceInfos, 0, false, true));
+    EXPECT_TRUE(resourceInfos.empty());
+}
+
+HWTEST_F(BmsDualModeInstallTest, GetResourceInfoByBundleName_FindTemp_UserIdNotFound_1000,
+    Function | SmallTest | Level0)
+{
+    // findInTempBundle=true but userId not registered -> false before any map lookup.
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] = MakeResourceInfo(true);
+    std::vector<ResourceInfo> resourceInfos;
+    EXPECT_FALSE(BundleResourceProcess::GetResourceInfoByBundleName(
+        BUNDLE_NAME, TEST_USERID + 1, resourceInfos, 0, false, true));
+    EXPECT_TRUE(resourceInfos.empty());
+}
+
+HWTEST_F(BmsDualModeInstallTest, GetResourceInfoByBundleName_FindTemp_DataMgrNull_1100,
+    Function | SmallTest | Level0)
+{
+    // dataMgr null -> false. Restore afterwards so later cases see a valid dataMgr.
+    auto service = DelayedSingleton<BundleMgrService>::GetInstance();
+    auto saved = service->dataMgr_;
+    service->dataMgr_ = nullptr;
+    std::vector<ResourceInfo> resourceInfos;
+    EXPECT_FALSE(BundleResourceProcess::GetResourceInfoByBundleName(
+        BUNDLE_NAME, TEST_USERID, resourceInfos, 0, false, true));
+    EXPECT_TRUE(resourceInfos.empty());
+    service->dataMgr_ = saved;
+}
+
+// ============== BaseBundleInstaller::ComputeToTempBundle (P1: toTempBundle call-site logic) =================
+// ComputeToTempBundle is the extracted toTempBundle decision logic from InnerProcessInstallByPreInstallInfo.
+// It decides whether a pre-install recovery stores the bundle into tempBundleInfos_ (cross-mode variant).
+// Truth table: non-dual-mode → false; DiffPackage clone in primary → true; DiffPackage non-clone in
+// secondary → true; MAIN_ONLY in secondary → true; SUB_ONLY in primary → true; else → false.
+
+HWTEST_F(BmsDualModeInstallTest, ComputeToTempBundle_NonDualMode_0100, Function | SmallTest | Level0)
+{
+    SetDualModeCache(ServiceConstants::DUAL_MODE_VALUE_INVALID, ServiceConstants::DUAL_MODE_VALUE_INVALID);
+    InnerBundleInfo info;
+    info.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE);
+    EXPECT_FALSE(BaseBundleInstaller::ComputeToTempBundle(info));
+}
+
+HWTEST_F(BmsDualModeInstallTest, ComputeToTempBundle_DiffCloneInPrimary_0200, Function | SmallTest | Level0)
+{
+    EnablePrimaryMode();
+    InnerBundleInfo info = MakeCat7Info(true); // clone + UNIVERSAL_DIFFERENT_PACKAGE
+    EXPECT_TRUE(BaseBundleInstaller::ComputeToTempBundle(info));
+}
+
+HWTEST_F(BmsDualModeInstallTest, ComputeToTempBundle_DiffCloneInSecondary_0300, Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    InnerBundleInfo info = MakeCat7Info(true); // clone + UNIVERSAL_DIFFERENT_PACKAGE
+    EXPECT_FALSE(BaseBundleInstaller::ComputeToTempBundle(info));
+}
+
+HWTEST_F(BmsDualModeInstallTest, ComputeToTempBundle_DiffNonCloneInSecondary_0400, Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    InnerBundleInfo info = MakeCat7Info(false); // non-clone + UNIVERSAL_DIFFERENT_PACKAGE
+    EXPECT_TRUE(BaseBundleInstaller::ComputeToTempBundle(info));
+}
+
+HWTEST_F(BmsDualModeInstallTest, ComputeToTempBundle_DiffNonCloneInPrimary_0500, Function | SmallTest | Level0)
+{
+    EnablePrimaryMode();
+    InnerBundleInfo info = MakeCat7Info(false); // non-clone + UNIVERSAL_DIFFERENT_PACKAGE
+    EXPECT_FALSE(BaseBundleInstaller::ComputeToTempBundle(info));
+}
+
+HWTEST_F(BmsDualModeInstallTest, ComputeToTempBundle_MainOnlyInSecondary_0600, Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    InnerBundleInfo info;
+    info.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::MAIN_ONLY);
+    EXPECT_TRUE(BaseBundleInstaller::ComputeToTempBundle(info));
+}
+
+HWTEST_F(BmsDualModeInstallTest, ComputeToTempBundle_MainOnlyInPrimary_0700, Function | SmallTest | Level0)
+{
+    EnablePrimaryMode();
+    InnerBundleInfo info;
+    info.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::MAIN_ONLY);
+    EXPECT_FALSE(BaseBundleInstaller::ComputeToTempBundle(info));
+}
+
+HWTEST_F(BmsDualModeInstallTest, ComputeToTempBundle_SubOnlyInPrimary_0800, Function | SmallTest | Level0)
+{
+    EnablePrimaryMode();
+    InnerBundleInfo info;
+    info.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::SUB_ONLY);
+    EXPECT_TRUE(BaseBundleInstaller::ComputeToTempBundle(info));
+}
+
+HWTEST_F(BmsDualModeInstallTest, ComputeToTempBundle_SubOnlyInSecondary_0900, Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    InnerBundleInfo info;
+    info.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::SUB_ONLY);
+    EXPECT_FALSE(BaseBundleInstaller::ComputeToTempBundle(info));
+}
+
+// ====================== IsCrossModeInstall supplementary (P1: false-return combos) ======================
+
+HWTEST_F(BmsDualModeInstallTest, IsCrossModeInstall_MainOnlyInPrimary_0700, Function | SmallTest | Level0)
+{
+    EnablePrimaryMode();
+    BaseBundleInstaller installer;
+    installer.dualModeInstallRole_ = DualModeInstallRole::NONE;
+    installer.resolvedDeviceModeDistributionPolicy_ = DeviceModeDistributionPolicy::MAIN_ONLY;
+    EXPECT_FALSE(installer.IsCrossModeInstall());
+}
+
+HWTEST_F(BmsDualModeInstallTest, IsCrossModeInstall_SubOnlyInSecondary_0800, Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    BaseBundleInstaller installer;
+    installer.dualModeInstallRole_ = DualModeInstallRole::NONE;
+    installer.resolvedDeviceModeDistributionPolicy_ = DeviceModeDistributionPolicy::SUB_ONLY;
+    EXPECT_FALSE(installer.IsCrossModeInstall());
+}
+
+HWTEST_F(BmsDualModeInstallTest, IsCrossModeInstall_PrimaryRoleInPrimary_0900, Function | SmallTest | Level0)
+{
+    EnablePrimaryMode();
+    BaseBundleInstaller installer;
+    installer.dualModeInstallRole_ = DualModeInstallRole::PRIMARY;
+    EXPECT_FALSE(installer.IsCrossModeInstall());
+}
+
+// ====================== BundleResourceHelper/Manager findInTempBundle pass-through (P2) ======================
+// These cases verify that helper and manager accept findInTempBundle=true and route through the
+// manager → GetResourceInfoByBundleName chain without crashing. With empty dataMgr maps the leaf
+// GetResourceInfoByBundleName returns false (strict miss), so the manager method returns false
+// before reaching RDB/PrepareSysRes — safe for unit-test scope. Full end-to-end pass-through
+// (data in tempBundleInfos_ → resource written to RDB) requires system-level RDB initialization
+// (see bms_bundle_resource_manager_test.cpp) and is out of scope for this unit test file.
+
+HWTEST_F(BmsDualModeInstallTest, HelperAddResource_FindTemp_EmptyMaps_NoCrash_0100, Function | SmallTest | Level0)
+{
+    // helper::AddResourceInfoByBundleName with findInTempBundle=true over INSTALL_BUNDLE:
+    // empty maps → GetResourceInfoByBundleName fails → manager returns false → helper logs warn, no crash.
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    dataMgr->bundleInfos_.clear();
+    dataMgr->tempBundleInfos_.clear();
+    EXPECT_NO_THROW(BundleResourceHelper::AddResourceInfoByBundleName(
+        BUNDLE_NAME, TEST_USERID, ADD_RESOURCE_TYPE::INSTALL_BUNDLE, true, true));
+    EXPECT_NO_THROW(BundleResourceHelper::AddResourceInfoByBundleName(
+        BUNDLE_NAME, TEST_USERID, ADD_RESOURCE_TYPE::UPDATE_BUNDLE, true, true));
+    EXPECT_NO_THROW(BundleResourceHelper::AddResourceInfoByBundleName(
+        BUNDLE_NAME, TEST_USERID, ADD_RESOURCE_TYPE::CREATE_USER, true, true));
+    // No crash = pass. The three ADD_RESOURCE_TYPE values exercise all switch branches in helper.
 }
 
 // ====================== BundlePermissionMgr::CreateHapInfoParams ======================

@@ -962,6 +962,10 @@ private:
     // device mode (primary-mode package installed while in secondary mode, or vice-versa). Such a
     // package is stored in tempBundleInfos_ (hidden) under the original bundle name, not bundleInfos_.
     bool IsCrossModeInstall() const;
+    // Compute whether a pre-install recovery should store the bundle into tempBundleInfos_
+    // (cross-mode variant). Extracted for testability — the decision is based purely on the
+    // oldInfo's distribution policy and the current device mode.
+    static bool ComputeToTempBundle(const InnerBundleInfo &oldInfo);
     // Capture persisted values before uninstall mutates/removes InnerBundleInfo. Uninstall requests normally carry
     // an UNSPECIFIED policy, so the event must not derive these fields from InstallParam.
     void SaveDualModeUninstallEventFields(const InnerBundleInfo &bundleInfo);

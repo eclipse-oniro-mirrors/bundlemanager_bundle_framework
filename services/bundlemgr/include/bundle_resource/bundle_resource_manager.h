@@ -84,16 +84,18 @@ public:
         std::vector<LauncherAbilityResourceInfo> &extensionAbilityResourceInfo, const int32_t appIndex = 0);
 
     bool AddResourceInfoByBundleNameWhenInstall(const std::string &bundleName, const int32_t userId,
-        const bool isBundleFirstInstall = true);
+        const bool isBundleFirstInstall = true, const bool findInTempBundle = false);
 
     bool UpdateAlternateResourceInfo(const std::string &bundleName);
 
     bool ParseAndAddAlternateIconResource(const std::string &bundleName, const AlternateIconInfo &alternateIconInfo,
         const IconResourceType type);
 
-    bool AddResourceInfoByBundleNameWhenUpdate(const std::string &bundleName, const int32_t userId);
+    bool AddResourceInfoByBundleNameWhenUpdate(const std::string &bundleName, const int32_t userId,
+        const bool findInTempBundle = false);
 
-    bool AddResourceInfoByBundleNameWhenCreateUser(const std::string &bundleName, const int32_t userId);
+    bool AddResourceInfoByBundleNameWhenCreateUser(const std::string &bundleName, const int32_t userId,
+        const bool findInTempBundle = false);
 
     bool DeleteBundleResourceInfo(const std::string &bundleName, const int32_t userId, const bool isExistInOtherUser);
     bool DeleteBundleResourceInfo(const InnerBundleInfo &info, const int32_t userId,

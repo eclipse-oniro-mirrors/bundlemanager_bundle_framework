@@ -30,9 +30,11 @@ namespace AppExecFwk {
 class BundleResourceProcess {
 public:
     // get LauncherAbilityResourceInfo and BundleResourceInfo by bundleName
+    // findInTempBundle: when true, fetch from tempBundleInfos_ (cross-mode variant);
+    // when false, fetch from bundleInfos_ (current-mode variant).
     static bool GetResourceInfoByBundleName(const std::string &bundleName, const int32_t userId,
         std::vector<ResourceInfo> &resourceInfo, const int32_t appIndex = Constants::DEFAULT_APP_INDEX,
-        bool needParseDynamic = true);
+        bool needParseDynamic = true, const bool findInTempBundle = false);
     // get LauncherAbilityResourceInfo by abilityName
     static bool GetLauncherResourceInfoByAbilityName(const std::string &bundleName, const std::string &moduleName,
         const std::string &abilityName, const int32_t userId,

@@ -609,11 +609,13 @@ void BundleResourceManager::PrepareSysRes()
 }
 
 bool BundleResourceManager::AddResourceInfoByBundleNameWhenInstall(
-    const std::string &bundleName, const int32_t userId, const bool isBundleFirstInstall)
+    const std::string &bundleName, const int32_t userId, const bool isBundleFirstInstall,
+    const bool findInTempBundle)
 {
     // 1. get all resourceInfos by bundleName
     std::vector<ResourceInfo> resourceInfos;
-    if (!BundleResourceProcess::GetResourceInfoByBundleName(bundleName, userId, resourceInfos, 0, false)) {
+    if (!BundleResourceProcess::GetResourceInfoByBundleName(bundleName, userId, resourceInfos, 0, false,
+        findInTempBundle)) {
         APP_LOGE("get resource by -n %{public}s -u %{public}d failed", bundleName.c_str(), userId);
         return false;
     }
@@ -765,11 +767,12 @@ bool BundleResourceManager::InnerProcessThemeResourceWhenInstall(
 }
 
 bool BundleResourceManager::AddResourceInfoByBundleNameWhenUpdate(
-    const std::string &bundleName, const int32_t userId)
+    const std::string &bundleName, const int32_t userId, const bool findInTempBundle)
 {
     // 1. get all resource
     std::vector<ResourceInfo> resourceInfos;
-    if (!BundleResourceProcess::GetResourceInfoByBundleName(bundleName, userId, resourceInfos, 0, false) ||
+    if (!BundleResourceProcess::GetResourceInfoByBundleName(bundleName, userId, resourceInfos, 0, false,
+        findInTempBundle) ||
         resourceInfos.empty()) {
         APP_LOGE("get resource bundleName %{public}s userId %{public}d failed",
             bundleName.c_str(), userId);
@@ -836,7 +839,7 @@ bool BundleResourceManager::ProcessCloneBundleResourceInfo(
 }
 
 bool BundleResourceManager::AddResourceInfoByBundleNameWhenCreateUser(
-    const std::string &bundleName, const int32_t userId)
+    const std::string &bundleName, const int32_t userId, const bool findInTempBundle)
 {
     // 1. if theme not exist, then return
     if (!BundleResourceThemeProcess::IsBundleThemeExist(bundleName, userId)) {
@@ -844,7 +847,8 @@ bool BundleResourceManager::AddResourceInfoByBundleNameWhenCreateUser(
     }
     // 2. get all resource
     std::vector<ResourceInfo> resourceInfos;
-    if (!BundleResourceProcess::GetResourceInfoByBundleName(bundleName, userId, resourceInfos, 0, false) ||
+    if (!BundleResourceProcess::GetResourceInfoByBundleName(bundleName, userId, resourceInfos, 0, false,
+        findInTempBundle) ||
         resourceInfos.empty()) {
         APP_LOGE("get all resource failed when create user -n %{public}s -u %{public}d",
             bundleName.c_str(), userId);
