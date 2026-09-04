@@ -76,7 +76,7 @@
 
 ### TASK-2: DualModeHelper 工具类
 
-- **目标**：新建 DualModeHelper，封装读 `persist.sceneboard.ispcmode`/`mainmode`（int）、判断主/副模式（值域校验 {0,1}）、不同包体类别集合判定（`IsDiffPackageCategory`：policy ∈ {4,6,8}）、前缀生成/解析（复用 BundleCloneCommonHelper，appIndex=10000）；测试注入开关 `IsTestDualMode`（切参数 key）。
+- **目标**：新建 DualModeHelper，封装读 `persist.sceneboard.ispcmode`（生产 key 为 bool，#9945 起）/`mainmode`（int）、判断主/副模式（归一化/值域校验）、不同包体类别集合判定（`IsDiffPackageCategory`：policy ∈ {4,6,8}）、前缀生成/解析（复用 BundleCloneCommonHelper，appIndex=10000）；测试注入开关 `IsTestDualMode`（切参数 key，测试 ispcmode key 为 int）。
 - **文件**：`dual_mode_helper.h/cpp`（新增）、`bundle_service_constants.h`（常量）、`BUILD.gn`（源文件）。
 - **完成判据**：IsDualModeDevice/IsSecondaryMode/IsDiffPackageCategory/GetDualModeBundleName/ParseDualModeBundleName 单测通过；参数缺失/非法回退非双模式。
 - **关联**：AC-3/AC-33，design ADR-5/6/10/22。

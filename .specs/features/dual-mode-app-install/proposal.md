@@ -1,7 +1,7 @@
 # 需求文档
 
-> 双模式同包名不同安装包应用安装支持。本文档仅覆盖"需求一：支持双模式同包名不同安装包的应用安装"。"需求二：模式切换接口"另立特性。
-> 当前代码基线：`appIndex_dual_mode_07_doc` HEAD `020de12b8`（含代码落地提交 `14eb7f286`，2026-08-06）。基线契约为 `DeviceModeDistributionPolicy` + `AppSandboxPolicy`。
+> 双模式同包名不同安装包应用安装支持。本文档覆盖"需求一：支持双模式同包名不同安装包的应用安装"与"需求三：支持双模式同包名不同安装包的应用预置"（US-14）；"需求二：模式切换接口"另立特性（`.specs/features/dual-mode-app-switch/`）。源诉求快照与演进对照见 [feature.md](./feature.md)。
+> 当前代码基线：`fix_dual_doc` HEAD `bcbfe06a9`（含 `appIndex_dual_mode_13` 合流）。基线契约为 `DeviceModeDistributionPolicy` + `AppSandboxPolicy`。
 
 ## 一、原始需求
 
@@ -11,9 +11,9 @@
 |------|------|
 | 需求ID | REQ-DUALMODE-001 |
 | 需求名称 | 双模式同包名不同安装包应用安装支持 |
-| 来源 | 双模式应用安装方案.md（需求一） |
+| 来源 | [feature.md](./feature.md)（原始诉求快照：需求一 + 需求三；源文档《支持双模式应用安装和切换》＝bundlemanager_design_doc 仓 `双模式安装方案设计.md`，原始表述与现行口径的演进对照见 feature.md 第二节） |
 | 提出人 | 用户 |
-| 目标发行版本 | OpenHarmony-6.0-Release（TBD） |
+| 目标发行版本 | OpenHarmony-6.0-Release |
 | 优先级 | P1 |
 
 ### 问题陈述
@@ -43,7 +43,7 @@
 | 确认人 | 用户 |
 | 复杂度 | 标准（单仓特性，涉及多模块但均在 BMS 服务内，需架构设计决策） |
 | Profile | none |
-| 目标发行版本 | OpenHarmony-6.0-Release（TBD） |
+| 目标发行版本 | OpenHarmony-6.0-Release |
 | 版本状态 | baselined |
 
 ### 设备模式分发策略枚举定义（基线锚点）
@@ -82,7 +82,7 @@
 | -1 / 非法(∉{0,1}) | * | false | false | 非双模式（回退正常流程） |
 | * | -1 / 非法(∉{0,1}) | false | false | 非双模式（回退正常流程） |
 
-> 参数源：`persist.sceneboard.ispcmode`（int：0=tablet/1=2in1）+ `const.sceneboard.mainmode`（int：0=主tablet/1=主2in1）。`GetIntParameter(key, -1)` 用 -1 作"参数不存在/读取失败"sentinel，再校验值域 ∈{0,1}。仅不同包体类别（policy ∈ {4,6,8}）应用在**副模式**（ispcmode≠mainmode）下安装时做目录/key 前缀特殊处理；主模式及非双模式均不做处理。
+> 参数源：`persist.sceneboard.ispcmode`（生产 key 为 **bool**：true=2in1/false=tablet，`GetBoolParameter` 读取、存在性检查判缺失）+ `const.sceneboard.mainmode`（int：0=主tablet/1=主2in1）。mainmode `GetIntParameter(key, -1)` 用 -1 作"参数不存在/读取失败"sentinel，再校验值域 ∈{0,1}；ispcmode 归一化为 0/1/-1（-1=缺失）。测试注入 key `persist.bms.ispcmode` 仍为 int（缺失/非法两态可模拟）。仅不同包体类别（policy ∈ {4,6,8}）应用在**副模式**（ispcmode≠mainmode）下安装时做目录/key 前缀特殊处理；主模式及非双模式均不做处理。
 
 ### 目标和成功指标
 
@@ -94,6 +94,9 @@
 | 重启后按模式正确加载 | 副模式可查询到去前缀的同包名应用 | 重启测试 + 查询验证 |
 | 跨模式 odid 一致 | 两模式下 odid 相同 | odid 比对 |
 | 不同包体类别仅系统应用准入 | 非系统应用主/副模式装不同包体类别失败 | 安装测试 |
+| 模式独占策略安装准入 | MAIN_ONLY×副模式 / SUB_ONLY×主模式安装失败（8519947），匹配模式正常 | 安装测试 |
+| 预置两模式包体分发 | 预置目录两模式 hap 一次预置装出主/副两变体，切换后各自可见 | 预置 + 重启测试 |
+| 切换互斥快速失败 | 切换进行中提交安装/更新/卸载即拒（8519944），切换结束可重试成功 | 并发测试 |
 
 ### 用户故事与 AC
 
@@ -110,8 +113,14 @@
 | US-9 | 作为系统，需要在 BundleInfo 中持久化应用沙箱策略（数据模型） | P1 |
 | US-10 | 作为系统，需要副模式不同包体类别应用 appIndex 安装时一次置位 10000（单一数据源） | P1 |
 | US-11 | 作为系统，需要安装/更新广播携带沙箱策略且隔离粘性保持 | P1 |
+| US-12 | 作为上层分发调用方，需要经 TS 安装接口 parameters 保留 key 透传设备模式分发策略 | P1 |
+| US-13 | 作为系统，需要校验模式独占策略（MAIN_ONLY/SUB_ONLY）与当前模式匹配（不匹配拒绝 8519947） | P0 |
+| US-14 | 作为系统，需要预置目录含两模式 hap 的不同包体类别应用一次预置完成主/副两变体安装（ERMS 解析 + 两趟 fan-out），变体按所属模式入对应 map | P0 |
+| US-15 | 作为系统，需要安装/更新/卸载与模式切换互斥（切换中快速失败 8519944，不排队） | P0 |
+| US-16 | 作为上层查询调用方，需要双模式 clone 应用查询结果回显 appIndex=10000（查询 key 零改动） | P1 |
+| US-17 | 作为 TS 应用开发者，需要 `bundleManager.DeviceModeDistributionPolicy` 枚举 JS 运行时可用（9 命名值） | P1 |
 
-> AC-1~40 的 WHEN/THEN 完整定义见 [spec.md](./spec.md)。AC-36/37 为 AppSandboxPolicy 数据模型、AC-38 为 appIndex 单一数据源、AC-39/40 为广播沙箱策略+粘性+before 值。
+> AC-1~54 的 WHEN/THEN 完整定义见 [spec.md](./spec.md)。AC-36/37 为 AppSandboxPolicy 数据模型、AC-38 为 appIndex 单一数据源、AC-39/40 为广播沙箱策略+粘性+before 值、AC-41 为 TS 保留 key 透传、AC-42 为模式独占拦截（8519947）、AC-43/44 为预置 ERMS 两趟 fan-out 与跨模式变体存储、AC-45 为切换互斥（8519944）、AC-46 为查询结果回显 clone appIndex、AC-47 为 NAPI 枚举运行时注册；AC-48~54 为 2026-09-04 规则检视拆分项（自 AC-41/43/45/17 按单一可验证行为拆出，行为语义零变化：服务端越界降级/重复 key first-wins/ERMS 退化兜底/两趟独立失败/user-100 恢复/切换对称面/卸载事件 3 字段）。
 
 ### 范围边界
 
@@ -122,6 +131,11 @@
 - 目录前缀机制 `+clone-10000+bundleName`（封装 DualModeHelper 工具类）
 - 首次安装 / 更新场景区分与策略一致性校验（当前模式 + 跨 map）
 - 不同包体类别 仅系统应用准入（不分主副模式）
+- 模式独占策略安装准入（MAIN_ONLY×副模式 / SUB_ONLY×主模式拒绝 8519947）
+- 预置双模式分发安装：ERMS 策略解析（dlopen liberms_sdk.z.so）+ 主/副两趟 fan-out（`forceDualModeCloneInstall` 进程内字段，不走 IPC）+ 退化整目录单包兜底 + user-100 恢复带存储策略（免重查 ERMS）
+- 跨模式变体存储（IsCrossModeInstall → tempBundleInfos_，原名 key；含 MAIN_ONLY/SUB_ONLY 单模式应用）
+- 安装/更新/卸载与模式切换互斥接入（TryLockForBundleOperation + 队列两时点拒绝 + 10 直连入口 guard，8519944 快速失败；互斥本体与切换排他侧属需求二）
+- 卸载事件双模式字段（policy/currentMode/appSandboxPolicy 3 字段，无 before 值）
 - 目录轮转适配（`+new-`/`+old-` 改造、InstallExceptionMgr）
 - 数据库 key 前缀适配与按模式查询逻辑
 - 设备重启数据加载（BundleDataMgr 新增 tempBundleInfos_、按模式分类）
@@ -149,9 +163,36 @@
 | bundlemanager | bundlemanager_bundle_framework | 安装流程（base_bundle_installer / bundle_permission_mgr） | 修改（模式判断、前缀处理、策略校验、token/uid 隔离、appIndex 单一数据源、粘性沙箱） |
 | bundlemanager | bundlemanager_bundle_framework | InstalldService / InstalldOperator | 修改（目录命名、轮转适配） |
 | bundlemanager | bundlemanager_bundle_framework | InstallExceptionMgr / BundleExceptionHandler | 修改（前缀命名/异常恢复适配） |
-| bundlemanager | bundlemanager_bundle_framework | BundleDataMgr | 修改（新增 tempBundleInfos_、重启加载、key 查询、状态机） |
+| bundlemanager | bundlemanager_bundle_framework | BundleDataMgr | 修改（新增 tempBundleInfos_、重启加载、key 查询、状态机、跨模式变体入 temp 存储、TryLockForBundleOperation） |
+| bundlemanager | bundlemanager_bundle_framework | SystemBundleInstaller（预置分发） | 修改（ERMS 两趟 fan-out：主趟收窄 + 副趟 forceDualModeCloneInstall） |
+| bundlemanager | bundlemanager_bundle_framework | BundleInstallerManager / BundleInstallerHost（互斥接入） | 修改（队列两时点拒绝 + 10 直连入口 DualModeSwitchGuard） |
 | bundlemanager | bundlemanager_bundle_framework | 数据库层（installed_bundle / SkillsDescription / AppProvisionInfo / Router / BundleResource） | 修改（key 前缀适配） |
 | bundlemanager | bundlemanager_bundle_framework | 事件系统（安装事件） | 修改（扩展 5 双模式字段 + before 值） |
+| bundlemanager | bundlemanager_bundle_framework | 查询结果组装（InnerBundleInfo / BundleDataMgr / extend_resource） | 修改（clone 应用查询结果回显 appIndex=10000，查询 key 零改动） |
+| bundlemanager | bundlemanager_bundle_framework | NAPI 层（interfaces/kits/js/bundle_manager） | 修改（DeviceModeDistributionPolicy 枚举 9 命名值运行时注册） |
+
+### 1+8设备差异规格
+
+> 本特性核心即 1+8 设备形态中 2in1（PC）/tablet（PAD）两形态的双模式差异；主/副模式由 ispcmode/mainmode 参数对值判定（见「主副模式判断规则」基线锚点），非按设备类型硬编码分支。
+
+| 设备形态 | 行为差异 | 规格/约束 | 验证方式 |
+|----------|----------|-----------|----------|
+| 2in1（PC） | mainmode=1(2in1) 为主模式侧；ispcmode=0(tablet) 为副模式侧 | 主模式侧不同包体类别不隔离；副模式侧不同包体类别隔离安装（`+clone-10000+` 前缀） | 集成测试 |
+| tablet（PAD） | mainmode=0(tablet) 为主模式侧；ispcmode=1(2in1) 为副模式侧 | 同 2in1 对称：主模式侧不隔离、副模式侧隔离安装 | 集成测试 |
+| default（手机等其他形态） | ispcmode / mainmode 参数不存在或非法 | 非双模式设备，全部回退正常安装流程（AC-3/AC-12） | 集成测试 |
+
+> 未配置双模式参数的其余设备形态均走 default 行为；本特性不含按设备类型分支的其他 UI/交互差异。
+
+### DFX设计
+
+| 维度 | 设计 | 指标/阈值 | 验证方式 |
+|------|------|-----------|----------|
+| 可靠性 | 模式参数缺失/非法回退正常安装流程不阻塞（AC-3/AC-12/AC-33）；ERMS 不可用退化整目录单包预置（AC-50）；切换互斥快速失败可重试（AC-45，8519944） | 回退/退化路径功能用例全通过；8519944 拒绝后重试成功 | 功能测试 + 并发测试 |
+| 可维护性（问题定位） | 模式判断、前缀处理、互斥拒绝关键节点输出 hilog（BMS_TAG_INSTALLER） | 关键节点日志可按标签检索 | hilog 抓取 |
+| 资源（内存） | tempBundleInfos_ 增量按不可查询应用数量计，无额外放大 | 增量与应用数量线性、无放大 | hidumper |
+| 可测试性 | 模式判断支持测试注入 key（`persist.bms.ispcmode`，缺失/非法两态可模拟，design ADR-22 双路径） | 注入缺失/非法两态用例通过 | 单元测试 |
+
+> 指标证据收集与全量非功能回归属发布 Gate 范畴（与 spec.md「非功能需求」表口径一致，证据在发布阶段回填）。
 
 ### API 变更项清单
 
@@ -164,6 +205,8 @@
 | BundleInfo.appSandboxPolicy | 新增字段 | Public | 应用沙箱策略，默认 SHARED_SANDBOX(0) |
 | ERR_APPEXECFWK_INSTALL_DUAL_MODE_CATEGORY_CONFLICT | 新增错误码 | System | 不同包体类别互转/跨map冲突（8519943） |
 | ERR_APPEXECFWK_INSTALL_DUAL_MODE_NOT_SYSTEM_APP | 新增错误码 | System | 非系统应用装不同包体类别（8519942） |
+| ERR_APPEXECFWK_INSTALL_DUAL_MODE_POLICY_NOT_SUPPORTED | 新增错误码 | System | 模式独占策略与当前模式不匹配：MAIN_ONLY×副模式 / SUB_ONLY×主模式（8519947） |
+| ERR_APPEXECFWK_DUAL_MODE_SWITCH_BUSY | 共用错误码（需求二定义） | System | 模式切换进行中安装/更新/卸载快速失败（8519944，可重试；安装侧消费，完整语义见需求二） |
 
 ### 不涉及项确认
 

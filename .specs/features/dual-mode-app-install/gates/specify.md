@@ -1,57 +1,69 @@
 # 规格化阶段 Gate 检查 — FEAT-20260715-001
 
 > 对应 gate-checklist.md「二、规格化阶段」。命中 Profile：无。
-> 本 Gate 结论：**Approved**（design ADR-1~29 / spec AC-1~40 完整一致）。
+> 本 Gate 结论：**Approved（全量复核 AC-1~54 / ADR-1~36）** —— 检查表按当前 [spec.md](../spec.md) / [design.md](../design.md) 终态全量复核通过，用户批复批准（2026-09-04；同日规则检视修复轮将 AC-41/43/45/17 按单一可验证行为拆分出 **AC-48~54（行为语义零变化）**，范围由 AC-1~47 编辑性同步至 AC-1~54，用户批准同步）。
 
 ## 入口检查
 
 | 检查项 | 结果 | 证据/理由 |
 |--------|------|-----------|
-| Stage 1 已 Approved（前置） | ✅ | [define.md](./define.md) 总结论 Approved |
+| Stage 1 已 Approved（前置） | ✅ | [define.md](./define.md) 总结论 Approved（基线 v1.0，2026-07-15；范围追加经各阶段澄清显式批准） |
+| proposal.md API 变更项清单已填写或标记 N/A | ✅ | API 变更（2 枚举 / 3 字段 / 4 错误码 / parameters 保留 key）已评估，spec「API 变更分析」承接 |
+| design/spec 引用仓/模块列表与 proposal 影响范围一致 | ✅ | bundlemanager_bundle_framework 单仓，三文档一致 |
 
-## 设计检查
+## 设计检查（标准复杂度：含新 Public API 与分层决策，不满足跳过条件，全量检查）
 
 | 检查项 | 结果 | 证据/理由 |
 |--------|------|-----------|
-| design.md 覆盖 P0/P1 AC | ✅ | ADR-1~29（[design.md](../design.md)） |
-| 不涉及项已承接，N/A 与展开项都有结论 | ✅ | design.md「不涉及项承接」 |
-| 涉及仓和模块职责清楚 | ✅ | bundlemanager_bundle_framework 单仓 |
-| 分层和子系统边界合规 | ✅ | BMS 经 IPC 调 installd（SA 511） |
-| API 变更有签名/权限/错误码/兼容性说明 | ✅ | DeviceModeDistributionPolicy + AppSandboxPolicy 枚举 + BundleInfo/InstallParam 字段 + 错误码 8519943/8519942 |
-| BUILD.gn/bundle.json 影响明确 | ✅ | 新增 dual_mode_helper.cpp 源 |
-| 关键设计决策有理由和影响说明 | ✅ | ADR-1~29 每条含问题/方案/取舍/影响 |
+| 分层调用合规（应用→框架→服务→内核） | ✅ | BMS 经 IPC 调 installd（SA 511）执行特权文件操作，无直做 |
+| 无跨层违规调用（除非 SA 代理） | ✅ | ERMS dlopen `liberms_sdk.z.so` 仅预置路径（ADR-32，架构约束表）；TS 侧经 NAPI/ANI 适配层 |
+| 子系统边界清晰、依赖已声明 | ✅ | 单仓内 BMS 服务闭环；与需求二（模式切换）仅互斥锁 + 错误码 8519944 共用面，已声明 |
+| API 命名和参数符合 OH 规范 | ✅ | DeviceModeDistributionPolicy / AppSandboxPolicy 枚举 + BundleInfo/InstallParam 字段，参数规约见 design「API 签名、Kit 与权限」 |
+| 错误码不与已有子系统冲突 | ✅ | 8519942 / 8519943 / 8519944（需求二定义、安装侧消费）/ 8519947，对外映射 status_receiver_proxy，无冲突 |
+| 数据模型定义完整 | ✅ | 枚举值域（0~8 / 0~1）、序列化（Parcel+JSON）、默认值兜底（AC-2/18/37）齐备 |
+| 构建系统影响已评估（BUILD.gn / bundle.json） | ✅ | dual_mode_helper.cpp 等源文件（implement.md TASK 清单） |
+| 涉及 IPC/异步调用时，超时行为已定义 | N/A | 无新增异步等待面；切换互斥为同步快速失败（EX-7，try 不等待、无超时） |
+| 涉及 Public/System API 变更时，接口参数规约已填写 | ✅ | 新增 Public 枚举/字段 5 项 + 错误码 4 项（spec「API 变更分析」） |
 
 ## 一致性检查（design.md × spec.md 交叉校验）
 
 | 检查项 | 结果 | 证据/理由 |
 |--------|------|-----------|
-| 每个 ADR 有对应 AC，反之亦然 | ✅ | ADR-26↔AC-34、ADR-27↔AC-35、ADR-28↔AC-38、ADR-29↔AC-39/40 等 |
-| 无多余/遗漏实现 | ✅ | AC-1~40 全部由 ADR-1~29 覆盖 |
+| 涉及仓和模块名称一致 | ✅ | 单仓 bundlemanager_bundle_framework，两文档一致 |
+| 每个 ADR 有对应 AC，反之亦然 | ✅ | ADR-1~36 ↔ AC-1~54 全覆盖：ADR-26↔AC-34、ADR-27↔AC-35、ADR-28↔AC-38、ADR-29↔AC-39/40/54、ADR-30↔AC-41/48/49、ADR-31↔AC-42、ADR-32↔AC-43/50/51/52、ADR-33↔AC-44、ADR-34↔AC-45/53、ADR-35↔AC-46、ADR-36↔AC-47（AC-48~54 为拆分项，映射承袭原 AC 的 ADR 对应） |
+| API 名称和变更类型一致 | ✅ | spec 列变更项、design 给签名细节，两文档同批对照代码终态（`fix_dual_doc` HEAD `bcbfe06a9`）刷新 |
+| 架构约束不矛盾 | ✅ | spec「架构约束」6 条 ↔ design ADR：SA 511 / 前缀 key / 加载去前缀 / 锁序（ADR-34）/ ERMS 仅预置（ADR-32）/ 直读不缓存（ADR-10） |
+| 不涉及项结论一致 | ✅ | 卸载主路径留专项、多用户不在范围、需求二边界——两文档同口径 |
 
 ## Spec 检查
 
 | 检查项 | 结果 | 证据/理由 |
 |--------|------|-----------|
-| 所有 AC 使用 WHEN/THEN 格式，可独立测试 | ✅ | spec.md AC-1~40 |
-| 范围边界明确（做什么/不做什么清晰） | ✅ | proposal.md / spec.md 范围边界 |
-| 无语义模糊表述 | ✅ | — |
-| AC 与业务/异常/恢复规则交叉一致 | ✅ | BR/FR/EX/RC 表与 AC 对齐 |
+| 用户故事和 AC 完整 | ✅ | US-1~17 / AC-1~54，全部 WHEN/THEN 格式、可独立测试（AC-48~54 为 2026-09-04 规则检视拆分项，每条单一可验证行为） |
+| AC 覆盖正常/异常/边界 | ✅ | 正常（AC-1/4/7/11…）/ 异常（EX-1~8 对应 AC-3/8/18/33/34/35/37/42/43/45）/ 边界（参数缺失/非法、缺字段兜底、值域越界） |
+| Spec 中无 InnerKit 接口定义、内部实现流程或框架层实现细节 | ✅（裁剪豁免） | spec 头部裁剪声明：代码锚点（类名/方法/文件行号）仅作实现追溯与验证定位，权威定义在 design.md；本特性代码先行、文档对照终态同步演进，锚点保证 AC 可对照代码核对 |
+| API 变更分析完整（如有）：入参概要、返回值、错误码、开放范围 | ✅ | 新增 API 5 项 + 新增错误码 4 项（含对外映射）+ 变更/废弃 API 5 项（含迁移指引） |
+| 兼容性声明完整 | ✅ | 广播 Want key 更名（isSharedSandbox→appSandboxPolicy + 2 个 before key）显式标注为对外契约变更；老数据缺字段默认值兜底；最低支持版本明确 |
+| 非功能需求有指标或明确 N/A（含功耗和多设备差异） | ✅ | 内存/问题定位/可靠性 3 项有指标（证据待发布 Gate 收集）；多设备差异表（2in1/tablet/default）在位；功耗 N/A（proposal 不涉及项） |
+| 全局特性影响已筛选 | ✅ | 7 项全筛，仅版本升级=是（AC-18 存量默认类别），其余 N/A 有结论 |
+| 上下文引用完整 | ✅ | context-references + 关键文档 3 份（方案文档/proposal/design） |
 
 ## 出口检查
 
 | 检查项 | 结果 | 证据/理由 |
 |--------|------|-----------|
-| 上述全项通过 | ✅ | design + spec 完整、一致 |
+| 上述全项通过 | ✅ | design + spec 完整、交叉一致（全量 AC-1~54 / ADR-1~36）；追溯表规则列无空洞（FR-1~24 / EX-1~8 / RC-1 全覆盖 54 条 AC）；spec 规则检视（ohos-test-spec-rule-checking 46 条）复检通过（2026-09-04，[spec-check-report.md](../spec-check-report.md)） |
 
 ## 总结论
 
-**Approved** — design ADR-1~29 / spec AC-1~40 完整、交叉一致。AC-1~35 `_04` 编译验证通过 + AC-1~21 运行 PASS（2026-07-18）；AC-36~40 代码已落地（`14eb7f286`）待集成环境编译/单测验证。代码静态核对见 [review.md](../review.md)。
+**Approved** —— 检查表全项通过，覆盖当前 spec.md（AC-1~54 / US-1~17 / FR-1~24 / EX-1~8 / RC-1）与 design.md（ADR-1~36）终态；需求方 2026-09-04 批复批准（AC-1~47），同日规则检视修复轮拆分 AC-48~54（行为零变化）经用户批准同步刷新范围。
 
 ## Approval 记录
 
 | 字段 | 内容 |
 |----|------|
 | 阶段 | 规格化 |
-| 决策 | Approved |
+| 决策 | Approved（本表为 AC-1~54 / ADR-1~36 全量口径：AC-1~47 为 2026-09-04 全量复核批准；AC-48~54 为同日规则检视拆分项（自 AC-41/43/45/17 拆出、行为语义零变化），用户批准编辑性同步；原 AC-1~40 批准见前次记录与 git 历史） |
 | 审查人 | 用户 |
-| 证据 | design.md / spec.md 审阅通过；ADR-1~29 / AC-1~40 范围均已纳入 |
+| 批准日期 | 2026-09-04 |
+| 证据 | spec.md / design.md 对照代码基线 `fix_dual_doc` HEAD `bcbfe06a9` 全量交叉核对；本文检查表全项 ✅；用户会话批复"批准 (Y)"（AC-1~47 复核）+"全部同步"（AC-48~54 拆分同步）；spec 规则检视复检 ✅ 可进入测试设计（spec-check-report.md，2026-09-04） |
