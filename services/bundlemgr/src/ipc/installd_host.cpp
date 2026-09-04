@@ -200,6 +200,9 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::GET_APP_DATA_FILE_CATEGORY_STATS):
             result = this->HandleGetAppDataFileCategoryStats(data, reply);
             break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::GET_APP_DATA_DIR_CATEGORY_SIZES):
+            result = this->HandleGetAppDataDirCategorySizes(data, reply);
+            break;
         case static_cast<uint32_t>(InstalldInterfaceCode::MOVE_FILE):
             result = this->HandleMoveFile(data, reply);
             break;
@@ -1003,6 +1006,29 @@ bool InstalldHost::HandleGetAppDataFileCategoryStats(MessageParcel &data, Messag
     LOG_NOFUNC_D(BMS_TAG_INSTALLD, "HandleGetAppDataFileCategoryStats: returned JSON string, size: %{public}zu",
         categoryStatsJson.size());
 
+    return true;
+}
+
+bool InstalldHost::HandleGetAppDataDirCategorySizes(MessageParcel &data, MessageParcel &reply)
+{
+    std::string bundleName = Str16ToStr8(data.ReadString16());
+    int32_t appIndex = data.ReadInt32();
+    int32_t userId = data.ReadInt32();
+    int32_t timeout = data.ReadInt32();
+
+    LOG_NOFUNC_D(BMS_TAG_INSTALLD,
+        "GetDirCategorySizes -n %{public}s, -a %{public}d, -u %{public}d, -t %{public}d",
+        bundleName.c_str(), appIndex, userId, timeout);
+
+    int64_t cacheSize = 0;
+    int64_t filesSize = 0;
+    int64_t databaseSize = 0;
+    ErrCode result = GetAppDataDirCategorySizes(bundleName, appIndex, userId, timeout,
+        cacheSize, filesSize, databaseSize);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int64, reply, cacheSize);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int64, reply, filesSize);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int64, reply, databaseSize);
     return true;
 }
 

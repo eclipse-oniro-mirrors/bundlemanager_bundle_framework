@@ -283,6 +283,9 @@ struct EventInfo {
     std::vector<uint64_t> partitionSize;
     std::string largeFiles;
     std::string topCategory;
+    int64_t cacheDataSize = 0;
+    int64_t filesDataSize = 0;
+    int64_t databaseDataSize = 0;
 
     void Reset()
     {
@@ -343,6 +346,9 @@ struct EventInfo {
         uidList.clear();
         largeFiles.clear();
         topCategory.clear();
+        cacheDataSize = 0;
+        filesDataSize = 0;
+        databaseDataSize = 0;
         userIdList.clear();
         appIndexList.clear();
         callingUidList.clear();
@@ -537,7 +543,8 @@ public:
 
     static void SendLargeFilesMonitorEvent(const std::string &bundleName,
         int32_t userId, int32_t appIndex, const std::string &largeFiles,
-        const std::string &topCategory = "");
+        const std::string &topCategory = "",
+        int64_t cacheDataSize = 0, int64_t filesDataSize = 0, int64_t databaseDataSize = 0);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

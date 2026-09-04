@@ -5082,6 +5082,57 @@ bool InstalldOperator::GetAppDataFileCategoryStats(const std::vector<std::string
     return true;
 }
 
+bool InstalldOperator::GetDirCategorySizes(const std::vector<std::string> &cacheDirPaths,
+    const std::vector<std::string> &filesDirPaths,
+    const std::vector<std::string> &databaseDirPaths,
+    const int32_t timeout,
+    int64_t &cacheSize, int64_t &filesSize, int64_t &databaseSize)
+{
+    cacheSize = 0;
+    filesSize = 0;
+    databaseSize = 0;
+
+    // Clamp timeout to [NFTW_TIMEOUT_MIN_SECONDS, NFTW_TIMEOUT_MAX_SECONDS] to avoid unbounded scans,
+    // same as GetAppDataFileCategoryStats.
+    const int32_t actualTimeout = (timeout <= NFTW_TIMEOUT_MIN_SECONDS) ? NFTW_TIMEOUT_MIN_SECONDS :
+        ((timeout > NFTW_TIMEOUT_MAX_SECONDS) ? NFTW_TIMEOUT_MAX_SECONDS : timeout);
+    g_dirSizeDeadline = std::chrono::steady_clock::now() + std::chrono::seconds(actualTimeout);
+    DirSizeDeadlineGuard deadlineGuard;
+
+    // One shared cache across the three groups. The deadline is global to this call: the cache
+    // group is summed first, on timeout the remaining groups contribute 0 (partial result by
+    // design, same semantics as the other idle scans).
+    std::unordered_map<std::string, uint64_t> dirSizeCache;
+    for (const auto &path : cacheDirPaths) {
+        cacheSize += static_cast<int64_t>(CalculateDirectorySizeWithCache(path, dirSizeCache));
+    }
+    for (const auto &path : filesDirPaths) {
+        filesSize += static_cast<int64_t>(CalculateDirectorySizeWithCache(path, dirSizeCache));
+    }
+    for (const auto &path : databaseDirPaths) {
+        databaseSize += static_cast<int64_t>(CalculateDirectorySizeWithCache(path, dirSizeCache));
+    }
+    // Aggregate-level partial-result marker (same signal as phase1Truncated in
+    // GetTopNLargestItemsInAppDataDir): the per-directory WARNs come from
+    // CalculateDirectorySizeWithCache; this one lets a single grep tell whether the
+    // reported triple is partial. g_dirSizeTimedOut is reset by the guard's ctor and
+    // only set on deadline, so reading it here reflects exactly this call.
+    if (g_dirSizeTimedOut) {
+        LOG_NOFUNC_W(BMS_TAG_INSTALLD,
+            "GetDirCategorySizes: timed out, partial result: cache=%{public}lld files=%{public}lld "
+            "db=%{public}lld",
+            static_cast<long long>(cacheSize), static_cast<long long>(filesSize),
+            static_cast<long long>(databaseSize));
+    }
+    LOG_NOFUNC_I(BMS_TAG_INSTALLD,
+        "GetDirCategorySizes: cacheDirs=%{public}zu filesDirs=%{public}zu dbDirs=%{public}zu "
+        "cacheSize=%{public}lld filesSize=%{public}lld dbSize=%{public}lld",
+        cacheDirPaths.size(), filesDirPaths.size(), databaseDirPaths.size(),
+        static_cast<long long>(cacheSize), static_cast<long long>(filesSize),
+        static_cast<long long>(databaseSize));
+    return true;
+}
+
 std::string InstalldOperator::AnonymizePath(const std::string &path)
 {
     if (path.empty()) {

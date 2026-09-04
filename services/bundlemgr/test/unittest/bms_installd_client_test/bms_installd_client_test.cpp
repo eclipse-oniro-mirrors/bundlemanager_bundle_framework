@@ -2184,5 +2184,23 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CheckHspPluginCertValidity
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_CheckHspPluginCertValidity_0100 end";
 }
+
+/**
+ * @tc.number: BmsInstalldClientTest_GetAppDataDirCategorySizes_0100
+ * @tc.name: empty bundleName returns PARAM_ERROR
+ * @tc.desc: 1. bundleName is empty
+ *           2. client rejects before IPC, returns ERR_APPEXECFWK_INSTALLD_PARAM_ERROR
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetAppDataDirCategorySizes_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_GetAppDataDirCategorySizes_0100 start";
+    int64_t cacheSize = 0;
+    int64_t filesSize = 0;
+    int64_t databaseSize = 0;
+    ErrCode result = installClient_->GetAppDataDirCategorySizes("", 0, 100, 30,
+        cacheSize, filesSize, databaseSize);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_GetAppDataDirCategorySizes_0100 end";
+}
 } // namespace AppExecFwk
 } // namespace OHOS

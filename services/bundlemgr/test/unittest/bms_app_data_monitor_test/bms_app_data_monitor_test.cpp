@@ -1234,6 +1234,85 @@ HWTEST_F(BmsAppDataMonitorTest, AppDataMonitor_ScanTopApps_ReportCap_0200, Funct
 }
 
 /**
+ * @tc.number: AppDataMonitor_ReportFileCategoryEvent_WithDirSizes_0100
+ * @tc.name: ReportFileCategoryEvent carries dir sizes and stamps report time
+ * @tc.desc: 1. call ReportFileCategoryEvent directly with fixed sizes
+ *           2. no crash; lastLargeFilesReportTime_ stamped (report path executed)
+ */
+HWTEST_F(BmsAppDataMonitorTest, AppDataMonitor_ReportFileCategoryEvent_WithDirSizes_0100,
+    Function | SmallTest | Level0)
+{
+    auto monitor = DelayedSingleton<AppDataMonitor>::GetInstance();
+    ASSERT_NE(monitor, nullptr);
+    monitor->lastLargeFilesReportTime_ = std::chrono::steady_clock::time_point{};
+
+    constexpr int64_t cacheSize = 111;
+    constexpr int64_t filesSize = 222;
+    constexpr int64_t databaseSize = 333;
+    monitor->ReportFileCategoryEvent("com.test.dirsize", TEST_USER_ID, 0,
+        R"({"extensions":[]})", cacheSize, filesSize, databaseSize);
+
+    EXPECT_NE(monitor->lastLargeFilesReportTime_, std::chrono::steady_clock::time_point{});
+}
+
+/**
+ * @tc.number: AppDataMonitor_ScanTopApps_DirSizesSeam_0100
+ * @tc.name: ScanTopApps with seam on exercises both IPCs per app
+ * @tc.desc: 1. SCAN_FILE_CATEGORY_TEST_PARAM on so both installd mocks succeed
+ *           2. 3 apps; all reported, no crash (sizes flow through the report path)
+ */
+HWTEST_F(BmsAppDataMonitorTest, AppDataMonitor_ScanTopApps_DirSizesSeam_0100, Function | SmallTest | Level0)
+{
+    auto monitor = DelayedSingleton<AppDataMonitor>::GetInstance();
+    ASSERT_NE(monitor, nullptr);
+
+    OHOS::system::SetParameter(ServiceConstants::SCAN_FILE_CATEGORY_TEST_PARAM, "true");
+    monitor->stopFileCategoryRequested_.store(false);
+    monitor->reportedFileCategoryCountInScan_ = 0;
+
+    std::vector<std::pair<std::string, int64_t>> sortedApps;
+    for (int i = 0; i < 3; ++i) {
+        sortedApps.emplace_back("com.test.dirsize" + std::to_string(i), 1024 * (3 - i));
+    }
+    monitor->ScanTopApps(TEST_USER_ID, sortedApps);
+
+    EXPECT_EQ(monitor->reportedFileCategoryCountInScan_, 3);
+    EXPECT_FALSE(monitor->isFileCategoryScanning_.load());
+
+    OHOS::system::SetParameter(ServiceConstants::SCAN_FILE_CATEGORY_TEST_PARAM, "false");
+}
+
+/**
+ * @tc.number: AppDataMonitor_ScanTopApps_DirSizesFailSeam_0100
+ * @tc.name: sizes IPC failure does not drop the report event
+ * @tc.desc: 1. stats seam on but sizes fail seam on (GetAppDataDirCategorySizes returns error)
+ *           2. ScanTopApps still reports every app (zero sizes fallback, spec 4.5)
+ *           3. all 3 apps reported, no crash
+ */
+HWTEST_F(BmsAppDataMonitorTest, AppDataMonitor_ScanTopApps_DirSizesFailSeam_0100, Function | SmallTest | Level0)
+{
+    auto monitor = DelayedSingleton<AppDataMonitor>::GetInstance();
+    ASSERT_NE(monitor, nullptr);
+
+    OHOS::system::SetParameter(ServiceConstants::SCAN_FILE_CATEGORY_TEST_PARAM, "true");
+    OHOS::system::SetParameter(ServiceConstants::SCAN_DIR_SIZES_FAIL_TEST_PARAM, "true");
+    monitor->stopFileCategoryRequested_.store(false);
+    monitor->reportedFileCategoryCountInScan_ = 0;
+
+    std::vector<std::pair<std::string, int64_t>> sortedApps;
+    for (int i = 0; i < 3; ++i) {
+        sortedApps.emplace_back("com.test.dirsizefail" + std::to_string(i), 1024 * (3 - i));
+    }
+    monitor->ScanTopApps(TEST_USER_ID, sortedApps);
+
+    EXPECT_EQ(monitor->reportedFileCategoryCountInScan_, 3);
+    EXPECT_FALSE(monitor->isFileCategoryScanning_.load());
+
+    OHOS::system::SetParameter(ServiceConstants::SCAN_DIR_SIZES_FAIL_TEST_PARAM, "false");
+    OHOS::system::SetParameter(ServiceConstants::SCAN_FILE_CATEGORY_TEST_PARAM, "false");
+}
+
+/**
  * @tc.number: AppDataMonitor_ReportFileCategoryEvent_0100
  * @tc.name: ReportFileCategoryEvent forwards to EventReport without throwing
  * @tc.desc: 1. invoke the private reporter directly with sample args
@@ -1256,7 +1335,7 @@ HWTEST_F(BmsAppDataMonitorTest, AppDataMonitor_ReportFileCategoryEvent_0100, Fun
     EXPECT_EQ(parsedExts[0]["extension"].get<std::string>(), "so");
     EXPECT_EQ(parsedExts[0]["totalSize"].get<uint64_t>(), 1024u);
 
-    EXPECT_NO_THROW(monitor->ReportFileCategoryEvent(SYSTEM_APP_BUNDLE, TEST_USER_ID, 0, input));
+    EXPECT_NO_THROW(monitor->ReportFileCategoryEvent(SYSTEM_APP_BUNDLE, TEST_USER_ID, 0, input, 0, 0, 0));
 }
 
 /**
@@ -1293,7 +1372,7 @@ HWTEST_F(BmsAppDataMonitorTest, AppDataMonitor_ReportFileCategoryEvent_0200, Fun
     monitor->ExtractTopFileCategories(input, topExts, topExtsWithDirs);
     ASSERT_GT(topExtsWithDirs.size(), AppDataMonitor::MAX_FILE_CATEGORY_PAYLOAD_LENGTH);
 
-    EXPECT_NO_THROW(monitor->ReportFileCategoryEvent(SYSTEM_APP_BUNDLE, TEST_USER_ID, 0, input));
+    EXPECT_NO_THROW(monitor->ReportFileCategoryEvent(SYSTEM_APP_BUNDLE, TEST_USER_ID, 0, input, 0, 0, 0));
 }
 
 /**

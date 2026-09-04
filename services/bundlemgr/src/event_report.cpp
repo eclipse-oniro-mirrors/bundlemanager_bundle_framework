@@ -351,7 +351,8 @@ void EventReport::SendSystemEvent(BMSEventType bmsEventType, const EventInfo& ev
 
 void EventReport::SendLargeFilesMonitorEvent(const std::string &bundleName,
     int32_t userId, int32_t appIndex, const std::string &largeFiles,
-    const std::string &topCategory)
+    const std::string &topCategory,
+    int64_t cacheDataSize, int64_t filesDataSize, int64_t databaseDataSize)
 {
     EventInfo eventInfo;
     eventInfo.bundleName = bundleName;
@@ -359,6 +360,9 @@ void EventReport::SendLargeFilesMonitorEvent(const std::string &bundleName,
     eventInfo.appIndex = appIndex;
     eventInfo.largeFiles = largeFiles;
     eventInfo.topCategory = topCategory;
+    eventInfo.cacheDataSize = cacheDataSize;
+    eventInfo.filesDataSize = filesDataSize;
+    eventInfo.databaseDataSize = databaseDataSize;
     EventReport::SendSystemEvent(BMSEventType::BUNDLE_LARGE_FILES_MONITOR, eventInfo);
 }
 }  // namespace AppExecFwk

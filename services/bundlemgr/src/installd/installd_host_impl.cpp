@@ -18,6 +18,8 @@
 #include <chrono>
 #include <cinttypes>
 #include <cstdio>
+#include <cstring>
+#include <dirent.h>
 #include <filesystem>
 #include <fstream>
 #include <future>
@@ -1487,6 +1489,69 @@ std::string InstalldHostImpl::GetAppDataPath(const std::string &bundleName, cons
     }
 }
 
+// List immediate subdirectories of dirPath (skipping "." and ".."); used to enumerate
+// base/<bundle>/haps/<moduleName> dirs from disk instead of BMS metadata (design D3).
+static void ListSubDirs(const std::string &dirPath, std::vector<std::string> &subDirs)
+{
+    DIR *dir = opendir(dirPath.c_str());
+    if (dir == nullptr) {
+        return;
+    }
+    struct dirent *entry = nullptr;
+    while ((entry = readdir(dir)) != nullptr) {
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
+            continue;
+        }
+        std::string subDir = dirPath + ServiceConstants::PATH_SEPARATOR + entry->d_name;
+        struct stat statBuf;
+        if (lstat(subDir.c_str(), &statBuf) == 0 && S_ISDIR(statBuf.st_mode)) {
+            subDirs.emplace_back(subDir);
+        }
+    }
+    closedir(dir);
+}
+
+// Append haps/<module>/{cache,files} paths for every module dir enumerated under hapsDir.
+// "files" has no named constant in BMS (BUNDLE_DATA_DIR uses the literal); keep it here.
+static void AppendHapsSubDirPaths(const std::string &hapsDir,
+    std::vector<std::string> &cacheDirPaths, std::vector<std::string> &filesDirPaths)
+{
+    std::vector<std::string> moduleDirs;
+    ListSubDirs(hapsDir, moduleDirs);
+    for (const auto &moduleDir : moduleDirs) {
+        cacheDirPaths.push_back(moduleDir + ServiceConstants::PATH_SEPARATOR + Constants::CACHE_DIR);
+        filesDirPaths.push_back(moduleDir + ServiceConstants::PATH_SEPARATOR + "files");
+    }
+}
+
+// Build the cache/files/database dir path groups for one bundle (spec 4.3 / D3 / D5):
+// el1-el5 database/<bn> whole dirs, and el2-only sharefiles/<bn>/{cache,files} plus
+// sharefiles/<bn>/haps/<module>/{cache,files} (matches GetAppCacheSize / BundleCacheMgr).
+static void BuildAppDataDirCategoryPaths(const std::string &bundleNameDir, const int32_t userId,
+    std::vector<std::string> &cacheDirPaths, std::vector<std::string> &filesDirPaths,
+    std::vector<std::string> &databaseDirPaths)
+{
+    std::vector<std::string> elPath(ServiceConstants::BUNDLE_EL);
+    elPath.push_back(ServiceConstants::DIR_EL5);
+    for (const auto &el : elPath) {
+        std::string elRoot = std::string(ServiceConstants::BUNDLE_APP_DATA_BASE_DIR) + el +
+            ServiceConstants::PATH_SEPARATOR + std::to_string(userId);
+        std::string baseDir = elRoot + ServiceConstants::BASE + bundleNameDir;
+        cacheDirPaths.push_back(baseDir + ServiceConstants::PATH_SEPARATOR + Constants::CACHE_DIR);
+        filesDirPaths.push_back(baseDir + ServiceConstants::PATH_SEPARATOR + "files");
+        databaseDirPaths.push_back(elRoot + ServiceConstants::DATABASE + bundleNameDir);
+        AppendHapsSubDirPaths(baseDir + ServiceConstants::HAPS, cacheDirPaths, filesDirPaths);
+        if (ServiceConstants::BUNDLE_EL[1] == el) {
+            // sharefiles exists in el2 only (CreateSharefilesDataDirEl2); included to match
+            // GetAppCacheSize / BundleCacheMgr accounting (design D5).
+            std::string sharefilesDir = elRoot + ServiceConstants::SHAREFILES + bundleNameDir;
+            cacheDirPaths.push_back(sharefilesDir + ServiceConstants::PATH_SEPARATOR + Constants::CACHE_DIR);
+            filesDirPaths.push_back(sharefilesDir + ServiceConstants::PATH_SEPARATOR + "files");
+            AppendHapsSubDirPaths(sharefilesDir + ServiceConstants::HAPS, cacheDirPaths, filesDirPaths);
+        }
+    }
+}
+
 int64_t InstalldHostImpl::GetAppCacheSize(const std::string &bundleName,
     const int32_t userId, const int32_t appIndex, const std::vector<std::string> &moduleNameList)
 {
@@ -1666,6 +1731,57 @@ ErrCode InstalldHostImpl::GetAppDataFileCategoryStats(const std::string &bundleN
         "appIndex=%{public}d, userId=%{public}d, found %{public}zu extensions, cost: %{public}lld ms",
         bundleName.c_str(), appIndex, userId, extTotalSizes.size(), static_cast<long long>(duration));
 
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::GetAppDataDirCategorySizes(const std::string &bundleName, const int32_t appIndex,
+    const int32_t userId, const int32_t timeout,
+    int64_t &cacheSize, int64_t &filesSize, int64_t &databaseSize)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "GetDirCategorySizes: installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    auto startTime = std::chrono::steady_clock::now();
+    LOG_NOFUNC_I(BMS_TAG_INSTALLD,
+        "GetDirCategorySizes -n %{public}s, -a %{public}d, -u %{public}d, -t %{public}d",
+        bundleName.c_str(), appIndex, userId, timeout);
+
+    cacheSize = 0;
+    filesSize = 0;
+    databaseSize = 0;
+    if (!InstalldOperator::IsFileNameValid(bundleName)) {
+        LOG_NOFUNC_E(BMS_TAG_INSTALLD, "GetDirCategorySizes: bundleName is invalid");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    if (userId < 0) {
+        LOG_NOFUNC_E(BMS_TAG_INSTALLD, "GetDirCategorySizes: invalid userId=%{public}d", userId);
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    std::string bundleNameDir = bundleName;
+    if (appIndex > 0) {
+        bundleNameDir = BundleCloneCommonHelper::GetCloneDataDir(bundleName, appIndex);
+    }
+    std::vector<std::string> cacheDirPaths;
+    std::vector<std::string> filesDirPaths;
+    std::vector<std::string> databaseDirPaths;
+    BuildAppDataDirCategoryPaths(bundleNameDir, userId, cacheDirPaths, filesDirPaths, databaseDirPaths);
+
+    if (!InstalldOperator::GetDirCategorySizes(cacheDirPaths, filesDirPaths, databaseDirPaths,
+        timeout, cacheSize, filesSize, databaseSize)) {
+        LOG_NOFUNC_E(BMS_TAG_INSTALLD, "GetDirCategorySizes: InstalldOperator scan failed");
+        return ERR_APPEXECFWK_INSTALL_STAT_FILE_FAILED;
+    }
+
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::steady_clock::now() - startTime).count();
+    LOG_NOFUNC_I(BMS_TAG_INSTALLD,
+        "GetDirCategorySizes: success, bundleName=%{public}s, appIndex=%{public}d, userId=%{public}d, "
+        "cache=%{public}lld, files=%{public}lld, db=%{public}lld, cost: %{public}lld ms",
+        bundleName.c_str(), appIndex, userId,
+        static_cast<long long>(cacheSize), static_cast<long long>(filesSize),
+        static_cast<long long>(databaseSize), static_cast<long long>(duration));
     return ERR_OK;
 }
 

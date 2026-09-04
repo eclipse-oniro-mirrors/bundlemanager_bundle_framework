@@ -769,6 +769,40 @@ ErrCode InstalldClient::GetAppDataFileCategoryStats(const std::string &bundleNam
         extStatsJson);
 }
 
+// Sentinel sizes returned by the scan_file_category test seam below; each must stay distinct so a
+// mis-wired output parameter would stand out when tests inspect the reported values.
+namespace {
+constexpr int64_t TEST_SEAM_CACHE_SIZE = 111;
+constexpr int64_t TEST_SEAM_FILES_SIZE = 222;
+constexpr int64_t TEST_SEAM_DATABASE_SIZE = 333;
+}  // namespace
+
+ErrCode InstalldClient::GetAppDataDirCategorySizes(const std::string &bundleName, const int32_t appIndex,
+    const int32_t userId, const int32_t timeout,
+    int64_t &cacheSize, int64_t &filesSize, int64_t &databaseSize)
+{
+    if (bundleName.empty()) {
+        APP_LOGE_NOFUNC("GetDirCategorySizes: bundleName is empty");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    // Opt-in test seam shared with GetAppDataFileCategoryStats: only bms_app_data_monitor_test sets
+    // persist.bms.test.scan_file_category. Fixed sizes let the monitor's report path carry the three
+    // INT64 fields in unit tests. Every other test target keeps the CallService-failure behaviour.
+    if (OHOS::system::GetBoolParameter(ServiceConstants::SCAN_FILE_CATEGORY_TEST_PARAM, false)) {
+        // Independent failure switch so a test can exercise the monitor's "sizes failed -> report
+        // the event with zero sizes" path while the extension-stats seam still succeeds.
+        if (OHOS::system::GetBoolParameter(ServiceConstants::SCAN_DIR_SIZES_FAIL_TEST_PARAM, false)) {
+            return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+        }
+        cacheSize = TEST_SEAM_CACHE_SIZE;
+        filesSize = TEST_SEAM_FILES_SIZE;
+        databaseSize = TEST_SEAM_DATABASE_SIZE;
+        return ERR_OK;
+    }
+    return CallService(&IInstalld::GetAppDataDirCategorySizes, bundleName, appIndex, userId, timeout,
+        cacheSize, filesSize, databaseSize);
+}
+
 ErrCode InstalldClient::DeleteOldCacheFiles(
     const std::vector<std::string> &paths, const uint64_t cacheSize, uint64_t &cleanedSize)
 {

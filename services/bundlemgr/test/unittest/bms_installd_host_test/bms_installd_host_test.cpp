@@ -1170,6 +1170,146 @@ HWTEST_F(BmsInstalldHostTest, InstalldHostImpl_GetAppDataFileCategoryStats_0300,
 }
 
 /**
+ * @tc.number: InstalldHostImpl_GetAppDataDirCategorySizes_0100
+ * @tc.name: invalid bundleName returns PARAM_ERROR
+ * @tc.desc: 1. bundleName contains path traversal chars
+ *           2. IsFileNameValid fails, returns ERR_APPEXECFWK_INSTALLD_PARAM_ERROR
+ */
+HWTEST_F(BmsInstalldHostTest, InstalldHostImpl_GetAppDataDirCategorySizes_0100, Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    int64_t cacheSize = 1;
+    int64_t filesSize = 1;
+    int64_t databaseSize = 1;
+    ErrCode ret = hostImpl.GetAppDataDirCategorySizes("abc/../etc", 0, 100, 30, cacheSize, filesSize, databaseSize);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    EXPECT_EQ(cacheSize, 0);
+    EXPECT_EQ(filesSize, 0);
+    EXPECT_EQ(databaseSize, 0);
+}
+
+/**
+ * @tc.number: InstalldHostImpl_GetAppDataDirCategorySizes_0200
+ * @tc.name: invalid userId returns PARAM_ERROR
+ * @tc.desc: 1. valid bundleName but userId < 0
+ *           2. returns ERR_APPEXECFWK_INSTALLD_PARAM_ERROR
+ */
+HWTEST_F(BmsInstalldHostTest, InstalldHostImpl_GetAppDataDirCategorySizes_0200, Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    int64_t cacheSize = 1;
+    int64_t filesSize = 1;
+    int64_t databaseSize = 1;
+    ErrCode ret = hostImpl.GetAppDataDirCategorySizes("com.test.valid", 0, -1, 30, cacheSize, filesSize, databaseSize);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    EXPECT_EQ(cacheSize, 0);
+    EXPECT_EQ(filesSize, 0);
+    EXPECT_EQ(databaseSize, 0);
+}
+
+/**
+ * @tc.number: InstalldHostImpl_GetAppDataDirCategorySizes_0300
+ * @tc.name: valid input with non-existent paths returns ERR_OK with zero sizes
+ * @tc.desc: 1. valid bundleName and userId, but data dir paths don't exist
+ *           2. walk of non-existent dirs yields 0, returns ERR_OK
+ */
+HWTEST_F(BmsInstalldHostTest, InstalldHostImpl_GetAppDataDirCategorySizes_0300, Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    int64_t cacheSize = -1;
+    int64_t filesSize = -1;
+    int64_t databaseSize = -1;
+    ErrCode ret = hostImpl.GetAppDataDirCategorySizes(
+        "com.test.nodata", 0, 999, 30, cacheSize, filesSize, databaseSize);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(cacheSize, 0);
+    EXPECT_EQ(filesSize, 0);
+    EXPECT_EQ(databaseSize, 0);
+}
+
+/**
+ * @tc.number: InstalldHostImpl_GetAppDataDirCategorySizes_0400
+ * @tc.name: empty bundleName returns PARAM_ERROR
+ * @tc.desc: 1. bundleName is empty string
+ *           2. IsFileNameValid returns false for empty string
+ *           3. returns ERR_APPEXECFWK_INSTALLD_PARAM_ERROR
+ */
+HWTEST_F(BmsInstalldHostTest, InstalldHostImpl_GetAppDataDirCategorySizes_0400, Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    int64_t cacheSize = 1;
+    int64_t filesSize = 1;
+    int64_t databaseSize = 1;
+    ErrCode ret = hostImpl.GetAppDataDirCategorySizes("", 0, 100, 30, cacheSize, filesSize, databaseSize);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    EXPECT_EQ(cacheSize, 0);
+    EXPECT_EQ(filesSize, 0);
+    EXPECT_EQ(databaseSize, 0);
+}
+
+/**
+ * @tc.number: InstalldHostImpl_GetAppDataDirCategorySizes_0500
+ * @tc.name: appIndex > 0 uses clone dir naming and returns ERR_OK with zero sizes
+ * @tc.desc: 1. valid bundleName with appIndex > 0 (clone app)
+ *           2. BundleCloneCommonHelper::GetCloneDataDir dir has no data on device
+ *           3. returns ERR_OK with zero sizes
+ */
+HWTEST_F(BmsInstalldHostTest, InstalldHostImpl_GetAppDataDirCategorySizes_0500, Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    int64_t cacheSize = -1;
+    int64_t filesSize = -1;
+    int64_t databaseSize = -1;
+    ErrCode ret = hostImpl.GetAppDataDirCategorySizes(
+        "com.test.nodata", 10, 999, 30, cacheSize, filesSize, databaseSize);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(cacheSize, 0);
+    EXPECT_EQ(filesSize, 0);
+    EXPECT_EQ(databaseSize, 0);
+}
+
+/**
+ * @tc.number: InstalldHostImpl_GetAppDataDirCategorySizes_0600
+ * @tc.name: real dirs are scanned and summed per category
+ * @tc.desc: 1. create base/{cache,files}, base/haps/<module>/{cache,files} and database dirs
+ *              under /data/app/el2/100 with files of known sizes
+ *           2. ListSubDirs enumerates haps module dirs from disk, sizes summed per group
+ *           3. only FTW_F file bytes are counted: cache=1000+500, files=2000+700, database=3000
+ */
+HWTEST_F(BmsInstalldHostTest, InstalldHostImpl_GetAppDataDirCategorySizes_0600, Function | SmallTest | Level1)
+{
+    const std::string bundleName = "com.test.dircategory";
+    const std::string baseDir = "/data/app/el2/100/base/" + bundleName;
+    const std::string databaseDir = "/data/app/el2/100/database/" + bundleName;
+    auto writeBytes = [](const std::string &path, size_t size) {
+        std::filesystem::create_directories(std::filesystem::path(path).parent_path());
+        std::ofstream file(path, std::ios::binary | std::ios::trunc);
+        ASSERT_TRUE(file.is_open());
+        file << std::string(size, 'a');
+    };
+    writeBytes(baseDir + "/cache/c1", 1000);
+    writeBytes(baseDir + "/files/f1", 2000);
+    writeBytes(baseDir + "/haps/entry/cache/c2", 500);
+    writeBytes(baseDir + "/haps/feature/files/f2", 700);
+    writeBytes(databaseDir + "/d1", 3000);
+
+    InstalldHostImpl hostImpl;
+    int64_t cacheSize = 0;
+    int64_t filesSize = 0;
+    int64_t databaseSize = 0;
+    ErrCode ret = hostImpl.GetAppDataDirCategorySizes(
+        bundleName, 0, 100, 30, cacheSize, filesSize, databaseSize);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(cacheSize, 1500);
+    EXPECT_EQ(filesSize, 2700);
+    EXPECT_EQ(databaseSize, 3000);
+
+    std::error_code ec;
+    std::filesystem::remove_all(baseDir, ec);
+    std::filesystem::remove_all(databaseDir, ec);
+}
+
+/**
  * @tc.number: InstalldHostImpl_GetAppDataFileCategoryStats_0400
  * @tc.name: empty bundleName returns PARAM_ERROR
  * @tc.desc: 1. bundleName is empty string
@@ -1230,6 +1370,55 @@ HWTEST_F(BmsInstalldHostTest, InstalldHost_HandleGetAppDataFileCategoryStats_020
     EXPECT_EQ(result, ERR_OK);
     uint64_t dataSize = reply.ReadUint64();
     EXPECT_EQ(dataSize, 0u);
+}
+
+/**
+ * @tc.number: InstalldHost_HandleGetAppDataDirCategorySizes_0100
+ * @tc.name: test HandleGetAppDataDirCategorySizes with valid parcel data
+ * @tc.desc: 1. write valid bundleName/appIndex/userId/timeout to parcel
+ *           2. handler reads them, calls GetAppDataDirCategorySizes, writes result and sizes
+ *           3. returns true
+ */
+HWTEST_F(BmsInstalldHostTest, InstalldHost_HandleGetAppDataDirCategorySizes_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    std::string bundleName = "com.test.valid";
+    int32_t appIndex = 0;
+    int32_t userId = 999;
+    int32_t timeout = 30;
+
+    data.WriteInterfaceToken(installdHost.GetDescriptor());
+    data.WriteString16(Str8ToStr16(bundleName));
+    data.WriteInt32(appIndex);
+    data.WriteInt32(userId);
+    data.WriteInt32(timeout);
+
+    bool res = installdHost.HandleGetAppDataDirCategorySizes(data, reply);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: InstalldHost_HandleGetAppDataDirCategorySizes_0200
+ * @tc.name: handler handles empty parcel without crashing
+ * @tc.desc: 1. empty parcel (no fields) -> reads defaults (bundleName="", ints=0)
+ *           2. stub GetAppDataDirCategorySizes returns ERR_OK (default impl)
+ *           3. handler writes result and zero sizes to reply, returns true
+ */
+HWTEST_F(BmsInstalldHostTest, InstalldHost_HandleGetAppDataDirCategorySizes_0200, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+
+    bool res = installdHost.HandleGetAppDataDirCategorySizes(data, reply);
+    EXPECT_TRUE(res);
+    ErrCode result = reply.ReadInt32();
+    EXPECT_EQ(result, ERR_OK);
+    EXPECT_EQ(reply.ReadInt64(), 0);
+    EXPECT_EQ(reply.ReadInt64(), 0);
+    EXPECT_EQ(reply.ReadInt64(), 0);
 }
 
 /**
