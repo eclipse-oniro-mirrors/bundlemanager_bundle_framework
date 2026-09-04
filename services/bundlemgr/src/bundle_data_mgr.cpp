@@ -10713,6 +10713,19 @@ void BundleDataMgr::GetListForBundleInfo(const int32_t userId,
     }
 }
 
+void BundleDataMgr::GetBundleInfoList(const std::string bundleName, std::vector<InnerBundleInfo>& bundleInfoList)
+{
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem != bundleInfos_.end()) {
+        bundleInfoList.emplace_back(infoItem->second)
+    }
+    auto infoItem = tempBundleInfos_.find(bundleName);
+    if (tempItem != tempBundleInfos_.end()) {
+        bundleInfoList.emplace_back(infoItem->second)
+    }
+}
+
 std::vector<std::string> BundleDataMgr::GetSystemAppNames(int32_t userId) const
 {
     std::vector<std::string> systemApps;
@@ -10825,12 +10838,22 @@ ErrCode BundleDataMgr::GetAppProvisionInfoInDevice(const std::string &bundleName
         APP_LOGW("GetAppProvisionInfoInDevice bundleName is empty.");
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
-    std::vector<std::pair<std::string, bool>> bundleInfoList;
-    GetListForBundleInfo(userId, false, bundleInfoList);
-    for (const auto& [bundleNameStr, isDualModeCloneApp] : bundleInfoList) {
-        if (bundleNameStr != bundleName) {
+    std::vector<InnerBundleInfo> bundleInfoList;
+    GetBundleInfoList(bundleName, bundleInfoList);
+    if (bundleInfoList.empty()) {
+        APP_LOGW("GetAppProvisionInfoInDevice bundleName is not existed. bundleName:%{public}s", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    const InnerBundleInfo &innerBundleInfo = infoItem->second;
+    for (const auto& bundleInfo : bundleInfoList) {
+        auto bundleType = bundleInfo.GetApplicationBundleType();
+        int32_t responseUserId = bundleInfo.GetResponseUserId(userId);
+        if (bundleType == BundleType::SHARED || bundleType == BundleType::SKILL ||
+            responseUserId == Constants::INVALID_USERID) {
             continue;
         }
+        bool isDualModeCloneApp = bundleInfo.IsDualModeCloneApp();
+        bundleInfoList.emplace_back(bundleName, isDualModeCloneApp);
         std::string effectiveBundleName = isDualModeCloneApp ?
             DualModeHelper::GetDualModeBundleName(bundleName) : bundleName;
         AppProvisionInfo appProvisionInfo;
@@ -10856,6 +10879,9 @@ ErrCode BundleDataMgr::GetAllAppProvisionInfoInDevice(
     }
     std::vector<std::pair<std::string, bool>> bundleInfoList;
     GetListForBundleInfo(userId, false, bundleInfoList);
+    if (bundleInfoList.empty()) {
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
     for (const auto& [bundleName, isDualModeCloneApp] : bundleInfoList) {
         std::string effectiveBundleName = isDualModeCloneApp ?
             DualModeHelper::GetDualModeBundleName(bundleName) : bundleName;
