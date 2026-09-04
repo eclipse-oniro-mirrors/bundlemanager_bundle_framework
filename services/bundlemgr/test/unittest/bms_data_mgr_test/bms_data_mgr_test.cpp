@@ -7435,7 +7435,7 @@ HWTEST_F(BmsDataMgrTest, GetAppProvisionInfoInDevice_0002, TestSize.Level1)
  * @tc.number: GetAppProvisionInfoInDevice_0003
  * @tc.name: get app provision info in device of not installed bundle
  * @tc.desc: 1. system running normally
- *           2. get app provision info in device of not installed bundle, returns ERR_OK with empty vector
+ *           2. get app provision info in device of not installed bundle, returns BUNDLE_NOT_EXIST with empty vector
  */
 HWTEST_F(BmsDataMgrTest, GetAppProvisionInfoInDevice_0003, TestSize.Level1)
 {
@@ -7444,7 +7444,7 @@ HWTEST_F(BmsDataMgrTest, GetAppProvisionInfoInDevice_0003, TestSize.Level1)
     dataMgr->AddUserId(USERID);
     std::vector<AppProvisionInfo> appProvisionInfos;
     ErrCode ret = dataMgr->GetAppProvisionInfoInDevice("com.not.installed", USERID, appProvisionInfos);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
     EXPECT_TRUE(appProvisionInfos.empty());
 }
 
