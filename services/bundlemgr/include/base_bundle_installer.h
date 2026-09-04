@@ -966,6 +966,7 @@ private:
     // an UNSPECIFIED policy, so the event must not derive these fields from InstallParam.
     void SaveDualModeUninstallEventFields(const InnerBundleInfo &bundleInfo);
     void FillDualModeUninstallEventFields(NotifyBundleEvents &uninstallRes) const;
+    void ResolveCrossModeInstall(const InstallParam &installParam);
     void DeleteUseLessSharefilesForDefaultUser(const std::string &bundleName, int32_t userId) const;
     ErrCode CleanShaderCache(const InnerBundleInfo &oldInfo, const std::string &bundleName, int32_t userId) const;
     ErrCode CleanArkStartupCache(const std::string &bundleName) const;

@@ -1704,6 +1704,9 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     if (installParam.isPreInstallApp && !installParam.isOTA) {
         ResolveDualModePolicy(inBundlePaths, bundlePaths, installParam, hapVerifyResults);
     }
+    if (installParam.forceCrossModeOTAInstall) {
+        ResolveCrossModeInstall(installParam);
+    }
 
     // parse the bundle infos for all haps
     // key is bundlePath , value is innerBundleInfo
@@ -6211,6 +6214,9 @@ ErrCode BaseBundleInstaller::CheckDualModeCategoryConsistency(const InnerBundleI
     }
     bool oldIsDiffPackage = DualModeHelper::IsDiffPackageCategory(oldInfo.GetDeviceModeDistributionPolicy());
     bool newIsDiffPackage = DualModeHelper::IsDiffPackageCategory(GetEffectiveDualModePolicy(installParam));
+    if (installParam.isOTA && !oldIsDiffPackage) {
+        return ERR_OK;
+    }
     // Different-package <-> non-different-package transitions are not allowed
     if (oldIsDiffPackage != newIsDiffPackage) {
         APP_LOGE("Dual mode: cannot change between different-package and non-different-package apps");
@@ -6231,6 +6237,9 @@ ErrCode BaseBundleInstaller::CheckDualModeCategoryConsistencyInTemp(const Instal
     // CheckDualModeCategoryConsistency (which checks the current-mode bundleInfos_ entry via oldInfo).
     InnerBundleInfo tempInfo;
     if (!dataMgr_->FetchTempBundleInfo(bundleName_, tempInfo)) {
+        return ERR_OK;
+    }
+    if (installParam.isOTA) {
         return ERR_OK;
     }
     bool existingIsDiffPackage = DualModeHelper::IsDiffPackageCategory(tempInfo.GetDeviceModeDistributionPolicy());
@@ -10716,6 +10725,21 @@ void BaseBundleInstaller::NotifyBundleCallback(const NotifyType &type, int32_t u
     };
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
     commonEventMgr->NotifyPluginEvents(event, dataMgr_, true);
+}
+
+void BaseBundleInstaller::ResolveCrossModeInstall(const InstallParam &installParam)
+{
+    if (!DualModeHelper::IsDualModeDevice()) {
+        return;
+    }
+    if (DualModeHelper::IsDiffPackageCategory(installParam.deviceModeDistributionPolicy)) {
+        if (DualModeHelper::IsSecondaryMode()) {
+            dualModeInstallRole_ = DualModeInstallRole::PRIMARY;
+        } else {
+            dualModeInstallRole_ = DualModeInstallRole::SECONDARY;
+        }
+    }
+    resolvedDeviceModeDistributionPolicy_ = installParam.deviceModeDistributionPolicy;
 }
 
 const std::string& BaseBundleInstaller::GetEffectiveBundleName() const

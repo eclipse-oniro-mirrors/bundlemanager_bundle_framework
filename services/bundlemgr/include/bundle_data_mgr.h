@@ -1555,6 +1555,9 @@ public:
     ErrCode GetAllSkillInfos(uint32_t flags, int32_t userId,
         std::vector<SkillInfo> &skillInfos);
     void ProcessEmptyOdid();
+    bool MoveBundleInfoToTemp(const std::string &bundleName);
+    bool UpdateBundleInfoPolicy(const std::string &bundleName,
+        DeviceModeDistributionPolicy deviceModeDistributionPolicy, AppSandboxPolicy appSandboxPolicy);
 private:
     /**
      * @brief Init transferStates.
