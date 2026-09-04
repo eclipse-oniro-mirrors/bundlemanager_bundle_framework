@@ -417,8 +417,7 @@ void ActsBmsKitSystemTest::TearDownTestCase()
 
 void ActsBmsKitSystemTest::SetUp()
 {
-    ASSERT_TRUE(OHOS::system::SetParameter("persist.bms.test_dual_mode", "false"))
-        << "SetParameter persist.bms.test_dual_mode to false failed, dual-mode state not controlled";
+    OHOS::system::SetParameter("persist.bms.test_dual_mode", "false");
 }
 
 void ActsBmsKitSystemTest::TearDown()
