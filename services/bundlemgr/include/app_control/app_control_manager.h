@@ -113,6 +113,8 @@ public:
 
     ErrCode DeleteAllDisposedRulesForUser(int32_t userId);
 
+    ErrCode UpdateAppControlAppId(const std::vector<std::string> &oldAppIdList, const std::string &newAppId);
+
 private:
     void KillRunningApp(const std::vector<AppRunningControlRule> &rules, int32_t userId) const;
     ErrCode KillRunningAppOutWhiteList(int32_t userId) const;
@@ -120,6 +122,7 @@ private:
     bool GetAbilityRunningRuleCache(const std::string &key, std::vector<DisposedRule> &disposedRules);
     void SetAbilityRunningRuleCache(const std::string &key, const std::vector<DisposedRule> &disposedRules);
     void DeleteAbilityRunningRuleCache(const std::vector<std::string> &keyList);
+    void DeleteRuleCacheByAppId(const std::vector<std::string> &appIdList);
     bool GetDisposedRuleOnlyForBms(const std::string &appId, std::vector<DisposedRule> &disposedRules);
     void DeleteAbilityRunningRuleBmsCache(const std::string &appId);
     bool CheckCanDispose(const std::string &appId, int32_t userId);

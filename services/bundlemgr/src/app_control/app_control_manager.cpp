@@ -24,6 +24,7 @@
 #include "app_log_tag_wrapper.h"
 #include "bundle_mgr_service.h"
 #include "bundle_parser.h"
+#include "event_report.h"
 #include "hitrace_meter.h"
 #include "new_bundle_data_dir_mgr.h"
 #include "parameters.h"
@@ -735,6 +736,98 @@ ErrCode AppControlManager::DeleteAllDisposedRulesForUser(int32_t userId)
         return ret;
     }
     return ERR_OK;
+}
+
+ErrCode AppControlManager::UpdateAppControlAppId(const std::vector<std::string> &oldAppIdList,
+    const std::string &newAppId)
+{
+    if (newAppId.empty()) {
+        LOG_NOFUNC_D(BMS_TAG_DEFAULT, "new appId is empty, no need to update appId in app control");
+        return ERR_OK;
+    }
+    std::vector<std::string> migrateAppIds;
+    for (const auto &appId : oldAppIdList) {
+        if (appId.empty() || appId == newAppId) {
+            continue;
+        }
+        migrateAppIds.push_back(appId);
+    }
+    if (migrateAppIds.empty()) {
+        LOG_NOFUNC_D(BMS_TAG_DEFAULT, "no valid old appId, no need to update appId in app control");
+        return ERR_OK;
+    }
+    if (appControlManagerDb_ == nullptr) {
+        LOG_NOFUNC_E(BMS_TAG_DEFAULT, "appControlManagerDb is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    // Deliberately no BundleDataMgr calls here: callers may hold the per-bundle mutex.
+    int32_t changedRows = 0;
+    auto ret = appControlManagerDb_->UpdateAppControlAppId(migrateAppIds, newAppId, changedRows);
+    if (ret != ERR_OK) {
+        LOG_NOFUNC_E(BMS_TAG_DEFAULT, "update appId to %{private}s failed ret:%{public}d",
+            newAppId.c_str(), ret);
+        return ret;
+    }
+    // A rule row written with an old appId while racing this one-shot update strands until
+    // the next update's history sweep; the window is accepted as self-healing.
+    if (changedRows > 0) {
+        // Drop cache entries keyed by the migrated appIds and by the new appId:
+        // old-appId entries may be served again if the appId ever recurs (rollback /
+        // re-sign back / reinstall with the original profile), and a reader racing the
+        // commit-to-update window may have cached a negative result under the new appId.
+        migrateAppIds.push_back(newAppId);
+        DeleteRuleCacheByAppId(migrateAppIds);
+        // Same event as AppControlManagerHostImpl::SendAppControlEvent sends; migration is
+        // triggered by the install flow and spans all users / clone indexes / rule types,
+        // so the event only carries the new appId with an unspecified user.
+        EventInfo info;
+        info.actionType = static_cast<int32_t>(ControlActionType::DISPOSE_RULE);
+        info.operationType = static_cast<int32_t>(ControlOperationType::ADD_RULE);
+        info.callingName = "bundle_installer";
+        info.userId = Constants::UNSPECIFIED_USERID;
+        info.appIndex = Constants::MAIN_APP_INDEX;
+        info.appIds = { newAppId };
+        info.rule = Constants::EMPTY_STRING;
+        EventReport::SendAppControlRuleEvent(info);
+    }
+    LOG_NOFUNC_D(BMS_TAG_DEFAULT, "update appId to %{private}s in app control successful, "
+        "changedRows:%{public}d", newAppId.c_str(), changedRows);
+    return ERR_OK;
+}
+
+void AppControlManager::DeleteRuleCacheByAppId(const std::vector<std::string> &appIdList)
+{
+    // Entries cached after the erase reflect the migrated rows and are kept; the transient
+    // BMS-only block cache is cleaned by its own guard.
+    {
+        std::lock_guard<std::mutex> cacheLock(abilityRunningControlRuleMutex_);
+        abilityRunningControlRuleCacheGeneration_++;
+        for (const auto &appId : appIdList) {
+            std::string prefix = appId + std::string("_");
+            for (auto iter = abilityRunningControlRuleCache_.begin();
+                iter != abilityRunningControlRuleCache_.end();) {
+                if (iter->first.find(prefix) == 0) {
+                    iter = abilityRunningControlRuleCache_.erase(iter);
+                } else {
+                    ++iter;
+                }
+            }
+        }
+    }
+    {
+        std::lock_guard<std::mutex> lock(appRunningControlMutex_);
+        for (const auto &appId : appIdList) {
+            std::string prefix = appId + std::string("_");
+            for (auto iter = appRunningControlRuleResult_.begin();
+                iter != appRunningControlRuleResult_.end();) {
+                if (iter->first.find(prefix) == 0) {
+                    iter = appRunningControlRuleResult_.erase(iter);
+                } else {
+                    ++iter;
+                }
+            }
+        }
+    }
 }
 
 void AppControlManager::DeleteAppRunningRuleCacheExcludeEdm(const std::string &key)

@@ -145,6 +145,7 @@ InnerBundleInfo CreateBinBundleInfo(const std::string &provisionType, const std:
     return info;
 }
 const std::string MODULE_NAME = "entry";
+const std::string APP_CONTROL_TEST_CALLER = "testCaller";
 const std::string EXTENSION_ABILITY_NAME = "extensionAbility_A";
 const std::string TEST_STRING = "test.string";
 const std::string TEST_APL_NORMAL = "normal";
@@ -8925,6 +8926,304 @@ HWTEST_F(BmsBundleInstallerTest, SetDisposedRuleWhenBundleUpdateStart_0030, Func
     EXPECT_FALSE(installer.needSetDisposeRule_);
     ret = installer.DeleteDisposedRuleWhenBundleUpdateEnd(oldBundleInfo);
     EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: UpdateAppControlAppIdWhenBundleUpdate_0010
+ * @tc.name: test UpdateAppControlAppIdWhenBundleUpdate for fresh install
+ * @tc.desc: 1.fresh install, rules keyed by old appId are kept
+ */
+HWTEST_F(BmsBundleInstallerTest, UpdateAppControlAppIdWhenBundleUpdate_0010, Function | SmallTest | Level0)
+{
+    const std::string oldAppId = "com.example.l3jsdemo_oldProvision";
+    const std::string newAppId = "com.example.l3jsdemo_newProvision";
+    auto appControlManager = DelayedSingleton<AppControlManager>::GetInstance();
+    ASSERT_NE(appControlManager, nullptr);
+    ASSERT_NE(appControlManager->appControlManagerDb_, nullptr);
+    DisposedRule disposedRule;
+    disposedRule.componentType = ComponentType::UI_ABILITY;
+    disposedRule.disposedType = DisposedType::BLOCK_APPLICATION;
+    disposedRule.controlType = ControlType::DISALLOWED_LIST;
+    ErrCode ret = appControlManager->appControlManagerDb_->SetDisposedRule(APP_CONTROL_TEST_CALLER, oldAppId,
+        disposedRule, Constants::MAIN_APP_INDEX, USERID);
+    EXPECT_EQ(ret, ERR_OK);
+
+    InnerBundleInfo oldBundleInfo;
+    BaseBundleInstaller installer;
+    installer.isAppExist_ = false;
+    installer.UpdateAppControlAppIdWhenBundleUpdate(oldBundleInfo, oldAppId, newAppId);
+
+    std::vector<DisposedRule> oldRules;
+    ret = appControlManager->appControlManagerDb_->GetAbilityRunningControlRule({ oldAppId },
+        Constants::MAIN_APP_INDEX, USERID, oldRules);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(oldRules.size(), static_cast<size_t>(1));
+    std::vector<DisposedRule> newRules;
+    ret = appControlManager->appControlManagerDb_->GetAbilityRunningControlRule({ newAppId },
+        Constants::MAIN_APP_INDEX, USERID, newRules);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_TRUE(newRules.empty());
+    appControlManager->appControlManagerDb_->DeleteDisposedRule(APP_CONTROL_TEST_CALLER, { oldAppId },
+        Constants::MAIN_APP_INDEX, USERID);
+}
+
+/**
+ * @tc.number: UpdateAppControlAppIdWhenBundleUpdate_0020
+ * @tc.name: test UpdateAppControlAppIdWhenBundleUpdate with same appId and no history
+ * @tc.desc: 1.appId not changed and never re-signed, rules are kept
+ */
+HWTEST_F(BmsBundleInstallerTest, UpdateAppControlAppIdWhenBundleUpdate_0020, Function | SmallTest | Level0)
+{
+    const std::string sameAppId = "com.example.l3jsdemo_sameProvision";
+    auto appControlManager = DelayedSingleton<AppControlManager>::GetInstance();
+    ASSERT_NE(appControlManager, nullptr);
+    ASSERT_NE(appControlManager->appControlManagerDb_, nullptr);
+    DisposedRule disposedRule;
+    disposedRule.componentType = ComponentType::UI_ABILITY;
+    disposedRule.disposedType = DisposedType::BLOCK_APPLICATION;
+    disposedRule.controlType = ControlType::DISALLOWED_LIST;
+    ErrCode ret = appControlManager->appControlManagerDb_->SetDisposedRule(APP_CONTROL_TEST_CALLER, sameAppId,
+        disposedRule, Constants::MAIN_APP_INDEX, USERID);
+    EXPECT_EQ(ret, ERR_OK);
+
+    InnerBundleInfo oldBundleInfo;
+    BaseBundleInstaller installer;
+    installer.isAppExist_ = true;
+    installer.UpdateAppControlAppIdWhenBundleUpdate(oldBundleInfo, sameAppId, sameAppId);
+
+    std::vector<DisposedRule> oldRules;
+    ret = appControlManager->appControlManagerDb_->GetAbilityRunningControlRule({ sameAppId },
+        Constants::MAIN_APP_INDEX, USERID, oldRules);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(oldRules.size(), static_cast<size_t>(1));
+    appControlManager->appControlManagerDb_->DeleteDisposedRule(APP_CONTROL_TEST_CALLER, { sameAppId },
+        Constants::MAIN_APP_INDEX, USERID);
+}
+
+/**
+ * @tc.number: UpdateAppControlAppIdWhenBundleUpdate_0030
+ * @tc.name: test UpdateAppControlAppIdWhenBundleUpdate with appId changed
+ * @tc.desc: 1.appId changed, rules keyed by old appId are migrated
+ */
+HWTEST_F(BmsBundleInstallerTest, UpdateAppControlAppIdWhenBundleUpdate_0030, Function | SmallTest | Level0)
+{
+    const std::string oldAppId = "com.example.l3jsdemo_oldProvision";
+    const std::string newAppId = "com.example.l3jsdemo_newProvision";
+    auto appControlManager = DelayedSingleton<AppControlManager>::GetInstance();
+    ASSERT_NE(appControlManager, nullptr);
+    ASSERT_NE(appControlManager->appControlManagerDb_, nullptr);
+    DisposedRule disposedRule;
+    disposedRule.componentType = ComponentType::UI_ABILITY;
+    disposedRule.disposedType = DisposedType::BLOCK_APPLICATION;
+    disposedRule.controlType = ControlType::DISALLOWED_LIST;
+    ErrCode ret = appControlManager->appControlManagerDb_->SetDisposedRule(APP_CONTROL_TEST_CALLER, oldAppId,
+        disposedRule, Constants::MAIN_APP_INDEX, USERID);
+    EXPECT_EQ(ret, ERR_OK);
+
+    InnerBundleInfo oldBundleInfo;
+    BaseBundleInstaller installer;
+    installer.isAppExist_ = true;
+    installer.UpdateAppControlAppIdWhenBundleUpdate(oldBundleInfo, oldAppId, newAppId);
+
+    std::vector<DisposedRule> newRules;
+    ret = appControlManager->appControlManagerDb_->GetAbilityRunningControlRule({ newAppId },
+        Constants::MAIN_APP_INDEX, USERID, newRules);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(newRules.size(), static_cast<size_t>(1));
+    std::vector<DisposedRule> oldRules;
+    ret = appControlManager->appControlManagerDb_->GetAbilityRunningControlRule({ oldAppId },
+        Constants::MAIN_APP_INDEX, USERID, oldRules);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_TRUE(oldRules.empty());
+    appControlManager->appControlManagerDb_->DeleteDisposedRule(APP_CONTROL_TEST_CALLER, { newAppId },
+        Constants::MAIN_APP_INDEX, USERID);
+}
+
+/**
+ * @tc.number: UpdateAppControlAppIdWhenBundleUpdate_0040
+ * @tc.name: test UpdateAppControlAppIdWhenBundleUpdate with historical appIds
+ * @tc.desc: 1.rules keyed by historical appIds recorded in old info are also migrated
+ */
+HWTEST_F(BmsBundleInstallerTest, UpdateAppControlAppIdWhenBundleUpdate_0040, Function | SmallTest | Level0)
+{
+    const std::string oldAppId = "com.example.l3jsdemo_oldProvision";
+    const std::string newAppId = "com.example.l3jsdemo_newProvision";
+    const std::string histAppId1 = "com.example.l3jsdemo_histProvision1";
+    const std::string histAppId2 = "com.example.l3jsdemo_histProvision2";
+    auto appControlManager = DelayedSingleton<AppControlManager>::GetInstance();
+    ASSERT_NE(appControlManager, nullptr);
+    ASSERT_NE(appControlManager->appControlManagerDb_, nullptr);
+    DisposedRule disposedRule;
+    disposedRule.componentType = ComponentType::UI_ABILITY;
+    disposedRule.disposedType = DisposedType::BLOCK_APPLICATION;
+    disposedRule.controlType = ControlType::DISALLOWED_LIST;
+    ErrCode ret = appControlManager->appControlManagerDb_->SetDisposedRule(APP_CONTROL_TEST_CALLER, oldAppId,
+        disposedRule, Constants::MAIN_APP_INDEX, USERID);
+    EXPECT_EQ(ret, ERR_OK);
+    ret = appControlManager->appControlManagerDb_->SetDisposedRule(APP_CONTROL_TEST_CALLER, histAppId1,
+        disposedRule, Constants::MAIN_APP_INDEX, USERID);
+    EXPECT_EQ(ret, ERR_OK);
+    ret = appControlManager->appControlManagerDb_->SetDisposedRule(APP_CONTROL_TEST_CALLER, histAppId2,
+        disposedRule, Constants::MAIN_APP_INDEX, USERID);
+    EXPECT_EQ(ret, ERR_OK);
+
+    InnerBundleInfo oldBundleInfo;
+    oldBundleInfo.AddOldAppId(histAppId1);
+    oldBundleInfo.AddOldAppId(histAppId2);
+    BaseBundleInstaller installer;
+    installer.isAppExist_ = true;
+    installer.UpdateAppControlAppIdWhenBundleUpdate(oldBundleInfo, oldAppId, newAppId);
+
+    // rows keyed by all historical appIds are re-keyed to the new appId
+    std::vector<DisposedRule> newRules;
+    ret = appControlManager->appControlManagerDb_->GetAbilityRunningControlRule({ newAppId },
+        Constants::MAIN_APP_INDEX, USERID, newRules);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(newRules.size(), static_cast<size_t>(3));
+    std::vector<DisposedRule> oldRules;
+    ret = appControlManager->appControlManagerDb_->GetAbilityRunningControlRule(
+        { oldAppId, histAppId1, histAppId2 }, Constants::MAIN_APP_INDEX, USERID, oldRules);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_TRUE(oldRules.empty());
+    appControlManager->appControlManagerDb_->DeleteDisposedRule(APP_CONTROL_TEST_CALLER, { newAppId },
+        Constants::MAIN_APP_INDEX, USERID);
+}
+
+/**
+ * @tc.number: UpdateAppControlAppIdWhenBundleUpdate_0050
+ * @tc.name: test UpdateAppControlAppIdWhenBundleUpdate repairs stranded history without re-sign
+ * @tc.desc: 1.appId not changed but history is not empty, stranded rules are still migrated
+ */
+HWTEST_F(BmsBundleInstallerTest, UpdateAppControlAppIdWhenBundleUpdate_0050, Function | SmallTest | Level0)
+{
+    const std::string sameAppId = "com.example.l3jsdemo_curProvision";
+    const std::string strandedAppId = "com.example.l3jsdemo_strandedProvision";
+    auto appControlManager = DelayedSingleton<AppControlManager>::GetInstance();
+    ASSERT_NE(appControlManager, nullptr);
+    ASSERT_NE(appControlManager->appControlManagerDb_, nullptr);
+    DisposedRule disposedRule;
+    disposedRule.componentType = ComponentType::UI_ABILITY;
+    disposedRule.disposedType = DisposedType::BLOCK_APPLICATION;
+    disposedRule.controlType = ControlType::DISALLOWED_LIST;
+    ErrCode ret = appControlManager->appControlManagerDb_->SetDisposedRule(APP_CONTROL_TEST_CALLER, strandedAppId,
+        disposedRule, Constants::MAIN_APP_INDEX, USERID);
+    EXPECT_EQ(ret, ERR_OK);
+
+    InnerBundleInfo oldBundleInfo;
+    oldBundleInfo.AddOldAppId(strandedAppId);
+    BaseBundleInstaller installer;
+    installer.isAppExist_ = true;
+    installer.UpdateAppControlAppIdWhenBundleUpdate(oldBundleInfo, sameAppId, sameAppId);
+
+    std::vector<DisposedRule> newRules;
+    ret = appControlManager->appControlManagerDb_->GetAbilityRunningControlRule({ sameAppId },
+        Constants::MAIN_APP_INDEX, USERID, newRules);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(newRules.size(), static_cast<size_t>(1));
+    std::vector<DisposedRule> oldRules;
+    ret = appControlManager->appControlManagerDb_->GetAbilityRunningControlRule({ strandedAppId },
+        Constants::MAIN_APP_INDEX, USERID, oldRules);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_TRUE(oldRules.empty());
+    appControlManager->appControlManagerDb_->DeleteDisposedRule(APP_CONTROL_TEST_CALLER, { sameAppId },
+        Constants::MAIN_APP_INDEX, USERID);
+}
+
+/**
+ * @tc.number: UpdateAppControlAppIdWhenBundleUpdate_0060
+ * @tc.name: test rule migration through the real update install flow
+ * @tc.desc: 1.install a third party bundle, seed a stranded historical appId into its
+ *           stored appId history to simulate a prior re-sign, then drive the real
+ *           ProcessBundleInstall update flow and verify the rule keyed by the old
+ *           appId is migrated to the newly installed appId
+ */
+HWTEST_F(BmsBundleInstallerTest, UpdateAppControlAppIdWhenBundleUpdate_0060, Function | SmallTest | Level0)
+{
+    std::string bundleFile = RESOURCE_ROOT_PATH + SYSTEMFIEID_BUNDLE;
+    ErrCode installResult = InstallThirdPartyBundle(bundleFile);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo storedInfo;
+    ASSERT_TRUE(dataMgr->FetchInnerBundleInfo(SYSTEMFIEID_NAME, storedInfo));
+    std::string newAppId = storedInfo.GetAppId();
+    ASSERT_FALSE(newAppId.empty());
+    // simulate rows stranded by a re-sign that happened before this migration was
+    // introduced: keep the stored appId unchanged (rewriting it would trip
+    // CheckAppIdentifier, since provisionId is encoded inside the appId string) and
+    // seed the old appId into the bundle's appId history instead; the update sweep
+    // migrates rules keyed by historical appIds after install finishes
+    const std::string oldAppId = SYSTEMFIEID_NAME + "_oldProvisionForResign";
+    storedInfo.AddOldAppId(oldAppId);
+    // SaveInnerBundleInfo only persists to disk while the update flow reads the in-memory
+    // bundleInfos_ map, so rewrite the in-memory entry as well to make the simulated
+    // history visible to ProcessBundleInstall
+    dataMgr->bundleInfos_[SYSTEMFIEID_NAME] = storedInfo;
+    EXPECT_TRUE(dataMgr->SaveInnerBundleInfo(storedInfo));
+
+    auto appControlManager = DelayedSingleton<AppControlManager>::GetInstance();
+    ASSERT_NE(appControlManager, nullptr);
+    ASSERT_NE(appControlManager->appControlManagerDb_, nullptr);
+    DisposedRule disposedRule;
+    disposedRule.componentType = ComponentType::UI_ABILITY;
+    disposedRule.disposedType = DisposedType::BLOCK_APPLICATION;
+    disposedRule.controlType = ControlType::DISALLOWED_LIST;
+    ErrCode ret = appControlManager->appControlManagerDb_->SetDisposedRule(APP_CONTROL_TEST_CALLER,
+        oldAppId, disposedRule, Constants::MAIN_APP_INDEX, USERID);
+    EXPECT_EQ(ret, ERR_OK);
+
+    // the real update flow must trigger the migration hook after mark install finish
+    ErrCode updateResult = UpdateThirdPartyBundle(bundleFile);
+    EXPECT_EQ(updateResult, ERR_OK);
+
+    std::vector<DisposedRule> newRules;
+    ret = appControlManager->appControlManagerDb_->GetAbilityRunningControlRule({ newAppId },
+        Constants::MAIN_APP_INDEX, USERID, newRules);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(newRules.size(), static_cast<size_t>(1));
+    std::vector<DisposedRule> oldRules;
+    ret = appControlManager->appControlManagerDb_->GetAbilityRunningControlRule({ oldAppId },
+        Constants::MAIN_APP_INDEX, USERID, oldRules);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_TRUE(oldRules.empty());
+
+    appControlManager->appControlManagerDb_->DeleteDisposedRule(APP_CONTROL_TEST_CALLER, { newAppId, oldAppId },
+        Constants::MAIN_APP_INDEX, USERID);
+    UnInstallBundle(SYSTEMFIEID_NAME);
+}
+
+/**
+ * @tc.number: UpdateAppControlAppIdWhenBundleUpdate_0070
+ * @tc.name: test UpdateAppControlAppIdWhenBundleUpdate with empty new appId
+ * @tc.desc: 1.empty new appId, no migration happens and rules keyed by the old appId are kept
+ */
+HWTEST_F(BmsBundleInstallerTest, UpdateAppControlAppIdWhenBundleUpdate_0070, Function | SmallTest | Level0)
+{
+    const std::string oldAppId = "com.example.l3jsdemo_emptyNewProvision";
+    auto appControlManager = DelayedSingleton<AppControlManager>::GetInstance();
+    ASSERT_NE(appControlManager, nullptr);
+    ASSERT_NE(appControlManager->appControlManagerDb_, nullptr);
+    DisposedRule disposedRule;
+    disposedRule.componentType = ComponentType::UI_ABILITY;
+    disposedRule.disposedType = DisposedType::BLOCK_APPLICATION;
+    disposedRule.controlType = ControlType::DISALLOWED_LIST;
+    ErrCode ret = appControlManager->appControlManagerDb_->SetDisposedRule(APP_CONTROL_TEST_CALLER, oldAppId,
+        disposedRule, Constants::MAIN_APP_INDEX, USERID);
+    EXPECT_EQ(ret, ERR_OK);
+
+    InnerBundleInfo oldBundleInfo;
+    BaseBundleInstaller installer;
+    installer.isAppExist_ = true;
+    installer.UpdateAppControlAppIdWhenBundleUpdate(oldBundleInfo, oldAppId, "");
+
+    std::vector<DisposedRule> oldRules;
+    ret = appControlManager->appControlManagerDb_->GetAbilityRunningControlRule({ oldAppId },
+        Constants::MAIN_APP_INDEX, USERID, oldRules);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(oldRules.size(), static_cast<size_t>(1));
+    appControlManager->appControlManagerDb_->DeleteDisposedRule(APP_CONTROL_TEST_CALLER, { oldAppId },
+        Constants::MAIN_APP_INDEX, USERID);
 }
 
 /**
