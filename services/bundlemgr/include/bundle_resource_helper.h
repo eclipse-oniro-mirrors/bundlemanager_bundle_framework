@@ -44,7 +44,8 @@ public:
     static void RegisterCommonEventSubscriber();
 
     static void AddResourceInfoByBundleName(const std::string &bundleName,
-        const int32_t userId, const ADD_RESOURCE_TYPE type, const bool isBundleFirstInstall = true);
+        const int32_t userId, const ADD_RESOURCE_TYPE type, const bool isBundleFirstInstall = true,
+        const bool findInTempBundle = false);
 
     static void UpdateAlternateResourceInfoByBundleName(const std::string &bundleName);
 

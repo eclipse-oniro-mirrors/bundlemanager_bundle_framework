@@ -2053,7 +2053,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     ProcessUpdateShortcut();
     BundleResourceHelper::AddResourceInfoByBundleName(bundleName_, userId_,
         (isAppExist_ && hasInstalledInUser_) ? ADD_RESOURCE_TYPE::UPDATE_BUNDLE : ADD_RESOURCE_TYPE::INSTALL_BUNDLE,
-        !isAppExist_);
+        !isAppExist_, IsCrossModeInstall());
     if (isAppExist_) {
         BundleResourceHelper::UpdateAlternateResourceInfoByBundleName(bundleName_);
     }
@@ -3018,22 +3018,7 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
             userGuard.Dismiss();
             uid = oldInfo.GetUid(userId_);
             GetInstallEventInfo(oldInfo, sysEventInfo_);
-            bool toTempBundle = false;
-            if (DualModeHelper::IsDualModeDevice()) {
-                DeviceModeDistributionPolicy oldPolicy = oldInfo.GetDeviceModeDistributionPolicy();
-                if (DualModeHelper::IsDiffPackageCategory(oldPolicy)) {
-                    // Different-package: clone/primary variant routing (4-case truth table).
-                    toTempBundle = oldInfo.IsDualModeCloneApp()
-                        ? !DualModeHelper::IsSecondaryMode()
-                        : DualModeHelper::IsSecondaryMode();
-                } else if (oldPolicy == DeviceModeDistributionPolicy::MAIN_ONLY) {
-                    // MAIN_ONLY belongs to primary mode; hide when currently in secondary.
-                    toTempBundle = DualModeHelper::IsSecondaryMode();
-                } else if (oldPolicy == DeviceModeDistributionPolicy::SUB_ONLY) {
-                    // SUB_ONLY belongs to secondary mode; hide when currently in primary.
-                    toTempBundle = !DualModeHelper::IsSecondaryMode();
-                }
-            }
+            bool toTempBundle = ComputeToTempBundle(oldInfo);
             if (!dataMgr_->UpdateInnerBundleInfo(oldInfo, true, toTempBundle)) {
                 if (!dataMgr_->UpdateInnerBundleInfo(oldInfo, true, toTempBundle)) {
                     LOG_W(BMS_TAG_INSTALLER, "save mark failed, -n:%{public}s", bundleName_.c_str());
@@ -3060,7 +3045,8 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
                 DeleteUninstallBundleInfo(effectiveBundleName);
             }
             // process resource
-            BundleResourceHelper::AddResourceInfoByBundleName(bundleName, userId_, ADD_RESOURCE_TYPE::CREATE_USER);
+            BundleResourceHelper::AddResourceInfoByBundleName(bundleName, userId_,
+                ADD_RESOURCE_TYPE::CREATE_USER, true, toTempBundle);
             SetAPIAndSdkVersions(oldInfo.GetBaseApplicationInfo().apiTargetVersion,
                 oldInfo.GetBaseApplicationInfo().apiCompatibleVersion,
                 oldInfo.GetBaseApplicationInfo().compileSdkVersion);
@@ -5972,6 +5958,29 @@ bool BaseBundleInstaller::IsCrossModeInstall() const
     }
     if (policy == DeviceModeDistributionPolicy::SUB_ONLY) {
         return !DualModeHelper::IsSecondaryMode(); // target secondary, current main → cross
+    }
+    return false;
+}
+
+bool BaseBundleInstaller::ComputeToTempBundle(const InnerBundleInfo &oldInfo)
+{
+    if (!DualModeHelper::IsDualModeDevice()) {
+        return false;
+    }
+    DeviceModeDistributionPolicy oldPolicy = oldInfo.GetDeviceModeDistributionPolicy();
+    if (DualModeHelper::IsDiffPackageCategory(oldPolicy)) {
+        // Different-package: clone/primary variant routing (4-case truth table).
+        return oldInfo.IsDualModeCloneApp()
+            ? !DualModeHelper::IsSecondaryMode()
+            : DualModeHelper::IsSecondaryMode();
+    }
+    if (oldPolicy == DeviceModeDistributionPolicy::MAIN_ONLY) {
+        // MAIN_ONLY belongs to primary mode; hide when currently in secondary.
+        return DualModeHelper::IsSecondaryMode();
+    }
+    if (oldPolicy == DeviceModeDistributionPolicy::SUB_ONLY) {
+        // SUB_ONLY belongs to secondary mode; hide when currently in primary.
+        return !DualModeHelper::IsSecondaryMode();
     }
     return false;
 }

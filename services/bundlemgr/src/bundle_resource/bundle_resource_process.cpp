@@ -127,9 +127,10 @@ bool BundleResourceProcess::GetResourceInfoByBundleName(
     const int32_t userId,
     std::vector<ResourceInfo> &resourceInfo,
     const int32_t appIndex,
-    bool needParseDynamic)
+    bool needParseDynamic,
+    const bool findInTempBundle)
 {
-    APP_LOGD("start, bundleName:%{public}s", bundleName.c_str());
+    APP_LOGD("start, bundleName:%{public}s, findInTempBundle:%{public}d", bundleName.c_str(), findInTempBundle);
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         APP_LOGE("dataMgr is nullptr");
@@ -140,9 +141,23 @@ bool BundleResourceProcess::GetResourceInfoByBundleName(
         return false;
     }
     InnerBundleInfo innerBundleInfo;
-    if (!dataMgr->FetchInnerBundleInfo(bundleName, innerBundleInfo)) {
-        APP_LOGE("bundleName %{public}s not exist", bundleName.c_str());
-        return false;
+    // dual-mode: findInTempBundle selects which map to fetch from. Cross-mode
+    // variants (SUB_ONLY/MAIN_ONLY/different-package other-mode) live in
+    // tempBundleInfos_; current-mode variants live in bundleInfos_. Callers
+    // should ensure the info resides in the map matching its findInTempBundle;
+    // a miss in the preferred map may indicate storage inconsistency,
+    // mode-switch race, or a caller passing the wrong flag — returning false
+    // exposes the problem rather than silently fetching the wrong-mode variant.
+    if (findInTempBundle) {
+        if (!dataMgr->FetchTempBundleInfo(bundleName, innerBundleInfo)) {
+            APP_LOGE("bundleName %{public}s not exist in tempBundleInfos", bundleName.c_str());
+            return false;
+        }
+    } else {
+        if (!dataMgr->FetchInnerBundleInfo(bundleName, innerBundleInfo)) {
+            APP_LOGE("bundleName %{public}s not exist in bundleInfos", bundleName.c_str());
+            return false;
+        }
     }
     auto bundleType = innerBundleInfo.GetApplicationBundleType();
     if (bundleType == BundleType::SHARED || bundleType == BundleType::SKILL ||

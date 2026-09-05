@@ -78,7 +78,8 @@ void BundleResourceHelper::UpdateAlternateResourceInfoByBundleName(const std::st
 }
 
 void BundleResourceHelper::AddResourceInfoByBundleName(const std::string &bundleName,
-    const int32_t userId, const ADD_RESOURCE_TYPE type, const bool isBundleFirstInstall)
+    const int32_t userId, const ADD_RESOURCE_TYPE type, const bool isBundleFirstInstall,
+    const bool findInTempBundle)
 {
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
     APP_LOGI_NOFUNC("-n %{public}s -u %{public}d type %{public}d add resource start", bundleName.c_str(), userId,
@@ -91,19 +92,20 @@ void BundleResourceHelper::AddResourceInfoByBundleName(const std::string &bundle
     switch (type) {
         case ADD_RESOURCE_TYPE::INSTALL_BUNDLE : {
             // add new resource info
-            if (!manager->AddResourceInfoByBundleNameWhenInstall(bundleName, userId, isBundleFirstInstall)) {
+            if (!manager->AddResourceInfoByBundleNameWhenInstall(bundleName, userId, isBundleFirstInstall,
+                findInTempBundle)) {
                 APP_LOGW("add failed, bundleName:%{public}s", bundleName.c_str());
             }
             break;
         }
         case ADD_RESOURCE_TYPE::UPDATE_BUNDLE : {
-            if (!manager->AddResourceInfoByBundleNameWhenUpdate(bundleName, userId)) {
+            if (!manager->AddResourceInfoByBundleNameWhenUpdate(bundleName, userId, findInTempBundle)) {
                 APP_LOGW("update failed, bundleName:%{public}s", bundleName.c_str());
             }
             break;
         }
         case ADD_RESOURCE_TYPE::CREATE_USER : {
-            if (!manager->AddResourceInfoByBundleNameWhenCreateUser(bundleName, userId)) {
+            if (!manager->AddResourceInfoByBundleNameWhenCreateUser(bundleName, userId, findInTempBundle)) {
                 APP_LOGW("update failed, bundleName:%{public}s", bundleName.c_str());
             }
             break;
