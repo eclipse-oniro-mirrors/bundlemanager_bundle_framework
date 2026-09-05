@@ -1590,6 +1590,24 @@ HWTEST_F(BmsBundleMgrProxyTest, GetAppProvisionInfoInDevice_0001, Function | Med
 }
 
 /**
+ * @tc.number: GetAppProvisionInfoInDevice_0002
+ * @tc.name: test the GetAppProvisionInfoInDevice with empty bundleName
+ * @tc.desc: 1. system running normally
+ *           2. test the proxy-level early return of GetAppProvisionInfoInDevice with empty
+ *              bundleName, before any remote/IPC call, returns BUNDLE_NOT_EXIST
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetAppProvisionInfoInDevice_0002, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::vector<AppProvisionInfo> appProvisionInfos;
+    int32_t userId = 100;
+    auto ret = bundleMgrProxy.GetAppProvisionInfoInDevice("", userId, appProvisionInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_TRUE(appProvisionInfos.empty());
+}
+
+/**
  * @tc.number: GetAllAppProvisionInfoInDevice_0001
  * @tc.name: test the GetAllAppProvisionInfoInDevice
  * @tc.desc: 1. system running normally

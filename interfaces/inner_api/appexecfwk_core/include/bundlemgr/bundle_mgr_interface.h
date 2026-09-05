@@ -1667,12 +1667,12 @@ public:
     virtual ErrCode GetAppProvisionInfoInDevice(const std::string &bundleName, int32_t userId,
         std::vector<AppProvisionInfo> &appProvisionInfos)
     {
-        return ERR_OK;
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
     virtual ErrCode GetAllAppProvisionInfoInDevice(int32_t userId, std::vector<AppProvisionInfo> &appProvisionInfos)
     {
-        return ERR_OK;
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
     virtual ErrCode GetProvisionMetadata(const std::string &bundleName, int32_t userId,
