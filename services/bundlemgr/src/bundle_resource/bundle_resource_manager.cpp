@@ -166,10 +166,12 @@ BundleResourceManager::DualModeQueryRoute BundleResourceManager::GetDualModeQuer
     if (!innerBundleInfo.IsDualModeCloneApp()) {
         return DualModeQueryRoute::NOT_DUAL_MODE;
     }
-    if (appIndex != ServiceConstants::DUAL_MODE_CLONE_APP_INDEX) {
-        // dual-mode: clone rows are only addressed by DUAL_MODE_CLONE_APP_INDEX
-        APP_LOGW("dual-mode clone -n %{public}s only accepts appIndex %{public}d, refuse appIndex %{public}d",
-            bundleName.c_str(), ServiceConstants::DUAL_MODE_CLONE_APP_INDEX, appIndex);
+    if (appIndex != ServiceConstants::DUAL_MODE_CLONE_APP_INDEX &&
+        appIndex != Constants::MAIN_APP_INDEX) {
+        // dual-mode: clone rows accept appIndex 0 or 10000
+        APP_LOGW("dual-mode clone -n %{public}s only accepts appIndex %{public}d or %{public}d, "
+            "refuse appIndex %{public}d", bundleName.c_str(), Constants::MAIN_APP_INDEX,
+            ServiceConstants::DUAL_MODE_CLONE_APP_INDEX, appIndex);
         return DualModeQueryRoute::REFUSED;
     }
     // dual-mode: clone rows are stored under the prefixed effective name with appIndex 0

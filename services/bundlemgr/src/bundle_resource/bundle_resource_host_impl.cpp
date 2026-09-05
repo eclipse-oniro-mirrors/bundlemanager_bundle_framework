@@ -539,7 +539,10 @@ ErrCode BundleResourceHostImpl::GetElementLauncherAbilityResourceInfo(
                 moduleExists = true;
                 if (info.abilityName == abilityName) {
                     abilityExists = true;
-                    return info.appIndex == appIndex;
+                    // dual-mode: appIndex 0 also addresses the clone row (appIndex 10000)
+                    return info.appIndex == appIndex ||
+                        (appIndex == Constants::MAIN_APP_INDEX &&
+                            info.appIndex == ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
                 }
             }
             return false;
