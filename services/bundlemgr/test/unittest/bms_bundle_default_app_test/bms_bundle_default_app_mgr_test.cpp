@@ -1971,7 +1971,14 @@ HWTEST_F(BmsBundleDefaultAppMgrTest, SetDefaultApplicationInternal_BrowserDenied
     ScopeGuard guard([&] {
         SetVerifyPermissionByCallingTokenIdForTest(true);
         ResetBrowserPermissionConfigForTest();
+        ResetDataMgr();
     });
+    // install a granted browser so IsElementValid passes and the permission gate is actually reached
+    ResetDataMgr();
+    auto dataMgr = bundleMgrService_->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(BROWSER_USER_ID);
+    InstallGrantedBrowser(dataMgr, BUNDLE_NAME, BROWSER_USER_ID);
     Element element;
     element.bundleName = BUNDLE_NAME;
     element.abilityName = ABILITY_NAME;
