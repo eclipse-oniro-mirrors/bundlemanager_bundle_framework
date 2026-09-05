@@ -22,6 +22,13 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+
+#if defined(__GNUC__) && __GNUC__ >= 4
+    #define APP_CONTROL_HIDDEN __attribute__((visibility("hidden")))
+#else
+    #define APP_CONTROL_HIDDEN
+#endif
+
 class AppControlProxy : public IRemoteProxy<IAppControlMgr> {
 public:
     explicit AppControlProxy(const sptr<IRemoteObject>& object);
@@ -107,7 +114,7 @@ private:
     template <typename T>
     ErrCode GetParcelableInfosWithErrCode(AppControlManagerInterfaceCode code, MessageParcel &data,
         std::vector<T> &parcelableInfos);
-    static inline BrokerDelegator<AppControlProxy> delegator_;
+    APP_CONTROL_HIDDEN static inline BrokerDelegator<AppControlProxy> delegator_;
     template<typename T>
     ErrCode WriteVectorToParcel(std::vector<T> &parcelVector, MessageParcel &reply);
     template<typename T>
