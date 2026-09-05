@@ -8292,5 +8292,34 @@ ErrCode BundleMgrProxy::SetApplicationDisableForbidden(const std::string &bundle
     }
     return reply.ReadInt32();
 }
-}  // namespace AppExecFwk
+
+ErrCode BundleMgrProxy::GetDualModeBundleInfo(const std::string &bundleName, int32_t userId,
+    DualModeBundleInfo &dualModeBundleInfo)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    LOG_D(BMS_TAG_QUERY, "begin to get dual mode bundle info of %{public}s", bundleName.c_str());
+    if (bundleName.empty()) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "GetDualModeBundleInfo -n empty");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE_NOFUNC("Write interface token fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE_NOFUNC("Write bundle name fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE_NOFUNC("Write user id fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    auto ret = GetParcelInfoIntelligent<DualModeBundleInfo>(BundleMgrInterfaceCode::GET_DUAL_MODE_BUNDLE_INFO, data,
+        dualModeBundleInfo);
+    return ret;
+}
+} // namespace AppExecFwk
 }  // namespace OHOS

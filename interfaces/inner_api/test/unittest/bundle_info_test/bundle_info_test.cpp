@@ -812,5 +812,45 @@ HWTEST_F(BundleInfoTest, GetMapObject_0800, Function | SmallTest | Level0)
     EXPECT_EQ(result.size(), 2u);
 }
 
+/**
+ * @tc.number: DualModeBundleInfo_0100
+ * @tc.name: DualModeBundleInfo_0100
+ * @tc.desc: test DualModeBundleInfo marshalling
+ */
+HWTEST_F(BundleInfoTest, DualModeBundleInfo_0100, Function | SmallTest | Level0)
+{
+    DualModeBundleInfo dualModeBundleInfo;
+    dualModeBundleInfo.appIndex = 0;
+    dualModeBundleInfo.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNSPECIFIED;
+    dualModeBundleInfo.appSandboxPolicy = AppSandboxPolicy::SHARED_SANDBOX;
+
+    Parcel parcel;
+    auto ret = dualModeBundleInfo.Marshalling(parcel);
+    EXPECT_EQ(ret, true);
+
+    DualModeBundleInfo dualModeBundleInfo1 = *DualModeBundleInfo::Unmarshalling(parcel);
+    EXPECT_EQ(dualModeBundleInfo1.appIndex, 0);
+    EXPECT_EQ(dualModeBundleInfo1.deviceModeDistributionPolicy, DeviceModeDistributionPolicy::UNSPECIFIED);
+    EXPECT_EQ(dualModeBundleInfo1.appSandboxPolicy, AppSandboxPolicy::SHARED_SANDBOX);
+
+    parcel.RewindRead(0);
+    ret = dualModeBundleInfo.Marshalling(parcel);
+    EXPECT_EQ(ret, true);
+    dualModeBundleInfo1.ReadFromParcel(parcel);
+    EXPECT_EQ(dualModeBundleInfo1.appIndex, 0);
+    EXPECT_EQ(dualModeBundleInfo1.deviceModeDistributionPolicy, DeviceModeDistributionPolicy::UNSPECIFIED);
+    EXPECT_EQ(dualModeBundleInfo1.appSandboxPolicy, AppSandboxPolicy::SHARED_SANDBOX);
+
+    nlohmann::json jsonObjectOut;
+    to_json(jsonObjectOut, dualModeBundleInfo);
+
+    std::string content = jsonObjectOut.dump();
+    DualModeBundleInfo dualModeBundleInfo2;
+    nlohmann::json jsonObjectIn = nlohmann::json::parse(content);
+    from_json(jsonObjectIn, dualModeBundleInfo2);
+    EXPECT_EQ(dualModeBundleInfo2.appIndex, 0);
+    EXPECT_EQ(dualModeBundleInfo2.deviceModeDistributionPolicy, DeviceModeDistributionPolicy::UNSPECIFIED);
+    EXPECT_EQ(dualModeBundleInfo2.appSandboxPolicy, AppSandboxPolicy::SHARED_SANDBOX);
+}
 } // AppExecFwk
 } // OHOS

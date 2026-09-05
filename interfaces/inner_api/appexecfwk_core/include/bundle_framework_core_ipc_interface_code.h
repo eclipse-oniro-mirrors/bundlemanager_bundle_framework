@@ -277,6 +277,7 @@ enum class BundleMgrInterfaceCode : uint32_t {
     BATCH_SET_CLONE_APPLICATION_ENABLED = 251,
     GET_APP_PROVISION_INFO_IN_DEVICE = 252,
     GET_ALL_APP_PROVISION_INFO_IN_DEVICE = 253,
+    GET_DUAL_MODE_BUNDLE_INFO = 254,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */

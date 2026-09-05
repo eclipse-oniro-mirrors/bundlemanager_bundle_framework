@@ -2341,19 +2341,36 @@ HWTEST_F(BmsBundleMgrProxyTest, GetStringByIdListProxy_0600, Function | MediumTe
 }
 
 /**
- * @tc.number: GetBundleInfoDualMode_0001
- * @tc.name: test the GetBundleInfoDualMode
+ * @tc.number: GetDualModeBundleInfo_0001
+ * @tc.name: test the GetDualModeBundleInfo
  * @tc.desc: 1. remote object unavailable
- *           2. test GetBundleInfoDualMode
+ *           2. test GetDualModeBundleInfo
  */
-HWTEST_F(BmsBundleMgrProxyTest, GetBundleInfoDualMode_0001, Function | MediumTest | Level1)
+HWTEST_F(BmsBundleMgrProxyTest, GetDualModeBundleInfo_0001, Function | MediumTest | Level1)
 {
     sptr<IRemoteObject> impl;
     BundleMgrProxy bundleMgrProxy(impl);
     std::string bundleName = "com.example.bundle";
-    BundleInfoDualMode info;
-    auto res = bundleMgrProxy.GetBundleInfoDualMode(bundleName, Constants::START_USERID, info);
-    EXPECT_EQ(res, ERR_OK);
+    DualModeBundleInfo info;
+    auto res = bundleMgrProxy.GetDualModeBundleInfo(bundleName, Constants::START_USERID, info);
+    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: GetDualModeBundleInfo_0003
+ * @tc.name: test the GetDualModeBundleInfo with negative userId
+ * @tc.desc: 1. remote object unavailable
+ *           2. test GetDualModeBundleInfo with negative userId
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetDualModeBundleInfo_0003, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::string bundleName = "com.example.bundle";
+    DualModeBundleInfo info;
+    int32_t negativeUserId = -1;
+    auto res = bundleMgrProxy.GetDualModeBundleInfo(bundleName, negativeUserId, info);
+    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
 }
 
 /**

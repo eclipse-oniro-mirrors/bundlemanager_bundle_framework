@@ -10444,10 +10444,10 @@ HWTEST_F(BmsBundleKitServiceTest, Proxy_GetLocalPluginInstaller_0100, Function |
 }
 
 /**
- * @tc.number: HandleGetBundleInfoDualMode_0001
- * @tc.desc: test HandleGetBundleInfoDualMode
+ * @tc.number: HandleGetDualModeBundleInfo_0001
+ * @tc.desc: test HandleGetDualModeBundleInfo
  */
-HWTEST_F(BmsBundleKitServiceTest, HandleGetBundleInfoDualMode_0001, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleKitServiceTest, HandleGetDualModeBundleInfo_0001, Function | SmallTest | Level1)
 {
     std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
     ASSERT_NE(localBundleMgrHostImpl, nullptr);
@@ -10455,21 +10455,7 @@ HWTEST_F(BmsBundleKitServiceTest, HandleGetBundleInfoDualMode_0001, Function | S
     MessageParcel reply;
     data.WriteString("bundleName");  // bundleName
     data.WriteInt32(Constants::START_USERID);  // userId
-    ErrCode res = localBundleMgrHostImpl->HandleGetBundleInfoDualMode(data, reply);
+    ErrCode res = localBundleMgrHostImpl->HandleGetDualModeBundleInfo(data, reply);
     EXPECT_EQ(res, ERR_OK);
-}
-
-/**
- * @tc.number: GetBundleInfoDualMode_0001
- * @tc.desc: test GetBundleInfoDualMode
- */
-HWTEST_F(BmsBundleKitServiceTest, GetBundleInfoDualMode_0001, Function | SmallTest | Level1)
-{
-    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
-    ASSERT_NE(localBundleMgrHostImpl, nullptr);
-    std::string bundleName = "bundleName";
-    BundleInfoDualMode info;
-    ErrCode ret = localBundleMgrHostImpl->GetBundleInfoDualMode(bundleName, Constants::START_USERID, info);
-    EXPECT_EQ(ret, ERR_OK);
 }
 }

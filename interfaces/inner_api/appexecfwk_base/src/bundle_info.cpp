@@ -1469,34 +1469,46 @@ void from_json(const nlohmann::json &jsonObject, AssetGroupInfo &assetGroupInfo)
         ArrayType::STRING);
 }
 
-bool BundleInfoDualMode::ReadFromParcel(Parcel &parcel)
+bool DualModeBundleInfo::ReadFromParcel(Parcel &parcel)
 {
-    appIndex = parcel.ReadUint32();
-    deviceModeDistributionPolicy = static_cast<DeviceModeDistributionPolicy>(parcel.ReadInt32());
-    appSandboxPolicy = static_cast<AppSandboxPolicy>(parcel.ReadInt32());
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appIndex);
+    int32_t tmpReadVal = 0;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, tmpReadVal);
+    if (tmpReadVal < static_cast<int32_t>(DeviceModeDistributionPolicy::UNSPECIFIED) ||
+        tmpReadVal > static_cast<int32_t>(DeviceModeDistributionPolicy::FULL_COMPATIBLE_DIFFERENT_PACKAGE)) {
+        APP_LOGE("invalid deviceModeDistributionPolicy value: %{public}d", tmpReadVal);
+        return false;
+    }
+    deviceModeDistributionPolicy = static_cast<DeviceModeDistributionPolicy>(tmpReadVal);
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, tmpReadVal);
+    if (tmpReadVal < static_cast<int32_t>(AppSandboxPolicy::SHARED_SANDBOX) ||
+        tmpReadVal > static_cast<int32_t>(AppSandboxPolicy::ISOLATED_SANDBOX)) {
+        APP_LOGE("invalid appSandboxPolicy value: %{public}d", tmpReadVal);
+        return false;
+    }
+    appSandboxPolicy = static_cast<AppSandboxPolicy>(tmpReadVal);
     return true;
 }
 
-bool BundleInfoDualMode::Marshalling(Parcel &parcel) const
+bool DualModeBundleInfo::Marshalling(Parcel &parcel) const
 {
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, appIndex);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appIndex);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(deviceModeDistributionPolicy));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(appSandboxPolicy));
     return true;
 }
 
-BundleInfoDualMode *BundleInfoDualMode::Unmarshalling(Parcel &parcel)
+DualModeBundleInfo *DualModeBundleInfo::Unmarshalling(Parcel &parcel)
 {
-    BundleInfoDualMode *info = new (std::nothrow) BundleInfoDualMode();
-    if (info && !info->ReadFromParcel(parcel)) {
+    std::unique_ptr<DualModeBundleInfo> info = std::make_unique<DualModeBundleInfo>();
+    if (!info->ReadFromParcel(parcel)) {
         APP_LOGW("read from parcel failed");
-        delete info;
         info = nullptr;
     }
-    return info;
+    return info.release();
 }
 
-void to_json(nlohmann::json &jsonObject, const BundleInfoDualMode &info)
+void to_json(nlohmann::json &jsonObject, const DualModeBundleInfo &info)
 {
     jsonObject = nlohmann::json {
         {BUNDLE_INFO_APP_INDEX, info.appIndex},
@@ -1505,7 +1517,7 @@ void to_json(nlohmann::json &jsonObject, const BundleInfoDualMode &info)
     };
 }
 
-void from_json(const nlohmann::json &jsonObject, BundleInfoDualMode &info)
+void from_json(const nlohmann::json &jsonObject, DualModeBundleInfo &info)
 {
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
@@ -1534,7 +1546,7 @@ void from_json(const nlohmann::json &jsonObject, BundleInfoDualMode &info)
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        APP_LOGE("BundleInfoDualMode from_json error %{public}d", parseResult);
+        APP_LOGE("DualModeBundleInfo from_json error %{public}d", parseResult);
     }
 }
 

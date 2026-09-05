@@ -879,6 +879,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::BATCH_SET_CLONE_APPLICATION_ENABLED):
             errCode = this->HandleBatchSetApplicationEnabled(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_DUAL_MODE_BUNDLE_INFO):
+            errCode = this->HandleGetDualModeBundleInfo(data, reply);
+            break;
         default :
             APP_LOGW("bundleMgr host receives unknown code %{public}u", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -6272,22 +6275,19 @@ ErrCode BundleMgrHost::HandleSetApplicationDisableForbidden(MessageParcel &data,
     return ERR_OK;
 }
 
-ErrCode BundleMgrHost::HandleGetBundleInfoDualMode(MessageParcel &data, MessageParcel &reply)
+ErrCode BundleMgrHost::HandleGetDualModeBundleInfo(MessageParcel &data, MessageParcel &reply)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     int32_t userId = data.ReadInt32();
     APP_LOGD("bundleName %{public}s, userId %{public}d", bundleName.c_str(), userId);
-    BundleInfoDualMode bundleInfoDualMode;
-    auto ret = GetBundleInfoDualMode(bundleName, userId, bundleInfoDualMode);
-    if (!reply.WriteInt32(ret)) {
-        APP_LOGE("write result failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
+    DualModeBundleInfo dualModeBundleInfo;
+    auto ret = GetDualModeBundleInfo(bundleName, userId, dualModeBundleInfo);
+    if (ret == ERR_OK) {
+        WRITE_PARCEL(reply.WriteInt32(ERR_OK));
+        return WriteParcelInfoIntelligent(dualModeBundleInfo, reply);
     }
-    if (ret == ERR_OK && !reply.WriteParcelable(&bundleInfoDualMode)) {
-        APP_LOGE("write bundleInfo DualMode failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
+    WRITE_PARCEL(reply.WriteInt32(ret));
     return ERR_OK;
 }
 

@@ -7167,5 +7167,68 @@ napi_value FilterBundleListByDeviceModeDistributionPolicies(napi_env env, napi_c
     APP_LOGD("Call FilterBundleListByDeviceModeDistributionPolicies done");
     return promise;
 }
+
+napi_value GetBundleInfoDualMode(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("NAPI GetBundleInfoDualMode called");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    std::string bundleName;
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    for (size_t i = 0; i < args.GetArgc(); ++i) {
+        napi_valuetype valueType = napi_undefined;
+        NAPI_CALL(env, napi_typeof(env, args[i], &valueType));
+        if (i == ARGS_POS_ZERO) {
+            if (!CommonFunc::ParseString(env, args[i], bundleName)) {
+                APP_LOGE("bundleName %{public}s invalid", bundleName.c_str());
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+                return nullptr;
+            }
+        } else if (i == ARGS_POS_ONE) {
+            if ((valueType == napi_number) && (!CommonFunc::ParseInt(env, args[i], userId))) {
+                APP_LOGE("parseInt failed");
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, TYPE_NUMBER);
+                return nullptr;
+            }
+        } else {
+            APP_LOGE("parameter is invalid");
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+            return nullptr;
+        }
+    }
+    if (bundleName.empty()) {
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ERROR_PARAM_CHECK_ERROR, GET_BUNDLE_INFO_DUAL_MODE, BUNDLE_PERMISSIONS);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    if (userId == Constants::UNSPECIFIED_USERID) {
+        userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    }
+
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("BundleMgr is null");
+        return nullptr;
+    }
+    DualModeBundleInfo dualModeBundleInfo;
+    auto innerRet = iBundleMgr->GetDualModeBundleInfo(bundleName, userId, dualModeBundleInfo);
+    ErrCode ret = CommonFunc::ConvertErrCode(innerRet);
+    if (ret != NO_ERROR) {
+        APP_LOGD("GetBundleInfoDualMode failed -n %{public}s -u %{public}d", bundleName.c_str(), userId);
+        napi_value businessError = BusinessError::CreateCommonError(env, ret, GET_BUNDLE_INFO_DUAL_MODE,
+            BUNDLE_PERMISSIONS);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    napi_value nBundleInfoDualMode = nullptr;
+    NAPI_CALL(env, napi_create_object(env,  &nBundleInfoDualMode));
+    CommonFunc::ConvertBundleInfoDualMode(env, dualModeBundleInfo, nBundleInfoDualMode);
+    return nBundleInfoDualMode;
+}
 } // namespace AppExecFwk
 } // namespace OHOS

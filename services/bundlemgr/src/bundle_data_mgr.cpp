@@ -17113,5 +17113,39 @@ ErrCode BundleDataMgr::GetAllSkillInfos(uint32_t flags, int32_t userId,
     }
     return ERR_OK;
 }
+
+ErrCode BundleDataMgr::GetDualModeBundleInfo(const std::string &bundleName, int32_t userId,
+    DualModeBundleInfo &dualModeBundleInfo)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    if (bundleName.empty()) {
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    if (bundleInfos_.empty()) {
+        APP_LOGW("bundleInfos_ data is empty, bundleName: %{public}s", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    APP_LOGD("GetDualModeBundleInfo: %{public}s", bundleName.c_str());
+    auto item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        APP_LOGW_NOFUNC("%{public}s not find", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+
+    const InnerBundleInfo &innerBundleInfo = item->second;
+    int32_t appIndex = (innerBundleInfo.GetAppIndex() / ServiceConstants::DUAL_MODE_CLONE_APP_INDEX) == 0 ?
+        0 : ServiceConstants::DUAL_MODE_CLONE_APP_INDEX;
+    dualModeBundleInfo.appIndex = appIndex;
+    dualModeBundleInfo.deviceModeDistributionPolicy = innerBundleInfo.GetBaseBundleInfo().deviceModeDistributionPolicy;
+    dualModeBundleInfo.appSandboxPolicy = innerBundleInfo.GetBaseBundleInfo().appSandboxPolicy;
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

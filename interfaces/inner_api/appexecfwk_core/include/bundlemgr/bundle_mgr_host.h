@@ -1081,14 +1081,7 @@ private:
     ErrCode HandleGetPluginExtensionInfo(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleIsApplicationDisableForbidden(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleSetApplicationDisableForbidden(MessageParcel &data, MessageParcel &reply);
-
-    /**
-     * @brief Handles the GetBundleInfo function called from a IBundleMgr proxy object.
-     * @param data Indicates the data to be read.
-     * @param reply Indicates the reply to be sent;
-     * @return Returns ERR_OK if called successfully; returns error code otherwise.
-     */
-    ErrCode HandleGetBundleInfoDualMode(MessageParcel &data, MessageParcel &reply);
+    ErrCode HandleGetDualModeBundleInfo(MessageParcel &data, MessageParcel &reply);
 
 private:
     /**
