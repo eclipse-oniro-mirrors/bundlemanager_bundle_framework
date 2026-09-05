@@ -582,6 +582,16 @@ ErrCode InstalldClient::ExtractDriverSoFiles(const std::string &srcPath,
     return CallService(&IInstalld::ExtractDriverSoFiles, srcPath, dirMap);
 }
 
+ErrCode InstalldClient::ExtractDriverKoFiles(const ExtractParam &extractParam,
+    const std::unordered_multimap<std::string, std::string> &dirMap)
+{
+    if (extractParam.srcPath.empty() || dirMap.empty()) {
+        APP_LOGE("src path or dir map is empty");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::ExtractDriverKoFiles, extractParam, dirMap);
+}
+
 ErrCode InstalldClient::VerifyCodeSignatureForHap(const CodeSignatureParam &codeSignatureParam)
 {
     if (codeSignatureParam.modulePath.empty()) {

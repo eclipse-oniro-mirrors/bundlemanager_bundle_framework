@@ -2634,6 +2634,29 @@ ErrCode InstalldHostImpl::ExtractDriverSoFiles(const std::string &srcPath,
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::ExtractDriverKoFiles(const ExtractParam &extractParam,
+    const std::unordered_multimap<std::string, std::string> &dirMap)
+{
+    LOG_D(BMS_TAG_INSTALLD, "start to extract driver raw files from HAP");
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+
+    for (const auto &iter : dirMap) {
+        if (!InstalldOperator::IsFileNameValid(iter.first) || !InstalldOperator::IsFileNameValid(iter.second)) {
+            LOG_E(BMS_TAG_INSTALLD, "invalid param in dirMap");
+            return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+        }
+    }
+
+    if (!InstalldOperator::ExtractDriverKoFiles(extractParam, dirMap)) {
+        LOG_E(BMS_TAG_INSTALLD, "extract driver raw files failed errno:%{public}d", errno);
+        return ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED;
+    }
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::ExtractEncryptedSoFiles(const std::string &hapPath, const std::string &realSoFilesPath,
     const std::string &cpuAbi, const std::string &tmpSoPath, int32_t uid)
 {

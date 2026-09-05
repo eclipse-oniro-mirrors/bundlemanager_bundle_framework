@@ -336,6 +336,9 @@ public:
 
     static bool CopyDriverSoFiles(const std::string &originalDir, const std::string &destinedDir);
 
+    static bool ExtractDriverKoFiles(const ExtractParam &extractParam,
+        const std::unordered_multimap<std::string, std::string> &dirMap);
+
 #if defined(CODE_ENCRYPTION_ENABLE)
     static ErrCode ExtractSoFilesToTmpHapPath(const std::string &hapPath, const std::string &cpuAbi,
         const std::string &tmpSoPath, int32_t uid);
@@ -540,6 +543,8 @@ private:
         const std::string &newSoPath, std::vector<std::string> &oldSoFileNames,
         std::vector<std::string> &diffFileNames);
     static bool ExtractResourceFiles(const ExtractParam &extractParam, const BundleExtractor &extractor);
+    static bool ExtractDriverKoFile(const BundleExtractor &extractor, const ExtractParam &extractParam,
+        const std::string &originalDir, const std::string &destinedDir);
     static bool CheckPathIsSame(const std::string &path, int32_t mode, const int32_t uid, const int32_t gid,
         bool &isPathExist);
     static bool IsPathNeedChown(const std::string &path, int32_t mode, bool isPathExist);

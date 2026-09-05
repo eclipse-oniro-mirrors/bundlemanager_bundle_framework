@@ -17,15 +17,24 @@
 
 #include "base_bundle_installer.h"
 #include "installd_client.h"
+#include "ipc/extract_param.h"
+#include "parameters.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
+constexpr const char* EXTERNAL_DRIVER_DEST_DIR = "/data/service/el1/public/pcie_driver/";
+constexpr const char* PREFIX_RESOURCE_RAWFILE_PATH = "/resources/rawfile/";
+constexpr const char* EXTERNAL_DRIVER_SOURCE = "externalDriverSource";
+constexpr const char* FILE_NAME_SEPARATOR = "+";
 const std::vector<std::string> DRIVER_PROPERTIES {
-    "cupsFilter", "cupsBackend", "cupsPpd", "saneConfig", "saneBackend"
+    "cupsFilter", "cupsBackend", "cupsPpd", "saneConfig", "saneBackend", EXTERNAL_DRIVER_SOURCE
 };
 constexpr const char* TEMP_PREFIX = "temp_";
-} // namespace
+constexpr const char* PARAM_EXTERNAL_DRIVER_INSTALL_ENABLE =
+    "const.enterprise.external_device.post_install.driver.enable";
+constexpr const size_t MAX_FILE_NAME_LENGTH = 256;
+}  // namespace
 
 ErrCode DriverInstaller::CopyAllDriverFile(const std::unordered_map<std::string, InnerBundleInfo> &newInfos,
     const InnerBundleInfo &oldInfo) const
@@ -48,12 +57,10 @@ ErrCode DriverInstaller::CopyDriverSoFile(const InnerBundleInfo &info, const std
     auto extensionAbilityInfos = info.GetInnerExtensionInfos();
     // key is the orignial dir in hap of driver so file
     // value is the destination dir of driver so file
-    std::unordered_multimap<std::string, std::string> dirMap;
+    std::unordered_multimap<std::string, std::string> libsDirMap;
+    std::unordered_multimap<std::string, std::string> rawfileDirMap;
     // 1. filter driver so files
     ErrCode result = ERR_OK;
-    std::string cpuAbi = "";
-    std::string nativeLibraryPath = "";
-    info.FetchNativeSoAttrs(info.GetCurrentModulePackage(), cpuAbi, nativeLibraryPath);
     for (const auto &extAbilityInfo : extensionAbilityInfos) {
         if (extAbilityInfo.second.type != ExtensionAbilityType::DRIVER) {
             continue;
@@ -62,23 +69,97 @@ ErrCode DriverInstaller::CopyDriverSoFile(const InnerBundleInfo &info, const std
             driverInstallExtHandler_ = std::make_shared<DriverInstallExtHandler>();
         }
         auto &metadata = extAbilityInfo.second.metadata;
-        auto filterFunc = [this, &result, &info, &dirMap, &isModuleExisted](const Metadata &meta) {
-            result = FilterDriverSoFile(info, meta, dirMap, isModuleExisted);
+        auto filterFunc = [this, &result, &info, &libsDirMap, &rawfileDirMap, &isModuleExisted](const Metadata &meta) {
+            if (meta.name == EXTERNAL_DRIVER_SOURCE) {
+                return HandleExternalDriverSource(info, meta, rawfileDirMap, isModuleExisted, result);
+            }
+            result = FilterDriverSoFile(info, meta, libsDirMap, isModuleExisted);
             return result != ERR_OK;
         };
         std::any_of(metadata.begin(), metadata.end(), filterFunc);
         CHECK_RESULT(result, "driver so path is invalid, error is %{public}d");
     }
-    if (dirMap.empty()) {
+    if (libsDirMap.empty() && rawfileDirMap.empty()) {
         APP_LOGD("no driver so file needs to be cpoied");
         return ERR_OK;
     }
-    // 2. copy driver so file to destined dir
-    std::string realSoDir;
-    realSoDir.append(Constants::BUNDLE_CODE_DIR).append(ServiceConstants::PATH_SEPARATOR)
-        .append(info.GetBundleName()).append(ServiceConstants::PATH_SEPARATOR)
-        .append(nativeLibraryPath);
-    return InstalldClient::GetInstance()->ExtractDriverSoFiles(realSoDir, dirMap);
+
+    if (!libsDirMap.empty()) {
+        std::string cpuAbi = "";
+        std::string nativeLibraryPath = "";
+        info.FetchNativeSoAttrs(info.GetCurrentModulePackage(), cpuAbi, nativeLibraryPath);
+        std::string realSoDir;
+        realSoDir.append(Constants::BUNDLE_CODE_DIR).append(ServiceConstants::PATH_SEPARATOR)
+            .append(info.GetBundleName()).append(ServiceConstants::PATH_SEPARATOR)
+            .append(nativeLibraryPath);
+        ErrCode ret = InstalldClient::GetInstance()->ExtractDriverSoFiles(realSoDir, libsDirMap);
+        if (ret != ERR_OK) {
+            APP_LOGE("ExtractDriverSoFiles failed due to error %{public}d", ret);
+            return ret;
+        }
+    }
+    // extract /resources/rawfile/ driver files from HAP (new path)
+    ErrCode ret = ExtractDriverRawFiles(info, rawfileDirMap);
+    CHECK_RESULT(ret, "extract driver raw files failed due to error %{public}d");
+    return ERR_OK;
+}
+
+ErrCode DriverInstaller::ExtractDriverRawFiles(const InnerBundleInfo &info,
+    const std::unordered_multimap<std::string, std::string> &rawfileDirMap) const
+{
+    APP_LOGD("begin");
+    if (rawfileDirMap.empty()) {
+        APP_LOGD("no rawfile driver file needs to be extracted");
+        return ERR_OK;
+    }
+    std::string hapPath = info.GetModuleHapPath(info.GetCurrentModulePackage());
+    if (hapPath.empty()) {
+        APP_LOGE("hap path is empty for rawfile driver extraction");
+        return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+    }
+    ExtractParam extractParam;
+    extractParam.srcPath = hapPath;
+    extractParam.extractFileType = ExtractFileType::RESOURCE;
+    ErrCode ret = InstalldClient::GetInstance()->ExtractDriverKoFiles(extractParam, rawfileDirMap);
+    if (ret != ERR_OK) {
+        APP_LOGE("ExtractDriverKoFiles failed due to error %{public}d", ret);
+    }
+    return ret;
+}
+
+bool DriverInstaller::HandleExternalDriverSource(const InnerBundleInfo &info, const Metadata &meta,
+    std::unordered_multimap<std::string, std::string> &dirMap, bool isModuleExisted, ErrCode &result) const
+{
+    const bool enabledByCcm = OHOS::system::GetBoolParameter(PARAM_EXTERNAL_DRIVER_INSTALL_ENABLE, false);
+    if (!enabledByCcm) {
+        APP_LOGI("external driver install disable");
+        return true;
+    }
+    result = FilterDriverKoFile(info, meta, dirMap, isModuleExisted);
+    return result != ERR_OK;
+}
+
+ErrCode DriverInstaller::FilterDriverKoFile(const InnerBundleInfo &info, const Metadata &meta,
+    std::unordered_multimap<std::string, std::string> &dirMap, bool isModuleExisted) const
+{
+    APP_LOGD("begin");
+    // check dir and obtain name of the file which needs to be copied
+    std::string originalDir = meta.resource;
+    std::string destinedDir = EXTERNAL_DRIVER_DEST_DIR;
+    if (originalDir.find(ServiceConstants::RELATIVE_PATH) != std::string::npos) {
+        APP_LOGW("metadata resource %{public}s cannot support path", originalDir.c_str());
+        return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+    }
+    const auto &moduleName = info.GetModuleName(info.GetCurrentModulePackage());
+    destinedDir = CreateDriverKoDestinedDir(info.GetBundleName(), moduleName, originalDir, destinedDir,
+        isModuleExisted);
+    if (destinedDir.empty()) {
+        APP_LOGW("CreateDriverKoDestinedDir error");
+        return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+    }
+    APP_LOGD("metadata destined dir is %{public}s", destinedDir.c_str());
+    dirMap.emplace(originalDir, destinedDir);
+    return ERR_OK;
 }
 
 ErrCode DriverInstaller::FilterDriverSoFile(const InnerBundleInfo &info, const Metadata &meta,
@@ -156,25 +237,80 @@ void DriverInstaller::RemoveDriverSoFile(const InnerBundleInfo &info, const std:
                 APP_LOGD("metadata name %{public}s is not existed in driver properties", meta.name.c_str());
                 continue;
             }
-            std::vector<std::string> originalDirVec;
-            SplitStr(meta.resource, ServiceConstants::PATH_SEPARATOR, originalDirVec, false, false);
-            if (originalDirVec.empty()) {
-                APP_LOGW("invalid metadata resource %{public}s", meta.resource.c_str());
+
+            if (!RemoveDriverFile(info, extModuleName, meta, isModuleExisted)) {
                 return;
-            }
-            auto fileName = originalDirVec.back();
-            APP_LOGD("fileName is %{public}s", fileName.c_str());
-            std::string destinedDir = CreateDriverSoDestinedDir(info.GetBundleName(), extModuleName, fileName,
-                meta.value, isModuleExisted);
-            APP_LOGD("Remove driver so file path is %{public}s", destinedDir.c_str());
-            if (!destinedDir.empty()) {
-                std::string systemServiceDir = ServiceConstants::SYSTEM_SERVICE_DIR;
-                InstalldClient::GetInstance()->RemoveDir(
-                    systemServiceDir + destinedDir, BundleDirScene::REMOVE_SYSTEM_SERVICE_DIR);
             }
         }
     }
     APP_LOGD("end");
+}
+
+bool DriverInstaller::RemoveDriverFile(const InnerBundleInfo &info, const std::string &moduleName,
+    const Metadata &meta, bool isModuleExisted) const
+{
+    if (meta.name == EXTERNAL_DRIVER_SOURCE) {
+        std::string metaDestDir = EXTERNAL_DRIVER_DEST_DIR;
+        std::string destinedDir = CreateDriverKoDestinedDir(info.GetBundleName(), moduleName, meta.resource,
+            metaDestDir, isModuleExisted);
+        APP_LOGD("Remove driver so file path is %{public}s", destinedDir.c_str());
+        if (!destinedDir.empty()) {
+            InstalldClient::GetInstance()->RemoveDir(
+                destinedDir, BundleDirScene::REMOVE_SYSTEM_SERVICE_DIR);
+        }
+        return true;
+    }
+    std::vector<std::string> originalDirVec;
+    SplitStr(meta.resource, ServiceConstants::PATH_SEPARATOR, originalDirVec, false, false);
+    if (originalDirVec.empty()) {
+        APP_LOGW("invalid metadata resource %{public}s", meta.resource.c_str());
+        return false;
+    }
+    auto fileName = originalDirVec.back();
+    APP_LOGD("fileName is %{public}s", fileName.c_str());
+    std::string destinedDir = CreateDriverSoDestinedDir(info.GetBundleName(), moduleName, fileName,
+        meta.value, isModuleExisted);
+    APP_LOGD("Remove driver so file path is %{public}s", destinedDir.c_str());
+    if (!destinedDir.empty()) {
+        std::string systemServiceDir = ServiceConstants::SYSTEM_SERVICE_DIR;
+        InstalldClient::GetInstance()->RemoveDir(
+            systemServiceDir + destinedDir, BundleDirScene::REMOVE_SYSTEM_SERVICE_DIR);
+    }
+    return true;
+}
+
+std::string DriverInstaller::CreateDriverKoDestinedDir(const std::string &bundleName, const std::string &moduleName,
+    const std::string &originalDir, const std::string &destinedDir, bool isModuleExisted) const
+{
+    APP_LOGD("bundleName is %{public}s, moduleName is %{public}s, fileName is %{public}s, destinedDir is %{public}s",
+        bundleName.c_str(), moduleName.c_str(), originalDir.c_str(), destinedDir.c_str());
+    if (bundleName.empty() || moduleName.empty() || originalDir.empty() || destinedDir.empty()) {
+        APP_LOGW("parameters are invalid");
+        return "";
+    }
+    if (destinedDir.find("..") != std::string::npos) {
+        APP_LOGW("destinedDir %{public}s invalid", destinedDir.c_str());
+        return "";
+    }
+    std::string resStr = destinedDir;
+    if (resStr.back() != ServiceConstants::PATH_SEPARATOR[0]) {
+        resStr += ServiceConstants::PATH_SEPARATOR;
+    }
+    if (isModuleExisted) {
+        resStr.append(TEMP_PREFIX);
+    }
+    std::string fileName = ConvertResfilePath(originalDir);
+    if (fileName.empty()) {
+        APP_LOGW("originalDir %{public}s invalid", originalDir.c_str());
+        return "";
+    }
+    resStr.append(bundleName).append(FILE_NAME_SEPARATOR).append(moduleName)
+        .append(FILE_NAME_SEPARATOR).append(fileName);
+    if (resStr.size() > MAX_FILE_NAME_LENGTH) {
+        APP_LOGE("file name %{public}s length invalid", resStr.c_str());
+        return "";
+    }
+    return resStr;
 }
 
 std::string DriverInstaller::CreateDriverSoDestinedDir(const std::string &bundleName, const std::string &moduleName,
@@ -205,6 +341,40 @@ std::string DriverInstaller::CreateDriverSoDestinedDir(const std::string &bundle
     return resStr;
 }
 
+std::string DriverInstaller::ConvertResfilePath(const std::string &originalDir) const
+{
+    APP_LOGD("originalDir is %{public}s", originalDir.c_str());
+    if (!BundleUtil::StartWith(originalDir, PREFIX_RESOURCE_RAWFILE_PATH)
+        || !BundleUtil::EndWith(originalDir, ".ko")) {
+        APP_LOGE("originalDir %{public}s invalid", originalDir.c_str());
+        return "";
+    }
+    std::string result = originalDir.substr(strlen(PREFIX_RESOURCE_RAWFILE_PATH));
+    std::replace(result.begin(), result.end(), '/', '.');
+    APP_LOGD("converted result is %{public}s", result.c_str());
+    return result;
+}
+
+void DriverInstaller::RenameDriverKoFile(const InnerBundleInfo &info, const std::string &moduleName,
+    const Metadata &meta) const
+{
+    auto fileName = meta.resource;
+    APP_LOGD("fileName is %{public}s", fileName.c_str());
+    std::string metaDestDir = EXTERNAL_DRIVER_DEST_DIR;
+    std::string tempDestinedDir =
+        CreateDriverKoDestinedDir(info.GetBundleName(), moduleName, fileName, metaDestDir, true);
+    APP_LOGD("driver so file temp path is %{public}s", tempDestinedDir.c_str());
+
+    std::string realDestinedDir =
+        CreateDriverKoDestinedDir(info.GetBundleName(), moduleName, fileName, metaDestDir, false);
+    APP_LOGD("driver so file real path is %{public}s", realDestinedDir.c_str());
+
+    InstalldClient::GetInstance()->MoveFile(tempDestinedDir,
+                                            realDestinedDir,
+                                            BundleDirScene::MOVE_DRIVER_FILE,
+                                            info.GetBundleName());
+}
+
 void DriverInstaller::RenameDriverFile(const InnerBundleInfo &info) const
 {
     APP_LOGD("begin");
@@ -222,25 +392,29 @@ void DriverInstaller::RenameDriverFile(const InnerBundleInfo &info) const
                 APP_LOGD("metadata name %{public}s is not existed in driver properties", meta.name.c_str());
                 continue;
             }
-            std::vector<std::string> originalDirVec;
-            SplitStr(meta.resource, ServiceConstants::PATH_SEPARATOR, originalDirVec, false, false);
-            if (originalDirVec.empty()) {
-                APP_LOGW("invalid metadata resource %{public}s", meta.resource.c_str());
-                return;
+            if (meta.name == EXTERNAL_DRIVER_SOURCE) {
+                RenameDriverKoFile(info, extModuleName, meta);
+            } else {
+                std::vector<std::string> originalDirVec;
+                SplitStr(meta.resource, ServiceConstants::PATH_SEPARATOR, originalDirVec, false, false);
+                if (originalDirVec.empty()) {
+                    APP_LOGW("invalid metadata resource %{public}s", meta.resource.c_str());
+                    return;
+                }
+                auto fileName = originalDirVec.back();
+                APP_LOGD("fileName is %{public}s", fileName.c_str());
+                std::string tempDestinedDir = CreateDriverSoDestinedDir(info.GetBundleName(), extModuleName, fileName,
+                    meta.value, true);
+                APP_LOGD("driver so file temp path is %{public}s", tempDestinedDir.c_str());
+
+                std::string realDestinedDir = CreateDriverSoDestinedDir(info.GetBundleName(), extModuleName, fileName,
+                    meta.value, false);
+                APP_LOGD("driver so file real path is %{public}s", realDestinedDir.c_str());
+
+                std::string systemServiceDir = ServiceConstants::SYSTEM_SERVICE_DIR;
+                InstalldClient::GetInstance()->MoveFile(systemServiceDir + tempDestinedDir,
+                    systemServiceDir + realDestinedDir, BundleDirScene::MOVE_DRIVER_FILE, info.GetBundleName());
             }
-            auto fileName = originalDirVec.back();
-            APP_LOGD("fileName is %{public}s", fileName.c_str());
-            std::string tempDestinedDir = CreateDriverSoDestinedDir(info.GetBundleName(), extModuleName, fileName,
-                meta.value, true);
-            APP_LOGD("driver so file temp path is %{public}s", tempDestinedDir.c_str());
-
-            std::string realDestinedDir = CreateDriverSoDestinedDir(info.GetBundleName(), extModuleName, fileName,
-                meta.value, false);
-            APP_LOGD("driver so file real path is %{public}s", realDestinedDir.c_str());
-
-            std::string systemServiceDir = ServiceConstants::SYSTEM_SERVICE_DIR;
-            InstalldClient::GetInstance()->MoveFile(systemServiceDir + tempDestinedDir,
-                systemServiceDir + realDestinedDir, BundleDirScene::MOVE_DRIVER_FILE, info.GetBundleName());
         }
     }
     APP_LOGD("end");

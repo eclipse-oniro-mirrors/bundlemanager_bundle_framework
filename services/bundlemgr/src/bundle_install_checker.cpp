@@ -76,6 +76,7 @@ constexpr int8_t THRESHOLD_VAL_LEN = 40;
 constexpr const char* DEVICE_TYPE_OF_DEFAULT = "default";
 constexpr const char* DEVICE_TYPE_OF_PHONE = "phone";
 constexpr const char* APP_INSTALL_PATH = "/data/app/el1/bundle";
+constexpr const char* EXTERNAL_DRIVER_SOURCE = "externalDriverSource";
 const uint32_t LEAST_FREE_INODE = 100000;
 
 const std::unordered_map<std::string, void (*)(AppPrivilegeCapability &appPrivilegeCapability)>
@@ -1545,9 +1546,13 @@ void BundleInstallChecker::FetchPrivilegeCapabilityFromPreConfig(
 bool CheckDriverNameAndValue(std::string name, std::string value)
 {
     const std::vector<std::string> DRIVER_PROPERTIES = {
-        "cupsFilter", "cupsBackend", "cupsPpd", "saneConfig", "saneBackend"
+        "cupsFilter", "cupsBackend", "cupsPpd", "saneConfig", "saneBackend", EXTERNAL_DRIVER_SOURCE
     };
     if (std::find(DRIVER_PROPERTIES.cbegin(), DRIVER_PROPERTIES.cend(), name) == DRIVER_PROPERTIES.cend()) {
+        return true;
+    }
+    // type externalDriverSource no need check value
+    if (name == EXTERNAL_DRIVER_SOURCE) {
         return true;
     }
 

@@ -271,6 +271,8 @@ private:
 
     bool HandExtractDriverSoFiles(MessageParcel &data, MessageParcel &reply);
 
+    bool HandleExtractDriverKoFiles(MessageParcel &data, MessageParcel &reply);
+
     bool HandExtractEncryptedSoFiles(MessageParcel &data, MessageParcel &reply);
 
     bool HandVerifyCodeSignatureForHap(MessageParcel &data, MessageParcel &reply);

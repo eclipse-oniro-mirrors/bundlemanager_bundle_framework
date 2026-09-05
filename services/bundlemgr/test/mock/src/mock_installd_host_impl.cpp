@@ -353,6 +353,12 @@ ErrCode InstalldHostImpl::ExtractEncryptedSoFiles(const std::string &hapPath, co
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::ExtractDriverKoFiles(const ExtractParam &extractParam,
+    const std::unordered_multimap<std::string, std::string> &dirMap)
+{
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::VerifyCodeSignatureForHap(const CodeSignatureParam &codeSignatureParam)
 {
     return ERR_OK;

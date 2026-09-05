@@ -121,6 +121,7 @@ constexpr const char* FRAMEWORK_ARK_CACHE_PATH = "framework_ark_cache/";
 constexpr const char* APP_BIN_FILE_CONTEXT = "u:object_r:app_bin_file:s0";
 constexpr const char* DEBUG_APP_BIN_FILE_CONTEXT = "u:object_r:debug_app_bin_file:s0";
 #endif
+constexpr const char* EXTERNAL_DRIVER_DEST_DIR = "/data/service/el1/public/pcie_driver/";
 #if defined(CODE_ENCRYPTION_ENABLE)
 static const char LIB_CODE_CRYPTO_SO_PATH[] = "system/lib/libcode_crypto_metadata_process_utils.z.so";
 static const char LIB64_CODE_CRYPTO_SO_PATH[] = "system/lib64/libcode_crypto_metadata_process_utils.z.so";
@@ -2911,6 +2912,94 @@ bool InstalldOperator::CopyDriverSoFiles(const std::string &originalDir, const s
         return false;
     }
     LOG_D(BMS_TAG_INSTALLD, "CopyDriverSoFiles end");
+    return true;
+}
+
+bool InstalldOperator::ExtractDriverKoFiles(const ExtractParam &extractParam,
+    const std::unordered_multimap<std::string, std::string> &dirMap)
+{
+    LOG_D(BMS_TAG_INSTALLD, "ExtractDriverKoFiles start");
+    if (extractParam.srcPath.empty() || dirMap.empty()) {
+        LOG_E(BMS_TAG_INSTALLD, "ExtractDriverKoFiles parameters are invalid");
+        return false;
+    }
+    if (extractParam.extractFileType != ExtractFileType::RESOURCE) {
+        LOG_E(BMS_TAG_INSTALLD, "ExtractDriverKoFiles extractFileType must be RESOURCE");
+        return false;
+    }
+
+    // 1. init BundleExtractor from HAP path
+    BundleExtractor extractor(extractParam.srcPath);
+    if (!extractor.Init()) {
+        LOG_E(BMS_TAG_INSTALLD, "ExtractDriverKoFiles extractor init failed, hapPath:%{public}s",
+            extractParam.srcPath.c_str());
+        return false;
+    }
+
+    // 2. iterate dirMap: key = entry in HAP (e.g. /resources/rawfile/xxx), value = target path
+    for (const auto &[originalDir, destinedDir] : dirMap) {
+        if (!ExtractDriverKoFile(extractor, extractParam, originalDir, destinedDir)) {
+            LOG_E(BMS_TAG_INSTALLD, "ExtractDriverKoFiles extract %{public}s failed", originalDir.c_str());
+            return false;
+        }
+    }
+    LOG_D(BMS_TAG_INSTALLD, "ExtractDriverKoFiles end");
+    return true;
+}
+
+bool InstalldOperator::ExtractDriverKoFile(const BundleExtractor &extractor, const ExtractParam &extractParam,
+    const std::string &originalDir, const std::string &destinedDir)
+{
+    if ((originalDir.compare(".") == 0) || (originalDir.compare("..") == 0)) {
+        LOG_E(BMS_TAG_INSTALLD, "ExtractDriverKoFiles originalDir %{public}s is invalid", originalDir.c_str());
+        return false;
+    }
+    // validate originalDir prefix: must start with /resources/rawfile/
+    if (!BundleUtil::StartWith(originalDir, PREFIX_RESOURCE_PATH) || !BundleUtil::EndWith(originalDir, ".ko")) {
+        LOG_E(BMS_TAG_INSTALLD, "ExtractDriverKoFiles originalDir %{public}s invalid", originalDir.c_str());
+        return false;
+    }
+    // originalDir format: /resources/rawfile/xxx  →  entryName: resources/rawfile/xxx (strip leading '/')
+    std::string entryName = originalDir;
+    if (!entryName.empty() && entryName.front() == ServiceConstants::PATH_SEPARATOR[0]) {
+        entryName = entryName.substr(1);
+    }
+    // check entry exists in HAP
+    if (!extractor.HasEntry(entryName)) {
+        LOG_E(BMS_TAG_INSTALLD, "ExtractDriverKoFiles entry %{public}s not found in HAP", entryName.c_str());
+        return false;
+    }
+
+    auto pos = destinedDir.rfind(ServiceConstants::PATH_SEPARATOR);
+    if ((pos == std::string::npos) || (pos == destinedDir.length() - 1)) {
+        LOG_E(BMS_TAG_INSTALLD, "destinedDir(%{public}s) is invalid path", destinedDir.c_str());
+        return false;
+    }
+    std::string desDir = destinedDir.substr(0, pos);
+    std::string realDesDir;
+    if (!PathToRealPath(desDir, realDesDir)) {
+        LOG_E(BMS_TAG_INSTALLD, "desDir(%{public}s) is not real path", desDir.c_str());
+        return false;
+    }
+    std::string targetPath = realDesDir + destinedDir.substr(pos);
+    if (!BundleUtil::StartWith(targetPath, EXTERNAL_DRIVER_DEST_DIR)) {
+        LOG_E(BMS_TAG_INSTALLD, "ExtractDriverKoFiles targetPath %{public}s has invalid prefix", targetPath.c_str());
+        return false;
+    }
+    if (!extractor.ExtractFile(entryName, targetPath)) {
+        LOG_E(BMS_TAG_INSTALLD,
+            "ExtractDriverKoFiles extract %{public}s to %{private}s failed", entryName.c_str(), targetPath.c_str());
+        return false;
+    }
+
+    if (!ChangeModeFile(extractParam, targetPath)) {
+        return false;
+    }
+    if (!FsyncFile(targetPath)) {
+        LOG_W(BMS_TAG_INSTALLD, "FsyncFile %{public}s failed", targetPath.c_str());
+    }
+    LOG_D(BMS_TAG_INSTALLD,
+        "ExtractDriverKoFiles extract %{public}s to %{private}s success", entryName.c_str(), targetPath.c_str());
     return true;
 }
 
