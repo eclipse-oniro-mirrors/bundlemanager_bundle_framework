@@ -6069,6 +6069,22 @@ HWTEST_F(BmsBundleKitServiceTest, SetAdditionalInfoByIndex_0003, Function | Smal
 }
 
 /**
+ * @tc.number: SetAdditionalInfoByIndex_0004
+ * @tc.name: test SetAdditionalInfoByIndex with default appIndex
+ * @tc.desc: 1.appIndex is DEFAULT_APP_INDEX
+ *           2.caller is not app gallery, get ERR_BUNDLE_MANAGER_NOT_APP_GALLERY_CALL
+ */
+HWTEST_F(BmsBundleKitServiceTest, SetAdditionalInfoByIndex_0004, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(nullptr, bundleMgrProxy);
+    std::string additionalInfo = "additionalInfo";
+    auto ret = bundleMgrProxy->SetAdditionalInfoByIndex(
+        BUNDLE_NAME_TEST, additionalInfo, Constants::DEFAULT_APP_INDEX);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_NOT_APP_GALLERY_CALL);
+}
+
+/**
  * @tc.number: GetAppServiceHspInfo_0001
  * @tc.name: test GetAppServiceHspInfo
  * @tc.desc: 1.system run normally
