@@ -52,7 +52,7 @@ namespace OHOS {
         BundleInfo bundleInfo;
         bundleMgrProxy.GetUninstalledBundleInfo(bundleName, bundleInfo);
         std::string additionalInfo = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
-        bundleMgrProxy.SetAdditionalInfo(bundleName, additionalInfo, appIndex);
+        bundleMgrProxy.SetAdditionalInfoByIndex(bundleName, additionalInfo, appIndex);
         bundleMgrProxy.CreateBundleDataDir(userId);
         std::string odid;
         bundleMgrProxy.GetOdid(odid);

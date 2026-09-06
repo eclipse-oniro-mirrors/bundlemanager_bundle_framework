@@ -925,6 +925,7 @@ private:
     ErrCode HandleGetBundleResourceProxy(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleGetSkillManagerProxy(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleSetAdditionalInfo(MessageParcel &data, MessageParcel &reply);
+    ErrCode HandleSetAdditionalInfoByIndex(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetRecoverableApplicationInfo(MessageParcel &data, MessageParcel &reply);
 

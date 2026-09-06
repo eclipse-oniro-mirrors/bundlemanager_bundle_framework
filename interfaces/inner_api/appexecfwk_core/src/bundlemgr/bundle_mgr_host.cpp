@@ -606,6 +606,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::SET_ADDITIONAL_INFO):
             errCode = this->HandleSetAdditionalInfo(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::SET_ADDITIONAL_INFO_BY_INDEX):
+            errCode = this->HandleSetAdditionalInfoByIndex(data, reply);
+            break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::COMPILE_PROCESSAOT):
             errCode = this->HandleCompileProcessAOT(data, reply);
             break;
@@ -4521,8 +4524,21 @@ ErrCode BundleMgrHost::HandleSetAdditionalInfo(MessageParcel &data, MessageParce
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     std::string additionalInfo = data.ReadString();
+    ErrCode ret = SetAdditionalInfo(bundleName, additionalInfo);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("Write reply failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleSetAdditionalInfoByIndex(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    std::string bundleName = data.ReadString();
+    std::string additionalInfo = data.ReadString();
     int32_t appIndex = data.ReadInt32();
-    ErrCode ret = SetAdditionalInfo(bundleName, additionalInfo, appIndex);
+    ErrCode ret = SetAdditionalInfoByIndex(bundleName, additionalInfo, appIndex);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("Write reply failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;

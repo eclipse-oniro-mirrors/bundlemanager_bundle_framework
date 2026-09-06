@@ -399,6 +399,8 @@ namespace bundleManager {
 
   native function setAdditionalInfo(bundleName: string, additionalInfo: string): void;
 
+  native function setAdditionalInfoByIndex(bundleName: string, additionalInfo: string, appIndex: int): void;
+
   native function deleteAbcNative(abcPath: string): void;
 
   native function getDeveloperIdsNative(appDistributionType: int): Array<string>;

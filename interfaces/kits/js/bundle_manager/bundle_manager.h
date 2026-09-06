@@ -459,6 +459,7 @@ napi_value GetDynamicIcon(napi_env env, napi_callback_info info);
 napi_value GetJsonProfile(napi_env env, napi_callback_info info);
 napi_value GetRecoverableApplicationInfo(napi_env env, napi_callback_info info);
 napi_value SetAdditionalInfo(napi_env env, napi_callback_info info);
+napi_value SetAdditionalInfoByIndex(napi_env env, napi_callback_info info);
 napi_value CanOpenLink(napi_env env, napi_callback_info info);
 napi_value GetAllPreinstalledApplicationInfos(napi_env env, napi_callback_info info);
 napi_value GetAllNewPreinstalledApplicationInfos(napi_env env, napi_callback_info info);

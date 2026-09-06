@@ -12783,11 +12783,8 @@ std::string BundleDataMgr::GetModuleNameByBundleAndAbility(
 }
 
 ErrCode BundleDataMgr::SetAdditionalInfo(const std::string& bundleName,
-    const std::string& additionalInfo, int32_t appIndex) const
+    const std::string& additionalInfo) const
 {
-    if (DualModeHelper::IsDualModeDevice()) {
-        return SetAdditionalInfoForDualMode(bundleName, additionalInfo, appIndex);
-    }
     APP_LOGD("Called. BundleName: %{public}s", bundleName.c_str());
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
@@ -12811,8 +12808,14 @@ ErrCode BundleDataMgr::SetAdditionalInfo(const std::string& bundleName,
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
 
-    if (!appProvisionInfoManager->SetAdditionalInfo(bundleName, additionalInfo)) {
-        APP_LOGE("BundleName: %{public}s set additional info failed", bundleName.c_str());
+    std::string effectiveBundleName = bundleName;
+    if (DualModeHelper::IsDualModeDevice()) {
+        effectiveBundleName = infoItem->second.IsDualModeCloneApp() ?
+            DualModeHelper::GetDualModeBundleName(bundleName) : bundleName;
+    }
+    if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->SetAdditionalInfo(effectiveBundleName,
+        additionalInfo)) {
+        APP_LOGE("effectiveBundleName: %{public}s set additional info failed", effectiveBundleName.c_str());
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
 
@@ -12826,7 +12829,7 @@ ErrCode BundleDataMgr::SetAdditionalInfo(const std::string& bundleName,
     return ERR_OK;
 }
 
-ErrCode BundleDataMgr::SetAdditionalInfoForDualMode(const std::string& bundleName,
+ErrCode BundleDataMgr::SetAdditionalInfoByIndex(const std::string& bundleName,
     const std::string& additionalInfo, int32_t appIndex) const
 {
     APP_LOGD("Called. BundleName: %{public}s", bundleName.c_str());
