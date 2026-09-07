@@ -75,6 +75,7 @@ private:
      */
     bool HandleExtractQuickFixSoFile(MessageParcel &data, MessageParcel &reply);
 
+    bool HandleExtractQuickFixRes(MessageParcel &data, MessageParcel &reply);
     bool HandleProcessBundleInstallNative(MessageParcel &data, MessageParcel &reply);
     bool HandleProcessBundleUnInstallNative(MessageParcel &data, MessageParcel &reply);
 

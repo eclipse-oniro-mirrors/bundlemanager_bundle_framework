@@ -112,6 +112,7 @@ enum class InstalldInterfaceCode : uint32_t {
     GET_APP_DATA_FILE_CATEGORY_STATS = 85,
     GET_APP_DATA_DIR_CATEGORY_SIZES = 86,
     EXTRACT_TARGET_RAW_FILES = 87,
+    EXTRACT_QUICK_FIX_RES = 88,
 };
 
 } // namespace AppExecFwk

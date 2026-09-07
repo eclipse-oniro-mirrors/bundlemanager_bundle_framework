@@ -69,6 +69,12 @@ ErrCode InstalldClient::ExtractQuickFixSoFile(const std::string &bundleName, con
     return 0;
 }
 
+ErrCode InstalldClient::ExtractQuickFixRes(const std::string &bundleName, const std::string &moduleName,
+    const std::string &hqfFilePath, bool needFakeDecompression)
+{
+    return 0;
+}
+
 ErrCode InstalldClient::ExtractHnpFiles(const std::map<std::string, std::string> &hnpPackageMap,
     const ExtractParam &extractParam)
 {

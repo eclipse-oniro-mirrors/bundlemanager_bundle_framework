@@ -535,6 +535,8 @@ public:
     static bool IsValidPathByCleanBundleDirsScene(const std::string &dir, const std::string &bundleName,
         const BundleDirScene &scene);
     static bool IsValidPathByDeleteUninstallTmpDirs(const std::string &dir);
+    static bool IsValidPathByExtractQuickFixRes(const std::string &bundleName, const std::string &moduleName,
+        const std::string &hqfFilePath);
 private:
     static bool ObtainNativeSoFile(const BundleExtractor &extractor, const std::string &cpuAbi,
         std::vector<std::string> &soEntryFiles);

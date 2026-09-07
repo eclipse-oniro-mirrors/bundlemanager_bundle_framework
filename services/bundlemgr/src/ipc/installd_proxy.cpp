@@ -225,6 +225,20 @@ ErrCode InstalldProxy::ExtractQuickFixSoFile(const std::string &bundleName, cons
     return TransactInstalldCmd(InstalldInterfaceCode::EXTRACT_QUICK_FIX_SO_FILE, data, reply, option);
 }
 
+ErrCode InstalldProxy::ExtractQuickFixRes(const std::string &bundleName, const std::string &moduleName,
+    const std::string &hqfFilePath, bool needFakeDecompression)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(moduleName));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(hqfFilePath));
+    INSTALLD_PARCEL_WRITE(data, Bool, needFakeDecompression);
+    MessageParcel reply;
+    MessageOption option;
+    return TransactInstalldCmd(InstalldInterfaceCode::EXTRACT_QUICK_FIX_RES, data, reply, option);
+}
+
 ErrCode InstalldProxy::ExtractHnpFiles(const std::map<std::string, std::string> &hnpPackageMap,
     const ExtractParam &extractParam)
 {

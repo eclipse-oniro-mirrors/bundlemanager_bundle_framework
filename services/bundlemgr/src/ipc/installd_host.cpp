@@ -251,6 +251,9 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_QUICK_FIX_SO_FILE):
             result = this->HandleExtractQuickFixSoFile(data, reply);
             break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_QUICK_FIX_RES):
+            result = this->HandleExtractQuickFixRes(data, reply);
+            break;
         case static_cast<uint32_t>(InstalldInterfaceCode::INSTALL_NATIVE):
             result = this->HandleProcessBundleInstallNative(data, reply);
             break;
@@ -481,6 +484,17 @@ bool InstalldHost::HandleExtractQuickFixSoFile(MessageParcel &data, MessageParce
 
     ErrCode result = ExtractQuickFixSoFile(
         bundleName, hqfFilePath, nativeLibraryPath, cpuAbi, isReplace, versionCode, targetPathSuffix);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleExtractQuickFixRes(MessageParcel &data, MessageParcel &reply)
+{
+    std::string bundleName = Str16ToStr8(data.ReadString16());
+    std::string moduleName = Str16ToStr8(data.ReadString16());
+    std::string hqfFilePath = Str16ToStr8(data.ReadString16());
+    bool needFakeDecompression = data.ReadBool();
+    ErrCode result = ExtractQuickFixRes(bundleName, moduleName, hqfFilePath, needFakeDecompression);
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
