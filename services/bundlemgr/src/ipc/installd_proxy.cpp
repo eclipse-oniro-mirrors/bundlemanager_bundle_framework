@@ -1209,6 +1209,30 @@ ErrCode InstalldProxy::ExtractDriverSoFiles(const std::string &srcPath,
     return ERR_OK;
 }
 
+ErrCode InstalldProxy::ExtractDriverKoFiles(const ExtractParam &extractParam,
+    const std::unordered_multimap<std::string, std::string> &dirMap)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    if (!data.WriteParcelable(&extractParam)) {
+        LOG_E(BMS_TAG_INSTALLD, "WriteParcelable extractParam failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    INSTALLD_PARCEL_WRITE(data, Int32, static_cast<int32_t>(dirMap.size()));
+    for (auto &[originalDir, destinedDir] : dirMap) {
+        INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(originalDir));
+        INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(destinedDir));
+    }
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    auto ret = TransactInstalldCmd(InstalldInterfaceCode::EXTRACT_TARGET_RAW_FILES, data, reply, option);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "TransactInstalldCmd failed");
+        return ret;
+    }
+    return ERR_OK;
+}
+
 ErrCode InstalldProxy::ExtractEncryptedSoFiles(const std::string &hapPath, const std::string &realSoFilesPath,
     const std::string &cpuAbi, const std::string &tmpSoPath, int32_t uid)
 {

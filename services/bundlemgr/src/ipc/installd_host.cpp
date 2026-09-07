@@ -284,6 +284,9 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_DRIVER_SO_FILE):
             result = this->HandExtractDriverSoFiles(data, reply);
             break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_TARGET_RAW_FILES):
+            result = this->HandleExtractDriverKoFiles(data, reply);
+            break;
         case static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_CODED_SO_FILE):
             result = this->HandExtractEncryptedSoFiles(data, reply);
             break;
@@ -1280,6 +1283,27 @@ bool InstalldHost::HandExtractDriverSoFiles(MessageParcel &data, MessageParcel &
     }
 
     ErrCode result = ExtractDriverSoFiles(srcPath, dirMap);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleExtractDriverKoFiles(MessageParcel &data, MessageParcel &reply)
+{
+    std::unique_ptr<ExtractParam> extractParam(data.ReadParcelable<ExtractParam>());
+    if (extractParam == nullptr) {
+        LOG_E(BMS_TAG_INSTALLD, "HandleExtractDriverKoFiles read extractParam failed");
+        return false;
+    }
+    int32_t size = data.ReadInt32();
+    std::unordered_multimap<std::string, std::string> dirMap;
+    CONTAINER_SECURITY_VERIFY(data, size, &dirMap);
+    for (int32_t index = 0; index < size; ++index) {
+        std::string originalDir = Str16ToStr8(data.ReadString16());
+        std::string destinedDir = Str16ToStr8(data.ReadString16());
+        dirMap.emplace(originalDir, destinedDir);
+    }
+
+    ErrCode result = ExtractDriverKoFiles(*extractParam, dirMap);
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

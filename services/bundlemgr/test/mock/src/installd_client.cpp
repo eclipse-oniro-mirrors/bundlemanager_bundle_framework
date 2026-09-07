@@ -532,6 +532,15 @@ ErrCode InstalldClient::ExtractDriverSoFiles(const std::string &srcPath,
     return CallService(&IInstalld::ExtractDriverSoFiles, srcPath, dirMap);
 }
 
+ErrCode InstalldClient::ExtractDriverKoFiles(const ExtractParam &extractParam,
+    const std::unordered_multimap<std::string, std::string> &dirMap)
+{
+    if (extractParam.srcPath.empty() || dirMap.empty()) {
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::ExtractDriverKoFiles, extractParam, dirMap);
+}
+
 ErrCode InstalldClient::ExtractEncryptedSoFiles(const std::string &hapPath, const std::string &realSoFilesPath,
     const std::string &cpuAbi, const std::string &tmpSoPath, int32_t uid)
 {

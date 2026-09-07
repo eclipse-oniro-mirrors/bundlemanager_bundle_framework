@@ -270,6 +270,9 @@ public:
     ErrCode ExtractDriverSoFiles(const std::string &srcPath,
         const std::unordered_multimap<std::string, std::string> &dirMap);
 
+    ErrCode ExtractDriverKoFiles(const ExtractParam &extractParam,
+        const std::unordered_multimap<std::string, std::string> &dirMap);
+
     void OnLoadSystemAbilitySuccess(const sptr<IRemoteObject> &remoteObject);
 
     void OnLoadSystemAbilityFail();

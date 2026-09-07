@@ -39,15 +39,34 @@ public:
     std::string CreateDriverSoDestinedDir(const std::string &bundleName, const std::string &moduleName,
         const std::string &fileName, const std::string &destinedDir, bool isModuleExisted) const;
 
+    std::string ConvertResfilePath(const std::string &originalDir) const;
+
 private:
     ErrCode CopyDriverSoFile(const InnerBundleInfo &info, const std::string &srcPath, bool isModuleExisted) const;
+
+    ErrCode ExtractDriverRawFiles(const InnerBundleInfo &info,
+        const std::unordered_multimap<std::string, std::string> &rawfileDirMap) const;
 
     void RemoveAndReNameDriverFile(const std::unordered_map<std::string, InnerBundleInfo> &newInfos,
         const InnerBundleInfo &oldInfo) const;
 
     void RenameDriverFile(const InnerBundleInfo &info) const;
 
+    void RenameDriverKoFile(const InnerBundleInfo &info, const std::string &moduleName, const Metadata &meta) const;
+
     mutable std::shared_ptr<DriverInstallExtHandler> driverInstallExtHandler_ = nullptr;
+
+    bool HandleExternalDriverSource(const InnerBundleInfo &info, const Metadata &meta,
+    std::unordered_multimap<std::string, std::string> &dirMap, bool isModuleExisted, ErrCode &result) const;
+
+    bool RemoveDriverFile(const InnerBundleInfo &info, const std::string &moduleName,
+        const Metadata &meta, bool isModuleExisted) const;
+
+    ErrCode FilterDriverKoFile(const InnerBundleInfo &info, const Metadata &meta,
+    std::unordered_multimap<std::string, std::string> &dirMap, bool isModuleExisted) const;
+
+    std::string CreateDriverKoDestinedDir(const std::string &bundleName, const std::string &moduleName,
+    const std::string &originalDir, const std::string &destinedDir, bool isModuleExisted) const;
 };
 } // AppExecFwk
 } // OHOS

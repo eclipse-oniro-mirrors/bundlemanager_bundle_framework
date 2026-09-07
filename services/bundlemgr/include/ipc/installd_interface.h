@@ -487,6 +487,12 @@ public:
         return ERR_OK;
     }
 
+    virtual ErrCode ExtractDriverKoFiles(const ExtractParam &extractParam,
+        const std::unordered_multimap<std::string, std::string> &dirMap)
+    {
+        return ERR_OK;
+    }
+
     virtual ErrCode ExtractEncryptedSoFiles(const std::string &hapPath, const std::string &realSoFilesPath,
         const std::string &cpuAbi, const std::string &tmpSoPath, int32_t uid)
     {
