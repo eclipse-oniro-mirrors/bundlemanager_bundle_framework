@@ -245,6 +245,10 @@ public:
     virtual ErrCode GetAppDataFileCategoryStats(const std::string &bundleName, const int32_t appIndex,
         const int32_t userId, const int32_t timeout, std::string &categoryStatsJson) override;
 
+    virtual ErrCode GetAppDataDirCategorySizes(const std::string &bundleName, const int32_t appIndex,
+        const int32_t userId, const int32_t timeout,
+        int64_t &cacheSize, int64_t &filesSize, int64_t &databaseSize) override;
+
     virtual ErrCode MoveFile(const std::string &oldPath, const std::string &newPath, BundleDirScene scene,
         const std::string &bundleName) override;
 

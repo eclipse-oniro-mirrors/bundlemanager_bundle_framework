@@ -439,7 +439,21 @@ void AppDataMonitor::ScanTopApps(int32_t userId,
             continue;
         }
 
-        ReportFileCategoryEvent(bundleName, userId, baseAppIndex, extStatsJson);
+        // Dir category sizes are supplementary: on failure keep zeros and still report the
+        // extension stats (spec 4.5) — a failed size scan must not drop the whole event.
+        int64_t cacheSize = 0;
+        int64_t filesSize = 0;
+        int64_t databaseSize = 0;
+        ErrCode sizeRet = installdClient->GetAppDataDirCategorySizes(
+            bundleName, baseAppIndex, userId, FILE_CATEGORY_SCAN_TIMEOUT,
+            cacheSize, filesSize, databaseSize);
+        if (sizeRet != ERR_OK) {
+            APP_LOGW_NOFUNC("GetDirCategorySizes failed for %{public}s, ret=%{public}d, "
+                "report with zero sizes", bundleName.c_str(), sizeRet);
+        }
+
+        ReportFileCategoryEvent(bundleName, userId, baseAppIndex, extStatsJson,
+            cacheSize, filesSize, databaseSize);
         ++reportedFileCategoryCountInScan_;
     }
     APP_LOGI_NOFUNC("AppFileCategory all top apps scanned, reported=%{public}d",
@@ -448,10 +462,14 @@ void AppDataMonitor::ScanTopApps(int32_t userId,
 
 void AppDataMonitor::ReportFileCategoryEvent(const std::string &bundleName,
     int32_t userId, int32_t appIndex,
-    const std::string &extStatsJson)
+    const std::string &extStatsJson,
+    int64_t cacheSize, int64_t filesSize, int64_t databaseSize)
 {
-    APP_LOGI_NOFUNC("AppFileCategory reporting: bundle=%{public}s, userId=%{public}d, appIndex=%{public}d",
-        bundleName.c_str(), userId, appIndex);
+    APP_LOGI_NOFUNC("AppFileCategory reporting: bundle=%{public}s, userId=%{public}d, appIndex=%{public}d, "
+        "cache=%{public}lld, files=%{public}lld, db=%{public}lld",
+        bundleName.c_str(), userId, appIndex,
+        static_cast<long long>(cacheSize), static_cast<long long>(filesSize),
+        static_cast<long long>(databaseSize));
 
     std::string topExtensionsJson;
     std::string topExtensionsWithDirsJson;
@@ -470,9 +488,10 @@ void AppDataMonitor::ReportFileCategoryEvent(const std::string &bundleName,
     }
 
     // Reuse BUNDLE_LARGE_FILES event:
-    // LARGE_FILES carries TOP 100 extensions JSON, TOP_CATEGORY carries TOP 5 with dirs JSON.
+    // LARGE_FILES carries TOP 100 extensions JSON, TOP_CATEGORY carries TOP 5 with dirs JSON,
+    // CACHE/FILES/DATABASE_DATA_SIZE carry the dir category sizes.
     EventReport::SendLargeFilesMonitorEvent(bundleName, userId, appIndex,
-        topExtensionsJson, topExtensionsWithDirsJson);
+        topExtensionsJson, topExtensionsWithDirsJson, cacheSize, filesSize, databaseSize);
     RecordLargeFilesReportTime();
 }
 

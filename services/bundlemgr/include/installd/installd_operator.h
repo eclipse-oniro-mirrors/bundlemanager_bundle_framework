@@ -465,6 +465,23 @@ public:
         std::vector<std::pair<std::string, std::vector<std::pair<std::string, uint64_t>>>> &extDirSizes);
 
     /**
+     * @brief Sum directory sizes for cache/files/database dir path groups.
+     * @param cacheDirPaths Indicates the cache directory paths (el1-el5 base + haps + el2 sharefiles).
+     * @param filesDirPaths Indicates the files directory paths (same layout as cacheDirPaths).
+     * @param databaseDirPaths Indicates the database directory paths (el1-el5 whole database dirs).
+     * @param timeout Indicates the maximum scan time in seconds (clamped to [3, 180]).
+     * @param cacheSize Output total size of all cache directories.
+     * @param filesSize Output total size of all files directories.
+     * @param databaseSize Output total size of all database directories.
+     * @return Returns true if the summing finished (possibly partial on timeout).
+     */
+    static bool GetDirCategorySizes(const std::vector<std::string> &cacheDirPaths,
+        const std::vector<std::string> &filesDirPaths,
+        const std::vector<std::string> &databaseDirPaths,
+        const int32_t timeout,
+        int64_t &cacheSize, int64_t &filesSize, int64_t &databaseSize);
+
+    /**
      * @brief Anonymize a file path by replacing every other character in directory and file names with '*'.
      * @param path Indicates the file path to be anonymized.
      * @return Returns the anonymized path string.

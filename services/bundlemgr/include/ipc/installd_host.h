@@ -225,6 +225,14 @@ private:
      */
     bool HandleGetAppDataFileCategoryStats(MessageParcel &data, MessageParcel &reply);
 
+    /**
+     * @brief Handles the GetAppDataDirCategorySizes function.
+     * @param data Indicates the data to be read.
+     * @param reply Indicates the reply to be sent;
+     * @return Returns true if called successfully; returns false otherwise.
+     */
+    bool HandleGetAppDataDirCategorySizes(MessageParcel &data, MessageParcel &reply);
+
     bool HandleMoveFile(MessageParcel &data, MessageParcel &reply);
 
     bool HandleRenameFile(MessageParcel &data, MessageParcel &reply);

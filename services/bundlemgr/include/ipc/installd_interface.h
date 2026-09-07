@@ -657,6 +657,24 @@ public:
     }
 
     /**
+     * @brief Get total sizes of cache/files/database directories in the bundle's app data.
+     * @param bundleName Indicates the bundle name.
+     * @param appIndex Indicates the app index.
+     * @param userId Indicates the user ID.
+     * @param timeout Indicates the maximum scan time in seconds.
+     * @param cacheSize Output parameter for total size of cache directories.
+     * @param filesSize Output parameter for total size of files directories.
+     * @param databaseSize Output parameter for total size of database directories.
+     * @return Returns ERR_OK if get successfully; returns error code otherwise.
+     */
+    virtual ErrCode GetAppDataDirCategorySizes(const std::string &bundleName, const int32_t appIndex,
+        const int32_t userId, const int32_t timeout,
+        int64_t &cacheSize, int64_t &filesSize, int64_t &databaseSize)
+    {
+        return ERR_OK;
+    }
+
+    /**
      * @brief Extract skills package with validation.
      * @param param Contains bundleName, moduleName, hspPath and skillNameList.
      * @param skillInfoList Output parameter containing skill extraction results with description.

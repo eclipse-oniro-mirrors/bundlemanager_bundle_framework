@@ -843,6 +843,18 @@ ErrCode InstalldClient::GetAppDataFileCategoryStats(const std::string &bundleNam
         timeout, categoryStatsJson);
 }
 
+ErrCode InstalldClient::GetAppDataDirCategorySizes(const std::string &bundleName, const int32_t appIndex,
+    const int32_t userId, const int32_t timeout,
+    int64_t &cacheSize, int64_t &filesSize, int64_t &databaseSize)
+{
+    if (bundleName.empty()) {
+        APP_LOGE_NOFUNC("GetDirCategorySizes: bundleName is empty");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::GetAppDataDirCategorySizes, bundleName, appIndex, userId, timeout,
+        cacheSize, filesSize, databaseSize);
+}
+
 ErrCode InstalldClient::DeleteOldCacheFiles(
     const std::vector<std::string> &paths, const uint64_t cacheSize, uint64_t &cleanedSize)
 {

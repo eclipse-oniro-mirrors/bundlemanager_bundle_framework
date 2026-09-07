@@ -843,6 +843,34 @@ ErrCode InstalldProxy::GetAppDataFileCategoryStats(const std::string &bundleName
     return ERR_OK;
 }
 
+ErrCode InstalldProxy::GetAppDataDirCategorySizes(const std::string &bundleName, const int32_t appIndex,
+    const int32_t userId, const int32_t timeout,
+    int64_t &cacheSize, int64_t &filesSize, int64_t &databaseSize)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
+    INSTALLD_PARCEL_WRITE(data, Int32, appIndex);
+    INSTALLD_PARCEL_WRITE(data, Int32, userId);
+    INSTALLD_PARCEL_WRITE(data, Int32, timeout);
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    auto ret = TransactInstalldCmd(InstalldInterfaceCode::GET_APP_DATA_DIR_CATEGORY_SIZES, data, reply, option);
+    if (ret != ERR_OK) {
+        LOG_NOFUNC_E(BMS_TAG_INSTALLD, "GetDirCategorySizes: TransactInstalldCmd failed");
+        return ret;
+    }
+    cacheSize = reply.ReadInt64();
+    filesSize = reply.ReadInt64();
+    databaseSize = reply.ReadInt64();
+    LOG_NOFUNC_D(BMS_TAG_INSTALLD,
+        "GetDirCategorySizes: cache=%{public}lld, files=%{public}lld, db=%{public}lld",
+        static_cast<long long>(cacheSize), static_cast<long long>(filesSize),
+        static_cast<long long>(databaseSize));
+    return ERR_OK;
+}
+
 ErrCode InstalldProxy::MoveFile(
     const std::string &oldPath, const std::string &newPath, BundleDirScene scene, const std::string &bundleName)
 {

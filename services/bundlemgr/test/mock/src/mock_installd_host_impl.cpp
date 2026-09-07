@@ -508,6 +508,13 @@ ErrCode InstalldHostImpl::GetAppDataFileCategoryStats(const std::string &bundleN
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::GetAppDataDirCategorySizes(const std::string &bundleName, const int32_t appIndex,
+    const int32_t userId, const int32_t timeout,
+    int64_t &cacheSize, int64_t &filesSize, int64_t &databaseSize)
+{
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::DeleteOldCacheFiles(
     const std::vector<std::string> &paths, const uint64_t cacheSize, uint64_t &cleanedSize)
 {

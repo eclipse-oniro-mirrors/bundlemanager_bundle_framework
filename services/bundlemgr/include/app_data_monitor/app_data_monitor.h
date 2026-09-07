@@ -73,7 +73,8 @@ private:
         const std::vector<std::pair<std::string, int64_t>> &sortedApps);
     void ReportFileCategoryEvent(const std::string &bundleName,
         int32_t userId, int32_t appIndex,
-        const std::string &extStatsJson);
+        const std::string &extStatsJson,
+        int64_t cacheSize, int64_t filesSize, int64_t databaseSize);
     // Process the raw extension statistics JSON returned by HostImpl. The HostImpl
     // outputs all extensions with anonymized directory paths (unsorted). This method
     // sorts extensions by totalSize descending, then produces two separate JSON strings:

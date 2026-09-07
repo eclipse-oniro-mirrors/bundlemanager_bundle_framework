@@ -110,6 +110,7 @@ enum class InstalldInterfaceCode : uint32_t {
     GET_CACHE_DISK_USAGE_FROM_PATH = 83,
     EXTRACT_QUICK_FIX_SO_FILE = 84,
     GET_APP_DATA_FILE_CATEGORY_STATS = 85,
+    GET_APP_DATA_DIR_CATEGORY_SIZES = 86,
 };
 
 } // namespace AppExecFwk

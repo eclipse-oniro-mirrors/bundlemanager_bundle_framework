@@ -73,3 +73,6 @@ BUNDLE_LARGE_FILES:
   APP_INDEX: {type: INT32, desc: app index}
   LARGE_FILES: {type: STRING, desc: large files info}
   TOP_CATEGORY: {type: STRING, desc: TOP extension categories with dirs info}
+  CACHE_DATA_SIZE: {type: INT64, desc: size of all cache directories}
+  FILES_DATA_SIZE: {type: INT64, desc: size of all files directories}
+  DATABASE_DATA_SIZE: {type: INT64, desc: size of all database directories}
