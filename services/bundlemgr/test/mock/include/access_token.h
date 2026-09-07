@@ -124,6 +124,12 @@ public:
     std::string feature;
 };
 
+enum MultipleMode {
+    DEFAULT_MODE = -1,
+    MAIN_MODE = 0,
+    SUB_MODE = 1,
+};
+
 class HapInfoParams final {
 public:
     int userID;
@@ -148,6 +154,8 @@ public:
     std::string appProvisionType = "release";
     /** Whether hap is a skill */
     bool isSkillHap = false;
+    /** App mode */
+    MultipleMode mode = DEFAULT_MODE;
 };
 
 /**
