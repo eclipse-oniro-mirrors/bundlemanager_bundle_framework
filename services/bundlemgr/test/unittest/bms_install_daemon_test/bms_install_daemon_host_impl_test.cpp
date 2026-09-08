@@ -1804,6 +1804,20 @@ HWTEST_F(BmsInstallDaemonHostImplTest, DeleteOldCacheFiles_0100, Function | Smal
     EXPECT_EQ(cleanedSize, 0);
 }
 
+
+/**
+ * @tc.number: ExtractQuickFixRes_0100
+ * @tc.name: ExtractQuickFixRes
+ * @tc.desc: permission denied
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, ExtractQuickFixRes_0100, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    auto ret = hostImpl->ExtractQuickFixRes(TEST_BUNDLE_NAME, "entry", "/data/test.hqf", false);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
 /**
  * @tc.number: GetCacheDiskUsageFromPath_0100
  * @tc.name: test GetCacheDiskUsageFromPath

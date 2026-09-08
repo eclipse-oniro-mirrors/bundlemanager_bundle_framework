@@ -2202,5 +2202,16 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetAppDataDirCategorySizes
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_GetAppDataDirCategorySizes_0100 end";
 }
+
+/**
+ * @tc.number: BmsInstalldClientTest_ExtractQuickFixRes_0100
+ * @tc.name: ExtractQuickFixRes
+ * @tc.desc: empty params
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractQuickFixRes_0100, TestSize.Level1)
+{
+    ErrCode result = installClient_->ExtractQuickFixRes("", "entry", "/data/test.hqf", false);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
 } // namespace AppExecFwk
 } // namespace OHOS

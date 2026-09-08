@@ -1071,6 +1071,24 @@ HWTEST_F(BmsInstalldHostTest, HandleGetCacheDiskUsageFromPath_0100, Function | S
 }
 
 /**
+ * @tc.number: HandleExtractQuickFixRes_0100
+ * @tc.name: test HandleExtractQuickFixRes
+ * @tc.desc: 1.HandleExtractQuickFixRes test
+ */
+HWTEST_F(BmsInstalldHostTest, HandleExtractQuickFixRes_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteString16(Str8ToStr16("com.example.test"));
+    data.WriteString16(Str8ToStr16("entry"));
+    data.WriteString16(Str8ToStr16("/data/test.hqf"));
+    data.WriteBool(false);
+    bool res = installdHost.HandleExtractQuickFixRes(data, reply);
+    EXPECT_TRUE(res);
+}
+
+/**
  * @tc.number: HandleGetCacheDiskUsageFromPath_0200
  * @tc.name: test HandleGetCacheDiskUsageFromPath
  * @tc.desc: 1.HandleGetCacheDiskUsageFromPath test

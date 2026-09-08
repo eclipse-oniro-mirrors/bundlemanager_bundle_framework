@@ -968,16 +968,8 @@ ErrCode QuickFixDeployer::ExtractQuickFixResFile(const AppQuickFix &appQuickFix,
             continue;
         }
 
-        std::string targetPath = std::string(Constants::BUNDLE_CODE_DIR)
-            + ServiceConstants::PATH_SEPARATOR + appQuickFix.bundleName
-            + ServiceConstants::PATH_SEPARATOR + hqf.moduleName + ServiceConstants::PATH_SEPARATOR
-            + ServiceConstants::RES_FILE_PATH;
-        ExtractParam extractParam;
-        extractParam.bundleName = appQuickFix.bundleName;
-        extractParam.extractFileType = ExtractFileType::RES_FILE;
-        extractParam.srcPath = hqf.hqfFilePath;
-        extractParam.targetPath = targetPath;
-        if (InstalldClient::GetInstance()->ExtractFiles(extractParam) != ERR_OK) {
+        if (InstalldClient::GetInstance()->ExtractQuickFixRes(appQuickFix.bundleName,
+            hqf.moduleName, hqf.hqfFilePath, false) != ERR_OK) {
             LOG_W(BMS_TAG_DEFAULT, "moduleName: %{public}s extract so failed", hqf.moduleName.c_str());
             continue;
         }

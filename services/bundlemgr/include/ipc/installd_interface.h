@@ -97,6 +97,12 @@ public:
         return ERR_OK;
     }
 
+    virtual ErrCode ExtractQuickFixRes(const std::string &bundleName, const std::string &moduleName,
+        const std::string &hqfFilePath, bool needFakeDecompression)
+    {
+        return ERR_OK;
+    }
+
     /**
      * @brief Extract the hnpFiles.
      * @param hnpPackageMap Indicates the hnpPackageInfo.

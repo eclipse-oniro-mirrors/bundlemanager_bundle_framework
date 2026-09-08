@@ -6180,5 +6180,24 @@ bool InstalldOperator::IsValidPathByDeleteUninstallTmpDirs(const std::string &di
         return false;
     }
 }
+
+bool InstalldOperator::IsValidPathByExtractQuickFixRes(
+    const std::string &bundleName, const std::string &moduleName, const std::string &hqfFilePath)
+{
+    if (!IsFileNameValid(moduleName) || moduleName.find('/') != std::string::npos) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid param exist ../ or \\..");
+        return false;
+    }
+    if (!IsFileNameValid(hqfFilePath) || !EndsWith(hqfFilePath, ServiceConstants::QUICK_FIX_FILE_SUFFIX) ||
+        !IsExistFile(hqfFilePath)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid hqfFilePath");
+        return false;
+    }
+    std::string targetPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
+        bundleName + ServiceConstants::PATH_SEPARATOR + moduleName + ServiceConstants::PATH_SEPARATOR +
+        ServiceConstants::RES_FILE_PATH;
+    return StartsWith(targetPath, Constants::BUNDLE_CODE_DIR) && IsContainsBundleName(targetPath, bundleName);
+}
+
 }  // namespace AppExecFwk
 }  // namespace OHOS

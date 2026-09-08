@@ -70,6 +70,9 @@ public:
         const std::string &nativeLibraryPath, const std::string &cpuAbi, bool isReplace, int32_t versionCode,
         const std::string &targetPathSuffix) override;
 
+    virtual ErrCode ExtractQuickFixRes(const std::string &bundleName, const std::string &moduleName,
+        const std::string &hqfFilePath, bool needFakeDecompression) override;
+
     /**
      * @brief Extract the hnpFiles.
      * @param hnpPackageMap Indicates the hnpPackageInfo.

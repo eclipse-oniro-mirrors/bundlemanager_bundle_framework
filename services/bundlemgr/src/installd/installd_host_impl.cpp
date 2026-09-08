@@ -290,6 +290,37 @@ ErrCode InstalldHostImpl::ExtractQuickFixSoFile(const std::string &bundleName, c
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::ExtractQuickFixRes(const std::string &bundleName, const std::string &moduleName,
+    const std::string &hqfFilePath, bool needFakeDecompression)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    if (!InstalldOperator::IsValidBundleName(bundleName) ||
+        !InstalldOperator::IsValidPathByExtractQuickFixRes(bundleName, moduleName, hqfFilePath)) {
+        LOG_E(BMS_TAG_INSTALLD,
+            "Calling the function ExtractQuickFixRes with invalid param, bundleName:%{public}s, "
+            "moduleName:%{private}s, hqfFilePath:%{private}s",
+            bundleName.c_str(), moduleName.c_str(), hqfFilePath.c_str());
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    std::string targetPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
+        bundleName + ServiceConstants::PATH_SEPARATOR + moduleName + ServiceConstants::PATH_SEPARATOR +
+        ServiceConstants::RES_FILE_PATH;
+    ExtractParam extractParam;
+    extractParam.bundleName = bundleName;
+    extractParam.extractFileType = ExtractFileType::RES_FILE;
+    extractParam.srcPath = hqfFilePath;
+    extractParam.targetPath = targetPath;
+    extractParam.needFakeDecompression = needFakeDecompression;
+    if (!InstalldOperator::ExtractFiles(extractParam)) {
+        LOG_E(BMS_TAG_INSTALLD, "ExtractQuickFixRes failed, bundleName:%{public}s", bundleName.c_str());
+        return ERR_APPEXECFWK_INSTALLD_EXTRACT_FAILED;
+    }
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::ExtractHnpFiles(const std::map<std::string, std::string> &hnpPackageMap,
     const ExtractParam &extractParam)
 {

@@ -1608,6 +1608,29 @@ HWTEST_F(BmsInstalldOperatorTest, IsValidSourcePathByCopyFileScene_0600, Functio
 }
 
 /**
+ * @tc.number: IsValidPathByExtractQuickFixRes_0100
+ * @tc.name: test IsValidPathByExtractQuickFixRes
+ * @tc.desc: test IsValidPathByExtractQuickFixRes of InstalldOperator (Option2: full hqfFilePath + IsExistFile)
+ */
+HWTEST_F(BmsInstalldOperatorTest, IsValidPathByExtractQuickFixRes_0100, Function | SmallTest | Level0)
+{
+    std::string moduleName = "entry";
+    // valid-looking but non-existent path -> false due to IsExistFile
+    std::string hqfFilePath = std::string(Constants::BUNDLE_CODE_DIR) + "/com.example.test/entry/patch.hqf";
+    auto ret = InstalldOperator::IsValidPathByExtractQuickFixRes(TEST_BUNDLE_NAME, moduleName, hqfFilePath);
+    EXPECT_FALSE(ret);
+    // path traversal in moduleName
+    ret = InstalldOperator::IsValidPathByExtractQuickFixRes(TEST_BUNDLE_NAME, "../entry", hqfFilePath);
+    EXPECT_FALSE(ret);
+    // wrong suffix
+    ret = InstalldOperator::IsValidPathByExtractQuickFixRes(TEST_BUNDLE_NAME, moduleName, "patch.txt");
+    EXPECT_FALSE(ret);
+    // empty module
+    ret = InstalldOperator::IsValidPathByExtractQuickFixRes(TEST_BUNDLE_NAME, "", hqfFilePath);
+    EXPECT_FALSE(ret);
+}
+
+/**
  * @tc.number: IsValidTargetPathByCopyFileScene_0100
  * @tc.name: test IsValidTargetPathByCopyFileScene
  * @tc.desc: test IsValidTargetPathByCopyFileScene of InstalldOperator

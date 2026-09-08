@@ -62,6 +62,12 @@ ErrCode InstalldHostImpl::ExtractModuleFiles(const std::string &srcModulePath, c
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::ExtractQuickFixRes(const std::string &bundleName, const std::string &moduleName,
+    const std::string &hqfFilePath, bool needFakeDecompression)
+{
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::ExtractHnpFiles(const std::map<std::string, std::string> &hnpPackageMap,
     const ExtractParam &extractParam)
 {
