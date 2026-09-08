@@ -200,6 +200,26 @@ private:
      */
     bool LoadInstallInfosFromDb();
     /**
+     * @brief Judge whether the last db rebuild was interrupted by process death.
+     *        The mark is saved before rebuild starts and is only removed after every
+     *        bundle info has been verified written into db.
+     * @return Returns true if an interrupted rebuild was detected; returns false otherwise.
+     */
+    bool IsRebuildInterrupted();
+    /**
+     * @brief Persist the "rebuilding" mark before any bundle info is written into db,
+     *        so an interrupted rebuild can be detected and redone on next boot even if
+     *        part of the bundles have already been written into db.
+     * @return
+     */
+    void MarkRebuildStart();
+    /**
+     * @brief Remove the "rebuilding" mark, only called when rebuild finished and every
+     *        bundle info was verified written into db completely.
+     * @return
+     */
+    void MarkRebuildFinish();
+    /**
      * @brief Guard against install infos lossed strategy.
      * @return Returns ResultCode for recover install infos.
      */

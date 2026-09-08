@@ -139,6 +139,10 @@ constexpr const char* BUNDLE_SCAN_START = "0";
 constexpr const char* BUNDLE_SCAN_FINISH = "1";
 constexpr const char* CODE_PROTECT_FLAG = "codeProtectFlag";
 constexpr const char* CODE_PROTECT_FLAG_CHECKED = "checked";
+// db rebuild mark in bms_param table: set before rebuild writes anything into
+// installed_bundle table, removed only after every bundle info is verified saved.
+constexpr const char* DB_REBUILD_MARK = "dbRebuildMark";
+constexpr const char* DB_REBUILD_MARK_DOING = "doing";
 constexpr const char* KEY_STORAGE_SIZE = "storageSize";
 constexpr int32_t USER_ID_SIZE = 1;
 constexpr const char* APPSPAWN_PRELOAD_ARKWEB_ENGINE = "const.startup.appspawn.preload.arkwebEngine";
@@ -416,6 +420,13 @@ void BMSEventHandler::ClearCache()
 
 bool BMSEventHandler::LoadInstallInfosFromDb()
 {
+    // A leftover rebuild mark means the last rebuild was interrupted, so the
+    // installed_bundle table may only hold part of the bundles. The db cannot
+    // be trusted in this case, fall back to rebuild from install dirs again.
+    if (IsRebuildInterrupted()) {
+        LOG_E(BMS_TAG_DEFAULT, "last db rebuild was interrupted, need to rebuild again");
+        return false;
+    }
     LOG_I(BMS_TAG_DEFAULT, "Load install infos from db");
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
@@ -424,6 +435,48 @@ bool BMSEventHandler::LoadInstallInfosFromDb()
     }
 
     return dataMgr->LoadDataFromPersistentStorage();
+}
+
+bool BMSEventHandler::IsRebuildInterrupted()
+{
+    auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    if (bmsPara == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "bmsPara is nullptr");
+        return false;
+    }
+
+    std::string mark;
+    if (!bmsPara->GetBmsParam(DB_REBUILD_MARK, mark)) {
+        return false;
+    }
+
+    return mark == DB_REBUILD_MARK_DOING;
+}
+
+void BMSEventHandler::MarkRebuildStart()
+{
+    auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    if (bmsPara == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "bmsPara is nullptr");
+        return;
+    }
+
+    if (!bmsPara->SaveBmsParam(DB_REBUILD_MARK, DB_REBUILD_MARK_DOING)) {
+        LOG_E(BMS_TAG_DEFAULT, "save db rebuild mark failed");
+    }
+}
+
+void BMSEventHandler::MarkRebuildFinish()
+{
+    auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    if (bmsPara == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "bmsPara is nullptr");
+        return;
+    }
+
+    if (!bmsPara->DeleteBmsParam(DB_REBUILD_MARK)) {
+        LOG_E(BMS_TAG_DEFAULT, "delete db rebuild mark failed");
+    }
 }
 
 void BMSEventHandler::BundleBootStartEvent()
@@ -524,12 +577,21 @@ ResultCode BMSEventHandler::GuardAgainstInstallInfosLossedStrategy()
     }
 
     ReportInfosLossedEvent(HighRiskOperationType::USER_DATA_PARSE_FAILED, Constants::INVALID_USERID);
-    
+
+    // From here on bundle infos will be written into db. Persist the rebuild mark
+    // first: if the process dies halfway, next boot must not treat the partially
+    // written db as complete, but redo the rebuild (redo is idempotent).
+    MarkRebuildStart();
+
     // When data exist, but parse all userinfo fails, reinstall all app.
     // For example: the AT database is lost or others.
     if (scanResultCode == ScanResultCode::SCAN_HAS_DATA_PARSE_FAILED) {
         // Reinstall all app from install dir
-        return ReInstallAllInstallDirApps();
+        ResultCode reinstallResult = ReInstallAllInstallDirApps();
+        if (reinstallResult == ResultCode::REINSTALL_OK) {
+            MarkRebuildFinish();
+        }
+        return reinstallResult;
     }
 
     // When data exist and parse all userinfo success,
@@ -542,7 +604,9 @@ ResultCode BMSEventHandler::GuardAgainstInstallInfosLossedStrategy()
         return ResultCode::SYSTEM_ERROR;
     }
 
-    // Combine InnerBundleInfo and InnerBundleUserInfo
+    // Combine InnerBundleInfo and InnerBundleUserInfo.
+    // Returns false if any bundle info fails to be written into db, in that case
+    // the rebuild mark is kept so next boot redoes the recovery for it.
     if (!CombineBundleInfoAndUserInfo(installInfos, innerBundleUserInfoMaps)) {
         LOG_E(BMS_TAG_DEFAULT, "System internal error");
         return ResultCode::SYSTEM_ERROR;
@@ -551,6 +615,8 @@ ResultCode BMSEventHandler::GuardAgainstInstallInfosLossedStrategy()
     // Recover system-level HSP and inter-app shared bundles which are not scanned
     ReInstallSystemHspAndSharedBundles();
 
+    // Every bundle info has been verified written into db, rebuild is complete.
+    MarkRebuildFinish();
     return ResultCode::RECOVER_OK;
 }
 
