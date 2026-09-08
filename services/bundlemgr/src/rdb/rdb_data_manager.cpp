@@ -154,29 +154,55 @@ ErrCode RdbDataManager::GetRdbStoreFromNative()
         ReportRdbLostEvent(HighRiskOperationType::DB_FALLBACK_CREATED, Constants::INVALID_USERID);
     }
     CheckSystemSizeAndHisysEvent(bmsRdbConfig_.dbPath, bmsRdbConfig_.dbName);
+    
+    NativeRdb::RebuiltType rebuildType = NativeRdb::RebuiltType::NONE;
+    int32_t rebuildCode = rdbStore_->GetRebuilt(rebuildType);
+    if (isNewDb || rebuildType == NativeRdb::RebuiltType::REPAIRED
+        || rebuildType == NativeRdb::RebuiltType::REBUILT) {
+        APP_LOGI("rdb repaired or rebuilt, reset rdb file");
+        InstalldClient::GetInstance()->ResetBmsDBSecurity();
+    }
     bool isNeedRebuildDb = false;
     if (!isInitial_) {
         isNeedRebuildDb = RdbIntegrityCheckNeedRestore();
         isInitial_ = true;
     }
-    NativeRdb::RebuiltType rebuildType = NativeRdb::RebuiltType::NONE;
-    int32_t rebuildCode = rdbStore_->GetRebuilt(rebuildType);
-    if (isNewDb || rebuildType == NativeRdb::RebuiltType::REPAIRED) {
-        APP_LOGI("rdb repaired, reset rdb file");
-        InstalldClient::GetInstance()->ResetBmsDBSecurity();
-    }
-    if (rebuildType == NativeRdb::RebuiltType::REBUILT || isNeedRebuildDb) {
-        APP_LOGI("start %{public}s restore ret %{public}d, type:%{public}d", bmsRdbConfig_.dbName.c_str(),
-            rebuildCode, static_cast<int32_t>(rebuildType));
-        int32_t restoreRet = rdbStore_->Restore("");
-        if (restoreRet != NativeRdb::E_OK) {
-            APP_LOGE("rdb restore failed ret:%{public}d", restoreRet);
-        } else {
-            APP_LOGI("rdb rebuilt, reset rdb file");
-            InstalldClient::GetInstance()->ResetBmsDBSecurity();
+
+    if (isNeedRebuildDb) {
+        std::string dbFile = bmsRdbConfig_.dbPath + bmsRdbConfig_.dbName;
+        rdbStore_ = nullptr;
+        NativeRdb::RdbHelper::ClearCache();
+        DeleteDbFiles(dbFile);
+        int32_t reopenErrCode = NativeRdb::E_OK;
+        rdbStore_ = NativeRdb::RdbHelper::GetRdbStore(
+            rdbStoreConfig, bmsRdbConfig_.version, bmsRdbOpenCallback, reopenErrCode);
+        if (rdbStore_ == nullptr) {
+            APP_LOGE("re-open rdb after delete failed, errCode:%{public}d", reopenErrCode);
+            SendDbErrorEvent(bmsRdbConfig_.dbName, static_cast<int32_t>(DB_OPERATION_TYPE::REBUILD), reopenErrCode);
+            return reopenErrCode;
         }
+        // Re-create the table directly on rdbStore_ instead of calling
+        // CreateTable(), because GetRdbStoreFromNative is already running inside
+        // GetRdbStore which holds rdbMutex_; calling GetRdbStore again would
+        // self-deadlock on the non-recursive mutex.
+        std::string createTableSql;
+        if (bmsRdbConfig_.createTableSql.empty()) {
+            createTableSql = std::string("CREATE TABLE IF NOT EXISTS ")
+                + bmsRdbConfig_.tableName
+                + "(KEY TEXT NOT NULL PRIMARY KEY, VALUE TEXT NOT NULL);";
+        } else {
+            createTableSql = bmsRdbConfig_.createTableSql;
+        }
+        int32_t createRet = rdbStore_->ExecuteSql(createTableSql);
+        if (createRet != NativeRdb::E_OK) {
+            APP_LOGE("re-create table after manual rebuild failed, ret: %{public}d", createRet);
+        }
+        for (const auto &sql : bmsRdbConfig_.insertColumnSql) {
+            rdbStore_->ExecuteSql(sql);
+        }
+        InstalldClient::GetInstance()->ResetBmsDBSecurity();
         SendDbErrorEvent(bmsRdbConfig_.dbName, static_cast<int32_t>(DB_OPERATION_TYPE::REBUILD), rebuildCode);
-        return restoreRet;
+        APP_LOGI("rdb manual rebuild finished: %{public}s", bmsRdbConfig_.dbName.c_str());
     }
     return ERR_OK;
 }

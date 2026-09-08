@@ -102,6 +102,15 @@ bool BMSEventHandler::LoadInstallInfosFromDb()
     return dataMgr->LoadDataFromPersistentStorage();
 }
 
+bool BMSEventHandler::IsRebuildInterrupted()
+{
+    return false;
+}
+
+void BMSEventHandler::MarkRebuildStart() {}
+
+void BMSEventHandler::MarkRebuildFinish() {}
+
 void BMSEventHandler::BundleBootStartEvent() {}
 
 void BMSEventHandler::BundleRebootStartEvent()

@@ -120,6 +120,9 @@ bool OtaFlagBitSet(uint32_t bit)
     }
 }
 
+const std::string DB_REBUILD_MARK_TEST = "dbRebuildMark";
+const std::string DB_REBUILD_MARK_DOING_TEST = "doing";
+
 }
 class BmsEventHandlerTest : public testing::Test {
 public:
@@ -166,6 +169,7 @@ void BmsEventHandlerTest::CleanupBmsParamTestState()
     if (bmsParam != nullptr) {
         bmsParam->DeleteBmsParam("otaFlag");
         bmsParam->DeleteBmsParam("fingerprint");
+        bmsParam->DeleteBmsParam(DB_REBUILD_MARK_TEST);
     }
 }
 
@@ -213,6 +217,88 @@ HWTEST_F(BmsEventHandlerTest, OnBmsStarting_0100, Function | SmallTest | Level0)
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     handler->OnBmsStarting();
     EXPECT_TRUE(handler->needRebootOta_ == true);
+}
+
+/**
+ * @tc.number: IsRebuildInterrupted_0100
+ * @tc.name: IsRebuildInterrupted
+ * @tc.desc: A leftover "doing" mark means the last rebuild was interrupted.
+ *           IsRebuildInterrupted must return true so the db is not trusted.
+ */
+HWTEST_F(BmsEventHandlerTest, IsRebuildInterrupted_0100, Function | SmallTest | Level0)
+{
+    InitBundleMgrServiceForTest();
+    auto bmsParam = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    ASSERT_NE(bmsParam, nullptr);
+
+    bmsParam->DeleteBmsParam(DB_REBUILD_MARK_TEST);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_FALSE(handler->IsRebuildInterrupted());
+
+    EXPECT_TRUE(bmsParam->SaveBmsParam(DB_REBUILD_MARK_TEST, DB_REBUILD_MARK_DOING_TEST));
+    EXPECT_TRUE(handler->IsRebuildInterrupted());
+
+    bmsParam->DeleteBmsParam(DB_REBUILD_MARK_TEST);
+}
+
+/**
+ * @tc.number: LoadInstallInfosFromDb_0100
+ * @tc.name: LoadInstallInfosFromDb
+ * @tc.desc: When a rebuild was interrupted, LoadInstallInfosFromDb must return false
+ *           so OnBmsStarting falls back to GuardAgainstInstallInfosLossedStrategy.
+ */
+HWTEST_F(BmsEventHandlerTest, LoadInstallInfosFromDb_0100, Function | SmallTest | Level0)
+{
+    InitBundleMgrServiceForTest();
+    auto bmsParam = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    ASSERT_NE(bmsParam, nullptr);
+
+    EXPECT_TRUE(bmsParam->SaveBmsParam(DB_REBUILD_MARK_TEST, DB_REBUILD_MARK_DOING_TEST));
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_FALSE(handler->LoadInstallInfosFromDb());
+
+    bmsParam->DeleteBmsParam(DB_REBUILD_MARK_TEST);
+}
+
+/**
+ * @tc.number: MarkRebuildStart_0100
+ * @tc.name: MarkRebuildStart
+ * @tc.desc: MarkRebuildStart persists the "doing" mark and returns true on success.
+ */
+HWTEST_F(BmsEventHandlerTest, MarkRebuildStart_0100, Function | SmallTest | Level0)
+{
+    InitBundleMgrServiceForTest();
+    auto bmsParam = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    ASSERT_NE(bmsParam, nullptr);
+
+    bmsParam->DeleteBmsParam(DB_REBUILD_MARK_TEST);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NO_THROW(handler->MarkRebuildStart());
+
+    std::string mark;
+    EXPECT_TRUE(bmsParam->GetBmsParam(DB_REBUILD_MARK_TEST, mark));
+    EXPECT_EQ(mark, DB_REBUILD_MARK_DOING_TEST);
+
+    bmsParam->DeleteBmsParam(DB_REBUILD_MARK_TEST);
+}
+
+/**
+ * @tc.number: MarkRebuildFinish_0100
+ * @tc.name: MarkRebuildFinish
+ * @tc.desc: MarkRebuildFinish removes the mark so next boot trusts the db.
+ */
+HWTEST_F(BmsEventHandlerTest, MarkRebuildFinish_0100, Function | SmallTest | Level0)
+{
+    InitBundleMgrServiceForTest();
+    auto bmsParam = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    ASSERT_NE(bmsParam, nullptr);
+
+    EXPECT_TRUE(bmsParam->SaveBmsParam(DB_REBUILD_MARK_TEST, DB_REBUILD_MARK_DOING_TEST));
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NO_THROW(handler->MarkRebuildFinish());
+
+    std::string mark;
+    EXPECT_FALSE(bmsParam->GetBmsParam(DB_REBUILD_MARK_TEST, mark));
 }
 
 /**
