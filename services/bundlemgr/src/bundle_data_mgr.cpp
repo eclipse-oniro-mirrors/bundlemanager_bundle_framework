@@ -10663,7 +10663,12 @@ bool BundleDataMgr::UpdateInnerBundleInfo(InnerBundleInfo &innerBundleInfo, bool
     {
         std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
         auto &targetMap = toTempBundle ? tempBundleInfos_ : bundleInfos_;
-        targetMap.at(bundleName) = innerBundleInfo;
+        auto infoItem = targetMap.find(bundleName);
+        if (infoItem == targetMap.end()) {
+            APP_LOGW("bundle:%{public}s info is not existed after saving storage", bundleName.c_str());
+            return false;
+        }
+        infoItem->second = innerBundleInfo;
     }
     return true;
 }
@@ -10705,12 +10710,17 @@ bool BundleDataMgr::QueryOverlayInnerBundleInfo(const std::string &bundleName, I
 void BundleDataMgr::SaveOverlayInfo(const std::string &bundleName, InnerBundleInfo &innerBundleInfo)
 {
     std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGW("bundle:%{public}s info is not existed", bundleName.c_str());
+        return;
+    }
     innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
     if (!dataStorage_->SaveStorageBundleInfo(innerBundleInfo)) {
         APP_LOGE("update storage failed bundle:%{public}s", bundleName.c_str());
         return;
     }
-    bundleInfos_.at(bundleName) = innerBundleInfo;
+    infoItem->second = innerBundleInfo;
 }
 
 void BundleDataMgr::GetBundleNameList(const int32_t userId, std::vector<std::string>& bundleNameList)

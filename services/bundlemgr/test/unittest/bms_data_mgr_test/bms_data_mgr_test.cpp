@@ -11015,6 +11015,62 @@ HWTEST_F(BmsDataMgrTest, UpdateInnerBundleInfo_0007, Function | SmallTest | Leve
 }
 
 /**
+ * @tc.number: UpdateInnerBundleInfo_0008
+ * @tc.name: UpdateInnerBundleInfo
+ * @tc.desc: test UpdateInnerBundleInfo update bundle in tempBundleInfos_ successfully
+ */
+HWTEST_F(BmsDataMgrTest, UpdateInnerBundleInfo_0008, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string bundleName = "com.ohos.test.temp.bundle";
+    InnerBundleInfo innerBundleInfo;
+    BundleInfo bundleInfo;
+    bundleInfo.name = bundleName;
+    bundleInfo.applicationInfo.name = "TempBundleApp";
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = bundleName;
+    applicationInfo.deviceId = DEVICE_ID;
+    applicationInfo.bundleName = bundleName;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+
+    dataMgr->tempBundleInfos_.clear();
+    dataMgr->tempBundleInfos_.emplace(bundleName, innerBundleInfo);
+    bool result = dataMgr->UpdateInnerBundleInfo(innerBundleInfo, false, true);
+    EXPECT_TRUE(result);
+    EXPECT_TRUE(dataMgr->tempBundleInfos_.find(bundleName) != dataMgr->tempBundleInfos_.end());
+}
+
+/**
+ * @tc.number: SaveOverlayInfo_0001
+ * @tc.name: SaveOverlayInfo
+ * @tc.desc: test SaveOverlayInfo when bundle does not exist in bundleInfos_
+ */
+HWTEST_F(BmsDataMgrTest, SaveOverlayInfo_0001, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string nonExistentBundleName = "com.ohos.nonexistent.overlay.target";
+    InnerBundleInfo innerBundleInfo;
+    BundleInfo bundleInfo;
+    bundleInfo.name = nonExistentBundleName;
+    bundleInfo.applicationInfo.name = "NonExistentOverlayTarget";
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = nonExistentBundleName;
+    applicationInfo.deviceId = DEVICE_ID;
+    applicationInfo.bundleName = nonExistentBundleName;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+
+    dataMgr->bundleInfos_.clear();
+    dataMgr->SaveOverlayInfo(nonExistentBundleName, innerBundleInfo);
+    EXPECT_TRUE(dataMgr->bundleInfos_.empty());
+}
+
+/**
  * @tc.number: CheckHspVersionIsRelied_0001
  * @tc.name: CheckHspVersionIsRelied
  * @tc.desc: test CheckHspVersionIsRelied when other bundle depends on the hsp module
