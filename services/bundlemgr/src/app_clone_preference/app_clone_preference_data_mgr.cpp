@@ -46,7 +46,7 @@ ErrCode AppClonePreferenceDataMgr::GetAppClonePreference(const std::string &bund
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
     if (!dataMgr->HasUserInstallInBundle(bundleName, userId)) {
-        APP_LOGE_NOFUNC("GetAppClonePreference bundle %{public}s does not exist in userId %{public}d",
+        APP_LOGE_NOFUNC("GetAppClonePreference %{public}s not in %{public}d",
             bundleName.c_str(), userId);
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }

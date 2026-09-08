@@ -5161,7 +5161,7 @@ ErrCode InnerBundleInfo::DelMimeType(
 ErrCode InnerBundleInfo::GetAppServiceHspInfo(BundleInfo &bundleInfo) const
 {
     if (baseApplicationInfo_->bundleType != BundleType::APP_SERVICE_FWK) {
-        APP_LOGW("%{public}s is not app service", GetBundleName().c_str());
+        APP_LOGW_NOFUNC("%{public}s is not app service", GetBundleName().c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     bundleInfo = *baseBundleInfo_;

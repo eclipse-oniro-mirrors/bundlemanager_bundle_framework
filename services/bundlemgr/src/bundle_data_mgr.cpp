@@ -1547,9 +1547,8 @@ bool BundleDataMgr::QueryAbilityInfo(const Want &want, int32_t flags, int32_t us
         bool ret = ExplicitQueryAbilityInfo(want, flags, requestUserId, abilityInfo, appIndex);
 #endif
         if (!ret) {
-            LOG_NOFUNC_I(BMS_TAG_QUERY, "ExplicitQueryAbility no match -n %{public}s -m %{public}s -a %{public}s"
-                " -u %{public}d -i %{public}d", bundleName.c_str(), element.GetModuleName().c_str(),
-                abilityName.c_str(), userId, appIndex);
+            LOG_NOFUNC_I(BMS_TAG_QUERY, "EQA no match %{public}s/%{public}s/%{public}s %{public}d %{public}d",
+                bundleName.c_str(), element.GetModuleName().c_str(), abilityName.c_str(), userId, appIndex);
             return false;
         }
         return true;
@@ -3238,7 +3237,7 @@ void BundleDataMgr::GetCloneBundleInfos(const InnerBundleInfo& info, int32_t fla
     const InnerBundleUserInfo *bundleUserInfoPtr = nullptr;
     (void)info.GetInnerBundleUserInfo(userId, bundleUserInfoPtr);
     if (!bundleUserInfoPtr) {
-        LOG_NOFUNC_E(BMS_TAG_QUERY, "The InnerBundleInfo obtained by GetCloneBundleInfos is null");
+        LOG_D(BMS_TAG_QUERY, "The InnerBundleInfo obtained by GetCloneBundleInfos is null");
         return;
     }
     if (bundleUserInfoPtr->cloneInfos.empty()) {
@@ -4208,7 +4207,7 @@ bool BundleDataMgr::GetBundleInfo(
     }
 #else
     if (!GetInnerBundleInfoWithFlags(bundleName, flags, innerBundleInfo, requestUserId)) {
-        LOG_NOFUNC_W(BMS_TAG_QUERY, "GetBundleInfo failed -n %{public}s -u %{public}d",
+        LOG_D(BMS_TAG_QUERY, "GetBundleInfo failed -n %{public}s -u %{public}d",
             bundleName.c_str(), requestUserId);
         return false;
     }
@@ -4918,7 +4917,7 @@ bool BundleDataMgr::GetAdaptBaseShareBundleInfo(
         auto item = shareBundles.find(dependency.bundleName);
         if ((item != shareBundles.end()) && innerBundleInfo.GetBaseSharedBundleInfo(dependency.moduleName,
             item->second, baseSharedBundleInfo)) {
-            APP_LOGI_NOFUNC("get share bundle by pid -n %{public}s -v %{public}u succeed",
+            APP_LOGI_NOFUNC("get shared hsp %{public}s %{public}u",
                 dependency.bundleName.c_str(), item->second);
             return true;
         }
@@ -8955,9 +8954,9 @@ bool BundleDataMgr::QueryExtensionAbilityInfos(const Want &want, int32_t flags, 
         if (ExplicitQueryExtensionInfo(want, flags, requestUserId, info, appIndex)) {
             extensionInfos.emplace_back(info);
         }
-        LOG_NOFUNC_I(BMS_TAG_QUERY, "ExplicitQueryExtension size:%{public}zu -n %{public}s -m %{public}s -e %{public}s"
-            " -u %{public}d -i %{public}d", extensionInfos.size(), bundleName.c_str(), element.GetModuleName().c_str(),
-            extensionName.c_str(), userId, appIndex);
+        LOG_NOFUNC_I(BMS_TAG_QUERY, "EQE size:%{public}zu %{public}s/%{public}s/%{public}s %{public}d %{public}d",
+            extensionInfos.size(), bundleName.c_str(), element.GetModuleName().c_str(), extensionName.c_str(),
+            userId, appIndex);
         return !extensionInfos.empty();
     }
 
@@ -12895,7 +12894,7 @@ ErrCode BundleDataMgr::GetAppServiceHspBundleInfo(const std::string &bundleName,
     const InnerBundleInfo &innerBundleInfo = infoItem->second;
     auto res = innerBundleInfo.GetAppServiceHspInfo(bundleInfo);
     if (res != ERR_OK) {
-        APP_LOGW("get hspInfo %{public}s fail", bundleName.c_str());
+        APP_LOGW_NOFUNC("get appservice hsp %{public}s fail", bundleName.c_str());
         return res;
     }
     return ERR_OK;

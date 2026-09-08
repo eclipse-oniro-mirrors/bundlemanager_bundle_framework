@@ -58,7 +58,7 @@ void CriticalManager::BeforeRequest()
         counter_, memMgrStarted_, critical_);
     counter_++;
     if (memMgrStarted_ && !critical_) {
-        LOG_I(BMS_TAG_INSTALLD, "SetCritical true");
+        LOG_NOFUNC_I(BMS_TAG_INSTALLD, "SetCritical true");
         Memory::MemMgrClient::GetInstance().SetCritical(
             getpid(), true, INSTALLD_SERVICE_ID);
         critical_ = true;
@@ -74,7 +74,7 @@ void CriticalManager::AfterRequest()
     auto delayTask = []() {
         std::lock_guard<std::mutex> lock(mutex_);
         if (memMgrStarted_ && critical_ && counter_ == 0) {
-            LOG_I(BMS_TAG_INSTALLD, "SetCritical false");
+            LOG_NOFUNC_I(BMS_TAG_INSTALLD, "SetCritical false");
             Memory::MemMgrClient::GetInstance().SetCritical(
                 getpid(), false, INSTALLD_SERVICE_ID);
             critical_ = false;
