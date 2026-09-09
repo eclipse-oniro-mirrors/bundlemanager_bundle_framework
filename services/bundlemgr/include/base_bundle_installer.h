@@ -744,7 +744,7 @@ private:
     bool CheckApiInfo(const std::unordered_map<std::string, InnerBundleInfo> &infos);
     ErrCode InnerProcessNativeLibs(InnerBundleInfo &info, const std::string &modulePath);
     ErrCode CheckSoEncryption(InnerBundleInfo &info, const std::string &cpuAbi, const std::string &targetSoPath);
-    bool ExtractSoFiles(const std::string &soPath, const std::string &cpuAbi) const;
+    bool ExtractSoFiles(const std::string &cpuAbi) const;
     void ProcessOldNativeLibraryPath(const std::unordered_map<std::string, InnerBundleInfo> &newInfos,
         uint32_t oldVersionCode, const std::string &oldNativeLibraryPath) const;
     void ProcessAOT(const InstallParam &installParam) const;

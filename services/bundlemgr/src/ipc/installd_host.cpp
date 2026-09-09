@@ -245,6 +245,9 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_FILES):
             result = this->HandleExtractFiles(data, reply);
             break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_SO_FILES):
+            result = this->HandleExtractSoFiles(data, reply);
+            break;
         case static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_HNP_FILES):
             result = this->HandleExtractHnpFiles(data, reply);
             break;
@@ -495,6 +498,21 @@ bool InstalldHost::HandleExtractQuickFixRes(MessageParcel &data, MessageParcel &
     std::string hqfFilePath = Str16ToStr8(data.ReadString16());
     bool needFakeDecompression = data.ReadBool();
     ErrCode result = ExtractQuickFixRes(bundleName, moduleName, hqfFilePath, needFakeDecompression);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleExtractSoFiles(MessageParcel &data, MessageParcel &reply)
+{
+    std::string bundleName = Str16ToStr8(data.ReadString16());
+    std::string moduleName = Str16ToStr8(data.ReadString16());
+    std::string hapFilePath = Str16ToStr8(data.ReadString16());
+    std::string cpuAbi = Str16ToStr8(data.ReadString16());
+    bool needFakeDecompression = data.ReadBool();
+    bool isSystemApp = data.ReadBool();
+    bool appendModuleName = data.ReadBool();
+    ErrCode result = ExtractSoFiles(bundleName, moduleName, hapFilePath, cpuAbi, needFakeDecompression,
+        isSystemApp, appendModuleName);
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

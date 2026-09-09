@@ -5583,12 +5583,19 @@ HWTEST_F(BmsBundleInstallerTest, BmsBundleInstallerTest_0030, TestSize.Level1)
 {
     BaseBundleInstaller installer;
     installer.bundleName_ = "com.example.test";
-    auto ret = installer.ExtractSoFiles("/data/app/el1/bundle/public/com.example.test", "libs/arm");
+    // modulePath_ empty -> InstalldClient param error
+    auto ret = installer.ExtractSoFiles("arm");
     EXPECT_FALSE(ret);
 
+    // existing external hap path -> extract ok (archive: no BUNDLE_CODE_DIR prefix required)
     installer.modulePath_ = RESOURCE_ROOT_PATH + RIGHT_BUNDLE;
-    ret = installer.ExtractSoFiles("/data/app/el1/bundle/public/com.example.test", "libs/arm");
+    ret = installer.ExtractSoFiles("arm");
     EXPECT_TRUE(ret);
+
+    // .hap suffix but file not exist -> installd path check fails
+    installer.modulePath_ = std::string(Constants::BUNDLE_CODE_DIR) + "/com.example.test/" + RIGHT_BUNDLE;
+    ret = installer.ExtractSoFiles("arm");
+    EXPECT_FALSE(ret);
 }
 
 /**

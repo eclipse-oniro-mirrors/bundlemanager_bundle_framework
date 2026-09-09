@@ -103,6 +103,13 @@ public:
         return ERR_OK;
     }
 
+    virtual ErrCode ExtractSoFiles(const std::string &bundleName, const std::string &moduleName,
+        const std::string &hapFilePath, const std::string &cpuAbi, bool needFakeDecompression,
+        bool isSystemApp, bool appendModuleName)
+    {
+        return ERR_OK;
+    }
+
     /**
      * @brief Extract the hnpFiles.
      * @param hnpPackageMap Indicates the hnpPackageInfo.

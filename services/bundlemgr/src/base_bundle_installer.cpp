@@ -3793,21 +3793,18 @@ bool BaseBundleInstaller::CheckHapLibsWithPatchLibs(
     return true;
 }
 
-bool BaseBundleInstaller::ExtractSoFiles(const std::string &soPath, const std::string &cpuAbi) const
+bool BaseBundleInstaller::ExtractSoFiles(const std::string &cpuAbi) const
 {
-    ExtractParam extractParam;
-    extractParam.bundleName = bundleName_;
-    extractParam.extractFileType = ExtractFileType::SO;
-    extractParam.srcPath = modulePath_;
-    extractParam.targetPath = soPath;
-    extractParam.cpuAbi = cpuAbi;
-    if (InstalldClient::GetInstance()->ExtractFiles(extractParam) != ERR_OK) {
+    // targetPath sunk in installd: HAP_COPY_PATH/{bundleName}_tmp/libs (appendModuleName=false)
+    if (InstalldClient::GetInstance()->ExtractSoFiles(bundleName_, modulePackage_, modulePath_, cpuAbi,
+        false, false, false) != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "bundleName: %{public}s moduleName: %{public}s extract so failed", bundleName_.c_str(),
             modulePackage_.c_str());
         return false;
     }
     return true;
 }
+
 
 bool BaseBundleInstaller::ExtractEncryptedSoFiles(const InnerBundleInfo &info,
     const std::string &tmpSoPath, int32_t uid) const
@@ -3868,7 +3865,7 @@ ErrCode BaseBundleInstaller::ProcessDiffFiles(const AppqfInfo &appQfInfo, const 
                 return ERR_BUNDLEMANAGER_QUICK_FIX_EXTRACT_DIFF_FILES_FAILED;
             }
         } else {
-            if (!ExtractSoFiles(oldSoPath, cpuAbi)) {
+            if (!ExtractSoFiles(cpuAbi)) {
                 return ERR_BUNDLEMANAGER_QUICK_FIX_EXTRACT_DIFF_FILES_FAILED;
             }
         }

@@ -321,6 +321,44 @@ ErrCode InstalldHostImpl::ExtractQuickFixRes(const std::string &bundleName, cons
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::ExtractSoFiles(const std::string &bundleName, const std::string &moduleName,
+    const std::string &hapFilePath, const std::string &cpuAbi, bool needFakeDecompression,
+    bool isSystemApp, bool appendModuleName)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    if (!InstalldOperator::IsValidBundleName(bundleName) ||
+        !InstalldOperator::IsValidPathByExtractSoFiles(bundleName, moduleName, hapFilePath, cpuAbi,
+            appendModuleName)) {
+        LOG_E(BMS_TAG_INSTALLD,
+            "Calling the function ExtractSoFiles with invalid param, bundleName:%{public}s, "
+            "moduleName:%{private}s, hapFilePath:%{private}s, cpuAbi:%{private}s",
+            bundleName.c_str(), moduleName.c_str(), hapFilePath.c_str(), cpuAbi.c_str());
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    // sink from BMS: HAP_COPY_PATH/{bundleName}_tmp/libs[/moduleName]
+    std::string targetPath = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::PATH_SEPARATOR +
+        bundleName + ServiceConstants::TMP_SUFFIX + ServiceConstants::LIBS;
+    if (appendModuleName) {
+        targetPath.append(moduleName);
+    }
+    ExtractParam extractParam;
+    extractParam.bundleName = bundleName;
+    extractParam.extractFileType = ExtractFileType::SO;
+    extractParam.srcPath = hapFilePath;
+    extractParam.targetPath = targetPath;
+    extractParam.cpuAbi = cpuAbi;
+    extractParam.needFakeDecompression = needFakeDecompression;
+    extractParam.isSystemApp = isSystemApp;
+    if (!InstalldOperator::ExtractFiles(extractParam)) {
+        LOG_E(BMS_TAG_INSTALLD, "ExtractSoFiles failed, bundleName:%{public}s", bundleName.c_str());
+        return ERR_APPEXECFWK_INSTALLD_EXTRACT_FAILED;
+    }
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::ExtractHnpFiles(const std::map<std::string, std::string> &hnpPackageMap,
     const ExtractParam &extractParam)
 {

@@ -237,6 +237,10 @@ public:
 
     ErrCode ExtractFiles(const ExtractParam &extractParam);
 
+    ErrCode ExtractSoFiles(const std::string &bundleName, const std::string &moduleName,
+        const std::string &hapFilePath, const std::string &cpuAbi, bool needFakeDecompression,
+        bool isSystemApp, bool appendModuleName);
+
     ErrCode ExtractQuickFixSoFile(const std::string &bundleName, const std::string &hqfFilePath,
         const std::string &nativeLibraryPath, const std::string &cpuAbi, bool isReplace, int32_t versionCode,
         const std::string &targetPathSuffix);

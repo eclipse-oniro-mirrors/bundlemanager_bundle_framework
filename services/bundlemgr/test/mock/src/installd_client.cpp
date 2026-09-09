@@ -88,6 +88,20 @@ ErrCode InstalldClient::ExtractFiles(const ExtractParam &extractParam)
     return CallService(&IInstalld::ExtractFiles, extractParam);
 }
 
+ErrCode InstalldClient::ExtractSoFiles(const std::string &bundleName, const std::string &moduleName,
+    const std::string &hapFilePath, const std::string &cpuAbi, bool needFakeDecompression,
+    bool isSystemApp, bool appendModuleName)
+{
+    if (bundleName.empty() || hapFilePath.empty() || cpuAbi.empty()) {
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    if (appendModuleName && moduleName.empty()) {
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::ExtractSoFiles, bundleName, moduleName, hapFilePath, cpuAbi,
+        needFakeDecompression, isSystemApp, appendModuleName);
+}
+
 ErrCode InstalldClient::ExtractQuickFixSoFile(const std::string &bundleName, const std::string &hqfFilePath,
     const std::string &nativeLibraryPath, const std::string &cpuAbi, bool isReplace, int32_t versionCode,
     const std::string &targetPathSuffix)
