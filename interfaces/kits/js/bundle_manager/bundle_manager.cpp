@@ -5549,7 +5549,6 @@ napi_value SetAdditionalInfo(napi_env env, napi_callback_info info)
 
 napi_value SetAdditionalInfoByIndex(napi_env env, napi_callback_info info)
 {
-    APP_LOGD("Called");
     NapiArg args(env, info);
     if (!args.Init(ARGS_SIZE_THREE, ARGS_SIZE_THREE)) {
         APP_LOGE("Param count invalid");
@@ -5599,7 +5598,6 @@ napi_value SetAdditionalInfoByIndex(napi_env env, napi_callback_info info)
     }
     napi_value nRet = nullptr;
     NAPI_CALL(env, napi_get_undefined(env, &nRet));
-    APP_LOGD("Call done");
     return nRet;
 }
 
