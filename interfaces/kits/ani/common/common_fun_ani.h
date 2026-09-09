@@ -163,6 +163,7 @@ public:
         return ConvertAbilitySkillInner(env, skill, true);
     }
     static ani_object ConvertBundleInfo(ani_env* env, const BundleInfo& bundleInfo, int32_t flags);
+    static ani_object ConvertBundleExtensionPolicy(ani_env* env, const DualModeBundleInfo& dualModeBundleInfo);
     static ani_object ConvertDefaultAppAbilityInfo(ani_env* env, const AbilityInfo& abilityInfo);
     static ani_object ConvertDefaultAppExtensionInfo(ani_env* env, const ExtensionAbilityInfo& extensionInfo);
     static ani_object ConvertDefaultAppHapModuleInfo(ani_env* env, const BundleInfo &bundleInfo);

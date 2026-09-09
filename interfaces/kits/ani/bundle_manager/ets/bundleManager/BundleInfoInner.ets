@@ -17,7 +17,7 @@ import { ApplicationInfo } from 'bundleManager.ApplicationInfo';
 import { HapModuleInfo, RouterItem } from 'bundleManager.HapModuleInfo';
 import bundleManager from '@ohos.bundle.bundleManager';
 import { BundleInfo, ReqPermissionDetail, UsedScene, SignatureInfo, AppCloneIdentity, AppClonePreference,
-  DynamicIconInfo, AlternateIconInfo, BundleOptions} from 'bundleManager.BundleInfo';
+  DynamicIconInfo, AlternateIconInfo, BundleOptions, BundleExtensionPolicyInfo } from 'bundleManager.BundleInfo';
 import { ApplicationInfoInner } from './ApplicationInfoInner';
 
 export class BundleInfoInner implements BundleInfo {
@@ -39,6 +39,8 @@ export class BundleInfoInner implements BundleInfo {
   readonly firstInstallTime?: long;
   readonly buildVersion?: string | undefined;
   readonly sandboxCreatorBundleName?: string | undefined;
+  readonly deviceModeDistributionPolicy?: bundleManager.DeviceModeDistributionPolicy;
+  readonly appSandboxPolicy?: bundleManager.AppSandboxPolicy;
 
   constructor() { }
   constructor(name: string,
@@ -58,7 +60,9 @@ export class BundleInfoInner implements BundleInfo {
     appIndex: int,
     firstInstallTime?: long,
     buildVersion?: string,
-    sandboxCreatorBundleName?: string) {
+    sandboxCreatorBundleName?: string,
+    deviceModeDistributionPolicy?: bundleManager.DeviceModeDistributionPolicy,
+    appSandboxPolicy?: bundleManager.AppSandboxPolicy) {
       this.name = name;
       this.vendor = vendor;
       this.versionCode = versionCode;
@@ -77,6 +81,8 @@ export class BundleInfoInner implements BundleInfo {
       this.firstInstallTime = firstInstallTime;
       this.buildVersion = buildVersion;
       this.sandboxCreatorBundleName = sandboxCreatorBundleName;
+      this.deviceModeDistributionPolicy = deviceModeDistributionPolicy;
+      this.appSandboxPolicy = appSandboxPolicy;
   }
   constructor(name: string, hapModulesInfo: Array<HapModuleInfo>) {
       this.name = name;
@@ -186,4 +192,23 @@ export class BundleOptionsInner implements BundleOptions {
   public bundleName?: string | undefined;
   public moduleName?: string | undefined;
   public abilityName?: string | undefined;
+}
+
+export class BundleExtensionPolicyInfoInner implements BundleExtensionPolicyInfo {
+  public readonly bundleName: string = '';
+  public readonly appIndex: int;
+  public readonly deviceModeDistributionPolicy: bundleManager.DeviceModeDistributionPolicy =
+    bundleManager.DeviceModeDistributionPolicy.UNSPECIFIED;
+  public readonly appSandboxPolicy: bundleManager.AppSandboxPolicy = bundleManager.AppSandboxPolicy.SHARED_SANDBOX;
+
+  constructor() { }
+  constructor(bundleName: string,
+    appIndex: int,
+    deviceModeDistributionPolicy: bundleManager.DeviceModeDistributionPolicy,
+    appSandboxPolicy: bundleManager.AppSandboxPolicy) {
+      this.bundleName = bundleName;
+      this.appIndex = appIndex;
+      this.deviceModeDistributionPolicy = deviceModeDistributionPolicy;
+      this.appSandboxPolicy = appSandboxPolicy;
+  }
 }

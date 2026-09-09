@@ -2171,6 +2171,11 @@ void CommonFunc::ConvertHapModuleInfo(napi_env env, const HapModuleInfo &hapModu
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, externalNativeLibraryPath.c_str(), NAPI_AUTO_LENGTH,
         &nativeLibraryPath));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, "nativeLibraryPath", nativeLibraryPath));
+
+    napi_value nCodePhysicalPath;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, hapModuleInfo.hapPath.c_str(), NAPI_AUTO_LENGTH,
+            &nCodePhysicalPath));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, "codePhysicalPath", nCodePhysicalPath));
 }
 
 void CommonFunc::ConvertRouterItem(napi_env env, const RouterItem &routerItem, napi_value value)
@@ -3230,10 +3235,15 @@ void CommonFunc::ConvertAppCloneIdentity(
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nAppCloneIdentity, APP_INDEX, nAppIndex));
 }
 
-void CommonFunc::ConvertBundleInfoDualMode(napi_env env, const DualModeBundleInfo& dualModeBundleInfo,
+void CommonFunc::ConvertBundleExtensionPolicy(napi_env env, const DualModeBundleInfo& dualModeBundleInfo,
     napi_value objDualModeBundleInfo)
 {
     AutoHandleScope scopeGuard(env);
+    napi_value nbundleName;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, dualModeBundleInfo.bundleName.c_str(), NAPI_AUTO_LENGTH, &nbundleName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objDualModeBundleInfo, "bundleName", nbundleName));
+
     napi_value nAppIndex;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, dualModeBundleInfo.appIndex, &nAppIndex));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objDualModeBundleInfo, APP_INDEX, nAppIndex));

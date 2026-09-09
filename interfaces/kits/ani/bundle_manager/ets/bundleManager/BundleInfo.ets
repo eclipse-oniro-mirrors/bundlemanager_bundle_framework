@@ -36,6 +36,8 @@ export interface BundleInfo {
   readonly firstInstallTime?: long;
   readonly buildVersion?: string;
   readonly sandboxCreatorBundleName?: string;
+  readonly deviceModeDistributionPolicy?: bundleManager.DeviceModeDistributionPolicy;
+  readonly appSandboxPolicy?: bundleManager.AppSandboxPolicy;
 }
 
 export interface ReqPermissionDetail {
@@ -87,4 +89,11 @@ export interface BundleOptions {
   bundleName?: string;
   moduleName?: string;
   abilityName?: string;
+}
+
+export interface BundleExtensionPolicyInfo {
+  readonly bundleName: string;
+  readonly appIndex: int;
+  readonly deviceModeDistributionPolicy: bundleManager.DeviceModeDistributionPolicy;
+  readonly appSandboxPolicy: bundleManager.AppSandboxPolicy;
 }

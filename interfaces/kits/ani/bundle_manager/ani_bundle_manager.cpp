@@ -2677,6 +2677,44 @@ static ani_enum_item GetBundleInstallStatusNative(ani_env* env, ani_string aniBu
     return EnumUtils::EnumNativeToETS_BundleManager_BundleInstallStatus(env, static_cast<int32_t>(status));
 }
 
+static ani_object GetBundleExtensionPolicyInfoNative(ani_env* env, ani_string aniBundleName, ani_int aniUserId)
+{
+    APP_LOGD("ani GetBundleExtensionPolicyInfoNative called");
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    if (aniUserId == EMPTY_USER_ID) {
+        aniUserId = callingUid / Constants::BASE_USER_RANGE;
+    }
+    std::string bundleName;
+    if (!CommonFunAni::ParseString(env, aniBundleName, bundleName)) {
+        APP_LOGE("bundleName %{public}s invalid", bundleName.c_str());
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+        return nullptr;
+    }
+    if (bundleName.empty()) {
+        BusinessErrorAni::ThrowCommonError(
+            env, ERROR_PARAM_CHECK_ERROR, GET_BUNDLE_INFO_SYNC, BUNDLE_PERMISSIONS);
+        return nullptr;
+    }
+ 
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("Get bundle mgr failed");
+        BusinessErrorAni::ThrowError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION);
+        return nullptr;
+    }
+    DualModeBundleInfo dualModeBundleInfo;
+    ErrCode ret = iBundleMgr->GetDualModeBundleInfo(bundleName, aniUserId, dualModeBundleInfo);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetBundleInfoDualModeNative failed ret: %{public}d", ret);
+        BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret), GET_BUNDLE_EXTENSION_POLICY_INFO,
+            Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+        return nullptr;
+    }
+    dualModeBundleInfo.bundleName = bundleName;
+    ani_object objectBundleExtensionPolicyInfo = CommonFunAni::ConvertBundleExtensionPolicy(env, dualModeBundleInfo);
+    return objectBundleExtensionPolicyInfo;
+}
+
 static ani_object GetAlternateIconsNative(ani_env* env)
 {
     APP_LOGD("ani GetAlternateIcons called");
@@ -2863,6 +2901,8 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
             reinterpret_cast<void*>(FilterBundleListByDeviceModeDistributionPoliciesNative) },
         ani_native_function { "getCloneMaxCountNative", nullptr,
             reinterpret_cast<void*>(GetCloneMaxCountNative) },
+        ani_native_function { "getBundleExtensionPolicyInfoNative", nullptr,
+            reinterpret_cast<void*>(GetBundleExtensionPolicyInfoNative) },
     };
 
     res = env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size());

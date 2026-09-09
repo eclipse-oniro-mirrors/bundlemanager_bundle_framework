@@ -64,6 +64,12 @@ constexpr const char* CLASSNAME_APPCONTROL_UNINSTALL_COMPONENT_TYPE =
     "@ohos.bundle.appControl.appControl.UninstallComponentType";
 constexpr const char* CLASSNAME_BUNDLEMANAGER_BUNDLE_INSTALL_STATUS =
     "@ohos.bundle.bundleManager.bundleManager.BundleInstallStatus";
+constexpr const char* CLASSNAME_BUNDLEMANAGER_APPLICATIONRESERVEDFLAG =
+    "@ohos.bundle.bundleManager.bundleManager.ApplicationReservedFlag";
+constexpr const char* CLASSNAME_BUNDLEMANAGER_DEVICE_MODE_DISTRIBUTION_POLICY =
+    "@ohos.bundle.bundleManager.bundleManager.DeviceModeDistributionPolicy";
+constexpr const char* CLASSNAME_BUNDLEMANAGER_APP_SANDBOX_POLICY =
+    "@ohos.bundle.bundleManager.bundleManager.AppSandboxPolicy";
 } // namespace CommonFunAniNS
 class EnumUtils {
 private:
@@ -249,6 +255,10 @@ private:
         0x00000001,
         0x00000002,
         0x00000004,
+    };
+    static constexpr std::array<int, 2> Array_BundleManager_ApplicationReservedFlag = {
+        0x00000001,
+        0x00000002,
     };
     /* zlib.CompressLevel
     enum CompressLevel {
@@ -601,6 +611,49 @@ public:
     static inline ani_enum_item EnumNativeToETS_Zlib_PathSeparatorStrategy(ani_env* env, const int32_t value)
     {
         return EnumNativeToETSByOffset(env, CommonFunAniNS::CLASSNAME_ZLIB_PATHSEPARATORSTRATRGY, value, 0);
+    }
+
+    /* Each bit of this ApplicationReservedFlag value identifies relevant information
+    enum class ApplicationReservedFlag {
+        ENCRYPTED_APPLICATION = 0x00000001,
+        ENCRYPTED_KEY_EXISTED = 0x00000002,
+    } */
+    static inline ani_enum_item EnumNativeToETS_BundleManager_ApplicationReservedFlag(ani_env* env,
+        const int32_t value)
+    {
+        return EnumNativeToETSByTable(env, CommonFunAniNS::CLASSNAME_BUNDLEMANAGER_APPLICATIONRESERVEDFLAG,
+            value, Array_BundleManager_ApplicationReservedFlag);
+    }
+
+    /* Device mode distribution policy for dual-mode (2IN1/TABLET) scenarios.
+    Values are consecutive integers (mutually exclusive, no bitwise-or combination).
+    enum DeviceModeDistributionPolicy {
+        UNSPECIFIED = 0,                              // Unspecified policy (default)
+        MAIN_ONLY = 1,                                // Primary-mode only
+        SUB_ONLY = 2,                                 // Secondary-mode only
+        UNIVERSAL_IDENTICAL_PACKAGE = 3,              // Universal, identical package body
+        UNIVERSAL_DIFFERENT_PACKAGE = 4,              // Universal, different package body
+        PARTIAL_COMPATIBLE_IDENTICAL_PACKAGE = 5,     // Partial-compatible, identical package body
+        PARTIAL_COMPATIBLE_DIFFERENT_PACKAGE = 6,     // Partial-compatible, different package body
+        FULL_COMPATIBLE_IDENTICAL_PACKAGE = 7,        // Full-compatible, identical package body
+        FULL_COMPATIBLE_DIFFERENT_PACKAGE = 8,        // Full-compatible, different package body
+    }; */
+    static inline ani_enum_item EnumNativeToETS_BundleManager_DeviceModeDistributionPolicy(ani_env* env,
+        const int32_t value)
+    {
+        return EnumNativeToETSByOffset(env, CommonFunAniNS::CLASSNAME_BUNDLEMANAGER_DEVICE_MODE_DISTRIBUTION_POLICY,
+            value, 0);
+    }
+ 
+    /* App sandbox policy for dual-mode (2IN1/TABLET) scenarios.
+    Values are consecutive integers (mutually exclusive, no bitwise-or combination).
+    enum AppSandboxPolicy {
+        SHARED_SANDBOX = 0,                           // Shared sandbox (default)
+        ISOLATED_SANDBOX = 1,                         // Isolated sandbox
+    }; */
+    static inline ani_enum_item EnumNativeToETS_BundleManager_AppSandboxPolicy(ani_env* env, const int32_t value)
+    {
+        return EnumNativeToETSByOffset(env, CommonFunAniNS::CLASSNAME_BUNDLEMANAGER_APP_SANDBOX_POLICY, value, 0);
     }
 };
 } // namespace AppExecFwk

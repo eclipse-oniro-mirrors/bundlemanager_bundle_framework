@@ -41,6 +41,7 @@ export class HapModuleInfoInner implements HapModuleInfo {
   readonly routerMap: Array<RouterItem> = new Array<RouterItem>;
   readonly nativeLibraryPath: string = "";
   readonly codePath: string = "";
+  readonly codePhysicalPath?: string;
 
   constructor() { }
   constructor(name: string,
@@ -63,7 +64,8 @@ export class HapModuleInfoInner implements HapModuleInfo {
     fileContextMenuConfig: string,
     routerMap: Array<RouterItem>,
     nativeLibraryPath: string,
-    codePath: string) {
+    codePath: string,
+    codePhysicalPath?: string) {
       this.name = name;
       this.icon = icon;
       this.iconId = iconId;
@@ -85,6 +87,7 @@ export class HapModuleInfoInner implements HapModuleInfo {
       this.routerMap = routerMap;
       this.nativeLibraryPath = nativeLibraryPath;
       this.codePath = codePath;
+      this.codePhysicalPath = codePhysicalPath;
   }
   constructor(abilitiesInfo: Array<AbilityInfo>, extensionAbilitiesInfo: Array<ExtensionAbilityInfo>) {
       this.abilitiesInfo = abilitiesInfo;
