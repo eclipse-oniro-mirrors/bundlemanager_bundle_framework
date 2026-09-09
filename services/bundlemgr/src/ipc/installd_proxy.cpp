@@ -206,6 +206,24 @@ ErrCode InstalldProxy::ExtractFiles(const ExtractParam &extractParam)
     return TransactInstalldCmd(InstalldInterfaceCode::EXTRACT_FILES, data, reply, option);
 }
 
+ErrCode InstalldProxy::ExtractSoFiles(const std::string &bundleName, const std::string &moduleName,
+    const std::string &hapFilePath, const std::string &cpuAbi, bool needFakeDecompression,
+    bool isSystemApp, bool appendModuleName)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(moduleName));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(hapFilePath));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(cpuAbi));
+    INSTALLD_PARCEL_WRITE(data, Bool, needFakeDecompression);
+    INSTALLD_PARCEL_WRITE(data, Bool, isSystemApp);
+    INSTALLD_PARCEL_WRITE(data, Bool, appendModuleName);
+    MessageParcel reply;
+    MessageOption option;
+    return TransactInstalldCmd(InstalldInterfaceCode::EXTRACT_SO_FILES, data, reply, option);
+}
+
 ErrCode InstalldProxy::ExtractQuickFixSoFile(const std::string &bundleName, const std::string &hqfFilePath,
     const std::string &nativeLibraryPath, const std::string &cpuAbi, bool isReplace, int32_t versionCode,
     const std::string &targetPathSuffix)

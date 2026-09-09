@@ -395,6 +395,10 @@ public:
     virtual ErrCode ExtractSkillsPackage(const SkillsPackageParam &param,
         std::vector<SkillsPackageInfo> &skillInfoList) override;
 
+    virtual ErrCode ExtractSoFiles(const std::string &bundleName, const std::string &moduleName,
+        const std::string &hapFilePath, const std::string &cpuAbi, bool needFakeDecompression,
+        bool isSystemApp, bool appendModuleName) override;
+
     /**
      * @brief Delete older cache files until the desired cache size is achieved.
      * @param paths Indicates the paths of cache files to be deleted.

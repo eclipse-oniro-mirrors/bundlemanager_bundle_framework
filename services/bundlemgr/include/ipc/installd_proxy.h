@@ -57,6 +57,10 @@ public:
      */
     virtual ErrCode ExtractFiles(const ExtractParam &extractParam) override;
 
+    virtual ErrCode ExtractSoFiles(const std::string &bundleName, const std::string &moduleName,
+        const std::string &hapFilePath, const std::string &cpuAbi, bool needFakeDecompression,
+        bool isSystemApp, bool appendModuleName) override;
+
     virtual ErrCode ExtractQuickFixSoFile(const std::string &bundleName, const std::string &hqfFilePath,
         const std::string &nativeLibraryPath, const std::string &cpuAbi, bool isReplace, int32_t versionCode,
         const std::string &targetPathSuffix) override;

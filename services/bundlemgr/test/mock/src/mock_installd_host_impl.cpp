@@ -68,6 +68,13 @@ ErrCode InstalldHostImpl::ExtractQuickFixRes(const std::string &bundleName, cons
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::ExtractSoFiles(const std::string &bundleName, const std::string &moduleName,
+    const std::string &hapFilePath, const std::string &cpuAbi, bool needFakeDecompression,
+    bool isSystemApp, bool appendModuleName)
+{
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::ExtractHnpFiles(const std::map<std::string, std::string> &hnpPackageMap,
     const ExtractParam &extractParam)
 {

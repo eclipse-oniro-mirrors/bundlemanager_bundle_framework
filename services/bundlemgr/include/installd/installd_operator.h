@@ -530,6 +530,8 @@ public:
     static bool IsValidPathByGetCacheDiskUsageFromPath(const std::string &path);
     static bool IsValidPathByGetFileStatScene(const std::string &file, const BundleDirScene &scene);
     static bool IsValidPathByHashFiles(const std::string &file);
+    static bool IsValidPathByExtractSoFiles(const std::string &bundleName, const std::string &moduleName,
+        const std::string &hapFilePath, const std::string &cpuAbi, bool appendModuleName);
     static bool IsValidPathByMigrateData(
         const std::vector<std::string> &sourcePaths, const std::string &destinationPath, bool &isInvalidsourcePath);
     static bool IsValidPathByCleanBundleDirsScene(const std::string &dir, const std::string &bundleName,

@@ -66,7 +66,7 @@ private:
      * @return Returns true if called successfully; returns false otherwise.
      */
     bool HandleExtractHnpFiles(MessageParcel &data, MessageParcel &reply);
-
+    bool HandleExtractSoFiles(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the HandleExtractQuickFixSoFile function called from a IInstalld proxy object.
      * @param data Indicates the data to be read.

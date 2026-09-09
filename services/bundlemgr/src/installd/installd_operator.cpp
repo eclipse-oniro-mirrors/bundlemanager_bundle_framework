@@ -6163,6 +6163,36 @@ bool InstalldOperator::IsValidPathByCleanBundleDirsScene(const std::string &dir,
     }
 }
 
+bool InstalldOperator::IsValidPathByExtractSoFiles(
+    const std::string &bundleName, const std::string &moduleName,
+    const std::string &hapFilePath, const std::string &cpuAbi, bool appendModuleName)
+{
+    if (!IsFileNameValid(cpuAbi) || cpuAbi.find('/') != std::string::npos) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid cpuAbi");
+        return false;
+    }
+    if (appendModuleName &&
+        (!IsFileNameValid(moduleName) || moduleName.find('/') != std::string::npos)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid moduleName");
+        return false;
+    }
+    // archive: hapFilePath is external full path — IsFileNameValid + .hap/.hsp + IsExistFile
+    if (!IsFileNameValid(hapFilePath) ||
+        !(EndsWith(hapFilePath, ServiceConstants::INSTALL_FILE_SUFFIX) ||
+            EndsWith(hapFilePath, ServiceConstants::HSP_FILE_SUFFIX)) ||
+        !IsExistFile(hapFilePath)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid hapFilePath");
+        return false;
+    }
+    std::string targetPath = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::PATH_SEPARATOR +
+        bundleName + ServiceConstants::TMP_SUFFIX + ServiceConstants::LIBS;
+    if (appendModuleName) {
+        targetPath.append(moduleName);
+    }
+    return StartsWith(targetPath, ServiceConstants::HAP_COPY_PATH) &&
+        IsContainsBundleName(targetPath, bundleName);
+}
+
 bool InstalldOperator::IsValidPathByDeleteUninstallTmpDirs(const std::string &dir)
 {
     if (!IsFileNameValid(dir)) {
