@@ -94,12 +94,17 @@ ErrCode BundleOverlayInstallChecker::CheckInternalBundle(
         return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR;
     }
     std::string moduleName = innerBundleInfo.GetCurrentModulePackage();
-    if ((result = CheckTargetPriority(innerModuleInfos.at(moduleName).targetPriority)) != ERR_OK) {
+    auto infoItem = innerModuleInfos.find(moduleName);
+    if (infoItem == innerModuleInfos.end()) {
+        APP_LOGE("module %{public}s is not existed in the overlay hap", moduleName.c_str());
+        return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR;
+    }
+    if ((result = CheckTargetPriority(infoItem->second.targetPriority)) != ERR_OK) {
         APP_LOGE("target priority of module is invalid");
         return result;
     }
     // 4. check TargetModule with moduleName
-    std::string targetModuleName = innerModuleInfos.at(moduleName).targetModuleName;
+    std::string targetModuleName = infoItem->second.targetModuleName;
     if (targetModuleName == moduleName) {
         APP_LOGE("target moduleName cannot be same with moduleName");
         return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INVALID_MODULE_NAME;
