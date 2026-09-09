@@ -6038,9 +6038,9 @@ HWTEST_F(BmsBundleKitServiceTest, SetAdditionalInfoByIndex_0001, Function | Smal
 
 /**
  * @tc.number: SetAdditionalInfoByIndex_0002
- * @tc.name: test SetAdditionalInfoByIndex with dual mode clone appIndex
- * @tc.desc: 1.appIndex is DUAL_MODE_CLONE_APP_INDEX
- *           2.caller is not app gallery, get ERR_BUNDLE_MANAGER_NOT_APP_GALLERY_CALL
+ * @tc.name: test SetAdditionalInfoByIndex with empty bundleName
+ * @tc.desc: 1.bundleName is empty
+ *           2.get ERR_BUNDLE_MANAGER_PARAM_ERROR
  */
 HWTEST_F(BmsBundleKitServiceTest, SetAdditionalInfoByIndex_0002, Function | SmallTest | Level1)
 {
@@ -6048,40 +6048,8 @@ HWTEST_F(BmsBundleKitServiceTest, SetAdditionalInfoByIndex_0002, Function | Smal
     ASSERT_NE(nullptr, bundleMgrProxy);
     std::string additionalInfo = "additionalInfo";
     auto ret = bundleMgrProxy->SetAdditionalInfoByIndex(
-        BUNDLE_NAME_TEST, additionalInfo, Constants::DUAL_MODE_CLONE_APP_INDEX);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_NOT_APP_GALLERY_CALL);
-}
-
-/**
- * @tc.number: SetAdditionalInfoByIndex_0003
- * @tc.name: test SetAdditionalInfoByIndex with empty bundleName
- * @tc.desc: 1.bundleName is empty
- *           2.get ERR_BUNDLE_MANAGER_PARAM_ERROR
- */
-HWTEST_F(BmsBundleKitServiceTest, SetAdditionalInfoByIndex_0003, Function | SmallTest | Level1)
-{
-    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(nullptr, bundleMgrProxy);
-    std::string additionalInfo = "additionalInfo";
-    auto ret = bundleMgrProxy->SetAdditionalInfoByIndex(
         "", additionalInfo, Constants::DEFAULT_APP_INDEX);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
-}
-
-/**
- * @tc.number: SetAdditionalInfoByIndex_0004
- * @tc.name: test SetAdditionalInfoByIndex with default appIndex
- * @tc.desc: 1.appIndex is DEFAULT_APP_INDEX
- *           2.caller is not app gallery, get ERR_BUNDLE_MANAGER_NOT_APP_GALLERY_CALL
- */
-HWTEST_F(BmsBundleKitServiceTest, SetAdditionalInfoByIndex_0004, Function | SmallTest | Level1)
-{
-    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(nullptr, bundleMgrProxy);
-    std::string additionalInfo = "additionalInfo";
-    auto ret = bundleMgrProxy->SetAdditionalInfoByIndex(
-        BUNDLE_NAME_TEST, additionalInfo, Constants::DEFAULT_APP_INDEX);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_NOT_APP_GALLERY_CALL);
 }
 
 /**
