@@ -6139,18 +6139,6 @@ ErrCode BundleMgrHostImpl::SetAdditionalInfoByIndex(const std::string &bundleNam
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
 
-    std::string appGalleryBundleName;
-    QueryAppGalleryBundleName(appGalleryBundleName);
-
-    std::string callingBundleName;
-    ObtainCallingBundleName(callingBundleName);
-
-    if (appGalleryBundleName.empty() || callingBundleName.empty() || appGalleryBundleName != callingBundleName) {
-        APP_LOGE("Failed, appGalleryBundleName: %{public}s. callingBundleName: %{public}s",
-            appGalleryBundleName.c_str(), callingBundleName.c_str());
-        return ERR_BUNDLE_MANAGER_NOT_APP_GALLERY_CALL;
-    }
-
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
