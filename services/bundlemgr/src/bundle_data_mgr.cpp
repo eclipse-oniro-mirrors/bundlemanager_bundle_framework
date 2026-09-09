@@ -12813,8 +12813,7 @@ ErrCode BundleDataMgr::SetAdditionalInfo(const std::string& bundleName,
         effectiveBundleName = infoItem->second.IsDualModeCloneApp() ?
             DualModeHelper::GetDualModeBundleName(bundleName) : bundleName;
     }
-    if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->SetAdditionalInfo(effectiveBundleName,
-        additionalInfo)) {
+    if (!appProvisionInfoManager->SetAdditionalInfo(effectiveBundleName, additionalInfo)) {
         APP_LOGE("effectiveBundleName: %{public}s set additional info failed", effectiveBundleName.c_str());
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }

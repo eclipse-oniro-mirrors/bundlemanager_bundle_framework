@@ -2291,8 +2291,8 @@ static void SetAdditionalInfoByIndex(ani_env* env, ani_string aniBundleName, ani
     ErrCode ret = iBundleMgr->SetAdditionalInfoByIndex(bundleName, additionalInfo, appIndex);
     if (ret != ERR_OK) {
         APP_LOGE("SetAdditionalInfoByIndex failed ret: %{public}d", ret);
-        BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret), RESOURCE_NAME_OF_SET_ADDITIONAL_INFO_BY_INDEX,
-            Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+        BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret),
+            RESOURCE_NAME_OF_SET_ADDITIONAL_INFO_BY_INDEX, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
     }
 }
 
