@@ -106,7 +106,7 @@ bool GetElementNameByModuleInfo(
 
 OH_NativeBundle_ApplicationInfo OH_NativeBundle_GetCurrentApplicationInfo()
 {
-    OH_NativeBundle_ApplicationInfo nativeApplicationInfo;
+    OH_NativeBundle_ApplicationInfo nativeApplicationInfo {nullptr, nullptr};
     OHOS::AppExecFwk::BundleMgrProxyNative bundleMgrProxyNative;
     OHOS::AppExecFwk::BundleInfo bundleInfo;
     auto bundleInfoFlag = static_cast<int32_t>(OHOS::AppExecFwk::GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION) |
@@ -219,7 +219,7 @@ char* OH_NativeBundle_GetAppIdentifier()
 
 OH_NativeBundle_ElementName OH_NativeBundle_GetMainElementName()
 {
-    OH_NativeBundle_ElementName elementName;
+    OH_NativeBundle_ElementName elementName {nullptr, nullptr, nullptr};
     OHOS::AppExecFwk::BundleMgrProxyNative bundleMgrProxyNative;
     OHOS::AppExecFwk::BundleInfo bundleInfo;
     auto bundleInfoFlag = static_cast<int32_t>(OHOS::AppExecFwk::GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE) |
