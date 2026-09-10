@@ -1195,6 +1195,9 @@ public:
     virtual ErrCode GetUninstalledBundleInfo(const std::string bundleName, BundleInfo &bundleInfo) override;
 
     virtual ErrCode SetAdditionalInfo(const std::string &bundleName,
+        const std::string &additionalInfo) override;
+
+    virtual ErrCode SetAdditionalInfoByIndex(const std::string &bundleName,
         const std::string &additionalInfo, int32_t appIndex) override;
 
     virtual ErrCode CreateBundleDataDir(int32_t userId) override;

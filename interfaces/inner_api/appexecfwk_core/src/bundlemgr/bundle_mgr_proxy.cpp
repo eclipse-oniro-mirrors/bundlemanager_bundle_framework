@@ -5425,10 +5425,41 @@ ErrCode BundleMgrProxy::GetUninstalledBundleInfo(const std::string bundleName, B
 }
 
 ErrCode BundleMgrProxy::SetAdditionalInfo(const std::string &bundleName,
-    const std::string &additionalInfo, int32_t appIndex)
+    const std::string &additionalInfo)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("Called. BundleName : %{public}s", bundleName.c_str());
+    if (bundleName.empty()) {
+        APP_LOGE("Invalid param");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("Write interfaceToken failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("Write bundleName failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(additionalInfo)) {
+        APP_LOGE("Write additionalInfo failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::SET_ADDITIONAL_INFO, data, reply)) {
+        APP_LOGE("Call failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return reply.ReadInt32();
+}
+
+ErrCode BundleMgrProxy::SetAdditionalInfoByIndex(const std::string &bundleName,
+    const std::string &additionalInfo, int32_t appIndex)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    APP_LOGD("Called. BundleName : %{public}s, appIndex: %{public}d", bundleName.c_str(), appIndex);
     if (bundleName.empty()) {
         APP_LOGE("Invalid param");
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
@@ -5452,7 +5483,7 @@ ErrCode BundleMgrProxy::SetAdditionalInfo(const std::string &bundleName,
     }
 
     MessageParcel reply;
-    if (!SendTransactCmd(BundleMgrInterfaceCode::SET_ADDITIONAL_INFO, data, reply)) {
+    if (!SendTransactCmd(BundleMgrInterfaceCode::SET_ADDITIONAL_INFO_BY_INDEX, data, reply)) {
         APP_LOGE("Call failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }

@@ -177,6 +177,7 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
         DECLARE_NAPI_PROPERTY("ProfileType", nProfileType),
         DECLARE_NAPI_FUNCTION("getRecoverableApplicationInfo", GetRecoverableApplicationInfo),
         DECLARE_NAPI_FUNCTION("setAdditionalInfo", SetAdditionalInfo),
+        DECLARE_NAPI_FUNCTION("setAdditionalInfoByIndex", SetAdditionalInfoByIndex),
         DECLARE_NAPI_FUNCTION("canOpenLink", CanOpenLink),
         DECLARE_NAPI_FUNCTION("getAllPreinstalledApplicationInfo", GetAllPreinstalledApplicationInfos),
         DECLARE_NAPI_FUNCTION("getAllNewPreinstalledApplicationInfo", GetAllNewPreinstalledApplicationInfos),

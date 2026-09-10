@@ -3610,10 +3610,10 @@ HWTEST_F(BmsBundleDataMgrTest, SetAdditionalInfo_0100, Function | SmallTest | Le
     std::string bundleName0 = "com.setaddition.current0";
     std::string bundleName1 = "com.setaddition.current1";
     std::string additionalInfo = "additionalInfo";
-    ErrCode res = GetBundleDataMgr()->SetAdditionalInfo(
+    ErrCode res = GetBundleDataMgr()->SetAdditionalInfoByIndex(
         bundleName0, additionalInfo, Constants::DUAL_MODE_CLONE_APP_INDEX);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
-    res = GetBundleDataMgr()->SetAdditionalInfo(
+    res = GetBundleDataMgr()->SetAdditionalInfoByIndex(
         bundleName1, additionalInfo, Constants::DUAL_MODE_CLONE_APP_INDEX);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
@@ -3637,10 +3637,10 @@ HWTEST_F(BmsBundleDataMgrTest, SetAdditionalInfo_0200, Function | SmallTest | Le
     GetBundleDataMgr()->bundleInfos_[bundleName2] = CreateTestBundleInfo(
         bundleName2, BundleType::APP, true, Constants::INVALID_USERID);
     std::string additionalInfo = "additionalInfo";
-    ErrCode res = GetBundleDataMgr()->SetAdditionalInfo(
+    ErrCode res = GetBundleDataMgr()->SetAdditionalInfoByIndex(
         bundleName0, additionalInfo, Constants::DUAL_MODE_CLONE_APP_INDEX);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
-    res = GetBundleDataMgr()->SetAdditionalInfo(
+    res = GetBundleDataMgr()->SetAdditionalInfoByIndex(
         bundleName2, additionalInfo, Constants::DUAL_MODE_CLONE_APP_INDEX);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
     GetBundleDataMgr()->bundleInfos_.clear();
@@ -3664,7 +3664,7 @@ HWTEST_F(BmsBundleDataMgrTest, SetAdditionalInfo_0300, Function | SmallTest | Le
     DelayedSingleton<AppProvisionInfoManager>::GetInstance()->AddAppProvisionInfo(
         effectiveBundleName0, appProvisionInfo);
     std::string additionalInfo = "additionalInfo";
-    ErrCode res = GetBundleDataMgr()->SetAdditionalInfo(
+    ErrCode res = GetBundleDataMgr()->SetAdditionalInfoByIndex(
         bundleName0, additionalInfo, Constants::DUAL_MODE_CLONE_APP_INDEX);
     EXPECT_EQ(res, ERR_OK);
     GetBundleDataMgr()->tempBundleInfos_.clear();

@@ -2239,18 +2239,60 @@ static void SetAdditionalInfo(ani_env* env, ani_string aniBundleName, ani_string
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, ADDITIONAL_INFO, TYPE_STRING);
         return;
     }
-    int32_t appIndex = Constants::DEFAULT_APP_INDEX;
+
     auto iBundleMgr = CommonFunc::GetBundleMgr();
     if (iBundleMgr == nullptr) {
         APP_LOGE("GetBundleMgr failed");
         BusinessErrorAni::ThrowError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION);
         return;
     }
-    ErrCode ret = iBundleMgr->SetAdditionalInfo(bundleName, additionalInfo, appIndex);
+    ErrCode ret = iBundleMgr->SetAdditionalInfo(bundleName, additionalInfo);
     if (ret != ERR_OK) {
         APP_LOGE("SetAdditionalInfo failed ret: %{public}d", ret);
         BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret), RESOURCE_NAME_OF_SET_ADDITIONAL_INFO,
             Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+    }
+}
+
+static void SetAdditionalInfoByIndex(ani_env* env, ani_string aniBundleName, ani_string aniAdditionalInfo,
+    ani_int aniAppIndex)
+{
+    APP_LOGD("ani SetAdditionalInfoByIndex called");
+    std::string bundleName;
+    if (!CommonFunAni::ParseString(env, aniBundleName, bundleName)) {
+        APP_LOGE("bundleName parse failed");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, Constants::BUNDLE_NAME, TYPE_STRING);
+        return;
+    }
+    if (bundleName.empty()) {
+        APP_LOGE("bundleName is empty");
+        BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_BUNDLENAME_EMPTY_ERROR);
+        return;
+    }
+    std::string additionalInfo;
+    if (!CommonFunAni::ParseString(env, aniAdditionalInfo, additionalInfo)) {
+        APP_LOGE("additionalInfo parse failed");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, ADDITIONAL_INFO, TYPE_STRING);
+        return;
+    }
+    int32_t appIndex = static_cast<int32_t>(aniAppIndex);
+    if (appIndex != Constants::DEFAULT_APP_INDEX && appIndex != Constants::DUAL_MODE_CLONE_APP_INDEX) {
+        APP_LOGE("appIndex: %{public}d not in valid range", appIndex);
+        BusinessErrorAni::ThrowCommonError(env, ERROR_INVALID_APPINDEX, Constants::APP_INDEX, TYPE_NUMBER);
+        return;
+    }
+
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("GetBundleMgr failed");
+        BusinessErrorAni::ThrowError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION);
+        return;
+    }
+    ErrCode ret = iBundleMgr->SetAdditionalInfoByIndex(bundleName, additionalInfo, appIndex);
+    if (ret != ERR_OK) {
+        APP_LOGE("SetAdditionalInfoByIndex failed ret: %{public}d", ret);
+        BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret),
+            RESOURCE_NAME_OF_SET_ADDITIONAL_INFO_BY_INDEX, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
     }
 }
 
@@ -2765,6 +2807,7 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
         ani_native_function { "getRecoverableApplicationInfoNative", nullptr,
             reinterpret_cast<void*>(GetRecoverableApplicationInfoNative) },
         ani_native_function { "setAdditionalInfo", nullptr, reinterpret_cast<void*>(SetAdditionalInfo) },
+        ani_native_function { "setAdditionalInfoByIndex", nullptr, reinterpret_cast<void*>(SetAdditionalInfoByIndex) },
         ani_native_function { "getDeveloperIdsNative", nullptr, reinterpret_cast<void*>(GetDeveloperIdsNative) },
         ani_native_function { "getAllPluginInfoNative", nullptr, reinterpret_cast<void*>(GetAllPluginInfoNative) },
         ani_native_function { "migrateDataNative", nullptr, reinterpret_cast<void*>(MigrateDataNative) },

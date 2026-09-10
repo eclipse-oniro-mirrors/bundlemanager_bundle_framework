@@ -190,6 +190,7 @@ constexpr const char* VERIFY_ABC = "VerifyAbc";
 constexpr const char* DELETE_ABC = "DeleteAbc";
 constexpr const char* GET_RECOVERABLE_APPLICATION_INFO = "GetRecoverableApplicationInfo";
 constexpr const char* RESOURCE_NAME_OF_SET_ADDITIONAL_INFO = "SetAdditionalInfo";
+constexpr const char* RESOURCE_NAME_OF_SET_ADDITIONAL_INFO_BY_INDEX = "SetAdditionalInfoByIndex";
 constexpr const char* GET_DEVELOPER_IDS = "GetDeveloperIds";
 constexpr const char* GET_ALL_PLUGIN_INFO = "GetAllPluginInfo";
 constexpr const char* MIGRATE_DATA = "MigrateData";

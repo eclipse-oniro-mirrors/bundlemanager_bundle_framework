@@ -5509,7 +5509,7 @@ napi_value SetAdditionalInfo(napi_env env, napi_callback_info info)
 {
     APP_LOGD("Called");
     NapiArg args(env, info);
-    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_THREE)) {
+    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_TWO)) {
         APP_LOGE("Param count invalid");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
@@ -5527,21 +5527,13 @@ napi_value SetAdditionalInfo(napi_env env, napi_callback_info info)
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, ADDITIONAL_INFO, TYPE_STRING);
         return nullptr;
     }
-    int32_t appIndex = Constants::DEFAULT_APP_INDEX;
-    if (args.GetMaxArgc() >= ARGS_SIZE_THREE) {
-        napi_valuetype valueType = napi_undefined;
-        NAPI_CALL(env, napi_typeof(env, args[ARGS_POS_TWO], &valueType));
-        if (valueType == napi_number) {
-            NAPI_CALL(env, napi_get_value_int32(env, args[ARGS_POS_TWO], &appIndex));
-        }
-    }
     auto iBundleMgr = CommonFunc::GetBundleMgr();
     if (iBundleMgr == nullptr) {
         APP_LOGE("Can not get iBundleMgr");
         BusinessError::ThrowError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION);
         return nullptr;
     }
-    ErrCode ret = CommonFunc::ConvertErrCode(iBundleMgr->SetAdditionalInfo(bundleName, additionalInfo, appIndex));
+    ErrCode ret = CommonFunc::ConvertErrCode(iBundleMgr->SetAdditionalInfo(bundleName, additionalInfo));
     if (ret != NO_ERROR) {
         APP_LOGE("Call failed, bundleName is %{public}s", bundleName.c_str());
         napi_value businessError = BusinessError::CreateCommonError(
@@ -5552,6 +5544,60 @@ napi_value SetAdditionalInfo(napi_env env, napi_callback_info info)
     napi_value nRet = nullptr;
     NAPI_CALL(env, napi_get_undefined(env, &nRet));
     APP_LOGD("Call done");
+    return nRet;
+}
+
+napi_value SetAdditionalInfoByIndex(napi_env env, napi_callback_info info)
+{
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_THREE, ARGS_SIZE_THREE)) {
+        APP_LOGE("Param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    std::string bundleName;
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], bundleName)) {
+        APP_LOGE("Parse bundleName failed");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+        return nullptr;
+    }
+    CHECK_STRING_EMPTY(env, bundleName, std::string{ BUNDLE_NAME });
+    std::string additionalInfo;
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ONE], additionalInfo)) {
+        APP_LOGE("Parse additionalInfo failed");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, ADDITIONAL_INFO, TYPE_STRING);
+        return nullptr;
+    }
+    int32_t appIndex = 0;
+    if (!CommonFunc::ParseInt(env, args[ARGS_POS_TWO], appIndex)) {
+        APP_LOGE("Parse appIndex failed");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_INDEX, TYPE_NUMBER);
+        return nullptr;
+    }
+
+    if (appIndex != Constants::DEFAULT_APP_INDEX && appIndex != Constants::DUAL_MODE_CLONE_APP_INDEX) {
+        APP_LOGE("appIndex: %{public}d not in valid range", appIndex);
+        BusinessError::ThrowParameterTypeError(env, ERROR_INVALID_APPINDEX, APP_INDEX, TYPE_NUMBER);
+        return nullptr;
+    }
+
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("Can not get iBundleMgr");
+        BusinessError::ThrowError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION);
+        return nullptr;
+    }
+    ErrCode ret =
+        CommonFunc::ConvertErrCode(iBundleMgr->SetAdditionalInfoByIndex(bundleName, additionalInfo, appIndex));
+    if (ret != NO_ERROR) {
+        APP_LOGE("Call failed, bundleName is %{public}s", bundleName.c_str());
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ret, RESOURCE_NAME_OF_SET_ADDITIONAL_INFO_BY_INDEX, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    napi_value nRet = nullptr;
+    NAPI_CALL(env, napi_get_undefined(env, &nRet));
     return nRet;
 }
 

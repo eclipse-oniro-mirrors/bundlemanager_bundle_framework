@@ -6085,7 +6085,7 @@ ErrCode BundleMgrHostImpl::GetJsonProfileForSelf(ProfileType profileType, const 
 }
 
 ErrCode BundleMgrHostImpl::SetAdditionalInfo(const std::string &bundleName,
-    const std::string &additionalInfo, int32_t appIndex)
+    const std::string &additionalInfo)
 {
     APP_LOGD("Called. BundleName: %{public}s", bundleName.c_str());
     if (!BundlePermissionMgr::IsSystemApp()) {
@@ -6116,7 +6116,35 @@ ErrCode BundleMgrHostImpl::SetAdditionalInfo(const std::string &bundleName,
         APP_LOGE("DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    return dataMgr->SetAdditionalInfo(bundleName, additionalInfo, appIndex);
+    return dataMgr->SetAdditionalInfo(bundleName, additionalInfo);
+}
+
+ErrCode BundleMgrHostImpl::SetAdditionalInfoByIndex(const std::string &bundleName,
+    const std::string &additionalInfo, int32_t appIndex)
+{
+    APP_LOGD("Called. BundleName: %{public}s, appIndex: %{public}d", bundleName.c_str(), appIndex);
+    if (appIndex != Constants::DEFAULT_APP_INDEX && appIndex != ServiceConstants::DUAL_MODE_CLONE_APP_INDEX) {
+        APP_LOGE("appIndex %{public}d is invalid", appIndex);
+        return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
+    }
+
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("Non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE_NOFUNC("SetAdditionalInfoByIndex permission denied %{public}d %{public}d",
+            IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->SetAdditionalInfoByIndex(bundleName, additionalInfo, appIndex);
 }
 
 ErrCode BundleMgrHostImpl::CreateBundleDataDir(int32_t userId)
