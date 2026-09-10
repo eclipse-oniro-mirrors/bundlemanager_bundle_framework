@@ -154,7 +154,7 @@ ErrCode RdbDataManager::GetRdbStoreFromNative()
         ReportRdbLostEvent(HighRiskOperationType::DB_FALLBACK_CREATED, Constants::INVALID_USERID);
     }
     CheckSystemSizeAndHisysEvent(bmsRdbConfig_.dbPath, bmsRdbConfig_.dbName);
-    
+
     NativeRdb::RebuiltType rebuildType = NativeRdb::RebuiltType::NONE;
     int32_t rebuildCode = rdbStore_->GetRebuilt(rebuildType);
     if (isNewDb || rebuildType == NativeRdb::RebuiltType::REPAIRED

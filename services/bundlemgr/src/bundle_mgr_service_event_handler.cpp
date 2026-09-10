@@ -48,6 +48,7 @@
 #endif
 #include "hmp_bundle_installer.h"
 #include "idle_condition_mgr/idle_condition_event_subscribe.h"
+#include "inner_bundle_clone_common.h"
 #include "inner_patch_info.h"
 #include "installd_client.h"
 #include "install_exception_mgr.h"
@@ -605,8 +606,6 @@ ResultCode BMSEventHandler::GuardAgainstInstallInfosLossedStrategy()
     }
 
     // Combine InnerBundleInfo and InnerBundleUserInfo.
-    // Returns false if any bundle info fails to be written into db, in that case
-    // the rebuild mark is kept so next boot redoes the recovery for it.
     if (!CombineBundleInfoAndUserInfo(installInfos, innerBundleUserInfoMaps)) {
         LOG_E(BMS_TAG_DEFAULT, "System internal error");
         return ResultCode::SYSTEM_ERROR;
@@ -675,6 +674,12 @@ bool BMSEventHandler::AnalyzeUserData(
         return false;
     }
 
+    // Clone app data dirs are named "+clone-{appIndex}+{bundleName}"; recover the
+    // clone's InnerBundleCloneInfo and merge it into the main app's user record.
+    if (userDataBundleName.find(ServiceConstants::CLONE_PREFIX) == 0) {
+        return AnalyzeCloneUserData(userId, userDataDir, userDataBundleName, userMaps);
+    }
+
     std::string userDataBundlePath = userDataDir + userDataBundleName;
     LOG_D(BMS_TAG_DEFAULT, "Analyze user data path(%{public}s)", userDataBundlePath.c_str());
     FileStat fileStat;
@@ -708,12 +713,100 @@ bool BMSEventHandler::AnalyzeUserData(
     innerBundleUserInfo.accessTokenIdEx = accessTokenIdEx.tokenIDEx;
     auto userIter = userMaps.find(userDataBundleName);
     if (userIter == userMaps.end()) {
-        std::vector<InnerBundleUserInfo> innerBundleUserInfos = { innerBundleUserInfo };
-        userMaps.emplace(userDataBundleName, innerBundleUserInfos);
+        userMaps.emplace(userDataBundleName, std::vector<InnerBundleUserInfo>{innerBundleUserInfo});
         return true;
     }
+    // A clone scan may have created this entry first (clone data dirs may be
+    // scanned before or after the main app dir, as readdir() order is
+    // filesystem-dependent); fill the main-app fields while keeping the
+    // cloneInfos already collected intact, instead of appending a duplicate entry.
+    for (auto &existing : userIter->second) {
+        if (existing.bundleUserInfo.userId == userId) {
+            existing.uid = innerBundleUserInfo.uid;
+            existing.gids = innerBundleUserInfo.gids;
+            existing.installTime = innerBundleUserInfo.installTime;
+            existing.updateTime = innerBundleUserInfo.updateTime;
+            existing.accessTokenId = innerBundleUserInfo.accessTokenId;
+            existing.accessTokenIdEx = innerBundleUserInfo.accessTokenIdEx;
+            return true;
+        }
+    }
+    userIter->second.emplace_back(innerBundleUserInfo);
+    return true;
+}
 
-    userMaps.at(userDataBundleName).emplace_back(innerBundleUserInfo);
+bool BMSEventHandler::AnalyzeCloneUserData(
+    int32_t userId, const std::string &userDataDir, const std::string &userDataBundleName,
+    std::map<std::string, std::vector<InnerBundleUserInfo>> &userMaps)
+{
+    std::string realBundleName;
+    int32_t appIndex = 0;
+    if (!BundleCloneCommonHelper::ParseCloneDataDir(userDataBundleName, realBundleName, appIndex)) {
+        LOG_E(BMS_TAG_DEFAULT, "parse clone data dir(%{public}s) failed", userDataBundleName.c_str());
+        return false;
+    }
+    if (realBundleName.empty()) {
+        LOG_E(BMS_TAG_DEFAULT, "bundleName is empty %{public}s", userDataBundleName.c_str());
+        return false;
+    }
+    // Only the normal app-clone range [CLONE_APP_INDEX_MIN, CLONE_APP_INDEX_MAX] is
+    // recovered here. Dual-mode (DUAL_MODE_CLONE_APP_INDEX) and CLI sandbox
+    // ([CLI_SANDBOX_APP_INDEX_MIN, CLI_SANDBOX_APP_INDEX_MAX]) have their own flows.
+    if (appIndex < ServiceConstants::CLONE_APP_INDEX_MIN ||
+        appIndex > ServiceConstants::CLONE_APP_INDEX_MAX) {
+        LOG_D(BMS_TAG_DEFAULT, "clone appIndex(%{public}d) out of app-clone range, skip bundle:%{public}s",
+            appIndex, realBundleName.c_str());
+        return false;
+    }
+
+    std::string userDataBundlePath = userDataDir + userDataBundleName;
+    LOG_D(BMS_TAG_DEFAULT, "Analyze clone user data path(%{public}s)", userDataBundlePath.c_str());
+    FileStat fileStat;
+    if (InstalldClient::GetInstance()->GetFileStat(
+        userDataBundlePath, BundleDirScene::GET_USER_DATA_FILE_STAT, fileStat) != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "GetFileStat clone path(%{public}s) failed", userDataBundlePath.c_str());
+        return false;
+    }
+    if (!fileStat.isDir) {
+        LOG_E(BMS_TAG_DEFAULT, "CloneUserDataPath(%{public}s) is not dir", userDataBundlePath.c_str());
+        return false;
+    }
+
+    auto accessTokenIdEx = OHOS::Security::AccessToken::AccessTokenKit::GetHapTokenIDEx(
+        userId, realBundleName, appIndex);
+    if (accessTokenIdEx.tokenIdExStruct.tokenID == 0) {
+        LOG_E(BMS_TAG_DEFAULT, "get clone tokenId failed, bundle:%{public}s appIndex:%{public}d",
+            realBundleName.c_str(), appIndex);
+        return false;
+    }
+
+    InnerBundleCloneInfo cloneInfo = {
+        .userId = userId,
+        .appIndex = appIndex,
+        .uid = fileStat.uid,
+        .accessTokenId = accessTokenIdEx.tokenIdExStruct.tokenID,
+        .accessTokenIdEx = accessTokenIdEx.tokenIDEx,
+        .gids = {fileStat.gid},
+        .installTime = fileStat.lastModifyTime,
+    };
+
+    // Merge the clone info into the main app's user record (keyed by bundleName +
+    // userId). If the main app dir is scanned later, AnalyzeUserData fills the
+    // main-app fields while keeping the cloneInfos collected here intact.
+    auto userIter = userMaps.find(realBundleName);
+    if (userIter != userMaps.end()) {
+        for (auto &userInfo : userIter->second) {
+            if (userInfo.bundleUserInfo.userId == userId) {
+                userInfo.cloneInfos.emplace(InnerBundleUserInfo::AppIndexToKey(appIndex), cloneInfo);
+                return true;
+            }
+        }
+    }
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleName = realBundleName;
+    innerBundleUserInfo.bundleUserInfo.userId = userId;
+    innerBundleUserInfo.cloneInfos.emplace(InnerBundleUserInfo::AppIndexToKey(appIndex), cloneInfo);
+    userMaps[realBundleName].emplace_back(innerBundleUserInfo);
     return true;
 }
 
