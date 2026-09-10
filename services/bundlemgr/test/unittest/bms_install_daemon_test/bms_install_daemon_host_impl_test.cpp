@@ -1833,4 +1833,18 @@ HWTEST_F(BmsInstallDaemonHostImplTest, GetCacheDiskUsageFromPath_0100, Function 
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
     EXPECT_EQ(statSize, 0);
 }
+
+/**
+ * @tc.number: CreatePrintServiceDir_0100
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling CreatePrintServiceDir of hostImpl
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, CreatePrintServiceDir_0100, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    auto ret = hostImpl->CreatePrintServiceDir(TEST_BUNDLE_NAME, 100, 0, 12400);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
 } // OHOS

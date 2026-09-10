@@ -460,6 +460,12 @@ ErrCode InstalldClient::CreateExtensionDataDir(const CreateDirParam &createDirPa
     return ERR_OK;
 }
 
+ErrCode InstalldClient::CreatePrintServiceDir(const std::string &bundleName, int32_t userId,
+    int32_t appIndex, int32_t appUid)
+{
+    return ERR_OK;
+}
+
 ErrCode InstalldClient::MigrateData(const std::vector<std::string> &sourcePaths, const std::string &destinationPath)
 {
     if (sourcePaths.empty()) {

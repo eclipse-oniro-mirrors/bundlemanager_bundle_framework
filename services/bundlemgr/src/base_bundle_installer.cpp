@@ -3385,8 +3385,37 @@ ErrCode BaseBundleInstaller::ProcessBundleUpdateStatus(
         LOG_E(BMS_TAG_INSTALLER, "install module failed %{public}d", result);
         return result;
     }
+    CreatePrintServiceDirForUpdate(newInfo);
     LOG_D(BMS_TAG_INSTALLER, "finish to call ProcessBundleUpdateStatus");
     return ERR_OK;
+}
+
+void BaseBundleInstaller::CreatePrintServiceDirForUpdate(const InnerBundleInfo &info) const
+{
+    if (!info.HasDriverExtension()) {
+        return;
+    }
+    for (const auto &userItem : info.GetInnerBundleUserInfos()) {
+        int32_t userId = userItem.second.bundleUserInfo.userId;
+        int32_t uid = userItem.second.uid;
+        ErrCode result = InstalldClient::GetInstance()->CreatePrintServiceDir(
+            info.GetBundleName(), userId, Constants::MAIN_APP_INDEX, uid);
+        if (result != ERR_OK) {
+            LOG_W(BMS_TAG_INSTALLER, "CreatePrintServiceDir for update failed, bundle: %{public}s, "
+                "userId: %{public}d, error is %{public}d", info.GetBundleName().c_str(), userId, result);
+        }
+        for (const auto &cloneItem : userItem.second.cloneInfos) {
+            int32_t cloneAppIndex = cloneItem.second.appIndex;
+            int32_t cloneUid = cloneItem.second.uid;
+            ErrCode cloneResult = InstalldClient::GetInstance()->CreatePrintServiceDir(
+                info.GetBundleName(), userId, cloneAppIndex, cloneUid);
+            if (cloneResult != ERR_OK) {
+                LOG_W(BMS_TAG_INSTALLER, "CreatePrintServiceDir for clone update failed, bundle: %{public}s, "
+                    "userId: %{public}d, appIndex: %{public}d, error is %{public}d",
+                    info.GetBundleName().c_str(), userId, cloneAppIndex, cloneResult);
+            }
+        }
+    }
 }
 
 bool BaseBundleInstaller::CheckAppIdentifier(const std::string &oldAppIdentifier, const std::string &newAppIdentifier,
@@ -4165,6 +4194,7 @@ ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
     createDirParam.apl = info.GetAppPrivilegeLevel();
     createDirParam.isPreInstallApp = info.IsPreInstallApp();
     createDirParam.debug = info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
+    createDirParam.hasDriverExtension = info.HasDriverExtension();
 
     auto result = InstalldClient::GetInstance()->CreateBundleDataDir(createDirParam);
     if (result != ERR_OK) {

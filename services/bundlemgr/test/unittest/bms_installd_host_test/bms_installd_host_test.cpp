@@ -1453,4 +1453,22 @@ HWTEST_F(BmsInstalldHostTest, InstalldOperator_GetBundleDataDirPaths_Failure_010
     EXPECT_FALSE(InstalldOperator::GetBundleDataDirPaths("com.test", 0, -1, paths));
 }
 
+/**
+ * @tc.number: HandleCreatePrintServiceDir_0100
+ * @tc.name: test HandleCreatePrintServiceDir
+ * @tc.desc: 1.HandleCreatePrintServiceDir test
+ */
+HWTEST_F(BmsInstalldHostTest, HandleCreatePrintServiceDir_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteString16(Str8ToStr16("com.test.bundle"));
+    data.WriteInt32(100);
+    data.WriteInt32(0);
+    data.WriteInt32(12400);
+    bool res = installdHost.HandleCreatePrintServiceDir(data, reply);
+    EXPECT_TRUE(res);
+}
+
 } // OHOS

@@ -24,6 +24,8 @@
 #include "installd_death_recipient.h"
 #undef private
 #undef protected
+#include "ipc/create_dir_param.h"
+#include "message_parcel.h"
 #include "parameters.h"
 
 using namespace testing::ext;
@@ -2212,6 +2214,62 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractQuickFixRes_0100, T
 {
     ErrCode result = installClient_->ExtractQuickFixRes("", "entry", "/data/test.hqf", false);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_CreateDirParamHasDriverExtension_0100
+ * @tc.name: CreateDirParam hasDriverExtension serialization
+ * @tc.desc: Verify hasDriverExtension field survives Marshalling/ReadFromParcel round-trip
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CreateDirParamHasDriverExtension_0100, TestSize.Level1)
+{
+    CreateDirParam param;
+    param.bundleName = "com.example.driver";
+    param.userId = 100;
+    param.uid = 12400;
+    param.gid = 12400;
+    param.appIndex = 0;
+    param.hasDriverExtension = true;
+    param.isContainsEl5Dir = false;
+    param.hasInputMethodExtension = false;
+
+    Parcel parcel;
+    bool writeResult = param.Marshalling(parcel);
+    EXPECT_TRUE(writeResult);
+
+    parcel.SetDataCapacity(parcel.GetDataCapacity());
+    parcel.SetDataSize(parcel.GetDataSize());
+    CreateDirParam *readParam = CreateDirParam::Unmarshalling(parcel);
+    EXPECT_NE(readParam, nullptr);
+    if (readParam != nullptr) {
+        EXPECT_EQ(readParam->hasDriverExtension, true);
+        EXPECT_EQ(readParam->bundleName, "com.example.driver");
+        EXPECT_EQ(readParam->userId, 100);
+        delete readParam;
+    }
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_CreateDirParamHasDriverExtension_0200
+ * @tc.name: CreateDirParam hasDriverExtension serialization (false)
+ * @tc.desc: Verify hasDriverExtension=false survives Marshalling/ReadFromParcel round-trip
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CreateDirParamHasDriverExtension_0200, TestSize.Level1)
+{
+    CreateDirParam param;
+    param.bundleName = "com.example.normal";
+    param.hasDriverExtension = false;
+
+    Parcel parcel;
+    bool writeResult = param.Marshalling(parcel);
+    EXPECT_TRUE(writeResult);
+
+    CreateDirParam *readParam = CreateDirParam::Unmarshalling(parcel);
+    EXPECT_NE(readParam, nullptr);
+    if (readParam != nullptr) {
+        EXPECT_EQ(readParam->hasDriverExtension, false);
+        delete readParam;
+    }
 }
 } // namespace AppExecFwk
 } // namespace OHOS

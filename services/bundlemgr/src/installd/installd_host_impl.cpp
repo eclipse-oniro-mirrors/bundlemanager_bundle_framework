@@ -89,6 +89,7 @@ constexpr const char* BUNDLE_BACKUP_HOME_PATH_EL2_NEW = "/data/app/el2/%/base/";
 constexpr const char* DISTRIBUTED_FILE = "/data/service/el2/%/hmdfs/account/data/";
 constexpr const char* DISTRIBUTED_FILE_NON_ACCOUNT = "/data/service/el2/%/hmdfs/non_account/data/";
 constexpr const char* SHAREFILES_DATA_PATH_EL2 = "/data/app/el2/%/sharefiles/";
+constexpr const char* PRINT_SERVICE_DATA_PATH = "/data/service/el1/%/print_service/data/";
 constexpr const char* BUNDLE_BACKUP_INNER_DIR = "/.backup";
 constexpr const char* EXTENSION_CONFIG_DEFAULT_PATH = "/system/etc/ams_extension_config.json";
 #ifdef CONFIG_POLOCY_ENABLE
@@ -612,6 +613,30 @@ static void CreateCloudDir(const std::string &bundleName, const int32_t userid, 
     }
 }
 
+static void CreatePrintServiceDirInner(const std::string &bundleName, const int32_t userid,
+    const int32_t appIndex, const int32_t uid)
+{
+    std::string printServiceBaseDir = PRINT_SERVICE_DATA_PATH;
+    printServiceBaseDir = printServiceBaseDir.replace(
+        printServiceBaseDir.find("%"), 1, std::to_string(userid));
+    if (!InstalldOperator::IsExistDir(printServiceBaseDir)) {
+        LOG_W(BMS_TAG_INSTALLD, "print service base dir not exists: %{public}s", printServiceBaseDir.c_str());
+        return;
+    }
+    std::string bundleDirName = (appIndex > 0)
+        ? BundleCloneCommonHelper::GetCloneDataDir(bundleName, appIndex)
+        : bundleName;
+    std::string printServiceDir = printServiceBaseDir + bundleDirName;
+    if (!InstalldOperator::MkOwnerDir(
+        printServiceDir, S_IRWXU | S_IRWXG | S_ISGID, uid, ServiceConstants::PRINT_SERVICE_GID)) {
+        static std::once_flag logOnce;
+        std::call_once(logOnce, []() {
+            LOG_W(BMS_TAG_INSTALLD, "CreatePrintServiceDir MkOwnerDir failed errno:%{public}d", errno);
+        });
+    }
+}
+
+
 /**
  * @brief Create bundle data dir(BUNDLE_DATA_DIR) in /data/app/el2/userid/sharefiles/
  * @return NA
@@ -925,6 +950,11 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
 
     CreateShareDir(createDirParam.bundleName, createDirParam.userId, createDirParam.uid, createDirParam.gid);
     CreateCloudDir(createDirParam.bundleName, createDirParam.userId, createDirParam.uid, ServiceConstants::DFS_GID);
+
+    if (createDirParam.hasDriverExtension) {
+        CreatePrintServiceDirInner(createDirParam.bundleName, createDirParam.userId,
+            createDirParam.appIndex, createDirParam.uid);
+    }
     return ERR_OK;
 }
 
@@ -1258,6 +1288,26 @@ static void CleanDistributedDir(const std::string &bundleName, const int userid)
     }
 }
 
+static void CleanPrintServiceDir(const std::string &bundleName, const int userid)
+{
+    std::string printServiceDir = PRINT_SERVICE_DATA_PATH + bundleName;
+    printServiceDir = printServiceDir.replace(printServiceDir.find("%"), 1, std::to_string(userid));
+    if (!InstalldOperator::DeleteFiles(printServiceDir)) {
+        LOG_W(BMS_TAG_INSTALLD, "clean dir %{public}s failed, errno is %{public}d", printServiceDir.c_str(), errno);
+    }
+}
+
+static ErrCode RemovePrintServiceDir(const std::string &bundleName, const int userid)
+{
+    std::string printServiceDir = PRINT_SERVICE_DATA_PATH + bundleName;
+    printServiceDir = printServiceDir.replace(printServiceDir.find("%"), 1, std::to_string(userid));
+    if (!InstalldOperator::DeleteDir(printServiceDir)) {
+        LOG_E(BMS_TAG_INSTALLD, "remove dir %{public}s failed errno:%{public}d", printServiceDir.c_str(), errno);
+        return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
+    }
+    return ERR_OK;
+}
+
 static ErrCode RemoveShareDir(const std::string &bundleName, const int userid)
 {
     std::string shareFileDir = SHARE_FILE_PATH + bundleName;
@@ -1534,6 +1584,7 @@ void InstalldHostImpl::InnerCleanBundleDataDirByName(std::string &suffixName, co
     CleanNewBackupExtHomeDir(suffixName, userid, DirType::DIR_EL2);
     CleanNewBackupExtHomeDir(suffixName, userid, DirType::DIR_EL1);
     CleanDistributedDir(suffixName, userid);
+    CleanPrintServiceDir(suffixName, userid);
 }
 
 std::string InstalldHostImpl::GetBundleDataDir(const std::string &el, const int userid) const
@@ -3419,6 +3470,9 @@ ErrCode InstalldHostImpl::InnerRemoveBundleDataDir(
         LOG_E(BMS_TAG_INSTALLD, "failed to remove distributed file dir");
         return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
     }
+    if (RemovePrintServiceDir(bundleName, userId) != ERR_OK) {
+        LOG_W(BMS_TAG_INSTALLD, "failed to remove print service dir, bundle: %{public}s", bundleName.c_str());
+    }
     return ERR_OK;
 }
 
@@ -4086,6 +4140,30 @@ ErrCode InstalldHostImpl::DeleteOldCacheFiles(
     for (const auto &path : validPath) {
         InstalldOperator::DeleteFilesExceptDirs(path, {"/web"});
     }
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::CreatePrintServiceDir(const std::string &bundleName, int32_t userId,
+    int32_t appIndex, int32_t appUid)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    if (!InstalldOperator::IsValidBundleName(bundleName) || !InstalldOperator::IsValidUserId(userId) ||
+        !InstalldOperator::IsValidAppIndex(appIndex) || !InstalldOperator::IsValidUid(appUid)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid params, bundleName: %{public}s, userId: %{public}d, "
+            "appIndex: %{public}d, appUid: %{public}d", bundleName.c_str(), userId, appIndex, appUid);
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    std::string printServiceBaseDir = PRINT_SERVICE_DATA_PATH;
+    printServiceBaseDir = printServiceBaseDir.replace(
+        printServiceBaseDir.find("%"), 1, std::to_string(userId));
+    if (!InstalldOperator::IsExistDir(printServiceBaseDir)) {
+        LOG_E(BMS_TAG_INSTALLD, "print service base dir not exists: %{public}s", printServiceBaseDir.c_str());
+        return ERR_APPEXECFWK_PRINT_SERVICE_PARENT_DIR_NOT_EXISTS;
+    }
+    CreatePrintServiceDirInner(bundleName, userId, appIndex, appUid);
     return ERR_OK;
 }
 }  // namespace AppExecFwk

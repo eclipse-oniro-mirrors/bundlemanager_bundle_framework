@@ -646,6 +646,16 @@ ErrCode InstalldClient::CreateExtensionDataDir(const CreateDirParam &createDirPa
     return CallService(&IInstalld::CreateExtensionDataDir, createDirParam);
 }
 
+ErrCode InstalldClient::CreatePrintServiceDir(const std::string &bundleName, int32_t userId,
+    int32_t appIndex, int32_t appUid)
+{
+    if (bundleName.empty() || userId < 0 || appIndex < 0 || appUid < 0) {
+        APP_LOGE("invalid params");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::CreatePrintServiceDir, bundleName, userId, appIndex, appUid);
+}
+
 ErrCode InstalldClient::DeleteEncryptionKeyId(const EncryptionParam &encryptionParam)
 {
     if (encryptionParam.bundleName.empty() && encryptionParam.groupId.empty()) {

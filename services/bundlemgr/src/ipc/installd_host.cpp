@@ -404,6 +404,9 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::GET_CACHE_DISK_USAGE_FROM_PATH):
             result = HandleGetCacheDiskUsageFromPath(data, reply);
             break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::CREATE_PRINT_SERVICE_DIR):
+            result = HandleCreatePrintServiceDir(data, reply);
+            break;
         default :
             LOG_W(BMS_TAG_INSTALLD, "installd host receives unknown code, code = %{public}u", code);
             int ret = IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -1810,6 +1813,17 @@ bool InstalldHost::HandleGetCacheDiskUsageFromPath(MessageParcel &data, MessageP
     auto result = GetCacheDiskUsageFromPath(cachePaths, statSize, timeoutMs);
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int64, reply, statSize);
+    return true;
+}
+
+bool InstalldHost::HandleCreatePrintServiceDir(MessageParcel &data, MessageParcel &reply)
+{
+    std::string bundleName = Str16ToStr8(data.ReadString16());
+    int32_t userId = data.ReadInt32();
+    int32_t appIndex = data.ReadInt32();
+    int32_t appUid = data.ReadInt32();
+    ErrCode result = CreatePrintServiceDir(bundleName, userId, appIndex, appUid);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 }  // namespace AppExecFwk

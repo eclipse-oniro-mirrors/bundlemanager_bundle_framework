@@ -13315,4 +13315,55 @@ HWTEST_F(BmsDataMgrTest, DeleteBundleStateByUserId_0002, Function | SmallTest | 
     auto ret = bundleDataMgr.DeleteBundleStateByUserId(bundleName, userId);
     EXPECT_EQ(ret, ERR_APPEXECFWK_DB_DELETE_ERROR);
 }
+
+/**
+ * @tc.number: GetDriverBundlePrintDirInfos_0001
+ * @tc.name: GetDriverBundlePrintDirInfos
+ * @tc.desc: 1. bundles without driver extension are skipped
+ *           2. driver bundle produces main and clone entries with minimal fields only
+ */
+HWTEST_F(BmsDataMgrTest, GetDriverBundlePrintDirInfos_0001, Function | SmallTest | Level0)
+{
+    BundleDataMgr bundleDataMgr;
+    const std::string normalBundleName = "com.example.normal";
+    const std::string driverBundleName = "com.example.printdriver";
+
+    InnerBundleInfo normalInfo;
+    InnerBundleUserInfo normalUserInfo;
+    normalUserInfo.bundleUserInfo.userId = 100;
+    normalUserInfo.uid = 12000;
+    normalInfo.AddInnerBundleUserInfo(normalUserInfo);
+    bundleDataMgr.bundleInfos_.emplace(normalBundleName, normalInfo);
+
+    InnerBundleInfo driverInfo;
+    InnerExtensionInfo extensionInfo;
+    extensionInfo.type = ExtensionAbilityType::DRIVER;
+    driverInfo.InsertExtensionInfo(driverBundleName + ".entry.DriverExt", extensionInfo);
+    InnerBundleUserInfo driverUserInfo;
+    driverUserInfo.bundleUserInfo.userId = 100;
+    driverUserInfo.uid = 12400;
+    InnerBundleCloneInfo cloneInfo;
+    cloneInfo.appIndex = 1;
+    cloneInfo.uid = 12401;
+    driverUserInfo.cloneInfos.emplace(std::to_string(cloneInfo.appIndex), cloneInfo);
+    driverInfo.AddInnerBundleUserInfo(driverUserInfo);
+    bundleDataMgr.bundleInfos_.emplace(driverBundleName, driverInfo);
+
+    std::vector<PrintServiceDirInfo> printDirInfos;
+    bundleDataMgr.GetDriverBundlePrintDirInfos(printDirInfos);
+    ASSERT_EQ(printDirInfos.size(), 2);
+
+    EXPECT_EQ(printDirInfos[0].bundleName, driverBundleName);
+    EXPECT_EQ(printDirInfos[0].userId, 100);
+    EXPECT_EQ(printDirInfos[0].appIndex, Constants::MAIN_APP_INDEX);
+    EXPECT_EQ(printDirInfos[0].uid, 12400);
+
+    EXPECT_EQ(printDirInfos[1].bundleName, driverBundleName);
+    EXPECT_EQ(printDirInfos[1].userId, 100);
+    EXPECT_EQ(printDirInfos[1].appIndex, 1);
+    EXPECT_EQ(printDirInfos[1].uid, 12401);
+
+    bundleDataMgr.bundleInfos_.erase(normalBundleName);
+    bundleDataMgr.bundleInfos_.erase(driverBundleName);
+}
 } // OHOS

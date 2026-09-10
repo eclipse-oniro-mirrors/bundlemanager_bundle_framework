@@ -345,6 +345,8 @@ private:
     bool HandleDeleteOldCacheFiles(MessageParcel &data, MessageParcel &reply);
 
     bool HandleGetCacheDiskUsageFromPath(MessageParcel &data, MessageParcel &reply);
+
+    bool HandleCreatePrintServiceDir(MessageParcel &data, MessageParcel &reply);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

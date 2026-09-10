@@ -10793,6 +10793,26 @@ std::vector<std::string> BundleDataMgr::GetSystemAppNames(int32_t userId) const
     return systemApps;
 }
 
+void BundleDataMgr::GetDriverBundlePrintDirInfos(std::vector<PrintServiceDirInfo> &printDirInfos) const
+{
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    for (const auto &item : bundleInfos_) {
+        const InnerBundleInfo &info = item.second;
+        if (!info.HasDriverExtension()) {
+            continue;
+        }
+        for (const auto &userItem : info.GetInnerBundleUserInfos()) {
+            const InnerBundleUserInfo &userInfo = userItem.second;
+            printDirInfos.push_back({item.first, userInfo.bundleUserInfo.userId,
+                Constants::MAIN_APP_INDEX, userInfo.uid});
+            for (const auto &cloneItem : userInfo.cloneInfos) {
+                printDirInfos.push_back({item.first, userInfo.bundleUserInfo.userId,
+                    cloneItem.second.appIndex, cloneItem.second.uid});
+            }
+        }
+    }
+}
+
 ErrCode BundleDataMgr::GetAllAppProvisionInfo(const int32_t userId, std::vector<AppProvisionInfo> &appProvisionInfos)
 {
     if (DualModeHelper::IsDualModeDevice()) {

@@ -306,6 +306,7 @@ ErrCode BundleMultiUserInstaller::CreateDataDir(InnerBundleInfo &info,
     createDirParam.isPreInstallApp = info.IsPreInstallApp();
     createDirParam.debug = info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
     createDirParam.extensionDirs = info.GetAllExtensionDirs();
+    createDirParam.hasDriverExtension = info.HasDriverExtension();
     auto result = InstalldClient::GetInstance()->CreateBundleDataDir(createDirParam);
     if (result != ERR_OK) {
         // if user is not activated, access el2-el4 may return ok but dir cannot be created
