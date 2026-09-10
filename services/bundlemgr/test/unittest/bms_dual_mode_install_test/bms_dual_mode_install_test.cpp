@@ -116,6 +116,17 @@ static InnerBundleInfo MakeCat7Info(bool isClone)
     return info;
 }
 
+static InnerBundleInfo MakeBundleInfoWithUser(DeviceModeDistributionPolicy policy)
+{
+    InnerBundleInfo info;
+    info.SetDeviceModeDistributionPolicy(policy);
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = BUNDLE_NAME;
+    userInfo.bundleUserInfo.userId = TEST_USERID;
+    info.AddInnerBundleUserInfo(userInfo);
+    return info;
+}
+
 // Build an APP-type InnerBundleInfo (bundleName set) so GetBundleResourceInfo returns true without
 // a real hap (ConvertToBundleResourceInfo yields one bundle-level ResourceInfo; GetAbilityResourceInfos
 // returns empty for an info with no abilities). isClone drives the dual-mode flag carried onto each
@@ -181,6 +192,39 @@ static void DeleteUninstallBundleInfoForTest(const std::shared_ptr<BundleDataMgr
     }
 }
 
+class PreInstallStorageSpy final : public IPreInstallDataStorage {
+public:
+    bool SavePreInstallStorageBundleInfo(const PreInstallBundleInfo &) override
+    {
+        return false;
+    }
+
+    bool LoadAllPreInstallBundleInfos(std::vector<PreInstallBundleInfo> &) override
+    {
+        return false;
+    }
+
+    bool DeletePreInstallStorageBundleInfo(const PreInstallBundleInfo &) override
+    {
+        return false;
+    }
+
+    bool LoadPreInstallBundleInfo(const std::string &bundleName, PreInstallBundleInfo &) override
+    {
+        queriedBundleNames.emplace_back(bundleName);
+        return false;
+    }
+
+    std::vector<std::string> queriedBundleNames;
+};
+
+static std::shared_ptr<PreInstallStorageSpy> InstallPreInstallStorageSpy(const std::shared_ptr<BundleDataMgr> &dataMgr)
+{
+    auto storageSpy = std::make_shared<PreInstallStorageSpy>();
+    dataMgr->preInstallDataStorage_ = storageSpy;
+    return storageSpy;
+}
+
 // ====================== DualModeHelper::GetMainmode ======================
 
 HWTEST_F(BmsDualModeInstallTest, GetMainmode_0100, Function | SmallTest | Level0)
@@ -221,39 +265,6 @@ HWTEST_F(BmsDualModeInstallTest, MapDeviceTypeToMode_0300, Function | SmallTest 
 HWTEST_F(BmsDualModeInstallTest, MapDeviceTypeToMode_0400, Function | SmallTest | Level0)
 {
     EXPECT_EQ(DualModeHelper::MapDeviceTypeToMode(""), ServiceConstants::DUAL_MODE_VALUE_INVALID);
-}
-
-class PreInstallStorageSpy final : public IPreInstallDataStorage {
-public:
-    bool SavePreInstallStorageBundleInfo(const PreInstallBundleInfo &) override
-    {
-        return false;
-    }
-
-    bool LoadAllPreInstallBundleInfos(std::vector<PreInstallBundleInfo> &) override
-    {
-        return false;
-    }
-
-    bool DeletePreInstallStorageBundleInfo(const PreInstallBundleInfo &) override
-    {
-        return false;
-    }
-
-    bool LoadPreInstallBundleInfo(const std::string &bundleName, PreInstallBundleInfo &) override
-    {
-        queriedBundleNames.emplace_back(bundleName);
-        return false;
-    }
-
-    std::vector<std::string> queriedBundleNames;
-};
-
-static std::shared_ptr<PreInstallStorageSpy> InstallPreInstallStorageSpy(const std::shared_ptr<BundleDataMgr> &dataMgr)
-{
-    auto storageSpy = std::make_shared<PreInstallStorageSpy>();
-    dataMgr->preInstallDataStorage_ = storageSpy;
-    return storageSpy;
 }
 
 // ====================== DualModeHelper::IsDualModeDevice ======================
@@ -1247,10 +1258,114 @@ HWTEST_F(BmsDualModeInstallTest, CheckDualModeCategoryConsistencyInTemp_0500, Fu
         OHOS::ERR_APPEXECFWK_INSTALL_DUAL_MODE_CATEGORY_CONFLICT);
 }
 
+// ====================== BundleInstaller::InitUninstallAndRecoverInfo ======================
+
+HWTEST_F(BmsDualModeInstallTest, InitUninstallAndRecoverInfo_0100, Function | SmallTest | Level0)
+{
+    auto service = DelayedSingleton<BundleMgrService>::GetInstance();
+    ASSERT_NE(service, nullptr);
+    auto oldDataMgr = service->dataMgr_;
+    ScopeGuard dataMgrGuard([&service, &oldDataMgr] { service->dataMgr_ = oldDataMgr; });
+    service->dataMgr_ = nullptr;
+    sptr<MockStatusReceiver> receiver = new (std::nothrow) MockStatusReceiver();
+    ASSERT_NE(receiver, nullptr);
+    BundleInstaller installer(0, receiver);
+    InstallParam installParam;
+    installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::MAIN_ONLY;
+    std::vector<int32_t> userIds;
+
+    EXPECT_TRUE(installer.InitUninstallAndRecoverInfo(BUNDLE_NAME, installParam, userIds));
+    EXPECT_TRUE(userIds.empty());
+    EXPECT_EQ(installParam.deviceModeDistributionPolicy, DeviceModeDistributionPolicy::MAIN_ONLY);
+}
+
+HWTEST_F(BmsDualModeInstallTest, InitUninstallAndRecoverInfo_0200, Function | SmallTest | Level0)
+{
+    SetDualModeCache(ServiceConstants::DUAL_MODE_VALUE_INVALID, ServiceConstants::DUAL_MODE_VALUE_INVALID);
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    dataMgr->bundleInfos_[BUNDLE_NAME] =
+        MakeBundleInfoWithUser(DeviceModeDistributionPolicy::FULL_COMPATIBLE_DIFFERENT_PACKAGE);
+    sptr<MockStatusReceiver> receiver = new (std::nothrow) MockStatusReceiver();
+    ASSERT_NE(receiver, nullptr);
+    BundleInstaller installer(0, receiver);
+    InstallParam installParam;
+    installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::MAIN_ONLY;
+    std::vector<int32_t> userIds;
+
+    EXPECT_TRUE(installer.InitUninstallAndRecoverInfo(BUNDLE_NAME, installParam, userIds));
+    ASSERT_EQ(userIds.size(), 1u);
+    EXPECT_EQ(userIds.front(), TEST_USERID);
+    EXPECT_EQ(installParam.deviceModeDistributionPolicy, DeviceModeDistributionPolicy::MAIN_ONLY);
+}
+
+HWTEST_F(BmsDualModeInstallTest, InitUninstallAndRecoverInfo_0300, Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    InstallTestDataMgr(TEST_USERID);
+    sptr<MockStatusReceiver> receiver = new (std::nothrow) MockStatusReceiver();
+    ASSERT_NE(receiver, nullptr);
+    BundleInstaller installer(0, receiver);
+    InstallParam installParam;
+    std::vector<int32_t> userIds;
+
+    EXPECT_FALSE(installer.InitUninstallAndRecoverInfo(BUNDLE_NAME, installParam, userIds));
+    EXPECT_TRUE(userIds.empty());
+    EXPECT_EQ(receiver->GetResultCode(), ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE);
+}
+
+HWTEST_F(BmsDualModeInstallTest, InitUninstallAndRecoverInfo_0400, Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    InstallTestDataMgr(TEST_USERID);
+    sptr<IStatusReceiver> receiver;
+    BundleInstaller installer(0, receiver);
+    InstallParam installParam;
+    std::vector<int32_t> userIds;
+
+    EXPECT_FALSE(installer.InitUninstallAndRecoverInfo(BUNDLE_NAME, installParam, userIds));
+    EXPECT_TRUE(userIds.empty());
+}
+
+HWTEST_F(BmsDualModeInstallTest, InitUninstallAndRecoverInfo_0500, Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    dataMgr->bundleInfos_[BUNDLE_NAME] =
+        MakeBundleInfoWithUser(DeviceModeDistributionPolicy::FULL_COMPATIBLE_DIFFERENT_PACKAGE);
+    sptr<MockStatusReceiver> receiver = new (std::nothrow) MockStatusReceiver();
+    ASSERT_NE(receiver, nullptr);
+    BundleInstaller installer(0, receiver);
+    InstallParam installParam;
+    installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::MAIN_ONLY;
+    std::vector<int32_t> userIds;
+
+    EXPECT_TRUE(installer.InitUninstallAndRecoverInfo(BUNDLE_NAME, installParam, userIds));
+    ASSERT_EQ(userIds.size(), 1u);
+    EXPECT_EQ(userIds.front(), TEST_USERID);
+    EXPECT_EQ(installParam.deviceModeDistributionPolicy,
+        DeviceModeDistributionPolicy::FULL_COMPATIBLE_DIFFERENT_PACKAGE);
+}
+
 // ====================== BundleInstaller::UninstallAndRecover ======================
 
 HWTEST_F(BmsDualModeInstallTest, UninstallAndRecover_0100, Function | SmallTest | Level0)
 {
+    EnableSecondaryMode();
+    InstallTestDataMgr(TEST_USERID);
+    sptr<MockStatusReceiver> receiver = new (std::nothrow) MockStatusReceiver();
+    ASSERT_NE(receiver, nullptr);
+    BundleInstaller installer(0, receiver);
+    InstallParam installParam;
+    installParam.isOTA = true;
+
+    installer.UninstallAndRecover(BUNDLE_NAME, installParam);
+
+    EXPECT_EQ(receiver->GetResultCode(), ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE);
+}
+
+HWTEST_F(BmsDualModeInstallTest, UninstallAndRecover_0200, Function | SmallTest | Level0)
+{
+    SetDualModeCache(ServiceConstants::DUAL_MODE_VALUE_INVALID, ServiceConstants::DUAL_MODE_VALUE_INVALID);
     InstallTestDataMgr(TEST_USERID);
     sptr<MockStatusReceiver> receiver = new (std::nothrow) MockStatusReceiver();
     ASSERT_NE(receiver, nullptr);
