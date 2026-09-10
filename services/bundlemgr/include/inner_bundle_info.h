@@ -2339,7 +2339,7 @@ public:
 
     std::unordered_map<std::string, PluginBundleInfo> GetAllPluginBundleInfo() const
     {
-        APP_LOGI("pluginBundleInfos size: %{public}zu", pluginBundleInfos_.size());
+        APP_LOGI_NOFUNC("pluginBundleInfos size: %{public}zu", pluginBundleInfos_.size());
         return pluginBundleInfos_;
     }
 

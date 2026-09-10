@@ -141,7 +141,7 @@ bool BundleMgrProxy::GetApplicationInfo(
     }
 
     if (!GetParcelableInfo<ApplicationInfo>(BundleMgrInterfaceCode::GET_APPLICATION_INFO, data, appInfo)) {
-        LOG_NOFUNC_E(BMS_TAG_QUERY, "fail to GetApplicationInfo from server");
+        LOG_D(BMS_TAG_QUERY, "fail to GetApplicationInfo from server");
         return false;
     }
     return true;
@@ -5662,7 +5662,7 @@ bool BundleMgrProxy::GetParcelableInfo(BundleMgrInterfaceCode code, MessageParce
     }
 
     if (!reply.ReadBool()) {
-        APP_LOGW_NOFUNC("GetParcelableInfo reply false");
+        APP_LOGW_NOFUNC("code %{public}d reply false", static_cast<int32_t>(code));
         return false;
     }
 

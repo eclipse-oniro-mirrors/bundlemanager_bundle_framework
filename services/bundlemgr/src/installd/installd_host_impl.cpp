@@ -1906,7 +1906,7 @@ ErrCode InstalldHostImpl::GetBundleStats(const std::string &bundleName, const in
     bundleStats[1] = bundleDataSize;
     // index 4 : cache size
     bundleStats[4] = bundleCacheSize;
-    LOG_NOFUNC_I(BMS_TAG_INSTALLD, "GetBundleStats %{public}s %{public}" PRId64 "%{public}" PRId64 "%{public}" PRId64,
+    LOG_NOFUNC_I(BMS_TAG_INSTALLD, "GetBundleStats %{public}s %{public}" PRId64 " %{public}" PRId64 " %{public}" PRId64,
         bundleName.c_str(), appDataSize, bundleDataSize, bundleCacheSize);
     return ERR_OK;
 }
@@ -2853,7 +2853,7 @@ ErrCode InstalldHostImpl::VerifyCodeSignatureForHap(const CodeSignatureParam &co
             ret = codeSignHelper->EnforceCodeSignForApp(
                 codeSignatureParam.modulePath, entryMap, fileType, codeSignFlag);
         }
-        LOG_I(BMS_TAG_INSTALLD, "Verify code signature %{public}s", codeSignatureParam.modulePath.c_str());
+        LOG_NOFUNC_I(BMS_TAG_INSTALLD, "Verify code signature %{public}s", codeSignatureParam.modulePath.c_str());
     } else {
         LOG_D(BMS_TAG_INSTALLD, "Verify code signature with: %{public}s", codeSignatureParam.signatureFileDir.c_str());
         ret = Security::CodeSign::CodeSignUtils::EnforceCodeSignForApp(entryMap, codeSignatureParam.signatureFileDir);

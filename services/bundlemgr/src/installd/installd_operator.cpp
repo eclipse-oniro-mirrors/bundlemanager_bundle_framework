@@ -1487,9 +1487,8 @@ bool InstalldOperator::FakeDecompression(const BundleExtractor &extractor, const
         return false;
     }
     if (!FileManagement::Decompress::CreateInnerFile(param.srcPath, targetPath, offset, length, param.isSystemApp)) {
-        LOG_E(BMS_TAG_INSTALLD,
-            "CreateInnerFile failed, retry entryName : %{public}s srcPath:%{public}s targetPath:%{public}s "
-            "offset:%{public}d length:%{public}d",
+        LOG_NOFUNC_W(BMS_TAG_INSTALLD,
+            "CreateInnerFile failed %{public}s %{public}s %{public}s %{public}d %{public}d",
             entryName.c_str(),
             param.srcPath.c_str(),
             targetPath.c_str(),
@@ -1548,7 +1547,7 @@ bool InstalldOperator::ExtractTargetFile(const BundleExtractor &extractor, const
     if (param.needFakeDecompression &&
         (param.extractFileType == ExtractFileType::SO || param.extractFileType == ExtractFileType::RES_FILE) &&
         InstalldOperator::FakeDecompression(extractor, entryName, param, path)) {
-        LOG_I(BMS_TAG_INSTALLD,
+        LOG_D(BMS_TAG_INSTALLD,
             "FakeDecompression success,entryName:%{public}s srcPath:%{public}s targetPath:%{public}s",
             entryName.c_str(),
             param.srcPath.c_str(),
