@@ -71,6 +71,8 @@ ohos_shared_library("libappexecfwk_common") {
     "init:libbegetutil",
   ]
 
+  version_script = "libappexecfwk_common.map"
+
   subsystem_name = "bundlemanager"
   innerapi_tags = [ "platformsdk" ]
   part_name = "bundle_framework"
