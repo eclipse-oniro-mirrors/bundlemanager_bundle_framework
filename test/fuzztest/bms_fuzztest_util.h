@@ -110,6 +110,23 @@ void GenerateDynamicShortcutInfo(FuzzedDataProvider& fdp, const std::string& sho
     shortcutInfo.icon = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     shortcutInfo.label = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     shortcutInfo.disableMessage = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    uint8_t intentsSize = fdp.ConsumeIntegral<uint8_t>();
+    for (uint8_t i = 0; i < intentsSize; i++) {
+        ShortcutIntent shortcutIntent;
+        shortcutIntent.targetBundle = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+        shortcutIntent.targetModule = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+        shortcutIntent.targetClass = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+        shortcutIntent.action = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+        shortcutIntent.uri = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+        shortcutIntent.flags = fdp.ConsumeIntegral<uint32_t>();
+        uint8_t parametersSize = fdp.ConsumeIntegral<uint8_t>();
+        for (uint8_t j = 0; j < parametersSize; j++) {
+            std::string key = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+            std::string value = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+            shortcutIntent.parameters.emplace(key, value);
+        }
+        shortcutInfo.intents.emplace_back(shortcutIntent);
+    }
 }
 
 Resource GenerateResource(FuzzedDataProvider& fdp)
@@ -668,6 +685,23 @@ void GenerateShortcutInfo(FuzzedDataProvider& fdp, ShortcutInfo &shortcutInfo)
     shortcutInfo.icon = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     shortcutInfo.label = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     shortcutInfo.disableMessage = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    uint8_t intentsSize = fdp.ConsumeIntegral<uint8_t>();
+    for (uint8_t i = 0; i < intentsSize; i++) {
+        ShortcutIntent shortcutIntent;
+        shortcutIntent.targetBundle = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+        shortcutIntent.targetModule = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+        shortcutIntent.targetClass = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+        shortcutIntent.action = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+        shortcutIntent.uri = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+        shortcutIntent.flags = fdp.ConsumeIntegral<uint32_t>();
+        uint8_t parametersSize = fdp.ConsumeIntegral<uint8_t>();
+        for (uint8_t j = 0; j < parametersSize; j++) {
+            std::string key = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+            std::string value = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+            shortcutIntent.parameters.emplace(key, value);
+        }
+        shortcutInfo.intents.emplace_back(shortcutIntent);
+    }
 }
 
 int32_t GenerateRandomUser(FuzzedDataProvider& fdp)

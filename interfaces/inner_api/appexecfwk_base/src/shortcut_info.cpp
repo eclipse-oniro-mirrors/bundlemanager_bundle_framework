@@ -24,6 +24,7 @@
 #include "nlohmann/json.hpp"
 #include "parcel_macro.h"
 #include "string_ex.h"
+#include "want.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -41,6 +42,9 @@ constexpr const char* JSON_KEY_BUNDLE_TARGET_BUNDLE = "targetBundle";
 constexpr const char* JSON_KEY_BUNDLE_TARGET_MODULE = "targetModule";
 constexpr const char* JSON_KEY_BUNDLE_TARGET_CLASS = "targetClass";
 constexpr const char* JSON_KEY_BUNDLE_PARAMETERS = "parameters";
+constexpr const char* JSON_KEY_BUNDLE_ACTION = "action";
+constexpr const char* JSON_KEY_BUNDLE_URI = "uri";
+constexpr const char* JSON_KEY_BUNDLE_FLAGS = "flags";
 constexpr const char* JSON_KEY_ICON_ID = "iconId";
 constexpr const char* JSON_KEY_LABEL_ID = "labelId";
 constexpr const char* JSON_KEY_APP_INDEX = "appIndex";
@@ -87,6 +91,13 @@ bool ShortcutInfo::ReadFromParcel(Parcel &parcel)
             std::string value = Str16ToStr8(parcel.ReadString16());
             shortcutIntent.parameters.emplace(key, value);
         }
+        std::u16string actionVal;
+        READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, actionVal);
+        shortcutIntent.action = Str16ToStr8(actionVal); // implicit want action
+        std::u16string uriVal;
+        READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, uriVal);
+        shortcutIntent.uri = Str16ToStr8(uriVal); // implicit want uri
+        READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, shortcutIntent.flags); // implicit want flags
         intents.emplace_back(shortcutIntent);
     }
     appIndex = parcel.ReadInt32();
@@ -132,6 +143,9 @@ bool ShortcutInfo::Marshalling(Parcel &parcel) const
             WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(dataItem.first));
             WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(dataItem.second));
         }
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(intents[i].action));
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(intents[i].uri));
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, intents[i].flags);
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appIndex);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, sourceType);
@@ -145,6 +159,9 @@ void to_json(nlohmann::json &jsonObject, const ShortcutIntent &shortcutIntent)
         {JSON_KEY_BUNDLE_TARGET_MODULE, shortcutIntent.targetModule},
         {JSON_KEY_BUNDLE_TARGET_CLASS, shortcutIntent.targetClass},
         {JSON_KEY_BUNDLE_PARAMETERS, shortcutIntent.parameters},
+        {JSON_KEY_BUNDLE_ACTION, shortcutIntent.action},
+        {JSON_KEY_BUNDLE_URI, shortcutIntent.uri},
+        {JSON_KEY_BUNDLE_FLAGS, shortcutIntent.flags},
     };
 }
 
@@ -199,6 +216,26 @@ void from_json(const nlohmann::json &jsonObject, ShortcutIntent &shortcutIntent)
         false,
         parseResult,
         JsonType::STRING,
+        ArrayType::NOT_ARRAY);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_BUNDLE_ACTION,
+        shortcutIntent.action,
+        false,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_BUNDLE_URI,
+        shortcutIntent.uri,
+        false,
+        parseResult);
+    GetValueIfFindKey<uint32_t>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_BUNDLE_FLAGS,
+        shortcutIntent.flags,
+        JsonType::NUMBER,
+        false,
+        parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("read shortcutIntent jsonObject error : %{public}d", parseResult);
@@ -430,6 +467,38 @@ void from_json(const nlohmann::json &jsonObject, ShortcutJson &shortcutJson)
     if (parseResult != ERR_OK) {
         APP_LOGE("read ShortcutJson module.json error : %{public}d", parseResult);
     }
+}
+
+void BuildShortcutWant(const ShortcutInfo &shortcutInfo, AAFwk::Want &want)
+{
+    if (shortcutInfo.intents.empty()) {
+        APP_LOGW("intents is empty, keep want in default state, shortcutId: %{public}s, "
+            "bundleName: %{public}s", shortcutInfo.id.c_str(), shortcutInfo.bundleName.c_str());
+        return;
+    }
+    const ShortcutIntent &intent = shortcutInfo.intents[0];
+    ElementName element;
+    element.SetModuleName(intent.targetModule);
+    if (!intent.targetBundle.empty()) {
+        element.SetBundleName(intent.targetBundle);
+    }
+    if (!intent.targetClass.empty()) {
+        element.SetAbilityName(intent.targetClass);
+    }
+    if (!intent.action.empty()) {
+        want.SetAction(intent.action);
+    }
+    if (!intent.uri.empty()) {
+        want.SetUri(intent.uri);
+    }
+    if (intent.flags != 0) {
+        want.SetFlags(intent.flags);
+    }
+    want.SetElement(element);
+    for (const auto &item : intent.parameters) {
+        want.SetParam(item.first, item.second);
+    }
+    want.SetParam(AAFwk::Want::PARAM_APP_CLONE_INDEX_KEY, shortcutInfo.appIndex);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

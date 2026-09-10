@@ -3057,6 +3057,55 @@ HWTEST_F(BmsDataMgrTest, AddDesktopShortcutInfo_0004, Function | MediumTest | Le
 }
 
 /**
+ * @tc.number: AddDesktopShortcutInfo_0005
+ * @tc.name: AddDesktopShortcutInfo with implicit want fields
+ * @tc.desc: test action/uri/flags persisted through RDB to_json/from_json round-trip
+ */
+HWTEST_F(BmsDataMgrTest, AddDesktopShortcutInfo_0005, Function | MediumTest | Level1)
+{
+    std::shared_ptr<ShortcutDataStorageRdb> shortcutDataStorageRdb = std::make_shared<ShortcutDataStorageRdb>();
+    ASSERT_NE(shortcutDataStorageRdb, nullptr);
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    shortcutInfo.id = "id_test_implicit_want";
+    ShortcutIntent shortcutIntent;
+    shortcutIntent.targetBundle = "com.ohos.target";
+    shortcutIntent.targetModule = "test_entry";
+    shortcutIntent.targetClass = "MainAbility";
+    shortcutIntent.parameters = {{"demoKey", "demoValue"}};
+    shortcutIntent.action = "ohos.want.action.viewData";
+    shortcutIntent.uri = "https://www.example.com/path";
+    shortcutIntent.flags = 4;
+    shortcutInfo.intents.push_back(shortcutIntent);
+    bool isIdIllegal = false;
+    bool ret = shortcutDataStorageRdb->AddDesktopShortcutInfo(shortcutInfo, USERID, isIdIllegal);
+    EXPECT_TRUE(ret);
+    EXPECT_FALSE(isIdIllegal);
+
+    std::vector<ShortcutInfo> shortcutInfos;
+    shortcutDataStorageRdb->GetAllDesktopShortcutInfo(USERID, shortcutInfos);
+    bool found = false;
+    for (const auto &item : shortcutInfos) {
+        if (item.id != shortcutInfo.id || item.bundleName != shortcutInfo.bundleName) {
+            continue;
+        }
+        found = true;
+        EXPECT_EQ(item.intents.size(), 1);
+        if (item.intents.size() != 1) {
+            continue;
+        }
+        EXPECT_EQ(item.intents[0].targetBundle, "com.ohos.target");
+        EXPECT_EQ(item.intents[0].parameters.at("demoKey"), "demoValue");
+        EXPECT_EQ(item.intents[0].action, "ohos.want.action.viewData");
+        EXPECT_EQ(item.intents[0].uri, "https://www.example.com/path");
+        EXPECT_EQ(item.intents[0].flags, 4);
+    }
+    EXPECT_TRUE(found);
+
+    ret = shortcutDataStorageRdb->DeleteDesktopShortcutInfo(shortcutInfo, USERID);
+    EXPECT_TRUE(ret);
+}
+
+/**
  * @tc.number: UpdateDesktopShortcutInfo_0001
  * @tc.name: UpdateDesktopShortcutInfo
  * @tc.desc: test StorageRdb UpdateDesktopShortcutInfo normal/not-exist/null-rdb paths via changedRows

@@ -58,15 +58,8 @@ static void AniStartShortcut(ani_env *env, ani_object aniShortcutInfo, ani_objec
         return;
     }
     AAFwk::Want want;
-    ElementName element;
-    element.SetBundleName(shortcutInfo.intents[0].targetBundle);
-    element.SetModuleName(shortcutInfo.intents[0].targetModule);
-    element.SetAbilityName(shortcutInfo.intents[0].targetClass);
-    want.SetElement(element);
-    std::for_each(shortcutInfo.intents[0].parameters.begin(), shortcutInfo.intents[0].parameters.end(),
-        [&want](const auto& item) { want.SetParam(item.first, item.second); });
+    BuildShortcutWant(shortcutInfo, want);
 
-    want.SetParam(AAFwk::Want::PARAM_APP_CLONE_INDEX_KEY, shortcutInfo.appIndex);
     auto abilityManagerClient = AAFwk::AbilityManagerClient::GetInstance();
     if (abilityManagerClient == nullptr) {
         APP_LOGI("abilityManagerClient is nullptr");
@@ -252,16 +245,8 @@ static ErrCode InnerStartShortcutWithReason(const OHOS::AppExecFwk::ShortcutInfo
         return ERR_BUNDLE_MANAGER_START_SHORTCUT_FAILED;
     }
     AAFwk::Want want;
-    ElementName element;
-    element.SetBundleName(shortcutInfo.intents[0].targetBundle);
-    element.SetModuleName(shortcutInfo.intents[0].targetModule);
-    element.SetAbilityName(shortcutInfo.intents[0].targetClass);
-    want.SetElement(element);
-    for (const auto &item : shortcutInfo.intents[0].parameters) {
-        want.SetParam(item.first, item.second);
-    }
+    BuildShortcutWant(shortcutInfo, want);
     want.SetParam(AAFwk::Want::PARM_LAUNCH_REASON_MESSAGE, startReason);
-    want.SetParam(AAFwk::Want::PARAM_APP_CLONE_INDEX_KEY, shortcutInfo.appIndex);
     auto res = AAFwk::AbilityManagerClient::GetInstance()->StartShortcut(want, startOptions);
     auto it = START_SHORTCUT_RES_MAP.find(res);
     if (it == START_SHORTCUT_RES_MAP.end()) {

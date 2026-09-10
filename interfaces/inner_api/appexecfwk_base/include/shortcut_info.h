@@ -22,6 +22,10 @@
 #include "parcel.h"
 
 namespace OHOS {
+namespace AAFwk {
+class Want;
+}  // namespace AAFwk
+
 namespace AppExecFwk {
 struct ShortcutWant {
     std::string bundleName;
@@ -49,6 +53,9 @@ struct ShortcutIntent {
     std::string targetModule;
     std::string targetClass;
     std::map<std::string, std::string> parameters;
+    std::string action;
+    std::string uri;
+    uint32_t flags = 0;
 };
 
 struct ShortcutInfo : public Parcelable {
@@ -73,6 +80,11 @@ struct ShortcutInfo : public Parcelable {
     virtual bool Marshalling(Parcel &parcel) const override;
     static ShortcutInfo *Unmarshalling(Parcel &parcel);
 };
+
+// Build a Want from the first intent of the shortcut info. Empty intents
+// leaves want in its default state; empty target/action/uri fields and zero flags
+// are not set, so a Want without explicit target is matched in implicit mode.
+void BuildShortcutWant(const ShortcutInfo &shortcutInfo, AAFwk::Want &want);
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif  // FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_SHORTCUT_INFO_H
