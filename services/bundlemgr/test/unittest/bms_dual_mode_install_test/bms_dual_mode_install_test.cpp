@@ -2134,6 +2134,99 @@ HWTEST_F(BmsDualModeInstallTest, CreateHapInfoParams_0400, Function | SmallTest 
     EXPECT_EQ(hapInfo.instIndex, 2);
 }
 
+// ====================== CreateHapInfoParams mode field ======================
+// mode maps DeviceModeDistributionPolicy + isDualModeCloneApp to ATM MultipleMode:
+//   DEFAULT(-1): non-diff-package categories (UNSPECIFIED/MAIN_ONLY/SUB_ONLY/*_IDENTICAL_PACKAGE)
+//   MAIN_MODE(0): diff-package category (*_DIFFERENT_PACKAGE) + not clone (main mode)
+//   SUB_MODE(1): diff-package category (*_DIFFERENT_PACKAGE) + clone (sub mode)
+
+HWTEST_F(BmsDualModeInstallTest, CreateHapInfoParams_ModeDefault_0100, Function | SmallTest | Level0)
+{
+    // UNSPECIFIED (default) + not clone -> DEFAULT
+    InnerBundleInfo info;
+    info.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::UNSPECIFIED);
+    info.SetDualModeCloneApp(false);
+    auto hapInfo = BundlePermissionMgr::CreateHapInfoParams(info, 0, 0);
+    EXPECT_EQ(hapInfo.mode, Security::AccessToken::MultipleMode::DEFAULT_MODE);
+}
+
+HWTEST_F(BmsDualModeInstallTest, CreateHapInfoParams_ModeDefault_0200, Function | SmallTest | Level0)
+{
+    // MAIN_ONLY -> DEFAULT (ATM does not perceive main/sub-only upgrades, all -1)
+    InnerBundleInfo info;
+    info.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::MAIN_ONLY);
+    auto hapInfo = BundlePermissionMgr::CreateHapInfoParams(info, 0, 0);
+    EXPECT_EQ(hapInfo.mode, Security::AccessToken::MultipleMode::DEFAULT_MODE);
+}
+
+HWTEST_F(BmsDualModeInstallTest, CreateHapInfoParams_ModeDefault_0300, Function | SmallTest | Level0)
+{
+    // SUB_ONLY -> DEFAULT
+    InnerBundleInfo info;
+    info.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::SUB_ONLY);
+    auto hapInfo = BundlePermissionMgr::CreateHapInfoParams(info, 0, 0);
+    EXPECT_EQ(hapInfo.mode, Security::AccessToken::MultipleMode::DEFAULT_MODE);
+}
+
+HWTEST_F(BmsDualModeInstallTest, CreateHapInfoParams_ModeDefault_0400, Function | SmallTest | Level0)
+{
+    // UNIVERSAL_IDENTICAL_PACKAGE (same package body) -> DEFAULT
+    InnerBundleInfo info;
+    info.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::UNIVERSAL_IDENTICAL_PACKAGE);
+    auto hapInfo = BundlePermissionMgr::CreateHapInfoParams(info, 0, 0);
+    EXPECT_EQ(hapInfo.mode, Security::AccessToken::MultipleMode::DEFAULT_MODE);
+}
+
+HWTEST_F(BmsDualModeInstallTest, CreateHapInfoParams_ModeDefault_0500, Function | SmallTest | Level0)
+{
+    // clone flag alone does not change mode when policy is non-diff-package
+    InnerBundleInfo info;
+    info.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::UNSPECIFIED);
+    info.SetDualModeCloneApp(true);
+    auto hapInfo = BundlePermissionMgr::CreateHapInfoParams(info, 0, 0);
+    EXPECT_EQ(hapInfo.mode, Security::AccessToken::MultipleMode::DEFAULT_MODE);
+}
+
+HWTEST_F(BmsDualModeInstallTest, CreateHapInfoParams_ModeMainMode_0100, Function | SmallTest | Level0)
+{
+    // UNIVERSAL_DIFFERENT_PACKAGE + not clone (main mode) -> MAIN_MODE
+    InnerBundleInfo info;
+    info.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE);
+    info.SetDualModeCloneApp(false);
+    auto hapInfo = BundlePermissionMgr::CreateHapInfoParams(info, 0, 0);
+    EXPECT_EQ(hapInfo.mode, Security::AccessToken::MultipleMode::MAIN_MODE);
+}
+
+HWTEST_F(BmsDualModeInstallTest, CreateHapInfoParams_ModeMainMode_0200, Function | SmallTest | Level0)
+{
+    // FULL_COMPATIBLE_DIFFERENT_PACKAGE + not clone -> MAIN_MODE
+    InnerBundleInfo info;
+    info.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::FULL_COMPATIBLE_DIFFERENT_PACKAGE);
+    info.SetDualModeCloneApp(false);
+    auto hapInfo = BundlePermissionMgr::CreateHapInfoParams(info, 0, 0);
+    EXPECT_EQ(hapInfo.mode, Security::AccessToken::MultipleMode::MAIN_MODE);
+}
+
+HWTEST_F(BmsDualModeInstallTest, CreateHapInfoParams_ModeSubMode_0100, Function | SmallTest | Level0)
+{
+    // UNIVERSAL_DIFFERENT_PACKAGE + clone (sub mode) -> SUB_MODE
+    InnerBundleInfo info;
+    info.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE);
+    info.SetDualModeCloneApp(true);
+    auto hapInfo = BundlePermissionMgr::CreateHapInfoParams(info, 0, 0);
+    EXPECT_EQ(hapInfo.mode, Security::AccessToken::MultipleMode::SUB_MODE);
+}
+
+HWTEST_F(BmsDualModeInstallTest, CreateHapInfoParams_ModeSubMode_0200, Function | SmallTest | Level0)
+{
+    // FULL_COMPATIBLE_DIFFERENT_PACKAGE + clone -> SUB_MODE
+    InnerBundleInfo info;
+    info.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::FULL_COMPATIBLE_DIFFERENT_PACKAGE);
+    info.SetDualModeCloneApp(true);
+    auto hapInfo = BundlePermissionMgr::CreateHapInfoParams(info, 0, 0);
+    EXPECT_EQ(hapInfo.mode, Security::AccessToken::MultipleMode::SUB_MODE);
+}
+
 // ====================== BundleDataStorageRdb dual-mode storageKey ======================
 // Real RDB (no mock): BundleDataStorageRdb computes storageKey from IsDualModeCloneApp.
 // Verify the key landed in the DB via rdbDataManager_->QueryData. dataMgr->dataStorage_ is the

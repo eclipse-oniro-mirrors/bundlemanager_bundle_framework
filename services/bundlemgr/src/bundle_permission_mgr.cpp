@@ -22,6 +22,7 @@
 #include "app_log_wrapper.h"
 #include "bundle_mgr_service.h"
 #include "bundle_parser.h"
+#include "dual_mode_helper.h"
 #include "inner_bundle_clone_info.h"
 #include "inner_bundle_user_info.h"
 #include "inner_cli_sandbox_info.h"
@@ -775,6 +776,10 @@ Security::AccessToken::HapInfoParams BundlePermissionMgr::CreateHapInfoParams(co
     hapInfo.isAtomicService = innerBundleInfo.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE;
     hapInfo.appProvisionType = innerBundleInfo.GetAppProvisionType();
     hapInfo.isSkillHap = innerBundleInfo.GetApplicationBundleType() == BundleType::SKILL;
+    hapInfo.mode = DualModeHelper::IsDiffPackageCategory(innerBundleInfo.GetDeviceModeDistributionPolicy())
+        ? (innerBundleInfo.IsDualModeCloneApp() ? AccessToken::MultipleMode::SUB_MODE
+                                                 : AccessToken::MultipleMode::MAIN_MODE)
+        : AccessToken::MultipleMode::DEFAULT_MODE;
     return hapInfo;
 }
 
