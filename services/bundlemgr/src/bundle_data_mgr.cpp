@@ -847,6 +847,17 @@ bool BundleDataMgr::UpdateBundleInfoPolicy(const std::string &bundleName,
         APP_LOGE("save %{public}s to db failed", bundleName.c_str());
         return false;
     }
+    auto tempItem = tempBundleInfos_.find(bundleName);
+    if (tempItem == tempBundleInfos_.end()) {
+        APP_LOGE("%{public}s not exist in temp bundle info", bundleName.c_str());
+        return false;
+    }
+    tempItem->second.SetDeviceModeDistributionPolicy(deviceModeDistributionPolicy);
+    tempItem->second.SetAppSandboxPolicy(appSandboxPolicy);
+    if (!dataStorage_->SaveStorageBundleInfo(tempItem->second)) {
+        APP_LOGE("temp bundle info save %{public}s to db failed", bundleName.c_str());
+        return false;
+    }
     return true;
 }
 
