@@ -29,6 +29,7 @@
 #include "bundle_resource_helper.h"
 #include "bundle_service_constants.h"
 #include "code_protect_bundle_info.h"
+#include "dual_mode_helper.h"
 #include "datetime_ex.h"
 #include "hitrace_meter.h"
 #include "installd_client.h"
@@ -250,6 +251,13 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
     }
     isBundleCrossAppSharedConfig_ = info.IsBundleCrossAppSharedConfig();
     appDistributionType_ = info.GetAppDistributionType();
+
+    if (DualModeHelper::IsSecondaryMode() &&
+        DualModeHelper::IsDiffPackageCategory(info.GetDeviceModeDistributionPolicy())) {
+        APP_LOGE("clone install not supported for different-package app in secondary mode, bundle=%{public}s",
+            bundleName.c_str());
+        return ERR_APPEXECFWK_CLONE_INSTALL_APP_NOT_SUPPORTED_MULTI_TYPE;
+    }
 
     // 2. obtain userId
     if (userId < Constants::DEFAULT_USERID) {

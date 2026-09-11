@@ -24,6 +24,8 @@
 #include "bundle_installer.h"
 #include "bundle_constants.h"
 #include "bundle_mgr_service.h"
+#include "bundle_service_constants.h"
+#include "dual_mode_helper.h"
 #include "parameters.h"
 #include "scope_guard.h"
 
@@ -51,6 +53,7 @@ public:
     void SetUp() override;
     void TearDown() override;
     void SetInnerBundleInfo(const std::string &bundleName);
+    void SetInnerBundleInfoWithPolicy(const std::string &bundleName, DeviceModeDistributionPolicy policy);
     BundlePackInfo CreateBundlePackInfo(const std::string &bundleName);
     void DeleteBundle(const std::string &bundleName);
     void SetBundleDataMgr();
@@ -123,6 +126,46 @@ void BmsBundleCloneInstallerTest::SetInnerBundleInfo(const std::string &bundleNa
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.SetBaseBundleInfo(bundleInfo);
     innerBundleInfo.SetBaseApplicationInfo(application);
+    innerBundleInfo.AddInnerBundleUserInfo(userInfo);
+    innerBundleInfo.SetBundlePackInfo(CreateBundlePackInfo(bundleName));
+    innerBundleInfo.AddInnerModuleInfo(innerModuleInfoMap);
+    dataMgr->UpdateBundleInstallState(bundleName, InstallState::INSTALL_START);
+    dataMgr->AddInnerBundleInfo(bundleName, innerBundleInfo);
+    dataMgr->UpdateBundleInstallState(bundleName, InstallState::INSTALL_SUCCESS);
+}
+
+void BmsBundleCloneInstallerTest::SetInnerBundleInfoWithPolicy(const std::string &bundleName,
+    DeviceModeDistributionPolicy policy)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        return;
+    }
+    BundleInfo bundleInfo;
+    bundleInfo.name = bundleName;
+
+    ApplicationInfo application;
+    application.name = bundleName;
+    application.bundleName = bundleName;
+    application.multiAppMode.multiAppModeType = MultiAppModeType::APP_CLONE;
+    application.multiAppMode.maxCount = CLONE_NUM;
+
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = bundleName;
+    userInfo.bundleUserInfo.userId = installer;
+
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = MODULE_NAME_TEST;
+    moduleInfo.name = MODULE_NAME_TEST;
+    moduleInfo.modulePackage = MODULE_NAME_TEST;
+
+    std::map<std::string, InnerModuleInfo> innerModuleInfoMap;
+    innerModuleInfoMap[MODULE_NAME_TEST] = moduleInfo;
+
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    innerBundleInfo.SetBaseApplicationInfo(application);
+    innerBundleInfo.SetDeviceModeDistributionPolicy(policy);
     innerBundleInfo.AddInnerBundleUserInfo(userInfo);
     innerBundleInfo.SetBundlePackInfo(CreateBundlePackInfo(bundleName));
     innerBundleInfo.AddInnerModuleInfo(innerModuleInfoMap);
@@ -662,5 +705,94 @@ HWTEST_F(BmsBundleCloneInstallerTest, DeleteUninstallCloneBundleInfo_0400, Funct
     bundleCloneInstall_->existBeforeKeepDataApp_ = true;
     auto res = bundleCloneInstall_->DeleteUninstallCloneBundleInfo(BUNDLE_NAME, userId_, 1);
     EXPECT_TRUE(res);
+}
+
+namespace {
+constexpr const char *TEST_DUAL_MODE_PARAM = "persist.bms.test_dual_mode";
+constexpr const char *TEST_ISPCMODE_PARAM = "persist.bms.ispcmode";
+constexpr const char *TEST_MAINMODE_PARAM = "persist.bms.mainmode";
+
+void EnableDualModeSecondary()
+{
+    OHOS::system::SetParameter(TEST_DUAL_MODE_PARAM, "true");
+    OHOS::system::SetParameter(TEST_ISPCMODE_PARAM,
+        std::to_string(ServiceConstants::DUAL_MODE_VALUE_2IN1));
+    OHOS::system::SetParameter(TEST_MAINMODE_PARAM,
+        std::to_string(ServiceConstants::DUAL_MODE_VALUE_TABLET));
+}
+
+void EnableDualModePrimary()
+{
+    OHOS::system::SetParameter(TEST_DUAL_MODE_PARAM, "true");
+    OHOS::system::SetParameter(TEST_ISPCMODE_PARAM,
+        std::to_string(ServiceConstants::DUAL_MODE_VALUE_TABLET));
+    OHOS::system::SetParameter(TEST_MAINMODE_PARAM,
+        std::to_string(ServiceConstants::DUAL_MODE_VALUE_TABLET));
+}
+} // namespace
+
+/**
+ * @tc.number: CloneInstall_SecondaryMode_DiffPackage_Rejected_0100
+ * @tc.name: Clone install rejected in secondary mode with different-package host app
+ * @tc.desc: 1. Set up a different-package host app
+ *           2. Enable secondary mode
+ *           3. Verify ProcessCloneBundleInstall returns ERR_APPEXECFWK_CLONE_INSTALL_APP_NOT_SUPPORTED_MULTI_TYPE
+ */
+HWTEST_F(BmsBundleCloneInstallerTest, CloneInstall_SecondaryMode_DiffPackage_Rejected_0100,
+    Function | SmallTest | Level1)
+{
+    SetBundleDataMgr();
+    SetInnerBundleInfoWithPolicy(BUNDLE_NAME, DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE);
+    ScopeGuard deleteGuard([this] { DeleteBundle(BUNDLE_NAME); });
+    SetUserIdToDataMgr(installer);
+    EnableDualModeSecondary();
+
+    int32_t appIndex = 0;
+    EXPECT_EQ(bundleCloneInstall_->ProcessCloneBundleInstall(BUNDLE_NAME, installer, appIndex),
+        ERR_APPEXECFWK_CLONE_INSTALL_APP_NOT_SUPPORTED_MULTI_TYPE);
+}
+
+/**
+ * @tc.number: CloneInstall_PrimaryMode_DiffPackage_NotRejected_0100
+ * @tc.name: Clone install proceeds in primary mode with different-package host app
+ * @tc.desc: 1. Set up a different-package host app
+ *           2. Enable primary mode (not secondary)
+ *           3. Verify ProcessCloneBundleInstall does NOT return
+ *            ERR_APPEXECFWK_CLONE_INSTALL_APP_NOT_SUPPORTED_MULTI_TYPE
+ */
+HWTEST_F(BmsBundleCloneInstallerTest, CloneInstall_PrimaryMode_DiffPackage_NotRejected_0100,
+    Function | SmallTest | Level1)
+{
+    SetBundleDataMgr();
+    SetInnerBundleInfoWithPolicy(BUNDLE_NAME, DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE);
+    ScopeGuard deleteGuard([this] { DeleteBundle(BUNDLE_NAME); });
+    SetUserIdToDataMgr(installer);
+    EnableDualModePrimary();
+
+    int32_t appIndex = 0;
+    auto ret = bundleCloneInstall_->ProcessCloneBundleInstall(BUNDLE_NAME, installer, appIndex);
+    EXPECT_NE(ret, ERR_APPEXECFWK_CLONE_INSTALL_APP_NOT_SUPPORTED_MULTI_TYPE);
+}
+
+/**
+ * @tc.number: CloneInstall_SecondaryMode_NonDiffPackage_NotRejected_0100
+ * @tc.name: Clone install proceeds in secondary mode with same-package host app
+ * @tc.desc: 1. Set up a same-package (non-different-package) host app
+ *           2. Enable secondary mode
+ *           3. Verify ProcessCloneBundleInstall does NOT return
+ *            ERR_APPEXECFWK_CLONE_INSTALL_APP_NOT_SUPPORTED_MULTI_TYPE
+ */
+HWTEST_F(BmsBundleCloneInstallerTest, CloneInstall_SecondaryMode_NonDiffPackage_NotRejected_0100,
+    Function | SmallTest | Level1)
+{
+    SetBundleDataMgr();
+    SetInnerBundleInfoWithPolicy(BUNDLE_NAME, DeviceModeDistributionPolicy::UNIVERSAL_IDENTICAL_PACKAGE);
+    ScopeGuard deleteGuard([this] { DeleteBundle(BUNDLE_NAME); });
+    SetUserIdToDataMgr(installer);
+    EnableDualModeSecondary();
+
+    int32_t appIndex = 0;
+    auto ret = bundleCloneInstall_->ProcessCloneBundleInstall(BUNDLE_NAME, installer, appIndex);
+    EXPECT_NE(ret, ERR_APPEXECFWK_CLONE_INSTALL_APP_NOT_SUPPORTED_MULTI_TYPE);
 }
 }

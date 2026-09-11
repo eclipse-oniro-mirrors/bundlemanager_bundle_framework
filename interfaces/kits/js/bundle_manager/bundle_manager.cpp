@@ -7156,7 +7156,8 @@ void FilterBundleListByDeviceModeDistributionPoliciesComplete(napi_env env, napi
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
     } else {
         result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
-            FILTER_BUNDLE_LIST_BY_DEVICE_MODE_DISTRIBUTION_POLICIES);
+            FILTER_BUNDLE_LIST_BY_DEVICE_MODE_DISTRIBUTION_POLICIES,
+            Constants::PERMISSION_SWITCH_MULTI_MODE_BUNDLE);
     }
     CommonFunc::NapiReturnDeferred<DeviceModePoliciesCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_ONE);
 }
