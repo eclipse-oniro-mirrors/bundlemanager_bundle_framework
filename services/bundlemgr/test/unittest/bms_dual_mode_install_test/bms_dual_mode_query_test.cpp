@@ -1906,4 +1906,424 @@ HWTEST_F(BmsDualModeQueryTest, NormalizeDualModeUninstallResourceInfos_Empty_040
     BundleResourceManager::NormalizeDualModeUninstallResourceInfos(infos);
     EXPECT_TRUE(infos.empty());
 }
+
+// ====================== BundleDataMgr::IsQueryAllDeviceMode ======
+
+HWTEST_F(BmsDualModeQueryTest, IsQueryAllDeviceMode_FlagUnset_0100, Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    // flag unset never means all-device-mode, even on a dual-mode device
+    EXPECT_FALSE(BundleDataMgr::IsQueryAllDeviceMode(0));
+    EXPECT_FALSE(BundleDataMgr::IsQueryAllDeviceMode(
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION)));
+}
+
+HWTEST_F(BmsDualModeQueryTest, IsQueryAllDeviceMode_FlagSetDualModeDevice_0200, Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    EXPECT_TRUE(BundleDataMgr::IsQueryAllDeviceMode(
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_OF_ALL_DEVICE_MODE)));
+    // combined with other flags
+    EXPECT_TRUE(BundleDataMgr::IsQueryAllDeviceMode(
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION) |
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_OF_ALL_DEVICE_MODE)));
+}
+
+HWTEST_F(BmsDualModeQueryTest, IsQueryAllDeviceMode_FlagSetNonDualModeDevice_0300, Function | SmallTest | Level0)
+{
+    // SetUp leaves both mode params invalid, so the device is not a dual-mode device
+    EXPECT_FALSE(BundleDataMgr::IsQueryAllDeviceMode(
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_OF_ALL_DEVICE_MODE)));
+}
+
+// ====================== BundleDataMgr::GetBundleInfosV9 all-device-mode ======
+
+namespace {
+const std::string NORMAL_BUNDLE_NAME = "com.example.normal";
+const std::string TEMP_ONLY_BUNDLE_NAME = "com.example.temponly";
+constexpr int32_t FLAG_ALL_DEVICE_MODE =
+    static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_OF_ALL_DEVICE_MODE);
+
+// One device-mode instance record: clone (appIndex 10000) or primary (appIndex 0).
+static InnerBundleInfo MakeModeInstanceInfo(const std::string &bundleName, int32_t userId,
+    bool isDualModeClone, bool enabled = true)
+{
+    InnerBundleInfo info;
+    info.SetDualModeCloneApp(isDualModeClone);
+    info.SetAppIndex(isDualModeClone ? ServiceConstants::DUAL_MODE_CLONE_APP_INDEX : 0);
+    info.baseApplicationInfo_->bundleName = bundleName;
+    info.baseBundleInfo_->name = bundleName;
+    auto userInfo = MakeUserInfo(bundleName, userId, enabled);
+    std::string key = bundleName + "_" + std::to_string(userId);
+    info.innerBundleUserInfos_.try_emplace(key, userInfo);
+    return info;
+}
+
+static int32_t CountBundleInfo(const std::vector<BundleInfo> &bundleInfos,
+    const std::string &bundleName, int32_t appIndex)
+{
+    int32_t count = 0;
+    for (const auto &info : bundleInfos) {
+        if (info.name == bundleName && info.appIndex == appIndex) {
+            ++count;
+        }
+    }
+    return count;
+}
+}  // namespace
+
+// secondary mode: current = clone (10000) in bundleInfos_; other = primary (0)
+// in tempBundleInfos_ plus a temp-only app
+HWTEST_F(BmsDualModeQueryTest, GetBundleInfosV9_AllDeviceMode_Secondary_0100, Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = MakeModeInstanceInfo(BUNDLE_NAME, TEST_USERID, true);
+    dataMgr->bundleInfos_[NORMAL_BUNDLE_NAME] = MakeModeInstanceInfo(NORMAL_BUNDLE_NAME, TEST_USERID, false);
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] = MakeModeInstanceInfo(BUNDLE_NAME, TEST_USERID, false);
+    dataMgr->tempBundleInfos_[TEMP_ONLY_BUNDLE_NAME] =
+        MakeModeInstanceInfo(TEMP_ONLY_BUNDLE_NAME, TEST_USERID, false);
+
+    std::vector<BundleInfo> bundleInfos;
+    auto ret = dataMgr->GetBundleInfosV9(FLAG_ALL_DEVICE_MODE, bundleInfos, TEST_USERID);
+    EXPECT_EQ(ret, ERR_OK);
+    // both modes: current clone (10000) + normal app, other-mode primary (0) + temp-only app
+    EXPECT_EQ(bundleInfos.size(), static_cast<size_t>(4));
+    EXPECT_EQ(CountBundleInfo(bundleInfos, BUNDLE_NAME, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX), 1);
+    EXPECT_EQ(CountBundleInfo(bundleInfos, BUNDLE_NAME, 0), 1);
+    EXPECT_EQ(CountBundleInfo(bundleInfos, NORMAL_BUNDLE_NAME, 0), 1);
+    EXPECT_EQ(CountBundleInfo(bundleInfos, TEMP_ONLY_BUNDLE_NAME, 0), 1);
+}
+
+// flag unset: only current-mode apps, tempBundleInfos_ stays invisible
+HWTEST_F(BmsDualModeQueryTest, GetBundleInfosV9_AllDeviceMode_FlagUnset_0200, Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = MakeModeInstanceInfo(BUNDLE_NAME, TEST_USERID, true);
+    dataMgr->bundleInfos_[NORMAL_BUNDLE_NAME] = MakeModeInstanceInfo(NORMAL_BUNDLE_NAME, TEST_USERID, false);
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] = MakeModeInstanceInfo(BUNDLE_NAME, TEST_USERID, false);
+    dataMgr->tempBundleInfos_[TEMP_ONLY_BUNDLE_NAME] =
+        MakeModeInstanceInfo(TEMP_ONLY_BUNDLE_NAME, TEST_USERID, false);
+
+    std::vector<BundleInfo> bundleInfos;
+    auto ret = dataMgr->GetBundleInfosV9(0, bundleInfos, TEST_USERID);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(bundleInfos.size(), static_cast<size_t>(2));
+    EXPECT_EQ(CountBundleInfo(bundleInfos, BUNDLE_NAME, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX), 1);
+    EXPECT_EQ(CountBundleInfo(bundleInfos, NORMAL_BUNDLE_NAME, 0), 1);
+}
+
+// non-dual-mode device: the flag is ignored, behavior unchanged
+HWTEST_F(BmsDualModeQueryTest, GetBundleInfosV9_AllDeviceMode_NonDualModeDevice_0300, Function | SmallTest | Level0)
+{
+    // SetUp leaves mode params invalid -> non-dual-mode device
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = MakeModeInstanceInfo(BUNDLE_NAME, TEST_USERID, false);
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] = MakeModeInstanceInfo(BUNDLE_NAME, TEST_USERID, true);
+
+    std::vector<BundleInfo> bundleInfos;
+    auto ret = dataMgr->GetBundleInfosV9(FLAG_ALL_DEVICE_MODE, bundleInfos, TEST_USERID);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(bundleInfos.size(), static_cast<size_t>(1));
+    EXPECT_EQ(CountBundleInfo(bundleInfos, BUNDLE_NAME, 0), 1);
+}
+
+// primary mode: current = primary (0) in bundleInfos_; other = clone (10000)
+// in tempBundleInfos_
+HWTEST_F(BmsDualModeQueryTest, GetBundleInfosV9_AllDeviceMode_Primary_0400, Function | SmallTest | Level0)
+{
+    EnablePrimaryMode();
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = MakeModeInstanceInfo(BUNDLE_NAME, TEST_USERID, false);
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] = MakeModeInstanceInfo(BUNDLE_NAME, TEST_USERID, true);
+
+    std::vector<BundleInfo> bundleInfos;
+    auto ret = dataMgr->GetBundleInfosV9(FLAG_ALL_DEVICE_MODE, bundleInfos, TEST_USERID);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(bundleInfos.size(), static_cast<size_t>(2));
+    EXPECT_EQ(CountBundleInfo(bundleInfos, BUNDLE_NAME, 0), 1);
+    EXPECT_EQ(CountBundleInfo(bundleInfos, BUNDLE_NAME, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX), 1);
+}
+
+// temp SHARED bundle is skipped, mirroring the current-mode loop
+HWTEST_F(BmsDualModeQueryTest, GetBundleInfosV9_AllDeviceMode_TempSharedSkipped_0500, Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = MakeModeInstanceInfo(BUNDLE_NAME, TEST_USERID, true);
+    auto sharedInfo = MakeModeInstanceInfo(TEMP_ONLY_BUNDLE_NAME, TEST_USERID, false);
+    sharedInfo.SetApplicationBundleType(BundleType::SHARED);
+    dataMgr->tempBundleInfos_[TEMP_ONLY_BUNDLE_NAME] = sharedInfo;
+
+    std::vector<BundleInfo> bundleInfos;
+    auto ret = dataMgr->GetBundleInfosV9(FLAG_ALL_DEVICE_MODE, bundleInfos, TEST_USERID);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(bundleInfos.size(), static_cast<size_t>(1));
+    EXPECT_EQ(CountBundleInfo(bundleInfos, BUNDLE_NAME, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX), 1);
+}
+
+// record-disabled temp variant is always skipped, mirroring the current-mode loop
+HWTEST_F(BmsDualModeQueryTest, GetBundleInfosV9_AllDeviceMode_TempDisabled_0600, Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = MakeModeInstanceInfo(BUNDLE_NAME, TEST_USERID, true);
+    auto tempInfo = MakeModeInstanceInfo(BUNDLE_NAME, TEST_USERID, false);
+    tempInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::DISABLED);
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] = tempInfo;
+
+    std::vector<BundleInfo> bundleInfos;
+    auto ret = dataMgr->GetBundleInfosV9(FLAG_ALL_DEVICE_MODE, bundleInfos, TEST_USERID);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(bundleInfos.size(), static_cast<size_t>(1));
+
+    bundleInfos.clear();
+    int32_t flags = FLAG_ALL_DEVICE_MODE |
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE);
+    ret = dataMgr->GetBundleInfosV9(flags, bundleInfos, TEST_USERID);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(bundleInfos.size(), static_cast<size_t>(1));
+}
+
+// application-disabled (user-level) temp variant: skipped by default,
+// returned with WITH_DISABLE
+HWTEST_F(BmsDualModeQueryTest, GetBundleInfosV9_AllDeviceMode_TempApplicationDisabled_0650,
+    Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = MakeModeInstanceInfo(BUNDLE_NAME, TEST_USERID, true);
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] = MakeModeInstanceInfo(BUNDLE_NAME, TEST_USERID, false, false);
+
+    std::vector<BundleInfo> bundleInfos;
+    auto ret = dataMgr->GetBundleInfosV9(FLAG_ALL_DEVICE_MODE, bundleInfos, TEST_USERID);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(bundleInfos.size(), static_cast<size_t>(1));
+
+    bundleInfos.clear();
+    int32_t flags = FLAG_ALL_DEVICE_MODE |
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE);
+    ret = dataMgr->GetBundleInfosV9(flags, bundleInfos, TEST_USERID);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(bundleInfos.size(), static_cast<size_t>(2));
+    EXPECT_EQ(CountBundleInfo(bundleInfos, BUNDLE_NAME, 0), 1);
+}
+
+// ALL_USERID path also appends the other-mode variants
+HWTEST_F(BmsDualModeQueryTest, GetBundleInfosV9_AllDeviceMode_AllUserId_0700, Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = MakeModeInstanceInfo(BUNDLE_NAME, TEST_USERID, true);
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] = MakeModeInstanceInfo(BUNDLE_NAME, TEST_USERID, false);
+    dataMgr->tempBundleInfos_[TEMP_ONLY_BUNDLE_NAME] =
+        MakeModeInstanceInfo(TEMP_ONLY_BUNDLE_NAME, TEST_USERID, false);
+
+    std::vector<BundleInfo> bundleInfos;
+    auto ret = dataMgr->GetBundleInfosV9(FLAG_ALL_DEVICE_MODE, bundleInfos, Constants::ALL_USERID);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(bundleInfos.size(), static_cast<size_t>(3));
+    EXPECT_EQ(CountBundleInfo(bundleInfos, BUNDLE_NAME, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX), 1);
+    EXPECT_EQ(CountBundleInfo(bundleInfos, BUNDLE_NAME, 0), 1);
+    EXPECT_EQ(CountBundleInfo(bundleInfos, TEMP_ONLY_BUNDLE_NAME, 0), 1);
+}
+
+// only other-mode apps exist: current map empty, temp map non-empty
+HWTEST_F(BmsDualModeQueryTest, GetBundleInfosV9_AllDeviceMode_OnlyTempApps_0800, Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    dataMgr->tempBundleInfos_[TEMP_ONLY_BUNDLE_NAME] =
+        MakeModeInstanceInfo(TEMP_ONLY_BUNDLE_NAME, TEST_USERID, false);
+
+    std::vector<BundleInfo> bundleInfos;
+    // flag unset keeps the existing behavior: empty current map -> internal error
+    auto ret = dataMgr->GetBundleInfosV9(0, bundleInfos, TEST_USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+
+    // flag set returns the other-mode apps
+    bundleInfos.clear();
+    ret = dataMgr->GetBundleInfosV9(FLAG_ALL_DEVICE_MODE, bundleInfos, TEST_USERID);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(bundleInfos.size(), static_cast<size_t>(1));
+    EXPECT_EQ(CountBundleInfo(bundleInfos, TEMP_ONLY_BUNDLE_NAME, 0), 1);
+}
+
+// ====================== BundleDataMgr::GetAllBundleInfoInstances ======
+
+// secondary mode + flag: current instance (clone, 10000) first, then the
+// other-mode instance (primary, 0)
+HWTEST_F(BmsDualModeQueryTest, GetAllBundleInfoInstances_SecondaryBothModes_0100, Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = MakeModeInstanceInfo(BUNDLE_NAME, TEST_USERID, true);
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] = MakeModeInstanceInfo(BUNDLE_NAME, TEST_USERID, false);
+
+    std::vector<BundleInfo> bundleInfos;
+    auto ret = dataMgr->GetAllBundleInfoInstances(BUNDLE_NAME, FLAG_ALL_DEVICE_MODE, TEST_USERID, bundleInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    ASSERT_EQ(bundleInfos.size(), static_cast<size_t>(2));
+    // the current-mode instance is placed first
+    EXPECT_EQ(bundleInfos[0].name, BUNDLE_NAME);
+    EXPECT_EQ(bundleInfos[0].appIndex, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
+    EXPECT_EQ(bundleInfos[1].name, BUNDLE_NAME);
+    EXPECT_EQ(bundleInfos[1].appIndex, 0);
+}
+
+// flag unset: only the current-mode instance, the temp variant is ignored
+HWTEST_F(BmsDualModeQueryTest, GetAllBundleInfoInstances_FlagUnsetCurrentOnly_0200, Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = MakeModeInstanceInfo(BUNDLE_NAME, TEST_USERID, true);
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] = MakeModeInstanceInfo(BUNDLE_NAME, TEST_USERID, false);
+
+    std::vector<BundleInfo> bundleInfos;
+    auto ret = dataMgr->GetAllBundleInfoInstances(BUNDLE_NAME, 0, TEST_USERID, bundleInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    ASSERT_EQ(bundleInfos.size(), static_cast<size_t>(1));
+    EXPECT_EQ(bundleInfos[0].appIndex, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
+}
+
+// non-dual-mode device: flag ignored, only the current-mode instance
+HWTEST_F(BmsDualModeQueryTest, GetAllBundleInfoInstances_NonDualModeDevice_0300, Function | SmallTest | Level0)
+{
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = MakeModeInstanceInfo(BUNDLE_NAME, TEST_USERID, false);
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] = MakeModeInstanceInfo(BUNDLE_NAME, TEST_USERID, true);
+
+    std::vector<BundleInfo> bundleInfos;
+    auto ret = dataMgr->GetAllBundleInfoInstances(BUNDLE_NAME, FLAG_ALL_DEVICE_MODE, TEST_USERID, bundleInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    ASSERT_EQ(bundleInfos.size(), static_cast<size_t>(1));
+    EXPECT_EQ(bundleInfos[0].appIndex, 0);
+}
+
+// app exists only in the other mode: flag set returns the temp instance
+HWTEST_F(BmsDualModeQueryTest, GetAllBundleInfoInstances_TempOnlyWithFlag_0400, Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] = MakeModeInstanceInfo(BUNDLE_NAME, TEST_USERID, false);
+
+    std::vector<BundleInfo> bundleInfos;
+    auto ret = dataMgr->GetAllBundleInfoInstances(BUNDLE_NAME, FLAG_ALL_DEVICE_MODE, TEST_USERID, bundleInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    ASSERT_EQ(bundleInfos.size(), static_cast<size_t>(1));
+    EXPECT_EQ(bundleInfos[0].name, BUNDLE_NAME);
+    EXPECT_EQ(bundleInfos[0].appIndex, 0);
+}
+
+// app exists only in the other mode: flag unset keeps the not-exist error
+HWTEST_F(BmsDualModeQueryTest, GetAllBundleInfoInstances_TempOnlyFlagUnset_0500, Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] = MakeModeInstanceInfo(BUNDLE_NAME, TEST_USERID, false);
+
+    std::vector<BundleInfo> bundleInfos;
+    auto ret = dataMgr->GetAllBundleInfoInstances(BUNDLE_NAME, 0, TEST_USERID, bundleInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_TRUE(bundleInfos.empty());
+}
+
+// neither mode has the bundle
+HWTEST_F(BmsDualModeQueryTest, GetAllBundleInfoInstances_NotExist_0600, Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    dataMgr->bundleInfos_[NORMAL_BUNDLE_NAME] = MakeModeInstanceInfo(NORMAL_BUNDLE_NAME, TEST_USERID, false);
+
+    std::vector<BundleInfo> bundleInfos;
+    auto ret = dataMgr->GetAllBundleInfoInstances(BUNDLE_NAME, FLAG_ALL_DEVICE_MODE, TEST_USERID, bundleInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_TRUE(bundleInfos.empty());
+}
+
+// empty bundle name
+HWTEST_F(BmsDualModeQueryTest, GetAllBundleInfoInstances_EmptyBundleName_0700, Function | SmallTest | Level0)
+{
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    std::vector<BundleInfo> bundleInfos;
+    auto ret = dataMgr->GetAllBundleInfoInstances("", FLAG_ALL_DEVICE_MODE, TEST_USERID, bundleInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+// invalid user id
+HWTEST_F(BmsDualModeQueryTest, GetAllBundleInfoInstances_InvalidUserId_0800, Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = MakeModeInstanceInfo(BUNDLE_NAME, TEST_USERID, false);
+
+    std::vector<BundleInfo> bundleInfos;
+    auto ret = dataMgr->GetAllBundleInfoInstances(BUNDLE_NAME, FLAG_ALL_DEVICE_MODE,
+        Constants::INVALID_USERID, bundleInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    EXPECT_TRUE(bundleInfos.empty());
+}
+
+// record-disabled instance: never returned (ERR_OK + empty since the bundle exists)
+HWTEST_F(BmsDualModeQueryTest, GetAllBundleInfoInstances_DisabledInstance_0900, Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    auto info = MakeModeInstanceInfo(BUNDLE_NAME, TEST_USERID, false);
+    info.SetBundleStatus(InnerBundleInfo::BundleStatus::DISABLED);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = info;
+
+    std::vector<BundleInfo> bundleInfos;
+    auto ret = dataMgr->GetAllBundleInfoInstances(BUNDLE_NAME, FLAG_ALL_DEVICE_MODE, TEST_USERID, bundleInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_TRUE(bundleInfos.empty());
+
+    bundleInfos.clear();
+    int32_t flags = FLAG_ALL_DEVICE_MODE |
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE);
+    ret = dataMgr->GetAllBundleInfoInstances(BUNDLE_NAME, flags, TEST_USERID, bundleInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_TRUE(bundleInfos.empty());
+}
+
+// application-disabled (user-level) instance: skipped by default, returned with WITH_DISABLE
+HWTEST_F(BmsDualModeQueryTest, GetAllBundleInfoInstances_ApplicationDisabledInstance_0950,
+    Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = MakeModeInstanceInfo(BUNDLE_NAME, TEST_USERID, false, false);
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] = MakeModeInstanceInfo(BUNDLE_NAME, TEST_USERID, false);
+
+    std::vector<BundleInfo> bundleInfos;
+    auto ret = dataMgr->GetAllBundleInfoInstances(BUNDLE_NAME, FLAG_ALL_DEVICE_MODE, TEST_USERID, bundleInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    ASSERT_EQ(bundleInfos.size(), static_cast<size_t>(1));
+    EXPECT_EQ(bundleInfos[0].appIndex, 0);
+
+    bundleInfos.clear();
+    int32_t flags = FLAG_ALL_DEVICE_MODE |
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE);
+    ret = dataMgr->GetAllBundleInfoInstances(BUNDLE_NAME, flags, TEST_USERID, bundleInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(bundleInfos.size(), static_cast<size_t>(2));
+}
+
+// primary mode + flag: current instance (primary, 0) first, then the
+// other-mode instance (clone, 10000)
+HWTEST_F(BmsDualModeQueryTest, GetAllBundleInfoInstances_PrimaryBothModes_1000, Function | SmallTest | Level0)
+{
+    EnablePrimaryMode();
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = MakeModeInstanceInfo(BUNDLE_NAME, TEST_USERID, false);
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] = MakeModeInstanceInfo(BUNDLE_NAME, TEST_USERID, true);
+
+    std::vector<BundleInfo> bundleInfos;
+    auto ret = dataMgr->GetAllBundleInfoInstances(BUNDLE_NAME, FLAG_ALL_DEVICE_MODE, TEST_USERID, bundleInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    ASSERT_EQ(bundleInfos.size(), static_cast<size_t>(2));
+    EXPECT_EQ(bundleInfos[0].appIndex, 0);
+    EXPECT_EQ(bundleInfos[1].appIndex, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
+}
 } // OHOS

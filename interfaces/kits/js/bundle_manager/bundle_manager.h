@@ -397,6 +397,15 @@ struct CloneAppBundleInfosCallbackInfo : public BaseCallbackInfo {
     std::vector<BundleInfo> bundleInfos;
 };
 
+struct BundleInfoInstancesCallbackInfo : public BaseCallbackInfo {
+    explicit BundleInfoInstancesCallbackInfo(napi_env env) : BaseCallbackInfo(env) {}
+
+    int32_t bundleFlags = 0;
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    std::string bundleName;
+    std::vector<BundleInfo> bundleInfos;
+};
+
 struct AppClonePreferenceCallbackInfo : public BaseCallbackInfo {
     explicit AppClonePreferenceCallbackInfo(napi_env env) : BaseCallbackInfo(env) {}
 
@@ -469,6 +478,7 @@ napi_value SwitchUninstallState(napi_env env, napi_callback_info info);
 napi_value GetAppCloneBundleInfo(napi_env env, napi_callback_info info);
 napi_value GetAllInstallInfo(napi_env env, napi_callback_info info);
 napi_value GetAllAppCloneBundleInfo(napi_env env, napi_callback_info info);
+napi_value GetAllBundleInfoInstances(napi_env env, napi_callback_info info);
 napi_value GetAppClonePreference(napi_env env, napi_callback_info info);
 napi_value SetAppClonePreference(napi_env env, napi_callback_info info);
 napi_value GetAppCloneIdentity(napi_env env, napi_callback_info info);

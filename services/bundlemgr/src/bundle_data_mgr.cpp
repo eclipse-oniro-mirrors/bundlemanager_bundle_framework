@@ -5313,7 +5313,7 @@ ErrCode BundleDataMgr::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
-    if (bundleInfos_.empty()) {
+    if (bundleInfos_.empty() && (!IsQueryAllDeviceMode(flags) || tempBundleInfos_.empty())) {
         LOG_W(BMS_TAG_QUERY, "bundleInfos_ data is empty");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
@@ -5378,6 +5378,10 @@ ErrCode BundleDataMgr::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &
             GetCloneBundleInfos(innerBundleInfo, flags, responseUserId, bundleInfos);
         }
     }
+    // dual-mode: append other-mode variants (tempBundleInfos_)
+    if (IsQueryAllDeviceMode(flags)) {
+        GetTempBundleInfosV9(flags, requestUserId, ofAnyUserFlag, bundleInfos);
+    }
     if (bundleInfos.empty()) {
         LOG_W(BMS_TAG_QUERY, "bundleInfos is empty");
     }
@@ -5387,7 +5391,7 @@ ErrCode BundleDataMgr::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &
 ErrCode BundleDataMgr::GetAllBundleInfosV9(int32_t flags, std::vector<BundleInfo> &bundleInfos) const
 {
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
-    if (bundleInfos_.empty()) {
+    if (bundleInfos_.empty() && (!IsQueryAllDeviceMode(flags) || tempBundleInfos_.empty())) {
         APP_LOGW("bundleInfos_ data is empty");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
@@ -5433,10 +5437,128 @@ ErrCode BundleDataMgr::GetAllBundleInfosV9(int32_t flags, std::vector<BundleInfo
             }
         }
     }
+    // dual-mode: append other-mode variants (tempBundleInfos_)
+    if (IsQueryAllDeviceMode(flags)) {
+        GetAllTempBundleInfosV9(flags, bundleInfos);
+    }
     if (bundleInfos.empty()) {
         APP_LOGW("bundleInfos is empty");
     }
     return ERR_OK;
+}
+
+bool BundleDataMgr::IsQueryAllDeviceMode(int32_t flags)
+{
+    if ((static_cast<uint32_t>(flags) &
+        static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_OF_ALL_DEVICE_MODE))
+        != static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_OF_ALL_DEVICE_MODE)) {
+        return false;
+    }
+    // system parameters are read only when the flag is set
+    return DualModeHelper::IsDualModeDevice();
+}
+
+// dual-mode: append other-mode variants for GetBundleInfosV9 (variants only,
+// no clones). Caller must hold bundleInfoMutex_ (shared)
+void BundleDataMgr::GetTempBundleInfosV9(int32_t flags, int32_t requestUserId, bool ofAnyUserFlag,
+    std::vector<BundleInfo> &bundleInfos) const
+{
+    if (tempBundleInfos_.empty()) {
+        return;
+    }
+    LOG_D(BMS_TAG_QUERY, "query bundle infos of all device modes, temp size: %{public}zu",
+        tempBundleInfos_.size());
+    for (const auto &item : tempBundleInfos_) {
+        const InnerBundleInfo &innerBundleInfo = item.second;
+        auto bundleType = innerBundleInfo.GetApplicationBundleType();
+        if (bundleType == BundleType::SHARED || bundleType == BundleType::SKILL) {
+            LOG_D(BMS_TAG_QUERY, "temp app %{public}s is cross-app shared bundle or skill bundle, ignore",
+                innerBundleInfo.GetBundleName().c_str());
+            continue;
+        }
+        int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
+        auto flag = GET_BASIC_APPLICATION_INFO;
+        if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE))
+            == static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE)) {
+            flag = GET_APPLICATION_INFO_WITH_DISABLE;
+        }
+        if (CheckInnerBundleInfoWithFlags(innerBundleInfo, flag, responseUserId) != ERR_OK) {
+            auto &hp = innerBundleInfo.GetInnerBundleUserInfos();
+            if (ofAnyUserFlag && hp.size() > 0) {
+                responseUserId = hp.begin()->second.bundleUserInfo.userId;
+            } else {
+                // skip the disabled/uninstalled variant
+                continue;
+            }
+        }
+        uint32_t launchFlag = static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_ONLY_WITH_LAUNCHER_ABILITY);
+        if (((static_cast<uint32_t>(flags) & launchFlag) == launchFlag) && (innerBundleInfo.IsHideDesktopIcon())) {
+            LOG_D(BMS_TAG_QUERY, "temp bundleName %{public}s is hide desktopIcon",
+                innerBundleInfo.GetBundleName().c_str());
+            continue;
+        }
+        uint32_t cloudFlag = static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_CLOUD_KIT);
+        if (((static_cast<uint32_t>(flags) & cloudFlag) == cloudFlag) &&
+            !innerBundleInfo.GetCloudFileSyncEnabled() &&
+            !innerBundleInfo.GetCloudStructuredDataSyncEnabled()) {
+            LOG_D(BMS_TAG_QUERY, "temp bundleName %{public}s does not enable cloud sync",
+                innerBundleInfo.GetBundleName().c_str());
+            continue;
+        }
+        BundleInfo bundleInfo;
+        if (innerBundleInfo.GetBundleInfoV9(flags, bundleInfo, responseUserId) == ERR_OK) {
+            ProcessCertificate(bundleInfo, innerBundleInfo.GetBundleName(), flags);
+            ProcessBundleMenu(bundleInfo, flags, true);
+            ProcessBundleRouterMap(bundleInfo, flags, requestUserId);
+            PostProcessAnyUserFlags(flags, responseUserId, requestUserId, bundleInfo, innerBundleInfo);
+            bundleInfos.emplace_back(std::move(bundleInfo));
+        }
+    }
+}
+
+// dual-mode: append other-mode variants for GetAllBundleInfosV9.
+// Caller must hold bundleInfoMutex_ (shared)
+void BundleDataMgr::GetAllTempBundleInfosV9(int32_t flags, std::vector<BundleInfo> &bundleInfos) const
+{
+    if (tempBundleInfos_.empty()) {
+        return;
+    }
+    LOG_D(BMS_TAG_QUERY, "query bundle infos of all device modes, temp size: %{public}zu",
+        tempBundleInfos_.size());
+    for (const auto &item : tempBundleInfos_) {
+        const InnerBundleInfo &info = item.second;
+        if (info.IsDisabled()) {
+            APP_LOGD("temp app %{public}s is disabled", info.GetBundleName().c_str());
+            continue;
+        }
+        auto bundleType = info.GetApplicationBundleType();
+        if (bundleType == BundleType::SHARED || bundleType == BundleType::SKILL) {
+            APP_LOGD("temp app %{public}s is cross-app shared bundle or skill bundle, ignore",
+                info.GetBundleName().c_str());
+            continue;
+        }
+        if (((static_cast<uint32_t>(flags) &
+            static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_ONLY_WITH_LAUNCHER_ABILITY)) ==
+            static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_ONLY_WITH_LAUNCHER_ABILITY)) &&
+            (info.IsHideDesktopIcon())) {
+            APP_LOGD("temp bundleName %{public}s is hide desktopIcon", info.GetBundleName().c_str());
+            continue;
+        }
+        uint32_t cloudFlag = static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_CLOUD_KIT);
+        if (((static_cast<uint32_t>(flags) & cloudFlag) == cloudFlag) &&
+            !info.GetCloudFileSyncEnabled() &&
+            !info.GetCloudStructuredDataSyncEnabled()) {
+            APP_LOGD("temp bundleName %{public}s does not enable cloud sync", info.GetBundleName().c_str());
+            continue;
+        }
+        BundleInfo bundleInfo;
+        info.GetBundleInfoV9(flags, bundleInfo, Constants::ALL_USERID);
+        ProcessCertificate(bundleInfo, info.GetBundleName(), flags);
+        auto ret = ProcessBundleMenu(bundleInfo, flags, true);
+        if (ret == ERR_OK) {
+            bundleInfos.emplace_back(std::move(bundleInfo));
+        }
+    }
 }
 
 bool BundleDataMgr::GetBundleNameForUid(const int32_t uid, std::string &bundleName) const
@@ -17179,6 +17301,70 @@ ErrCode BundleDataMgr::GetDualModeBundleInfo(const std::string &bundleName, int3
     dualModeBundleInfo.deviceModeDistributionPolicy = innerBundleInfo.GetBaseBundleInfo().deviceModeDistributionPolicy;
     dualModeBundleInfo.appSandboxPolicy = innerBundleInfo.GetBaseBundleInfo().appSandboxPolicy;
     return ERR_OK;
+}
+
+ErrCode BundleDataMgr::GetAllBundleInfoInstances(const std::string &bundleName, int32_t flags,
+    int32_t userId, std::vector<BundleInfo> &bundleInfos) const
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    if (bundleName.empty()) {
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+
+    bool withDisable = (static_cast<uint32_t>(flags) &
+        static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE)) != 0;
+
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto curIter = bundleInfos_.find(bundleName);
+    auto tempIter = tempBundleInfos_.end();
+    if (IsQueryAllDeviceMode(flags)) {
+        tempIter = tempBundleInfos_.find(bundleName);
+    }
+    if (curIter == bundleInfos_.end() && tempIter == tempBundleInfos_.end()) {
+        LOG_D(BMS_TAG_QUERY, "bundleName: %{public}s not exist in any device mode", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+
+    // current-mode instance first
+    if (curIter != bundleInfos_.end()) {
+        AddBundleInfoInstanceIfEnabled(curIter->second, flags, requestUserId, withDisable, bundleInfos);
+    }
+    // other-mode instance (dual-mode devices only)
+    if (tempIter != tempBundleInfos_.end()) {
+        AddBundleInfoInstanceIfEnabled(tempIter->second, flags, requestUserId, withDisable, bundleInfos);
+    }
+    LOG_D(BMS_TAG_QUERY, "GetAllBundleInfoInstances(%{public}s) in user(%{public}d), instance size: %{public}zu",
+        bundleName.c_str(), requestUserId, bundleInfos.size());
+    return ERR_OK;
+}
+
+// dual-mode: append one instance if enabled (or WITH_DISABLE set); completely
+// disabled records are never visible. Caller must hold bundleInfoMutex_ (shared)
+void BundleDataMgr::AddBundleInfoInstanceIfEnabled(const InnerBundleInfo &info, int32_t flags,
+    int32_t requestUserId, bool withDisable, std::vector<BundleInfo> &bundleInfos) const
+{
+    if (info.IsDisabled()) {
+        LOG_D(BMS_TAG_QUERY, "instance of %{public}s is disabled", info.GetBundleName().c_str());
+        return;
+    }
+    int32_t responseUserId = info.GetResponseUserId(requestUserId);
+    bool isEnabled = false;
+    if (info.GetApplicationEnabledV9(responseUserId, isEnabled, info.GetAppIndex()) != ERR_OK) {
+        return;
+    }
+    if (!withDisable && !isEnabled) {
+        return;
+    }
+    BundleInfo bundleInfo;
+    if (BuildBundleInfoWithProcess(info, info.GetBundleName(), static_cast<uint32_t>(flags),
+        requestUserId, responseUserId, info.GetAppIndex(), bundleInfo) == ERR_OK) {
+        bundleInfos.emplace_back(std::move(bundleInfo));
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

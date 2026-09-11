@@ -885,6 +885,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_DUAL_MODE_BUNDLE_INFO):
             errCode = this->HandleGetDualModeBundleInfo(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_BUNDLE_INFO_INSTANCES):
+            errCode = this->HandleGetAllBundleInfoInstances(data, reply);
+            break;
         default :
             APP_LOGW("bundleMgr host receives unknown code %{public}u", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -5051,6 +5054,28 @@ ErrCode BundleMgrHost::HandleGetMainAndCloneBundleInfo(MessageParcel &data, Mess
 
     std::vector<BundleInfo> bundleInfos;
     auto ret = GetMainAndCloneBundleInfo(bundleName, flags, userId, bundleInfos);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
+        if (!WriteVectorToParcelIntelligent(bundleInfos, reply)) {
+            APP_LOGE("write failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetAllBundleInfoInstances(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    std::string bundleName = data.ReadString();
+    int32_t flags = data.ReadInt32();
+    int32_t userId = data.ReadInt32();
+
+    std::vector<BundleInfo> bundleInfos;
+    auto ret = GetAllBundleInfoInstances(bundleName, flags, bundleInfos, userId);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;

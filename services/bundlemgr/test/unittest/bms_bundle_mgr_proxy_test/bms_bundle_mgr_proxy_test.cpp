@@ -2392,6 +2392,40 @@ HWTEST_F(BmsBundleMgrProxyTest, GetDualModeBundleInfo_0003, Function | MediumTes
 }
 
 /**
+ * @tc.number: GetAllBundleInfoInstances_0001
+ * @tc.name: test the GetAllBundleInfoInstances
+ * @tc.desc: 1. remote object unavailable
+ *           2. test GetAllBundleInfoInstances
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetAllBundleInfoInstances_0001, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::string bundleName = "com.example.bundle";
+    std::vector<BundleInfo> bundleInfos;
+    int32_t flags = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_OF_ALL_DEVICE_MODE);
+    auto res = bundleMgrProxy.GetAllBundleInfoInstances(bundleName, flags, bundleInfos,
+        Constants::START_USERID);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: GetAllBundleInfoInstances_0002
+ * @tc.name: test the GetAllBundleInfoInstances with default flags
+ * @tc.desc: 1. remote object unavailable
+ *           2. test GetAllBundleInfoInstances with default flags
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetAllBundleInfoInstances_0002, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::string bundleName = "com.example.bundle";
+    std::vector<BundleInfo> bundleInfos;
+    auto res = bundleMgrProxy.GetAllBundleInfoInstances(bundleName, 0, bundleInfos);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
  * @tc.number: FilterBundleListByDeviceModeDistributionPolicies_0100
  * @tc.name: test FilterBundleListByDeviceModeDistributionPolicies with null remote object
  * @tc.desc: 1. BundleMgrProxy constructed with null IRemoteObject

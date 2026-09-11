@@ -6675,6 +6675,32 @@ ErrCode BundleMgrProxy::GetMainAndCloneBundleInfo(const std::string &bundleName,
         BundleMgrInterfaceCode::GET_MAIN_AND_CLONE_BUNDLE_INFO, data, bundleInfos);
 }
 
+ErrCode BundleMgrProxy::GetAllBundleInfoInstances(const std::string &bundleName, int32_t flags,
+    std::vector<BundleInfo> &bundleInfos, int32_t userId)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    APP_LOGD("begin to GetAllBundleInfoInstances of %{public}s", bundleName.c_str());
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetAllBundleInfoInstances due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to GetAllBundleInfoInstances due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(flags)) {
+        APP_LOGE("fail to GetAllBundleInfoInstances due to write flag fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to GetAllBundleInfoInstances due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetVectorFromParcelIntelligentWithErrCode<BundleInfo>(
+        BundleMgrInterfaceCode::GET_ALL_BUNDLE_INFO_INSTANCES, data, bundleInfos);
+}
+
 ErrCode BundleMgrProxy::GetCloneAppIndexes(const std::string &bundleName, std::vector<int32_t> &appIndexes,
     int32_t userId)
 {

@@ -173,6 +173,7 @@ constexpr const char* GET_ALL_INSTALL_INFO = "getAllBundleInstallInfo";
 constexpr const char* SWITCH_UNINSTALL_STATE = "SwitchUninstallState";
 constexpr const char* GET_SIGNATURE_INFO = "GetSignatureInfo";
 constexpr const char* GET_ALL_APP_CLONE_BUNDLE_INFO = "GetAllAppCloneBundleInfo";
+constexpr const char* GET_ALL_BUNDLE_INFO_INSTANCES = "GetAllBundleInfoInstances";
 constexpr const char* GET_APP_CLONE_PREFERENCE = "GetAppClonePreference";
 constexpr const char* SET_APP_CLONE_PREFERENCE = "SetAppClonePreference";
 constexpr const char* GET_BUNDLE_ARCHIVE_INFO_SYNC = "GetBundleArchiveInfoSync";

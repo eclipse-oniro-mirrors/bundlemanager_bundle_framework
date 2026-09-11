@@ -1352,6 +1352,9 @@ public:
     virtual ErrCode GetMainAndCloneBundleInfo(const std::string &bundleName, uint32_t flags,
         int32_t userId, std::vector<BundleInfo> &bundleInfos) override;
 
+    virtual ErrCode GetAllBundleInfoInstances(const std::string &bundleName, int32_t flags,
+        std::vector<BundleInfo> &bundleInfos, int32_t userId = Constants::UNSPECIFIED_USERID) override;
+
     virtual ErrCode GetLaunchWant(Want &want) override;
 
     virtual ErrCode GetSignatureInfoByBundleName(const std::string &bundleName, SignatureInfo &signatureInfo) override;

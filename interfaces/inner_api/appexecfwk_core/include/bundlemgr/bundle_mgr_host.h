@@ -982,6 +982,8 @@ private:
 
     ErrCode HandleGetMainAndCloneBundleInfo(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleGetAllBundleInfoInstances(MessageParcel &data, MessageParcel &reply);
+
     ErrCode HandleGetCloneAppIndexes(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetCliSandboxAppIndexes(MessageParcel &data, MessageParcel &reply);
