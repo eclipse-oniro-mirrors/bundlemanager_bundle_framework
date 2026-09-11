@@ -221,6 +221,51 @@ Metadata *Metadata::Unmarshalling(Parcel &parcel)
     return metadata;
 }
 
+bool ModuleMetadata::ReadFromParcel(Parcel &parcel)
+{
+    moduleName = Str16ToStr8(parcel.ReadString16());
+    int32_t size;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, size);
+    CONTAINER_SECURITY_VERIFY(parcel, size, &metadata);
+    metadata.clear();
+    metadata.reserve(size);
+    for (int32_t i = 0; i < size; ++i) {
+        auto metadataItem = std::unique_ptr<Metadata>(parcel.ReadParcelable<Metadata>());
+        if (metadataItem == nullptr) {
+            APP_LOGE("read metadata item failed");
+            return false;
+        }
+        metadata.push_back(*metadataItem);
+    }
+    return true;
+}
+
+bool ModuleMetadata::Marshalling(Parcel &parcel) const
+{
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(moduleName));
+    int32_t metadataSize = static_cast<int32_t>(metadata.size());
+    CONTAINER_SECURITY_VERIFY(parcel, metadataSize, &metadata);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, metadataSize);
+    for (const auto &item : metadata) {
+        if (!parcel.WriteParcelable(&item)) {
+            APP_LOGE("write metadata item failed");
+            return false;
+        }
+    }
+    return true;
+}
+
+ModuleMetadata *ModuleMetadata::Unmarshalling(Parcel &parcel)
+{
+    ModuleMetadata *info = new (std::nothrow) ModuleMetadata;
+    if (info && !info->ReadFromParcel(parcel)) {
+        APP_LOGE("read from parcel failed");
+        delete info;
+        info = nullptr;
+    }
+    return info;
+}
+
 bool HnpPackage::ReadFromParcel(Parcel &parcel)
 {
     package = Str16ToStr8(parcel.ReadString16());

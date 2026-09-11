@@ -7010,6 +7010,33 @@ ErrCode BundleDataMgr::GetInnerBundleInfoWithBundleFlagsV9(const std::string &bu
     return ERR_OK;
 }
 
+ErrCode BundleDataMgr::GetMetadataByBundleName(const std::string &bundleName,
+    std::vector<ModuleMetadata> &metadataInfos, int32_t userId) const
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    if (bundleInfos_.empty()) {
+        APP_LOGW("bundleInfos_ data is empty, bundleName: %{public}s", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    auto item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        APP_LOGW_NOFUNC("%{public}s not find", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    const InnerBundleInfo &innerBundleInfo = item->second;
+    if (innerBundleInfo.IsDisabled()) {
+        APP_LOGW("bundleName: %{public}s status is disabled", innerBundleInfo.GetBundleName().c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_DISABLED;
+    }
+    if (!innerBundleInfo.HasInnerBundleUserInfo(userId)) {
+        APP_LOGW("bundleName: %{public}s not installed for userId: %{public}d", bundleName.c_str(), userId);
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    innerBundleInfo.GetMetadataByBundleName(metadataInfos);
+    return ERR_OK;
+}
+
 #ifdef BMS_ENABLE_CLONE_FOR_ACCOUNT
 ErrCode BundleDataMgr::GetInnerBundleInfoForClone(const std::string &bundleName, const int32_t flags,
         const InnerBundleInfo *&info, int32_t userId, int32_t appIndex) const

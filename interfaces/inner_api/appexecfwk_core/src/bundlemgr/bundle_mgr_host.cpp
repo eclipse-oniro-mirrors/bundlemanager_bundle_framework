@@ -888,6 +888,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_BUNDLE_INFO_INSTANCES):
             errCode = this->HandleGetAllBundleInfoInstances(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_METADATA_BY_BUNDLE_NAME):
+            errCode = this->HandleGetMetadataByBundleName(data, reply);
+            break;
         default :
             APP_LOGW("bundleMgr host receives unknown code %{public}u", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -6340,5 +6343,32 @@ ErrCode BundleMgrHost::HandleGetDualModeBundleInfo(MessageParcel &data, MessageP
     return ERR_OK;
 }
 
+ErrCode BundleMgrHost::HandleGetMetadataByBundleName(MessageParcel &data, MessageParcel &reply)
+{
+    std::string bundleName = data.ReadString();
+    if (bundleName.empty()) {
+        APP_LOGE("bundleName is invalid");
+        return ERR_INVALID_VALUE;
+    }
+    std::vector<ModuleMetadata> metadataInfos;
+    ErrCode ret = GetMetadataByBundleName(bundleName, metadataInfos);
+    if (!reply.WriteInt32(static_cast<int32_t>(ret))) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
+        if (!reply.WriteInt32(static_cast<int32_t>(metadataInfos.size()))) {
+            APP_LOGE("write failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+        for (const auto &item : metadataInfos) {
+            if (!reply.WriteParcelable(&item)) {
+                APP_LOGE("write failed");
+                return ERR_APPEXECFWK_PARCEL_ERROR;
+            }
+        }
+    }
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

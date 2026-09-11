@@ -129,6 +129,14 @@ struct Metadata : public Parcelable {
     static Metadata *Unmarshalling(Parcel &parcel);
 };
 
+struct ModuleMetadata : public Parcelable {
+    std::string moduleName;
+    std::vector<Metadata> metadata;
+    bool ReadFromParcel(Parcel &parcel);
+    virtual bool Marshalling(Parcel &parcel) const override;
+    static ModuleMetadata *Unmarshalling(Parcel &parcel);
+};
+
 struct HnpPackage : public Parcelable {
     std::string package;
     std::string type;
