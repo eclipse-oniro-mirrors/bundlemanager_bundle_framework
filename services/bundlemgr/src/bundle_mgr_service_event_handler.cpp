@@ -4271,6 +4271,13 @@ void BMSEventHandler::HandlePreInstallBundleNamesException(
             ret = OTAInstallSystemBundleTargetUser(preInstallBundleInfo.GetBundlePaths(), bundleNameIter,
                 Constants::AppType::SYSTEM_APP, preInstallBundleInfo.IsRemovable(), userIds, false, forceClone,
                 distPolicy);
+        } else if (CheckDualModeCrossInstall(forceClone, distPolicy)) {
+            CrossModeOtaTask task;
+            task.removable = preInstallBundleInfo.IsRemovable();
+            task.policy = distPolicy;
+            task.forceCrossModeOTAInstall = true;
+            ret = OTAInstallSystemBundleForDualApp(preInstallBundleInfo.GetBundlePaths(), task,
+                Constants::AppType::SYSTEM_APP);
         } else {
             ret = OTAInstallSystemBundle(preInstallBundleInfo.GetBundlePaths(),
                 Constants::AppType::SYSTEM_APP, preInstallBundleInfo.IsRemovable(), forceClone, distPolicy);
@@ -6817,6 +6824,10 @@ void BMSEventHandler::ProcessUpdateDualPolicy(const DualModePackageInfo &pkgInfo
     if (dataMgr == nullptr) {
         return;
     }
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "%{public}s update policy", bundleName.c_str());
+    AppSandboxPolicy appSandboxPolicy =
+        pkgInfo.isDiffPackage ? AppSandboxPolicy::ISOLATED_SANDBOX : AppSandboxPolicy::SHARED_SANDBOX;
+    dataMgr->UpdateBundleInfoPolicy(bundleName, pkgInfo.policy, appSandboxPolicy);
     InnerBundleInfo crossInnerInfo;
     PreInstallBundleInfo preInstallBundleInfo;
     const std::string effectiveBundleName = DualModeHelper::GetDualModeBundleName(bundleName);
@@ -6825,14 +6836,18 @@ void BMSEventHandler::ProcessUpdateDualPolicy(const DualModePackageInfo &pkgInfo
         dataMgr->GetPreInstallBundleInfo(effectiveBundleName, preInstallBundleInfo)) {
         return;
     }
-    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "%{public}s update policy", bundleName.c_str());
-    AppSandboxPolicy appSandboxPolicy =
-        pkgInfo.isDiffPackage ? AppSandboxPolicy::ISOLATED_SANDBOX : AppSandboxPolicy::SHARED_SANDBOX;
-    dataMgr->UpdateBundleInfoPolicy(bundleName, pkgInfo.policy, appSandboxPolicy);
     if (DualModeHelper::IsSecondaryMode()) {
         dataMgr->MoveBundleInfoToTemp(bundleName);
         LOG_NOFUNC_I(BMS_TAG_DEFAULT, "%{public}s move to tempBundleInfos", bundleName.c_str());
     }
+}
+
+bool BMSEventHandler::CheckDualModeCrossInstall(bool isDualCloneApp, DeviceModeDistributionPolicy policy)
+{
+    if (!DualModeHelper::IsDualModeDevice() || !DualModeHelper::IsDiffPackageCategory(policy)) {
+        return false;
+    }
+    return DualModeHelper::IsSecondaryMode() ? !isDualCloneApp : isDualCloneApp;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -768,16 +768,19 @@ HWTEST_F(BmsDualModeInstallTest, ShouldUseDualModeCloneName_PrimaryRole_0300, Fu
     EXPECT_FALSE(installer.ShouldUseDualModeCloneName(installParam));
 }
 
-HWTEST_F(BmsDualModeInstallTest, ShouldUseDualModeCloneName_PreInstallNoneKeepsOriginal_0400,
+HWTEST_F(BmsDualModeInstallTest, ShouldUseDualModeCloneName_PreInstallNoneFollowsMode_0400,
     Function | SmallTest | Level0)
 {
+    // role=NONE: preinstall apps follow NeedDualModeHandle like normal installs since the
+    // isPreInstallApp early-return was removed (OTA sub-mode install fix): secondary mode +
+    // caller-set different-package policy (caller wins for preinstall) -> clone name.
     EnableSecondaryMode();
     BaseBundleInstaller installer;
     installer.dualModeInstallRole_ = DualModeInstallRole::NONE;
     InstallParam installParam;
     installParam.isPreInstallApp = true;
     installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE;
-    EXPECT_FALSE(installer.ShouldUseDualModeCloneName(installParam));
+    EXPECT_TRUE(installer.ShouldUseDualModeCloneName(installParam));
 }
 
 HWTEST_F(BmsDualModeInstallTest, ShouldUseDualModeCloneName_NoneNormalInstallFollowsMode_0500,
@@ -792,6 +795,35 @@ HWTEST_F(BmsDualModeInstallTest, ShouldUseDualModeCloneName_NoneNormalInstallFol
     InstallParam installParam;
     installParam.isPreInstallApp = false;
     installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE;
+    EXPECT_TRUE(installer.ShouldUseDualModeCloneName(installParam));
+}
+
+HWTEST_F(BmsDualModeInstallTest, ShouldUseDualModeCloneName_PreInstallNoneSingleModeKeepsOriginal_0600,
+    Function | SmallTest | Level0)
+{
+    // role=NONE + preinstall + non-different-package policy: NeedDualModeHandle stays false even in
+    // secondary mode, so the preset app keeps the original name.
+    EnableSecondaryMode();
+    BaseBundleInstaller installer;
+    installer.dualModeInstallRole_ = DualModeInstallRole::NONE;
+    InstallParam installParam;
+    installParam.isPreInstallApp = true;
+    installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::MAIN_ONLY;
+    EXPECT_FALSE(installer.ShouldUseDualModeCloneName(installParam));
+}
+
+HWTEST_F(BmsDualModeInstallTest, ShouldUseDualModeCloneName_PreInstallNoneUnspecifiedPolicyResolves_0700,
+    Function | SmallTest | Level0)
+{
+    // role=NONE + preinstall + UNSPECIFIED param policy: GetEffectiveDualModePolicy falls back to the
+    // resolved preinstall policy, which drives NeedDualModeHandle.
+    EnableSecondaryMode();
+    BaseBundleInstaller installer;
+    installer.dualModeInstallRole_ = DualModeInstallRole::NONE;
+    installer.resolvedDeviceModeDistributionPolicy_ = DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE;
+    InstallParam installParam;
+    installParam.isPreInstallApp = true;
+    installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNSPECIFIED;
     EXPECT_TRUE(installer.ShouldUseDualModeCloneName(installParam));
 }
 
@@ -3682,6 +3714,36 @@ public:
     }
 };
 
+// In-memory stand-in for BundleDataStorageRdb so UpdateBundleInfoPolicy's save path succeeds
+// deterministically (this target links the real storage, whose RDB write must not be exercised
+// from unit tests). Records every saved bundle name so callers can assert both saves.
+class MockBundleDataStorage : public IBundleDataStorage {
+public:
+    bool LoadAllData(std::map<std::string, InnerBundleInfo> &infos) override
+    {
+        return true;
+    }
+
+    bool SaveStorageBundleInfo(const InnerBundleInfo &innerBundleInfo) override
+    {
+        savedBundleNames.emplace_back(innerBundleInfo.GetBundleName());
+        return true;
+    }
+
+    ErrCode SaveStorageBundleInfoWithCode(const InnerBundleInfo &innerBundleInfo) override
+    {
+        savedBundleNames.emplace_back(innerBundleInfo.GetBundleName());
+        return ERR_OK;
+    }
+
+    bool DeleteStorageBundleInfo(const InnerBundleInfo &innerBundleInfo) override
+    {
+        return true;
+    }
+
+    std::vector<std::string> savedBundleNames;
+};
+
 // A parsed hap info with one module named MODULE_NAME so GetModuleNameVec() is non-empty
 // (ProcessDualModeCrossUpdateIfNeeded skips empty-module infos).
 static InnerBundleInfo MakeHapModuleInfo(bool isEntry = true)
@@ -4486,6 +4548,150 @@ HWTEST_F(BmsDualModeInstallTest, OTAInstallSystemBundleForDualApp_EmptyPaths_010
     task.forceCrossModeOTAInstall = true;
     EXPECT_FALSE(handler.OTAInstallSystemBundleForDualApp(task.filePaths, task,
         Constants::AppType::SYSTEM_APP));
+}
+
+// ====================== BMSEventHandler::CheckDualModeCrossInstall ======================
+// Route predicate of HandlePreInstallBundleNamesException's dual-mode branch: the exception
+// reinstall goes through OTAInstallSystemBundleForDualApp only for a different-package app whose
+// stored variant belongs to the mode that is NOT the current one (secondary + non-clone primary
+// variant, primary + clone-named secondary variant).
+
+HWTEST_F(BmsDualModeInstallTest, CheckDualModeCrossInstall_NonDualMode_0100, Function | SmallTest | Level0)
+{
+    SetDualModeCache(ServiceConstants::DUAL_MODE_VALUE_INVALID, ServiceConstants::DUAL_MODE_VALUE_INVALID);
+    BMSEventHandler handler;
+    EXPECT_FALSE(handler.CheckDualModeCrossInstall(false, DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE));
+    EXPECT_FALSE(handler.CheckDualModeCrossInstall(true, DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE));
+}
+
+HWTEST_F(BmsDualModeInstallTest, CheckDualModeCrossInstall_NonDiffPackagePolicy_0200, Function | SmallTest | Level0)
+{
+    // Different-package category is a precondition: single-mode policies never take the cross path.
+    EnableSecondaryMode();
+    BMSEventHandler handler;
+    EXPECT_FALSE(handler.CheckDualModeCrossInstall(false, DeviceModeDistributionPolicy::MAIN_ONLY));
+    EXPECT_FALSE(handler.CheckDualModeCrossInstall(true, DeviceModeDistributionPolicy::UNIVERSAL_IDENTICAL_PACKAGE));
+    EXPECT_FALSE(handler.CheckDualModeCrossInstall(false, DeviceModeDistributionPolicy::UNSPECIFIED));
+}
+
+HWTEST_F(BmsDualModeInstallTest, CheckDualModeCrossInstall_SecondaryMode_0300, Function | SmallTest | Level0)
+{
+    // Secondary mode: the primary-side (non-clone) variant is cross and must reinstall through the
+    // dual-app path; the clone-named secondary variant is the current side and stays on the normal path.
+    EnableSecondaryMode();
+    BMSEventHandler handler;
+    EXPECT_TRUE(handler.CheckDualModeCrossInstall(false, DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE));
+    EXPECT_FALSE(handler.CheckDualModeCrossInstall(true, DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE));
+}
+
+HWTEST_F(BmsDualModeInstallTest, CheckDualModeCrossInstall_PrimaryMode_0400, Function | SmallTest | Level0)
+{
+    // Primary mode mirrors it: only the clone-named secondary variant takes the cross path.
+    EnablePrimaryMode();
+    BMSEventHandler handler;
+    EXPECT_TRUE(handler.CheckDualModeCrossInstall(true, DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE));
+    EXPECT_FALSE(handler.CheckDualModeCrossInstall(false, DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE));
+}
+
+// ====================== BMSEventHandler::ProcessUpdateDualPolicy ======================
+// Policy sync runs BEFORE the not-updated early return (commit cba09c2a4): an app whose cross
+// variant is absent still gets its deviceModeDistributionPolicy/appSandboxPolicy refreshed, and
+// UpdateBundleInfoPolicy keeps the hidden tempBundleInfos_ side in sync when it exists.
+
+static DualModePackageInfo MakeSamePackageInfo()
+{
+    DualModePackageInfo pkgInfo;
+    pkgInfo.policy = DeviceModeDistributionPolicy::UNIVERSAL_IDENTICAL_PACKAGE;
+    pkgInfo.isDiffPackage = false;
+    return pkgInfo;
+}
+
+// Fresh InnerBundleInfo whose dual-mode fields are still at the defaults, so a refresh is observable.
+static InnerBundleInfo MakePolicyTargetInfo()
+{
+    InnerBundleInfo info = MakeHapModuleInfo();
+    ApplicationInfo appInfo;
+    appInfo.bundleName = BUNDLE_NAME;
+    info.SetBaseApplicationInfo(appInfo);
+    BundleInfo baseInfo;
+    baseInfo.name = BUNDLE_NAME;
+    baseInfo.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNSPECIFIED;
+    baseInfo.appSandboxPolicy = AppSandboxPolicy::SHARED_SANDBOX;
+    info.SetBaseBundleInfo(baseInfo);
+    return info;
+}
+
+HWTEST_F(BmsDualModeInstallTest, ProcessUpdateDualPolicy_NonDualMode_0100, Function | SmallTest | Level0)
+{
+    // Non-dual-mode device: guard returns first, nothing is read or mutated.
+    SetDualModeCache(ServiceConstants::DUAL_MODE_VALUE_INVALID, ServiceConstants::DUAL_MODE_VALUE_INVALID);
+    auto dataMgr = InstallOtaTestDataMgr();
+    dataMgr->bundleInfos_[BUNDLE_NAME] = MakePolicyTargetInfo();
+
+    BMSEventHandler handler;
+    handler.ProcessUpdateDualPolicy(MakeDiffPackageInfo(), BUNDLE_NAME);
+    EXPECT_EQ(dataMgr->bundleInfos_[BUNDLE_NAME].GetDeviceModeDistributionPolicy(),
+        DeviceModeDistributionPolicy::UNSPECIFIED);
+    EXPECT_EQ(dataMgr->bundleInfos_[BUNDLE_NAME].GetAppSandboxPolicy(), AppSandboxPolicy::SHARED_SANDBOX);
+    EXPECT_EQ(dataMgr->tempBundleInfos_.count(BUNDLE_NAME), 0u);
+}
+
+HWTEST_F(BmsDualModeInstallTest, ProcessUpdateDualPolicy_NonDiffPackage_0200, Function | SmallTest | Level0)
+{
+    // Same-package apps have no per-mode split: guard returns before any dataMgr access.
+    EnableSecondaryMode();
+    auto dataMgr = InstallOtaTestDataMgr();
+    dataMgr->bundleInfos_[BUNDLE_NAME] = MakePolicyTargetInfo();
+
+    BMSEventHandler handler;
+    handler.ProcessUpdateDualPolicy(MakeSamePackageInfo(), BUNDLE_NAME);
+    EXPECT_EQ(dataMgr->bundleInfos_[BUNDLE_NAME].GetDeviceModeDistributionPolicy(),
+        DeviceModeDistributionPolicy::UNSPECIFIED);
+    EXPECT_EQ(dataMgr->tempBundleInfos_.count(BUNDLE_NAME), 0u);
+}
+
+HWTEST_F(BmsDualModeInstallTest, ProcessUpdateDualPolicy_NotUpdatedSecondaryMovesToTemp_0300,
+    Function | SmallTest | Level0)
+{
+    // App not updated (no temp copy, no preinstall clone record) + secondary mode: the policy update
+    // runs BEFORE the early return (commit fix), then the current variant moves to tempBundleInfos_
+    // so the sub-mode OTA pass can install the other side.
+    EnableSecondaryMode();
+    auto dataMgr = InstallOtaTestDataMgr();
+    auto dataStorage = std::make_shared<MockBundleDataStorage>();
+    dataMgr->dataStorage_ = dataStorage;
+    dataMgr->bundleInfos_[BUNDLE_NAME] = MakePolicyTargetInfo();
+
+    BMSEventHandler handler;
+    handler.ProcessUpdateDualPolicy(MakeDiffPackageInfo(), BUNDLE_NAME);
+    ASSERT_EQ(dataStorage->savedBundleNames.size(), 1u);  // main side saved; temp side absent
+    EXPECT_EQ(dataMgr->bundleInfos_.count(BUNDLE_NAME), 0u);
+    ASSERT_EQ(dataMgr->tempBundleInfos_.count(BUNDLE_NAME), 1u);
+    EXPECT_EQ(dataMgr->tempBundleInfos_[BUNDLE_NAME].GetDeviceModeDistributionPolicy(),
+        DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE);
+    EXPECT_EQ(dataMgr->tempBundleInfos_[BUNDLE_NAME].GetAppSandboxPolicy(), AppSandboxPolicy::ISOLATED_SANDBOX);
+}
+
+HWTEST_F(BmsDualModeInstallTest, ProcessUpdateDualPolicy_NotUpdatedPrimaryKeepsInBundleInfos_0500,
+    Function | SmallTest | Level0)
+{
+    // App not updated + primary mode: the current side is refreshed in place (UpdateBundleInfoPolicy
+    // reports false because no temp copy exists, but the main-side update is already persisted) and
+    // no move happens outside secondary mode.
+    EnablePrimaryMode();
+    auto dataMgr = InstallOtaTestDataMgr();
+    auto dataStorage = std::make_shared<MockBundleDataStorage>();
+    dataMgr->dataStorage_ = dataStorage;
+    dataMgr->bundleInfos_[BUNDLE_NAME] = MakePolicyTargetInfo();
+
+    BMSEventHandler handler;
+    handler.ProcessUpdateDualPolicy(MakeDiffPackageInfo(), BUNDLE_NAME);
+    ASSERT_EQ(dataStorage->savedBundleNames.size(), 1u);  // main side saved; temp side absent
+    ASSERT_EQ(dataMgr->bundleInfos_.count(BUNDLE_NAME), 1u);
+    EXPECT_EQ(dataMgr->bundleInfos_[BUNDLE_NAME].GetDeviceModeDistributionPolicy(),
+        DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE);
+    EXPECT_EQ(dataMgr->bundleInfos_[BUNDLE_NAME].GetAppSandboxPolicy(), AppSandboxPolicy::ISOLATED_SANDBOX);
+    EXPECT_EQ(dataMgr->tempBundleInfos_.count(BUNDLE_NAME), 0u);
 }
 
 // ====================== InnerBundleInfo::UpdateBaseBundleInfo dual-mode fields ======================

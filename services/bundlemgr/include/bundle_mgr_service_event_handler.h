@@ -860,6 +860,8 @@ private:
     // different packages bundle need to be installed separately under the sub‑mode,
     // main mode bundle info should switch to tempBundleInfos_ accordingly.
     void ProcessUpdateDualPolicy(const DualModePackageInfo &pkgInfo, const std::string &bundleName);
+
+    bool CheckDualModeCrossInstall(bool isDualCloneApp, DeviceModeDistributionPolicy policy);
     
     // Used to mark Whether trigger OTA check
     bool needRebootOta_ = false;

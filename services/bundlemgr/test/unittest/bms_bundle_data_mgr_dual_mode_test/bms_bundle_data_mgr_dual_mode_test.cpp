@@ -246,5 +246,99 @@ HWTEST_F(BmsBundleDataMgrDualModeTest, GetBundleInfoDualMode_0600, Function | Sm
     EXPECT_EQ(ret, ERR_OK) << "ANY_USERID should return ERR_OK";
     EXPECT_EQ(dualModeBundleInfo.appIndex, TEST_APP_INDEX) << "appIndex should match";
 }
+
+// Build a fresh InnerBundleInfo whose dual-mode fields are still at the defaults, so a policy
+// refresh is observable. Used to seed tempBundleInfos_ (AddInnerBundleInfo only writes bundleInfos_).
+static InnerBundleInfo MakeDefaultPolicyInfo(const std::string &bundleName)
+{
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo appInfo;
+    appInfo.bundleName = bundleName;
+    innerBundleInfo.SetBaseApplicationInfo(appInfo);
+    BundleInfo bundleInfo;
+    bundleInfo.name = bundleName;
+    bundleInfo.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNSPECIFIED;
+    bundleInfo.appSandboxPolicy = AppSandboxPolicy::SHARED_SANDBOX;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    return innerBundleInfo;
+}
+
+/**
+ * @tc.number: UpdateBundleInfoPolicyDualMode_0100
+ * @tc.name: test UpdateBundleInfoPolicy with empty bundle name
+ * @tc.desc: 1. Call UpdateBundleInfoPolicy with an empty bundle name
+ *           2. Function should return false
+ */
+HWTEST_F(BmsBundleDataMgrDualModeTest, UpdateBundleInfoPolicyDualMode_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    EXPECT_FALSE(dataMgr->UpdateBundleInfoPolicy("",
+        DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE, AppSandboxPolicy::ISOLATED_SANDBOX));
+}
+
+/**
+ * @tc.number: UpdateBundleInfoPolicyDualMode_0200
+ * @tc.name: test UpdateBundleInfoPolicy when bundle does not exist
+ * @tc.desc: 1. Keep bundleInfos_ empty
+ *           2. Call UpdateBundleInfoPolicy for a missing bundle
+ *           3. Function should return false
+ */
+HWTEST_F(BmsBundleDataMgrDualModeTest, UpdateBundleInfoPolicyDualMode_0200, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    EXPECT_FALSE(dataMgr->UpdateBundleInfoPolicy(TEST_BUNDLE_NAME,
+        DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE, AppSandboxPolicy::ISOLATED_SANDBOX));
+}
+
+/**
+ * @tc.number: UpdateBundleInfoPolicyDualMode_0300
+ * @tc.name: test UpdateBundleInfoPolicy when only the current side exists
+ * @tc.desc: 1. Add the bundle to bundleInfos_ only (no tempBundleInfos_ copy)
+ *           2. Call UpdateBundleInfoPolicy
+ *           3. Function should return false because the temp side is missing (single-side state
+ *              fails the both-side sync contract), but the main-side fields must still be refreshed
+ */
+HWTEST_F(BmsBundleDataMgrDualModeTest, UpdateBundleInfoPolicyDualMode_0300, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    AddInnerBundleInfo(TEST_BUNDLE_NAME);
+
+    EXPECT_FALSE(dataMgr->UpdateBundleInfoPolicy(TEST_BUNDLE_NAME,
+        DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE, AppSandboxPolicy::ISOLATED_SANDBOX));
+    EXPECT_EQ(dataMgr->bundleInfos_[TEST_BUNDLE_NAME].GetDeviceModeDistributionPolicy(),
+        DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE);
+    EXPECT_EQ(dataMgr->bundleInfos_[TEST_BUNDLE_NAME].GetAppSandboxPolicy(), AppSandboxPolicy::ISOLATED_SANDBOX);
+}
+
+/**
+ * @tc.number: UpdateBundleInfoPolicyDualMode_0400
+ * @tc.name: test UpdateBundleInfoPolicy with both sides present
+ * @tc.desc: 1. Add the bundle to bundleInfos_ and tempBundleInfos_ (dual-mode both-side state)
+ *           2. Call UpdateBundleInfoPolicy
+ *           3. Function should return true and refresh policy/sandbox on BOTH sides
+ */
+HWTEST_F(BmsBundleDataMgrDualModeTest, UpdateBundleInfoPolicyDualMode_0400, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    AddInnerBundleInfo(TEST_BUNDLE_NAME);
+    dataMgr->tempBundleInfos_[TEST_BUNDLE_NAME] = MakeDefaultPolicyInfo(TEST_BUNDLE_NAME);
+
+    EXPECT_TRUE(dataMgr->UpdateBundleInfoPolicy(TEST_BUNDLE_NAME,
+        DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE, AppSandboxPolicy::ISOLATED_SANDBOX));
+    EXPECT_EQ(dataMgr->bundleInfos_[TEST_BUNDLE_NAME].GetDeviceModeDistributionPolicy(),
+        DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE);
+    EXPECT_EQ(dataMgr->bundleInfos_[TEST_BUNDLE_NAME].GetAppSandboxPolicy(), AppSandboxPolicy::ISOLATED_SANDBOX);
+    EXPECT_EQ(dataMgr->tempBundleInfos_[TEST_BUNDLE_NAME].GetDeviceModeDistributionPolicy(),
+        DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE);
+    EXPECT_EQ(dataMgr->tempBundleInfos_[TEST_BUNDLE_NAME].GetAppSandboxPolicy(), AppSandboxPolicy::ISOLATED_SANDBOX);
+
+    dataMgr->tempBundleInfos_.clear();
+}
 }
 }

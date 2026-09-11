@@ -5927,11 +5927,6 @@ bool BaseBundleInstaller::ShouldUseDualModeCloneName(const InstallParam &install
     if (dualModeInstallRole_ == DualModeInstallRole::PRIMARY) {
         return false;
     }
-    // role=NONE: preset primary variant keeps the original name; normal install follows
-    // NeedDualModeHandle (secondary + different-package -> clone name).
-    if (installParam.isPreInstallApp) {
-        return false;
-    }
     return DualModeHelper::NeedDualModeHandle(GetEffectiveDualModePolicy(installParam));
 }
 
