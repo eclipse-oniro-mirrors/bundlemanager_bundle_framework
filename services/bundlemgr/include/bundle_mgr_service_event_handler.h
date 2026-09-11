@@ -306,6 +306,18 @@ private:
         int32_t userId, const std::string &userDataDir, const std::string &userDataBundleName,
         std::map<std::string, std::vector<InnerBundleUserInfo>> &userMaps);
     /**
+     * @brief Analyze clone user data dir (+clone-{appIndex}+{bundleName}) and merge the
+     *        recovered InnerBundleCloneInfo into the main app's user record.
+     * @param userId Indicates the userId.
+     * @param userDataDir Indicates the userDataDir.
+     * @param userDataBundleName Indicates the clone dir name.
+     * @param userMaps Indicates the userMaps to save userInfo.
+     * @return Returns true if analyze infos successfully; returns false otherwise.
+     */
+    bool AnalyzeCloneUserData(
+        int32_t userId, const std::string &userDataDir, const std::string &userDataBundleName,
+        std::map<std::string, std::vector<InnerBundleUserInfo>> &userMaps);
+    /**
      * @brief ReInstall all Apps from installDir.
      * @return Returns the ResultCode indicates the result of this action.
      */

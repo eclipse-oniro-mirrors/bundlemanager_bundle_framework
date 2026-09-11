@@ -994,6 +994,163 @@ HWTEST_F(BmsEventHandlerUnLockedTest, AnalyzeUserData_0200, Function | SmallTest
 }
 
 /**
+ * @tc.number: AnalyzeUserData_0300
+ * @tc.name: AnalyzeUserData recovers clone user info
+ * @tc.desc: A "+clone-{appIndex}+{bundleName}" data dir is parsed and the clone
+ *           InnerBundleCloneInfo is merged into the main app's user record, so
+ *           clone info is no longer lost when the BMS RDB is deleted/rebuilt.
+ */
+HWTEST_F(BmsEventHandlerUnLockedTest, AnalyzeUserData_0300, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    int32_t userId = 100;
+    std::string userDataDir = "/test/userData/100/";
+    std::string cloneDir = std::string("+clone-1+com.example.app");
+    std::map<std::string, std::vector<InnerBundleUserInfo>> userMaps;
+
+    // clone dir scanned first: creates a placeholder user record holding the clone info
+    SetErrCodeForTest(ERR_OK);
+    SetIsDirForTest(true);
+    AccessToken::SetAccessTokenIDForTest(1);
+    bool ret = handler->AnalyzeUserData(userId, userDataDir, cloneDir, userMaps);
+    EXPECT_TRUE(ret);
+    ASSERT_FALSE(userMaps.empty());
+    auto it = userMaps.find("com.example.app");
+    ASSERT_NE(it, userMaps.end());
+    ASSERT_EQ(it->second.size(), 1u);
+    EXPECT_EQ(it->second[0].bundleName, "com.example.app");
+    ASSERT_EQ(it->second[0].cloneInfos.size(), 1u);
+    auto cloneIt = it->second[0].cloneInfos.find("1");
+    ASSERT_NE(cloneIt, it->second[0].cloneInfos.end());
+    EXPECT_EQ(cloneIt->second.appIndex, 1);
+    EXPECT_EQ(cloneIt->second.userId, userId);
+    EXPECT_EQ(cloneIt->second.uid, -1);
+    EXPECT_EQ(cloneIt->second.accessTokenId, 1u);
+    ASSERT_EQ(cloneIt->second.gids.size(), 1u);
+    EXPECT_EQ(cloneIt->second.gids[0], -1);
+    EXPECT_EQ(cloneIt->second.installTime, -1);
+
+    // main app dir scanned next: merges main-app fields, keeps cloneInfos intact
+    std::string mainDir = "com.example.app";
+    ret = handler->AnalyzeUserData(userId, userDataDir, mainDir, userMaps);
+    EXPECT_TRUE(ret);
+    ASSERT_EQ(it->second.size(), 1u); // no duplicate entry
+    EXPECT_EQ(it->second[0].accessTokenId, 1u);
+    ASSERT_EQ(it->second[0].cloneInfos.size(), 1u);
+    ASSERT_NE(it->second[0].cloneInfos.find("1"), it->second[0].cloneInfos.end());
+
+    AccessToken::SetAccessTokenIDForTest(0);
+}
+
+/**
+ * @tc.number: AnalyzeUserData_0400
+ * @tc.name: AnalyzeUserData skips out-of-range clone dirs
+ * @tc.desc: CLI sandbox (appIndex 2000) and dual-mode (appIndex 10000) clone dirs
+ *           are not recovered by the app-clone path; returns false so they are
+ *           skipped instead of being mis-parsed as the main app.
+ */
+HWTEST_F(BmsEventHandlerUnLockedTest, AnalyzeUserData_0400, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    std::map<std::string, std::vector<InnerBundleUserInfo>> userMaps;
+    SetErrCodeForTest(ERR_OK);
+    SetIsDirForTest(true);
+    AccessToken::SetAccessTokenIDForTest(1);
+    EXPECT_FALSE(handler->AnalyzeUserData(100, "/test/", "+clone-2000+com.example.app", userMaps));
+    EXPECT_FALSE(handler->AnalyzeUserData(100, "/test/", "+clone-10000+com.example.app", userMaps));
+    EXPECT_TRUE(userMaps.empty());
+    AccessToken::SetAccessTokenIDForTest(0);
+}
+
+/**
+ * @tc.number: AnalyzeUserData_0500
+ * @tc.name: AnalyzeUserData clone then different user does not merge
+ * @tc.desc: A clone for user 100 and main for user 101 coexist as separate entries;
+ *           the merge only targets the matching userId.
+ */
+HWTEST_F(BmsEventHandlerUnLockedTest, AnalyzeUserData_0500, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    std::string userDataDir = "/test/userData/";
+    std::map<std::string, std::vector<InnerBundleUserInfo>> userMaps;
+    SetErrCodeForTest(ERR_OK);
+    SetIsDirForTest(true);
+    AccessToken::SetAccessTokenIDForTest(1);
+    EXPECT_TRUE(handler->AnalyzeUserData(100, userDataDir, "+clone-1+com.example.app", userMaps));
+    EXPECT_TRUE(handler->AnalyzeUserData(101, userDataDir, "com.example.app", userMaps));
+    auto it = userMaps.find("com.example.app");
+    ASSERT_NE(it, userMaps.end());
+    ASSERT_EQ(it->second.size(), 2u); // two different users
+    AccessToken::SetAccessTokenIDForTest(0);
+}
+
+/**
+ * @tc.number: AnalyzeUserData_0600
+ * @tc.name: AnalyzeUserData recovers clone info (main app first)
+ * @tc.desc: The main app dir is scanned before the clone dir; the clone
+ *           InnerBundleCloneInfo is merged into the already-created main app
+ *           user record, covering the reverse merge order of AnalyzeUserData_0300.
+ */
+HWTEST_F(BmsEventHandlerUnLockedTest, AnalyzeUserData_0600, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    int32_t userId = 100;
+    std::string userDataDir = "/test/userData/100/";
+    std::map<std::string, std::vector<InnerBundleUserInfo>> userMaps;
+
+    // main app dir scanned first: creates the user record with main-app fields
+    SetErrCodeForTest(ERR_OK);
+    SetIsDirForTest(true);
+    AccessToken::SetAccessTokenIDForTest(1);
+    std::string mainDir = "com.example.app";
+    bool ret = handler->AnalyzeUserData(userId, userDataDir, mainDir, userMaps);
+    EXPECT_TRUE(ret);
+    auto it = userMaps.find("com.example.app");
+    ASSERT_NE(it, userMaps.end());
+    ASSERT_EQ(it->second.size(), 1u);
+    EXPECT_EQ(it->second[0].bundleName, "com.example.app");
+    EXPECT_EQ(it->second[0].accessTokenId, 1u);
+    ASSERT_EQ(it->second[0].cloneInfos.size(), 0u);
+
+    // clone dir scanned next: merges cloneInfos into the existing entry
+    std::string cloneDir = std::string("+clone-1+com.example.app");
+    ret = handler->AnalyzeUserData(userId, userDataDir, cloneDir, userMaps);
+    EXPECT_TRUE(ret);
+    ASSERT_EQ(it->second.size(), 1u); // no duplicate entry
+    EXPECT_EQ(it->second[0].accessTokenId, 1u); // main-app fields preserved
+    ASSERT_EQ(it->second[0].cloneInfos.size(), 1u);
+    auto cloneIt = it->second[0].cloneInfos.find("1");
+    ASSERT_NE(cloneIt, it->second[0].cloneInfos.end());
+    EXPECT_EQ(cloneIt->second.appIndex, 1);
+
+    AccessToken::SetAccessTokenIDForTest(0);
+}
+
+/**
+ * @tc.number: AnalyzeUserData_0700
+ * @tc.name: AnalyzeUserData rejects malformed clone dir (empty bundleName)
+ * @tc.desc: A "+clone-1+" dir (no bundleName after the trailing plus) is
+ *           rejected by AnalyzeCloneUserData's empty-bundleName guard; returns
+ *           false and no entry is inserted into userMaps.
+ */
+HWTEST_F(BmsEventHandlerUnLockedTest, AnalyzeUserData_0700, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    std::map<std::string, std::vector<InnerBundleUserInfo>> userMaps;
+    SetErrCodeForTest(ERR_OK);
+    SetIsDirForTest(true);
+    AccessToken::SetAccessTokenIDForTest(1);
+    EXPECT_FALSE(handler->AnalyzeUserData(100, "/test/", "+clone-1+", userMaps));
+    EXPECT_TRUE(userMaps.empty());
+    AccessToken::SetAccessTokenIDForTest(0);
+}
+
+/**
  * @tc.number: GuardAgainstInstallInfosLossedStrategy_0100
  * @tc.name: GuardAgainstInstallInfosLossedStrategy no user data
  * @tc.desc: No user data scanned → returns NO_INSTALLED_DATA
