@@ -29,6 +29,7 @@
 #include "napi_arg.h"
 #include "napi_common_start_options.h"
 #include "napi_constants.h"
+#include "shortcut_info.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -457,15 +458,7 @@ static ErrCode InnerStartShortcut(const OHOS::AppExecFwk::ShortcutInfo &shortcut
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     AAFwk::Want want;
-    ElementName element;
-    element.SetBundleName(shortcutInfo.intents[0].targetBundle);
-    element.SetModuleName(shortcutInfo.intents[0].targetModule);
-    element.SetAbilityName(shortcutInfo.intents[0].targetClass);
-    want.SetElement(element);
-    for (const auto &item : shortcutInfo.intents[0].parameters) {
-        want.SetParam(item.first, item.second);
-    }
-    want.SetParam(AAFwk::Want::PARAM_APP_CLONE_INDEX_KEY, shortcutInfo.appIndex);
+    BuildShortcutWant(shortcutInfo, want);
     auto res = AAFwk::AbilityManagerClient::GetInstance()->StartShortcut(want, startOptions);
     auto it = START_SHORTCUT_RES_MAP.find(res);
     if (it == START_SHORTCUT_RES_MAP.end()) {
@@ -559,16 +552,8 @@ static ErrCode InnerStartShortcutWithReason(const OHOS::AppExecFwk::ShortcutInfo
         return ERR_BUNDLE_MANAGER_START_SHORTCUT_FAILED;
     }
     AAFwk::Want want;
-    ElementName element;
-    element.SetBundleName(shortcutInfo.intents[0].targetBundle);
-    element.SetModuleName(shortcutInfo.intents[0].targetModule);
-    element.SetAbilityName(shortcutInfo.intents[0].targetClass);
-    want.SetElement(element);
-    for (const auto &item : shortcutInfo.intents[0].parameters) {
-        want.SetParam(item.first, item.second);
-    }
+    BuildShortcutWant(shortcutInfo, want);
     want.SetParam(AAFwk::Want::PARM_LAUNCH_REASON_MESSAGE, startReason);
-    want.SetParam(AAFwk::Want::PARAM_APP_CLONE_INDEX_KEY, shortcutInfo.appIndex);
     auto res = AAFwk::AbilityManagerClient::GetInstance()->StartShortcut(want, startOptions);
     APP_LOGI_NOFUNC("call AbilityManagerClient StartShortcut result : %{public}d", res);
     auto it = START_SHORTCUT_RES_MAP.find(res);

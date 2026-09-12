@@ -151,6 +151,8 @@ constexpr const char* PROPERTYNAME_SHARED_BUNDLE_DIR_PATHS = "sharedBundleDirPat
 constexpr const char* PROPERTYNAME_ADDITIONAL_INFO = "additionalInfo";
 constexpr const char* PROPERTYNAME_VISIBLE = "visible";
 constexpr const char* PROPERTYNAME_ACTION = "action";
+constexpr const char* PROPERTYNAME_URI = "uri";
+constexpr const char* PROPERTYNAME_FLAGS = "flags";
 
 constexpr const char* PATH_PREFIX = "/data/app/el1/bundle/public";
 constexpr const char* CODE_PATH_PREFIX = "/data/storage/el1/bundle/";
@@ -2216,17 +2218,41 @@ ani_object CommonFunAni::ConvertShortcutIntent(ani_env* env, const ShortcutInten
     ani_object parameters = ConvertAniArray(env, shortcutIntent.parameters, ConvertShortcutIntentParameter);
     RETURN_NULL_IF_NULL(parameters);
 
+    // action?: string
+    ani_ref action = refUndefined;
+    ani_string actionString = nullptr;
+    if (StringToAniStr(env, shortcutIntent.action, actionString)) {
+        action = actionString;
+    }
+
+    // uri?: string
+    ani_ref uri = refUndefined;
+    ani_string uriString = nullptr;
+    if (StringToAniStr(env, shortcutIntent.uri, uriString)) {
+        uri = uriString;
+    }
+
+    // flags?: int (boxed: optional primitive parameter in the ets constructor)
+    ani_object flags = BoxValue(env, static_cast<ani_int>(shortcutIntent.flags));
+    RETURN_NULL_IF_NULL(flags);
+
     ani_value args[] = {
         { .r = targetBundle },
         { .r = targetAbility },
         { .r = targetModule },
         { .r = parameters },
+        { .r = action },
+        { .r = uri },
+        { .r = flags },
     };
     static const std::string ctorSig = SignatureBuilder()
         .AddClass(CommonFunAniNS::CLASSNAME_STRING) // targetBundle: string
         .AddClass(CommonFunAniNS::CLASSNAME_STRING) // targetAbility: string
         .AddClass(CommonFunAniNS::CLASSNAME_STRING) // targetModule?: string
         .AddClass(CommonFunAniNS::CLASSNAME_ARRAY)  // parameters?: Array<ParameterItem>
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // action?: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // uri?: string
+        .AddClass(CommonFunAniNS::CLASSNAME_INT)    // flags?: int
         .BuildSignatureDescriptor();
     return CreateNewObjectByClassV2(env, CLASSNAME_SHORTCUT_WANT_INNER, ctorSig, args);
 }
@@ -2930,6 +2956,22 @@ bool CommonFunAni::ParseShortcutIntent(ani_env* env, ani_object object, Shortcut
         for (const auto& parameter : parameters) {
             shortcutIntent.parameters[parameter.first] = parameter.second;
         }
+    }
+
+    // action?: string
+    if (CallGetterOptional(env, object, PROPERTYNAME_ACTION, &string)) {
+        shortcutIntent.action = AniStrToString(env, string);
+    }
+
+    // uri?: string
+    if (CallGetterOptional(env, object, PROPERTYNAME_URI, &string)) {
+        shortcutIntent.uri = AniStrToString(env, string);
+    }
+
+    // flags?: int
+    ani_int intValue = 0;
+    if (CallGetterOptional(env, object, PROPERTYNAME_FLAGS, &intValue)) {
+        shortcutIntent.flags = static_cast<uint32_t>(intValue);
     }
 
     return true;

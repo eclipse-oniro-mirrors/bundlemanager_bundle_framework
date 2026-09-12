@@ -33,6 +33,9 @@ export interface ShortcutWant {
     targetModule?: string;
     targetAbility: string;
     parameters?: Array<ParameterItem>;
+    action?: string;
+    uri?: string;
+    flags?: int;
 }
 
 export interface ParameterItem {
@@ -87,16 +90,25 @@ class ShortcutWantInner implements ShortcutWant {
     targetModule?: string | undefined;
     targetAbility: string = "";
     parameters?: Array<ParameterItem> | undefined;
+    action?: string | undefined;
+    uri?: string | undefined;
+    flags?: int | undefined;
 
     constructor() { }
     constructor(targetBundle: string,
         targetAbility: string,
         targetModule?: string,
-        parameters?: Array<ParameterItem>) {
+        parameters?: Array<ParameterItem>,
+        action?: string,
+        uri?: string,
+        flags?: int) {
             this.targetBundle = targetBundle;
             this.targetAbility = targetAbility;
             this.targetModule = targetModule;
             this.parameters = parameters;
+            this.action = action;
+            this.uri = uri;
+            this.flags = flags;
     }
 }
 

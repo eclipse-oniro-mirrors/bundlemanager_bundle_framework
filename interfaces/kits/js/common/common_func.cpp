@@ -2532,6 +2532,21 @@ void CommonFunc::ConvertShortcutIntent(napi_env env,
     NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nParameters));
     ConvertParameters(env, shortcutIntent.parameters, nParameters);
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "parameters", nParameters));
+
+    napi_value nAction;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, shortcutIntent.action.c_str(), NAPI_AUTO_LENGTH, &nAction));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "action", nAction));
+
+    napi_value nUri;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, shortcutIntent.uri.c_str(), NAPI_AUTO_LENGTH, &nUri));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "uri", nUri));
+
+    napi_value nFlags;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
+        static_cast<int32_t>(shortcutIntent.flags), &nFlags));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "flags", nFlags));
 }
 
 void CommonFunc::ConvertParameters(napi_env env,
@@ -2934,6 +2949,30 @@ bool CommonFunc::ParseShortcutWant(napi_env env, napi_value param, ShortcutInten
         parameters.clear();
     }
     shortcutIntent.parameters = parameters;
+
+    // parse action
+    napi_get_named_property(env, param, "action", &prop);
+    std::string action;
+    if (!ParseString(env, prop, action)) {
+        action = "";
+    }
+    shortcutIntent.action = action;
+
+    // parse uri
+    napi_get_named_property(env, param, "uri", &prop);
+    std::string uri;
+    if (!ParseString(env, prop, uri)) {
+        uri = "";
+    }
+    shortcutIntent.uri = uri;
+
+    // parse flags
+    napi_get_named_property(env, param, "flags", &prop);
+    int32_t flags = 0;
+    if (!ParseInt(env, prop, flags)) {
+        flags = 0;
+    }
+    shortcutIntent.flags = static_cast<uint32_t>(flags);
     return true;
 }
 

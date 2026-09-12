@@ -3370,6 +3370,233 @@ HWTEST_F(BmsBundleKitServiceTest, ShortcutInfoBranchCover_0010, Function | Small
 }
 
 /**
+ * @tc.number: ShortcutInfoBranchCover_0011
+ * @tc.name: shortcutInfo Marshalling and Unmarshalling round-trip with implicit want fields
+ * @tc.desc: 1.Test action/uri/flags parcel round-trip
+ */
+HWTEST_F(BmsBundleKitServiceTest, ShortcutInfoBranchCover_0011, Function | SmallTest | Level1)
+{
+    ShortcutInfo shortcutInfo = MockShortcutInfo(BUNDLE_NAME_DEMO, SHORTCUT_TEST_ID);
+    ShortcutIntent fullIntent;
+    fullIntent.targetBundle = SHORTCUT_INTENTS_TARGET_BUNDLE;
+    fullIntent.targetModule = SHORTCUT_INTENTS_TARGET_MODULE;
+    fullIntent.targetClass = SHORTCUT_INTENTS_TARGET_CLASS;
+    fullIntent.parameters = {{"demoKey", "demoValue"}};
+    fullIntent.action = "ohos.want.action.viewData";
+    fullIntent.uri = "https://www.example.com/path";
+    fullIntent.flags = 4;
+    ShortcutIntent oldIntent = MockShortcutIntent();
+    shortcutInfo.intents.clear();
+    shortcutInfo.intents.push_back(fullIntent);
+    shortcutInfo.intents.push_back(oldIntent);
+    Parcel parcel;
+    auto ret1 = shortcutInfo.Marshalling(parcel);
+    EXPECT_EQ(ret1, true);
+    auto ret2 = ShortcutInfo::Unmarshalling(parcel);
+    ASSERT_NE(ret2, nullptr);
+    EXPECT_EQ(ret2->intents.size(), 2);
+    if (ret2->intents.size() == 2) {
+        EXPECT_EQ(ret2->intents[0].action, "ohos.want.action.viewData");
+        EXPECT_EQ(ret2->intents[0].uri, "https://www.example.com/path");
+        EXPECT_EQ(ret2->intents[0].flags, 4);
+        EXPECT_EQ(ret2->intents[0].parameters["demoKey"], "demoValue");
+        EXPECT_EQ(ret2->intents[0].targetBundle, SHORTCUT_INTENTS_TARGET_BUNDLE);
+        EXPECT_EQ(ret2->intents[0].targetModule, SHORTCUT_INTENTS_TARGET_MODULE);
+        EXPECT_EQ(ret2->intents[0].targetClass, SHORTCUT_INTENTS_TARGET_CLASS);
+        EXPECT_EQ(ret2->intents[1].action, "");
+        EXPECT_EQ(ret2->intents[1].uri, "");
+        EXPECT_EQ(ret2->intents[1].flags, 0);
+    }
+    EXPECT_EQ(ret2->id, SHORTCUT_TEST_ID);
+    EXPECT_EQ(ret2->bundleName, BUNDLE_NAME_DEMO);
+    delete ret2;
+
+    ShortcutIntent maxFlagIntent = MockShortcutIntent();
+    maxFlagIntent.flags = 0xFFFFFFFF; // flags upper bound, e.g. wrapped from negative json value
+    shortcutInfo.intents.clear();
+    shortcutInfo.intents.push_back(maxFlagIntent);
+    Parcel maxFlagParcel;
+    EXPECT_EQ(shortcutInfo.Marshalling(maxFlagParcel), true);
+    auto maxFlagResult = ShortcutInfo::Unmarshalling(maxFlagParcel);
+    ASSERT_NE(maxFlagResult, nullptr);
+    EXPECT_EQ(maxFlagResult->intents.size(), 1);
+    if (maxFlagResult->intents.size() == 1) {
+        EXPECT_EQ(maxFlagResult->intents[0].flags, 0xFFFFFFFFu);
+    }
+    delete maxFlagResult;
+}
+
+/**
+ * @tc.number: ShortcutInfoBranchCover_0012
+ * @tc.name: shortcutIntent to_json and from_json round-trip with implicit want fields
+ * @tc.desc: 1.Test action/uri/flags json round-trip and old record compatibility
+ */
+HWTEST_F(BmsBundleKitServiceTest, ShortcutInfoBranchCover_0012, Function | SmallTest | Level1)
+{
+    ShortcutIntent shortcutIntent = MockShortcutIntent();
+    shortcutIntent.action = "ohos.want.action.viewData";
+    shortcutIntent.uri = "https://www.example.com/path";
+    shortcutIntent.flags = 4;
+    nlohmann::json jsonObj;
+    to_json(jsonObj, shortcutIntent);
+    ShortcutIntent result;
+    from_json(jsonObj, result);
+    EXPECT_EQ(result.targetBundle, SHORTCUT_INTENTS_TARGET_BUNDLE);
+    EXPECT_EQ(result.targetModule, SHORTCUT_INTENTS_TARGET_MODULE);
+    EXPECT_EQ(result.targetClass, SHORTCUT_INTENTS_TARGET_CLASS);
+    EXPECT_EQ(result.action, "ohos.want.action.viewData");
+    EXPECT_EQ(result.uri, "https://www.example.com/path");
+    EXPECT_EQ(result.flags, 4);
+
+    nlohmann::json oldJsonObj;
+    oldJsonObj["targetBundle"] = SHORTCUT_INTENTS_TARGET_BUNDLE;
+    oldJsonObj["targetModule"] = SHORTCUT_INTENTS_TARGET_MODULE;
+    oldJsonObj["targetClass"] = SHORTCUT_INTENTS_TARGET_CLASS;
+    ShortcutIntent oldResult;
+    from_json(oldJsonObj, oldResult);
+    EXPECT_EQ(oldResult.targetBundle, SHORTCUT_INTENTS_TARGET_BUNDLE);
+    EXPECT_EQ(oldResult.action, "");
+    EXPECT_EQ(oldResult.uri, "");
+    EXPECT_EQ(oldResult.flags, 0);
+
+    ShortcutIntent maxFlagIntent = MockShortcutIntent();
+    maxFlagIntent.flags = 0xFFFFFFFF; // flags upper bound, e.g. wrapped from negative json value
+    nlohmann::json maxFlagJson;
+    to_json(maxFlagJson, maxFlagIntent);
+    ShortcutIntent maxFlagResult;
+    from_json(maxFlagJson, maxFlagResult);
+    EXPECT_EQ(maxFlagResult.flags, 0xFFFFFFFFu);
+
+    nlohmann::json typeErrJson;
+    typeErrJson["targetBundle"] = SHORTCUT_INTENTS_TARGET_BUNDLE;
+    typeErrJson["action"] = 123; // number instead of string
+    typeErrJson["uri"] = 456; // number instead of string
+    typeErrJson["flags"] = "not-a-number"; // string instead of number
+    ShortcutIntent typeErrResult;
+    from_json(typeErrJson, typeErrResult);
+    EXPECT_EQ(typeErrResult.targetBundle, SHORTCUT_INTENTS_TARGET_BUNDLE);
+    EXPECT_EQ(typeErrResult.action, "");
+    EXPECT_EQ(typeErrResult.uri, "");
+    EXPECT_EQ(typeErrResult.flags, 0);
+}
+
+/**
+ * @tc.number: ShortcutInfoBranchCover_0013
+ * @tc.name: BuildShortcutWant with empty intents
+ * @tc.desc: 1.Test empty intents defense keeps want in default state
+ */
+HWTEST_F(BmsBundleKitServiceTest, ShortcutInfoBranchCover_0013, Function | SmallTest | Level1)
+{
+    ShortcutInfo shortcutInfo = MockShortcutInfo(BUNDLE_NAME_DEMO, SHORTCUT_TEST_ID);
+    shortcutInfo.intents.clear();
+    AAFwk::Want want;
+    BuildShortcutWant(shortcutInfo, want);
+    EXPECT_EQ(want.GetAction(), "");
+    EXPECT_EQ(want.GetUriString(), "");
+    EXPECT_EQ(want.GetElement().GetBundleName(), "");
+    EXPECT_EQ(want.GetElement().GetModuleName(), "");
+    EXPECT_EQ(want.GetElement().GetAbilityName(), "");
+}
+
+/**
+ * @tc.number: ShortcutInfoBranchCover_0014
+ * @tc.name: BuildShortcutWant with implicit want intent
+ * @tc.desc: 1.Test implicit intent builds want without bundle/ability in element
+ */
+HWTEST_F(BmsBundleKitServiceTest, ShortcutInfoBranchCover_0014, Function | SmallTest | Level1)
+{
+    ShortcutInfo shortcutInfo = MockShortcutInfo(BUNDLE_NAME_DEMO, SHORTCUT_TEST_ID);
+    ShortcutIntent implicitIntent;
+    implicitIntent.targetModule = SHORTCUT_INTENTS_TARGET_MODULE;
+    implicitIntent.action = "ohos.want.action.viewData";
+    implicitIntent.uri = "https://www.example.com/path";
+    implicitIntent.flags = 4;
+    implicitIntent.parameters = {{"demoKey", "demoValue"}};
+    shortcutInfo.appIndex = 1;
+    shortcutInfo.intents.clear();
+    shortcutInfo.intents.push_back(implicitIntent);
+    AAFwk::Want want;
+    BuildShortcutWant(shortcutInfo, want);
+    EXPECT_EQ(want.GetAction(), "ohos.want.action.viewData");
+    EXPECT_EQ(want.GetUriString(), "https://www.example.com/path");
+    EXPECT_EQ(want.GetFlags(), 4u);
+    EXPECT_EQ(want.GetElement().GetBundleName(), "");
+    EXPECT_EQ(want.GetElement().GetAbilityName(), "");
+    EXPECT_EQ(want.GetElement().GetModuleName(), SHORTCUT_INTENTS_TARGET_MODULE);
+    EXPECT_EQ(want.GetStringParam("demoKey"), "demoValue");
+    EXPECT_EQ(want.GetIntParam(AAFwk::Want::PARAM_APP_CLONE_INDEX_KEY, -1), 1);
+}
+
+/**
+ * @tc.number: ShortcutInfoBranchCover_0015
+ * @tc.name: BuildShortcutWant with explicit want intent
+ * @tc.desc: 1.Test explicit intent builds want with full element and attached fields
+ */
+HWTEST_F(BmsBundleKitServiceTest, ShortcutInfoBranchCover_0015, Function | SmallTest | Level1)
+{
+    ShortcutInfo shortcutInfo = MockShortcutInfo(BUNDLE_NAME_DEMO, SHORTCUT_TEST_ID);
+    shortcutInfo.intents[0].action = "ohos.want.action.viewData";
+    shortcutInfo.intents[0].uri = "https://www.example.com/path";
+    shortcutInfo.intents[0].flags = 4;
+    AAFwk::Want want;
+    BuildShortcutWant(shortcutInfo, want);
+    EXPECT_EQ(want.GetAction(), "ohos.want.action.viewData");
+    EXPECT_EQ(want.GetUriString(), "https://www.example.com/path");
+    EXPECT_EQ(want.GetFlags(), 4u);
+    EXPECT_EQ(want.GetElement().GetBundleName(), SHORTCUT_INTENTS_TARGET_BUNDLE);
+    EXPECT_EQ(want.GetElement().GetModuleName(), SHORTCUT_INTENTS_TARGET_MODULE);
+    EXPECT_EQ(want.GetElement().GetAbilityName(), SHORTCUT_INTENTS_TARGET_CLASS);
+}
+
+/**
+ * @tc.number: ShortcutInfoBranchCover_0016
+ * @tc.name: BuildShortcutWant injects non-zero flags and skips zero flags
+ * @tc.desc: 1.Test flags are injected only when non-zero; empty action/uri are not injected
+ */
+HWTEST_F(BmsBundleKitServiceTest, ShortcutInfoBranchCover_0016, Function | SmallTest | Level1)
+{
+    ShortcutInfo shortcutInfo = MockShortcutInfo(BUNDLE_NAME_DEMO, SHORTCUT_TEST_ID);
+    constexpr uint32_t newMission = 0x10000000; // FLAG_ABILITY_NEW_MISSION
+    shortcutInfo.intents[0].flags = newMission;
+    AAFwk::Want want;
+    BuildShortcutWant(shortcutInfo, want);
+    EXPECT_EQ(want.GetFlags(), newMission);
+
+    ShortcutInfo zeroFlagInfo = MockShortcutInfo(BUNDLE_NAME_DEMO, SHORTCUT_TEST_ID);
+    // intents[0] keeps default flags 0 and empty action/uri
+    AAFwk::Want wantZeroFlag;
+    BuildShortcutWant(zeroFlagInfo, wantZeroFlag);
+    EXPECT_EQ(wantZeroFlag.GetFlags(), 0u);
+    EXPECT_EQ(wantZeroFlag.GetAction(), "");
+    EXPECT_EQ(wantZeroFlag.GetUriString(), "");
+
+    ShortcutInfo maxFlagInfo = MockShortcutInfo(BUNDLE_NAME_DEMO, SHORTCUT_TEST_ID);
+    constexpr uint32_t allFlags = 0xFFFFFFFF; // flags upper bound, e.g. wrapped from negative json value
+    maxFlagInfo.intents[0].flags = allFlags;
+    AAFwk::Want wantMaxFlag;
+    BuildShortcutWant(maxFlagInfo, wantMaxFlag);
+    EXPECT_EQ(wantMaxFlag.GetFlags(), allFlags);
+}
+
+/**
+ * @tc.number: ShortcutInfoBranchCover_0019
+ * @tc.name: shortcutWant from_json branch cover
+ * @tc.desc: 1.Test static shortcut config parsing with basic fields
+ */
+HWTEST_F(BmsBundleKitServiceTest, ShortcutInfoBranchCover_0019, Function | SmallTest | Level1)
+{
+    nlohmann::json jsonObject;
+    jsonObject["bundleName"] = BUNDLE_NAME_DEMO;
+    jsonObject["moduleName"] = MODULE_NAME_DEMO;
+    jsonObject["abilityName"] = ABILITY_NAME_DEMO;
+    ShortcutWant shortcutWant;
+    from_json(jsonObject, shortcutWant);
+    EXPECT_EQ(shortcutWant.bundleName, BUNDLE_NAME_DEMO);
+    EXPECT_EQ(shortcutWant.moduleName, MODULE_NAME_DEMO);
+    EXPECT_EQ(shortcutWant.abilityName, ABILITY_NAME_DEMO);
+}
+
+/**
  * @tc.number: DBMSBranchCover_0001
  * @tc.name: dbms Marshalling branch cover
  * @tc.desc: 1.Test dbms Marshalling and ReadFromParcel branch cover
@@ -5988,6 +6215,39 @@ HWTEST_F(BmsBundleKitServiceTest, InnerProcessShortcut_0003, Function | SmallTes
     EXPECT_EQ(shortcutInfo.labelId, shortcut.labelId);
     EXPECT_EQ(shortcutInfo.icon, shortcut.icon);
     EXPECT_EQ(shortcutInfo.iconId, shortcut.iconId);
+}
+
+/**
+ * @tc.number: InnerProcessShortcut_0004
+ * @tc.name: test InnerProcessShortcut with implicit want fields
+ * @tc.desc: 1.system run normally
+ *           2.test InnerProcessShortcut transfers action/uri/flags.
+ */
+HWTEST_F(BmsBundleKitServiceTest, InnerProcessShortcut_0004, Function | SmallTest | Level1)
+{
+    Shortcut shortcut;
+    shortcut.shortcutId = "shortcut_id";
+    shortcut.icon = "$media:icon";
+    shortcut.label = "$string:label";
+    ShortcutWant want;
+    want.bundleName = "bundleName";
+    want.abilityName = "ability";
+    shortcut.wants.emplace_back(want);
+    ShortcutWant secondWant;
+    secondWant.bundleName = "bundleName2";
+    secondWant.abilityName = "ability2";
+    shortcut.wants.emplace_back(secondWant);
+
+    ShortcutInfo shortcutInfo;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.InnerProcessShortcut(shortcut, shortcutInfo);
+
+    EXPECT_EQ(shortcutInfo.id, shortcut.shortcutId);
+    ASSERT_EQ(shortcutInfo.intents.size(), 2);
+    EXPECT_EQ(shortcutInfo.intents[0].targetBundle, want.bundleName);
+    EXPECT_EQ(shortcutInfo.intents[0].targetClass, want.abilityName);
+    EXPECT_EQ(shortcutInfo.intents[1].targetBundle, secondWant.bundleName);
+    EXPECT_EQ(shortcutInfo.intents[1].targetClass, secondWant.abilityName);
 }
 
 /**
