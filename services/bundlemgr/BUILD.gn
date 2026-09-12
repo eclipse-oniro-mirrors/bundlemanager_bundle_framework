@@ -259,6 +259,7 @@ ohos_shared_library("libbms_exception_wrapper") {
   }
 
   use_exceptions = true
+  use_rtti = true
 
   sources = [ "src/exception/exception_wrapper.cpp" ]
 
@@ -284,6 +285,8 @@ ohos_shared_library("libbms_exception_wrapper") {
   ]
 
   ldflags = [ "-Wl,--gc-sections" ]
+
+  version_script = "libbms_exception_wrapper.map"
 
   deps = [ "${common_path}:libappexecfwk_common" ]
 
