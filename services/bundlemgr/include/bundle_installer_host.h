@@ -18,6 +18,7 @@
 
 #include <atomic>
 #include <memory>
+#include <mutex>
 #include <shared_mutex>
 #include <string>
 
@@ -30,6 +31,9 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+
+class BundleBackupService;
+
 class BundleInstallerHost : public IRemoteStub<IBundleInstaller> {
 public:
     BundleInstallerHost();
@@ -267,9 +271,17 @@ private:
     void HandleAddEnterpriseResignCert(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleDeleteEnterpriseReSignatureCert(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleGetEnterpriseReSignatureCert(MessageParcel &data, MessageParcel &reply);
+
+    // Lets internal modules (backup/restore) share enterpriseCertMutex_ with the EDM cert
+    // APIs; returns an owned unique_lock. Not an IPC entry, no permission check.
+    friend class BundleBackupService;
+    std::unique_lock<std::shared_mutex> AcquireEnterpriseCertLock();
 private:
     InstallParam CheckInstallParam(const InstallParam &installParam);
     bool CheckInstallDowngradeParam(const InstallParam &installParam);
+    // Erases any caller-supplied skip flag first, then re-marks it only after the caller
+    // holds PERMISSION_SKIP_ENTERPRISE_RESIGN_VERIFY (verified via ATM).
+    void MarkSkipEnterpriseResignVerify(InstallParam &installParam);
     bool IsPermissionValid(const InstallParam &installParam, InstallParam &installParam2);
     bool CheckUninstallDisposedRule(const std::string &bundleName, int32_t userId, int32_t appIndex, bool isKeepData,
         const std::string &modulePackage = "");

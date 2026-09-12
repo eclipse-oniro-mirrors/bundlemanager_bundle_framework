@@ -77,6 +77,14 @@ const char FILE_SEPARATOR_CHAR = '/';
 constexpr const char* CURRENT_DEVICE_ID = "PHONE-001";
 constexpr const char* HAP_COPY_PATH = "/data/service/el1/public/bms/bundle_manager_service";
 constexpr const char* ENTERPRISE_CERT_PATH = "/certificates/enterprise/";
+// backup config json keys (backup_config.conf v2)
+constexpr const char* BACKUP_VERSION_KEY = "version";
+constexpr int32_t BACKUP_FORMAT_VERSION = 2;
+constexpr const char* BACKUP_SHORTCUTS_KEY = "shortcuts";
+constexpr const char* BACKUP_ENTERPRISE_CERTS_KEY = "enterpriseResignCerts";
+constexpr const char* BACKUP_CERT_USER_ID_KEY = "userId";
+constexpr const char* BACKUP_CERT_ALIAS_KEY = "certificateAlias";
+constexpr const char* BACKUP_CERT_CONTENT_KEY = "certificateContent";
 constexpr const char* TMP_SUFFIX = "_tmp";
 constexpr const char* BUNDLE_APP_DATA_BASE_DIR = "/data/app/";
 constexpr const char* BASE = "/base/";
@@ -150,6 +158,8 @@ constexpr const char* PERMISSION_INSTALL_ENTERPRISE_BUNDLE = "ohos.permission.IN
 constexpr const char* PERMISSION_INSTALL_ENTERPRISE_NORMAL_BUNDLE = "ohos.permission.INSTALL_ENTERPRISE_NORMAL_BUNDLE";
 constexpr const char* PERMISSION_INSTALL_ENTERPRISE_MDM_BUNDLE = "ohos.permission.INSTALL_ENTERPRISE_MDM_BUNDLE";
 constexpr const char* PERMISSION_MANAGE_EDM_POLICY = "ohos.permission.MANAGE_EDM_POLICY";
+// holders may install haps without enterprise resign cert verification
+constexpr const char* PERMISSION_SKIP_ENTERPRISE_RESIGN_VERIFY = "ohos.permission.SKIP_ENTERPRISE_RESIGN_VERIFY";
 constexpr const char* PERMISSION_INSTALL_INTERNALTESTING_BUNDLE = "ohos.permission.INSTALL_INTERNALTESTING_BUNDLE";
 constexpr const char* PERMISSION_MANAGE_DISPOSED_APP_STATUS = "ohos.permission.MANAGE_DISPOSED_APP_STATUS";
 constexpr const char* PERMISSION_INSTALL_SELF_BUNDLE = "ohos.permission.INSTALL_SELF_BUNDLE";
@@ -346,6 +356,9 @@ constexpr const char* META_KEEP_TOKEN_ID_KEY = "ohos.fileshare.supportPreservePe
 constexpr const char* BMS_PARA_INSTALL_BUNDLE_NAME = "ohos.bms.param.installBundleName";
 // for install downgrade
 constexpr const char* BMS_PARA_INSTALL_ALLOW_DOWNGRADE = "ohos.bms.param.installAllowDowngrade";
+// internal only: set by BMS at the install IPC entry after the skip permission check;
+// always erased from caller-supplied parcels first, so it can never be forged
+constexpr const char* BMS_PARA_SKIP_ENTERPRISE_RESIGN_VERIFY = "ohos.bms.param.skipEnterpriseResignVerify";
 // for original install source
 constexpr const char* BMS_PARA_ORIGINAL_INSTALL_SOURCE = "ohos.bms.param.originalInstallSource";
 

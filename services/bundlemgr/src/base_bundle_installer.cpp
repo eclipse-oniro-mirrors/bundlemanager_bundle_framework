@@ -5789,7 +5789,10 @@ ErrCode BaseBundleInstaller::CheckMultipleHapsSignInfo(
     std::vector<Security::Verify::HapVerifyResult>& hapVerifyRes)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
-    return bundleInstallChecker_->CheckMultipleHapsSignInfo(bundlePaths, hapVerifyRes, true, userId_);
+    // The key is set only by BMS at the install IPC entry after the ATM permission check.
+    bool skipResign = installParam.parameters.find(
+        ServiceConstants::BMS_PARA_SKIP_ENTERPRISE_RESIGN_VERIFY) != installParam.parameters.end();
+    return bundleInstallChecker_->CheckMultipleHapsSignInfo(bundlePaths, hapVerifyRes, true, userId_, skipResign);
 }
 
 ErrCode BaseBundleInstaller::CheckShellInstall(std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes)
