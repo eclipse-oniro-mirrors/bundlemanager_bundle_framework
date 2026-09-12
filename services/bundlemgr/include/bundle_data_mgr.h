@@ -100,6 +100,16 @@ struct AccessTokenRestoreInfo {
     uint64_t accessTokenIdEx = 0;
 };
 
+// Minimal info for print service dir check: one per (bundleName, userId, appIndex)
+// of driver applications and their clones. Extracted under bundleInfoMutex_ so the
+// OTA scan path does not copy the whole InnerBundleInfo map.
+struct PrintServiceDirInfo {
+    std::string bundleName;
+    int32_t userId = Constants::INVALID_USERID;
+    int32_t appIndex = Constants::INITIAL_APP_INDEX;
+    int32_t uid = Constants::INVALID_UID;
+};
+
 class BundleDataMgr {
 public:
     using Want = OHOS::AAFwk::Want;
@@ -1163,6 +1173,13 @@ public:
         AppProvisionInfo &appProvisionInfo);
     void GetBundleNameList(const int32_t userId, std::vector<std::string>& bundleNameList);
     std::vector<std::string> GetSystemAppNames(int32_t userId) const;
+    /**
+     * @brief Collects PrintServiceDirInfo of all driver applications and their clones.
+     *        Only extracts minimal fields under bundleInfoMutex_ to avoid copying the
+     *        whole InnerBundleInfo map on the OTA scan path.
+     * @param printDirInfos Indicates the extracted print service dir infos.
+     */
+    void GetDriverBundlePrintDirInfos(std::vector<PrintServiceDirInfo> &printDirInfos) const;
     ErrCode GetAllAppProvisionInfo(const int32_t userId, std::vector<AppProvisionInfo> &appProvisionInfos);
     ErrCode GetAppProvisionInfoInDevice(const std::string &bundleName, int32_t userId,
         std::vector<AppProvisionInfo> &appProvisionInfos);

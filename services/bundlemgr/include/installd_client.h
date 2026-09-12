@@ -409,6 +409,17 @@ public:
 
     ErrCode GetCacheDiskUsageFromPath(const std::vector<std::string> &paths, int64_t &statSize, int64_t timeoutMs = -1);
 
+    /**
+     * @brief Create a print service directory for driver application through an installd proxy object.
+     * @param bundleName Indicates the bundle name of the driver application.
+     * @param userId Indicates the user id.
+     * @param appIndex Indicates the app index for clone application.
+     * @param appUid Indicates the uid of the application.
+     * @return Returns ERR_OK if the directory is ready; returns error code otherwise.
+     */
+    ErrCode CreatePrintServiceDir(const std::string &bundleName, int32_t userId,
+        int32_t appIndex, int32_t appUid);
+
 private:
     sptr<IInstalld> GetInstalldProxy();
     bool LoadInstalldService();

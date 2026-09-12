@@ -1645,6 +1645,7 @@ void BMSEventHandler::ProcessRebootBundle()
 #endif
     ProcessCheckAppLogDir();
     ProcessCheckAppFileManagerDir();
+    ProcessCheckPrintServiceDir();
     ProcessCheckPreinstallData();
     ProcessCheckSystemOptimizeDir();
     ProcessCheckSystemOptimizeShaderCacheDir();
@@ -1877,6 +1878,45 @@ void BMSEventHandler::InnerProcessCheckAppFileManagerDir()
         return;
     }
     UpdateAppDataMgr::ProcessFileManagerDir(bundleInfos, Constants::U1);
+}
+
+void BMSEventHandler::ProcessCheckPrintServiceDir()
+{
+    bool checkPrintServiceDir = false;
+    CheckOtaFlag(OTAFlag::CHECK_PRINT_SERVICE_DIR, checkPrintServiceDir);
+    if (checkPrintServiceDir) {
+        LOG_I(BMS_TAG_DEFAULT, "Not need to check print service dir due to has checked");
+        return;
+    }
+    LOG_I(BMS_TAG_DEFAULT, "Need to check print service dir");
+    if (!InnerProcessCheckPrintServiceDir()) {
+        LOG_W(BMS_TAG_DEFAULT, "check print service dir not finished, retry on next reboot");
+        return;
+    }
+    UpdateOtaFlag(OTAFlag::CHECK_PRINT_SERVICE_DIR);
+}
+
+bool BMSEventHandler::InnerProcessCheckPrintServiceDir()
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return false;
+    }
+    std::vector<PrintServiceDirInfo> printDirInfos;
+    dataMgr->GetDriverBundlePrintDirInfos(printDirInfos);
+    bool allSuccess = true;
+    for (const auto &dirInfo : printDirInfos) {
+        ErrCode result = InstalldClient::GetInstance()->CreatePrintServiceDir(
+            dirInfo.bundleName, dirInfo.userId, dirInfo.appIndex, dirInfo.uid);
+        if (result != ERR_OK) {
+            allSuccess = false;
+            LOG_W(BMS_TAG_DEFAULT, "check print service dir failed, bundle: %{public}s, "
+                "userId: %{public}d, appIndex: %{public}d, error is %{public}d",
+                dirInfo.bundleName.c_str(), dirInfo.userId, dirInfo.appIndex, result);
+        }
+    }
+    return allSuccess;
 }
 
 void BMSEventHandler::ProcessCheckSystemOptimizeShaderCacheDir()

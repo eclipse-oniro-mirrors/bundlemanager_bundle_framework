@@ -396,6 +396,9 @@ public:
     virtual ErrCode GetCacheDiskUsageFromPath(const std::vector<std::string> &paths,
         int64_t &statSize, int64_t timeoutMs = -1) override;
 
+    virtual ErrCode CreatePrintServiceDir(const std::string &bundleName, int32_t userId,
+        int32_t appIndex, int32_t appUid) override;
+
 private:
     ErrCode TransactInstalldCmd(InstalldInterfaceCode code, MessageParcel &data, MessageParcel &reply,
         MessageOption &option);

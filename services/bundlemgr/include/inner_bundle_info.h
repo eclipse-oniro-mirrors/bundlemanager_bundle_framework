@@ -1431,6 +1431,11 @@ public:
      */
     bool HasInputMethodExtension() const;
     /**
+     * @brief Checks if the bundle contains driver type extension.
+     * @return Returns true if the bundle contains driver extension; returns false otherwise.
+     */
+    bool HasDriverExtension() const;
+    /**
      * @brief Get the bundle is whether removable.
      * @return Return whether the bundle is removable.
      */

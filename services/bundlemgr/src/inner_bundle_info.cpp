@@ -6670,5 +6670,15 @@ bool InnerBundleInfo::HasInputMethodExtension() const
     }
     return false;
 }
+
+bool InnerBundleInfo::HasDriverExtension() const
+{
+    for (const auto& [key, extensionInfo] : baseExtensionInfos_) {
+        if (extensionInfo.type == ExtensionAbilityType::DRIVER) {
+            return true;
+        }
+    }
+    return false;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

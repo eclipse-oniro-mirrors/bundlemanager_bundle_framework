@@ -628,6 +628,7 @@ private:
 
     ErrCode CreateBundleCodeDir(InnerBundleInfo &info) const;
     ErrCode CreateBundleDataDir(InnerBundleInfo &info) const;
+    void CreatePrintServiceDirForUpdate(const InnerBundleInfo &info) const;
     ErrCode RemoveBundleCodeDir(const InnerBundleInfo &info, bool async) const;
     ErrCode RemoveBundleDataDir(
         const InnerBundleInfo &info, bool forException = false, const bool async = false);

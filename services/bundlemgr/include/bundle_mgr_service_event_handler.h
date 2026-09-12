@@ -68,6 +68,7 @@ enum OTAFlag : uint32_t {
     UPDATE_MODULE_JSON_EXTEND_FIELDS = 0x02000000,
     DELETE_RESOURCE_SLAVE_DB = 0x04000000,
     MIGRATE_UNINSTALL_BUNDLE_RESOURCE = 0x08000000,
+    CHECK_PRINT_SERVICE_DIR = 0x10000000,
 };
 
 enum class ScanResultCode : uint8_t {
@@ -645,6 +646,8 @@ private:
     void InnerProcessCheckAppLogDir();
     void ProcessCheckAppFileManagerDir();
     void InnerProcessCheckAppFileManagerDir();
+    void ProcessCheckPrintServiceDir();
+    bool InnerProcessCheckPrintServiceDir();
     void ProcessCheckPreinstallData();
     void InnerProcessCheckPreinstallData();
     void ProcessCheckSystemOptimizeShaderCacheDir();

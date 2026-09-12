@@ -910,5 +910,16 @@ ErrCode InstalldClient::GetCacheDiskUsageFromPath(const std::vector<std::string>
     }
     return CallService(&IInstalld::GetCacheDiskUsageFromPath, paths, statSize, timeoutMs);
 }
+
+ErrCode InstalldClient::CreatePrintServiceDir(const std::string &bundleName, int32_t userId,
+    int32_t appIndex, int32_t appUid)
+{
+    if (bundleName.empty() || userId < 0 || appIndex < 0 || appUid < 0) {
+        APP_LOGE("params are invalid, bundleName: %{public}s, userId: %{public}d, "
+            "appIndex: %{public}d, appUid: %{public}d", bundleName.c_str(), userId, appIndex, appUid);
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::CreatePrintServiceDir, bundleName, userId, appIndex, appUid);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

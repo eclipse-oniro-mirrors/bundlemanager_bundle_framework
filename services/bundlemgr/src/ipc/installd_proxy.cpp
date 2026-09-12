@@ -1847,5 +1847,22 @@ ErrCode InstalldProxy::GetCacheDiskUsageFromPath(const std::vector<std::string> 
     statSize = reply.ReadInt64();
     return ERR_OK;
 }
+
+ErrCode InstalldProxy::CreatePrintServiceDir(const std::string &bundleName, int32_t userId,
+    int32_t appIndex, int32_t appUid)
+{
+    LOG_D(BMS_TAG_INSTALLD, "call CreatePrintServiceDir, bundleName: %{public}s", bundleName.c_str());
+
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
+    INSTALLD_PARCEL_WRITE(data, Int32, userId);
+    INSTALLD_PARCEL_WRITE(data, Int32, appIndex);
+    INSTALLD_PARCEL_WRITE(data, Int32, appUid);
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    return TransactInstalldCmd(InstalldInterfaceCode::CREATE_PRINT_SERVICE_DIR, data, reply, option);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
