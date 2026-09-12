@@ -47,6 +47,7 @@
 #include "dual_mode_helper.h"
 #include "hidump_helper.h"
 #include "install_param.h"
+#include "inner_bundle_clone_common.h"
 #include "extension_ability_info.h"
 #include "installd/installd_service.h"
 #include "installd/installd_operator.h"
@@ -73,6 +74,10 @@ namespace AppExecFwk {
     bool InsertQueryEventInfo(int32_t errCode, const QueryEventInfo& info);
     bool TransQueryEventInfo(const std::vector<QueryEventInfo> &infos, EventInfo &report);
     void SetCleanBundleDataDirResult(bool cleanResult);
+    // test-only helpers implemented in test/mock/src/installd_client.cpp
+    void ResetSetEncryptionPolicyState();
+    int32_t GetSetEncryptionPolicyCallCount();
+    std::string GetLastSetEncryptionPolicyBundleName();
 }
 }
 
@@ -1093,6 +1098,77 @@ HWTEST_F(BmsBundleDataMgrTest, AddInnerBundleInfo_0100, Function | SmallTest | L
     GetBundleDataMgr()->installStates_.emplace(BUNDLE_TEST2, InstallState::INSTALL_SUCCESS);
     bool testRet = GetBundleDataMgr()->AddInnerBundleInfo(BUNDLE_TEST2, innerBundleInfo);
     EXPECT_EQ(testRet, false);
+}
+
+/**
+ * @tc.number: SetEl5DirPolicy_DualMode_0100
+ * @tc.name: test SetEl5DirPolicy with dual-mode effective name
+ * @tc.desc: dual-mode clone app uses the effective (prefixed) name for both fetch and el5 key
+ */
+HWTEST_F(BmsBundleDataMgrTest, SetEl5DirPolicy_DualMode_0100, Function | SmallTest | Level1)
+{
+    const std::string bundleName = "com.test.dualmode.el5";
+    InnerBundleInfo innerBundleInfo;
+    GetBundleDataMgr()->bundleInfos_.emplace(bundleName, innerBundleInfo);
+
+    CreateDirParam el5Param;
+    el5Param.bundleName = DualModeHelper::GetDualModeBundleName(bundleName);
+    el5Param.userId = 100;
+    el5Param.uid = 20000;
+    ResetSetEncryptionPolicyState();
+    GetBundleDataMgr()->SetEl5DirPolicy(el5Param, true);
+    EXPECT_EQ(GetSetEncryptionPolicyCallCount(), 1);
+    EXPECT_EQ(GetLastSetEncryptionPolicyBundleName(), el5Param.bundleName);
+    ResetSetEncryptionPolicyState();
+    GetBundleDataMgr()->bundleInfos_.erase(bundleName);
+}
+
+/**
+ * @tc.number: SetEl5DirPolicy_Normal_0100
+ * @tc.name: test SetEl5DirPolicy with original bundle name
+ * @tc.desc: normal app keeps the original name for the el5 key (behavior unchanged)
+ */
+HWTEST_F(BmsBundleDataMgrTest, SetEl5DirPolicy_Normal_0100, Function | SmallTest | Level1)
+{
+    const std::string bundleName = "com.test.normal.el5";
+    InnerBundleInfo innerBundleInfo;
+    GetBundleDataMgr()->bundleInfos_.emplace(bundleName, innerBundleInfo);
+
+    CreateDirParam el5Param;
+    el5Param.bundleName = bundleName;
+    el5Param.userId = 100;
+    el5Param.uid = 20001;
+    ResetSetEncryptionPolicyState();
+    GetBundleDataMgr()->SetEl5DirPolicy(el5Param, true);
+    EXPECT_EQ(GetSetEncryptionPolicyCallCount(), 1);
+    EXPECT_EQ(GetLastSetEncryptionPolicyBundleName(), bundleName);
+    ResetSetEncryptionPolicyState();
+    GetBundleDataMgr()->bundleInfos_.erase(bundleName);
+}
+
+/**
+ * @tc.number: SetEl5DirPolicy_Clone_0100
+ * @tc.name: test SetEl5DirPolicy with clone appIndex
+ * @tc.desc: normal clone (appIndex 1..5) keeps the +clone-N+ prefixed name (behavior unchanged)
+ */
+HWTEST_F(BmsBundleDataMgrTest, SetEl5DirPolicy_Clone_0100, Function | SmallTest | Level1)
+{
+    const std::string bundleName = "com.test.clone.el5";
+    InnerBundleInfo innerBundleInfo;
+    GetBundleDataMgr()->bundleInfos_.emplace(bundleName, innerBundleInfo);
+
+    CreateDirParam el5Param;
+    el5Param.bundleName = bundleName;
+    el5Param.appIndex = 2;
+    el5Param.userId = 100;
+    el5Param.uid = 20002;
+    ResetSetEncryptionPolicyState();
+    GetBundleDataMgr()->SetEl5DirPolicy(el5Param, true);
+    EXPECT_EQ(GetSetEncryptionPolicyCallCount(), 1);
+    EXPECT_EQ(GetLastSetEncryptionPolicyBundleName(),
+        BundleCloneCommonHelper::GetCloneDataDir(bundleName, el5Param.appIndex));
+    ResetSetEncryptionPolicyState();
+    GetBundleDataMgr()->bundleInfos_.erase(bundleName);
 }
 
 /**
