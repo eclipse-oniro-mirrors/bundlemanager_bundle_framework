@@ -1943,6 +1943,11 @@ const std::string NORMAL_BUNDLE_NAME = "com.example.normal";
 const std::string TEMP_ONLY_BUNDLE_NAME = "com.example.temponly";
 constexpr int32_t FLAG_ALL_DEVICE_MODE =
     static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_OF_ALL_DEVICE_MODE);
+constexpr int32_t FLAG_ANY_USER =
+    static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_OF_ANY_USER);
+constexpr int32_t FLAG_WITH_APPLICATION =
+    static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION);
+const int32_t ANOTHER_USERID = 101;
 
 // One device-mode instance record: clone (appIndex 10000) or primary (appIndex 0).
 static InnerBundleInfo MakeModeInstanceInfo(const std::string &bundleName, int32_t userId,
@@ -2325,5 +2330,124 @@ HWTEST_F(BmsDualModeQueryTest, GetAllBundleInfoInstances_PrimaryBothModes_1000, 
     ASSERT_EQ(bundleInfos.size(), static_cast<size_t>(2));
     EXPECT_EQ(bundleInfos[0].appIndex, 0);
     EXPECT_EQ(bundleInfos[1].appIndex, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
+}
+
+// ====================== GetAllBundleInfoInstances GET_BUNDLE_INFO_OF_ANY_USER ======
+
+// request user not installed, record only installed by another user:
+// skipped without ANY_USER, returned (first installed user) with ANY_USER
+HWTEST_F(BmsDualModeQueryTest, GetAllBundleInfoInstances_AnyUserFallback_1100,
+    Function | SmallTest | Level0)
+{
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = MakeModeInstanceInfo(BUNDLE_NAME, ANOTHER_USERID, false);
+
+    std::vector<BundleInfo> bundleInfos;
+    auto ret = dataMgr->GetAllBundleInfoInstances(BUNDLE_NAME, 0, TEST_USERID, bundleInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_TRUE(bundleInfos.empty());
+
+    bundleInfos.clear();
+    ret = dataMgr->GetAllBundleInfoInstances(BUNDLE_NAME, FLAG_ANY_USER, TEST_USERID, bundleInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    ASSERT_EQ(bundleInfos.size(), static_cast<size_t>(1));
+    EXPECT_EQ(bundleInfos[0].name, BUNDLE_NAME);
+}
+
+// ANY_USER together with WITH_APPLICATION marks FLAG_OTHER_INSTALLED on the
+// returned instance (request user not installed)
+HWTEST_F(BmsDualModeQueryTest, GetAllBundleInfoInstances_AnyUserOtherInstalled_1101,
+    Function | SmallTest | Level0)
+{
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = MakeModeInstanceInfo(BUNDLE_NAME, ANOTHER_USERID, false);
+
+    std::vector<BundleInfo> bundleInfos;
+    auto ret = dataMgr->GetAllBundleInfoInstances(BUNDLE_NAME,
+        FLAG_ANY_USER | FLAG_WITH_APPLICATION, TEST_USERID, bundleInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    ASSERT_EQ(bundleInfos.size(), static_cast<size_t>(1));
+    EXPECT_NE(static_cast<uint32_t>(bundleInfos[0].applicationInfo.applicationFlags) &
+        static_cast<uint32_t>(ApplicationInfoFlag::FLAG_OTHER_INSTALLED), 0);
+}
+
+// ANY_USER auto-sets WITH_DISABLE: an application-disabled instance installed
+// by the request user is returned with ANY_USER, skipped without it
+HWTEST_F(BmsDualModeQueryTest, GetAllBundleInfoInstances_AnyUserAutoWithDisable_1200,
+    Function | SmallTest | Level0)
+{
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    dataMgr->bundleInfos_[BUNDLE_NAME] =
+        MakeModeInstanceInfo(BUNDLE_NAME, TEST_USERID, false, false);
+
+    std::vector<BundleInfo> bundleInfos;
+    auto ret = dataMgr->GetAllBundleInfoInstances(BUNDLE_NAME, 0, TEST_USERID, bundleInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_TRUE(bundleInfos.empty());
+
+    bundleInfos.clear();
+    ret = dataMgr->GetAllBundleInfoInstances(BUNDLE_NAME, FLAG_ANY_USER, TEST_USERID, bundleInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    ASSERT_EQ(bundleInfos.size(), static_cast<size_t>(1));
+}
+
+// temp-only record: PreProcessAnyUserFlag only checks bundleInfos_, the
+// per-record fallback in AddBundleInfoInstanceIfEnabled covers the temp record
+HWTEST_F(BmsDualModeQueryTest, GetAllBundleInfoInstances_AnyUserTempOnly_1300,
+    Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] = MakeModeInstanceInfo(BUNDLE_NAME, ANOTHER_USERID, false);
+
+    std::vector<BundleInfo> bundleInfos;
+    auto ret = dataMgr->GetAllBundleInfoInstances(BUNDLE_NAME,
+        FLAG_ALL_DEVICE_MODE | FLAG_ANY_USER, TEST_USERID, bundleInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    ASSERT_EQ(bundleInfos.size(), static_cast<size_t>(1));
+    EXPECT_EQ(bundleInfos[0].name, BUNDLE_NAME);
+    EXPECT_EQ(bundleInfos[0].appIndex, 0);
+}
+
+// record-disabled instance is never returned, even with ANY_USER
+// (mirrors GetBundleInfoV9: IsDisabled is rejected regardless of flags)
+HWTEST_F(BmsDualModeQueryTest, GetAllBundleInfoInstances_AnyUserRecordDisabled_1400,
+    Function | SmallTest | Level0)
+{
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    auto info = MakeModeInstanceInfo(BUNDLE_NAME, TEST_USERID, false);
+    info.SetBundleStatus(InnerBundleInfo::BundleStatus::DISABLED);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = info;
+
+    std::vector<BundleInfo> bundleInfos;
+    auto ret = dataMgr->GetAllBundleInfoInstances(BUNDLE_NAME, FLAG_ANY_USER, TEST_USERID, bundleInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_TRUE(bundleInfos.empty());
+}
+
+// both device modes with different installed users: current instance from the
+// request user (no OTHER_INSTALLED), temp instance falls back to its first
+// installed user (OTHER_INSTALLED marked with WITH_APPLICATION)
+HWTEST_F(BmsDualModeQueryTest, GetAllBundleInfoInstances_AnyUserBothModes_1500,
+    Function | SmallTest | Level0)
+{
+    EnablePrimaryMode();
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = MakeModeInstanceInfo(BUNDLE_NAME, TEST_USERID, false);
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] = MakeModeInstanceInfo(BUNDLE_NAME, ANOTHER_USERID, true);
+
+    std::vector<BundleInfo> bundleInfos;
+    auto ret = dataMgr->GetAllBundleInfoInstances(BUNDLE_NAME,
+        FLAG_ALL_DEVICE_MODE | FLAG_ANY_USER | FLAG_WITH_APPLICATION, TEST_USERID, bundleInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    ASSERT_EQ(bundleInfos.size(), static_cast<size_t>(2));
+    // current-mode instance: installed by the request user, not marked
+    EXPECT_EQ(bundleInfos[0].appIndex, 0);
+    EXPECT_EQ(static_cast<uint32_t>(bundleInfos[0].applicationInfo.applicationFlags) &
+        static_cast<uint32_t>(ApplicationInfoFlag::FLAG_OTHER_INSTALLED), 0);
+    // other-mode instance: falls back to its first installed user, marked
+    EXPECT_EQ(bundleInfos[1].appIndex, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
+    EXPECT_NE(static_cast<uint32_t>(bundleInfos[1].applicationInfo.applicationFlags) &
+        static_cast<uint32_t>(ApplicationInfoFlag::FLAG_OTHER_INSTALLED), 0);
 }
 } // OHOS

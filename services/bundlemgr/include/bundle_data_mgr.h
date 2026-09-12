@@ -1567,6 +1567,11 @@ public:
      * @brief Obtains the bundle info instances of the given bundle name: the
      * current-mode instance first, then the other-mode instance (only when
      * GET_BUNDLE_INFO_OF_ALL_DEVICE_MODE is set on a dual-mode device).
+     * When GET_BUNDLE_INFO_OF_ANY_USER is set, an instance installed by any
+     * user is returned (WITH_DISABLE is auto-set and the request user falls
+     * back to the first installed user; used together with
+     * GET_BUNDLE_INFO_WITH_APPLICATION, applicationFlags marks
+     * FLAG_OTHER_INSTALLED and clears FLAG_INSTALLED accordingly).
      * @param bundleName Indicates the bundle name to be queried.
      * @param flags Indicates the information contained in the BundleInfo objects.
      * @param userId Indicates the user ID.
@@ -1767,10 +1772,12 @@ private:
         int32_t userId, std::vector<BundleInfo> &bundleInfos, bool withDisable,
         int32_t appIndex, int32_t responseUserId) const;
     // dual-mode: append one instance if enabled (or WITH_DISABLE set);
-    // completely disabled records are never visible.
-    // Caller must hold bundleInfoMutex_ (shared)
+    // completely disabled records are never visible. With ANY_USER, fall back
+    // to the first installed user of this record when the request user has
+    // not installed it. Caller must hold bundleInfoMutex_ (shared)
     void AddBundleInfoInstanceIfEnabled(const InnerBundleInfo &info, int32_t flags,
-        int32_t requestUserId, bool withDisable, std::vector<BundleInfo> &bundleInfos) const;
+        int32_t requestUserId, int32_t originalUserId, bool withDisable,
+        std::vector<BundleInfo> &bundleInfos) const;
     ErrCode BuildBundleInfoWithProcess(const InnerBundleInfo &info, const std::string &bundleName, uint32_t flags,
         int32_t userId, int32_t responseUserId, int32_t appIndex, BundleInfo &bundleInfo) const;
     void GetBundleNameAndIndexByName(const std::string &keyName, std::string &bundleName, int32_t &appIndex) const;

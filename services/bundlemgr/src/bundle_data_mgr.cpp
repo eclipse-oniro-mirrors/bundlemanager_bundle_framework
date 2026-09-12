@@ -17316,6 +17316,12 @@ ErrCode BundleDataMgr::GetAllBundleInfoInstances(const std::string &bundleName, 
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
 
+    int32_t originalUserId = requestUserId;
+    // ANY_USER: mirror GetBundleInfoV9 — auto-set WITH_DISABLE and fall back to
+    // the first installed user; must run before locking (it takes the shared
+    // bundleInfoMutex_ internally via GetInnerBundleUserInfos)
+    PreProcessAnyUserFlag(bundleName, flags, requestUserId);
+
     bool withDisable = (static_cast<uint32_t>(flags) &
         static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE)) != 0;
 
@@ -17332,11 +17338,13 @@ ErrCode BundleDataMgr::GetAllBundleInfoInstances(const std::string &bundleName, 
 
     // current-mode instance first
     if (curIter != bundleInfos_.end()) {
-        AddBundleInfoInstanceIfEnabled(curIter->second, flags, requestUserId, withDisable, bundleInfos);
+        AddBundleInfoInstanceIfEnabled(curIter->second, flags, requestUserId, originalUserId,
+            withDisable, bundleInfos);
     }
     // other-mode instance (dual-mode devices only)
     if (tempIter != tempBundleInfos_.end()) {
-        AddBundleInfoInstanceIfEnabled(tempIter->second, flags, requestUserId, withDisable, bundleInfos);
+        AddBundleInfoInstanceIfEnabled(tempIter->second, flags, requestUserId, originalUserId,
+            withDisable, bundleInfos);
     }
     LOG_D(BMS_TAG_QUERY, "GetAllBundleInfoInstances(%{public}s) in user(%{public}d), instance size: %{public}zu",
         bundleName.c_str(), requestUserId, bundleInfos.size());
@@ -17344,25 +17352,35 @@ ErrCode BundleDataMgr::GetAllBundleInfoInstances(const std::string &bundleName, 
 }
 
 // dual-mode: append one instance if enabled (or WITH_DISABLE set); completely
-// disabled records are never visible. Caller must hold bundleInfoMutex_ (shared)
+// disabled records are never visible. With ANY_USER, fall back to the first
+// installed user of this record when the request user has not installed it
+// (covers temp records PreProcessAnyUserFlag cannot reach, it only checks
+// bundleInfos_). Caller must hold bundleInfoMutex_ (shared)
 void BundleDataMgr::AddBundleInfoInstanceIfEnabled(const InnerBundleInfo &info, int32_t flags,
-    int32_t requestUserId, bool withDisable, std::vector<BundleInfo> &bundleInfos) const
+    int32_t requestUserId, int32_t originalUserId, bool withDisable,
+    std::vector<BundleInfo> &bundleInfos) const
 {
     if (info.IsDisabled()) {
         LOG_D(BMS_TAG_QUERY, "instance of %{public}s is disabled", info.GetBundleName().c_str());
         return;
     }
+    bool ofAnyUserFlag = (static_cast<uint32_t>(flags) &
+        static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_OF_ANY_USER)) != 0;
     int32_t responseUserId = info.GetResponseUserId(requestUserId);
     bool isEnabled = false;
-    if (info.GetApplicationEnabledV9(responseUserId, isEnabled, info.GetAppIndex()) != ERR_OK) {
-        return;
-    }
-    if (!withDisable && !isEnabled) {
-        return;
+    if (info.GetApplicationEnabledV9(responseUserId, isEnabled, info.GetAppIndex()) != ERR_OK ||
+        (!withDisable && !isEnabled)) {
+        const auto &hp = info.GetInnerBundleUserInfos();
+        if (ofAnyUserFlag && hp.size() > 0) {
+            responseUserId = hp.begin()->second.bundleUserInfo.userId;
+        } else {
+            return;
+        }
     }
     BundleInfo bundleInfo;
     if (BuildBundleInfoWithProcess(info, info.GetBundleName(), static_cast<uint32_t>(flags),
         requestUserId, responseUserId, info.GetAppIndex(), bundleInfo) == ERR_OK) {
+        PostProcessAnyUserFlags(flags, responseUserId, originalUserId, bundleInfo, info);
         bundleInfos.emplace_back(std::move(bundleInfo));
     }
 }

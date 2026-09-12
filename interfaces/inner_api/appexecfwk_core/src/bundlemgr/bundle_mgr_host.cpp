@@ -5071,8 +5071,16 @@ ErrCode BundleMgrHost::HandleGetAllBundleInfoInstances(MessageParcel &data, Mess
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
-    int32_t flags = data.ReadInt32();
-    int32_t userId = data.ReadInt32();
+    int32_t flags = 0;
+    if (!data.ReadInt32(flags)) {
+        APP_LOGE("HandleGetAllBundleInfoInstances read flags failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    int32_t userId = 0;
+    if (!data.ReadInt32(userId)) {
+        APP_LOGE("HandleGetAllBundleInfoInstances read userId failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
 
     std::vector<BundleInfo> bundleInfos;
     auto ret = GetAllBundleInfoInstances(bundleName, flags, bundleInfos, userId);
