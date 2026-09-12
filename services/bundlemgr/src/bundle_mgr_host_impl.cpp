@@ -7122,7 +7122,7 @@ ErrCode BundleMgrHostImpl::FilterBundleListByDeviceModeDistributionPolicies(
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(
-        Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        Constants::PERMISSION_SWITCH_MULTI_MODE_BUNDLE)) {
         APP_LOGE_NOFUNC("FilterBundleListByDeviceModeDistributionPolicies verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }

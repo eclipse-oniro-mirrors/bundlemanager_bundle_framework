@@ -122,6 +122,7 @@ constexpr const char* PERMISSION_GET_ABILITY_INFO = "ohos.permission.GET_ABILITY
 constexpr const char* PERMISSION_BMS_INTERACT_ACROSS_LOCAL_ACCOUNTS = "ohos.permission.INTERACT_ACROSS_LOCAL_ACCOUNTS";
 constexpr const char* PERMISSION_RECOVER_BUNDLE = "ohos.permission.RECOVER_BUNDLE";
 constexpr const char* PERMISSION_CLEAN_APPLICATION_DATA = "ohos.permission.CLEAN_APPLICATION_DATA";
+constexpr const char* PERMISSION_SWITCH_MULTI_MODE_BUNDLE = "ohos.permission.SWITCH_MULTI_MODE_BUNDLE";
 constexpr const char* PERMISSION_MANAGE_SELF_SKILLS = "ohos.permission.MANAGE_SELF_SKILLS";
 constexpr const char* PERMISSION_MANAGE_SKILL_PRIVILEGE = "ohos.permission.MANAGE_SKILL_PRIVILEGE";
 constexpr const char* PERMISSION_MANAGE_SKILL = "ohos.permission.MANAGE_SKILL";

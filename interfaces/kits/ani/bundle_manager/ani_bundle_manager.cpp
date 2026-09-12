@@ -2697,7 +2697,8 @@ static void FilterBundleListByDeviceModeDistributionPoliciesNative(ani_env* env,
     if (ret != ERR_OK) {
         APP_LOGE_NOFUNC("FilterBundleListByDeviceModeDistributionPolicies failed ret:%{public}d", ret);
         BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret),
-            FILTER_BUNDLE_LIST_BY_DEVICE_MODE_DISTRIBUTION_POLICIES, "");
+            FILTER_BUNDLE_LIST_BY_DEVICE_MODE_DISTRIBUTION_POLICIES,
+            Constants::PERMISSION_SWITCH_MULTI_MODE_BUNDLE);
     }
 }
 

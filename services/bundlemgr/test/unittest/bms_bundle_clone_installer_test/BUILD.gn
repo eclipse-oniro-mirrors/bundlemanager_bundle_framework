@@ -25,7 +25,7 @@ ohos_unittest("BmsBundleCloneInstallerTest") {
   }
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = []
+  include_dirs = [ "../../mock/include/parameter" ]
 
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
@@ -36,6 +36,9 @@ ohos_unittest("BmsBundleCloneInstallerTest") {
     "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp",
     "${services_path}/bundlemgr/test/mock/src/installd_permission_mgr.cpp",
     "${services_path}/bundlemgr/test/mock/src/mock_status_receiver.cpp",
+    "${services_path}/bundlemgr/test/mock/src/parameter/parameter.cpp",
+    "${services_path}/bundlemgr/test/mock/src/parameter/parameters.cpp",
+    "${services_path}/bundlemgr/test/mock/src/parameter/systemcapability.cpp",
     "${services_path}/bundlemgr/test/mock/src/system_ability_helper.cpp",
   ]
 
