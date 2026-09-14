@@ -1,7 +1,7 @@
 ---
 name: comprehensive_review
-description: 综合代码修改检视工具，整合 Security Review、Logic Analyzer、DFX Reviewer、Code Review Checklist、Test Coverage Reviewer 和 Coding Style Review，提供全方位的代码质量检查
-version: 1.3.0
+description: bundle_framework 综合代码修改检视工具，整合 Security Review、Logic Analyzer、DFX Reviewer、Code Review Checklist、Test Coverage Reviewer、Coding Style Review 与兼容性影响评估（含历史典型问题核对），提供全方位的代码质量检查
+version: 1.4.0
 author: AI Assistant
 tags:
   - code review
@@ -62,7 +62,7 @@ triggers:
 
 ## 技能概述
 
-本技能是**综合代码修改检视工具**，整合了5个专门的skills，提供全方位的代码质量检查：
+本技能是**综合代码修改检视工具**，整合了6个专门的skills，提供全方位的代码质量检查：
 
 1. **Security Review** - 安全问题检查
 2. **Logic Analyzer** - 逻辑问题检查
@@ -70,8 +70,11 @@ triggers:
 4. **Code Review Checklist** - 已知易犯错误检查
 5. **Test Coverage Reviewer** - 用例测试覆盖度检查
 6. **Coding Style Review** - 编码风格/格式/命名/注释/类设计检查
+7. **兼容性影响评估**（必产出）- 修改对当前功能/历史功能的影响 + 历史典型问题核对（HIST-1~12）
 
 所有检查完成后，生成包含**Summary部分的全量报告**，提供完整的问题清单和修复建议。
+
+**bundle_framework 强制输入**：检视开始前必须加载 [`../bundle_framework_common_issues.md`](../bundle_framework_common_issues.md)（历史典型问题库）与 [`../codecheck_report_TEMPLATE.md`](../codecheck_report_TEMPLATE.md)（统一报告模板，§6 兼容性影响评估必填）。
 
 ---
 
@@ -81,8 +84,9 @@ triggers:
 ┌─────────────────────────────────────────────────────────────┐
 │  第一阶段：准备 (Preparation)                                │
 │  ├─ 识别变更范围                                            │
-│  ├─ 确定检查策略                                            │
-│  └─ 准备检查环境                                            │
+│  ├─ 标记热点文件（bundle_framework_common_issues.md §0）     │
+│  ├─ 加载历史典型问题库（HIST-1~12）                          │
+│  └─ 确定检查策略                                            │
 ├─────────────────────────────────────────────────────────────┤
 │  第二阶段：执行 (Execution)                                  │
 │  ├─ 1. Security Review (安全检查)                           │
@@ -90,13 +94,14 @@ triggers:
 │  ├─ 3. DFX Reviewer (DFX检查)                               │
 │  ├─ 4. Code Review Checklist (规范检查)                     │
 │  ├─ 5. Test Coverage Reviewer (测试覆盖度检查)              │
-│  └─ 6. Coding Style Review (编码风格检查)                   │
+│  ├─ 6. Coding Style Review (编码风格检查)                   │
+│  └─ 7. 兼容性影响评估 + 历史问题核对 (必产出)                │
 ├─────────────────────────────────────────────────────────────┤
 │  第三阶段：汇总 (Aggregation)                                │
 │  ├─ 收集所有检查结果                                        │
-│  ├─ 去重和分类问题                                          │
+│  ├─ 去重和分类问题（复发历史问题标 HIST-{n}，P1 起）         │
 │  ├─ 评估严重程度和影响                                      │
-│  └─ 生成综合报告                                            │
+│  └─ 生成综合报告（含 §6 兼容性影响评估）                     │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -121,7 +126,7 @@ triggers:
 - 🟠 **严重**: 输入验证缺失、并发安全问题
 - 🟡 **警告**: 加密算法不当、日志敏感信息
 
-**参考文档**: `.refdocs/skills/srcurity_review/SKILL.md`
+**参考文档**: [`../security_review/SKILL.md`](../security_review/SKILL.md)
 
 ---
 
@@ -143,7 +148,7 @@ triggers:
 - 🟠 **严重**: 未初始化变量、竞态条件、边界错误
 - 🟡 **警告**: 死代码、冗余检查
 
-**参考文档**: `.refdocs/skills/logic_analyzer/SKILL.md`
+**参考文档**: [`../logic_analyzer/SKILL.md`](../logic_analyzer/SKILL.md)
 
 ---
 
@@ -165,7 +170,7 @@ triggers:
 - 🟠 **严重**: 场景未区分、事件覆盖不完整
 - 🟡 **警告**: 错误信息不清楚、trace缺失
 
-**参考文档**: `.refdocs/skills/dfx_reviewer/dfx_reviewer_universal.md`
+**参考文档**: [`../dfx_reviewer/SKILL.md`](../dfx_reviewer/SKILL.md)
 
 ---
 
@@ -199,7 +204,7 @@ triggers:
 - 🟠 **严重**: 日志格式错误、数据一致性问题、错误码处理不当
 - 🟡 **警告**: 锁内性能问题、可优化但不影响功能
 
-**参考文档**: `.refdocs/skills/code_review_checklist/SKILL.md`
+**参考文档**: [`../code_review_checklist/SKILL.md`](../code_review_checklist/SKILL.md)
 
 ---
 
@@ -219,7 +224,7 @@ triggers:
 - 🟡 **警告**: 边界条件或错误路径缺少测试覆盖
 - 🟢 **优化**: 测试质量可提升，但不影响基本验证
 
-**参考文档**: `.refdocs/skills/test_coverage_reviewer/SKILL.md`
+**参考文档**: [`../test_coverage_reviewer/SKILL.md`](../test_coverage_reviewer/SKILL.md)
 
 ---
 
@@ -240,7 +245,7 @@ triggers:
 - 🔴 **致命**: 无（编码风格不阻塞上库）→ 使用 🟡 **警告**
 - 🟡 **警告**: 格式化违规、命名不规范、注释缺失、类设计违规
 
-**参考文档**: `.refdocs/skills/code_review_checklist/SKILL.md`（F/G/H/I 节）
+**参考文档**: [`../code_review_checklist/SKILL.md`](../code_review_checklist/SKILL.md)（F/G/H/I 节）
 
 ---
 
@@ -428,6 +433,31 @@ DFX问题: N 个
 
 ---
 
+#### 步骤7: 兼容性影响评估 + 历史问题核对 🔥 必产出
+
+```bash
+# 1. 标记热点文件
+# 变更命中 base_bundle_installer.cpp / bundle_data_mgr.cpp / bundle_mgr_host_impl.cpp
+# → bundle_framework_common_issues.md HIST-1~12 全部必核
+
+# 2. 逐类核对历史问题（对照 ../bundle_framework_common_issues.md）
+# HIST-1 userId语义 / HIST-2 并发锁 / HIST-3 RDB兜底 / HIST-4 错误码
+# HIST-5 JSON解析 / HIST-6 IPC校验 / HIST-7 路径穿越 / HIST-8 一致性ID复用
+# HIST-9 预置OTA / HIST-10 HSP双模式 / HIST-11 日志DFX / HIST-12 告警fuzz
+
+# 3. 沿四条历史链路分析影响面
+# 安装/卸载/更新主流程 → 启动恢复 → 查询（_V9 双版本）→ 持久化（RDB/JSON）
+```
+
+**检查重点**:
+- IPC code / Parcel / 错误码 / 持久化数据 / 对外行为的兼容性逐项判定（`../code_review_checklist/SKILL.md` §A）
+- 历史问题是否复发：复发/疑似复发按 P1 起评级，finding 标注 `HIST-{n}`
+- 影响的历史功能清单与回归建议
+
+**输出**: 兼容性影响评估（直接写入统一报告 §6，含 6.1 影响面 / 6.2 兼容性检查 / 6.3 历史问题核对 / 6.4 结论与 `compat_risk`）
+
+---
+
 ### 2.3 汇总阶段
 
 #### 问题收集与分类
@@ -512,6 +542,12 @@ def aggregate_reports():
 ### 检查概览
 ### 问题详情
 ### 总结
+
+## 🔁 兼容性影响评估（必填章节，对应统一报告 §6）
+### 影响面分析（四条历史链路）
+### 兼容性检查结论（IPC code/Parcel/错误码/行为/持久化/五条主流程/性能）
+### 历史问题核对（HIST-1~12 对照表）
+### 兼容性结论（compat_risk + 回归建议）
 
 ## 问题汇总与优先级
 ### 按严重程度汇总
@@ -609,6 +645,18 @@ def aggregate_reports():
 
 ---
 
+#### 🔁 兼容性影响评估（必填）
+
+- ✅ **影响面分析**: {四条历史链路（安装/OTA/查询/持久化）波及面评估结果}
+- ❌ **历史问题核对**: {HIST-{n} 复发/疑似复发问题}（HIST-{ID}），{影响描述}
+- ✅ **IPC/Parcel/错误码兼容**: {检查结果}
+- ✅ **持久化数据兼容**: {旧数据加载检查结果}
+- {RATING_ICON} **compat_risk**: {none/low/medium/high}
+
+**小计**: {PASSED_COUNT}/{TOTAL_COUNT} 通过 {STATUS_ICON}
+
+---
+
 ### 🎯 总体评价
 
 | 维度 | 通过率 | 等级 | 评价 |
@@ -617,6 +665,7 @@ def aggregate_reports():
 | Logic Analyzer | {PERCENTAGE}% ({PASSED}/{TOTAL}) | {GRADE_ICON} {LEVEL} | {COMMENT} |
 | DFX Reviewer | {PERCENTAGE}% ({PASSED}/{TOTAL}) | {GRADE_ICON} {LEVEL} | {COMMENT} |
 | Code Review Checklist | {PERCENTAGE}% ({PASSED}/{TOTAL}) | {GRADE_ICON} {LEVEL} | {COMMENT} |
+| 兼容性影响评估 | {PERCENTAGE}% ({PASSED}/{TOTAL}) | {GRADE_ICON} {LEVEL} | compat_risk={LEVEL} |
 | Coding Style Review | {PERCENTAGE}% ({PASSED}/{TOTAL}) | {GRADE_ICON} {LEVEL} | {COMMENT} |
 
 **整体评分**: {SCORE}/100 ({GRADE_ICON} {LEVEL})
@@ -920,6 +969,7 @@ def aggregate_reports():
 - **C-{NN}**: Code Review Checklist 问题
 - **T-{NN}**: Test Coverage Reviewer 问题
 - **F-{NN}**: Coding Style Review 问题（编码风格/格式）
+- **HIST-{n}**: 历史典型问题复发标签（追加在其他编号后，n 为 [`../bundle_framework_common_issues.md`](../bundle_framework_common_issues.md) 中的问题类别 1~12）
 
 其中 NN 为两位数字序号（01, 02, 03...）
 
@@ -1092,6 +1142,7 @@ def aggregate_reports():
 | v1.1 | 2026-04-01 | 优化报告模板：Summary改为checklist形式 | AI Assistant |
 | v1.2 | 2026-05-29 | 新增第5个检查维度：Test Coverage Reviewer（测试覆盖度检查） | AI Assistant |
 | v1.3 | 2026-06-09 | 新增第6个检查维度：Coding Style Review（编码风格检查），涵盖格式化、命名、注释、类设计规范 | AI Assistant |
+| v1.4 | 2026-09-14 | bundle_framework 定制化：新增第7个必产出维度「兼容性影响评估 + 历史问题核对」（统一报告 §6，对照 bundle_framework_common_issues.md HIST-1~12）；修复 .refdocs 失效引用为相对路径 | BMS CodeCheck Team |
 
 ---
 

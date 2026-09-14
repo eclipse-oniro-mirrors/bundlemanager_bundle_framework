@@ -360,44 +360,41 @@ if (count < vector.size()) {
 
 #### 问题 1: 非法状态转换 (Illegal State Transition)
 
+**bundle_framework 核心状态机（真实代码）**：`BundleDataMgr::UpdateBundleInstallState` 维护 `InstallState` 状态机，仅允许 `transferStates_` 中预定义的转换（`bundle_data_mgr.cpp:304-343`，转换表 `:5562-5589`）。关键转换路径：
+
+```
+INSTALL_START → INSTALL_SUCCESS / INSTALL_FAIL          （首次安装）
+INSTALL_SUCCESS → UNINSTALL_START → UNINSTALL_SUCCESS   （正常卸载）
+INSTALL_SUCCESS → UPDATING_START → UPDATING_SUCCESS     （更新成功）
+INSTALL_SUCCESS → UPDATING_START → UPDATING_FAIL → INSTALL_SUCCESS（更新失败回滚）
+INSTALL_SUCCESS → ROLL_BACK → INSTALL_SUCCESS           （回滚到原状态）
+```
+
+`INSTALL_FAIL`、`UNINSTALL_FAIL`、`UNINSTALL_SUCCESS`、`UPDATING_FAIL` 属于 `IsDeleteDataState`（`:5592-5596`），会触发 `DeleteBundleInfo` 删除内存与 DB 记录——**误触发即数据丢失**。
+
 **检测模式：**
 ```cpp
-// ❌ 问题：不合法的状态转换
-enum State { CREATED, ACTIVATING, ACTIVE, DEACTIVATING };
-void ChangeState(State newState) {
-    // 允许任何转换，包括非法的
-    currentState_ = newState;
-}
+// ❌ 问题：绕过状态机直接改状态（checklist B3）
+// innerBundleInfo.SetInstallState(InstallState::UNINSTALL_SUCCESS);  // 未走 UpdateBundleInstallState，
+                                                                       // 绕过 transferStates_ 校验，
+                                                                       // 可能误触发 DeleteBundleInfo
 
-// 示例非法转换：
-// CREATED -> DEACTIVATING (跳过ACTIVATING和ACTIVE)
-// ACTIVE -> CREATED (跳过DEACTIVATING)
+// ❌ 问题：不检查状态转换返回值，转换被拒后继续执行
+UpdateBundleInstallState(bundleName, InstallState::UNINSTALL_START);   // 返回 false 被忽略
+// ... 继续卸载流程，状态机与实际流程脱节，异常时卡死在中间态
 
-// ✅ 正确：验证状态转换
-bool ChangeState(State newState) {
-    switch (currentState_) {
-        case CREATED:
-            if (newState != ACTIVATING) {
-                HILOG_ERROR("Invalid transition: CREATED -> %{public}d", newState);
-                return false;
-            }
-            break;
-        case ACTIVATING:
-            if (newState != ACTIVE && newState != CREATED) {
-                return false;
-            }
-            break;
-        // ... 其他状态验证
-    }
-    currentState_ = newState;
-    return true;
+// ✅ 正确：走状态机 + 检查返回值，失败即中止
+if (!dataMgr_->UpdateBundleInstallState(bundleName, InstallState::UNINSTALL_START)) {
+    APP_LOGE("state transition rejected, bundleName=%{private}s", bundleName.c_str());
+    return ERR_APPEXECFWK_UPDATE_BUNDLE_INSTALL_STATUS_ERROR;
 }
 ```
 
 **检测方法：**
-- 构建状态转换图
-- 验证所有转换的合法性
-- 检查是否遗漏中间状态
+- 构建状态转换图（以 `transferStates_` 为准）
+- 验证所有转换的合法性；搜索所有绕过 `UpdateBundleInstallState` 直接 `SetInstallState` 的写点
+- 检查异常路径（installd 死亡、进程被杀）下状态是否会卡在 `INSTALL_START`/`UNINSTALL_START` 等中间态，以及重启后 `BundleExceptionHandler` 能否恢复
+- 安装器侧同步检查 `BaseBundleInstaller::InstallerState` 步进状态机（`base_bundle_installer.h:82-91`，5 步增量：CHECKED→SYSCAP_CHECKED→SIGNATURE_CHECKED→PARSED→...）是否在所有失败分支都有出口
 
 ---
 
@@ -405,44 +402,31 @@ bool ChangeState(State newState) {
 
 **检测模式：**
 ```cpp
-// ❌ 问题：状态与实际数据不一致
-class Account {
-    State state_;
-    bool isActive_;
+// ❌ 问题（bundle_framework 真实场景）：InstallState 状态与 DB/内存数据不一致
+// bundle_data_mgr.cpp 中状态机转换成功，但后续数据落盘失败，状态未回退
+ErrCode BundleDataMgr::UpdateBundleInstallState(...)
+{
+    // 已将内存中 InstallState 更新为 UNINSTALL_SUCCESS（并触发 DeleteBundleInfo），
+    // 但 dataStorage_->SaveStorageBundleInfo 落盘失败 → 内存/DB/磁盘三方状态不一致
+    // （对应 checklist B2 三方一致性、HIST-3 RDB 异常兜底）
+}
 
-    void Activate() {
-        state_ = ACTIVE;
-        // 忘记更新 isActive_
-    }
-
-    bool IsActive() {
-        return isActive_;  // 返回旧值
-    }
-};
-
-// ❌ 问题：多状态变量不同步
-class Connection {
-    bool isConnected_;
-    bool isReady_;
-    bool hasError_;
-
-    void Connect() {
-        isConnected_ = true;
-        // isReady_ 未更新，导致不一致
+// ❌ 问题：多状态变量不同步（安装器场景）
+class BaseBundleInstaller {
+    InstallerState state_;        // 状态机当前态
+    bool isInstallSuccess_;       // 冗余的成功标志
+    void MarkInstallFinish() {
+        state_ = INSTALL_BUNDLE_FINISHED;
+        // 忘记同步 isInstallSuccess_ / versionCode_ 等冗余字段
     }
 };
 
-// ✅ 正确：确保状态一致性
-class Account {
-    State state_;
+// ✅ 正确：单一状态源，或保证同步更新
+class BaseBundleInstaller {
+    InstallerState state_;   // 单一状态源
 
-    void Activate() {
-        state_ = ACTIVE;
-        // 单一状态源，无需同步多个变量
-    }
-
-    bool IsActive() {
-        return state_ == ACTIVE;
+    bool IsInstallSuccess() {
+        return state_ == INSTALL_BUNDLE_FINISHED;   // 由状态派生，不会失步
     }
 };
 ```
@@ -557,42 +541,26 @@ void CopyData(const std::vector<int>& src, int* dest, int destSize) {
 
 **检测模式：**
 ```cpp
-// ❌ 问题：未检查空指针
-void ProcessData(Account* account) {
-    account->Update();  // account可能为nullptr
+// ❌ 问题（bundle_framework 真实场景）：查询接口返回的裸指针未判空
+// bundle_data_mgr.cpp 中 GetInnerBundleInfo 系列查不到时返回 nullptr
+void ProcessBundle(const std::string &bundleName) {
+    auto info = dataMgr_->GetInnerBundleInfo(bundleName);
+    info->GetBundleName();   // ❌ bundle 未安装时 info 为 nullptr，直接崩溃
 }
 
-// ❌ 问题：检查后再次使用
-void Process(Account* account) {
-    if (account != nullptr) {
-        DoSomething(account);
+// ❌ 问题：iface_cast / GetInstance 结果未判空
+auto installdClient = InstalldClient::GetInstance();
+installdClient->CreateBundleDir(...);   // ❌ GetInstance 理论上可为空，且内部 proxy 可能未连接
+
+// ✅ 正确：完整的空指针检查（本仓惯例：if (xxx == nullptr) + LOG_E + 返回错误码）
+ErrCode ProcessBundle(const std::string &bundleName) {
+    std::shared_ptr<InnerBundleInfo> info;
+    if (!dataMgr_->GetInnerBundleInfo(bundleName, info)) {
+        APP_LOGE("get inner bundle info failed, bundleName=%{private}s", bundleName.c_str());
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
-    account->Update();  // 可能已经是nullptr
-}
-
-// ❌ 问题：函数调用后未验证返回值
-Account* GetAccount(int id);
-void UseAccount(int id) {
-    Account* account = GetAccount(id);
-    account->Process();  // GetAccount可能返回nullptr
-}
-
-// ✅ 正确：完整的空指针检查
-void ProcessData(Account* account) {
-    if (account == nullptr) {
-        HILOG_ERROR("Account is null");
-        return;
-    }
-    account->Update();
-}
-
-void UseAccount(int id) {
-    Account* account = GetAccount(id);
-    if (account == nullptr) {
-        HILOG_ERROR("Account not found: %{public}d", id);
-        return;
-    }
-    account->Process();
+    // 安全使用 info
+    return ERR_OK;
 }
 ```
 
@@ -658,38 +626,33 @@ void ProcessFile(const std::string& path) {
     fclose(file);
 }
 
-// ❌ 问题：部分错误处理
-ErrCode CreateAccount(const AccountInfo& info) {
-    if (!ValidateInfo(info)) {
-        return ERR_INVALID;
+// ❌ 问题（bundle_framework 真实场景，对应 HIST-3）：内存更新成功但 DB 落盘失败被忽略
+ErrCode BundleDataMgr::UpdateInnerBundleInfo(const InnerBundleInfo &info, bool needSaveStorage)
+{
+    // 1. 更新内存 bundleInfos_ ...
+    if (needSaveStorage && !dataStorage_->SaveStorageBundleInfo(info)) {
+        // ❌ 错误写法：仅打一条 log 就返回 ERR_OK，内存态与 RDB 持久态从此不一致，
+        //    重启后数据回退（历史案例：3219c1f41 数据库异常兜底）
+        APP_LOGW("save storage bundle info failed");
+        return ERR_OK;
     }
-    // 未检查数据库写入是否成功
-    database_->Insert(info);
-    // 未检查文件写入是否成功
-    WriteToFile(info);
     return ERR_OK;
 }
 
-// ✅ 正确：完整的错误处理
-ErrCode CreateAccount(const AccountInfo& info) {
-    if (!ValidateInfo(info)) {
-        return ERR_INVALID;
+// ✅ 正确：完整的错误处理（拷贝→持久化→替换三段式，失败回滚内存，对应 HIST-8）
+ErrCode BundleDataMgr::UpdateInnerBundleInfo(const InnerBundleInfo &info, bool needSaveStorage)
+{
+    // 1. 先持久化
+    if (needSaveStorage && !dataStorage_->SaveStorageBundleInfo(info)) {
+        APP_LOGE("SaveStorageBundleInfo failed");
+        EventReport::SendDbErrorEvent(...);   // DB 故障打点（dfx_reviewer）
+        return ERR_APPEXECFWK_UPDATE_BUNDLE_ERROR;
     }
-
-    ErrCode ret = database_->Insert(info);
-    if (ret != ERR_OK) {
-        HILOG_ERROR("Database insert failed: %{public}d", ret);
-        return ret;
+    // 2. 持久化成功后再替换内存
+    {
+        std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        bundleInfos_[key] = info;
     }
-
-    ret = WriteToFile(info);
-    if (ret != ERR_OK) {
-        HILOG_ERROR("File write failed: %{public}d", ret);
-        // 回滚数据库操作
-        database_->Delete(info.id);
-        return ret;
-    }
-
     return ERR_OK;
 }
 ```
@@ -807,6 +770,35 @@ void Thread2() {
 - 检查是否存在循环依赖
 - 验证锁顺序的一致性
 
+**bundle_framework 真实锁模型与检查点（对应 HIST-2）：**
+```cpp
+// BundleDataMgr 双锁模型，嵌套时固定顺序：先 bundleInfoMutex_ 后 stateMutex_（bundle_data_mgr.cpp:245）
+std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);   // 写锁
+std::lock_guard<std::mutex> stateLock(stateMutex_);
+
+// ❌ 历史案例 2aecf8dad（lost wakeup 死锁）：notify 不持锁
+{
+    // std::unique_lock<std::mutex> lock(cvMutex_);
+    ready_ = true;
+}   // 锁已释放
+cv.notify_all();   // ❌ 等待线程在"检查 ready_ 失败 → 进入等待"与"notify 发出"之间被调度 → 永久阻塞
+
+// ✅ 正确：状态修改与 notify 在同一临界区内
+{
+    std::unique_lock<std::mutex> lock(cvMutex_);
+    ready_ = true;
+    cv.notify_all();
+}
+
+// ❌ 锁内调用同步 IPC / 递归加锁：持 per-bundle mutex 期间调用 InstalldClient / AbilityManagerHelper
+//    （同步 IPC），或 GetBundleMutex(A) 内再取 GetBundleMutex(B) —— 检视时按 checklist B1 核对
+// ✅ 双模式切换等长操作使用 try_to_lock 防死锁（bundle_data_mgr.cpp:645）：
+std::unique_lock<std::shared_mutex> switchLock(dualModeSwitchMutex_, std::try_to_lock);
+if (!switchLock.owns_lock()) {
+    return ERR_APPEXECFWK_DUAL_MODE_SWITCH_BUSY;
+}
+```
+
 ---
 
 #### 问题 2: 竞态条件 (Race Condition)
@@ -824,18 +816,19 @@ void Increment() {
     count_++;  // 非原子操作，三个步骤：读取、增加、写入
 }
 
-// ❌ 问题：状态不一致读取
-class Account {
-    int balance_;
-    void Deposit(int amount) {
-        balance_ += amount;
-    }
-    int GetBalance() {
-        return balance_;  // 可能读到部分更新的值
-    }
-};
+// ❌ 问题（bundle_framework 真实场景，对应 HIST-2）：锁外读、锁内写，读-改-写跨越锁边界
+// bundle_data_mgr.cpp 历史案例：GetJsonProfile 锁外拿到的引用在锁释放后继续使用（b2c211568）
+auto &info = GetInfoRefUnsafe(bundleName);   // 锁外读
+{
+    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    info.SetInstalled(true);                 // 锁内写：info 可能已被其他线程删除/替换
+}
 
-// ✅ 正确：使用原子操作或锁
+// ❌ 问题（bundle_framework 真实场景，对应 HIST-2）：临时目录名仅用时间戳，并发安装重名（20f547b17）
+std::string tmpDir = codePath + std::to_string(std::chrono::system_clock::now()
+    .time_since_epoch().count());            // ❌ 两个并发任务同纳秒 → 冲突
+
+// ✅ 正确：使用原子操作或锁；临时名加进程内唯一 ID
 std::atomic<int> count_;
 void Increment() {
     count_.fetch_add(1, std::memory_order_relaxed);
@@ -848,6 +841,17 @@ void Increment() {
     std::lock_guard<std::mutex> lock(mutex_);
     count_++;
 }
+
+// ✅ 正确（bundle_framework）：整个读-改-写放在同一临界区内
+{
+    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto it = bundleInfos_.find(bundleName);
+    if (it != bundleInfos_.end()) {
+        it->second.SetInstalled(true);
+    }
+}
+// 临时目录名：时间戳 + 原子自增序号（或 installerId）
+std::string tmpDir = codePath + std::to_string(installerId_);
 ```
 
 **检测方法：**
@@ -918,42 +922,28 @@ class Buffer {
 
 **检测模式：**
 ```cpp
-// ❌ 问题：破坏不变性
-class AccountManager {
-    std::map<int, Account> accounts_;
-    int maxAccounts_;  // 不变性：accounts_.size() <= maxAccounts_
+// ❌ 问题（bundle_framework 真实场景，对应 HIST-8）：bundleId 立即复用破坏"ID 唯一"不变性
+// 历史案例 8ae3d8d95：卸载后 bundleId 立即被复用 → 缓存/权限串应用
+int32_t AllocateBundleId() {
+    // ❌ 错误：只依赖内存 map 中当前最大值 +1，卸载释放的 ID 立即被新安装复用
+    return GetMaxBundleIdInMemory() + 1;
+}
 
-    ErrCode AddAccount(const Account& account) {
-        accounts_[account.id] = account;
-        // 未检查是否超过maxAccounts_
-        return ERR_OK;
-    }
-};
+// ✅ 正确：持久化游标 + 防立即复用（lastAllocatedBundleId 落盘）
+int32_t AllocateBundleId() {
+    int32_t nextId = lastAllocatedBundleId_ + 1;   // 游标只前进不回退
+    SaveLastAllocatedBundleId(nextId);             // 持久化，重启后不回退
+    return nextId;
+}
 
-// ❌ 问题：约束条件违反
-class PriorityQueue {
-    std::vector<int> data_;
-
-    void Add(int value) {
-        data_.push_back(value);
-        // 忘记调整堆结构，破坏堆性质
-    }
-};
+// ❌ 问题：约束条件违反（每 bundle 必须持有独立 per-bundle mutex 的不变性）
+// 直接绕过 GetBundleMutex 修改 bundleInfos_（对应 checklist B1）
+bundleInfos_[bundleName] = info;   // ❌ 无锁直改
 
 // ✅ 正确：维护不变性
-class AccountManager {
-    std::map<int, Account> accounts_;
-    int maxAccounts_;
-
-    ErrCode AddAccount(const Account& account) {
-        if (accounts_.size() >= maxAccounts_) {
-            HILOG_ERROR("Max accounts limit reached");
-            return ERR_LIMIT_REACHED;
-        }
-        accounts_[account.id] = account;
-        return ERR_OK;
-    }
-};
+auto &mtx = dataMgr_->GetBundleMutex(bundleName);
+std::lock_guard lock {mtx};
+// ... 拷贝 → 持久化 → 替换 ...
 ```
 
 **检测方法：**
@@ -1005,6 +995,41 @@ int GetNextId() {
 - 识别函数的前置/后置条件
 - 检查前置条件验证
 - 验证后置条件保证
+
+---
+
+## 3.8 bundle_framework 定制分析维度（本仓必查）
+
+> 以下维度来自 bundle_framework 的真实架构与 git 历史高频缺陷（详见 [`../bundle_framework_common_issues.md`](../bundle_framework_common_issues.md)），是本仓逻辑分析的**必查项**，优先级高于通用维度。
+
+### BM-1 userId 语义一致性（HIST-1）
+
+- [ ] 每个userId 使用点区分 `requestUserId`（调用方传入）与 `responseUserId`（映射后），与同函数既有分支一致（历史案例 `9557928a6`：8 处调用点混用）
+- [ ] 特殊值显式分支：`Constants::UNSPECIFIED_USERID(-2)` / `ALL_USERID(-3)` / `ANY_USERID(-4)`（`bundle_constants.h:42-44`）与 user 0
+- [ ] userId 解析走 `OHOS::StrToInt` 等安全接口并校验 INVALID_USERID（历史案例 `198da84d3`、`f09860073`：std::stoi 解析崩溃）
+- [ ] 调用方类型分派正确：native/shell 用前台用户，hap 用 uid 推导（`account_helper.cpp:81-91` `GetUserIdByCallerType`）
+
+### BM-2 三方一致性：内存 bundleInfos_ ↔ RDB ↔ 文件系统（HIST-3/8，对应 checklist B2）
+
+- [ ] 修改顺序：拷贝 → 持久化 → 替换内存（历史案例 `4142de240` copy-then-replace），禁止拿可变引用原地改
+- [ ] `SaveStorageBundleInfo` 返回 false 必须处理（历史案例：忽略返回值导致重启后数据回退）
+- [ ] 失败回滚覆盖所有副作用（ScopeGuard `Dismiss()`，checklist B7）
+
+### BM-3 状态机双检：InstallState 与 InstallerState（见 3.3）
+
+- [ ] 不绕过 `UpdateBundleInstallState` 直改状态；`IsDeleteDataState` 触发面（误触发即数据丢失）
+- [ ] 安装器 `InstallerState` 步进在所有失败分支有出口
+
+### BM-4 预置/OTA/双模式分支覆盖（HIST-9/10）
+
+- [ ] 新分支逻辑覆盖四组合：三方/系统 × 新装/升级 × user 0/普通用户
+- [ ] 新特性 flag/policy 在 install/uninstall/OTA/预置/query 五条主流程都被消费（历史案例 `4ff44f4c2` OTA 子模式安装失败：新特性遗漏旧分支）
+- [ ] 双模式分支同时验证主模式与子模式
+
+### BM-5 共享资源并发保护（HIST-2，见 3.6）
+
+- [ ] `bundleInfos_`、`uidMap_`、callback 列表、`installdProxy_` 的访问点全部有锁
+- [ ] 锁内无 IPC/文件 IO/递归加锁；cv notify 与状态修改同临界区
 
 ---
 
@@ -1126,13 +1151,13 @@ int GetNextId() {
 ### 5.1 报告结构
 
 ```markdown
-# 代码逻辑变更分析报告
+# 代码逻辑变更分析报告（bundle_framework）
 
 ## 1. 变更概览
 
 ### 变更文件
-- `src/account_manager.cpp`: 45 行变更
-- `include/account_manager.h`: 3 行变更
+- `services/bundlemgr/src/bundle_data_mgr.cpp`: 45 行变更
+- `services/bundlemgr/include/bundle_data_mgr.h`: 3 行变更
 
 ### 变更类型
 - 控制流变更: 2 处
@@ -1140,8 +1165,8 @@ int GetNextId() {
 - 状态转换变更: 1 处
 
 ### 影响范围评估
-- 直接影响: AccountManager类及其3个调用者
-- 间接影响: 可能影响所有依赖账户状态的模块
+- 直接影响: BundleDataMgr 及其 3 个调用者（bundle_mgr_host_impl / base_bundle_installer / bundle_user_mgr_host_impl）
+- 间接影响: 查询链路（含 _V9 双版本接口）、卸载链路、开机扫描恢复链路
 - 风险等级: **高** ⚠️
 
 ---
@@ -1150,33 +1175,29 @@ int GetNextId() {
 
 ### 问题 1: 状态转换非法 (致命)
 
-**位置**: `src/account_manager.cpp:123-127`
+**位置**: `services/bundlemgr/src/bundle_data_mgr.cpp:123-127`
 
 **问题描述**:
-从CREATED状态直接转换到DEACTIVATED状态，跳过了ACTIVE状态。
+绕过 UpdateBundleInstallState 直接 SetInstallState(UNINSTALL_SUCCESS)，
+误触发 IsDeleteDataState → DeleteBundleInfo，卸载失败场景下误删应用数据。
 
 **当前代码**:
 ```cpp
-ErrCode AccountManager::DeactivateAccount(int id) {
-    accounts_[id].state_ = DEACTIVATED;  // 非法转换
-    return ERR_OK;
-}
+// 直接置为卸载成功，未走状态机校验
+innerBundleInfo.SetInstallState(InstallState::UNINSTALL_SUCCESS);
 ```
 
 **影响**:
-- 破坏状态机完整性
-- 可能导致后续操作异常
-- 账户数据不一致
+- 破坏状态机完整性（transferStates_ 被绕过）
+- 误触发 IsDeleteDataState 的删除路径，可能导致用户数据丢失
+- 内存/DB/文件系统三方不一致（对应 HIST-3/HIST-8）
 
 **修复建议**:
 ```cpp
-ErrCode AccountManager::DeactivateAccount(int id) {
-    if (accounts_[id].state_ != ACTIVE) {
-        HILOG_ERROR("Cannot deactivate non-active account");
-        return ERR_INVALID_STATE;
-    }
-    accounts_[id].state_ = DEACTIVATED;
-    return ERR_OK;
+// 走状态机，检查返回值，失败即中止
+if (!dataMgr_->UpdateBundleInstallState(bundleName, InstallState::UNINSTALL_SUCCESS)) {
+    APP_LOGE("state transition rejected, bundleName=%{private}s", bundleName.c_str());
+    return ERR_APPEXECFWK_UPDATE_BUNDLE_INSTALL_STATUS_ERROR;
 }
 ```
 
@@ -1186,50 +1207,37 @@ ErrCode AccountManager::DeactivateAccount(int id) {
 
 ### 问题 2: 错误路径遗漏 (严重)
 
-**位置**: `src/account_manager.cpp:145-152`
+**位置**: `services/bundlemgr/src/bundle_data_mgr.cpp:145-152`
 
 **问题描述**:
-CreateAccount函数未检查数据库插入是否成功。
+UpdateInnerBundleInfo 未检查 SaveStorageBundleInfo 落盘是否成功，
+内存态与 RDB 持久态不一致（对应 HIST-3，历史案例 3219c1f41 数据库异常兜底）。
 
 **当前代码**:
 ```cpp
-ErrCode AccountManager::CreateAccount(const AccountInfo& info) {
-    if (!ValidateInfo(info)) {
-        return ERR_INVALID;
-    }
-    database_->Insert(info);  // 未检查返回值
-    WriteToFile(info);
-    return ERR_OK;
-}
+dataStorage_->SaveStorageBundleInfo(info);   // 返回值被忽略
+bundleInfos_[key] = info;                    // 内存照常更新
+return ERR_OK;
 ```
 
 **影响**:
-- 数据库失败时状态不一致
-- 文件已写入但数据库未记录
-- 数据恢复困难
+- DB 写失败时内存/DB 不一致
+- 重启后应用列表回退或缺失
+- 无法触发数据库异常兜底重建
 
 **修复建议**:
 ```cpp
-ErrCode AccountManager::CreateAccount(const AccountInfo& info) {
-    if (!ValidateInfo(info)) {
-        return ERR_INVALID;
-    }
-
-    ErrCode ret = database_->Insert(info);
-    if (ret != ERR_OK) {
-        HILOG_ERROR("Database insert failed: %{public}d", ret);
-        return ret;
-    }
-
-    ret = WriteToFile(info);
-    if (ret != ERR_OK) {
-        HILOG_ERROR("File write failed: %{public}d", ret);
-        database_->Delete(info.id);  // 回滚
-        return ret;
-    }
-
-    return ERR_OK;
+// 拷贝 → 持久化 → 替换 三段式（HIST-8 历史案例 4142de240）
+if (!dataStorage_->SaveStorageBundleInfo(info)) {
+    APP_LOGE("SaveStorageBundleInfo failed, bundleName=%{private}s", bundleName.c_str());
+    EventReport::SendDbErrorEvent(...);
+    return ERR_APPEXECFWK_UPDATE_BUNDLE_ERROR;   // 不更新内存
 }
+{
+    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    bundleInfos_[key] = info;
+}
+return ERR_OK;
 ```
 
 **严重等级**: 🟠 严重
@@ -1238,30 +1246,34 @@ ErrCode AccountManager::CreateAccount(const AccountInfo& info) {
 
 ### 问题 3: 竞态条件 (严重)
 
-**位置**: `src/account_manager.cpp:89-93`
+**位置**: `services/bundlemgr/src/bundle_data_mgr.cpp:89-93`
 
 **问题描述**:
-Check-Then-Act模式导致竞态条件。
+锁外读取 bundleInfos_ 引用、锁内使用，Check-Then-Act 跨越锁边界
+（对应 HIST-2，历史案例 b2c211568 fix GetJsonProfile lock）。
 
 **当前代码**:
 ```cpp
-bool AccountManager::HasAccount(int id) {
-    if (accounts_.find(id) == accounts_.end()) {
-        return false;
-    }
-    return true;
+auto &info = GetMutableInfoRefUnsafe(bundleName);   // 锁外拿引用
+{
+    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    info.SetInstalled(true);   // 引用可能已被其他线程删除/替换
 }
 ```
 
 **影响**:
-- 多线程环境下结果不准确
-- 可能导致重复创建账户
+- 多线程环境下悬空引用/数据竞争
+- 可能导致 UAF 崩溃或状态错乱
 
 **修复建议**:
 ```cpp
-bool AccountManager::HasAccount(int id) {
-    std::lock_guard<std::mutex> lock(mutex_);
-    return accounts_.find(id) != accounts_.end();
+// 读-改-写整体放入同一临界区
+{
+    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto it = bundleInfos_.find(bundleName);
+    if (it != bundleInfos_.end()) {
+        it->second.SetInstalled(true);
+    }
 }
 ```
 
@@ -1272,14 +1284,15 @@ bool AccountManager::HasAccount(int id) {
 ## 3. 影响分析
 
 ### 直接影响
-- `AccountManager::DeactivateAccount()`: 行为改变
-- `AccountManager::CreateAccount()`: 错误处理不完整
-- `AccountManager::HasAccount()`: 线程不安全
+- `BundleDataMgr::UpdateBundleInstallState()`: 状态机行为改变
+- `BundleDataMgr::UpdateInnerBundleInfo()`: 错误处理不完整
+- `BundleDataMgr::GetInnerBundleInfo()`: 并发安全
 
-### 间接影响
-- 所有调用`HasAccount()`的代码可能受影响
-- 依赖账户状态的下游模块
-- 可能触发数据不一致问题
+### 间接影响（bundle_framework 四条历史链路）
+- 安装/卸载/更新主流程：base_bundle_installer 等安装器共享该数据层
+- 启动恢复链路：重启后 BundleExceptionHandler 依赖持久化状态恢复
+- 查询链路：bundle_mgr_host_impl 各查询接口（含 _V9 双版本）读取同一份数据
+- 持久化链路：RDB 记录与 JSON 序列化兼容旧数据
 
 ### 风险评估
 - **数据一致性**: 高风险 🔴
@@ -1296,16 +1309,25 @@ bool AccountManager::HasAccount(int id) {
 3. 问题3: 竞态条件
 
 ### 应该修复 (建议)
-- 添加单元测试覆盖边界条件
+- 添加单元测试覆盖边界条件（services/bundlemgr/test/unittest/bms_bundle_data_mgr_test/）
 - 增加日志记录便于调试
 
 ### 可以考虑 (优化)
-- 重构状态机使用状态模式
-- 引入契约式编程库
+- 缩小锁粒度（参考历史 a6a17b8a2 narrow lock scope）
+- 引入 ScopeGuard 统一失败回滚
 
 ---
 
-## 5. 总结
+## 5. 兼容性影响评估（供统一报告 §6 汇总）
+
+- **影响的历史功能**: {如：多用户卸载保留数据、OTA 升级后开机扫描恢复}
+- **历史问题核对**: 对照 bundle_framework_common_issues.md HIST-1~12，
+  本变更涉及 {HIST-2/HIST-3/HIST-8}，核对结论 {未复发/疑似复发 + 证据}
+- **compat_risk**: {none/low/medium/high} + 理由
+
+---
+
+## 6. 总结
 
 本次代码变更引入了**3个严重的逻辑问题**，主要涉及：
 1. 状态机完整性
@@ -1327,13 +1349,16 @@ bool AccountManager::HasAccount(int id) {
 
 ```bash
 # 分析特定分支的代码变更
-claude-code "使用logic_analyzer技能分析分支feature-xxx相对于main的代码逻辑变更"
+"使用 logic_analyzer 分析分支 feature-xxx 相对于 master 的代码逻辑变更"
 
 # 分析特定文件的变更
-claude-code "使用logic_analyzer技能分析src/account_manager.cpp文件的逻辑变更"
+"使用 logic_analyzer 分析 services/bundlemgr/src/bundle_data_mgr.cpp 的逻辑变更"
 
 # 分析特定问题类型
-claude-code "使用logic_analyzer技能检查状态机相关的逻辑问题"
+"使用 logic_analyzer 检查本次变更中 InstallState 状态机相关的逻辑问题"
+
+# 检查是否复发历史问题
+"使用 logic_analyzer 对照 bundle_framework_common_issues.md 核对本分支是否复发 HIST-1~12"
 ```
 
 ### 6.2 分析流程
@@ -1342,20 +1367,25 @@ claude-code "使用logic_analyzer技能检查状态机相关的逻辑问题"
 1. 识别变更
    ├─ 获取变更文件列表
    ├─ 分类变更类型
+   ├─ 标记是否涉及热点文件（bundle_framework_common_issues.md §0）
    └─ 识别影响范围
 
 2. 执行分析
+   ├─ bundle_framework 定制维度（BM-1~BM-5，§3.8，优先）
    ├─ 控制流分析
    ├─ 数据流分析
-   ├─ 状态机分析
+   ├─ 状态机分析（InstallState / InstallerState）
    ├─ 边界条件分析
    ├─ 错误处理分析
-   ├─ 并发控制分析
+   ├─ 并发控制分析（bundleInfoMutex_/stateMutex_/per-bundle mutex 锁模型）
    └─ 业务规则分析
 
-3. 生成报告
-   ├─ 问题发现与分类
-   ├─ 影响分析
+3. 历史问题核对（强制）
+   └─ 对照 bundle_framework_common_issues.md HIST-1~12 逐一核对是否复发
+
+4. 生成报告
+   ├─ 问题发现与分类（复发问题标 HIST-{n}）
+   ├─ 影响分析（含兼容性影响：四条历史链路波及面）
    ├─ 风险评估
    └─ 修复建议
 ```
@@ -1367,6 +1397,7 @@ claude-code "使用logic_analyzer技能检查状态机相关的逻辑问题"
 | 版本 | 日期 | 变更 | 维护者 |
 |---------|------|---------|------------|
 | v1.0 | 2026-04-01 | 初始版本，完整的逻辑分析框架 | AI Assistant |
+| v2.0 | 2026-09-14 | bundle_framework 定制化：示例替换为本仓真实代码（InstallState 状态机、bundleInfoMutex_ 锁模型、三方一致性）；新增 §3.8 定制分析维度（BM-1~5）；新增历史问题核对强制步骤与兼容性影响输出 | BMS CodeCheck Team |
 
 ---
 

@@ -1,7 +1,7 @@
 ---
 name: dfx_reviewer
-description: Bundle Framework DFX 代码审查技能，专注于 HiLog API、HiSysEvent 和 HiTrace 组件的审查，包含日志基础规范、常见模式日志打印检查
-version: 2.1.0
+description: Bundle Framework DFX 代码审查技能，专注于 HiLog API、HiSysEvent 和 HiTrace 组件的审查，包含日志基础规范、常见模式日志打印检查、历史问题核对与兼容性影响评估
+version: 2.2.0
 author: DFX Team
 tags:
   - dfx
@@ -1668,6 +1668,33 @@ TEST(EventReportTest, TestInstallExceptionReporting)
     // Verify via mock that HiSysEventWrite was called with expected params
 }
 ```
+
+## 历史典型问题核对（强制步骤，对照 HIST-11）
+
+> 每次检视必须对照 [`../bundle_framework_common_issues.md`](../bundle_framework_common_issues.md) 判断本 PR 是否复发历史已有问题。DFX 维度对应 **HIST-11 日志/DFX 规范不达标**：本仓长期滚动"日志整改"系列（2024-08 至 2026-09 共 30+ 笔，如 `be439c4d0` 日志整改13、`ca8052268` fix print log errCode），说明日志规范问题在本仓是**高频复发项**。
+
+**检视时逐条核对（新增/修改的每条日志与每个事件）：**
+- [ ] 新增 APP_LOG/LOG_* 是否带正确 BMS_TAG 与 `%{public}`/`%{private}` 标注（userId/bundleName/路径按敏感级别脱敏）；
+- [ ] errCode 优先打印数值（`errCode=%{public}d`）而非仅文案（历史整改点 `ca8052268`）；
+- [ ] 无循环内打印、无 ERROR 级别描述正常分支；
+- [ ] HiSysEvent 事件参数与 `hisysevent.yaml` 定义一致（历史偏差会被 DFX 校验拦截）；
+- [ ] 若本 PR 本身就是日志整改类提交：确认未顺带改变行为逻辑（整改 PR 混入功能变更是历史回修根因之一）。
+
+核对结论写入统一报告 §6.3 历史问题核对表的 HIST-11 行。
+
+## 兼容性影响（强制输出，供统一报告 §6 汇总）
+
+DFX 变更同样有兼容性影响面，检视时必须评估并输出：
+
+| 兼容性项 | 检查内容 |
+|---|---|
+| `hisysevent.yaml` / `bundle_hisysevent.yaml` 变更 | 事件名/参数是否**只增不改不删**——修改既有事件参数会破坏数据平台（DFT）已有的解析与看板；删除事件导致历史监控断流 |
+| 日志格式变更 | 既有日志文案被自动化脚本（测试断言、问题定位工具）依赖时，改动需评估解析兼容；建议"新增日志"而非"改写既有日志文案" |
+| 日志级别变更 | 既有 WARN→INFO 等级别调整会影响告警规则与日志采集策略 |
+| EventInfo 字段变更 | `event_report.h` 字段增删影响所有 `Send*` 调用点与事件消费者，需全量检查 |
+| 行为逻辑影响 | DFX 整改（打点/日志调整）不得改变业务行为；打点调用移位（如从锁内移到锁外、从校验前移到校验后）需确认不影响时序语义 |
+
+输出 `compat_risk` 建议评级：纯新增打点/日志 → `none`；改写既有日志/事件参数 → `medium`（有数据消费方）。
 
 ## Quick Decision Tree
 

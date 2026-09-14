@@ -331,13 +331,13 @@ ErrCode {Module}Manager::{Operation}(...)
 
 ```bash
 # 1. 客户端打点检查
-./.refdocs/scripts/check_client_hisysevent.sh
+bash（见 dfx_reviewer/SKILL.md 自动化检查脚本章节）
 
 # 2. DFX 覆盖率检查
-./.refdocs/scripts/check_dfx_coverage.sh
+bash（见 dfx_reviewer/SKILL.md 自动化检查脚本章节）
 
 # 3. 敏感数据检查
-./.refdocs/scripts/check_sensitive_data.sh
+bash（见 dfx_reviewer/SKILL.md 自动化检查脚本章节）
 ```
 
 ### 6.2 手动验证

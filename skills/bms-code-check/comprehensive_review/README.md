@@ -135,7 +135,7 @@ Security Review 检查结果:
   - 建议: 1 个（加密算法优化）
 ```
 
-**详细文档**: `.refdocs/skills/srcurity_review/SKILL.md`
+**详细文档**: [`../security_review/SKILL.md`](../security_review/SKILL.md)
 
 ---
 
@@ -163,7 +163,7 @@ Logic Analyzer 检查结果:
   - 建议: 1 个（冗余检查）
 ```
 
-**详细文档**: `.refdocs/skills/logic_analyzer/SKILL.md`
+**详细文档**: [`../logic_analyzer/SKILL.md`](../logic_analyzer/SKILL.md)
 
 ---
 
@@ -190,7 +190,7 @@ DFX Reviewer 检查结果:
   - 建议: 0 个
 ```
 
-**详细文档**: `.refdocs/skills/dfx_reviewer/dfx_reviewer_universal.md`
+**详细文档**: [`../dfx_reviewer/SKILL.md`](../dfx_reviewer/SKILL.md)
 
 ---
 
@@ -216,7 +216,7 @@ Code Review Checklist 检查结果:
   - 建议: 1 个（性能优化）
 ```
 
-**详细文档**: `.refdocs/skills/code_review_checklist/SKILL.md`
+**详细文档**: [`../code_review_checklist/SKILL.md`](../code_review_checklist/SKILL.md)
 
 ---
 
@@ -528,10 +528,10 @@ jobs:
 
 ### 内部资源
 
-- **Security Review**: `.refdocs/skills/srcurity_review/SKILL.md`
-- **Logic Analyzer**: `.refdocs/skills/logic_analyzer/SKILL.md`
-- **DFX Reviewer**: `.refdocs/skills/dfx_reviewer/dfx_reviewer_universal.md`
-- **Code Review Checklist**: `.refdocs/skills/code_review_checklist/SKILL.md`
+- **Security Review**: [`../security_review/SKILL.md`](../security_review/SKILL.md)
+- **Logic Analyzer**: [`../logic_analyzer/SKILL.md`](../logic_analyzer/SKILL.md)
+- **DFX Reviewer**: [`../dfx_reviewer/SKILL.md`](../dfx_reviewer/SKILL.md)
+- **Code Review Checklist**: [`../code_review_checklist/SKILL.md`](../code_review_checklist/SKILL.md)
 
 ### 外部资源
 
