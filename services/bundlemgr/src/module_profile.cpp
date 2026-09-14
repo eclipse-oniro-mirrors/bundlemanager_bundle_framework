@@ -2214,6 +2214,35 @@ bool ParserAtomicModuleResizeableConfig(const nlohmann::json &moduleAtomicObj, c
     return true;
 }
 
+bool ParserAtomicModulePreloadsConfig(const nlohmann::json &preloadObj, std::vector<std::string> &preloads)
+{
+    if (!preloadObj.is_array()) {
+        APP_LOGE_NOFUNC("preloads config in module.json is not array");
+        return false;
+    }
+    if (preloadObj.size() > Constants::MAX_JSON_ARRAY_LENGTH) {
+        APP_LOGE_NOFUNC("preloads config in module.json is oversize");
+        return false;
+    }
+    for (const auto &preload : preloadObj) {
+        if (!preload.is_object()) {
+            APP_LOGE_NOFUNC("preloads config in module.json is not object");
+            return false;
+        }
+        auto preloadNameIter = preload.find(Profile::PRELOADS_MODULE_NAME);
+        if (preloadNameIter == preload.end()) {
+            APP_LOGE_NOFUNC("preloads must have moduleName");
+            return false;
+        }
+        if (!preloadNameIter->is_string()) {
+            APP_LOGE_NOFUNC("moduleName config in preloads is not string");
+            return false;
+        }
+        preloads.emplace_back(preloadNameIter->get<std::string>());
+    }
+    return true;
+}
+
 bool ParserAtomicModuleConfig(const nlohmann::json &jsonObject, InnerBundleInfo &innerBundleInfo)
 {
     auto moduleIter = jsonObject.find(Profile::MODULE);
@@ -2254,29 +2283,8 @@ bool ParserAtomicModuleConfig(const nlohmann::json &jsonObject, InnerBundleInfo 
                 APP_LOGD("preloadObj is empty");
                 return true;
             }
-            if (!preloadObj.is_array()) {
-                APP_LOGE_NOFUNC("preloads config in module.json is not array");
+            if (!ParserAtomicModulePreloadsConfig(preloadObj, preloads)) {
                 return false;
-            }
-            if (preloadObj.size() > Constants::MAX_JSON_ARRAY_LENGTH) {
-                APP_LOGE_NOFUNC("preloads config in module.json is oversize");
-                return false;
-            }
-            for (const auto &preload : preloadObj) {
-                if (!preload.is_object()) {
-                    APP_LOGE_NOFUNC("preloads config in module.json is not object");
-                    return false;
-                }
-                auto preloadNameIter = preload.find(Profile::PRELOADS_MODULE_NAME);
-                if (preloadNameIter == preload.end()) {
-                    APP_LOGE_NOFUNC("preloads must have moduleName");
-                    return false;
-                }
-                if (!preloadNameIter->is_string()) {
-                    APP_LOGE_NOFUNC("moduleName config in preloads is not string");
-                    return false;
-                }
-                preloads.emplace_back(preloadNameIter->get<std::string>());
             }
         }
     }

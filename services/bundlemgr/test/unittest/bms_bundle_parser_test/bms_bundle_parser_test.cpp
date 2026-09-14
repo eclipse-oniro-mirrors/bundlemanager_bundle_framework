@@ -62,6 +62,7 @@ const std::string ATOMIC_SERVICE = "atomicService";
 const std::string RESIZEABLE = "resizeable";
 const std::string PRELOADS = "preloads";
 const std::string PRELOADS_MODULE_NAME_VALUE = "feature";
+const std::string PRELOADS_MODULE_NAME_VALUE_SECOND = "featureSecond";
 const std::string BUNDLE_MODULE_PROFILE_KEY_DISTRO = "distro";
 const std::string BUNDLE_MODULE_PROFILE_KEY_MODULE_TYPE = "moduleType";
 const std::string MODULE_TYPE_SHARED = "shared";
@@ -7202,6 +7203,65 @@ HWTEST_F(BmsBundleParserTest, TestParse_8100, Function | SmallTest | Level1)
     ErrCode result = moduleProfile.TransformTo(
         profileFileBuffer, bundleExtractor, innerBundleInfo);
     EXPECT_EQ(result, ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR);
+}
+
+/**
+ * @tc.name: TestParse_8200
+ * @tc.desc: 1. system running normally
+ *           2. test ParserAtomicConfig collects every preload in the configured order
+ * @tc.type: FUNC
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_8200, Function | SmallTest | Level1)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json firstPreload;
+    firstPreload[MODULE_NAME] = PRELOADS_MODULE_NAME_VALUE;
+    nlohmann::json secondPreload;
+    secondPreload[MODULE_NAME] = PRELOADS_MODULE_NAME_VALUE_SECOND;
+    nlohmann::json profileJson = MODULE_JSON;
+    profileJson[MODULE][ATOMIC_SERVICE][PRELOADS] = nlohmann::json::array({ firstPreload, secondPreload });
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor(EMPTY_NAME);
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
+
+    auto hapModule = innerBundleInfo.FindHapModuleInfo("entry");
+    ASSERT_NE(hapModule, std::nullopt);
+    ASSERT_EQ(hapModule->preloads.size(), TWO);
+    EXPECT_EQ(hapModule->preloads[0].moduleName, PRELOADS_MODULE_NAME_VALUE);
+    EXPECT_EQ(hapModule->preloads[1].moduleName, PRELOADS_MODULE_NAME_VALUE_SECOND);
+}
+
+/**
+ * @tc.name: TestParse_8300
+ * @tc.desc: 1. system running normally
+ *           2. test ParserAtomicConfig when atomicService carries no preloads property
+ * @tc.type: FUNC
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_8300, Function | SmallTest | Level1)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json profileJson = MODULE_JSON;
+    profileJson[MODULE][ATOMIC_SERVICE].erase(PRELOADS);
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor(EMPTY_NAME);
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
+
+    auto hapModule = innerBundleInfo.FindHapModuleInfo("entry");
+    ASSERT_NE(hapModule, std::nullopt);
+    EXPECT_TRUE(hapModule->preloads.empty());
+    EXPECT_TRUE(hapModule->resizeable);
 }
 
 } // OHOS
