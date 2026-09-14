@@ -14284,22 +14284,27 @@ ErrCode BundleDataMgr::GetMainAndCloneBundleInfo(
 {
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
-        return ERR_BUNDLE_MANAGER_INVALID_USER_ID; 
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "GetMainAndCloneBundleInfo failed, invalid userId %{public}s %{public}d "
+            "%{public}d", bundleName.c_str(), flags, userId);
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     auto item = bundleInfos_.find(bundleName);
     if (item == bundleInfos_.end()) {
-        LOG_D(BMS_TAG_QUERY, "bundleName: %{public}s not exist", bundleName.c_str());
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "GetMainAndCloneBundleInfo failed, bundle not exist %{public}s",
+            bundleName.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     const InnerBundleInfo &info = item->second;
     if (info.IsDisabled()) {
-        LOG_D(BMS_TAG_QUERY, "bundleName: %{public}s is disabled", bundleName.c_str());
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "GetMainAndCloneBundleInfo failed, bundle disabled %{public}s",
+            bundleName.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_DISABLED;
     }
     int32_t responseUserId = info.GetResponseUserId(requestUserId);
     if (responseUserId == Constants::INVALID_USERID) {
-        LOG_D(BMS_TAG_QUERY, "user %{public}d not exist for bundle %{public}s", userId, bundleName.c_str());
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "GetMainAndCloneBundleInfo failed, user not exist %{public}s %{public}d",
+            bundleName.c_str(), userId);
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
     bool withDisable = (flags &
@@ -14318,6 +14323,8 @@ ErrCode BundleDataMgr::GetMainAndCloneBundleInfo(
         }
     }
     if (bundleInfos.empty()) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "GetMainAndCloneBundleInfo failed, no available bundleInfo %{public}s",
+            bundleName.c_str());
         return ERR_BUNDLE_MANAGER_APPLICATION_DISABLED;
     }
     LOG_D(BMS_TAG_QUERY, "get main and clone bundleInfo(%{public}s) successfully in "
@@ -14330,14 +14337,20 @@ bool BundleDataMgr::AddBundleInfoIfEnabled(const InnerBundleInfo &info, const st
     int32_t appIndex, int32_t responseUserId) const
 {
     bool isEnabled = false;
-    if (info.GetApplicationEnabledV9(responseUserId, isEnabled, appIndex) != ERR_OK) {
+    ErrCode ret = info.GetApplicationEnabledV9(responseUserId, isEnabled, appIndex);
+    if (ret != ERR_OK) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "GetApplicationEnabledV9 failed %{public}s %{public}d %{public}d",
+            bundleName.c_str(), appIndex, ret);
         return false;
     }
     if (!withDisable && !isEnabled) {
         return true;
     }
     BundleInfo tmpInfo;
-    if (BuildBundleInfoWithProcess(info, bundleName, flags, userId, responseUserId, appIndex, tmpInfo) != ERR_OK) {
+    ret = BuildBundleInfoWithProcess(info, bundleName, flags, userId, responseUserId, appIndex, tmpInfo);
+    if (ret != ERR_OK) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "BuildBundleInfoWithProcess failed %{public}s %{public}d %{public}d",
+            bundleName.c_str(), appIndex, ret);
         return false;
     }
     bundleInfos.emplace_back(std::move(tmpInfo));
