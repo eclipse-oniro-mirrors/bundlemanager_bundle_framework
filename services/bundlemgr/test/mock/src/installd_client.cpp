@@ -56,6 +56,28 @@ void SetCleanBundleDataDirResult(bool cleanResult)
     g_mockCleanBundleDataDirResult = cleanResult;
 }
 
+namespace {
+int32_t g_setEncryptionPolicyCallCount = 0;
+std::string g_lastSetEncryptionPolicyBundleName;
+}
+
+// Test-only helpers for SetEncryptionPolicy; declare them extern in test files.
+void ResetSetEncryptionPolicyState()
+{
+    g_setEncryptionPolicyCallCount = 0;
+    g_lastSetEncryptionPolicyBundleName.clear();
+}
+
+int32_t GetSetEncryptionPolicyCallCount()
+{
+    return g_setEncryptionPolicyCallCount;
+}
+
+std::string GetLastSetEncryptionPolicyBundleName()
+{
+    return g_lastSetEncryptionPolicyBundleName;
+}
+
 ErrCode InstalldClient::CreateBundleDir(
     const std::string &bundleName, BundleDirScene scene, const std::string &bundleDir)
 {
@@ -614,7 +636,12 @@ ErrCode InstalldClient::SetEncryptionPolicy(const EncryptionParam &encryptionPar
         APP_LOGE("bundleName is empty");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-    return CallService(&IInstalld::SetEncryptionPolicy, encryptionParam, keyId);
+    g_setEncryptionPolicyCallCount++;
+    if (encryptionParam.encryptionDirType == EncryptionDirType::APP) {
+        g_lastSetEncryptionPolicyBundleName = encryptionParam.bundleName;
+    }
+    keyId = "mockedKeyId";
+    return ERR_OK;
 }
 
 ErrCode InstalldClient::RemoveExtensionDir(int32_t userId, const std::vector<std::string> &extensionBundleDirs)

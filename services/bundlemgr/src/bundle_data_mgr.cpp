@@ -13118,7 +13118,10 @@ ErrCode BundleDataMgr::CreateBundleDataDir(int32_t userId)
             continue;
         }
         CreateDirParam createDirParam;
-        createDirParam.bundleName = info.GetBundleName();
+        // dual-mode: use the effective (prefixed) name for directories, aligned with the install chain
+        createDirParam.bundleName = info.IsDualModeCloneApp()
+            ? DualModeHelper::GetDualModeBundleName(info.GetBundleName())
+            : info.GetBundleName();
         createDirParam.userId = responseUserId;
         createDirParam.uid = info.GetUid(responseUserId);
         createDirParam.gid = info.GetGid(responseUserId);
@@ -13166,7 +13169,10 @@ ErrCode BundleDataMgr::CreateBundleDataDirWithEl(int32_t userId, DataDirEl dirEl
             continue;
         }
         CreateDirParam createDirParam;
-        createDirParam.bundleName = info.GetBundleName();
+        // dual-mode: use the effective (prefixed) name for directories, aligned with the install chain
+        createDirParam.bundleName = info.IsDualModeCloneApp()
+            ? DualModeHelper::GetDualModeBundleName(info.GetBundleName())
+            : info.GetBundleName();
         createDirParam.userId = userId;
         createDirParam.uid = info.GetUid(userId);
         createDirParam.gid = info.GetGid(userId);
@@ -13288,8 +13294,15 @@ void BundleDataMgr::InnerCreateEl5Dir(const CreateDirParam &el5Param)
 void BundleDataMgr::SetEl5DirPolicy(const CreateDirParam &el5Param, bool needSaveStorage)
 {
     InnerBundleInfo info;
-    if (!FetchInnerBundleInfo(el5Param.bundleName, info)) {
-        LOG_E(BMS_TAG_INSTALLER, "get bundle %{public}s failed", el5Param.bundleName.c_str());
+    // dual-mode: el5Param.bundleName may be the effective (prefixed) name; fetch by the original name.
+    std::string fetchName = el5Param.bundleName;
+    std::string originalName;
+    int32_t parsedAppIndex = 0;
+    if (BundleCloneCommonHelper::ParseCloneDataDir(fetchName, originalName, parsedAppIndex)) {
+        fetchName = originalName;
+    }
+    if (!FetchInnerBundleInfo(fetchName, info)) {
+        LOG_E(BMS_TAG_INSTALLER, "get bundle %{public}s failed", fetchName.c_str());
         return;
     }
     std::string keyId = "";
@@ -13299,7 +13312,9 @@ void BundleDataMgr::SetEl5DirPolicy(const CreateDirParam &el5Param, bool needSav
 void BundleDataMgr::SetEl5DirPolicy(const CreateDirParam &el5Param, InnerBundleInfo &info, std::string &keyId)
 {
     int32_t uid = el5Param.uid;
-    std::string bundleName = info.GetBundleName();
+    // dual-mode: align the el5 key name with the dir name (InnerCreateEl5Dir); el5Param.bundleName
+    // carries the effective (prefixed) name for dual-mode clone apps.
+    std::string bundleName = el5Param.bundleName.empty() ? info.GetBundleName() : el5Param.bundleName;
     if (el5Param.appIndex > 0) {
         bundleName = BundleCloneCommonHelper::GetCloneDataDir(bundleName, el5Param.appIndex);
     }
