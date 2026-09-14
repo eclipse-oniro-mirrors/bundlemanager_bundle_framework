@@ -519,7 +519,9 @@ bool BundleInstallerHost::Install(
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
         return false;
     }
-    manager_->CreateInstallTask(bundleFilePath, installParam, statusReceiver);
+    InstallParam verifiedInstallParam = installParam;
+    MarkSkipEnterpriseResignVerify(verifiedInstallParam);
+    manager_->CreateInstallTask(bundleFilePath, verifiedInstallParam, statusReceiver);
     return true;
 }
 
@@ -572,6 +574,7 @@ bool BundleInstallerHost::Install(const std::vector<std::string> &bundleFilePath
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
         return false;
     }
+    MarkSkipEnterpriseResignVerify(verifiedInstallParam);
     manager_->CreateInstallTask(bundleFilePaths, verifiedInstallParam, statusReceiver);
     return true;
 }
@@ -1085,16 +1088,49 @@ BundleInstallerHost::DualModeSwitchGuard::DualModeSwitchGuard()
     rejected_ = (guard_ == nullptr);
 }
 
+void BundleInstallerHost::MarkSkipEnterpriseResignVerify(InstallParam &installParam)
+{
+    // Never trust this key from the parcel: erase first, re-mark only after ATM grants.
+    installParam.parameters.erase(ServiceConstants::BMS_PARA_SKIP_ENTERPRISE_RESIGN_VERIFY);
+    // Cheap gate: with no registered cert dir the skip is a no-op anyway, so skip the
+    // ATM queries entirely on devices (or users) without enterprise resign certs.
+    int32_t callerUserId = BundleUtil::GetUserIdByCallingUid();
+    std::string callerCertDir = std::string(ServiceConstants::HAP_COPY_PATH) +
+        ServiceConstants::ENTERPRISE_CERT_PATH + std::to_string(callerUserId);
+    if (!BundleUtil::IsExistDir(callerCertDir)) {
+        return;
+    }
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_INSTALLER, "null dataMgr, no resign verify skip");
+        return;
+    }
+    // Out-param only: VerifyPermission always resolves the base-app token (appIndex 0).
+    int32_t appIndex = 0;
+    std::string callerBundleName;
+    if (dataMgr->GetBundleNameAndIndexForUid(IPCSkeleton::GetCallingUid(), callerBundleName, appIndex)
+        != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "get caller bundleName failed, no resign verify skip");
+        return;
+    }
+    if (BundlePermissionMgr::VerifyPermission(callerBundleName,
+        ServiceConstants::PERMISSION_SKIP_ENTERPRISE_RESIGN_VERIFY, callerUserId)
+        == Constants::PERMISSION_GRANTED) {
+        installParam.parameters[ServiceConstants::BMS_PARA_SKIP_ENTERPRISE_RESIGN_VERIFY] =
+            ServiceConstants::BMS_TRUE;
+        LOG_I(BMS_TAG_INSTALLER, "caller %{public}s granted skip resign verify", callerBundleName.c_str());
+    }
+}
+
 InstallParam BundleInstallerHost::CheckInstallParam(const InstallParam &installParam)
 {
-    if (installParam.userId == Constants::UNSPECIFIED_USERID) {
+    InstallParam callInstallParam = installParam;
+    if (callInstallParam.userId == Constants::UNSPECIFIED_USERID) {
         LOG_I(BMS_TAG_INSTALLER, "installParam userId is unspecified and get calling userId by callingUid");
-        InstallParam callInstallParam = installParam;
         callInstallParam.userId = BundleUtil::GetUserIdByCallingUid();
-        return callInstallParam;
     }
-
-    return installParam;
+    MarkSkipEnterpriseResignVerify(callInstallParam);
+    return callInstallParam;
 }
 
 bool BundleInstallerHost::UpdateBundleForSelf(const std::vector<std::string> &bundleFilePaths,
@@ -1115,7 +1151,11 @@ bool BundleInstallerHost::UpdateBundleForSelf(const std::vector<std::string> &bu
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
         return false;
     }
-    manager_->CreateInstallTask(bundleFilePaths, installParam, statusReceiver);
+    // Self-update never grants the resign-verify skip: erase the internal key so no
+    // caller (or in-process stream commit) can smuggle it into the install task.
+    InstallParam verifiedInstallParam = installParam;
+    verifiedInstallParam.parameters.erase(ServiceConstants::BMS_PARA_SKIP_ENTERPRISE_RESIGN_VERIFY);
+    manager_->CreateInstallTask(bundleFilePaths, verifiedInstallParam, statusReceiver);
     return true;
 }
 
@@ -1554,6 +1594,11 @@ ErrCode BundleInstallerHost::InnerAddEnterpriseResignCert(
     }
     APP_LOGI("add enterprise resign cert success %{public}s %{public}d", certAlias.c_str(), userId);
     return ERR_OK;
+}
+
+std::unique_lock<std::shared_mutex> BundleInstallerHost::AcquireEnterpriseCertLock()
+{
+    return std::unique_lock<std::shared_mutex>(enterpriseCertMutex_);
 }
 
 bool BundleInstallerHost::CheckInstallDowngradeParam(const InstallParam &installParam)

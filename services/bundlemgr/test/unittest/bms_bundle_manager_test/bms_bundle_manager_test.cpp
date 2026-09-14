@@ -3351,6 +3351,73 @@ HWTEST_F(BmsBundleManagerTest, GetApplicationLabelInfo_0002, Function | MediumTe
 }
 
 /**
+ * @tc.number: BundleBackupService_0100
+ * @tc.name: test OnExtension restore with legacy v1 array
+ * @tc.desc: 1.restore v1 array format succeeds (shortcut-only path)
+ */
+HWTEST_F(BmsBundleManagerTest, BundleBackupService_0100, Function | MediumTest | Level1)
+{
+    const std::string tmpFile = "/data/local/tmp/bms_backup_v1_test.conf";
+    std::ofstream ofs(tmpFile, std::ios::trunc);
+    ofs << "[]";
+    ofs.close();
+    int32_t fd = open(tmpFile.c_str(), O_RDONLY);
+    ASSERT_GE(fd, 0);
+    MessageParcel data;
+    MessageParcel reply;
+    ASSERT_TRUE(data.WriteFileDescriptor(fd));
+    std::string extension = "restore";
+    // Note: OnRestore closes the fd internally, do not close it here.
+    int32_t ret = DelayedSingleton<BundleMgrService>::GetInstance()->OnExtension(extension, data, reply);
+    EXPECT_EQ(ret, ERR_OK);
+    (void)remove(tmpFile.c_str());
+}
+
+/**
+ * @tc.number: BundleBackupService_0101
+ * @tc.name: test OnExtension restore rejects unsupported version
+ * @tc.desc: 1.version 3 object rejected with INVALID_JSON_STRUCTURE
+ */
+HWTEST_F(BmsBundleManagerTest, BundleBackupService_0101, Function | MediumTest | Level1)
+{
+    const std::string tmpFile = "/data/local/tmp/bms_backup_v3_test.conf";
+    std::ofstream ofs(tmpFile, std::ios::trunc);
+    ofs << "{\"version\":3,\"shortcuts\":[],\"enterpriseResignCerts\":[]}";
+    ofs.close();
+    int32_t fd = open(tmpFile.c_str(), O_RDONLY);
+    ASSERT_GE(fd, 0);
+    MessageParcel data;
+    MessageParcel reply;
+    ASSERT_TRUE(data.WriteFileDescriptor(fd));
+    std::string extension = "restore";
+    int32_t ret = DelayedSingleton<BundleMgrService>::GetInstance()->OnExtension(extension, data, reply);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_BACKUP_INVALID_JSON_STRUCTURE);
+    (void)remove(tmpFile.c_str());
+}
+
+/**
+ * @tc.number: BundleBackupService_0102
+ * @tc.name: test OnExtension backup then restore round trip
+ * @tc.desc: 1.backup produces v2 conf; restoring it succeeds
+ */
+HWTEST_F(BmsBundleManagerTest, BundleBackupService_0102, Function | MediumTest | Level1)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    std::string extension = "backup";
+    int32_t ret = DelayedSingleton<BundleMgrService>::GetInstance()->OnExtension(extension, data, reply);
+    EXPECT_EQ(ret, ERR_OK);
+    int32_t fd = open("/data/service/el1/public/bms/bundle_manager_service/backup_config.conf", O_RDONLY);
+    ASSERT_GE(fd, 0);
+    MessageParcel restoreData;
+    MessageParcel restoreReply;
+    ASSERT_TRUE(restoreData.WriteFileDescriptor(fd));
+    extension = "restore";
+    ret = DelayedSingleton<BundleMgrService>::GetInstance()->OnExtension(extension, restoreData, restoreReply);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
  * @tc.number: GetApplicationLabelInfo_0003
  * @tc.name: GetApplicationLabelInfo_0003
  * @tc.desc: Test GetApplicationLabelInfo with empty bundle name

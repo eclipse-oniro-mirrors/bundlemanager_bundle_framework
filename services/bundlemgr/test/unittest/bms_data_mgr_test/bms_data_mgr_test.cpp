@@ -7033,7 +7033,7 @@ HWTEST_F(BmsDataMgrTest, OnExtension_0030, Function | MediumTest | Level1)
     bundleBackupService->dataMgr_ = std::make_shared<BundleDataMgr>();
     nlohmann::json backupJson;
     auto ret = bundleBackupService->OnRestore(backupJson);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_DB_UPDATE_ERROR);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_BACKUP_INVALID_JSON_STRUCTURE);
     shortcutDataStorageRdb->rdbDataManager_ = nullptr;
     backupJson = nlohmann::json::array();
     EXPECT_EQ(shortcutDataStorageRdb->UpdateAllShortcuts(backupJson), false);
