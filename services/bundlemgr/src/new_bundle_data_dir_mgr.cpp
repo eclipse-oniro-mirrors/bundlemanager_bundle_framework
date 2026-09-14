@@ -371,7 +371,6 @@ bool NewBundleDataDirMgr::DeleteUserId(const int32_t userId)
     userIds_.erase(userId);
     if (userIds_.empty()) {
         newBundleDataDirMap_.clear();
-        bundleMutexMap_.clear();
         return DeleteNewBundleDataDirInfosFromDb();
     }
     return AddNewBundleDataDirInfosToDb();

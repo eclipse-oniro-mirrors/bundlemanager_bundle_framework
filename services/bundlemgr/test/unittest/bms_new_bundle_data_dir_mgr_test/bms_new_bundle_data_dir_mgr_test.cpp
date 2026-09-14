@@ -237,6 +237,32 @@ HWTEST_F(BmsNewBundleDataDirMgrTest, DeleteUserId_0001, Function | SmallTest | L
 }
 
 /**
+ * @tc.number: GetBundleMutex_0001
+ * @tc.name: GetBundleMutex_0001
+ * @tc.desc: 1.mutex returned by GetBundleMutex stays valid after DeleteUserId removes the last user
+ */
+HWTEST_F(BmsNewBundleDataDirMgrTest, GetBundleMutex_0001, Function | SmallTest | Level1)
+{
+    auto newBundleDirMgr = DelayedSingleton<NewBundleDataDirMgr>::GetInstance();
+    EXPECT_NE(newBundleDirMgr, nullptr);
+    if (newBundleDirMgr != nullptr) {
+        std::set<int32_t> userIds;
+        userIds.insert(USER_ID);
+        auto ret = newBundleDirMgr->AddAllUserId(userIds);
+        EXPECT_TRUE(ret);
+        auto &mutex = newBundleDirMgr->GetBundleMutex(BUNDLE_NAME);
+        {
+            std::lock_guard<std::mutex> lock(mutex);
+        }
+        size_t sizeAfterCreate = newBundleDirMgr->bundleMutexMap_.size();
+        ret = newBundleDirMgr->DeleteUserId(USER_ID);
+        EXPECT_TRUE(ret);
+        EXPECT_EQ(newBundleDirMgr->bundleMutexMap_.size(), sizeAfterCreate);
+        EXPECT_EQ(&newBundleDirMgr->GetBundleMutex(BUNDLE_NAME), &mutex);
+    }
+}
+
+/**
  * @tc.number: AddNewBundleDirInfo_0001
  * @tc.name: AddNewBundleDirInfo_0001
  * @tc.desc: 1.test AddNewBundleDirInfo
