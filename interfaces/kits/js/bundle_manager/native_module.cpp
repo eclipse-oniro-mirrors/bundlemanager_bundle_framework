@@ -188,6 +188,7 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
         DECLARE_NAPI_PROPERTY("AppClonePreferenceMode", nAppClonePreferenceMode),
         DECLARE_NAPI_FUNCTION("getAppCloneBundleInfo", GetAppCloneBundleInfo),
         DECLARE_NAPI_FUNCTION("getAllAppCloneBundleInfo", GetAllAppCloneBundleInfo),
+        DECLARE_NAPI_FUNCTION("getAllBundleInfoInstances", GetAllBundleInfoInstances),
         DECLARE_NAPI_FUNCTION("getAppClonePreference", GetAppClonePreference),
         DECLARE_NAPI_FUNCTION("setAppClonePreference", SetAppClonePreference),
         DECLARE_NAPI_FUNCTION("getAppCloneIdentity", GetAppCloneIdentity),

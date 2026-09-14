@@ -1402,6 +1402,23 @@ public:
      */
     virtual ErrCode GetDualModeBundleInfo(const std::string &bundleName, int32_t userId,
         DualModeBundleInfo &dualModeBundleInfo) override;
+    /**
+     * @brief Obtains the bundle info instances of the given bundle name: the
+     * current-mode instance first, then the other-mode instance (only when
+     * GET_BUNDLE_INFO_OF_ALL_DEVICE_MODE is set on a dual-mode device).
+     * When GET_BUNDLE_INFO_OF_ANY_USER is set, an instance installed by any
+     * user is returned (WITH_DISABLE is auto-set and the request user falls
+     * back to the first installed user; used together with
+     * GET_BUNDLE_INFO_WITH_APPLICATION, applicationFlags marks
+     * FLAG_OTHER_INSTALLED and clears FLAG_INSTALLED accordingly).
+     * @param bundleName Indicates the bundle name to be queried.
+     * @param flags Indicates the information contained in the BundleInfo objects.
+     * @param bundleInfos Indicates the obtained BundleInfo objects.
+     * @param userId Indicates the user ID.
+     * @return Returns ERR_OK if the bundle is found; returns error code otherwise.
+     */
+    virtual ErrCode GetAllBundleInfoInstances(const std::string &bundleName, int32_t flags,
+        std::vector<BundleInfo> &bundleInfos, int32_t userId) override;
 
 private:
     bool GetLabelByBundleName(const std::string &bundleName, int32_t userId, std::string &label);

@@ -94,6 +94,7 @@ const std::string FUNCTION_GET_HAP_MODULE_INFO = "BundleMgrHostImpl::GetHapModul
 const std::string FUNCTION_BATCH_BUNDLE_INFO = "BundleMgrHostImpl::BatchGetBundleInfo";
 const std::string FUNCTION_GET_BUNDLE_INFO = "BundleMgrHostImpl::GetBundleInfo";
 const std::string FUNCTION_GET_DUAL_MODE_BUNDLE_INFO = "BundleMgrHostImpl::GetDualModeBundleInfo";
+const std::string FUNCTION_GET_ALL_BUNDLE_INFO_INSTANCES = "BundleMgrHostImpl::GetAllBundleInfoInstances";
 const std::string FUNCTION_GET_BUNDLE_INFO_V9 = "BundleMgrHostImpl::GetBundleInfoV9";
 const std::string FUNCTION_GET_BUNDLE_INFO_FOR_SELF = "BundleMgrHostImpl::GetBundleInfoForSelf";
 const std::string FUNCTION_GREAT_OR_EQUAL_API_TARGET_VERSION = "BundleMgrHostImpl::GreatOrEqualTargetAPIVersion";
@@ -122,7 +123,8 @@ const std::unordered_map<std::string, int32_t> QUERY_FUNC_MAP = {
     {"GetBundleInfoV9", 3},
     {"GetBundleInfo", 4},
     {"GetAppProvisionInfo", 5},
-    {"GetDualModeBundleInfo", 6}
+    {"GetDualModeBundleInfo", 6},
+    {"GetAllBundleInfoInstances", 7}
 };
 const std::vector<int32_t> QUERY_EXPECTED_ERR = {
     ERR_OK,
@@ -8901,6 +8903,49 @@ ErrCode BundleMgrHostImpl::GetDualModeBundleInfo(const std::string &bundleName, 
     ErrCode res = dataMgr->GetDualModeBundleInfo(bundleName, userId, dualModeBundleInfo);
     if (res != ERR_OK) {
         QueryEventInfo info = PrepareQueryEvent(res, bundleName, "GetDualModeBundleInfo", -1, userId, 0, 0);
+        SendQueryBundleInfoEvent(info, intervalTime, false);
+    }
+    return res;
+}
+
+ErrCode BundleMgrHostImpl::GetAllBundleInfoInstances(const std::string &bundleName, int32_t flags,
+    std::vector<BundleInfo> &bundleInfos, int32_t userId)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    LOG_D(BMS_TAG_QUERY, "GetAllBundleInfoInstances, bundleName:%{public}s, flags:%{public}d, userId:%{public}d",
+        bundleName.c_str(), flags, userId);
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    int32_t timerId = XCollieHelper::SetRecoveryTimer(FUNCTION_GET_ALL_BUNDLE_INFO_INSTANCES);
+    ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE_NOFUNC("GetAllBundleInfoInstances permission denied %{public}d %{public}d",
+            IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (!CheckAcrossUserPermission(userId)) {
+        APP_LOGE("verify permission across local account failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    LOG_D(BMS_TAG_QUERY, "verify permission success, begin to GetAllBundleInfoInstances");
+
+    int64_t intervalTime = ONE_DAY;
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_QUERY, "DataMgr is nullptr");
+        QueryEventInfo info = PrepareQueryEvent(ERR_BUNDLE_MANAGER_INTERNAL_ERROR, bundleName,
+            "GetAllBundleInfoInstances", -1, userId, 0, flags);
+        SendQueryBundleInfoEvent(info, intervalTime, true);
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+
+    ErrCode res = dataMgr->GetAllBundleInfoInstances(bundleName, flags, userId, bundleInfos);
+    if (res != ERR_OK) {
+        QueryEventInfo info = PrepareQueryEvent(res, bundleName, "GetAllBundleInfoInstances",
+            -1, userId, 0, flags);
         SendQueryBundleInfoEvent(info, intervalTime, false);
     }
     return res;

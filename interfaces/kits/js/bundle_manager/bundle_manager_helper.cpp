@@ -348,14 +348,31 @@ ErrCode BundleManagerHelper::InnerGetAllAppCloneBundleInfo(
         APP_LOGE("can not get iBundleMgr");
         return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
-    BundleInfo bundleInfoMain;
-    ErrCode ret = iBundleMgr->GetCloneBundleInfo(bundleName, bundleFlags, 0, bundleInfoMain, userId);
-    APP_LOGD("GetMainBundleInfo appIndex = 0, ret=%{public}d", ret);
-    if (ret == ERR_OK) {
-        bundleInfos.emplace_back(bundleInfoMain);
-    }
-    if (ret != ERR_OK && ret != ERR_BUNDLE_MANAGER_APPLICATION_DISABLED && ret != ERR_BUNDLE_MANAGER_BUNDLE_DISABLED) {
-        return CommonFunc::ConvertErrCode(ret);
+    ErrCode ret = ERR_OK;
+    bool queryAllDeviceMode = (static_cast<uint32_t>(bundleFlags) &
+        static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_OF_ALL_DEVICE_MODE)) != 0;
+    if (queryAllDeviceMode) {
+        // one-shot query for instances of both device modes (current first)
+        ret = iBundleMgr->GetAllBundleInfoInstances(bundleName, bundleFlags, bundleInfos, userId);
+        APP_LOGD("GetAllBundleInfoInstances ret=%{public}d", ret);
+        if (ret != ERR_OK) {
+            return CommonFunc::ConvertErrCode(ret);
+        }
+        if (bundleInfos.empty()) {
+            // all instances disabled, keep the main-app tolerance semantics
+            ret = ERR_BUNDLE_MANAGER_APPLICATION_DISABLED;
+        }
+    } else {
+        BundleInfo bundleInfoMain;
+        ret = iBundleMgr->GetCloneBundleInfo(bundleName, bundleFlags, 0, bundleInfoMain, userId);
+        APP_LOGD("GetMainBundleInfo appIndex = 0, ret=%{public}d", ret);
+        if (ret == ERR_OK) {
+            bundleInfos.emplace_back(bundleInfoMain);
+        }
+        if (ret != ERR_OK && ret != ERR_BUNDLE_MANAGER_APPLICATION_DISABLED &&
+            ret != ERR_BUNDLE_MANAGER_BUNDLE_DISABLED) {
+            return CommonFunc::ConvertErrCode(ret);
+        }
     }
 
     bool hasSandboxFlag = static_cast<uint32_t>(bundleFlags) &
@@ -403,6 +420,22 @@ ErrCode BundleManagerHelper::InnerGetAllAppCloneBundleInfo(
 
     if (bundleInfos.empty()) {
         return ERROR_BUNDLE_IS_DISABLED;
+    }
+    return SUCCESS;
+}
+
+ErrCode BundleManagerHelper::InnerGetAllBundleInfoInstances(
+    const std::string& bundleName, int32_t bundleFlags, int32_t userId, std::vector<BundleInfo>& bundleInfos)
+{
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode ret = iBundleMgr->GetAllBundleInfoInstances(bundleName, bundleFlags, bundleInfos, userId);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetAllBundleInfoInstances failed due to %{public}d", ret);
+        return CommonFunc::ConvertErrCode(ret);
     }
     return SUCCESS;
 }

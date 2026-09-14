@@ -18,8 +18,11 @@
 #include <gtest/gtest.h>
 
 #include "bundle_info.h"
+#include "bundle_data_mgr.h"
 #include "bundle_mgr_host_impl.h"
+#include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
+#include "inner_bundle_info.h"
 
 using namespace testing::ext;
 using namespace OHOS;
@@ -232,6 +235,117 @@ HWTEST_F(BmsBundleMgrHostImplDualModeTest, GetBundleInfoDualMode_0900, Function 
     // Cannot verify output parameter values without integration environment
     // Just verify function call doesn't crash and returns non-permission-denied code
     EXPECT_NE(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED) << "Permission should be granted in this test";
+}
+
+/**
+ * @tc.number: GetAllBundleInfoInstances_0100
+ * @tc.name: test GetAllBundleInfoInstances denied for non-system app
+ * @tc.desc: 1. IsSystemApp returns false
+ *           2. Function should return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED
+ */
+HWTEST_F(BmsBundleMgrHostImplDualModeTest, GetAllBundleInfoInstances_0100, Function | SmallTest | Level1)
+{
+    SetVerifyCallingPermissionForTest(true);
+    SetSystemAppForTest(false);
+    SetIsBundleSelfCallingForTest(true);
+
+    auto hostImpl = GetBundleMgrHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+
+    std::vector<BundleInfo> bundleInfos;
+    ErrCode ret = hostImpl->GetAllBundleInfoInstances(TEST_BUNDLE_NAME,
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_OF_ALL_DEVICE_MODE), bundleInfos,
+        TEST_USER_ID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
+
+/**
+ * @tc.number: GetAllBundleInfoInstances_0200
+ * @tc.name: test GetAllBundleInfoInstances denied without privileged permission
+ * @tc.desc: 1. IsSystemApp returns true, VerifyCallingPermissionForAll returns false
+ *           2. Function should return ERR_BUNDLE_MANAGER_PERMISSION_DENIED
+ */
+HWTEST_F(BmsBundleMgrHostImplDualModeTest, GetAllBundleInfoInstances_0200, Function | SmallTest | Level1)
+{
+    SetVerifyCallingPermissionForTest(false);
+    SetSystemAppForTest(true);
+    SetIsBundleSelfCallingForTest(true);
+
+    auto hostImpl = GetBundleMgrHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+
+    std::vector<BundleInfo> bundleInfos;
+    ErrCode ret = hostImpl->GetAllBundleInfoInstances(TEST_BUNDLE_NAME,
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_OF_ALL_DEVICE_MODE), bundleInfos,
+        TEST_USER_ID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: GetAllBundleInfoInstances_0300
+ * @tc.name: test GetAllBundleInfoInstances success with permission granted
+ * @tc.desc: 1. All permission checks pass and a dataMgr with the bundle is installed
+ *           2. Returns ERR_OK with the current-mode instance (no dual-mode
+ *              parameter mock here, so the flag only returns the current one)
+ */
+HWTEST_F(BmsBundleMgrHostImplDualModeTest, GetAllBundleInfoInstances_0300, Function | SmallTest | Level1)
+{
+    SetVerifyCallingPermissionForTest(true);
+    SetSystemAppForTest(true);
+    SetIsBundleSelfCallingForTest(true);
+
+    auto service = DelayedSingleton<BundleMgrService>::GetInstance();
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    dataMgr->multiUserIdsSet_.insert(TEST_USER_ID);
+    InnerBundleInfo info;
+    info.SetDualModeCloneApp(false);
+    info.baseApplicationInfo_->bundleName = TEST_BUNDLE_NAME;
+    info.baseBundleInfo_->name = TEST_BUNDLE_NAME;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = TEST_BUNDLE_NAME;
+    userInfo.bundleUserInfo.userId = TEST_USER_ID;
+    userInfo.bundleUserInfo.enabled = true;
+    info.innerBundleUserInfos_.try_emplace(TEST_BUNDLE_NAME + "_" + std::to_string(TEST_USER_ID), userInfo);
+    dataMgr->bundleInfos_[TEST_BUNDLE_NAME] = info;
+    service->dataMgr_ = dataMgr;
+
+    auto hostImpl = GetBundleMgrHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+
+    std::vector<BundleInfo> bundleInfos;
+    ErrCode ret = hostImpl->GetAllBundleInfoInstances(TEST_BUNDLE_NAME,
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_OF_ALL_DEVICE_MODE), bundleInfos,
+        TEST_USER_ID);
+    EXPECT_EQ(ret, ERR_OK);
+    ASSERT_EQ(bundleInfos.size(), static_cast<size_t>(1));
+    EXPECT_EQ(bundleInfos[0].name, TEST_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: GetAllBundleInfoInstances_0400
+ * @tc.name: test GetAllBundleInfoInstances with a bundle not found
+ * @tc.desc: 1. All permission checks pass and a dataMgr without the bundle is installed
+ *           2. Function should return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST
+ */
+HWTEST_F(BmsBundleMgrHostImplDualModeTest, GetAllBundleInfoInstances_0400, Function | SmallTest | Level1)
+{
+    SetVerifyCallingPermissionForTest(true);
+    SetSystemAppForTest(true);
+    SetIsBundleSelfCallingForTest(true);
+
+    auto service = DelayedSingleton<BundleMgrService>::GetInstance();
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    dataMgr->multiUserIdsSet_.insert(TEST_USER_ID);
+    service->dataMgr_ = dataMgr;
+
+    auto hostImpl = GetBundleMgrHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+
+    std::vector<BundleInfo> bundleInfos;
+    ErrCode ret = hostImpl->GetAllBundleInfoInstances(TEST_BUNDLE_NAME,
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_OF_ALL_DEVICE_MODE), bundleInfos,
+        TEST_USER_ID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 }
 }

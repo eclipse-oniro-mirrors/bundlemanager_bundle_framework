@@ -77,6 +77,9 @@ enum class GetBundleInfoFlag {
     GET_BUNDLE_INFO_WITH_FUSION = 0x00040000,
     GET_BUNDLE_INFO_WITH_COMMON_CLONE = 0x00080000,
     GET_BUNDLE_INFO_WITH_SANDBOX_CLONE = 0x00100000,
+    // dual-mode: query infos of both device modes; valid only for
+    // GetAllBundleInfo / GetAllAppCloneBundleInfo / GetAllBundleInfoInstances
+    GET_BUNDLE_INFO_OF_ALL_DEVICE_MODE = 0x00200000,
 };
 
 struct RequestPermissionUsedScene : public Parcelable {
