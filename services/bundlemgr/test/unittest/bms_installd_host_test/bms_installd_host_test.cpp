@@ -417,6 +417,20 @@ HWTEST_F(BmsInstalldHostTest, HandleMoveFile_0100, Function | SmallTest | Level1
 }
 
 /**
+ * @tc.number: HandleMoveSharedHspToCodeDir_0100
+ * @tc.name: test HandleMoveSharedHspToCodeDir
+ * @tc.desc: 1.HandleMoveSharedHspToCodeDir test
+ */
+HWTEST_F(BmsInstalldHostTest, HandleMoveSharedHspToCodeDir_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    bool res = installdHost.HandleMoveSharedHspToCodeDir(data, reply);
+    EXPECT_TRUE(res);
+}
+
+/**
  * @tc.number: HandleCopyFile_0100
  * @tc.name: test HandleCopyFile
  * @tc.desc: 1.HandleCopyFile test
@@ -427,6 +441,20 @@ HWTEST_F(BmsInstalldHostTest, HandleCopyFile_0100, Function | SmallTest | Level1
     MessageParcel data;
     MessageParcel reply;
     bool res = installdHost.HandleCopyFile(data, reply);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: HandleCopySharedHsp_0100
+ * @tc.name: test HandleCopySharedHsp
+ * @tc.desc: 1.HandleCopySharedHsp test
+ */
+HWTEST_F(BmsInstalldHostTest, HandleCopySharedHsp_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    bool res = installdHost.HandleCopySharedHsp(data, reply);
     EXPECT_TRUE(res);
 }
 

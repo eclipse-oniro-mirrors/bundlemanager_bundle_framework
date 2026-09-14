@@ -296,6 +296,12 @@ ErrCode InstalldClient::CopyFile(const std::string &oldPath, const std::string &
     return 0;
 }
 
+ErrCode InstalldClient::CopySharedHsp(const std::string &bundleName, const std::string &moduleName,
+    const std::string &sourceHspPath, uint32_t versionCode, const std::string &sourceSignaturePath)
+{
+    return 0;
+}
+
 ErrCode InstalldClient::Mkdir(const std::string &dir, const int32_t mode, const int32_t uid, const int32_t gid,
     const CreateDirParam &createDirParam)
 {
@@ -488,6 +494,12 @@ ErrCode InstalldClient::AddUserDirDeleteDfx(int32_t userId)
 }
 
 ErrCode InstalldClient::MoveHapToCodeDir(const std::string &originPath, const std::string &targetPath)
+{
+    return ERR_OK;
+}
+
+ErrCode InstalldClient::MoveSharedHspToCodeDir(const std::string &bundleName, const std::string &moduleName,
+    const std::string &sourceHspPath, uint32_t versionCode)
 {
     return ERR_OK;
 }

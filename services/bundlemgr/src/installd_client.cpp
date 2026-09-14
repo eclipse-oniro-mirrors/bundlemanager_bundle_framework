@@ -482,6 +482,18 @@ ErrCode InstalldClient::CopyFile(const std::string &oldPath, const std::string &
     return CallService(&IInstalld::CopyFile, oldPath, newPath, scene, signatureFilePath);
 }
 
+ErrCode InstalldClient::CopySharedHsp(const std::string &bundleName, const std::string &moduleName,
+    const std::string &sourceHspPath, uint32_t versionCode, const std::string &sourceSignaturePath)
+{
+    if (bundleName.empty() || moduleName.empty() || sourceHspPath.empty() || sourceSignaturePath.empty()) {
+        APP_LOGE("params are invalid");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    return CallService(&IInstalld::CopySharedHsp, bundleName, moduleName, sourceHspPath,
+        versionCode, sourceSignaturePath);
+}
+
 ErrCode InstalldClient::Mkdir(const std::string &dir, const int32_t mode, const int32_t uid, const int32_t gid,
     const CreateDirParam &createDirParam)
 {
@@ -762,6 +774,17 @@ ErrCode InstalldClient::MoveHapToCodeDir(const std::string &originPath, const st
     }
 
     return CallService(&IInstalld::MoveHapToCodeDir, originPath, targetPath);
+}
+
+ErrCode InstalldClient::MoveSharedHspToCodeDir(const std::string &bundleName, const std::string &moduleName,
+    const std::string &sourceHspPath, uint32_t versionCode)
+{
+    if (bundleName.empty() || moduleName.empty() || sourceHspPath.empty()) {
+        APP_LOGE("params are invalid");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    return CallService(&IInstalld::MoveSharedHspToCodeDir, bundleName, moduleName, sourceHspPath, versionCode);
 }
 
 ErrCode InstalldClient::CreateDataGroupDirs(const std::vector<CreateDirParam> &params)

@@ -934,6 +934,118 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CopyFile_0300, TestSize.Le
 }
 
 /**
+ * @tc.number: BmsInstalldClientTest_CopySharedHsp_0100
+ * @tc.name: CopySharedHsp
+ * @tc.desc: Test whether CopySharedHsp is called normally when versionCode is 0.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CopySharedHsp_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_CopySharedHsp_0100 start";
+    std::string bundleName = BUNDLE_NAME;
+    std::string moduleName = MODULE_NAME;
+    std::string sourceHspPath = FILE_PATH;
+    uint32_t versionCode = 0;
+    std::string sourceSignaturePath = FILE_PATH;
+    ErrCode result = installClient_->CopySharedHsp(bundleName, moduleName, sourceHspPath,
+        versionCode, sourceSignaturePath);
+    EXPECT_EQ(result, installClient_->CallService(&IInstalld::CopySharedHsp,
+        bundleName, moduleName, sourceHspPath, versionCode, sourceSignaturePath));
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_CopySharedHsp_0100 end";
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_CopySharedHsp_0200
+ * @tc.name: CopySharedHsp
+ * @tc.desc: Test whether CopySharedHsp returns param error when sourceSignaturePath is empty.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CopySharedHsp_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_CopySharedHsp_0200 start";
+    std::string bundleName = BUNDLE_NAME;
+    std::string moduleName = MODULE_NAME;
+    std::string sourceHspPath = FILE_PATH;
+    uint32_t versionCode = 1;
+    std::string sourceSignaturePath = EMPTY_STRING;
+    ErrCode result = installClient_->CopySharedHsp(bundleName, moduleName, sourceHspPath,
+        versionCode, sourceSignaturePath);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_CopySharedHsp_0200 end";
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_CopySharedHsp_0300
+ * @tc.name: CopySharedHsp
+ * @tc.desc: Test whether CopySharedHsp is called normally.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CopySharedHsp_0300, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_CopySharedHsp_0300 start";
+    std::string bundleName = BUNDLE_NAME;
+    std::string moduleName = MODULE_NAME;
+    std::string sourceHspPath = FILE_PATH;
+    uint32_t versionCode = 1;
+    std::string sourceSignaturePath = FILE_PATH;
+    ErrCode result = installClient_->CopySharedHsp(bundleName, moduleName, sourceHspPath,
+        versionCode, sourceSignaturePath);
+    EXPECT_EQ(result, installClient_->CallService(&IInstalld::CopySharedHsp,
+        bundleName, moduleName, sourceHspPath, versionCode, sourceSignaturePath));
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_CopySharedHsp_0300 end";
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_MoveSharedHspToCodeDir_0100
+ * @tc.name: MoveSharedHspToCodeDir
+ * @tc.desc: Test whether MoveSharedHspToCodeDir is called normally when versionCode is 0.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_MoveSharedHspToCodeDir_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_MoveSharedHspToCodeDir_0100 start";
+    std::string bundleName = BUNDLE_NAME;
+    std::string moduleName = MODULE_NAME;
+    std::string sourceHspPath = FILE_PATH;
+    uint32_t versionCode = 0;
+    ErrCode result = installClient_->MoveSharedHspToCodeDir(bundleName, moduleName, sourceHspPath, versionCode);
+    EXPECT_EQ(result, installClient_->CallService(&IInstalld::MoveSharedHspToCodeDir,
+        bundleName, moduleName, sourceHspPath, versionCode));
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_MoveSharedHspToCodeDir_0100 end";
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_MoveSharedHspToCodeDir_0200
+ * @tc.name: MoveSharedHspToCodeDir
+ * @tc.desc: Test whether MoveSharedHspToCodeDir returns param error when sourceHspPath is empty.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_MoveSharedHspToCodeDir_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_MoveSharedHspToCodeDir_0200 start";
+    std::string bundleName = BUNDLE_NAME;
+    std::string moduleName = MODULE_NAME;
+    std::string sourceHspPath = EMPTY_STRING;
+    uint32_t versionCode = 1;
+    ErrCode result = installClient_->MoveSharedHspToCodeDir(bundleName, moduleName, sourceHspPath, versionCode);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_MoveSharedHspToCodeDir_0200 end";
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_MoveSharedHspToCodeDir_0300
+ * @tc.name: MoveSharedHspToCodeDir
+ * @tc.desc: Test whether MoveSharedHspToCodeDir is called normally.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_MoveSharedHspToCodeDir_0300, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_MoveSharedHspToCodeDir_0300 start";
+    std::string bundleName = BUNDLE_NAME;
+    std::string moduleName = MODULE_NAME;
+    std::string sourceHspPath = FILE_PATH;
+    uint32_t versionCode = 1;
+    ErrCode result = installClient_->MoveSharedHspToCodeDir(bundleName, moduleName, sourceHspPath, versionCode);
+    EXPECT_EQ(result, installClient_->CallService(&IInstalld::MoveSharedHspToCodeDir,
+        bundleName, moduleName, sourceHspPath, versionCode));
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_MoveSharedHspToCodeDir_0300 end";
+}
+
+/**
  * @tc.number: BmsInstalldClientTest_Mkdir_0100
  * @tc.name: Mkdir
  * @tc.desc: Test whether Mkdir is called normally.(dir is empty)

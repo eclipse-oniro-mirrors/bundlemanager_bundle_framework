@@ -212,8 +212,14 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::COPY_FILE):
             result = this->HandleCopyFile(data, reply);
             break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::COPY_SHARED_HSP):
+            result = this->HandleCopySharedHsp(data, reply);
+            break;
         case static_cast<uint32_t>(InstalldInterfaceCode::MOVE_HAP_TO_CODE_DIR):
             result = this->HandleMoveHapToCodeDir(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::MOVE_SHARED_HSP_TO_CODE_DIR):
+            result = this->HandleMoveSharedHspToCodeDir(data, reply);
             break;
         case static_cast<uint32_t>(InstalldInterfaceCode::MKDIR):
             result = this->HandleMkdir(data, reply);
@@ -1102,6 +1108,19 @@ bool InstalldHost::HandleCopyFile(MessageParcel &data, MessageParcel &reply)
     return true;
 }
 
+bool InstalldHost::HandleCopySharedHsp(MessageParcel &data, MessageParcel &reply)
+{
+    std::string bundleName = Str16ToStr8(data.ReadString16());
+    std::string moduleName = Str16ToStr8(data.ReadString16());
+    std::string sourceHspPath = Str16ToStr8(data.ReadString16());
+    uint32_t versionCode = static_cast<uint32_t>(data.ReadUint32());
+    std::string sourceSignaturePath = Str16ToStr8(data.ReadString16());
+
+    ErrCode result = CopySharedHsp(bundleName, moduleName, sourceHspPath, versionCode, sourceSignaturePath);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
 bool InstalldHost::HandleMkdir(MessageParcel &data, MessageParcel &reply)
 {
     std::string dir = Str16ToStr8(data.ReadString16());
@@ -1537,6 +1556,18 @@ bool InstalldHost::HandleMoveHapToCodeDir(MessageParcel &data, MessageParcel &re
     std::string targetPath = Str16ToStr8(data.ReadString16());
 
     ErrCode result = MoveHapToCodeDir(originPath, targetPath);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleMoveSharedHspToCodeDir(MessageParcel &data, MessageParcel &reply)
+{
+    std::string bundleName = Str16ToStr8(data.ReadString16());
+    std::string moduleName = Str16ToStr8(data.ReadString16());
+    std::string sourceHspPath = Str16ToStr8(data.ReadString16());
+    uint32_t versionCode = static_cast<uint32_t>(data.ReadUint32());
+
+    ErrCode result = MoveSharedHspToCodeDir(bundleName, moduleName, sourceHspPath, versionCode);
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

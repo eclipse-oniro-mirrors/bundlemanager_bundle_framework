@@ -1721,15 +1721,16 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, SaveHspToRealInstallationDir_0001, Funct
     std::string moduleName;
     std::string realHspPath;
     std::string signatureFileDir_;
+    uint32_t versionCode = 1;
 
     signatureFileDir_ = "test_signature_file_dir";
-    ErrCode ret = installer.SaveHspToRealInstallationDir(bundlePath, moduleDir, moduleName, realHspPath);
+    ErrCode ret = installer.SaveHspToRealInstallationDir(bundlePath, moduleDir, moduleName, realHspPath, versionCode);
 
     signatureFileDir_ = " ";
-    installer.SaveHspToRealInstallationDir(bundlePath, moduleDir, moduleName, realHspPath);
+    installer.SaveHspToRealInstallationDir(bundlePath, moduleDir, moduleName, realHspPath, versionCode);
 
     ErrCode result = ERR_DEAD_OBJECT;
-    installer.SaveHspToRealInstallationDir(bundlePath, moduleDir, moduleName, realHspPath);
+    installer.SaveHspToRealInstallationDir(bundlePath, moduleDir, moduleName, realHspPath, versionCode);
     ASSERT_NE(ret, ERR_OK);
 }
 

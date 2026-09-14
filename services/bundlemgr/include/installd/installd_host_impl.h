@@ -284,6 +284,9 @@ public:
     virtual ErrCode CopyFile(const std::string &oldPath, const std::string &newPath, BundleDirScene scene,
         const std::string &signatureFilePath = "") override;
 
+    virtual ErrCode CopySharedHsp(const std::string &bundleName, const std::string &moduleName,
+        const std::string &sourceHspPath, uint32_t versionCode, const std::string &sourceSignaturePath) override;
+
     virtual ErrCode Mkdir(const std::string &dir, const int32_t mode, const int32_t uid, const int32_t gid,
         const CreateDirParam &createDirParam) override;
 
@@ -357,6 +360,9 @@ public:
     virtual ErrCode AddUserDirDeleteDfx(int32_t userId) override;
 
     virtual ErrCode MoveHapToCodeDir(const std::string &originPath, const std::string &targetPath) override;
+
+    virtual ErrCode MoveSharedHspToCodeDir(const std::string &bundleName, const std::string &moduleName,
+        const std::string &sourceHspPath, uint32_t versionCode) override;
 
     virtual ErrCode CreateDataGroupDirs(const std::vector<CreateDirParam> &params) override;
 
