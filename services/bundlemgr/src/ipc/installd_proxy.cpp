@@ -945,6 +945,22 @@ ErrCode InstalldProxy::CopyFile(const std::string &oldPath, const std::string &n
     return TransactInstalldCmd(InstalldInterfaceCode::COPY_FILE, data, reply, option);
 }
 
+ErrCode InstalldProxy::CopySharedHsp(const std::string &bundleName, const std::string &moduleName,
+    const std::string &sourceHspPath, uint32_t versionCode, const std::string &sourceSignaturePath)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(moduleName));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(sourceHspPath));
+    INSTALLD_PARCEL_WRITE(data, Uint32, versionCode);
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(sourceSignaturePath));
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    return TransactInstalldCmd(InstalldInterfaceCode::COPY_SHARED_HSP, data, reply, option);
+}
+
 ErrCode InstalldProxy::Mkdir(const std::string &dir, const int32_t mode, const int32_t uid, const int32_t gid,
     const CreateDirParam &createDirParam)
 {
@@ -1525,6 +1541,21 @@ ErrCode InstalldProxy::MoveHapToCodeDir(const std::string &originPath, const std
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
     return TransactInstalldCmd(InstalldInterfaceCode::MOVE_HAP_TO_CODE_DIR, data, reply, option);
+}
+
+ErrCode InstalldProxy::MoveSharedHspToCodeDir(const std::string &bundleName, const std::string &moduleName,
+    const std::string &sourceHspPath, uint32_t versionCode)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(moduleName));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(sourceHspPath));
+    INSTALLD_PARCEL_WRITE(data, Uint32, versionCode);
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    return TransactInstalldCmd(InstalldInterfaceCode::MOVE_SHARED_HSP_TO_CODE_DIR, data, reply, option);
 }
 
 ErrCode InstalldProxy::MigrateData(const std::vector<std::string> &sourcePaths, const std::string &destinationPath)

@@ -433,7 +433,7 @@ ErrCode InnerSharedBundleInstaller::ExtractSharedBundles(const std::string &bund
         // save hsp and so files to installation dir
         std::string realHspPath = moduleDir + ServiceConstants::PATH_SEPARATOR + moduleName +
             ServiceConstants::HSP_FILE_SUFFIX;
-        result = SaveHspToRealInstallationDir(bundlePath, moduleDir, moduleName, realHspPath);
+        result = SaveHspToRealInstallationDir(bundlePath, moduleDir, moduleName, realHspPath, versionCode);
         CHECK_RESULT(result, "save hsp file failed %{public}d");
         newInfo.SetModuleHapPath(realHspPath);
     }
@@ -666,7 +666,8 @@ ErrCode InnerSharedBundleInstaller::ObtainHspFileAndSignatureFilePath(const std:
 ErrCode InnerSharedBundleInstaller::SaveHspToRealInstallationDir(const std::string &bundlePath,
     const std::string &moduleDir,
     const std::string &moduleName,
-    const std::string &realHspPath)
+    const std::string &realHspPath,
+    uint32_t versionCode)
 {
     // 1. create temp dir
     ErrCode result = ERR_OK;
@@ -678,10 +679,11 @@ ErrCode InnerSharedBundleInstaller::SaveHspToRealInstallationDir(const std::stri
     std::string tempHspPath = tempHspDir + ServiceConstants::PATH_SEPARATOR + moduleName +
         ServiceConstants::HSP_FILE_SUFFIX;
     if (!signatureFileDir_.empty()) {
-        result = InstalldClient::GetInstance()->CopyFile(
-            bundlePath, tempHspPath, BundleDirScene::COPY_SHARED_HSP, signatureFileDir_);
+        result = InstalldClient::GetInstance()->CopySharedHsp(bundleName_, moduleName,
+            bundlePath, versionCode, signatureFileDir_);
     } else {
-        result = InstalldClient::GetInstance()->MoveHapToCodeDir(bundlePath, tempHspPath);
+        result = InstalldClient::GetInstance()->MoveSharedHspToCodeDir(
+            bundleName_, moduleName, bundlePath, versionCode);
         CHECK_RESULT(result, "copy hsp to install dir failed %{public}d");
         bool isCompileSdkOpenHarmony = (compileSdkType_ == COMPILE_SDK_TYPE_OPEN_HARMONY);
         result = VerifyCodeSignatureForHsp(tempHspPath, appIdentifier_, isEnterpriseBundle_,

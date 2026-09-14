@@ -398,6 +398,21 @@ public:
     }
 
     /**
+     * @brief Copy shared hsp file to the shared hsp install dir under the bundle code dir.
+     * @param bundleName Indicates the bundle name.
+     * @param moduleName Indicates the module name.
+     * @param sourceHspPath Indicates the source hsp file path in the security dir.
+     * @param versionCode Indicates the version code for the version dir.
+     * @param sourceSignaturePath Indicates the source code signature file path in the security dir.
+     * @return Returns ERR_OK if copy shared hsp successfully; returns error code otherwise.
+     */
+    virtual ErrCode CopySharedHsp(const std::string &bundleName, const std::string &moduleName,
+        const std::string &sourceHspPath, uint32_t versionCode, const std::string &sourceSignaturePath)
+    {
+        return ERR_OK;
+    }
+
+    /**
      * @brief Create directory recursively.
      * @param dir Indicates dir which will be created.
      * @param mode Indicates dir mode.
@@ -569,6 +584,20 @@ public:
     }
 
     virtual ErrCode MoveHapToCodeDir(const std::string &originPath, const std::string &targetPath)
+    {
+        return ERR_OK;
+    }
+
+    /**
+     * @brief Move shared hsp to code dir.
+     * @param bundleName Indicates the bundle name of shared bundle.
+     * @param moduleName Indicates the module name.
+     * @param sourceHspPath Indicates the source hsp file path in the security dir.
+     * @param versionCode Indicates the version code.
+     * @return Returns ERR_OK if move shared hsp successfully; returns error code otherwise.
+     */
+    virtual ErrCode MoveSharedHspToCodeDir(const std::string &bundleName, const std::string &moduleName,
+        const std::string &sourceHspPath, uint32_t versionCode)
     {
         return ERR_OK;
     }
