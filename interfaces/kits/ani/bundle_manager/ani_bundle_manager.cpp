@@ -1709,6 +1709,31 @@ static ani_object GetAllAppCloneBundleInfoNative(
     return CommonFunAni::ConvertAniArray(env, bundleInfos, CommonFunAni::ConvertBundleInfo, aniBundleFlags);
 }
 
+static ani_object GetAllBundleInfoInstancesNative(
+    ani_env* env, ani_string aniBundleName, ani_int aniBundleFlags)
+{
+    APP_LOGD("ani GetAllBundleInfoInstancesNative called");
+    std::string bundleName;
+    if (!CommonFunAni::ParseString(env, aniBundleName, bundleName)) {
+        APP_LOGE("bundleName parse failed");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, Constants::BUNDLE_NAME, TYPE_STRING);
+        return nullptr;
+    }
+    std::vector<BundleInfo> bundleInfos;
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    ErrCode ret = BundleManagerHelper::InnerGetAllBundleInfoInstances(
+        bundleName, aniBundleFlags, userId, bundleInfos);
+    if (ret != ERR_OK) {
+        APP_LOGE("InnerGetAllBundleInfoInstances failed ret: %{public}d", ret);
+        BusinessErrorAni::ThrowCommonError(
+            env, ret, GET_ALL_BUNDLE_INFO_INSTANCES, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+        return nullptr;
+    }
+    APP_LOGD("GetAllBundleInfoInstancesNative bundleInfos size: %{public}zu", bundleInfos.size());
+
+    return CommonFunAni::ConvertAniArray(env, bundleInfos, CommonFunAni::ConvertBundleInfo, aniBundleFlags);
+}
+
 static ani_object GetAllSharedBundleInfoNative(ani_env* env)
 {
     APP_LOGD("ani GetAllSharedBundleInfoNative called");
@@ -2790,6 +2815,8 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
         ani_native_function { "getSignatureInfo", nullptr, reinterpret_cast<void*>(GetSignatureInfo) },
         ani_native_function { "getAllAppCloneBundleInfoNative", nullptr,
             reinterpret_cast<void*>(GetAllAppCloneBundleInfoNative) },
+        ani_native_function { "getAllBundleInfoInstancesNative", nullptr,
+            reinterpret_cast<void*>(GetAllBundleInfoInstancesNative) },
         ani_native_function { "getAllSharedBundleInfoNative", nullptr,
             reinterpret_cast<void*>(GetAllSharedBundleInfoNative) },
         ani_native_function { "getAllBundleInstallInfoNative", nullptr,

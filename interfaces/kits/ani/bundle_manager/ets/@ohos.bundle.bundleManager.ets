@@ -74,6 +74,7 @@ namespace bundleManager {
     GET_BUNDLE_INFO_EXCLUDE_CLONE = 0x00004000,
     GET_BUNDLE_INFO_WITH_CLOUD_KIT = 0x00008000,
     GET_BUNDLE_INFO_WITH_ENTRY_MODULE = 0x00010000,
+    GET_BUNDLE_INFO_OF_ALL_DEVICE_MODE = 0x00200000,
   }
 
   enum ApplicationFlag {
@@ -374,6 +375,9 @@ namespace bundleManager {
 
   native function getAllAppCloneBundleInfoNative(bundleName: string,
     bundleFlags: int, userId: int): Array<BundleInfo>;
+
+  native function getAllBundleInfoInstancesNative(bundleName: string,
+    bundleFlags: int): Array<BundleInfo>;
 
   native function getAllSharedBundleInfoNative(): Array<SharedBundleInfo>;
 
@@ -1692,6 +1696,25 @@ namespace bundleManager {
       let userIdInfo: int = userId ?? -2;
       let execFun = (): Array<BundleInfo> => {
         return getAllAppCloneBundleInfoNative(bundleName, bundleFlags, userIdInfo);
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((e: Any) => {
+        let resultBundleInfos: Array<BundleInfo> = e as Array<BundleInfo>;
+        resolve(resultBundleInfos);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
+      });
+    }
+    );
+    return p;
+  }
+
+  function getAllBundleInfoInstances(bundleName: string,
+    bundleFlags: int): Promise<Array<BundleInfo>> {
+    let p = new Promise<Array<BundleInfo>>((resolve: (bundleInfos: Array<BundleInfo>)
+      => void, reject: (error: Error) => void) => {
+      let execFun = (): Array<BundleInfo> => {
+        return getAllBundleInfoInstancesNative(bundleName, bundleFlags);
       };
       let p1 = taskpool.execute(execFun);
       p1.then((e: Any) => {
