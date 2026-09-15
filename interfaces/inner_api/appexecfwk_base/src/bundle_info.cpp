@@ -1471,6 +1471,9 @@ void from_json(const nlohmann::json &jsonObject, AssetGroupInfo &assetGroupInfo)
 
 bool DualModeBundleInfo::ReadFromParcel(Parcel &parcel)
 {
+    std::u16string bundleNameVal;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, bundleNameVal);
+    bundleName = Str16ToStr8(bundleNameVal);
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appIndex);
     int32_t tmpReadVal = 0;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, tmpReadVal);
@@ -1492,6 +1495,7 @@ bool DualModeBundleInfo::ReadFromParcel(Parcel &parcel)
 
 bool DualModeBundleInfo::Marshalling(Parcel &parcel) const
 {
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(bundleName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appIndex);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(deviceModeDistributionPolicy));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(appSandboxPolicy));
@@ -1511,6 +1515,7 @@ DualModeBundleInfo *DualModeBundleInfo::Unmarshalling(Parcel &parcel)
 void to_json(nlohmann::json &jsonObject, const DualModeBundleInfo &info)
 {
     jsonObject = nlohmann::json {
+        {BUNDLE_INFO_NAME, info.bundleName},
         {BUNDLE_INFO_APP_INDEX, info.appIndex},
         {BUNDLE_INFO_DEVICE_MODE_DISTRIBUTION_POLICY, info.deviceModeDistributionPolicy},
         {BUNDLE_INFO_APP_SANDBOX_POLICY, info.appSandboxPolicy},
@@ -1521,6 +1526,12 @@ void from_json(const nlohmann::json &jsonObject, DualModeBundleInfo &info)
 {
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        BUNDLE_INFO_NAME,
+        info.bundleName,
+        false,
+        parseResult);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
         BUNDLE_INFO_APP_INDEX,

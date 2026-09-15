@@ -52,6 +52,7 @@ export class ApplicationInfoInner implements ApplicationInfo {
   readonly cloudFileSyncEnabled: boolean;
   readonly cloudStructuredDataSyncEnabled?: boolean|undefined;
   readonly flags?: int|undefined;
+  readonly applicationReservedFlag?: bundleManager.ApplicationReservedFlag|undefined;
 
   constructor() { }
   constructor(name: string,
@@ -85,7 +86,8 @@ export class ApplicationInfoInner implements ApplicationInfo {
     releaseType: string,
     cloudFileSyncEnabled: boolean,
     cloudStructuredDataSyncEnabled?: boolean,
-    flags?: int) {
+    flags?: int,
+    applicationReservedFlag?: bundleManager.ApplicationReservedFlag) {
       this.name = name;
       this.description = description;
       this.descriptionId = descriptionId;
@@ -118,6 +120,7 @@ export class ApplicationInfoInner implements ApplicationInfo {
       this.cloudFileSyncEnabled = cloudFileSyncEnabled;
       this.cloudStructuredDataSyncEnabled = cloudStructuredDataSyncEnabled;
       this.flags = flags;
+      this.applicationReservedFlag = applicationReservedFlag;
   }
 }
 

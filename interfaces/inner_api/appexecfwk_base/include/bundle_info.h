@@ -270,6 +270,7 @@ struct AssetGroupInfo : public Parcelable {
 };
 
 struct DualModeBundleInfo : public Parcelable {
+    std::string bundleName;
     int32_t appIndex = 0;    // 0, mainMode; 10000, secondMode
     // device mode distribution policy for dual-mode (2IN1/TABLET), default UNSPECIFIED
     DeviceModeDistributionPolicy deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNSPECIFIED;

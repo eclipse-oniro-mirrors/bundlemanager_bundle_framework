@@ -40,6 +40,7 @@ export interface HapModuleInfo {
   readonly routerMap: Array<RouterItem>;
   readonly nativeLibraryPath: string;
   readonly codePath: string;
+  readonly codePhysicalPath?: string;
 }
 
 export interface Dependency {

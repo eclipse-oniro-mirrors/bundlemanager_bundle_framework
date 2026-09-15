@@ -39,6 +39,8 @@ constexpr const char* CLASSNAME_MODULE_METADATA_INNER = "bundleManager.Applicati
 constexpr const char* CLASSNAME_MULTI_APP_MODE = "bundleManager.ApplicationInfo.MultiAppMode";
 constexpr const char* CLASSNAME_MULTI_APP_MODE_INNER = "bundleManager.ApplicationInfoInner.MultiAppModeInner";
 constexpr const char* CLASSNAME_BUNDLE_INFO_INNER = "bundleManager.BundleInfoInner.BundleInfoInner";
+constexpr const char* CLASSNAME_BUNDLE_EXTENSION_POLICYINFO_INNER =
+    "bundleManager.BundleInfoInner.BundleExtensionPolicyInfoInner";
 constexpr const char* CLASSNAME_PERMISSION_INNER = "bundleManager.BundleInfoInner.ReqPermissionDetailInner";
 constexpr const char* CLASSNAME_USED_SCENE = "bundleManager.BundleInfo.UsedScene";
 constexpr const char* CLASSNAME_USED_SCENE_INNER = "bundleManager.BundleInfoInner.UsedSceneInner";
@@ -195,6 +197,7 @@ static std::map<std::string, ANIClassCacheItem> g_aniClassCache = {
     { CLASSNAME_DISPOSED_UNINSTALL_RULE_INNER, { } },
     { CLASSNAME_BUNDLE_RES_INFO_INNER, { } },
     { CLASSNAME_LAUNCHER_ABILITY_RESOURCE_INFO_INNER, { } },
+    { CLASSNAME_BUNDLE_EXTENSION_POLICYINFO_INNER, { } },
 };
 
 static ani_class GetCacheClass(ani_env* env, const std::string& className)
@@ -473,6 +476,10 @@ ani_object CommonFunAni::ConvertBundleInfo(ani_env* env, const BundleInfo& bundl
         { .r = firstInstallTime },
         { .r = buildVersion },
         { .r = sandboxCreatorBundleName },
+        { .r = EnumUtils::EnumNativeToETS_BundleManager_DeviceModeDistributionPolicy(env,
+            static_cast<int32_t>(bundleInfo.deviceModeDistributionPolicy)) },
+        { .r = EnumUtils::EnumNativeToETS_BundleManager_AppSandboxPolicy(env,
+            static_cast<int32_t>(bundleInfo.appSandboxPolicy)) },
     };
     static const std::string ctorSig = SignatureBuilder()
         .AddClass(CommonFunAniNS::CLASSNAME_STRING) // moduleName: string
@@ -493,8 +500,34 @@ ani_object CommonFunAni::ConvertBundleInfo(ani_env* env, const BundleInfo& bundl
         .AddClass(CommonFunAniNS::CLASSNAME_LONG)   // firstInstallTime?: long
         .AddClass(CommonFunAniNS::CLASSNAME_STRING) // buildVersion?: string
         .AddClass(CommonFunAniNS::CLASSNAME_STRING) // sandboxCreatorBundleName?: string
+        .AddClass(CommonFunAniNS::CLASSNAME_BUNDLEMANAGER_DEVICE_MODE_DISTRIBUTION_POLICY)
+        .AddClass(CommonFunAniNS::CLASSNAME_BUNDLEMANAGER_APP_SANDBOX_POLICY) // appSandboxPolicy?: AppSandboxPolicy
         .BuildSignatureDescriptor();
     return CreateNewObjectByClassV2(env, CLASSNAME_BUNDLE_INFO_INNER, ctorSig, args);
+}
+
+ani_object CommonFunAni::ConvertBundleExtensionPolicy(ani_env* env, const DualModeBundleInfo& dualModeBundleInfo)
+{
+    RETURN_NULL_IF_NULL(env);
+ 
+    // sandboxCreatorBundleName: string
+    ani_string bundleName = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, dualModeBundleInfo.bundleName, bundleName));
+    ani_value args[] = {
+        { .r = bundleName },
+        { .i = dualModeBundleInfo.appIndex },
+        { .r = EnumUtils::EnumNativeToETS_BundleManager_DeviceModeDistributionPolicy(env,
+            static_cast<int32_t>(dualModeBundleInfo.deviceModeDistributionPolicy)) },
+        { .r = EnumUtils::EnumNativeToETS_BundleManager_AppSandboxPolicy(env,
+            static_cast<int32_t>(dualModeBundleInfo.appSandboxPolicy)) },
+    };
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // bundleName: string
+        .AddInt()                                   // appIndex: int
+        .AddClass(CommonFunAniNS::CLASSNAME_BUNDLEMANAGER_DEVICE_MODE_DISTRIBUTION_POLICY)
+        .AddClass(CommonFunAniNS::CLASSNAME_BUNDLEMANAGER_APP_SANDBOX_POLICY) // appSandboxPolicy?: AppSandboxPolicy
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_BUNDLE_EXTENSION_POLICYINFO_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertDefaultAppAbilityInfo(ani_env* env, const AbilityInfo& abilityInfo)
@@ -829,6 +862,8 @@ ani_object CommonFunAni::ConvertApplicationInfo(ani_env* env, const ApplicationI
         { .z = BoolToAniBoolean(appInfo.cloudFileSyncEnabled) },
         { .r = cloudStructuredDataSyncEnabled },
         { .r = flags },
+        { .r = EnumUtils::EnumNativeToETS_BundleManager_ApplicationReservedFlag(env,
+            static_cast<int32_t>(appInfo.applicationReservedFlag)) },
     };
     static const std::string ctorSig = SignatureBuilder()
         .AddClass(CommonFunAniNS::CLASSNAME_STRING)                    // name: string
@@ -863,6 +898,7 @@ ani_object CommonFunAni::ConvertApplicationInfo(ani_env* env, const ApplicationI
         .AddBoolean()                                                  // cloudFileSyncEnabled: boolean
         .AddClass(CommonFunAniNS::CLASSNAME_BOOLEAN)                   // cloudStructuredDataSyncEnabled?: boolean
         .AddClass(CommonFunAniNS::CLASSNAME_INT)                       // flags?: int
+        .AddClass(CommonFunAniNS::CLASSNAME_BUNDLEMANAGER_APPLICATIONRESERVEDFLAG)
         .BuildSignatureDescriptor();
     return CreateNewObjectByClassV2(env, CLASSNAME_APPLICATION_INFO_INNER, ctorSig, args);
 }
@@ -1434,6 +1470,10 @@ ani_object CommonFunAni::ConvertHapModuleInfo(ani_env* env, const HapModuleInfo&
         }
     }
     RETURN_NULL_IF_FALSE(StringToAniStr(env, hapPath, codePath));
+    
+    // codePhysicalPath: string
+    ani_string codePhysicalPath = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, hapModuleInfo.hapPath, codePhysicalPath));
 
     ani_value args[] = {
         { .r = name },
@@ -1458,6 +1498,7 @@ ani_object CommonFunAni::ConvertHapModuleInfo(ani_env* env, const HapModuleInfo&
         { .r = routerMap },
         { .r = nativeLibraryPath },
         { .r = codePath },
+        { .r = codePhysicalPath },
     };
     static const std::string ctorSig = SignatureBuilder()
         .AddClass(CommonFunAniNS::CLASSNAME_STRING) // name: string
@@ -1481,6 +1522,7 @@ ani_object CommonFunAni::ConvertHapModuleInfo(ani_env* env, const HapModuleInfo&
         .AddClass(CommonFunAniNS::CLASSNAME_ARRAY)                     // routerMap: Array<RouterItem>
         .AddClass(CommonFunAniNS::CLASSNAME_STRING)                    // nativeLibraryPath: string
         .AddClass(CommonFunAniNS::CLASSNAME_STRING)                    // codePath: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING)                    // codePhysicalPath: string
         .BuildSignatureDescriptor();
     return CreateNewObjectByClassV2(env, CLASSNAME_HAP_MODULE_INFO_INNER, ctorSig, args);
 }

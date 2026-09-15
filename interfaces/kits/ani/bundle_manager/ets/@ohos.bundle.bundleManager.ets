@@ -14,7 +14,7 @@
  */
 
 import { BundleInfo, AppCloneIdentity, AppClonePreference, SignatureInfo, BundleOptions, DynamicIconInfo,
-  AlternateIconInfo } from 'bundleManager.BundleInfo';
+  AlternateIconInfo, BundleExtensionPolicyInfo } from 'bundleManager.BundleInfo';
 import { AsyncCallback, BusinessError } from '@ohos.base';
 import { PreinstalledApplicationInfo, ApplicationInfo } from 'bundleManager.ApplicationInfo';
 import { AbilityInfo } from 'bundleManager.AbilityInfo';
@@ -103,7 +103,7 @@ namespace bundleManager {
     GET_EXTENSION_ABILITY_INFO_WITH_SKILL = 0x00000010,
   }
 
-  enum DeviceModeDistributionPolicy {
+  export enum DeviceModeDistributionPolicy {
     UNSPECIFIED = 0,
     MAIN_ONLY = 1,
     SUB_ONLY = 2,
@@ -253,6 +253,15 @@ namespace bundleManager {
     BUNDLE_INSTALLED = 3
   }
 
+  export enum ApplicationReservedFlag {  
+    ENCRYPTED_APPLICATION = 0x00000001,
+    ENCRYPTED_KEY_EXISTED = 0x00000002,
+  }
+
+  export enum AppSandboxPolicy {
+      SHARED_SANDBOX = 0,
+      ISOLATED_SANDBOX = 1,
+  }
   native function getBundleInfoForSelfNative(bundleFlags: int, isSync: boolean): BundleInfo;
 
   native function getBundleInfoNative(bundleName: string, bundleFlags: int, userId: int, isSync: boolean) : BundleInfo;
@@ -2100,6 +2109,12 @@ namespace bundleManager {
     }
     );
     return p;
+  }
+
+  native function getBundleExtensionPolicyInfoNative(bundleName: string, userId: int): BundleExtensionPolicyInfo;
+
+  function getBundleExtensionPolicyInfo(bundleName: string, userId: int): BundleExtensionPolicyInfo {
+    return getBundleExtensionPolicyInfoNative(bundleName, userId);
   }
 }
 

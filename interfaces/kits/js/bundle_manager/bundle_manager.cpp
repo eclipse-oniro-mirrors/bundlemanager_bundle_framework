@@ -7307,9 +7307,9 @@ napi_value FilterBundleListByDeviceModeDistributionPolicies(napi_env env, napi_c
     return promise;
 }
 
-napi_value GetBundleInfoDualMode(napi_env env, napi_callback_info info)
+napi_value GetBundleExtensionPolicyInfo(napi_env env, napi_callback_info info)
 {
-    APP_LOGD("NAPI GetBundleInfoDualMode called");
+    APP_LOGD("NAPI GetBundleExtensionPolicyInfo called");
     NapiArg args(env, info);
     if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
         APP_LOGE("param count invalid");
@@ -7341,7 +7341,7 @@ napi_value GetBundleInfoDualMode(napi_env env, napi_callback_info info)
     }
     if (bundleName.empty()) {
         napi_value businessError = BusinessError::CreateCommonError(
-            env, ERROR_PARAM_CHECK_ERROR, GET_BUNDLE_INFO_DUAL_MODE, BUNDLE_PERMISSIONS);
+            env, ERROR_PARAM_CHECK_ERROR, GET_BUNDLE_EXTENSION_POLICY_INFO, BUNDLE_PERMISSIONS);
         napi_throw(env, businessError);
         return nullptr;
     }
@@ -7359,15 +7359,16 @@ napi_value GetBundleInfoDualMode(napi_env env, napi_callback_info info)
     ErrCode ret = CommonFunc::ConvertErrCode(innerRet);
     if (ret != NO_ERROR) {
         APP_LOGD("GetBundleInfoDualMode failed -n %{public}s -u %{public}d", bundleName.c_str(), userId);
-        napi_value businessError = BusinessError::CreateCommonError(env, ret, GET_BUNDLE_INFO_DUAL_MODE,
+        napi_value businessError = BusinessError::CreateCommonError(env, ret, GET_BUNDLE_EXTENSION_POLICY_INFO,
             BUNDLE_PERMISSIONS);
         napi_throw(env, businessError);
         return nullptr;
     }
-    napi_value nBundleInfoDualMode = nullptr;
-    NAPI_CALL(env, napi_create_object(env,  &nBundleInfoDualMode));
-    CommonFunc::ConvertBundleInfoDualMode(env, dualModeBundleInfo, nBundleInfoDualMode);
-    return nBundleInfoDualMode;
+    dualModeBundleInfo.bundleName = bundleName;
+    napi_value nBundleExtensionPolicyInfo = nullptr;
+    NAPI_CALL(env, napi_create_object(env,  &nBundleExtensionPolicyInfo));
+    CommonFunc::ConvertBundleExtensionPolicy(env, dualModeBundleInfo, nBundleExtensionPolicyInfo);
+    return nBundleExtensionPolicyInfo;
 }
 } // namespace AppExecFwk
 } // namespace OHOS

@@ -50,6 +50,7 @@ export interface ApplicationInfo {
   readonly cloudFileSyncEnabled: boolean;
   readonly cloudStructuredDataSyncEnabled?: boolean;
   readonly flags?: int;
+  readonly applicationReservedFlag?: bundleManager.ApplicationReservedFlag;
 }
 
 export interface ModuleMetadata {
