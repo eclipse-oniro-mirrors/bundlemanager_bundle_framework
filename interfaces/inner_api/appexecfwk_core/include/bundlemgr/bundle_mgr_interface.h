@@ -2329,12 +2329,13 @@ public:
      * @brief Switch the application visibility by device mode distribution policies
      * (dual-mode requirement 2). Structural hiding only: no bundle event is broadcast;
      * the caller is responsible for notifying listeners / refreshing UI after success.
-     * Same-name different-package variant pairs rotate on every call (call once per
-     * device-mode flip); single-variant different-package apps are placed by the
+     * Same-name different-package variant pairs rotate on every performing call (call once
+     * per device-mode flip); single-variant different-package apps are placed by the
      * reboot classification.
      * @param policies set of DeviceModeDistributionPolicy values (0~8). MUST be non-empty, all
      *        values in range, and contain all different-package policies (4/6/8).
-     * @return ERR_OK on success; ERR_APPEXECFWK_DUAL_MODE_DEVICE_NOT_SUPPORTED on a non
+     * @return ERR_OK on success (a set equal to the persisted value is an ERR_OK no-op);
+     *         ERR_APPEXECFWK_DUAL_MODE_DEVICE_NOT_SUPPORTED on a non
      *         dual-mode device, or when the mode-param refresh inside the switch fails (cache
      *         keeps the last-known-good values; retry); ERR_APPEXECFWK_DUAL_MODE_SWITCH_BUSY
      *         when an install/update/uninstall task or another switch is in flight (fail fast

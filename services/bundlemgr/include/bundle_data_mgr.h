@@ -165,7 +165,9 @@ public:
      * requirement 2). Validates the set, migrates apps between bundleInfos_ (queryable) and
      * tempBundleInfos_ (hidden) per policy set, then persists the set to bms_param; if the
      * persist fails, the migration is re-run with the previously persisted set (rollback
-     * baseline), restoring the pre-switch memory state. Mutually exclusive with queued
+     * baseline), restoring the pre-switch memory state. A switch whose set equals the
+     * persisted value is a no-op: ERR_OK is returned without migration or persist. Mutually
+     * exclusive with queued
      * install/update/uninstall tasks via dualModeSwitchMutex_: the switch takes the exclusive
      * lock with try_to_lock and fails fast with ERR_APPEXECFWK_DUAL_MODE_SWITCH_BUSY when any
      * task is running (or another switch is in flight); bundle operations try the shared lock
