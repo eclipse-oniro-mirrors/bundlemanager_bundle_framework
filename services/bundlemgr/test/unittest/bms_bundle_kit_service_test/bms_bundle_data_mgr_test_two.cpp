@@ -3004,6 +3004,15 @@ HWTEST_F(BmsBundleDataMgrTest2, BatchSetApplicationEnabled_0700, Function | Smal
     auto ret3 = dataMgr->BatchSetApplicationEnabled(USERID, -1, 1, "", false, false, true);
     EXPECT_EQ(ret3, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
 
+    // disableAppIndex = -2 (not ALL_CLONE_APP_INDEX) should be invalid
+    auto ret3b = dataMgr->BatchSetApplicationEnabled(USERID, 1, -2, "", false, false, true);
+    EXPECT_EQ(ret3b, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+
+    // disableAppIndex = ALL_CLONE_APP_INDEX (-1) should pass validation (ERR_OK, no clone bundles)
+    auto ret3c = dataMgr->BatchSetApplicationEnabled(USERID, 1, Constants::ALL_CLONE_APP_INDEX,
+        "", false, false, true);
+    EXPECT_EQ(ret3c, ERR_OK);
+
     auto ret4 = dataMgr->BatchSetApplicationEnabled(USERID, 1, 1, "", false, false, true);
     EXPECT_EQ(ret4, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
 
@@ -3291,6 +3300,247 @@ HWTEST_F(BmsBundleDataMgrTest2, BatchSetApplicationEnabled_1400, Function | Smal
     ASSERT_NE(it, dataMgr->bundleInfos_.end());
     bool enabled = false;
     EXPECT_EQ(it->second.GetApplicationEnabledV9(USERID, enabled, 1), ERR_OK);
+    EXPECT_TRUE(enabled);
+}
+
+/**
+ * @tc.number: BatchSetApplicationEnabled_1500
+ * @tc.name: test BatchSetApplicationEnabled with disableAppIndex = ALL_CLONE_APP_INDEX
+ * @tc.desc: when disableAppIndex = -1, all clones except enableAppIndex should be disabled
+ */
+HWTEST_F(BmsBundleDataMgrTest2, BatchSetApplicationEnabled_1500, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    MockInstallBundle(BUNDLE_TEST1, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    ScopeGuard guard([&] { MockUninstallBundle(BUNDLE_TEST1); });
+
+    auto it = dataMgr->bundleInfos_.find(BUNDLE_TEST1);
+    ASSERT_NE(it, dataMgr->bundleInfos_.end());
+    std::string key = BUNDLE_TEST1 + Constants::FILE_UNDERLINE + std::to_string(USERID);
+    auto userIt = it->second.innerBundleUserInfos_.find(key);
+    ASSERT_NE(userIt, it->second.innerBundleUserInfos_.end());
+    // create 3 clones: index 1 (enabled), 2 (enabled), 3 (disabled)
+    InnerBundleCloneInfo cloneInfo1;
+    cloneInfo1.appIndex = 1;
+    cloneInfo1.uid = TEST_UID;
+    cloneInfo1.enabled = true;
+    userIt->second.cloneInfos["1"] = cloneInfo1;
+    InnerBundleCloneInfo cloneInfo2;
+    cloneInfo2.appIndex = 2;
+    cloneInfo2.uid = TEST_UID + 1;
+    cloneInfo2.enabled = true;
+    userIt->second.cloneInfos["2"] = cloneInfo2;
+    InnerBundleCloneInfo cloneInfo3;
+    cloneInfo3.appIndex = 3;
+    cloneInfo3.uid = TEST_UID + 2;
+    cloneInfo3.enabled = false;
+    userIt->second.cloneInfos["3"] = cloneInfo3;
+
+    auto ret = dataMgr->BatchSetApplicationEnabled(
+        USERID, 1, Constants::ALL_CLONE_APP_INDEX, "", false, false, true);
+    EXPECT_EQ(ret, ERR_OK);
+
+    it = dataMgr->bundleInfos_.find(BUNDLE_TEST1);
+    ASSERT_NE(it, dataMgr->bundleInfos_.end());
+    bool enabled = false;
+    // enableAppIndex=1 should remain enabled
+    EXPECT_EQ(it->second.GetApplicationEnabledV9(USERID, enabled, 1), ERR_OK);
+    EXPECT_TRUE(enabled);
+    // index 2 should be disabled
+    EXPECT_EQ(it->second.GetApplicationEnabledV9(USERID, enabled, 2), ERR_OK);
+    EXPECT_FALSE(enabled);
+    // index 3 should remain disabled
+    EXPECT_EQ(it->second.GetApplicationEnabledV9(USERID, enabled, 3), ERR_OK);
+    EXPECT_FALSE(enabled);
+}
+
+/**
+ * @tc.number: BatchSetApplicationEnabled_1600
+ * @tc.name: test BatchSetApplicationEnabled with disableAppIndex = ALL_CLONE_APP_INDEX and no clone apps
+ * @tc.desc: when disableAppIndex = -1 and no clone apps, should return ERR_OK
+ */
+HWTEST_F(BmsBundleDataMgrTest2, BatchSetApplicationEnabled_1600, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(USERID);
+    MockInstallBundle(BUNDLE_TEST1, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    ScopeGuard guard([&] { MockUninstallBundle(BUNDLE_TEST1); });
+    auto ret = dataMgr->BatchSetApplicationEnabled(
+        USERID, 1, Constants::ALL_CLONE_APP_INDEX, "", false, false, false);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: BatchSetApplicationEnabled_1700
+ * @tc.name: test BatchSetApplicationEnabled with disableAppIndex = ALL_CLONE_APP_INDEX and save failure
+ * @tc.desc: when disableAppIndex = -1, if SaveStorageBundleInfo fails on the second clone,
+ *           should rollback the first clone and return ERR_BUNDLE_MANAGER_INTERNAL_ERROR
+ */
+HWTEST_F(BmsBundleDataMgrTest2, BatchSetApplicationEnabled_1700, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    MockInstallBundle(BUNDLE_TEST1, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    ScopeGuard guard([&] { MockUninstallBundle(BUNDLE_TEST1); });
+
+    auto it = dataMgr->bundleInfos_.find(BUNDLE_TEST1);
+    ASSERT_NE(it, dataMgr->bundleInfos_.end());
+    std::string key = BUNDLE_TEST1 + Constants::FILE_UNDERLINE + std::to_string(USERID);
+    auto userIt = it->second.innerBundleUserInfos_.find(key);
+    ASSERT_NE(userIt, it->second.innerBundleUserInfos_.end());
+    // create 3 clones: index 1 (enabled), 2 (enabled), 3 (enabled)
+    InnerBundleCloneInfo cloneInfo1;
+    cloneInfo1.appIndex = 1;
+    cloneInfo1.uid = TEST_UID;
+    cloneInfo1.enabled = true;
+    userIt->second.cloneInfos["1"] = cloneInfo1;
+    InnerBundleCloneInfo cloneInfo2;
+    cloneInfo2.appIndex = 2;
+    cloneInfo2.uid = TEST_UID + 1;
+    cloneInfo2.enabled = true;
+    userIt->second.cloneInfos["2"] = cloneInfo2;
+    InnerBundleCloneInfo cloneInfo3;
+    cloneInfo3.appIndex = 3;
+    cloneInfo3.uid = TEST_UID + 2;
+    cloneInfo3.enabled = true;
+    userIt->second.cloneInfos["3"] = cloneInfo3;
+
+    auto mockStorage = std::make_shared<MockBundleDataStorage>();
+    auto savedStorage = dataMgr->dataStorage_;
+    ScopeGuard storageGuard([dataMgr, savedStorage] { dataMgr->dataStorage_ = savedStorage; });
+    dataMgr->dataStorage_ = mockStorage;
+    int callCount = 0;
+    mockStorage->saveCallback = [&callCount](const InnerBundleInfo &) -> bool {
+        return ++callCount <= 1; // first save succeeds, second fails
+    };
+
+    auto ret = dataMgr->BatchSetApplicationEnabled(
+        USERID, 1, Constants::ALL_CLONE_APP_INDEX, "", false, false, true);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+
+    it = dataMgr->bundleInfos_.find(BUNDLE_TEST1);
+    ASSERT_NE(it, dataMgr->bundleInfos_.end());
+    bool enabled = false;
+    // enableAppIndex=1 should remain enabled (skipped in disable loop)
+    EXPECT_EQ(it->second.GetApplicationEnabledV9(USERID, enabled, 1), ERR_OK);
+    EXPECT_TRUE(enabled);
+    // first disabled clone should be rolled back to enabled
+    EXPECT_EQ(it->second.GetApplicationEnabledV9(USERID, enabled, 2), ERR_OK);
+    EXPECT_TRUE(enabled);
+    // the clone that failed save should also be rolled back to enabled
+    EXPECT_EQ(it->second.GetApplicationEnabledV9(USERID, enabled, 3), ERR_OK);
+    EXPECT_TRUE(enabled);
+}
+
+/**
+ * @tc.number: BatchSetApplicationEnabled_1800
+ * @tc.name: test BatchSetApplicationEnabled with disableAppIndex = ALL_CLONE_APP_INDEX and forbidden clone
+ * @tc.desc: when disableAppIndex = -1, a forbidden clone should be skipped (remains enabled),
+ *           while other clones are disabled
+ */
+HWTEST_F(BmsBundleDataMgrTest2, BatchSetApplicationEnabled_1800, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    MockInstallBundle(BUNDLE_TEST1, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    auto forbiddenMgr = DelayedSingleton<AppDisableForbiddenMgr>::GetInstance();
+    ASSERT_NE(forbiddenMgr, nullptr);
+    ScopeGuard guard([&] {
+        MockUninstallBundle(BUNDLE_TEST1);
+        forbiddenMgr->SetApplicationDisableForbidden(BUNDLE_TEST1, USERID, 2, false);
+    });
+
+    auto it = dataMgr->bundleInfos_.find(BUNDLE_TEST1);
+    ASSERT_NE(it, dataMgr->bundleInfos_.end());
+    std::string key = BUNDLE_TEST1 + Constants::FILE_UNDERLINE + std::to_string(USERID);
+    auto userIt = it->second.innerBundleUserInfos_.find(key);
+    ASSERT_NE(userIt, it->second.innerBundleUserInfos_.end());
+    // create 3 clones: index 1 (enabled), 2 (enabled, forbidden), 3 (enabled)
+    InnerBundleCloneInfo cloneInfo1;
+    cloneInfo1.appIndex = 1;
+    cloneInfo1.uid = TEST_UID;
+    cloneInfo1.enabled = true;
+    userIt->second.cloneInfos["1"] = cloneInfo1;
+    InnerBundleCloneInfo cloneInfo2;
+    cloneInfo2.appIndex = 2;
+    cloneInfo2.uid = TEST_UID + 1;
+    cloneInfo2.enabled = true;
+    userIt->second.cloneInfos["2"] = cloneInfo2;
+    InnerBundleCloneInfo cloneInfo3;
+    cloneInfo3.appIndex = 3;
+    cloneInfo3.uid = TEST_UID + 2;
+    cloneInfo3.enabled = true;
+    userIt->second.cloneInfos["3"] = cloneInfo3;
+
+    // clone index 2 is forbidden to disable
+    forbiddenMgr->SetApplicationDisableForbidden(BUNDLE_TEST1, USERID, 2, true);
+
+    auto ret = dataMgr->BatchSetApplicationEnabled(
+        USERID, 1, Constants::ALL_CLONE_APP_INDEX, "", false, false, false);
+    EXPECT_EQ(ret, ERR_OK);
+
+    it = dataMgr->bundleInfos_.find(BUNDLE_TEST1);
+    ASSERT_NE(it, dataMgr->bundleInfos_.end());
+    bool enabled = false;
+    // enableAppIndex=1 should remain enabled
+    EXPECT_EQ(it->second.GetApplicationEnabledV9(USERID, enabled, 1), ERR_OK);
+    EXPECT_TRUE(enabled);
+    // index 2 is forbidden, should remain enabled
+    EXPECT_EQ(it->second.GetApplicationEnabledV9(USERID, enabled, 2), ERR_OK);
+    EXPECT_TRUE(enabled);
+    // index 3 should be disabled
+    EXPECT_EQ(it->second.GetApplicationEnabledV9(USERID, enabled, 3), ERR_OK);
+    EXPECT_FALSE(enabled);
+}
+
+/**
+ * @tc.number: BatchSetApplicationEnabled_1900
+ * @tc.name: test BatchSetApplicationEnabled with ALL_CLONE_APP_INDEX when enableAppIndex not in cloneInfos
+ * @tc.desc: when enableAppIndex does not exist in cloneInfos, the bundle should be skipped
+ */
+HWTEST_F(BmsBundleDataMgrTest2, BatchSetApplicationEnabled_1900, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    MockInstallBundle(BUNDLE_TEST1, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    ScopeGuard guard([&] { MockUninstallBundle(BUNDLE_TEST1); });
+
+    auto it = dataMgr->bundleInfos_.find(BUNDLE_TEST1);
+    ASSERT_NE(it, dataMgr->bundleInfos_.end());
+    std::string key = BUNDLE_TEST1 + Constants::FILE_UNDERLINE + std::to_string(USERID);
+    auto userIt = it->second.innerBundleUserInfos_.find(key);
+    ASSERT_NE(userIt, it->second.innerBundleUserInfos_.end());
+    // create 2 clones: index 2 (enabled), 3 (enabled) - no index 1
+    InnerBundleCloneInfo cloneInfo2;
+    cloneInfo2.appIndex = 2;
+    cloneInfo2.uid = TEST_UID;
+    cloneInfo2.enabled = true;
+    userIt->second.cloneInfos["2"] = cloneInfo2;
+    InnerBundleCloneInfo cloneInfo3;
+    cloneInfo3.appIndex = 3;
+    cloneInfo3.uid = TEST_UID + 1;
+    cloneInfo3.enabled = true;
+    userIt->second.cloneInfos["3"] = cloneInfo3;
+
+    // enableAppIndex=1 does not exist in cloneInfos, bundle should be skipped
+    auto ret = dataMgr->BatchSetApplicationEnabled(
+        USERID, 1, Constants::ALL_CLONE_APP_INDEX, "", false, false, true);
+    EXPECT_EQ(ret, ERR_OK);
+
+    it = dataMgr->bundleInfos_.find(BUNDLE_TEST1);
+    ASSERT_NE(it, dataMgr->bundleInfos_.end());
+    bool enabled = false;
+    // index 2 should remain enabled (bundle was skipped)
+    EXPECT_EQ(it->second.GetApplicationEnabledV9(USERID, enabled, 2), ERR_OK);
+    EXPECT_TRUE(enabled);
+    // index 3 should remain enabled (bundle was skipped)
+    EXPECT_EQ(it->second.GetApplicationEnabledV9(USERID, enabled, 3), ERR_OK);
     EXPECT_TRUE(enabled);
 }
 

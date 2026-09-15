@@ -653,7 +653,8 @@ public:
      * @brief Batch set application enabled status for clone apps under a specific user.
      * @param userId Indicates the user id.
      * @param enableAppIndex Indicates the app index to enable.
-     * @param disableAppIndex Indicates the app index to disable.
+     * @param disableAppIndex Indicates the app index to disable. If set to Constants::ALL_CLONE_APP_INDEX (-1),
+     *        all clone app indexes except enableAppIndex will be disabled.
      * @param caller Indicates the caller name.
      * @param killProcess Indicates whether to kill the process when disabling.
      * @param needSendEvent Indicates whether to send broadcast events.
