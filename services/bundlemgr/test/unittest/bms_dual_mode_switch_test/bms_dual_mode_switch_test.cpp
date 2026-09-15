@@ -300,6 +300,9 @@ HWTEST_F(BmsDualModeSwitchTest,
     EXPECT_TRUE(dataMgr_->bundleInfos_[BUNDLE_NAME_DIFF].IsDualModeCloneApp());
     EXPECT_FALSE(dataMgr_->tempBundleInfos_[BUNDLE_NAME_DIFF].IsDualModeCloneApp());
 
+    // Clear the persisted set: a same-set repeat is short-circuited now (see _0530)
+    service_->bmsParam_->DeleteBmsParam(ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICIES_KEY);
+
     // When: the second switch Then: the pair rotates back — the primary is visible again
     EXPECT_EQ(Switch(POLICIES_VALID_MINIMAL), ERR_OK);
     EXPECT_TRUE(IsVisible(*dataMgr_, BUNDLE_NAME_DIFF));
@@ -333,6 +336,9 @@ HWTEST_F(BmsDualModeSwitchTest,
     dataMgr_->tempBundleInfos_[BUNDLE_NAME_DIFFONLY] = MakePolicyInfo(
         BUNDLE_NAME_DIFFONLY, DeviceModeDistributionPolicy::FULL_COMPATIBLE_DIFFERENT_PACKAGE);
 
+    // Clear the persisted set: a same-set repeat is short-circuited now (see _0530)
+    service_->bmsParam_->DeleteBmsParam(ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICIES_KEY);
+
     // When/Then: the primary variant rotates in alone as well — same rule, either variant
     EXPECT_EQ(Switch(POLICIES_VALID_MINIMAL), ERR_OK);
     EXPECT_TRUE(IsVisible(*dataMgr_, BUNDLE_NAME_DIFFONLY));
@@ -346,11 +352,17 @@ HWTEST_F(BmsDualModeSwitchTest,
         BUNDLE_NAME_DIFFONLY, DeviceModeDistributionPolicy::FULL_COMPATIBLE_DIFFERENT_PACKAGE);
     dataMgr_->tempBundleInfos_.erase(BUNDLE_NAME_DIFFONLY);
 
+    // Clear the persisted set: a same-set repeat is short-circuited now (see _0530)
+    service_->bmsParam_->DeleteBmsParam(ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICIES_KEY);
+
     // When/Then: the visible-side single variant rotates OUT (exactly one move — it must not
     //            bounce back within the same call), and the next switch rotates it in again
     EXPECT_EQ(Switch(POLICIES_VALID_MINIMAL), ERR_OK);
     EXPECT_TRUE(IsHidden(*dataMgr_, BUNDLE_NAME_DIFFONLY));
     EXPECT_FALSE(IsVisible(*dataMgr_, BUNDLE_NAME_DIFFONLY));
+
+    // Clear the persisted set again for the next same-set call
+    service_->bmsParam_->DeleteBmsParam(ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICIES_KEY);
     EXPECT_EQ(Switch(POLICIES_VALID_MINIMAL), ERR_OK);
     EXPECT_TRUE(IsVisible(*dataMgr_, BUNDLE_NAME_DIFFONLY));
     EXPECT_FALSE(IsHidden(*dataMgr_, BUNDLE_NAME_DIFFONLY));
@@ -404,6 +416,9 @@ HWTEST_F(BmsDualModeSwitchTest,
     EXPECT_TRUE(dataMgr_->bundleInfos_[BUNDLE_NAME_SUB].IsDualModeCloneApp());
     EXPECT_FALSE(dataMgr_->tempBundleInfos_[BUNDLE_NAME_SUB].IsDualModeCloneApp());
 
+    // Clear the persisted set: a same-set repeat is short-circuited now (see _0530)
+    service_->bmsParam_->DeleteBmsParam(ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICIES_KEY);
+
     // When: the switch runs again Then: the pair rotates back — the MAIN_ONLY app is visible
     //       again (per-call rotation, no anti-oscillation guard)
     EXPECT_EQ(Switch(POLICIES_VALID_MAIN_SET), ERR_OK);
@@ -442,6 +457,9 @@ HWTEST_F(BmsDualModeSwitchTest,
     //       again — DualModeHelper reads params directly, so the new mode takes effect immediately
     OHOS::system::SetParameter(TEST_ISPCMODE_PARAM,
         std::to_string(ServiceConstants::DUAL_MODE_VALUE_2IN1));
+
+    // Clear the persisted set: the short-circuit compares sets, not modes (see _0530)
+    service_->bmsParam_->DeleteBmsParam(ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICIES_KEY);
 
     // Then: the switch sees secondary mode (direct read, no cache refresh needed) while the
     //       migration keeps rotating every diff-package name per call — the pair flips back
@@ -507,6 +525,9 @@ HWTEST_F(BmsDualModeSwitchTest,
     EXPECT_FALSE(dataMgr_->tempBundleInfos_[BUNDLE_NAME_DIFF].IsDualModeCloneApp());
     EXPECT_TRUE(IsHidden(*dataMgr_, BUNDLE_NAME_DIFFONLY));
 
+    // Clear the persisted set: a same-set repeat is short-circuited now (see _0530)
+    service_->bmsParam_->DeleteBmsParam(ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICIES_KEY);
+
     // When/Then: the next call rotates them all again — the pair swaps back and the single
     //            variant crosses back in
     EXPECT_EQ(Switch(POLICIES_VALID_MINIMAL), ERR_OK);
@@ -554,6 +575,9 @@ HWTEST_F(BmsDualModeSwitchTest,
     EXPECT_FALSE(dataMgr_->tempBundleInfos_[BUNDLE_NAME_DIFF].IsDualModeCloneApp());
     EXPECT_TRUE(IsHidden(*dataMgr_, BUNDLE_NAME_DIFFONLY));
 
+    // Clear the persisted set: a same-set repeat is short-circuited now (see _0530)
+    service_->bmsParam_->DeleteBmsParam(ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICIES_KEY);
+
     // When: the switch runs again with the SAME set
     // Then: filterable placement is idempotent (SUB stays hidden, MAIN stays visible) while
     //       every different-package name rotates once more (pair swaps back, single variant
@@ -568,6 +592,50 @@ HWTEST_F(BmsDualModeSwitchTest,
     EXPECT_TRUE(dataMgr_->tempBundleInfos_[BUNDLE_NAME_DIFF].IsDualModeCloneApp());
     EXPECT_TRUE(IsVisible(*dataMgr_, BUNDLE_NAME_DIFFONLY));
     EXPECT_FALSE(IsHidden(*dataMgr_, BUNDLE_NAME_DIFFONLY));
+}
+
+// Same-set short-circuit: a switch whose set equals the persisted value is a no-op — ERR_OK
+// without migration or persist; the comparison is set-based only (a mode flip between two
+// modes sharing one identical set does not lift the skip)
+HWTEST_F(BmsDualModeSwitchTest,
+    FilterBundleListByDeviceModeDistributionPolicies_0530_SameSetShortCircuitsWithoutMigration,
+    TestSize.Level1)
+{
+    // Given: the persisted set is the minimal set; memory sits in the state that set produces
+    //        (SUB hidden, pair's primary visible / clone hidden, single variant visible)
+    EnablePrimaryMode();
+    EXPECT_TRUE(service_->bmsParam_->SaveBmsParam(
+        ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICIES_KEY, "4,6,8"));
+    dataMgr_->tempBundleInfos_[BUNDLE_NAME_SUB] = MakePolicyInfo(
+        BUNDLE_NAME_SUB, DeviceModeDistributionPolicy::SUB_ONLY);
+    dataMgr_->bundleInfos_[BUNDLE_NAME_DIFF] = MakePolicyInfo(
+        BUNDLE_NAME_DIFF, DeviceModeDistributionPolicy::FULL_COMPATIBLE_DIFFERENT_PACKAGE);
+    dataMgr_->tempBundleInfos_[BUNDLE_NAME_DIFF] = MakePolicyInfo(
+        BUNDLE_NAME_DIFF, DeviceModeDistributionPolicy::FULL_COMPATIBLE_DIFFERENT_PACKAGE, true);
+    dataMgr_->bundleInfos_[BUNDLE_NAME_DIFFONLY] = MakePolicyInfo(
+        BUNDLE_NAME_DIFFONLY, DeviceModeDistributionPolicy::FULL_COMPATIBLE_DIFFERENT_PACKAGE);
+
+    // When: the mode flips and the switch arrives with the SAME set as persisted
+    EnableSecondaryMode();
+
+    // Then: ERR_OK, nothing moved — SUB stays hidden, the pair does NOT rotate (the primary
+    //       stays visible), the single variant stays visible, and the persisted CSV is intact
+    EXPECT_EQ(Switch(POLICIES_VALID_MINIMAL), ERR_OK);
+    EXPECT_TRUE(IsHidden(*dataMgr_, BUNDLE_NAME_SUB));
+    EXPECT_FALSE(dataMgr_->bundleInfos_[BUNDLE_NAME_DIFF].IsDualModeCloneApp());
+    EXPECT_TRUE(dataMgr_->tempBundleInfos_[BUNDLE_NAME_DIFF].IsDualModeCloneApp());
+    EXPECT_TRUE(IsVisible(*dataMgr_, BUNDLE_NAME_DIFFONLY));
+    std::string persisted;
+    EXPECT_TRUE(service_->bmsParam_->GetBmsParam(
+        ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICIES_KEY, persisted));
+    EXPECT_EQ(persisted, "4,6,8");
+
+    // And: a differing set still performs the switch — the pair rotates, the CSV is replaced
+    EXPECT_EQ(Switch(POLICIES_VALID_MAIN_SET), ERR_OK);
+    EXPECT_TRUE(dataMgr_->bundleInfos_[BUNDLE_NAME_DIFF].IsDualModeCloneApp());
+    EXPECT_TRUE(service_->bmsParam_->GetBmsParam(
+        ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICIES_KEY, persisted));
+    EXPECT_EQ(persisted, "1,3,4,5,6,7,8");
 }
 
 // Success -> policy set is synchronously written to bms_param (normalized ascending CSV)

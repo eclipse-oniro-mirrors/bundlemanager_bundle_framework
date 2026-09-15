@@ -491,6 +491,7 @@ void BundleDataMgr::ClassifyDualModeAppsNoLock()
             // Keep the swapped primary in tempBundleInfos_ (do NOT erase) so it stays hidden.
             auto existingIt = bundleInfos_.find(originalName);
             if (existingIt != bundleInfos_.end()) {
+                APP_LOGI_NOFUNC("Dual mode: -n %{public}s need change in secondary mode", originalName.c_str());
                 InnerBundleInfo tempInfo = it->second;
                 tempBundleInfos_[originalName] = existingIt->second;
                 bundleInfos_[originalName] = tempInfo;
@@ -539,6 +540,7 @@ bool BundleDataMgr::ClassifyDualModeAppsByPolicyNoLock()
     bool hasPolicies = (bmsPara != nullptr)
         && bmsPara->GetBmsParam(ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICIES_KEY, policiesStr);
     if (!hasPolicies) {
+        APP_LOGW_NOFUNC("Dual mode: persisted policies not exist");
         return false;
     }
     std::set<DeviceModeDistributionPolicy> policySet;
@@ -671,7 +673,16 @@ ErrCode BundleDataMgr::FilterBundleListByDeviceModeDistributionPolicies(
         ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICIES_KEY, oldPoliciesCsv)
         && DualModeHelper::ParsePersistedPolicies(oldPoliciesCsv, oldPolicies);
     if (!rollbackPossible) {
-        APP_LOGW("Dual mode: no valid persisted policy set as rollback baseline");
+        APP_LOGW_NOFUNC("Dual mode: no valid persisted policy set as rollback baseline");
+    }
+
+    // Same-set short-circuit: the requested set equals the persisted one — re-running the
+    // migration would only rotate different-package entries (4/6/8) once more without any
+    // policy change. The comparison is set-based only: a mode flip between two modes sharing
+    // one identical set is not distinguished (one set change per flip is the contract).
+    if (rollbackPossible && (oldPolicies == policies)) {
+        APP_LOGI_NOFUNC("Dual mode: FilterBundleListByDeviceModeDistributionPolicies policies unchanged, skip");
+        return ERR_OK;
     }
 
     std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
