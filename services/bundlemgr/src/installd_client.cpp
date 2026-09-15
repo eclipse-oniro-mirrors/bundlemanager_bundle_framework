@@ -576,6 +576,19 @@ ErrCode InstalldClient::CopyFiles(const std::string &sourceDir, const std::strin
     return CallService(&IInstalld::CopyFiles, sourceDir, destinationDir, bundleName, scene);
 }
 
+ErrCode InstalldClient::CopyHqfFile(const std::string &bundleName, const std::string &moduleName,
+    const std::string &hqfSourceRelativePath, uint32_t versionCode, const QuickFixTargetParam &targetParam)
+{
+    if (bundleName.empty() || moduleName.empty() || hqfSourceRelativePath.empty() ||
+        (targetParam.type != QuickFixType::PATCH && targetParam.type != QuickFixType::HOT_RELOAD) ||
+        (targetParam.type == QuickFixType::HOT_RELOAD && !targetParam.targetPathSuffix.empty())) {
+        APP_LOGE("params are invalid");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(
+        &IInstalld::CopyHqfFile, bundleName, moduleName, hqfSourceRelativePath, versionCode, targetParam);
+}
+
 ErrCode InstalldClient::GetNativeLibraryFileNames(const std::string &filePath, const std::string &cpuAbi,
     std::vector<std::string> &fileNames)
 {

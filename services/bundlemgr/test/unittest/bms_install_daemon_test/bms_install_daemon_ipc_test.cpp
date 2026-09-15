@@ -1688,4 +1688,20 @@ HWTEST_F(BmsInstallDaemonIpcTest, CodeSignatureParam_Marshalling_0100, Function 
     EXPECT_EQ(unmarshalled->profileBlockLength, param.profileBlockLength);
     delete unmarshalled;
 }
+
+/**
+ * @tc.number: InstalldSceneInterfacesIpc_CopyHqfFile_0100
+ * @tc.name: test CopyHqfFile IPC
+ * @tc.desc: Verify fixed IPC code and proxy-to-host dispatch for CopyHqfFile.
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldSceneInterfacesIpc_CopyHqfFile_0100, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    ASSERT_NE(proxy, nullptr);
+    QuickFixTargetParam targetParam;
+    targetParam.type = QuickFixType::PATCH;
+    targetParam.targetPathSuffix = "test_slot";
+    EXPECT_EQ(proxy->CopyHqfFile(
+        TEST_BUNDLE_NAME, "entry", "scene_test/entry.hqf", 100, targetParam), ERR_OK);
+}
 } // OHOS

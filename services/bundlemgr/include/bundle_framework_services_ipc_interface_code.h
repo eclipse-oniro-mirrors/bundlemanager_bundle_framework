@@ -115,6 +115,7 @@ enum class InstalldInterfaceCode : uint32_t {
     EXTRACT_QUICK_FIX_RES = 88,
     EXTRACT_SO_FILES = 89,
     CREATE_PRINT_SERVICE_DIR = 90,
+    COPY_HQF_FILE = 93,
     COPY_SHARED_HSP = 104,
     MOVE_SHARED_HSP_TO_CODE_DIR = 119,
 };

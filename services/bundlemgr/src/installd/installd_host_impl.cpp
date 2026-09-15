@@ -110,6 +110,80 @@ constexpr int64_t ONE_GB = 1024 * 1024 * 1024;
 constexpr int64_t TEN_GB = ONE_GB * 10;
 constexpr size_t MAX_BIN_FILES_COUNT = 100;
 constexpr size_t MAX_SIGN_DATA_SIZE = 1024 * 1024;
+constexpr const char* QUICK_FIX_PATCH_DIR = "patch/";
+
+bool IsValidPathComponent(const std::string &value)
+{
+    return InstalldOperator::IsFileNameValid(value) &&
+        value.find(ServiceConstants::PATH_SEPARATOR) == std::string::npos;
+}
+
+bool IsValidRelativePath(const std::string &value)
+{
+    return !value.empty() && InstalldOperator::IsFileNameValid(value) &&
+        value.front() != ServiceConstants::PATH_SEPARATOR[0];
+}
+
+std::string BuildBundleRoot(const std::string &root, const std::string &bundleName)
+{
+    return root + ServiceConstants::PATH_SEPARATOR + bundleName + ServiceConstants::PATH_SEPARATOR;
+}
+
+bool IsPathInRoot(const std::string &root, const std::string &path)
+{
+    return InstalldOperator::IsValidPath(root, path);
+}
+
+bool BuildPathInRoot(const std::string &root, const std::string &relativePath, std::string &path)
+{
+    if (!IsValidRelativePath(relativePath)) {
+        return false;
+    }
+    path = root + relativePath;
+    if (!IsPathInRoot(root, path)) {
+        return false;
+    }
+    if (!InstalldOperator::IsExistFile(path) && !InstalldOperator::IsExistDir(path)) {
+        return true;
+    }
+
+    std::string realRoot;
+    std::string realPath;
+    if (!PathToRealPath(root, realRoot) || !PathToRealPath(path, realPath)) {
+        return false;
+    }
+    if (realRoot.back() != ServiceConstants::PATH_SEPARATOR[0]) {
+        realRoot.append(ServiceConstants::PATH_SEPARATOR);
+    }
+    return IsPathInRoot(realRoot, realPath);
+}
+
+bool BuildQuickFixTargetDir(const std::string &bundleName, uint32_t versionCode,
+    const QuickFixTargetParam &targetParam, std::string &targetDir)
+{
+    const std::string codeRoot = BuildBundleRoot(Constants::BUNDLE_CODE_DIR, bundleName);
+    if (targetParam.type == QuickFixType::HOT_RELOAD) {
+        if (!targetParam.targetPathSuffix.empty()) {
+            return false;
+        }
+        targetDir = codeRoot + ServiceConstants::HOT_RELOAD_PATH + std::to_string(versionCode);
+        return true;
+    }
+    if (targetParam.type != QuickFixType::PATCH) {
+        return false;
+    }
+    if (!targetParam.targetPathSuffix.empty()) {
+        if (!IsValidPathComponent(targetParam.targetPathSuffix) ||
+            targetParam.targetPathSuffix.find('.') != std::string::npos) {
+            return false;
+        }
+        targetDir = codeRoot + QUICK_FIX_PATCH_DIR + targetParam.targetPathSuffix;
+        return true;
+    }
+    targetDir = codeRoot + ServiceConstants::PATCH_PATH + std::to_string(versionCode);
+    return true;
+}
+
 enum class DirType : uint8_t {
     DIR_EL1,
     DIR_EL2,
@@ -2662,6 +2736,47 @@ ErrCode InstalldHostImpl::CopyFiles(const std::string &sourceDir, const std::str
     }
 
     InstalldOperator::CopyFiles(sourceDir, destinationDir);
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::CopyHqfFile(const std::string &bundleName, const std::string &moduleName,
+    const std::string &hqfSourceRelativePath, uint32_t versionCode, const QuickFixTargetParam &targetParam)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    if (!InstalldOperator::IsValidBundleName(bundleName) || !IsValidPathComponent(moduleName) ||
+        !IsValidRelativePath(hqfSourceRelativePath) ||
+        !InstalldOperator::EndsWith(hqfSourceRelativePath, ServiceConstants::QUICK_FIX_FILE_SUFFIX)) {
+        LOG_E(BMS_TAG_INSTALLD, "CopyHqfFile invalid param");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    const std::string sourceRoot = std::string(ServiceConstants::HAP_COPY_PATH) +
+        ServiceConstants::PATH_SEPARATOR + ServiceConstants::SECURITY_QUICK_FIX_PATH +
+        ServiceConstants::PATH_SEPARATOR;
+    std::string sourcePath;
+    if (!BuildPathInRoot(sourceRoot, hqfSourceRelativePath, sourcePath)) {
+        LOG_E(BMS_TAG_INSTALLD, "CopyHqfFile source path is invalid");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    const std::string targetRoot = BuildBundleRoot(Constants::BUNDLE_CODE_DIR, bundleName);
+    std::string targetDir;
+    if (!BuildQuickFixTargetDir(bundleName, versionCode, targetParam, targetDir)) {
+        LOG_E(BMS_TAG_INSTALLD, "CopyHqfFile target param is invalid");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    const std::string targetPath = targetDir + ServiceConstants::PATH_SEPARATOR + moduleName +
+        ServiceConstants::QUICK_FIX_FILE_SUFFIX;
+    if (!IsPathInRoot(targetRoot, targetPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "CopyHqfFile target path is invalid");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    if (!InstalldOperator::CopyFileWithMode(sourcePath, targetPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "CopyHqfFile failed, errno:%{public}d", errno);
+        return ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED;
+    }
     return ERR_OK;
 }
 

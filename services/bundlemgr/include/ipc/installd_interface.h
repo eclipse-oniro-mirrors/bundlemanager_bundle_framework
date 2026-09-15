@@ -37,10 +37,16 @@
 #include "ipc/skills_package_param.h"
 #include "ipc/verify_bin_param.h"
 #include "installd/installd_constants.h"
+#include "quick_fix/hqf_info.h"
 #include "skills_installer/skills_package_info.h"
 
 namespace OHOS {
 namespace AppExecFwk {
+struct QuickFixTargetParam {
+    QuickFixType type = QuickFixType::UNKNOWN;
+    std::string targetPathSuffix;
+};
+
 class IInstalld : public IRemoteBroker {
 public:
     DECLARE_INTERFACE_DESCRIPTOR(u"ohos.appexecfwk.Installd");
@@ -764,6 +770,12 @@ public:
      */
     virtual ErrCode CreatePrintServiceDir(const std::string &bundleName, int32_t userId,
         int32_t appIndex, int32_t appUid)
+    {
+        return ERR_OK;
+    }
+
+    virtual ErrCode CopyHqfFile(const std::string &bundleName, const std::string &moduleName,
+        const std::string &hqfSourceRelativePath, uint32_t versionCode, const QuickFixTargetParam &targetParam)
     {
         return ERR_OK;
     }

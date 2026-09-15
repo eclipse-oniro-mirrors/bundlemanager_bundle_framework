@@ -238,6 +238,9 @@ public:
     ErrCode CopyFiles(const std::string &sourceDir, const std::string &destinationDir, const std::string &bundleName,
         BundleDirScene scene);
 
+    ErrCode CopyHqfFile(const std::string &bundleName, const std::string &moduleName,
+        const std::string &hqfSourceRelativePath, uint32_t versionCode, const QuickFixTargetParam &targetParam);
+
     ErrCode ExtractFiles(const ExtractParam &extractParam);
 
     ErrCode ExtractSoFiles(const std::string &bundleName, const std::string &moduleName,
