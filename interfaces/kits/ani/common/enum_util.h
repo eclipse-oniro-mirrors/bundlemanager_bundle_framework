@@ -195,9 +195,10 @@ private:
         NOTIFICATION_SUBSCRIBER = 34,
         CRYPTO = 35,
         PARTNER_AGENT = 36,
+        UKEY_AUTH = 40,
         UNSPECIFIED = 255
     } */
-    static constexpr std::array<int, 36> Array_BundleManager_ExtensionAbilityType = {
+    static constexpr std::array<int, 37> Array_BundleManager_ExtensionAbilityType = {
         0,
         1,
         2,
@@ -233,6 +234,7 @@ private:
         34,
         35,
         36,
+        40,
         255,
     };
     /* bundleManager.ApplicationFlag
