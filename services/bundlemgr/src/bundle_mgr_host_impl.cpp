@@ -4060,7 +4060,7 @@ bool BundleMgrHostImpl::GetDistributedBundleInfo(const std::string &networkId, c
 ErrCode BundleMgrHostImpl::GetMetadataByBundleName(const std::string &bundleName,
     std::vector<ModuleMetadata> &metadataInfos)
 {
-    APP_LOGD("start GetMetadataByBundleName, bundleName : %{public}s", bundleName.c_str());
+    APP_LOGD("start GetMetadataByBundleName, bundleName=%{public}s", bundleName.c_str());
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("Non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
@@ -4085,13 +4085,20 @@ ErrCode BundleMgrHostImpl::GetMetadataByBundleName(const std::string &bundleName
     if (ret != ERR_OK) {
         return ret;
     }
+    BundleType bundleType = BundleType::APP;
+    dataMgr->GetBundleType(bundleName, bundleType);
     for (auto &moduleMetadata : metadataInfos) {
         const std::string &moduleName = moduleMetadata.moduleName;
         for (auto &metadata : moduleMetadata.metadata) {
             if (metadata.valueId == 0 || metadata.value.find(VALUE_STRING_PREFIX) != 0) {
                 continue;
             }
-            std::string resolvedValue = dataMgr->GetStringById(bundleName, moduleName, metadata.valueId, userId, "");
+            std::string resolvedValue;
+            if (bundleType == BundleType::SHARED || bundleType == BundleType::APP_SERVICE_FWK) {
+                resolvedValue = dataMgr->GetStringByIdForSharedBundle(bundleName, moduleName, metadata.valueId);
+            } else {
+                resolvedValue = dataMgr->GetStringById(bundleName, moduleName, metadata.valueId, userId, "");
+            }
             if (!resolvedValue.empty()) {
                 metadata.value = resolvedValue;
             }

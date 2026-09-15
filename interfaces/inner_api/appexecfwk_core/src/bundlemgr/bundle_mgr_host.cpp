@@ -6345,28 +6345,22 @@ ErrCode BundleMgrHost::HandleGetDualModeBundleInfo(MessageParcel &data, MessageP
 
 ErrCode BundleMgrHost::HandleGetMetadataByBundleName(MessageParcel &data, MessageParcel &reply)
 {
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     if (bundleName.empty()) {
         APP_LOGE("bundleName is invalid");
         return ERR_INVALID_VALUE;
     }
+    APP_LOGD("bundleName=%{public}s", bundleName.c_str());
     std::vector<ModuleMetadata> metadataInfos;
     ErrCode ret = GetMetadataByBundleName(bundleName, metadataInfos);
-    if (!reply.WriteInt32(static_cast<int32_t>(ret))) {
-        APP_LOGE("write failed");
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write result failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (ret == ERR_OK) {
-        if (!reply.WriteInt32(static_cast<int32_t>(metadataInfos.size()))) {
-            APP_LOGE("write failed");
-            return ERR_APPEXECFWK_PARCEL_ERROR;
-        }
-        for (const auto &item : metadataInfos) {
-            if (!reply.WriteParcelable(&item)) {
-                APP_LOGE("write failed");
-                return ERR_APPEXECFWK_PARCEL_ERROR;
-            }
-        }
+    if (ret == ERR_OK && !WriteVectorToParcelIntelligent(metadataInfos, reply)) {
+        APP_LOGE("write metadata infos failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
 }

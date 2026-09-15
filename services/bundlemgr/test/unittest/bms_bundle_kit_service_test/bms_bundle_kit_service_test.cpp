@@ -5983,6 +5983,670 @@ HWTEST_F(BmsBundleKitServiceTest, GetDistributedBundleInfo_0100, Function | Smal
 }
 
 /**
+ * @tc.number: GetMetadataByBundleName_0100
+ * @tc.name: GetMetadataByBundleName
+ * @tc.desc: 1.system run normally
+ *           2.test GetMetadataByBundleName with non-system app
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetMetadataByBundleName_0100, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<ModuleMetadata> metadataInfos;
+    ErrCode ret = hostImpl->GetMetadataByBundleName(BUNDLE_NAME_TEST, metadataInfos);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetMetadataByBundleName_0200
+ * @tc.name: GetMetadataByBundleName
+ * @tc.desc: 1.system run normally
+ *           2.test GetMetadataByBundleName with mocked bundle and metadata
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetMetadataByBundleName_0200, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    auto iter = dataMgr->bundleInfos_.find(BUNDLE_NAME_TEST);
+    if (iter != dataMgr->bundleInfos_.end()) {
+        for (auto &modulePair : iter->second.innerModuleInfos_) {
+            modulePair.second.isModuleJson = true;
+            Metadata metadata("testName", "testValue", "testResource");
+            modulePair.second.metadata.push_back(metadata);
+        }
+    }
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<ModuleMetadata> metadataInfos;
+    ErrCode ret = hostImpl->GetMetadataByBundleName(BUNDLE_NAME_TEST, metadataInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(metadataInfos.size(), 1);
+    EXPECT_EQ(metadataInfos[0].moduleName, MODULE_NAME_TEST);
+    EXPECT_EQ(metadataInfos[0].metadata.size(), 1);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetMetadataByBundleName_0300
+ * @tc.name: GetMetadataByBundleName
+ * @tc.desc: 1.system run normally
+ *           2.test GetMetadataByBundleName with nonexistent bundle
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetMetadataByBundleName_0300, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<ModuleMetadata> metadataInfos;
+    ErrCode ret = hostImpl->GetMetadataByBundleName("com.example.nonexistent", metadataInfos);
+    EXPECT_NE(ret, ERR_OK);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetMetadataByBundleName_0400
+ * @tc.name: GetMetadataByBundleName HSP $string resolution
+ * @tc.desc: 1.system run normally
+ *           2.test GetMetadataByBundleName with SHARED bundle and $string metadata routing
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetMetadataByBundleName_0400, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    auto iter = dataMgr->bundleInfos_.find(BUNDLE_NAME_TEST);
+    if (iter != dataMgr->bundleInfos_.end()) {
+        iter->second.SetApplicationBundleType(BundleType::SHARED);
+        for (auto &modulePair : iter->second.innerModuleInfos_) {
+            modulePair.second.isModuleJson = true;
+            Metadata metadata("testName", "$string:test_resource", "testResource");
+            metadata.valueId = 12345;
+            modulePair.second.metadata.push_back(metadata);
+        }
+    }
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<ModuleMetadata> metadataInfos;
+    ErrCode ret = hostImpl->GetMetadataByBundleName(BUNDLE_NAME_TEST, metadataInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(metadataInfos.size(), 1);
+    EXPECT_EQ(metadataInfos[0].metadata.size(), 1);
+    EXPECT_EQ(metadataInfos[0].metadata[0].value, "$string:test_resource");
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetMetadataByBundleName_0500
+ * @tc.name: GetMetadataByBundleName APP $string resolution
+ * @tc.desc: 1.system run normally
+ *           2.test GetMetadataByBundleName with APP bundle and $string metadata routing
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetMetadataByBundleName_0500, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    auto iter = dataMgr->bundleInfos_.find(BUNDLE_NAME_TEST);
+    if (iter != dataMgr->bundleInfos_.end()) {
+        for (auto &modulePair : iter->second.innerModuleInfos_) {
+            modulePair.second.isModuleJson = true;
+            Metadata metadata("testName", "$string:test_resource", "testResource");
+            metadata.valueId = 12345;
+            modulePair.second.metadata.push_back(metadata);
+        }
+    }
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<ModuleMetadata> metadataInfos;
+    ErrCode ret = hostImpl->GetMetadataByBundleName(BUNDLE_NAME_TEST, metadataInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(metadataInfos.size(), 1);
+    EXPECT_EQ(metadataInfos[0].metadata.size(), 1);
+    EXPECT_EQ(metadataInfos[0].metadata[0].value, "$string:test_resource");
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetMetadataByBundleName_DataMgr_0100
+ * @tc.name: GetMetadataByBundleName DataMgr
+ * @tc.desc: 1.system run normally
+ *           2.test BundleDataMgr GetMetadataByBundleName with nonexistent bundle
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetMetadataByBundleName_DataMgr_0100, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::vector<ModuleMetadata> metadataInfos;
+    ErrCode ret = dataMgr->GetMetadataByBundleName("com.example.nonexistent", metadataInfos, 0);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetMetadataByBundleName_DataMgr_0200
+ * @tc.name: GetMetadataByBundleName DataMgr
+ * @tc.desc: 1.system run normally
+ *           2.test BundleDataMgr GetMetadataByBundleName with valid bundle and metadata
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetMetadataByBundleName_DataMgr_0200, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    auto iter = dataMgr->bundleInfos_.find(BUNDLE_NAME_TEST);
+    if (iter != dataMgr->bundleInfos_.end()) {
+        for (auto &modulePair : iter->second.innerModuleInfos_) {
+            modulePair.second.isModuleJson = true;
+            Metadata metadata("testName", "testValue", "testResource");
+            modulePair.second.metadata.push_back(metadata);
+        }
+    }
+    std::vector<ModuleMetadata> metadataInfos;
+    ErrCode ret = dataMgr->GetMetadataByBundleName(BUNDLE_NAME_TEST, metadataInfos, 0);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(metadataInfos.size(), 1);
+    EXPECT_EQ(metadataInfos[0].moduleName, MODULE_NAME_TEST);
+    EXPECT_EQ(metadataInfos[0].metadata.size(), 1);
+    EXPECT_EQ(metadataInfos[0].metadata[0].name, "testName");
+    EXPECT_EQ(metadataInfos[0].metadata[0].value, "testValue");
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_GetMetadataByBundleName_0100
+ * @tc.name: InnerBundleInfo GetMetadataByBundleName
+ * @tc.desc: 1.system run normally
+ *           2.test InnerBundleInfo GetMetadataByBundleName with modules containing metadata
+ */
+HWTEST_F(BmsBundleKitServiceTest, InnerBundleInfo_GetMetadataByBundleName_0100, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = MODULE_NAME_TEST;
+    moduleInfo.isModuleJson = true;
+    Metadata metadata("testName", "testValue", "testResource");
+    moduleInfo.metadata.push_back(metadata);
+    innerBundleInfo.InsertInnerModuleInfo(MODULE_NAME_TEST, moduleInfo);
+    std::vector<ModuleMetadata> metadataInfos;
+    bool ret = innerBundleInfo.GetMetadataByBundleName(metadataInfos);
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(metadataInfos.size(), 1);
+    EXPECT_EQ(metadataInfos[0].moduleName, MODULE_NAME_TEST);
+    EXPECT_EQ(metadataInfos[0].metadata.size(), 1);
+    EXPECT_EQ(metadataInfos[0].metadata[0].name, "testName");
+    EXPECT_EQ(metadataInfos[0].metadata[0].value, "testValue");
+}
+
+/**
+ * @tc.number: InnerBundleInfo_GetMetadataByBundleName_0200
+ * @tc.name: InnerBundleInfo GetMetadataByBundleName
+ * @tc.desc: 1.system run normally
+ *           2.test InnerBundleInfo GetMetadataByBundleName with no modules containing metadata
+ */
+HWTEST_F(BmsBundleKitServiceTest, InnerBundleInfo_GetMetadataByBundleName_0200, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = MODULE_NAME_TEST;
+    moduleInfo.isModuleJson = false;
+    innerBundleInfo.InsertInnerModuleInfo(MODULE_NAME_TEST, moduleInfo);
+    std::vector<ModuleMetadata> metadataInfos;
+    bool ret = innerBundleInfo.GetMetadataByBundleName(metadataInfos);
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(metadataInfos.size(), 0);
+}
+
+/**
+ * @tc.number: ModuleMetadata_Marshalling_0100
+ * @tc.name: ModuleMetadata Marshalling
+ * @tc.desc: 1.system run normally
+ *           2.test ModuleMetadata Marshalling and Unmarshalling roundtrip
+ */
+HWTEST_F(BmsBundleKitServiceTest, ModuleMetadata_Marshalling_0100, Function | SmallTest | Level1)
+{
+    ModuleMetadata moduleMetadata;
+    moduleMetadata.moduleName = MODULE_NAME_TEST;
+    Metadata metadata("testName", "testValue", "testResource");
+    moduleMetadata.metadata.push_back(metadata);
+    MessageParcel parcel;
+    bool ret = moduleMetadata.Marshalling(parcel);
+    EXPECT_EQ(ret, true);
+    std::unique_ptr<ModuleMetadata> result(ModuleMetadata::Unmarshalling(parcel));
+    ASSERT_NE(result, nullptr);
+    EXPECT_EQ(result->moduleName, MODULE_NAME_TEST);
+    EXPECT_EQ(result->metadata.size(), 1);
+    EXPECT_EQ(result->metadata[0].name, "testName");
+    EXPECT_EQ(result->metadata[0].value, "testValue");
+    EXPECT_EQ(result->metadata[0].resource, "testResource");
+}
+
+/**
+ * @tc.number: ModuleMetadata_Marshalling_0200
+ * @tc.name: ModuleMetadata Marshalling
+ * @tc.desc: 1.system run normally
+ *           2.test ModuleMetadata Marshalling with empty metadata vector
+ */
+HWTEST_F(BmsBundleKitServiceTest, ModuleMetadata_Marshalling_0200, Function | SmallTest | Level1)
+{
+    ModuleMetadata moduleMetadata;
+    moduleMetadata.moduleName = MODULE_NAME_TEST;
+    MessageParcel parcel;
+    bool ret = moduleMetadata.Marshalling(parcel);
+    EXPECT_EQ(ret, true);
+    std::unique_ptr<ModuleMetadata> result(ModuleMetadata::Unmarshalling(parcel));
+    ASSERT_NE(result, nullptr);
+    EXPECT_EQ(result->moduleName, MODULE_NAME_TEST);
+    EXPECT_EQ(result->metadata.size(), 0);
+}
+
+/**
+ * @tc.number: ModuleMetadata_Unmarshalling_0100
+ * @tc.name: ModuleMetadata Unmarshalling
+ * @tc.desc: 1.system run normally
+ *           2.test ModuleMetadata Unmarshalling with empty parcel returns empty object
+ */
+HWTEST_F(BmsBundleKitServiceTest, ModuleMetadata_Unmarshalling_0100, Function | SmallTest | Level1)
+{
+    MessageParcel parcel;
+    std::unique_ptr<ModuleMetadata> result(ModuleMetadata::Unmarshalling(parcel));
+    ASSERT_NE(result, nullptr);
+    EXPECT_EQ(result->moduleName, "");
+    EXPECT_EQ(result->metadata.size(), 0);
+}
+
+/**
+ * @tc.number: GetMetadataByBundleName_DataMgr_0300
+ * @tc.name: GetMetadataByBundleName DataMgr
+ * @tc.desc: 1.system run normally
+ *           2.test BundleDataMgr GetMetadataByBundleName with empty bundleInfos
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetMetadataByBundleName_DataMgr_0300, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    auto backupBundleInfos = std::move(dataMgr->bundleInfos_);
+    dataMgr->bundleInfos_.clear();
+    std::vector<ModuleMetadata> metadataInfos;
+    ErrCode ret = dataMgr->GetMetadataByBundleName(BUNDLE_NAME_TEST, metadataInfos, DEFAULT_USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    dataMgr->bundleInfos_ = std::move(backupBundleInfos);
+}
+
+/**
+ * @tc.number: GetMetadataByBundleName_DataMgr_0400
+ * @tc.name: GetMetadataByBundleName DataMgr
+ * @tc.desc: 1.system run normally
+ *           2.test BundleDataMgr GetMetadataByBundleName with disabled bundle
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetMetadataByBundleName_DataMgr_0400, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    auto iter = dataMgr->bundleInfos_.find(BUNDLE_NAME_TEST);
+    if (iter != dataMgr->bundleInfos_.end()) {
+        iter->second.SetBundleStatus(InnerBundleInfo::BundleStatus::DISABLED);
+    }
+    std::vector<ModuleMetadata> metadataInfos;
+    ErrCode ret = dataMgr->GetMetadataByBundleName(BUNDLE_NAME_TEST, metadataInfos, DEFAULT_USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_DISABLED);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetMetadataByBundleName_DataMgr_0500
+ * @tc.name: GetMetadataByBundleName DataMgr
+ * @tc.desc: 1.system run normally
+ *           2.test BundleDataMgr GetMetadataByBundleName with invalid userId for APP type (per-user isolation)
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetMetadataByBundleName_DataMgr_0500, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::vector<ModuleMetadata> metadataInfos;
+    ErrCode ret = dataMgr->GetMetadataByBundleName(BUNDLE_NAME_TEST, metadataInfos, Constants::INVALID_USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetMetadataByBundleName_Proxy_0100
+ * @tc.name: GetMetadataByBundleName Proxy
+ * @tc.desc: 1.system run normally
+ *           2.test BundleMgrProxy GetMetadataByBundleName with empty bundleName
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetMetadataByBundleName_Proxy_0100, Function | SmallTest | Level1)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::vector<ModuleMetadata> metadataInfos;
+    ErrCode ret = bundleMgrProxy->GetMetadataByBundleName("", metadataInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: GetMetadataByBundleName_Proxy_0200
+ * @tc.name: GetMetadataByBundleName Proxy
+ * @tc.desc: 1.system run normally
+ *           2.test BundleMgrProxy GetMetadataByBundleName with nonexistent bundle
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetMetadataByBundleName_Proxy_0200, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::vector<ModuleMetadata> metadataInfos;
+    ErrCode ret = bundleMgrProxy->GetMetadataByBundleName("com.example.nonexistent", metadataInfos);
+    EXPECT_NE(ret, ERR_OK);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetMetadataByBundleName_StringResolve_0100
+ * @tc.name: GetMetadataByBundleName string resolve HAP
+ * @tc.desc: 1.system run normally
+ *           2.test $string: value resolution for APP bundle with non-existent hapPath
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetMetadataByBundleName_StringResolve_0100, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    auto iter = dataMgr->bundleInfos_.find(BUNDLE_NAME_TEST);
+    ASSERT_NE(iter, dataMgr->bundleInfos_.end());
+    for (auto &modulePair : iter->second.innerModuleInfos_) {
+        modulePair.second.isModuleJson = true;
+        modulePair.second.hapPath = "/data/test/resource/bms/not_exist.hap";
+        Metadata metadata("testName", "$string:app_name", "testResource");
+        metadata.valueId = 1;
+        modulePair.second.metadata.push_back(metadata);
+    }
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<ModuleMetadata> metadataInfos;
+    ErrCode ret = hostImpl->GetMetadataByBundleName(BUNDLE_NAME_TEST, metadataInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(metadataInfos.size(), 1);
+    EXPECT_EQ(metadataInfos[0].metadata.size(), 1);
+    EXPECT_EQ(metadataInfos[0].metadata[0].value, "$string:app_name");
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetMetadataByBundleName_StringResolve_0200
+ * @tc.name: GetMetadataByBundleName string resolve HSP
+ * @tc.desc: 1.system run normally
+ *           2.test $string: value resolution for SHARED bundle with non-existent hapPath
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetMetadataByBundleName_StringResolve_0200, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    auto iter = dataMgr->bundleInfos_.find(BUNDLE_NAME_TEST);
+    ASSERT_NE(iter, dataMgr->bundleInfos_.end());
+    iter->second.SetApplicationBundleType(BundleType::SHARED);
+    for (auto &modulePair : iter->second.innerModuleInfos_) {
+        modulePair.second.isModuleJson = true;
+        modulePair.second.hapPath = "/data/test/resource/bms/not_exist.hap";
+        Metadata metadata("testName", "$string:app_name", "testResource");
+        metadata.valueId = 1;
+        modulePair.second.metadata.push_back(metadata);
+    }
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<ModuleMetadata> metadataInfos;
+    ErrCode ret = hostImpl->GetMetadataByBundleName(BUNDLE_NAME_TEST, metadataInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(metadataInfos.size(), 1);
+    EXPECT_EQ(metadataInfos[0].metadata.size(), 1);
+    EXPECT_EQ(metadataInfos[0].metadata[0].value, "$string:app_name");
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetMetadataByBundleName_StringResolve_0300
+ * @tc.name: GetMetadataByBundleName string resolve APP_SERVICE_FWK
+ * @tc.desc: 1.system run normally
+ *           2.test $string: value resolution for APP_SERVICE_FWK bundle with non-existent hapPath
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetMetadataByBundleName_StringResolve_0300, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    auto iter = dataMgr->bundleInfos_.find(BUNDLE_NAME_TEST);
+    ASSERT_NE(iter, dataMgr->bundleInfos_.end());
+    iter->second.SetApplicationBundleType(BundleType::APP_SERVICE_FWK);
+    for (auto &modulePair : iter->second.innerModuleInfos_) {
+        modulePair.second.isModuleJson = true;
+        modulePair.second.hapPath = "/data/test/resource/bms/not_exist.hap";
+        Metadata metadata("testName", "$string:app_name", "testResource");
+        metadata.valueId = 1;
+        modulePair.second.metadata.push_back(metadata);
+    }
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<ModuleMetadata> metadataInfos;
+    ErrCode ret = hostImpl->GetMetadataByBundleName(BUNDLE_NAME_TEST, metadataInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(metadataInfos.size(), 1);
+    EXPECT_EQ(metadataInfos[0].metadata.size(), 1);
+    EXPECT_EQ(metadataInfos[0].metadata[0].value, "$string:app_name");
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetMetadataByBundleName_StringResolve_0400
+ * @tc.name: GetMetadataByBundleName string resolve skip valueId zero
+ * @tc.desc: 1.system run normally
+ *           2.test $string: value with valueId=0 is skipped (no resolution)
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetMetadataByBundleName_StringResolve_0400, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    auto iter = dataMgr->bundleInfos_.find(BUNDLE_NAME_TEST);
+    ASSERT_NE(iter, dataMgr->bundleInfos_.end());
+    for (auto &modulePair : iter->second.innerModuleInfos_) {
+        modulePair.second.isModuleJson = true;
+        modulePair.second.hapPath = "/data/test/resource/bms/not_exist.hap";
+        Metadata metadata("testName", "$string:app_name", "testResource");
+        metadata.valueId = 0;
+        modulePair.second.metadata.push_back(metadata);
+    }
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<ModuleMetadata> metadataInfos;
+    ErrCode ret = hostImpl->GetMetadataByBundleName(BUNDLE_NAME_TEST, metadataInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(metadataInfos.size(), 1);
+    EXPECT_EQ(metadataInfos[0].metadata.size(), 1);
+    EXPECT_EQ(metadataInfos[0].metadata[0].value, "$string:app_name");
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetMetadataByBundleName_StringResolve_0500
+ * @tc.name: GetMetadataByBundleName string resolve skip non-prefix
+ * @tc.desc: 1.system run normally
+ *           2.test value without $string: prefix is skipped (no resolution)
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetMetadataByBundleName_StringResolve_0500, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    auto iter = dataMgr->bundleInfos_.find(BUNDLE_NAME_TEST);
+    ASSERT_NE(iter, dataMgr->bundleInfos_.end());
+    for (auto &modulePair : iter->second.innerModuleInfos_) {
+        modulePair.second.isModuleJson = true;
+        modulePair.second.hapPath = "/data/test/resource/bms/not_exist.hap";
+        Metadata metadata("testName", "plain_value", "testResource");
+        metadata.valueId = 1;
+        modulePair.second.metadata.push_back(metadata);
+    }
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<ModuleMetadata> metadataInfos;
+    ErrCode ret = hostImpl->GetMetadataByBundleName(BUNDLE_NAME_TEST, metadataInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(metadataInfos.size(), 1);
+    EXPECT_EQ(metadataInfos[0].metadata.size(), 1);
+    EXPECT_EQ(metadataInfos[0].metadata[0].value, "plain_value");
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetMetadataByBundleName_StringResolve_0600
+ * @tc.name: GetMetadataByBundleName string resolve HSP empty hapPath
+ * @tc.desc: 1.system run normally
+ *           2.test $string: value resolution for SHARED bundle with empty hapPath
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetMetadataByBundleName_StringResolve_0600, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    auto iter = dataMgr->bundleInfos_.find(BUNDLE_NAME_TEST);
+    ASSERT_NE(iter, dataMgr->bundleInfos_.end());
+    iter->second.SetApplicationBundleType(BundleType::SHARED);
+    for (auto &modulePair : iter->second.innerModuleInfos_) {
+        modulePair.second.isModuleJson = true;
+        Metadata metadata("testName", "$string:app_name", "testResource");
+        metadata.valueId = 1;
+        modulePair.second.metadata.push_back(metadata);
+    }
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<ModuleMetadata> metadataInfos;
+    ErrCode ret = hostImpl->GetMetadataByBundleName(BUNDLE_NAME_TEST, metadataInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(metadataInfos.size(), 1);
+    EXPECT_EQ(metadataInfos[0].metadata.size(), 1);
+    EXPECT_EQ(metadataInfos[0].metadata[0].value, "$string:app_name");
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: ModuleMetadata_Marshalling_0300
+ * @tc.name: ModuleMetadata Marshalling multiple items
+ * @tc.desc: 1.system run normally
+ *           2.test ModuleMetadata Marshalling with multiple metadata items
+ */
+HWTEST_F(BmsBundleKitServiceTest, ModuleMetadata_Marshalling_0300, Function | SmallTest | Level1)
+{
+    ModuleMetadata moduleMetadata;
+    moduleMetadata.moduleName = MODULE_NAME_TEST;
+    moduleMetadata.metadata.push_back(Metadata("name1", "value1", "resource1"));
+    moduleMetadata.metadata.push_back(Metadata("name2", "value2", "resource2"));
+    moduleMetadata.metadata.push_back(Metadata("name3", "value3", "resource3"));
+    MessageParcel parcel;
+    EXPECT_EQ(moduleMetadata.Marshalling(parcel), true);
+    std::unique_ptr<ModuleMetadata> result(ModuleMetadata::Unmarshalling(parcel));
+    ASSERT_NE(result, nullptr);
+    EXPECT_EQ(result->moduleName, MODULE_NAME_TEST);
+    EXPECT_EQ(result->metadata.size(), 3);
+    EXPECT_EQ(result->metadata[0].name, "name1");
+    EXPECT_EQ(result->metadata[1].name, "name2");
+    EXPECT_EQ(result->metadata[2].name, "name3");
+}
+
+/**
+ * @tc.number: ModuleMetadata_ReadFromParcel_0100
+ * @tc.name: ModuleMetadata ReadFromParcel negative size
+ * @tc.desc: 1.system run normally
+ *           2.test ModuleMetadata ReadFromParcel with negative size returns false
+ */
+HWTEST_F(BmsBundleKitServiceTest, ModuleMetadata_ReadFromParcel_0100, Function | SmallTest | Level1)
+{
+    ModuleMetadata moduleMetadata;
+    MessageParcel parcel;
+    parcel.WriteString16(Str8ToStr16(MODULE_NAME_TEST));
+    parcel.WriteInt32(-1);
+    EXPECT_EQ(moduleMetadata.ReadFromParcel(parcel), false);
+}
+
+/**
+ * @tc.number: GetMetadataByBundleName_DataMgr_0600
+ * @tc.name: GetMetadataByBundleName SHARED skip per-user
+ * @tc.desc: 1.system run normally
+ *           2.test SHARED bundle skips per-user check with invalid userId
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetMetadataByBundleName_DataMgr_0600, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    auto iter = dataMgr->bundleInfos_.find(BUNDLE_NAME_TEST);
+    if (iter != dataMgr->bundleInfos_.end()) {
+        iter->second.SetApplicationBundleType(BundleType::SHARED);
+        for (auto &modulePair : iter->second.innerModuleInfos_) {
+            modulePair.second.isModuleJson = true;
+            modulePair.second.metadata.push_back(Metadata("testName", "testValue", "testResource"));
+        }
+    }
+    std::vector<ModuleMetadata> metadataInfos;
+    ErrCode ret = dataMgr->GetMetadataByBundleName(BUNDLE_NAME_TEST, metadataInfos, Constants::START_USERID);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(metadataInfos.size(), 1);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetMetadataByBundleName_DataMgr_0700
+ * @tc.name: GetMetadataByBundleName APP_SERVICE_FWK skip per-user
+ * @tc.desc: 1.system run normally
+ *           2.test APP_SERVICE_FWK bundle skips per-user check with invalid userId
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetMetadataByBundleName_DataMgr_0700, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    auto iter = dataMgr->bundleInfos_.find(BUNDLE_NAME_TEST);
+    if (iter != dataMgr->bundleInfos_.end()) {
+        iter->second.SetApplicationBundleType(BundleType::APP_SERVICE_FWK);
+        for (auto &modulePair : iter->second.innerModuleInfos_) {
+            modulePair.second.isModuleJson = true;
+            modulePair.second.metadata.push_back(Metadata("testName", "testValue", "testResource"));
+        }
+    }
+    std::vector<ModuleMetadata> metadataInfos;
+    ErrCode ret = dataMgr->GetMetadataByBundleName(BUNDLE_NAME_TEST, metadataInfos, Constants::START_USERID);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(metadataInfos.size(), 1);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetStringByIdForSharedBundle_0100
+ * @tc.name: GetStringByIdForSharedBundle nonexistent bundle
+ * @tc.desc: 1.system run normally
+ *           2.test GetStringByIdForSharedBundle with nonexistent bundle returns empty
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetStringByIdForSharedBundle_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::string result = dataMgr->GetStringByIdForSharedBundle("com.example.nonexistent", MODULE_NAME_TEST, 1);
+    EXPECT_EQ(result, Constants::EMPTY_STRING);
+}
+
+/**
+ * @tc.number: GetStringByIdForSharedBundle_0200
+ * @tc.name: GetStringByIdForSharedBundle SHARED no resource
+ * @tc.desc: 1.system run normally
+ *           2.test GetStringByIdForSharedBundle with SHARED bundle but no hap resource returns empty
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetStringByIdForSharedBundle_0200, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    auto iter = dataMgr->bundleInfos_.find(BUNDLE_NAME_TEST);
+    if (iter != dataMgr->bundleInfos_.end()) {
+        iter->second.SetApplicationBundleType(BundleType::SHARED);
+    }
+    std::string result = dataMgr->GetStringByIdForSharedBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, 1);
+    EXPECT_EQ(result, Constants::EMPTY_STRING);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
  * @tc.number: GetAllFormInfo_0100
  * @tc.name: test can get all the formInfo
  * @tc.desc: 1.system run normally

@@ -8383,7 +8383,8 @@ ErrCode BundleMgrProxy::GetMetadataByBundleName(const std::string &bundleName,
     std::vector<ModuleMetadata> &metadataInfos)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
-    LOG_D(BMS_TAG_QUERY, "begin to get metadata by bundle name of %{public}s", bundleName.c_str());
+    LOG_D(BMS_TAG_QUERY, "BundleMgrProxy get metadata by bundle name begin, bundleName=%{public}s",
+        bundleName.c_str());
     if (bundleName.empty()) {
         LOG_NOFUNC_E(BMS_TAG_QUERY, "GetMetadataByBundleName -n empty");
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
@@ -8397,33 +8398,8 @@ ErrCode BundleMgrProxy::GetMetadataByBundleName(const std::string &bundleName,
         APP_LOGE_NOFUNC("Write bundle name fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    MessageParcel reply;
-    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_METADATA_BY_BUNDLE_NAME, data, reply)) {
-        APP_LOGE_NOFUNC("SendTransactCmd failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    int32_t retCode = 0;
-    if (!reply.ReadInt32(retCode)) {
-        APP_LOGE_NOFUNC("GetMetadataByBundleName read retCode failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    if (retCode != ERR_OK) {
-        LOG_NOFUNC_E(BMS_TAG_QUERY, "GetMetadataByBundleName reply err:%{public}d", retCode);
-        return retCode;
-    }
-    int32_t infoSize = reply.ReadInt32();
-    CONTAINER_SECURITY_VERIFY(reply, infoSize, &metadataInfos);
-    metadataInfos.clear();
-    metadataInfos.reserve(infoSize);
-    for (int32_t i = 0; i < infoSize; ++i) {
-        auto info = std::unique_ptr<ModuleMetadata>(reply.ReadParcelable<ModuleMetadata>());
-        if (info == nullptr) {
-            APP_LOGE_NOFUNC("read ModuleMetadata failed");
-            return ERR_APPEXECFWK_PARCEL_ERROR;
-        }
-        metadataInfos.push_back(*info);
-    }
-    return ERR_OK;
+    return GetVectorFromParcelIntelligentWithErrCode(
+        BundleMgrInterfaceCode::GET_METADATA_BY_BUNDLE_NAME, data, metadataInfos);
 }
 } // namespace AppExecFwk
 }  // namespace OHOS

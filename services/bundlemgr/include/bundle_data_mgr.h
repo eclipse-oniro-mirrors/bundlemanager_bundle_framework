@@ -1118,6 +1118,9 @@ public:
     std::string GetStringById(const std::string &bundleName, const std::string &moduleName,
         uint32_t resId, int32_t userId, const std::string &localeInfo);
 
+    std::string GetStringByIdForSharedBundle(const std::string &bundleName, const std::string &moduleName,
+        uint32_t resId) const;
+
     ErrCode GetStringByIdList(const std::string &bundleName, const std::string &moduleName,
         const std::vector<uint32_t> &resIdList, std::vector<std::string> &labelList,
         int32_t userId, const std::string &localeInfo);
