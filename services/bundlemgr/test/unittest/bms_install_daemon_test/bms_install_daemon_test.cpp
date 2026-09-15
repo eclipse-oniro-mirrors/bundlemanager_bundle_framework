@@ -70,6 +70,8 @@ const int32_t GID = 1000;
 const std::string APL = "normal";
 const std::string BUNDLE_DATA_DIR_2 = "/data/app/el2/100/base/com.example.14jsdemo";
 const std::string BUNDLE_DATA_DIR_CACHE_2 = "/data/app/el2/100/base/com.example.l4jsdemo/cache/temp";
+const std::string SECURITY_QUICK_FIX_BUNDLE_DIR =
+    "/data/service/el1/public/bms/bundle_manager_service/security_quick_fix/scene_test";
 }  // namespace
 
 class BmsInstallDaemonTest : public testing::Test {
@@ -2968,5 +2970,114 @@ HWTEST_F(BmsInstallDaemonTest, ExtractQuickFixSoFile_0400, Function | SmallTest 
     ErrCode ret = hostImpl.ExtractQuickFixSoFile(
         "com.example", "/path/hqf.hqf", "libs/arm64", "arm64-v8a", false, 1000000, "../suffix");
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: InstalldSceneInterfaces_CopyHqfFileValidation_0100
+ * @tc.name: test CopyHqfFile validation
+ * @tc.desc: Cover parameter validation, missing sources and missing targets.
+ */
+HWTEST_F(BmsInstallDaemonTest, InstalldSceneInterfaces_CopyHqfFileValidation_0100,
+    Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    QuickFixTargetParam patchTarget;
+    patchTarget.type = QuickFixType::PATCH;
+    constexpr uint32_t versionCode = 100;
+    const std::string sourceRelativePath = "scene_test/entry.hqf";
+
+    EXPECT_EQ(hostImpl.CopyHqfFile("", "entry", sourceRelativePath, versionCode, patchTarget),
+        ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    EXPECT_EQ(hostImpl.CopyHqfFile(BUNDLE_NAME13, "../entry", sourceRelativePath, versionCode, patchTarget),
+        ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    EXPECT_EQ(hostImpl.CopyHqfFile(BUNDLE_NAME13, "entry", "entry.hap", versionCode, patchTarget),
+        ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    EXPECT_EQ(hostImpl.CopyHqfFile(BUNDLE_NAME13, "entry", "../entry.hqf", versionCode, patchTarget),
+        ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    EXPECT_EQ(hostImpl.CopyHqfFile(BUNDLE_NAME13, "entry", "scene_test/missing.hqf", versionCode, patchTarget),
+        ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
+
+    ASSERT_TRUE(OHOS::ForceCreateDirectory(SECURITY_QUICK_FIX_BUNDLE_DIR));
+    CreateFile(SECURITY_QUICK_FIX_BUNDLE_DIR + "/entry.hqf", "standard");
+    EXPECT_EQ(hostImpl.CopyHqfFile(BUNDLE_NAME13, "entry", sourceRelativePath, versionCode, patchTarget),
+        ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
+}
+
+/**
+ * @tc.number: InstalldSceneInterfaces_CopyHqfFileTargets_0200
+ * @tc.name: test CopyHqfFile targets
+ * @tc.desc: Cover PATCH, custom PATCH and HOT_RELOAD target selection.
+ */
+HWTEST_F(BmsInstallDaemonTest, InstalldSceneInterfaces_CopyHqfFileTargets_0200,
+    Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    constexpr uint32_t versionCode = 100;
+    const std::string sourceRelativePath = "scene_test/entry.hqf";
+    ASSERT_TRUE(OHOS::ForceCreateDirectory(SECURITY_QUICK_FIX_BUNDLE_DIR));
+    CreateFile(SECURITY_QUICK_FIX_BUNDLE_DIR + "/entry.hqf", "standard");
+
+    const std::string patchDir = BUNDLE_CODE_DIR + "/patch_100";
+    ASSERT_TRUE(OHOS::ForceCreateDirectory(patchDir));
+    QuickFixTargetParam patchTarget;
+    patchTarget.type = QuickFixType::PATCH;
+    EXPECT_EQ(hostImpl.CopyHqfFile(BUNDLE_NAME13, "entry", sourceRelativePath, versionCode, patchTarget), ERR_OK);
+    EXPECT_EQ(access((patchDir + "/entry.hqf").c_str(), F_OK), 0);
+
+    QuickFixTargetParam suffixTarget;
+    suffixTarget.type = QuickFixType::PATCH;
+    suffixTarget.targetPathSuffix = "slot.1";
+    EXPECT_EQ(hostImpl.CopyHqfFile(BUNDLE_NAME13, "entry", sourceRelativePath, versionCode, suffixTarget),
+        ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    suffixTarget.targetPathSuffix = "../slot";
+    EXPECT_EQ(hostImpl.CopyHqfFile(BUNDLE_NAME13, "entry", sourceRelativePath, versionCode, suffixTarget),
+        ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    suffixTarget.targetPathSuffix = "test_slot";
+    ASSERT_TRUE(OHOS::ForceCreateDirectory(BUNDLE_CODE_DIR + "/patch/test_slot"));
+    EXPECT_EQ(hostImpl.CopyHqfFile(
+        BUNDLE_NAME13, "slotEntry", sourceRelativePath, versionCode, suffixTarget), ERR_OK);
+    EXPECT_EQ(access((BUNDLE_CODE_DIR + "/patch/test_slot/slotEntry.hqf").c_str(), F_OK), 0);
+
+    QuickFixTargetParam hotReloadTarget;
+    hotReloadTarget.type = QuickFixType::HOT_RELOAD;
+    hotReloadTarget.targetPathSuffix = "invalid";
+    EXPECT_EQ(hostImpl.CopyHqfFile(BUNDLE_NAME13, "entry", sourceRelativePath, versionCode, hotReloadTarget),
+        ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    hotReloadTarget.targetPathSuffix.clear();
+    ASSERT_TRUE(OHOS::ForceCreateDirectory(BUNDLE_CODE_DIR + "/hotreload_100"));
+    EXPECT_EQ(hostImpl.CopyHqfFile(
+        BUNDLE_NAME13, "hotEntry", sourceRelativePath, versionCode, hotReloadTarget), ERR_OK);
+
+    QuickFixTargetParam unknownTarget;
+    EXPECT_EQ(hostImpl.CopyHqfFile(BUNDLE_NAME13, "entry", sourceRelativePath, versionCode, unknownTarget),
+        ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: InstalldSceneInterfaces_CopyHqfFileFailures_0300
+ * @tc.name: test CopyHqfFile failures
+ * @tc.desc: Cover source isolation and destination copy failures.
+ */
+HWTEST_F(BmsInstallDaemonTest, InstalldSceneInterfaces_CopyHqfFileFailures_0300,
+    Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    QuickFixTargetParam patchTarget;
+    patchTarget.type = QuickFixType::PATCH;
+    constexpr uint32_t versionCode = 100;
+    // A same-named file outside security_quick_fix must not be discovered or used.
+    ASSERT_TRUE(OHOS::ForceCreateDirectory(BUNDLE_CODE_DIR + "/fallback"));
+    CreateFile(BUNDLE_CODE_DIR + "/fallback/fallback.hqf", "fallback");
+    EXPECT_EQ(hostImpl.CopyHqfFile(
+        BUNDLE_NAME13, "fallback", "scene_test/fallback.hqf", versionCode, patchTarget),
+        ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
+
+    ASSERT_TRUE(OHOS::ForceCreateDirectory(SECURITY_QUICK_FIX_BUNDLE_DIR));
+    CreateFile(SECURITY_QUICK_FIX_BUNDLE_DIR + "/blocked.hqf", "blocked");
+    const std::string patchDir = BUNDLE_CODE_DIR + "/patch_100";
+    ASSERT_TRUE(OHOS::ForceCreateDirectory(patchDir + "/blocked.hqf"));
+    EXPECT_EQ(hostImpl.CopyHqfFile(
+        BUNDLE_NAME13, "blocked", "scene_test/blocked.hqf", versionCode, patchTarget),
+        ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
 }
 } // OHOS

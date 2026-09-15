@@ -392,6 +392,12 @@ ErrCode InstalldClient::CopyFiles(const std::string &sourceDir, const std::strin
     return 0;
 }
 
+ErrCode InstalldClient::CopyHqfFile(const std::string &bundleName, const std::string &moduleName,
+    const std::string &hqfSourceRelativePath, uint32_t versionCode, const QuickFixTargetParam &targetParam)
+{
+    return 0;
+}
+
 ErrCode InstalldClient::GetNativeLibraryFileNames(const std::string &filePath, const std::string &cpuAbi,
     std::vector<std::string> &fileNames)
 {

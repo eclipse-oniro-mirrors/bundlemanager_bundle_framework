@@ -264,6 +264,8 @@ private:
 
     bool HandCopyFiles(MessageParcel &data, MessageParcel &reply);
 
+    bool HandleCopyHqfFile(MessageParcel &data, MessageParcel &reply);
+
     bool HandGetNativeLibraryFileNames(MessageParcel &data, MessageParcel &reply);
 
     bool HandVerifyCodeSignature(MessageParcel &data, MessageParcel &reply);

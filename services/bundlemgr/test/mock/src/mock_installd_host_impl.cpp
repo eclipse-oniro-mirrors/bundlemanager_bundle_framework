@@ -306,6 +306,12 @@ ErrCode InstalldHostImpl::CopyFiles(const std::string &sourceDir, const std::str
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::CopyHqfFile(const std::string &bundleName, const std::string &moduleName,
+    const std::string &hqfSourceRelativePath, uint32_t versionCode, const QuickFixTargetParam &targetParam)
+{
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::ExtractFiles(const ExtractParam &extractParam)
 {
     return ERR_OK;

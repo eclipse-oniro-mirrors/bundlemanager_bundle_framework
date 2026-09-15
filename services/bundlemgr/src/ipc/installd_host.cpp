@@ -413,6 +413,9 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::CREATE_PRINT_SERVICE_DIR):
             result = HandleCreatePrintServiceDir(data, reply);
             break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::COPY_HQF_FILE):
+            result = HandleCopyHqfFile(data, reply);
+            break;
         default :
             LOG_W(BMS_TAG_INSTALLD, "installd host receives unknown code, code = %{public}u", code);
             int ret = IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -1265,6 +1268,21 @@ bool InstalldHost::HandCopyFiles(MessageParcel &data, MessageParcel &reply)
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
+
+bool InstalldHost::HandleCopyHqfFile(MessageParcel &data, MessageParcel &reply)
+{
+    std::string bundleName = Str16ToStr8(data.ReadString16());
+    std::string moduleName = Str16ToStr8(data.ReadString16());
+    std::string hqfSourceRelativePath = Str16ToStr8(data.ReadString16());
+    uint32_t versionCode = data.ReadUint32();
+    QuickFixTargetParam targetParam;
+    targetParam.type = static_cast<QuickFixType>(data.ReadInt32());
+    targetParam.targetPathSuffix = Str16ToStr8(data.ReadString16());
+    ErrCode result = CopyHqfFile(bundleName, moduleName, hqfSourceRelativePath, versionCode, targetParam);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
 
 bool InstalldHost::HandGetNativeLibraryFileNames(MessageParcel &data, MessageParcel &reply)
 {

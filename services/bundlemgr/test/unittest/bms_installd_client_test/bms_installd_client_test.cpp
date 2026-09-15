@@ -2318,6 +2318,46 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetAppDataDirCategorySizes
 }
 
 /**
+ * @tc.number: BmsInstalldClientTest_CopyHqfFileInvalidParams_0100
+ * @tc.name: CopyHqfFileInvalidParams
+ * @tc.desc: Verify CopyHqfFile rejects invalid parameters.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CopyHqfFileInvalidParams_0100, TestSize.Level1)
+{
+    QuickFixTargetParam patchTarget;
+    patchTarget.type = QuickFixType::PATCH;
+    EXPECT_EQ(installClient_->CopyHqfFile(EMPTY_STRING, MODULE_NAME, "entry.hqf", 1, patchTarget),
+        ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    EXPECT_EQ(installClient_->CopyHqfFile(BUNDLE_NAME, EMPTY_STRING, "entry.hqf", 1, patchTarget),
+        ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    EXPECT_EQ(installClient_->CopyHqfFile(BUNDLE_NAME, MODULE_NAME, EMPTY_STRING, 1, patchTarget),
+        ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    QuickFixTargetParam unknownTarget;
+    EXPECT_EQ(installClient_->CopyHqfFile(BUNDLE_NAME, MODULE_NAME, "entry.hqf", 1, unknownTarget),
+        ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    QuickFixTargetParam invalidHotReloadTarget;
+    invalidHotReloadTarget.type = QuickFixType::HOT_RELOAD;
+    invalidHotReloadTarget.targetPathSuffix = "suffix";
+    EXPECT_EQ(installClient_->CopyHqfFile(
+        BUNDLE_NAME, MODULE_NAME, "entry.hqf", 1, invalidHotReloadTarget),
+        ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_CopyHqfFileProxyError_0100
+ * @tc.name: CopyHqfFileProxyError
+ * @tc.desc: Verify CopyHqfFile returns proxy error when service is unavailable.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CopyHqfFileProxyError_0100, Function | SmallTest | Level0)
+{
+    ASSERT_NE(installClient_, nullptr);
+    QuickFixTargetParam patchTarget;
+    patchTarget.type = QuickFixType::PATCH;
+    EXPECT_EQ(installClient_->CopyHqfFile(TEST_BUNDLE_NAME, "entry", "entry.hqf", 1, patchTarget),
+        ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
+}
+
+/**
  * @tc.number: BmsInstalldClientTest_ExtractQuickFixRes_0100
  * @tc.name: ExtractQuickFixRes
  * @tc.desc: empty params

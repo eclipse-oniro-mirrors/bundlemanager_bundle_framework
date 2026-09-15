@@ -27,6 +27,17 @@ namespace {
 constexpr const char* DEBUG_APP_IDENTIFIER = "DEBUG_LIB_ID";
 constexpr const char* COMPILE_SDK_TYPE_OPEN_HARMONY = "OpenHarmony";
 constexpr const char* PATCH_DIR = "patch/";
+
+bool GetPathRelativeToRoot(
+    const std::string &path, const std::string &root, std::string &relativePath)
+{
+    const std::string rootPrefix = root + ServiceConstants::PATH_SEPARATOR;
+    if (path.size() <= rootPrefix.size() || path.compare(0, rootPrefix.size(), rootPrefix) != 0) {
+        return false;
+    }
+    relativePath = path.substr(rootPrefix.size());
+    return true;
+}
 }
 
 QuickFixDeployer::QuickFixDeployer(const std::vector<std::string> &bundleFilePaths, bool isDebug,
@@ -638,8 +649,20 @@ ErrCode QuickFixDeployer::MoveHqfFiles(InnerAppQuickFix &innerAppQuickFix, const
             return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
         }
         std::string realPath = path + info.moduleName + ServiceConstants::QUICK_FIX_FILE_SUFFIX;
-        ErrCode ret =
-            InstalldClient::GetInstance()->CopyFile(info.hqfFilePath, realPath, BundleDirScene::COPY_HQF_FILE);
+        QuickFixTargetParam targetParam;
+        targetParam.type = appQuickFix.deployingAppqfInfo.type;
+        if (targetParam.type == QuickFixType::PATCH) {
+            targetParam.targetPathSuffix = targetPath_;
+        }
+        const std::string securityRoot = std::string(ServiceConstants::HAP_COPY_PATH) +
+            ServiceConstants::PATH_SEPARATOR + ServiceConstants::SECURITY_QUICK_FIX_PATH;
+        std::string hqfSourceRelativePath;
+        if (!GetPathRelativeToRoot(info.hqfFilePath, securityRoot, hqfSourceRelativePath)) {
+            LOG_E(BMS_TAG_DEFAULT, "invalid hqf source path");
+            return ERR_BUNDLEMANAGER_QUICK_FIX_MOVE_PATCH_FILE_FAILED;
+        }
+        ErrCode ret = InstalldClient::GetInstance()->CopyHqfFile(appQuickFix.bundleName, info.moduleName,
+            hqfSourceRelativePath, appQuickFix.deployingAppqfInfo.versionCode, targetParam);
         if (ret != ERR_OK) {
             LOG_E(BMS_TAG_DEFAULT, "error CopyFile failed, errcode: %{public}d", ret);
             return ERR_BUNDLEMANAGER_QUICK_FIX_MOVE_PATCH_FILE_FAILED;

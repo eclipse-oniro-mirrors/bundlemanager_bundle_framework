@@ -293,6 +293,10 @@ public:
     virtual ErrCode CopyFiles(const std::string &sourceDir, const std::string &destinationDir,
         const std::string &bundleName, BundleDirScene scene) override;
 
+    virtual ErrCode CopyHqfFile(const std::string &bundleName, const std::string &moduleName,
+        const std::string &hqfSourceRelativePath, uint32_t versionCode,
+        const QuickFixTargetParam &targetParam) override;
+
     virtual ErrCode GetNativeLibraryFileNames(const std::string &filePath, const std::string &cpuAbi,
         std::vector<std::string> &fileNames) override;
 

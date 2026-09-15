@@ -1156,6 +1156,23 @@ ErrCode InstalldProxy::CopyFiles(const std::string &sourceDir, const std::string
     return ERR_OK;
 }
 
+ErrCode InstalldProxy::CopyHqfFile(const std::string &bundleName, const std::string &moduleName,
+    const std::string &hqfSourceRelativePath, uint32_t versionCode, const QuickFixTargetParam &targetParam)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(moduleName));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(hqfSourceRelativePath));
+    INSTALLD_PARCEL_WRITE(data, Uint32, versionCode);
+    INSTALLD_PARCEL_WRITE(data, Int32, static_cast<int32_t>(targetParam.type));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(targetParam.targetPathSuffix));
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    return TransactInstalldCmd(InstalldInterfaceCode::COPY_HQF_FILE, data, reply, option);
+}
+
 ErrCode InstalldProxy::GetNativeLibraryFileNames(const std::string &filePath, const std::string &cpuAbi,
     std::vector<std::string> &fileNames)
 {

@@ -1847,4 +1847,19 @@ HWTEST_F(BmsInstallDaemonHostImplTest, CreatePrintServiceDir_0100, Function | Sm
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 
+/**
+ * @tc.number: InstalldHostImplCopyHqfFile_0100
+ * @tc.name: test CopyHqfFile
+ * @tc.desc: Verify CopyHqfFile rejects a non-foundation caller.
+ */
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplCopyHqfFile_0100, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+
+    QuickFixTargetParam patchTarget;
+    patchTarget.type = QuickFixType::PATCH;
+    EXPECT_EQ(hostImpl->CopyHqfFile(TEST_BUNDLE_NAME, "entry", "entry.hqf", 1, patchTarget),
+        ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
 } // OHOS

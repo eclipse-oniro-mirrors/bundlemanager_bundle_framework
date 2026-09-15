@@ -2311,6 +2311,15 @@ bool InstalldOperator::CopyFileFast(const std::string &sourcePath, const std::st
     return BundleUtil::CopyFileFast(sourcePath, destPath);
 }
 
+bool InstalldOperator::CopyFileWithMode(const std::string &sourcePath, const std::string &destPath)
+{
+    if (!CopyFileFast(sourcePath, destPath)) {
+        return false;
+    }
+    mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+    return OHOS::ChangeModeFile(destPath, mode);
+}
+
 bool InstalldOperator::ExtractDiffFiles(const std::string &filePath, const std::string &targetPath,
     const std::string &cpuAbi)
 {
