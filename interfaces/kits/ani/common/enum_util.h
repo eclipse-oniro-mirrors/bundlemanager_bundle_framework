@@ -136,8 +136,9 @@ private:
         GET_BUNDLE_INFO_WITH_ENTRY_MODULE = 0x00010000,
         GET_BUNDLE_INFO_WITH_COMMON_CLONE = 0x00080000,
         GET_BUNDLE_INFO_WITH_SANDBOX_CLONE = 0x00100000,
+        GET_BUNDLE_INFO_OF_ALL_DEVICE_MODE = 0x00200000,
     } */
-    static constexpr std::array<int, 19> Array_BundleManager_BundleFlag = {
+    static constexpr std::array<int, 20> Array_BundleManager_BundleFlag = {
         0x00000000,
         0x00000001,
         0x00000002,
@@ -157,6 +158,7 @@ private:
         0x00010000,
         0x00080000,
         0x00100000,
+        0x00200000,
     };
     /* bundleManager.ExtensionAbilityType
     enum ExtensionAbilityType {
