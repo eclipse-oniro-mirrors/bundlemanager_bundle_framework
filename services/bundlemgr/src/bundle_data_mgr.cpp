@@ -3273,7 +3273,7 @@ void BundleDataMgr::GetCloneBundleInfos(const InnerBundleInfo& info, int32_t fla
         if (ret == ERR_OK) {
             ProcessCertificate(cloneBundleInfo, info.GetBundleName(), flags);
             ProcessBundleMenu(cloneBundleInfo, flags, true);
-            ProcessBundleRouterMap(cloneBundleInfo, flags, userId);
+            ProcessBundleRouterMap(info, cloneBundleInfo, flags, userId);
             bundleInfos.emplace_back(std::move(cloneBundleInfo));
         }
     }
@@ -4257,7 +4257,8 @@ bool BundleDataMgr::GetBundleInfo(
     }
     if ((static_cast<uint32_t>(flags) & BundleFlag::GET_BUNDLE_WITH_ROUTER_MAP) ==
         BundleFlag::GET_BUNDLE_WITH_ROUTER_MAP) {
-        ProcessBundleRouterMap(bundleInfo, static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE) |
+        ProcessBundleRouterMap(*innerBundleInfo, bundleInfo,
+            static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE) |
             static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ROUTER_MAP), userId);
     }
     LOG_D(BMS_TAG_QUERY, "get bundleInfo(%{public}s) successfully in user(%{public}d)",
@@ -4274,7 +4275,7 @@ ErrCode BundleDataMgr::BuildBundleInfoWithProcess(const InnerBundleInfo &info, c
     }
     ProcessCertificate(bundleInfo, bundleName, flags);
     ProcessBundleMenu(bundleInfo, flags, true);
-    ProcessBundleRouterMap(bundleInfo, flags, userId);
+    ProcessBundleRouterMap(info, bundleInfo, flags, userId);
     return ERR_OK;
 }
 
@@ -4433,7 +4434,7 @@ ErrCode BundleDataMgr::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundleInf
     }
     ProcessCertificate(bundleInfo, innerBundleInfo->GetBundleName(), flags);
     ProcessBundleMenu(bundleInfo, flags, true);
-    ProcessBundleRouterMap(bundleInfo, flags, userId);
+    ProcessBundleRouterMap(*innerBundleInfo, bundleInfo, flags, userId);
     LOG_D(BMS_TAG_QUERY, "get bundleInfoForSelf %{public}s successfully in user %{public}d",
         innerBundleInfo->GetBundleName().c_str(), userId);
     return ERR_OK;
@@ -4473,7 +4474,8 @@ ErrCode BundleDataMgr::ProcessBundleMenu(BundleInfo &bundleInfo, int32_t flags, 
     return ERR_OK;
 }
 
-void BundleDataMgr::ProcessBundleRouterMap(BundleInfo& bundleInfo, int32_t flag, int32_t userId) const
+void BundleDataMgr::ProcessBundleRouterMap(const InnerBundleInfo &innerBundleInfo,
+    BundleInfo& bundleInfo, int32_t flag, int32_t userId) const
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (routerStorage_ == nullptr) {
@@ -4489,6 +4491,11 @@ void BundleDataMgr::ProcessBundleRouterMap(BundleInfo& bundleInfo, int32_t flag,
         != static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ROUTER_MAP)) {
         return;
     }
+    // dual-mode: mirror InsertRouterInfo — a clone record's router rows live under
+    // the prefixed effective name.
+    std::string routerKey = innerBundleInfo.IsDualModeCloneApp()
+        ? DualModeHelper::GetDualModeBundleName(bundleInfo.name)
+        : bundleInfo.name;
     for (auto &hapModuleInfo : bundleInfo.hapModuleInfos) {
         const std::string &routerPath = hapModuleInfo.routerMap;
         auto pos = routerPath.find(PROFILE_PREFIX);
@@ -4496,7 +4503,7 @@ void BundleDataMgr::ProcessBundleRouterMap(BundleInfo& bundleInfo, int32_t flag,
             APP_LOGD("invalid router map profile");
             continue;
         }
-        if (!routerStorage_->GetRouterInfo(bundleInfo.name, hapModuleInfo.moduleName,
+        if (!routerStorage_->GetRouterInfo(routerKey, hapModuleInfo.moduleName,
             bundleInfo.versionCode, hapModuleInfo.routerArray)) {
             APP_LOGE("get failed for %{public}s", hapModuleInfo.moduleName.c_str());
             continue;
@@ -4505,15 +4512,15 @@ void BundleDataMgr::ProcessBundleRouterMap(BundleInfo& bundleInfo, int32_t flag,
 
     // get plugin router info
     std::vector<RouterItem> pluginRouterInfos;
-    GetRouterInfoForPlugin(bundleInfo.name, userId, pluginRouterInfos);
+    GetRouterInfoForPlugin(innerBundleInfo, userId, pluginRouterInfos);
     // get hsp router info
     std::vector<RouterItem> sharedBundleRouterInfos;
-    GetRouterInfoForSharedBundle(bundleInfo.name, sharedBundleRouterInfos);
+    GetRouterInfoForSharedBundle(innerBundleInfo, sharedBundleRouterInfos);
     MergeRouterItems(sharedBundleRouterInfos, pluginRouterInfos);
     RouterMapHelper::MergeRouter(bundleInfo, pluginRouterInfos);
 }
 
-void BundleDataMgr::GetRouterInfoForPlugin(const std::string &hostBundleName,
+void BundleDataMgr::GetRouterInfoForPlugin(const InnerBundleInfo &hostInfo,
     int32_t userId, std::vector<RouterItem> &routerInfos) const
 {
     if (routerStorage_ == nullptr) {
@@ -4527,7 +4534,9 @@ void BundleDataMgr::GetRouterInfoForPlugin(const std::string &hostBundleName,
         APP_LOGE("invalid userid :%{public}d", userId);
         return;
     }
-    InnerGetAllPluginInfo(hostBundleName, requestUserId, pluginBundleInfos);
+    // dual-mode: enumerate plugins from the record being processed; a name-based
+    // bundleInfos_ lookup would hit the current-mode record instead.
+    GetPluginInfosFromRecord(hostInfo, requestUserId, pluginBundleInfos, false);
     for (const auto &pluginInfo : pluginBundleInfos) {
         for (const auto &module : pluginInfo.pluginModuleInfos) {
             if (!routerStorage_->GetRouterInfo(pluginInfo.pluginBundleName, module.moduleName,
@@ -4542,16 +4551,12 @@ void BundleDataMgr::GetRouterInfoForPlugin(const std::string &hostBundleName,
     }
 }
 
-void BundleDataMgr::GetRouterInfoForSharedBundle(const std::string &bundleName,
+void BundleDataMgr::GetRouterInfoForSharedBundle(const InnerBundleInfo &innerBundleInfo,
     std::vector<RouterItem> &routerInfos) const
 {
     std::vector<BaseSharedBundleInfo> baseSharedBundleInfos;
-    auto infoItem = bundleInfos_.find(bundleName);
-    if (infoItem == bundleInfos_.end()) {
-        APP_LOGW("get bundle info failed, bundleName:%{public}s", bundleName.c_str());
-        return;
-    }
-    const InnerBundleInfo &innerBundleInfo = infoItem->second;
+    // dual-mode: take dependencies from the record being processed; a name-based
+    // bundleInfos_ lookup would hit the current-mode record instead.
     std::vector<Dependency> dependencies = innerBundleInfo.GetDependencies();
     baseSharedBundleInfos.reserve(dependencies.size());
     for (const auto &item : dependencies) {
@@ -5377,7 +5382,7 @@ ErrCode BundleDataMgr::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &
             if (innerBundleInfo.GetBundleInfoV9(flags, bundleInfo, responseUserId) == ERR_OK) {
                 ProcessCertificate(bundleInfo, innerBundleInfo.GetBundleName(), flags);
                 ProcessBundleMenu(bundleInfo, flags, true);
-                ProcessBundleRouterMap(bundleInfo, flags, userId);
+                ProcessBundleRouterMap(innerBundleInfo, bundleInfo, flags, userId);
                 PostProcessAnyUserFlags(flags, responseUserId, requestUserId, bundleInfo, innerBundleInfo);
                 bundleInfos.emplace_back(std::move(bundleInfo));
             }
@@ -5520,7 +5525,7 @@ void BundleDataMgr::GetTempBundleInfosV9(int32_t flags, int32_t requestUserId, b
         if (innerBundleInfo.GetBundleInfoV9(flags, bundleInfo, responseUserId) == ERR_OK) {
             ProcessCertificate(bundleInfo, innerBundleInfo.GetBundleName(), flags);
             ProcessBundleMenu(bundleInfo, flags, true);
-            ProcessBundleRouterMap(bundleInfo, flags, requestUserId);
+            ProcessBundleRouterMap(innerBundleInfo, bundleInfo, flags, requestUserId);
             PostProcessAnyUserFlags(flags, responseUserId, requestUserId, bundleInfo, innerBundleInfo);
             bundleInfos.emplace_back(std::move(bundleInfo));
         }
@@ -14259,7 +14264,7 @@ ErrCode BundleDataMgr::GetCloneBundleInfo(
 
     ProcessCertificate(bundleInfo, bundleName, flags);
     ProcessBundleMenu(bundleInfo, flags, true);
-    ProcessBundleRouterMap(bundleInfo, flags, userId);
+    ProcessBundleRouterMap(*innerBundleInfo, bundleInfo, flags, userId);
     LOG_D(BMS_TAG_QUERY, "get bundleInfo(%{public}s) successfully in user(%{public}d)",
         bundleName.c_str(), userId);
     return ERR_OK;
@@ -14300,7 +14305,7 @@ ErrCode BundleDataMgr::GetCliSandboxBundleInfo(
 
     ProcessCertificate(bundleInfo, bundleName, flags);
     ProcessBundleMenu(bundleInfo, flags, true);
-    ProcessBundleRouterMap(bundleInfo, flags, userId);
+    ProcessBundleRouterMap(innerBundleInfo, bundleInfo, flags, userId);
     LOG_D(BMS_TAG_QUERY, "GetCliSandboxBundleInfo(%{public}s) appIndex:%{public}d successfully in user(%{public}d)",
         bundleName.c_str(), appIndex, userId);
     return ERR_OK;
@@ -15407,10 +15412,16 @@ ErrCode BundleDataMgr::InnerGetAllPluginInfo(const std::string &hostBundleName, 
         APP_LOGE("hostBundleName: %{public}s does not exist", hostBundleName.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
-    const InnerBundleInfo &innerBundleInfo = item->second;
+    return GetPluginInfosFromRecord(item->second, userId, pluginBundleInfos, onlyGetDeveloperDistribution);
+}
+
+ErrCode BundleDataMgr::GetPluginInfosFromRecord(const InnerBundleInfo &innerBundleInfo, int32_t userId,
+    std::vector<PluginBundleInfo> &pluginBundleInfos, bool onlyGetDeveloperDistribution) const
+{
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(userId);
     if (responseUserId == Constants::INVALID_USERID) {
-        APP_LOGE("-n : %{public}s is not installed in user %{public}d or 0", hostBundleName.c_str(), userId);
+        APP_LOGE("-n : %{public}s is not installed in user %{public}d or 0",
+            innerBundleInfo.GetBundleName().c_str(), userId);
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     std::unordered_map<std::string, PluginBundleInfo> pluginInfoMap = innerBundleInfo.GetAllPluginBundleInfo();
@@ -15419,7 +15430,7 @@ ErrCode BundleDataMgr::InnerGetAllPluginInfo(const std::string &hostBundleName, 
         return ERR_OK;
     }
     if (!innerBundleUserInfoPtr) {
-        LOG_NOFUNC_E(BMS_TAG_QUERY, "The InnerBundleInfo obtained by InnerGetAllPluginInfo is null");
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "The InnerBundleInfo obtained by GetPluginInfosFromRecord is null");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     for (const auto &pluginName : innerBundleUserInfoPtr->installedPluginSet) {

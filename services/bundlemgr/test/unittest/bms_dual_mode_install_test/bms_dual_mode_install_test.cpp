@@ -2876,6 +2876,7 @@ class MockRouterStorage : public IRouterDataStorage {
 public:
     std::string insertedKey;
     std::string updatedKey;
+    std::string queriedKey;
     bool InsertRouterInfo(const std::string &bundleName,
         const std::map<std::string, std::string> &, const uint32_t) override
     {
@@ -2888,14 +2889,54 @@ public:
         updatedKey = bundleName;
         return true;
     }
-    bool GetRouterInfo(const std::string &, const std::string &,
-        const uint32_t, std::vector<RouterItem> &) override { return false; }
+    bool GetRouterInfo(const std::string &bundleName, const std::string &,
+        const uint32_t, std::vector<RouterItem> &) override
+    {
+        queriedKey = bundleName;
+        return false;
+    }
     void GetAllBundleNames(std::set<std::string> &) override {}
     bool DeleteRouterInfo(const std::string &) override { return true; }
     bool DeleteRouterInfo(const std::string &, const std::string &) override { return true; }
     bool DeleteRouterInfo(const std::string &, const std::string &, const uint32_t) override { return true; }
     bool UpdateDB() override { return true; }
 };
+
+constexpr int32_t ROUTER_QUERY_FLAGS =
+    static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE) |
+    static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ROUTER_MAP);
+
+// BundleInfo carrying one module whose routerMap points at a $profile: entry, so
+// ProcessBundleRouterMap reaches the routerStorage_->GetRouterInfo call.
+BundleInfo MakeRouterBundleInfo()
+{
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    bundleInfo.versionCode = 1;
+    HapModuleInfo hapModuleInfo;
+    hapModuleInfo.moduleName = MODULE_NAME;
+    hapModuleInfo.routerMap = "$profile:router_map";
+    bundleInfo.hapModuleInfos.emplace_back(hapModuleInfo);
+    return bundleInfo;
+}
+
+// SHARED-type record resolvable through GetBaseSharedBundleInfo: one shared module
+// version registered under innerSharedModuleInfos_.
+InnerBundleInfo MakeHspRecord(const std::string &bundleName, const std::string &moduleName)
+{
+    InnerBundleInfo info;
+    ApplicationInfo appInfo;
+    appInfo.bundleName = bundleName;
+    appInfo.bundleType = BundleType::SHARED;
+    info.SetBaseApplicationInfo(appInfo);
+    info.baseBundleInfo_->name = bundleName;
+    InnerModuleInfo sharedModule;
+    sharedModule.moduleName = moduleName;
+    sharedModule.bundleType = BundleType::SHARED;
+    sharedModule.versionCode = 1;
+    info.innerSharedModuleInfos_[moduleName] = {sharedModule};
+    return info;
+}
 }  // namespace
 
 HWTEST_F(BmsDualModeInstallTest, InsertRouterInfo_DualModeClone_0100, Function | SmallTest | Level0)
@@ -2951,6 +2992,141 @@ HWTEST_F(BmsDualModeInstallTest, UpdateRouterInfo_ByBundleName_Normal_0400, Func
     dataMgr->bundleInfos_[BUNDLE_NAME] = info;
     dataMgr->UpdateRouterInfo(BUNDLE_NAME);
     EXPECT_EQ(mockStorage->updatedKey, BUNDLE_NAME);
+}
+
+// ====================== ProcessBundleRouterMap (query side) ======================
+// The write side (InsertRouterInfo/UpdateRouterInfo) stores a clone app's router rows
+// under the prefixed effective name; the query side must use the same key, and the
+// HSP/plugin router sources must come from the record being processed (the temp
+// other-mode variant), not from a same-name bundleInfos_ lookup.
+
+HWTEST_F(BmsDualModeInstallTest, ProcessBundleRouterMap_DualModeClone_0100, Function | SmallTest | Level0)
+{
+    // clone record: the per-module router query uses the prefixed effective name
+    // (mirrors InsertRouterInfo's write-side key).
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    auto mockStorage = std::make_shared<MockRouterStorage>();
+    dataMgr->routerStorage_ = mockStorage;
+    InnerBundleInfo cloneInfo = MakeCat7Info(true);
+    cloneInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    BundleInfo bundleInfo = MakeRouterBundleInfo();
+    dataMgr->ProcessBundleRouterMap(cloneInfo, bundleInfo, ROUTER_QUERY_FLAGS, TEST_USERID);
+    EXPECT_EQ(mockStorage->queriedKey, PREFIXED_NAME);
+}
+
+HWTEST_F(BmsDualModeInstallTest, ProcessBundleRouterMap_Normal_0200, Function | SmallTest | Level0)
+{
+    // non-clone: the per-module router query keeps the original name; zero change
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    auto mockStorage = std::make_shared<MockRouterStorage>();
+    dataMgr->routerStorage_ = mockStorage;
+    InnerBundleInfo info = MakeCat7Info(false);
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    BundleInfo bundleInfo = MakeRouterBundleInfo();
+    dataMgr->ProcessBundleRouterMap(info, bundleInfo, ROUTER_QUERY_FLAGS, TEST_USERID);
+    EXPECT_EQ(mockStorage->queriedKey, BUNDLE_NAME);
+}
+
+HWTEST_F(BmsDualModeInstallTest, ProcessBundleRouterMap_FlagNotSet_0300, Function | SmallTest | Level0)
+{
+    // without GET_BUNDLE_INFO_WITH_ROUTER_MAP the router storage is never queried
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    auto mockStorage = std::make_shared<MockRouterStorage>();
+    dataMgr->routerStorage_ = mockStorage;
+    InnerBundleInfo cloneInfo = MakeCat7Info(true);
+    cloneInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    BundleInfo bundleInfo = MakeRouterBundleInfo();
+    int32_t flags = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE);
+    dataMgr->ProcessBundleRouterMap(cloneInfo, bundleInfo, flags, TEST_USERID);
+    EXPECT_TRUE(mockStorage->queriedKey.empty());
+}
+
+HWTEST_F(BmsDualModeInstallTest, GetRouterInfoForSharedBundle_RecordDriven_0400, Function | SmallTest | Level0)
+{
+    // HSP dependencies come from the record being processed: the temp variant depends
+    // on hspA while the same-name current-mode record depends on hspB — a name-based
+    // bundleInfos_ lookup would query hspB instead.
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    auto mockStorage = std::make_shared<MockRouterStorage>();
+    dataMgr->routerStorage_ = mockStorage;
+
+    InnerBundleInfo tempHost = MakeCat7Info(true);
+    tempHost.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    InnerModuleInfo tempModule;
+    Dependency tempDep;
+    tempDep.bundleName = "hspA";
+    tempDep.moduleName = "hspA_module";
+    tempDep.versionCode = 1;
+    tempModule.moduleName = MODULE_NAME;
+    tempModule.dependencies.emplace_back(tempDep);
+    tempHost.innerModuleInfos_[MODULE_NAME] = tempModule;
+
+    InnerBundleInfo currentHost = MakeCat7Info(false);
+    currentHost.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    InnerModuleInfo currentModule;
+    Dependency currentDep;
+    currentDep.bundleName = "hspB";
+    currentDep.moduleName = "hspB_module";
+    currentDep.versionCode = 1;
+    currentModule.moduleName = MODULE_NAME;
+    currentModule.dependencies.emplace_back(currentDep);
+    currentHost.innerModuleInfos_[MODULE_NAME] = currentModule;
+    dataMgr->bundleInfos_[BUNDLE_NAME] = currentHost;
+    dataMgr->bundleInfos_["hspA"] = MakeHspRecord("hspA", "hspA_module");
+    dataMgr->bundleInfos_["hspB"] = MakeHspRecord("hspB", "hspB_module");
+
+    std::vector<RouterItem> routerInfos;
+    dataMgr->GetRouterInfoForSharedBundle(tempHost, routerInfos);
+    EXPECT_EQ(mockStorage->queriedKey, "hspA");
+}
+
+HWTEST_F(BmsDualModeInstallTest, GetRouterInfoForPlugin_RecordDriven_0500, Function | SmallTest | Level0)
+{
+    // The installed-plugin list comes from the record being processed: the temp variant
+    // carries pluginA while the same-name current-mode record carries pluginB — a
+    // name-based bundleInfos_ lookup would query pluginB instead.
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    auto mockStorage = std::make_shared<MockRouterStorage>();
+    dataMgr->routerStorage_ = mockStorage;
+    dataMgr->multiUserIdsSet_.insert(TEST_USERID);
+
+    InnerBundleInfo tempHost = MakeCat7Info(true);
+    tempHost.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = BUNDLE_NAME;
+    userInfo.bundleUserInfo.userId = TEST_USERID;
+    tempHost.AddInnerBundleUserInfo(userInfo);
+    PluginBundleInfo pluginInfo;
+    pluginInfo.pluginBundleName = "pluginA";
+    pluginInfo.versionCode = 1;
+    PluginModuleInfo pluginModule;
+    pluginModule.moduleName = "pluginA_module";
+    pluginInfo.pluginModuleInfos.emplace_back(pluginModule);
+    ASSERT_TRUE(tempHost.AddPluginBundleInfo(pluginInfo, TEST_USERID));
+
+    InnerBundleInfo currentHost = MakeCat7Info(false);
+    currentHost.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    InnerBundleUserInfo currentUserInfo;
+    currentUserInfo.bundleName = BUNDLE_NAME;
+    currentUserInfo.bundleUserInfo.userId = TEST_USERID;
+    currentHost.AddInnerBundleUserInfo(currentUserInfo);
+    PluginBundleInfo currentPlugin;
+    currentPlugin.pluginBundleName = "pluginB";
+    currentPlugin.versionCode = 1;
+    PluginModuleInfo currentPluginModule;
+    currentPluginModule.moduleName = "pluginB_module";
+    currentPlugin.pluginModuleInfos.emplace_back(currentPluginModule);
+    ASSERT_TRUE(currentHost.AddPluginBundleInfo(currentPlugin, TEST_USERID));
+    dataMgr->bundleInfos_[BUNDLE_NAME] = currentHost;
+
+    std::vector<RouterItem> routerInfos;
+    dataMgr->GetRouterInfoForPlugin(tempHost, TEST_USERID, routerInfos);
+    EXPECT_EQ(mockStorage->queriedKey, "pluginA");
 }
 
 // ====================== BundleDataMgr::GenerateOdidNoLock ======================
