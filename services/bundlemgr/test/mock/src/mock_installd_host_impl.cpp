@@ -324,6 +324,11 @@ ErrCode InstalldHostImpl::ExtractQuickFixSoFile(const std::string &bundleName, c
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::CopyHapToTempPath(const std::string &bundleName, const std::string &hapRealPath,
+    const std::string &tempDirName, const std::string &hapFileName)
+{
+    return ERR_OK;
+}
 ErrCode InstalldHostImpl::ExecuteAOT(const AOTArgs &aotArgs, std::vector<uint8_t> &pendSignData)
 {
     return ERR_OK;

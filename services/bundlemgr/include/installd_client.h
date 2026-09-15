@@ -254,6 +254,9 @@ public:
     ErrCode ExtractQuickFixRes(const std::string &bundleName, const std::string &moduleName,
         const std::string &hqfFilePath, bool needFakeDecompression);
 
+    ErrCode CopyHapToTempPath(const std::string &bundleName, const std::string &hapRealPath,
+        const std::string &tempDirName, const std::string &hapFileName);
+
     ErrCode ExtractHnpFiles(const std::map<std::string, std::string> &hnpPackageMap, const ExtractParam &extractParam);
 
     ErrCode ProcessBundleInstallNative(const InstallHnpParam &installHnpParam);

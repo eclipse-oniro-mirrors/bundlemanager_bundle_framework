@@ -66,6 +66,13 @@ private:
      * @return Returns true if called successfully; returns false otherwise.
      */
     bool HandleExtractHnpFiles(MessageParcel &data, MessageParcel &reply);
+    /**
+     * @brief Handles the CopyHapToTempPath function called from a IInstalld proxy object.
+     * @param data Indicates the data to be read.
+     * @param reply Indicates the reply to be sent;
+     * @return Returns true if called successfully; returns false otherwise.
+     */
+    bool HandleCopyHapToTempPath(MessageParcel &data, MessageParcel &reply);
     bool HandleExtractSoFiles(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the HandleExtractQuickFixSoFile function called from a IInstalld proxy object.

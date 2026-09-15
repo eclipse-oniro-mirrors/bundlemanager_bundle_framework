@@ -128,6 +128,20 @@ public:
         return ERR_OK;
     }
 
+    /**
+     * @brief Copy HAP file to temp path for sandbox access.
+     * @param bundleName Indicates the bundle name for path validation.
+     * @param hapRealPath Indicates the real HAP file path after RevertToRealPath mapping.
+     * @param tempDirName Indicates the temp directory name (timestamp_counter format).
+     * @param hapFileName Indicates the HAP file name extracted from sandbox path.
+     * @return Returns ERR_OK if copied successfully; returns error code otherwise.
+     */
+    virtual ErrCode CopyHapToTempPath(const std::string &bundleName, const std::string &hapRealPath,
+        const std::string &tempDirName, const std::string &hapFileName)
+    {
+        return ERR_OK;
+    }
+
     virtual ErrCode ProcessBundleInstallNative(const InstallHnpParam &installHnpParam)
     {
         return ERR_OK;

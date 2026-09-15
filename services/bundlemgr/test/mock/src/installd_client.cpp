@@ -144,6 +144,15 @@ ErrCode InstalldClient::ExtractQuickFixRes(const std::string &bundleName, const 
     return CallService(&IInstalld::ExtractQuickFixRes, bundleName, moduleName, hqfFilePath, needFakeDecompression);
 }
 
+ErrCode InstalldClient::CopyHapToTempPath(const std::string &bundleName, const std::string &hapRealPath,
+    const std::string &tempDirName, const std::string &hapFileName)
+{
+    if (bundleName.empty() || hapRealPath.empty() || tempDirName.empty() || hapFileName.empty()) {
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::CopyHapToTempPath, bundleName, hapRealPath, tempDirName, hapFileName);
+}
+
 ErrCode InstalldClient::ExtractHnpFiles(const std::map<std::string, std::string> &hnpPackageMap,
     const ExtractParam &extractParam)
 {

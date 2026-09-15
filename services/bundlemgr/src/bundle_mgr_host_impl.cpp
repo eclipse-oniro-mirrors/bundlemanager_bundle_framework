@@ -1836,22 +1836,22 @@ ErrCode BundleMgrHostImpl::GetBundleArchiveInfoBySandBoxPath(const std::string &
         APP_LOGE("non-v9 app file is not supported in sandbox path");
         return ERR_BUNDLE_MANAGER_INVALID_HAP_PATH;
     }
-    std::string tempHapPath = std::string(ServiceConstants::BUNDLE_MANAGER_SERVICE_PATH) +
-        std::string(ServiceConstants::PATH_SEPARATOR) +
-        std::to_string(BundleUtil::GetCurrentTimeNs()) + "_" +
+    std::string tempDirName = std::to_string(BundleUtil::GetCurrentTimeNs()) + "_" +
         std::to_string(++g_tempDirUniqueCounter);
+    std::string tempHapPath = std::string(ServiceConstants::BUNDLE_MANAGER_SERVICE_PATH) +
+        ServiceConstants::PATH_SEPARATOR + tempDirName;
     if (!BundleUtil::CreateDir(tempHapPath)) {
         APP_LOGE("GetBundleArchiveInfo make temp dir failed");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     ScopeGuard tempHapPathGuard([tempHapPath] { BundleUtil::DeleteDir(tempHapPath); });
-    std::string hapName = hapFilePath.substr(hapFilePath.find_last_of("//") + 1);
-    std::string tempHapFile = tempHapPath + ServiceConstants::PATH_SEPARATOR + hapName;
-    if (InstalldClient::GetInstance()->CopyFile(hapRealPath, tempHapFile,
-        BundleDirScene::COPY_HAP_TO_TEMP_PATH) != ERR_OK) {
+    std::string hapFileName = hapFilePath.substr(hapFilePath.find_last_of("/") + 1);
+    if (InstalldClient::GetInstance()->CopyHapToTempPath(bundleName, hapRealPath,
+        tempDirName, hapFileName) != ERR_OK) {
         APP_LOGE("GetBundleArchiveInfo copy hap file failed");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
+    std::string tempHapFile = tempHapPath + ServiceConstants::PATH_SEPARATOR + hapFileName;
     if (BundleUtil::CheckFileType(tempHapFile, ServiceConstants::APP_FILE_SUFFIX)) {
         return GetBundleArchiveInfoFromApp(tempHapFile, flags, bundleInfo, tempHapPath);
     }

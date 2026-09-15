@@ -110,6 +110,12 @@ ErrCode InstalldClient::ExtractSoFiles(const std::string &bundleName, const std:
     return 0;
 }
 
+ErrCode InstalldClient::CopyHapToTempPath(const std::string &bundleName, const std::string &hapRealPath,
+    const std::string &tempDirName, const std::string &hapFileName)
+{
+    return 0;
+}
+
 ErrCode InstalldClient::ExtractHnpFiles(const std::map<std::string, std::string> &hnpPackageMap,
     const ExtractParam &extractParam)
 {
