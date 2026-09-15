@@ -1577,7 +1577,6 @@ public:
     bool MoveBundleInfoToTemp(const std::string &bundleName);
     bool UpdateBundleInfoPolicy(const std::string &bundleName,
         DeviceModeDistributionPolicy deviceModeDistributionPolicy, AppSandboxPolicy appSandboxPolicy);
-
     ErrCode GetDualModeBundleInfo(const std::string &bundleName, int32_t userId,
         DualModeBundleInfo &dualModeBundleInfo);
     /**
@@ -1597,6 +1596,9 @@ public:
      */
     ErrCode GetAllBundleInfoInstances(const std::string &bundleName, int32_t flags,
         int32_t userId, std::vector<BundleInfo> &bundleInfos) const;
+    ErrCode GetMetadataByBundleName(const std::string &bundleName,
+        std::vector<ModuleMetadata> &metadataInfos, int32_t userId) const;
+
 private:
     /**
      * @brief Init transferStates.

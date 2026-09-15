@@ -1508,6 +1508,9 @@ public:
     virtual ErrCode FilterBundleListByDeviceModeDistributionPolicies(
         const std::set<DeviceModeDistributionPolicy> &policies) override;
 
+    virtual ErrCode GetMetadataByBundleName(const std::string &bundleName,
+        std::vector<ModuleMetadata> &metadataInfos) override;
+
 private:
     /**
      * @brief Send a command message from the proxy object.

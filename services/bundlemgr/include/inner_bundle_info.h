@@ -2553,6 +2553,7 @@ public:
     bool HasKeepTokenIdMetadata() const;
 
     bool IsFakeDecompressionEnable() const;
+    bool GetMetadataByBundleName(std::vector<ModuleMetadata> &metadataInfos) const;
 private:
     bool IsExistLauncherAbility() const;
     void GetBundleWithAbilities(

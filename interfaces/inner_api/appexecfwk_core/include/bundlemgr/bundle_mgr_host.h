@@ -1085,6 +1085,7 @@ private:
     ErrCode HandleIsApplicationDisableForbidden(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleSetApplicationDisableForbidden(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleGetDualModeBundleInfo(MessageParcel &data, MessageParcel &reply);
+    ErrCode HandleGetMetadataByBundleName(MessageParcel &data, MessageParcel &reply);
 
 private:
     /**

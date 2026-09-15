@@ -280,6 +280,7 @@ enum class BundleMgrInterfaceCode : uint32_t {
     GET_DUAL_MODE_BUNDLE_INFO = 254,
     SET_ADDITIONAL_INFO_BY_INDEX = 255,
     GET_ALL_BUNDLE_INFO_INSTANCES = 256,
+    GET_METADATA_BY_BUNDLE_NAME = 257,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */

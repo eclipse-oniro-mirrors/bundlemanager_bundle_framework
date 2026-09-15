@@ -1419,6 +1419,8 @@ public:
      */
     virtual ErrCode GetAllBundleInfoInstances(const std::string &bundleName, int32_t flags,
         std::vector<BundleInfo> &bundleInfos, int32_t userId) override;
+    virtual ErrCode GetMetadataByBundleName(const std::string &bundleName,
+        std::vector<ModuleMetadata> &metadataInfos) override;
 
 private:
     bool GetLabelByBundleName(const std::string &bundleName, int32_t userId, std::string &label);

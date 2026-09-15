@@ -3234,6 +3234,20 @@ bool InnerBundleInfo::GetSharedBundleInfo(int32_t flags, BundleInfo &bundleInfo)
     return true;
 }
 
+bool InnerBundleInfo::GetMetadataByBundleName(std::vector<ModuleMetadata> &metadataInfos) const
+{
+    metadataInfos.clear();
+    for (const auto &info : innerModuleInfos_) {
+        if (info.second.isModuleJson && info.second.metadata.size() > 0) {
+            ModuleMetadata metadataInfo;
+            metadataInfo.moduleName = info.second.moduleName;
+            metadataInfo.metadata = info.second.metadata;
+            metadataInfos.push_back(metadataInfo);
+        }
+    }
+    return true;
+}
+
 void InnerBundleInfo::ProcessBundleFlags(
     int32_t flags, int32_t userId, BundleInfo &bundleInfo, int32_t appIndex) const
 {

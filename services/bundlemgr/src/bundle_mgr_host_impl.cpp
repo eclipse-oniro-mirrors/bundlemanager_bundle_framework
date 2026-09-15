@@ -80,6 +80,7 @@ constexpr const char* SYSTEM_APP = "system";
 constexpr const char* THIRD_PARTY_APP = "third-party";
 constexpr const char* APP_LINKING = "applinking";
 constexpr const char* EMPTY_ABILITY_NAME = "";
+constexpr const char* VALUE_STRING_PREFIX = "$string:";
 const std::string FUNCATION_GET_ASSET_GROUPS_INFO = "BundleMgrHostImpl::GetAssetGroupsInfo";
 const std::string FUNCTION_GET_NAME_FOR_UID = "BundleMgrHostImpl::GetNameForUid";
 const std::string FUNCTION_GET_OVERLAY_MANAGER_PROXY = "BundleMgrHostImpl::GetOverlayManagerProxy";
@@ -4054,6 +4055,49 @@ bool BundleMgrHostImpl::GetDistributedBundleInfo(const std::string &networkId, c
     APP_LOGW("DISTRIBUTED_BUNDLE_FRAMEWORK is false");
     return false;
 #endif
+}
+
+ErrCode BundleMgrHostImpl::GetMetadataByBundleName(const std::string &bundleName,
+    std::vector<ModuleMetadata> &metadataInfos)
+{
+    APP_LOGD("start GetMetadataByBundleName, bundleName : %{public}s", bundleName.c_str());
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("Non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED}) &&
+        !BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
+        APP_LOGE_NOFUNC("GetMetadataByBundleName permission denied %{public}d %{public}d",
+            IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is null");
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    int32_t userId = AccountHelper::GetCurrentActiveUserId();
+    if (userId == Constants::INVALID_USERID) {
+        APP_LOGE("GetMetadataByBundleName GetCurrentActiveUserId failed");
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    ErrCode ret = dataMgr->GetMetadataByBundleName(bundleName, metadataInfos, userId);
+    if (ret != ERR_OK) {
+        return ret;
+    }
+    for (auto &moduleMetadata : metadataInfos) {
+        const std::string &moduleName = moduleMetadata.moduleName;
+        for (auto &metadata : moduleMetadata.metadata) {
+            if (metadata.valueId == 0 || metadata.value.find(VALUE_STRING_PREFIX) != 0) {
+                continue;
+            }
+            std::string resolvedValue = dataMgr->GetStringById(bundleName, moduleName, metadata.valueId, userId, "");
+            if (!resolvedValue.empty()) {
+                metadata.value = resolvedValue;
+            }
+        }
+    }
+    return ERR_OK;
 }
 
 bool BundleMgrHostImpl::QueryExtensionAbilityInfos(const Want &want, const int32_t &flag, const int32_t &userId,
