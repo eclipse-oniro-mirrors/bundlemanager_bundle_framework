@@ -13,7 +13,7 @@
 <!-- codecheck-report-metadata:start -->
 ```yaml
 codecheck_report:
-  schema_version: "1.0"
+  schema_version: "1.1"
   scope: "{scope}"
   round: {round}
   commit_id: "{commit_id}"
@@ -25,6 +25,8 @@ codecheck_report:
   score: {score}
   dimensions_required: {dimensions_required}
   dimensions_executed: {dimensions_executed}
+  compat_risk: "{compat_risk}"
+  historical_issues_rechecked: "{historical_issues_rechecked}"
   findings_total: {findings_total}
   findings_by_severity: {findings_by_severity}
   gate_blockers: {gate_blockers}
@@ -32,6 +34,10 @@ codecheck_report:
   followups: {followups}
 ```
 <!-- codecheck-report-metadata:end -->
+
+> **v1.1 新增字段**：
+> - `compat_risk`：兼容性风险结论，取值域固定为 `none | low | medium | high`（与第 6 节结论一致）。
+> - `historical_issues_rechecked`：历史典型问题核对是否完成，取值域固定为 `yes | partial | no`（partial/no 时第 6.3 节必须说明缺口及理由）。
 
 
 ---
@@ -89,9 +95,65 @@ codecheck_report:
 
 ---
 
-## 6. 关键发现详情
+## 6. 兼容性影响评估 🔥 v1.1 新增（必填章节）
 
-> P0/P1 必出全量卡片；P2/P3 按需精选或全出。每条 finding 按以下固定卡片格式呈现：
+> 本节评估**本次修改对当前代码功能与历史功能的影响**，是每个维度检视都必须参与的输出维度。生成规则：由 `code_review_checklist`（§A 兼容性自检）主导，`logic_analyzer`（影响范围识别）与 `test_coverage_reviewer`（回归覆盖）提供输入，orchestrator 汇总。填写依据与检查点见 [`code_review_checklist/SKILL.md`](code_review_checklist/SKILL.md) §A 与 [`bundle_framework_common_issues.md`](bundle_framework_common_issues.md)。
+> `compat_risk` 取值：`none`（无接口/行为变化）→ `low`（仅内部行为微调且有回归覆盖）→ `medium`（行为变化但已识别全部影响面并有兜底）→ `high`（存在破坏性变更或影响面未知，gate_decision 至少为 conditional）。
+
+### 6.1 影响面分析（修改 → 受影响的功能）
+
+| # | 修改点（file:line） | 变更类型 | 直接影响的功能 | 波及的历史功能/调用方 | 影响程度 |
+|---|---|---|---|---|---|
+| 1 | {file}:{line} | {新增/修改/删除} | {如：ProcessBundleInstall 的校验顺序} | {如：OTA 升级路径（SystemBundleInstaller 复用同一流程）、预装恢复} | {高/中/低} |
+
+> 分析要求：不只列直接调用方。bundle_framework 中必须沿以下四条历史链路追踪波及：
+> 1. **安装/卸载/更新主流程**（`BundleInstaller` → `BaseBundleInstaller` → `SystemBundleInstaller`/`BundleMultiUserInstaller`/Clone/HSP 安装器共享基类逻辑，改基类即全链路受影响）；
+> 2. **启动恢复链路**（`BundleMgrService` OnStart → 开机扫描/`loadExistData_`/`pre_install_exception_mgr`，改数据格式或状态语义必须验证重启后恢复）；
+> 3. **查询链路**（`bundle_mgr_host_impl` → `BundleDataMgr` → 各查询接口，含 `_V9`/`_WITH_INT_FLAGS` 双版本接口，改过滤/返回字段必须双版本核对）；
+> 4. **持久化链路**（`BundleDataMgr` ↔ RDB（`bundle_data_storage_rdb`）↔ JSON 序列化，改结构体字段/序列化顺序必须验证旧数据加载）。
+
+### 6.2 兼容性检查结论
+
+| 兼容性项 | 是否涉及 | 结论 | 证据（file:line） |
+|---|---|---|---|
+| IPC code（`bundle_framework_core_ipc_interface_code.h` / `bundle_framework_services_ipc_interface_code.h`）是否仅追加在枚举末尾、无删改/中间插入 | {是/否} | {✅/❌ 结论} | {证据} |
+| Parcel 序列化（新增字段是否追加在 Marshalling/Unmarshalling 末尾、读写顺序一致、旧数据可读） | {是/否} | {✅/❌} | {证据} |
+| 错误码（`appexecfwk_errors.h`：是否新增而非修改既有码；JS/NAPI 映射是否同步） | {是/否} | {✅/❌} | {证据} |
+| 对外行为（既有接口返回值/回调时序/参数取值范围/权限要求是否变化） | {是/否} | {✅/❌} | {证据} |
+| 持久化数据（RDB 记录/JSON 字段是否向后兼容旧版本数据） | {是/否} | {✅/❌} | {证据} |
+| 新特性 flag/policy 是否覆盖 install/uninstall/OTA/预置/query 五条主流程（防"新特性遗漏旧分支"） | {是/否} | {✅/❌} | {证据} |
+| 性能（接口性能是否明显劣化，尤其查询热路径与开机扫描） | {是/否} | {✅/❌} | {证据} |
+
+### 6.3 历史问题核对（对照 [`bundle_framework_common_issues.md`](bundle_framework_common_issues.md)）
+
+| 问题类别（HIST 编号） | 本 PR 是否涉及 | 核对结论 |
+|---|---|---|
+| 1. userId 语义混用 | {是/否} | {✅ 未复发 / ⚠️ 疑似 / ❌ 复发 + 证据 file:line；不涉及时写"—（未触碰共享资源）"或未核对理由} |
+| 2. 并发与锁问题 | {是/否} | {...} |
+| 3. RDB 异常兜底缺失 | {是/否} | {...} |
+| 4. 错误码返回遗漏/映射不合理 | {是/否} | {...} |
+| 5. JSON 解析健壮性 | {是/否} | {...} |
+| 6. IPC/Parcel 参数校验缺失 | {是/否} | {...} |
+| 7. 路径处理/路径穿越 | {是/否} | {...} |
+| 8. 安装/卸载数据一致性与 ID 复用 | {是/否} | {...} |
+| 9. 预置应用 × OTA 场景 | {是/否} | {...} |
+| 10. HSP/共享包与双模式适配 | {是/否} | {...} |
+| 11. 日志/DFX 规范不达标 | {是/否} | {...} |
+| 12. 静态告警与 fuzz 用例质量 | {是/否} | {...} |
+
+> 核对规则：变更涉及热点文件（`base_bundle_installer.cpp`、`bundle_data_mgr.cpp`、`bundle_mgr_host_impl.cpp`）时 HIST-1~12 **全部必核**；`historical_issues_rechecked = partial/no` 时必须在此说明缺口理由。判定"复发/疑似复发"的问题按 P1 起评级，编号追加 `HIST-{n}` 标签进入第 7 节 finding 卡片。
+
+### 6.4 兼容性结论
+
+- **compat_risk**：{none/low/medium/high}
+- **一句话结论**：{本次修改对既有功能的影响与兜底情况}
+- **回归建议**：{需重点回归的历史功能清单，如"OTA 升级后首次开机扫描、多用户卸载保留数据场景"}
+
+---
+
+## 7. 关键发现详情
+
+> P0/P1 必出全量卡片；P2/P3 按需精选或全出。每条 finding 按以下固定卡片格式呈现；复发历史典型问题的 finding 需在标题追加 `HIST-{n}` 标签，并在"影响"中注明对应 [`bundle_framework_common_issues.md`](bundle_framework_common_issues.md) 的问题类别：
 
 ### [{finding_id}] {finding_title} ({severity}, scanner={scanner_name})
 

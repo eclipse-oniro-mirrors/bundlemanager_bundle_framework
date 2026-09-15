@@ -1,7 +1,7 @@
 ---
 name: test_coverage_reviewer
-description: 用例测试覆盖度检视专家，检查修改点是否有已有用例覆盖、是否新增了必要的测试用例、评估用例覆盖完备度
-version: 1.0.0
+description: bundle_framework 用例测试覆盖度检视专家，检查修改点是否有已有用例覆盖、是否新增了必要的测试用例、评估用例覆盖完备度与历史问题回归覆盖
+version: 2.0.0
 author: AI Assistant
 tags:
   - test coverage
@@ -95,6 +95,7 @@ grep -rn "TestName" test/  # 查看测试用例描述
 - [ ] 新增用例是否覆盖了被删除旧逻辑原本处理的业务路径
 - [ ] 新增用例是否覆盖了新逻辑的所有关键分支
 - [ ] **innerkit接口Fuzz要求**: 如果修改涉及新增innerkit接口，且接口存在入参，必须补充对应的Fuzz测试用例
+- [ ] **历史问题回归**: 如果本次修改的代码路径命中 [`../bundle_framework_common_issues.md`](../bundle_framework_common_issues.md) 中的历史问题类别（HIST-1~12），必须有用例覆盖该历史缺陷场景（防复发回归用例）
 
 #### 新增用例质量评估
 
@@ -108,9 +109,9 @@ grep -rn "TestName" test/  # 查看测试用例描述
 
 当修改涉及**新增innerkit接口**时，需进行专项检查：
 
-**触发条件**（需同时满足）：
-1. 修改涉及 `.idl` 后缀文件中新增了接口函数
-2. 接口函数入参存在 `in` 类型修饰
+**触发条件**（满足其一即触发）：
+1. IPC code 枚举新增条目：`bundle_framework_core_ipc_interface_code.h`（SA 401）或 `bundle_framework_services_ipc_interface_code.h`（SA 511 `InstalldInterfaceCode`）新增枚举值
+2. `.idl` 文件（本仓为 `IBundleMgrExt.idl` / `IVerifyManager.idl`）新增了带 `in` 入参的接口函数
 
 **Fuzz用例要求**：
 - 必须新增至少一个Fuzz测试用例，使用 libfuzzer 框架（`FUZZ_TEST` 宏或 `extern "C" int LLVMFuzzerTestOneInput`）
@@ -118,47 +119,43 @@ grep -rn "TestName" test/  # 查看测试用例描述
   - 随机字节流注入
   - 边界值（空指针、空字符串、极值、零值）
   - 畸形数据结构
+  - **Parcel/JSON 解析路径**（本仓 fuzz 曾多次暴露真实解析崩溃，见 common issues HIST-12：`005267e0f` 等 fuzz crash 修复）
 
 **判定标准**：
 
 | 状态 | 说明 |
 |------|------|
-| ✅ **满足** | `.idl` 中新增接口函数的每个 `[in]` 入参均已通过 `FuzzData` 生成随机数据并传入，并在 `LLVMFuzzerTestOneInput` 中最终调用到目标接口 |
-| ⚠️ **部分满足** | 存在Fuzz用例但未覆盖所有 `[in]` 入参或缺少边界场景 |
+| ✅ **满足** | 新增接口的每个入参均已通过 `FuzzData`/`FuzzedDataProvider` 生成随机数据并传入，并在 `LLVMFuzzerTestOneInput` 中最终调用到目标接口 |
+| ⚠️ **部分满足** | 存在Fuzz用例但未覆盖所有入参或缺少边界场景 |
 | ❌ **不满足** | 完全缺少Fuzz用例，或Fuzz用例中未实际调用目标接口 |
 
-**示例**：
+**示例**（bundle_framework 真实模式，参考 `test/fuzztest/fuzztest_bundlemanager/` 下既有 fuzzer）：
 
-以 `IBundleMgr.idl` 中新增的 `Install` 接口为例：
-
-```cpp
-// IBundleMgr.idl 中的接口定义（interfaces/inner_api/appexecfwk_core/src/bundlemgr/IBundleMgr.idl）
-void Install([in] String bundleFilePath, [in] InstallParam installParam, [in] IStatusReceiver statusReceiver);
-```
-
-对应的Fuzz用例（`installbundle_fuzzer.cpp`）：
+新增 IPC 接口 `GET_ALL_BUNDLE_INFO_INSTANCES`（`bundle_framework_core_ipc_interface_code.h:282`，proxy 侧 `FilterBundleListByDeviceModeDistributionPolicies`）时：
 
 ```cpp
-#include "installbundle_fuzzer.h"
-#include "bundle_mgr_proxy.h"
-#include "bundle_mgr_interface.h"
+// test/fuzztest/fuzztest_bundlemanager/bmsfilterbundlelistbydevicemodedistributionpolicies_fuzzer/
+//   bmsfilterbundlelistbydevicemodedistributionpolicies_fuzzer.cpp
+#include "bmsfilterbundlelistbydevicemodedistributionpolicies_fuzzer.h"
+#include "bundle_mgr_client.h"
 #include "fuzz_data.h"
 
 using namespace OHOS::AppExecFwk;
 
 namespace OHOS {
-    bool InstallBundleFuzzTest(const uint8_t* data, size_t size)
+    bool FilterBundleListFuzzTest(const uint8_t* data, size_t size)
     {
         bool result = false;
         if ((data != nullptr) && (size != 0)) {
             FuzzData fuzzData(data, size);
-            std::string testBundlePath(fuzzData.GenerateString());
-            InstallParam installParam;
-            // 每个 [in] 入参均通过 FuzzData 生成随机值
+            // 每个入参均通过 FuzzData 生成随机值（含畸形/边界）
+            std::vector<DeviceModeDistributionPolicy> policies;
+            // ... 从 fuzzData 构造随机 policy 集合（覆盖越界值）...
             auto bundleMgr = DelayedSingleton<BundleMgrClient>::GetInstance();
             if (bundleMgr != nullptr) {
-                sptr<IStatusReceiver> receiver = new (std::nothrow) MockStatusReceiver();
-                result = (bundleMgr->Install(testBundlePath, installParam, receiver) == ERR_OK);
+                std::vector<BundleInfo> bundleInfos;
+                result = (bundleMgr->FilterBundleListByDeviceModeDistributionPolicies(
+                    bundleInfos, policies) != ERR_OK);   // 最终调用到目标接口
             }
         }
         return result;
@@ -167,15 +164,15 @@ namespace OHOS {
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
-    OHOS::InstallBundleFuzzTest(data, size);
+    OHOS::FilterBundleListFuzzTest(data, size);
     return 0;
 }
 ```
 
 关键检查点：
-1. `LLVMFuzzerTestOneInput` 入口 → 调用 Fuzz 测试函数 → 最终调用到 `.idl` 声明的目标接口
-2. 每个 `[in]` 入参均通过 `FuzzData` 生成随机数据后传入
-3. Fuzz 用例文件命名遵循 `{interface_name_lower}_fuzzer.cpp` 规范，目录结构为 `test/fuzztest/{module}/{name}_fuzzer/`
+1. `LLVMFuzzerTestOneInput` 入口 → 调用 Fuzz 测试函数 → 最终调用到目标接口（proxy 或 `BundleMgrInterfaceCode` 对应链路）
+2. 每个入参均通过 `FuzzData`/`FuzzedDataProvider` 生成随机数据后传入
+3. Fuzz 用例目录命名遵循 `{被测函数小写下划线}_fuzzer/` 规范，位于 `test/fuzztest/fuzztest_bundlemanager/`，GN target 为 `ohos_fuzztest("BMS*FuzzTest")`，并在 `test/fuzztest/BUILD.gn` 登记
 
 ### 2.4 覆盖完备度评价
 
@@ -197,6 +194,53 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 | 🟡 **基本完备** | 70-89 | 主要修改点有覆盖，部分边界或错误路径缺失 |
 | 🟠 **不足** | 50-69 | 仅部分修改点有覆盖，存在明显的测试缺口 |
 | 🔴 **严重不足** | 0-49 | 核心修改点完全无覆盖 |
+
+### 2.5 bundle_framework 测试布局与惯例（定位用例时使用）
+
+```
+services/bundlemgr/test/unittest/bms_<域>_test/     # 单元测试（40+ 目录）
+    ├── bms_<域>_test.cpp                            # 用例文件 HWTEST_F
+    └── BUILD.gn                                     # ohos_unittest("Bms<域>Test")
+services/bundlemgr/test/mock/src/                    # mock 实现（BUILD.gn 用 sources -= 真实现 / += mock 替换）
+test/systemtest/common/bms/                          # 系统测试（bms_*_system_test / bms_*_host_test）
+test/fuzztest/fuzztest_bundlemanager/                # 245+ 个 fuzzer（X_fuzzer.cpp + BUILD.gn + corpus/）
+test/fuzztest/fuzztest_others/
+test/benchmarktest/                                  # 序列化/解析性能基准
+test/sceneProject/                                   # 测试用 hap/hsp 源工程（unittest 依赖）
+services/test/moduletest/common/bms/                 # 模块测试
+interfaces/inner_api/test/unittest/                  # proxy/client 级单测
+```
+
+- **命名惯例**：单测目录与文件 `bms_*_test.cpp`，GN target 驼峰 `Bms*Test`（如 `BmsBundleInstallerTest`），`module_out_path = "bundle_framework/bundle_framework"`。
+- **mock 惯例**：整套服务源码编进单测 target，用 `sources -= [".../bms_param.cpp"]` + `sources += [".../test/mock/src/bms_param.cpp"]` 替换实现；检视新增代码时确认是否需要同步提供 mock。
+- **覆盖判定命令**：
+  ```bash
+  # 修改函数是否被已有用例触达
+  grep -rn "FunctionName" services/bundlemgr/test/unittest/ test/systemtest/
+  # 找到目标单测目录
+  ls services/bundlemgr/test/unittest/ | grep <域>
+  ```
+
+### 2.6 历史问题回归用例检查（对照 HIST-1~12）
+
+bundle_framework 的 fuzz 用例曾多次暴露真实解析崩溃（`005267e0f`、`36406e48b`、`89c8d45ad` 等），测试代码自身也出过 bug（`98691ab33`：`==` 误用为 `=`、枚举错配）。检视要求：
+
+1. 本次修改若修复/触碰了 [`../bundle_framework_common_issues.md`](../bundle_framework_common_issues.md) 中某类历史问题（HIST-1~12）的代码路径，检查是否补充了**防复发回归用例**（覆盖历史缺陷场景）；
+2. 测试代码本身按生产代码标准检视（断言有效性、无 `=` 误用、枚举匹配）；
+3. 修改 RDB/JSON 解析/Parcel 反序列化路径时，优先确认对应 fuzzer 是否覆盖（`test/fuzztest/fuzztest_bundlemanager/` 下搜同名模块）。
+
+### 2.7 兼容性回归覆盖检查（供统一报告 §6 汇总）
+
+修改涉及兼容性敏感面时，回归用例要求：
+
+| 兼容性敏感面 | 回归用例要求 |
+|---|---|
+| 既有 IPC 接口行为变化 | 旧调用方式（旧参数组合/旧 userId 默认值）的用例必须保持通过 |
+| RDB/JSON 持久化结构 | 必须有用例覆盖"旧版本数据 → 新代码加载"场景 |
+| 错误码变更 | 既有场景的错误码断言用例同步更新 |
+| 新特性 flag（HIST-10） | 五条主流程（install/uninstall/OTA/预置/query）各自有用例消费该 flag |
+
+结论写入统一报告 §6.1 影响面分析与 §6.4 回归建议。
 
 ---
 
@@ -382,3 +426,4 @@ git diff HEAD -- test/
 | 版本 | 日期 | 变更 | 维护者 |
 |---------|------|---------|------------|
 | v1.0 | 2026-05-29 | 初始版本 | AI Assistant |
+| v2.0 | 2026-09-14 | bundle_framework 定制化：修正 IPC 接口定义位置（IPC code 枚举而非 IBundleMgr.idl）；新增 §2.5 本仓测试布局与 GN/mock 惯例；新增 §2.6 历史问题回归用例检查（对照 HIST-1~12）与 §2.7 兼容性回归覆盖检查 | BMS CodeCheck Team |

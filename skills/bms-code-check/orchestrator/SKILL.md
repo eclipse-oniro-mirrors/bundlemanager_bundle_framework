@@ -56,7 +56,11 @@ scope: bms
 | `dfx_reviewer` | dfx_reviewer/ | HiLog、HiSysEvent、HiTrace 覆盖 | ✅ 默认调用 |
 | `code_review_checklist` | code_review_checklist/ | 兼容性、日志规范、编码风格、命名、注释 | ✅ 默认调用 |
 | `test_coverage_reviewer` | test_coverage_reviewer/ | 测试用例覆盖度 | ✅ 默认调用 |
+| **兼容性影响评估** | 由 `code_review_checklist` §A 主导，logic/test 提供输入 | 对当前/历史功能的影响、IPC/Parcel/错误码/持久化兼容、历史问题核对 | ✅ 必产出（统一报告 §6） |
 | `architecture_analyzer` | architecture_analyzer/ | 模块化、依赖、接口设计、可扩展性 | 用户指定或大型变更 |
+
+**bundle_framework 强制输入**（本仓专属，任何 scanner 组合都必须加载）：
+- [`../bundle_framework_common_issues.md`](../bundle_framework_common_issues.md) — 历史典型问题库（HIST-1~12 + 热点文件）。每个 scanner 检视时对照本 PR 是否复发历史问题；结果由编排器汇总进统一报告 §6.3。
 
 **原则**：
 - scanner 之间无数据依赖，全部并行执行
@@ -70,7 +74,7 @@ scope: bms
 ### Step 1: 界定范围（缺则向用户确认）
 
 必明确三项：
-1. **目标**：路径（如 `services/abilitymgr/src/`）或 Kit 名（如 `abilityKit`）。
+1. **目标**：路径（如 `services/bundlemgr/src/`、`interfaces/inner_api/appexecfwk_core/`）或模块名（如 `installd`、`clone`）。
 2. **检视重点**：未指定时默认"通用检视"。
 3. **版本信息**：从 git 获取完整 commit-id（full SHA, 40 位十六进制）和 Change-Id，记入报告头部。
 
@@ -101,10 +105,12 @@ security_review → logic_analyzer → dfx_reviewer → code_review_checklist �
 
 | 用户意图 | 调用组合 |
 |---------|---------|
-| 默认（"检视一下代码"） | **全部 5 个** skill |
-| 用户指定单一维度（如"只检查安全"） | 只调 `security_review` |
-| 大型架构变更 | **全部 6 个** skill + `architecture_analyzer` |
-| 用户说"快速检视" | `security_review` + `logic_analyzer` + `code_review_checklist` |
+| 默认（"检视一下代码"） | **全部 5 个** skill + 兼容性影响评估（必产出） |
+| 用户指定单一维度（如"只检查安全"） | 只调 `security_review`（兼容性影响评估仍必产出，可裁剪为涉及项） |
+| 大型架构变更 | **全部 5 个** skill + `architecture_analyzer` + 兼容性影响评估 |
+| 用户说"快速检视" | `security_review` + `logic_analyzer` + `code_review_checklist` + 兼容性影响评估 |
+
+> 无论何种组合，**统一报告 §6（兼容性影响评估 + 历史问题核对）必产出**，仅分析深度可按变更规模裁剪。
 
 #### 2.3 告知用户选择结果
 
@@ -142,28 +148,38 @@ security_review → logic_analyzer → dfx_reviewer → code_review_checklist �
 
 **第三层：跨 scanner 根因去重** — "这两个发现本质是同一个根因吗？"
 - 不同于 `file:line` 机械去重，基于修复方案反推
-- 同一修复改动 → 合并（例：SEC-005 空指针 + LOG-004 状态更新异常 + SEC-007 异常路径未释放锁 → 根因是 `mission_list_manager.cpp:412` 缺一次 nullptr 检查，合并为一条）
+- 同一修复改动 → 合并（例：SEC-005 空指针 + LOG-004 状态更新异常 + SEC-007 异常路径未释放锁 → 根因是 `bundle_data_mgr.cpp` 某处缺一次 nullptr 检查（历史案例：`b2c211568` fix GetJsonProfile lock），合并为一条）
 - 连锁影响 → 合并到根因（例：缺少边界校验 → 越界写入 → 相邻内存损坏 → 合并为一条"缺少边界校验"）
 - 独立发现（即使同文件，修复需改动不同位置）→ 维持独立
 
 **产出 `refute_log.md`**，记录每条发现的判定：✅ 维持 | ⬇️ 降级 | ❌ 推翻 | 🔀 合并。详见 [`refute-rules.md`](refute-rules.md)。
 
-### Step 6: 合并为统一报告
+### Step 6: 兼容性影响评估 + 历史问题核对 🔥 bundle_framework 必产出
+
+**即使只调用单一 scanner，本步骤也不可省略。** 产出统一报告模板的 **§6 兼容性影响评估** 整节：
+
+1. **影响面分析**（§6.1）：沿四条历史链路追踪本次修改的波及面——安装/卸载/更新主流程、启动恢复链路、查询链路（含 `_V9`/`_WITH_INT_FLAGS` 双版本接口）、持久化链路（RDB + JSON 序列化）。输入来自 `logic_analyzer` 的影响范围识别与 `test_coverage_reviewer` 的回归覆盖分析。
+2. **兼容性检查结论**（§6.2）：逐项核对 IPC code（`bundle_framework_core_ipc_interface_code.h` / `bundle_framework_services_ipc_interface_code.h` 是否仅末尾追加）、Parcel 序列化、错误码（`appexecfwk_errors.h`）、对外行为、持久化数据、新特性 flag 是否覆盖五条主流程、性能。
+3. **历史问题核对**（§6.3）：对照 [`../bundle_framework_common_issues.md`](../bundle_framework_common_issues.md) HIST-1~12 逐类核对；变更涉及热点文件（`base_bundle_installer.cpp`、`bundle_data_mgr.cpp`、`bundle_mgr_host_impl.cpp`）时 12 类全部必核。复发/疑似复发按 P1 起评级并标 `HIST-{n}`。
+4. **兼容性结论**（§6.4）：给出 `compat_risk`（none/low/medium/high），写入 YAML 元数据块，与正文一致。
+
+### Step 7: 合并为统一报告
 
 基于 `refute_log.md` 过滤后的发现列表，按 [`codecheck_report_TEMPLATE.md`](../codecheck_report_TEMPLATE.md) 生成最终报告。
 
 **必须使用权威模板**。模板固定了：
-- 头部 **YAML 报告元数据块**（机器可读，字段名/取值域固定，`risk_level` 仅 `low|medium|high|unknown`，`gate_decision` 仅 `approve|conditional|block|insufficient`）。
-- **固定章节**：1 门禁结论 → 2 扣分原因 → 3 必须立即处理（P0/P1）→ 4 建议跟进（P2/P3）→ 5 分维度速览 → 6 关键发现详情。评分与门禁规则见 conventions.md §9。
+- 头部 **YAML 报告元数据块**（机器可读，字段名/取值域固定，`risk_level` 仅 `low|medium|high|unknown`，`gate_decision` 仅 `approve|conditional|block|insufficient`，`compat_risk` 仅 `none|low|medium|high`，`historical_issues_rechecked` 仅 `yes|partial|no`）。
+- **固定章节**：1 门禁结论 → 2 扣分原因 → 3 必须立即处理（P0/P1）→ 4 建议跟进（P2/P3）→ 5 分维度速览 → 6 兼容性影响评估（必填，含历史问题核对）→ 7 关键发现详情。评分与门禁规则见 [`../conventions.md`](../conventions.md) §9。
 - **评分与决策矩阵**（见 conventions.md §9）：`评分 = max(0, 100 − (30×P0 + 12×P1 + 5×P2 + 2×P3))`；存在 P0 → block，存在 P1 → conditional，评分 ≥90 → approve，≥70 → conditional，否则 block；必检维度缺失 → insufficient。严重等级统一归一化为 P0–P3。
 
 **执行合并时**：
 1. 跨维度去重以 `file:line` 为第一键；同位置多维度命中合并为一条，标注全部维度来源。
 2. 不同 `file:line` 但同根因 → 由 refuter 在 Step 5 合并。
-3. 按 conventions.md §9 计算 `score` / `risk_level` / `gate_decision`，同时写入 YAML 元数据块与第 1 节门禁结论表格（两者必须一致）。
+3. 按 [`../conventions.md`](../conventions.md) §9 计算 `score` / `risk_level` / `gate_decision`，同时写入 YAML 元数据块与第 1 节门禁结论表格（两者必须一致）。
 4. 必检维度缺失时，决策为 `insufficient`；维度无适用面（如文档仅提交无代码）时该维度仍计入 `dimensions_executed` 并在 §5 分维度速览注明 N/A 理由，不计为缺失。
+5. **§6 兼容性影响评估缺失或未做历史问题核对（`historical_issues_rechecked ≠ yes` 且无理由）→ 整份报告决策 `insufficient`**。
 
-### Step 7: 交付
+### Step 8: 交付
 
 向用户交付：
 1. 统一报告路径。
@@ -180,9 +196,9 @@ security_review → logic_analyzer → dfx_reviewer → code_review_checklist �
 
 | 目标类型 | 必检维度（默认执行） |
 |---------|---------------------|
-| **代码变更**（默认） | `security_review` + `logic_analyzer` + `dfx_reviewer` + `code_review_checklist` + `test_coverage_reviewer` |
+| **代码变更**（默认） | `security_review` + `logic_analyzer` + `dfx_reviewer` + `code_review_checklist` + `test_coverage_reviewer` + 兼容性影响评估（§6） |
 | **大型架构变更** | 上述全部 + `architecture_analyzer` |
-| **纯文档变更** | 仅文档规范检查，跳过代码 scanner |
+| **纯文档变更** | 仅文档规范检查，跳过代码 scanner；§6 仍须给出 `compat_risk = none` 结论 |
 
 **维度说明**：
 - `security_review`：内存安全、输入验证、权限、敏感信息、并发
@@ -191,6 +207,7 @@ security_review → logic_analyzer → dfx_reviewer → code_review_checklist �
 - `code_review_checklist`：兼容性、日志规范、编码风格、命名、注释
 - `test_coverage_reviewer`：测试用例覆盖度
 - `architecture_analyzer`：模块化、依赖、接口设计、可扩展性
+- **兼容性影响评估**（必产出）：对当前/历史功能的影响 + 历史问题核对（统一报告 §6）
 
 ---
 

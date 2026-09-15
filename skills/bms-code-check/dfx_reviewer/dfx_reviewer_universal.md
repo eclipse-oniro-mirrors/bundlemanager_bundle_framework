@@ -21,7 +21,7 @@ Replace the placeholder directories with your actual codebase structure:
 ```yaml
 # Template Configuration
 codebase:
-  name: "Your_Module_Name"  # e.g., "Account Manager", "Network Stack"
+  name: "Your_Module_Name"  # e.g., "Bundle Manager", "Network Stack"
 
   # Service/Server side (where HiSysEvent is allowed)
   server_dirs:
@@ -375,15 +375,15 @@ ErrCode YourFunction()
 
 ```cpp
 // ❌ BAD: Logging sensitive data
-LOG_INFO("User password: %{public}s", password.c_str());
-LOG_INFO("Auth token: %{public}s", token.c_str());
-LOG_INFO("Account name: %{public}s", accountName.c_str());
+LOG_INFO("Fingerprint: %{public}s", fingerprint.c_str());
+LOG_INFO("Hap path: %{public}s", hapPath.c_str());
+LOG_INFO("Caller identity: %{public}s", callerIdentity.c_str());
 
 // ✅ GOOD: Anonymized or metadata only
-std::string anonName = AnonymizeData(accountName);
-LOG_INFO("Account name: %{public}s", anonName.c_str());
+std::string anonName = AnonymizeData(bundleName);
+LOG_INFO("Bundle name: %{public}s", anonName.c_str());
 
-LOG_INFO("Token size: %{public}zu bytes", token.size());
+LOG_INFO("Hap path size: %{public}zu bytes", hapPath.size());
 LOG_INFO("Operation completed for user: %{public}d", userId);
 ```
 
@@ -682,11 +682,11 @@ public ErrCode yourFunction() {
 
 ## Reference Implementations
 
-### Account Manager (Original)
+### Bundle Manager (bundle_framework)
 
-**Location**: `services/accountmgr/`
-**Operations**: Account create, delete, activate
-**Scenarios**: Boot, Settings, API, MDM
+**Location**: `services/bundlemgr/`
+**Operations**: Bundle install, uninstall, update
+**Scenarios**: Boot scan, API trigger, Create/Remove user, OTA
 
 ### Network Stack (Example)
 

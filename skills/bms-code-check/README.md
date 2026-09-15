@@ -12,10 +12,12 @@
 skills/
 ├── README.md                         # 本文件 - Skills 总索引
 │
-├── codecheck_report_TEMPLATE.md      # 📋 统一报告模板（门禁固定格式）
+├── codecheck_report_TEMPLATE.md      # 📋 统一报告模板（门禁固定格式，v1.1 含 §6 兼容性影响评估）
+├── conventions.md                    # 📐 评分/门禁/等级归一化权威规则
+├── bundle_framework_common_issues.md # 🔥 本仓历史典型问题库（HIST-1~12，所有检视 skill 强制输入）
 │
 ├── orchestrator/                     # 🎯 代码检视编排器（自动触发入口）
-│   ├── SKILL.md                       # 编排器配置与工作流
+│   ├── SKILL.md                       # 编排器配置与工作流（Step 6 兼容性评估+历史问题核对）
 │   └── refute-rules.md                # 对抗性验证规则
 │
 ├── comprehensive_review/             # ⭐ 综合代码检视 Skill（推荐）
@@ -23,11 +25,11 @@ skills/
 │   ├── SKILL.md                       # 综合检视详细指南
 │   └── QUICKSTART.md                  # 快速参考指南
 │
-├── security_review/                  # 🔒 安全审计 Skill
+├── security_review/                  # 🔒 安全审计 Skill（bundle_framework 信任边界定制）
 │   ├── README.md                      # 安全审计使用指南
 │   └── SKILL.md                       # 安全审计详细指南
 │
-├── logic_analyzer/                   # 🧠 逻辑分析 Skill
+├── logic_analyzer/                   # 🧠 逻辑分析 Skill（含 §3.8 本仓定制维度 BM-1~5）
 │   ├── README.md                      # 逻辑分析使用指南
 │   ├── SKILL.md                       # 逻辑分析详细指南
 │   └── QUICKSTART.md                  # 快速参考指南
@@ -39,13 +41,16 @@ skills/
 │   ├── dfx_skill_config_template.yaml # 配置模板
 │   └── SKILL.md                       # bundle_framework 专用版本
 │
-├── code_review_checklist/            # ✅ 规范检查 Skill
+├── code_review_checklist/            # ✅ 规范检查 Skill（含 HIST-1~12 历史问题核对）
 │   ├── README.md                      # 规范检查使用指南
 │   └── SKILL.md                       # 规范检查详细指南
 │
-└── architecture_analyzer/            # 🏗️ 架构分析 Skill
+├── test_coverage_reviewer/           # 🧪 测试覆盖度 Skill（含本仓测试布局 + 历史问题回归检查）
+│   └── SKILL.md                       # 测试覆盖度详细指南
+│
+└── architecture_analyzer/            # 🏗️ 架构分析 Skill（含本仓进程拓扑/分层铁律）
     ├── README.md                      # 架构分析使用指南
-    └── code_architecture_analyzer.md  # 架构分析与优化指南
+    └── SKILL.md                       # 架构分析详细指南
 ```
 
 ---
@@ -71,14 +76,16 @@ skills/
 1. 🔍 **并行调度** — 同时运行所有检视 skill 获取结果
 2. 📋 **检视维度** — security + logic + dfx + checklist + test（可选 + architecture）
 3. 🛡️ **对抗性验证** — Refute 三层质疑（触发路径/影响夸大/根因去重）
-4. 📊 **统一报告** — 生成符合门禁规范的综合报告
+4. 🔁 **兼容性影响评估 + 历史问题核对** — 对照 [bundle_framework_common_issues.md](bundle_framework_common_issues.md) HIST-1~12，评估修改对当前/历史功能的影响（统一报告 §6，必产出）
+5. 📊 **统一报告** — 生成符合门禁规范的综合报告
 
 **默认调用的检视 skill**：
-- `security_review` — 内存安全、输入验证、权限、敏感信息、并发
-- `logic_analyzer` — 控制流、数据流、状态机、边界条件、错误处理
+- `security_review` — 内存安全、输入验证、权限、敏感信息、并发（bundle_framework 信任边界）
+- `logic_analyzer` — 控制流、数据流、状态机、边界条件、错误处理（含本仓定制维度 BM-1~5）
 - `dfx_reviewer` — HiLog、HiSysEvent、HiTrace 覆盖
-- `code_review_checklist` — 兼容性、日志规范、编码风格、命名、注释
-- `test_coverage_reviewer` — 测试用例覆盖度
+- `code_review_checklist` — 兼容性、日志规范、编码风格、命名、注释（含历史问题核对）
+- `test_coverage_reviewer` — 测试用例覆盖度（含本仓测试布局与历史问题回归）
+- **兼容性影响评估** — 必产出，由 checklist 主导、logic/test 提供输入
 
 **输出**：
 - `codecheck_report_{change_id}.md` — 统一检视报告
@@ -117,7 +124,7 @@ skills/
 - 按严重程度排序的问题清单
 - 修复建议和优先级
 
-**详细文档**: `.refdocs/skills/comprehensive_review/`
+**详细文档**: [`comprehensive_review/SKILL.md`](comprehensive_review/SKILL.md)
 
 ---
 
@@ -414,14 +421,13 @@ skills/
 
 ### 检查脚本
 
-位于 `.refdocs/scripts/` 目录：
+DFX/客户端打点检查脚本内置于各 SKILL.md（如 [`dfx_reviewer/SKILL.md`](dfx_reviewer/SKILL.md) 的自动化检查脚本章节），可直接复制执行：
 
 ```bash
-# IDL 接口顺序检查
-./.refdocs/scripts/check_idl_interface_order.sh
+# 客户端 HiSysEvent 违规打点检查（见 dfx_reviewer/SKILL.md）
+grep -rn "EventReport::\|HiSysEventWrite" interfaces/inner_api/ interfaces/kits/ --include="*.cpp" --include="*.h"
 
-# 其他检查脚本（如有）
-ls .refdocs/scripts/
+# IPC code 枚举末尾追加检查（人工核对 bundle_framework_core_ipc_interface_code.h diff）
 ```
 
 ### CI/CD 集成建议
@@ -504,6 +510,20 @@ jobs:
 ---
 
 ## 📝 更新日志
+
+### v8.0 (2026-09-14) - bundle_framework 深度定制 🔥
+
+**新增**:
+- ✅ 新增 [`bundle_framework_common_issues.md`](bundle_framework_common_issues.md)：从本仓 git 历史（16767 提交，fix 类约 37%）归纳的 12 类历史典型问题库（HIST-1~12），每类含根因、真实代表性提交、检视检查点
+- ✅ 每个维度的检视 skill 新增**历史问题核对强制步骤**：每次检视必须核对本 PR 是否复发历史已有问题，复发项按 P1 起评级并标 `HIST-{n}`
+- ✅ 报告模板 v1.1 新增 **§6 兼容性影响评估**（必填）：影响面分析（四条历史链路）、兼容性检查结论（IPC code/Parcel/错误码/持久化/五条主流程/性能）、历史问题核对表、`compat_risk` 评级
+- ✅ 新增 [`conventions.md`](conventions.md)：等级归一化/必检维度/评分决策矩阵权威规则
+
+**改进**:
+- ✅ 全部 8 个维度 skill 的示例替换为 bundle_framework 真实代码（InstallState 状态机、bundleInfoMutex_ 锁模型、BundleMgrInterfaceCode IPC code、BaseBundleInstaller 继承体系等），移除所有与账号（os_account）相关的示例
+- ✅ 各 skill 增加本仓定制要求：security_review 信任边界与 IPC 三段式、logic_analyzer BM-1~5 定制维度、test_coverage_reviewer 本仓测试布局与 GN/mock 惯例、architecture_analyzer 真实进程拓扑与分层铁律
+- ✅ 修正 IPC 接口描述：本仓 IPC code 管理在 `bundle_framework_core_ipc_interface_code.h` / `bundle_framework_services_ipc_interface_code.h`（手写枚举），并非 IBundleMgr.idl
+- ✅ 修复 `.refdocs/` 失效引用与跨仓残留（abilitymgr/mission_list_manager）
 
 ### v7.0 (2026-04-01) - 自动触发功能 🎯
 

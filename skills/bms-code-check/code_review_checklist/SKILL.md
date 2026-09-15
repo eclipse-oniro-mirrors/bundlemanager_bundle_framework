@@ -1,7 +1,7 @@
 ---
 name: code_review_checklist
-description: OpenHarmony 代码规范检视专家，检查兼容性、日志规范、安全编码、编码风格、命名规范、注释规范、类设计规范和常见陷阱
-version: 2.0.0
+description: bundle_framework 代码规范检视专家，检查兼容性、日志规范、安全编码、编码风格、命名规范、注释规范、类设计规范、常见陷阱与历史典型问题复发
+version: 2.1.0
 author: Code Review Team
 tags:
   - code review
@@ -75,6 +75,16 @@ triggers:
 
 #### 性能检查
 - [ ] 接口性能是否出现明显劣化
+
+#### bundle_framework 兼容性专项检查
+- [ ] IPC code 枚举（`bundle_framework_core_ipc_interface_code.h` / `bundle_framework_services_ipc_interface_code.h`）是否仅末尾追加、无删改/中间插入
+- [ ] Parcel 序列化（`interfaces/inner_api/appexecfwk_base/src/` 各结构体 Marshalling/Unmarshalling）新增字段是否末尾追加、读写一致、旧数据可读
+- [ ] 错误码（`appexecfwk_errors.h`）是否只新增不修改既有码，JS/NAPI 映射是否同步
+- [ ] 查询接口双版本（`_V9`/`_WITH_INT_FLAGS`）行为是否保持一致
+- [ ] 持久化数据（RDB 记录/JSON 字段）变更是否向后兼容旧版本数据（旧 DB 能否被新代码加载）
+- [ ] 新特性 flag/policy 是否覆盖 install/uninstall/OTA/预置/query 五条主流程（防"新特性遗漏旧分支"，HIST-10）
+
+> **输出要求**：本节检查结论是统一报告「§6 兼容性影响评估」的主导输入——逐项判定 + file:line 证据 + `compat_risk` 评级。评估"修改对当前功能/历史功能的影响"时，沿报告 §6.1 的四条历史链路（安装/卸载/更新主流程、启动恢复、查询、持久化）追踪波及面。
 
 ### B. 日志规范自检
 
@@ -234,14 +244,14 @@ ohos_shared_library("bundlemgr") {
   - 错误处理逻辑是否完整（不能只记录日志但不处理）
   - 是否忽略了某些错误码的返回值
 
-#### Pitfall 5: 避免改变 SA 启动和首个用户创建激活流程
+#### Pitfall 5: 避免改变 SA 启动和首个用户创建流程
 - [ ] **避免改变 SA 启动**：避免改变系统能力的启动过程，可能影响设备启动流程
-- [ ] **避免改变首个用户创建激活**：避免改变首个用户创建和激活过程，可能影响设备启动流程
+- [ ] **避免改变首个用户创建流程**：避免改变首个用户（userId=100）创建时 BMS 的预装/扫描行为，可能影响设备启动流程
 - [ ] **检查点**：
-  - 是否修改了 SA 的启动依赖关系
-  - 是否修改了首个用户（userId=100）的创建逻辑
-  - 是否修改了默认账号的激活逻辑
-  - 是否修改了账号恢复逻辑（设备重启后）
+  - 是否修改了 `BundleMgrService::OnStart()` 的启动依赖关系或初始化顺序（`bundle_mgr_service.cpp:88-100`）
+  - 是否修改了首个用户（userId=100）创建触发的安装链路（`BundleUserMgr` → `BundleMultiUserInstaller`）
+  - 是否修改了开机扫描（BootScan）/`loadExistData_` 的判定逻辑
+  - 是否修改了异常恢复逻辑（设备重启后 `pre_install_exception_mgr` / `bundle_exception_handler`）
   - 这些修改是否会影响设备启动时间和启动成功率
 
 #### Pitfall 6: 锁内处理必须快速
@@ -364,20 +374,23 @@ bundle_framework 支持克隆应用（同一 bundleName 多个 appIndex），通
   - `GetInnerBundleUserInfo(userId)` 与 `GetInnerBundleUserInfoWithAppIndex(userId, appIndex)` 是否用对
 - [ ] **真实代码位置**：`services/bundlemgr/src/clone/bundle_clone_installer.cpp`、`bundle_data_mgr.cpp`（appIndex 相关接口）
 
-#### Pitfall B6: IDL 接口与 Parcel 序列化兼容性
+#### Pitfall B6: IPC 接口与 Parcel 序列化兼容性
 
-bundle_framework 的 IDL 接口位于 `interfaces/inner_api/appexecfwk_core/src/bundlemgr/`，如 `IBundleMgr.idl`、`IBundleInstaller.idl`。修改时必须保持二进制兼容。
+bundle_framework 的 IPC 接口以**手写接口头文件 + IPC code 枚举**为主（仅 IBundleMgrExt/IVerifyManager 走 IDL）。修改时必须保持二进制兼容。
 
-- [ ] **IDL 新增方法只追加在末尾**：避免打乱现有 IPC code 顺序（见通用 Pitfall 7）
+- [ ] **IPC code 枚举只追加在末尾**：SA 401 侧 `interfaces/inner_api/appexecfwk_core/include/bundle_framework_core_ipc_interface_code.h`（`BundleMgrInterfaceCode` 等）、SA 511 侧 `services/bundlemgr/include/bundle_framework_services_ipc_interface_code.h`（`InstalldInterfaceCode`）。中间插入/修改/删除枚举项 = 移动既有接口 code = 二进制破坏（历史案例 `d1faedd1d` 漏赋值导致 code 冲突）
+- [ ] **IDL 文件（`IBundleMgrExt.idl`/`IVerifyManager.idl`）新增方法只追加在末尾**：见通用 Pitfall 7
 - [ ] **Parcel 序列化顺序变更导致 IPC 不兼容**：新增字段必须追加在 `Parcel` 读写的末尾
 - [ ] **新增字段必须有默认值**：旧版本客户端读取新版本数据时，新字段应为空/默认
-- [ ] **结构体变更影响所有读写点**：`BundleInfo`、`ApplicationInfo`、`AbilityInfo`、`InnerBundleInfo` 等结构体的字段增删需全量检查 Marshalling/Unmarshalling
+- [ ] **结构体变更影响所有读写点**：`BundleInfo`、`ApplicationInfo`、`AbilityInfo`、`InnerBundleInfo` 等结构体的字段增删需全量检查 Marshalling/Unmarshalling（位于 `interfaces/inner_api/appexecfwk_base/src/`）
+- [ ] **错误码登记**：新接口每个失败分支的错误码必须在 `interfaces/inner_api/appexecfwk_base/include/appexecfwk_errors.h` 新增（只追加不修改，对应 HIST-4），并同步 JS/NAPI 映射
 - [ ] **检查点**：
-  - IDL 文件修改是否仅在末尾追加
+  - IPC code 枚举修改是否仅在末尾追加、无删改/中间插入
+  - proxy/stub 两端是否同步登记且无 code 冲突
   - Parcel 序列化新增字段是否在末尾、且读顺序与写顺序一致
   - 新增可选字段是否处理了旧版本数据的兼容
   - 是否有 `BundleMgrProxy` 与 `BundleMgrHostImpl` 中的同步修改
-- [ ] **真实代码位置**：`interfaces/inner_api/appexecfwk_core/src/bundlemgr/`、`bundle_mgr_host_impl.cpp`、`bundle_mgr_proxy.cpp`
+- [ ] **真实代码位置**：`bundle_framework_core_ipc_interface_code.h`、`bundle_framework_services_ipc_interface_code.h`、`interfaces/inner_api/appexecfwk_core/src/bundlemgr/bundle_mgr_host.cpp`（OnRemoteRequest 分发）、`bundle_mgr_proxy.cpp`、`bundle_mgr_host_impl.cpp`
 
 #### Pitfall B7: ScopeGuard 使用模式错误
 
@@ -895,10 +908,12 @@ class Base { public: ~Base() {} };  // 通过Base*删除Derived会泄漏
 - [ ] Pitfall 7: 是否在 IDL 文件中间插入接口
 
 **检查代码位置**：
-- `interfaces/inner_api/appexecfwk_core/src/bundlemgr/IBundleMgr.idl`
-- `interfaces/inner_api/appexecfwk_core/src/bundlemgr/IBundleInstaller.idl`
+- `interfaces/inner_api/appexecfwk_core/include/bundle_framework_core_ipc_interface_code.h`（SA 401 IPC code 枚举）
+- `services/bundlemgr/include/bundle_framework_services_ipc_interface_code.h`（SA 511 InstalldInterfaceCode）
 - `interfaces/inner_api/appexecfwk_core/src/bundlemgr/bundle_mgr_proxy.cpp`
-- `interfaces/inner_api/appexecfwk_core/src/bundlemgr/bundle_mgr_host_impl.cpp`
+- `interfaces/inner_api/appexecfwk_core/src/bundlemgr/bundle_mgr_host.cpp`
+- `services/bundlemgr/src/bundle_mgr_host_impl.cpp`
+- `interfaces/inner_api/appexecfwk_base/src/`（各结构体 Marshalling/Unmarshalling）
 
 #### 策略 7: 客户端 Kit 检查
 **触发条件**：变更文件路径包含 `interfaces/kits/`
@@ -1019,14 +1034,14 @@ void InnerSharedBundleInstaller::RollBack()
 
 #### IDL/Inner API 模块
 ```cpp
-// 文件：IBundleMgr.idl
-// 检查点 1：新增方法追加在末尾（B6）
-interface OHOS.AppExecFwk.IBundleMgr {
-    GetBundleInfo(...);        // code = 1
-    Install(...);              // code = 2
-    // ...existing methods...
-    NewMethod(...);            // ✅ 新方法追加在末尾
-}
+// 文件：interfaces/inner_api/appexecfwk_core/include/bundle_framework_core_ipc_interface_code.h
+// 检查点 1：IPC code 新增只追加在枚举末尾（B6）
+enum class BundleMgrInterfaceCode : uint32_t {
+    GET_BUNDLE_INFO = 2,
+    // ... 既有 250+ 个 code 保持原值不动 ...
+    GET_ALL_BUNDLE_INFO_INSTANCES = 256,   // ✅ 真实案例：新接口追加在末尾
+    // MY_NEW_INTERFACE = 250,             // ❌ 与既有 code 冲突/中间插入
+};
 
 // 检查点 2：Parcel 序列化（B6）
 bool BundleInfo::Marshalling(Parcel &parcel) const
@@ -1107,46 +1122,59 @@ BundleInfo *BundleInfo::Unmarshalling(Parcel &parcel)
 - Parcel 序列化新增字段是否在末尾（B6）
 - 新增字段是否有默认值（B6）
 
-## 8. 常见问题示例
+## 9. 常见问题示例（bundle_framework 真实场景）
 
 ### 兼容性问题示例
-```
-// 错误：改变参数取值范围
-// 旧：int timeout (0-INT_MAX)
-// 新：int timeout (0-30000)
+```cpp
+// 错误：修改既有 IPC code 的取值（bundle_framework_core_ipc_interface_code.h）
+enum class BundleMgrInterfaceCode : uint32_t {
+    GET_BUNDLE_INFO = 2,
+    GET_BUNDLE_PACK_INFO = 4,   // ❌ 旧版本是 3，中间插入导致既有调用方打到错误接口
+    // ...
+};
 
-// 错误：新增权限校验
-if (callerToken != SYSTEM_TOKEN) {
-    return ERR_PERMISSION_DENIED;
+// 错误：修改既有错误码语义（appexecfwk_errors.h）
+// 旧：ERR_APPEXECFWK_INSTALL_TIMEOUT = 8519700 表示超时
+// 新：8519700 被挪作表示签名错误  ❌ 上层按错误码分支的逻辑全部失效
+
+// 错误：查询接口新增权限校验（收紧既有行为）
+ErrCode GetBundleInfoV9(...) {
+    if (!BundlePermissionMgr::VerifyCallingPermission(...)) {   // ❌ 既有系统调用方会被误伤
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
 }
 ```
 
 ### 日志规范示例
-```
-// 错误：高频代码打印日志
-for (int i = 0; i < 100000; i++) {
-    HILOG_INFO("Processing item %{public}d", i);  // 违规
+```cpp
+// 错误：高频代码打印日志（查询热路径，GetBundleInfo 每秒可达千次）
+for (const auto &bundleName : bundleNames) {
+    APP_LOGI("query bundle %{private}s", bundleName.c_str());  // 违规：循环内打日志
 }
 
-// 错误：格式不规范
-HILOG_INFO("account created");  // 应该是 "CreateAccount successful"
+// 错误：格式不规范（who do what 主谓宾）
+APP_LOGI("bundle installed");  // ❌ 应该是 "InstallBundle successful" 或带上下文
+
+// 正确：状态变化 + 参数值格式（本仓惯例）
+APP_LOGI("install_state:%{public}d->%{public}d, bundleName=%{private}s, userId=%{public}d",
+    oldState, newState, bundleName.c_str(), userId);
 ```
 
 ### 安全编码示例
-```
-// 错误：未校验外部数据
-void ProcessData(char* data, int len) {
-    char buffer[100];
-    memcpy(buffer, data, len);  // 危险，len 未校验
+```cpp
+// 错误（对应 HIST-6）：ReadFromParcel 读容器 size 未过 CONTAINER_SECURITY_VERIFY
+int32_t size = 0;
+parcel.ReadInt32(size);                 // ❌ size 直接信任，恶意 parcel 可触发超大分配
+for (int32_t i = 0; i < size; i++) { ... }
+
+// 正确：
+if (!parcel.ReadInt32(size) || size < 0 || size > MAX_VALID_SIZE) {  // CONTAINER_SECURITY_VERIFY
+    return false;
 }
 
-// 错误：使用危险函数
-char buf[100];
-strcpy(buf, input);  // 应使用 strncpy_s
-
-// 错误：有符号整数位运算
-int32_t flags = -1;
-if (flags & 0x01) { ... }  // 危险
+// 错误（对应 HIST-7）：外部路径未拒绝 ../
+std::string codePath = baseDir + "/" + moduleName;   // ❌ moduleName 来自 HAP profile，可含 ../
+// 正确：过 IsFileNameValid/PathIsValid 后再拼接，installd 侧再做前缀白名单校验
 ```
 
 ### 常见陷阱示例
@@ -1154,185 +1182,168 @@ if (flags & 0x01) { ... }  // 危险
 #### Pitfall 1: SA 初始化阻塞
 ```cpp
 // ❌ 错误：在 SA 启动时执行阻塞操作
-void AccountMgrService::OnStart()
+void BundleMgrService::OnStart()
 {
-    // 错误：同步读取文件
-    std::string data = ReadFile("/data/service/el1/public/account/account_list.json");
+    // 错误：启动路径同步等待 installd/其他 SA 就绪
+    WaitForSaReady(INSTALLD_SYS_ABILITY_ID);
 
-    // 错误：同步网络请求
-    auto response = httpClient->Post(url, data);
+    // 错误：同步全量扫描所有已安装应用
+    BootScanSync();   // ❌ 拖慢开机，扫描应异步
 
-    // 错误：复杂计算
-    std::vector<AccountInfo> allAccounts = ProcessAllAccounts();
+    // 错误：复杂计算/大文件 IO
+    auto allInfos = LoadAllBundleInfosFromRdb();
 }
 
-// ✅ 正确：异步加载或延迟加载
-void AccountMgrService::OnStart()
+// ✅ 正确：快速初始化 + 异步加载（本仓真实做法：OnStart 只做 Init + AddSystemAbilityListener，
+// 重活交给 bundle_mgr_service_event_handler 的线程池）
+void BundleMgrService::OnStart()
 {
-    // 只做快速初始化
-    RegisterServiceListener();
-
-    // 异步加载数据
-    taskExecutor_->Task([this]() {
-        LoadAccountDataAsync();
-    });
+    ...Init...
+    AddSystemAbilityListener(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    taskExecutor_->Task([this]() { BootScanAsync(); });
 }
 ```
 
-#### Pitfall 2: 数据一致性问题
+#### Pitfall 2: 数据一致性问题（bundleInfos_ ↔ RDB ↔ 文件系统）
 ```cpp
-// ❌ 错误：文件和数据库操作不在同一事务中
-ErrCode CreateAccount(const AccountInfo& info)
+// ❌ 错误：内存先改、DB 后写且失败不回滚（对应 HIST-3/HIST-8）
+ErrCode EnableBundle(const std::string &bundleName)
 {
-    // 先写文件
-    WriteAccountToFile(info);
-
-    // 如果数据库写入失败，文件已经写入，数据不一致
-    if (database_->Insert(info) != ERR_OK) {
-        return ERR_DB_ERROR;
+    bundleInfos_[bundleName].SetEnabled(false);        // 先改内存
+    if (!dataStorage_->SaveStorageBundleInfo(info)) {  // DB 失败
+        return ERR_APPEXECFWK_UPDATE_BUNDLE_ERROR;     // ❌ 内存未回滚，重启前查询结果错误
     }
-
     return ERR_OK;
 }
 
-// ✅ 正确：使用事务保证一致性
-ErrCode CreateAccount(const AccountInfo& info)
+// ✅ 正确：拷贝 → 持久化 → 替换（历史案例 4142de240）
+ErrCode EnableBundle(const std::string &bundleName)
 {
-    // 先在事务中写数据库
-    auto transaction = database_->BeginTransaction();
-
-    if (database_->Insert(info) != ERR_OK) {
-        transaction->Rollback();
-        return ERR_DB_ERROR;
+    InnerBundleInfo copy;
+    // 1. 拷贝出副本并修改
+    // 2. 先持久化
+    if (!dataStorage_->SaveStorageBundleInfo(copy)) {
+        return ERR_APPEXECFWK_UPDATE_BUNDLE_ERROR;     // 内存未被污染
     }
-
-    // 数据库成功后再写文件
-    if (WriteAccountToFile(info) != ERR_OK) {
-        transaction->Rollback();
-        // 清理文件
-        RemoveAccountFile(info.id);
-        return ERR_FILE_ERROR;
-    }
-
-    transaction->Commit();
+    // 3. 再替换内存（持锁）
     return ERR_OK;
 }
 ```
 
 #### Pitfall 3: 敏感数据泄露
 ```cpp
-// ❌ 错误：敏感数据明文存储和打印
-void ProcessPassword(const std::string& password)
-{
-    // 错误：打印敏感信息
-    HILOG_INFO("Password: %{public}s", password.c_str());
+// ❌ 错误：签名指纹/路径以 public 打印（本仓日志整改系列 HIST-11 的典型项）
+APP_LOGI("fingerprint=%{public}s, hapPath=%{public}s", fingerprint.c_str(), hapPath.c_str());
 
-    // 错误：明文存储
-    SaveToFile("/data/password.txt", password);
-}
-
-// ✅ 正确：加密存储和使用后清除
-void ProcessPassword(const std::string& password)
-{
-    // 使用加密存储
-    asset_->SetSecret("account_password", password);
-
-    // 使用后清除
-    char* buffer = new char[password.size()];
-    memcpy(buffer, password.c_str(), password.size());
-
-    // 使用 buffer...
-
-    // 清除敏感数据
-    memset_s(buffer, password.size(), 0, password.size());
-    delete[] buffer;
-}
+// ✅ 正确：敏感字段 private，业务主键 public
+APP_LOGI("InstallBundle successful, bundleName=%{private}s, userId=%{public}d, versionCode=%{public}d",
+    bundleName_.c_str(), userId_, versionCode_);
+APP_LOGI("fingerprint=%{private}s", fingerprint.c_str());
+// EventInfo 同理：fingerprint/appId 等字段脱敏，见 dfx_reviewer
 ```
 
 #### Pitfall 4: 错误处理不当
 ```cpp
-// ❌ 错误：不检查返回值
-void DeleteAccount(int id)
+// ❌ 错误：不检查返回值 + 中间分支覆盖返回值（对应 HIST-4）
+ErrCode UninstallBundle(const std::string &bundleName)
 {
-    // 不检查返回值
-    database_->Delete(id);
-
-    // 错误：HILOG 后使用 errno
-    SomeFunction();
-    HILOG_INFO("Operation failed");
-    int err = errno;  // 错误：errno 可能被 HILOG 修改
+    dataMgr_->DeleteBundleInfo(bundleName);   // ❌ 返回值被忽略
+    return ERR_OK;
 }
 
-// ✅ 正确：正确处理错误码
-ErrCode DeleteAccount(int id)
-{
-    // 保存 errno（如果需要）
-    int savedErrno = errno;
+// ❌ 错误：proxy 层返回值被日志分支覆盖
+ErrCode ret = SendRequest(code, data, reply, option);
+if (ret != ERR_OK) {
+    APP_LOGE("send request failed");
+    ret = ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;   // ❌ 丢失底层真实错误码（历史整改点）
+}
 
-    ErrCode ret = database_->Delete(id);
-    if (ret != ERR_OK) {
-        HILOG_ERROR("DeleteAccount failed, id=%{public}d, err=%{public}d", id, ret);
-        return ret;
-    }
-
-    errno = savedErrno;
-    return ERR_OK;
+// ✅ 正确：透传错误码 + 完整处理
+ErrCode ret = dataMgr_->DeleteBundleInfo(bundleName);
+if (ret != ERR_OK) {
+    APP_LOGE("DeleteBundleInfo failed, bundleName=%{private}s, errCode=%{public}d",
+        bundleName.c_str(), ret);
+    return ret;   // 透传原始错误码
 }
 ```
 
 #### Pitfall 6: 锁内长时间操作
 ```cpp
-// ❌ 错误：锁内执行文件 I/O
-void UpdateAccount(const AccountInfo& info)
+// ❌ 错误：持有 bundleInfoMutex_ 时执行文件 I/O / IPC（本仓惯例：锁外做文件/DB 操作）
+ErrCode UpdateInnerBundleInfo(const InnerBundleInfo &info)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-
-    // 错误：锁内执行文件 I/O
-    WriteAccountToFile(info);
-
-    // 错误：锁内执行 IPC 调用
-    auto proxy = GetProxy();
-    proxy->NotifyChange(info);
+    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    bundleInfos_[key] = info;
+    dataStorage_->SaveStorageBundleInfo(info);        // ❌ 锁内 RDB 写入，其他查询全部被阻塞
+    InstalldClient::GetInstance()->RemoveDir(...);    // ❌ 锁内同步 IPC
+    return ERR_OK;
 }
 
-// ✅ 正确：锁内只做必要操作
-void UpdateAccount(const AccountInfo& info)
+// ✅ 正确：锁外持久化/IPC，锁内只做内存快速操作
+ErrCode UpdateInnerBundleInfo(const InnerBundleInfo &info)
 {
-    // 先在锁外准备数据
-    std::string jsonData = SerializeAccount(info);
-
+    // 锁外先持久化
+    if (!dataStorage_->SaveStorageBundleInfo(info)) {
+        return ERR_APPEXECFWK_UPDATE_BUNDLE_ERROR;
+    }
     {
-        std::lock_guard<std::mutex> lock(mutex_);
-        // 锁内只做快速操作
-        accounts_[info.id] = info;
-        needNotify_ = true;
+        std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        bundleInfos_[key] = info;                     // 锁内只做内存替换
     }
-
-    // 锁外执行耗时操作
-    WriteAccountToFile(info);
-
-    if (needNotify_) {
-        auto proxy = GetProxy();
-        proxy->NotifyChange(info);
-    }
+    // 锁外做 IPC
+    return InstalldClient::GetInstance()->RemoveDir(...);
 }
 ```
 
-#### Pitfall 7: IDL 文件中间插入接口
-```idl
-// ❌ 错误：在中间插入新接口
-interface OHOS.AppExecFwk.IBundleMgr {
-    void GetBundleInfo([in] String bundleName, [in] int flags, [out] BundleInfo info);
-    void SetDefaultApp([in] String type, [in] ElementName element);  // 新插入的接口
-    void Install([in] String bundleFilePath, ...);  // IPC 代码从 2 变成 3
-    void Uninstall([in] String bundleName, ...);  // IPC 代码从 3 变成 4
-}
+#### Pitfall 7: IPC code 中间插入接口
+```cpp
+// 文件：bundle_framework_core_ipc_interface_code.h（本仓 IPC code 真实管理方式）
+// ❌ 错误：在中间插入新 code，既有 code 全部后移
+enum class BundleMgrInterfaceCode : uint32_t {
+    GET_BUNDLE_INFO = 2,
+    MY_NEW_FEATURE = 3,          // ❌ 新插入
+    GET_BUNDLE_PACK_INFO = 3,    // 原有的 code 被顶掉 → 旧版本客户端调用错乱
+};
 
-// ✅ 正确：在末尾添加新接口
-interface OHOS.AppExecFwk.IBundleMgr {
-    void GetBundleInfo([in] String bundleName, [in] int flags, [out] BundleInfo info);
-    void Install([in] String bundleFilePath, ...);
-    void Uninstall([in] String bundleName, ...);
-    void SetDefaultApp([in] String type, [in] ElementName element);  // 新接口在末尾
-}
+// ✅ 正确：追加在末尾（真实案例：GET_ALL_BUNDLE_INFO_INSTANCES = 256）
+enum class BundleMgrInterfaceCode : uint32_t {
+    GET_BUNDLE_INFO = 2,
+    GET_BUNDLE_PACK_INFO = 3,
+    // ... 既有 250+ 个 code 原样保留 ...
+    GET_ALL_BUNDLE_INFO_INSTANCES = 256,   // ✅ 新接口追加在末尾
+};
 ```
+
+## 10. 历史典型问题核对（强制步骤，对照 HIST-1~12）
+
+> 每次检视**必须**将本 PR 与 [`../bundle_framework_common_issues.md`](../bundle_framework_common_issues.md) 的 12 类历史典型问题逐一对照，判断"本 PR 是否会复发历史已有问题"。核对结论写入统一报告模板 **§6.3 历史问题核对** 表格。
+
+### 核对规则
+1. 变更涉及热点文件（`base_bundle_installer.cpp`、`bundle_data_mgr.cpp`、`bundle_mgr_host_impl.cpp`，见 common issues §0）→ HIST-1~12 **全部必核**；
+2. 非热点文件变更 → 按改动内容核对相关类别，未核对项在表中说明理由；
+3. 判定"复发/疑似复发" → 按 **P1 起评级**，finding 编号追加 `HIST-{n}` 标签；
+4. 每类问题的检视检查点以 common issues 文件中该类别的"检视检查点"为准。
+
+### 快速对照表（HIST → 本 skill 检查项映射）
+
+| HIST 类别 | 对应本 skill 检查项 |
+|---|---|
+| 1. userId 语义混用 | §E 无直接项 → 按 common issues §1 检查点核对（特殊值分支/安全解析） |
+| 2. 并发与锁 | Pitfall 6 + B1 |
+| 3. RDB 异常兜底 | Pitfall 2 + B2 |
+| 4. 错误码遗漏/映射 | Pitfall 4 + B6（错误码登记） |
+| 5. JSON 解析健壮性 | §C 类型安全（json 取值前先判断类型）+ common issues §5 |
+| 6. IPC/Parcel 校验缺失 | §C 数组与序列化安全 + B6 |
+| 7. 路径穿越 | §C 路径安全 |
+| 8. 数据一致性与 ID 复用 | Pitfall 2 + B2 + B3 |
+| 9. 预置 × OTA | B4 |
+| 10. HSP/双模式适配 | B2 + B5 + common issues §10 |
+| 11. 日志/DFX 不达标 | §B 日志规范（+ dfx_reviewer） |
+| 12. 告警与 fuzz 质量 | §C 安全编码 + test_coverage_reviewer |
+
+## 11. 兼容性检视输出（供统一报告 §6 汇总）
+
+本 skill 的 §A 兼容性自检是统一报告「§6 兼容性影响评估」的**主导输入**。检视输出必须包含：
+1. §6.2 兼容性检查结论表的逐项判定（IPC code / Parcel / 错误码 / 对外行为 / 持久化数据 / 五条主流程 / 性能），每项附 file:line 证据；
+2. §6.3 历史问题核对表（见第 10 节）；
+3. `compat_risk` 建议评级（none/low/medium/high）与理由。

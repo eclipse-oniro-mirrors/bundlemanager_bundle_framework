@@ -210,57 +210,40 @@ bundle_framework/
 
 #### API 设计原则
 
-**好的 API 设计**:
+**好的 API 设计（bundle_framework 真实示例）**:
 
 ```cpp
-// ✅ 好的接口设计
-// 1. 清晰的命名
-class IAccountManager {
-public:
-    // 2. 单一职责
-    ErrCode CreateAccount(const std::string& name, const AccountInfo& info);
-    ErrCode RemoveAccount(int32_t id);
-
-    // 3. 参数合理
-    ErrCode QueryAccount(int32_t id, AccountInfo& info);
-
-    // 4. 返回值明确
-    ErrCode UpdateAccount(const AccountInfo& info);
-
-    // 5. 接口稳定
-    static constexpr int32_t MAX_ACCOUNT_NAME_LEN = 256;
-};
+// ✅ 本仓真实接口：interfaces/inner_api/appexecfwk_core/include/bundlemgr/bundle_mgr_interface.h
+// 1. 命名清晰：GetBundleInfoV9 明确返回 ErrCode 版本
+// 2. 返回值明确：新接口用 ErrCode（旧 bool 接口保留用于兼容，新版本走 _V9）
+virtual ErrCode GetBundleInfoV9(const std::string &bundleName, int32_t flags,
+    BundleInfo &bundleInfo, int32_t userId = Constants::UNSPECIFIED_USERID)
+{
+    return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+}
+// 3. 参数合理：bundleName + flags + 出参 + userId（带默认值）
+// 4. 接口稳定：IPC code 只追加（bundle_framework_core_ipc_interface_code.h，SAID 401）
 ```
 
 **❌ 常见接口问题**:
 
 ```cpp
-// ❌ 问题1: 职责不清
-class IAccountManager {
-    ErrCode CreateAccount(...);
-    ErrCode SendEmail(...);        // 不相关功能
-    ErrCode ProcessPayment(...);   // 不相关功能
-};
+// ❌ 问题1: 职责不清 —— 查询接口里夹带状态修改或策略逻辑
+ErrCode GetBundleInfo(...);          // 查询
+ErrCode AndSetSomePolicyInside(...); // ❌ 不相关功能混入查询接口
 
-// ❌ 问题2: 参数过多
-ErrCode CreateAccount(
-    const std::string& name,
-    const std::string& email,
-    const std::string& phone,
-    const std::string& address,
-    const std::string& avatar,
-    const std::string& signature,
-    // ... 10+ parameters
-);
+// ❌ 问题2: 参数过多（新接口仍在扩散参数）
+ErrCode QueryAbilityInfo(const std::string& name, int32_t flags, int32_t userId,
+    const std::string& type, const std::string& uri, bool needIcons,
+    const std::string& elementType, const std::string& extensionTypeName, ...);  // ❌ 10+ 参数
 
-// ❌ 问题3: 返回值不明确
-bool CreateAccount(...);  // 失败原因不清楚
+// ❌ 问题3: 返回值不明确（旧版 bool 接口的教训，新接口必须用 ErrCode）
+bool GetBundleInfo(...);  // ❌ 失败原因不清楚
 
-// ❌ 问题4: 接口不稳定（频繁变更）
-class IAccountManager {
-    ErrCode CreateAccountV1(...);
-    ErrCode CreateAccountV2(...);
-    ErrCode CreateAccountV3(...);
+// ❌ 问题4: 接口不稳定 —— IPC code 中间插入/修改而非追加
+enum class BundleMgrInterfaceCode : uint32_t {
+    GET_BUNDLE_INFO = 2,
+    MY_NEW_CODE = 2,      // ❌ 与既有 code 冲突（历史案例 d1faedd1d 漏赋值）
 };
 ```
 
@@ -268,11 +251,11 @@ class IAccountManager {
 
 - [ ] **命名清晰**: 接口名称准确描述功能
 - [ ] **单一职责**: 每个接口只做一件事
-- [ ] **参数合理**: 参数数量适中（≤5个）
-- [ ] **返回值明确**: 使用 ErrCode 而非 bool
-- [ ] **版本管理**: 接口变更考虑兼容性
-- [ ] **文档完整**: 有清晰的接口文档
-- [ ] **错误处理**: 定义所有可能的错误码
+- [ ] **参数合理**: 参数数量适中（超 5 个考虑用 InstallParam 类参数对象聚合）
+- [ ] **返回值明确**: 新接口一律使用 ErrCode 而非 bool（本仓存在历史 bool 接口，新接口不得沿用该风格）
+- [ ] **版本管理**: 行为变更通过 `_V9` / `_WITH_INT_FLAGS` 追加新接口与新增 IPC code，禁止原地修改既有接口语义（参考 `bundle_framework_core_ipc_interface_code.h` 中 GET_BUNDLE_INFO=2 与 GET_BUNDLE_INFO_WITH_INT_FLAGS=49、GET_BUNDLE_INFO_FOR_SELF=98 的版本化方式）
+- [ ] **文档完整**: 头文件接口有 @brief/@param/@return 注释（参考 bundle_mgr_interface.h）
+- [ ] **错误处理**: 每个失败分支在 `appexecfwk_errors.h` 有对应错误码
 
 ---
 
@@ -338,36 +321,29 @@ class IAccountManager {
 #### 性能优化建议
 
 ```cpp
-// ❌ 性能问题: N+1 查询
-for (auto& account : accounts) {
-    auto info = GetAccountInfo(account.id);  // N次查询
+// ❌ 性能问题（bundle_framework 真实场景）: 循环内逐个查询/IPC
+for (const auto &bundleName : bundleNames) {
+    BundleInfo info;
+    dataMgr_->GetBundleInfo(bundleName, flag, info, userId);  // N 次锁竞争/数据拷贝
 }
 
-// ✅ 优化: 批量查询
-auto infos = GetAccountInfos(accountIds);  // 1次查询
+// ✅ 优化: 批量接口（本仓已有 BATCH_GET_BUNDLE_INFO、BATCH_QUERY_ABILITY_INFOS 等 IPC code）
+std::vector<BundleInfo> infos;
+dataMgr_->GetBundleInfos(bundleNames, flag, infos, userId);
 
-// ❌ 性能问题: 不必要的拷贝
-std::string ProcessData(std::string data) {
-    return data + "processed";
+// ❌ 性能问题: 查询热路径（GetBundleInfo 每秒可达千次）内做无谓深拷贝/序列化
+BundleInfo ProcessQuery(const BundleInfo &info) {
+    BundleInfo copy = info;         // ❌ BundleInfo 深拷贝成本高
+    copy.isPreInstallApp = true;
+    return copy;
 }
 
-// ✅ 优化: 使用引用
-std::string ProcessData(const std::string& data) {
-    return data + "processed";
-}
+// ✅ 优化: 原地修改或按需字段拷贝；注意 ApiCacheManager 缓存路径（bundle_mgr_proxy.cpp:547 PreSendRequest）
 
-// ❌ 性能问题: 频繁分配
-for (int i = 0; i < 1000; i++) {
-    auto buffer = new char[1024];
-    // use buffer
-    delete[] buffer;
-}
+// ❌ 性能问题: 开机扫描（BootScan）路径做同步 IPC 等待
+// OnStart/扫描循环内同步等待 installd/其他 SA → 拖慢开机（checklist Pitfall 1）
 
-// ✅ 优化: 复用缓冲区
-std::vector<char> buffer(1024);
-for (int i = 0; i < 1000; i++) {
-    // use buffer
-}
+// ✅ 优化: 重活交给 taskExecutor 异步线程，扫描路径仅做轻量校验
 ```
 
 ---
@@ -414,6 +390,50 @@ find . -name "*.cpp" -o -name "*.h" | \
 
 ---
 
+## 🏗️ bundle_framework 定制检视要求（本仓必查）
+
+> bundle_framework 的真实分层与进程拓扑（检视时以此为准，替代通用五层模型）：
+
+```
+进程拓扑:
+┌────────────────────────────────────────────────────────┐
+│ foundation 进程: BundleMgrService (SA 401, libbms.z.so) │
+│   ├── BundleMgrHost / HostImpl   ← IPC 入口             │
+│   ├── BundleDataMgr             ← 数据层门面            │
+│   │     └── IDataStorage → BundleDataStorageRdb (RDB)   │
+│   ├── BundleInstaller 系安装器   ← 安装状态机            │
+│   └── EventReport               ← DFX（服务端打点）      │
+├────────────────────────────────────────────────────────┤
+│ installs 进程: Installd (SA 511)                        │
+│   └── InstalldHost ← BMS 经 InstalldClient 调用         │
+├────────────────────────────────────────────────────────┤
+│ 客户端: BundleMgrClient / Proxy / Kits(js/ani/cj/native)│
+└────────────────────────────────────────────────────────┘
+```
+
+**分层铁律（违反即 P1）**：
+1. `interfaces/inner_api/appexecfwk_base/`（数据结构/错误码/JSON 工具）是最底层，禁止反向 include 服务端或客户端头文件；
+2. 服务端 `services/bundlemgr/` 禁止 include 客户端 proxy/client 头文件（`bundle_mgr_proxy.h`、`bundle_mgr_client*.h`）；
+3. 数据层（`bundle_data_mgr.*`、`bundle_data_storage_*`）禁止依赖安装器（`base_bundle_installer.h` 等）；
+4. 客户端 Kit（`interfaces/kits/`）禁止打点（EventReport/HiSysEventWrite）与禁止实现业务逻辑，只做参数解析 + IPC 透传；
+5. 通用工具 `common/` 禁止依赖上层任何模块。
+
+**热点文件原则**：`base_bundle_installer.cpp`、`bundle_data_mgr.cpp`、`bundle_mgr_host_impl.cpp` 是本仓修复密度最高文件（见 [`../bundle_framework_common_issues.md`](../bundle_framework_common_issues.md) §0）——架构评审时，向这些文件新增代码的方案必须额外论证"为什么不放到功能域子目录"。
+
+**新特性架构检查**（历史高频问题 HIST-10：新特性遗漏旧分支）：
+- [ ] 新特性 flag/policy 字段是否在 install/uninstall/OTA/预置/query 五条主流程都有落点；
+- [ ] 新安装器类型是否继承 `BaseBundleInstaller` 复用状态机，而非自建；
+- [ ] 新数据结构是否归位 `appexecfwk_base`（供 proxy/host/序列化共享），而非散落在服务端私有头文件。
+
+**历史典型问题核对（强制）**：架构评审前阅读 [`../bundle_framework_common_issues.md`](../bundle_framework_common_issues.md)，重点核对：
+- HIST-10 类"新特性遗漏旧分支"（双模式 OTA 回修 `4ff44f4c2` 等）；
+- Revert 高发区：并行化/缓存类重构需重点评审并发与缓存失效设计（`183f7eb97` 回退安装并行化）；
+- 核对结论写入统一报告 §6.3。
+
+**兼容性影响（强制输出）**：架构层面的变更（分层调整、依赖方向变化、接口版本化策略变化）必须在统一报告 §6 给出影响面与 `compat_risk`——尤其评估对既有 proxy/host 二进制兼容性（IPC code、Parcel、descriptor）与历史功能链路（安装/OTA/多用户/双模式）的波及。
+
+---
+
 ## 📋 架构检查清单
 
 ### 整体架构
@@ -454,145 +474,98 @@ find . -name "*.cpp" -o -name "*.h" | \
 
 ### 建议1: 分层优化
 
-**当前问题**: 分层不清晰
+**当前问题**: 单文件职责过重（`bundle_data_mgr.cpp` 9000+ 行、`base_bundle_installer.cpp` 2000+ 行，均属本仓修复密度最高的热点文件）
 
-**优化方案**:
+**优化方向**（保持既有分层惯例，而非推翻重来）:
 
 ```
-Before:
-services/bundlemgr/
-└── src/
-    ├── bundle_mgr_service.cpp     # 混合了业务逻辑
-    ├── bundle_data_mgr.cpp        # 和数据访问
-    └── bundle_util.cpp
+现状（bundle_framework 实际结构，分层是清晰的，问题是热点文件过重）:
+services/bundlemgr/src/
+├── bundle_mgr_service.cpp        # SA 生命周期 + 启动扫描
+├── bundle_data_mgr.cpp           # 数据层门面（内存仓库 + 状态机 + 锁）
+├── bundle_data_storage_rdb.cpp   # RDB 持久化（数据访问）
+├── base_bundle_installer.cpp     # 安装状态机基类（全安装器共享）
+└── clone/ shared/ cli_sandbox/   # 按功能域拆分的子目录
 
-After:
-services/bundlemgr/
-└── src/
-    ├── domain/                   # 领域层
-    │   ├── inner_bundle_info.cpp
-    │   └── bundle_entity.cpp
-    ├── application/              # 应用层
-    │   ├── base_bundle_installer.cpp
-    │   └── bundle_command.cpp
-    ├── infrastructure/           # 基础设施层
-    │   ├── persistence/
-    │   │   └── bundle_data_storage.cpp
-    │   └── messaging/
-    │       └── bundle_event_publisher.cpp
-    └── interfaces/               # 接口层
-        └── account_dto.cpp
+检视建议:
+├── 新逻辑优先落子目录（clone/、shared/、aging/、app_control/ 等），不再向热点大文件堆代码
+├── bundle_data_mgr 新增接口时评估是否应拆分到对应功能域管理器
+└── 禁止在 bundle_util.cpp 这类通用工具里堆积业务逻辑
 ```
 
 ### 建议2: 依赖解耦
 
 **当前问题**: 模块间耦合度高
 
-**优化方案**: 使用依赖注入
+**本仓已有的正确解耦范式（新代码必须沿用）**:
 
 ```cpp
-// Before: 紧耦合
-class AccountService {
-    AccountDatabase db_;  // 直接依赖具体实现
-public:
-    ErrCode CreateAccount(const AccountInfo& info) {
-        return db_.Insert(info);
-    }
+// ✅ bundle_data_mgr 通过 IDataStorage 抽象解耦持久化实现（RDB 可替换）
+class BundleDataMgr {
+    std::shared_ptr<IDataStorage> dataStorage_;   // 依赖抽象，不依赖 bundle_data_storage_rdb 具体类
 };
 
-// After: 松耦合
-class IAccountRepository {
-public:
-    virtual ~IAccountRepository() = default;
-    virtual ErrCode Insert(const AccountInfo& info) = 0;
-};
+// ✅ 安装器通过 InstalldClient 门面解耦 installd 进程通信细节
+InstalldClient::GetInstance()->CreateBundleDir(...);   // 不直接操作 IPC 细节
 
-class AccountService {
-    std::unique_ptr<IAccountRepository> repo_;
-public:
-    explicit AccountService(std::unique_ptr<IAccountRepository> repo)
-        : repo_(std::move(repo)) {}
-
-    ErrCode CreateAccount(const AccountInfo& info) {
-        return repo_->Insert(info);
-    }
-};
+// ❌ 反例（检视即拦截）：
+// services/bundlemgr/src/bundle_data_mgr.cpp
+#include "base_bundle_installer.h"   // ❌ 数据层反向依赖安装器（分层违规）
+// services/bundlemgr/src/bundle_mgr_service.cpp
+#include "bundle_mgr_proxy.h"        // ❌ 服务端依赖客户端 proxy
 ```
 
 ### 建议3: 接口稳定化
 
 **当前问题**: 接口频繁变更
 
-**优化方案**:
+**本仓的版本化惯例（新代码必须沿用，禁止 namespace V1/V2 方案）**:
 
-1. **版本化接口**
+1. **IPC code 追加 + 接口后缀版本化**
 ```cpp
-namespace V1 {
-    class IAccountManager {
-        virtual ErrCode CreateAccount(...) = 0;
-    };
-}
-
-namespace V2 {
-    class IAccountManager : public V1::IAccountManager {
-        virtual ErrCode CreateAccountWithExtra(...) = 0;
-    };
-}
+// ✅ 真实做法（bundle_framework_core_ipc_interface_code.h，SAID 401）：
+// 行为变化时追加新接口 + 新 code，旧接口与旧 code 原样保留
+enum class BundleMgrInterfaceCode : uint32_t {
+    GET_BUNDLE_INFO = 2,                        // 旧接口保持不变
+    GET_BUNDLE_INFO_WITH_INT_FLAGS = 49,        // 兼容性扩展版本
+    GET_BUNDLE_INFO_FOR_SELF = 98,              // 场景专用版本
+    // 新接口只能追加在枚举末尾（当前最大 256）
+};
+// 接口声明侧对应：GetBundleInfo / GetBundleInfoV9 / GetBundleInfoWithIntFlags ...
 ```
 
-2. **使用 DTO 隔离变化**
+2. **使用数据结构隔离变化**
 ```cpp
-// DTO 作为接口边界
-class AccountDTO {
-public:
-    int32_t id;
-    std::string name;
-    // ... 字段
-
-    static AccountDTO FromDomain(const Account& account);
-    Account ToDomain() const;
+// ✅ BundleInfo / ApplicationInfo 等结构体作为接口边界：
+// 新增字段追加在末尾 + Marshalling/Unmarshalling 同步追加 + 旧数据缺字段给默认值
+class BundleInfo {
+    // ... 既有字段
+    bool newFeatureFlag = false;   // ✅ 新字段带默认值，旧数据反序列化兼容
 };
 ```
 
 ### 建议4: 引入设计模式
 
-**场景1: 需要多种创建方式**
+**场景1: 多种安装方式 —— 本仓已有继承体系，新安装器必须复用而非另起炉灶**
 
 ```cpp
-// 使用工厂模式
-class IAccountFactory {
-public:
-    virtual ~IAccountFactory() = default;
-    virtual std::unique_ptr<Account> Create(const AccountInfo& info) = 0;
-};
-
-class AdminAccountFactory : public IAccountFactory { ... };
-class GuestAccountFactory : public IAccountFactory { ... };
+// ✅ 真实体系（services/bundlemgr/include/）：
+// BaseBundleInstaller（状态机基类，InstallerState 步进）
+//   ├── BundleInstaller           普通安装
+//   ├── SystemBundleInstaller     预置/系统包 + OTA 恢复
+//   └── BundleMultiUserInstaller  跨用户安装
+// 检视要点：新安装场景（如 clone、cli_sandbox）优先继承 BaseBundleInstaller，
+// 复用状态机与 ScopeGuard 回滚；禁止绕过基类自建状态机（checklist B3/B7）
 ```
 
-**场景2: 需要事件通知**
+**场景2: 状态变化通知 —— 本仓已有回调注册模式**
 
 ```cpp
-// 使用观察者模式
-class IAccountObserver {
-public:
-    virtual void OnAccountCreated(const Account& account) = 0;
-    virtual void OnAccountRemoved(int32_t id) = 0;
-};
-
-class AccountManager {
-    std::vector<IAccountObserver*> observers_;
-public:
-    void AddObserver(IAccountObserver* observer) {
-        observers_.push_back(observer);
-    }
-
-    void NotifyAccountCreated(const Account& account) {
-        for (auto* observer : observers_) {
-            observer->OnAccountCreated(account);
-        }
-    }
-};
+// ✅ 真实模式（bundle_status_callback_interface.h / bundle_event_callback_interface.h）：
+// sptr<IBundleStatusCallback> 注册进 BMS，安装/卸载状态变化时回调通知
+// bundle_mgr_host_impl 中 RegisterBundleStatusCallback → dataMgr_ 维护回调列表（加锁保护）
+// 检视要点：回调列表的增删查必须持锁（g_bundleCacheCallBackList 前例）；
+// 回调触发在锁外执行，防止持锁回调外部代码造成死锁
 ```
 
 ---
@@ -764,6 +737,11 @@ public:
 ---
 
 ## 📝 版本历史
+
+**v2.0** (2026-09-14)
+- ✅ bundle_framework 定制化：示例全部替换为本仓真实代码（IBundleMgr 接口、BundleMgrInterfaceCode IPC code、BaseBundleInstaller 继承体系、IDataStorage 解耦）
+- ✅ 新增「bundle_framework 定制检视要求」：真实进程拓扑/分层铁律/热点文件原则/新特性架构检查
+- ✅ 新增历史典型问题核对与兼容性影响强制输出（对照 bundle_framework_common_issues.md）
 
 **v1.0** (2026-03-23)
 - ✅ 初始版本

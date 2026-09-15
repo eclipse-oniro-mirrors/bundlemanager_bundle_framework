@@ -106,32 +106,36 @@ python3 generate_dfx_skill.py my_dfx_config.yaml my_dfx_skill.md
 
 ## 🛠️ 自动化工具
 
-### 客户端打点检查脚本
+以下脚本已内置于 [`SKILL.md`](SKILL.md) 的"自动化检查脚本"章节，可直接复制执行：
 
-检查客户端代码是否违规进行 HiSysEvent 打点：
+### 客户端打点检查
+
+检查客户端代码是否违规进行 HiSysEvent 打点（`SKILL.md` §自动化检查脚本）：
 
 ```bash
-./.refdocs/scripts/check_client_hisysevent.sh
+grep -rn "EventReport::\|HiSysEventWrite" interfaces/inner_api/ interfaces/kits/ --include="*.cpp" --include="*.h"
 ```
 
 **输出**:
-- ✅ 未发现违规
-- ❌ 发现违规（详细列表）
+- ✅ 无输出 = 未发现违规
+- ❌ 有输出 = 发现违规（详细列表）
 
-### DFX 覆盖率检查脚本
+### 错误路径 DFX 覆盖检查
 
-检查整体 DFX 实现质量：
+检查错误返回路径是否缺少 HiSysEvent/日志上报（`SKILL.md` §Automated DFX Checks）：
 
 ```bash
-./.refdocs/scripts/check_dfx_coverage.sh [服务目录]
+grep -rn "return.*ERR_APPEXECFWK_\|return.*ERR_BUNDLE_MANAGER_" --include="*.cpp" services/bundlemgr/src/ | \
+    grep -v "EventReport::" | grep -v "APP_LOG" | head -20
 ```
 
-### 敏感数据检查脚本
+### 敏感数据检查
 
-检查是否有敏感数据泄漏：
+检查是否有敏感数据以 %{public} 泄漏（`SKILL.md` §Automated DFX Checks）：
 
 ```bash
-./.refdocs/scripts/check_sensitive_data.sh [服务目录]
+grep -rn "fingerprint\|hapPath\|codePath\|appIdentifier" --include="*.cpp" services/bundlemgr/src/ | \
+    grep "APP_LOG\|LOG_" | grep "%{public}" | head -10
 ```
 
 ---
@@ -258,9 +262,9 @@ python3 generate_dfx_skill.py storage_dfx_config.yaml storage_dfx_skill.md
 
 ### 工具脚本
 
-- **客户端检查**: `.refdocs/scripts/check_client_hisysevent.sh`
-- **覆盖率检查**: `.refdocs/scripts/check_dfx_coverage.sh`
-- **敏感数据检查**: `.refdocs/scripts/check_sensitive_data.sh`
+- **客户端检查**: `dfx_reviewer/SKILL.md` 内置的客户端打点检查脚本
+- **覆盖率检查**: `dfx_reviewer/SKILL.md` 自动化检查脚本章节
+- **敏感数据检查**: `dfx_reviewer/SKILL.md` 自动化检查脚本章节
 
 ---
 

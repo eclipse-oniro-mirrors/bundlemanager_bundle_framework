@@ -40,9 +40,9 @@ Logic Analyzer 是一个专门用于**深度分析代码逻辑变更**的技能�
 
 ## 2. 发现的逻辑问题
 ### 问题 1: 状态转换非法 (致命)
-- 位置: account_mgr_service.cpp:123
+- 位置: services/bundlemgr/src/bundle_data_mgr.cpp:123
 - 严重等级: 🔴 致命
-- 影响: 破坏状态机完整性
+- 影响: 绕过 InstallState 状态机，误触发 IsDeleteDataState 删除路径
 ...
 ```
 
@@ -390,9 +390,9 @@ jobs:
 
 ### 内部资源
 
-- **代码审查检查清单**: `.refdocs/skills/code_review_checklist/SKILL.md`
-- **DFX 审查技能**: `.refdocs/skills/dfx_reviewer/dfx_reviewer_universal.md`
-- **综合代码审查**: `.refdocs/skills/branch_review/comprehensive_code_reviewer.md`
+- **代码审查检查清单**: [`../code_review_checklist/SKILL.md`](../code_review_checklist/SKILL.md)
+- **DFX 审查技能**: [`../dfx_reviewer/SKILL.md`](../dfx_reviewer/SKILL.md)
+- **综合代码审查**: [`../comprehensive_review/SKILL.md`](../comprehensive_review/SKILL.md)
 
 ### 外部资源
 

@@ -9,7 +9,7 @@
 "使用 logic_analyzer 分析分支 feature-xxx 相对于 main 的代码逻辑变更"
 
 # 分析特定文件
-"使用 logic_analyzer 分析 src/account_manager.cpp 的逻辑变更"
+"使用 logic_analyzer 分析 services/bundlemgr/src/bundle_data_mgr.cpp 的逻辑变更"
 
 # 检查特定问题
 "使用 logic_analyzer 检查状态机问题"
@@ -112,8 +112,8 @@ if (condition) {
 return result;  // 🔴
 
 // 4. 空指针
-Account* acc = GetAccount();
-acc->Update();  // 🔴
+auto info = dataMgr_->GetInnerBundleInfo(bundleName);
+info->GetBundleName();  // 🔴 info 可能为 nullptr
 
 // 5. 数组越界
 for (int i = 0; i <= size; i++) {  // 🔴
@@ -121,7 +121,7 @@ for (int i = 0; i <= size; i++) {  // 🔴
 }
 
 // 6. 遗漏错误处理
-database_->Insert(info);  // 🟠
+dataStorage_->SaveStorageBundleInfo(info);  // 🟠 返回值被忽略
 return ERR_OK;
 
 // 7. 竞态条件
@@ -130,7 +130,7 @@ if (instance == nullptr) {  // 🔴
 }
 
 // 8. 非法状态转换
-state = DEACTIVATED;  // 从CREATED直接跳过  🔴
+info.SetInstallState(InstallState::UNINSTALL_SUCCESS);  // 🔴 绕过 UpdateBundleInstallState 状态机
 ```
 
 ### ✅ 正确模式
@@ -153,11 +153,12 @@ if (condition) {
 return result;
 
 // 3. 空指针检查
-Account* acc = GetAccount();
-if (acc == nullptr) {  // ✅
-    return ERR_NULL;
+auto info = dataMgr_->GetInnerBundleInfo(bundleName);
+if (info == nullptr) {  // ✅
+    APP_LOGE("get inner bundle info failed, bundleName=%{private}s", bundleName.c_str());
+    return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
 }
-acc->Update();
+info->GetBundleName();
 
 // 4. 边界检查
 for (int i = 0; i < size; i++) {  // ✅
