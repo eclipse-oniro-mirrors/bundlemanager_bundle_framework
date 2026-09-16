@@ -1410,6 +1410,29 @@ HWTEST_F(BmsDualModeInstallTest, UninstallAndRecover_0200, Function | SmallTest 
     EXPECT_EQ(receiver->GetResultCode(), ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE);
 }
 
+HWTEST_F(BmsDualModeInstallTest, UninstallAndRecover_UsesEffectivePreInstallKey_0200,
+    Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    auto service = DelayedSingleton<BundleMgrService>::GetInstance();
+    auto savedDataMgr = service->dataMgr_;
+    ScopeGuard dataMgrGuard([service, savedDataMgr] { service->dataMgr_ = savedDataMgr; });
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    auto storageSpy = InstallPreInstallStorageSpy(dataMgr);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = MakeResourceInfo(true);
+
+    BaseBundleInstaller installer;
+    InstallParam installParam;
+    installParam.userId = TEST_USERID;
+    installParam.isUninstallAndRecover = true;
+    int32_t uid = Constants::INVALID_UID;
+
+    EXPECT_EQ(installer.ProcessBundleUninstall(BUNDLE_NAME, installParam, uid),
+        ERR_APPEXECFWK_UNINSTALL_AND_RECOVER_NOT_PREINSTALLED_BUNDLE);
+    ASSERT_EQ(storageSpy->queriedBundleNames.size(), 1u);
+    EXPECT_EQ(storageSpy->queriedBundleNames.front(), PREFIXED_NAME);
+}
+
 // ====================== BaseBundleInstaller::InnerProcessInstallByPreInstallInfo ======================
 
 HWTEST_F(BmsDualModeInstallTest, InnerProcessInstallByPreInstallInfo_0100, Function | SmallTest | Level0)
