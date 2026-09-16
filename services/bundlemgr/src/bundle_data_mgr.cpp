@@ -7331,13 +7331,32 @@ ErrCode BundleDataMgr::ProcessBatchForAllBundles(int32_t requestUserId, int32_t 
         }
         const std::string &bundleName = item.first;
 
-        auto ret = ProcessDisableForBundle(innerBundleInfo, innerBundleUserInfoPtr, bundleName,
-            disableAppIndex, caller, requestUserId, needSendEvent, skipDisableForbidden,
-            eventsToSend, disabledBundles, rollbackList, sysEventsToSend);
-        if (ret != ERR_OK) {
-            return ret;
+        if (disableAppIndex == Constants::ALL_CLONE_APP_INDEX) {
+            if (innerBundleUserInfoPtr->cloneInfos.find(std::to_string(enableAppIndex))
+                == innerBundleUserInfoPtr->cloneInfos.end()) {
+                continue;
+            }
+            for (const auto &cloneItem : innerBundleUserInfoPtr->cloneInfos) {
+                int32_t cloneAppIndex = cloneItem.second.appIndex;
+                if (cloneAppIndex == enableAppIndex) {
+                    continue;
+                }
+                auto ret = ProcessDisableForBundle(innerBundleInfo, innerBundleUserInfoPtr, bundleName,
+                    cloneAppIndex, caller, requestUserId, needSendEvent, skipDisableForbidden,
+                    eventsToSend, disabledBundles, rollbackList, sysEventsToSend);
+                if (ret != ERR_OK) {
+                    return ret;
+                }
+            }
+        } else {
+            auto ret = ProcessDisableForBundle(innerBundleInfo, innerBundleUserInfoPtr, bundleName,
+                disableAppIndex, caller, requestUserId, needSendEvent, skipDisableForbidden,
+                eventsToSend, disabledBundles, rollbackList, sysEventsToSend);
+            if (ret != ERR_OK) {
+                return ret;
+            }
         }
-        ret = ProcessEnableForBundle(innerBundleInfo, innerBundleUserInfoPtr, bundleName,
+        auto ret = ProcessEnableForBundle(innerBundleInfo, innerBundleUserInfoPtr, bundleName,
             enableAppIndex, caller, requestUserId, needSendEvent,
             eventsToSend, rollbackList, sysEventsToSend);
         if (ret != ERR_OK) {
@@ -7518,9 +7537,13 @@ void BundleDataMgr::RollbackBatchSetEnabled(
 
 ErrCode BundleDataMgr::ValidateBatchSetAppIndex(int32_t enableAppIndex, int32_t disableAppIndex)
 {
-    if (enableAppIndex <= 0 || disableAppIndex <= 0) {
-        APP_LOGE("enableAppIndex and disableAppIndex must be greater than 0, enable:%{public}d disable:%{public}d",
-            enableAppIndex, disableAppIndex);
+    if (enableAppIndex <= 0) {
+        APP_LOGE("enableAppIndex must be greater than 0, enable:%{public}d", enableAppIndex);
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+    }
+    if (disableAppIndex != Constants::ALL_CLONE_APP_INDEX && disableAppIndex <= 0) {
+        APP_LOGE("disableAppIndex must be greater than 0 or ALL_CLONE_APP_INDEX, disable:%{public}d",
+            disableAppIndex);
         return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
     int32_t maxCloneCount = BundleFileUtil::GetCloneMaxCount();
