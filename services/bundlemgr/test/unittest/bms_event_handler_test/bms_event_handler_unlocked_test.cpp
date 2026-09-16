@@ -1230,4 +1230,123 @@ HWTEST_F(BmsEventHandlerUnLockedTest, UpdateOtaFlag_NullBmsParam_0100, Function 
     EXPECT_FALSE(handler->UpdateOtaFlag(OTAFlag::CHECK_LOG_DIR));
     bms->bmsParam_ = savedBmsParam;
 }
+
+/**
+ * @tc.number: UserUnlockedEventSubscriber_2900
+ * @tc.name: CreateBundleDataDir el2 base dir missing
+ * @tc.desc: In the el2 pass, database dir exists but el2 base dir is missing:
+ *           isExist is set to false so the recovery path is triggered.
+ *           The trailing sentinel pair proves exactly two probes (database +
+ *           el2 base) were consumed from the mock queue.
+ */
+HWTEST_F(BmsEventHandlerUnLockedTest, UserUnlockedEventSubscriber_2900, Function | SmallTest | Level0)
+{
+    UpdateAppDataMgr updateAppDataMgr;
+    BundleInfo bundleInfo;
+    bundleInfo.name = "com.test.el2.base.missing";
+    bundleInfo.uid = -1; // equals mock FileStat.uid, keeps isExist true in CheckPathAttribute
+    int32_t userId = 100;
+    // database probe: exist; el2 base probe: missing; sentinel pair
+    SetTestReturnValue({0, 1, 0, 0, 7, 1});
+    EXPECT_TRUE(updateAppDataMgr.CreateBundleDataDir(bundleInfo, userId, ServiceConstants::BUNDLE_EL[1]));
+    bool isSentinelExist = false;
+    ErrCode sentinel = InstalldClient::GetInstance()->IsExistDir("sentinel", isSentinelExist);
+    EXPECT_EQ(sentinel, 7);
+    EXPECT_TRUE(isSentinelExist);
+    SetTestReturnValue({});
+}
+
+/**
+ * @tc.number: UserUnlockedEventSubscriber_3000
+ * @tc.name: CreateBundleDataDir el2 base dir exists
+ * @tc.desc: In the el2 pass, both database dir and el2 base dir exist:
+ *           recovery is not triggered. The sentinel pair proves both probes
+ *           ran and no further queue entry was consumed.
+ */
+HWTEST_F(BmsEventHandlerUnLockedTest, UserUnlockedEventSubscriber_3000, Function | SmallTest | Level0)
+{
+    UpdateAppDataMgr updateAppDataMgr;
+    BundleInfo bundleInfo;
+    bundleInfo.name = "com.test.el2.base.exists";
+    bundleInfo.uid = -1;
+    int32_t userId = 100;
+    // database probe: exist; el2 base probe: exist; sentinel pair
+    SetTestReturnValue({0, 1, 0, 1, 7, 1});
+    EXPECT_TRUE(updateAppDataMgr.CreateBundleDataDir(bundleInfo, userId, ServiceConstants::BUNDLE_EL[1]));
+    bool isSentinelExist = false;
+    ErrCode sentinel = InstalldClient::GetInstance()->IsExistDir("sentinel", isSentinelExist);
+    EXPECT_EQ(sentinel, 7);
+    EXPECT_TRUE(isSentinelExist);
+    SetTestReturnValue({});
+}
+
+/**
+ * @tc.number: UserUnlockedEventSubscriber_3100
+ * @tc.name: CreateBundleDataDir skips el2 base probe when database missing
+ * @tc.desc: In the el2 pass, database dir is missing: the el2 base dir probe
+ *           is skipped and recovery is triggered directly. The sentinel pair
+ *           proves only the database probe consumed the mock queue.
+ */
+HWTEST_F(BmsEventHandlerUnLockedTest, UserUnlockedEventSubscriber_3100, Function | SmallTest | Level0)
+{
+    UpdateAppDataMgr updateAppDataMgr;
+    BundleInfo bundleInfo;
+    bundleInfo.name = "com.test.database.missing";
+    int32_t userId = 100;
+    // database probe: missing; sentinel pair
+    SetTestReturnValue({0, 0, 7, 1});
+    EXPECT_TRUE(updateAppDataMgr.CreateBundleDataDir(bundleInfo, userId, ServiceConstants::BUNDLE_EL[1]));
+    bool isSentinelExist = false;
+    ErrCode sentinel = InstalldClient::GetInstance()->IsExistDir("sentinel", isSentinelExist);
+    EXPECT_EQ(sentinel, 7);
+    EXPECT_TRUE(isSentinelExist);
+    SetTestReturnValue({});
+}
+
+/**
+ * @tc.number: UserUnlockedEventSubscriber_3200
+ * @tc.name: CreateBundleDataDir does not probe el2 base in non-el2 pass
+ * @tc.desc: In the el3 pass with database dir existing, the el2 base dir probe
+ *           is skipped. The sentinel pair proves only the database probe ran.
+ */
+HWTEST_F(BmsEventHandlerUnLockedTest, UserUnlockedEventSubscriber_3200, Function | SmallTest | Level0)
+{
+    UpdateAppDataMgr updateAppDataMgr;
+    BundleInfo bundleInfo;
+    bundleInfo.name = "com.test.el3.pass";
+    bundleInfo.uid = -1;
+    int32_t userId = 100;
+    // database probe: exist; sentinel pair
+    SetTestReturnValue({0, 1, 7, 1});
+    EXPECT_TRUE(updateAppDataMgr.CreateBundleDataDir(bundleInfo, userId, ServiceConstants::DIR_EL3));
+    bool isSentinelExist = false;
+    ErrCode sentinel = InstalldClient::GetInstance()->IsExistDir("sentinel", isSentinelExist);
+    EXPECT_EQ(sentinel, 7);
+    EXPECT_TRUE(isSentinelExist);
+    SetTestReturnValue({});
+}
+
+/**
+ * @tc.number: UserUnlockedEventSubscriber_3300
+ * @tc.name: CreateBundleDataDir el2 base probe failure only warns
+ * @tc.desc: In the el2 pass, the el2 base dir probe fails (non-ERR_OK):
+ *           only a warning is logged, isExist is not polluted and the call
+ *           still returns true instead of returning false.
+ */
+HWTEST_F(BmsEventHandlerUnLockedTest, UserUnlockedEventSubscriber_3300, Function | SmallTest | Level0)
+{
+    UpdateAppDataMgr updateAppDataMgr;
+    BundleInfo bundleInfo;
+    bundleInfo.name = "com.test.el2.base.probe.fail";
+    bundleInfo.uid = -1;
+    int32_t userId = 100;
+    // database probe: exist; el2 base probe: ipc error; sentinel pair
+    SetTestReturnValue({0, 1, 1, 0, 7, 1});
+    EXPECT_TRUE(updateAppDataMgr.CreateBundleDataDir(bundleInfo, userId, ServiceConstants::BUNDLE_EL[1]));
+    bool isSentinelExist = false;
+    ErrCode sentinel = InstalldClient::GetInstance()->IsExistDir("sentinel", isSentinelExist);
+    EXPECT_EQ(sentinel, 7);
+    EXPECT_TRUE(isSentinelExist);
+    SetTestReturnValue({});
+}
 } // OHOS
