@@ -34,21 +34,23 @@ void MigrateDataUserAuthCallback::OnResult(int32_t result, const Attributes &ext
     if (isComplete_.load()) {
         return;
     }
-    isComplete_.store(true);
-    result_ = result;
+    result_.store(result);
+    if (isComplete_.exchange(true)) {
+        return;
+    }
     resultPromise_.set_value(result);
 }
 
 int32_t MigrateDataUserAuthCallback::GetUserAuthResult()
 {
     if (isComplete_.load()) {
-        return result_;
+        return result_.load();
     }
     // timeout waiting for five minutes
     if (future_.wait_for(std::chrono::minutes(WAIT_TIME)) == std::future_status::ready) {
         return future_.get();
     }
-    return result_;
+    return result_.load();
 }
 } // namespace AppExecFwk
 } // namespace OHOS

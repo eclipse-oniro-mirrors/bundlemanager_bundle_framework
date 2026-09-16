@@ -36,6 +36,7 @@ AppClonePreferenceDataMgr::AppClonePreferenceDataMgr()
 ErrCode AppClonePreferenceDataMgr::GetAppClonePreference(const std::string &bundleName, int32_t userId,
     AppClonePreference &preference)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     if (bundleName.empty()) {
         APP_LOGE_NOFUNC("GetAppClonePreference bundleName is empty");
         return ERR_BUNDLE_MANAGER_BUNDLE_NAME_IS_EMPTY;
@@ -80,6 +81,7 @@ ErrCode AppClonePreferenceDataMgr::GetAppClonePreference(const std::string &bund
 ErrCode AppClonePreferenceDataMgr::SetAppClonePreference(const std::string &bundleName, int32_t userId,
     const AppClonePreference &preference)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     if (bundleName.empty()) {
         APP_LOGE_NOFUNC("SetAppClonePreference bundleName is empty");
         return ERR_BUNDLE_MANAGER_BUNDLE_NAME_IS_EMPTY;
@@ -145,6 +147,7 @@ ErrCode AppClonePreferenceDataMgr::SetAppClonePreference(const std::string &bund
 
 ErrCode AppClonePreferenceDataMgr::DeleteAppClonePreference(const std::string &bundleName, int32_t userId)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     if (bundleName.empty()) {
         return ERR_OK;
     }
@@ -160,6 +163,7 @@ ErrCode AppClonePreferenceDataMgr::DeleteAppClonePreference(const std::string &b
 ErrCode AppClonePreferenceDataMgr::HandleAppCloneUninstalled(const std::string &bundleName,
     int32_t userId, int32_t uninstalledAppIndex)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     if (bundleName.empty()) {
         return ERR_OK;
     }

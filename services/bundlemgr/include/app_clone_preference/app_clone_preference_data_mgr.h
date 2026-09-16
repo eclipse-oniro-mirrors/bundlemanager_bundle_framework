@@ -17,6 +17,7 @@
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_APP_CLONE_PREFERENCE_DATA_MGR_H
 
 #include <memory>
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -42,6 +43,7 @@ public:
         int32_t uninstalledAppIndex);
 
 private:
+    std::mutex mutex_;
     std::shared_ptr<AppClonePreferenceStorage> storage_;
 };
 }  // namespace AppExecFwk
