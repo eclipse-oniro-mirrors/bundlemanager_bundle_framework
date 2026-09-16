@@ -147,6 +147,7 @@ group("unittest") {
       "unittest/bms_service_startup_test:unittest",
       "unittest/bundle_access_token_recovery_test:unittest",
       "unittest/bms_skill_info_test:unittest",
+      "unittest/bms_skill_manager_helper_test:unittest",
       "unittest/bms_skill_manager_host_impl_test:unittest",
       "unittest/bms_skill_manager_host_test:unittest",
       "unittest/bms_skill_manager_proxy_test:unittest",
