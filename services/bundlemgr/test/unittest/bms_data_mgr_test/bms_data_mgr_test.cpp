@@ -8806,15 +8806,15 @@ HWTEST_F(BmsDataMgrTest, GetAssetGroupsInfo_0001, Function | MediumTest | Level1
     int32_t uid = 0;
     AssetGroupInfo assetGroupInfo;
     BundleInfo bundleInfo;
+    InnerBundleInfo info;
     int32_t flag = 0;
     int32_t userId = 100;
     bundleDataMgr.routerStorage_ = nullptr;
-    bundleDataMgr.ProcessBundleRouterMap(bundleInfo, flag, userId);
+    bundleDataMgr.ProcessBundleRouterMap(info, bundleInfo, flag, userId);
     ErrCode ret = bundleDataMgr.GetAssetGroupsInfo(uid, assetGroupInfo);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_UID);
-    std::string hostBundleName;
     std::vector<RouterItem> routerInfos;
-    bundleDataMgr.GetRouterInfoForPlugin(hostBundleName, userId, routerInfos);
+    bundleDataMgr.GetRouterInfoForPlugin(info, userId, routerInfos);
     bundleDataMgr.sandboxAppHelper_ = nullptr;
     ret = bundleDataMgr.GetAssetGroupsInfo(uid, assetGroupInfo);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_UID);

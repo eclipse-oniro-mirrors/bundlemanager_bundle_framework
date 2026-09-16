@@ -1330,7 +1330,7 @@ public:
     bool DeleteRouterInfo(const std::string &bundleName, const std::string &moduleName);
     void DeleteRouterInfoForPlugin(const std::string &hostBundleName, const PluginBundleInfo &pluginInfo);
     void GetAllBundleNames(std::set<std::string> &bundleNames);
-    void GetRouterInfoForPlugin(const std::string &hostBundleName, int32_t userId,
+    void GetRouterInfoForPlugin(const InnerBundleInfo &hostInfo, int32_t userId,
         std::vector<RouterItem> &routerInfos) const;
 
     void UpdateIsPreInstallApp(const std::string &bundleName, bool isPreInstallApp);
@@ -1467,6 +1467,8 @@ public:
         std::vector<PluginBundleInfo> &pluginBundleInfos) const;
     ErrCode InnerGetAllPluginInfo(const std::string &hostBundleName, int32_t userId,
         std::vector<PluginBundleInfo> &pluginBundleInfos, bool onlyGetDeveloperDistribution = false) const;
+    ErrCode GetPluginInfosFromRecord(const InnerBundleInfo &innerBundleInfo, int32_t userId,
+        std::vector<PluginBundleInfo> &pluginBundleInfos, bool onlyGetDeveloperDistribution) const;
     ErrCode GetAllLocalPluginInfoForSelf(std::vector<PluginBundleInfo> &pluginBundleInfos) const;
     ErrCode GetDirForAtomicService(const std::string &bundleName, std::string &dataDir) const;
     ErrCode GetDirForAtomicServiceByUserId(const std::string &bundleName, int32_t userId,
@@ -1865,7 +1867,8 @@ private:
     void AddAppHspBundleName(const BundleType type, const std::string &bundleName);
     void ConvertServiceHspToSharedBundleInfo(const InnerBundleInfo &innerBundleInfo,
         std::vector<BaseSharedBundleInfo> &baseSharedBundleInfos) const;
-    void ProcessBundleRouterMap(BundleInfo& bundleInfo, int32_t flag, int32_t userId) const;
+    void ProcessBundleRouterMap(const InnerBundleInfo &innerBundleInfo,
+        BundleInfo& bundleInfo, int32_t flag, int32_t userId) const;
     void ProcessAllowedAcls(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo) const;
     void ProcessCertificate(BundleInfo& bundleInfo, const std::string &bundleName, int32_t flags) const;
     void FilterAbilityInfosByAppLinking(const Want &want, int32_t flags,
@@ -1926,7 +1929,8 @@ private:
     bool ProcessUninstallBundle(std::vector<BundleOptionInfo> &bundleOptionInfos) const;
     void ProcessShortcutInfos(const InnerBundleInfo &info, const std::string moduleName, const std::string abilityName,
         const int32_t appIndex, const int32_t requestUserId, std::vector<ShortcutInfo> &shortcutInfos) const;
-    void GetRouterInfoForSharedBundle(const std::string &bundleName, std::vector<RouterItem> &routerInfos) const;
+    void GetRouterInfoForSharedBundle(const InnerBundleInfo &innerBundleInfo,
+        std::vector<RouterItem> &routerInfos) const;
     void MergeRouterItems(const std::vector<RouterItem>& sharedBundleRouterInfos,
         std::vector<RouterItem>& pluginRouterInfos) const;
     bool ParseUserKey(const std::string &userKey, int32_t &userId, int32_t &appIndex) const;

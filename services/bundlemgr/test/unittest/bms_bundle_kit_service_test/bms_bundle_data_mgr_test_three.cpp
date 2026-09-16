@@ -3632,7 +3632,7 @@ HWTEST_F(BmsBundleDataMgrTest3, HasPluginInstalledByOtherBundle_0001, Function |
 
     int32_t userId = 0;
     std::vector<RouterItem> routerInfos;
-    bundleDataMgr->GetRouterInfoForPlugin(hostBundleName, 0, routerInfos);
+    bundleDataMgr->GetRouterInfoForPlugin(info, 0, routerInfos);
 }
 
 /**
@@ -4197,16 +4197,16 @@ HWTEST_F(BmsBundleDataMgrTest3, LauncherService_0100, Function | MediumTest | Le
  * @tc.number: GetRouterInfoForSharedBundle_0200
  * @tc.name: test GetRouterInfoForSharedBundle
  * @tc.desc: 1.system run normally
- *           2.check GetRouterInfoForSharedBundle with bundle not exist
+ *           2.check GetRouterInfoForSharedBundle with empty record (no dependencies)
  */
 HWTEST_F(BmsBundleDataMgrTest3, GetRouterInfoForSharedBundle_0200, Function | MediumTest | Level1)
 {
     auto bundleDataMgr = GetBundleDataMgr();
     ASSERT_NE(bundleDataMgr, nullptr);
 
-    std::string bundleName = "com.test.notexist";
+    InnerBundleInfo info;
     std::vector<RouterItem> routerInfos;
-    bundleDataMgr->GetRouterInfoForSharedBundle(bundleName, routerInfos);
+    bundleDataMgr->GetRouterInfoForSharedBundle(info, routerInfos);
     EXPECT_EQ(routerInfos.size(), 0);
 }
 
@@ -4225,9 +4225,8 @@ HWTEST_F(BmsBundleDataMgrTest3, GetRouterInfoForSharedBundle_0300, Function | Me
     info.baseApplicationInfo_->bundleName = BUNDLE_TEST1;
     bundleDataMgr->bundleInfos_.emplace(BUNDLE_TEST1, info);
 
-    std::string bundleName = BUNDLE_TEST1;
     std::vector<RouterItem> routerInfos;
-    bundleDataMgr->GetRouterInfoForSharedBundle(bundleName, routerInfos);
+    bundleDataMgr->GetRouterInfoForSharedBundle(info, routerInfos);
     EXPECT_EQ(routerInfos.size(), 0);
 
     bundleDataMgr->bundleInfos_.erase(BUNDLE_TEST1);
