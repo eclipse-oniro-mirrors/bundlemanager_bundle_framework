@@ -35,7 +35,7 @@ sptr<IRemoteObject::DeathRecipient> SkillManagerHelper::deathRecipient_(
 void SkillManagerHelper::SkillManagerDeathRecipient::OnRemoteDied(
     [[maybe_unused]] const wptr<IRemoteObject>& remote)
 {
-    APP_LOGI("BundleManagerService dead");
+    APP_LOGI("SkillManagerService dead");
     std::lock_guard<std::mutex> lock(skillManagerMutex_);
     skillManager_ = nullptr;
 }
@@ -55,12 +55,26 @@ sptr<IBundleSkillManager> SkillManagerHelper::GetSkillManager()
             return nullptr;
         }
         auto bundleMgr = OHOS::iface_cast<IBundleMgr>(bundleMgrSa);
-        if (bundleMgr == nullptr) {
-            APP_LOGE("iface_cast failed");
+        if ((bundleMgr == nullptr) || (bundleMgr->AsObject() == nullptr)) {
+            APP_LOGE("bundleMgr or bundleMgr AsObject is null");
             return nullptr;
         }
-        bundleMgr->AsObject()->AddDeathRecipient(deathRecipient_);
-        skillManager_ = bundleMgr->GetSkillManagerProxy();
+        auto skillManager = bundleMgr->GetSkillManagerProxy();
+        if ((skillManager == nullptr) || (skillManager->AsObject() == nullptr)) {
+            APP_LOGE("failed to get skillManager proxy");
+            return nullptr;
+        }
+        if (skillManager->AsObject()->IsProxyObject()) {
+            if (deathRecipient_ == nullptr) {
+                APP_LOGE("deathRecipient_ is null");
+                return nullptr;
+            }
+            if (!skillManager->AsObject()->AddDeathRecipient(deathRecipient_)) {
+                APP_LOGE("failed to add death recipient");
+                return nullptr;
+            }
+        }
+        skillManager_ = skillManager;
     }
     return skillManager_;
 }

@@ -38,7 +38,9 @@ void ANIBundleMonitorCallbackHandler::AddCallback(ani_env* env, ani_object aniCa
         ani_boolean isEqual = ANI_FALSE;
         status = env->Reference_StrictEquals(aniCallback, *iter, &isEqual);
         if (status != ANI_OK) {
-            APP_LOGW_NOFUNC("AddCallback Reference_StrictEquals error. result: %{public}d", status);
+            APP_LOGW_NOFUNC("AddCallback Reference_StrictEquals failed: %{public}d, skip this callback",
+                status);
+            continue;
         }
         if (isEqual == ANI_TRUE) {
             APP_LOGI("callback already exists");
@@ -69,7 +71,10 @@ void ANIBundleMonitorCallbackHandler::RemoveCallback(ani_env* env, ani_object an
         ani_boolean isEqual = ANI_FALSE;
         status = env->Reference_StrictEquals(aniCallback, *iter, &isEqual);
         if (status != ANI_OK) {
-            APP_LOGW_NOFUNC("RemoveCallback Reference_StrictEquals error. result: %{public}d", status);
+            APP_LOGW_NOFUNC("RemoveCallback Reference_StrictEquals failed: %{public}d, skip this callback",
+                status);
+            ++iter;
+            continue;
         }
         if (isEqual == ANI_TRUE) {
             if (notifyCounter_ == 0) {
