@@ -181,6 +181,17 @@ bool UpdateAppDataMgr::CreateBundleDataDir(
         return false;
     }
     CheckPathAttribute(baseBundleDataDir, bundleInfo, isExist);
+    // also check el2 base dir (primary data dirs cache/files/...): recover when missing even if database dir exists.
+    if (isExist && elDir == ServiceConstants::BUNDLE_EL[1]) {
+        std::string el2BaseBundleDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1] +
+            ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::BASE + dirBundleName;
+        bool isEl2BaseExist = false;
+        if (InstalldClient::GetInstance()->IsExistDir(el2BaseBundleDir, isEl2BaseExist) != ERR_OK) {
+            APP_LOGW_NOFUNC("path: %{public}s IsExistDir failed", el2BaseBundleDir.c_str());
+        } else if (!isEl2BaseExist) {
+            isExist = false;
+        }
+    }
     if (!isExist) {
         APP_LOGI_NOFUNC("path: %{public}s need CreateBundleDataDir", baseBundleDataDir.c_str());
         EventReport::SendTriggerFallbackEvent(HighRiskOperationType::USER_UNLOCK_DATA_DIR_RECOVERY,
