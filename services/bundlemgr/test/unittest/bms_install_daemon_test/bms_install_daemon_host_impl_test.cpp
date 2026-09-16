@@ -1554,6 +1554,22 @@ HWTEST_F(BmsInstallDaemonHostImplTest, CreateBundleDataDirWithEl_0100, Function 
 }
 
 /**
+ * @tc.number: CopyHapToTempPath_0100
+ * @tc.name: test CopyHapToTempPath permission denied
+ * @tc.desc: 1. calling CopyHapToTempPath without foundation UID
+ * @tc.require:
+ */
+HWTEST_F(BmsInstallDaemonHostImplTest, CopyHapToTempPath_0100, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    auto ret = hostImpl->CopyHapToTempPath(TEST_BUNDLE_NAME,
+        "/data/app/el2/100/base/com.example.test/entry.hap",
+        "1788255600000000000_42", "entry.hap");
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
  * @tc.number: SetFileConForce_0100
  * @tc.name: test SetFileConForce
  * @tc.desc: test SetFileConForce of InstalldHostImpl

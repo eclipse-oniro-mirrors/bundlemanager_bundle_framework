@@ -257,6 +257,21 @@ ErrCode InstalldProxy::ExtractQuickFixRes(const std::string &bundleName, const s
     return TransactInstalldCmd(InstalldInterfaceCode::EXTRACT_QUICK_FIX_RES, data, reply, option);
 }
 
+ErrCode InstalldProxy::CopyHapToTempPath(const std::string &bundleName, const std::string &hapRealPath,
+    const std::string &tempDirName, const std::string &hapFileName)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(hapRealPath));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(tempDirName));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(hapFileName));
+
+    MessageParcel reply;
+    MessageOption option;
+    return TransactInstalldCmd(InstalldInterfaceCode::COPY_HAP_TO_TEMP_PATH, data, reply, option);
+}
+
 ErrCode InstalldProxy::ExtractHnpFiles(const std::map<std::string, std::string> &hnpPackageMap,
     const ExtractParam &extractParam)
 {

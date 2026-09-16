@@ -263,6 +263,9 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_QUICK_FIX_RES):
             result = this->HandleExtractQuickFixRes(data, reply);
             break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::COPY_HAP_TO_TEMP_PATH):
+            result = this->HandleCopyHapToTempPath(data, reply);
+            break;
         case static_cast<uint32_t>(InstalldInterfaceCode::INSTALL_NATIVE):
             result = this->HandleProcessBundleInstallNative(data, reply);
             break;
@@ -525,6 +528,18 @@ bool InstalldHost::HandleExtractSoFiles(MessageParcel &data, MessageParcel &repl
     bool appendModuleName = data.ReadBool();
     ErrCode result = ExtractSoFiles(bundleName, moduleName, hapFilePath, cpuAbi, needFakeDecompression,
         isSystemApp, appendModuleName);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleCopyHapToTempPath(MessageParcel &data, MessageParcel &reply)
+{
+    std::string bundleName = Str16ToStr8(data.ReadString16());
+    std::string hapRealPath = Str16ToStr8(data.ReadString16());
+    std::string tempDirName = Str16ToStr8(data.ReadString16());
+    std::string hapFileName = Str16ToStr8(data.ReadString16());
+
+    ErrCode result = CopyHapToTempPath(bundleName, hapRealPath, tempDirName, hapFileName);
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

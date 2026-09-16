@@ -278,6 +278,34 @@ ErrCode InstalldHostImpl::ExtractModuleFiles(const std::string &srcModulePath, c
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::CopyHapToTempPath(const std::string &bundleName, const std::string &hapRealPath,
+    const std::string &tempDirName, const std::string &hapFileName)
+{
+    LOG_D(BMS_TAG_INSTALLD, "CopyHapToTempPath bundleName:%{public}s", bundleName.c_str());
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    std::string oldPath = hapRealPath;
+    std::string newPath = std::string(ServiceConstants::BUNDLE_MANAGER_SERVICE_PATH) +
+        ServiceConstants::PATH_SEPARATOR + tempDirName +
+        ServiceConstants::PATH_SEPARATOR + hapFileName;
+    if (!InstalldOperator::IsValidPathByCopyFileScene(oldPath, newPath, BundleDirScene::COPY_HAP_TO_TEMP_PATH)) {
+        LOG_E(BMS_TAG_INSTALLD, "Calling CopyHapToTempPath with invalid path prefix");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    if (!InstalldOperator::CopyFileFast(oldPath, newPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "CopyHapToTempPath failed, errno:%{public}d", errno);
+        return ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED;
+    }
+    mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+    if (!OHOS::ChangeModeFile(newPath, mode)) {
+        LOG_E(BMS_TAG_INSTALLD, "CopyHapToTempPath change mode failed");
+        return ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED;
+    }
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::ExtractFiles(const ExtractParam &extractParam)
 {
     LOG_D(BMS_TAG_INSTALLD, "ExtractFiles extractParam %{public}s", extractParam.ToString().c_str());

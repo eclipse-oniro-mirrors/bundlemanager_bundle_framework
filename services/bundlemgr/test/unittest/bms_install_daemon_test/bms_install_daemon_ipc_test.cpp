@@ -1704,4 +1704,22 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldSceneInterfacesIpc_CopyHqfFile_0100, F
     EXPECT_EQ(proxy->CopyHqfFile(
         TEST_BUNDLE_NAME, "entry", "scene_test/entry.hqf", 100, targetParam), ERR_OK);
 }
+
+/**
+ * @tc.number: CopyHapToTempPath_Ipc_0100
+ * @tc.name: test CopyHapToTempPath IPC serialization
+ * @tc.desc: 1. verify Proxy write order matches Host read order
+ * @tc.require:
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, CopyHapToTempPath_Ipc_0100, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    ASSERT_NE(proxy, nullptr);
+    std::string bundleName = "com.example.test";
+    std::string hapRealPath = "/data/app/el2/100/base/com.example.test/entry.hap";
+    std::string tempDirName = "1788255600000000000_42";
+    std::string hapFileName = "entry.hap";
+    auto ret = proxy->CopyHapToTempPath(bundleName, hapRealPath, tempDirName, hapFileName);
+    EXPECT_EQ(ret, ERR_OK);
+}
 } // OHOS
