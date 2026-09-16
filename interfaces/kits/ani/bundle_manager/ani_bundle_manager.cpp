@@ -2692,7 +2692,7 @@ static ani_object GetBundleExtensionPolicyInfoNative(ani_env* env, ani_string an
     }
     if (bundleName.empty()) {
         BusinessErrorAni::ThrowCommonError(
-            env, ERROR_PARAM_CHECK_ERROR, GET_BUNDLE_INFO_SYNC, BUNDLE_PERMISSIONS);
+            env, ERROR_PARAM_CHECK_ERROR, GET_BUNDLE_EXTENSION_POLICY_INFO, BUNDLE_PERMISSIONS);
         return nullptr;
     }
  

@@ -17527,7 +17527,6 @@ ErrCode BundleDataMgr::GetDualModeBundleInfo(const std::string &bundleName, int3
         APP_LOGW("bundleInfos_ data is empty, bundleName: %{public}s", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    APP_LOGD("GetDualModeBundleInfo: %{public}s", bundleName.c_str());
     auto item = bundleInfos_.find(bundleName);
     if (item == bundleInfos_.end()) {
         APP_LOGW_NOFUNC("%{public}s not find", bundleName.c_str());

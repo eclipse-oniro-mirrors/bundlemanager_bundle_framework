@@ -1471,9 +1471,7 @@ void from_json(const nlohmann::json &jsonObject, AssetGroupInfo &assetGroupInfo)
 
 bool DualModeBundleInfo::ReadFromParcel(Parcel &parcel)
 {
-    std::u16string bundleNameVal;
-    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, bundleNameVal);
-    bundleName = Str16ToStr8(bundleNameVal);
+    bundleName = Str16ToStr8(parcel.ReadString16());
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appIndex);
     int32_t tmpReadVal = 0;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, tmpReadVal);
