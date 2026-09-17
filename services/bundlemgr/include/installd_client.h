@@ -254,6 +254,9 @@ public:
     ErrCode ExtractQuickFixRes(const std::string &bundleName, const std::string &moduleName,
         const std::string &hqfFilePath, bool needFakeDecompression);
 
+    ErrCode ExtractArkProfile(const std::string &bundleName, const std::string &moduleName,
+        const std::string &hapFilePath, int32_t userId);
+
     ErrCode CopyHapToTempPath(const std::string &bundleName, const std::string &hapRealPath,
         const std::string &tempDirName, const std::string &hapFileName);
 

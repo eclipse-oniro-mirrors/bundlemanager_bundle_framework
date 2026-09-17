@@ -263,6 +263,9 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_QUICK_FIX_RES):
             result = this->HandleExtractQuickFixRes(data, reply);
             break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_ARK_PROFILE):
+            result = this->HandleExtractArkProfile(data, reply);
+            break;
         case static_cast<uint32_t>(InstalldInterfaceCode::COPY_HAP_TO_TEMP_PATH):
             result = this->HandleCopyHapToTempPath(data, reply);
             break;
@@ -540,6 +543,17 @@ bool InstalldHost::HandleCopyHapToTempPath(MessageParcel &data, MessageParcel &r
     std::string hapFileName = Str16ToStr8(data.ReadString16());
 
     ErrCode result = CopyHapToTempPath(bundleName, hapRealPath, tempDirName, hapFileName);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleExtractArkProfile(MessageParcel &data, MessageParcel &reply)
+{
+    std::string bundleName = Str16ToStr8(data.ReadString16());
+    std::string moduleName = Str16ToStr8(data.ReadString16());
+    std::string hapFilePath = Str16ToStr8(data.ReadString16());
+    int32_t userId = data.ReadInt32();
+    ErrCode result = ExtractArkProfile(bundleName, moduleName, hapFilePath, userId);
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

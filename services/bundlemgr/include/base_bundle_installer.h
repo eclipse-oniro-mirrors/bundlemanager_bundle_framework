@@ -710,7 +710,7 @@ private:
     bool RemoveDataPreloadHapFiles(const std::string &bundleName) const;
     bool IsDataPreloadHap(const std::string &path) const;
     ErrCode ExtractArkProfileFile(const std::string &modulePath, const std::string &bundleName,
-        int32_t userId) const;
+        const std::string &moduleName, int32_t userId) const;
     ErrCode ExtractAllArkProfileFile(const InnerBundleInfo &oldInfo, bool checkRepeat = false);
     ErrCode CopyPgoFileToArkProfileDir(const std::string &moduleName, const std::string &modulePath,
         const std::string &bundleName, int32_t userId);

@@ -1835,6 +1835,19 @@ HWTEST_F(BmsInstallDaemonHostImplTest, ExtractQuickFixRes_0100, Function | Small
 }
 
 /**
+ * @tc.number: ExtractArkProfile_0100
+ * @tc.name: ExtractArkProfile
+ * @tc.desc: permission denied
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, ExtractArkProfile_0100, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    auto ret = hostImpl->ExtractArkProfile(TEST_BUNDLE_NAME, "entry", "/data/test.hap", 100);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
  * @tc.number: GetCacheDiskUsageFromPath_0100
  * @tc.name: test GetCacheDiskUsageFromPath
  * @tc.desc: 1. verify GetCacheDiskUsageFromPath when permission denied

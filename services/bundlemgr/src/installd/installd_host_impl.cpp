@@ -463,6 +463,41 @@ ErrCode InstalldHostImpl::ExtractSoFiles(const std::string &bundleName, const st
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::ExtractArkProfile(const std::string &bundleName, const std::string &moduleName,
+    const std::string &hapFilePath, int32_t userId)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    if (!InstalldOperator::IsValidBundleName(bundleName) ||
+        !InstalldOperator::IsValidPathByExtractArkProfile(bundleName, moduleName, hapFilePath, userId)) {
+        LOG_E(BMS_TAG_INSTALLD,
+            "Calling the function ExtractArkProfile with invalid param, bundleName:%{public}s, "
+            "moduleName:%{private}s, hapFilePath:%{private}s, userId:%{public}d",
+            bundleName.c_str(), moduleName.c_str(), hapFilePath.c_str(), userId);
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    std::string targetPath = std::string(Constants::APP_EL1_PATH) + std::to_string(userId) +
+        ServiceConstants::PATH_SEPARATOR + Constants::ARK_PROFILE_PATH +
+        ServiceConstants::PATH_SEPARATOR + bundleName;
+    // Verify targetPath against BundleDirScene whitelist (per skill template step 5)
+    if (!InstalldOperator::IsValidPathByBundleDirScene(BundleDirScene::EXTRACT_FILES, targetPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "targetPath failed BundleDirScene whitelist check");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    ExtractParam extractParam;
+    extractParam.bundleName = bundleName;
+    extractParam.extractFileType = ExtractFileType::AP;
+    extractParam.srcPath = hapFilePath;
+    extractParam.targetPath = targetPath;
+    if (!InstalldOperator::ExtractFiles(extractParam)) {
+        LOG_E(BMS_TAG_INSTALLD, "ExtractArkProfile failed, bundleName:%{public}s", bundleName.c_str());
+        return ERR_APPEXECFWK_INSTALLD_EXTRACT_FAILED;
+    }
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::ExtractHnpFiles(const std::map<std::string, std::string> &hnpPackageMap,
     const ExtractParam &extractParam)
 {

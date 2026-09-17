@@ -6237,5 +6237,37 @@ bool InstalldOperator::IsValidPathByExtractQuickFixRes(
     return StartsWith(targetPath, Constants::BUNDLE_CODE_DIR) && IsContainsBundleName(targetPath, bundleName);
 }
 
+
+bool InstalldOperator::IsValidPathByExtractArkProfile(
+    const std::string &bundleName, const std::string &moduleName,
+    const std::string &hapFilePath, int32_t userId)
+{
+    // Semantic validation only — targetPath is constructed internally from known constants
+    // (APP_EL1_PATH, ARK_PROFILE_PATH), so StartsWith/IsContainsBundleName would be
+    // tautological. Path safety is guaranteed by using known constants + IsValidPathByBundleDirScene.
+    // moduleName: validated for format correctness (no path separators) but does not participate
+    // in target path construction. Kept for defense-in-depth and potential future per-module filtering.
+    if (!IsFileNameValid(moduleName) || moduleName.find('/') != std::string::npos) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid param exist ../ or \\..");
+        return false;
+    }
+    if (!IsValidUserId(userId)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid userId");
+        return false;
+    }
+    // Case-insensitive suffix check for .hap/.hsp
+    std::string lowerHapFilePath = hapFilePath;
+    std::transform(lowerHapFilePath.begin(), lowerHapFilePath.end(),
+        lowerHapFilePath.begin(), ::tolower);
+    if (!IsFileNameValid(hapFilePath) ||
+        !(EndsWith(lowerHapFilePath, ServiceConstants::INSTALL_FILE_SUFFIX) ||
+            EndsWith(lowerHapFilePath, ServiceConstants::HSP_FILE_SUFFIX)) ||
+        !IsExistFile(hapFilePath)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid hapFilePath");
+        return false;
+    }
+    return true;
+}
+
 }  // namespace AppExecFwk
 }  // namespace OHOS

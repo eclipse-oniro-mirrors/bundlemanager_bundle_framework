@@ -4395,7 +4395,7 @@ HWTEST_F(BmsBundleInstallerTest, ExtractArkProfileFile_0100, Function | SmallTes
     BaseBundleInstaller installer;
     std::string modulePath = "";
     std::string bundleName = "";
-    auto ret = installer.ExtractArkProfileFile(modulePath, bundleName, USERID);
+    auto ret = installer.ExtractArkProfileFile(modulePath, bundleName, "", USERID);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
@@ -4409,7 +4409,7 @@ HWTEST_F(BmsBundleInstallerTest, ExtractArkProfileFile_0200, Function | SmallTes
     BaseBundleInstaller installer;
     std::string modulePath = RESOURCE_ROOT_PATH + RIGHT_BUNDLE;
     std::string bundleName = BUNDLE_NAME;
-    auto ret = installer.ExtractArkProfileFile(modulePath, bundleName, USERID);
+    auto ret = installer.ExtractArkProfileFile(modulePath, bundleName, "entry", USERID);
     EXPECT_EQ(ret, ERR_OK);
 }
 
@@ -4463,6 +4463,7 @@ HWTEST_F(BmsBundleInstallerTest, ExtractAllArkProfileFile_0300, Function | Small
     innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
     innerBundleInfo.SetIsNewVersion(true);
     BaseBundleInstaller installer;
+    installer.userId_ = USERID;
     auto ret = installer.ExtractAllArkProfileFile(innerBundleInfo);
     EXPECT_EQ(ret, ERR_OK);
 }
@@ -5934,6 +5935,7 @@ HWTEST_F(BmsBundleInstallerTest, ExtractModule_0010, Function | SmallTest | Leve
     info.baseApplicationInfo_->bundleName = "com.example.test";
 
     BaseBundleInstaller installer;
+    installer.userId_ = USERID;
     installer.bundleName_ = "com.example.test";
     installer.modulePackage_ = MODULE_NAME_TEST;
     std::string modulePath = "/data/app/el1/bundle/public/com.example.test";
