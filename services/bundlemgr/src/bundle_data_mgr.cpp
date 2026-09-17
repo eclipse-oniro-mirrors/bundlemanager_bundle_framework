@@ -169,6 +169,7 @@ constexpr const char* LAST_ALLOCATED_BUNDLE_ID_KEY = "lastAllocatedBundleId";
 constexpr unsigned int OTA_CODE_ENCRYPTION_TIMEOUT = 4 * 60;
 const std::string FUNCATION_HANDLE_OTA_CODE_ENCRYPTION = "BundleDataMgr::HandleOTACodeEncryption()";
 const std::string BUNDLE_NAME = "BUNDLE_NAME";
+const std::string SHORTCUT_ID = "SHORTCUT_ID";
 const std::string USER_ID = "USER_ID";
 const std::string APP_INDEX = "APP_INDEX";
 #ifndef BUNDLE_FRAMEWORK_FREE_INSTALL
@@ -16040,8 +16041,13 @@ void BundleDataMgr::FilterShortcutJson(nlohmann::json &jsonResult)
         APP_LOGE("Invalid JSON format: expected array");
         return;
     }
+    size_t originalSize = jsonResult.size();
     for (auto it = jsonResult.begin(); it != jsonResult.end();) {
         if (!it->contains(BUNDLE_NAME) || !it->at(BUNDLE_NAME).is_string()) {
+            it = jsonResult.erase(it);
+            continue;
+        }
+        if (!it->contains(SHORTCUT_ID) || !it->at(SHORTCUT_ID).is_string()) {
             it = jsonResult.erase(it);
             continue;
         }
@@ -16063,6 +16069,11 @@ void BundleDataMgr::FilterShortcutJson(nlohmann::json &jsonResult)
             continue;
         }
         ++it;
+    }
+    size_t dropped = originalSize - jsonResult.size();
+    if (dropped > 0) {
+        APP_LOGW_NOFUNC("FilterShortcutJson dropped %{public}zu entries (of %{public}zu)",
+            dropped, originalSize);
     }
 }
 
