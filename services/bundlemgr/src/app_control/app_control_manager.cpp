@@ -402,13 +402,28 @@ ErrCode AppControlManager::GetAppRunningControlRule(
         return ret;
     }
     std::string key = appId + std::string("_") + std::to_string(userId);
-    auto statusRet = GetAppRunningControlRuleCache(key, controlRuleResult);
-    if (statusRet) {
-        if (controlRuleResult.controlMessage == INVALID_MESSAGE) {
-            controlRuleResult.controlMessage = std::string();
-            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_SET_CONTROL;
+    std::lock_guard<std::mutex> cacheLock(appRunningControlMutex_);
+    auto cacheIt = appRunningControlRuleResult_.find(key);
+    if (cacheIt != appRunningControlRuleResult_.end()) {
+        controlRuleResult = cacheIt->second;
+        bool wantCopyOk = true;
+        if (controlRuleResult.controlWant != nullptr) {
+            Want *newWant = new (std::nothrow) Want(*(controlRuleResult.controlWant));
+            if (newWant != nullptr) {
+                controlRuleResult.controlWant = std::shared_ptr<Want>(newWant);
+            } else {
+                controlRuleResult.controlWant.reset();
+                wantCopyOk = false;
+                LOG_W(BMS_TAG_DEFAULT, "copy Want failed: %{public}s", key.c_str());
+            }
         }
-        return ERR_OK;
+        if (wantCopyOk) {
+            if (controlRuleResult.controlMessage == INVALID_MESSAGE) {
+                controlRuleResult.controlMessage = std::string();
+                return ERR_BUNDLE_MANAGER_BUNDLE_NOT_SET_CONTROL;
+            }
+            return ERR_OK;
+        }
     }
     ret = appIdentifier.empty() ? appControlManagerDb_->GetAppRunningControlRule(appId, userId, controlRuleResult) :
         appControlManagerDb_->GetAppRunningControlRule(appIdentifier, userId, controlRuleResult);
@@ -417,7 +432,7 @@ ErrCode AppControlManager::GetAppRunningControlRule(
     }
     bool findRule = (ret == ERR_OK);
     ret = CheckAppControlRuleIntercept(bundleName, userId, findRule, controlRuleResult);
-    SetAppRunningControlRuleCache(key, controlRuleResult);
+    appRunningControlRuleResult_.emplace(key, controlRuleResult);
     return ret;
 }
 
