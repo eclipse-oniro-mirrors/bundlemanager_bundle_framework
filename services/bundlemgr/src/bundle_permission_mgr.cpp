@@ -47,6 +47,7 @@ const int32_t USER_MODE = 0;
 
 using namespace OHOS::Security;
 std::map<std::string, DefaultPermission> BundlePermissionMgr::defaultPermissions_;
+std::shared_mutex BundlePermissionMgr::defaultPermissionsMutex_;
 
 bool BundlePermissionMgr::Init()
 {
@@ -73,9 +74,12 @@ bool BundlePermissionMgr::Init()
         }
     }
 
-    defaultPermissions_.clear();
-    for (const auto &permission : permissions) {
-        defaultPermissions_.try_emplace(permission.bundleName, permission);
+    {
+        std::unique_lock lock {defaultPermissionsMutex_};
+        defaultPermissions_.clear();
+        for (const auto &permission : permissions) {
+            defaultPermissions_.try_emplace(permission.bundleName, permission);
+        }
     }
     LOG_D(BMS_TAG_DEFAULT, "BundlePermissionMgr::Init success");
     return true;
@@ -84,6 +88,7 @@ bool BundlePermissionMgr::Init()
 void BundlePermissionMgr::UnInit()
 {
     LOG_D(BMS_TAG_DEFAULT, "BundlePermissionMgr::UnInit");
+    std::unique_lock lock {defaultPermissionsMutex_};
     defaultPermissions_.clear();
 }
 
@@ -401,6 +406,7 @@ bool BundlePermissionMgr::CheckPermissionInDefaultPermissions(const DefaultPermi
 bool BundlePermissionMgr::GetDefaultPermission(
     const std::string &bundleName, DefaultPermission &permission)
 {
+    std::shared_lock lock {defaultPermissionsMutex_};
     auto iter = defaultPermissions_.find(bundleName);
     if (iter == defaultPermissions_.end()) {
         LOG_NOFUNC_W(BMS_TAG_DEFAULT, "-n %{public}s not exist in defaultPermissions",
@@ -931,18 +937,25 @@ bool BundlePermissionMgr::RefreshPreAuthorizationForOTA()
         return false;
     }
 
-    if (defaultPermissions_.empty()) {
-        LOG_I(BMS_TAG_DEFAULT, "No default permissions configured");
-        return true;
-    }
+    std::vector<std::string> bundleNames;
+    {
+        std::shared_lock lock {defaultPermissionsMutex_};
+        if (defaultPermissions_.empty()) {
+            LOG_I(BMS_TAG_DEFAULT, "No default permissions configured");
+            return true;
+        }
 
-    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "Processing %{public}zu bundles with default permissions config",
-        defaultPermissions_.size());
+        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "Processing %{public}zu bundles with default permissions config",
+            defaultPermissions_.size());
+        bundleNames.reserve(defaultPermissions_.size());
+        for (const auto &permPair : defaultPermissions_) {
+            bundleNames.push_back(permPair.first);
+        }
+    }
 
     size_t successCount = 0;
     size_t totalCount = 0;
-    for (const auto &permPair : defaultPermissions_) {
-        const std::string &bundleName = permPair.first;
+    for (const std::string &bundleName : bundleNames) {
         InnerBundleInfo innerBundleInfo;
         if (!dataMgr->FetchInnerBundleInfo(bundleName, innerBundleInfo)) {
             LOG_NOFUNC_D(BMS_TAG_DEFAULT, "Bundle %{public}s not installed, skip", bundleName.c_str());
