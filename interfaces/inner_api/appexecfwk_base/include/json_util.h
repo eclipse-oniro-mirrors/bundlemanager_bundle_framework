@@ -190,6 +190,10 @@ bool ParseInfoFromJsonStr(const char *data, T &t)
         return false;
     }
 
+    if (!jsonObject.is_object()) {
+        APP_LOGE("jsonObject is not an object");
+        return false;
+    }
     t = jsonObject.get<T>();
     return true;
 }

@@ -645,7 +645,7 @@ void from_json(const nlohmann::json &jsonObject, AbilityInfo &abilityInfo)
 
 void AbilityInfo::ConvertToCompatiableAbilityInfo(CompatibleAbilityInfo& compatibleAbilityInfo) const
 {
-    APP_LOGE("AbilityInfo::ConvertToCompatiableAbilityInfo called");
+    APP_LOGI("AbilityInfo::ConvertToCompatiableAbilityInfo called");
     compatibleAbilityInfo.package = package;
     compatibleAbilityInfo.name = name;
     compatibleAbilityInfo.label = label;
