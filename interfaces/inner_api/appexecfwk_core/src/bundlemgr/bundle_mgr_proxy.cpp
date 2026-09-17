@@ -5332,6 +5332,7 @@ sptr<IBundleSkillManager> BundleMgrProxy::GetSkillManagerProxy()
     sptr<IBundleSkillManager> skillManagerProxy = iface_cast<IBundleSkillManager>(object);
     if (skillManagerProxy == nullptr) {
         APP_LOGE("skillManagerProxy is nullptr");
+        return nullptr;
     }
 
     return skillManagerProxy;
