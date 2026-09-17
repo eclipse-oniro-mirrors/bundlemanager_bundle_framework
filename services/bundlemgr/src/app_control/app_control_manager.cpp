@@ -137,6 +137,7 @@ ErrCode AppControlManager::AddAppRunningControlRule(const std::string &callingNa
     const std::vector<AppRunningControlRule> &controlRules, int32_t userId)
 {
     LOG_D(BMS_TAG_DEFAULT, "AddAppRunningControlRule");
+    std::lock_guard<std::mutex> opLock(appRunningControlRuleOpMutex_);
     ErrCode ret = CheckControlRules(controlRules, userId);
     if (ret != ERR_OK) {
         return ret;
@@ -219,6 +220,7 @@ void AppControlManager::SetRunningRuleSettingStatusByUserId(
 ErrCode AppControlManager::DeleteAppRunningControlRule(const std::string &callingName,
     const std::vector<AppRunningControlRule> &controlRules, int32_t userId)
 {
+    std::lock_guard<std::mutex> opLock(appRunningControlRuleOpMutex_);
     ErrCode ret = CheckControlRules(controlRules, userId);
     if (ret != ERR_OK) {
         return ret;
@@ -260,6 +262,7 @@ void AppControlManager::DeleteRunningRuleSettingStatusCache(int32_t userId)
 
 ErrCode AppControlManager::DeleteAppRunningControlRule(const std::string &callingName, int32_t userId)
 {
+    std::lock_guard<std::mutex> opLock(appRunningControlRuleOpMutex_);
     ErrCode res = appControlManagerDb_->DeleteAppRunningControlRule(callingName, userId);
     if (res != ERR_OK) {
         LOG_E(BMS_TAG_DEFAULT, "DeleteAppRunningControlRule failed");
