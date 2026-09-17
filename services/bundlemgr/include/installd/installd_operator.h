@@ -541,6 +541,8 @@ public:
     static bool IsValidPathByDeleteUninstallTmpDirs(const std::string &dir);
     static bool IsValidPathByExtractQuickFixRes(const std::string &bundleName, const std::string &moduleName,
         const std::string &hqfFilePath);
+    static bool IsValidPathByExtractArkProfile(const std::string &bundleName, const std::string &moduleName,
+        const std::string &hapFilePath, int32_t userId);
 private:
     static bool ObtainNativeSoFile(const BundleExtractor &extractor, const std::string &cpuAbi,
         std::vector<std::string> &soEntryFiles);

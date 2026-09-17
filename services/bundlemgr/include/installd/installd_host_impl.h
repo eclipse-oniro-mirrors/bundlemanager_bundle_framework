@@ -73,6 +73,9 @@ public:
     virtual ErrCode ExtractQuickFixRes(const std::string &bundleName, const std::string &moduleName,
         const std::string &hqfFilePath, bool needFakeDecompression) override;
 
+    virtual ErrCode ExtractArkProfile(const std::string &bundleName, const std::string &moduleName,
+        const std::string &hapFilePath, int32_t userId) override;
+
     /**
      * @brief Copy HAP file to temp path for sandbox access.
      * @param bundleName Indicates the bundle name for path validation.

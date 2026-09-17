@@ -313,6 +313,8 @@ inline constexpr const char* ISOLATION_PROCESS = "isolationProcess";
 inline constexpr const char* SKIP_ABILITY_STAGE_LIFECYCLE = "skipAbilityStageLifecycle";
 inline constexpr const char* SRC_LANGUAGE_JS = "js";
 inline constexpr const char* PREFER_MULTI_WINDOW_ORIENTATION_DEFAULT = "default";
+inline constexpr const char* APP_EL1_PATH = "/data/app/el1/";
+inline constexpr const char* ARK_PROFILE_PATH = "aot_compiler/ark_profile";
 }  // namespace Constants
 }  // namespace AppExecFwk
 }  // namespace OHOS

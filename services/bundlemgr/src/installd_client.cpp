@@ -104,6 +104,16 @@ ErrCode InstalldClient::ExtractQuickFixRes(const std::string &bundleName, const 
     return CallService(&IInstalld::ExtractQuickFixRes, bundleName, moduleName, hqfFilePath, needFakeDecompression);
 }
 
+ErrCode InstalldClient::ExtractArkProfile(const std::string &bundleName, const std::string &moduleName,
+    const std::string &hapFilePath, int32_t userId)
+{
+    if (bundleName.empty() || moduleName.empty() || hapFilePath.empty()) {
+        APP_LOGE("params are invalid");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::ExtractArkProfile, bundleName, moduleName, hapFilePath, userId);
+}
+
 ErrCode InstalldClient::CopyHapToTempPath(const std::string &bundleName, const std::string &hapRealPath,
     const std::string &tempDirName, const std::string &hapFileName)
 {

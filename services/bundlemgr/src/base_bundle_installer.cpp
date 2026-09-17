@@ -5538,7 +5538,7 @@ ErrCode BaseBundleInstaller::CopyPgoFileToArkProfileDir(
     if (it != pgoParams_.end()) {
         result = CopyPgoFile(moduleName, it->second, bundleName, userId);
     } else {
-        result = ExtractArkProfileFile(modulePath, bundleName, userId);
+        result = ExtractArkProfileFile(modulePath, bundleName, moduleName, userId);
     }
     if (result != ERR_OK) {
         return result;
@@ -5555,7 +5555,7 @@ ErrCode BaseBundleInstaller::CopyPgoFileToArkProfileDir(
         if (it != pgoParams_.end()) {
             (void)CopyPgoFile(moduleName, it->second, bundleName, otherUserId);
         } else {
-            (void)ExtractArkProfileFile(modulePath, bundleName, otherUserId);
+            (void)ExtractArkProfileFile(modulePath, bundleName, moduleName, otherUserId);
         }
     }
     return ERR_OK;
@@ -5579,18 +5579,12 @@ ErrCode BaseBundleInstaller::CopyPgoFile(
 ErrCode BaseBundleInstaller::ExtractArkProfileFile(
     const std::string &modulePath,
     const std::string &bundleName,
+    const std::string &moduleName,
     int32_t userId) const
 {
-    std::string targetPath = AOTHandler::BuildArkProfilePath(userId, bundleName);
-    LOG_D(BMS_TAG_INSTALLER, "Begin to extract ap file, modulePath : %{public}s, targetPath : %{public}s",
-        modulePath.c_str(), targetPath.c_str());
-    ExtractParam extractParam;
-    extractParam.bundleName = bundleName;
-    extractParam.srcPath = modulePath;
-    extractParam.targetPath = targetPath;
-    extractParam.cpuAbi = Constants::EMPTY_STRING;
-    extractParam.extractFileType = ExtractFileType::AP;
-    auto result = InstalldClient::GetInstance()->ExtractFiles(extractParam);
+    LOG_D(BMS_TAG_INSTALLER, "Begin to extract ap file, modulePath : %{public}s",
+        modulePath.c_str());
+    auto result = InstalldClient::GetInstance()->ExtractArkProfile(bundleName, moduleName, modulePath, userId);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "extract ap files failed, error is %{public}d", result);
         return result;

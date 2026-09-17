@@ -68,6 +68,9 @@ public:
     virtual ErrCode ExtractQuickFixRes(const std::string &bundleName, const std::string &moduleName,
         const std::string &hqfFilePath, bool needFakeDecompression) override;
 
+    virtual ErrCode ExtractArkProfile(const std::string &bundleName, const std::string &moduleName,
+        const std::string &hapFilePath, int32_t userId) override;
+
     /**
      * @brief Extract the hnpFiles.
      * @param hnpPackageMap Indicates the hnpPackageInfo.
