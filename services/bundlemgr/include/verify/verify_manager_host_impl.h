@@ -17,7 +17,6 @@
 #define FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_SERVICE_BUNDLEMGR_INCLUDE_VERIFY_VERIFY_MANAGER_PROXY_H
 
 #include <mutex>
-#include <shared_mutex>
 #include "bundle_memory_guard.h"
 #include "verify_manager_stub.h"
 
@@ -61,7 +60,7 @@ private:
     ErrCode VerifyDeleteAbcPermission(const std::string &path);
 
     std::atomic<uint32_t> id_ = 0;
-    mutable std::shared_mutex bundleMutex_;
+    mutable std::mutex bundleMutex_;
     // using for locking by bundleName
     std::unordered_map<std::string, std::mutex> bundleMutexMap_;
 };

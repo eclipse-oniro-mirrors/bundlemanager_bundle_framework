@@ -579,15 +579,8 @@ ErrCode VerifyManagerHostImpl::DeleteAbc(const std::string &path, int32_t &funcR
 
 std::mutex &VerifyManagerHostImpl::GetBundleMutex(const std::string &bundleName)
 {
-    bundleMutex_.lock_shared();
-    auto it = bundleMutexMap_.find(bundleName);
-    if (it == bundleMutexMap_.end()) {
-        bundleMutex_.unlock_shared();
-        std::unique_lock lock {bundleMutex_};
-        return bundleMutexMap_[bundleName];
-    }
-    bundleMutex_.unlock_shared();
-    return it->second;
+    std::unique_lock lock {bundleMutex_};
+    return bundleMutexMap_[bundleName];
 }
 } // AppExecFwk
 } // namespace OHOS
