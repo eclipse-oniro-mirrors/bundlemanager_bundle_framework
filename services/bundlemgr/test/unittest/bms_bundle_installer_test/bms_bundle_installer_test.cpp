@@ -5938,6 +5938,7 @@ HWTEST_F(BmsBundleInstallerTest, ExtractModule_0010, Function | SmallTest | Leve
     installer.userId_ = USERID;
     installer.bundleName_ = "com.example.test";
     installer.modulePackage_ = MODULE_NAME_TEST;
+    installer.userId_ = USERID;
     std::string modulePath = "/data/app/el1/bundle/public/com.example.test";
     installer.modulePath_ = RESOURCE_ROOT_PATH + RIGHT_BUNDLE;
     ErrCode ret = installer.InnerProcessNativeLibs(info, modulePath);

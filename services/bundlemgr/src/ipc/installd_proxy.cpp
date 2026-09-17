@@ -257,6 +257,24 @@ ErrCode InstalldProxy::ExtractQuickFixRes(const std::string &bundleName, const s
     return TransactInstalldCmd(InstalldInterfaceCode::EXTRACT_QUICK_FIX_RES, data, reply, option);
 }
 
+ErrCode InstalldProxy::ExtractArkNative(const std::string &bundleName, const std::string &moduleName,
+    const std::string &hapFilePath, const std::string &cpuAbi,
+    bool needFakeDecompression, bool isSystemApp, int32_t userId)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(moduleName));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(hapFilePath));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(cpuAbi));
+    INSTALLD_PARCEL_WRITE(data, Bool, needFakeDecompression);
+    INSTALLD_PARCEL_WRITE(data, Bool, isSystemApp);
+    INSTALLD_PARCEL_WRITE(data, Int32, userId);
+    MessageParcel reply;
+    MessageOption option;
+    return TransactInstalldCmd(InstalldInterfaceCode::EXTRACT_ARK_NATIVE, data, reply, option);
+}
+
 ErrCode InstalldProxy::ExtractArkProfile(const std::string &bundleName, const std::string &moduleName,
     const std::string &hapFilePath, int32_t userId)
 {

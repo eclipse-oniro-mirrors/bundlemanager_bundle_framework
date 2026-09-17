@@ -6237,6 +6237,37 @@ bool InstalldOperator::IsValidPathByExtractQuickFixRes(
     return StartsWith(targetPath, Constants::BUNDLE_CODE_DIR) && IsContainsBundleName(targetPath, bundleName);
 }
 
+bool InstalldOperator::IsValidPathByExtractArkNative(
+    const std::string &bundleName, const std::string &moduleName,
+    const std::string &hapFilePath, const std::string &cpuAbi)
+{
+    // Semantic validation only — targetPath is constructed internally from known constants,
+    // so StartsWith/IsContainsBundleName would be tautological.
+    // Path safety is guaranteed by using known constants in path construction.
+    if (!IsFileNameValid(moduleName) || moduleName.find('/') != std::string::npos ||
+        !IsFileNameValid(cpuAbi) || cpuAbi.find('/') != std::string::npos) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid param exist ../ or \\..");
+        return false;
+    }
+    // Case-insensitive suffix check for .hap/.hsp (matches CheckFileType behavior)
+    std::string lowerHapFilePath = hapFilePath;
+    std::transform(lowerHapFilePath.begin(), lowerHapFilePath.end(),
+        lowerHapFilePath.begin(), ::tolower);
+    if (!IsFileNameValid(hapFilePath) ||
+        !(EndsWith(lowerHapFilePath, ServiceConstants::INSTALL_FILE_SUFFIX) ||
+            EndsWith(lowerHapFilePath, ServiceConstants::HSP_FILE_SUFFIX)) ||
+        !IsExistFile(hapFilePath)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid hapFilePath");
+        return false;
+    }
+    // cpuAbi must be a known ABI; reject unknown values instead of silently degrading
+    auto abiIter = ServiceConstants::ABI_MAP.find(cpuAbi);
+    if (abiIter == ServiceConstants::ABI_MAP.end()) {
+        LOG_E(BMS_TAG_INSTALLD, "cpuAbi not found in ABI_MAP: %{private}s", cpuAbi.c_str());
+        return false;
+    }
+    return true;
+}
 
 bool InstalldOperator::IsValidPathByExtractArkProfile(
     const std::string &bundleName, const std::string &moduleName,

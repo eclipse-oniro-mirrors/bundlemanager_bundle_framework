@@ -498,6 +498,48 @@ ErrCode InstalldHostImpl::ExtractArkProfile(const std::string &bundleName, const
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::ExtractArkNative(const std::string &bundleName, const std::string &moduleName,
+    const std::string &hapFilePath, const std::string &cpuAbi,
+    bool needFakeDecompression, bool isSystemApp, int32_t userId)
+{
+    // moduleName: validated for format only (no path separators); not used in target path construction.
+    // needFakeDecompression, isSystemApp: passed through to ExtractParam for future use;
+    // current callers always pass false.
+    // userId: reserved for potential multi-user ark cache isolation; not used in current path formula.
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    if (!InstalldOperator::IsValidBundleName(bundleName) ||
+        !InstalldOperator::IsValidPathByExtractArkNative(bundleName, moduleName, hapFilePath, cpuAbi)) {
+        LOG_E(BMS_TAG_INSTALLD,
+            "Calling the function ExtractArkNative with invalid param, bundleName:%{public}s, "
+            "moduleName:%{private}s, hapFilePath:%{private}s, cpuAbi:%{private}s",
+            bundleName.c_str(), moduleName.c_str(), hapFilePath.c_str(), cpuAbi.c_str());
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    std::string arkNativeFilePath;
+    auto abiIter = ServiceConstants::ABI_MAP.find(cpuAbi);
+    if (abiIter != ServiceConstants::ABI_MAP.end()) {
+        arkNativeFilePath = abiIter->second + ServiceConstants::PATH_SEPARATOR;
+    }
+    std::string targetPath = std::string(ServiceConstants::HAP_ARK_CACHE_PATH) + bundleName +
+        ServiceConstants::PATH_SEPARATOR + arkNativeFilePath;
+    ExtractParam extractParam;
+    extractParam.bundleName = bundleName;
+    extractParam.extractFileType = ExtractFileType::AN;
+    extractParam.srcPath = hapFilePath;
+    extractParam.targetPath = targetPath;
+    extractParam.cpuAbi = cpuAbi;
+    extractParam.needFakeDecompression = needFakeDecompression;
+    extractParam.isSystemApp = isSystemApp;
+    if (!InstalldOperator::ExtractFiles(extractParam)) {
+        LOG_E(BMS_TAG_INSTALLD, "ExtractArkNative failed, bundleName:%{public}s", bundleName.c_str());
+        return ERR_APPEXECFWK_INSTALLD_EXTRACT_FAILED;
+    }
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::ExtractHnpFiles(const std::map<std::string, std::string> &hnpPackageMap,
     const ExtractParam &extractParam)
 {

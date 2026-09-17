@@ -1647,6 +1647,22 @@ HWTEST_F(BmsInstalldOperatorTest, IsValidPathByExtractArkProfile_0100, Function 
 }
 
 /**
+ * @tc.number: IsValidPathByExtractArkNative_0100
+ * @tc.name: test IsValidPathByExtractArkNative
+ * @tc.desc: test IsValidPathByExtractArkNative of InstalldOperator (Option2: full hapFilePath + IsExistFile)
+ */
+HWTEST_F(BmsInstalldOperatorTest, IsValidPathByExtractArkNative_0100, Function | SmallTest | Level0)
+{
+    std::string hapFilePath = std::string(Constants::BUNDLE_CODE_DIR) + "/com.example.test/entry/entry.hap";
+    auto ret = InstalldOperator::IsValidPathByExtractArkNative(TEST_BUNDLE_NAME, "entry", hapFilePath, "arm64");
+    EXPECT_FALSE(ret);
+    ret = InstalldOperator::IsValidPathByExtractArkNative(TEST_BUNDLE_NAME, "entry", hapFilePath, "../arm");
+    EXPECT_FALSE(ret);
+    ret = InstalldOperator::IsValidPathByExtractArkNative(TEST_BUNDLE_NAME, "entry", "", "arm64");
+    EXPECT_FALSE(ret);
+}
+
+/**
  * @tc.number: IsValidTargetPathByCopyFileScene_0100
  * @tc.name: test IsValidTargetPathByCopyFileScene
  * @tc.desc: test IsValidTargetPathByCopyFileScene of InstalldOperator

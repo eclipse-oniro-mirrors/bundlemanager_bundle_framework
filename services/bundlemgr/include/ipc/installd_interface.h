@@ -122,6 +122,13 @@ public:
         return ERR_OK;
     }
 
+    virtual ErrCode ExtractArkNative(const std::string &bundleName, const std::string &moduleName,
+        const std::string &hapFilePath, const std::string &cpuAbi,
+        bool needFakeDecompression, bool isSystemApp, int32_t userId)
+    {
+        return ERR_OK;
+    }
+
     /**
      * @brief Extract the hnpFiles.
      * @param hnpPackageMap Indicates the hnpPackageInfo.

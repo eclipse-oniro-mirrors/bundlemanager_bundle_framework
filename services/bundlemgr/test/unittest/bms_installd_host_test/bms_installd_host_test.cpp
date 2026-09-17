@@ -1135,6 +1135,27 @@ HWTEST_F(BmsInstalldHostTest, HandleExtractArkProfile_0100, Function | SmallTest
 }
 
 /**
+ * @tc.number: HandleExtractArkNative_0100
+ * @tc.name: test HandleExtractArkNative
+ * @tc.desc: 1.HandleExtractArkNative test
+ */
+HWTEST_F(BmsInstalldHostTest, HandleExtractArkNative_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteString16(Str8ToStr16("com.example.test"));
+    data.WriteString16(Str8ToStr16("entry"));
+    data.WriteString16(Str8ToStr16("/data/test.hap"));
+    data.WriteString16(Str8ToStr16("arm64-v8a"));
+    data.WriteBool(false);
+    data.WriteBool(false);
+    data.WriteInt32(100);
+    bool res = installdHost.HandleExtractArkNative(data, reply);
+    EXPECT_TRUE(res);
+}
+
+/**
  * @tc.number: HandleGetCacheDiskUsageFromPath_0200
  * @tc.name: test HandleGetCacheDiskUsageFromPath
  * @tc.desc: 1.HandleGetCacheDiskUsageFromPath test

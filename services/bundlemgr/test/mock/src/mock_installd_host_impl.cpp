@@ -81,6 +81,13 @@ ErrCode InstalldHostImpl::ExtractArkProfile(const std::string &bundleName, const
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::ExtractArkNative(const std::string &bundleName, const std::string &moduleName,
+    const std::string &hapFilePath, const std::string &cpuAbi,
+    bool needFakeDecompression, bool isSystemApp, int32_t userId)
+{
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::ExtractHnpFiles(const std::map<std::string, std::string> &hnpPackageMap,
     const ExtractParam &extractParam)
 {

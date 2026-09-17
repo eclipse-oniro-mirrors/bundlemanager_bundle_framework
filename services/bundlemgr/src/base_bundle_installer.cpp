@@ -5463,6 +5463,7 @@ ErrCode BaseBundleInstaller::ExtractHnpFileDir(const std::string &cpuAbi,
     return ret;
 }
 
+// modulePath parameter unused; kept for ABI compatibility. Uses modulePath_ member instead.
 ErrCode BaseBundleInstaller::ExtractArkNativeFile(InnerBundleInfo &info, const std::string &modulePath)
 {
     if (!info.GetArkNativeFilePath().empty()) {
@@ -5483,18 +5484,10 @@ ErrCode BaseBundleInstaller::ExtractArkNativeFile(InnerBundleInfo &info, const s
 
     std::string arkNativeFilePath;
     arkNativeFilePath.append(ServiceConstants::ABI_MAP.at(cpuAbi)).append(ServiceConstants::PATH_SEPARATOR);
-    std::string targetPath;
-    targetPath.append(ServiceConstants::HAP_ARK_CACHE_PATH).append(info.GetBundleName())
-        .append(ServiceConstants::PATH_SEPARATOR).append(arkNativeFilePath);
-    LOG_D(BMS_TAG_INSTALLER, "Begin extract an modulePath: %{public}s targetPath: %{public}s cpuAbi: %{public}s",
-        modulePath.c_str(), targetPath.c_str(), cpuAbi.c_str());
-    ExtractParam extractParam;
-    extractParam.bundleName = info.GetBundleName();
-    extractParam.srcPath = modulePath_;
-    extractParam.targetPath = targetPath;
-    extractParam.cpuAbi = cpuAbi;
-    extractParam.extractFileType = ExtractFileType::AN;
-    auto result = InstalldClient::GetInstance()->ExtractFiles(extractParam);
+    LOG_D(BMS_TAG_INSTALLER, "Begin extract an modulePath: %{public}s cpuAbi: %{public}s",
+        modulePath_.c_str(), cpuAbi.c_str());
+    auto result = InstalldClient::GetInstance()->ExtractArkNative(
+        info.GetBundleName(), modulePackage_, modulePath_, cpuAbi, false, false, userId_);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "extract files failed, error is %{public}d", result);
         return result;
