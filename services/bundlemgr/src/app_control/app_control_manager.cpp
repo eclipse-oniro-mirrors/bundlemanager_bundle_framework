@@ -381,6 +381,33 @@ ErrCode AppControlManager::GetDisposedStatus(const std::string &appId, Want& wan
         APP_MARKET_CALLING, appId, want, userId);
 }
 
+bool AppControlManager::TryGetControlRuleFromCache(const std::string &key,
+    AppRunningControlRuleResult &controlRuleResult, ErrCode &result)
+{
+    std::lock_guard<std::mutex> cacheLock(appRunningControlMutex_);
+    auto cacheIt = appRunningControlRuleResult_.find(key);
+    if (cacheIt == appRunningControlRuleResult_.end()) {
+        return false;
+    }
+    controlRuleResult = cacheIt->second;
+    if (controlRuleResult.controlWant != nullptr) {
+        Want *newWant = new (std::nothrow) Want(*(controlRuleResult.controlWant));
+        if (newWant == nullptr) {
+            controlRuleResult.controlWant.reset();
+            LOG_W(BMS_TAG_DEFAULT, "copy Want failed: %{public}s", key.c_str());
+            return false;
+        }
+        controlRuleResult.controlWant = std::shared_ptr<Want>(newWant);
+    }
+    if (controlRuleResult.controlMessage == INVALID_MESSAGE) {
+        controlRuleResult.controlMessage = std::string();
+        result = ERR_BUNDLE_MANAGER_BUNDLE_NOT_SET_CONTROL;
+    } else {
+        result = ERR_OK;
+    }
+    return true;
+}
+
 ErrCode AppControlManager::GetAppRunningControlRule(
     const std::string &bundleName, int32_t userId, AppRunningControlRuleResult &controlRuleResult)
 {
@@ -402,28 +429,8 @@ ErrCode AppControlManager::GetAppRunningControlRule(
         return ret;
     }
     std::string key = appId + std::string("_") + std::to_string(userId);
-    std::lock_guard<std::mutex> cacheLock(appRunningControlMutex_);
-    auto cacheIt = appRunningControlRuleResult_.find(key);
-    if (cacheIt != appRunningControlRuleResult_.end()) {
-        controlRuleResult = cacheIt->second;
-        bool wantCopyOk = true;
-        if (controlRuleResult.controlWant != nullptr) {
-            Want *newWant = new (std::nothrow) Want(*(controlRuleResult.controlWant));
-            if (newWant != nullptr) {
-                controlRuleResult.controlWant = std::shared_ptr<Want>(newWant);
-            } else {
-                controlRuleResult.controlWant.reset();
-                wantCopyOk = false;
-                LOG_W(BMS_TAG_DEFAULT, "copy Want failed: %{public}s", key.c_str());
-            }
-        }
-        if (wantCopyOk) {
-            if (controlRuleResult.controlMessage == INVALID_MESSAGE) {
-                controlRuleResult.controlMessage = std::string();
-                return ERR_BUNDLE_MANAGER_BUNDLE_NOT_SET_CONTROL;
-            }
-            return ERR_OK;
-        }
+    if (TryGetControlRuleFromCache(key, controlRuleResult, ret)) {
+        return ret;
     }
     ret = appIdentifier.empty() ? appControlManagerDb_->GetAppRunningControlRule(appId, userId, controlRuleResult) :
         appControlManagerDb_->GetAppRunningControlRule(appIdentifier, userId, controlRuleResult);
