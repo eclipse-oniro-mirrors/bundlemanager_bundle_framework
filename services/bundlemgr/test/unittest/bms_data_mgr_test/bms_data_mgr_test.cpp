@@ -7279,11 +7279,13 @@ HWTEST_F(BmsDataMgrTest, FilterShortcutJson_0020, Function | MediumTest | Level1
 {
     BundleDataMgr bundleDataMgr;
     nlohmann::json backupJson;
-    backupJson.push_back({{"BUNDLE_NAME", "com.invalid.bundle"}, {"APP_INDEX", 0}, {"USER_ID", 100}});
+    backupJson.push_back({{"BUNDLE_NAME", "com.invalid.bundle"}, {"SHORTCUT_ID", "shortcut_001"},
+        {"APP_INDEX", 0}, {"USER_ID", 100}});
     bundleDataMgr.FilterShortcutJson(backupJson);
     EXPECT_EQ(backupJson.size(), 1);
     nlohmann::json backupJson2;
-    backupJson2.push_back({{"BUNDLE_NAME", "com.invalid.bundle"}, {"APP_INDEX", 0}, {"USER_ID", 101}});
+    backupJson2.push_back({{"BUNDLE_NAME", "com.invalid.bundle"}, {"SHORTCUT_ID", "shortcut_002"},
+        {"APP_INDEX", 0}, {"USER_ID", 101}});
     bundleDataMgr.FilterShortcutJson(backupJson2);
     EXPECT_EQ(backupJson2.size(), 0);
 }
@@ -7297,11 +7299,8 @@ HWTEST_F(BmsDataMgrTest, FilterShortcutJson_0030, Function | MediumTest | Level1
 {
     BundleDataMgr bundleDataMgr;
     nlohmann::json backupJson;
-    std::string bundleName = "com.valid.bundle";
-    backupJson.push_back({{"BUNDLE_NAME", "com.valid.bundle"}, {"APP_INDEX", 0}, {"USER_ID", 100}});
-    InnerBundleInfo innerBundleInfo;
-    bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
-    bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
+    backupJson.push_back({{"BUNDLE_NAME", "com.valid.bundle"}, {"SHORTCUT_ID", "shortcut_001"},
+        {"APP_INDEX", 0}, {"USER_ID", 100}});
     bundleDataMgr.FilterShortcutJson(backupJson);
     EXPECT_EQ(backupJson.size(), 1);
 }
@@ -7315,12 +7314,8 @@ HWTEST_F(BmsDataMgrTest, FilterShortcutJson_0040, Function | MediumTest | Level1
 {
     BundleDataMgr bundleDataMgr;
     nlohmann::json backupJson;
-    std::string bundleName = "com.valid.bundle";
-    backupJson.push_back({{"BUNDLE_NAME", "com.valid.bundle"}, {"APP_INDEX", 0}, {"USER_ID", 100}});
-    InnerBundleInfo innerBundleInfo;
-    bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
-    bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
-    bundleDataMgr.multiUserIdsSet_.insert(100);
+    backupJson.push_back({{"BUNDLE_NAME", "com.valid.bundle"}, {"SHORTCUT_ID", "shortcut_001"},
+        {"APP_INDEX", 0}, {"USER_ID", 100}});
     bundleDataMgr.FilterShortcutJson(backupJson);
     EXPECT_EQ(backupJson.size(), 1);
 }
@@ -7335,11 +7330,8 @@ HWTEST_F(BmsDataMgrTest, FilterShortcutJson_0050, Function | MediumTest | Level1
     BundleDataMgr bundleDataMgr;
     nlohmann::json backupJson;
     std::string bundleName = "com.valid.bundle";
-    backupJson.push_back({{"BUNDLE_NAME", "com.valid.bundle"}, {"APP_INDEX", 0}, {"USER_ID", -5}});
-    InnerBundleInfo innerBundleInfo;
-    bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
-    bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
-    bundleDataMgr.multiUserIdsSet_.insert(-5);
+    backupJson.push_back({{"BUNDLE_NAME", "com.valid.bundle"}, {"SHORTCUT_ID", "shortcut_001"},
+        {"APP_INDEX", 0}, {"USER_ID", -5}});
     bundleDataMgr.FilterShortcutJson(backupJson);
     EXPECT_EQ(backupJson.size(), 0);
     std::shared_ptr<ShortcutDataStorageRdb> shortcutDataStorageRdb = std::make_shared<ShortcutDataStorageRdb>();
@@ -7350,25 +7342,14 @@ HWTEST_F(BmsDataMgrTest, FilterShortcutJson_0050, Function | MediumTest | Level1
 /**
  * @tc.number: FilterShortcutJson_0060
  * @tc.name: test FilterShortcutJson
- * @tc.desc: 1.test FilterShortcutJson with invalid appIndex
+ * @tc.desc: 1.test FilterShortcutJson with clone appIndex
  */
 HWTEST_F(BmsDataMgrTest, FilterShortcutJson_0060, Function | MediumTest | Level1)
 {
     BundleDataMgr bundleDataMgr;
     nlohmann::json backupJson;
-    std::string bundleName = "com.valid.bundle";
-    backupJson.push_back({{"BUNDLE_NAME", "com.valid.bundle"}, {"APP_INDEX", 1}, {"USER_ID", 100}});
-    InnerBundleInfo innerBundleInfo;
-    std::map<std::string, InnerBundleUserInfo> innerBundleUserInfos;
-    InnerBundleUserInfo info;
-    info.bundleUserInfo.userId = 100;
-    InnerBundleCloneInfo cloneInfo;
-    info.cloneInfos.emplace(bundleName, cloneInfo);
-    innerBundleUserInfos["_100"] = info;
-    innerBundleInfo.innerBundleUserInfos_ = innerBundleUserInfos;
-    bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
-    bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
-    bundleDataMgr.multiUserIdsSet_.insert(100);
+    backupJson.push_back({{"BUNDLE_NAME", "com.valid.bundle"}, {"SHORTCUT_ID", "shortcut_001"},
+        {"APP_INDEX", 1}, {"USER_ID", 100}});
     bundleDataMgr.FilterShortcutJson(backupJson);
     EXPECT_EQ(backupJson.size(), 1);
 }
@@ -7378,38 +7359,137 @@ HWTEST_F(BmsDataMgrTest, FilterShortcutJson_0060, Function | MediumTest | Level1
  * @tc.name: test FilterShortcutJson
  * @tc.desc: 1.test FilterShortcutJson with invalid json
  */
-HWTEST_F(BmsDataMgrTest, FilterShortcutJson_0130, Function | MediumTest | Level1)
+HWTEST_F(BmsDataMgrTest, FilterShortcutJson_0070, Function | MediumTest | Level1)
 {
     BundleDataMgr bundleDataMgr;
     nlohmann::json backupJson;
-    backupJson.push_back({{"APP_INDEX", 0}, {"USER_ID", 100}});
+    backupJson.push_back({{"SHORTCUT_ID", "shortcut_001"}, {"APP_INDEX", 0}, {"USER_ID", 100}});
     bundleDataMgr.FilterShortcutJson(backupJson);
     EXPECT_EQ(backupJson.size(), 0);
 
     backupJson.clear();
-    backupJson.push_back({{"BUNDLE_NAME", "com.valid.bundle"}, {"USER_ID", 100}});
+    backupJson.push_back({{"BUNDLE_NAME", "com.valid.bundle"}, {"SHORTCUT_ID", "shortcut_001"},
+        {"USER_ID", 100}});
     bundleDataMgr.FilterShortcutJson(backupJson);
     EXPECT_EQ(backupJson.size(), 0);
 
     backupJson.clear();
-    backupJson.push_back({{"BUNDLE_NAME", "com.valid.bundle"}, {"APP_INDEX", 0}});
+    backupJson.push_back({{"BUNDLE_NAME", "com.valid.bundle"}, {"SHORTCUT_ID", "shortcut_001"},
+        {"APP_INDEX", 0}});
     bundleDataMgr.FilterShortcutJson(backupJson);
     EXPECT_EQ(backupJson.size(), 0);
 
     backupJson.clear();
-    backupJson.push_back({{"BUNDLE_NAME", 1}, {"APP_INDEX", 0}, {"USER_ID", 100}});
+    backupJson.push_back({{"BUNDLE_NAME", 1}, {"SHORTCUT_ID", "shortcut_001"},
+        {"APP_INDEX", 0}, {"USER_ID", 100}});
     bundleDataMgr.FilterShortcutJson(backupJson);
     EXPECT_EQ(backupJson.size(), 0);
 
     backupJson.clear();
-    backupJson.push_back({{"BUNDLE_NAME", "com.valid.bundle"}, {"APP_INDEX", "appIndex"}, {"USER_ID", 100}});
+    backupJson.push_back({{"BUNDLE_NAME", "com.valid.bundle"}, {"SHORTCUT_ID", "shortcut_001"},
+        {"APP_INDEX", "appIndex"}, {"USER_ID", 100}});
     bundleDataMgr.FilterShortcutJson(backupJson);
     EXPECT_EQ(backupJson.size(), 0);
 
     backupJson.clear();
-    backupJson.push_back({{"BUNDLE_NAME", "com.valid.bundle"}, {"APP_INDEX", 0}, {"USER_ID", "userId"}});
+    backupJson.push_back({{"BUNDLE_NAME", "com.valid.bundle"}, {"SHORTCUT_ID", "shortcut_001"},
+        {"APP_INDEX", 0}, {"USER_ID", "userId"}});
     bundleDataMgr.FilterShortcutJson(backupJson);
     EXPECT_EQ(backupJson.size(), 0);
+}
+
+/**
+ * @tc.number: FilterShortcutJson_0080
+ * @tc.name: test FilterShortcutJson
+ * @tc.desc: 1.test FilterShortcutJson with missing SHORTCUT_ID field
+ */
+HWTEST_F(BmsDataMgrTest, FilterShortcutJson_0080, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    nlohmann::json backupJson;
+    backupJson.push_back({{"BUNDLE_NAME", "com.valid.bundle"}, {"APP_INDEX", 0}, {"USER_ID", 100}});
+    bundleDataMgr.FilterShortcutJson(backupJson);
+    EXPECT_EQ(backupJson.size(), 0);
+}
+
+/**
+ * @tc.number: FilterShortcutJson_0090
+ * @tc.name: test FilterShortcutJson
+ * @tc.desc: 1.test FilterShortcutJson with SHORTCUT_ID of wrong type (not string)
+ */
+HWTEST_F(BmsDataMgrTest, FilterShortcutJson_0090, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    nlohmann::json backupJson;
+    backupJson.push_back({{"BUNDLE_NAME", "com.valid.bundle"}, {"SHORTCUT_ID", 1},
+        {"APP_INDEX", 0}, {"USER_ID", 100}});
+    bundleDataMgr.FilterShortcutJson(backupJson);
+    EXPECT_EQ(backupJson.size(), 0);
+
+    backupJson.clear();
+    backupJson.push_back({{"BUNDLE_NAME", "com.valid.bundle"}, {"SHORTCUT_ID", true},
+        {"APP_INDEX", 0}, {"USER_ID", 100}});
+    bundleDataMgr.FilterShortcutJson(backupJson);
+    EXPECT_EQ(backupJson.size(), 0);
+
+    backupJson.clear();
+    backupJson.push_back({{"BUNDLE_NAME", "com.valid.bundle"}, {"SHORTCUT_ID", nullptr},
+        {"APP_INDEX", 0}, {"USER_ID", 100}});
+    bundleDataMgr.FilterShortcutJson(backupJson);
+    EXPECT_EQ(backupJson.size(), 0);
+}
+
+/**
+ * @tc.number: FilterShortcutJson_0100
+ * @tc.name: test FilterShortcutJson
+ * @tc.desc: 1.test FilterShortcutJson with valid SHORTCUT_ID field should be kept
+ */
+HWTEST_F(BmsDataMgrTest, FilterShortcutJson_0100, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    nlohmann::json backupJson;
+    backupJson.push_back({{"BUNDLE_NAME", "com.valid.bundle"}, {"SHORTCUT_ID", "shortcut_001"},
+        {"APP_INDEX", 0}, {"USER_ID", 100}});
+    bundleDataMgr.FilterShortcutJson(backupJson);
+    EXPECT_EQ(backupJson.size(), 1);
+    EXPECT_TRUE(backupJson[0].contains("SHORTCUT_ID"));
+    EXPECT_EQ(backupJson[0]["SHORTCUT_ID"].get<std::string>(), "shortcut_001");
+}
+
+/**
+ * @tc.number: FilterShortcutJson_0110
+ * @tc.name: test FilterShortcutJson
+ * @tc.desc: 1.test FilterShortcutJson with mixed valid and invalid SHORTCUT_ID entries
+ */
+HWTEST_F(BmsDataMgrTest, FilterShortcutJson_0110, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    nlohmann::json backupJson;
+    backupJson.push_back({{"BUNDLE_NAME", "com.valid.bundle"}, {"SHORTCUT_ID", "shortcut_001"},
+        {"APP_INDEX", 0}, {"USER_ID", 100}});
+    backupJson.push_back({{"BUNDLE_NAME", "com.valid.bundle"}, {"APP_INDEX", 0}, {"USER_ID", 100}});
+    backupJson.push_back({{"BUNDLE_NAME", "com.valid.bundle"}, {"SHORTCUT_ID", 2},
+        {"APP_INDEX", 0}, {"USER_ID", 100}});
+    backupJson.push_back({{"BUNDLE_NAME", "com.valid.bundle"}, {"SHORTCUT_ID", "shortcut_002"},
+        {"APP_INDEX", 0}, {"USER_ID", 101}});
+    bundleDataMgr.FilterShortcutJson(backupJson);
+    EXPECT_EQ(backupJson.size(), 1);
+    EXPECT_EQ(backupJson[0]["SHORTCUT_ID"].get<std::string>(), "shortcut_001");
+}
+
+/**
+ * @tc.number: FilterShortcutJson_0120
+ * @tc.name: test FilterShortcutJson
+ * @tc.desc: 1.test FilterShortcutJson with empty SHORTCUT_ID string value should be kept
+ */
+HWTEST_F(BmsDataMgrTest, FilterShortcutJson_0120, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    nlohmann::json backupJson;
+    backupJson.push_back({{"BUNDLE_NAME", "com.valid.bundle"}, {"SHORTCUT_ID", ""},
+        {"APP_INDEX", 0}, {"USER_ID", 100}});
+    bundleDataMgr.FilterShortcutJson(backupJson);
+    EXPECT_EQ(backupJson.size(), 1);
 }
 
 /**
