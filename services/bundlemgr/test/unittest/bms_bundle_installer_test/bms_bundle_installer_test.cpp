@@ -1029,6 +1029,51 @@ HWTEST_F(BmsBundleInstallerTest, PrepareSkillUri_0100, Function | SmallTest | Le
 }
 
 /**
+ * @tc.number: NotifyAppSkillStatus_0100
+ * @tc.name: test NotifyAppSkillStatus with no skill changes
+ * @tc.desc: 1.old skills and new skills are both empty
+ *           2.no added/changed/removed skills, function should return false
+ */
+HWTEST_F(BmsBundleInstallerTest, NotifyAppSkillStatus_0100, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    std::vector<std::string> oldSkills;
+    std::vector<std::string> newSkills;
+
+    bool ret = installer.NotifyAppSkillStatus(BUNDLE_NAME, oldSkills, newSkills, USERID);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: NotifyAppSkillStatus_0200
+ * @tc.name: test NotifyAppSkillStatus with skill changes
+ * @tc.desc: 1.added skill should notify and return true
+ *           2.changed skill (exists in both sides) should notify and return true
+ *           3.removed skill should notify and return true
+ */
+HWTEST_F(BmsBundleInstallerTest, NotifyAppSkillStatus_0200, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    const std::string skillA = "entry:SkillA";
+    const std::string skillB = "entry:SkillB";
+
+    // added: new skill not in old skills
+    std::vector<std::string> oldSkills;
+    std::vector<std::string> newSkills = { skillA };
+    EXPECT_TRUE(installer.NotifyAppSkillStatus(BUNDLE_NAME, oldSkills, newSkills, USERID));
+
+    // changed: skill exists in both sides
+    oldSkills = { skillA };
+    newSkills = { skillA, skillB };
+    EXPECT_TRUE(installer.NotifyAppSkillStatus(BUNDLE_NAME, oldSkills, newSkills, USERID));
+
+    // removed: old skill missing in new skills
+    oldSkills = { skillA };
+    newSkills.clear();
+    EXPECT_TRUE(installer.NotifyAppSkillStatus(BUNDLE_NAME, oldSkills, newSkills, USERID));
+}
+
+/**
  * @tc.number: SystemInstall_0100
  * @tc.name: test the right system bundle file can be installed
  * @tc.desc: 1.the system bundle file exists
