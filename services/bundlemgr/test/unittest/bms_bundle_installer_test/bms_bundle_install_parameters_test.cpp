@@ -33,6 +33,7 @@ namespace {
 const std::string VALID_BUNDLE_NAME_1 = "com.example.test";
 const std::string VALID_BUNDLE_NAME_2 = "com.example_test.app";
 const std::string VALID_CLONE_BUNDLE_NAME = "+clone-1+com.example.test";
+const std::string VALID_DUAL_MODE_CLONE_BUNDLE_NAME = "+clone-10000+com.example.test";
 const std::string VALID_SANDBOX_BUNDLE_NAME = "1_com.example.test";
 const std::string INVALID_BUNDLE_NAME_EMPTY = "";
 const std::string INVALID_BUNDLE_NAME_SHORT = "a.b.c";
@@ -42,6 +43,7 @@ const std::string INVALID_BUNDLE_NAME_2 = "com/example/test";
 const std::string INVALID_BUNDLE_NAME_3 = "com/..example/test";
 const std::string INVALID_BUNDLE_NAME_4 = "com../example/test";
 const std::string INVALID_CLONE_BUNDLE_NAME = "+clone-1w+com.example.test";
+const std::string INVALID_CLONE_BUNDLE_NAME_NO_SEPARATOR = "+clone-10000";
 const std::string INVALID_SANDBOX_BUNDLE_NAME = "1w_com.example.test";
 }  // namespace
 
@@ -2341,6 +2343,57 @@ HWTEST_F(BmsBundleInstallParametersTest, SetDirApl_0900, Function | SmallTest | 
     std::string bundleName = "";
     std::string apl = "";
     int32_t uid = -1;
+    auto ret = impl.SetDirApl(dir, bundleName, apl, false, false, uid);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: SetDirApl_1000
+ * @tc.name: test SetDirApl with dual-mode clone bundleName
+ * @tc.desc: 1. test SetDirApl with dual-mode clone bundleName should pass the param check
+ *              (prefix parsed to the original bundle name) and reach restorecon
+ */
+HWTEST_F(BmsBundleInstallParametersTest, SetDirApl_1000, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    std::string dir = "/data/app/el1/bundle/public";
+    std::string bundleName = VALID_DUAL_MODE_CLONE_BUNDLE_NAME;
+    std::string apl = "normal";
+    int32_t uid = 10000;
+    auto ret = impl.SetDirApl(dir, bundleName, apl, false, false, uid);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_SET_SELINUX_LABEL_FAILED);
+}
+
+/**
+ * @tc.number: SetDirApl_1100
+ * @tc.name: test SetDirApl with clone bundleName
+ * @tc.desc: 1. test SetDirApl with clone bundleName should pass the param check (prefix
+ *              parsed to the original bundle name) and reach restorecon
+ */
+HWTEST_F(BmsBundleInstallParametersTest, SetDirApl_1100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    std::string dir = "/data/app/el1/bundle/public";
+    std::string bundleName = VALID_CLONE_BUNDLE_NAME;
+    std::string apl = "normal";
+    int32_t uid = 10000;
+    auto ret = impl.SetDirApl(dir, bundleName, apl, false, false, uid);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_SET_SELINUX_LABEL_FAILED);
+}
+
+/**
+ * @tc.number: SetDirApl_1200
+ * @tc.name: test SetDirApl with malformed clone bundleName
+ * @tc.desc: 1. test SetDirApl with malformed clone bundleName (no original name after
+ *              the appIndex) should return error
+ */
+HWTEST_F(BmsBundleInstallParametersTest, SetDirApl_1200, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    std::string dir = "/data/app/el1/bundle/public";
+    std::string bundleName = INVALID_CLONE_BUNDLE_NAME_NO_SEPARATOR;
+    std::string apl = "normal";
+    int32_t uid = 10000;
     auto ret = impl.SetDirApl(dir, bundleName, apl, false, false, uid);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
