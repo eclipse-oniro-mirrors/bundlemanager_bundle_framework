@@ -14,6 +14,9 @@
  */
 #define private public
 
+#include <atomic>
+#include <thread>
+#include <vector>
 #include <gtest/gtest.h>
 
 #include "bundle_constants.h"
@@ -47,6 +50,11 @@ const uint32_t TEST_VERSION = 1;
 const std::string TEST_BUNDLE_NAME_TWO = "com.test.rdbtwo";
 const std::string TEST_NAME_TWO = "NameTwo";
 const uint32_t TEST_VERSION_TWO = 2;
+const std::string UPSERT_RACE_TABLE = "rdbUpsertRaceTable";
+const std::string UPSERT_RACE_COLUMN_NAME = "NAME";
+const std::string UPSERT_RACE_COLUMN_VALUE = "VALUE";
+const std::string UPSERT_RACE_KEY = "raceKeyOne";
+const std::string UPSERT_RACE_VALUE = "raceValueOne";
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 const int32_t TEST_USERID = 500;
 const std::string TEST_DEFAULT_APP_TYPE = "IMAGE";
@@ -60,6 +68,7 @@ public:
     void TearDown();
     std::shared_ptr<RdbDataManager> OpenDbAndTable();
     void CloseDb();
+    std::shared_ptr<RdbDataManager> OpenUpsertRaceTable();
 private:
     static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
@@ -95,6 +104,19 @@ std::shared_ptr<RdbDataManager> BmsRdbDataManagerTest::OpenDbAndTable()
 void BmsRdbDataManagerTest::CloseDb()
 {
     OHOS::NativeRdb::RdbHelper::DeleteRdbStore(DB_PATH + DB_NAME);
+}
+
+std::shared_ptr<RdbDataManager> BmsRdbDataManagerTest::OpenUpsertRaceTable()
+{
+    BmsRdbConfig bmsRdbConfig;
+    bmsRdbConfig.dbPath = DB_PATH;
+    bmsRdbConfig.dbName = DB_NAME;
+    bmsRdbConfig.tableName = UPSERT_RACE_TABLE;
+    bmsRdbConfig.createTableSql = "CREATE TABLE IF NOT EXISTS " + UPSERT_RACE_TABLE
+        + "(ID INTEGER PRIMARY KEY AUTOINCREMENT, NAME TEXT NOT NULL, VALUE TEXT NOT NULL);";
+    auto rdbDataManager = std::make_shared<RdbDataManager>(bmsRdbConfig);
+    rdbDataManager->CreateTable();
+    return rdbDataManager;
 }
 
 /**
@@ -1256,6 +1278,108 @@ HWTEST_F(BmsRdbDataManagerTest, TransformStrToInfo_Parallel_0700, Function | Sma
     dataStorage->TransformStrToInfo(datas, infos);
 
     EXPECT_TRUE(infos.empty());
+}
+
+/**
+ * @tc.number: RdbDataManager_1700
+ * @tc.name: concurrent UpdateOrInsertData with same instance
+ * @tc.desc: 1.concurrent UpdateOrInsertData for same key, only one row exists
+ */
+HWTEST_F(BmsRdbDataManagerTest, RdbDataManager_1700, Function | MediumTest | Level1)
+{
+    auto rdbDataManager = OpenUpsertRaceTable();
+    ASSERT_NE(rdbDataManager, nullptr);
+    NativeRdb::AbsRdbPredicates cleanPredicates(UPSERT_RACE_TABLE);
+    cleanPredicates.EqualTo(UPSERT_RACE_COLUMN_NAME, UPSERT_RACE_KEY);
+    rdbDataManager->DeleteData(cleanPredicates);
+
+    constexpr int32_t threadCount = 8;
+    std::atomic<bool> startFlag {false};
+    std::vector<std::thread> threads;
+    for (int32_t i = 0; i < threadCount; i++) {
+        threads.emplace_back([&rdbDataManager, &startFlag]() {
+            while (!startFlag.load()) {
+                std::this_thread::yield();
+            }
+            NativeRdb::ValuesBucket valuesBucket;
+            valuesBucket.PutString(UPSERT_RACE_COLUMN_NAME, UPSERT_RACE_KEY);
+            valuesBucket.PutString(UPSERT_RACE_COLUMN_VALUE, UPSERT_RACE_VALUE);
+            NativeRdb::AbsRdbPredicates absRdbPredicates(UPSERT_RACE_TABLE);
+            absRdbPredicates.EqualTo(UPSERT_RACE_COLUMN_NAME, UPSERT_RACE_KEY);
+            rdbDataManager->UpdateOrInsertData(valuesBucket, absRdbPredicates);
+        });
+    }
+    startFlag.store(true);
+    for (auto &worker : threads) {
+        worker.join();
+    }
+
+    auto resultSet = rdbDataManager->QueryData(cleanPredicates);
+    ASSERT_NE(resultSet, nullptr);
+    ScopeGuard guard([resultSet] { resultSet->Close(); });
+    int32_t rowCount = 0;
+    if (resultSet->GoToFirstRow() == NativeRdb::E_OK) {
+        do {
+            rowCount++;
+        } while (resultSet->GoToNextRow() == NativeRdb::E_OK);
+    }
+    EXPECT_EQ(rowCount, 1);
+
+    rdbDataManager->DeleteData(cleanPredicates);
+}
+
+/**
+ * @tc.number: RdbDataManager_1800
+ * @tc.name: concurrent UpdateOrInsertData with two instances
+ * @tc.desc: 1.concurrent UpdateOrInsertData on same table from two instances, only one row exists
+ */
+HWTEST_F(BmsRdbDataManagerTest, RdbDataManager_1800, Function | MediumTest | Level1)
+{
+    auto rdbDataManagerFirst = OpenUpsertRaceTable();
+    ASSERT_NE(rdbDataManagerFirst, nullptr);
+    auto rdbDataManagerSecond = OpenUpsertRaceTable();
+    ASSERT_NE(rdbDataManagerSecond, nullptr);
+    NativeRdb::AbsRdbPredicates cleanPredicates(UPSERT_RACE_TABLE);
+    cleanPredicates.EqualTo(UPSERT_RACE_COLUMN_NAME, UPSERT_RACE_KEY);
+    rdbDataManagerFirst->DeleteData(cleanPredicates);
+
+    auto upsertFunc = [](std::shared_ptr<RdbDataManager> rdbDataManager, const std::atomic<bool> *startFlag) {
+        while (!startFlag->load()) {
+            std::this_thread::yield();
+        }
+        NativeRdb::ValuesBucket valuesBucket;
+        valuesBucket.PutString(UPSERT_RACE_COLUMN_NAME, UPSERT_RACE_KEY);
+        valuesBucket.PutString(UPSERT_RACE_COLUMN_VALUE, UPSERT_RACE_VALUE);
+        NativeRdb::AbsRdbPredicates absRdbPredicates(UPSERT_RACE_TABLE);
+        absRdbPredicates.EqualTo(UPSERT_RACE_COLUMN_NAME, UPSERT_RACE_KEY);
+        rdbDataManager->UpdateOrInsertData(valuesBucket, absRdbPredicates);
+    };
+    constexpr int32_t threadCountPerMgr = 4;
+    std::atomic<bool> startFlag {false};
+    std::vector<std::thread> threads;
+    for (int32_t i = 0; i < threadCountPerMgr; i++) {
+        threads.emplace_back(upsertFunc, rdbDataManagerFirst, &startFlag);
+    }
+    for (int32_t i = 0; i < threadCountPerMgr; i++) {
+        threads.emplace_back(upsertFunc, rdbDataManagerSecond, &startFlag);
+    }
+    startFlag.store(true);
+    for (auto &worker : threads) {
+        worker.join();
+    }
+
+    auto resultSet = rdbDataManagerFirst->QueryData(cleanPredicates);
+    ASSERT_NE(resultSet, nullptr);
+    ScopeGuard guard([resultSet] { resultSet->Close(); });
+    int32_t rowCount = 0;
+    if (resultSet->GoToFirstRow() == NativeRdb::E_OK) {
+        do {
+            rowCount++;
+        } while (resultSet->GoToNextRow() == NativeRdb::E_OK);
+    }
+    EXPECT_EQ(rowCount, 1);
+
+    rdbDataManagerFirst->DeleteData(cleanPredicates);
 }
 
 }  // namespace
