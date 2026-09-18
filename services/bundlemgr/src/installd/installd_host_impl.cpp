@@ -540,6 +540,42 @@ ErrCode InstalldHostImpl::ExtractArkNative(const std::string &bundleName, const 
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::ExtractResourceFiles(const std::string &bundleName, const std::string &moduleName,
+    const std::string &hapFilePath, bool needFakeDecompression, bool useNewCodeDir, bool useModuleTmp)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    if (!InstalldOperator::IsValidBundleName(bundleName) ||
+        !InstalldOperator::IsValidPathByExtractResourceFiles(bundleName, moduleName, hapFilePath,
+            useNewCodeDir, useModuleTmp)) {
+        LOG_E(BMS_TAG_INSTALLD,
+            "Calling the function ExtractResourceFiles with invalid param, bundleName:%{public}s, "
+            "moduleName:%{private}s, hapFilePath:%{private}s",
+            bundleName.c_str(), moduleName.c_str(), hapFilePath.c_str());
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    // align GetModulePath: BUNDLE_CODE_DIR/[+new-]{bn}/{mn}[_tmp]/
+    std::string codeDirName = useNewCodeDir
+        ? (std::string(ServiceConstants::BUNDLE_NEW_CODE_DIR) + bundleName) : bundleName;
+    std::string moduleDirName = useModuleTmp
+        ? (moduleName + ServiceConstants::TMP_SUFFIX) : moduleName;
+    std::string targetPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
+        codeDirName + ServiceConstants::PATH_SEPARATOR + moduleDirName + ServiceConstants::PATH_SEPARATOR;
+    ExtractParam extractParam;
+    extractParam.bundleName = bundleName;
+    extractParam.extractFileType = ExtractFileType::RESOURCE;
+    extractParam.srcPath = hapFilePath;
+    extractParam.targetPath = targetPath;
+    extractParam.needFakeDecompression = needFakeDecompression;
+    if (!InstalldOperator::ExtractFiles(extractParam)) {
+        LOG_E(BMS_TAG_INSTALLD, "ExtractResourceFiles failed, bundleName:%{public}s", bundleName.c_str());
+        return ERR_APPEXECFWK_INSTALLD_EXTRACT_FAILED;
+    }
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::ExtractHnpFiles(const std::map<std::string, std::string> &hnpPackageMap,
     const ExtractParam &extractParam)
 {

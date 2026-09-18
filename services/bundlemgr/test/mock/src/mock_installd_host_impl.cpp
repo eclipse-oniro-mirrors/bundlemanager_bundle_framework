@@ -88,6 +88,12 @@ ErrCode InstalldHostImpl::ExtractArkNative(const std::string &bundleName, const 
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::ExtractResourceFiles(const std::string &bundleName, const std::string &moduleName,
+    const std::string &hapFilePath, bool needFakeDecompression, bool useNewCodeDir, bool useModuleTmp)
+{
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::ExtractHnpFiles(const std::map<std::string, std::string> &hnpPackageMap,
     const ExtractParam &extractParam)
 {

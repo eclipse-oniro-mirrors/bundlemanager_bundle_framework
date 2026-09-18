@@ -101,6 +101,12 @@ ErrCode InstalldClient::ExtractArkNative(const std::string &bundleName, const st
     return 0;
 }
 
+ErrCode InstalldClient::ExtractResourceFiles(const std::string &bundleName, const std::string &moduleName,
+    const std::string &hapFilePath, bool needFakeDecompression, bool useNewCodeDir, bool useModuleTmp)
+{
+    return 0;
+}
+
 ErrCode InstalldClient::ExtractHnpFiles(const std::map<std::string, std::string> &hnpPackageMap,
     const ExtractParam &extractParam)
 {

@@ -541,6 +541,8 @@ public:
     static bool IsValidPathByDeleteUninstallTmpDirs(const std::string &dir);
     static bool IsValidPathByExtractQuickFixRes(const std::string &bundleName, const std::string &moduleName,
         const std::string &hqfFilePath);
+    static bool IsValidPathByExtractResourceFiles(const std::string &bundleName, const std::string &moduleName,
+        const std::string &hapFilePath, bool useNewCodeDir, bool useModuleTmp);
     static bool IsValidPathByExtractArkNative(const std::string &bundleName, const std::string &moduleName,
         const std::string &hapFilePath, const std::string &cpuAbi);
     static bool IsValidPathByExtractArkProfile(const std::string &bundleName, const std::string &moduleName,

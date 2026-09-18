@@ -787,7 +787,7 @@ private:
     ErrCode CheckBundleInBmsExtension(const std::string &bundleName, int32_t userId);
     ErrCode CheckMDMUpdateBundleForSelf(const InstallParam &installParam, InnerBundleInfo &oldInfo,
         const std::unordered_map<std::string, InnerBundleInfo> &newInfos, bool isAppExist);
-    void ExtractResourceFiles(const InnerBundleInfo &info, const std::string &targetPath) const;
+    void ExtractResourceFiles(const InnerBundleInfo &info, bool useNewCodeDir, bool useModuleTmp) const;
     void ExtractNPAPIPluginFiles(const std::string &modulePath);
     void RemoveNPAPIPluginDir();
     void RemoveTempSoDir(const std::string &tempSoDir, const std::string &bundleName);

@@ -6237,6 +6237,28 @@ bool InstalldOperator::IsValidPathByExtractQuickFixRes(
     return StartsWith(targetPath, Constants::BUNDLE_CODE_DIR) && IsContainsBundleName(targetPath, bundleName);
 }
 
+bool InstalldOperator::IsValidPathByExtractResourceFiles(
+    const std::string &bundleName, const std::string &moduleName, const std::string &hapFilePath,
+    bool useNewCodeDir, bool useModuleTmp)
+{
+    if (useNewCodeDir && useModuleTmp) {
+        LOG_E(BMS_TAG_INSTALLD, "useNewCodeDir and useModuleTmp cannot both be true");
+        return false;
+    }
+    if (!IsFileNameValid(moduleName) || moduleName.find('/') != std::string::npos) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid param exist ../ or \\..");
+        return false;
+    }
+    if (!IsFileNameValid(hapFilePath) ||
+        !(EndsWith(hapFilePath, ServiceConstants::INSTALL_FILE_SUFFIX) ||
+            EndsWith(hapFilePath, ServiceConstants::HSP_FILE_SUFFIX)) ||
+        !IsExistFile(hapFilePath)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid hapFilePath");
+        return false;
+    }
+    return true;
+}
+
 bool InstalldOperator::IsValidPathByExtractArkNative(
     const std::string &bundleName, const std::string &moduleName,
     const std::string &hapFilePath, const std::string &cpuAbi)

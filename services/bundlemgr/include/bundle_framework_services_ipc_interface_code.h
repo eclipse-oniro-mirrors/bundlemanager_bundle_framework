@@ -122,6 +122,7 @@ enum class InstalldInterfaceCode : uint32_t {
     COPY_SKILL_HSP = 96,
     COPY_SHARED_HSP = 104,
     MOVE_SHARED_HSP_TO_CODE_DIR = 119,
+    EXTRACT_RESOURCE_FILES = 121,
 };
 
 } // namespace AppExecFwk
