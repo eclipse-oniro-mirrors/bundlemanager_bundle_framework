@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 #include "application_info.h"
+#include "bundle_profile.h"
 #include "inner_bundle_info.h"
 #include "json_serializer.h"
 #include "module_profile.h"
@@ -219,6 +220,54 @@ const nlohmann::json MODULE_JSON_FEATURE = R"(
         "srcEntrance": "./ets/Application/AbilityStage.ts",
         "type": "feature",
         "virtualMachine": "ark0.0.0.3"
+    }
+})"_json;
+
+const nlohmann::json CONFIG_JSON_FORM_ENTITY = R"(
+{
+    "app": {
+        "bundleName": "com.example.formentitytest",
+        "apiVersion": {
+            "compatible": 5
+        },
+        "version": {
+            "code": 1,
+            "name": "1.0.0"
+        }
+    },
+    "deviceConfig": {
+    },
+    "module": {
+        "package": "entry",
+        "name": "entry",
+        "deviceType": [
+            "default"
+        ],
+        "distro": {
+            "moduleName": "entry",
+            "moduleType": "entry"
+        },
+        "abilities": [
+            {
+                "name": "MainAbility",
+                "type": "page",
+                "form": {
+                    "formEntity": [
+                        "homeScreen",
+                        "searchbox"
+                    ]
+                }
+            },
+            {
+                "name": "SecondAbility",
+                "type": "page",
+                "form": {
+                    "formEntity": [
+                        "unknownEntity"
+                    ]
+                }
+            }
+        ]
     }
 })"_json;
 }  // namespace
@@ -635,5 +684,34 @@ HWTEST_F(BmsBundleSrcEntryDelegatorTest, GetHnpPackageTest_0200, Function | Smal
     auto innerModuleInfo = innerBundleInfo.GetInnerModuleInfoByModuleName("featureModule");
     EXPECT_NE(innerModuleInfo, std::nullopt);
     EXPECT_EQ(innerModuleInfo->hnpPackages.size(), 0);
+}
+
+/**
+ * @tc.number: BundleProfileFormEntityTest_0100
+ * @tc.name: test BundleProfileFormEntityTest_0100
+ * @tc.desc: BundleProfileFormEntityTest_0100
+ */
+HWTEST_F(BmsBundleSrcEntryDelegatorTest, BundleProfileFormEntityTest_0100, Function | SmallTest | Level1)
+{
+    BundleProfile bundleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json profileJson = CONFIG_JSON_FORM_ENTITY;
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor("");
+    ErrCode result = bundleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK);
+
+    const auto &abilityInfos = innerBundleInfo.GetInnerAbilityInfos();
+    auto mainAbility = abilityInfos.find("com.example.formentitytest.entry.MainAbility");
+    EXPECT_NE(mainAbility, abilityInfos.end());
+    EXPECT_EQ(mainAbility->second.formEntity, 3U);
+
+    auto secondAbility = abilityInfos.find("com.example.formentitytest.entry.SecondAbility");
+    EXPECT_NE(secondAbility, abilityInfos.end());
+    EXPECT_EQ(secondAbility->second.formEntity, 0U);
 }
 } // OHOS

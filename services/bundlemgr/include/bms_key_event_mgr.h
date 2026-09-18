@@ -16,6 +16,8 @@
 #ifndef FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_SERVICES_BMS_KEY_EVENT_MGR_H
 #define FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_SERVICES_BMS_KEY_EVENT_MGR_H
 
+#include <atomic>
+#include <mutex>
 #include <string>
 
 namespace OHOS {
@@ -27,7 +29,8 @@ public:
     static void ProcessMainBundleInstallFailed(const std::string &bundleName, int32_t errCode);
 
 private:
-    static std::atomic_uint isMainBundleReady_;
+    static std::atomic<bool> isMainBundleReady_;
+    static std::mutex paramMutex_;
 };
 } // namespace AppExecFwk
 } // namespace OHOS

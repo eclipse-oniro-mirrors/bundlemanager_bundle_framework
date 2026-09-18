@@ -13,6 +13,9 @@
  * limitations under the License.
  */
 
+#include "bms_key_event_mgr.h"
+#include "parameters.h"
+
 #define private public
 
 #include <atomic>
@@ -1082,5 +1085,26 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleManagerCallbackStub_0500, Function |
 
     int32_t ret = stub.OnRemoteRequest(code, data, reply, option);
     EXPECT_NE(ret, 0);
+}
+
+/**
+ * @tc.number: BmsKeyEventMgr_0100
+ * @tc.name: Test ProcessMainBundleStatusFinally and ProcessMainBundleInstallFailed
+ * @tc.desc: Verify the main bundle ready parameter protocol.
+ */
+HWTEST_F(BmsBundleKitServiceBaseTest, BmsKeyEventMgr_0100, Function | MediumTest | Level1)
+{
+    const std::string bootEventKey = "bootevent.bms.main.bundles.ready";
+    BmsKeyEventMgr::ProcessMainBundleStatusFinally();
+    EXPECT_EQ(system::GetParameter(bootEventKey, ""), "true");
+
+    BmsKeyEventMgr::ProcessMainBundleInstallFailed("com.ohos.sceneboard", 1);
+    EXPECT_EQ(system::GetParameter(bootEventKey, ""), "false");
+
+    BmsKeyEventMgr::ProcessMainBundleStatusFinally();
+    EXPECT_EQ(system::GetParameter(bootEventKey, ""), "false");
+
+    BmsKeyEventMgr::ProcessMainBundleInstallFailed("not.main.bundle", 1);
+    EXPECT_EQ(system::GetParameter(bootEventKey, ""), "false");
 }
 }
