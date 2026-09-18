@@ -416,21 +416,25 @@ void BundleInstallerManager::DelayStopThreadPool()
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "DelayStopThreadPool begin");
     BundleMemoryGuard memoryGuard;
 
-    do {
+    while (true) {
         LOG_NOFUNC_I(BMS_TAG_INSTALLER, "sleep for 60s runningTask %{public}d", g_taskCounter.load());
         std::this_thread::sleep_for(std::chrono::seconds(DELAY_INTERVAL_SECONDS));
-    } while (threadPool_ != nullptr && (threadPool_->GetCurTaskNum() != 0
-        || g_taskCounter.load() != 0));
-
-    std::lock_guard<std::mutex> guard(mutex_);
-    if (threadPool_ == nullptr) {
-        LOG_NOFUNC_I(BMS_TAG_INSTALLER, "InstallerThreadPool is null, no need to stop");
+        // the drain check and Stop() must be in one mutex_ section, otherwise a task added by AddTask
+        // in between is dropped by Stop()
+        std::lock_guard<std::mutex> guard(mutex_);
+        if (threadPool_ == nullptr) {
+            LOG_NOFUNC_I(BMS_TAG_INSTALLER, "InstallerThreadPool is null, no need to stop");
+            return;
+        }
+        if (threadPool_->GetCurTaskNum() != 0 || g_taskCounter.load() != 0) {
+            continue;
+        }
+        LOG_NOFUNC_I(BMS_TAG_INSTALLER, "begin to stop InstallerThreadPool");
+        threadPool_->Stop();
+        threadPool_ = nullptr;
+        LOG_NOFUNC_I(BMS_TAG_INSTALLER, "DelayStopThreadPool end");
         return;
     }
-    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "begin to stop InstallerThreadPool");
-    threadPool_->Stop();
-    threadPool_ = nullptr;
-    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "DelayStopThreadPool end");
 }
 
 size_t BundleInstallerManager::GetCurTaskNum()

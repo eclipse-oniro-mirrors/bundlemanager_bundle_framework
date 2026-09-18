@@ -1699,6 +1699,8 @@ HWTEST_F(BmsIdleConditionMgrTest, SetIsRelabeling_0100, Function | SmallTest | L
     auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
     ASSERT_NE(idleMgr, nullptr);
 
+    idleMgr->isScanActive_ = false;
+    idleMgr->isFileCategoryScanActive_ = false;
     idleMgr->isRelabeling_ = true;
     bool result = idleMgr->SetIsRelabeling();
     EXPECT_FALSE(result);
@@ -1735,6 +1737,8 @@ HWTEST_F(BmsIdleConditionMgrTest, SetIsScanActive_0100, Function | SmallTest | L
     auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
     ASSERT_NE(idleMgr, nullptr);
 
+    idleMgr->isRelabeling_ = false;
+    idleMgr->isFileCategoryScanActive_ = false;
     idleMgr->isScanActive_ = true;
     EXPECT_FALSE(idleMgr->SetIsScanActive());
 
@@ -2217,6 +2221,8 @@ HWTEST_F(BmsIdleConditionMgrTest, SetIsFileCategoryScanActive_0100, Function | S
     auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
     ASSERT_NE(idleMgr, nullptr);
 
+    idleMgr->isRelabeling_.store(false);
+    idleMgr->isScanActive_.store(false);
     idleMgr->isFileCategoryScanActive_.store(false);
     EXPECT_TRUE(idleMgr->SetIsFileCategoryScanActive());
     EXPECT_TRUE(idleMgr->isFileCategoryScanActive_.load());
@@ -2237,6 +2243,78 @@ HWTEST_F(BmsIdleConditionMgrTest, SetIsFileCategoryScanActive_0200, Function | S
     idleMgr->isFileCategoryScanActive_.store(true);
     EXPECT_FALSE(idleMgr->SetIsFileCategoryScanActive());
     idleMgr->isFileCategoryScanActive_.store(false);
+}
+
+/**
+ * @tc.number: SetIsRelabeling_0200
+ * @tc.name: SetIsRelabeling re-checks sibling flags under lock
+ * @tc.desc: 1. isScanActive_ or isFileCategoryScanActive_ set after the condition check
+ *           2. SetIsRelabeling returns false and isRelabeling_ stays false
+ */
+HWTEST_F(BmsIdleConditionMgrTest, SetIsRelabeling_0200, Function | SmallTest | Level0)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    ASSERT_NE(idleMgr, nullptr);
+
+    idleMgr->isRelabeling_.store(false);
+    idleMgr->isScanActive_.store(true);
+    idleMgr->isFileCategoryScanActive_.store(false);
+    EXPECT_FALSE(idleMgr->SetIsRelabeling());
+    EXPECT_FALSE(idleMgr->isRelabeling_.load());
+
+    idleMgr->isScanActive_.store(false);
+    idleMgr->isFileCategoryScanActive_.store(true);
+    EXPECT_FALSE(idleMgr->SetIsRelabeling());
+    EXPECT_FALSE(idleMgr->isRelabeling_.load());
+    idleMgr->isFileCategoryScanActive_.store(false);
+}
+
+/**
+ * @tc.number: SetIsScanActive_0200
+ * @tc.name: SetIsScanActive re-checks sibling flags under lock
+ * @tc.desc: 1. isRelabeling_ or isFileCategoryScanActive_ set after the condition check
+ *           2. SetIsScanActive returns false and isScanActive_ stays false
+ */
+HWTEST_F(BmsIdleConditionMgrTest, SetIsScanActive_0200, Function | SmallTest | Level0)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    ASSERT_NE(idleMgr, nullptr);
+
+    idleMgr->isScanActive_.store(false);
+    idleMgr->isRelabeling_.store(true);
+    idleMgr->isFileCategoryScanActive_.store(false);
+    EXPECT_FALSE(idleMgr->SetIsScanActive());
+    EXPECT_FALSE(idleMgr->isScanActive_.load());
+
+    idleMgr->isRelabeling_.store(false);
+    idleMgr->isFileCategoryScanActive_.store(true);
+    EXPECT_FALSE(idleMgr->SetIsScanActive());
+    EXPECT_FALSE(idleMgr->isScanActive_.load());
+    idleMgr->isFileCategoryScanActive_.store(false);
+}
+
+/**
+ * @tc.number: SetIsFileCategoryScanActive_0300
+ * @tc.name: SetIsFileCategoryScanActive re-checks sibling flags under lock
+ * @tc.desc: 1. isRelabeling_ or isScanActive_ set after the condition check
+ *           2. SetIsFileCategoryScanActive returns false and isFileCategoryScanActive_ stays false
+ */
+HWTEST_F(BmsIdleConditionMgrTest, SetIsFileCategoryScanActive_0300, Function | SmallTest | Level0)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    ASSERT_NE(idleMgr, nullptr);
+
+    idleMgr->isFileCategoryScanActive_.store(false);
+    idleMgr->isRelabeling_.store(true);
+    idleMgr->isScanActive_.store(false);
+    EXPECT_FALSE(idleMgr->SetIsFileCategoryScanActive());
+    EXPECT_FALSE(idleMgr->isFileCategoryScanActive_.load());
+
+    idleMgr->isRelabeling_.store(false);
+    idleMgr->isScanActive_.store(true);
+    EXPECT_FALSE(idleMgr->SetIsFileCategoryScanActive());
+    EXPECT_FALSE(idleMgr->isFileCategoryScanActive_.load());
+    idleMgr->isScanActive_.store(false);
 }
 
 /**

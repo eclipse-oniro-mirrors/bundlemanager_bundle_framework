@@ -317,6 +317,12 @@ bool IdleConditionMgr::SetIsRelabeling()
         APP_LOGI_NOFUNC("Already relabeling");
         return false;
     }
+    // CheckRelabelConditions released mutex_ before this, re-check the mutually exclusive tasks under the same lock
+    if (isScanActive_ || isFileCategoryScanActive_) {
+        APP_LOGI_NOFUNC("scan active, skip relabel: isScanActive=%{public}d, isFileCategoryScanActive=%{public}d",
+            isScanActive_.load(), isFileCategoryScanActive_.load());
+        return false;
+    }
     isRelabeling_ = true;
     return true;
 }
@@ -326,6 +332,12 @@ bool IdleConditionMgr::SetIsScanActive()
     std::lock_guard<std::mutex> lock(mutex_);
     if (isScanActive_) {
         APP_LOGI_NOFUNC("ScanSystemAppSize Scan already active");
+        return false;
+    }
+    // CheckScanConditions released mutex_ before this, re-check the mutually exclusive tasks under the same lock
+    if (isRelabeling_ || isFileCategoryScanActive_) {
+        APP_LOGI_NOFUNC("ScanSystemAppSize skip scan: isRelabeling=%{public}d, isFileCategoryScanActive=%{public}d",
+            isRelabeling_.load(), isFileCategoryScanActive_.load());
         return false;
     }
     isScanActive_ = true;
@@ -477,7 +489,7 @@ void IdleConditionMgr::TryStartScanAppData()
         return;
     }
     if (!SetIsScanActive()) {
-        APP_LOGI("ScanSystemAppSize Scan already active");
+        APP_LOGD("ScanSystemAppSize Set isScanActive failed");
         return;
     }
     StartScanAppDataTask();
@@ -572,6 +584,12 @@ bool IdleConditionMgr::SetIsFileCategoryScanActive()
         APP_LOGI_NOFUNC("AppFileCategory Scan already active");
         return false;
     }
+    // CheckFileCategoryScanConditions released mutex_ before this, re-check the mutually exclusive tasks
+    if (isRelabeling_ || isScanActive_) {
+        APP_LOGI_NOFUNC("AppFileCategory skip scan: isRelabeling=%{public}d, isScanActive=%{public}d",
+            isRelabeling_.load(), isScanActive_.load());
+        return false;
+    }
     isFileCategoryScanActive_ = true;
     return true;
 }
@@ -605,7 +623,7 @@ void IdleConditionMgr::TryStartScanFileCategory()
         return;
     }
     if (!SetIsFileCategoryScanActive()) {
-        APP_LOGI_NOFUNC("AppFileCategory Scan already active");
+        APP_LOGD("AppFileCategory Set isFileCategoryScanActive failed");
         return;
     }
     StartFileCategoryScanTask();

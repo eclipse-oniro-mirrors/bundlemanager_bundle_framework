@@ -1477,6 +1477,74 @@ HWTEST_F(BmsAOTMgrTest, AOTSignDataCacheMgr_1000, Function | SmallTest | Level1)
 }
 
 /**
+ * @tc.number: AOTSignDataCacheMgr_1100
+ * @tc.name: Test HandleUnlockEvent drains cached data
+ * @tc.desc: 1.cache sign data while locked
+ *           2.HandleUnlockEvent signs and drains the cache, then clears isLocked_
+ */
+HWTEST_F(BmsAOTMgrTest, AOTSignDataCacheMgr_1100, Function | SmallTest | Level1)
+{
+    AOTSignDataCacheMgr &signDataCacheMgr = AOTSignDataCacheMgr::GetInstance();
+    signDataCacheMgr.isLocked_ = true;
+    signDataCacheMgr.moduleSignDataVector_.clear();
+    signDataCacheMgr.sysCompSignDataMap_.clear();
+    AOTArgs aotArgs;
+    aotArgs.bundleName = AOT_BUNDLE_NAME;
+    aotArgs.moduleName = AOT_MODULE_NAME;
+    aotArgs.anFileName = AN_FILE_NAME;
+    std::vector<uint8_t> signData(HAP_PATH.begin(), HAP_PATH.end());
+    signDataCacheMgr.AddSignDataForModule(aotArgs, 1, signData, ERR_APPEXECFWK_INSTALLD_SIGN_AOT_DISABLE);
+    signDataCacheMgr.AddSignDataForSysComp(AN_FILE_NAME, signData, ERR_APPEXECFWK_INSTALLD_SIGN_AOT_DISABLE);
+    EXPECT_EQ(signDataCacheMgr.moduleSignDataVector_.size(), 1U);
+    EXPECT_EQ(signDataCacheMgr.sysCompSignDataMap_.size(), 1U);
+
+    SetPendSignAOTCode(ERR_OK);
+    InstalldClient::GetInstance()->installdProxy_ = new (std::nothrow) MockInstalldProxy(nullptr);
+    signDataCacheMgr.HandleUnlockEvent();
+    EXPECT_FALSE(signDataCacheMgr.isLocked_);
+    EXPECT_TRUE(signDataCacheMgr.moduleSignDataVector_.empty());
+    EXPECT_TRUE(signDataCacheMgr.sysCompSignDataMap_.empty());
+
+    // data added after unlock handled is not cached, so it can not be left behind in the drained cache
+    signDataCacheMgr.AddSignDataForModule(aotArgs, 1, signData, ERR_APPEXECFWK_INSTALLD_SIGN_AOT_DISABLE);
+    signDataCacheMgr.AddSignDataForSysComp(AN_FILE_NAME, signData, ERR_APPEXECFWK_INSTALLD_SIGN_AOT_DISABLE);
+    EXPECT_TRUE(signDataCacheMgr.moduleSignDataVector_.empty());
+    EXPECT_TRUE(signDataCacheMgr.sysCompSignDataMap_.empty());
+    signDataCacheMgr.isLocked_ = true;
+    InstalldClient::GetInstance()->installdProxy_ = nullptr;
+    InstalldClient::GetInstance()->GetInstalldProxy();
+}
+
+/**
+ * @tc.number: AOTExecutor_4100
+ * @tc.name: test ExecuteAOT when AOT is already running
+ * @tc.desc: verify ExecuteAOT is rejected and does not overwrite the running state.
+ */
+HWTEST_F(BmsAOTMgrTest, AOTExecutor_4100, Function | SmallTest | Level1)
+{
+#if defined(CODE_SIGNATURE_ENABLE)
+    AOTArgs runningArgs;
+    runningArgs.outputPath = OUT_PUT_PATH;
+    AOTExecutor::GetInstance().InitState(runningArgs);
+
+    AOTArgs aotArgs;
+    aotArgs.isSysComp = true;
+    aotArgs.sysCompPath = "/system/lib64/libabc.so";
+    aotArgs.anFileName = "test_an_file";
+    aotArgs.outputPath = "test_an_file";
+    ErrCode ret = ERR_OK;
+    std::vector<uint8_t> pendSignData;
+    AOTExecutor::GetInstance().ExecuteAOT(aotArgs, ret, pendSignData);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED);
+    EXPECT_TRUE(AOTExecutor::GetInstance().state_.running);
+    EXPECT_EQ(AOTExecutor::GetInstance().state_.outputPath, OUT_PUT_PATH);
+    AOTExecutor::GetInstance().ResetState();
+#else
+    GTEST_SKIP() << "CODE_SIGNATURE_ENABLE not defined";
+#endif
+}
+
+/**
  * @tc.number: AOTExecutor_2300
  * @tc.name: test StartAOTCompiler with invalid bundleUid
  * @tc.desc: verify StartAOTCompiler returns failure when AotCompilerClient is unavailable
