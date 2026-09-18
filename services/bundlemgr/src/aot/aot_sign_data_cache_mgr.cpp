@@ -52,10 +52,14 @@ void AOTSignDataCacheMgr::AddSignDataForSysComp(const std::string &anFileName, c
         APP_LOGE_NOFUNC("empty anFileName or signData");
         return;
     }
-    if (!isLocked_ || ret != ERR_APPEXECFWK_INSTALLD_SIGN_AOT_DISABLE) {
+    if (ret != ERR_APPEXECFWK_INSTALLD_SIGN_AOT_DISABLE) {
         return;
     }
     std::lock_guard<std::mutex> lock(mutex_);
+    // check isLocked_ under mutex_, HandleUnlockEvent clears it under the same lock before draining the cache
+    if (!isLocked_) {
+        return;
+    }
     sysCompSignDataMap_[anFileName] = signData;
 }
 
@@ -66,10 +70,14 @@ void AOTSignDataCacheMgr::AddSignDataForModule(const AOTArgs &aotArgs, const uin
         APP_LOGD("empty bundleName or moduleName or signData");
         return;
     }
-    if (!isLocked_ || ret != ERR_APPEXECFWK_INSTALLD_SIGN_AOT_DISABLE) {
+    if (ret != ERR_APPEXECFWK_INSTALLD_SIGN_AOT_DISABLE) {
         return;
     }
     std::lock_guard<std::mutex> lock(mutex_);
+    // check isLocked_ under mutex_, HandleUnlockEvent clears it under the same lock before draining the cache
+    if (!isLocked_) {
+        return;
+    }
     moduleSignDataVector_.emplace_back(ModuleSignData{aotArgs.bundleType, aotArgs.triggerType, versionCode,
         aotArgs.bundleName, aotArgs.moduleName, aotArgs.anFileName, signData});
 }
@@ -100,7 +108,11 @@ void AOTSignDataCacheMgr::UnlockEventSubscriber::OnReceiveEvent(const EventFwk::
 void AOTSignDataCacheMgr::HandleUnlockEvent()
 {
     APP_LOGI_NOFUNC("begin to sign data");
-    isLocked_ = false;
+    {
+        // clear isLocked_ under mutex_, so no data can be cached after the drain below has started
+        std::lock_guard<std::mutex> lock(mutex_);
+        isLocked_ = false;
+    }
     UnregisterScreenUnlockEvent();
 
     uint8_t maxRetry = 5;

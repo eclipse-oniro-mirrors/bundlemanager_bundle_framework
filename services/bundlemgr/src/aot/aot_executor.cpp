@@ -364,6 +364,12 @@ void AOTExecutor::ExecuteAOT(const AOTArgs &aotArgs, ErrCode &ret, std::vector<u
     }
     {
         std::lock_guard<std::mutex> lock(stateMutex_);
+        // PrepareArgs runs without stateMutex_, re-check so that the running check and InitState are atomic
+        if (state_.running) {
+            APP_LOGI("AOT started by another caller, ignore");
+            ret = ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
+            return;
+        }
         InitState(aotArgs);
     }
     APP_LOGI("begin to call aot compiler");
