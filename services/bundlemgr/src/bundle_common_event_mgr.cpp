@@ -633,6 +633,11 @@ void BundleCommonEventMgr::NotifySkillEvents(
     if (!EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo)) {
         APP_LOGE("Publish skill common event failed");
     }
+    EventFwk::CommonEventPublishInfo publishInfoForNormalApp;
+    publishInfoForNormalApp.SetSubscriberPermissions({ Constants::PERMISSION_MANAGE_SKILL });
+    if (!EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfoForNormalApp)) {
+        APP_LOGE("Publish skill common event to normal app failed");
+    }
     IPCSkeleton::SetCallingIdentity(identity);
 }
 
