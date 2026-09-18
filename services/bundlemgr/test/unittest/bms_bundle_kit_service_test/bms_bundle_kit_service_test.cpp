@@ -10458,4 +10458,264 @@ HWTEST_F(BmsBundleKitServiceTest, HandleGetDualModeBundleInfo_0001, Function | S
     ErrCode res = localBundleMgrHostImpl->HandleGetDualModeBundleInfo(data, reply);
     EXPECT_EQ(res, ERR_OK);
 }
+
+#ifdef BMS_ENABLE_CLONE_FOR_ACCOUNT
+/**
+ * @tc.number: GetBundleGidsForClone_0100
+ * @tc.name: test GetBundleGids with clone app when main disabled
+ * @tc.desc: 1.system run normally
+ *           2.add cloneInfo
+ *           3.disable main app
+ *           4.get gids returns enabled clone's gids
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleGidsForClone_0100, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    AddCloneInfo(BUNDLE_NAME_TEST, Constants::DEFAULT_USERID, TEST_APP_INDEX1);
+
+    EXPECT_TRUE(ChangeAppDisabledStatus(BUNDLE_NAME_TEST, Constants::DEFAULT_USERID, 0, false));
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<int> gids;
+    auto ret = hostImpl->GetBundleGids(BUNDLE_NAME_TEST, gids);
+    EXPECT_TRUE(ret);
+    EXPECT_FALSE(gids.empty());
+
+    ClearCloneInfo(BUNDLE_NAME_TEST, Constants::DEFAULT_USERID);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetBundleGidsForClone_0200
+ * @tc.name: test GetBundleGids with all clones disabled
+ * @tc.desc: 1.system run normally
+ *           2.add cloneInfo
+ *           3.disable main app and all clones
+ *           4.get gids falls through to main gids
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleGidsForClone_0200, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    AddCloneInfo(BUNDLE_NAME_TEST, Constants::DEFAULT_USERID, TEST_APP_INDEX1);
+
+    EXPECT_TRUE(ChangeAppDisabledStatus(BUNDLE_NAME_TEST, Constants::DEFAULT_USERID, 0, false));
+    EXPECT_TRUE(ChangeAppDisabledStatus(BUNDLE_NAME_TEST, Constants::DEFAULT_USERID, TEST_APP_INDEX1, false));
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<int> gids;
+    auto ret = hostImpl->GetBundleGids(BUNDLE_NAME_TEST, gids);
+    EXPECT_TRUE(ret);
+
+    ClearCloneInfo(BUNDLE_NAME_TEST, Constants::DEFAULT_USERID);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetLaunchWantForBundleSyncForClone_0100
+ * @tc.name: test GetLaunchWantForBundleSync with clone app when main disabled
+ * @tc.desc: 1.system run normally
+ *           2.add cloneInfo
+ *           3.disable main app
+ *           4.get launch want returns OK with clone appIndex
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetLaunchWantForBundleSyncForClone_0100, Function | SmallTest | Level1)
+{
+    GetBundleDataMgr()->AddUserId(DEFAULT_USERID);
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    AddCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST, TEST_APP_INDEX1);
+
+    EXPECT_TRUE(ChangeAppDisabledStatus(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST, 0, false));
+
+    Want want;
+    ErrCode testRet = GetBundleDataMgr()->GetLaunchWantForBundleSync(BUNDLE_NAME_TEST, want, DEFAULT_USER_ID_TEST);
+    EXPECT_EQ(testRet, ERR_OK);
+    int32_t appIndex = want.GetIntParam(Constants::APP_INDEX, Constants::DEFAULT_APP_INDEX);
+    EXPECT_EQ(appIndex, TEST_APP_INDEX1);
+
+    ClearCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetLaunchWantForBundleSyncForClone_0200
+ * @tc.name: test GetLaunchWantForBundleSync with all clones disabled
+ * @tc.desc: 1.system run normally
+ *           2.add cloneInfo
+ *           3.disable main app and all clones
+ *           4.get launch want returns APPLICATION_DISABLED
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetLaunchWantForBundleSyncForClone_0200, Function | SmallTest | Level1)
+{
+    GetBundleDataMgr()->AddUserId(DEFAULT_USERID);
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    AddCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST, TEST_APP_INDEX1);
+
+    EXPECT_TRUE(ChangeAppDisabledStatus(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST, 0, false));
+    EXPECT_TRUE(ChangeAppDisabledStatus(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST, TEST_APP_INDEX1, false));
+
+    Want want;
+    ErrCode testRet = GetBundleDataMgr()->GetLaunchWantForBundleSync(BUNDLE_NAME_TEST, want, DEFAULT_USER_ID_TEST);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_APPLICATION_DISABLED);
+
+    ClearCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetShortcutInfoV9ForClone_0100
+ * @tc.name: test GetShortcutInfoV9 with clone app when main disabled
+ * @tc.desc: 1.system run normally
+ *           2.add cloneInfo
+ *           3.disable main app
+ *           4.get shortcut info returns OK with clone appIndex
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetShortcutInfoV9ForClone_0100, Function | SmallTest | Level1)
+{
+    GetBundleDataMgr()->AddUserId(DEFAULT_USERID);
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    AddCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST, TEST_APP_INDEX1);
+
+    EXPECT_TRUE(ChangeAppDisabledStatus(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST, 0, false));
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<ShortcutInfo> shortcutInfos;
+    ErrCode testRet = hostImpl->GetShortcutInfoV9(BUNDLE_NAME_TEST, shortcutInfos, DEFAULT_USER_ID_TEST);
+    EXPECT_EQ(testRet, ERR_OK);
+
+    ClearCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetShortcutInfoV9ForClone_0200
+ * @tc.name: test GetShortcutInfoV9 with all clones disabled
+ * @tc.desc: 1.system run normally
+ *           2.add cloneInfo
+ *           3.disable main app and all clones
+ *           4.get shortcut info returns APPLICATION_DISABLED
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetShortcutInfoV9ForClone_0200, Function | SmallTest | Level1)
+{
+    GetBundleDataMgr()->AddUserId(DEFAULT_USERID);
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    AddCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST, TEST_APP_INDEX1);
+
+    EXPECT_TRUE(ChangeAppDisabledStatus(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST, 0, false));
+    EXPECT_TRUE(ChangeAppDisabledStatus(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST, TEST_APP_INDEX1, false));
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<ShortcutInfo> shortcutInfos;
+    ErrCode testRet = hostImpl->GetShortcutInfoV9(BUNDLE_NAME_TEST, shortcutInfos, DEFAULT_USER_ID_TEST);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_APPLICATION_DISABLED);
+
+    ClearCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetDeveloperIdsForClone_0100
+ * @tc.name: test GetDeveloperIds with clone app when main disabled
+ * @tc.desc: 1.system run normally
+ *           2.add cloneInfo
+ *           3.disable main app
+ *           4.get developer ids still returns OK
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetDeveloperIdsForClone_0100, Function | SmallTest | Level1)
+{
+    GetBundleDataMgr()->AddUserId(DEFAULT_USERID);
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    AddCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST, TEST_APP_INDEX1);
+
+    EXPECT_TRUE(ChangeAppDisabledStatus(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST, 0, false));
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string appDistributionType;
+    std::vector<std::string> developerIdList;
+    ErrCode ret = hostImpl->GetDeveloperIds(appDistributionType, developerIdList, DEFAULT_USER_ID_TEST);
+    EXPECT_EQ(ret, ERR_OK);
+
+    ClearCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetDeveloperIdsForClone_0200
+ * @tc.name: test GetDeveloperIds with all clones disabled
+ * @tc.desc: 1.system run normally
+ *           2.add cloneInfo
+ *           3.disable main app and all clones
+ *           4.get developer ids skips the bundle
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetDeveloperIdsForClone_0200, Function | SmallTest | Level1)
+{
+    GetBundleDataMgr()->AddUserId(DEFAULT_USERID);
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    AddCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST, TEST_APP_INDEX1);
+
+    EXPECT_TRUE(ChangeAppDisabledStatus(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST, 0, false));
+    EXPECT_TRUE(ChangeAppDisabledStatus(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST, TEST_APP_INDEX1, false));
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string appDistributionType;
+    std::vector<std::string> developerIdList;
+    ErrCode ret = hostImpl->GetDeveloperIds(appDistributionType, developerIdList, DEFAULT_USER_ID_TEST);
+    EXPECT_EQ(ret, ERR_OK);
+
+    ClearCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetContinueBundleNamesForClone_0100
+ * @tc.name: test GetContinueBundleNames with clone app when main disabled
+ * @tc.desc: 1.system run normally
+ *           2.add cloneInfo with continueBundleName
+ *           3.disable main app
+ *           4.get continue bundle names still returns OK
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetContinueBundleNamesForClone_0100, Function | SmallTest | Level1)
+{
+    GetBundleDataMgr()->AddUserId(DEFAULT_USERID);
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    AddCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST, TEST_APP_INDEX1);
+
+    EXPECT_TRUE(ChangeAppDisabledStatus(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST, 0, false));
+
+    std::string continueBundleName = "com.example.continue";
+    std::vector<std::string> bundleNames;
+    ErrCode testRet = GetBundleDataMgr()->GetContinueBundleNames(
+        continueBundleName, bundleNames, DEFAULT_USER_ID_TEST);
+    EXPECT_EQ(testRet, ERR_OK);
+
+    ClearCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetContinueBundleNamesForClone_0200
+ * @tc.name: test GetContinueBundleNames with all clones disabled
+ * @tc.desc: 1.system run normally
+ *           2.add cloneInfo
+ *           3.disable main app and all clones
+ *           4.get continue bundle names skips the bundle
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetContinueBundleNamesForClone_0200, Function | SmallTest | Level1)
+{
+    GetBundleDataMgr()->AddUserId(DEFAULT_USERID);
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    AddCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST, TEST_APP_INDEX1);
+
+    EXPECT_TRUE(ChangeAppDisabledStatus(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST, 0, false));
+    EXPECT_TRUE(ChangeAppDisabledStatus(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST, TEST_APP_INDEX1, false));
+
+    std::string continueBundleName = "com.example.continue";
+    std::vector<std::string> bundleNames;
+    ErrCode testRet = GetBundleDataMgr()->GetContinueBundleNames(
+        continueBundleName, bundleNames, DEFAULT_USER_ID_TEST);
+    EXPECT_EQ(testRet, ERR_OK);
+
+    ClearCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+#endif // BMS_ENABLE_CLONE_FOR_ACCOUNT
 }
