@@ -934,6 +934,92 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CopyFile_0300, TestSize.Le
 }
 
 /**
+ * @tc.number: BmsInstalldClientTest_CopySkillHsp_0100
+ * @tc.name: CopySkillHsp
+ * @tc.desc: Test whether CopySkillHsp returns param error when bundleName is empty.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CopySkillHsp_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_CopySkillHsp_0100 start";
+    std::string bundleName = EMPTY_STRING;
+    std::string moduleName = SOURCE_DIR;
+    std::string hspFileName = FILE;
+    std::string sourceTempDir = TMP_DIR;
+    ErrCode result = installClient_->CopySkillHsp(bundleName, moduleName, hspFileName, sourceTempDir, false);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_CopySkillHsp_0100 end";
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_CopySkillHsp_0200
+ * @tc.name: CopySkillHsp
+ * @tc.desc: Test whether CopySkillHsp returns param error when hspFileName is empty.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CopySkillHsp_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_CopySkillHsp_0200 start";
+    std::string bundleName = BUNDLE_NAME;
+    std::string moduleName = MODULE_NAME;
+    std::string hspFileName = EMPTY_STRING;
+    std::string sourceTempDir = TMP_DIR;
+    ErrCode result = installClient_->CopySkillHsp(bundleName, moduleName, hspFileName, sourceTempDir, true);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_CopySkillHsp_0200 end";
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_CopySkillHsp_0300
+ * @tc.name: CopySkillHsp
+ * @tc.desc: Test whether CopySkillHsp is called normally.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CopySkillHsp_0300, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_CopySkillHsp_0300 start";
+    std::string bundleName = BUNDLE_NAME;
+    std::string moduleName = MODULE_NAME;
+    std::string hspFileName = FILE;
+    std::string sourceTempDir = TMP_DIR;
+    ErrCode result = installClient_->CopySkillHsp(bundleName, moduleName, hspFileName, sourceTempDir, false);
+    EXPECT_EQ(result, installClient_->CallService(&IInstalld::CopySkillHsp,
+        bundleName, moduleName, hspFileName, sourceTempDir, false));
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_CopySkillHsp_0300 end";
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_CopySkillHsp_0400
+ * @tc.name: CopySkillHsp
+ * @tc.desc: Test whether CopySkillHsp returns param error when moduleName is empty.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CopySkillHsp_0400, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_CopySkillHsp_0400 start";
+    std::string bundleName = BUNDLE_NAME;
+    std::string moduleName = EMPTY_STRING;
+    std::string hspFileName = FILE;
+    std::string sourceTempDir = TMP_DIR;
+    ErrCode result = installClient_->CopySkillHsp(bundleName, moduleName, hspFileName, sourceTempDir, true);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_CopySkillHsp_0400 end";
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_CopySkillHsp_0500
+ * @tc.name: CopySkillHsp
+ * @tc.desc: Test whether CopySkillHsp returns param error when sourceTempDir is empty.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CopySkillHsp_0500, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_CopySkillHsp_0500 start";
+    std::string bundleName = BUNDLE_NAME;
+    std::string moduleName = MODULE_NAME;
+    std::string hspFileName = FILE;
+    std::string sourceTempDir = EMPTY_STRING;
+    ErrCode result = installClient_->CopySkillHsp(bundleName, moduleName, hspFileName, sourceTempDir, false);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_CopySkillHsp_0500 end";
+}
+
+/**
  * @tc.number: BmsInstalldClientTest_CopySharedHsp_0100
  * @tc.name: CopySharedHsp
  * @tc.desc: Test whether CopySharedHsp is called normally when versionCode is 0.

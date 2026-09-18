@@ -212,6 +212,9 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::COPY_FILE):
             result = this->HandleCopyFile(data, reply);
             break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::COPY_SKILL_HSP):
+            result = this->HandleCopySkillHsp(data, reply);
+            break;
         case static_cast<uint32_t>(InstalldInterfaceCode::COPY_SHARED_HSP):
             result = this->HandleCopySharedHsp(data, reply);
             break;
@@ -1167,6 +1170,19 @@ bool InstalldHost::HandleCopySharedHsp(MessageParcel &data, MessageParcel &reply
     std::string sourceSignaturePath = Str16ToStr8(data.ReadString16());
 
     ErrCode result = CopySharedHsp(bundleName, moduleName, sourceHspPath, versionCode, sourceSignaturePath);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleCopySkillHsp(MessageParcel &data, MessageParcel &reply)
+{
+    std::string bundleName = Str16ToStr8(data.ReadString16());
+    std::string moduleName = Str16ToStr8(data.ReadString16());
+    std::string hspFileName = Str16ToStr8(data.ReadString16());
+    std::string sourceTempDir = Str16ToStr8(data.ReadString16());
+    bool isUpdate = data.ReadBool();
+
+    ErrCode result = CopySkillHsp(bundleName, moduleName, hspFileName, sourceTempDir, isUpdate);
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

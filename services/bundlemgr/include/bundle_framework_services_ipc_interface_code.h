@@ -119,6 +119,7 @@ enum class InstalldInterfaceCode : uint32_t {
     EXTRACT_ARK_PROFILE = 92,
     COPY_HQF_FILE = 93,
     COPY_HAP_TO_TEMP_PATH = 94,
+    COPY_SKILL_HSP = 96,
     COPY_SHARED_HSP = 104,
     MOVE_SHARED_HSP_TO_CODE_DIR = 119,
 };

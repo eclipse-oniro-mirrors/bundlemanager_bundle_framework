@@ -2610,6 +2610,61 @@ ErrCode InstalldHostImpl::CopySharedHsp(const std::string &bundleName, const std
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::CopySkillHsp(const std::string &bundleName, const std::string &moduleName,
+    const std::string &hspFileName, const std::string &sourceTempDir, bool isUpdate)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    if (!InstalldOperator::IsValidBundleName(bundleName) || !InstalldOperator::IsFileNameValid(moduleName) ||
+        !InstalldOperator::IsFileNameValid(hspFileName) || !InstalldOperator::IsFileNameValid(sourceTempDir)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid skill hsp param, bundleName:%{private}s, moduleName:%{private}s, "
+            "hspFileName:%{private}s, sourceTempDir:%{private}s",
+            bundleName.c_str(), moduleName.c_str(), hspFileName.c_str(), sourceTempDir.c_str());
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    // moduleName and hspFileName are single path components — reject embedded separators.
+    // sourceTempDir may contain sub-paths under SECURITY_STREAM_INSTALL_PATH.
+    if (moduleName.find(ServiceConstants::PATH_SEPARATOR) != std::string::npos ||
+        hspFileName.find(ServiceConstants::PATH_SEPARATOR) != std::string::npos) {
+        LOG_E(BMS_TAG_INSTALLD, "moduleName or hspFileName contains path separator");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    if (!InstalldOperator::EndsWith(hspFileName, ServiceConstants::HSP_FILE_SUFFIX)) {
+        LOG_E(BMS_TAG_INSTALLD, "hspFileName does not end with .hsp suffix");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    std::string moduleDirName = moduleName;
+    if (isUpdate) {
+        moduleDirName += ServiceConstants::SKILL_TEMP_PATH;
+    }
+
+    std::string oldPath = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::PATH_SEPARATOR +
+        ServiceConstants::SECURITY_STREAM_INSTALL_PATH + ServiceConstants::PATH_SEPARATOR + sourceTempDir +
+        ServiceConstants::PATH_SEPARATOR + hspFileName;
+    std::string newPath = std::string(Constants::BASE_SKILL_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName +
+        ServiceConstants::PATH_SEPARATOR + moduleDirName + ServiceConstants::PATH_SEPARATOR + moduleDirName +
+        ServiceConstants::HSP_FILE_SUFFIX;
+    if (!InstalldOperator::IsValidPathByCopyFileScene(oldPath, newPath, BundleDirScene::COPY_SKILL_HSP)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid path, oldPath:%{private}s, newPath:%{private}s",
+            oldPath.c_str(), newPath.c_str());
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    if (!InstalldOperator::CopyFileFast(oldPath, newPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "Copy skill hsp %{private}s to %{private}s failed errno:%{public}d",
+            oldPath.c_str(), newPath.c_str(), errno);
+        return ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED;
+    }
+    mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+    if (!OHOS::ChangeModeFile(newPath, mode)) {
+        LOG_E(BMS_TAG_INSTALLD, "change mode failed");
+        return ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED;
+    }
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::Mkdir(const std::string &dir, const int32_t mode, const int32_t uid, const int32_t gid,
     const CreateDirParam &createDirParam)
 {

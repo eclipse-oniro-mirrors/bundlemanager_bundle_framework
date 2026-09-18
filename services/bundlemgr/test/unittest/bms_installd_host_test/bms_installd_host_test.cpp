@@ -459,6 +459,20 @@ HWTEST_F(BmsInstalldHostTest, HandleCopySharedHsp_0100, Function | SmallTest | L
 }
 
 /**
+ * @tc.number: HandleCopySkillHsp_0100
+ * @tc.name: test HandleCopySkillHsp
+ * @tc.desc: 1.HandleCopySkillHsp test
+ */
+HWTEST_F(BmsInstalldHostTest, HandleCopySkillHsp_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    bool res = installdHost.HandleCopySkillHsp(data, reply);
+    EXPECT_TRUE(res);
+}
+
+/**
  * @tc.number: HandleMkdir_0100
  * @tc.name: test HandleMkdir
  * @tc.desc: 1.HandleMkdir test

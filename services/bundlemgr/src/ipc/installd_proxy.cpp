@@ -992,6 +992,22 @@ ErrCode InstalldProxy::CopyFile(const std::string &oldPath, const std::string &n
     return TransactInstalldCmd(InstalldInterfaceCode::COPY_FILE, data, reply, option);
 }
 
+ErrCode InstalldProxy::CopySkillHsp(const std::string &bundleName, const std::string &moduleName,
+    const std::string &hspFileName, const std::string &sourceTempDir, bool isUpdate)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(moduleName));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(hspFileName));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(sourceTempDir));
+    INSTALLD_PARCEL_WRITE(data, Bool, isUpdate);
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    return TransactInstalldCmd(InstalldInterfaceCode::COPY_SKILL_HSP, data, reply, option);
+}
+
 ErrCode InstalldProxy::CopySharedHsp(const std::string &bundleName, const std::string &moduleName,
     const std::string &sourceHspPath, uint32_t versionCode, const std::string &sourceSignaturePath)
 {

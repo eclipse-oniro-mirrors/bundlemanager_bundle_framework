@@ -302,6 +302,9 @@ public:
     virtual ErrCode CopyFile(const std::string &oldPath, const std::string &newPath, BundleDirScene scene,
         const std::string &signatureFilePath = "") override;
 
+    virtual ErrCode CopySkillHsp(const std::string &bundleName, const std::string &moduleName,
+        const std::string &hspFileName, const std::string &sourceTempDir, bool isUpdate) override;
+
     virtual ErrCode CopySharedHsp(const std::string &bundleName, const std::string &moduleName,
         const std::string &sourceHspPath, uint32_t versionCode, const std::string &sourceSignaturePath) override;
 

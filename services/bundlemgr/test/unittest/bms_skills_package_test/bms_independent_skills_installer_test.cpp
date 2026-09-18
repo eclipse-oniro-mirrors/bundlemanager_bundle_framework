@@ -1448,6 +1448,42 @@ HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_ExtractMo
 }
 
 /**
+ * @tc.number: IndependentSkillsInstaller_ExtractModule_0002
+ * Function: ExtractModule
+ * @tc.name: test ExtractModule with copyHapToInstallPath
+ * @tc.desc: 1. system running normally
+ *           2. test ExtractModule with copyHapToInstallPath=true executes without crash
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_ExtractModule_0002,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = dataMgr_;
+
+    InnerBundleInfo newInfo;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = MODULE_NAME;
+    SkillProfile skill;
+    skill.name = SKILL_NAME;
+    moduleInfo.skillProfiles.push_back(skill);
+    std::map<std::string, InnerModuleInfo> moduleInfoMap;
+    moduleInfoMap[MODULE_NAME] = moduleInfo;
+    newInfo.AddInnerModuleInfo(moduleInfoMap);
+
+    std::string bundlePath = TEST_HSP_PATH;
+    bool copyHapToInstallPath = true;
+    bool isModuleExist = false;
+
+    installer_->userId_ = USER_ID;
+    installer_->bundleName_ = BUNDLE_NAME;
+
+    ErrCode ret = installer_->ExtractModule(newInfo, bundlePath, copyHapToInstallPath, isModuleExist);
+    // Since the HSP file doesn't exist, ExtractSkillsPackage will fail before the copy branch,
+    // but the copyHapToInstallPath=true path should not crash
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
  * @tc.number: IndependentSkillsInstaller_ProcessBundleUpdateStatus_0001
  * Function: ProcessBundleUpdateStatus
  * @tc.name: test ProcessBundleUpdateStatus
@@ -2133,7 +2169,8 @@ HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_ExtractSk
  * Function: ExtractSkills
  * @tc.name: test ExtractSkills when module already exists (isModuleExist=true)
  * @tc.desc: 1. system running normally
- *           2. test ExtractSkills appends "+temp" to moduleName when isModuleExist is true
+ *           2. test ExtractSkills appends ServiceConstants::SKILL_TEMP_PATH ("+temp")
+ *              to moduleName when isModuleExist is true
  */
 HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_ExtractSkills_0005,
     Function | SmallTest | Level0)
@@ -2154,7 +2191,7 @@ HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_ExtractSk
     bool isModuleExist = true; // Module already exists
 
     ErrCode ret = installer_->ExtractSkills(newInfo, moduleInfo, bundlePath, isModuleExist);
-    // Should process with temp module name (+temp suffix)
+    // Should process with temp module name (SKILL_TEMP_PATH suffix)
     // Will fail due to non-existent HSP, but not due to empty skill list
     EXPECT_NE(ret, ERR_SKILLS_HAS_NO_SKILLS_AGENT);
 }
