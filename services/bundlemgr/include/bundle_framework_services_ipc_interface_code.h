@@ -115,6 +115,7 @@ enum class InstalldInterfaceCode : uint32_t {
     EXTRACT_QUICK_FIX_RES = 88,
     EXTRACT_SO_FILES = 89,
     CREATE_PRINT_SERVICE_DIR = 90,
+    EXTRACT_ARK_NATIVE = 91,
     EXTRACT_ARK_PROFILE = 92,
     COPY_HQF_FILE = 93,
     COPY_HAP_TO_TEMP_PATH = 94,

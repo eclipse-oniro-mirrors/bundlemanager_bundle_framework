@@ -122,6 +122,13 @@ ErrCode InstalldClient::ExtractArkProfile(const std::string &bundleName, const s
     return 0;
 }
 
+ErrCode InstalldClient::ExtractArkNative(const std::string &bundleName, const std::string &moduleName,
+    const std::string &hapFilePath, const std::string &cpuAbi,
+    bool needFakeDecompression, bool isSystemApp, int32_t userId)
+{
+    return 0;
+}
+
 ErrCode InstalldClient::ExtractHnpFiles(const std::map<std::string, std::string> &hnpPackageMap,
     const ExtractParam &extractParam)
 {

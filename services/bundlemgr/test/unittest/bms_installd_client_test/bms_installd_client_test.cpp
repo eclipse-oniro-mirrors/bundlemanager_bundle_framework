@@ -2425,6 +2425,17 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CreateDirParamHasDriverExt
 }
 
 /**
+ * @tc.number: BmsInstalldClientTest_ExtractArkNative_0100
+ * @tc.name: ExtractArkNative
+ * @tc.desc: empty params
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractArkNative_0100, TestSize.Level1)
+{
+    ErrCode result = installClient_->ExtractArkNative("", "entry", "/data/test.hap", "arm64-v8a", false, false, 100);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
  * @tc.number: BmsInstalldClientTest_ExtractArkProfile_0100
  * @tc.name: ExtractArkProfile
  * @tc.desc: empty params
