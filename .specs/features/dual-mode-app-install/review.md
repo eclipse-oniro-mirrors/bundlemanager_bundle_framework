@@ -51,6 +51,28 @@
 | 401 表述统一 | ✅ 已消 | spec 内 4 处提及均为"不报 401"裁定表述，无失实残留；单测注释（bms_dual_mode_install_test.cpp:1295）同口径 |
 | 遗留（已裁定关闭） | ✅ 非缺口 | NAPI/ANI `updateBundleForSelf` 不接入刷新（保留 key 在该两入口不生效、字段走默认）——**2026-08-18 需求方裁定：该接口不适配，透传范围即 install 入口**（spec AC-41/FR-16 已改记裁定口径；codecheck R2 F-P3-03 同步关闭，资料锚点 F-P3-04 亦裁定资料不适配） |
 
+## 文档同步检视记录（2026-08-29，spec/proposal/design 对照代码 HEAD `3ee068b1d` 补齐）
+
+| 项 | 结论 | 证据/说明 |
+|----|------|-----------|
+| 同步动因 | 文档落后于代码 | Stage 3 审查基线后安装路径持续演进（模式独占拦截 / 预置 ERMS fan-out / 跨模式存储 / 切换互斥 / DualModeHelper 去 cache 直读），spec.md 错误码表与 AC 未覆盖，design.md ADR-10 与实现相反 |
+| 错误码补齐 | 已补 | 8519947（`SetDualModeAppInfo` base_bundle_installer.cpp:5978-5984，MAIN_ONLY×副模式/SUB_ONLY×主模式，先于写入循环无突变，单测 SetDualModeAppInfo_1000/1100/1200，status_receiver_proxy.cpp:726-727 映射 PARSE_FAILED）→ AC-42/FR-17/EX-6/ADR-31；8519944 安装侧消费面（TryLockForBundleOperation bundle_data_mgr.cpp:739-747 + RejectTaskIfSwitchInFlight bundle_installer_manager.cpp:336-352 + AddTask wrapper :388-411 + DualModeSwitchGuard bundle_installer_host.cpp 10 直连入口，单测 bms_bundle_installer_manager_test:387 / bms_dual_mode_switch_test）→ AC-45/FR-20/EX-7/ADR-34；另登记 effectivePolicy 值域硬校验 PARAM_ERROR（:5970-5976，IPC 白名单后正常流不可达）与 8519943 对外映射 BUNDLE_TYPE_NOT_SAME |
+| 方案补齐 | 已补 | 预置 ERMS 两趟 fan-out（ResolveDualModePolicy :6017-6141 + SystemBundleInstaller::InstallSystemBundle system_bundle_installer.cpp:53-88 + forceDualModeCloneInstall 进程内字段 + user-100 恢复带策略 :3058-3065）→ AC-43/FR-18/EX-8/ADR-32；跨模式变体存储（IsCrossModeInstall :5902-5924 → tempBundleInfos_ 原名 key，含 MAIN_ONLY/SUB_ONLY）→ AC-44/FR-19/ADR-33 |
+| ADR-10 重写 | 已重写 | 实现已无缓存成员（DualModeHelper 直读 ispcmode/mainmode，dual_mode_helper.h:40-56 注释明确 no cache）；架构图/核心机制/设计骨架/数据模型/ADR-22 测试注入表述同步改写 |
+| 引用修正 | 已清理 | 悬空提交号 `e148c7a34`（经 `git merge-base --is-ancestor` 验证不在分支历史，其改动内容已含于 HEAD）→ 删除，保留终态事实表述；当前代码基线统一改记 `appIndex_dual_mode_13` HEAD `3ee068b1d`；行号锚点刷新（CheckDualModeCategoryConsistency 6143-6157 / InTemp 6159-6181 / SetDualModeAppInfo 5963-6015 / FillDualModeEventFields 5843-5859 / 错误码定义 appexecfwk_errors.h:214-220）；单测规模 123 例 → 安装专项 226 例（+切换专项 45 例重叠面） |
+| 属性 | 文档同步（无代码改动） | 全部代码事实经 HEAD `3ee068b1d` 静态核对；编译/单测/运行时回归状态不变——仍待集成环境（与「审查决策」一致），本记录不改变 Stage 3/4 门禁状态 |
+
+## 文档同步检视记录（2026-08-31，spec/proposal/design/manifest 对照代码 HEAD `bcbfe06a9` 补齐）
+
+| 项 | 结论 | 证据/说明 |
+|----|------|-----------|
+| 同步动因 | 文档落后于代码 | 2026-08-29 同步基线（`3ee068b1d`）后安装路径又有 3 项代码提交合流：#9945（ispcmode 生产参数 int→bool 读取，`ReadValidIspcmodeParam` dual_mode_helper.cpp:86-99）、查询结果回显 clone appIndex（`ResolveDualModeResponseAppIndex` inner_bundle_info.h:1759）、`DeviceModeDistributionPolicy` NAPI 枚举运行时注册（bundle_manager.cpp:6229-6288 + native_module.cpp:106-108）；另有 bundle_data_mgr.cpp 行号锚点漂移（#9950 前后大量插入） |
+| ispcmode bool 已同步 | 已同步 | #9945：生产 key `persist.sceneboard.ispcmode` 为 **bool**（true=2in1/false=tablet），双路径读取（生产 GetParameter 存在性检查 + GetBoolParameter；测试 key `persist.bms.ispcmode` 仍 int 走 `ReadValidModeParam`）；mainmode 不变 int；对外归一化 0/1/-1 语义不变 → spec AC-3/AC-12/AC-33/EX-2/RC-1/架构约束、design 术语表/需求基线/ADR-5/ADR-10/ADR-22、proposal 参数源全部改写；"ispcmode 缺失或非法(∉{0,1})"旧表述收敛为"ispcmode 缺失（生产 bool，仅缺失一种无效态）/ mainmode 缺失或非法(∉{0,1})" |
+| 查询回显补录 | 已补 | `ResolveDualModeResponseAppIndex(requested)`（clone 恒返 10000、非 clone 回显请求值）覆盖 BundleInfo/AbilityInfo/extension 组装、shortcut 可见性行（storageAppIndex/queryAppIndex=10000）、GetBundleNameAndIndexByName（:3233 前缀 key 解析）、GetCurDynamicIconModule（:15332）、CheckParamInvalid（extend_resource_manager_host_impl.cpp:811-814）→ AC-46/FR-21/US-16/ADR-35；全文"查询零改动"限定为"查询 key 零改动（结果回显 ADR-35）" |
+| NAPI 枚举注册补录 | 已补 | `CreateDeviceModeDistributionPolicyObject`（9 命名值）+ `DECLARE_NAPI_PROPERTY` 挂载 → AC-47/FR-22/US-17/ADR-36 + design API 签名节 NAPI 注册注记 + proposal 影响范围/API 清单 |
+| 引用修正 | 已清理 | 代码基线统一改记 `fix_dual_doc` HEAD `bcbfe06a9`（含 `appIndex_dual_mode_13` 合流）；行号锚点刷新（AC-14 兜底 :424→:505-511、AC-25 GetAppProvisionInfo :10670→:10719、FR-20 TryLockForBundleOperation :739-747→:718-726、错误码映射表 status_receiver_proxy.cpp:724-729→:720-725、design 内 installStates_ /odid/GenerateOdid 等锚点按 HEAD 实测刷新）；单测规模 226 例→install 164 + query 95 = 259 例（新增 `bms_dual_mode_query_test` 查询专项）、切换专项 45→42 例 |
+| 属性 | 文档同步（无代码改动） | 全部代码事实经 HEAD `bcbfe06a9` 静态核对；编译/单测/运行时回归状态不变——仍待集成环境（与「审查决策」一致），本记录不改变 Stage 3/4 门禁状态 |
+
 ## 验证证据
 
 | 项 | 结果 | 证据 |
