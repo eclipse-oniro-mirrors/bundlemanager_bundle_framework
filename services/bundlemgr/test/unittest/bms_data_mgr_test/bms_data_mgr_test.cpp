@@ -10474,7 +10474,6 @@ HWTEST_F(BmsDataMgrTest, GetBundleCacheInfo_0400, Function | MediumTest | Level1
  * @tc.number: GetInnerBundleInfoWithBundleFlagsV9_0100
  * @tc.name: GetInnerBundleInfoWithBundleFlagsV9
  * @tc.desc: Test returning ERR_BUNDLE_MANAGER_APPLICATION_DISABLED when app is disabled and flag is not set.
- *           In car mode, disabled check is skipped, so ERR_OK is returned.
  */
 HWTEST_F(BmsDataMgrTest, GetInnerBundleInfoWithBundleFlagsV9_0100, Function | SmallTest | Level0)
 {
@@ -10505,20 +10504,14 @@ HWTEST_F(BmsDataMgrTest, GetInnerBundleInfoWithBundleFlagsV9_0100, Function | Sm
 
 
     ErrCode ret = dataMgr->GetInnerBundleInfoWithBundleFlagsV9(bundleName, flags, info, userId, appIndex);
-#ifndef BMS_ENABLE_CLONE_FOR_ACCOUNT
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_APPLICATION_DISABLED);
     EXPECT_EQ(info, nullptr);
-#else
-    EXPECT_EQ(ret, ERR_OK);
-    EXPECT_NE(info, nullptr);
-#endif
 }
 
 /**
  * @tc.number: GetInnerBundleInfoWithFlags_0200
  * @tc.name: test GetInnerBundleInfoWithFlags
  * @tc.desc: Test returning false when app is disabled and flag is not set.
- *           In car mode, disabled check is skipped, so true is returned.
  */
 HWTEST_F(BmsDataMgrTest, GetInnerBundleInfoWithFlags_0200, Function | SmallTest | Level1)
 {
@@ -10548,11 +10541,7 @@ HWTEST_F(BmsDataMgrTest, GetInnerBundleInfoWithFlags_0200, Function | SmallTest 
     dataMgr->bundleInfos_[bundleName] = innerBundleInfo;
 
     bool ret = dataMgr->GetInnerBundleInfoWithFlags(bundleName, flags, info, userId);
-#ifndef BMS_ENABLE_CLONE_FOR_ACCOUNT
     EXPECT_EQ(ret, false);
-#else
-    EXPECT_EQ(ret, true);
-#endif
 }
 
 /**
