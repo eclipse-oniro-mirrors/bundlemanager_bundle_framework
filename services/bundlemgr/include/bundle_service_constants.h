@@ -371,6 +371,9 @@ constexpr const char* PLUGIN_FILE_PATH = "+plugins";
 //skill path
 constexpr const char* SKILL_FILE_PATH = "/data/app/el1/skills/public";
 constexpr const char* SKILL_DIR = "skills";
+// Module dir/file suffix used while updating an existing skill module (must match BMS and installd).
+// Do not reuse TMP_SUFFIX ("_tmp") different value and semantics.
+constexpr const char* SKILL_TEMP_PATH = "+temp";
 
 // enterprise re sign cert
 constexpr const char* DELETE_CERT_PREFIX = ".deleteCer";

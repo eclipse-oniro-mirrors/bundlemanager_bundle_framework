@@ -260,6 +260,12 @@ ErrCode InstalldHostImpl::CopySharedHsp(const std::string &bundleName, const std
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::CopySkillHsp(const std::string &bundleName, const std::string &moduleName,
+    const std::string &hspFileName, const std::string &sourceTempDir, bool isUpdate)
+{
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::Mkdir(const std::string &dir, const int32_t mode, const int32_t uid, const int32_t gid,
     const CreateDirParam &createDirParam)
 {

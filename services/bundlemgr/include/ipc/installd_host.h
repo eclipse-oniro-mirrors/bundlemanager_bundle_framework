@@ -249,6 +249,8 @@ private:
 
     bool HandleCopyFile(MessageParcel &data, MessageParcel &reply);
 
+    bool HandleCopySkillHsp(MessageParcel &data, MessageParcel &reply);
+
     bool HandleCopySharedHsp(MessageParcel &data, MessageParcel &reply);
 
     bool HandleMkdir(MessageParcel &data, MessageParcel &reply);

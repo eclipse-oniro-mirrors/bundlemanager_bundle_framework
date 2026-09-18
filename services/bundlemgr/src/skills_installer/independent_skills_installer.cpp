@@ -34,7 +34,6 @@ namespace {
 constexpr const char* COMPILE_SDK_TYPE_OPEN_HARMONY = "OpenHarmony";
 constexpr const char* DEBUG_APP_IDENTIFIER = "DEBUG_LIB_ID";
 constexpr const int64_t FIVE_MB = 1024 * 1024 * 5; // 5MB
-constexpr const char* TEMP_PATH = "+temp";
 constexpr const char* BASE_SKILL_DIR = "/data/app/el1/skills/public";
 
 void BuildCheckParam(
@@ -751,7 +750,7 @@ ErrCode IndependentSkillsInstaller::ExtractModule(
     std::string moduleName = moduleInfos.begin()->second.moduleName;
     std::string tempModuleName = moduleName;
     if (isModuleExist) {
-        tempModuleName += TEMP_PATH;
+        tempModuleName += ServiceConstants::SKILL_TEMP_PATH;
     }
     std::string moduleDir = bundleDir + ServiceConstants::PATH_SEPARATOR + tempModuleName;
     result = MkdirIfNotExist(moduleDir);
@@ -762,7 +761,14 @@ ErrCode IndependentSkillsInstaller::ExtractModule(
     if (copyHapToInstallPath) {
         std::string tempHspPath = moduleDir + AppExecFwk::ServiceConstants::PATH_SEPARATOR +
             tempModuleName + ServiceConstants::HSP_FILE_SUFFIX;
-        result = InstalldClient::GetInstance()->CopyFile(bundlePath, tempHspPath, BundleDirScene::COPY_SKILL_HSP);
+        std::string hspFileName;
+        std::string sourceTempDir;
+        result = GetHspSourcePath(bundlePath, hspFileName, sourceTempDir);
+        if (result != ERR_OK) {
+            return result;
+        }
+        result = InstalldClient::GetInstance()->CopySkillHsp(bundleName_, moduleName, hspFileName, sourceTempDir,
+            isModuleExist);
         std::string realHspPath = moduleDir + AppExecFwk::ServiceConstants::PATH_SEPARATOR +
             moduleName + ServiceConstants::HSP_FILE_SUFFIX;
         newInfo.SetModuleHapPath(realHspPath);
@@ -786,6 +792,35 @@ ErrCode IndependentSkillsInstaller::ExtractModule(
     return ERR_OK;
 }
 
+ErrCode IndependentSkillsInstaller::GetHspSourcePath(
+    const std::string &bundlePath, std::string &hspFileName, std::string &sourceTempDir)
+{
+    auto lastSep = bundlePath.rfind(ServiceConstants::PATH_SEPARATOR);
+    if (lastSep == std::string::npos || lastSep == bundlePath.size() - 1) {
+        LOG_E(BMS_TAG_INSTALLER, "invalid bundlePath format: %{private}s", bundlePath.c_str());
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    hspFileName = bundlePath.substr(lastSep + 1);
+    sourceTempDir = bundlePath.substr(0, lastSep);
+    // Extract the relative path under SECURITY_STREAM_INSTALL_PATH: take everything
+    // after "HAP_COPY_PATH/SECURITY_STREAM_INSTALL_PATH/" prefix, which preserves the
+    // full directory structure (may be multi-level) rather than just the last component.
+    std::string streamPrefix = std::string(ServiceConstants::HAP_COPY_PATH) +
+        ServiceConstants::PATH_SEPARATOR + ServiceConstants::SECURITY_STREAM_INSTALL_PATH +
+        ServiceConstants::PATH_SEPARATOR;
+    if (sourceTempDir.find(streamPrefix) == 0) {
+        sourceTempDir = sourceTempDir.substr(streamPrefix.size());
+    } else {
+        auto prevSep = sourceTempDir.rfind(ServiceConstants::PATH_SEPARATOR);
+        if (prevSep == std::string::npos) {
+            LOG_E(BMS_TAG_INSTALLER, "invalid sourceTempDir format: %{private}s", sourceTempDir.c_str());
+            return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+        }
+        sourceTempDir = sourceTempDir.substr(prevSep + 1);
+    }
+    return ERR_OK;
+}
+
 ErrCode IndependentSkillsInstaller::ExtractSkills(
     InnerBundleInfo &newInfo, const InnerModuleInfo &moduleInfo, const std::string &bundlePath, bool isModuleExist)
 {
@@ -803,7 +838,7 @@ ErrCode IndependentSkillsInstaller::ExtractSkills(
     std::string moduleName = moduleInfo.moduleName;
     std::string tempModuleName = moduleName;
     if (isModuleExist) {
-        tempModuleName += TEMP_PATH;
+        tempModuleName += ServiceConstants::SKILL_TEMP_PATH;
     }
     std::vector<SkillsPackageInfo> validSkillInfoList;
     ErrCode result = SkillsInstallerUtil::ExtractSkillsPackage(bundleName_, moduleName, tempModuleName,
@@ -1113,7 +1148,7 @@ bool IndependentSkillsInstaller::RollBack(
         if (oldmoduleInfos.find(moduleName) == oldmoduleInfos.end()) {
             RemoveModuleDir(bundleName_, moduleName);
         } else {
-            RemoveModuleDir(bundleName_, moduleName + TEMP_PATH);
+            RemoveModuleDir(bundleName_, moduleName + ServiceConstants::SKILL_TEMP_PATH);
         }
     }
     if (dataMgr_ != nullptr) {

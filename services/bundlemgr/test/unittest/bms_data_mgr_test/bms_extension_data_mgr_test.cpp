@@ -2565,4 +2565,3 @@ HWTEST_F(BmsExtensionDataMgrTest, RebuildBundleResourceTable_0002, Function | Sm
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR);
 }
 } // OHOS
-

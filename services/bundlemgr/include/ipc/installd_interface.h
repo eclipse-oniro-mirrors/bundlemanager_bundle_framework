@@ -446,6 +446,21 @@ public:
     }
 
     /**
+     * @brief Copy skill hsp file from security stream install dir to skill install dir.
+     * @param bundleName Indicates the bundle name.
+     * @param moduleName Indicates the module name.
+     * @param hspFileName Indicates the source hsp file name.
+     * @param sourceTempDir Indicates the source temp dir.
+     * @param isUpdate Indicates whether the module is being updated.
+     * @return Returns ERR_OK if copy skill hsp successfully; returns error code otherwise.
+     */
+    virtual ErrCode CopySkillHsp(const std::string &bundleName, const std::string &moduleName,
+        const std::string &hspFileName, const std::string &sourceTempDir, bool isUpdate)
+    {
+        return ERR_OK;
+    }
+
+    /**
      * @brief Create directory recursively.
      * @param dir Indicates dir which will be created.
      * @param mode Indicates dir mode.

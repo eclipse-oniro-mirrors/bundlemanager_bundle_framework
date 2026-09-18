@@ -486,6 +486,17 @@ ErrCode InstalldClient::CopyFile(const std::string &oldPath, const std::string &
     return CallService(&IInstalld::CopyFile, oldPath, newPath, scene, signatureFilePath);
 }
 
+ErrCode InstalldClient::CopySkillHsp(const std::string &bundleName, const std::string &moduleName,
+    const std::string &hspFileName, const std::string &sourceTempDir, bool isUpdate)
+{
+    if (bundleName.empty() || moduleName.empty() || hspFileName.empty() || sourceTempDir.empty()) {
+        APP_LOGE("params are invalid");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    return CallService(&IInstalld::CopySkillHsp, bundleName, moduleName, hspFileName, sourceTempDir, isUpdate);
+}
+
 ErrCode InstalldClient::CopySharedHsp(const std::string &bundleName, const std::string &moduleName,
     const std::string &sourceHspPath, uint32_t versionCode, const std::string &sourceSignaturePath)
 {
