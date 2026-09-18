@@ -2937,10 +2937,24 @@ bool BundleMgrHostImpl::DumpInfos(
         LOG_E(BMS_TAG_INSTALLER, "check shell user fail");
         return false;
     }
-    const bool hasGetAllBundleInfoPermission = BundlePermissionMgr::VerifyCallingPermissionForAll(
-        Constants::PERMISSION_GET_ALL_BUNDLE_INFO);
-    if (!hasGetAllBundleInfoPermission &&
-        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+    const uint64_t callerToken = IPCSkeleton::GetCallingFullTokenID();
+    bool hasPermission = false;
+    if (BundlePermissionMgr::IsCliToolCalling(callerToken)) {
+        // Cli tool callers require GET_ALL_BUNDLE_INFO or GET_INSTALLED_BUNDLE_LIST.
+        hasPermission = BundlePermissionMgr::VerifyCallingPermissionsForAll({
+            Constants::PERMISSION_GET_ALL_BUNDLE_INFO,
+            Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST
+        });
+    } else {
+        // Non-cli callers require GET_ALL_BUNDLE_INFO, GET_INSTALLED_BUNDLE_LIST
+        // or GET_BUNDLE_INFO_PRIVILEGED.
+        hasPermission = BundlePermissionMgr::VerifyCallingPermissionsForAll({
+            Constants::PERMISSION_GET_ALL_BUNDLE_INFO,
+            Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST,
+            Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED
+        });
+    }
+    if (!hasPermission) {
         APP_LOGE_NOFUNC("DumpInfos permission denied %{public}d %{public}d",
             IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
         return false;
@@ -2975,10 +2989,6 @@ bool BundleMgrHostImpl::DumpInfos(
         default:
             APP_LOGE("dump flag error");
             break;
-    }
-    if (hasGetAllBundleInfoPermission) {
-        BundlePermissionMgr::AddPermissionUsedRecord(
-            Constants::PERMISSION_GET_ALL_BUNDLE_INFO, ret ? 1 : 0, ret ? 0 : 1);
     }
     return ret;
 }
@@ -4034,17 +4044,24 @@ bool BundleMgrHostImpl::GetDistributedBundleInfo(const std::string &networkId, c
         APP_LOGE("Non-system app calling system api");
         return false;
     }
-    const bool hasLegacyPermission = BundlePermissionMgr::VerifyCallingPermissionsForAll({
-            Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED, Constants::PERMISSION_GET_BUNDLE_INFO
+    const uint64_t callerToken = IPCSkeleton::GetCallingFullTokenID();
+    bool hasPermission = false;
+    if (BundlePermissionMgr::IsCliToolCalling(callerToken)) {
+        // Cli tool callers require GET_ALL_BUNDLE_INFO or GET_INSTALLED_BUNDLE_LIST.
+        hasPermission = BundlePermissionMgr::VerifyCallingPermissionsForAll({
+            Constants::PERMISSION_GET_ALL_BUNDLE_INFO,
+            Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST
         });
-    bool hasGetAllBundleInfoPermission = false;
-    if (!hasLegacyPermission) {
-        const uint64_t callerToken = IPCSkeleton::GetCallingFullTokenID();
-        hasGetAllBundleInfoPermission = BundlePermissionMgr::IsCliToolCalling(callerToken) &&
-            BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_ALL_BUNDLE_INFO);
+    } else {
+        // Non-cli callers require GET_ALL_BUNDLE_INFO, GET_INSTALLED_BUNDLE_LIST
+        // or GET_BUNDLE_INFO_PRIVILEGED.
+        hasPermission = BundlePermissionMgr::VerifyCallingPermissionsForAll({
+            Constants::PERMISSION_GET_ALL_BUNDLE_INFO,
+            Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST,
+            Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED
+        });
     }
-    if (!hasLegacyPermission && !hasGetAllBundleInfoPermission &&
-        !BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
+    if (!hasPermission && !BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
         APP_LOGE_NOFUNC("GetDistributedBundleInfo permission denied %{public}d %{public}d",
             IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
         return false;
@@ -5509,7 +5526,20 @@ ErrCode BundleMgrHostImpl::GetAllSharedBundleInfo(std::vector<SharedBundleInfo> 
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+    const uint64_t callerToken = IPCSkeleton::GetCallingFullTokenID();
+    bool hasPermission = false;
+    if (BundlePermissionMgr::IsCliToolCalling(callerToken)) {
+        // Cli tool callers require GET_INSTALLED_BUNDLE_LIST.
+        hasPermission = BundlePermissionMgr::VerifyCallingPermissionForAll(
+            Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST);
+    } else {
+        // Non-cli callers require GET_BUNDLE_INFO_PRIVILEGED or GET_INSTALLED_BUNDLE_LIST.
+        hasPermission = BundlePermissionMgr::VerifyCallingPermissionsForAll({
+            Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED,
+            Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST
+        });
+    }
+    if (!hasPermission) {
         APP_LOGE_NOFUNC("GetAllSharedBundleInfo permission denied %{public}d %{public}d",
             IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
@@ -5557,9 +5587,22 @@ ErrCode BundleMgrHostImpl::GetSharedBundleInfoBySelf(const std::string &bundleNa
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED,
-        Constants::PERMISSION_GET_BUNDLE_INFO}) &&
-        !BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
+    const uint64_t callerToken = IPCSkeleton::GetCallingFullTokenID();
+    bool hasPermission = false;
+    if (BundlePermissionMgr::IsCliToolCalling(callerToken)) {
+        // Cli tool callers require GET_INSTALLED_BUNDLE_LIST.
+        hasPermission = BundlePermissionMgr::VerifyCallingPermissionForAll(
+            Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST);
+    } else {
+        // Non-cli callers require GET_BUNDLE_INFO_PRIVILEGED, GET_BUNDLE_INFO,
+        // GET_INSTALLED_BUNDLE_LIST or bundle self calling.
+        hasPermission = BundlePermissionMgr::VerifyCallingPermissionsForAll({
+            Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED,
+            Constants::PERMISSION_GET_BUNDLE_INFO,
+            Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST
+        }) || BundlePermissionMgr::IsBundleSelfCalling(bundleName);
+    }
+    if (!hasPermission) {
         APP_LOGE_NOFUNC("GetSharedBundleInfoBySelf permission denied %{public}d %{public}d",
             IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
@@ -5578,8 +5621,21 @@ ErrCode BundleMgrHostImpl::GetSharedDependencies(const std::string &bundleName, 
 {
     APP_LOGD("GetSharedDependencies: bundleName: %{public}s, moduleName: %{public}s",
         bundleName.c_str(), moduleName.c_str());
-    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) &&
-        !BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
+    const uint64_t callerToken = IPCSkeleton::GetCallingFullTokenID();
+    bool hasPermission = false;
+    if (BundlePermissionMgr::IsCliToolCalling(callerToken)) {
+        // Cli tool callers require GET_INSTALLED_BUNDLE_LIST.
+        hasPermission = BundlePermissionMgr::VerifyCallingPermissionForAll(
+            Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST);
+    } else {
+        // Non-cli callers require GET_BUNDLE_INFO_PRIVILEGED, GET_INSTALLED_BUNDLE_LIST
+        // or bundle self calling.
+        hasPermission = BundlePermissionMgr::VerifyCallingPermissionsForAll({
+            Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED,
+            Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST
+        }) || BundlePermissionMgr::IsBundleSelfCalling(bundleName);
+    }
+    if (!hasPermission) {
         APP_LOGE_NOFUNC("GetSharedDependencies permission denied %{public}d %{public}d",
             IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
@@ -6451,7 +6507,20 @@ ErrCode BundleMgrHostImpl::GetRecoverableApplicationInfo(
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+    const uint64_t callerToken = IPCSkeleton::GetCallingFullTokenID();
+    bool hasPermission = false;
+    if (BundlePermissionMgr::IsCliToolCalling(callerToken)) {
+        // Cli tool callers require GET_INSTALLED_BUNDLE_LIST.
+        hasPermission = BundlePermissionMgr::VerifyCallingPermissionForAll(
+            Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST);
+    } else {
+        // Non-cli callers require GET_BUNDLE_INFO_PRIVILEGED or GET_INSTALLED_BUNDLE_LIST.
+        hasPermission = BundlePermissionMgr::VerifyCallingPermissionsForAll({
+            Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED,
+            Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST
+        });
+    }
+    if (!hasPermission) {
         APP_LOGE_NOFUNC("GetRecoverableApplicationInfo permission denied %{public}d %{public}d",
             IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;

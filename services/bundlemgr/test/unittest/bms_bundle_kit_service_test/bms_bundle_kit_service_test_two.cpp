@@ -92,6 +92,7 @@ int32_t GetPermissionSuccessCountForTest(const std::string &permissionName);
 int32_t GetPermissionFailCountForTest(const std::string &permissionName);
 void SetGetDistributedBundleInfoCallingForTest(bool isCliToolCalling, bool isBundleSelfCalling);
 int32_t GetIsBundleSelfCallingForDistributedCountForTest();
+void SetIsCliToolCallingForTest(bool value);
 namespace OHOS {
 namespace {
 const std::string BUNDLE_NAME_TEST = "com.example.bundlekit.test";
@@ -329,13 +330,16 @@ public:
 };
 }  // namespace
 
-void PrepareDumpPermissionTest(bool hasNewPermission, bool hasOldPermission)
+void PrepareDumpPermissionTest(bool hasNewPermission, bool hasOldPermission,
+    bool hasInstalledBundleListPermission = false)
 {
     ResetTestValues();
 
     SetPermissionResultForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO, hasNewPermission);
     SetPermissionResultForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED, hasOldPermission);
     SetPermissionResultForTest(Constants::PERMISSION_GET_BUNDLE_INFO, false);
+    SetPermissionResultForTest(
+        Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST, hasInstalledBundleListPermission);
 }
 
 void ResetDumpPermissionTest()
@@ -343,8 +347,24 @@ void ResetDumpPermissionTest()
     ResetTestValues();
 }
 
+void PrepareSharedBundlePermissionTest(bool hasPrivilegedPermission, bool hasBundleInfoPermission,
+    bool hasInstalledBundleListPermission, bool isCliToolCalling = true, bool isBundleSelfCalling = false)
+{
+    ResetTestValues();
+    SetIsCliToolCallingForTest(isCliToolCalling);
+    SetIsBundleSelfCallingForTest(isBundleSelfCalling);
+
+    SetPermissionResultForTest(
+        Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED, hasPrivilegedPermission);
+    SetPermissionResultForTest(
+        Constants::PERMISSION_GET_BUNDLE_INFO, hasBundleInfoPermission);
+    SetPermissionResultForTest(
+        Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST, hasInstalledBundleListPermission);
+}
+
 void PrepareGetDistributedBundleInfoPermissionTest(bool isCliToolCalling, bool hasGetAllBundleInfoPermission,
-    bool hasPrivilegedPermission, bool hasBundleInfoPermission, bool isBundleSelfCalling)
+    bool hasPrivilegedPermission, bool hasBundleInfoPermission, bool isBundleSelfCalling,
+    bool hasInstalledBundleListPermission = false)
 {
     ResetTestValues();
     SetGetDistributedBundleInfoCallingForTest(
@@ -359,6 +379,9 @@ void PrepareGetDistributedBundleInfoPermissionTest(bool isCliToolCalling, bool h
     SetPermissionResultForTest(
         Constants::PERMISSION_GET_BUNDLE_INFO,
         hasBundleInfoPermission);
+    SetPermissionResultForTest(
+        Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST,
+        hasInstalledBundleListPermission);
 }
 
 class BmsBundleKitServiceTest : public testing::Test {
@@ -9865,7 +9888,7 @@ HWTEST_F(BmsBundleKitServiceTest, DumpInfosPermission_0100, Function | MediumTes
     EXPECT_NE(result.find(BUNDLE_NAME_TEST), std::string::npos);
     EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
     EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 0);
-    EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
     EXPECT_EQ(GetPermissionFailCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
 
     MockUninstallBundle(BUNDLE_NAME_TEST);
@@ -9891,7 +9914,7 @@ HWTEST_F(BmsBundleKitServiceTest, DumpInfosPermission_0200, Function | MediumTes
     EXPECT_NE(result.find(BUNDLE_NAME_TEST), std::string::npos);
     EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
     EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 0);
-    EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
     EXPECT_EQ(GetPermissionFailCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
 
     MockUninstallBundle(BUNDLE_NAME_TEST);
@@ -9917,7 +9940,7 @@ HWTEST_F(BmsBundleKitServiceTest, DumpInfosPermission_0300, Function | MediumTes
     EXPECT_NE(result.find(BUNDLE_NAME_TEST), std::string::npos);
     EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
     EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 0);
-    EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
     EXPECT_EQ(GetPermissionFailCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
 
     MockUninstallBundle(BUNDLE_NAME_TEST);
@@ -9926,12 +9949,13 @@ HWTEST_F(BmsBundleKitServiceTest, DumpInfosPermission_0300, Function | MediumTes
 /**
  * @tc.number: DumpInfosPermission_0400
  * @tc.name: test BundleMgrHostImpl
- * @tc.desc: 1.test old privileged permission remains compatible when new permission is denied
+ * @tc.desc: 1.test non-cli caller is authorized by the privileged permission
  */
 HWTEST_F(BmsBundleKitServiceTest, DumpInfosPermission_0400, Function | MediumTest | Level1)
 {
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
     PrepareDumpPermissionTest(false, true);
+    SetIsCliToolCallingForTest(false);
     ScopeGuard guard([] { ResetDumpPermissionTest(); });
 
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
@@ -9942,9 +9966,13 @@ HWTEST_F(BmsBundleKitServiceTest, DumpInfosPermission_0400, Function | MediumTes
     EXPECT_TRUE(ret);
     EXPECT_NE(result.find(BUNDLE_NAME_TEST), std::string::npos);
     EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST), 1);
     EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 1);
     EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
     EXPECT_EQ(GetPermissionFailCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
+    // DumpInfos does not report permission usage.
+    EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST), 0);
+    EXPECT_EQ(GetPermissionFailCountForTest(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST), 0);
 
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }
@@ -9952,7 +9980,7 @@ HWTEST_F(BmsBundleKitServiceTest, DumpInfosPermission_0400, Function | MediumTes
 /**
  * @tc.number: DumpInfosPermission_0500
  * @tc.name: test BundleMgrHostImpl
- * @tc.desc: 1.test invalid DumpFlag records GET_ALL_BUNDLE_INFO failure
+ * @tc.desc: 1.test invalid DumpFlag fails without usage record
  */
 HWTEST_F(BmsBundleKitServiceTest, DumpInfosPermission_0500, Function | MediumTest | Level1)
 {
@@ -9969,17 +9997,18 @@ HWTEST_F(BmsBundleKitServiceTest, DumpInfosPermission_0500, Function | MediumTes
     EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
     EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 0);
     EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
-    EXPECT_EQ(GetPermissionFailCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetPermissionFailCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
 }
 
 /**
  * @tc.number: DumpInfosPermission_0600
  * @tc.name: test BundleMgrHostImpl
- * @tc.desc: 1.test DumpInfos rejects caller without permissions
+ * @tc.desc: 1.test DumpInfos rejects cli caller without permissions
  */
 HWTEST_F(BmsBundleKitServiceTest, DumpInfosPermission_0600, Function | MediumTest | Level1)
 {
     PrepareDumpPermissionTest(false, false);
+    SetIsCliToolCallingForTest(true);
     ScopeGuard guard([] { ResetDumpPermissionTest(); });
 
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
@@ -9990,7 +10019,8 @@ HWTEST_F(BmsBundleKitServiceTest, DumpInfosPermission_0600, Function | MediumTes
     EXPECT_FALSE(ret);
     EXPECT_TRUE(result.empty());
     EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
-    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 0);
     EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
     EXPECT_EQ(GetPermissionFailCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
 }
@@ -10019,7 +10049,7 @@ HWTEST_F(BmsBundleKitServiceTest, DumpInfosPermission_0700, Function | MediumTes
     EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
     EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 0);
     EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO), 0);
-    EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
     EXPECT_EQ(GetPermissionFailCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
 
     MockUninstallBundle(BUNDLE_NAME_TEST);
@@ -10045,7 +10075,7 @@ HWTEST_F(BmsBundleKitServiceTest, DumpInfosPermission_0800, Function | MediumTes
     EXPECT_NE(result.find("shortcuts"), std::string::npos);
     EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
     EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 0);
-    EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
     EXPECT_EQ(GetPermissionFailCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
 
     MockUninstallBundle(BUNDLE_NAME_TEST);
@@ -10110,7 +10140,7 @@ HWTEST_F(BmsBundleKitServiceTest, DumpInfosPermission_1000, Function | MediumTes
     EXPECT_NE(result.find(BUNDLE_NAME_TEST), std::string::npos);
     EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
     EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 0);
-    EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
     EXPECT_EQ(GetPermissionFailCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
 }
 
@@ -10134,7 +10164,7 @@ HWTEST_F(BmsBundleKitServiceTest, DumpInfosPermission_1100, Function | MediumTes
     EXPECT_TRUE(ret);
     EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
     EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 0);
-    EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
     EXPECT_EQ(GetPermissionFailCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
 
     MockUninstallBundle(BUNDLE_NAME_TEST);
@@ -10159,7 +10189,7 @@ HWTEST_F(BmsBundleKitServiceTest, DumpInfosPermission_1200, Function | MediumTes
     EXPECT_TRUE(ret);
     EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
     EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 0);
-    EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
     EXPECT_EQ(GetPermissionFailCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
 
     MockUninstallBundle(BUNDLE_NAME_TEST);
@@ -10215,13 +10245,14 @@ HWTEST_F(BmsBundleKitServiceTest, DumpInfosPermission_1400, Function | MediumTes
 /**
  * @tc.number: DumpInfosPermission_1500
  * @tc.name: test BundleMgrHostImpl
- * @tc.desc: 1.test old privileged permission supports DUMP_BUNDLE_INFO through the dump-only query path
+ * @tc.desc: 1.test non-cli privileged permission supports DUMP_BUNDLE_INFO through the dump-only query path
  */
 HWTEST_F(BmsBundleKitServiceTest, DumpInfosPermission_1500, Function | MediumTest | Level1)
 {
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
     ScopeGuard bundleGuard([this] { MockUninstallBundle(BUNDLE_NAME_TEST); });
     PrepareDumpPermissionTest(false, true);
+    SetIsCliToolCallingForTest(false);
     ScopeGuard permissionGuard([] { ResetDumpPermissionTest(); });
 
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
@@ -10232,22 +10263,27 @@ HWTEST_F(BmsBundleKitServiceTest, DumpInfosPermission_1500, Function | MediumTes
     EXPECT_TRUE(ret);
     EXPECT_NE(result.find(BUNDLE_NAME_TEST), std::string::npos);
     EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST), 1);
     EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 1);
     EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO), 0);
     EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
     EXPECT_EQ(GetPermissionFailCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
+    // DumpInfos does not report permission usage.
+    EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST), 0);
+    EXPECT_EQ(GetPermissionFailCountForTest(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST), 0);
 }
 
 /**
  * @tc.number: DumpInfosPermission_1600
  * @tc.name: test BundleMgrHostImpl
- * @tc.desc: 1.test old privileged permission supports DUMP_SHORTCUT_INFO through the dump-only query path
+ * @tc.desc: 1.test non-cli privileged permission supports DUMP_SHORTCUT_INFO through the dump-only query path
  */
 HWTEST_F(BmsBundleKitServiceTest, DumpInfosPermission_1600, Function | MediumTest | Level1)
 {
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
     ScopeGuard bundleGuard([this] { MockUninstallBundle(BUNDLE_NAME_TEST); });
     PrepareDumpPermissionTest(false, true);
+    SetIsCliToolCallingForTest(false);
     ScopeGuard permissionGuard([] { ResetDumpPermissionTest(); });
 
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
@@ -10258,6 +10294,7 @@ HWTEST_F(BmsBundleKitServiceTest, DumpInfosPermission_1600, Function | MediumTes
     EXPECT_TRUE(ret);
     EXPECT_NE(result.find("shortcuts"), std::string::npos);
     EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST), 1);
     EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 1);
     EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
     EXPECT_EQ(GetPermissionFailCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
@@ -10266,7 +10303,7 @@ HWTEST_F(BmsBundleKitServiceTest, DumpInfosPermission_1600, Function | MediumTes
 /**
  * @tc.number: DumpInfosPermission_1700
  * @tc.name: test BundleMgrHostImpl
- * @tc.desc: 1.test a valid dump command records GET_ALL_BUNDLE_INFO failure when bundle query fails
+ * @tc.desc: 1.test a valid dump command fails without usage record when bundle query fails
  */
 HWTEST_F(BmsBundleKitServiceTest, DumpInfosPermission_1700, Function | MediumTest | Level1)
 {
@@ -10284,7 +10321,471 @@ HWTEST_F(BmsBundleKitServiceTest, DumpInfosPermission_1700, Function | MediumTes
     EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 0);
     EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO), 0);
     EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
-    EXPECT_EQ(GetPermissionFailCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetPermissionFailCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
+}
+
+/**
+ * @tc.number: DumpInfosPermission_1800
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test cli tool caller with GET_INSTALLED_BUNDLE_LIST can dump bundle list
+ */
+HWTEST_F(BmsBundleKitServiceTest, DumpInfosPermission_1800, Function | MediumTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    ScopeGuard bundleGuard([this] { MockUninstallBundle(BUNDLE_NAME_TEST); });
+    PrepareDumpPermissionTest(false, false, true);
+    SetIsCliToolCallingForTest(true);
+    ScopeGuard permissionGuard([] { ResetDumpPermissionTest(); });
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string result;
+    bool ret = hostImpl->DumpInfos(DumpFlag::DUMP_BUNDLE_LIST, "", Constants::DEFAULT_USERID, result);
+
+    EXPECT_TRUE(ret);
+    EXPECT_NE(result.find(BUNDLE_NAME_TEST), std::string::npos);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 0);
+    EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
+    EXPECT_EQ(GetPermissionFailCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
+    EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST), 0);
+    EXPECT_EQ(GetPermissionFailCountForTest(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST), 0);
+}
+
+/**
+ * @tc.number: DumpInfosPermission_1900
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test cli tool caller without any permission is denied
+ */
+HWTEST_F(BmsBundleKitServiceTest, DumpInfosPermission_1900, Function | MediumTest | Level1)
+{
+    PrepareDumpPermissionTest(false, false, false);
+    SetIsCliToolCallingForTest(true);
+    ScopeGuard permissionGuard([] { ResetDumpPermissionTest(); });
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string result;
+    bool ret = hostImpl->DumpInfos(DumpFlag::DUMP_BUNDLE_LIST, "", Constants::DEFAULT_USERID, result);
+
+    EXPECT_FALSE(ret);
+    EXPECT_TRUE(result.empty());
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 0);
+}
+
+/**
+ * @tc.number: DumpInfosPermission_2000
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test non-cli caller with GET_INSTALLED_BUNDLE_LIST can dump bundle list
+ */
+HWTEST_F(BmsBundleKitServiceTest, DumpInfosPermission_2000, Function | MediumTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    ScopeGuard bundleGuard([this] { MockUninstallBundle(BUNDLE_NAME_TEST); });
+    PrepareDumpPermissionTest(false, false, true);
+    SetIsCliToolCallingForTest(false);
+    ScopeGuard permissionGuard([] { ResetDumpPermissionTest(); });
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string result;
+    bool ret = hostImpl->DumpInfos(DumpFlag::DUMP_BUNDLE_LIST, "", Constants::DEFAULT_USERID, result);
+
+    EXPECT_TRUE(ret);
+    EXPECT_NE(result.find(BUNDLE_NAME_TEST), std::string::npos);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 0);
+    EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
+    EXPECT_EQ(GetPermissionFailCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
+    EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST), 0);
+    EXPECT_EQ(GetPermissionFailCountForTest(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST), 0);
+}
+
+/**
+ * @tc.number: DumpInfosPermission_2100
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test GET_BUNDLE_INFO_PRIVILEGED does not authorize cli tool callers
+ */
+HWTEST_F(BmsBundleKitServiceTest, DumpInfosPermission_2100, Function | MediumTest | Level1)
+{
+    PrepareDumpPermissionTest(false, true, false);
+    SetIsCliToolCallingForTest(true);
+    ScopeGuard permissionGuard([] { ResetDumpPermissionTest(); });
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string result;
+    bool ret = hostImpl->DumpInfos(DumpFlag::DUMP_BUNDLE_LIST, "", Constants::DEFAULT_USERID, result);
+
+    EXPECT_FALSE(ret);
+    EXPECT_TRUE(result.empty());
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 0);
+}
+
+/**
+ * @tc.number: GetAllSharedBundleInfoPermission_0100
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test cli tool caller with GET_INSTALLED_BUNDLE_LIST can get all shared bundle info
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetAllSharedBundleInfoPermission_0100, Function | MediumTest | Level1)
+{
+    PrepareSharedBundlePermissionTest(false, false, true, true);
+    ScopeGuard permissionGuard([] { ResetTestValues(); });
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<SharedBundleInfo> sharedBundles;
+    ErrCode ret = hostImpl->GetAllSharedBundleInfo(sharedBundles);
+
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 0);
+}
+
+/**
+ * @tc.number: GetAllSharedBundleInfoPermission_0200
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test GET_BUNDLE_INFO_PRIVILEGED does not authorize cli tool callers
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetAllSharedBundleInfoPermission_0200, Function | MediumTest | Level1)
+{
+    PrepareSharedBundlePermissionTest(true, false, false, true);
+    ScopeGuard permissionGuard([] { ResetTestValues(); });
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<SharedBundleInfo> sharedBundles;
+    ErrCode ret = hostImpl->GetAllSharedBundleInfo(sharedBundles);
+
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 0);
+}
+
+/**
+ * @tc.number: GetAllSharedBundleInfoPermission_0300
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test non-cli caller with GET_BUNDLE_INFO_PRIVILEGED remains compatible
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetAllSharedBundleInfoPermission_0300, Function | MediumTest | Level1)
+{
+    PrepareSharedBundlePermissionTest(true, false, false, false);
+    ScopeGuard permissionGuard([] { ResetTestValues(); });
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<SharedBundleInfo> sharedBundles;
+    ErrCode ret = hostImpl->GetAllSharedBundleInfo(sharedBundles);
+
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST), 0);
+}
+
+/**
+ * @tc.number: GetAllSharedBundleInfoPermission_0400
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test non-cli caller with GET_INSTALLED_BUNDLE_LIST can get all shared bundle info
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetAllSharedBundleInfoPermission_0400, Function | MediumTest | Level1)
+{
+    PrepareSharedBundlePermissionTest(false, false, true, false);
+    ScopeGuard permissionGuard([] { ResetTestValues(); });
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<SharedBundleInfo> sharedBundles;
+    ErrCode ret = hostImpl->GetAllSharedBundleInfo(sharedBundles);
+
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST), 1);
+}
+
+/**
+ * @tc.number: GetAllSharedBundleInfoPermission_0500
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test non-cli caller without any permission is denied
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetAllSharedBundleInfoPermission_0500, Function | MediumTest | Level1)
+{
+    PrepareSharedBundlePermissionTest(false, false, false, false);
+    ScopeGuard permissionGuard([] { ResetTestValues(); });
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<SharedBundleInfo> sharedBundles;
+    ErrCode ret = hostImpl->GetAllSharedBundleInfo(sharedBundles);
+
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST), 1);
+}
+
+/**
+ * @tc.number: GetSharedBundleInfoBySelfPermission_0100
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test cli tool caller with GET_INSTALLED_BUNDLE_LIST passes the permission gate
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetSharedBundleInfoBySelfPermission_0100, Function | MediumTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    ScopeGuard bundleGuard([this] { MockUninstallBundle(BUNDLE_NAME_TEST); });
+    PrepareSharedBundlePermissionTest(false, false, true, true);
+    ScopeGuard permissionGuard([] { ResetTestValues(); });
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    SharedBundleInfo sharedBundleInfo;
+    ErrCode ret = hostImpl->GetSharedBundleInfoBySelf(BUNDLE_NAME_TEST, sharedBundleInfo);
+
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 0);
+}
+
+/**
+ * @tc.number: GetSharedBundleInfoBySelfPermission_0200
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test GET_BUNDLE_INFO_PRIVILEGED does not authorize cli tool callers
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetSharedBundleInfoBySelfPermission_0200, Function | MediumTest | Level1)
+{
+    PrepareSharedBundlePermissionTest(true, false, false, true);
+    ScopeGuard permissionGuard([] { ResetTestValues(); });
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    SharedBundleInfo sharedBundleInfo;
+    ErrCode ret = hostImpl->GetSharedBundleInfoBySelf(BUNDLE_NAME_TEST, sharedBundleInfo);
+
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 0);
+}
+
+/**
+ * @tc.number: GetSharedBundleInfoBySelfPermission_0300
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test non-cli caller with GET_BUNDLE_INFO_PRIVILEGED remains compatible
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetSharedBundleInfoBySelfPermission_0300, Function | MediumTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    ScopeGuard bundleGuard([this] { MockUninstallBundle(BUNDLE_NAME_TEST); });
+    PrepareSharedBundlePermissionTest(true, false, false, false);
+    ScopeGuard permissionGuard([] { ResetTestValues(); });
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    SharedBundleInfo sharedBundleInfo;
+    ErrCode ret = hostImpl->GetSharedBundleInfoBySelf(BUNDLE_NAME_TEST, sharedBundleInfo);
+
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO), 0);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST), 0);
+}
+
+/**
+ * @tc.number: GetSharedBundleInfoBySelfPermission_0400
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test non-cli caller with GET_BUNDLE_INFO remains compatible
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetSharedBundleInfoBySelfPermission_0400, Function | MediumTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    ScopeGuard bundleGuard([this] { MockUninstallBundle(BUNDLE_NAME_TEST); });
+    PrepareSharedBundlePermissionTest(false, true, false, false);
+    ScopeGuard permissionGuard([] { ResetTestValues(); });
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    SharedBundleInfo sharedBundleInfo;
+    ErrCode ret = hostImpl->GetSharedBundleInfoBySelf(BUNDLE_NAME_TEST, sharedBundleInfo);
+
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST), 0);
+}
+
+/**
+ * @tc.number: GetSharedBundleInfoBySelfPermission_0500
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test non-cli caller with GET_INSTALLED_BUNDLE_LIST passes the permission gate
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetSharedBundleInfoBySelfPermission_0500, Function | MediumTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    ScopeGuard bundleGuard([this] { MockUninstallBundle(BUNDLE_NAME_TEST); });
+    PrepareSharedBundlePermissionTest(false, false, true, false);
+    ScopeGuard permissionGuard([] { ResetTestValues(); });
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    SharedBundleInfo sharedBundleInfo;
+    ErrCode ret = hostImpl->GetSharedBundleInfoBySelf(BUNDLE_NAME_TEST, sharedBundleInfo);
+
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST), 1);
+}
+
+/**
+ * @tc.number: GetSharedBundleInfoBySelfPermission_0600
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test non-cli bundle self caller remains compatible without any permission
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetSharedBundleInfoBySelfPermission_0600, Function | MediumTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    ScopeGuard bundleGuard([this] { MockUninstallBundle(BUNDLE_NAME_TEST); });
+    PrepareSharedBundlePermissionTest(false, false, false, false, true);
+    ScopeGuard permissionGuard([] { ResetTestValues(); });
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    SharedBundleInfo sharedBundleInfo;
+    ErrCode ret = hostImpl->GetSharedBundleInfoBySelf(BUNDLE_NAME_TEST, sharedBundleInfo);
+
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST), 1);
+}
+
+/**
+ * @tc.number: GetSharedBundleInfoBySelfPermission_0700
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test non-cli caller without any permission is denied
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetSharedBundleInfoBySelfPermission_0700, Function | MediumTest | Level1)
+{
+    PrepareSharedBundlePermissionTest(false, false, false, false);
+    ScopeGuard permissionGuard([] { ResetTestValues(); });
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    SharedBundleInfo sharedBundleInfo;
+    ErrCode ret = hostImpl->GetSharedBundleInfoBySelf(BUNDLE_NAME_TEST, sharedBundleInfo);
+
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST), 1);
+}
+
+/**
+ * @tc.number: GetSharedDependenciesPermission_0100
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test cli tool caller with GET_INSTALLED_BUNDLE_LIST can get shared dependencies
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetSharedDependenciesPermission_0100, Function | MediumTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    ScopeGuard bundleGuard([this] { MockUninstallBundle(BUNDLE_NAME_TEST); });
+    PrepareSharedBundlePermissionTest(false, false, true, true);
+    ScopeGuard permissionGuard([] { ResetTestValues(); });
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<Dependency> dependencies;
+    ErrCode ret = hostImpl->GetSharedDependencies(BUNDLE_NAME_TEST, MODULE_NAME_TEST, dependencies);
+
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 0);
+}
+
+/**
+ * @tc.number: GetSharedDependenciesPermission_0200
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test GET_BUNDLE_INFO_PRIVILEGED does not authorize cli tool callers
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetSharedDependenciesPermission_0200, Function | MediumTest | Level1)
+{
+    PrepareSharedBundlePermissionTest(true, false, false, true);
+    ScopeGuard permissionGuard([] { ResetTestValues(); });
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<Dependency> dependencies;
+    ErrCode ret = hostImpl->GetSharedDependencies(BUNDLE_NAME_TEST, MODULE_NAME_TEST, dependencies);
+
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 0);
+}
+
+/**
+ * @tc.number: GetSharedDependenciesPermission_0300
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test non-cli caller with GET_BUNDLE_INFO_PRIVILEGED remains compatible
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetSharedDependenciesPermission_0300, Function | MediumTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    ScopeGuard bundleGuard([this] { MockUninstallBundle(BUNDLE_NAME_TEST); });
+    PrepareSharedBundlePermissionTest(true, false, false, false);
+    ScopeGuard permissionGuard([] { ResetTestValues(); });
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<Dependency> dependencies;
+    ErrCode ret = hostImpl->GetSharedDependencies(BUNDLE_NAME_TEST, MODULE_NAME_TEST, dependencies);
+
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST), 0);
+}
+
+/**
+ * @tc.number: GetSharedDependenciesPermission_0400
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test non-cli caller with GET_INSTALLED_BUNDLE_LIST can get shared dependencies
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetSharedDependenciesPermission_0400, Function | MediumTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    ScopeGuard bundleGuard([this] { MockUninstallBundle(BUNDLE_NAME_TEST); });
+    PrepareSharedBundlePermissionTest(false, false, true, false);
+    ScopeGuard permissionGuard([] { ResetTestValues(); });
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<Dependency> dependencies;
+    ErrCode ret = hostImpl->GetSharedDependencies(BUNDLE_NAME_TEST, MODULE_NAME_TEST, dependencies);
+
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST), 1);
+}
+
+/**
+ * @tc.number: GetSharedDependenciesPermission_0500
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test non-cli bundle self caller remains compatible without any permission
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetSharedDependenciesPermission_0500, Function | MediumTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    ScopeGuard bundleGuard([this] { MockUninstallBundle(BUNDLE_NAME_TEST); });
+    PrepareSharedBundlePermissionTest(false, false, false, false, true);
+    ScopeGuard permissionGuard([] { ResetTestValues(); });
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<Dependency> dependencies;
+    ErrCode ret = hostImpl->GetSharedDependencies(BUNDLE_NAME_TEST, MODULE_NAME_TEST, dependencies);
+
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST), 1);
+}
+
+/**
+ * @tc.number: GetSharedDependenciesPermission_0600
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test non-cli caller without any permission is denied
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetSharedDependenciesPermission_0600, Function | MediumTest | Level1)
+{
+    PrepareSharedBundlePermissionTest(false, false, false, false);
+    ScopeGuard permissionGuard([] { ResetTestValues(); });
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<Dependency> dependencies;
+    ErrCode ret = hostImpl->GetSharedDependencies(BUNDLE_NAME_TEST, MODULE_NAME_TEST, dependencies);
+
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST), 1);
 }
 
 /**
@@ -13663,13 +14164,108 @@ HWTEST_F(BmsBundleKitServiceTest, VerifySystemApi_0100, Function | SmallTest | L
     EXPECT_TRUE(hostImpl->VerifySystemApi());
 }
 
+/**
+ * @tc.number: GetRecoverableApplicationInfo_0300
+ * @tc.name: test GetRecoverableApplicationInfo permission gate
+ * @tc.desc: 1.cli tool caller with GET_INSTALLED_BUNDLE_LIST passes the permission gate
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetRecoverableApplicationInfo_0300, Function | MediumTest | Level1)
+{
+    PrepareSharedBundlePermissionTest(false, false, true, true);
+    ScopeGuard permissionGuard([] { ResetTestValues(); });
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<RecoverableApplicationInfo> recoverableApplications;
+    ErrCode retCode = hostImpl->GetRecoverableApplicationInfo(recoverableApplications);
+
+    EXPECT_EQ(retCode, ERR_OK);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 0);
+}
+
+/**
+ * @tc.number: GetRecoverableApplicationInfo_0400
+ * @tc.name: test GetRecoverableApplicationInfo permission gate
+ * @tc.desc: 1.GET_BUNDLE_INFO_PRIVILEGED does not authorize cli tool callers
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetRecoverableApplicationInfo_0400, Function | MediumTest | Level1)
+{
+    PrepareSharedBundlePermissionTest(true, false, false, true);
+    ScopeGuard permissionGuard([] { ResetTestValues(); });
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<RecoverableApplicationInfo> recoverableApplications;
+    ErrCode retCode = hostImpl->GetRecoverableApplicationInfo(recoverableApplications);
+
+    EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 0);
+}
+
+/**
+ * @tc.number: GetRecoverableApplicationInfo_0500
+ * @tc.name: test GetRecoverableApplicationInfo permission gate
+ * @tc.desc: 1.non-cli caller with GET_BUNDLE_INFO_PRIVILEGED remains compatible
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetRecoverableApplicationInfo_0500, Function | MediumTest | Level1)
+{
+    PrepareSharedBundlePermissionTest(true, false, false, false);
+    ScopeGuard permissionGuard([] { ResetTestValues(); });
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<RecoverableApplicationInfo> recoverableApplications;
+    ErrCode retCode = hostImpl->GetRecoverableApplicationInfo(recoverableApplications);
+
+    EXPECT_EQ(retCode, ERR_OK);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST), 0);
+}
+
+/**
+ * @tc.number: GetRecoverableApplicationInfo_0600
+ * @tc.name: test GetRecoverableApplicationInfo permission gate
+ * @tc.desc: 1.non-cli caller with GET_INSTALLED_BUNDLE_LIST passes the permission gate
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetRecoverableApplicationInfo_0600, Function | MediumTest | Level1)
+{
+    PrepareSharedBundlePermissionTest(false, false, true, false);
+    ScopeGuard permissionGuard([] { ResetTestValues(); });
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<RecoverableApplicationInfo> recoverableApplications;
+    ErrCode retCode = hostImpl->GetRecoverableApplicationInfo(recoverableApplications);
+
+    EXPECT_EQ(retCode, ERR_OK);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST), 1);
+}
+
+/**
+ * @tc.number: GetRecoverableApplicationInfo_0700
+ * @tc.name: test GetRecoverableApplicationInfo permission gate
+ * @tc.desc: 1.non-cli caller without any permission is denied
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetRecoverableApplicationInfo_0700, Function | MediumTest | Level1)
+{
+    PrepareSharedBundlePermissionTest(false, false, false, false);
+    ScopeGuard permissionGuard([] { ResetTestValues(); });
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<RecoverableApplicationInfo> recoverableApplications;
+    ErrCode retCode = hostImpl->GetRecoverableApplicationInfo(recoverableApplications);
+
+    EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST), 1);
+}
+
 #ifdef DISTRIBUTED_BUNDLE_FRAMEWORK
 /**
  * @tc.number: GetDistributedBundleInfo_0200
- * @tc.name: GetDistributedBundleInfoLegacyPermissionFirst
- * @tc.desc: Caller with both legacy and new permissions should be
- *           authorized by the legacy permission without checking
- *           the new permission or self-calling identity.
+ * @tc.name: GetDistributedBundleInfoCliToolWithAllPermissions
+ * @tc.desc: CLI caller holding all permissions should be authorized by
+ *           GET_ALL_BUNDLE_INFO without consulting other permissions
+ *           or the self-calling identity.
  */
 HWTEST_F(BmsBundleKitServiceTest, GetDistributedBundleInfo_0200, Function | SmallTest | Level1)
 {
@@ -13682,9 +14278,10 @@ HWTEST_F(BmsBundleKitServiceTest, GetDistributedBundleInfo_0200, Function | Smal
     DistributedBundleInfo distributedBundleInfo;
     (void)hostImpl->GetDistributedBundleInfo(DEVICE_ID, BUNDLE_NAME_TEST, distributedBundleInfo);
 
-    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST), 0);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 0);
     EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO), 0);
-    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
     EXPECT_EQ(GetIsBundleSelfCallingForDistributedCountForTest(), 0);
     EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
     EXPECT_EQ(GetPermissionFailCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
@@ -13692,9 +14289,9 @@ HWTEST_F(BmsBundleKitServiceTest, GetDistributedBundleInfo_0200, Function | Smal
 
 /**
  * @tc.number: GetDistributedBundleInfo_0300
- * @tc.name: GetDistributedBundleInfoFallbackToNewPermission
- * @tc.desc: CLI caller should use GET_ALL_BUNDLE_INFO after both
- *           legacy permissions fail.
+ * @tc.name: GetDistributedBundleInfoCliToolWithAllBundleInfo
+ * @tc.desc: CLI caller holding only GET_ALL_BUNDLE_INFO should be
+ *           authorized without other permission checks.
  */
 HWTEST_F(BmsBundleKitServiceTest, GetDistributedBundleInfo_0300, Function | SmallTest | Level1)
 {
@@ -13707,9 +14304,10 @@ HWTEST_F(BmsBundleKitServiceTest, GetDistributedBundleInfo_0300, Function | Smal
     DistributedBundleInfo distributedBundleInfo;
     (void)hostImpl->GetDistributedBundleInfo(DEVICE_ID, BUNDLE_NAME_TEST, distributedBundleInfo);
 
-    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 1);
-    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO), 1);
     EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST), 0);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 0);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO), 0);
     EXPECT_EQ(GetIsBundleSelfCallingForDistributedCountForTest(), 0);
     EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
     EXPECT_EQ(GetPermissionFailCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
@@ -13718,8 +14316,8 @@ HWTEST_F(BmsBundleKitServiceTest, GetDistributedBundleInfo_0300, Function | Smal
 /**
  * @tc.number: GetDistributedBundleInfo_0400
  * @tc.name: GetDistributedBundleInfoFallbackToSelfCalling
- * @tc.desc: CLI caller without new or legacy permissions should fall back
- *           to the bundle self-calling check.
+ * @tc.desc: CLI caller without cli permissions should fall back to the
+ *           bundle self-calling check.
  */
 HWTEST_F(BmsBundleKitServiceTest, GetDistributedBundleInfo_0400, Function | SmallTest | Level1)
 {
@@ -13733,8 +14331,9 @@ HWTEST_F(BmsBundleKitServiceTest, GetDistributedBundleInfo_0400, Function | Smal
     (void)hostImpl->GetDistributedBundleInfo(DEVICE_ID, BUNDLE_NAME_TEST, distributedBundleInfo);
 
     EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
-    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 1);
-    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 0);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO), 0);
     EXPECT_EQ(GetIsBundleSelfCallingForDistributedCountForTest(), 1);
     EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
     EXPECT_EQ(GetPermissionFailCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
@@ -13743,8 +14342,8 @@ HWTEST_F(BmsBundleKitServiceTest, GetDistributedBundleInfo_0400, Function | Smal
 /**
  * @tc.number: GetDistributedBundleInfo_0500
  * @tc.name: GetDistributedBundleInfoPermissionDenied
- * @tc.desc: CLI caller without new permission, legacy permissions or
- *           self-calling identity should be denied.
+ * @tc.desc: CLI caller without cli permissions or self-calling identity
+ *           should be denied.
  */
 HWTEST_F(BmsBundleKitServiceTest, GetDistributedBundleInfo_0500, Function | SmallTest | Level1)
 {
@@ -13759,8 +14358,9 @@ HWTEST_F(BmsBundleKitServiceTest, GetDistributedBundleInfo_0500, Function | Smal
 
     EXPECT_FALSE(ret);
     EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
-    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 1);
-    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 0);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO), 0);
     EXPECT_EQ(GetIsBundleSelfCallingForDistributedCountForTest(), 1);
     EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
     EXPECT_EQ(GetPermissionFailCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
@@ -13768,13 +14368,13 @@ HWTEST_F(BmsBundleKitServiceTest, GetDistributedBundleInfo_0500, Function | Smal
 
 /**
  * @tc.number: GetDistributedBundleInfo_0600
- * @tc.name: GetDistributedBundleInfoNewPermissionRestrictedToCli
- * @tc.desc: Non-CLI caller should not enter the GET_ALL_BUNDLE_INFO
- *           permission path.
+ * @tc.name: GetDistributedBundleInfoPrivilegedRestrictedToNonCli
+ * @tc.desc: CLI caller holding only GET_BUNDLE_INFO_PRIVILEGED should be
+ *           denied without the privileged permission being consulted.
  */
 HWTEST_F(BmsBundleKitServiceTest, GetDistributedBundleInfo_0600, Function | SmallTest | Level1)
 {
-    PrepareGetDistributedBundleInfoPermissionTest(false, true, false, false, false);
+    PrepareGetDistributedBundleInfoPermissionTest(true, false, true, false, false);
     ScopeGuard permissionGuard([] { ResetTestValues(); });
 
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
@@ -13784,9 +14384,10 @@ HWTEST_F(BmsBundleKitServiceTest, GetDistributedBundleInfo_0600, Function | Smal
     bool ret = hostImpl->GetDistributedBundleInfo(DEVICE_ID, BUNDLE_NAME_TEST, distributedBundleInfo);
 
     EXPECT_FALSE(ret);
-    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
-    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 1);
-    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 0);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO), 0);
     EXPECT_EQ(GetIsBundleSelfCallingForDistributedCountForTest(), 1);
     EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
     EXPECT_EQ(GetPermissionFailCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
@@ -13794,9 +14395,9 @@ HWTEST_F(BmsBundleKitServiceTest, GetDistributedBundleInfo_0600, Function | Smal
 
 /**
  * @tc.number: GetDistributedBundleInfo_0700
- * @tc.name: GetDistributedBundleInfoNonCliWithLegacyPermission
- * @tc.desc: Non-CLI caller should retain compatibility with the
- *           original privileged bundle-info permission.
+ * @tc.name: GetDistributedBundleInfoNonCliWithPrivilegedPermission
+ * @tc.desc: Non-CLI caller holding only GET_BUNDLE_INFO_PRIVILEGED should
+ *           be authorized by the privileged permission.
  */
 HWTEST_F(BmsBundleKitServiceTest, GetDistributedBundleInfo_0700, Function | SmallTest | Level1)
 {
@@ -13809,7 +14410,8 @@ HWTEST_F(BmsBundleKitServiceTest, GetDistributedBundleInfo_0700, Function | Smal
     DistributedBundleInfo distributedBundleInfo;
     (void)hostImpl->GetDistributedBundleInfo(DEVICE_ID, BUNDLE_NAME_TEST, distributedBundleInfo);
 
-    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST), 1);
     EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 1);
     EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO), 0);
     EXPECT_EQ(GetIsBundleSelfCallingForDistributedCountForTest(), 0);
@@ -13819,27 +14421,27 @@ HWTEST_F(BmsBundleKitServiceTest, GetDistributedBundleInfo_0700, Function | Smal
 
 /**
  * @tc.number: GetDistributedBundleInfo_0800
- * @tc.name: GetDistributedBundleInfoBundleInfoPermissionFirst
- * @tc.desc: GET_BUNDLE_INFO should authorize the caller without checking
- *           GET_ALL_BUNDLE_INFO or the bundle self-calling identity.
+ * @tc.name: GetDistributedBundleInfoBundleInfoNotAccepted
+ * @tc.desc: Caller holding only GET_BUNDLE_INFO should be denied since it
+ *           is no longer an accepted permission.
  */
 HWTEST_F(BmsBundleKitServiceTest, GetDistributedBundleInfo_0800, Function | SmallTest | Level1)
 {
-    PrepareGetDistributedBundleInfoPermissionTest(true, false, false, true, false);
+    PrepareGetDistributedBundleInfoPermissionTest(false, false, false, true, false);
     ScopeGuard permissionGuard([] { ResetTestValues(); });
 
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     ASSERT_NE(hostImpl, nullptr);
 
     DistributedBundleInfo distributedBundleInfo;
-    (void)hostImpl->GetDistributedBundleInfo(DEVICE_ID, BUNDLE_NAME_TEST, distributedBundleInfo);
+    bool ret = hostImpl->GetDistributedBundleInfo(DEVICE_ID, BUNDLE_NAME_TEST, distributedBundleInfo);
 
+    EXPECT_FALSE(ret);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST), 1);
     EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 1);
-    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO), 1);
-    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
-    EXPECT_EQ(GetIsBundleSelfCallingForDistributedCountForTest(), 0);
-    EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
-    EXPECT_EQ(GetPermissionFailCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO), 0);
+    EXPECT_EQ(GetIsBundleSelfCallingForDistributedCountForTest(), 1);
 }
 
 /**
@@ -13867,6 +14469,56 @@ HWTEST_F(BmsBundleKitServiceTest, GetDistributedBundleInfo_0900, Function | Smal
     EXPECT_EQ(GetIsBundleSelfCallingForDistributedCountForTest(), 0);
     EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
     EXPECT_EQ(GetPermissionFailCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
+}
+
+/**
+ * @tc.number: GetDistributedBundleInfo_1000
+ * @tc.name: GetDistributedBundleInfoCliToolWithInstalledBundleList
+ * @tc.desc: CLI caller holding only GET_INSTALLED_BUNDLE_LIST should be
+ *           authorized without the bundle self-calling check.
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetDistributedBundleInfo_1000, Function | SmallTest | Level1)
+{
+    PrepareGetDistributedBundleInfoPermissionTest(true, false, false, false, false, true);
+    ScopeGuard permissionGuard([] { ResetTestValues(); });
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+
+    DistributedBundleInfo distributedBundleInfo;
+    (void)hostImpl->GetDistributedBundleInfo(DEVICE_ID, BUNDLE_NAME_TEST, distributedBundleInfo);
+
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 0);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO), 0);
+    EXPECT_EQ(GetIsBundleSelfCallingForDistributedCountForTest(), 0);
+    EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
+    EXPECT_EQ(GetPermissionFailCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
+}
+
+/**
+ * @tc.number: GetDistributedBundleInfo_1100
+ * @tc.name: GetDistributedBundleInfoNonCliWithInstalledBundleList
+ * @tc.desc: Non-CLI caller holding only GET_INSTALLED_BUNDLE_LIST should
+ *           be authorized without the bundle self-calling check.
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetDistributedBundleInfo_1100, Function | SmallTest | Level1)
+{
+    PrepareGetDistributedBundleInfoPermissionTest(false, false, false, false, false, true);
+    ScopeGuard permissionGuard([] { ResetTestValues(); });
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+
+    DistributedBundleInfo distributedBundleInfo;
+    (void)hostImpl->GetDistributedBundleInfo(DEVICE_ID, BUNDLE_NAME_TEST, distributedBundleInfo);
+
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 0);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO), 0);
+    EXPECT_EQ(GetIsBundleSelfCallingForDistributedCountForTest(), 0);
 }
 #endif
 }
