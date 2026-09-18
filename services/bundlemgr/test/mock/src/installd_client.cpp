@@ -144,6 +144,16 @@ ErrCode InstalldClient::ExtractQuickFixRes(const std::string &bundleName, const 
     return CallService(&IInstalld::ExtractQuickFixRes, bundleName, moduleName, hqfFilePath, needFakeDecompression);
 }
 
+ErrCode InstalldClient::ExtractResourceFiles(const std::string &bundleName, const std::string &moduleName,
+    const std::string &hapFilePath, bool needFakeDecompression, bool useNewCodeDir, bool useModuleTmp)
+{
+    if (bundleName.empty() || moduleName.empty() || hapFilePath.empty()) {
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::ExtractResourceFiles, bundleName, moduleName, hapFilePath,
+        needFakeDecompression, useNewCodeDir, useModuleTmp);
+}
+
 ErrCode InstalldClient::ExtractArkNative(const std::string &bundleName, const std::string &moduleName,
     const std::string &hapFilePath, const std::string &cpuAbi,
     bool needFakeDecompression, bool isSystemApp, int32_t userId)

@@ -4703,7 +4703,9 @@ ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::str
         }
     }
 
-    ExtractResourceFiles(info, modulePath);
+    bool useNewCodeDir = modulePath.find(ServiceConstants::BUNDLE_NEW_CODE_DIR) != std::string::npos;
+    bool useModuleTmp = BundleUtil::EndWith(modulePath, ServiceConstants::TMP_SUFFIX);
+    ExtractResourceFiles(info, useNewCodeDir, useModuleTmp);
     auto needFakeDecompression =
         BundleUtil::IsResFileSupportFakeDecompression(info.GetBundleName(), info.GetIsKeepAlive());
     auto isSystemApp = info.IsSystemApp();
@@ -4963,7 +4965,8 @@ void BaseBundleInstaller::RemoveAppSkillsDir(
     }
 }
 
-void BaseBundleInstaller::ExtractResourceFiles(const InnerBundleInfo &info, const std::string &targetPath) const
+void BaseBundleInstaller::ExtractResourceFiles(const InnerBundleInfo &info, bool useNewCodeDir,
+    bool useModuleTmp) const
 {
     LOG_D(BMS_TAG_INSTALLER, "ExtractResourceFiles begin");
     int32_t apiTargetVersion = info.GetBaseApplicationInfo().apiTargetVersion;
@@ -4972,14 +4975,11 @@ void BaseBundleInstaller::ExtractResourceFiles(const InnerBundleInfo &info, cons
         return;
     }
     LOG_D(BMS_TAG_INSTALLER, "apiTargetVersion is %{public}d, extract resource files", apiTargetVersion);
-    ExtractParam extractParam;
-    extractParam.bundleName = bundleName_;
-    extractParam.srcPath = modulePath_;
-    extractParam.targetPath = targetPath + ServiceConstants::PATH_SEPARATOR;
-    extractParam.extractFileType = ExtractFileType::RESOURCE;
-    ErrCode ret = InstalldClient::GetInstance()->ExtractFiles(extractParam);
+    ErrCode ret = InstalldClient::GetInstance()->ExtractResourceFiles(
+        GetEffectiveBundleName(info), modulePackage_, modulePath_, false, useNewCodeDir, useModuleTmp);
     LOG_D(BMS_TAG_INSTALLER, "ExtractResourceFiles ret : %{public}d", ret);
 }
+
 
 void BaseBundleInstaller::ExtractNPAPIPluginFiles(const std::string &modulePath)
 {

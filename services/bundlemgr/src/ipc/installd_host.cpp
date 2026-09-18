@@ -263,6 +263,9 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_QUICK_FIX_RES):
             result = this->HandleExtractQuickFixRes(data, reply);
             break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_RESOURCE_FILES):
+            result = this->HandleExtractResourceFiles(data, reply);
+            break;
         case static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_ARK_NATIVE):
             result = this->HandleExtractArkNative(data, reply);
             break;
@@ -572,6 +575,20 @@ bool InstalldHost::HandleExtractArkNative(MessageParcel &data, MessageParcel &re
     int32_t userId = data.ReadInt32();
     ErrCode result = ExtractArkNative(bundleName, moduleName, hapFilePath, cpuAbi, needFakeDecompression,
         isSystemApp, userId);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleExtractResourceFiles(MessageParcel &data, MessageParcel &reply)
+{
+    std::string bundleName = Str16ToStr8(data.ReadString16());
+    std::string moduleName = Str16ToStr8(data.ReadString16());
+    std::string hapFilePath = Str16ToStr8(data.ReadString16());
+    bool needFakeDecompression = data.ReadBool();
+    bool useNewCodeDir = data.ReadBool();
+    bool useModuleTmp = data.ReadBool();
+    ErrCode result = ExtractResourceFiles(bundleName, moduleName, hapFilePath, needFakeDecompression,
+        useNewCodeDir, useModuleTmp);
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
