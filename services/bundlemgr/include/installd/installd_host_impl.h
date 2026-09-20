@@ -55,6 +55,10 @@ public:
      */
     virtual ErrCode ExtractFiles(const ExtractParam &extractParam) override;
 
+    virtual ErrCode ExtractResFileDir(const std::string &bundleName, const std::string &moduleName,
+        const std::string &hapFilePath, bool needFakeDecompression, bool isSystemApp,
+        bool useNewCodeDir, bool useModuleTmp) override;
+
     /**
      * @brief Extract quick fix so files.
      * @param bundleName Indicates the bundle name for path construction and validation.

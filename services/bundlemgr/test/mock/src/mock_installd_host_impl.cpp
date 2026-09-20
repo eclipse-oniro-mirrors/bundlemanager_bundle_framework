@@ -94,6 +94,13 @@ ErrCode InstalldHostImpl::ExtractResourceFiles(const std::string &bundleName, co
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::ExtractResFileDir(const std::string &bundleName, const std::string &moduleName,
+    const std::string &hapFilePath, bool needFakeDecompression, bool isSystemApp,
+    bool useNewCodeDir, bool useModuleTmp)
+{
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::ExtractHnpFiles(const std::map<std::string, std::string> &hnpPackageMap,
     const ExtractParam &extractParam)
 {

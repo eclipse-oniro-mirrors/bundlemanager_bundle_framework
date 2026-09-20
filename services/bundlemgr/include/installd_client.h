@@ -246,6 +246,10 @@ public:
 
     ErrCode ExtractFiles(const ExtractParam &extractParam);
 
+    ErrCode ExtractResFileDir(const std::string &bundleName, const std::string &moduleName,
+        const std::string &hapFilePath, bool needFakeDecompression, bool isSystemApp,
+        bool useNewCodeDir, bool useModuleTmp);
+
     ErrCode ExtractSoFiles(const std::string &bundleName, const std::string &moduleName,
         const std::string &hapFilePath, const std::string &cpuAbi, bool needFakeDecompression,
         bool isSystemApp, bool appendModuleName);

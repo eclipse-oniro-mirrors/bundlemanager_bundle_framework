@@ -107,6 +107,13 @@ ErrCode InstalldClient::ExtractResourceFiles(const std::string &bundleName, cons
     return 0;
 }
 
+ErrCode InstalldClient::ExtractResFileDir(const std::string &bundleName, const std::string &moduleName,
+    const std::string &hapFilePath, bool needFakeDecompression, bool isSystemApp,
+    bool useNewCodeDir, bool useModuleTmp)
+{
+    return 0;
+}
+
 ErrCode InstalldClient::ExtractHnpFiles(const std::map<std::string, std::string> &hnpPackageMap,
     const ExtractParam &extractParam)
 {
