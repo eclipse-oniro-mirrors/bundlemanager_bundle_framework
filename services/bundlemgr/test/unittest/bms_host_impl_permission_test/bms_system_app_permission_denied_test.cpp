@@ -1278,4 +1278,39 @@ HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleMgrHostImpl_0059, TestSize.Leve
     auto ret = localBundleMgrHostImpl->FilterBundleListByDeviceModeDistributionPolicies(policies);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
 }
+
+/**
+ * @tc.number: BundleMgrHostImpl_0060
+ * @tc.name: BmsSystemAppPermissionDeniedTest
+ * @tc.desc: QueryExtensionAbilityInfoOptimal non-foundation calling denied
+ */
+HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleMgrHostImpl_0060, TestSize.Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+
+    Want want;
+    ExtensionAbilityInfo extensionInfo;
+    auto ret = localBundleMgrHostImpl->QueryExtensionAbilityInfoOptimal(want, 0, 100, extensionInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    EXPECT_TRUE(extensionInfo.bundleName.empty());
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_0062
+ * @tc.name: BmsSystemAppPermissionDeniedTest
+ * @tc.desc: GetSandboxExtAbilityInfoOptimal non-foundation calling denied
+ */
+HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleMgrHostImpl_0062, TestSize.Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+
+    int32_t appIndex = 1 + Constants::INITIAL_SANDBOX_APP_INDEX;
+    Want want;
+    ExtensionAbilityInfo info;
+    auto ret = localBundleMgrHostImpl->GetSandboxExtAbilityInfoOptimal(want, appIndex, 0, 100, info);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    EXPECT_TRUE(info.bundleName.empty());
+}
 }  // namespace OHOS

@@ -914,6 +914,18 @@ public:
      */
     virtual bool QueryExtensionAbilityInfos(const Want &want, const int32_t &flag, const int32_t &userId,
         std::vector<ExtensionAbilityInfo> &extensionInfos) override;
+
+    /**
+     * @brief Query the optimal extension info by the given Want, system app first then
+     *        ascending by bundleName.
+     * @param want Indicates the information of extension info.
+     * @param flag Indicates the query flag which will filter any specified stuff in the extension info.
+     * @param userId Indicates the userId in the system.
+     * @param extensionInfo Indicates the obtained optimal extension.
+     * @return Returns ERR_OK if this function is successfully called; returns errCode otherwise.
+     */
+    virtual ErrCode QueryExtensionAbilityInfoOptimal(const Want &want, const int32_t &flag,
+        const int32_t &userId, ExtensionAbilityInfo &extensionInfo) override;
     /**
      * @brief Query extension info.
      * @param Want Indicates the information of extension info.
@@ -1091,6 +1103,19 @@ public:
         AbilityInfo &info) override;
     virtual ErrCode GetSandboxExtAbilityInfos(const Want &want, int32_t appIndex, int32_t flags, int32_t userId,
         std::vector<ExtensionAbilityInfo> &infos) override;
+
+    /**
+     * @brief Obtains the optimal ExtensionAbilityInfo of a sandbox app, system app first
+     *        then ascending by bundleName.
+     * @param want Indicates the information of the ability.
+     * @param appIndex Indicates the app index of the sandbox app.
+     * @param flags Indicates the information contained in the info object to be returned.
+     * @param userId Indicates the user ID.
+     * @param info Indicates the obtained optimal ExtensionAbilityInfo object.
+     * @return Returns ERR_OK if this function is successfully called; returns errCode otherwise.
+     */
+    virtual ErrCode GetSandboxExtAbilityInfoOptimal(const Want &want, int32_t appIndex, int32_t flags,
+        int32_t userId, ExtensionAbilityInfo &info) override;
     virtual ErrCode GetSandboxHapModuleInfo(const AbilityInfo &abilityInfo, int32_t appIndex, int32_t userId,
         HapModuleInfo &info) override;
 

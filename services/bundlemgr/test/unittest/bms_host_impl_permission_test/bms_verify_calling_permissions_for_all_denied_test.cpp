@@ -1462,4 +1462,39 @@ HWTEST_F(VerifyCallingPermissionsForAllDeniedTest, SetAppClonePreference_0001, T
     auto ret = localBundleMgrHostImpl->SetAppClonePreference(bundleName, userId, preference);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
+
+/**
+ * @tc.number: QueryExtensionAbilityInfoOptimal_0001
+ * @tc.name: VerifyCallingPermissionsForAllDeniedTest
+ * @tc.desc: QueryExtensionAbilityInfoOptimal non-foundation calling denied
+ */
+HWTEST_F(VerifyCallingPermissionsForAllDeniedTest, QueryExtensionAbilityInfoOptimal_0001, TestSize.Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+
+    Want want;
+    ExtensionAbilityInfo extensionInfo;
+    auto ret = localBundleMgrHostImpl->QueryExtensionAbilityInfoOptimal(want, 0, 100, extensionInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    EXPECT_TRUE(extensionInfo.bundleName.empty());
+}
+
+/**
+ * @tc.number: GetSandboxExtAbilityInfoOptimal_0001
+ * @tc.name: VerifyCallingPermissionsForAllDeniedTest
+ * @tc.desc: GetSandboxExtAbilityInfoOptimal non-foundation calling denied
+ */
+HWTEST_F(VerifyCallingPermissionsForAllDeniedTest, GetSandboxExtAbilityInfoOptimal_0001, TestSize.Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+
+    int32_t appIndex = 1 + Constants::INITIAL_SANDBOX_APP_INDEX;
+    Want want;
+    ExtensionAbilityInfo info;
+    auto ret = localBundleMgrHostImpl->GetSandboxExtAbilityInfoOptimal(want, appIndex, 0, 100, info);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    EXPECT_TRUE(info.bundleName.empty());
+}
 } // namespace OHOS

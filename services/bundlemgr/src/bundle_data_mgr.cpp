@@ -18,6 +18,7 @@
 #include <algorithm>
 #include <sys/stat.h>
 #include <tuple>
+#include <unordered_map>
 
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 #ifdef ACCOUNT_ENABLE
@@ -183,6 +184,26 @@ const std::string FIELD_MEDIA = "media";
 const std::string FIELD_STRING = "string";
 #endif
 constexpr int32_t DYNAMIC_SHORTCUT_TYPE = 2;
+
+// Sort infos in place: system apps first, then ascending by bundleName in each group.
+// Items with the same key keep their relative order (stable).
+template<typename T>
+void SortInfosBySystemAppFirst(std::vector<T> &infos, const std::unordered_map<std::string, bool> &isSystemAppMap)
+{
+    auto isSystemApp = [&isSystemAppMap](const std::string &bundleName) {
+        auto item = isSystemAppMap.find(bundleName);
+        return item != isSystemAppMap.end() && item->second;
+    };
+    std::stable_sort(infos.begin(), infos.end(),
+        [&isSystemApp](const T &first, const T &second) {
+            bool isFirstSystem = isSystemApp(first.bundleName);
+            bool isSecondSystem = isSystemApp(second.bundleName);
+            if (isFirstSystem != isSecondSystem) {
+                return isFirstSystem;
+            }
+            return first.bundleName < second.bundleName;
+        });
+}
 }
 
 BundleDataMgr::BundleDataMgr()
@@ -1594,6 +1615,27 @@ bool BundleDataMgr::QueryAbilityInfo(const Want &want, int32_t flags, int32_t us
     }
     abilityInfo = abilityInfos[0];
     return true;
+}
+
+void BundleDataMgr::SortExtensionAbilityInfos(std::vector<ExtensionAbilityInfo> &extensionInfos) const
+{
+    if (extensionInfos.size() <= 1) {
+        return;
+    }
+    std::unordered_map<std::string, bool> isSystemAppMap;
+    {
+        // pre-compute system app flags of distinct bundle names under one shared lock
+        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        for (const auto &extensionInfo : extensionInfos) {
+            if (isSystemAppMap.find(extensionInfo.bundleName) != isSystemAppMap.end()) {
+                continue;
+            }
+            auto item = bundleInfos_.find(extensionInfo.bundleName);
+            isSystemAppMap.emplace(extensionInfo.bundleName,
+                item != bundleInfos_.end() && item->second.IsSystemApp());
+        }
+    }
+    SortInfosBySystemAppFirst(extensionInfos, isSystemAppMap);
 }
 
 void BundleDataMgr::GetCloneAbilityInfos(std::vector<AbilityInfo> &abilityInfos,

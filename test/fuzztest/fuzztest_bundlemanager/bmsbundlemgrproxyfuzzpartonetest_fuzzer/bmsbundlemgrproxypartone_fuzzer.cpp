@@ -96,6 +96,7 @@ namespace OHOS {
         bundleMgrProxy.VerifyCallingPermission(permission);
         std::string uri = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
         bundleMgrProxy.QueryExtensionAbilityInfoByUri(uri, userId, extensionInfo);
+        bundleMgrProxy.QueryExtensionAbilityInfoOptimal(want, flag, userId, extensionInfo);
         bundleMgrProxy.ImplicitQueryInfoByPriority(want, userId, flag, abilityInfo, extensionInfo);
 
         abilityInfo.name = bundleName;
@@ -141,6 +142,7 @@ namespace OHOS {
         bundleMgrProxy.GetIconById(bundleName, moduleName, resId, density, userId);
         bundleMgrProxy.GetSandboxAbilityInfo(want, appIndex, flag, userId, abilityInfo);
         bundleMgrProxy.GetSandboxExtAbilityInfos(want, appIndex, flag, userId, extensionInfos);
+        bundleMgrProxy.GetSandboxExtAbilityInfoOptimal(want, appIndex, flag, userId, extensionInfo);
         HapModuleInfo hapModuleInfo;
         bundleMgrProxy.GetSandboxHapModuleInfo(abilityInfo, appIndex, userId, hapModuleInfo);
         bundleMgrProxy.UnregisterBundleStatusCallback();

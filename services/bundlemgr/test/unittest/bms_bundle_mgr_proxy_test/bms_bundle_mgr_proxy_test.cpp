@@ -21,6 +21,7 @@
 #include "bundle_stats_callback_interface.h"
 #include "get_largest_items_callback_interface.h"
 #include "if_system_ability_manager.h"
+#include "iremote_stub.h"
 #include "iservice_registry.h"
 #include "process_cache_callback_host.h"
 #include "system_ability_definition.h"
@@ -151,6 +152,32 @@ sptr<IRemoteObject> IBundleEventCallbackTest::AsObject()
 {
     return nullptr;
 }
+
+// stub whose OnRemoteRequest writes a prepared errCode (and optional info) for the
+// optimal-query codes, to cover the remote reply branches of the proxy
+class MockOptimalQueryStub : public IRemoteStub<IBundleMgr> {
+public:
+    MockOptimalQueryStub() = default;
+    ~MockOptimalQueryStub() override = default;
+
+    ErrCode queryExtRet = ERR_OK;
+    ErrCode sandboxRet = ERR_OK;
+    bool writeInfoParcelable = true;
+    ExtensionAbilityInfo mockInfo;
+
+    int OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override
+    {
+        if (code == static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_EXTENSION_ABILITY_INFO_OPTIMAL)) {
+            reply.WriteInt32(queryExtRet);
+        } else {
+            reply.WriteInt32(sandboxRet);
+        }
+        if (writeInfoParcelable) {
+            reply.WriteParcelable(&mockInfo);
+        }
+        return 0;
+    }
+};
 
 class BmsBundleMgrProxyTest : public testing::Test {
 public:
@@ -2514,6 +2541,157 @@ HWTEST_F(BmsBundleMgrProxyTest, FilterBundleListByDeviceModeDistributionPolicies
 
     ErrCode ret = bundleMgrProxy.FilterBundleListByDeviceModeDistributionPolicies(policies);
     EXPECT_EQ(ret, ERR_APPEXECFWK_DUAL_MODE_POLICY_INVALID);
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfoOptimal_0100
+ * @tc.name: test the QueryExtensionAbilityInfoOptimal
+ * @tc.desc: 1. BundleMgrProxy constructed with null IRemoteObject
+ *           2. test QueryExtensionAbilityInfoOptimal returns parcel error (SendTransactCmd fails)
+ */
+HWTEST_F(BmsBundleMgrProxyTest, QueryExtensionAbilityInfoOptimal_0100, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl = nullptr;
+    BundleMgrProxy bundleMgrProxy(impl);
+    Want want;
+    ExtensionAbilityInfo extensionInfo;
+    ErrCode ret = bundleMgrProxy.QueryExtensionAbilityInfoOptimal(want, 0, 100, extensionInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
+    want.SetAction("action.test.optimal");
+    ret = bundleMgrProxy.QueryExtensionAbilityInfoOptimal(want, 0, 100, extensionInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfoOptimal_0200
+ * @tc.name: test the QueryExtensionAbilityInfoOptimal
+ * @tc.desc: 1. remote replies with an error code
+ *           2. test QueryExtensionAbilityInfoOptimal returns the remote error code
+ */
+HWTEST_F(BmsBundleMgrProxyTest, QueryExtensionAbilityInfoOptimal_0200, Function | MediumTest | Level1)
+{
+    sptr<MockOptimalQueryStub> stub = new MockOptimalQueryStub();
+    stub->queryExtRet = ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+    BundleMgrProxy bundleMgrProxy(stub->AsObject());
+    Want want;
+    ExtensionAbilityInfo extensionInfo;
+    ErrCode ret = bundleMgrProxy.QueryExtensionAbilityInfoOptimal(want, 0, 100, extensionInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+    EXPECT_EQ(extensionInfo.bundleName, "");
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfoOptimal_0300
+ * @tc.name: test the QueryExtensionAbilityInfoOptimal
+ * @tc.desc: 1. remote replies ERR_OK with a valid ExtensionAbilityInfo
+ *           2. test QueryExtensionAbilityInfoOptimal returns ERR_OK and fills the info
+ */
+HWTEST_F(BmsBundleMgrProxyTest, QueryExtensionAbilityInfoOptimal_0300, Function | MediumTest | Level1)
+{
+    sptr<MockOptimalQueryStub> stub = new MockOptimalQueryStub();
+    stub->mockInfo.bundleName = "com.example.optimal";
+    BundleMgrProxy bundleMgrProxy(stub->AsObject());
+    Want want;
+    ExtensionAbilityInfo extensionInfo;
+    ErrCode ret = bundleMgrProxy.QueryExtensionAbilityInfoOptimal(want, 0, 100, extensionInfo);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(extensionInfo.bundleName, "com.example.optimal");
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfoOptimal_0400
+ * @tc.name: test the QueryExtensionAbilityInfoOptimal
+ * @tc.desc: 1. remote replies ERR_OK without a parcelable info
+ *           2. test QueryExtensionAbilityInfoOptimal returns parcel error (read info fails)
+ */
+HWTEST_F(BmsBundleMgrProxyTest, QueryExtensionAbilityInfoOptimal_0400, Function | MediumTest | Level1)
+{
+    sptr<MockOptimalQueryStub> stub = new MockOptimalQueryStub();
+    stub->writeInfoParcelable = false;
+    BundleMgrProxy bundleMgrProxy(stub->AsObject());
+    Want want;
+    ExtensionAbilityInfo extensionInfo;
+    ErrCode ret = bundleMgrProxy.QueryExtensionAbilityInfoOptimal(want, 0, 100, extensionInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
+    EXPECT_EQ(extensionInfo.bundleName, "");
+}
+
+/**
+ * @tc.number: GetSandboxExtAbilityInfoOptimal_0100
+ * @tc.name: test the GetSandboxExtAbilityInfoOptimal
+ * @tc.desc: 1. appIndex out of the valid sandbox range
+ *           2. test GetSandboxExtAbilityInfoOptimal returns error without IPC
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetSandboxExtAbilityInfoOptimal_0100, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl = nullptr;
+    BundleMgrProxy bundleMgrProxy(impl);
+    Want want;
+    ExtensionAbilityInfo info;
+    ErrCode ret = bundleMgrProxy.GetSandboxExtAbilityInfoOptimal(
+        want, Constants::INITIAL_SANDBOX_APP_INDEX, 0, 100, info);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR);
+    ret = bundleMgrProxy.GetSandboxExtAbilityInfoOptimal(
+        want, Constants::MAX_SANDBOX_APP_INDEX + 1, 0, 100, info);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: GetSandboxExtAbilityInfoOptimal_0200
+ * @tc.name: test the GetSandboxExtAbilityInfoOptimal
+ * @tc.desc: 1. valid appIndex, BundleMgrProxy constructed with null IRemoteObject
+ *           2. test GetSandboxExtAbilityInfoOptimal returns parcel error (SendTransactCmd fails)
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetSandboxExtAbilityInfoOptimal_0200, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl = nullptr;
+    BundleMgrProxy bundleMgrProxy(impl);
+    Want want;
+    ExtensionAbilityInfo info;
+    int32_t appIndex = Constants::INITIAL_SANDBOX_APP_INDEX + 1;
+    ErrCode ret = bundleMgrProxy.GetSandboxExtAbilityInfoOptimal(want, appIndex, 0, 100, info);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
+    want.SetAction("action.test.optimal");
+    ret = bundleMgrProxy.GetSandboxExtAbilityInfoOptimal(want, appIndex, 0, 100, info);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: GetSandboxExtAbilityInfoOptimal_0300
+ * @tc.name: test the GetSandboxExtAbilityInfoOptimal
+ * @tc.desc: 1. remote replies with an error code
+ *           2. test GetSandboxExtAbilityInfoOptimal returns the remote error code
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetSandboxExtAbilityInfoOptimal_0300, Function | MediumTest | Level1)
+{
+    sptr<MockOptimalQueryStub> stub = new MockOptimalQueryStub();
+    stub->sandboxRet = ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR;
+    BundleMgrProxy bundleMgrProxy(stub->AsObject());
+    Want want;
+    ExtensionAbilityInfo info;
+    int32_t appIndex = Constants::INITIAL_SANDBOX_APP_INDEX + 1;
+    ErrCode ret = bundleMgrProxy.GetSandboxExtAbilityInfoOptimal(want, appIndex, 0, 100, info);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR);
+    EXPECT_EQ(info.bundleName, "");
+}
+
+/**
+ * @tc.number: GetSandboxExtAbilityInfoOptimal_0400
+ * @tc.name: test the GetSandboxExtAbilityInfoOptimal
+ * @tc.desc: 1. remote replies ERR_OK with a valid ExtensionAbilityInfo
+ *           2. test GetSandboxExtAbilityInfoOptimal returns ERR_OK and fills the info
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetSandboxExtAbilityInfoOptimal_0400, Function | MediumTest | Level1)
+{
+    sptr<MockOptimalQueryStub> stub = new MockOptimalQueryStub();
+    stub->mockInfo.bundleName = "com.example.sandbox.optimal";
+    BundleMgrProxy bundleMgrProxy(stub->AsObject());
+    Want want;
+    ExtensionAbilityInfo info;
+    int32_t appIndex = Constants::INITIAL_SANDBOX_APP_INDEX + 1;
+    ErrCode ret = bundleMgrProxy.GetSandboxExtAbilityInfoOptimal(want, appIndex, 0, 100, info);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(info.bundleName, "com.example.sandbox.optimal");
 }
 }
 }

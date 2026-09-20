@@ -3146,6 +3146,34 @@ void FuzzGetSimpleAppInfoForUid(BundleMgrHost& host, FuzzedDataProvider& fdp)
     host.HandleGetSimpleAppInfoForUid(data, reply);
 }
 
+// 248. HandleQueryExtensionAbilityInfoOptimal: ReadParcelable<Want>, ReadInt32(flag), ReadInt32(userId)
+void FuzzQueryExtensionAbilityInfoOptimal(BundleMgrHost& host, FuzzedDataProvider& fdp)
+{
+    MessageParcel data;
+    PrepareParcel<BundleMgrHost>(data);
+    MessageParcel reply;
+    WriteWant(data, fdp);  // Want
+    WriteInt32Field(data, fdp);  // flag
+    WriteUserId(data, fdp);  // userId
+    FinishParcel(data);
+    host.HandleQueryExtensionAbilityInfoOptimal(data, reply);
+}
+
+// 249. HandleGetSandboxExtAbilityInfoOptimal: ReadParcelable<Want>, ReadInt32(appIndex), ReadInt32(flags),
+// ReadInt32(userId)
+void FuzzGetSandboxExtAbilityInfoOptimal(BundleMgrHost& host, FuzzedDataProvider& fdp)
+{
+    MessageParcel data;
+    PrepareParcel<BundleMgrHost>(data);
+    MessageParcel reply;
+    WriteWant(data, fdp);  // Want
+    WriteInt32Field(data, fdp);  // appIndex
+    WriteInt32Field(data, fdp);  // flags
+    WriteUserId(data, fdp);  // userId
+    FinishParcel(data);
+    host.HandleGetSandboxExtAbilityInfoOptimal(data, reply);
+}
+
 enum BundleMgrMethod {
     FUZZSETBUNDLEFIRSTLAUNCH = 0,
     FUZZSETAPPLICATIONENABLED,
@@ -3394,6 +3422,8 @@ enum BundleMgrMethod {
     FUZZGETMAINANDCLONEBUNDLEINFO,
     FUZZGETSHORTCUTINFOBYABILITY,
     FUZZGETSIMPLEAPPINFOFORUID,
+    FUZZQUERYEXTENSIONABILITYINFOOPTIMAL,
+    FUZZGETSANDBOXEXTABILITYINFOOPTIMAL,
     BUNDLE_MGR_METHOD_MAX,
 };
 
@@ -3666,6 +3696,8 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
         case FUZZGETMAINANDCLONEBUNDLEINFO: FuzzGetMainAndCloneBundleInfo(bundleMgrHost, fdp); break;
         case FUZZGETSHORTCUTINFOBYABILITY: FuzzGetShortcutInfoByAbility(bundleMgrHost, fdp); break;
         case FUZZGETSIMPLEAPPINFOFORUID: FuzzGetSimpleAppInfoForUid(bundleMgrHost, fdp); break;
+        case FUZZQUERYEXTENSIONABILITYINFOOPTIMAL: FuzzQueryExtensionAbilityInfoOptimal(bundleMgrHost, fdp); break;
+        case FUZZGETSANDBOXEXTABILITYINFOOPTIMAL: FuzzGetSandboxExtAbilityInfoOptimal(bundleMgrHost, fdp); break;
     }
     return true;
 }
