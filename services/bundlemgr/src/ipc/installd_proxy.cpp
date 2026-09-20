@@ -257,6 +257,24 @@ ErrCode InstalldProxy::ExtractQuickFixRes(const std::string &bundleName, const s
     return TransactInstalldCmd(InstalldInterfaceCode::EXTRACT_QUICK_FIX_RES, data, reply, option);
 }
 
+ErrCode InstalldProxy::ExtractResFileDir(const std::string &bundleName, const std::string &moduleName,
+    const std::string &hapFilePath, bool needFakeDecompression, bool isSystemApp,
+    bool useNewCodeDir, bool useModuleTmp)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(moduleName));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(hapFilePath));
+    INSTALLD_PARCEL_WRITE(data, Bool, needFakeDecompression);
+    INSTALLD_PARCEL_WRITE(data, Bool, isSystemApp);
+    INSTALLD_PARCEL_WRITE(data, Bool, useNewCodeDir);
+    INSTALLD_PARCEL_WRITE(data, Bool, useModuleTmp);
+    MessageParcel reply;
+    MessageOption option;
+    return TransactInstalldCmd(InstalldInterfaceCode::EXTRACT_RES_FILE_DIR, data, reply, option);
+}
+
 ErrCode InstalldProxy::ExtractResourceFiles(const std::string &bundleName, const std::string &moduleName,
     const std::string &hapFilePath, bool needFakeDecompression, bool useNewCodeDir, bool useModuleTmp)
 {

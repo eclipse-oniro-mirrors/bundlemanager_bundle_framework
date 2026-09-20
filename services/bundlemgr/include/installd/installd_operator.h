@@ -538,6 +538,8 @@ public:
         const std::vector<std::string> &sourcePaths, const std::string &destinationPath, bool &isInvalidsourcePath);
     static bool IsValidPathByCleanBundleDirsScene(const std::string &dir, const std::string &bundleName,
         const BundleDirScene &scene);
+    static bool IsValidPathByExtractResFileDir(const std::string &bundleName, const std::string &moduleName,
+        const std::string &hapFilePath, bool useNewCodeDir, bool useModuleTmp);
     static bool IsValidPathByDeleteUninstallTmpDirs(const std::string &dir);
     static bool IsValidPathByExtractQuickFixRes(const std::string &bundleName, const std::string &moduleName,
         const std::string &hqfFilePath);

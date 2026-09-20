@@ -6219,6 +6219,28 @@ bool InstalldOperator::IsValidPathByDeleteUninstallTmpDirs(const std::string &di
     }
 }
 
+bool InstalldOperator::IsValidPathByExtractResFileDir(
+    const std::string &bundleName, const std::string &moduleName, const std::string &hapFilePath,
+    bool useNewCodeDir, bool useModuleTmp)
+{
+    if (useNewCodeDir && useModuleTmp) {
+        LOG_E(BMS_TAG_INSTALLD, "useNewCodeDir and useModuleTmp cannot both be true");
+        return false;
+    }
+    if (!IsFileNameValid(moduleName) || moduleName.find('/') != std::string::npos) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid param exist ../ or \\..");
+        return false;
+    }
+    if (!IsFileNameValid(hapFilePath) ||
+        !(EndsWith(hapFilePath, ServiceConstants::INSTALL_FILE_SUFFIX) ||
+            EndsWith(hapFilePath, ServiceConstants::HSP_FILE_SUFFIX)) ||
+        !IsExistFile(hapFilePath)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid hapFilePath");
+        return false;
+    }
+    return true;
+}
+
 bool InstalldOperator::IsValidPathByExtractQuickFixRes(
     const std::string &bundleName, const std::string &moduleName, const std::string &hqfFilePath)
 {

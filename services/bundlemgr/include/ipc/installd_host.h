@@ -81,6 +81,7 @@ private:
      * @return Returns true if called successfully; returns false otherwise.
      */
     bool HandleExtractQuickFixSoFile(MessageParcel &data, MessageParcel &reply);
+    bool HandleExtractResFileDir(MessageParcel &data, MessageParcel &reply);
 
     bool HandleExtractQuickFixRes(MessageParcel &data, MessageParcel &reply);
     bool HandleExtractResourceFiles(MessageParcel &data, MessageParcel &reply);

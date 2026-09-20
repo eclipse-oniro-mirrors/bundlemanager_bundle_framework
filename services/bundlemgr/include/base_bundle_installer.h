@@ -809,8 +809,8 @@ private:
         const std::string &srcHapPath, const std::string &realHapPath);
     ErrCode DeliveryProfileToCodeSign() const;
     ErrCode RemoveProfileFromCodeSign(const std::string &bundleName) const;
-    ErrCode ExtractResFileDir(
-        const std::string &modulePath, const bool needFakeDecompression, const bool isSystemApp) const;
+    ErrCode ExtractResFileDir(const bool needFakeDecompression, const bool isSystemApp,
+        bool useNewCodeDir, bool useModuleTmp) const;
     ErrCode ProcessAppSkills(InnerBundleInfo &info);
     ErrCode FinalizeAppSkills(const InnerBundleInfo &info);
     ErrCode CommitAppSkills(const InnerBundleInfo &info);

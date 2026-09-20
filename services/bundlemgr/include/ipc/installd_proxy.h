@@ -68,6 +68,10 @@ public:
     virtual ErrCode ExtractQuickFixRes(const std::string &bundleName, const std::string &moduleName,
         const std::string &hqfFilePath, bool needFakeDecompression) override;
 
+    virtual ErrCode ExtractResFileDir(const std::string &bundleName, const std::string &moduleName,
+        const std::string &hapFilePath, bool needFakeDecompression, bool isSystemApp,
+        bool useNewCodeDir, bool useModuleTmp) override;
+
     virtual ErrCode ExtractResourceFiles(const std::string &bundleName, const std::string &moduleName,
         const std::string &hapFilePath, bool needFakeDecompression, bool useNewCodeDir,
         bool useModuleTmp) override;

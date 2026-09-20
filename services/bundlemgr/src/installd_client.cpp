@@ -104,6 +104,18 @@ ErrCode InstalldClient::ExtractQuickFixRes(const std::string &bundleName, const 
     return CallService(&IInstalld::ExtractQuickFixRes, bundleName, moduleName, hqfFilePath, needFakeDecompression);
 }
 
+ErrCode InstalldClient::ExtractResFileDir(const std::string &bundleName, const std::string &moduleName,
+    const std::string &hapFilePath, bool needFakeDecompression, bool isSystemApp,
+    bool useNewCodeDir, bool useModuleTmp)
+{
+    if (bundleName.empty() || moduleName.empty() || hapFilePath.empty()) {
+        APP_LOGE("params are invalid");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::ExtractResFileDir, bundleName, moduleName, hapFilePath,
+        needFakeDecompression, isSystemApp, useNewCodeDir, useModuleTmp);
+}
+
 ErrCode InstalldClient::ExtractResourceFiles(const std::string &bundleName, const std::string &moduleName,
     const std::string &hapFilePath, bool needFakeDecompression, bool useNewCodeDir, bool useModuleTmp)
 {
