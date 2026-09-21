@@ -2362,10 +2362,10 @@ HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_RefreshPreAuthorizationForOT
     }
 
     // Call RefreshPreAuthorizationForOTA - should process the permission
-    // Note: This will try to fetch bundle info which may fail, but the function should not crash
+    // FetchInnerBundleInfo will fail for non-installed bundle, totalCount stays 0,
+    // function returns true (totalCount == 0 || successCount == totalCount)
     ret = BundlePermissionMgr::RefreshPreAuthorizationForOTA();
-    // Result depends on whether the bundle exists, but function should complete without crash
-    EXPECT_TRUE(ret || !ret); // Just verify it doesn't crash
+    EXPECT_TRUE(ret);
 
     // Cleanup
     BundlePermissionMgr::UnInit();
@@ -2412,5 +2412,112 @@ HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_LockBehavior_0100, Function 
 
     // Cleanup
     BundlePermissionMgr::UnInit();
+}
+
+/**
+ * @tc.number: BundlePermissionMgr_RefreshPreAuthorizationForOTA_0300
+ * @tc.name: test RefreshPreAuthorizationForOTA with non-empty permissions and dataMgr
+ * @tc.desc: 1.Test RefreshPreAuthorizationForOTA when defaultPermissions_ has entries
+ *           and dataMgr is available (covers snapshot loop and bundleName iteration)
+ */
+HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_RefreshPreAuthorizationForOTA_0300,
+    Function | SmallTest | Level0)
+{
+    // Initialize BundleDataMgr first
+    DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleDataMgr();
+
+    // Initialize permission manager
+    bool ret = BundlePermissionMgr::Init();
+    EXPECT_TRUE(ret);
+
+    // Add test permissions to defaultPermissions_ so the non-empty path is taken
+    DefaultPermission perm1;
+    perm1.bundleName = "com.test.ota.bundle1";
+    PermissionInfo permInfo1;
+    permInfo1.name = "ohos.permission.TEST_OTA_1";
+    permInfo1.userCancellable = true;
+    perm1.grantPermission.push_back(permInfo1);
+
+    DefaultPermission perm2;
+    perm2.bundleName = "com.test.ota.bundle2";
+    PermissionInfo permInfo2;
+    permInfo2.name = "ohos.permission.TEST_OTA_2";
+    permInfo2.userCancellable = false;
+    perm2.grantPermission.push_back(permInfo2);
+
+    {
+        std::unique_lock lock{BundlePermissionMgr::defaultPermissionsMutex_};
+        BundlePermissionMgr::defaultPermissions_.clear();
+        BundlePermissionMgr::defaultPermissions_.try_emplace("com.test.ota.bundle1", perm1);
+        BundlePermissionMgr::defaultPermissions_.try_emplace("com.test.ota.bundle2", perm2);
+    }
+
+    // Call RefreshPreAuthorizationForOTA - should enter non-empty path, build bundleNames
+    // snapshot, and iterate. FetchInnerBundleInfo will fail for non-installed bundles,
+    // but the function should complete without crash and return true.
+    ret = BundlePermissionMgr::RefreshPreAuthorizationForOTA();
+    EXPECT_TRUE(ret);
+
+    // Cleanup
+    BundlePermissionMgr::UnInit();
+}
+
+/**
+ * @tc.number: BundlePermissionMgr_Init_UnInit_ConcurrentSafety_0100
+ * @tc.name: test Init and UnInit with pre-populated permissions
+ * @tc.desc: 1.Test that Init correctly clears and repopulates defaultPermissions_
+ *           under the mutex, and UnInit clears it
+ */
+HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_Init_UnInit_ConcurrentSafety_0100,
+    Function | SmallTest | Level0)
+{
+    // Initialize BundleDataMgr first
+    DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleDataMgr();
+
+    // Pre-populate defaultPermissions_ to verify Init clears it
+    {
+        std::unique_lock lock{BundlePermissionMgr::defaultPermissionsMutex_};
+        DefaultPermission stalePerm;
+        stalePerm.bundleName = "com.stale.bundle";
+        BundlePermissionMgr::defaultPermissions_.clear();
+        BundlePermissionMgr::defaultPermissions_.try_emplace("com.stale.bundle", stalePerm);
+        ASSERT_FALSE(BundlePermissionMgr::defaultPermissions_.empty());
+    }
+
+    // Init should clear stale entries and repopulate (permissions may be empty in test env)
+    bool ret = BundlePermissionMgr::Init();
+    EXPECT_TRUE(ret);
+
+    // Verify stale entry was cleared by Init
+    {
+        std::shared_lock lock{BundlePermissionMgr::defaultPermissionsMutex_};
+        EXPECT_EQ(BundlePermissionMgr::defaultPermissions_.find("com.stale.bundle"),
+            BundlePermissionMgr::defaultPermissions_.end());
+    }
+
+    // Add a permission and verify GetDefaultPermission works after Init
+    DefaultPermission perm;
+    perm.bundleName = "com.test.init.uninit";
+    PermissionInfo permInfo;
+    permInfo.name = "ohos.permission.TEST_INIT";
+    permInfo.userCancellable = true;
+    perm.grantPermission.push_back(permInfo);
+
+    {
+        std::unique_lock lock{BundlePermissionMgr::defaultPermissionsMutex_};
+        BundlePermissionMgr::defaultPermissions_.try_emplace("com.test.init.uninit", perm);
+    }
+
+    DefaultPermission retrieved;
+    ret = BundlePermissionMgr::GetDefaultPermission("com.test.init.uninit", retrieved);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(retrieved.bundleName, "com.test.init.uninit");
+
+    // UnInit should clear all entries
+    BundlePermissionMgr::UnInit();
+    {
+        std::shared_lock lock{BundlePermissionMgr::defaultPermissionsMutex_};
+        EXPECT_TRUE(BundlePermissionMgr::defaultPermissions_.empty());
+    }
 }
 } // OHOS
