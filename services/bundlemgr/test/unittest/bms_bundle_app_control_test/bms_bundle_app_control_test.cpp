@@ -6335,4 +6335,102 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_SetDisposedRules_Dua
     EXPECT_EQ(ret, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
 }
 
+/**
+ * @tc.number: AppControlManager_TryGetControlRuleFromCache_0100
+ * @tc.name: test TryGetControlRuleFromCache with cache miss
+ * @tc.desc: 1.Test TryGetControlRuleFromCache when key not in cache
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManager_TryGetControlRuleFromCache_0100,
+    Function | SmallTest | Level1)
+{
+    auto appControlManager = DelayedSingleton<AppControlManager>::GetInstance();
+    ASSERT_NE(appControlManager, nullptr);
+
+    std::string key = "nonexistent_key_12345";
+    AppRunningControlRuleResult controlRuleResult;
+    ErrCode result = ERR_OK;
+
+    bool ret = appControlManager->TryGetControlRuleFromCache(key, controlRuleResult, result);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: AppControlManager_TryGetControlRuleFromCache_0200
+ * @tc.name: test TryGetControlRuleFromCache with cache hit
+ * @tc.desc: 1.Test TryGetControlRuleFromCache when key exists in cache
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManager_TryGetControlRuleFromCache_0200,
+    Function | SmallTest | Level1)
+{
+    auto appControlManager = DelayedSingleton<AppControlManager>::GetInstance();
+    ASSERT_NE(appControlManager, nullptr);
+
+    // First, add a rule to populate the cache
+    seteuid(3057);
+    std::vector<AppRunningControlRule> controlRules;
+    AppRunningControlRule controlRule;
+    controlRule.appId = APPID;
+    controlRule.controlMessage = CONTROL_MESSAGE;
+    controlRule.allowRunning = false;
+    controlRules.emplace_back(controlRule);
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<IAppControlMgr> appControlProxy = bundleMgrProxy->GetAppControlProxy();
+    auto res = appControlProxy->AddAppRunningControlRule(controlRules, USERID);
+    EXPECT_EQ(res, ERR_OK);
+
+    // Now call GetAppRunningControlRule to populate the cache
+    AppRunningControlRuleResult controlRuleResult;
+    res = appControlProxy->GetAppRunningControlRule(BUNDLE_NAME, USERID, controlRuleResult);
+
+    // Try to get from cache directly
+    std::string key = APPID + "_" + std::to_string(USERID);
+    ErrCode result = ERR_OK;
+    bool ret = appControlManager->TryGetControlRuleFromCache(key, controlRuleResult, result);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(result, ERR_OK);
+
+    // Cleanup
+    seteuid(3057);
+    res = appControlProxy->DeleteAppRunningControlRule(USERID);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: AppControlManager_TryGetControlRuleFromCache_0300
+ * @tc.name: test TryGetControlRuleFromCache with INVALID_MESSAGE
+ * @tc.desc: 1.Test TryGetControlRuleFromCache when controlMessage is INVALID_MESSAGE
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManager_TryGetControlRuleFromCache_0300,
+    Function | SmallTest | Level1)
+{
+    auto appControlManager = DelayedSingleton<AppControlManager>::GetInstance();
+    ASSERT_NE(appControlManager, nullptr);
+
+    // Manually insert a rule with INVALID_MESSAGE into cache
+    std::string key = "test_key_invalid";
+    AppRunningControlRuleResult ruleResult;
+    ruleResult.controlMessage = INVALID_MESSAGE;
+    ruleResult.controlWant = nullptr;
+
+    {
+        std::lock_guard<std::mutex> lock(appControlManager->appRunningControlMutex_);
+        appControlManager->appRunningControlRuleResult_[key] = ruleResult;
+    }
+
+    // Try to get from cache
+    AppRunningControlRuleResult result;
+    ErrCode errCode = ERR_OK;
+    bool ret = appControlManager->TryGetControlRuleFromCache(key, result, errCode);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(errCode, ERR_BUNDLE_MANAGER_BUNDLE_NOT_SET_CONTROL);
+    EXPECT_EQ(result.controlMessage, "");
+
+    // Cleanup
+    {
+        std::lock_guard<std::mutex> lock(appControlManager->appRunningControlMutex_);
+        appControlManager->appRunningControlRuleResult_.erase(key);
+    }
+}
+
 } // OHOS

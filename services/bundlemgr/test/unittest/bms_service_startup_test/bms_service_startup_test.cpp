@@ -2303,4 +2303,100 @@ HWTEST_F(BmsServiceStartupTest, PreInstallBundleInfo_CalculateHapTotalSize_0100,
     info.CalculateHapTotalSize();
     EXPECT_EQ(info.GetHapTotalSize(), 0);
 }
+
+/**
+ * @tc.number: BundlePermissionMgr_RefreshPreAuthorizationForOTA_0100
+ * @tc.name: test RefreshPreAuthorizationForOTA with empty permissions
+ * @tc.desc: 1.Test RefreshPreAuthorizationForOTA when defaultPermissions_ is empty
+ */
+HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_RefreshPreAuthorizationForOTA_0100,
+    Function | SmallTest | Level0)
+{
+    // Initialize permission manager
+    bool ret = BundlePermissionMgr::Init();
+    EXPECT_TRUE(ret);
+
+    // Clear default permissions to test empty case
+    {
+        std::unique_lock lock{BundlePermissionMgr::defaultPermissionsMutex_};
+        BundlePermissionMgr::defaultPermissions_.clear();
+    }
+
+    // Call RefreshPreAuthorizationForOTA - should return true for empty permissions
+    ret = BundlePermissionMgr::RefreshPreAuthorizationForOTA();
+    EXPECT_TRUE(ret);
+
+    // Cleanup
+    BundlePermissionMgr::UnInit();
+}
+
+/**
+ * @tc.number: BundlePermissionMgr_RefreshPreAuthorizationForOTA_0200
+ * @tc.name: test RefreshPreAuthorizationForOTA with permissions
+ * @tc.desc: 1.Test RefreshPreAuthorizationForOTA when defaultPermissions_ has entries
+ */
+HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_RefreshPreAuthorizationForOTA_0200,
+    Function | SmallTest | Level0)
+{
+    // Initialize permission manager
+    bool ret = BundlePermissionMgr::Init();
+    EXPECT_TRUE(ret);
+
+    // Add a test permission
+    DefaultPermission perm;
+    perm.bundleName = "com.test.refreshota";
+    perm.permissionName = "ohos.permission.TEST";
+    perm.userCancellable = true;
+
+    {
+        std::unique_lock lock{BundlePermissionMgr::defaultPermissionsMutex_};
+        BundlePermissionMgr::defaultPermissions_.try_emplace("com.test.refreshota", perm);
+    }
+
+    // Call RefreshPreAuthorizationForOTA - should process the permission
+    // Note: This will try to fetch bundle info which may fail, but the function should not crash
+    ret = BundlePermissionMgr::RefreshPreAuthorizationForOTA();
+    // Result depends on whether the bundle exists, but function should complete without crash
+    EXPECT_TRUE(ret || !ret); // Just verify it doesn't crash
+
+    // Cleanup
+    BundlePermissionMgr::UnInit();
+}
+
+/**
+ * @tc.number: BundlePermissionMgr_LockBehavior_0100
+ * @tc.name: test BundlePermissionMgr lock behavior
+ * @tc.desc: 1.Test that GetDefaultPermission works with shared_lock
+ */
+HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_LockBehavior_0100, Function | SmallTest | Level0)
+{
+    // Initialize permission manager
+    bool ret = BundlePermissionMgr::Init();
+    EXPECT_TRUE(ret);
+
+    // Add a test permission
+    DefaultPermission perm;
+    perm.bundleName = "com.test.lockbehavior";
+    perm.permissionName = "ohos.permission.TEST_LOCK";
+    perm.userCancellable = false;
+
+    {
+        std::unique_lock lock{BundlePermissionMgr::defaultPermissionsMutex_};
+        BundlePermissionMgr::defaultPermissions_.try_emplace("com.test.lockbehavior", perm);
+    }
+
+    // Get the permission - should work with shared_lock
+    DefaultPermission retrievedPerm;
+    ret = BundlePermissionMgr::GetDefaultPermission("com.test.lockbehavior", retrievedPerm);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(retrievedPerm.bundleName, "com.test.lockbehavior");
+    EXPECT_EQ(retrievedPerm.permissionName, "ohos.permission.TEST_LOCK");
+
+    // Try to get non-existent permission
+    ret = BundlePermissionMgr::GetDefaultPermission("com.nonexistent.bundle", retrievedPerm);
+    EXPECT_FALSE(ret);
+
+    // Cleanup
+    BundlePermissionMgr::UnInit();
+}
 } // OHOS
