@@ -23,6 +23,8 @@
 
 using namespace testing::ext;
 
+using OHOS::AAFwk::Want;
+
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
@@ -4687,6 +4689,159 @@ HWTEST_F(BmsBundleMgrHostUnitTest, HandleGetCliSandboxAppIndexes_0100, Function 
     EXPECT_EQ(res, ERR_OK);
     ErrCode retCode = reply.ReadInt32();
     EXPECT_NE(retCode, ERR_OK);
+}
+
+// host stub whose optimal-query interfaces succeed, to cover the ERR_OK reply branch
+class MockOptimalQueryHost : public BundleMgrHost {
+public:
+    ErrCode QueryExtensionAbilityInfoOptimal(const Want &want, const int32_t &flag,
+        const int32_t &userId, ExtensionAbilityInfo &extensionInfo) override
+    {
+        extensionInfo = mockInfo;
+        return queryExtRet;
+    }
+
+    ErrCode GetSandboxExtAbilityInfoOptimal(const Want &want, int32_t appIndex, int32_t flags,
+        int32_t userId, ExtensionAbilityInfo &info) override
+    {
+        info = mockInfo;
+        return sandboxRet;
+    }
+
+    ExtensionAbilityInfo mockInfo;
+    ErrCode queryExtRet = ERR_OK;
+    ErrCode sandboxRet = ERR_OK;
+};
+
+/**
+ * @tc.number: HandleQueryExtensionAbilityInfoOptimal_0100
+ * @tc.name: test the HandleQueryExtensionAbilityInfoOptimal
+ * @tc.desc: 1. parcel has no Want (read fails)
+ *           2. test HandleQueryExtensionAbilityInfoOptimal returns parcel error
+ */
+HWTEST_F(BmsBundleMgrHostUnitTest, HandleQueryExtensionAbilityInfoOptimal_0100, Function | SmallTest | Level0)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    // parcel without Want: ReadParcelable<Want> fails before reading flag and userId
+    data.WriteInt32(0); // flag
+    data.WriteInt32(100); // userId
+    ErrCode res = bundleMgrHost.HandleQueryExtensionAbilityInfoOptimal(data, reply);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
+    EXPECT_EQ(reply.GetDataSize(), 0U);
+}
+
+/**
+ * @tc.number: HandleQueryExtensionAbilityInfoOptimal_0200
+ * @tc.name: test the HandleQueryExtensionAbilityInfoOptimal
+ * @tc.desc: 1. valid parcel, QueryExtensionAbilityInfoOptimal returns error (default impl)
+ *           2. test HandleQueryExtensionAbilityInfoOptimal writes errCode without info
+ */
+HWTEST_F(BmsBundleMgrHostUnitTest, HandleQueryExtensionAbilityInfoOptimal_0200, Function | SmallTest | Level0)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    Want want;
+    data.WriteParcelable(&want);
+    data.WriteInt32(0); // flag
+    data.WriteInt32(100); // userId
+    ErrCode res = bundleMgrHost.HandleQueryExtensionAbilityInfoOptimal(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+    EXPECT_EQ(reply.ReadInt32(), ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    EXPECT_EQ(reply.ReadParcelable<ExtensionAbilityInfo>(), nullptr);
+}
+
+/**
+ * @tc.number: HandleQueryExtensionAbilityInfoOptimal_0300
+ * @tc.name: test the HandleQueryExtensionAbilityInfoOptimal
+ * @tc.desc: 1. valid parcel, QueryExtensionAbilityInfoOptimal returns ERR_OK
+ *           2. test HandleQueryExtensionAbilityInfoOptimal writes errCode and info
+ */
+HWTEST_F(BmsBundleMgrHostUnitTest, HandleQueryExtensionAbilityInfoOptimal_0300, Function | SmallTest | Level0)
+{
+    MockOptimalQueryHost bundleMgrHost;
+    bundleMgrHost.mockInfo.bundleName = TEST_BUNDLE_NAME;
+    MessageParcel data;
+    MessageParcel reply;
+    Want want;
+    data.WriteParcelable(&want);
+    data.WriteInt32(0); // flag
+    data.WriteInt32(100); // userId
+    ErrCode res = bundleMgrHost.HandleQueryExtensionAbilityInfoOptimal(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+    EXPECT_EQ(reply.ReadInt32(), ERR_OK);
+    std::unique_ptr<ExtensionAbilityInfo> info(reply.ReadParcelable<ExtensionAbilityInfo>());
+    ASSERT_NE(info, nullptr);
+    EXPECT_EQ(info->bundleName, TEST_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: HandleGetSandboxExtAbilityInfoOptimal_0100
+ * @tc.name: test the HandleGetSandboxExtAbilityInfoOptimal
+ * @tc.desc: 1. parcel has no Want (read fails)
+ *           2. test HandleGetSandboxExtAbilityInfoOptimal returns parcel error
+ */
+HWTEST_F(BmsBundleMgrHostUnitTest, HandleGetSandboxExtAbilityInfoOptimal_0100, Function | SmallTest | Level0)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    // parcel without Want: ReadParcelable<Want> fails before reading appIndex, flags and userId
+    data.WriteInt32(1001); // appIndex
+    data.WriteInt32(0); // flags
+    data.WriteInt32(100); // userId
+    ErrCode res = bundleMgrHost.HandleGetSandboxExtAbilityInfoOptimal(data, reply);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
+    EXPECT_EQ(reply.GetDataSize(), 0U);
+}
+
+/**
+ * @tc.number: HandleGetSandboxExtAbilityInfoOptimal_0200
+ * @tc.name: test the HandleGetSandboxExtAbilityInfoOptimal
+ * @tc.desc: 1. valid parcel, GetSandboxExtAbilityInfoOptimal returns error (default impl)
+ *           2. test HandleGetSandboxExtAbilityInfoOptimal writes errCode without info
+ */
+HWTEST_F(BmsBundleMgrHostUnitTest, HandleGetSandboxExtAbilityInfoOptimal_0200, Function | SmallTest | Level0)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    Want want;
+    data.WriteParcelable(&want);
+    data.WriteInt32(1001); // appIndex
+    data.WriteInt32(0); // flags
+    data.WriteInt32(100); // userId
+    ErrCode res = bundleMgrHost.HandleGetSandboxExtAbilityInfoOptimal(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+    EXPECT_EQ(reply.ReadInt32(), ERR_APPEXECFWK_SANDBOX_QUERY_PARAM_ERROR);
+    EXPECT_EQ(reply.ReadParcelable<ExtensionAbilityInfo>(), nullptr);
+}
+
+/**
+ * @tc.number: HandleGetSandboxExtAbilityInfoOptimal_0300
+ * @tc.name: test the HandleGetSandboxExtAbilityInfoOptimal
+ * @tc.desc: 1. valid parcel, GetSandboxExtAbilityInfoOptimal returns ERR_OK
+ *           2. test HandleGetSandboxExtAbilityInfoOptimal writes errCode and info
+ */
+HWTEST_F(BmsBundleMgrHostUnitTest, HandleGetSandboxExtAbilityInfoOptimal_0300, Function | SmallTest | Level0)
+{
+    MockOptimalQueryHost bundleMgrHost;
+    bundleMgrHost.mockInfo.bundleName = TEST_BUNDLE_NAME;
+    MessageParcel data;
+    MessageParcel reply;
+    Want want;
+    data.WriteParcelable(&want);
+    data.WriteInt32(1001); // appIndex
+    data.WriteInt32(0); // flags
+    data.WriteInt32(100); // userId
+    ErrCode res = bundleMgrHost.HandleGetSandboxExtAbilityInfoOptimal(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+    EXPECT_EQ(reply.ReadInt32(), ERR_OK);
+    std::unique_ptr<ExtensionAbilityInfo> info(reply.ReadParcelable<ExtensionAbilityInfo>());
+    ASSERT_NE(info, nullptr);
+    EXPECT_EQ(info->bundleName, TEST_BUNDLE_NAME);
 }
 } // namespace AppExecFwk
 } // namespace OHOS

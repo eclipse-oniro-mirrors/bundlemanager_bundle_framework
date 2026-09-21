@@ -383,6 +383,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_EXTENSION_ABILITY_INFO_BY_URI_OPTIMAL):
             errCode = this->HandleQueryExtensionAbilityInfoByUriOptimal(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_EXTENSION_ABILITY_INFO_OPTIMAL):
+            errCode = this->HandleQueryExtensionAbilityInfoOptimal(data, reply);
+            break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_APPID_BY_BUNDLE_NAME):
             errCode = this->HandleGetAppIdByBundleName(data, reply);
             break;
@@ -465,6 +468,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
             break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_SANDBOX_APP_EXTENSION_INFOS):
             errCode = this->HandleGetSandboxExtAbilityInfos(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_SANDBOX_EXT_ABILITY_INFO_OPTIMAL):
+            errCode = this->HandleGetSandboxExtAbilityInfoOptimal(data, reply);
             break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_SANDBOX_MODULE_INFO):
             errCode = this->HandleGetSandboxHapModuleInfo(data, reply);
@@ -3080,6 +3086,29 @@ ErrCode BundleMgrHost::HandleQueryExtensionAbilityInfoByUriOptimal(MessageParcel
     return ERR_OK;
 }
 
+ErrCode BundleMgrHost::HandleQueryExtensionAbilityInfoOptimal(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    std::unique_ptr<Want> want(data.ReadParcelable<Want>());
+    if (want == nullptr) {
+        APP_LOGE("ReadParcelable<want> failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    int32_t flag = data.ReadInt32();
+    int32_t userId = data.ReadInt32();
+    ExtensionAbilityInfo extensionInfo;
+    ErrCode ret = QueryExtensionAbilityInfoOptimal(*want, flag, userId, extensionInfo);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if ((ret == ERR_OK) && (!reply.WriteParcelable(&extensionInfo))) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
 ErrCode BundleMgrHost::HandleGetAppIdByBundleName(MessageParcel &data, MessageParcel &reply)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
@@ -3482,6 +3511,30 @@ ErrCode BundleMgrHost::HandleGetSandboxExtAbilityInfos(MessageParcel &data, Mess
     }
     if ((res == ERR_OK) && (!WriteParcelableVector(infos, reply))) {
         APP_LOGE("write extension infos failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetSandboxExtAbilityInfoOptimal(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    std::unique_ptr<Want> want(data.ReadParcelable<Want>());
+    if (want == nullptr) {
+        APP_LOGE("ReadParcelable<want> failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    int32_t appIndex = data.ReadInt32();
+    int32_t flags = data.ReadInt32();
+    int32_t userId = data.ReadInt32();
+    ExtensionAbilityInfo info;
+    auto res = GetSandboxExtAbilityInfoOptimal(*want, appIndex, flags, userId, info);
+    if (!reply.WriteInt32(res)) {
+        APP_LOGE("write result failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if ((res == ERR_OK) && (!reply.WriteParcelable(&info))) {
+        APP_LOGE("write extension info failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;

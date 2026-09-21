@@ -4132,6 +4132,36 @@ bool BundleMgrHostImpl::QueryExtensionAbilityInfos(const Want &want, const int32
     return true;
 }
 
+ErrCode BundleMgrHostImpl::QueryExtensionAbilityInfoOptimal(const Want &want, const int32_t &flag,
+    const int32_t &userId, ExtensionAbilityInfo &extensionInfo)
+{
+    LOG_NOFUNC_D(BMS_TAG_QUERY, "QEAIOptimal flag:%{public}d userId:%{public}d", flag, userId);
+    int32_t uid = IPCSkeleton::GetCallingUid();
+    if (uid != Constants::FOUNDATION_UID) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "QEAIOptimal uid:%{public}d not foundation", uid);
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    LOG_NOFUNC_D(BMS_TAG_QUERY, "QEAIOptimal want uri is %{private}s", want.GetUriString().c_str());
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "QEAIOptimal DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    // same query chain as QueryExtensionAbilityInfos, without its permission checks
+    (void)dataMgr->QueryExtensionAbilityInfos(want, flag, userId, extensionInfos);
+    dataMgr->QueryAllCloneExtensionInfos(want, flag, userId, extensionInfos);
+    if (extensionInfos.empty()) {
+        LOG_NOFUNC_W(BMS_TAG_QUERY, "QEAIOptimal no valid extension info can be inquired");
+        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+    }
+    dataMgr->SortExtensionAbilityInfos(extensionInfos);
+    extensionInfo = extensionInfos.front();
+    LOG_NOFUNC_I(BMS_TAG_QUERY, "QEAIOptimal %{public}s/%{public}s/%{public}s",
+        extensionInfo.bundleName.c_str(), extensionInfo.moduleName.c_str(), extensionInfo.name.c_str());
+    return ERR_OK;
+}
+
 ErrCode BundleMgrHostImpl::QueryExtensionAbilityInfosV9(const Want &want, int32_t flags, int32_t userId,
     std::vector<ExtensionAbilityInfo> &extensionInfos)
 {
@@ -5223,6 +5253,44 @@ ErrCode BundleMgrHostImpl::GetSandboxExtAbilityInfos(const Want &want, int32_t a
         APP_LOGE("query extension ability info failed");
         return ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR;
     }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHostImpl::GetSandboxExtAbilityInfoOptimal(const Want &want, int32_t appIndex, int32_t flags,
+    int32_t userId, ExtensionAbilityInfo &info)
+{
+    LOG_NOFUNC_D(BMS_TAG_QUERY, "GSEAIOptimal appIndex:%{public}d userId:%{public}d", appIndex, userId);
+    int32_t uid = IPCSkeleton::GetCallingUid();
+    if (uid != Constants::FOUNDATION_UID) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "GSEAIOptimal uid:%{public}d not foundation", uid);
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    // same appIndex check as GetSandboxExtAbilityInfos
+    if (appIndex <= Constants::INITIAL_SANDBOX_APP_INDEX || appIndex > Constants::MAX_SANDBOX_APP_INDEX) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "GSEAIOptimal the appIndex %{public}d is invalid", appIndex);
+        return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "GSEAIOptimal DataMgr is nullptr");
+        return ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR;
+    }
+    std::vector<ExtensionAbilityInfo> infos;
+    // same userId fallback chain as GetSandboxExtAbilityInfos, without its permission check
+    if (!(dataMgr->QueryExtensionAbilityInfos(want, flags, userId, infos, appIndex)
+        || dataMgr->QueryExtensionAbilityInfos(want, flags, Constants::DEFAULT_USERID, infos, appIndex)
+        || dataMgr->QueryExtensionAbilityInfos(want, flags, Constants::U1, infos, appIndex))) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "GSEAIOptimal query extension ability info failed");
+        return ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR;
+    }
+    if (infos.empty()) {
+        LOG_NOFUNC_W(BMS_TAG_QUERY, "GSEAIOptimal no result");
+        return ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR;
+    }
+    dataMgr->SortExtensionAbilityInfos(infos);
+    info = infos.front();
+    LOG_NOFUNC_I(BMS_TAG_QUERY, "GSEAIOptimal %{public}s/%{public}s/%{public}s",
+        info.bundleName.c_str(), info.moduleName.c_str(), info.name.c_str());
     return ERR_OK;
 }
 

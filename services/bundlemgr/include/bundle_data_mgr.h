@@ -26,6 +26,7 @@
 #include <shared_mutex>
 #include <string>
 #include <tuple>
+#include <unordered_map>
 #include <unordered_set>
 
 #include "bundle_dir.h"
@@ -988,6 +989,13 @@ public:
 
     bool QueryExtensionAbilityInfoByUriOptimal(const std::string &uri, int32_t userId,
         ExtensionAbilityInfo &extensionAbilityInfo) const;
+
+    /**
+     * @brief Sort ExtensionAbilityInfos in place: system apps first, then ascending by
+     *        bundleName in each group. Items with the same key keep their relative order.
+     * @param extensionInfos Indicates the ExtensionAbilityInfos to be sorted.
+     */
+    void SortExtensionAbilityInfos(std::vector<ExtensionAbilityInfo> &extensionInfos) const;
 
     ErrCode AddInnerBundleUserInfo(const std::string &bundleName, const InnerBundleUserInfo& newUserInfo);
 
