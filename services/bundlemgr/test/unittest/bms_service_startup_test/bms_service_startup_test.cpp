@@ -2345,8 +2345,10 @@ HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_RefreshPreAuthorizationForOT
     // Add a test permission
     DefaultPermission perm;
     perm.bundleName = "com.test.refreshota";
-    perm.permissionName = "ohos.permission.TEST";
-    perm.userCancellable = true;
+    PermissionInfo permInfo;
+    permInfo.name = "ohos.permission.TEST";
+    permInfo.userCancellable = true;
+    perm.grantPermission.push_back(permInfo);
 
     {
         std::unique_lock lock{BundlePermissionMgr::defaultPermissionsMutex_};
@@ -2377,8 +2379,10 @@ HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_LockBehavior_0100, Function 
     // Add a test permission
     DefaultPermission perm;
     perm.bundleName = "com.test.lockbehavior";
-    perm.permissionName = "ohos.permission.TEST_LOCK";
-    perm.userCancellable = false;
+    PermissionInfo permInfo;
+    permInfo.name = "ohos.permission.TEST_LOCK";
+    permInfo.userCancellable = false;
+    perm.grantPermission.push_back(permInfo);
 
     {
         std::unique_lock lock{BundlePermissionMgr::defaultPermissionsMutex_};
@@ -2390,7 +2394,8 @@ HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_LockBehavior_0100, Function 
     ret = BundlePermissionMgr::GetDefaultPermission("com.test.lockbehavior", retrievedPerm);
     EXPECT_TRUE(ret);
     EXPECT_EQ(retrievedPerm.bundleName, "com.test.lockbehavior");
-    EXPECT_EQ(retrievedPerm.permissionName, "ohos.permission.TEST_LOCK");
+    ASSERT_FALSE(retrievedPerm.grantPermission.empty());
+    EXPECT_EQ(retrievedPerm.grantPermission[0].name, "ohos.permission.TEST_LOCK");
 
     // Try to get non-existent permission
     ret = BundlePermissionMgr::GetDefaultPermission("com.nonexistent.bundle", retrievedPerm);
