@@ -46,8 +46,7 @@ private:
     void OutTimeMonitor(const std::string transactId);
     int GetTransactId() const
     {
-        transactId_++;
-        return transactId_.load();
+        return ++transactId_;
     }
     mutable std::atomic<int> transactId_ = 0;
     std::shared_mutex mutex_;
