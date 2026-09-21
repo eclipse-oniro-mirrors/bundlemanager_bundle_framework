@@ -885,7 +885,7 @@ bool AppControlManager::GetAbilityRunningRuleCache(const std::string &key, std::
             if (newWant != nullptr) {
                 rule.want = std::shared_ptr<Want>(newWant);
             } else {
-                LOG_W(BMS_TAG_DEFAULT, "copy Want failed: %{public}s", key.c_str());
+                LOG_W(BMS_TAG_DEFAULT, "copy Want failed: %{private}s", key.c_str());
                 return false;
             }
         }
