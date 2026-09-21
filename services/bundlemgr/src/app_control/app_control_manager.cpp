@@ -384,7 +384,8 @@ ErrCode AppControlManager::GetDisposedStatus(const std::string &appId, Want& wan
 bool AppControlManager::TryGetControlRuleFromCache(const std::string &key,
     AppRunningControlRuleResult &controlRuleResult, ErrCode &result)
 {
-    std::lock_guard<std::mutex> cacheLock(appRunningControlMutex_);
+    // result is only valid when function returns true
+    std::lock_guard<std::mutex> lock(appRunningControlMutex_);
     auto cacheIt = appRunningControlRuleResult_.find(key);
     if (cacheIt == appRunningControlRuleResult_.end()) {
         return false;
@@ -394,7 +395,7 @@ bool AppControlManager::TryGetControlRuleFromCache(const std::string &key,
         Want *newWant = new (std::nothrow) Want(*(controlRuleResult.controlWant));
         if (newWant == nullptr) {
             controlRuleResult.controlWant.reset();
-            LOG_W(BMS_TAG_DEFAULT, "copy Want failed: %{public}s", key.c_str());
+            LOG_W(BMS_TAG_DEFAULT, "copy Want failed: %{private}s", key.c_str());
             return false;
         }
         controlRuleResult.controlWant = std::shared_ptr<Want>(newWant);
@@ -439,7 +440,10 @@ ErrCode AppControlManager::GetAppRunningControlRule(
     }
     bool findRule = (ret == ERR_OK);
     ret = CheckAppControlRuleIntercept(bundleName, userId, findRule, controlRuleResult);
-    appRunningControlRuleResult_.emplace(key, controlRuleResult);
+    {
+        std::lock_guard<std::mutex> lock(appRunningControlMutex_);
+        appRunningControlRuleResult_.emplace(key, controlRuleResult);
+    }
     return ret;
 }
 
@@ -500,7 +504,7 @@ bool AppControlManager::GetAppRunningControlRuleCache(
                 controlRuleResult.controlWant = std::shared_ptr<Want>(newWant);
             } else {
                 controlRuleResult.controlWant.reset();
-                LOG_W(BMS_TAG_DEFAULT, "copy Want failed: %{public}s", key.c_str());
+                LOG_W(BMS_TAG_DEFAULT, "copy Want failed: %{private}s", key.c_str());
                 return false;
             }
         }
