@@ -134,8 +134,6 @@ private:
     RunningRuleSettingStatus GetRunningRuleSettingStatusByUserId(int32_t userId);
     void SetAppRunningControlRuleCache(const std::string &key, AppRunningControlRuleResult controlRuleResult);
     bool GetAppRunningControlRuleCache(const std::string &key, AppRunningControlRuleResult &controlRuleResult);
-    bool TryGetControlRuleFromCache(const std::string &key, AppRunningControlRuleResult &controlRuleResult,
-        ErrCode &result);
     void DeleteAppRunningControlRuleCache(const std::string &key);
     void DeleteAppRunningControlRuleCacheForUserId(int32_t userId);
     void DeleteRunningRuleSettingStatusCache(int32_t userId);
