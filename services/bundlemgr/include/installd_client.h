@@ -206,6 +206,18 @@ public:
 
     ErrCode RenameFile(const std::string &oldPath, const std::string &newPath);
 
+    /**
+     * @brief Rename the sandbox dir of the specified user under all bundle data prefix paths
+     *        according to the scene.
+     * @param userId Indicates the user id.
+     * @param sandboxDir Indicates the sandbox directory name of the bundle under the data
+     *        prefix paths, which is the bundleName for normal bundles and the data dir name
+     *        (e.g. +clone-N+bundleName) for clone/sandbox bundles.
+     * @param scene Indicates the rename scene.
+     * @return Returns ERR_OK if rename successfully; returns error code otherwise.
+     */
+    ErrCode RenameFileExt(int32_t userId, const std::string &sandboxDir, BundleDirScene scene);
+
     ErrCode CopyFile(const std::string &oldPath, const std::string &newPath, BundleDirScene scene,
         const std::string &signatureFilePath = "");
 

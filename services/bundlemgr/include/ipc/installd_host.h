@@ -249,6 +249,8 @@ private:
 
     bool HandleRenameFile(MessageParcel &data, MessageParcel &reply);
 
+    bool HandleRenameFileExt(MessageParcel &data, MessageParcel &reply);
+
     bool HandleCopyFile(MessageParcel &data, MessageParcel &reply);
 
     bool HandleCopySkillHsp(MessageParcel &data, MessageParcel &reply);

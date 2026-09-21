@@ -391,6 +391,21 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_1350, Function | SmallTest |
 }
 
 /**
+ * @tc.number: InstalldProxyTest_1355
+ * @tc.name: test RenameFileExt serialization of proxy
+ * @tc.desc: 1. calling RenameFileExt of proxy
+ * @tc.require: issueI5T6P3
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_1355, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    EXPECT_NE(proxy, nullptr);
+
+    auto ret = proxy->RenameFileExt(UID, TEST_STRING, BundleDirScene::RENAME_EXT_BACKUP);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
  * @tc.number: InstalldProxyTest_1400
  * @tc.name: test Marshalling function of FileStat
  * @tc.desc: 1. calling CopyFile of proxy

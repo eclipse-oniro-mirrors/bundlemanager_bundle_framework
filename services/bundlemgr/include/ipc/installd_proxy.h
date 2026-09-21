@@ -279,6 +279,9 @@ public:
 
     virtual ErrCode RenameFile(const std::string &oldPath, const std::string &newPath) override;
 
+    virtual ErrCode RenameFileExt(
+        int32_t userId, const std::string &sandboxDir, BundleDirScene scene) override;
+
     virtual ErrCode CopyFile(const std::string &oldPath, const std::string &newPath, BundleDirScene scene,
         const std::string &signatureFilePath = "") override;
 

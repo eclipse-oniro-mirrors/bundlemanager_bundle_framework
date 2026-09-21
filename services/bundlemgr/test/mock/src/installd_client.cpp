@@ -496,6 +496,16 @@ ErrCode InstalldClient::RenameFile(const std::string &oldPath, const std::string
     return CallService(&IInstalld::RenameFile, oldPath, newPath);
 }
 
+ErrCode InstalldClient::RenameFileExt(int32_t userId, const std::string &sandboxDir, BundleDirScene scene)
+{
+    if (userId < 0 || sandboxDir.empty()) {
+        APP_LOGE("params are invalid");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    return CallService(&IInstalld::RenameFileExt, userId, sandboxDir, scene);
+}
+
 ErrCode InstalldClient::CopyFile(const std::string &oldPath, const std::string &newPath, BundleDirScene scene,
     const std::string &signatureFilePath)
 {

@@ -309,6 +309,11 @@ ErrCode InstalldClient::RenameFile(const std::string &oldPath, const std::string
     return 0;
 }
 
+ErrCode InstalldClient::RenameFileExt(int32_t userId, const std::string &sandboxDir, BundleDirScene scene)
+{
+    return 0;
+}
+
 ErrCode InstalldClient::CopyFile(const std::string &oldPath, const std::string &newPath, BundleDirScene scene,
     const std::string &signatureFilePath)
 {

@@ -209,6 +209,9 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::RENAME_FILE):
             result = this->HandleRenameFile(data, reply);
             break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::RENAME_FILE_EXT):
+            result = this->HandleRenameFileExt(data, reply);
+            break;
         case static_cast<uint32_t>(InstalldInterfaceCode::COPY_FILE):
             result = this->HandleCopyFile(data, reply);
             break;
@@ -1180,6 +1183,16 @@ bool InstalldHost::HandleRenameFile(MessageParcel &data, MessageParcel &reply)
     std::string oldPath = Str16ToStr8(data.ReadString16());
     std::string newPath = Str16ToStr8(data.ReadString16());
     ErrCode result = RenameFile(oldPath, newPath);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleRenameFileExt(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t userId = data.ReadInt32();
+    std::string sandboxDir = Str16ToStr8(data.ReadString16());
+    BundleDirScene scene = static_cast<BundleDirScene>(data.ReadInt32());
+    ErrCode result = RenameFileExt(userId, sandboxDir, scene);
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

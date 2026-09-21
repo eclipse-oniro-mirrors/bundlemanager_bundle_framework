@@ -425,6 +425,19 @@ void FuzzRenameFile(InstalldHost& host, FuzzedDataProvider& fdp)
     host.HandleRenameFile(data, reply);
 }
 
+// RenameFileExt: ReadInt32(userId), ReadString16(sandboxDir), ReadInt32(scene)
+void FuzzRenameFileExt(InstalldHost& host, FuzzedDataProvider& fdp)
+{
+    MessageParcel data;
+    PrepareParcel<InstalldHost>(data);
+    MessageParcel reply;
+    WriteInt32Field(data, fdp);     // userId
+    WriteString16Field(data, fdp);  // sandboxDir
+    WriteInt32Field(data, fdp);     // scene
+    FinishParcel(data);
+    host.HandleRenameFileExt(data, reply);
+}
+
 // RenameModuleDir: ReadString16(oldPath), ReadString16(newPath), ReadString16(bundleName), ReadInt32(scene)
 void FuzzRenameModuleDir(InstalldHost& host, FuzzedDataProvider& fdp)
 {
@@ -1281,6 +1294,7 @@ enum InstalldMethod {
     FUZZCLEARDIR,
     FUZZCOPYDIR,
     FUZZRENAMEFILE,
+    FUZZRENAMEFILEEXT,
     FUZZRENAMEMODULEDIR,
     FUZZMOVEHAPTOCODEDIR,
     FUZZAPPLYDIFFPATCH,
@@ -1384,6 +1398,7 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
         case FUZZCLEARDIR: FuzzClearDir(installdHost, fdp);              break;
         case FUZZCOPYDIR: FuzzCopyDir(installdHost, fdp);              break;
         case FUZZRENAMEFILE: FuzzRenameFile(installdHost, fdp);            break;
+        case FUZZRENAMEFILEEXT: FuzzRenameFileExt(installdHost, fdp);      break;
         case FUZZRENAMEMODULEDIR: FuzzRenameModuleDir(installdHost, fdp);       break;
         case FUZZMOVEHAPTOCODEDIR: FuzzMoveHapToCodeDir(installdHost, fdp);     break;
         case FUZZAPPLYDIFFPATCH: FuzzApplyDiffPatch(installdHost, fdp);       break;

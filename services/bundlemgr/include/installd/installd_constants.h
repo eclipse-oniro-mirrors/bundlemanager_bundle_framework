@@ -172,6 +172,11 @@ enum class BundleDirScene : int32_t {
     CLEAN_EL1_CACHE_DIR = 1903,
     // RenameFile scenes
     RENAME_FILE = 2001,
+    // RenameFileExt scenes
+    RENAME_EXT_BACKUP = 2101,
+    RENAME_EXT_DELETE = 2102,
+    RENAME_EXT_DELETE_BACKUP = 2103,
+    RENAME_EXT_RECOVER = 2104,
 };
 
 const std::unordered_map<int32_t, int32_t> CODE_SIGNATURE_ERR_MAP = {

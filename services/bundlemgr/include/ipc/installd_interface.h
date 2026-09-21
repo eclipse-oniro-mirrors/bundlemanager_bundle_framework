@@ -431,6 +431,24 @@ public:
     }
 
     /**
+     * @brief Rename the sandbox dir of the specified user under all bundle data prefix paths
+     *        according to the scene. The source and target dir names are derived inside the
+     *        installd process, the caller can only control userId, sandboxDir and the scene.
+     * @param userId Indicates the user id.
+     * @param sandboxDir Indicates the sandbox directory name of the bundle under the data
+     *        prefix paths, which is the bundleName for normal bundles and the data dir name
+     *        (e.g. +clone-N+bundleName) for clone/sandbox bundles.
+     * @param scene Indicates the rename scene, one of RENAME_EXT_BACKUP, RENAME_EXT_DELETE,
+     *        RENAME_EXT_DELETE_BACKUP and RENAME_EXT_RECOVER.
+     * @return Returns ERR_OK if rename successfully; returns error code otherwise.
+     */
+    virtual ErrCode RenameFileExt(
+        int32_t userId, const std::string &sandboxDir, BundleDirScene scene)
+    {
+        return ERR_OK;
+    }
+
+    /**
      * @brief Copy file from oldPath to newPath.
      * @param oldPath Indicates oldPath.
      * @param newPath Indicates newPath.

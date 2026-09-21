@@ -15403,6 +15403,111 @@ HWTEST_F(BmsBundleInstallerTest, RenameFile_0100, Function | SmallTest | Level0)
 }
 
 /**
+ * @tc.number: RenameFileExt_0100
+ * @tc.name: test RenameFileExt with invalid params
+ * @tc.desc: test RenameFileExt of InstalldHostImpl, userId/sandboxDir/scene are invalid
+ */
+HWTEST_F(BmsBundleInstallerTest, RenameFileExt_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    const std::string sandboxDir = "com.example.renameext";
+    auto ret = impl.RenameFileExt(-1, sandboxDir, BundleDirScene::RENAME_EXT_BACKUP);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    ret = impl.RenameFileExt(Constants::START_USERID, TEST_EMPTY_STRING, BundleDirScene::RENAME_EXT_BACKUP);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    ret = impl.RenameFileExt(Constants::START_USERID, "test/../dir", BundleDirScene::RENAME_EXT_BACKUP);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    ret = impl.RenameFileExt(Constants::START_USERID, "test/dir", BundleDirScene::RENAME_EXT_BACKUP);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    ret = impl.RenameFileExt(Constants::START_USERID, "1abc", BundleDirScene::RENAME_EXT_BACKUP);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    ret = impl.RenameFileExt(Constants::START_USERID, sandboxDir, BundleDirScene::RENAME_FILE);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    ret = impl.RenameFileExt(Constants::START_USERID, sandboxDir, static_cast<BundleDirScene>(9999));
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: RenameFileExt_0200
+ * @tc.name: test RenameFileExt without existing source dir
+ * @tc.desc: test RenameFileExt of InstalldHostImpl, source dirs not exist under any prefix
+ */
+HWTEST_F(BmsBundleInstallerTest, RenameFileExt_0200, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    const std::string sandboxDir = "com.example.renameext.not.exist";
+    auto ret = impl.RenameFileExt(Constants::START_USERID, sandboxDir, BundleDirScene::RENAME_EXT_BACKUP);
+    EXPECT_EQ(ret, ERR_OK);
+    ret = impl.RenameFileExt(Constants::START_USERID, sandboxDir, BundleDirScene::RENAME_EXT_DELETE);
+    EXPECT_EQ(ret, ERR_OK);
+    ret = impl.RenameFileExt(Constants::START_USERID, sandboxDir, BundleDirScene::RENAME_EXT_DELETE_BACKUP);
+    EXPECT_EQ(ret, ERR_OK);
+    ret = impl.RenameFileExt(Constants::START_USERID, sandboxDir, BundleDirScene::RENAME_EXT_RECOVER);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: RenameFileExt_0300
+ * @tc.name: test RenameFileExt with existing source dir
+ * @tc.desc: test RenameFileExt of InstalldHostImpl with backup/recover/delete scenes
+ */
+HWTEST_F(BmsBundleInstallerTest, RenameFileExt_0300, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    const std::string prefix = "/data/app/el2/" + std::to_string(Constants::START_USERID) + "/sharefiles/";
+    const std::string sandboxDir = "com.example.renameext";
+    const std::string backupDir = prefix + "+backup+" + sandboxDir;
+    const std::string deleteDir = prefix + "+delete+" + sandboxDir;
+    ASSERT_TRUE(OHOS::ForceCreateDirectory(prefix + sandboxDir));
+
+    auto ret = impl.RenameFileExt(Constants::START_USERID, sandboxDir, BundleDirScene::RENAME_EXT_BACKUP);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(access(backupDir.c_str(), F_OK), 0);
+    EXPECT_NE(access((prefix + sandboxDir).c_str(), F_OK), 0);
+
+    ret = impl.RenameFileExt(Constants::START_USERID, sandboxDir, BundleDirScene::RENAME_EXT_RECOVER);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(access((prefix + sandboxDir).c_str(), F_OK), 0);
+    EXPECT_NE(access(backupDir.c_str(), F_OK), 0);
+
+    ret = impl.RenameFileExt(Constants::START_USERID, sandboxDir, BundleDirScene::RENAME_EXT_DELETE);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(access(deleteDir.c_str(), F_OK), 0);
+    EXPECT_NE(access((prefix + sandboxDir).c_str(), F_OK), 0);
+
+    std::filesystem::remove_all(deleteDir);
+}
+
+/**
+ * @tc.number: RenameFileExt_0400
+ * @tc.name: test RenameFileExt with clone sandbox dir
+ * @tc.desc: test RenameFileExt of InstalldHostImpl, sandboxDir is a clone data dir name
+ */
+HWTEST_F(BmsBundleInstallerTest, RenameFileExt_0400, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    const std::string prefix = "/data/app/el2/" + std::to_string(Constants::START_USERID) + "/sharefiles/";
+    const std::string cloneDir = "+clone-100+com.example.renameext";
+    const std::string backupDir = prefix + "+backup+" + cloneDir;
+    const std::string deleteDir = prefix + "+delete+" + cloneDir;
+    ASSERT_TRUE(OHOS::ForceCreateDirectory(backupDir));
+
+    auto ret = impl.RenameFileExt(Constants::START_USERID, cloneDir, BundleDirScene::RENAME_EXT_DELETE_BACKUP);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(access(deleteDir.c_str(), F_OK), 0);
+    EXPECT_NE(access(backupDir.c_str(), F_OK), 0);
+
+    ret = impl.RenameFileExt(Constants::START_USERID, cloneDir, BundleDirScene::RENAME_EXT_BACKUP);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(access(backupDir.c_str(), F_OK), 0);
+
+    std::filesystem::remove_all(deleteDir);
+    std::filesystem::remove_all(backupDir);
+}
+
+/**
  * @tc.number: ChangeFileStat_0200
  * @tc.name: test ChangeFileStat
  * @tc.desc: test ChangeFileStat of InstalldHostImpl
