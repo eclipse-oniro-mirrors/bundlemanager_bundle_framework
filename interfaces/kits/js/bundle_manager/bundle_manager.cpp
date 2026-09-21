@@ -6564,6 +6564,32 @@ void CreateDeviceModeDistributionPolicyObject(napi_env env, napi_value value)
         "FULL_COMPATIBLE_DIFFERENT_PACKAGE", nFullDifferent));
 }
 
+void CreateAppSandboxPolicyObject(napi_env env, napi_value value)
+{
+    napi_value nSharedSandbox;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(AppSandboxPolicy::SHARED_SANDBOX),
+        &nSharedSandbox));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "SHARED_SANDBOX", nSharedSandbox));
+
+    napi_value nIsolatedSandbox;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(AppSandboxPolicy::ISOLATED_SANDBOX),
+        &nIsolatedSandbox));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "ISOLATED_SANDBOX", nIsolatedSandbox));
+}
+
+void CreateApplicationReservedFlagObject(napi_env env, napi_value value)
+{
+    napi_value nEncryptedApplication;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
+        static_cast<int32_t>(ApplicationReservedFlag::ENCRYPTED_APPLICATION), &nEncryptedApplication));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "ENCRYPTED_APPLICATION", nEncryptedApplication));
+
+    napi_value nEncryptedKeyExisted;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
+        static_cast<int32_t>(ApplicationReservedFlag::ENCRYPTED_KEY_EXISTED), &nEncryptedKeyExisted));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "ENCRYPTED_KEY_EXISTED", nEncryptedKeyExisted));
+}
+
 void MigrateDataExec(napi_env env, void *data)
 {
     MigrateDataCallbackInfo *asyncCallbackInfo = reinterpret_cast<MigrateDataCallbackInfo *>(data);

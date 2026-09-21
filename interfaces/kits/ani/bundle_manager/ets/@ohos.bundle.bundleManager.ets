@@ -259,8 +259,8 @@ namespace bundleManager {
   }
 
   export enum AppSandboxPolicy {
-      SHARED_SANDBOX = 0,
-      ISOLATED_SANDBOX = 1,
+    SHARED_SANDBOX = 0,
+    ISOLATED_SANDBOX = 1,
   }
   native function getBundleInfoForSelfNative(bundleFlags: int, isSync: boolean): BundleInfo;
 

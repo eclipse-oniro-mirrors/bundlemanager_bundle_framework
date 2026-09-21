@@ -6389,6 +6389,9 @@ ErrCode BundleMgrHost::HandleGetDualModeBundleInfo(MessageParcel &data, MessageP
     DualModeBundleInfo dualModeBundleInfo;
     auto ret = GetDualModeBundleInfo(bundleName, userId, dualModeBundleInfo);
     if (ret == ERR_OK) {
+        APP_LOGD("appIndex=%{public}d, deviceModeDistributionPolicy %{public}d, appSandboxPolicy=%{public}d",
+            dualModeBundleInfo.appIndex, static_cast<int32_t>(dualModeBundleInfo.deviceModeDistributionPolicy),
+            static_cast<int32_t>(dualModeBundleInfo.appSandboxPolicy));
         WRITE_PARCEL(reply.WriteInt32(ERR_OK));
         return WriteParcelInfoIntelligent(dualModeBundleInfo, reply);
     }
