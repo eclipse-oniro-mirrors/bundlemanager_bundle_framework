@@ -97,6 +97,10 @@ int32_t BmsEcologicalRuleMgrServiceClient::QueryFreeInstallExperience(const OHOS
         return OHOS::AppExecFwk::IBmsEcologicalRuleMgrService::ErrCode::ERR_FAILED;
     }
     std::lock_guard<std::mutex> lock(proxyMutex_);
+    if (bmsEcologicalRuleMgrServiceProxy_ == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "proxy is null after check, SA may have died");
+        return OHOS::AppExecFwk::IBmsEcologicalRuleMgrService::ErrCode::ERR_FAILED;
+    }
     int32_t res = bmsEcologicalRuleMgrServiceProxy_->QueryFreeInstallExperience(want, callerInfo, rule);
     if (rule.replaceWant != nullptr) {
         rule.replaceWant->SetParam(ERMS_ORIGINAL_TARGET, want.ToString());

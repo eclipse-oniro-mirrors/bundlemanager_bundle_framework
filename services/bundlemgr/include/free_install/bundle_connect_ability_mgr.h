@@ -225,8 +225,7 @@ private:
 
     int GetTransactId() const
     {
-        transactId_++;
-        return transactId_.load();
+        return ++transactId_;
     }
 
     /**
