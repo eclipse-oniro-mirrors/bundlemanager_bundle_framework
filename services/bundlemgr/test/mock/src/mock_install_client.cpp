@@ -360,6 +360,17 @@ ErrCode InstalldClient::CopySkillHsp(const std::string &bundleName, const std::s
     return 0;
 }
 
+ErrCode InstalldClient::CopyPgoFile(const std::string &bundleName, const std::string &moduleName,
+    const std::string &pgoFileName, const std::string &pgoFileDir, int32_t userId)
+{
+    return 0;
+}
+
+ErrCode InstalldClient::CopyHapToInstallPath(const CopyHapToInstallPathParam &copyHapToInstallPathParam)
+{
+    return 0;
+}
+
 ErrCode InstalldClient::Mkdir(const std::string &dir, const int32_t mode, const int32_t uid, const int32_t gid,
     const CreateDirParam &createDirParam)
 {
@@ -432,6 +443,11 @@ ErrCode InstalldClient::CopyFiles(const std::string &sourceDir, const std::strin
 
 ErrCode InstalldClient::CopyHqfFile(const std::string &bundleName, const std::string &moduleName,
     const std::string &hqfSourceRelativePath, uint32_t versionCode, const QuickFixTargetParam &targetParam)
+{
+    return 0;
+}
+
+ErrCode InstalldClient::CopyExtendResourceFile(const std::string &bundleName, const std::string &moduleName)
 {
     return 0;
 }

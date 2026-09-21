@@ -279,6 +279,11 @@ ErrCode InstalldHostImpl::CopySkillHsp(const std::string &bundleName, const std:
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::CopyHapToInstallPath(const CopyHapToInstallPathParam &copyHapToInstallPathParam)
+{
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::Mkdir(const std::string &dir, const int32_t mode, const int32_t uid, const int32_t gid,
     const CreateDirParam &createDirParam)
 {
@@ -340,6 +345,11 @@ ErrCode InstalldHostImpl::CopyFiles(const std::string &sourceDir, const std::str
 
 ErrCode InstalldHostImpl::CopyHqfFile(const std::string &bundleName, const std::string &moduleName,
     const std::string &hqfSourceRelativePath, uint32_t versionCode, const QuickFixTargetParam &targetParam)
+{
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::CopyExtendResourceFile(const std::string &bundleName, const std::string &moduleName)
 {
     return ERR_OK;
 }
@@ -597,6 +607,12 @@ ErrCode InstalldHostImpl::GetAppDataDirCategorySizes(const std::string &bundleNa
 
 ErrCode InstalldHostImpl::DeleteOldCacheFiles(
     const std::vector<std::string> &paths, const uint64_t cacheSize, uint64_t &cleanedSize)
+{
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::CopyPgoFile(const std::string &bundleName, const std::string &moduleName,
+    const std::string &pgoFileName, const std::string &pgoFileDir, int32_t userId)
 {
     return ERR_OK;
 }

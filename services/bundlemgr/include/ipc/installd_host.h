@@ -251,6 +251,10 @@ private:
 
     bool HandleCopyFile(MessageParcel &data, MessageParcel &reply);
 
+    bool HandleCopyHapToInstallPath(MessageParcel &data, MessageParcel &reply);
+
+    bool HandleCopyPgoFile(MessageParcel &data, MessageParcel &reply);
+
     bool HandleCopySkillHsp(MessageParcel &data, MessageParcel &reply);
 
     bool HandleCopySharedHsp(MessageParcel &data, MessageParcel &reply);
@@ -276,6 +280,8 @@ private:
     bool HandObtainQuickFixFileDir(MessageParcel &data, MessageParcel &reply);
 
     bool HandCopyFiles(MessageParcel &data, MessageParcel &reply);
+
+    bool HandleCopyExtendResourceFile(MessageParcel &data, MessageParcel &reply);
 
     bool HandleCopyHqfFile(MessageParcel &data, MessageParcel &reply);
 

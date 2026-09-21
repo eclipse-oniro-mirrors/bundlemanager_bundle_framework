@@ -23,6 +23,7 @@
 #include "bundle_framework_services_ipc_interface_code.h"
 #include "bundle_memory_guard.h"
 #include "skills_installer/skills_package_info.h"
+#include "ipc/copy_hap_to_install_path_param.h"
 #include "ipc/skills_package_param.h"
 #include "ipc/verify_bin_param.h"
 #include "mem_mgr_client.h"
@@ -211,6 +212,12 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
             break;
         case static_cast<uint32_t>(InstalldInterfaceCode::COPY_FILE):
             result = this->HandleCopyFile(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::COPY_HAP_TO_INSTALL_PATH):
+            result = this->HandleCopyHapToInstallPath(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::COPY_PGO_FILE):
+            result = this->HandleCopyPgoFile(data, reply);
             break;
         case static_cast<uint32_t>(InstalldInterfaceCode::COPY_SKILL_HSP):
             result = this->HandleCopySkillHsp(data, reply);
@@ -427,6 +434,9 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
             break;
         case static_cast<uint32_t>(InstalldInterfaceCode::GET_CACHE_DISK_USAGE_FROM_PATH):
             result = HandleGetCacheDiskUsageFromPath(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::COPY_EXTEND_RESOURCE_FILE):
+            result = HandleCopyExtendResourceFile(data, reply);
             break;
         case static_cast<uint32_t>(InstalldInterfaceCode::CREATE_PRINT_SERVICE_DIR):
             result = HandleCreatePrintServiceDir(data, reply);
@@ -1222,6 +1232,32 @@ bool InstalldHost::HandleCopySkillHsp(MessageParcel &data, MessageParcel &reply)
     return true;
 }
 
+bool InstalldHost::HandleCopyPgoFile(MessageParcel &data, MessageParcel &reply)
+{
+    std::string bundleName = Str16ToStr8(data.ReadString16());
+    std::string moduleName = Str16ToStr8(data.ReadString16());
+    std::string pgoFileName = Str16ToStr8(data.ReadString16());
+    std::string pgoFileDir = Str16ToStr8(data.ReadString16());
+    int32_t userId = data.ReadInt32();
+
+    ErrCode result = CopyPgoFile(bundleName, moduleName, pgoFileName, pgoFileDir, userId);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleCopyHapToInstallPath(MessageParcel &data, MessageParcel &reply)
+{
+    std::unique_ptr<CopyHapToInstallPathParam> info(data.ReadParcelable<CopyHapToInstallPathParam>());
+    if (info == nullptr) {
+        LOG_E(BMS_TAG_INSTALLD, "readParcelableInfo failed");
+        return false;
+    }
+
+    ErrCode result = CopyHapToInstallPath(*info);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
 bool InstalldHost::HandleMkdir(MessageParcel &data, MessageParcel &reply)
 {
     std::string dir = Str16ToStr8(data.ReadString16());
@@ -1381,6 +1417,14 @@ bool InstalldHost::HandleCopyHqfFile(MessageParcel &data, MessageParcel &reply)
     return true;
 }
 
+bool InstalldHost::HandleCopyExtendResourceFile(MessageParcel &data, MessageParcel &reply)
+{
+    std::string bundleName = Str16ToStr8(data.ReadString16());
+    std::string moduleName = Str16ToStr8(data.ReadString16());
+    ErrCode result = CopyExtendResourceFile(bundleName, moduleName);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
 
 bool InstalldHost::HandGetNativeLibraryFileNames(MessageParcel &data, MessageParcel &reply)
 {

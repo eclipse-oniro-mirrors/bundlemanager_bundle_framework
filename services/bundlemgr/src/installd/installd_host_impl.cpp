@@ -64,6 +64,7 @@
 #include "installd/installd_operator.h"
 #include "installd/installd_permission_mgr.h"
 #include "interfaces/hap_verify.h"
+#include "ipc/copy_hap_to_install_path_param.h"
 #include "ipc/verify_bin_param.h"
 #include "parameters.h"
 #include "inner_bundle_clone_common.h"
@@ -100,6 +101,9 @@ constexpr const char* EXTENSION_TYPE_NAME = "extension_type_name";
 constexpr const char* EXTENSION_SERVICE_NEED_CREATE_SANDBOX = "need_create_sandbox";
 constexpr const char* HSP_VERSION_PREFIX = "v";
 constexpr const char* SHELL_ENTRY_TXT = "g:2000:rwx";
+constexpr const char* APP_EL1_PATH = "/data/app/el1/";
+constexpr const char* ARK_PROFILE_PATH = "aot_compiler/ark_profile";
+constexpr const char* PGO_FILE_PATH = "pgo_files";
 constexpr int32_t APP_DATA_SIZE_INDEX = 0;
 constexpr int32_t BUNDLE_DATA_SIZE_INDEX = 1;
 constexpr uint64_t MAX_EXTENSION_DIR_COUNT = 100;
@@ -2740,6 +2744,54 @@ ErrCode InstalldHostImpl::CopySkillHsp(const std::string &bundleName, const std:
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::CopyPgoFile(const std::string &bundleName, const std::string &moduleName,
+    const std::string &pgoFileName, const std::string &pgoFileDir, int32_t userId)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    if (!InstalldOperator::IsValidBundleName(bundleName) || !InstalldOperator::IsValidUserId(userId) ||
+        !InstalldOperator::IsFileNameValid(moduleName) || !InstalldOperator::IsFileNameValid(pgoFileName) ||
+        !InstalldOperator::IsFileNameValid(pgoFileDir)) {
+        LOG_E(BMS_TAG_INSTALLD,
+            "Calling the function CopyPgoFile with invalid param, bundleName: %{public}s, moduleName: %{public}s, "
+            "pgoFileName: %{private}s, pgoFileDir: %{private}s, userId: %{public}d",
+            bundleName.c_str(), moduleName.c_str(), pgoFileName.c_str(), pgoFileDir.c_str(), userId);
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    // construct source path: HAP_COPY_PATH/pgo_files/pgoFileDir/pgoFileName
+    std::string sourcePath = std::string(ServiceConstants::HAP_COPY_PATH) +
+        ServiceConstants::PATH_SEPARATOR + PGO_FILE_PATH +
+        ServiceConstants::PATH_SEPARATOR + pgoFileDir +
+        ServiceConstants::PATH_SEPARATOR + pgoFileName;
+    // construct target path: APP_EL1_PATH/userId/aot_compiler/ark_profile/bundleName/moduleName.ap
+    std::string targetPath = std::string(APP_EL1_PATH) + std::to_string(userId) +
+        ServiceConstants::PATH_SEPARATOR + ARK_PROFILE_PATH +
+        ServiceConstants::PATH_SEPARATOR + bundleName +
+        ServiceConstants::PATH_SEPARATOR + moduleName + ServiceConstants::AP_SUFFIX;
+    if (!InstalldOperator::IsValidPathByCopyFileScene(
+        sourcePath, targetPath, BundleDirScene::COPY_PGO_FILE)) {
+        LOG_E(BMS_TAG_INSTALLD,
+            "Calling the function CopyPgoFile with invalid param, sourcePath:%{private}s, targetPath:%{private}s, "
+            "scene:%{public}d",
+            sourcePath.c_str(), targetPath.c_str(),
+            static_cast<int32_t>(BundleDirScene::COPY_PGO_FILE));
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    if (!InstalldOperator::CopyFileFast(sourcePath, targetPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "Copy file %{private}s to %{private}s failed errno:%{public}d",
+            sourcePath.c_str(), targetPath.c_str(), errno);
+        return ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED;
+    }
+    mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+    if (!OHOS::ChangeModeFile(targetPath, mode)) {
+        LOG_E(BMS_TAG_INSTALLD, "change mode failed");
+        return ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED;
+    }
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::Mkdir(const std::string &dir, const int32_t mode, const int32_t uid, const int32_t gid,
     const CreateDirParam &createDirParam)
 {
@@ -2844,6 +2896,45 @@ ErrCode InstalldHostImpl::ChangeFileStat(const std::string &file, FileStat &file
         }
     }
 
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::CopyHapToInstallPath(const CopyHapToInstallPathParam &param)
+{
+    LOG_D(BMS_TAG_INSTALLD, "CopyHapToInstallPath param: %{public}s", param.ToString().c_str());
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    std::string targetPath;
+    std::string signatureFilePath;
+    if (!InstalldOperator::BuildHapToInstallPath(param, targetPath, signatureFilePath)) {
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    if (!InstalldOperator::CopyFileFast(param.srcHapPath, targetPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "Copy file %{private}s to %{private}s failed errno:%{public}d",
+            param.srcHapPath.c_str(), targetPath.c_str(), errno);
+        return ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED;
+    }
+    mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+    if (!OHOS::ChangeModeFile(targetPath, mode)) {
+        LOG_E(BMS_TAG_INSTALLD, "change mode failed");
+        return ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED;
+    }
+
+    if (signatureFilePath.empty()) {
+        LOG_D(BMS_TAG_INSTALLD, "signature file path is empty and no need to process code signature");
+        return ERR_OK;
+    }
+
+#if defined(CODE_SIGNATURE_ENABLE)
+    Security::CodeSign::EntryMap entryMap = {{ ServiceConstants::CODE_SIGNATURE_HAP, targetPath }};
+    ErrCode ret = Security::CodeSign::CodeSignUtils::EnforceCodeSignForApp(entryMap, signatureFilePath);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "hap or hsp code signature failed due to %{public}d", ret);
+        return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED;
+    }
+#endif
     return ERR_OK;
 }
 
@@ -3010,6 +3101,44 @@ ErrCode InstalldHostImpl::CopyHqfFile(const std::string &bundleName, const std::
     }
     if (!InstalldOperator::CopyFileWithMode(sourcePath, targetPath)) {
         LOG_E(BMS_TAG_INSTALLD, "CopyHqfFile failed, errno:%{public}d", errno);
+        return ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED;
+    }
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::CopyExtendResourceFile(const std::string &bundleName, const std::string &moduleName)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    if (!InstalldOperator::IsValidBundleName(bundleName) || !IsValidPathComponent(moduleName)) {
+        LOG_E(BMS_TAG_INSTALLD, "CopyExtendResourceFile invalid param");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    const std::string sourceRoot = BuildBundleRoot(Constants::BUNDLE_CODE_DIR, bundleName) +
+        ServiceConstants::EXT_RESOURCE_FILE_PATH + ServiceConstants::PATH_SEPARATOR;
+    if (!InstalldOperator::IsExistDir(sourceRoot)) {
+        LOG_W(BMS_TAG_INSTALLD, "CopyExtendResourceFile source directory does not exist");
+        return ERR_OK;
+    }
+    const std::string fileName = moduleName + ServiceConstants::HSP_FILE_SUFFIX;
+    const std::string sourcePath = sourceRoot + fileName;
+    const std::string targetBundleName = std::string(ServiceConstants::BUNDLE_NEW_CODE_DIR) + bundleName;
+    const std::string targetRoot = BuildBundleRoot(Constants::BUNDLE_CODE_DIR, targetBundleName) +
+        ServiceConstants::EXT_RESOURCE_FILE_PATH + ServiceConstants::PATH_SEPARATOR;
+    const std::string targetPath = targetRoot + fileName;
+    if (!IsPathInRoot(sourceRoot, sourcePath) || !IsPathInRoot(targetRoot, targetPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "CopyExtendResourceFile path is invalid");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    if (!InstalldOperator::IsExistDir(targetRoot) && !InstalldOperator::MkRecursiveDir(targetRoot, true)) {
+        LOG_E(BMS_TAG_INSTALLD, "CopyExtendResourceFile create target directory failed, errno:%{public}d", errno);
+        return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
+    }
+    if (!InstalldOperator::CopyFileWithMode(sourcePath, targetPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "CopyExtendResourceFile failed, errno:%{public}d", errno);
         return ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED;
     }
     return ERR_OK;

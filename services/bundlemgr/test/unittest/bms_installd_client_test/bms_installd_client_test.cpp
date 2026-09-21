@@ -2372,6 +2372,87 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CheckExternalSourcePluginS
 }
 
 /**
+ * @tc.number: BmsInstalldClientTest_CopyPgoFile_0100
+ * @tc.name: CopyPgoFile
+ * @tc.desc: Test whether CopyPgoFile is called normally.(pgoFileName is empty)
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CopyPgoFile_0100, TestSize.Level1)
+{
+    std::string bundleName = BUNDLE_NAME;
+    std::string moduleName = "moduleName";
+    std::string pgoFileName = EMPTY_STRING;
+    std::string pgoFileDir = "dir";
+    int32_t userId = USERID;
+    ErrCode result = installClient_->CopyPgoFile(bundleName, moduleName, pgoFileName, pgoFileDir, userId);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_CopyPgoFile_0200
+ * @tc.name: CopyPgoFile
+ * @tc.desc: Test whether CopyPgoFile is called normally.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CopyPgoFile_0200, TestSize.Level1)
+{
+    std::string bundleName = BUNDLE_NAME;
+    std::string moduleName = "moduleName";
+    std::string pgoFileName = "module.ap";
+    std::string pgoFileDir = "dir";
+    int32_t userId = USERID;
+    ErrCode result = installClient_->CopyPgoFile(bundleName, moduleName, pgoFileName, pgoFileDir, userId);
+    EXPECT_EQ(result, installClient_->CallService(&IInstalld::CopyPgoFile,
+        bundleName, moduleName, pgoFileName, pgoFileDir, userId));
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_CopyPgoFile_0300
+ * @tc.name: CopyPgoFile
+ * @tc.desc: Test whether CopyPgoFile is called normally.(bundleName is empty)
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CopyPgoFile_0300, TestSize.Level1)
+{
+    std::string bundleName = EMPTY_STRING;
+    std::string moduleName = "moduleName";
+    std::string pgoFileName = "module.ap";
+    std::string pgoFileDir = "dir";
+    int32_t userId = USERID;
+    ErrCode result = installClient_->CopyPgoFile(bundleName, moduleName, pgoFileName, pgoFileDir, userId);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_CopyPgoFile_0400
+ * @tc.name: CopyPgoFile
+ * @tc.desc: Test whether CopyPgoFile is called normally.(moduleName is empty)
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CopyPgoFile_0400, TestSize.Level1)
+{
+    std::string bundleName = BUNDLE_NAME;
+    std::string moduleName = EMPTY_STRING;
+    std::string pgoFileName = "module.ap";
+    std::string pgoFileDir = "dir";
+    int32_t userId = USERID;
+    ErrCode result = installClient_->CopyPgoFile(bundleName, moduleName, pgoFileName, pgoFileDir, userId);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_CopyPgoFile_0500
+ * @tc.name: CopyPgoFile
+ * @tc.desc: Test whether CopyPgoFile is called normally.(pgoFileDir is empty)
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CopyPgoFile_0500, TestSize.Level1)
+{
+    std::string bundleName = BUNDLE_NAME;
+    std::string moduleName = "moduleName";
+    std::string pgoFileName = "module.ap";
+    std::string pgoFileDir = EMPTY_STRING;
+    int32_t userId = USERID;
+    ErrCode result = installClient_->CopyPgoFile(bundleName, moduleName, pgoFileName, pgoFileDir, userId);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
  * @tc.number: BmsInstalldClientTest_CheckHspPluginCertValidity_0100
  * @tc.name: CheckHspPluginCertValidity
  */
@@ -2383,6 +2464,32 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CheckHspPluginCertValidity
     ErrCode result = installClient_->CheckHspPluginCertValidity(bundleName, sessionId);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_CheckHspPluginCertValidity_0100 end";
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_ExtendResourceInterfacesInvalidParams_0100
+ * @tc.name: ExtendResourceInterfacesInvalidParams
+ * @tc.desc: Verify extend resource interfaces reject invalid parameters.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtendResourceInterfacesInvalidParams_0100,
+    TestSize.Level1)
+{
+    EXPECT_EQ(installClient_->CopyExtendResourceFile(BUNDLE_NAME, EMPTY_STRING),
+        ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    EXPECT_EQ(installClient_->CopyExtendResourceFile(EMPTY_STRING, MODULE_NAME),
+        ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_SceneInterfaces_0200
+ * @tc.name: test scene-specific installd IPC
+ * @tc.desc: Verify fixed IPC codes and proxy-to-host dispatch for all new interfaces.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_SceneInterfaces_0200, Function | SmallTest | Level0)
+{
+    ASSERT_NE(installClient_, nullptr);
+    EXPECT_EQ(installClient_->CopyExtendResourceFile(TEST_BUNDLE_NAME, "entry"),
+        ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
 }
 
 /**
@@ -2452,6 +2559,41 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractQuickFixRes_0100, T
 {
     ErrCode result = installClient_->ExtractQuickFixRes("", "entry", "/data/test.hqf", false);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_CopyHapToInstallPath_0100
+ * @tc.name: CopyHapToInstallPath
+ * @tc.desc: Test whether CopyHapToInstallPath is called normally.(srcHapPath is empty)
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CopyHapToInstallPath_0100, TestSize.Level1)
+{
+    CopyHapToInstallPathParam copyHapToInstallPathParam;
+    copyHapToInstallPathParam.bundleName = BUNDLE_NAME;
+    copyHapToInstallPathParam.moduleName = "moduleName";
+    copyHapToInstallPathParam.hapFileName = "module.hap";
+    ErrCode result = installClient_->CopyHapToInstallPath(copyHapToInstallPathParam);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_CopyHapToInstallPath_0200
+ * @tc.name: CopyHapToInstallPath
+ * @tc.desc: Test whether CopyHapToInstallPath is called normally.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CopyHapToInstallPath_0200, TestSize.Level1)
+{
+    CopyHapToInstallPathParam copyHapToInstallPathParam;
+    copyHapToInstallPathParam.bundleName = BUNDLE_NAME;
+    copyHapToInstallPathParam.moduleName = "moduleName";
+    copyHapToInstallPathParam.hapFileName = "module.hap";
+    copyHapToInstallPathParam.srcHapPath = "/data/service/el1/public/bms/bundle_manager_service/module.hap";
+    copyHapToInstallPathParam.isUpdate = true;
+    copyHapToInstallPathParam.isFeatureNeedUninstall = false;
+    copyHapToInstallPathParam.signatureFileSubPath = "timestamp_count/moduleName";
+    copyHapToInstallPathParam.signatureFileName = "module.sig";
+    ErrCode result = installClient_->CopyHapToInstallPath(copyHapToInstallPathParam);
+    EXPECT_EQ(result, installClient_->CallService(&IInstalld::CopyHapToInstallPath, copyHapToInstallPathParam));
 }
 
 /**

@@ -1660,6 +1660,21 @@ HWTEST_F(BmsInstallDaemonIpcTest, CheckEncryptionParam_Marshalling_0100, Functio
 }
 
 /**
+ * @tc.number: CopyPgoFile_0200
+ * @tc.name: test Marshalling function of CopyPgoFile
+ * @tc.desc: 1. calling CopyPgoFile of proxy
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, CopyPgoFile_0200, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    EXPECT_NE(proxy, nullptr);
+
+    auto ret = proxy->CopyPgoFile(TEST_BUNDLE_NAME, "moduleName", "module.ap", "dir",
+        Constants::START_USERID);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
  * @tc.number: CodeSignatureParam_Marshalling_0100
  * @tc.name: test CodeSignatureParam Marshalling and Unmarshalling with bundleName
  * @tc.desc: 1. test bundleName is correctly preserved after round-trip
@@ -1687,6 +1702,19 @@ HWTEST_F(BmsInstallDaemonIpcTest, CodeSignatureParam_Marshalling_0100, Function 
     EXPECT_EQ(unmarshalled->targetSoPath, param.targetSoPath);
     EXPECT_EQ(unmarshalled->profileBlockLength, param.profileBlockLength);
     delete unmarshalled;
+}
+
+/**
+ * @tc.number: InstalldSceneInterfacesIpc_0100
+ * @tc.name: test scene-specific installd IPC
+ * @tc.desc: Verify fixed IPC codes and proxy-to-host dispatch for all new interfaces.
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldSceneInterfacesIpc_0100, Function | SmallTest | Level0)
+{
+    EXPECT_EQ(static_cast<uint32_t>(InstalldInterfaceCode::COPY_EXTEND_RESOURCE_FILE), 102U);
+    auto proxy = GetInstallProxy();
+    ASSERT_NE(proxy, nullptr);
+    EXPECT_EQ(proxy->CopyExtendResourceFile(TEST_BUNDLE_NAME, "entry"), ERR_OK);
 }
 
 /**
