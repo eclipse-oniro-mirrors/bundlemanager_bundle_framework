@@ -2312,6 +2312,9 @@ HWTEST_F(BmsServiceStartupTest, PreInstallBundleInfo_CalculateHapTotalSize_0100,
 HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_RefreshPreAuthorizationForOTA_0100,
     Function | SmallTest | Level0)
 {
+    // Initialize BundleDataMgr first
+    DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleDataMgr();
+
     // Initialize permission manager
     bool ret = BundlePermissionMgr::Init();
     EXPECT_TRUE(ret);
@@ -2338,6 +2341,9 @@ HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_RefreshPreAuthorizationForOT
 HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_RefreshPreAuthorizationForOTA_0200,
     Function | SmallTest | Level0)
 {
+    // Initialize BundleDataMgr first
+    DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleDataMgr();
+
     // Initialize permission manager
     bool ret = BundlePermissionMgr::Init();
     EXPECT_TRUE(ret);
@@ -2372,6 +2378,9 @@ HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_RefreshPreAuthorizationForOT
  */
 HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_LockBehavior_0100, Function | SmallTest | Level0)
 {
+    // Initialize BundleDataMgr first
+    DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleDataMgr();
+
     // Initialize permission manager
     bool ret = BundlePermissionMgr::Init();
     EXPECT_TRUE(ret);
