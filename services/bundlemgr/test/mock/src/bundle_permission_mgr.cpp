@@ -38,6 +38,7 @@ bool g_enableGetDistributedBundleInfoPermissionTest = false;
 bool g_isCliToolCallingForDistributedTest = true;
 bool g_isBundleSelfCallingForDistributedTest = false;
 int32_t g_isBundleSelfCallingForDistributedCount = 0;
+bool g_isCliToolCalling = true;
 // controllable return value for VerifyPermissionByCallingTokenId, default true (granted)
 bool g_verifyPermissionByCallingTokenId = true;
 
@@ -166,6 +167,11 @@ void SetGetDistributedBundleInfoCallingForTest(
     g_isBundleSelfCallingForDistributedCount = 0;
 }
 
+void SetIsCliToolCallingForTest(bool value)
+{
+    g_isCliToolCalling = value;
+}
+
 int32_t GetPermissionCheckCountForTest(const std::string &permissionName)
 {
     auto iter = g_permissionCheckCounts.find(permissionName);
@@ -221,6 +227,7 @@ void ResetTestValues()
     g_isCliToolCallingForDistributedTest = true;
     g_isBundleSelfCallingForDistributedTest = false;
     g_isBundleSelfCallingForDistributedCount = 0;
+    g_isCliToolCalling = true;
 }
 namespace OHOS {
 int32_t g_testVerifyPermission = 0;
@@ -339,7 +346,7 @@ bool BundlePermissionMgr::IsCliToolCalling(const uint64_t callerToken)
     if (g_enableGetDistributedBundleInfoPermissionTest) {
         return g_isCliToolCallingForDistributedTest;
     }
-    return true;
+    return g_isCliToolCalling;
 }
 
 bool BundlePermissionMgr::IsSelfCalling()
