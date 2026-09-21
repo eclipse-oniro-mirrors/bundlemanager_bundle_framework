@@ -2452,9 +2452,16 @@ ErrCode InstalldHostImpl::SetDirApl(const std::string &dir, const std::string &b
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
+    // The bundleName may carry a clone prefix (+clone-<appIndex>+); the SELinux label must be
+    // derived from the original bundle name. Keep the raw name on parse failure.
+    std::string originalBundleName = bundleName;
+    if (bundleName.find(ServiceConstants::CLONE_PREFIX) == 0) {
+        int32_t appIndex = 0;
+        BundleCloneCommonHelper::ParseCloneDataDir(bundleName, originalBundleName, appIndex);
+    }
     // check param
     if (!InstalldOperator::IsValidPathByBundleDirScene(BundleDirScene::SET_DIR_APL, dir) ||
-        !InstalldOperator::IsValidBundleName(bundleName) || !InstalldOperator::IsValidUid(uid)) {
+        !InstalldOperator::IsValidBundleName(originalBundleName) || !InstalldOperator::IsValidUid(uid)) {
         LOG_E(BMS_TAG_INSTALLD, "Calling the function SetDirApl with invalid param");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
@@ -2466,7 +2473,7 @@ ErrCode InstalldHostImpl::SetDirApl(const std::string &dir, const std::string &b
     HapFileInfo hapFileInfo;
     hapFileInfo.pathNameOrig.push_back(dir);
     hapFileInfo.apl = apl;
-    hapFileInfo.packageName = bundleName;
+    hapFileInfo.packageName = originalBundleName;
     hapFileInfo.flags = SELINUX_HAP_RESTORECON_RECURSE;
     hapFileInfo.hapFlags = hapFlags;
     hapFileInfo.uid = static_cast<uint32_t>(uid);
