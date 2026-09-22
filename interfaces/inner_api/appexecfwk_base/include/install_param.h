@@ -98,6 +98,8 @@ struct InstallParam : public Parcelable {
     PermissionStatus installEtpMdmBundlePermissionStatus = PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS;
     // status of install internaltesting bundle permission
     PermissionStatus installInternaltestingBundlePermissionStatus = PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS;
+    // status of install developer_id bundle permission
+    PermissionStatus installDeveloperIdBundlePermissionStatus = PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS;
     // status of mdm update bundle for self
     PermissionStatus installUpdateSelfBundlePermissionStatus = PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS;
     ApplicationInfoFlag preinstallSourceFlag = ApplicationInfoFlag::FLAG_INSTALLED;
@@ -192,6 +194,12 @@ public:
     {
         return parameters.find(ENTERPRISE_FOR_ALL_USER_KEY) != parameters.end() &&
             parameters.at(ENTERPRISE_FOR_ALL_USER_KEY) == PARAMETERS_VALUE_TRUE;
+    }
+
+    bool IsNotarizationCredentialEnabled() const
+    {
+        return parameters.find(Constants::NOTARIZATION_CREDENTIAL_ENABLED_KEY) != parameters.end() &&
+            parameters.at(Constants::NOTARIZATION_CREDENTIAL_ENABLED_KEY) == PARAMETERS_VALUE_TRUE;
     }
 
     bool IsForcedUninstall() const

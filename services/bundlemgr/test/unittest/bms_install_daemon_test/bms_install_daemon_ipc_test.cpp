@@ -1690,6 +1690,27 @@ HWTEST_F(BmsInstallDaemonIpcTest, CodeSignatureParam_Marshalling_0100, Function 
 }
 
 /**
+ * @tc.number: CodeSignatureParam_Marshalling_0200
+ * @tc.name: test isFreelyDistributableApp round-trip
+ * @tc.desc: 1. isFreelyDistributableApp survives Marshalling->Unmarshalling
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, CodeSignatureParam_Marshalling_0200, Function | SmallTest | Level0)
+{
+    Parcel parcel;
+    CodeSignatureParam param;
+    param.bundleName = "com.example.test";
+    param.isFreelyDistributableApp = true;
+    bool res = param.Marshalling(parcel);
+    EXPECT_TRUE(res);
+
+    CodeSignatureParam *unmarshalled = CodeSignatureParam::Unmarshalling(parcel);
+    ASSERT_NE(unmarshalled, nullptr);
+    EXPECT_EQ(unmarshalled->isFreelyDistributableApp, true);
+    EXPECT_EQ(unmarshalled->bundleName, param.bundleName);
+    delete unmarshalled;
+}
+
+/**
  * @tc.number: InstalldSceneInterfacesIpc_CopyHqfFile_0100
  * @tc.name: test CopyHqfFile IPC
  * @tc.desc: Verify fixed IPC code and proxy-to-host dispatch for CopyHqfFile.

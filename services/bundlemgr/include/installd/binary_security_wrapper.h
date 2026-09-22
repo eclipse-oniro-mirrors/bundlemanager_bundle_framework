@@ -43,6 +43,8 @@ public:
 
     ErrCode CheckHspPluginCertValidity(Security::Verify::HspPlugin &hspPlugin);
 
+    bool CheckAppSideLoadingAsync(int32_t userId);
+
 private:
     BinarySecurityWrapper();
     ~BinarySecurityWrapper() = default;
@@ -58,6 +60,7 @@ private:
     bool ResolveProcessHapBinInstallNoLock();
     bool ResolveRequestIndependentBinarySwitchAsyncNoLock();
     bool ResolveCheckHspPluginCertValidityNoLock();
+    bool ResolveCheckAppSideLoadingAsyncNoLock();
     void UnloadLibraryNoLock();
     void UnloadLibrary();
     void ScheduleUnload();
@@ -66,12 +69,14 @@ private:
         int32_t, const std::vector<BinFileInfo>&);
     using RequestIndependentBinarySwitchAsyncFunc = int32_t(*)(int32_t &);
     using CheckHspPluginCertValidityFunc = int32_t(*)(Security::Verify::HspPlugin &);
+    using CheckAppSideLoadingAsyncFunc = int32_t(*)(int32_t);
 
     mutable std::shared_mutex mutex_;
     void* handle_ = nullptr;
     ProcessHapBinInstallFunc processHapBinInstallFunc_ = nullptr;
     RequestIndependentBinarySwitchAsyncFunc requestIndependentBinarySwitchAsyncFunc_ = nullptr;
     CheckHspPluginCertValidityFunc checkHspPluginCertValidityFunc_ = nullptr;
+    CheckAppSideLoadingAsyncFunc checkAppSideLoadingAsyncFunc_ = nullptr;
     std::shared_ptr<SingleDelayedTaskMgr> delayedTaskMgr_ = nullptr;
 };
 

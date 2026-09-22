@@ -3352,4 +3352,99 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckCriticalAppAreInstalled_0600, Functio
     BmsExtensionDataMgr::bmsExtension_.bmsExtensionBundleMgr = non;
     BmsExtensionDataMgr::handler_ = nullptr;
 }
+
+/**
+ * @tc.number: CheckDeveloperIdBundle_0001
+ * @tc.name: test CheckDeveloperIdBundle when privacy server disabled
+ * @tc.desc: CheckDeveloperIdBundle returns PRIVACY_SERVER_DISABLED when SECURITY_PRIVACY_SERVER_ENABLE is disabled
+ */
+HWTEST_F(BmsBundleInstallCheckerTest, CheckDeveloperIdBundle_0001, Function | SmallTest | Level0)
+{
+    BundleInstallChecker bundleInstallChecker;
+    InstallParam installParam;
+    auto ret = bundleInstallChecker.CheckDeveloperIdBundle(installParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PLUGIN_PRIVACY_SERVER_DISABLED);
+}
+
+/**
+ * @tc.number: CheckDeveloperIdBundle_0002
+ * @tc.name: test CheckDeveloperIdBundle with permission when privacy server disabled
+ * @tc.desc: permission status does not bypass privacy server gate (HAVE_PERMISSION)
+ */
+HWTEST_F(BmsBundleInstallCheckerTest, CheckDeveloperIdBundle_0002, Function | SmallTest | Level0)
+{
+    BundleInstallChecker bundleInstallChecker;
+    InstallParam installParam;
+    installParam.installDeveloperIdBundlePermissionStatus = PermissionStatus::HAVE_PERMISSION_STATUS;
+    auto ret = bundleInstallChecker.CheckDeveloperIdBundle(installParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PLUGIN_PRIVACY_SERVER_DISABLED);
+}
+
+/**
+ * @tc.number: CheckDeveloperIdBundle_0003
+ * @tc.name: test CheckDeveloperIdBundle without permission when privacy server disabled
+ * @tc.desc: permission status does not bypass privacy server gate (NON_HAVE_PERMISSION)
+ */
+HWTEST_F(BmsBundleInstallCheckerTest, CheckDeveloperIdBundle_0003, Function | SmallTest | Level0)
+{
+    BundleInstallChecker bundleInstallChecker;
+    InstallParam installParam;
+    installParam.installDeveloperIdBundlePermissionStatus = PermissionStatus::NON_HAVE_PERMISSION_STATUS;
+    auto ret = bundleInstallChecker.CheckDeveloperIdBundle(installParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PLUGIN_PRIVACY_SERVER_DISABLED);
+}
+
+/**
+ * @tc.number: CheckDeveloperIdBundle_0004
+ * @tc.name: test CheckDeveloperIdBundle with userId 100 when privacy server disabled
+ * @tc.desc: privacy server gate blocks regardless of userId (HAVE_PERMISSION, userId=100)
+ */
+HWTEST_F(BmsBundleInstallCheckerTest, CheckDeveloperIdBundle_0004, Function | SmallTest | Level0)
+{
+    BundleInstallChecker bundleInstallChecker;
+    InstallParam installParam;
+    installParam.installDeveloperIdBundlePermissionStatus = PermissionStatus::HAVE_PERMISSION_STATUS;
+    installParam.userId = Constants::START_USERID;
+    auto ret = bundleInstallChecker.CheckDeveloperIdBundle(installParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PLUGIN_PRIVACY_SERVER_DISABLED);
+}
+
+/**
+ * @tc.number: CheckDeveloperIdBundle_0005
+ * @tc.name: test CheckDeveloperIdBundle with userId 0 when privacy server disabled
+ * @tc.desc: privacy server gate blocks regardless of userId (NON_HAVE_PERMISSION, userId=0)
+ */
+HWTEST_F(BmsBundleInstallCheckerTest, CheckDeveloperIdBundle_0005, Function | SmallTest | Level0)
+{
+    BundleInstallChecker bundleInstallChecker;
+    InstallParam installParam;
+    installParam.installDeveloperIdBundlePermissionStatus = PermissionStatus::NON_HAVE_PERMISSION_STATUS;
+    installParam.userId = Constants::DEFAULT_USERID;
+    auto ret = bundleInstallChecker.CheckDeveloperIdBundle(installParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PLUGIN_PRIVACY_SERVER_DISABLED);
+}
+
+/**
+ * @tc.number: NotarizationCredentialEnabled_0001
+ * @tc.name: test SetNotarizationCredentialEnabled and GetNotarizationCredentialEnabled
+ * @tc.desc: notarization credential enabled flag should be set and retrieved correctly
+ */
+HWTEST_F(BmsBundleInstallCheckerTest, NotarizationCredentialEnabled_0001, Function | SmallTest | Level0)
+{
+    InnerBundleInfo info;
+    info.SetNotarizationCredentialEnabled(true);
+    EXPECT_EQ(info.GetNotarizationCredentialEnabled(), true);
+}
+
+/**
+ * @tc.number: NotarizationCredentialEnabled_0002
+ * @tc.name: test InstallParam IsNotarizationCredentialEnabled
+ * @tc.desc: notarization credential enabled flag from parameters map should be retrieved correctly
+ */
+HWTEST_F(BmsBundleInstallCheckerTest, NotarizationCredentialEnabled_0002, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    installParam.parameters[Constants::NOTARIZATION_CREDENTIAL_ENABLED_KEY] = InstallParam::PARAMETERS_VALUE_TRUE;
+    EXPECT_EQ(installParam.IsNotarizationCredentialEnabled(), true);
+}
 } // OHOS

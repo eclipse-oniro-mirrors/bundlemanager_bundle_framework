@@ -124,6 +124,7 @@ enum class InstalldInterfaceCode : uint32_t {
     MOVE_SHARED_HSP_TO_CODE_DIR = 119,
     EXTRACT_RESOURCE_FILES = 121,
     EXTRACT_RES_FILE_DIR = 131,
+    CHECK_APP_SIDE_LOADING_ASYNC = 132,
 };
 
 } // namespace AppExecFwk

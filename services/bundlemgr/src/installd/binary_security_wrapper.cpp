@@ -29,6 +29,7 @@ constexpr const char* LIB_BINARY_SECURITY_SDK = "/system/lib64/libsps_binary_sec
 constexpr const char* PROCESS_HAP_BIN_INSTALL_FUNC = "ProcessHapBinInstall";
 constexpr const char* REQUEST_INDEPENDENT_BINARY_SWITCH_ASYNC_FUNC = "RequestIndependentBinarySwitchAsync";
 constexpr const char* CHECK_HSP_PLUGIN_CERT_VALIDITY_FUNC = "CheckHspPluginCertValidity";
+constexpr const char* CHECK_APP_SIDE_LOADING_ASYNC_FUNC = "CheckAppSideLoadingAsync";
 } // namespace
 
 BinarySecurityWrapper& BinarySecurityWrapper::GetInstance()
@@ -62,7 +63,8 @@ bool BinarySecurityWrapper::HasNoResolvedSymbolsNoLock() const
 {
     return processHapBinInstallFunc_ == nullptr &&
         requestIndependentBinarySwitchAsyncFunc_ == nullptr &&
-        checkHspPluginCertValidityFunc_ == nullptr;
+        checkHspPluginCertValidityFunc_ == nullptr &&
+        checkAppSideLoadingAsyncFunc_ == nullptr;
 }
 
 bool BinarySecurityWrapper::ResolveSymbolNoLock(const char* symbolName, void **func)
@@ -113,6 +115,12 @@ bool BinarySecurityWrapper::ResolveCheckHspPluginCertValidityNoLock()
         reinterpret_cast<void **>(&checkHspPluginCertValidityFunc_));
 }
 
+bool BinarySecurityWrapper::ResolveCheckAppSideLoadingAsyncNoLock()
+{
+    return ResolveSymbolNoLock(CHECK_APP_SIDE_LOADING_ASYNC_FUNC,
+        reinterpret_cast<void **>(&checkAppSideLoadingAsyncFunc_));
+}
+
 void BinarySecurityWrapper::UnloadLibrary()
 {
     std::unique_lock<std::shared_mutex> lock(mutex_);
@@ -129,6 +137,7 @@ void BinarySecurityWrapper::UnloadLibraryNoLock()
     processHapBinInstallFunc_ = nullptr;
     requestIndependentBinarySwitchAsyncFunc_ = nullptr;
     checkHspPluginCertValidityFunc_ = nullptr;
+    checkAppSideLoadingAsyncFunc_ = nullptr;
     LOG_I(BMS_TAG_INSTALLD, "Unloaded libsps_binary_security_sdk.z.so");
 }
 
@@ -246,6 +255,41 @@ ErrCode __attribute__((no_sanitize("cfi"))) BinarySecurityWrapper::CheckHspPlugi
         }
         ScheduleUnload();
         return result;
+    }
+}
+
+// This wrapper calls a dlsym-resolved function pointer, so CFI is disabled for
+// the runtime-resolved indirect call.
+bool __attribute__((no_sanitize("cfi"))) BinarySecurityWrapper::CheckAppSideLoadingAsync(int32_t userId)
+{
+    {
+        std::shared_lock<std::shared_mutex> readLock(mutex_);
+        if (handle_ != nullptr && checkAppSideLoadingAsyncFunc_ != nullptr) {
+            int32_t result = checkAppSideLoadingAsyncFunc_(userId);
+            if (result != ERR_OK) {
+                LOG_E(BMS_TAG_INSTALLD, "CheckAppSideLoadingAsync failed %{public}d", result);
+            }
+            ScheduleUnload();
+            return result == ERR_OK;
+        }
+    }
+
+    {
+        std::unique_lock<std::shared_mutex> writeLock(mutex_);
+        if (!LoadLibraryNoLock()) {
+            LOG_E(BMS_TAG_INSTALLD, "LoadLibrary failed for CheckAppSideLoadingAsync");
+            return false;
+        }
+        if (!ResolveCheckAppSideLoadingAsyncNoLock() || checkAppSideLoadingAsyncFunc_ == nullptr) {
+            LOG_E(BMS_TAG_INSTALLD, "CheckAppSideLoadingAsync symbol not ready");
+            return false;
+        }
+        int32_t result = checkAppSideLoadingAsyncFunc_(userId);
+        if (result != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLD, "CheckAppSideLoadingAsync failed %{public}d", result);
+        }
+        ScheduleUnload();
+        return result == ERR_OK;
     }
 }
 }  // namespace AppExecFwk

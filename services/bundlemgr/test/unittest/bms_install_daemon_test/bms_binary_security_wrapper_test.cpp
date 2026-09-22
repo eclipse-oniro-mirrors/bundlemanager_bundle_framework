@@ -428,6 +428,44 @@ HWTEST_F(BmsBinarySecurityWrapperTest, BmsBinarySecurityWrapperTest_020, Functio
 }
 
 /**
+ * @tc.number: BmsBinarySecurityWrapperTest_026
+ * @tc.name: test ResolveCheckAppSideLoadingAsyncNoLock with null handle
+ * @tc.desc: 1. ResolveCheckAppSideLoadingAsyncNoLock returns false when handle_ is null
+ */
+HWTEST_F(BmsBinarySecurityWrapperTest, BmsBinarySecurityWrapperTest_026, Function | SmallTest | Level0)
+{
+    BinarySecurityWrapper& instance = BinarySecurityWrapper::GetInstance();
+
+    void* originalHandle = instance.handle_;
+    instance.handle_ = nullptr;
+    instance.checkAppSideLoadingAsyncFunc_ = nullptr;
+
+    bool ret = instance.ResolveCheckAppSideLoadingAsyncNoLock();
+    EXPECT_FALSE(ret);
+
+    instance.handle_ = originalHandle;
+}
+
+/**
+ * @tc.number: BmsBinarySecurityWrapperTest_027
+ * @tc.name: test CheckAppSideLoadingAsync without library
+ * @tc.desc: 1. CheckAppSideLoadingAsync returns false when library unavailable
+ */
+HWTEST_F(BmsBinarySecurityWrapperTest, BmsBinarySecurityWrapperTest_027, Function | SmallTest | Level0)
+{
+    BinarySecurityWrapper& instance = BinarySecurityWrapper::GetInstance();
+
+    void* originalHandle = instance.handle_;
+    instance.handle_ = nullptr;
+    instance.checkAppSideLoadingAsyncFunc_ = nullptr;
+
+    bool ret = instance.CheckAppSideLoadingAsync(100);
+    EXPECT_FALSE(ret);
+
+    instance.handle_ = originalHandle;
+}
+
+/**
  * @tc.number: BmsBinarySecurityWrapperTest_021
  * @tc.name: test UnloadLibraryNoLock when handle is null
  * @tc.desc: 1. UnloadLibraryNoLock handles nullptr handle gracefully
