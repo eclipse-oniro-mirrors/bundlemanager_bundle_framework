@@ -105,7 +105,8 @@ bool BundleParser::ReadFileIntoJson(const std::string &filePath, nlohmann::json 
 ErrCode BundleParser::Parse(
     const std::string &pathName,
     InnerBundleInfo &innerBundleInfo,
-    bool &isAbcCompressed) const
+    bool &isAbcCompressed,
+    bool needCheckProfileSize) const
 {
     APP_LOGD("parse from %{private}s", pathName.c_str());
     BundleExtractor bundleExtractor(pathName);
@@ -116,6 +117,13 @@ ErrCode BundleParser::Parse(
 
     // check abc is compressed or not
     bundleExtractor.IsHapCompress(isAbcCompressed);
+
+    // The profile is loaded into the memory and parsed by json, so an oversized profile of a
+    // malicious package(zip bomb) must be rejected before it is extracted, otherwise the memory
+    // of the bundle manager service would be exhausted.
+    if (needCheckProfileSize && !bundleExtractor.IsProfileSizeAllowed()) {
+        return ERR_APPEXECFWK_PARSE_FILE_FAILED;
+    }
 
     // to extract config.json
     std::ostringstream outStream;

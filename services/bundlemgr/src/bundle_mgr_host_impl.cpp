@@ -1741,7 +1741,7 @@ bool BundleMgrHostImpl::GetBundleArchiveInfo(
         InnerBundleInfo info;
         BundleParser bundleParser;
         bool isAbcCompressed = false;
-        ret = bundleParser.Parse(realPath, info, isAbcCompressed);
+        ret = bundleParser.Parse(realPath, info, isAbcCompressed, true);
         if (ret != ERR_OK) {
             APP_LOGE("parse bundle info failed, error: %{public}d", ret);
             return false;
@@ -1796,7 +1796,7 @@ ErrCode BundleMgrHostImpl::GetBundleArchiveInfoV9(
     InnerBundleInfo info;
     BundleParser bundleParser;
     bool isAbcCompressed = false;
-    ret = bundleParser.Parse(realPath, info, isAbcCompressed);
+    ret = bundleParser.Parse(realPath, info, isAbcCompressed, true);
     if (ret != ERR_OK) {
         APP_LOGE("parse bundle info failed, error: %{public}d", ret);
         return ERR_BUNDLE_MANAGER_INVALID_HAP_PATH;
@@ -1864,7 +1864,7 @@ ErrCode BundleMgrHostImpl::GetBundleArchiveInfoBySandBoxPath(const std::string &
     InnerBundleInfo info;
     BundleParser bundleParser;
     bool isAbcCompressed = false;
-    ret = bundleParser.Parse(realPath, info, isAbcCompressed);
+    ret = bundleParser.Parse(realPath, info, isAbcCompressed, true);
     if (ret != ERR_OK) {
         APP_LOGE("parse bundle info failed, error: %{public}d", ret);
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
@@ -8957,7 +8957,8 @@ ErrCode BundleMgrHostImpl::ParseAndFilterHaps(
         InnerBundleInfo info;
         BundleParser bundleParser;
         bool isAbcCompressed = false;
-        auto ret = bundleParser.Parse(hapPath, info, isAbcCompressed);
+        // the haps are from the app file provided by the caller, so the profile size must be checked
+        auto ret = bundleParser.Parse(hapPath, info, isAbcCompressed, true);
         if (ret != ERR_OK) {
             APP_LOGE("parse hap failed, path=%{private}s, err=%{public}d", hapPath.c_str(), ret);
             return ret;
