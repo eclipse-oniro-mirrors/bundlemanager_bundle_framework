@@ -1847,16 +1847,15 @@ bool CheckModuleInfosIsValid(ProfileReader::ConfigJson &configJson)
 }
 uint32_t GetFormEntity(const std::vector<std::string> &formEntity)
 {
-    static std::map<std::string, uint32_t> formEntityMap;
-    if (formEntityMap.empty()) {
-        formEntityMap.insert({ProfileReader::KEY_HOME_SCREEN, ProfileReader::VALUE_HOME_SCREEN});
-        formEntityMap.insert({ProfileReader::KEY_SEARCHBOX, ProfileReader::VALUE_SEARCHBOX});
-    }
+    static const std::map<std::string, uint32_t> formEntityMap = {
+        {ProfileReader::KEY_HOME_SCREEN, ProfileReader::VALUE_HOME_SCREEN},
+        {ProfileReader::KEY_SEARCHBOX, ProfileReader::VALUE_SEARCHBOX}};
 
     uint32_t formEntityInBinary = 0;
     for (const auto &item : formEntity) {
-        if (formEntityMap.find(item) != formEntityMap.end()) {
-            formEntityInBinary |= formEntityMap[item];
+        auto it = formEntityMap.find(item);
+        if (it != formEntityMap.end()) {
+            formEntityInBinary |= it->second;
         }
     }
     return formEntityInBinary;

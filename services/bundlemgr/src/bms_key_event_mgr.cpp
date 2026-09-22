@@ -35,11 +35,13 @@ constexpr const char *BMS_PARAM_TRUE = "true";
 constexpr const char *BMS_PARAM_FALSE = "false";
 }
 
-std::atomic_uint BmsKeyEventMgr::isMainBundleReady_ = true;
+std::atomic<bool> BmsKeyEventMgr::isMainBundleReady_ {true};
+std::mutex BmsKeyEventMgr::paramMutex_;
 
 void BmsKeyEventMgr::ProcessMainBundleStatusFinally()
 {
     LOG_I(BMS_TAG_DEFAULT, "ProcessMainBundleStatus start");
+    std::lock_guard<std::mutex> lock(paramMutex_);
     if (isMainBundleReady_) {
         if (!system::SetParameter(BOOTEVENT_BMS_MAIN_BUNDLES_READY, BMS_PARAM_TRUE)) {
             LOG_E(BMS_TAG_DEFAULT, "bms set parameter failed");
@@ -56,6 +58,7 @@ void BmsKeyEventMgr::ProcessMainBundleInstallFailed(const std::string &bundleNam
         return;
     }
     LOG_I(BMS_TAG_DEFAULT, "bundleName:%{public}s install failed, errCode:%{public}d", bundleName.c_str(), errCode);
+    std::lock_guard<std::mutex> lock(paramMutex_);
     isMainBundleReady_ = false;
     if (!system::SetParameter(BOOTEVENT_BMS_MAIN_BUNDLES_READY, BMS_PARAM_FALSE)) {
         LOG_E(BMS_TAG_DEFAULT, "bms set parameter failed");

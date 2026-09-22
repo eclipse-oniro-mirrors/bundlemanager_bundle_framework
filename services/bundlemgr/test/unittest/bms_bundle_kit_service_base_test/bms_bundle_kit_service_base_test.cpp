@@ -13,8 +13,12 @@
  * limitations under the License.
  */
 
+#include "bms_key_event_mgr.h"
+#include "parameters.h"
+
 #define private public
 
+#include <atomic>
 #include <thread>
 #include <gtest/gtest.h>
 
@@ -993,6 +997,78 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_3100, Function | 
     EXPECT_TRUE(param.callback != nullptr);
 }
 
+class CountingRemoteObject : public IRemoteObject {
+public:
+    explicit CountingRemoteObject(const std::u16string& descriptor = u"CountingDescriptor")
+        : IRemoteObject(descriptor) {}
+
+    int32_t GetObjectRefCount()
+    {
+        return ERR_OK;
+    }
+
+    int32_t SendRequest(uint32_t code, MessageParcel& data, MessageParcel& reply, MessageOption& option)
+    {
+        count_++;
+        return ERR_OK;
+    }
+
+    bool AddDeathRecipient(const sptr<DeathRecipient>& recipient)
+    {
+        return ERR_OK;
+    }
+
+    bool RemoveDeathRecipient(const sptr<DeathRecipient>& recipient)
+    {
+        return ERR_OK;
+    }
+
+    int Dump(int fd, const std::vector<std::u16string>& args)
+    {
+        return ERR_OK;
+    }
+
+    int32_t GetCount() const
+    {
+        return count_.load();
+    }
+
+private:
+    std::atomic<int32_t> count_ {0};
+};
+
+/**
+ * @tc.number: BundleDistributedManager_3200
+ * @tc.name: Test SendCallbackRequest
+ * @tc.desc: Verify the SendCallbackRequest sends callback only once under concurrent calls.
+ */
+HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_3200, Function | MediumTest | Level1)
+{
+    auto mgr = GetBundleDistributedManager();
+    sptr<CountingRemoteObject> callback = new (std::nothrow) CountingRemoteObject();
+    ASSERT_TRUE(callback != nullptr);
+    QueryRpcIdParams param;
+    param.missionId = 0;
+    param.versionCode = 0;
+    param.callback = callback;
+    mgr->queryAbilityParamsMap_.emplace(TRANSACT_ID, param);
+    const int32_t threadCount = 4;
+    const int32_t loopCount = 10;
+    std::vector<std::thread> threads;
+    for (int32_t i = 0; i < threadCount; i++) {
+        threads.emplace_back([&mgr, loopCount]() {
+            for (int32_t j = 0; j < loopCount; j++) {
+                mgr->SendCallbackRequest(0, TRANSACT_ID);
+            }
+        });
+    }
+    for (auto &worker : threads) {
+        worker.join();
+    }
+    EXPECT_TRUE(mgr->queryAbilityParamsMap_.size() == 0);
+    EXPECT_EQ(callback->GetCount(), 1);
+}
+
 /**
  * @tc.number: BundleManagerCallbackStub_0500
  * @tc.name: Test OnRemoteRequest
@@ -1009,5 +1085,26 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleManagerCallbackStub_0500, Function |
 
     int32_t ret = stub.OnRemoteRequest(code, data, reply, option);
     EXPECT_NE(ret, 0);
+}
+
+/**
+ * @tc.number: BmsKeyEventMgr_0100
+ * @tc.name: Test ProcessMainBundleStatusFinally and ProcessMainBundleInstallFailed
+ * @tc.desc: Verify the main bundle ready parameter protocol.
+ */
+HWTEST_F(BmsBundleKitServiceBaseTest, BmsKeyEventMgr_0100, Function | MediumTest | Level1)
+{
+    const std::string bootEventKey = "bootevent.bms.main.bundles.ready";
+    BmsKeyEventMgr::ProcessMainBundleStatusFinally();
+    EXPECT_EQ(system::GetParameter(bootEventKey, ""), "true");
+
+    BmsKeyEventMgr::ProcessMainBundleInstallFailed("com.ohos.sceneboard", 1);
+    EXPECT_EQ(system::GetParameter(bootEventKey, ""), "false");
+
+    BmsKeyEventMgr::ProcessMainBundleStatusFinally();
+    EXPECT_EQ(system::GetParameter(bootEventKey, ""), "false");
+
+    BmsKeyEventMgr::ProcessMainBundleInstallFailed("not.main.bundle", 1);
+    EXPECT_EQ(system::GetParameter(bootEventKey, ""), "false");
 }
 }

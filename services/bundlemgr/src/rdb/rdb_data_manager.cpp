@@ -78,6 +78,8 @@ const std::unordered_map<int32_t, int32_t> RDB_ERR_MAP = {
 std::mutex RdbDataManager::restoreRdbMapMutex_;
 std::unordered_map<std::string, std::mutex> RdbDataManager::restoreRdbMap_;
 std::atomic<bool> RdbDataManager::isRebuilding_ {false};
+std::mutex RdbDataManager::dataOpMapMutex_;
+std::unordered_map<std::string, std::mutex> RdbDataManager::dataOpMutexMap_;
 
 RdbDataManager::RdbDataManager(const BmsRdbConfig &bmsRdbConfig)
     : bmsRdbConfig_(bmsRdbConfig)
@@ -102,6 +104,12 @@ std::mutex &RdbDataManager::GetRdbRestoreMutex(const std::string &dbName)
         isInitial_ = restoreRdbMap_.find(dbName) != restoreRdbMap_.end();
     }
     return restoreRdbMap_[dbName];
+}
+
+std::mutex &RdbDataManager::GetDataOpMutex()
+{
+    std::lock_guard<std::mutex> dataOpMapLock(dataOpMapMutex_);
+    return dataOpMutexMap_[bmsRdbConfig_.dbName + bmsRdbConfig_.tableName];
 }
 
 void RdbDataManager::ReportRdbLostEvent(HighRiskOperationType operation, int32_t userId)
@@ -379,6 +387,8 @@ bool RdbDataManager::UpdateOrInsertData(
         APP_LOGE("RdbStore table is invalid");
         return false;
     }
+    auto &dataOpMutex = GetDataOpMutex();
+    std::lock_guard<std::mutex> dataOpLock(dataOpMutex);
     int32_t rowId = -1;
     ret = rdbStore->Update(rowId, valuesBucket, absRdbPredicates);
     if ((ret == NativeRdb::E_OK) && (rowId == 0)) {
@@ -684,21 +694,29 @@ void RdbDataManager::CheckDbError()
     int32_t errCode = NativeRdb::E_OK;
     BmsRdbOpenCallback bmsRdbOpenCallback(bmsRdbConfig_);
     BmsExtensionDataMgr bmsExtensionDataMgr;
-    rdbStore_ = NativeRdb::RdbHelper::GetRdbStore(
-        rdbStoreConfig,
-        bmsRdbConfig_.version,
-        bmsRdbOpenCallback, errCode);
+    std::shared_ptr<NativeRdb::RdbStore> rdbStore;
+    bool isNeedRebuildDb = false;
+    {
+        std::lock_guard<std::mutex> lock(rdbMutex_);
+        rdbStore_ = NativeRdb::RdbHelper::GetRdbStore(
+            rdbStoreConfig,
+            bmsRdbConfig_.version,
+            bmsRdbOpenCallback, errCode);
+        rdbStore = rdbStore_;
+        if (errCode != NativeRdb::E_SQLITE_CORRUPT && rdbStore != nullptr) {
+            isNeedRebuildDb = RdbIntegrityCheckNeedRestore();
+        }
+    }
     if (errCode == NativeRdb::E_SQLITE_CORRUPT) {
         DeleteDbFiles(bmsRdbConfig_.dbPath + bmsRdbConfig_.dbName);
         bmsExtensionDataMgr.RebuildBundleResourceTable();
         return;
     }
-    if (rdbStore_ == nullptr) {
+    if (rdbStore == nullptr) {
         APP_LOGE("GetRdbStore failed, errCode:%{public}d", errCode);
         return;
     }
 
-    bool isNeedRebuildDb = RdbIntegrityCheckNeedRestore();
     if (isNeedRebuildDb) {
         DeleteDbFiles(bmsRdbConfig_.dbPath + bmsRdbConfig_.dbName);
         bmsExtensionDataMgr.RebuildBundleResourceTable();

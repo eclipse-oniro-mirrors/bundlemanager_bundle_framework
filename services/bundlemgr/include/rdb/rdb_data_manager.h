@@ -83,12 +83,15 @@ private:
         const NativeRdb::ValuesBucket &valuesBucket);
     bool IsRetryErrCode(int32_t errCode);
     std::mutex &GetRdbRestoreMutex(const std::string &dbName);
+    std::mutex &GetDataOpMutex();
     void TriggerRebuild();
     void DeleteDbFiles(const std::string &dbFile);
     bool isInitial_ = false;
     std::mutex rdbMutex_;
     static std::mutex restoreRdbMapMutex_;
     static std::unordered_map<std::string, std::mutex> restoreRdbMap_;
+    static std::mutex dataOpMapMutex_;
+    static std::unordered_map<std::string, std::mutex> dataOpMutexMap_;
     std::shared_ptr<NativeRdb::RdbStore> rdbStore_;
 
     BmsRdbConfig bmsRdbConfig_;

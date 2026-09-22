@@ -106,18 +106,17 @@ public:
     virtual void OnStatusNotify(const int progress) override {}
     virtual void OnFinished(const int32_t resultCode, const std::string &resultMsg) override
     {
-        g_installedHapNum++;
-        APP_LOGI_NOFUNC("OnFinished result:%{public}d msg:%{public}s count:%{public}u",
-            resultCode, resultMsg.c_str(), g_installedHapNum.load());
-        if (static_cast<int32_t>(g_installedHapNum) >= totalHapNum_ && bundlePromise_ != nullptr) {
-            bundlePromise_->NotifyAllTasksExecuteFinished();
-        }
-
         if (resultCode != ERR_OK && resultCode !=
             ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON && needReInstall_) {
             APP_LOGI("needReInstall bundleName: %{public}s", bundleName_.c_str());
             BmsKeyEventMgr::ProcessMainBundleInstallFailed(bundleName_, resultCode);
             SavePreInstallException(bundleName_);
+        }
+        g_installedHapNum++;
+        APP_LOGI_NOFUNC("OnFinished result:%{public}d msg:%{public}s count:%{public}u",
+            resultCode, resultMsg.c_str(), g_installedHapNum.load());
+        if (static_cast<int32_t>(g_installedHapNum) >= totalHapNum_ && bundlePromise_ != nullptr) {
+            bundlePromise_->NotifyAllTasksExecuteFinished();
         }
     }
 private:
