@@ -32,8 +32,10 @@
 #include "ipc/copy_hap_to_install_path_param.h"
 #include "ipc/create_dir_param.h"
 #include "ipc/encryption_param.h"
+#include "ipc/extract_hnp_files_param.h"
 #include "ipc/extract_param.h"
 #include "ipc/file_stat.h"
+#include "ipc/hap_module_extract_param.h"
 #include "ipc/install_hnp_param.h"
 #include "ipc/skills_package_param.h"
 #include "ipc/verify_bin_param.h"
@@ -73,6 +75,15 @@ public:
     virtual ErrCode ExtractModuleFiles(const std::string &srcModulePath, const std::string &targetPath,
         const std::string &targetSoPath, const std::string &cpuAbi, const bool needFakeDecompression,
         const bool isSystemApp)
+    {
+        return ERR_OK;
+    }
+    /**
+     * @brief Extract the files of a HAP module with path construction in installd.
+     * @param param Indicates the HAP module extract parameters.
+     * @return Returns ERR_OK if the HAP file extracted successfully; returns error code otherwise.
+     */
+    virtual ErrCode ExtractHapModuleFiles(const HapModuleExtractParam &param)
     {
         return ERR_OK;
     }
@@ -165,6 +176,11 @@ public:
      */
     virtual ErrCode CopyHapToTempPath(const std::string &bundleName, const std::string &hapRealPath,
         const std::string &tempDirName, const std::string &hapFileName)
+    {
+        return ERR_OK;
+    }
+
+    virtual ErrCode ExtractHnpFilesByScene(const ExtractHnpFilesParam &extractHnpFilesParam)
     {
         return ERR_OK;
     }

@@ -85,6 +85,11 @@ ErrCode InstalldClient::ExtractModuleFiles(const std::string &srcModulePath, con
     return 0;
 }
 
+ErrCode InstalldClient::ExtractHapModuleFiles(const HapModuleExtractParam &param)
+{
+    return 0;
+}
+
 ErrCode InstalldClient::ExtractFiles(const ExtractParam &extractParam)
 {
     return 0;
@@ -144,6 +149,11 @@ ErrCode InstalldClient::ExtractResFileDir(const std::string &bundleName, const s
 
 ErrCode InstalldClient::ExtractHnpFiles(const std::map<std::string, std::string> &hnpPackageMap,
     const ExtractParam &extractParam)
+{
+    return 0;
+}
+
+ErrCode InstalldClient::ExtractHnpFilesByScene(const ExtractHnpFilesParam &extractHnpFilesParam)
 {
     return 0;
 }

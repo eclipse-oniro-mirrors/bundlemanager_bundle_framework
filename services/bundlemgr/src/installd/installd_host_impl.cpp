@@ -310,6 +310,42 @@ ErrCode InstalldHostImpl::CopyHapToTempPath(const std::string &bundleName, const
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::ExtractHapModuleFiles(const HapModuleExtractParam &param)
+{
+    LOG_D(BMS_TAG_INSTALLD, "ExtractHapModuleFiles bundleName:%{public}s moduleName:%{public}s installMode:%{public}d",
+        param.bundleName.c_str(), param.moduleName.c_str(), param.installMode);
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    ErrCode ret = InstalldOperator::ValidateExtractHapModuleParams(param);
+    if (ret != ERR_OK) {
+        return ret;
+    }
+    std::string srcModulePath;
+    std::string targetPath;
+    std::string targetSoPath;
+    InstalldOperator::BuildExtractHapModulePaths(param, srcModulePath, targetPath, targetSoPath);
+    if (!InstalldOperator::IsValidPathByExtractModuleFiles(srcModulePath, targetPath, targetSoPath)) {
+        LOG_E(BMS_TAG_INSTALLD,
+            "Calling ExtractHapModuleFiles with invalid path, srcModulePath: %{private}s, targetPath: %{private}s, "
+            "targetSoPath: %{private}s",
+            srcModulePath.c_str(), targetPath.c_str(), targetSoPath.c_str());
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    if (!InstalldOperator::MkRecursiveDir(targetPath, true)) {
+        LOG_E(BMS_TAG_INSTALLD, "create target dir %{public}s failed, errno:%{public}d", targetPath.c_str(), errno);
+        return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
+    }
+    if (!InstalldOperator::ExtractFiles(srcModulePath, targetSoPath, param.cpuAbi,
+        param.needFakeDecompression, param.isSystemApp)) {
+        LOG_E(BMS_TAG_INSTALLD, "ExtractHapModuleFiles failed, errno:%{public}d", errno);
+        InstalldOperator::DeleteDir(targetPath);
+        return ERR_APPEXECFWK_INSTALLD_EXTRACT_FAILED;
+    }
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::ExtractFiles(const ExtractParam &extractParam)
 {
     LOG_D(BMS_TAG_INSTALLD, "ExtractFiles extractParam %{public}s", extractParam.ToString().c_str());
@@ -637,7 +673,41 @@ ErrCode InstalldHostImpl::ExtractHnpFiles(const std::map<std::string, std::strin
         LOG_E(BMS_TAG_INSTALLD, "extract failed errno:%{public}d", errno);
         return ERR_APPEXECFWK_NATIVE_HNP_EXTRACT_FAILED;
     }
+    return ERR_OK;
+}
 
+ErrCode InstalldHostImpl::ExtractHnpFilesByScene(const ExtractHnpFilesParam &extractHnpFilesParam)
+{
+    LOG_D(BMS_TAG_INSTALLD, "ExtractHnpFilesByScene extractHnpFilesParam %{public}s",
+        extractHnpFilesParam.ToString().c_str());
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+
+    std::string srcPath;
+    std::string targetPath;
+    if (!InstalldOperator::ValidateAndBuildHnpPaths(extractHnpFilesParam, srcPath, targetPath)) {
+        LOG_E(BMS_TAG_INSTALLD,
+            "Calling the function ExtractHnpFilesByScene with invalid param, srcPath:%{private}s, "
+            "targetPath:%{private}s",
+            srcPath.c_str(), targetPath.c_str());
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    ExtractParam extractParam;
+    extractParam.bundleName = extractHnpFilesParam.bundleName;
+    extractParam.srcPath = srcPath;
+    extractParam.targetPath = targetPath;
+    extractParam.cpuAbi = extractHnpFilesParam.cpuAbi;
+    extractParam.extractFileType = ExtractFileType::HNPS_FILE;
+
+    LOG_D(BMS_TAG_INSTALLD, "ExtractHnpFilesByScene targetPath: %{public}s", targetPath.c_str());
+
+    if (!InstalldOperator::ExtractFiles(extractHnpFilesParam.hnpPackageMap, extractParam)) {
+        LOG_E(BMS_TAG_INSTALLD, "extract hnp files failed errno:%{public}d", errno);
+        return ERR_APPEXECFWK_NATIVE_HNP_EXTRACT_FAILED;
+    }
     return ERR_OK;
 }
 
@@ -4699,6 +4769,14 @@ ErrCode InstalldHostImpl::ExtractSkillsPackage(const SkillsPackageParam &param,
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    if (!InstalldOperator::IsValidBundleName(param.bundleName) ||
+        param.bundleName.find('/') != std::string::npos ||
+        !InstalldOperator::IsValidPathByExtractSkillsPackage(param)) {
+        LOG_E(BMS_TAG_INSTALLD,
+            "Calling ExtractSkillsPackage with invalid param, bundleName:%{public}s, moduleName:%{public}s",
+            param.bundleName.c_str(), param.moduleName.c_str());
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     return InstalldOperator::ExtractSkillsPackage(param, skillInfoList);
 }

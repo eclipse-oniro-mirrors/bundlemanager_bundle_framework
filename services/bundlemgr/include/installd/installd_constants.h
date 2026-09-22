@@ -31,6 +31,12 @@ enum class ResultMode : uint8_t {
     RELATIVE_PATH,
 };
 
+enum class HapExtractMode : int32_t {
+    NORMAL = 0,
+    MODULE_UPDATE = 1,
+    BUNDLE_UPDATE = 2,
+};
+
 enum class BundleDirScene : int32_t {
     SET_DIR_APL = 0,
     EXTRACT_HNP_FILES = 1,
