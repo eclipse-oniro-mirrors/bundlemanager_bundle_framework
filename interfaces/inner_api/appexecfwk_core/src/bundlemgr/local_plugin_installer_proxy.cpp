@@ -23,6 +23,7 @@
 #include <unistd.h>
 
 #include "app_log_wrapper.h"
+#include "app_log_tag_wrapper.h"
 #include "bundle_constants.h"
 #include "bundle_file_util.h"
 #include "directory_ex.h"
@@ -155,11 +156,11 @@ ErrCode WriteInputFileToLocalPluginStream(const std::string &path, int32_t outpu
         APP_LOGE("open %{public}s failed, errno:%{public}d", inputPath.c_str(), errno);
         return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
     }
-    fdsan_exchange_owner_tag(inputFd, 0, LOG_DOMAIN);
+    fdsan_exchange_owner_tag(inputFd, 0, BMS_FDSAN_INSTALLER_TAG);
     struct stat sourceStat;
     if (fstat(inputFd, &sourceStat) == -1 || sourceStat.st_size < 0) {
         APP_LOGE("fstat failed, errno:%{public}d", errno);
-        fdsan_close_with_tag(inputFd, LOG_DOMAIN);
+        fdsan_close_with_tag(inputFd, BMS_FDSAN_INSTALLER_TAG);
         return ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT;
     }
 
@@ -174,11 +175,11 @@ ErrCode WriteInputFileToLocalPluginStream(const std::string &path, int32_t outpu
     if (singleTransfer == -1 || transferCount != static_cast<size_t>(sourceStat.st_size)) {
         APP_LOGE("errno:%{public}d, singleTransfer:%{public}zd, send count:%{public}zu, file size:%{public}zu",
             errno, singleTransfer, transferCount, static_cast<size_t>(sourceStat.st_size));
-        fdsan_close_with_tag(inputFd, LOG_DOMAIN);
+        fdsan_close_with_tag(inputFd, BMS_FDSAN_INSTALLER_TAG);
         return ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT;
     }
 
-    fdsan_close_with_tag(inputFd, LOG_DOMAIN);
+    fdsan_close_with_tag(inputFd, BMS_FDSAN_INSTALLER_TAG);
     fsync(outputFd);
     return ERR_OK;
 }
@@ -355,8 +356,9 @@ ErrCode LocalPluginInstallerProxy::WriteFileToLocalPluginStream(
     if (outputFd < 0) {
         return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
     }
+    fdsan_exchange_owner_tag(outputFd, 0, BMS_FDSAN_INSTALLER_TAG);
     ret = WriteInputFileToLocalPluginStream(path, outputFd);
-    close(outputFd);
+    fdsan_close_with_tag(outputFd, BMS_FDSAN_INSTALLER_TAG);
     return ret;
 }
 }  // namespace AppExecFwk
