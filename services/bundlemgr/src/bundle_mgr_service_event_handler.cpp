@@ -247,6 +247,16 @@ BMSEventHandler::~BMSEventHandler()
     LOG_D(BMS_TAG_DEFAULT, "instance is destroyed");
 }
 
+std::shared_ptr<BundleDataMgr> BMSEventHandler::GetDataMgrFromService()
+{
+    auto service = DelayedSingleton<BundleMgrService>::GetInstance();
+    if (service == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "BundleMgrService instance is null");
+        return nullptr;
+    }
+    return service->GetDataMgr();
+}
+
 void BMSEventHandler::BmsStartEvent()
 {
     LOG_NOFUNC_I(BMS_TAG_DEFAULT, "BmsStartEvent start");
@@ -357,7 +367,7 @@ void BMSEventHandler::AfterBmsStart()
     // first boot) converges here. If the reset fails the persist parameter stays set and the
     // next boot retries the whole pass idempotently (mostly already-exist).
     BundleAccessTokenRecoveryMgr::ProcessRecovery(
-        DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr(), "AfterBmsStart");
+        GetDataMgrFromService(), "AfterBmsStart");
     DelayedSingleton<BundleMgrService>::GetInstance()->RegisterService();
     // delay after regist
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
@@ -429,7 +439,7 @@ bool BMSEventHandler::LoadInstallInfosFromDb()
         return false;
     }
     LOG_I(BMS_TAG_DEFAULT, "Load install infos from db");
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
         return false;
@@ -623,7 +633,7 @@ ScanResultCode BMSEventHandler::ScanAndAnalyzeUserDatas(
     std::map<std::string, std::vector<InnerBundleUserInfo>> &userMaps)
 {
     ScanResultCode scanResultCode = ScanResultCode::SCAN_NO_DATA;
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "dataMgr is null");
         return scanResultCode;
@@ -1116,7 +1126,7 @@ bool BMSEventHandler::CombineBundleInfoAndUserInfo(
     const std::map<std::string, std::vector<InnerBundleUserInfo>> &userInfoMaps)
 {
     LOG_D(BMS_TAG_DEFAULT, "Combine code information and user data start");
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "dataMgr is null");
         return false;
@@ -1169,7 +1179,7 @@ bool BMSEventHandler::CombineBundleInfoAndUserInfo(
 
 void BMSEventHandler::SaveInstallInfoToCache(InnerBundleInfo &info)
 {
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "dataMgr is null");
         return;
@@ -1556,7 +1566,7 @@ void BMSEventHandler::ReInstallSystemHspAndSharedBundles()
 
 void BMSEventHandler::CreateAppInstallDir() const
 {
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
         return;
@@ -1573,7 +1583,7 @@ void BMSEventHandler::CreateAppInstallDir() const
 
 void BMSEventHandler::SetAllInstallFlag() const
 {
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
         return;
@@ -1729,7 +1739,7 @@ void BMSEventHandler::ProcessCheckAppDataDir()
 
 void BMSEventHandler::InnerProcessCheckAppDataDir()
 {
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
         return;
@@ -1766,7 +1776,7 @@ void BMSEventHandler::ProcessCheckPreinstallData()
 
 void BMSEventHandler::InnerProcessCheckPreinstallData()
 {
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
         return;
@@ -1821,7 +1831,7 @@ void BMSEventHandler::ProcessCheckAppLogDir()
 
 void BMSEventHandler::InnerProcessCheckAppLogDir()
 {
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
         return;
@@ -1858,7 +1868,7 @@ void BMSEventHandler::ProcessCheckAppFileManagerDir()
 
 void BMSEventHandler::InnerProcessCheckAppFileManagerDir()
 {
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
         return;
@@ -1898,7 +1908,7 @@ void BMSEventHandler::ProcessCheckPrintServiceDir()
 
 bool BMSEventHandler::InnerProcessCheckPrintServiceDir()
 {
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
         return false;
@@ -1941,7 +1951,7 @@ void BMSEventHandler::ProcessNewBackupDir()
         return;
     }
     LOG_I(BMS_TAG_DEFAULT, "Need to check back up dir");
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
         return;
@@ -1976,7 +1986,7 @@ void BMSEventHandler::ProcessCheckRecoverableApplicationInfo()
 
 void BMSEventHandler::InnerProcessCheckRecoverableApplicationInfo()
 {
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
         return;
@@ -2036,7 +2046,7 @@ void BMSEventHandler::ProcessCheckInstallSource()
 
 void BMSEventHandler::InnerProcessCheckInstallSource()
 {
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
         return;
@@ -2172,7 +2182,7 @@ void BMSEventHandler::ParseSizeFromProvision(const std::string &bundleName, cons
 
 void BMSEventHandler::RefreshQuotaForAllUid()
 {
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
         return;
@@ -2204,7 +2214,7 @@ bool BMSEventHandler::LoadAllPreInstallBundleInfos()
         return true;
     }
 
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
         return false;
@@ -2238,7 +2248,7 @@ void BMSEventHandler::LoadPreInstallWhiteList()
         LOG_NOFUNC_E(BMS_TAG_DEFAULT, "load preInstallWhiteListMap fail or whiteList not exist");
         return;
     }
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_NOFUNC_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
         return;
@@ -2315,8 +2325,8 @@ bool BMSEventHandler::NeedProcessOtaNewPreloadInstall(const std::string &bundleN
         bool hideDesktopIcon = false;
         BundleInstallChecker bundleInstallChecker;
         std::vector<std::string> filePaths;
-        BundleUtil::CheckFilePath({scanPath}, filePaths);
-        if (filePaths.empty()) {
+        ErrCode checkRet = BundleUtil::CheckFilePath({scanPath}, filePaths);
+        if (checkRet != ERR_OK || filePaths.empty()) {
             LOG_NOFUNC_W(BMS_TAG_DEFAULT, "obtain real path failed : %{public}s", bundleName.c_str());
             return false;
         }
@@ -2431,7 +2441,7 @@ bool BMSEventHandler::GetBundleNameAndUserIdFromPath(const std::string &path,
 void BMSEventHandler::InnerProcessRebootBundleInstall(
     const std::list<std::string> &scanPathList, Constants::AppType appType)
 {
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
         return;
@@ -2879,7 +2889,7 @@ bool BMSEventHandler::HotPatchAppProcessing(const std::string &bundleName, uint3
         return false;
     }
     // obtains the users to which the app is installed
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
         return false;
@@ -3002,7 +3012,7 @@ void BMSEventHandler::InnerProcessRebootSharedBundleInstall(
     LOG_I(BMS_TAG_DEFAULT, "InnerProcessRebootSharedBundleInstall");
     int32_t timerId = XCollieHelper::SetOTATimer(OTA_SHARED_HSP_TASK, OTA_TIMEOUT_SECONDS);
     ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
         return;
@@ -3058,7 +3068,7 @@ void BMSEventHandler::InnerProcessRebootSystemHspInstall(const std::list<std::st
     LOG_NOFUNC_I(BMS_TAG_DEFAULT, "InnerProcessRebootSystemHspInstall");
     int32_t timerId = XCollieHelper::SetOTATimer(OTA_SYSTEM_HSP_TASK, OTA_TIMEOUT_SECONDS);
     ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
         return;
@@ -3104,7 +3114,7 @@ void BMSEventHandler::InnerProcessRebootSystemHspInstall(const std::list<std::st
 void BMSEventHandler::InnerProcessRebootSkillsInstall(const std::list<std::string> &scanPathList)
 {
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "InnerProcessRebootSkillsInstall");
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_INSTALLER, "DataMgr is nullptr");
         return;
@@ -3149,7 +3159,7 @@ void BMSEventHandler::InnerProcessRebootSkillsInstall(const std::list<std::strin
 void BMSEventHandler::ProcessRebootAppServiceUninstall()
 {
     APP_LOGI("Reboot scan and OTA uninstall for appServiceFwk start");
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
         return;
@@ -3246,7 +3256,7 @@ bool BMSEventHandler::InnerProcessUninstallAppServiceModule(const InnerBundleInf
 void BMSEventHandler::ProcessRebootSkillsUninstall()
 {
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "Reboot scan and OTA uninstall for skills start");
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_INSTALLER, "DataMgr is nullptr");
         return;
@@ -3298,7 +3308,7 @@ void BMSEventHandler::ProcessRebootSkillsUninstall()
 
 void BMSEventHandler::ProcessEmptyOdid()
 {
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "ProcessEmptyOdid DataMgr is nullptr");
         return;
@@ -3321,7 +3331,7 @@ void BMSEventHandler::ProcessCheckAppExtensionAbility()
 
 void BMSEventHandler::InnerProcessCheckAppExtensionAbility()
 {
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "dataMgr is nullptr");
         return;
@@ -3364,7 +3374,7 @@ void BMSEventHandler::ProcessRouterMap()
 void BMSEventHandler::InnerProcessRouterMap()
 {
     auto task = []() {
-        auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+        auto dataMgr = GetDataMgrFromService();
         if (dataMgr == nullptr) {
             LOG_E(BMS_TAG_DEFAULT, "dataMgr is nullptr");
             return;
@@ -3464,7 +3474,7 @@ void BMSEventHandler::HandleOTACodeEncryption()
         }
     }
     LOG_I(BMS_TAG_DEFAULT, "begin");
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "dataMgr is null");
         return;
@@ -3490,7 +3500,7 @@ void BMSEventHandler::HandleDetermineCloneNumList()
         LOG_NOFUNC_W(BMS_TAG_DEFAULT, "GetDetermineCloneNumList empty");
         return;
     }
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_NOFUNC_E(BMS_TAG_DEFAULT, "dataMgr is null");
         return;
@@ -3655,7 +3665,7 @@ bool BMSEventHandler::HandleInstallModuleUpdateNormalApp(const std::vector<std::
 
 bool BMSEventHandler::CheckAppIsUpdatedByUser(const std::string& appDir)
 {
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "dataMgr is null");
         return false;
@@ -3849,7 +3859,7 @@ void BMSEventHandler::HandleHmpUninstall()
 
 bool BMSEventHandler::IsSystemUpgrade()
 {
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr != nullptr && dataMgr->IsBopdModeEnabled()) {
         LOG_I(BMS_TAG_DEFAULT, "system should be upgraded due to bopd mode enabled");
         return true;
@@ -3945,7 +3955,7 @@ void BMSEventHandler::AddParseInfosToMap(
 void BMSEventHandler::ProcessRebootBundleUninstall()
 {
     LOG_NOFUNC_I(BMS_TAG_DEFAULT, "Reboot scan and OTA uninstall start");
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
         return;
@@ -4021,7 +4031,7 @@ void BMSEventHandler::ProcessRebootBundleUninstall()
 void BMSEventHandler::SavePreloadAppUninstallInfo(const PreInstallBundleInfo &info,
     std::vector<std::string> &preloadBundleNames)
 {
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
         return;
@@ -4128,7 +4138,7 @@ bool BMSEventHandler::InnerProcessUninstallModule(const BundleInfo &bundleInfo,
 void BMSEventHandler::DeletePreInfoInDb(
     const std::string &bundleName, const std::string &bundlePath, bool bundleLevel)
 {
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
         return;
@@ -4397,7 +4407,10 @@ void BMSEventHandler::HandlePreInstallBundleNamesException(
         bool forceClone = preInstallBundleInfo.IsDualModeCloneApp();
         auto distPolicy = preInstallBundleInfo.GetDeviceModeDistributionPolicy();
         bool ret = false;
-        if (!xmlMap_.empty()) {
+        if (preInstallBundleInfo.GetBundlePaths().empty()) {
+            LOG_NOFUNC_W(BMS_TAG_DEFAULT, "HandlePreInstallException bundlePaths is empty: %{public}s",
+                bundleNameIter.c_str());
+        } else if (!xmlMap_.empty()) {
             std::vector<int32_t> userIds;
             std::string bundleName = bundleNameIter;
             GetBundleNameAndUserIdFromPath(preInstallBundleInfo.GetBundlePaths().front(), userIds, bundleName);
@@ -4764,7 +4777,7 @@ bool BMSEventHandler::CheckExtensionTypeInConfig(const std::string &typeName)
 #ifdef USE_PRE_BUNDLE_PROFILE
 void BMSEventHandler::UpdateRemovable(const std::string &bundleName, bool removable)
 {
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
         return;
@@ -4833,7 +4846,7 @@ bool BMSEventHandler::MatchOldSignatures(const PreBundleConfigInfo &configInfo,
 void BMSEventHandler::UpdateTrustedPrivilegeCapability(
     const PreBundleConfigInfo &preBundleConfigInfo)
 {
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
         return;
@@ -4871,7 +4884,7 @@ void BMSEventHandler::UpdateTrustedPrivilegeCapability(
 bool BMSEventHandler::FetchInnerBundleInfo(
     const std::string &bundleName, InnerBundleInfo &innerBundleInfo)
 {
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
         return false;
@@ -5008,7 +5021,7 @@ void BMSEventHandler::UpdateAppDataSelinuxLabel(const std::string &bundleName, c
     bool isPreInstall, bool debug)
 {
     LOG_D(BMS_TAG_DEFAULT, "UpdateAppDataSelinuxLabel bundleName: %{public}s start", bundleName.c_str());
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
         return;
@@ -5054,7 +5067,7 @@ void BMSEventHandler::UpdateAppDataSelinuxLabel(const std::string &bundleName, c
 void BMSEventHandler::HandleSceneBoard() const
 {
 #ifdef WINDOW_ENABLE
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "dataMgr is null");
         return;
@@ -5081,7 +5094,7 @@ void BMSEventHandler::HandleSceneBoard() const
 void BMSEventHandler::InnerProcessStockBundleProvisionInfo()
 {
     LOG_D(BMS_TAG_DEFAULT, "InnerProcessStockBundleProvisionInfo start");
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
         return;
@@ -5111,7 +5124,7 @@ void BMSEventHandler::InnerProcessStockBundleProvisionInfo()
 
 void BMSEventHandler::InnerProcessStockBundleRouterInfo()
 {
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
         return;
@@ -5160,7 +5173,7 @@ void BMSEventHandler::PatchSystemHspInstall(const std::string &path, bool isOta)
         LOG_I(BMS_TAG_DEFAULT, "end, bundleDirs is empty");
         return;
     }
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
         return;
@@ -5210,7 +5223,7 @@ void BMSEventHandler::PatchSharedHspInstall(const std::string &path)
         LOG_I(BMS_TAG_DEFAULT, "end, bundleDirs is empty");
         return;
     }
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
         return;
@@ -5258,7 +5271,7 @@ void BMSEventHandler::PatchSystemBundleInstall(const std::string &path, bool isO
         LOG_I(BMS_TAG_DEFAULT, "end, bundleDirs is empty");
         return;
     }
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
         return;
@@ -5447,7 +5460,7 @@ void BMSEventHandler::CheckALLResourceInfo()
 void BMSEventHandler::ProcessBundleResourceInfo()
 {
     LOG_I(BMS_TAG_DEFAULT, "ProcessBundleResourceInfo start");
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "dataMgr is nullptr");
         return;
@@ -5497,7 +5510,7 @@ void BMSEventHandler::ProcessBundleResourceInfo()
 void BMSEventHandler::ProcessAllBundleDataGroupInfo()
 {
     LOG_I(BMS_TAG_DEFAULT, "start");
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "dataMgr is nullptr");
         return;
@@ -5521,7 +5534,7 @@ void BMSEventHandler::SendBundleUpdateFailedEvent(const BundleInfo &bundleInfo, 
     eventInfo.errCode = errorCode;
     eventInfo.isPreInstallApp = bundleInfo.isPreInstallApp;
     eventInfo.callingUid = IPCSkeleton::GetCallingUid();
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr != nullptr) {
         dataMgr->GetOdidByBundleName(bundleInfo.name, eventInfo.odid);
     }
@@ -5554,7 +5567,7 @@ void BMSEventHandler::UpdatePreinstallDBForNotUpdatedBundle(const std::string &b
         LOG_W(BMS_TAG_DEFAULT, "innerBundleInfos is empty");
         return;
     }
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_W(BMS_TAG_DEFAULT, "dataMgr is nullptr");
         return;
@@ -5614,6 +5627,7 @@ bool BMSEventHandler::IsQuickfixPatchApp(const std::string &bundleName, uint32_t
 
 bool BMSEventHandler::GetValueFromJson(nlohmann::json &jsonObject)
 {
+    bundleNameList_.clear();
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,
@@ -5638,7 +5652,7 @@ void BMSEventHandler::ProcessRebootQuickFixUnInstallAndRecover(const std::string
         LOG_E(BMS_TAG_DEFAULT, "end, reinstall json file is empty");
         return;
     }
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "dataMgr is nullptr");
         return;
@@ -5679,7 +5693,7 @@ void BMSEventHandler::ProcessRebootQuickFixUnInstallAndRecover(const std::string
 
 void BMSEventHandler::InnerProcessRebootUninstallWrongBundle()
 {
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "dataMgr is null");
         return;
@@ -5749,7 +5763,7 @@ void BMSEventHandler::ProcessCheckAppEl1Dir()
 void BMSEventHandler::ProcessCheckAppEl1DirTask()
 {
     LOG_I(BMS_TAG_DEFAULT, "begin");
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
         return;
@@ -5772,7 +5786,7 @@ void BMSEventHandler::ProcessCheckAppEl1DirTask()
 void BMSEventHandler::CheckAndCreateShareFilesSubDataDirs()
 {
     LOG_D(BMS_TAG_DEFAULT, "begin");
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_W(BMS_TAG_DEFAULT, "DataMgr is nullptr");
         return;
@@ -5817,7 +5831,7 @@ bool BMSEventHandler::InnerProcessUninstallForExistPreBundle(const BundleInfo &i
         DeletePreInfoInDb(installedInfo.name, moduleName, true);
         if (installedInfo.isPreInstallApp) {
             // need update isPreInstallApp false
-            auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+            auto dataMgr = GetDataMgrFromService();
             if (dataMgr == nullptr) {
                 LOG_W(BMS_TAG_DEFAULT, "DataMgr is nullptr, -n %{public}s need change isPreInstallApp",
                     installedInfo.name.c_str());
@@ -5931,7 +5945,7 @@ void BMSEventHandler::InnerProcessAllDynamicIconInfoWhenOta()
         return;
     }
     LOG_I(BMS_TAG_DEFAULT, "Need to process dynamic");
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
         return;
@@ -5992,7 +6006,7 @@ void BMSEventHandler::InnerProcessBootCheckOnDemandBundle()
 
 void BMSEventHandler::ProcessRebootCheckOnDemandBundle()
 {
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
         return;
@@ -6119,7 +6133,7 @@ void BMSEventHandler::ProcessUpdatePermissions()
         LOG_I(BMS_TAG_DEFAULT, "permissions already updated");
         return;
     }
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
         return;
@@ -6193,7 +6207,7 @@ ErrCode BMSEventHandler::CheckSystemOptimizeBundleShaderCache(const std::string 
 ErrCode BMSEventHandler::CheckSystemOptimizeShaderCache()
 {
     LOG_I(BMS_TAG_DEFAULT, "start");
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
@@ -6230,7 +6244,7 @@ ErrCode BMSEventHandler::CleanSystemOptimizeBundleShaderCache(const std::string 
 ErrCode BMSEventHandler::CleanSystemOptimizeShaderCache()
 {
     LOG_I(BMS_TAG_DEFAULT, "start");
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
@@ -6281,7 +6295,7 @@ bool BMSEventHandler::SaveUpdatePermissionsFlag()
 bool BMSEventHandler::ProcessCheckSystemOptimizeDir()
 {
     LOG_NOFUNC_I(BMS_TAG_DEFAULT, "Need to check system optimize dir");
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
         return false;
@@ -6303,7 +6317,7 @@ bool BMSEventHandler::ProcessCheckSystemOptimizeDir()
 bool BMSEventHandler::CleanAllBundleEl1ArkStartupCacheLocal()
 {
     LOG_I(BMS_TAG_DEFAULT, "start");
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
         return false;
@@ -6391,7 +6405,7 @@ void BMSEventHandler::ProcessRecoverList(const std::string &bundleName, const st
     preInstallBundleInfo.SetAppType(appType);
     preInstallBundleInfo.SetRemovable(removable);
     preInstallBundleInfo.SetIsUninstalled(true);
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
         return;
@@ -6404,7 +6418,7 @@ void BMSEventHandler::ProcessRecoverList(const std::string &bundleName, const st
 void BMSEventHandler::GetInstallAndRecoverListForAllUser(std::unordered_map<int32_t,
     std::pair<std::vector<std::string>, std::vector<std::string>>> &installAndRecoverList)
 {
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
         return;
@@ -6472,7 +6486,7 @@ void BMSEventHandler::ProcessUpdateExtensionDirsApl()
         return;
     }
     LOG_I(BMS_TAG_DEFAULT, "Need to update extension dirs selinux apl");
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
         return;
@@ -6504,7 +6518,7 @@ bool BMSEventHandler::ProcessIdleInfo()
         return true;
     }
     LOG_I(BMS_TAG_DEFAULT, "Need to add idle info");
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
         return false;
@@ -6768,7 +6782,7 @@ void BMSEventHandler::ProcessDualModeCrossUpdateIfNeeded(
         return;
     }
 
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         return;
     }
@@ -6953,7 +6967,7 @@ void BMSEventHandler::ProcessUpdateDualPolicy(const DualModePackageInfo &pkgInfo
     if (!DualModeHelper::IsDualModeDevice() || !pkgInfo.isDiffPackage) {
         return;
     }
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         return;
     }

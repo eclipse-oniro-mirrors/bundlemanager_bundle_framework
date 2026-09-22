@@ -135,6 +135,10 @@ napi_value Unregister(napi_env env, napi_callback_info info)
     }
     APP_LOGI_NOFUNC("SubEvent op=off_all kit=AbilityKit event=%{public}s", type.c_str());
     std::lock_guard<std::mutex> lock(g_monitorLock);
+    if (g_bundleMonitor == nullptr) {
+        APP_LOGE("environment init failed");
+        return nullptr;
+    }
     g_bundleMonitor->BundleMonitorOff(env, type);
     return nullptr;
 }
@@ -148,6 +152,7 @@ static napi_value BundleMonitorExport(napi_env env, napi_value exports)
     };
     NAPI_CALL(env, napi_define_properties(env, exports,
         sizeof(bundleMonitorDesc) / sizeof(bundleMonitorDesc[0]), bundleMonitorDesc));
+    std::lock_guard<std::mutex> lock(g_monitorLock);
     if (g_bundleMonitor == nullptr) {
         EventFwk::MatchingSkills matchingSkills;
         matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_ADDED);

@@ -214,6 +214,10 @@ bool BundleCommonEventMgr::PublishCommonEvent(
             if (commonData.GetWant().GetAction() != EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_REMOVED
                 || appIndex != Constants::DEFAULT_APP_INDEX) {
                 auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+                if (dataMgr == nullptr) {
+                    APP_LOGE("dataMgr is nullptr");
+                    return false;
+                }
                 allowListenBundleNames = dataMgr->GetAllowListenBundleNames(bundleName);
             }
             if (allowListenBundleNames.empty()) {
