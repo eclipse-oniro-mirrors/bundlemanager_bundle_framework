@@ -145,6 +145,7 @@ private:
     std::mutex abilityRunningControlRuleMutex_;
     std::atomic<uint64_t> abilityRunningControlRuleCacheGeneration_ { 0 };
     std::mutex runningRuleSettingStatusMutex_;
+    std::mutex appRunningControlRuleOpMutex_;
     std::shared_ptr<IAppControlManagerDb> appControlManagerDb_;
     std::shared_ptr<IAppJumpInterceptorlManagerDb> appJumpInterceptorManagerDb_;
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr_;

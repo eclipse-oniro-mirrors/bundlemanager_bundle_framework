@@ -16,6 +16,8 @@
 #ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_BUNDLE_PERMISSION_MGR_H
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_BUNDLE_PERMISSION_MGR_H
 
+#include <shared_mutex>
+
 #include "accesstoken_kit.h"
 #include "bundle_constants.h"
 #include "default_permission.h"
@@ -184,6 +186,7 @@ private:
         const std::string &permissionName, bool &userCancellable);
 
     static std::map<std::string, DefaultPermission> defaultPermissions_;
+    static std::shared_mutex defaultPermissionsMutex_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
