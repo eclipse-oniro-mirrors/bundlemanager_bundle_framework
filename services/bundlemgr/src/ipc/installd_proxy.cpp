@@ -1026,6 +1026,36 @@ ErrCode InstalldProxy::CopyFile(const std::string &oldPath, const std::string &n
     return TransactInstalldCmd(InstalldInterfaceCode::COPY_FILE, data, reply, option);
 }
 
+ErrCode InstalldProxy::CopyHapToInstallPath(const CopyHapToInstallPathParam &copyHapToInstallPathParam)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    if (!data.WriteParcelable(&copyHapToInstallPathParam)) {
+        LOG_E(BMS_TAG_INSTALLD, "WriteParcelable copyHapToInstallPathParam failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    return TransactInstalldCmd(InstalldInterfaceCode::COPY_HAP_TO_INSTALL_PATH, data, reply, option);
+}
+
+ErrCode InstalldProxy::CopyPgoFile(const std::string &bundleName, const std::string &moduleName,
+    const std::string &pgoFileName, const std::string &pgoFileDir, int32_t userId)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(moduleName));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(pgoFileName));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(pgoFileDir));
+    INSTALLD_PARCEL_WRITE(data, Int32, userId);
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    return TransactInstalldCmd(InstalldInterfaceCode::COPY_PGO_FILE, data, reply, option);
+}
+
 ErrCode InstalldProxy::CopySkillHsp(const std::string &bundleName, const std::string &moduleName,
     const std::string &hspFileName, const std::string &sourceTempDir, bool isUpdate)
 {
@@ -1251,6 +1281,17 @@ ErrCode InstalldProxy::CopyFiles(const std::string &sourceDir, const std::string
         return ret;
     }
     return ERR_OK;
+}
+
+ErrCode InstalldProxy::CopyExtendResourceFile(const std::string &bundleName, const std::string &moduleName)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(moduleName));
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    return TransactInstalldCmd(InstalldInterfaceCode::COPY_EXTEND_RESOURCE_FILE, data, reply, option);
 }
 
 ErrCode InstalldProxy::CopyHqfFile(const std::string &bundleName, const std::string &moduleName,

@@ -1861,6 +1861,21 @@ HWTEST_F(BmsInstallDaemonHostImplTest, ExtractArkNative_0100, Function | SmallTe
 }
 
 /**
+ * @tc.number: CopyPgoFile_0100
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling CopyPgoFile of hostImpl without foundation permission
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, CopyPgoFile_0100, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+
+    auto ret = hostImpl->CopyPgoFile(TEST_BUNDLE_NAME, "moduleName", "module.ap", "dir",
+        Constants::START_USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
  * @tc.number: GetCacheDiskUsageFromPath_0100
  * @tc.name: test GetCacheDiskUsageFromPath
  * @tc.desc: 1. verify GetCacheDiskUsageFromPath when permission denied
@@ -1874,6 +1889,39 @@ HWTEST_F(BmsInstallDaemonHostImplTest, GetCacheDiskUsageFromPath_0100, Function 
     auto ret = hostImpl->GetCacheDiskUsageFromPath(paths, statSize);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
     EXPECT_EQ(statSize, 0);
+}
+
+/**
+ * @tc.number: InstalldHostImplCopyExtendResourceFile_0100
+ * @tc.name: test CopyExtendResourceFile
+ * @tc.desc: Verify CopyExtendResourceFile rejects a non-foundation caller.
+ */
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplCopyExtendResourceFile_0100, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+
+    EXPECT_EQ(hostImpl->CopyExtendResourceFile(TEST_BUNDLE_NAME, "entry"),
+        ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: CopyHapToInstallPath_0100
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling CopyHapToInstallPath of hostImpl without foundation permission
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, CopyHapToInstallPath_0100, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+
+    CopyHapToInstallPathParam param;
+    param.bundleName = TEST_BUNDLE_NAME;
+    param.moduleName = "module1";
+    param.hapFileName = "test.hap";
+    param.srcHapPath = "/data/service/el1/public/bms/bundle_manager_service/test.hap";
+    auto ret = hostImpl->CopyHapToInstallPath(param);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 
 /**

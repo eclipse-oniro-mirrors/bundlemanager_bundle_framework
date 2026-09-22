@@ -507,6 +507,28 @@ ErrCode InstalldClient::CopyFile(const std::string &oldPath, const std::string &
     return CallService(&IInstalld::CopyFile, oldPath, newPath, scene, signatureFilePath);
 }
 
+ErrCode InstalldClient::CopyHapToInstallPath(const CopyHapToInstallPathParam &copyHapToInstallPathParam)
+{
+    if (copyHapToInstallPathParam.bundleName.empty() || copyHapToInstallPathParam.moduleName.empty() ||
+        copyHapToInstallPathParam.hapFileName.empty() || copyHapToInstallPathParam.srcHapPath.empty()) {
+        APP_LOGE("params are invalid");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    return CallService(&IInstalld::CopyHapToInstallPath, copyHapToInstallPathParam);
+}
+
+ErrCode InstalldClient::CopyPgoFile(const std::string &bundleName, const std::string &moduleName,
+    const std::string &pgoFileName, const std::string &pgoFileDir, int32_t userId)
+{
+    if (bundleName.empty() || moduleName.empty() || pgoFileName.empty() || pgoFileDir.empty()) {
+        APP_LOGE("params are invalid");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    return CallService(&IInstalld::CopyPgoFile, bundleName, moduleName, pgoFileName, pgoFileDir, userId);
+}
+
 ErrCode InstalldClient::CopySkillHsp(const std::string &bundleName, const std::string &moduleName,
     const std::string &hspFileName, const std::string &sourceTempDir, bool isUpdate)
 {
@@ -608,6 +630,14 @@ ErrCode InstalldClient::CopyFiles(const std::string &sourceDir, const std::strin
     const std::string &bundleName, BundleDirScene scene)
 {
     return CallService(&IInstalld::CopyFiles, sourceDir, destinationDir, bundleName, scene);
+}
+
+ErrCode InstalldClient::CopyExtendResourceFile(const std::string &bundleName, const std::string &moduleName)
+{
+    if (bundleName.empty() || moduleName.empty()) {
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::CopyExtendResourceFile, bundleName, moduleName);
 }
 
 ErrCode InstalldClient::CopyHqfFile(const std::string &bundleName, const std::string &moduleName,

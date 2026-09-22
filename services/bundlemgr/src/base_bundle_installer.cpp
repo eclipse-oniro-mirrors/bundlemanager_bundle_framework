@@ -5554,10 +5554,26 @@ ErrCode BaseBundleInstaller::CopyPgoFile(
     const std::string &bundleName,
     int32_t userId) const
 {
-    std::string targetPath =
-        AOTHandler::BuildArkProfilePath(userId, bundleName, moduleName + ServiceConstants::AP_SUFFIX);
-    if (InstalldClient::GetInstance()->CopyFile(pgoPath, targetPath, BundleDirScene::COPY_PGO_FILE) != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLER, "copy file from %{public}s to %{public}s failed", pgoPath.c_str(), targetPath.c_str());
+    size_t lastSlash = pgoPath.find_last_of(ServiceConstants::PATH_SEPARATOR);
+    if (lastSlash == std::string::npos || lastSlash == 0) {
+        LOG_E(BMS_TAG_INSTALLER, "invalid pgoPath: %{public}s", pgoPath.c_str());
+        return ERR_APPEXECFWK_INSTALL_COPY_HAP_FAILED;
+    }
+    std::string pgoFileName = pgoPath.substr(lastSlash + 1);
+    size_t secondLastSlash = pgoPath.find_last_of(ServiceConstants::PATH_SEPARATOR, lastSlash - 1);
+    if (secondLastSlash == std::string::npos) {
+        LOG_E(BMS_TAG_INSTALLER, "invalid pgoPath format: %{public}s", pgoPath.c_str());
+        return ERR_APPEXECFWK_INSTALL_COPY_HAP_FAILED;
+    }
+    std::string pgoFileDir = pgoPath.substr(secondLastSlash + 1, lastSlash - secondLastSlash - 1);
+    if (pgoFileName.empty() || pgoFileDir.empty()) {
+        LOG_E(BMS_TAG_INSTALLER, "pgoFileName or pgoFileDir is empty, pgoPath: %{public}s", pgoPath.c_str());
+        return ERR_APPEXECFWK_INSTALL_COPY_HAP_FAILED;
+    }
+    if (InstalldClient::GetInstance()->CopyPgoFile(
+        bundleName, moduleName, pgoFileName, pgoFileDir, userId) != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "copy pgo file failed, bundleName:%{public}s, moduleName:%{public}s",
+            bundleName.c_str(), moduleName.c_str());
         return ERR_APPEXECFWK_INSTALL_COPY_HAP_FAILED;
     }
     return ERR_OK;
@@ -7661,6 +7677,47 @@ void BaseBundleInstaller::SaveHapPathToRecords(
     }
 }
 
+void BaseBundleInstaller::BuildCopyHapToInstallPathParam(
+    const std::unordered_map<std::string, InnerBundleInfo> &infos,
+    const std::pair<std::string, std::string> &hapPathRecord,
+    CopyHapToInstallPathParam &param)
+{
+    auto infoIter = infos.find(hapPathRecord.first);
+    if (infoIter == infos.end()) {
+        LOG_E(BMS_TAG_INSTALLER, "find inner bundle info of hapPath %{public}s failed",
+            hapPathRecord.first.c_str());
+        return;
+    }
+    const InnerBundleInfo &info = infoIter->second;
+    param.bundleName = GetEffectiveBundleName(info);
+    param.moduleName = info.GetCurrentModulePackage();
+    std::string hapFileName = GetHapPath(info);
+    auto posOfPathSep = hapFileName.rfind(ServiceConstants::PATH_SEPARATOR);
+    if (posOfPathSep != std::string::npos) {
+        hapFileName = hapFileName.substr(posOfPathSep + 1);
+    }
+    param.hapFileName = hapFileName;
+    param.srcHapPath = hapPathRecord.first;
+    param.isUpdate = installedModules_[info.GetCurrentModulePackage()];
+    param.isFeatureNeedUninstall = isFeatureNeedUninstall_;
+    std::string signatureFilePath = signatureFileMap_.at(hapPathRecord.first);
+    std::string signatureFilePrefix = std::string(ServiceConstants::HAP_COPY_PATH) +
+        ServiceConstants::PATH_SEPARATOR + ServiceConstants::SECURITY_SIGNATURE_FILE_PATH +
+        ServiceConstants::PATH_SEPARATOR;
+    if (signatureFilePath.find(signatureFilePrefix) != 0) {
+        LOG_E(BMS_TAG_INSTALLER, "invalid signature file path %{private}s", signatureFilePath.c_str());
+        return;
+    }
+    std::string signatureFileSubPath = signatureFilePath.substr(signatureFilePrefix.size());
+    auto posOfLastPathSep = signatureFileSubPath.rfind(ServiceConstants::PATH_SEPARATOR);
+    if (posOfLastPathSep == std::string::npos) {
+        LOG_E(BMS_TAG_INSTALLER, "invalid signature file path %{private}s", signatureFilePath.c_str());
+        return;
+    }
+    param.signatureFileSubPath = signatureFileSubPath.substr(0, posOfLastPathSep);
+    param.signatureFileName = signatureFileSubPath.substr(posOfLastPathSep + 1);
+}
+
 ErrCode BaseBundleInstaller::SaveHapToInstallPath(const std::unordered_map<std::string, InnerBundleInfo> &infos,
     const InnerBundleInfo &oldInfo)
 {
@@ -7678,8 +7735,9 @@ ErrCode BaseBundleInstaller::SaveHapToInstallPath(const std::unordered_map<std::
             hapPathRecord.first.c_str(), hapPathRecord.second.c_str());
         if ((signatureFileMap_.find(hapPathRecord.first) != signatureFileMap_.end()) &&
             (!signatureFileMap_.at(hapPathRecord.first).empty())) {
-            result = InstalldClient::GetInstance()->CopyFile(hapPathRecord.first, hapPathRecord.second,
-                BundleDirScene::COPY_HAP_TO_INSTALL_PATH, signatureFileMap_.at(hapPathRecord.first));
+            CopyHapToInstallPathParam copyHapToInstallPathParam;
+            BuildCopyHapToInstallPathParam(infos, hapPathRecord, copyHapToInstallPathParam);
+            result = InstalldClient::GetInstance()->CopyHapToInstallPath(copyHapToInstallPathParam);
             CHECK_RESULT(result, "Copy hap to install path failed or code signature hap failed %{public}d");
         } else {
             result = InstalldClient::GetInstance()->MoveHapToCodeDir(hapPathRecord.first, hapPathRecord.second);
@@ -10323,7 +10381,7 @@ ErrCode BaseBundleInstaller::ProcessBundleCodePath(
     std::string newAppCodePath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
         std::string(ServiceConstants::BUNDLE_NEW_CODE_DIR) + bundleName;
     // process dynamic icon file
-    result = ProcessDynamicIconFileWhenUpdate(oldInfo, realAppCodePath, newAppCodePath);
+    result = ProcessDynamicIconFileWhenUpdate(oldInfo, bundleName);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "-n %{public}s copy extend resource to install path failed %{public}d",
             oldInfo.GetBundleName().c_str(), result);
@@ -10342,36 +10400,16 @@ ErrCode BaseBundleInstaller::ProcessBundleCodePath(
 }
 
 ErrCode BaseBundleInstaller::ProcessDynamicIconFileWhenUpdate(
-    const InnerBundleInfo &oldInfo,
-    const std::string &oldPath,
-    const std::string &newPath)
+    const InnerBundleInfo &oldInfo, const std::string &bundleName)
 {
     auto extendResourceInfos = oldInfo.GetExtendResourceInfos();
     if (extendResourceInfos.empty()) {
         return ERR_OK;
     }
     APP_LOGI("-n %{public}s has dynamic icon, process start", oldInfo.GetBundleName().c_str());
-    std::string oldExtendResourcePath = oldPath + ServiceConstants::PATH_SEPARATOR +
-        ServiceConstants::EXT_RESOURCE_FILE_PATH;
-    bool isExtResource = false;
-    InstalldClient::GetInstance()->IsExistDir(oldExtendResourcePath, isExtResource);
-    if (!isExtResource) {
-        APP_LOGW("-n %{public}s old ext_resource path not exist", oldInfo.GetBundleName().c_str());
-        return ERR_OK;
-    }
-    std::string newExtendResourcePath = newPath + ServiceConstants::PATH_SEPARATOR +
-        ServiceConstants::EXT_RESOURCE_FILE_PATH;
-    auto result = InstalldClient::GetInstance()->CreateBundleDir(
-        oldInfo.GetBundleName(), BundleDirScene::EXTEND_RESOURCE_DIR, newExtendResourcePath);
-    if (result != ERR_OK) {
-        APP_LOGE("-n %{public}s create ext_resource failed", oldInfo.GetBundleName().c_str());
-        return result;
-    }
     for (const auto &extendResource : extendResourceInfos) {
-        std::string fileName = ServiceConstants::PATH_SEPARATOR +extendResource.second.moduleName +
-            ServiceConstants::HSP_FILE_SUFFIX;
-        result = InstalldClient::GetInstance()->CopyFile(oldExtendResourcePath + fileName,
-            newExtendResourcePath + fileName, BundleDirScene::COPY_EXTEND_RESOURCE_FILE);
+        ErrCode result = InstalldClient::GetInstance()->CopyExtendResourceFile(
+            bundleName, extendResource.second.moduleName);
         if (result != ERR_OK) {
             APP_LOGE("-n %{public}s copy ext_resource failed", oldInfo.GetBundleName().c_str());
             return result;

@@ -4234,6 +4234,16 @@ bool InstalldOperator::ReadCert(const std::string &path, std::vector<unsigned ch
     return true;
 }
 
+bool InstalldOperator::IsValidModuleName(const std::string &moduleName)
+{
+    if (moduleName.empty() || !IsFileNameValid(moduleName) ||
+        moduleName.find(ServiceConstants::PATH_SEPARATOR) != std::string::npos) {
+        LOG_NOFUNC_E(BMS_TAG_INSTALLD, "invalid moduleName %{public}s", moduleName.c_str());
+        return false;
+    }
+    return true;
+}
+
 bool InstalldOperator::IsValidBundleName(const std::string &bundleName)
 {
     if (bundleName.empty() || !IsFileNameValid(bundleName)) {
@@ -6257,6 +6267,59 @@ bool InstalldOperator::IsValidPathByExtractQuickFixRes(
         bundleName + ServiceConstants::PATH_SEPARATOR + moduleName + ServiceConstants::PATH_SEPARATOR +
         ServiceConstants::RES_FILE_PATH;
     return StartsWith(targetPath, Constants::BUNDLE_CODE_DIR) && IsContainsBundleName(targetPath, bundleName);
+}
+
+bool InstalldOperator::BuildHapToInstallPath(const CopyHapToInstallPathParam &param,
+    std::string &targetPath, std::string &signatureFilePath)
+{
+    if (!IsValidBundleName(param.bundleName) ||
+        !IsValidModuleName(param.moduleName) ||
+        !IsFileNameValid(param.hapFileName) ||
+        param.hapFileName.find(ServiceConstants::PATH_SEPARATOR) != std::string::npos ||
+        !IsFileNameValid(param.srcHapPath)) {
+        LOG_E(BMS_TAG_INSTALLD,
+            "Calling the function BuildHapToInstallPath with invalid param, bundleName: %{public}s, "
+            "moduleName: %{public}s, hapFileName: %{private}s",
+            param.bundleName.c_str(), param.moduleName.c_str(), param.hapFileName.c_str());
+        return false;
+    }
+
+    targetPath = std::string(Constants::BUNDLE_CODE_DIR) +
+        ServiceConstants::PATH_SEPARATOR + param.bundleName + ServiceConstants::PATH_SEPARATOR;
+    if (param.isFeatureNeedUninstall) {
+        targetPath = std::string(Constants::BUNDLE_CODE_DIR) +
+            ServiceConstants::PATH_SEPARATOR + std::string(ServiceConstants::BUNDLE_NEW_CODE_DIR) +
+            param.bundleName + ServiceConstants::PATH_SEPARATOR + param.hapFileName;
+    } else {
+        targetPath += param.moduleName + ServiceConstants::PATH_SEPARATOR;
+        if (param.isUpdate) {
+            targetPath = targetPath.substr(0, targetPath.length() - 1) +
+                ServiceConstants::TMP_SUFFIX + ServiceConstants::PATH_SEPARATOR;
+        }
+        targetPath += param.hapFileName;
+    }
+
+    if (!IsValidPathByCopyFileScene(
+        param.srcHapPath, targetPath, BundleDirScene::COPY_HAP_TO_INSTALL_PATH)) {
+        LOG_E(BMS_TAG_INSTALLD,
+            "Calling the function BuildHapToInstallPath with invalid targetPath:%{private}s",
+            targetPath.c_str());
+        return false;
+    }
+
+    // construct signature file path: HAP_COPY_PATH/security_signature_files/signatureFileSubPath/signatureFileName
+    if (!param.signatureFileName.empty()) {
+        signatureFilePath = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::PATH_SEPARATOR +
+            ServiceConstants::SECURITY_SIGNATURE_FILE_PATH + ServiceConstants::PATH_SEPARATOR +
+            param.signatureFileSubPath + ServiceConstants::PATH_SEPARATOR + param.signatureFileName;
+        if (!IsFileNameValid(signatureFilePath)) {
+            LOG_E(BMS_TAG_INSTALLD,
+                "Calling the function BuildHapToInstallPath with invalid signatureFilePath:%{private}s",
+                signatureFilePath.c_str());
+            return false;
+        }
+    }
+    return true;
 }
 
 bool InstalldOperator::IsValidPathByExtractResourceFiles(

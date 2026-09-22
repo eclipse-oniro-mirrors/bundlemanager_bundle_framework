@@ -29,6 +29,7 @@
 #include "bundle_storage_stats.h"
 #include "ipc/check_encryption_param.h"
 #include "ipc/code_signature_param.h"
+#include "ipc/copy_hap_to_install_path_param.h"
 #include "ipc/create_dir_param.h"
 #include "ipc/encryption_param.h"
 #include "ipc/extract_param.h"
@@ -474,6 +475,31 @@ public:
     }
 
     /**
+     * @brief Copy pgo file from HAP copy path to ark profile path.
+     * @param bundleName Indicates the bundle name.
+     * @param moduleName Indicates the module name.
+     * @param pgoFileName Indicates the pgo file name.
+     * @param pgoFileDir Indicates the pgo file directory name.
+     * @param userId Indicates the user id.
+     * @return Returns ERR_OK if copy pgo file successfully; returns error code otherwise.
+     */
+    virtual ErrCode CopyPgoFile(const std::string &bundleName, const std::string &moduleName,
+        const std::string &pgoFileName, const std::string &pgoFileDir, int32_t userId)
+    {
+        return ERR_OK;
+    }
+
+    /**
+     * @brief Copy HAP file to install path with path construction in installd.
+     * @param copyHapToInstallPathParam Indicates the parameters for copy hap to install path.
+     * @return Returns ERR_OK if copied successfully; returns error code otherwise.
+     */
+    virtual ErrCode CopyHapToInstallPath(const CopyHapToInstallPathParam &copyHapToInstallPathParam)
+    {
+        return ERR_OK;
+    }
+
+    /**
      * @brief Create directory recursively.
      * @param dir Indicates dir which will be created.
      * @param mode Indicates dir mode.
@@ -831,6 +857,11 @@ public:
 
     virtual ErrCode CopyHqfFile(const std::string &bundleName, const std::string &moduleName,
         const std::string &hqfSourceRelativePath, uint32_t versionCode, const QuickFixTargetParam &targetParam)
+    {
+        return ERR_OK;
+    }
+
+    virtual ErrCode CopyExtendResourceFile(const std::string &bundleName, const std::string &moduleName)
     {
         return ERR_OK;
     }

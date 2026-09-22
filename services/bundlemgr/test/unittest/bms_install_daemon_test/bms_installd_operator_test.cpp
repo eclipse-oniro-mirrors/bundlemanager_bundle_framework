@@ -4171,4 +4171,201 @@ HWTEST_F(BmsInstalldOperatorTest, GetAppDataFileCategoryStats_0900, Function | S
     std::filesystem::remove_all(baseDir);
 }
 
+/**
+ * @tc.number: BuildHapToInstallPath_0100
+ * @tc.name: test BuildHapToInstallPath
+ * @tc.desc: 1. calling BuildHapToInstallPath with invalid bundleName returns false
+ */
+HWTEST_F(BmsInstalldOperatorTest, BuildHapToInstallPath_0100, Function | SmallTest | Level0)
+{
+    CopyHapToInstallPathParam param;
+    param.bundleName = "";
+    param.moduleName = "module1";
+    param.hapFileName = "test.hap";
+    param.srcHapPath = std::string(ServiceConstants::HAP_COPY_PATH) +
+        ServiceConstants::PATH_SEPARATOR + "com.example.test" + ServiceConstants::PATH_SEPARATOR + "test.hap";
+    std::string targetPath;
+    std::string signatureFilePath;
+    auto ret = InstalldOperator::BuildHapToInstallPath(param, targetPath, signatureFilePath);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: BuildHapToInstallPath_0200
+ * @tc.name: test BuildHapToInstallPath
+ * @tc.desc: 1. calling BuildHapToInstallPath with invalid moduleName returns false
+ */
+HWTEST_F(BmsInstalldOperatorTest, BuildHapToInstallPath_0200, Function | SmallTest | Level0)
+{
+    CopyHapToInstallPathParam param;
+    param.bundleName = TEST_BUNDLE_NAME;
+    param.moduleName = "";
+    param.hapFileName = "test.hap";
+    param.srcHapPath = std::string(ServiceConstants::HAP_COPY_PATH) +
+        ServiceConstants::PATH_SEPARATOR + TEST_BUNDLE_NAME + ServiceConstants::PATH_SEPARATOR + "test.hap";
+    std::string targetPath;
+    std::string signatureFilePath;
+    auto ret = InstalldOperator::BuildHapToInstallPath(param, targetPath, signatureFilePath);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: BuildHapToInstallPath_0300
+ * @tc.name: test BuildHapToInstallPath
+ * @tc.desc: 1. calling BuildHapToInstallPath with invalid hapFileName returns false
+ */
+HWTEST_F(BmsInstalldOperatorTest, BuildHapToInstallPath_0300, Function | SmallTest | Level0)
+{
+    CopyHapToInstallPathParam param;
+    param.bundleName = TEST_BUNDLE_NAME;
+    param.moduleName = "module1";
+    param.hapFileName = "";
+    param.srcHapPath = std::string(ServiceConstants::HAP_COPY_PATH) +
+        ServiceConstants::PATH_SEPARATOR + TEST_BUNDLE_NAME + ServiceConstants::PATH_SEPARATOR + "test.hap";
+    std::string targetPath;
+    std::string signatureFilePath;
+    auto ret = InstalldOperator::BuildHapToInstallPath(param, targetPath, signatureFilePath);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: BuildHapToInstallPath_0400
+ * @tc.name: test BuildHapToInstallPath
+ * @tc.desc: 1. calling BuildHapToInstallPath with empty srcHapPath returns false
+ */
+HWTEST_F(BmsInstalldOperatorTest, BuildHapToInstallPath_0400, Function | SmallTest | Level0)
+{
+    CopyHapToInstallPathParam param;
+    param.bundleName = TEST_BUNDLE_NAME;
+    param.moduleName = "module1";
+    param.hapFileName = "test.hap";
+    param.srcHapPath = "";
+    std::string targetPath;
+    std::string signatureFilePath;
+    auto ret = InstalldOperator::BuildHapToInstallPath(param, targetPath, signatureFilePath);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: BuildHapToInstallPath_0500
+ * @tc.name: test BuildHapToInstallPath
+ * @tc.desc: 1. calling BuildHapToInstallPath with normal params returns true and correct targetPath
+ */
+HWTEST_F(BmsInstalldOperatorTest, BuildHapToInstallPath_0500, Function | SmallTest | Level0)
+{
+    CopyHapToInstallPathParam param;
+    param.bundleName = TEST_BUNDLE_NAME;
+    param.moduleName = "module1";
+    param.hapFileName = "test.hap";
+    param.srcHapPath = std::string(ServiceConstants::HAP_COPY_PATH) +
+        ServiceConstants::PATH_SEPARATOR + TEST_BUNDLE_NAME + ServiceConstants::PATH_SEPARATOR + "test.hap";
+    param.isUpdate = false;
+    param.isFeatureNeedUninstall = false;
+    std::string targetPath;
+    std::string signatureFilePath;
+    auto ret = InstalldOperator::BuildHapToInstallPath(param, targetPath, signatureFilePath);
+    EXPECT_TRUE(ret);
+    std::string expectedTarget = std::string(Constants::BUNDLE_CODE_DIR) +
+        ServiceConstants::PATH_SEPARATOR + TEST_BUNDLE_NAME + ServiceConstants::PATH_SEPARATOR +
+        "module1" + ServiceConstants::PATH_SEPARATOR + "test.hap";
+    EXPECT_EQ(targetPath, expectedTarget);
+    EXPECT_TRUE(signatureFilePath.empty());
+}
+
+/**
+ * @tc.number: BuildHapToInstallPath_0600
+ * @tc.name: test BuildHapToInstallPath
+ * @tc.desc: 1. calling BuildHapToInstallPath with isUpdate=true returns correct targetPath with _tmp suffix
+ */
+HWTEST_F(BmsInstalldOperatorTest, BuildHapToInstallPath_0600, Function | SmallTest | Level0)
+{
+    CopyHapToInstallPathParam param;
+    param.bundleName = TEST_BUNDLE_NAME;
+    param.moduleName = "module1";
+    param.hapFileName = "test.hap";
+    param.srcHapPath = std::string(ServiceConstants::HAP_COPY_PATH) +
+        ServiceConstants::PATH_SEPARATOR + TEST_BUNDLE_NAME + ServiceConstants::PATH_SEPARATOR + "test.hap";
+    param.isUpdate = true;
+    param.isFeatureNeedUninstall = false;
+    std::string targetPath;
+    std::string signatureFilePath;
+    auto ret = InstalldOperator::BuildHapToInstallPath(param, targetPath, signatureFilePath);
+    EXPECT_TRUE(ret);
+    std::string expectedTarget = std::string(Constants::BUNDLE_CODE_DIR) +
+        ServiceConstants::PATH_SEPARATOR + TEST_BUNDLE_NAME + ServiceConstants::PATH_SEPARATOR +
+        "module1" + ServiceConstants::TMP_SUFFIX + ServiceConstants::PATH_SEPARATOR + "test.hap";
+    EXPECT_EQ(targetPath, expectedTarget);
+    EXPECT_TRUE(signatureFilePath.empty());
+}
+
+/**
+ * @tc.number: BuildHapToInstallPath_0700
+ * @tc.name: test BuildHapToInstallPath
+ * @tc.desc: 1. calling BuildHapToInstallPath with isFeatureNeedUninstall=true returns correct targetPath with +new-
+ */
+HWTEST_F(BmsInstalldOperatorTest, BuildHapToInstallPath_0700, Function | SmallTest | Level0)
+{
+    CopyHapToInstallPathParam param;
+    param.bundleName = TEST_BUNDLE_NAME;
+    param.moduleName = "module1";
+    param.hapFileName = "test.hap";
+    param.srcHapPath = std::string(ServiceConstants::HAP_COPY_PATH) +
+        ServiceConstants::PATH_SEPARATOR + TEST_BUNDLE_NAME + ServiceConstants::PATH_SEPARATOR + "test.hap";
+    param.isUpdate = false;
+    param.isFeatureNeedUninstall = true;
+    std::string targetPath;
+    std::string signatureFilePath;
+    auto ret = InstalldOperator::BuildHapToInstallPath(param, targetPath, signatureFilePath);
+    EXPECT_TRUE(ret);
+    std::string expectedTarget = std::string(Constants::BUNDLE_CODE_DIR) +
+        ServiceConstants::PATH_SEPARATOR + std::string(ServiceConstants::BUNDLE_NEW_CODE_DIR) +
+        TEST_BUNDLE_NAME + ServiceConstants::PATH_SEPARATOR + "test.hap";
+    EXPECT_EQ(targetPath, expectedTarget);
+    EXPECT_TRUE(signatureFilePath.empty());
+}
+
+/**
+ * @tc.number: BuildHapToInstallPath_0800
+ * @tc.name: test BuildHapToInstallPath
+ * @tc.desc: 1. calling BuildHapToInstallPath with signature file returns correct signatureFilePath
+ */
+HWTEST_F(BmsInstalldOperatorTest, BuildHapToInstallPath_0800, Function | SmallTest | Level0)
+{
+    CopyHapToInstallPathParam param;
+    param.bundleName = TEST_BUNDLE_NAME;
+    param.moduleName = "module1";
+    param.hapFileName = "test.hap";
+    param.srcHapPath = std::string(ServiceConstants::HAP_COPY_PATH) +
+        ServiceConstants::PATH_SEPARATOR + TEST_BUNDLE_NAME + ServiceConstants::PATH_SEPARATOR + "test.hap";
+    param.isUpdate = false;
+    param.isFeatureNeedUninstall = false;
+    param.signatureFileSubPath = "sub";
+    param.signatureFileName = "sig.dat";
+    std::string targetPath;
+    std::string signatureFilePath;
+    auto ret = InstalldOperator::BuildHapToInstallPath(param, targetPath, signatureFilePath);
+    EXPECT_TRUE(ret);
+    std::string expectedSignature = std::string(ServiceConstants::HAP_COPY_PATH) +
+        ServiceConstants::PATH_SEPARATOR + ServiceConstants::SECURITY_SIGNATURE_FILE_PATH +
+        ServiceConstants::PATH_SEPARATOR + "sub" + ServiceConstants::PATH_SEPARATOR + "sig.dat";
+    EXPECT_EQ(signatureFilePath, expectedSignature);
+}
+
+/**
+ * @tc.number: BuildHapToInstallPath_0900
+ * @tc.name: test BuildHapToInstallPath
+ * @tc.desc: 1. calling BuildHapToInstallPath with invalid srcHapPath returns false
+ */
+HWTEST_F(BmsInstalldOperatorTest, BuildHapToInstallPath_0900, Function | SmallTest | Level0)
+{
+    CopyHapToInstallPathParam param;
+    param.bundleName = TEST_BUNDLE_NAME;
+    param.moduleName = "module1";
+    param.hapFileName = "test.hap";
+    param.srcHapPath = "/invalid/path/test.hap";
+    std::string targetPath;
+    std::string signatureFilePath;
+    auto ret = InstalldOperator::BuildHapToInstallPath(param, targetPath, signatureFilePath);
+    EXPECT_FALSE(ret);
+}
 } // OHOS
