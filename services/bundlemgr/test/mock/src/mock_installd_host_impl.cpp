@@ -101,8 +101,18 @@ ErrCode InstalldHostImpl::ExtractResFileDir(const std::string &bundleName, const
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::ExtractHapModuleFiles(const HapModuleExtractParam &param)
+{
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::ExtractHnpFiles(const std::map<std::string, std::string> &hnpPackageMap,
     const ExtractParam &extractParam)
+{
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::ExtractHnpFilesByScene(const ExtractHnpFilesParam &extractHnpFilesParam)
 {
     return ERR_OK;
 }

@@ -147,6 +147,9 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_MODULE_FILES):
             result = this->HandleExtractModuleFiles(data, reply);
             break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_HAP_MODULE_FILES):
+            result = this->HandleExtractHapModuleFiles(data, reply);
+            break;
         case static_cast<uint32_t>(InstalldInterfaceCode::RENAME_MODULE_DIR):
             result = this->HandleRenameModuleDir(data, reply);
             break;
@@ -269,6 +272,9 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
             break;
         case static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_HNP_FILES):
             result = this->HandleExtractHnpFiles(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_HNP_FILES_BY_SCENE):
+            result = this->HandleExtractHnpFilesByScene(data, reply);
             break;
         case static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_QUICK_FIX_SO_FILE):
             result = this->HandleExtractQuickFixSoFile(data, reply);
@@ -481,6 +487,18 @@ bool InstalldHost::HandleExtractModuleFiles(MessageParcel &data, MessageParcel &
     return true;
 }
 
+bool InstalldHost::HandleExtractHapModuleFiles(MessageParcel &data, MessageParcel &reply)
+{
+    std::unique_ptr<HapModuleExtractParam> info(data.ReadParcelable<HapModuleExtractParam>());
+    if (info == nullptr) {
+        LOG_E(BMS_TAG_INSTALLD, "readParcelableInfo failed");
+        return false;
+    }
+    ErrCode result = ExtractHapModuleFiles(*info);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
 bool InstalldHost::HandleExtractFiles(MessageParcel &data, MessageParcel &reply)
 {
     std::unique_ptr<ExtractParam> info(data.ReadParcelable<ExtractParam>());
@@ -511,6 +529,19 @@ bool InstalldHost::HandleExtractHnpFiles(MessageParcel &data, MessageParcel &rep
     }
 
     ErrCode result = ExtractHnpFiles(hnpPackageMap, *info);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleExtractHnpFilesByScene(MessageParcel &data, MessageParcel &reply)
+{
+    std::unique_ptr<ExtractHnpFilesParam> info(data.ReadParcelable<ExtractHnpFilesParam>());
+    if (info == nullptr) {
+        LOG_E(BMS_TAG_INSTALLD, "readParcelable ExtractHnpFilesParam failed");
+        return false;
+    }
+
+    ErrCode result = ExtractHnpFilesByScene(*info);
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

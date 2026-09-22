@@ -35,6 +35,7 @@
 #define private public
 #include "installd/installd_operator.h"
 #undef private
+#include "ipc/extract_hnp_files_param.h"
 #include "parameters.h"
 
 using namespace testing::ext;
@@ -3841,6 +3842,142 @@ HWTEST_F(BmsInstalldOperatorTest, IsFileNameValid_0800, Function | SmallTest | L
 HWTEST_F(BmsInstalldOperatorTest, IsFileNameValid_0900, Function | SmallTest | Level0)
 {
     EXPECT_FALSE(InstalldOperator::IsFileNameValid("abc/../etc"));
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_0012
+ * @tc.name: test ValidateAndBuildHnpPaths with invalid bundleName
+ * @tc.desc: 1. bundleName starts with digit → return false
+ */
+HWTEST_F(BmsInstalldOperatorTest, InstalldOperatorTest_0012, Function | SmallTest | Level0)
+{
+    ExtractHnpFilesParam param;
+    param.bundleName = "123test";
+    param.moduleName = "entry";
+    param.srcPath = "test.hap";
+    param.hnpPackageMap.try_emplace("hnp1", "type1");
+    std::string srcPath;
+    std::string targetPath;
+    EXPECT_FALSE(InstalldOperator::ValidateAndBuildHnpPaths(param, srcPath, targetPath));
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_0013
+ * @tc.name: test ValidateAndBuildHnpPaths with invalid srcPath
+ * @tc.desc: 1. srcPath contains ../ → return false
+ */
+HWTEST_F(BmsInstalldOperatorTest, InstalldOperatorTest_0013, Function | SmallTest | Level0)
+{
+    ExtractHnpFilesParam param;
+    param.bundleName = "com.example.test";
+    param.moduleName = "entry";
+    param.srcPath = "../../test.hap";
+    param.hnpPackageMap.try_emplace("hnp1", "type1");
+    std::string srcPath;
+    std::string targetPath;
+    EXPECT_FALSE(InstalldOperator::ValidateAndBuildHnpPaths(param, srcPath, targetPath));
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_0014
+ * @tc.name: test ValidateAndBuildHnpPaths with empty moduleName
+ * @tc.desc: 1. moduleName is empty → return false
+ */
+HWTEST_F(BmsInstalldOperatorTest, InstalldOperatorTest_0014, Function | SmallTest | Level0)
+{
+    ExtractHnpFilesParam param;
+    param.bundleName = "com.example.test";
+    param.moduleName = "";
+    param.srcPath = "test.hap";
+    param.hnpPackageMap.try_emplace("hnp1", "type1");
+    std::string srcPath;
+    std::string targetPath;
+    EXPECT_FALSE(InstalldOperator::ValidateAndBuildHnpPaths(param, srcPath, targetPath));
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_0015
+ * @tc.name: test ValidateAndBuildHnpPaths with empty srcPath
+ * @tc.desc: 1. srcPath is empty → return false
+ */
+HWTEST_F(BmsInstalldOperatorTest, InstalldOperatorTest_0015, Function | SmallTest | Level0)
+{
+    ExtractHnpFilesParam param;
+    param.bundleName = "com.example.test";
+    param.moduleName = "entry";
+    param.srcPath = "";
+    param.hnpPackageMap.try_emplace("hnp1", "type1");
+    std::string srcPath;
+    std::string targetPath;
+    EXPECT_FALSE(InstalldOperator::ValidateAndBuildHnpPaths(param, srcPath, targetPath));
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_0016
+ * @tc.name: test BuildHnpTargetPath with STANDARD scene
+ * @tc.desc: 1. isBundleUpdate=false, isModuleUpdate=false → correct target path
+ */
+HWTEST_F(BmsInstalldOperatorTest, InstalldOperatorTest_0016, Function | SmallTest | Level0)
+{
+    ExtractHnpFilesParam param;
+    param.bundleName = "com.example.test";
+    param.moduleName = "entry";
+    param.isBundleUpdate = false;
+    param.isModuleUpdate = false;
+    std::string targetPath;
+    EXPECT_TRUE(InstalldOperator::BuildHnpTargetPath(param, targetPath));
+    EXPECT_EQ(targetPath, "/data/app/el1/bundle/public/com.example.test/entry/hnp_tmp_extract_dir/");
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_0017
+ * @tc.name: test BuildHnpTargetPath with BUNDLE_UPDATE scene
+ * @tc.desc: 1. isBundleUpdate=true, isModuleUpdate=false → +new- prefix concatenated with bundleName
+ */
+HWTEST_F(BmsInstalldOperatorTest, InstalldOperatorTest_0017, Function | SmallTest | Level0)
+{
+    ExtractHnpFilesParam param;
+    param.bundleName = "com.example.test";
+    param.moduleName = "entry";
+    param.isBundleUpdate = true;
+    param.isModuleUpdate = false;
+    std::string targetPath;
+    EXPECT_TRUE(InstalldOperator::BuildHnpTargetPath(param, targetPath));
+    EXPECT_EQ(targetPath, "/data/app/el1/bundle/public/+new-com.example.test/entry/hnp_tmp_extract_dir/");
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_0018
+ * @tc.name: test BuildHnpTargetPath with MODULE_UPDATE scene
+ * @tc.desc: 1. isBundleUpdate=false, isModuleUpdate=true → correct target path with _tmp
+ */
+HWTEST_F(BmsInstalldOperatorTest, InstalldOperatorTest_0018, Function | SmallTest | Level0)
+{
+    ExtractHnpFilesParam param;
+    param.bundleName = "com.example.test";
+    param.moduleName = "entry";
+    param.isBundleUpdate = false;
+    param.isModuleUpdate = true;
+    std::string targetPath;
+    EXPECT_TRUE(InstalldOperator::BuildHnpTargetPath(param, targetPath));
+    EXPECT_EQ(targetPath, "/data/app/el1/bundle/public/com.example.test/entry_tmp/hnp_tmp_extract_dir/");
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_0019
+ * @tc.name: test BuildHnpTargetPath with BUNDLE_UPDATE and MODULE_UPDATE both true
+ * @tc.desc: 1. isBundleUpdate=true, isModuleUpdate=true → isBundleUpdate takes priority, no _tmp suffix
+ */
+HWTEST_F(BmsInstalldOperatorTest, InstalldOperatorTest_0019, Function | SmallTest | Level0)
+{
+    ExtractHnpFilesParam param;
+    param.bundleName = "com.example.test";
+    param.moduleName = "entry";
+    param.isBundleUpdate = true;
+    param.isModuleUpdate = true;
+    std::string targetPath;
+    EXPECT_TRUE(InstalldOperator::BuildHnpTargetPath(param, targetPath));
+    EXPECT_EQ(targetPath, "/data/app/el1/bundle/public/+new-com.example.test/entry/hnp_tmp_extract_dir/");
 }
 
 /**

@@ -22,6 +22,7 @@
 #include "ipc/file_stat.h"
 #include "installd/installd_host_impl.h"
 #include "installd/installd_operator.h"
+#include "ipc/hap_module_extract_param.h"
 #include "ipc/installd_proxy.h"
 #include "ipc/skills_package_param.h"
 #include "skills_installer/skills_package_info.h"
@@ -1892,6 +1893,25 @@ HWTEST_F(BmsInstallDaemonHostImplTest, GetCacheDiskUsageFromPath_0100, Function 
 }
 
 /**
+ * @tc.number: ExtractHapModuleFiles_0100
+ * @tc.name: test ExtractHapModuleFiles
+ * @tc.desc: 1. calling ExtractHapModuleFiles with permission denied
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, ExtractHapModuleFiles_0100, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+
+    HapModuleExtractParam param;
+    param.bundleName = TEST_BUNDLE_NAME;
+    param.moduleName = "entry";
+    param.hapCopySubDir = "subdir";
+    param.hapFileName = "entry.hap";
+    auto ret = hostImpl->ExtractHapModuleFiles(param);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
  * @tc.number: InstalldHostImplCopyExtendResourceFile_0100
  * @tc.name: test CopyExtendResourceFile
  * @tc.desc: Verify CopyExtendResourceFile rejects a non-foundation caller.
@@ -1951,5 +1971,61 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplCopyHqfFile_0100, Functio
     patchTarget.type = QuickFixType::PATCH;
     EXPECT_EQ(hostImpl->CopyHqfFile(TEST_BUNDLE_NAME, "entry", "entry.hqf", 1, patchTarget),
         ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: ExtractSkillsPackage_0200
+ * @tc.name: test ExtractSkillsPackage permission denied with valid params
+ * @tc.desc: 1. calling ExtractSkillsPackage with valid params but no foundation permission
+ *           2. verify permission denied returned (validation not reached)
+ */
+HWTEST_F(BmsInstallDaemonHostImplTest, ExtractSkillsPackage_0200, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    SkillsPackageParam param;
+    param.bundleName = "com.example.test";
+    param.moduleName = "testModule";
+    param.hspPath = "/data/app/el1/skills/public/com.example.test/testModule.hsp";
+    param.skillNameList.push_back("skill1");
+    std::vector<SkillsPackageInfo> skillInfoList;
+    auto ret = hostImpl->ExtractSkillsPackage(param, skillInfoList);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: ExtractSkillsPackage_0300
+ * @tc.name: test ExtractSkillsPackage validation - bundleName with slash
+ * @tc.desc: 1. bundleName containing '/' fails IsValidBundleName (HostImpl gate)
+ *           2. IsValidPathByExtractSkillsPackage does not check bundleName
+ */
+HWTEST_F(BmsInstallDaemonHostImplTest, ExtractSkillsPackage_0300, Function | SmallTest | Level0)
+{
+    SkillsPackageParam param;
+    param.bundleName = "com.example/evil";
+    param.moduleName = "testModule";
+    param.hspPath = "/data/app/el1/skills/public/com.example.test/testModule.hsp";
+    param.skillNameList.push_back("skill1");
+
+    EXPECT_FALSE(InstalldOperator::IsValidBundleName(param.bundleName));
+    // Path validator only checks moduleName/extractModuleName/hspPath
+    EXPECT_TRUE(InstalldOperator::IsValidPathByExtractSkillsPackage(param));
+}
+
+/**
+ * @tc.number: ExtractSkillsPackage_0400
+ * @tc.name: test IsValidPathByExtractSkillsPackage via Operator
+ * @tc.desc: 1. verify IsValidPathByExtractSkillsPackage rejects hspPath with path traversal
+ */
+HWTEST_F(BmsInstallDaemonHostImplTest, ExtractSkillsPackage_0400, Function | SmallTest | Level0)
+{
+    SkillsPackageParam param;
+    param.bundleName = "com.example.test";
+    param.moduleName = "testModule";
+    param.hspPath = "/data/app/el1/skills/public/com.example.test/../../evil.hsp";
+    param.skillNameList.push_back("skill1");
+
+    EXPECT_FALSE(InstalldOperator::IsValidPathByExtractSkillsPackage(param));
+    EXPECT_FALSE(InstalldOperator::IsValidBundleName("com.example/evil"));
 }
 } // OHOS

@@ -49,6 +49,7 @@
 #include "bundle_constants.h"
 #include "bundle_file_util.h"
 #include "bundle_service_constants.h"
+#include "ipc/hap_module_extract_param.h"
 #include "bundle_util.h"
 #include "decompress.h"
 #include "directory_ex.h"
@@ -1160,13 +1161,20 @@ ErrCode InstalldOperator::ExtractSkillsPackage(const SkillsPackageParam &param,
         LOG_W(BMS_TAG_INSTALLD, "not real path: %{public}s", param.hspPath.c_str());
         return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
     }
-    // Check if HSP file exists
+    // Re-validate resolved path (symlink / normalization may change the string)
+    if (!IsFileNameValid(filePath) ||
+        (!EndsWith(filePath, ServiceConstants::INSTALL_FILE_SUFFIX) &&
+         !EndsWith(filePath, ServiceConstants::HSP_FILE_SUFFIX))) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid resolved hspPath");
+        return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+    }
+    // Check if HSP/HAP file exists
     if (access(filePath.c_str(), F_OK) != 0) {
         LOG_E(BMS_TAG_INSTALLD, "HSP file not exist: %{public}s", filePath.c_str());
         return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
     }
 
-    // Create BundleExtractor to read HSP file
+    // Create BundleExtractor to read HSP/HAP file
     BundleExtractor extractor(filePath);
     if (!extractor.Init()) {
         LOG_E(BMS_TAG_INSTALLD, "failed to initialize extractor for %{public}s", param.hspPath.c_str());
@@ -1176,7 +1184,8 @@ ErrCode InstalldOperator::ExtractSkillsPackage(const SkillsPackageParam &param,
     skillInfoList.clear();
     // Process each skill
     for (const auto &skillName : param.skillNameList) {
-        if (!IsFileNameValid(skillName)) {
+        // Align with moduleName: IsFileNameValid + no '/' + reject "." path component
+        if (!IsFileNameValid(skillName) || skillName.find('/') != std::string::npos || skillName == ".") {
             LOG_E(BMS_TAG_INSTALLD, "wrong name %{public}s", skillName.c_str());
             continue;
         }
@@ -1190,6 +1199,10 @@ ErrCode InstalldOperator::ExtractSkillsPackage(const SkillsPackageParam &param,
         // Step 2: Build target path for skill extraction
         std::string targetSkillPath = std::string(Constants::BASE_SKILL_DIR) + "/" + param.bundleName +
             "/" + extractModuleName + "/skills/" + skillName;
+        if (!IsValidPathByCreateBundleDirScene(BundleDirScene::BASE_SKILL_DIR, param.bundleName, targetSkillPath)) {
+            LOG_E(BMS_TAG_INSTALLD, "invalid targetSkillPath prefix for skill %{public}s", skillName.c_str());
+            continue;
+        }
         LOG_D(BMS_TAG_INSTALLD, "target path = %{public}s", targetSkillPath.c_str());
 
         // Step 3: Extract skill folder from HSP
@@ -4091,6 +4104,41 @@ bool InstalldOperator::IsFileNameValid(const std::string &fileName)
     return true;
 }
 
+bool InstalldOperator::ValidateAndBuildHnpPaths(const ExtractHnpFilesParam &param,
+    std::string &srcPath, std::string &targetPath)
+{
+    if (!IsValidBundleName(param.bundleName) || !IsFileNameValid(param.srcPath) ||
+        param.moduleName.empty() || param.hnpPackageMap.empty()) {
+        LOG_E(BMS_TAG_INSTALLD, "ValidateAndBuildHnpPaths invalid bundleName/srcPath/moduleName/hnpPackageMap");
+        return false;
+    }
+    srcPath = param.srcPath;
+    if (!BuildHnpTargetPath(param, targetPath)) {
+        return false;
+    }
+    return true;
+}
+
+bool InstalldOperator::BuildHnpTargetPath(const ExtractHnpFilesParam &param, std::string &targetPath)
+{
+    targetPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR;
+    if (param.isBundleUpdate) {
+        targetPath += std::string(ServiceConstants::BUNDLE_NEW_CODE_DIR) + param.bundleName +
+            ServiceConstants::PATH_SEPARATOR + param.moduleName;
+    } else {
+        targetPath += param.bundleName + ServiceConstants::PATH_SEPARATOR + param.moduleName;
+        if (param.isModuleUpdate) {
+            targetPath += ServiceConstants::TMP_SUFFIX;
+        }
+    }
+    targetPath += std::string(ServiceConstants::PATH_SEPARATOR) + ServiceConstants::HNPS_FILE_PATH;
+    if (!IsValidPathByBundleDirScene(BundleDirScene::EXTRACT_HNP_FILES, targetPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "BuildHnpTargetPath invalid targetPath");
+        return false;
+    }
+    return true;
+}
+
 bool InstalldOperator::CopyDir(const std::string &sourceDir, const std::string &destinationDir)
 {
     LOG_D(BMS_TAG_INSTALLD, "sourceDir is %{public}s, destinationDir is %{public}s",
@@ -5903,6 +5951,33 @@ bool InstalldOperator::IsValidPathByApplyDiffPatch(const std::string &oldSoPath,
     return isValidOldSoPath && isValidDiffFilePath && isValidNewSoPath;
 }
 
+bool InstalldOperator::IsValidPathByExtractSkillsPackage(const SkillsPackageParam &param)
+{
+    // moduleName: IsFileNameValid + no '/'
+    if (!IsFileNameValid(param.moduleName) || param.moduleName.find('/') != std::string::npos) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid moduleName");
+        return false;
+    }
+    // extractModuleName: IsFileNameValid + no '/' (if not empty)
+    const std::string &extractModuleName =
+        param.extractModuleName.empty() ? param.moduleName : param.extractModuleName;
+    if (!IsFileNameValid(extractModuleName) || extractModuleName.find('/') != std::string::npos) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid extractModuleName");
+        return false;
+    }
+    // hspPath: IsFileNameValid + .hap/.hsp suffix (entry/feature use .hap, shared/independent use .hsp).
+    // No prefix whitelist: preInstall path comes from system partition (e.g. /system/app/...),
+    // normal install path comes from HAP_COPY_PATH. Consistent with IsValidPathByHashFiles /
+    // COPY_SKILL_HSP (suffix only). Resolved path is re-checked after PathToRealPath in Operator.
+    if (!IsFileNameValid(param.hspPath) ||
+        (!EndsWith(param.hspPath, ServiceConstants::INSTALL_FILE_SUFFIX) &&
+         !EndsWith(param.hspPath, ServiceConstants::HSP_FILE_SUFFIX))) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid hspPath");
+        return false;
+    }
+    return true;
+}
+
 bool InstalldOperator::IsValidPathByExtractEncryptedSoFiles(
     const std::string &hapPath, const std::string &realSoFilesPath, const std::string &tmpSoPath)
 {
@@ -6269,6 +6344,79 @@ bool InstalldOperator::IsValidPathByExtractQuickFixRes(
     return StartsWith(targetPath, Constants::BUNDLE_CODE_DIR) && IsContainsBundleName(targetPath, bundleName);
 }
 
+static bool IsValidHapOrHspName(const std::string &name)
+{
+    return InstalldOperator::EndsWith(name, ServiceConstants::INSTALL_FILE_SUFFIX) ||
+        InstalldOperator::EndsWith(name, ServiceConstants::HSP_FILE_SUFFIX);
+}
+
+ErrCode InstalldOperator::ValidateExtractHapModuleParams(const HapModuleExtractParam &param)
+{
+    if (param.bundleName.empty() || param.moduleName.empty()) {
+        LOG_E(BMS_TAG_INSTALLD, "Calling ExtractHapModuleFiles with invalid param");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    if (!param.hapCopySubDir.empty()) {
+        if (param.hapFileName.empty() || !IsFileNameValid(param.hapCopySubDir) ||
+            !IsFileNameValid(param.hapFileName) || !IsValidHapOrHspName(param.hapFileName)) {
+            LOG_E(BMS_TAG_INSTALLD, "Calling ExtractHapModuleFiles with invalid stream install param");
+            return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+        }
+    } else if (param.hapSrcPath.empty() || !IsFileNameValid(param.hapSrcPath) ||
+        !IsValidHapOrHspName(param.hapSrcPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "Calling ExtractHapModuleFiles with invalid hapSrcPath");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    if (!IsValidBundleName(param.bundleName)) {
+        LOG_E(BMS_TAG_INSTALLD, "Calling ExtractHapModuleFiles with invalid bundleName");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    if (!IsFileNameValid(param.moduleName)) {
+        LOG_E(BMS_TAG_INSTALLD, "Calling ExtractHapModuleFiles with invalid moduleName");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    if (!param.nativeLibraryPath.empty() && !IsFileNameValid(param.nativeLibraryPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "Calling ExtractHapModuleFiles with invalid nativeLibraryPath");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    if (param.installMode < static_cast<int32_t>(HapExtractMode::NORMAL) ||
+        param.installMode > static_cast<int32_t>(HapExtractMode::BUNDLE_UPDATE)) {
+        LOG_E(BMS_TAG_INSTALLD, "Calling ExtractHapModuleFiles with invalid installMode");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return ERR_OK;
+}
+
+void InstalldOperator::BuildExtractHapModulePaths(const HapModuleExtractParam &param,
+    std::string &srcModulePath, std::string &targetPath, std::string &targetSoPath)
+{
+    if (!param.hapCopySubDir.empty()) {
+        srcModulePath = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::PATH_SEPARATOR +
+            ServiceConstants::SECURITY_STREAM_INSTALL_PATH + ServiceConstants::PATH_SEPARATOR +
+            param.hapCopySubDir + ServiceConstants::PATH_SEPARATOR + param.hapFileName;
+    } else {
+        srcModulePath = param.hapSrcPath;
+    }
+
+    std::string baseDir = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR;
+    if (param.installMode == static_cast<int32_t>(HapExtractMode::BUNDLE_UPDATE)) {
+        baseDir += std::string(ServiceConstants::BUNDLE_NEW_CODE_DIR) + param.bundleName +
+            ServiceConstants::PATH_SEPARATOR;
+    } else {
+        baseDir += param.bundleName + ServiceConstants::PATH_SEPARATOR;
+    }
+
+    targetPath = baseDir + param.moduleName;
+    if (param.installMode == static_cast<int32_t>(HapExtractMode::MODULE_UPDATE)) {
+        targetPath += ServiceConstants::TMP_SUFFIX;
+    }
+
+    targetSoPath.clear();
+    if (!param.nativeLibraryPath.empty()) {
+        targetSoPath = baseDir + param.nativeLibraryPath + ServiceConstants::PATH_SEPARATOR;
+    }
+}
+
 bool InstalldOperator::BuildHapToInstallPath(const CopyHapToInstallPathParam &param,
     std::string &targetPath, std::string &signatureFilePath)
 {
@@ -6406,6 +6554,5 @@ bool InstalldOperator::IsValidPathByExtractArkProfile(
     }
     return true;
 }
-
 }  // namespace AppExecFwk
 }  // namespace OHOS

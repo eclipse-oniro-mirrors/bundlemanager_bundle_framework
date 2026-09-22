@@ -53,6 +53,13 @@ private:
      */
     bool HandleExtractModuleFiles(MessageParcel &data, MessageParcel &reply);
     /**
+     * @brief Handles the ExtractHapModuleFiles function called from a IInstalld proxy object.
+     * @param data Indicates the data to be read.
+     * @param reply Indicates the reply to be sent;
+     * @return Returns true if called successfully; returns false otherwise.
+     */
+    bool HandleExtractHapModuleFiles(MessageParcel &data, MessageParcel &reply);
+    /**
      * @brief Handles the HandleExtractFiles function called from a IInstalld proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
@@ -74,6 +81,7 @@ private:
      */
     bool HandleCopyHapToTempPath(MessageParcel &data, MessageParcel &reply);
     bool HandleExtractSoFiles(MessageParcel &data, MessageParcel &reply);
+    bool HandleExtractHnpFilesByScene(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the HandleExtractQuickFixSoFile function called from a IInstalld proxy object.
      * @param data Indicates the data to be read.

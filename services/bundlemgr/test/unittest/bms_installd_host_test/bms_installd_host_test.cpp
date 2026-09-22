@@ -28,6 +28,7 @@
 #include <filesystem>
 #include <fstream>
 #include <nlohmann/json.hpp>
+#include "ipc/hap_module_extract_param.h"
 
 using namespace testing::ext;
 using namespace OHOS;
@@ -1051,6 +1052,30 @@ HWTEST_F(BmsInstalldHostTest, HandleExtractSkillsPackage_0100, Function | SmallT
 }
 
 /**
+ * @tc.number: HandleExtractSkillsPackage_0200
+ * @tc.name: test HandleExtractSkillsPackage with valid SkillsPackageParam
+ * @tc.desc: 1. write valid SkillsPackageParam to parcel
+ *           2. HandleExtractSkillsPackage should process (may fail due to permission)
+ */
+HWTEST_F(BmsInstalldHostTest, HandleExtractSkillsPackage_0200, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    // Handle* is called after OnRemoteRequest consumes the token; do not write InterfaceToken here.
+    SkillsPackageParam param;
+    param.bundleName = "com.example.test";
+    param.moduleName = "testModule";
+    param.hspPath = "/data/app/el1/skills/public/com.example.test/testModule.hsp";
+    param.skillNameList.push_back("skill1");
+    // Must use WriteParcelable so ReadParcelable can see the object flag before Unmarshalling.
+    ASSERT_TRUE(data.WriteParcelable(&param));
+    bool res = installdHost.HandleExtractSkillsPackage(data, reply);
+    // Will return true if handled (even if permission denied)
+    EXPECT_TRUE(res);
+}
+
+/**
  * @tc.number: HandleDeleteOldCacheFiles_0100
  * @tc.name: test HandleDeleteOldCacheFiles
  * @tc.desc: 1.HandleDeleteOldCacheFiles test
@@ -1222,6 +1247,20 @@ HWTEST_F(BmsInstalldHostTest, HandleCopyPgoFile_0100, Function | SmallTest | Lev
     data.WriteInt32(userId);
     bool res = installdHost.HandleCopyPgoFile(data, reply);
     EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: HandleExtractHnpFilesByScene_0100
+ * @tc.name: test HandleExtractHnpFilesByScene
+ * @tc.desc: 1.HandleExtractHnpFilesByScene test
+ */
+HWTEST_F(BmsInstalldHostTest, HandleExtractHnpFilesByScene_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    bool res = installdHost.HandleExtractHnpFilesByScene(data, reply);
+    EXPECT_FALSE(res);
 }
 
 /**
@@ -1556,6 +1595,40 @@ HWTEST_F(BmsInstalldHostTest, InstalldOperator_GetBundleDataDirPaths_Failure_010
     EXPECT_FALSE(InstalldOperator::GetBundleDataDirPaths("", 0, 100, paths));
     EXPECT_TRUE(paths.empty());
     EXPECT_FALSE(InstalldOperator::GetBundleDataDirPaths("com.test", 0, -1, paths));
+}
+
+/**
+ * @tc.number: HandleExtractHapModuleFiles_0100
+ * @tc.name: test HandleExtractHapModuleFiles
+ * @tc.desc: 1.HandleExtractHapModuleFiles test with empty parcel data
+ */
+HWTEST_F(BmsInstalldHostTest, HandleExtractHapModuleFiles_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    bool res = installdHost.HandleExtractHapModuleFiles(data, reply);
+    EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: HandleExtractHapModuleFiles_0200
+ * @tc.name: test HandleExtractHapModuleFiles
+ * @tc.desc: 1.HandleExtractHapModuleFiles test with valid param
+ */
+HWTEST_F(BmsInstalldHostTest, HandleExtractHapModuleFiles_0200, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    HapModuleExtractParam param;
+    param.bundleName = "com.example.test";
+    param.moduleName = "entry";
+    param.hapCopySubDir = "subdir";
+    param.hapFileName = "entry.hap";
+    data.WriteParcelable(&param);
+    bool res = installdHost.HandleExtractHapModuleFiles(data, reply);
+    EXPECT_TRUE(res);
 }
 
 /**

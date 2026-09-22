@@ -58,7 +58,9 @@
 #include "driver_installer.h"
 #include "dual_mode_helper.h"
 #include "hitrace_meter.h"
+#include "bundle_service_constants.h"
 #include "installd_client.h"
+#include "ipc/hap_module_extract_param.h"
 #include "install_exception_mgr.h"
 #include "ipc/install_hnp_param.h"
 #include "ipc/verify_bin_param.h"
@@ -3471,7 +3473,7 @@ ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, I
         oldInfo.SetInstallMark(GetEffectiveBundleName(), modulePackage_, InstallExceptionStatus::UPDATING_NEW_START);
     }
     std::string modulePath = GetModulePath(newInfo, isFeatureNeedUninstall_, false);
-    result = ExtractModule(newInfo, modulePath);
+    result = ExtractModule(newInfo, modulePath, isFeatureNeedUninstall_, false);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "extract module and rename failed");
         return result;
@@ -3580,7 +3582,8 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
     result = ProcessAsanDirectory(newInfo);
     CHECK_RESULT(result, "process asan log directory failed %{public}d");
 
-    result = ExtractModule(newInfo, GetModulePath(newInfo, isFeatureNeedUninstall_, true));
+    result = ExtractModule(newInfo, GetModulePath(newInfo, isFeatureNeedUninstall_, true),
+        isFeatureNeedUninstall_, true);
     CHECK_RESULT(result, "extract module and rename failed %{public}d");
 
     result = ProcessBundleInstallNative(newInfo, oldInfo.GetUsers());
@@ -4681,7 +4684,8 @@ bool BaseBundleInstaller::IsDataPreloadHap(const std::string &path) const
     return path.find(DATA_PRELOAD_APP) == 0;
 }
 
-ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::string &modulePath)
+ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::string &modulePath,
+    bool isBundleUpdate, bool isModuleUpdate)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     // need remove modulePath, make sure the directory is empty
@@ -4732,7 +4736,7 @@ ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::str
             hnpPackageInfoMap[hnpPackageInfo.package] = hnpPackageInfo.type;
         }
         std::string cpuAbi = info.GetCpuAbi();
-        result = ExtractHnpFileDir(cpuAbi, hnpPackageInfoMap, modulePath);
+        result = ExtractHnpFileDir(cpuAbi, hnpPackageInfoMap, isBundleUpdate, isModuleUpdate);
         if (result != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "fail to ExtractHnpsFileDir, error is %{public}d", result);
             return result;
@@ -5434,23 +5438,25 @@ int32_t BaseBundleInstaller::RollbackUserInstances(const InnerBundleUserInfo &us
 }
 
 ErrCode BaseBundleInstaller::ExtractHnpFileDir(const std::string &cpuAbi,
-    const std::map<std::string, std::string> &hnpPackageMap, const std::string &modulePath) const
+    const std::map<std::string, std::string> &hnpPackageMap,
+    bool isBundleUpdate, bool isModuleUpdate) const
 {
     LOG_D(BMS_TAG_INSTALLER, "ExtractHnpFileDir begin");
-    ExtractParam extractParam;
-    extractParam.bundleName = bundleName_;
-    extractParam.srcPath = modulePath_;
-    extractParam.targetPath = modulePath + ServiceConstants::PATH_SEPARATOR + ServiceConstants::HNPS_FILE_PATH;
     if (ServiceConstants::ABI_MAP.find(cpuAbi) == ServiceConstants::ABI_MAP.end()) {
         LOG_E(BMS_TAG_INSTALLER, "No support %{public}s abi", cpuAbi.c_str());
         return ERR_APPEXECFWK_NATIVE_HNP_EXTRACT_FAILED;
     }
-    extractParam.cpuAbi = cpuAbi;
-    LOG_D(BMS_TAG_INSTALLER, "ExtractHnpFileDir targetPath: %{public}s", extractParam.targetPath.c_str());
-    extractParam.extractFileType = ExtractFileType::HNPS_FILE;
-    ErrCode ret = InstalldClient::GetInstance()->ExtractHnpFiles(hnpPackageMap, extractParam);
+    ExtractHnpFilesParam param;
+    param.bundleName = GetEffectiveBundleName();
+    param.moduleName = modulePackage_;
+    param.srcPath = modulePath_;
+    param.cpuAbi = cpuAbi;
+    param.isBundleUpdate = isBundleUpdate;
+    param.isModuleUpdate = isModuleUpdate;
+    param.hnpPackageMap = hnpPackageMap;
+    ErrCode ret = InstalldClient::GetInstance()->ExtractHnpFilesByScene(param);
     if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLER, "ExtractHnpFileDir ExtractFiles failed, error is %{public}d", ret);
+        LOG_E(BMS_TAG_INSTALLER, "ExtractHnpFileDir ExtractHnpFilesByScene failed, error is %{public}d", ret);
         return ret;
     }
     LOG_D(BMS_TAG_INSTALLER, "ExtractHnpFileDir end");
@@ -5767,8 +5773,9 @@ ErrCode BaseBundleInstaller::RemoveModuleDir(const std::string &modulePath, cons
     return InstalldClient::GetInstance()->RemoveDir(modulePath, BundleDirScene::REMOVE_MODULE_DIR, bundleName);
 }
 
-ErrCode BaseBundleInstaller::ExtractModuleFiles(const InnerBundleInfo &info, const std::string &modulePath,
-    const std::string &targetSoPath, const std::string &cpuAbi)
+ErrCode BaseBundleInstaller::ExtractModuleFiles(const InnerBundleInfo &info,
+    const std::string &modulePath, const std::string &nativeLibraryPath,
+    const std::string &cpuAbi, int32_t installMode)
 {
     LOG_D(BMS_TAG_INSTALLER, "extract module to %{public}s", modulePath.c_str());
     auto needFakeDecompression = info.IsFakeDecompressionEnable() &&
@@ -5776,12 +5783,44 @@ ErrCode BaseBundleInstaller::ExtractModuleFiles(const InnerBundleInfo &info, con
                                      modulePath_);
     auto isSystemApp = info.IsSystemApp();
     LOG_D(BMS_TAG_INSTALLER,
-        "ExtractModuleFiles,targetSoPath:%{public}s modulePath:%{public}s needFakeDecompression:%{public}d",
-        targetSoPath.c_str(),
-        modulePath.c_str(),
-        needFakeDecompression);
-    auto result = InstalldClient::GetInstance()->ExtractModuleFiles(
-        modulePath_, modulePath, targetSoPath, cpuAbi, needFakeDecompression, isSystemApp);
+        "ExtractModuleFiles, nativeLibraryPath:%{public}s modulePath:%{public}s installMode:%{public}d "
+        "needFakeDecompression:%{public}d",
+        nativeLibraryPath.c_str(), modulePath.c_str(), installMode, needFakeDecompression);
+
+    // Stream install: sink constructed src path as hapCopySubDir + hapFileName.
+    // Pre-install/OTA: modulePath_ is an external hap path and cannot be inferred, keep as hapSrcPath.
+    std::string hapCopySubDir;
+    std::string hapFileName;
+    std::string hapSrcPath;
+    std::string prefixPath = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::PATH_SEPARATOR +
+        ServiceConstants::SECURITY_STREAM_INSTALL_PATH + ServiceConstants::PATH_SEPARATOR;
+    if (modulePath_.size() > prefixPath.size() &&
+        modulePath_.compare(0, prefixPath.size(), prefixPath) == 0) {
+        std::string suffix = modulePath_.substr(prefixPath.size());
+        auto pos = suffix.rfind(ServiceConstants::PATH_SEPARATOR);
+        if (pos != std::string::npos && pos + 1 < suffix.size()) {
+            hapCopySubDir = suffix.substr(0, pos);
+            hapFileName = suffix.substr(pos + 1);
+        } else {
+            hapSrcPath = modulePath_;
+        }
+    } else {
+        hapSrcPath = modulePath_;
+    }
+
+    HapModuleExtractParam param;
+    param.bundleName = GetEffectiveBundleName(info);
+    param.moduleName = modulePackage_;
+    param.hapCopySubDir = hapCopySubDir;
+    param.hapFileName = hapFileName;
+    param.nativeLibraryPath = nativeLibraryPath;
+    param.cpuAbi = cpuAbi;
+    param.installMode = installMode;
+    param.needFakeDecompression = needFakeDecompression;
+    param.isSystemApp = isSystemApp;
+    param.hapSrcPath = hapSrcPath;
+
+    auto result = InstalldClient::GetInstance()->ExtractHapModuleFiles(param);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "extract module files failed, error is %{public}d", result);
         return result;
@@ -8216,7 +8255,13 @@ ErrCode BaseBundleInstaller::InnerProcessNativeLibs(InnerBundleInfo &info, const
         return ret;
     }
     if (isCompressNativeLibrary) {
-        auto result = ExtractModuleFiles(info, modulePath, targetSoPath, cpuAbi);
+        int32_t installMode = static_cast<int32_t>(HapExtractMode::NORMAL);
+        if (isFeatureNeedUninstall_) {
+            installMode = static_cast<int32_t>(HapExtractMode::BUNDLE_UPDATE);
+        } else if (BundleUtil::EndWith(modulePath, ServiceConstants::TMP_SUFFIX)) {
+            installMode = static_cast<int32_t>(HapExtractMode::MODULE_UPDATE);
+        }
+        auto result = ExtractModuleFiles(info, modulePath, nativeLibraryPath, cpuAbi, installMode);
         CHECK_RESULT(result, "fail to extract module dir, error is %{public}d");
         // verify hap or hsp code signature for compressed so files
         result = VerifyCodeSignatureForNativeFiles(info, cpuAbi, targetSoPath, signatureFileDir);

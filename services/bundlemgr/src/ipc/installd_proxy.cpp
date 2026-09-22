@@ -192,6 +192,20 @@ ErrCode InstalldProxy::ExtractModuleFiles(const std::string &srcModulePath, cons
     return TransactInstalldCmd(InstalldInterfaceCode::EXTRACT_MODULE_FILES, data, reply, option);
 }
 
+ErrCode InstalldProxy::ExtractHapModuleFiles(const HapModuleExtractParam &param)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    if (!data.WriteParcelable(&param)) {
+        LOG_E(BMS_TAG_INSTALLD, "WriteParcelable HapModuleExtractParam failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    MessageOption option;
+    return TransactInstalldCmd(InstalldInterfaceCode::EXTRACT_HAP_MODULE_FILES, data, reply, option);
+}
+
 ErrCode InstalldProxy::ExtractFiles(const ExtractParam &extractParam)
 {
     MessageParcel data;
@@ -357,6 +371,20 @@ ErrCode InstalldProxy::ExtractHnpFiles(const std::map<std::string, std::string> 
     MessageParcel reply;
     MessageOption option;
     return TransactInstalldCmd(InstalldInterfaceCode::EXTRACT_HNP_FILES, data, reply, option);
+}
+
+ErrCode InstalldProxy::ExtractHnpFilesByScene(const ExtractHnpFilesParam &extractHnpFilesParam)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    if (!data.WriteParcelable(&extractHnpFilesParam)) {
+        LOG_E(BMS_TAG_INSTALLD, "WriteParcelable extractHnpFilesParam failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    MessageOption option;
+    return TransactInstalldCmd(InstalldInterfaceCode::EXTRACT_HNP_FILES_BY_SCENE, data, reply, option);
 }
 
 ErrCode InstalldProxy::ProcessBundleInstallNative(const InstallHnpParam &installHnpParam)

@@ -17,6 +17,7 @@
 #include <vector>
 
 #include "ipc/file_stat.h"
+#include "ipc/hap_module_extract_param.h"
 #include "parcel_macro.h"
 #include "installd/installd_host_impl.h"
 #include "ipc/installd_proxy.h"
@@ -1702,6 +1703,54 @@ HWTEST_F(BmsInstallDaemonIpcTest, CodeSignatureParam_Marshalling_0100, Function 
     EXPECT_EQ(unmarshalled->targetSoPath, param.targetSoPath);
     EXPECT_EQ(unmarshalled->profileBlockLength, param.profileBlockLength);
     delete unmarshalled;
+}
+
+/**
+ * @tc.number: HapModuleExtractParamTest_0100
+ * @tc.name: test Marshalling of HapModuleExtractParam
+ * @tc.desc: 1. hapSrcPath survives Marshalling/ReadFromParcel round trip
+*/
+HWTEST_F(BmsInstallDaemonIpcTest, HapModuleExtractParamTest_0100, Function | SmallTest | Level0)
+{
+    HapModuleExtractParam param;
+    param.bundleName = TEST_BUNDLE_NAME;
+    param.moduleName = "entry";
+    param.hapSrcPath = "/system/app/com.example.test/entry.hap";
+    param.cpuAbi = "arm64-v8a";
+    param.installMode = static_cast<int32_t>(HapExtractMode::NORMAL);
+    param.needFakeDecompression = true;
+    param.isSystemApp = true;
+
+    Parcel parcel;
+    EXPECT_TRUE(param.Marshalling(parcel));
+    std::unique_ptr<HapModuleExtractParam> unmarshalled(HapModuleExtractParam::Unmarshalling(parcel));
+    ASSERT_NE(unmarshalled, nullptr);
+    EXPECT_EQ(unmarshalled->bundleName, param.bundleName);
+    EXPECT_EQ(unmarshalled->moduleName, param.moduleName);
+    EXPECT_EQ(unmarshalled->hapSrcPath, param.hapSrcPath);
+    EXPECT_EQ(unmarshalled->cpuAbi, param.cpuAbi);
+    EXPECT_EQ(unmarshalled->installMode, param.installMode);
+    EXPECT_EQ(unmarshalled->needFakeDecompression, param.needFakeDecompression);
+    EXPECT_EQ(unmarshalled->isSystemApp, param.isSystemApp);
+}
+
+/**
+ * @tc.number: InstalldProxyTest_ExtractHapModuleFiles_0100
+ * @tc.name: test ExtractHapModuleFiles of proxy
+ * @tc.desc: 1. calling ExtractHapModuleFiles with valid param
+*/
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_ExtractHapModuleFiles_0100, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    EXPECT_NE(proxy, nullptr);
+
+    HapModuleExtractParam param;
+    param.bundleName = TEST_BUNDLE_NAME;
+    param.moduleName = "entry";
+    param.hapCopySubDir = "subdir";
+    param.hapFileName = "entry.hap";
+    auto ret = proxy->ExtractHapModuleFiles(param);
+    EXPECT_EQ(ret, ERR_OK);
 }
 
 /**

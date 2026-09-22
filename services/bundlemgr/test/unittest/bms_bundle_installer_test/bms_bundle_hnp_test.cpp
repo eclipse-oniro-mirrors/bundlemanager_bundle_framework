@@ -230,22 +230,24 @@ HWTEST_F(BmsBundleHnpTest, ProcessBundleUnInstallNative_0001, Function | SmallTe
 HWTEST_F(BmsBundleHnpTest, ExtractHnpFileDir_0001, Function | SmallTest | Level3)
 {
     BaseBundleInstaller installer;
+    installer.modulePath_ = "/tmp/modulePath/module.hap";
 
     std::map<std::string, std::string> hnpPackageMap;
     hnpPackageMap.emplace("example.hnp", "public");
 
     std::string unsupportedAbi = "unsupported_abi";
-    ErrCode ret = installer.ExtractHnpFileDir(unsupportedAbi, hnpPackageMap, "/tmp/modulePath");
+    ErrCode ret = installer.ExtractHnpFileDir(unsupportedAbi, hnpPackageMap, false, false);
     EXPECT_EQ(ret, ERR_APPEXECFWK_NATIVE_HNP_EXTRACT_FAILED);
 
     std::string supportedAbi = "arm64-v8a";
-    ret = installer.ExtractHnpFileDir(supportedAbi, hnpPackageMap, "/tmp/modulePath");
+    ret = installer.ExtractHnpFileDir(supportedAbi, hnpPackageMap, false, false);
     EXPECT_EQ(ret, ERR_OK);
 }
 
 HWTEST_F(BmsBundleHnpTest, ExtractModule_0001, Function | SmallTest | Level3)
 {
     BaseBundleInstaller installer;
+    installer.modulePath_ = "/tmp/modulePath/module.hap";
     InnerBundleInfo info;
     InnerModuleInfo moduleInfo;
     moduleInfo.moduleName = "moduleA";
