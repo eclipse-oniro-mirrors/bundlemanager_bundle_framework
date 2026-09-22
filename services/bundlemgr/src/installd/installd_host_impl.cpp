@@ -112,11 +112,12 @@ constexpr size_t MAX_BIN_FILES_COUNT = 100;
 constexpr size_t MAX_SIGN_DATA_SIZE = 1024 * 1024;
 constexpr const char* QUICK_FIX_PATCH_DIR = "patch/";
 
-// Prefix paths for RenameFileExt, '%' is the userId placeholder. The full paths are
-// concatenated inside the installd process, the caller can only control userId, sandboxDir
-// and the rename scene. Every entry must stay under the bundle data prefixes; sandboxDir is
-// constrained by IsValidBundleName so it cannot contain any path separator.
-const std::vector<std::string> RENAME_FILE_EXT_PREFIX_PATHS = {
+// Prefix paths for sandbox dir state change (Backup/Recover/Delete/DeleteBackupSandboxDir),
+// '%' is the userId placeholder. The full paths are concatenated inside the installd process,
+// the caller can only control userId and sandboxDir. Every entry must stay under the bundle
+// data prefixes; sandboxDir is constrained by IsValidBundleName so it cannot contain any
+// path separator.
+const std::vector<std::string> SANDBOX_DIR_PREFIX_PATHS = {
     "/data/app/el1/%/base/",
     "/data/app/el2/%/base/",
     "/data/app/el3/%/base/",
@@ -138,6 +139,40 @@ const std::vector<std::string> RENAME_FILE_EXT_PREFIX_PATHS = {
 };
 constexpr const char* BACKUP_DIR_PREFIX = "+backup+";
 constexpr const char* DELETE_DIR_PREFIX = "+delete+";
+
+ErrCode ChangeSandboxDirName(int32_t userId, const std::string &sandboxDir,
+    const std::string &oldDirName, const std::string &newDirName)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+
+    if (userId < 0 || !InstalldOperator::IsValidBundleName(sandboxDir)) {
+        LOG_E(BMS_TAG_INSTALLD,
+            "Change sandbox dir name with invalid param, userId:%{public}d, sandboxDir:%{private}s",
+            userId, sandboxDir.c_str());
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    ErrCode result = ERR_OK;
+    for (const auto &prefixTemplate : SANDBOX_DIR_PREFIX_PATHS) {
+        std::string prefix = prefixTemplate;
+        prefix.replace(prefix.find("%"), 1, std::to_string(userId));
+        std::string oldDir = prefix + oldDirName;
+        std::string newDir = prefix + newDirName;
+        // The source dir is not guaranteed to exist under every el level, skip it silently.
+        if (access(oldDir.c_str(), F_OK) != 0) {
+            continue;
+        }
+        if (!InstalldOperator::RenameFile(oldDir, newDir)) {
+            LOG_E(BMS_TAG_INSTALLD, "rename file %{private}s to %{private}s failed errno:%{public}d",
+                oldDir.c_str(), newDir.c_str(), errno);
+            result = ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
+        }
+    }
+    return result;
+}
 
 bool IsValidPathComponent(const std::string &value)
 {
@@ -2615,67 +2650,28 @@ ErrCode InstalldHostImpl::RenameFile(const std::string &oldPath, const std::stri
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::RenameFileExt(
-    int32_t userId, const std::string &sandboxDir, BundleDirScene scene)
+ErrCode InstalldHostImpl::BackupSandboxDir(int32_t userId, const std::string &sandboxDir)
 {
-    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
-        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
-        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
-    }
+    return ChangeSandboxDirName(userId, sandboxDir, sandboxDir,
+        std::string(BACKUP_DIR_PREFIX) + sandboxDir);
+}
 
-    if (userId < 0 || !InstalldOperator::IsValidBundleName(sandboxDir)) {
-        LOG_E(BMS_TAG_INSTALLD,
-            "Calling the function RenameFileExt with invalid param, userId:%{public}d, "
-            "sandboxDir:%{private}s, scene:%{public}d",
-            userId, sandboxDir.c_str(), static_cast<int32_t>(scene));
-        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-    }
+ErrCode InstalldHostImpl::RecoverSandboxDir(int32_t userId, const std::string &sandboxDir)
+{
+    return ChangeSandboxDirName(userId, sandboxDir, std::string(BACKUP_DIR_PREFIX) + sandboxDir,
+        sandboxDir);
+}
 
-    std::string backupDirName = std::string(BACKUP_DIR_PREFIX) + sandboxDir;
-    std::string deleteDirName = std::string(DELETE_DIR_PREFIX) + sandboxDir;
-    std::string oldName;
-    std::string newName;
-    switch (scene) {
-        case BundleDirScene::RENAME_EXT_BACKUP:
-            oldName = sandboxDir;
-            newName = backupDirName;
-            break;
-        case BundleDirScene::RENAME_EXT_DELETE:
-            oldName = sandboxDir;
-            newName = deleteDirName;
-            break;
-        case BundleDirScene::RENAME_EXT_DELETE_BACKUP:
-            oldName = backupDirName;
-            newName = deleteDirName;
-            break;
-        case BundleDirScene::RENAME_EXT_RECOVER:
-            oldName = backupDirName;
-            newName = sandboxDir;
-            break;
-        default:
-            LOG_E(BMS_TAG_INSTALLD,
-                "Calling the function RenameFileExt with invalid scene:%{public}d",
-                static_cast<int32_t>(scene));
-            return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-    }
+ErrCode InstalldHostImpl::DeleteSandboxDir(int32_t userId, const std::string &sandboxDir)
+{
+    return ChangeSandboxDirName(userId, sandboxDir, sandboxDir,
+        std::string(DELETE_DIR_PREFIX) + sandboxDir);
+}
 
-    ErrCode result = ERR_OK;
-    for (const auto &prefixTemplate : RENAME_FILE_EXT_PREFIX_PATHS) {
-        std::string prefix = prefixTemplate;
-        prefix.replace(prefix.find("%"), 1, std::to_string(userId));
-        std::string oldDir = prefix + oldName;
-        std::string newDir = prefix + newName;
-        // The source dir is not guaranteed to exist under every el level, skip it silently.
-        if (access(oldDir.c_str(), F_OK) != 0) {
-            continue;
-        }
-        if (!InstalldOperator::RenameFile(oldDir, newDir)) {
-            LOG_E(BMS_TAG_INSTALLD, "rename file %{private}s to %{private}s failed errno:%{public}d",
-                oldDir.c_str(), newDir.c_str(), errno);
-            result = ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
-        }
-    }
-    return result;
+ErrCode InstalldHostImpl::DeleteBackupSandboxDir(int32_t userId, const std::string &sandboxDir)
+{
+    return ChangeSandboxDirName(userId, sandboxDir, std::string(BACKUP_DIR_PREFIX) + sandboxDir,
+        std::string(DELETE_DIR_PREFIX) + sandboxDir);
 }
 
 ErrCode InstalldHostImpl::CopyFile(const std::string &oldPath, const std::string &newPath, BundleDirScene scene,

@@ -392,8 +392,8 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_1350, Function | SmallTest |
 
 /**
  * @tc.number: InstalldProxyTest_1355
- * @tc.name: test RenameFileExt serialization of proxy
- * @tc.desc: 1. calling RenameFileExt of proxy
+ * @tc.name: test BackupSandboxDir serialization of proxy
+ * @tc.desc: 1. calling BackupSandboxDir of proxy
  * @tc.require: issueI5T6P3
  */
 HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_1355, Function | SmallTest | Level0)
@@ -401,7 +401,52 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_1355, Function | SmallTest |
     auto proxy = GetInstallProxy();
     EXPECT_NE(proxy, nullptr);
 
-    auto ret = proxy->RenameFileExt(UID, TEST_STRING, BundleDirScene::RENAME_EXT_BACKUP);
+    auto ret = proxy->BackupSandboxDir(UID, TEST_STRING);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstalldProxyTest_1356
+ * @tc.name: test RecoverSandboxDir serialization of proxy
+ * @tc.desc: 1. calling RecoverSandboxDir of proxy
+ * @tc.require: issueI5T6P3
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_1356, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    EXPECT_NE(proxy, nullptr);
+
+    auto ret = proxy->RecoverSandboxDir(UID, TEST_STRING);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstalldProxyTest_1357
+ * @tc.name: test DeleteSandboxDir serialization of proxy
+ * @tc.desc: 1. calling DeleteSandboxDir of proxy
+ * @tc.require: issueI5T6P3
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_1357, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    EXPECT_NE(proxy, nullptr);
+
+    auto ret = proxy->DeleteSandboxDir(UID, TEST_STRING);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstalldProxyTest_1358
+ * @tc.name: test DeleteBackupSandboxDir serialization of proxy
+ * @tc.desc: 1. calling DeleteBackupSandboxDir of proxy
+ * @tc.require: issueI5T6P3
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_1358, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    EXPECT_NE(proxy, nullptr);
+
+    auto ret = proxy->DeleteBackupSandboxDir(UID, TEST_STRING);
     EXPECT_EQ(ret, ERR_OK);
 }
 

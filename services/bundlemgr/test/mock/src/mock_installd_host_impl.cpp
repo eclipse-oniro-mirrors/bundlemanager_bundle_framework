@@ -261,8 +261,22 @@ ErrCode InstalldHostImpl::RenameFile(const std::string &oldPath, const std::stri
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::RenameFileExt(
-    int32_t userId, const std::string &sandboxDir, BundleDirScene scene)
+ErrCode InstalldHostImpl::BackupSandboxDir(int32_t userId, const std::string &sandboxDir)
+{
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::RecoverSandboxDir(int32_t userId, const std::string &sandboxDir)
+{
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::DeleteSandboxDir(int32_t userId, const std::string &sandboxDir)
+{
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::DeleteBackupSandboxDir(int32_t userId, const std::string &sandboxDir)
 {
     return ERR_OK;
 }

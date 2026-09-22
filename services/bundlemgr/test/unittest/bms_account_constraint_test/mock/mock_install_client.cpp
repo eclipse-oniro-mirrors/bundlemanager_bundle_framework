@@ -309,7 +309,22 @@ ErrCode InstalldClient::RenameFile(const std::string &oldPath, const std::string
     return 0;
 }
 
-ErrCode InstalldClient::RenameFileExt(int32_t userId, const std::string &sandboxDir, BundleDirScene scene)
+ErrCode InstalldClient::BackupSandboxDir(int32_t userId, const std::string &sandboxDir)
+{
+    return 0;
+}
+
+ErrCode InstalldClient::RecoverSandboxDir(int32_t userId, const std::string &sandboxDir)
+{
+    return 0;
+}
+
+ErrCode InstalldClient::DeleteSandboxDir(int32_t userId, const std::string &sandboxDir)
+{
+    return 0;
+}
+
+ErrCode InstalldClient::DeleteBackupSandboxDir(int32_t userId, const std::string &sandboxDir)
 {
     return 0;
 }

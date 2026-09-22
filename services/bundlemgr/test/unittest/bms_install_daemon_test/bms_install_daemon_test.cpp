@@ -824,8 +824,8 @@ HWTEST_F(BmsInstallDaemonTest, InstalldClient_0450, Function | SmallTest | Level
 
 /**
  * @tc.number: InstalldClient_0460
- * @tc.name: Test RenameFileExt, a param is invalid
- * @tc.desc: 1.Test the RenameFileExt of InstalldClient
+ * @tc.name: Test sandbox dir methods, a param is invalid
+ * @tc.desc: 1.Test the Backup/Recover/Delete/DeleteBackupSandboxDir of InstalldClient
  */
 HWTEST_F(BmsInstallDaemonTest, InstalldClient_0460, Function | SmallTest | Level0)
 {
@@ -833,11 +833,21 @@ HWTEST_F(BmsInstallDaemonTest, InstalldClient_0460, Function | SmallTest | Level
     if (!service->IsServiceReady()) {
         service->Start();
     }
-    ErrCode ret = InstalldClient::GetInstance()->RenameFileExt(-1, BUNDLE_DATA_DIR,
-        BundleDirScene::RENAME_EXT_BACKUP);
+    ErrCode ret = InstalldClient::GetInstance()->BackupSandboxDir(-1, BUNDLE_DATA_DIR);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-    ret = InstalldClient::GetInstance()->RenameFileExt(Constants::START_USERID, "",
-        BundleDirScene::RENAME_EXT_BACKUP);
+    ret = InstalldClient::GetInstance()->BackupSandboxDir(Constants::START_USERID, "");
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    ret = InstalldClient::GetInstance()->RecoverSandboxDir(-1, BUNDLE_DATA_DIR);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    ret = InstalldClient::GetInstance()->RecoverSandboxDir(Constants::START_USERID, "");
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    ret = InstalldClient::GetInstance()->DeleteSandboxDir(-1, BUNDLE_DATA_DIR);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    ret = InstalldClient::GetInstance()->DeleteSandboxDir(Constants::START_USERID, "");
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    ret = InstalldClient::GetInstance()->DeleteBackupSandboxDir(-1, BUNDLE_DATA_DIR);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    ret = InstalldClient::GetInstance()->DeleteBackupSandboxDir(Constants::START_USERID, "");
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 

@@ -496,14 +496,44 @@ ErrCode InstalldClient::RenameFile(const std::string &oldPath, const std::string
     return CallService(&IInstalld::RenameFile, oldPath, newPath);
 }
 
-ErrCode InstalldClient::RenameFileExt(int32_t userId, const std::string &sandboxDir, BundleDirScene scene)
+ErrCode InstalldClient::BackupSandboxDir(int32_t userId, const std::string &sandboxDir)
 {
     if (userId < 0 || sandboxDir.empty()) {
         APP_LOGE("params are invalid");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
 
-    return CallService(&IInstalld::RenameFileExt, userId, sandboxDir, scene);
+    return CallService(&IInstalld::BackupSandboxDir, userId, sandboxDir);
+}
+
+ErrCode InstalldClient::RecoverSandboxDir(int32_t userId, const std::string &sandboxDir)
+{
+    if (userId < 0 || sandboxDir.empty()) {
+        APP_LOGE("params are invalid");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    return CallService(&IInstalld::RecoverSandboxDir, userId, sandboxDir);
+}
+
+ErrCode InstalldClient::DeleteSandboxDir(int32_t userId, const std::string &sandboxDir)
+{
+    if (userId < 0 || sandboxDir.empty()) {
+        APP_LOGE("params are invalid");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    return CallService(&IInstalld::DeleteSandboxDir, userId, sandboxDir);
+}
+
+ErrCode InstalldClient::DeleteBackupSandboxDir(int32_t userId, const std::string &sandboxDir)
+{
+    if (userId < 0 || sandboxDir.empty()) {
+        APP_LOGE("params are invalid");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    return CallService(&IInstalld::DeleteBackupSandboxDir, userId, sandboxDir);
 }
 
 ErrCode InstalldClient::CopyFile(const std::string &oldPath, const std::string &newPath, BundleDirScene scene,

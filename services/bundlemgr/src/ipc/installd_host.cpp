@@ -209,8 +209,17 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::RENAME_FILE):
             result = this->HandleRenameFile(data, reply);
             break;
-        case static_cast<uint32_t>(InstalldInterfaceCode::RENAME_FILE_EXT):
-            result = this->HandleRenameFileExt(data, reply);
+        case static_cast<uint32_t>(InstalldInterfaceCode::BACKUP_SANDBOX_DIR):
+            result = this->HandleBackupSandboxDir(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::RECOVER_SANDBOX_DIR):
+            result = this->HandleRecoverSandboxDir(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::DELETE_SANDBOX_DIR):
+            result = this->HandleDeleteSandboxDir(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::DELETE_BACKUP_SANDBOX_DIR):
+            result = this->HandleDeleteBackupSandboxDir(data, reply);
             break;
         case static_cast<uint32_t>(InstalldInterfaceCode::COPY_FILE):
             result = this->HandleCopyFile(data, reply);
@@ -1187,12 +1196,38 @@ bool InstalldHost::HandleRenameFile(MessageParcel &data, MessageParcel &reply)
     return true;
 }
 
-bool InstalldHost::HandleRenameFileExt(MessageParcel &data, MessageParcel &reply)
+bool InstalldHost::HandleBackupSandboxDir(MessageParcel &data, MessageParcel &reply)
 {
     int32_t userId = data.ReadInt32();
     std::string sandboxDir = Str16ToStr8(data.ReadString16());
-    BundleDirScene scene = static_cast<BundleDirScene>(data.ReadInt32());
-    ErrCode result = RenameFileExt(userId, sandboxDir, scene);
+    ErrCode result = BackupSandboxDir(userId, sandboxDir);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleRecoverSandboxDir(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t userId = data.ReadInt32();
+    std::string sandboxDir = Str16ToStr8(data.ReadString16());
+    ErrCode result = RecoverSandboxDir(userId, sandboxDir);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleDeleteSandboxDir(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t userId = data.ReadInt32();
+    std::string sandboxDir = Str16ToStr8(data.ReadString16());
+    ErrCode result = DeleteSandboxDir(userId, sandboxDir);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleDeleteBackupSandboxDir(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t userId = data.ReadInt32();
+    std::string sandboxDir = Str16ToStr8(data.ReadString16());
+    ErrCode result = DeleteBackupSandboxDir(userId, sandboxDir);
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
