@@ -238,7 +238,8 @@ HWTEST_F(BmsBundleMultiuserInstallPermissionTest, PluginInstaller_0007, Function
     std::string pluginBundleDir;
     std::string moduleName;
     InnerBundleInfo newInfo;
-    auto ret = installer.SaveHspToInstallDir(bundlePath, pluginBundleDir, moduleName, newInfo);
+    std::string hostBundleName;
+    auto ret = installer.SaveHspToInstallDir(bundlePath, pluginBundleDir, moduleName, hostBundleName, newInfo);
     EXPECT_EQ(ret, ERR_OK);
 }
 
@@ -254,8 +255,9 @@ HWTEST_F(BmsBundleMultiuserInstallPermissionTest, PluginInstaller_0008, Function
     std::string pluginBundleDir;
     std::string moduleName;
     InnerBundleInfo newInfo;
+    std::string hostBundleName;
     installer.signatureFileDir_ = "data/";
-    auto ret = installer.SaveHspToInstallDir(bundlePath, pluginBundleDir, moduleName, newInfo);
+    auto ret = installer.SaveHspToInstallDir(bundlePath, pluginBundleDir, moduleName, hostBundleName, newInfo);
     EXPECT_EQ(ret, ERR_OK);
 }
 

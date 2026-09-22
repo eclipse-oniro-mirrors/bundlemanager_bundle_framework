@@ -2990,6 +2990,39 @@ HWTEST_F(BmsInstallDaemonTest, ExtractQuickFixSoFile_0400, Function | SmallTest 
 }
 
 /**
+ * @tc.number: InstalldSceneInterfaces_CopyExtendProfileFile_0100
+ * @tc.name: test CopyExtendProfileFile branches
+ * @tc.desc: Cover invalid paths, install/update targets, successful copies and copy failures.
+ */
+HWTEST_F(BmsInstallDaemonTest, InstalldSceneInterfaces_CopyExtendProfileFile_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    const std::string profileSourceRelativePath = "ext_profile/scene_test/profile.json";
+    EXPECT_EQ(hostImpl.CopyExtendProfileFile("", profileSourceRelativePath, false),
+        ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    EXPECT_EQ(hostImpl.CopyExtendProfileFile(BUNDLE_NAME13, "../profile.json", false),
+        ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    EXPECT_EQ(hostImpl.CopyExtendProfileFile(BUNDLE_NAME13, "other/profile.json", false),
+        ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    EXPECT_EQ(hostImpl.CopyExtendProfileFile(BUNDLE_NAME13, profileSourceRelativePath, false),
+        ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
+    ASSERT_TRUE(OHOS::ForceCreateDirectory(EXT_PROFILE_STAGING_DIR));
+    CreateFile(EXT_PROFILE_STAGING_DIR + "/profile.json", "{}");
+    EXPECT_EQ(hostImpl.CopyExtendProfileFile(BUNDLE_NAME13, profileSourceRelativePath, false),
+        ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
+    ASSERT_TRUE(OHOS::ForceCreateDirectory(BUNDLE_CODE_DIR + "/ext_profile"));
+    EXPECT_EQ(hostImpl.CopyExtendProfileFile(BUNDLE_NAME13, profileSourceRelativePath, false), ERR_OK);
+    EXPECT_EQ(access((BUNDLE_CODE_DIR + "/ext_profile/manifest.json").c_str(), F_OK), 0);
+    ASSERT_TRUE(OHOS::ForceCreateDirectory(BUNDLE_NEW_CODE_DIR + "/ext_profile"));
+    EXPECT_EQ(hostImpl.CopyExtendProfileFile(BUNDLE_NAME13, profileSourceRelativePath, true), ERR_OK);
+    EXPECT_EQ(access((BUNDLE_NEW_CODE_DIR + "/ext_profile/manifest.json").c_str(), F_OK), 0);
+    DeleteFile(BUNDLE_CODE_DIR + "/ext_profile/manifest.json");
+    ASSERT_TRUE(OHOS::ForceCreateDirectory(BUNDLE_CODE_DIR + "/ext_profile/manifest.json"));
+    EXPECT_EQ(hostImpl.CopyExtendProfileFile(BUNDLE_NAME13, profileSourceRelativePath, false),
+        ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
+}
+
+/**
  * @tc.number: InstalldSceneInterfaces_CopyExtendFiles_0100
  * @tc.name: test extend resource and profile copy branches
  * @tc.desc: Cover invalid paths, install/update targets, successful copies and copy failures.

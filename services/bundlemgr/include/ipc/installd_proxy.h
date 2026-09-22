@@ -78,6 +78,9 @@ public:
         const std::string &hapFilePath, bool needFakeDecompression, bool isSystemApp,
         bool useNewCodeDir, bool useModuleTmp) override;
 
+    virtual ErrCode ExtractNPAPIPlugin(const std::string &bundleName, const std::string &moduleName,
+        const std::string &hapFilePath, int32_t userId) override;
+
     virtual ErrCode ExtractResourceFiles(const std::string &bundleName, const std::string &moduleName,
         const std::string &hapFilePath, bool needFakeDecompression, bool useNewCodeDir,
         bool useModuleTmp) override;
@@ -102,6 +105,9 @@ public:
 
     virtual ErrCode CopyHapToTempPath(const std::string &bundleName, const std::string &hapRealPath,
         const std::string &tempDirName, const std::string &hapFileName) override;
+
+    virtual ErrCode CopyApFile(const std::string &bundleName, const std::string &moduleName,
+        int32_t userId) override;
 
     virtual ErrCode ProcessBundleInstallNative(const InstallHnpParam &installHnpParam) override;
 
@@ -290,6 +296,13 @@ public:
     virtual ErrCode CopyFile(const std::string &oldPath, const std::string &newPath, BundleDirScene scene,
         const std::string &signatureFilePath = "") override;
 
+    virtual ErrCode CopyPluginHsp(const std::string &hostBundleName, const std::string &bundleName,
+        const std::string &moduleName, const std::string &sourceHspPath,
+        const std::string &sourceSignaturePath) override;
+
+    virtual ErrCode CopyServiceHsp(const std::string &bundleName, const std::string &moduleName,
+        const std::string &sourceHspPath, uint32_t versionCode) override;
+
     virtual ErrCode CopyHapToInstallPath(const CopyHapToInstallPathParam &copyHapToInstallPathParam) override;
 
     virtual ErrCode CopyPgoFile(const std::string &bundleName, const std::string &moduleName,
@@ -326,6 +339,9 @@ public:
 
     virtual ErrCode CopyFiles(const std::string &sourceDir, const std::string &destinationDir,
         const std::string &bundleName, BundleDirScene scene) override;
+
+    virtual ErrCode CopyExtendProfileFile(
+        const std::string &bundleName, const std::string &profileSourceRelativePath, bool isUpdate) override;
 
     virtual ErrCode CopyExtendResourceFile(const std::string &bundleName, const std::string &moduleName) override;
 
@@ -380,6 +396,9 @@ public:
     virtual ErrCode AddUserDirDeleteDfx(int32_t userId) override;
 
     virtual ErrCode MoveHapToCodeDir(const std::string &originPath, const std::string &targetPath) override;
+
+    virtual ErrCode MovePluginHspToCodeDir(const std::string &hostBundleName, const std::string &pluginBundleName,
+        const std::string &moduleName, const std::string &sourceHspPath) override;
 
     virtual ErrCode MoveSharedHspToCodeDir(const std::string &bundleName, const std::string &moduleName,
         const std::string &sourceHspPath, uint32_t versionCode) override;
@@ -444,6 +463,9 @@ public:
 
     virtual ErrCode CreatePrintServiceDir(const std::string &bundleName, int32_t userId,
         int32_t appIndex, int32_t appUid) override;
+
+    virtual ErrCode CopyAbcFile(
+        const std::string &bundleName, int32_t userId, const std::string &abcRelativePath) override;
 
 private:
     ErrCode TransactInstalldCmd(InstalldInterfaceCode code, MessageParcel &data, MessageParcel &reply,

@@ -1664,6 +1664,22 @@ HWTEST_F(BmsInstalldOperatorTest, IsValidPathByExtractArkNative_0100, Function |
 }
 
 /**
+ * @tc.number: IsValidPathByExtractNPAPIPlugin_0100
+ * @tc.name: test IsValidPathByExtractNPAPIPlugin
+ * @tc.desc: test IsValidPathByExtractNPAPIPlugin of InstalldOperator
+ */
+HWTEST_F(BmsInstalldOperatorTest, IsValidPathByExtractNPAPIPlugin_0100, Function | SmallTest | Level0)
+{
+    std::string hapFilePath = std::string(Constants::BUNDLE_CODE_DIR) + "/com.example.test/entry/entry.hap";
+    auto ret = InstalldOperator::IsValidPathByExtractNPAPIPlugin(TEST_BUNDLE_NAME, "entry", hapFilePath, 100);
+    EXPECT_FALSE(ret);
+    ret = InstalldOperator::IsValidPathByExtractNPAPIPlugin(TEST_BUNDLE_NAME, "../entry", hapFilePath, 100);
+    EXPECT_FALSE(ret);
+    ret = InstalldOperator::IsValidPathByExtractNPAPIPlugin(TEST_BUNDLE_NAME, "entry", hapFilePath, -1);
+    EXPECT_FALSE(ret);
+}
+
+/**
  * @tc.number: IsValidTargetPathByCopyFileScene_0100
  * @tc.name: test IsValidTargetPathByCopyFileScene
  * @tc.desc: test IsValidTargetPathByCopyFileScene of InstalldOperator
@@ -4306,6 +4322,78 @@ HWTEST_F(BmsInstalldOperatorTest, GetAppDataFileCategoryStats_0900, Function | S
     EXPECT_EQ(extTotalSizes[0].second, 100u);   // only top.so counted, deep.so skipped by depth guard
 
     std::filesystem::remove_all(baseDir);
+}
+
+/**
+ * @tc.number: GetAbcRealPath_0100
+ * @tc.name: test GetAbcRealPath
+ * @tc.desc: test GetAbcRealPath with data/storage/el1/bundle prefix
+ */
+HWTEST_F(BmsInstalldOperatorTest, GetAbcRealPath_0100, Function | SmallTest | Level0)
+{
+    std::string relativePath = "/data/storage/el1/bundle/modules.abc";
+    auto result = InstalldOperator::GetAbcRealPath(TEST_BUNDLE_NAME, Constants::START_USERID, relativePath);
+    std::string expected = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
+        TEST_BUNDLE_NAME + ServiceConstants::PATH_SEPARATOR + "modules.abc";
+    EXPECT_EQ(result, expected);
+}
+
+/**
+ * @tc.number: GetAbcRealPath_0200
+ * @tc.name: test GetAbcRealPath
+ * @tc.desc: test GetAbcRealPath with data/storage/el1/base prefix
+ */
+HWTEST_F(BmsInstalldOperatorTest, GetAbcRealPath_0200, Function | SmallTest | Level0)
+{
+    std::string relativePath = "/data/storage/el1/base/cache/modules.abc";
+    int32_t userId = Constants::START_USERID;
+    auto result = InstalldOperator::GetAbcRealPath(TEST_BUNDLE_NAME, userId, relativePath);
+    std::string expected = std::string(ServiceConstants::BUNDLE_APP_DATA_BASE_DIR) + ServiceConstants::DIR_EL1 +
+        ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::BASE +
+        TEST_BUNDLE_NAME + ServiceConstants::PATH_SEPARATOR + "cache/modules.abc";
+    EXPECT_EQ(result, expected);
+}
+
+/**
+ * @tc.number: GetAbcRealPath_0300
+ * @tc.name: test GetAbcRealPath
+ * @tc.desc: test GetAbcRealPath with data/storage/el2/database prefix
+ */
+HWTEST_F(BmsInstalldOperatorTest, GetAbcRealPath_0300, Function | SmallTest | Level0)
+{
+    std::string relativePath = "/data/storage/el2/database/rdb/modules.abc";
+    int32_t userId = Constants::START_USERID;
+    auto result = InstalldOperator::GetAbcRealPath(TEST_BUNDLE_NAME, userId, relativePath);
+    std::string expected = std::string(ServiceConstants::BUNDLE_APP_DATA_BASE_DIR) + ServiceConstants::DIR_EL2 +
+        ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::DATABASE +
+        TEST_BUNDLE_NAME + ServiceConstants::PATH_SEPARATOR + "rdb/modules.abc";
+    EXPECT_EQ(result, expected);
+}
+
+/**
+ * @tc.number: GetAbcRealPath_0400
+ * @tc.name: test GetAbcRealPath
+ * @tc.desc: test GetAbcRealPath with illegal path returns empty
+ */
+HWTEST_F(BmsInstalldOperatorTest, GetAbcRealPath_0400, Function | SmallTest | Level0)
+{
+    std::string relativePath = "/data/illegal/path/modules.abc";
+    auto result = InstalldOperator::GetAbcRealPath(TEST_BUNDLE_NAME, Constants::START_USERID, relativePath);
+    EXPECT_TRUE(result.empty());
+}
+
+/**
+ * @tc.number: GetAbcRealPath_0500
+ * @tc.name: test GetAbcRealPath
+ * @tc.desc: test GetAbcRealPath normalizes path without leading separator
+ */
+HWTEST_F(BmsInstalldOperatorTest, GetAbcRealPath_0500, Function | SmallTest | Level0)
+{
+    std::string relativePath = "data/storage/el1/bundle/modules.abc";
+    auto result = InstalldOperator::GetAbcRealPath(TEST_BUNDLE_NAME, Constants::START_USERID, relativePath);
+    std::string expected = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
+        TEST_BUNDLE_NAME + ServiceConstants::PATH_SEPARATOR + "modules.abc";
+    EXPECT_EQ(result, expected);
 }
 
 /**

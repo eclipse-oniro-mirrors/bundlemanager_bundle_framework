@@ -120,7 +120,7 @@ private:
     ErrCode CheckExternalSourcePluginSwitch() const;
     ErrCode CheckHspPluginCertValidity() const;
     ErrCode SaveHspToInstallDir(const std::string &bundlePath, const std::string &pluginBundleDir,
-        const std::string &moduleName, InnerBundleInfo &newInfo);
+        const std::string &moduleName, const std::string &hostBundleName, InnerBundleInfo &newInfo);
     void RemoveEmptyDirs(const std::string &pluginDir, const std::string &hostBundleName) const;
     void RemoveDir(const std::string &dir, const std::string &hostBundleName) const;
     bool CheckAppIdentifier() const;

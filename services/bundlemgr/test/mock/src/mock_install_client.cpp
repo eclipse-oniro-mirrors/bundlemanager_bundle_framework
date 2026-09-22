@@ -115,6 +115,11 @@ ErrCode InstalldClient::ExtractSoFiles(const std::string &bundleName, const std:
     return 0;
 }
 
+ErrCode InstalldClient::CopyApFile(const std::string &bundleName, const std::string &moduleName, int32_t userId)
+{
+    return 0;
+}
+
 ErrCode InstalldClient::CopyHapToTempPath(const std::string &bundleName, const std::string &hapRealPath,
     const std::string &tempDirName, const std::string &hapFileName)
 {
@@ -143,6 +148,12 @@ ErrCode InstalldClient::ExtractResourceFiles(const std::string &bundleName, cons
 ErrCode InstalldClient::ExtractResFileDir(const std::string &bundleName, const std::string &moduleName,
     const std::string &hapFilePath, bool needFakeDecompression, bool isSystemApp,
     bool useNewCodeDir, bool useModuleTmp)
+{
+    return 0;
+}
+
+ErrCode InstalldClient::ExtractNPAPIPlugin(const std::string &bundleName, const std::string &moduleName,
+    const std::string &hapFilePath, int32_t userId)
 {
     return 0;
 }
@@ -364,8 +375,20 @@ ErrCode InstalldClient::CopySharedHsp(const std::string &bundleName, const std::
     return 0;
 }
 
+ErrCode InstalldClient::CopyServiceHsp(const std::string &bundleName, const std::string &moduleName,
+    const std::string &sourceHspPath, uint32_t versionCode)
+{
+    return 0;
+}
+
 ErrCode InstalldClient::CopySkillHsp(const std::string &bundleName, const std::string &moduleName,
     const std::string &hspFileName, const std::string &sourceTempDir, bool isUpdate)
+{
+    return 0;
+}
+
+ErrCode InstalldClient::CopyPluginHsp(const std::string &hostBundleName, const std::string &bundleName,
+    const std::string &moduleName, const std::string &sourceHspPath, const std::string &sourceSignaturePath)
 {
     return 0;
 }
@@ -458,6 +481,12 @@ ErrCode InstalldClient::CopyHqfFile(const std::string &bundleName, const std::st
 }
 
 ErrCode InstalldClient::CopyExtendResourceFile(const std::string &bundleName, const std::string &moduleName)
+{
+    return 0;
+}
+
+ErrCode InstalldClient::CopyExtendProfileFile(
+    const std::string &bundleName, const std::string &profileSourceRelativePath, bool isUpdate)
 {
     return 0;
 }
@@ -599,6 +628,12 @@ ErrCode InstalldClient::MoveSharedHspToCodeDir(const std::string &bundleName, co
     return ERR_OK;
 }
 
+ErrCode InstalldClient::MovePluginHspToCodeDir(const std::string &hostBundleName,
+    const std::string &pluginBundleName, const std::string &moduleName, const std::string &sourceHspPath)
+{
+    return ERR_OK;
+}
+
 ErrCode InstalldClient::CreateDataGroupDirs(const std::vector<CreateDirParam> &params)
 {
     return ERR_OK;
@@ -699,6 +734,12 @@ ErrCode InstalldClient::GetCacheDiskUsageFromPath(const std::vector<std::string>
     int64_t &statSize, int64_t timeoutMs)
 {
     return ERR_OK;
+}
+
+ErrCode InstalldClient::CopyAbcFile(const std::string &bundleName, int32_t userId,
+    const std::string &abcRelativePath)
+{
+    return 0;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -12511,7 +12511,8 @@ HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0052, Function | MediumTest | L
     std::string pluginBundleDir;
     std::string moduleName;
     InnerBundleInfo newInfo;
-    auto ret = installer.SaveHspToInstallDir(bundlePath, pluginBundleDir, moduleName, newInfo);
+    std::string hostBundleName;
+    auto ret = installer.SaveHspToInstallDir(bundlePath, pluginBundleDir, moduleName, hostBundleName, newInfo);
     EXPECT_NE(ret, ERR_OK);
 }
 
@@ -12527,8 +12528,9 @@ HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0053, Function | MediumTest | L
     std::string pluginBundleDir;
     std::string moduleName;
     InnerBundleInfo newInfo;
+    std::string hostBundleName;
     installer.signatureFileDir_ = "data/";
-    auto ret = installer.SaveHspToInstallDir(bundlePath, pluginBundleDir, moduleName, newInfo);
+    auto ret = installer.SaveHspToInstallDir(bundlePath, pluginBundleDir, moduleName, hostBundleName, newInfo);
     EXPECT_NE(ret, ERR_OK);
 }
 
@@ -12741,12 +12743,12 @@ HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0065, Function | MediumTest | L
     std::string pluginBundleDir = "/data";
     std::string moduleName = "moduleName";
     InnerBundleInfo newInfo;
+    std::string hostBundleName;
     installer.signatureFileDir_ = "data/";
-    auto ret = installer.SaveHspToInstallDir(bundlePath, pluginBundleDir, moduleName, newInfo);
+    auto ret = installer.SaveHspToInstallDir(bundlePath, pluginBundleDir, moduleName, hostBundleName, newInfo);
     EXPECT_NE(ret, ERR_OK);
     std::string hspPath = pluginBundleDir + ServiceConstants::PATH_SEPARATOR + moduleName +
         ServiceConstants::HSP_FILE_SUFFIX;
-    std::string hostBundleName;
     installer.RemoveDir(hspPath, hostBundleName);
 }
 

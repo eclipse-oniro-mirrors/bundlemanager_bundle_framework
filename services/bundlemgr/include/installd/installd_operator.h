@@ -552,6 +552,8 @@ public:
     static bool IsValidPathByExtractResFileDir(const std::string &bundleName, const std::string &moduleName,
         const std::string &hapFilePath, bool useNewCodeDir, bool useModuleTmp);
     static bool IsValidPathByDeleteUninstallTmpDirs(const std::string &dir);
+    static bool IsValidPathByExtractNPAPIPlugin(const std::string &bundleName, const std::string &moduleName,
+        const std::string &hapFilePath, int32_t userId);
     static bool IsValidPathByExtractQuickFixRes(const std::string &bundleName, const std::string &moduleName,
         const std::string &hqfFilePath);
     static ErrCode ValidateExtractHapModuleParams(const HapModuleExtractParam &param);
@@ -565,6 +567,8 @@ public:
         const std::string &hapFilePath, const std::string &cpuAbi);
     static bool IsValidPathByExtractArkProfile(const std::string &bundleName, const std::string &moduleName,
         const std::string &hapFilePath, int32_t userId);
+    static std::string GetAbcRealPath(const std::string &bundleName, int32_t userId,
+        const std::string &relativePath);
 private:
     static bool ObtainNativeSoFile(const BundleExtractor &extractor, const std::string &cpuAbi,
         std::vector<std::string> &soEntryFiles);

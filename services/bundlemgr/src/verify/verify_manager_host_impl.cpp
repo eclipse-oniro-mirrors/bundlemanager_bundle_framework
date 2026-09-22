@@ -250,9 +250,9 @@ bool VerifyManagerHostImpl::CopyFilesToTempDir(
             return false;
         }
 
-        result = InstalldClient::GetInstance()->CopyFile(realPath, tempCopyPath, BundleDirScene::COPY_ABC_FILE, "");
+        result = InstalldClient::GetInstance()->CopyAbcFile(bundleName, userId, abcPaths[i]);
         if (result != ERR_OK) {
-            APP_LOGE("CopyFile tempDir %{public}s faild %{public}d", realPath.c_str(), result);
+            APP_LOGE("CopyAbcFile failed, abcPath: %{private}s, result: %{public}d", abcPaths[i].c_str(), result);
             return false;
         }
     }

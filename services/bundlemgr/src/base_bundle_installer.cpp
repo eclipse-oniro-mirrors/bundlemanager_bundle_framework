@@ -121,6 +121,17 @@ bool IsValidDeviceModeDistributionPolicy(DeviceModeDistributionPolicy policy)
         value <= static_cast<int32_t>(DeviceModeDistributionPolicy::FULL_COMPATIBLE_DIFFERENT_PACKAGE);
 }
 
+bool GetPathRelativeToRoot(
+    const std::string &path, const std::string &root, std::string &relativePath)
+{
+    const std::string rootPrefix = root + ServiceConstants::PATH_SEPARATOR;
+    if (path.size() <= rootPrefix.size() || path.compare(0, rootPrefix.size(), rootPrefix) != 0) {
+        return false;
+    }
+    relativePath = path.substr(rootPrefix.size());
+    return true;
+}
+
 bool IsSupportedAppSkillBundleType(BundleType bundleType)
 {
     return bundleType == BundleType::APP || bundleType == BundleType::ATOMIC_SERVICE;
@@ -4995,14 +5006,8 @@ void BaseBundleInstaller::ExtractNPAPIPluginFiles(const std::string &modulePath)
         npapiPluginStatus_ = NpapiPluginStatus::STATUS_NOT_APPLICABLE;
         return;
     }
-    std::string targetPath = ServiceConstants::NPAPI_PLUGIN_TARGET_BASE_PATH + std::to_string(userId_) +
-        ServiceConstants::NPAPI_PLUGIN_TARGET_DIR + bundleName_;
-    ExtractParam extractParam;
-    extractParam.bundleName = bundleName_;
-    extractParam.srcPath = modulePath;
-    extractParam.targetPath = targetPath;
-    extractParam.extractFileType = ExtractFileType::NPAPI_PLUGIN;
-    ErrCode ret = InstalldClient::GetInstance()->ExtractFiles(extractParam);
+    ErrCode ret = InstalldClient::GetInstance()->ExtractNPAPIPlugin(
+        bundleName_, modulePackage_, modulePath, userId_);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "ExtractNPAPIPluginFiles failed, error is %{public}d", ret);
         npapiPluginStatus_ = NpapiPluginStatus::STATUS_EXTRACT_FAILED;
@@ -10702,8 +10707,14 @@ bool BaseBundleInstaller::ProcessExtProfile(const InstallParam &installParam)
         LOG_E(BMS_TAG_INSTALLER, "fail to create ext profile dir, error is %{public}d", result);
         return false;
     }
-    if (InstalldClient::GetInstance()->CopyFile(iter->second, targetPath,
-        BundleDirScene::COPY_EXTEND_PROFILE_FILE) != ERR_OK) {
+    std::string profileSourceRelativePath;
+    if (!GetPathRelativeToRoot(
+        iter->second, ServiceConstants::HAP_COPY_PATH, profileSourceRelativePath)) {
+        LOG_E(BMS_TAG_INSTALLER, "invalid ext profile source path");
+        return false;
+    }
+    if (InstalldClient::GetInstance()->CopyExtendProfileFile(
+        effectiveBundleName, profileSourceRelativePath, false) != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "copy file from %{public}s to %{public}s failed", iter->second.c_str(),
             targetPath.c_str());
         return false;

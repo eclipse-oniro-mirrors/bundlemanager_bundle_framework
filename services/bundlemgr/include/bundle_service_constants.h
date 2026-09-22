@@ -138,6 +138,7 @@ constexpr const char* AP_SUFFIX = ".ap";
 constexpr const char* SYSTEM_LIB64 = "/system/lib64";
 constexpr const char* PATCH_PATH = "patch_";
 constexpr const char* HOT_RELOAD_PATH = "hotreload_";
+constexpr const char* ABCS_TEMP_DIR_PATH = "abcs/temp/";
 // uid and gid
 constexpr int16_t MODE_BASE = 07777;
 constexpr int32_t BMS_UID = 1000;
