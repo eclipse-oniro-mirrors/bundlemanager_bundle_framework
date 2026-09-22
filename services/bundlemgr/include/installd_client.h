@@ -215,6 +215,12 @@ public:
     ErrCode CopyFile(const std::string &oldPath, const std::string &newPath, BundleDirScene scene,
         const std::string &signatureFilePath = "");
 
+    ErrCode CopyPluginHsp(const std::string &hostBundleName, const std::string &bundleName,
+        const std::string &moduleName, const std::string &sourceHspPath, const std::string &sourceSignaturePath);
+
+    ErrCode CopyServiceHsp(const std::string &bundleName, const std::string &moduleName,
+        const std::string &sourceHspPath, uint32_t versionCode);
+
     ErrCode CopyHapToInstallPath(const CopyHapToInstallPathParam &copyHapToInstallPathParam);
 
     ErrCode CopyPgoFile(const std::string &bundleName, const std::string &moduleName,
@@ -252,6 +258,9 @@ public:
     ErrCode CopyFiles(const std::string &sourceDir, const std::string &destinationDir, const std::string &bundleName,
         BundleDirScene scene);
 
+    ErrCode CopyExtendProfileFile(
+        const std::string &bundleName, const std::string &profileSourceRelativePath, bool isUpdate);
+
     ErrCode CopyExtendResourceFile(const std::string &bundleName, const std::string &moduleName);
 
     ErrCode CopyHqfFile(const std::string &bundleName, const std::string &moduleName,
@@ -288,6 +297,11 @@ public:
         const std::string &tempDirName, const std::string &hapFileName);
 
     ErrCode ExtractHnpFiles(const std::map<std::string, std::string> &hnpPackageMap, const ExtractParam &extractParam);
+
+    ErrCode CopyApFile(const std::string &bundleName, const std::string &moduleName, int32_t userId);
+
+    ErrCode ExtractNPAPIPlugin(const std::string &bundleName, const std::string &moduleName,
+        const std::string &hapFilePath, int32_t userId);
 
     ErrCode ExtractHnpFilesByScene(const ExtractHnpFilesParam &extractHnpFilesParam);
 
@@ -352,6 +366,9 @@ public:
     ErrCode AddUserDirDeleteDfx(int32_t userId);
 
     ErrCode MoveHapToCodeDir(const std::string &originPath, const std::string &targetPath);
+
+    ErrCode MovePluginHspToCodeDir(const std::string &hostBundleName, const std::string &pluginBundleName,
+        const std::string &moduleName, const std::string &sourceHspPath);
 
     ErrCode MoveSharedHspToCodeDir(const std::string &bundleName, const std::string &moduleName,
         const std::string &sourceHspPath, uint32_t versionCode);
@@ -463,6 +480,15 @@ public:
      */
     ErrCode CreatePrintServiceDir(const std::string &bundleName, int32_t userId,
         int32_t appIndex, int32_t appUid);
+
+    /**
+     * @brief Copy abc file from temp dir to bundle code dir.
+     * @param bundleName Indicates the bundle name for path construction and validation.
+     * @param userId Indicates the user id for path construction.
+     * @param abcRelativePath Indicates the abc file relative path.
+     * @return Returns ERR_OK if copied successfully; returns error code otherwise.
+     */
+    ErrCode CopyAbcFile(const std::string &bundleName, int32_t userId, const std::string &abcRelativePath);
 
 private:
     sptr<IInstalld> GetInstalldProxy();

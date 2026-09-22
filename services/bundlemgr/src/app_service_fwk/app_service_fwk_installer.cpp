@@ -611,7 +611,7 @@ ErrCode AppServiceFwkInstaller::ExtractModule(
     if (copyHapToInstallPath) {
         std::string realHspPath = moduleDir + AppExecFwk::ServiceConstants::PATH_SEPARATOR +
             moduleName + ServiceConstants::HSP_FILE_SUFFIX;
-        result = InstalldClient::GetInstance()->CopyFile(bundlePath, realHspPath, BundleDirScene::COPY_SERVICE_HSP);
+        result = InstalldClient::GetInstance()->CopyServiceHsp(bundleName_, moduleName, bundlePath, versionCode);
         newInfo.SetModuleHapPath(realHspPath);
         CHECK_RESULT(result, "move hsp to install dir failed %{public}d");
 

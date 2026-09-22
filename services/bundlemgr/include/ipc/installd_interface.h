@@ -154,6 +154,12 @@ public:
         return ERR_OK;
     }
 
+    virtual ErrCode ExtractNPAPIPlugin(const std::string &bundleName, const std::string &moduleName,
+        const std::string &hapFilePath, int32_t userId)
+    {
+        return ERR_OK;
+    }
+
     /**
      * @brief Extract the hnpFiles.
      * @param hnpPackageMap Indicates the hnpPackageInfo.
@@ -181,6 +187,18 @@ public:
     }
 
     virtual ErrCode ExtractHnpFilesByScene(const ExtractHnpFilesParam &extractHnpFilesParam)
+    {
+        return ERR_OK;
+    }
+
+    /**
+     * @brief Copy AP file for AOT profile.
+     * @param bundleName Indicates the bundle name for path construction and validation.
+     * @param moduleName Indicates the module name for merged/rt selection.
+     * @param userId Indicates the user ID for ark profile path construction.
+     * @return Returns ERR_OK if copied successfully; returns error code otherwise.
+     */
+    virtual ErrCode CopyApFile(const std::string &bundleName, const std::string &moduleName, int32_t userId)
     {
         return ERR_OK;
     }
@@ -516,6 +534,36 @@ public:
     }
 
     /**
+     * @brief Copy service hsp file to the service hsp install dir under the bundle code dir.
+     * @param bundleName Indicates the bundle name.
+     * @param moduleName Indicates the module name.
+     * @param sourceHspPath Indicates the source hsp file path provided by the caller.
+     * @param versionCode Indicates the version code for the version dir.
+     * @return Returns ERR_OK if copy service hsp successfully; returns error code otherwise.
+     */
+    virtual ErrCode CopyServiceHsp(const std::string &bundleName, const std::string &moduleName,
+        const std::string &sourceHspPath, uint32_t versionCode)
+    {
+        return ERR_OK;
+    }
+
+    /**
+     * @brief Copy plugin hsp to the plugin install dir under the host bundle code dir.
+     * @param hostBundleName Indicates the host bundle name.
+     * @param bundleName Indicates the plugin bundle dir name under the host bundle.
+     * @param moduleName Indicates the module name.
+     * @param sourceHspPath Indicates the full source path of the plugin hsp file under the security stream install dir.
+     * @param sourceSignaturePath Indicates the full source path of the code signature file under the security stream
+     *        install dir.
+     * @return Returns ERR_OK if copy plugin hsp successfully; returns error code otherwise.
+     */
+    virtual ErrCode CopyPluginHsp(const std::string &hostBundleName, const std::string &bundleName,
+        const std::string &moduleName, const std::string &sourceHspPath, const std::string &sourceSignaturePath)
+    {
+        return ERR_OK;
+    }
+
+    /**
      * @brief Create directory recursively.
      * @param dir Indicates dir which will be created.
      * @param mode Indicates dir mode.
@@ -705,6 +753,21 @@ public:
         return ERR_OK;
     }
 
+    /**
+     * @brief Move the plugin hsp file from the security stream install dir to the plugin install dir
+     * under the bundle code dir.
+     * @param hostBundleName Indicates the host bundle name.
+     * @param pluginBundleName Indicates the plugin install dir name.
+     * @param moduleName Indicates the module name.
+     * @param sourceHspPath Indicates the full source path of the plugin hsp file under the security stream install dir.
+     * @return Returns ERR_OK if move plugin hsp successfully; returns error code otherwise.
+     */
+    virtual ErrCode MovePluginHspToCodeDir(const std::string &hostBundleName, const std::string &pluginBundleName,
+        const std::string &moduleName, const std::string &sourceHspPath)
+    {
+        return ERR_OK;
+    }
+
     virtual ErrCode CreateDataGroupDirs(const std::vector<CreateDirParam> &params)
     {
         return ERR_OK;
@@ -871,8 +934,26 @@ public:
         return ERR_OK;
     }
 
+    /**
+     * @brief Copy abc file from temp dir to bundle code dir.
+     * @param bundleName Indicates the bundle name for path construction and validation.
+     * @param userId Indicates the user id for path construction.
+     * @param abcRelativePath Indicates the abc file relative path.
+     * @return Returns ERR_OK if copied successfully; returns error code otherwise.
+     */
+    virtual ErrCode CopyAbcFile(const std::string &bundleName, int32_t userId, const std::string &abcRelativePath)
+    {
+        return ERR_OK;
+    }
+
     virtual ErrCode CopyHqfFile(const std::string &bundleName, const std::string &moduleName,
         const std::string &hqfSourceRelativePath, uint32_t versionCode, const QuickFixTargetParam &targetParam)
+    {
+        return ERR_OK;
+    }
+
+    virtual ErrCode CopyExtendProfileFile(
+        const std::string &bundleName, const std::string &profileSourceRelativePath, bool isUpdate)
     {
         return ERR_OK;
     }

@@ -101,6 +101,15 @@ constexpr const char* HQF_DIR_PREFIX = "patch_";
 constexpr const char* HQF_PATCH_PATH = "/patch";
 constexpr const char* VERIFY_FILE_PATH = "/abcs/";
 constexpr const char* VERIFY_FILE_SUFFIX = ".abc";
+constexpr const char* DATA_STORAGE_BUNDLE = "/data/storage/el1/bundle/";
+constexpr const char* DATA_STORAGE_EL1_BASE = "/data/storage/el1/base/";
+constexpr const char* DATA_STORAGE_EL1_DATABASE = "/data/storage/el1/database/";
+constexpr const char* DATA_STORAGE_EL2_BASE = "/data/storage/el2/base/";
+constexpr const char* DATA_STORAGE_EL2_DATABASE = "/data/storage/el2/database/";
+constexpr const char* DATA_STORAGE_EL3_BASE = "/data/storage/el3/base/";
+constexpr const char* DATA_STORAGE_EL3_DATABASE = "/data/storage/el3/database/";
+constexpr const char* DATA_STORAGE_EL4_BASE = "/data/storage/el4/base/";
+constexpr const char* DATA_STORAGE_EL4_DATABASE = "/data/storage/el4/database/";
 constexpr const char* APP_EL1_PATH = "/data/app/el1/";
 constexpr const char* APP_EL2_PATH = "/data/app/el2/";
 constexpr const char* APP_EL3_PATH = "/data/app/el3/";
@@ -6326,6 +6335,31 @@ bool InstalldOperator::IsValidPathByExtractResFileDir(
     return true;
 }
 
+bool InstalldOperator::IsValidPathByExtractNPAPIPlugin(
+    const std::string &bundleName, const std::string &moduleName,
+    const std::string &hapFilePath, int32_t userId)
+{
+    if (!IsFileNameValid(moduleName) || moduleName.find('/') != std::string::npos) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid param exist ../ or \\..");
+        return false;
+    }
+    if (!IsValidUserId(userId)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid userId");
+        return false;
+    }
+    if (!IsFileNameValid(hapFilePath) ||
+        !(EndsWith(hapFilePath, ServiceConstants::INSTALL_FILE_SUFFIX) ||
+            EndsWith(hapFilePath, ServiceConstants::HSP_FILE_SUFFIX)) ||
+        !IsExistFile(hapFilePath)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid hapFilePath");
+        return false;
+    }
+    std::string targetPath = std::string(ServiceConstants::NPAPI_PLUGIN_TARGET_BASE_PATH) +
+        std::to_string(userId) + ServiceConstants::NPAPI_PLUGIN_TARGET_DIR + bundleName;
+    return StartsWith(targetPath, ServiceConstants::NPAPI_PLUGIN_TARGET_BASE_PATH) &&
+           IsContainsBundleName(targetPath, bundleName);
+}
+
 bool InstalldOperator::IsValidPathByExtractQuickFixRes(
     const std::string &bundleName, const std::string &moduleName, const std::string &hqfFilePath)
 {
@@ -6553,6 +6587,65 @@ bool InstalldOperator::IsValidPathByExtractArkProfile(
         return false;
     }
     return true;
+}
+
+static bool GetAbcDataDir(const std::string &path, std::string &suffix, std::string &el, std::string &baseType)
+{
+    struct DataDirEntry {
+        const char *prefix;
+        const std::string &elValue;
+        const std::string &baseTypeValue;
+    };
+    static const DataDirEntry entries[] = {
+        { DATA_STORAGE_EL1_BASE, ServiceConstants::DIR_EL1, ServiceConstants::BASE },
+        { DATA_STORAGE_EL1_DATABASE, ServiceConstants::DIR_EL1, ServiceConstants::DATABASE },
+        { DATA_STORAGE_EL2_BASE, ServiceConstants::DIR_EL2, ServiceConstants::BASE },
+        { DATA_STORAGE_EL2_DATABASE, ServiceConstants::DIR_EL2, ServiceConstants::DATABASE },
+        { DATA_STORAGE_EL3_BASE, ServiceConstants::DIR_EL3, ServiceConstants::BASE },
+        { DATA_STORAGE_EL3_DATABASE, ServiceConstants::DIR_EL3, ServiceConstants::DATABASE },
+        { DATA_STORAGE_EL4_BASE, ServiceConstants::DIR_EL4, ServiceConstants::BASE },
+        { DATA_STORAGE_EL4_DATABASE, ServiceConstants::DIR_EL4, ServiceConstants::DATABASE },
+    };
+    for (const auto &entry : entries) {
+        if (BundleUtil::StartWith(path, entry.prefix)) {
+            suffix = path.substr(strlen(entry.prefix));
+            el = entry.elValue;
+            baseType = entry.baseTypeValue;
+            return true;
+        }
+    }
+    return false;
+}
+
+std::string InstalldOperator::GetAbcRealPath(const std::string &bundleName, int32_t userId,
+    const std::string &relativePath)
+{
+    auto path = relativePath;
+    if (!BundleUtil::StartWith(path, ServiceConstants::PATH_SEPARATOR)) {
+        path = ServiceConstants::PATH_SEPARATOR + path;
+    }
+
+    if (BundleUtil::StartWith(path, DATA_STORAGE_BUNDLE)) {
+        auto suffix = path.substr(strlen(DATA_STORAGE_BUNDLE));
+        std::string filePath;
+        filePath.append(Constants::BUNDLE_CODE_DIR).append(ServiceConstants::PATH_SEPARATOR)
+            .append(bundleName).append(ServiceConstants::PATH_SEPARATOR).append(suffix);
+        return filePath;
+    }
+
+    std::string suffix;
+    std::string el;
+    std::string baseType;
+    if (!GetAbcDataDir(path, suffix, el, baseType)) {
+        LOG_E(BMS_TAG_INSTALLD, "The path %{private}s is illegal", path.c_str());
+        return "";
+    }
+
+    std::string filePath;
+    filePath.append(ServiceConstants::BUNDLE_APP_DATA_BASE_DIR).append(el)
+        .append(ServiceConstants::PATH_SEPARATOR).append(std::to_string(userId)).append(baseType)
+        .append(bundleName).append(ServiceConstants::PATH_SEPARATOR).append(suffix);
+    return filePath;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -104,6 +104,7 @@ constexpr const char* SHELL_ENTRY_TXT = "g:2000:rwx";
 constexpr const char* APP_EL1_PATH = "/data/app/el1/";
 constexpr const char* ARK_PROFILE_PATH = "aot_compiler/ark_profile";
 constexpr const char* PGO_FILE_PATH = "pgo_files";
+constexpr const char* PGO_DIR_PATH = "/data/local/pgo/";
 constexpr int32_t APP_DATA_SIZE_INDEX = 0;
 constexpr int32_t BUNDLE_DATA_SIZE_INDEX = 1;
 constexpr uint64_t MAX_EXTENSION_DIR_COUNT = 100;
@@ -279,6 +280,70 @@ ErrCode InstalldHostImpl::ExtractModuleFiles(const std::string &srcModulePath, c
         InstalldOperator::DeleteDir(targetPath);
         return ERR_APPEXECFWK_INSTALLD_EXTRACT_FAILED;
     }
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::CopyApFile(const std::string &bundleName,
+    const std::string &moduleName, int32_t userId)
+{
+    LOG_D(BMS_TAG_INSTALLD, "CopyApFile bundleName:%{public}s moduleName:%{public}s",
+        bundleName.c_str(), moduleName.c_str());
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+
+    if (!InstalldOperator::IsValidBundleName(bundleName)) {
+        LOG_E(BMS_TAG_INSTALLD, "Calling CopyApFile with invalid bundleName");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    if (!InstalldOperator::IsValidUserId(userId)) {
+        LOG_E(BMS_TAG_INSTALLD, "Calling CopyApFile with invalid userId");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    if (!InstalldOperator::IsValidModuleName(moduleName)) {
+        LOG_E(BMS_TAG_INSTALLD, "Calling CopyApFile with invalid moduleName");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    // Path construction (sunk from BMS)
+    std::string arkProfilePath = std::string(APP_EL1_PATH) + std::to_string(userId) +
+        ServiceConstants::PATH_SEPARATOR + ARK_PROFILE_PATH +
+        ServiceConstants::PATH_SEPARATOR + bundleName + ServiceConstants::PATH_SEPARATOR;
+    std::string mergedAp = arkProfilePath + "merged_" + moduleName + ServiceConstants::AP_SUFFIX;
+    std::string rtAp = arkProfilePath + "rt_" + moduleName + ServiceConstants::AP_SUFFIX;
+    std::string destAp = std::string(PGO_DIR_PATH) + bundleName + "_" + moduleName +
+        ServiceConstants::AP_SUFFIX;
+
+    // merged/rt selection (sunk from BMS GetSouceAp)
+    std::string sourceAp;
+    if (InstalldOperator::IsExistFile(mergedAp)) {
+        sourceAp = mergedAp;
+    } else if (InstalldOperator::IsExistFile(rtAp)) {
+        sourceAp = rtAp;
+    } else {
+        LOG_E(BMS_TAG_INSTALLD, "CopyApFile source ap not exist");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    // Path prefix validation
+    if (!InstalldOperator::IsValidPathByCopyFileScene(sourceAp, destAp, BundleDirScene::COPY_AP_FILE)) {
+        LOG_E(BMS_TAG_INSTALLD, "Calling CopyApFile with invalid path");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    if (!InstalldOperator::CopyFileFast(sourceAp, destAp)) {
+        LOG_E(BMS_TAG_INSTALLD, "CopyApFile failed, errno:%{public}d", errno);
+        return ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED;
+    }
+    mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+    if (!OHOS::ChangeModeFile(destAp, mode)) {
+        LOG_E(BMS_TAG_INSTALLD, "CopyApFile change mode failed");
+        return ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED;
+    }
+
     return ERR_OK;
 }
 
@@ -650,6 +715,35 @@ ErrCode InstalldHostImpl::ExtractResFileDir(const std::string &bundleName, const
     extractParam.isSystemApp = isSystemApp;
     if (!InstalldOperator::ExtractFiles(extractParam)) {
         LOG_E(BMS_TAG_INSTALLD, "ExtractResFileDir failed, bundleName:%{public}s", bundleName.c_str());
+        return ERR_APPEXECFWK_INSTALLD_EXTRACT_FAILED;
+    }
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::ExtractNPAPIPlugin(const std::string &bundleName, const std::string &moduleName,
+    const std::string &hapFilePath, int32_t userId)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    if (!InstalldOperator::IsValidBundleName(bundleName) ||
+        !InstalldOperator::IsValidPathByExtractNPAPIPlugin(bundleName, moduleName, hapFilePath, userId)) {
+        LOG_E(BMS_TAG_INSTALLD,
+            "Calling the function ExtractNPAPIPlugin with invalid param, bundleName:%{public}s, "
+            "moduleName:%{private}s, hapFilePath:%{private}s, userId:%{public}d",
+            bundleName.c_str(), moduleName.c_str(), hapFilePath.c_str(), userId);
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    std::string targetPath = std::string(ServiceConstants::NPAPI_PLUGIN_TARGET_BASE_PATH) +
+        std::to_string(userId) + ServiceConstants::NPAPI_PLUGIN_TARGET_DIR + bundleName;
+    ExtractParam extractParam;
+    extractParam.bundleName = bundleName;
+    extractParam.extractFileType = ExtractFileType::NPAPI_PLUGIN;
+    extractParam.srcPath = hapFilePath;
+    extractParam.targetPath = targetPath;
+    if (!InstalldOperator::ExtractFiles(extractParam)) {
+        LOG_E(BMS_TAG_INSTALLD, "ExtractNPAPIPlugin failed, bundleName:%{public}s", bundleName.c_str());
         return ERR_APPEXECFWK_INSTALLD_EXTRACT_FAILED;
     }
     return ERR_OK;
@@ -2710,6 +2804,45 @@ ErrCode InstalldHostImpl::CopyFile(const std::string &oldPath, const std::string
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::CopyAbcFile(const std::string &bundleName, int32_t userId,
+    const std::string &abcRelativePath)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    if (!InstalldOperator::IsValidBundleName(bundleName) || !InstalldOperator::IsValidUserId(userId) ||
+        !InstalldOperator::IsFileNameValid(abcRelativePath)) {
+        LOG_E(BMS_TAG_INSTALLD,
+            "Calling the function CopyAbcFile with invalid param, bundleName: %{public}s, "
+            "userId: %{public}d, abcRelativePath: %{private}s",
+            bundleName.c_str(), userId, abcRelativePath.c_str());
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    std::string oldPath = InstalldOperator::GetAbcRealPath(bundleName, userId, abcRelativePath);
+    std::string newPath = std::string(Constants::BUNDLE_CODE_DIR) +
+        ServiceConstants::PATH_SEPARATOR + bundleName + ServiceConstants::PATH_SEPARATOR +
+        ServiceConstants::ABCS_TEMP_DIR_PATH + abcRelativePath;
+    if (!InstalldOperator::IsValidPathByCopyFileScene(oldPath, newPath, BundleDirScene::COPY_ABC_FILE)) {
+        LOG_E(BMS_TAG_INSTALLD,
+            "Calling the function CopyAbcFile with invalid param, oldPath:%{private}s, newPath:%{private}s, "
+            "scene:%{public}d",
+            oldPath.c_str(), newPath.c_str(), static_cast<int32_t>(BundleDirScene::COPY_ABC_FILE));
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    if (!InstalldOperator::CopyFileFast(oldPath, newPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "Copy file %{private}s to %{private}s failed errno:%{public}d",
+            oldPath.c_str(), newPath.c_str(), errno);
+        return ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED;
+    }
+    mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+    if (!OHOS::ChangeModeFile(newPath, mode)) {
+        LOG_E(BMS_TAG_INSTALLD, "change mode failed");
+        return ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED;
+    }
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::CopySharedHsp(const std::string &bundleName, const std::string &moduleName,
     const std::string &sourceHspPath, uint32_t versionCode, const std::string &sourceSignaturePath)
 {
@@ -2763,6 +2896,48 @@ ErrCode InstalldHostImpl::CopySharedHsp(const std::string &bundleName, const std
         return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED;
     }
 #endif
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::CopyServiceHsp(const std::string &bundleName, const std::string &moduleName,
+    const std::string &sourceHspPath, uint32_t versionCode)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    if (!InstalldOperator::IsValidBundleName(bundleName) || !InstalldOperator::IsFileNameValid(moduleName) ||
+        !InstalldOperator::IsFileNameValid(sourceHspPath) ||
+        !InstalldOperator::EndsWith(sourceHspPath, ServiceConstants::HSP_FILE_SUFFIX)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid service hsp param, bundleName:%{private}s, moduleName:%{private}s, "
+            "sourceHspPath:%{private}s",
+            bundleName.c_str(), moduleName.c_str(), sourceHspPath.c_str());
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    if (versionCode == 0) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid versionCode:%{public}u", versionCode);
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    std::string newPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName +
+        ServiceConstants::PATH_SEPARATOR + HSP_VERSION_PREFIX + std::to_string(versionCode) +
+        ServiceConstants::PATH_SEPARATOR + moduleName + ServiceConstants::PATH_SEPARATOR + moduleName +
+        ServiceConstants::HSP_FILE_SUFFIX;
+    if (!InstalldOperator::IsValidPathByCopyFileScene(sourceHspPath, newPath, BundleDirScene::COPY_SERVICE_HSP)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid path, sourceHspPath:%{private}s, newPath:%{private}s",
+            sourceHspPath.c_str(), newPath.c_str());
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    if (!InstalldOperator::CopyFileFast(sourceHspPath, newPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "Copy service hsp %{private}s to %{private}s failed errno:%{public}d",
+            sourceHspPath.c_str(), newPath.c_str(), errno);
+        return ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED;
+    }
+    mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+    if (!OHOS::ChangeModeFile(newPath, mode)) {
+        LOG_E(BMS_TAG_INSTALLD, "change mode failed");
+        return ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED;
+    }
     return ERR_OK;
 }
 
@@ -2866,6 +3041,60 @@ ErrCode InstalldHostImpl::CopyPgoFile(const std::string &bundleName, const std::
         LOG_E(BMS_TAG_INSTALLD, "change mode failed");
         return ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED;
     }
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::CopyPluginHsp(const std::string &hostBundleName, const std::string &bundleName,
+    const std::string &moduleName, const std::string &sourceHspPath, const std::string &sourceSignaturePath)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    if (!InstalldOperator::IsValidBundleName(hostBundleName) || !InstalldOperator::IsFileNameValid(bundleName) ||
+        !InstalldOperator::IsFileNameValid(moduleName) || sourceHspPath.empty() || sourceSignaturePath.empty() ||
+        !InstalldOperator::IsFileNameValid(sourceHspPath) || !InstalldOperator::IsFileNameValid(sourceSignaturePath) ||
+        !InstalldOperator::EndsWith(sourceHspPath, ServiceConstants::HSP_FILE_SUFFIX) ||
+        !InstalldOperator::EndsWith(sourceSignaturePath, ServiceConstants::CODE_SIGNATURE_FILE_SUFFIX) ||
+        sourceHspPath.find(ServiceConstants::HAP_COPY_PATH) != 0 ||
+        sourceHspPath.find(ServiceConstants::SECURITY_STREAM_INSTALL_PATH) == std::string::npos ||
+        sourceSignaturePath.find(ServiceConstants::HAP_COPY_PATH) != 0 ||
+        sourceSignaturePath.find(ServiceConstants::SECURITY_STREAM_INSTALL_PATH) == std::string::npos) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid plugin hsp param, hostBundleName:%{private}s, bundleName:%{private}s, "
+            "moduleName:%{private}s, sourceHspPath:%{private}s, sourceSignaturePath:%{private}s",
+            hostBundleName.c_str(), bundleName.c_str(), moduleName.c_str(), sourceHspPath.c_str(),
+            sourceSignaturePath.c_str());
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    std::string newPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
+        hostBundleName + ServiceConstants::PATH_SEPARATOR + ServiceConstants::PLUGIN_FILE_PATH +
+        ServiceConstants::PATH_SEPARATOR + bundleName + ServiceConstants::PATH_SEPARATOR + moduleName +
+        ServiceConstants::HSP_FILE_SUFFIX;
+    if (!InstalldOperator::IsValidPathByCopyFileScene(sourceHspPath, newPath, BundleDirScene::COPY_PLUGIN_HSP)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid path, sourceHspPath:%{private}s, newPath:%{private}s",
+            sourceHspPath.c_str(), newPath.c_str());
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    if (!InstalldOperator::CopyFileFast(sourceHspPath, newPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "Copy plugin hsp %{private}s to %{private}s failed errno:%{public}d",
+            sourceHspPath.c_str(), newPath.c_str(), errno);
+        return ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED;
+    }
+    mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+    if (!OHOS::ChangeModeFile(newPath, mode)) {
+        LOG_E(BMS_TAG_INSTALLD, "change mode failed");
+        return ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED;
+    }
+
+#if defined(CODE_SIGNATURE_ENABLE)
+    Security::CodeSign::EntryMap entryMap = {{ ServiceConstants::CODE_SIGNATURE_HAP, newPath }};
+    ErrCode ret = Security::CodeSign::CodeSignUtils::EnforceCodeSignForApp(entryMap, sourceSignaturePath);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "plugin hsp code signature failed due to %{public}d", ret);
+        return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED;
+    }
+#endif
     return ERR_OK;
 }
 
@@ -3220,6 +3449,45 @@ ErrCode InstalldHostImpl::CopyExtendResourceFile(const std::string &bundleName, 
     }
     return ERR_OK;
 }
+
+ErrCode InstalldHostImpl::CopyExtendProfileFile(
+    const std::string &bundleName, const std::string &profileSourceRelativePath, bool isUpdate)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    const std::string sourcePrefix = std::string(ServiceConstants::EXT_PROFILE) +
+        ServiceConstants::PATH_SEPARATOR;
+    if (!InstalldOperator::IsValidBundleName(bundleName) || !IsValidRelativePath(profileSourceRelativePath) ||
+        profileSourceRelativePath.compare(0, sourcePrefix.size(), sourcePrefix) != 0) {
+        LOG_E(BMS_TAG_INSTALLD, "CopyExtendProfileFile invalid param");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    const std::string sourceRoot = std::string(ServiceConstants::HAP_COPY_PATH) +
+        ServiceConstants::PATH_SEPARATOR + sourcePrefix;
+    std::string sourcePath;
+    if (!BuildPathInRoot(sourceRoot, profileSourceRelativePath.substr(sourcePrefix.size()), sourcePath)) {
+        LOG_E(BMS_TAG_INSTALLD, "CopyExtendProfileFile source path is invalid");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    const std::string targetBundleName = isUpdate ?
+        std::string(ServiceConstants::BUNDLE_NEW_CODE_DIR) + bundleName : bundleName;
+    const std::string targetRoot = BuildBundleRoot(Constants::BUNDLE_CODE_DIR, targetBundleName) +
+        ServiceConstants::EXT_PROFILE + ServiceConstants::PATH_SEPARATOR;
+    const std::string targetPath = targetRoot + ServiceConstants::MANIFEST_JSON;
+    if (!IsPathInRoot(targetRoot, targetPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "CopyExtendProfileFile path is invalid");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    if (!InstalldOperator::CopyFileWithMode(sourcePath, targetPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "CopyExtendProfileFile failed, errno:%{public}d", errno);
+        return ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED;
+    }
+    return ERR_OK;
+}
+
 
 ErrCode InstalldHostImpl::GetNativeLibraryFileNames(const std::string &filePath, const std::string &cpuAbi,
     std::vector<std::string> &fileNames)
@@ -4195,6 +4463,66 @@ ErrCode InstalldHostImpl::MoveSharedHspToCodeDir(const std::string &bundleName, 
 
     if (!InstalldOperator::MoveFile(sourceHspPath, targetPath)) {
         LOG_E(BMS_TAG_INSTALLD, "move shared hsp %{private}s to %{private}s failed errno:%{public}d",
+            sourceHspPath.c_str(), targetPath.c_str(), errno);
+        if (errno == ENOENT) {
+            return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+        }
+        return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
+    }
+    if (!InstalldOperator::FsyncFile(targetPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "FsyncFile %{private}s failed errno:%{public}d", targetPath.c_str(), errno);
+        return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
+    }
+    mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+    if (!OHOS::ChangeModeFile(targetPath, mode)) {
+        LOG_E(BMS_TAG_INSTALLD, "change mode failed");
+        return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
+    }
+    if (!InstalldOperator::ChangeFileAttr(targetPath, INSTALLS_UID, INSTALLS_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "ChangeAttr %{private}s failed errno:%{public}d", targetPath.c_str(), errno);
+        return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
+    }
+
+#ifdef WITH_SELINUX
+    const char *context = "u:object_r:data_app_el1_file:s0";
+    if (lsetfilecon(targetPath.c_str(), context) < 0) {
+        LOG_E(BMS_TAG_INSTALLD, "setcon %{private}s failed errno:%{public}d", targetPath.c_str(), errno);
+        return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
+    }
+#endif
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::MovePluginHspToCodeDir(const std::string &hostBundleName,
+    const std::string &pluginBundleName, const std::string &moduleName, const std::string &sourceHspPath)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    if (!InstalldOperator::IsValidBundleName(hostBundleName) || !InstalldOperator::IsFileNameValid(pluginBundleName) ||
+        !InstalldOperator::IsFileNameValid(moduleName) || sourceHspPath.empty() ||
+        !InstalldOperator::EndsWith(sourceHspPath, ServiceConstants::HSP_FILE_SUFFIX) ||
+        sourceHspPath.find(ServiceConstants::HAP_COPY_PATH) != 0 ||
+        sourceHspPath.find(ServiceConstants::SECURITY_STREAM_INSTALL_PATH) == std::string::npos) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid plugin hsp param, hostBundleName:%{private}s, pluginBundleName:%{private}s, "
+            "moduleName:%{private}s, sourceHspPath:%{private}s",
+            hostBundleName.c_str(), pluginBundleName.c_str(), moduleName.c_str(), sourceHspPath.c_str());
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    std::string targetPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
+        hostBundleName + ServiceConstants::PATH_SEPARATOR + ServiceConstants::PLUGIN_FILE_PATH +
+        ServiceConstants::PATH_SEPARATOR + pluginBundleName + ServiceConstants::PATH_SEPARATOR + moduleName +
+        ServiceConstants::HSP_FILE_SUFFIX;
+    if (!InstalldOperator::IsValidPathByCopyFileScene(sourceHspPath, targetPath, BundleDirScene::COPY_PLUGIN_HSP)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid path, sourceHspPath:%{private}s, targetPath:%{private}s",
+            sourceHspPath.c_str(), targetPath.c_str());
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    if (!InstalldOperator::MoveFile(sourceHspPath, targetPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "move plugin hsp %{private}s to %{private}s failed errno:%{public}d",
             sourceHspPath.c_str(), targetPath.c_str(), errno);
         if (errno == ENOENT) {
             return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;

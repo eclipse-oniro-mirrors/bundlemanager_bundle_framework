@@ -162,6 +162,14 @@ ErrCode InstalldClient::ExtractQuickFixRes(const std::string &bundleName, const 
     return CallService(&IInstalld::ExtractQuickFixRes, bundleName, moduleName, hqfFilePath, needFakeDecompression);
 }
 
+ErrCode InstalldClient::CopyApFile(const std::string &bundleName, const std::string &moduleName, int32_t userId)
+{
+    if (bundleName.empty() || moduleName.empty()) {
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::CopyApFile, bundleName, moduleName, userId);
+}
+
 ErrCode InstalldClient::ExtractResFileDir(const std::string &bundleName, const std::string &moduleName,
     const std::string &hapFilePath, bool needFakeDecompression, bool isSystemApp,
     bool useNewCodeDir, bool useModuleTmp)
@@ -171,6 +179,15 @@ ErrCode InstalldClient::ExtractResFileDir(const std::string &bundleName, const s
     }
     return CallService(&IInstalld::ExtractResFileDir, bundleName, moduleName, hapFilePath,
         needFakeDecompression, isSystemApp, useNewCodeDir, useModuleTmp);
+}
+
+ErrCode InstalldClient::ExtractNPAPIPlugin(const std::string &bundleName, const std::string &moduleName,
+    const std::string &hapFilePath, int32_t userId)
+{
+    if (bundleName.empty() || moduleName.empty() || hapFilePath.empty()) {
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::ExtractNPAPIPlugin, bundleName, moduleName, hapFilePath, userId);
 }
 
 ErrCode InstalldClient::ExtractResourceFiles(const std::string &bundleName, const std::string &moduleName,
@@ -534,6 +551,30 @@ ErrCode InstalldClient::CopyFile(const std::string &oldPath, const std::string &
     return CallService(&IInstalld::CopyFile, oldPath, newPath, scene, signatureFilePath);
 }
 
+ErrCode InstalldClient::CopyPluginHsp(const std::string &hostBundleName, const std::string &bundleName,
+    const std::string &moduleName, const std::string &sourceHspPath, const std::string &sourceSignaturePath)
+{
+    if (hostBundleName.empty() || bundleName.empty() || moduleName.empty() || sourceHspPath.empty() ||
+        sourceSignaturePath.empty()) {
+        APP_LOGE("params are invalid");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    return CallService(&IInstalld::CopyPluginHsp, hostBundleName, bundleName, moduleName, sourceHspPath,
+        sourceSignaturePath);
+}
+
+ErrCode InstalldClient::CopyServiceHsp(const std::string &bundleName, const std::string &moduleName,
+    const std::string &sourceHspPath, uint32_t versionCode)
+{
+    if (bundleName.empty() || moduleName.empty() || sourceHspPath.empty() || versionCode == 0) {
+        APP_LOGE("params are invalid");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    return CallService(&IInstalld::CopyServiceHsp, bundleName, moduleName, sourceHspPath, versionCode);
+}
+
 ErrCode InstalldClient::CopyHapToInstallPath(const CopyHapToInstallPathParam &copyHapToInstallPathParam)
 {
     if (copyHapToInstallPathParam.bundleName.empty() || copyHapToInstallPathParam.moduleName.empty() ||
@@ -657,6 +698,15 @@ ErrCode InstalldClient::CopyFiles(const std::string &sourceDir, const std::strin
     const std::string &bundleName, BundleDirScene scene)
 {
     return CallService(&IInstalld::CopyFiles, sourceDir, destinationDir, bundleName, scene);
+}
+
+ErrCode InstalldClient::CopyExtendProfileFile(
+    const std::string &bundleName, const std::string &profileSourceRelativePath, bool isUpdate)
+{
+    if (bundleName.empty() || profileSourceRelativePath.empty()) {
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::CopyExtendProfileFile, bundleName, profileSourceRelativePath, isUpdate);
 }
 
 ErrCode InstalldClient::CopyExtendResourceFile(const std::string &bundleName, const std::string &moduleName)
@@ -886,6 +936,18 @@ ErrCode InstalldClient::MoveHapToCodeDir(const std::string &originPath, const st
     return CallService(&IInstalld::MoveHapToCodeDir, originPath, targetPath);
 }
 
+ErrCode InstalldClient::MovePluginHspToCodeDir(const std::string &hostBundleName,
+    const std::string &pluginBundleName, const std::string &moduleName, const std::string &sourceHspPath)
+{
+    if (hostBundleName.empty() || pluginBundleName.empty() || moduleName.empty() || sourceHspPath.empty()) {
+        APP_LOGE("params are invalid");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    return CallService(&IInstalld::MovePluginHspToCodeDir, hostBundleName, pluginBundleName, moduleName,
+        sourceHspPath);
+}
+
 ErrCode InstalldClient::MoveSharedHspToCodeDir(const std::string &bundleName, const std::string &moduleName,
     const std::string &sourceHspPath, uint32_t versionCode)
 {
@@ -1071,5 +1133,15 @@ ErrCode InstalldClient::GetCacheDiskUsageFromPath(const std::vector<std::string>
 void InstalldClient::OnLoadSystemAbilitySuccess(const sptr<IRemoteObject>& remoteObject) {}
 
 void InstalldClient::OnLoadSystemAbilityFail() {}
+
+ErrCode InstalldClient::CopyAbcFile(const std::string &bundleName, int32_t userId,
+    const std::string &abcRelativePath)
+{
+    if (bundleName.empty() || abcRelativePath.empty()) {
+        APP_LOGE("bundleName or abcRelativePath is empty");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::CopyAbcFile, bundleName, userId, abcRelativePath);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

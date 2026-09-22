@@ -216,6 +216,12 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::COPY_FILE):
             result = this->HandleCopyFile(data, reply);
             break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::COPY_PLUGIN_HSP):
+            result = this->HandleCopyPluginHsp(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::COPY_SERVICE_HSP):
+            result = this->HandleCopyServiceHsp(data, reply);
+            break;
         case static_cast<uint32_t>(InstalldInterfaceCode::COPY_HAP_TO_INSTALL_PATH):
             result = this->HandleCopyHapToInstallPath(data, reply);
             break;
@@ -230,6 +236,9 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
             break;
         case static_cast<uint32_t>(InstalldInterfaceCode::MOVE_HAP_TO_CODE_DIR):
             result = this->HandleMoveHapToCodeDir(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::MOVE_PLUGIN_HSP_TO_CODE_DIR):
+            result = this->HandleMovePluginHspToCodeDir(data, reply);
             break;
         case static_cast<uint32_t>(InstalldInterfaceCode::MOVE_SHARED_HSP_TO_CODE_DIR):
             result = this->HandleMoveSharedHspToCodeDir(data, reply);
@@ -281,6 +290,12 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
             break;
         case static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_QUICK_FIX_RES):
             result = this->HandleExtractQuickFixRes(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::COPY_AP_FILE_NEW):
+            result = this->HandleCopyApFile(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_NPAPI_PLUGIN):
+            result = this->HandleExtractNPAPIPlugin(data, reply);
             break;
         case static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_RESOURCE_FILES):
             result = this->HandleExtractResourceFiles(data, reply);
@@ -441,6 +456,12 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::GET_CACHE_DISK_USAGE_FROM_PATH):
             result = HandleGetCacheDiskUsageFromPath(data, reply);
             break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::COPY_EXTEND_PROFILE_FILE):
+            result = HandleCopyExtendProfileFile(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::COPY_ABC_FILE):
+            result = HandleCopyAbcFile(data, reply);
+            break;
         case static_cast<uint32_t>(InstalldInterfaceCode::COPY_EXTEND_RESOURCE_FILE):
             result = HandleCopyExtendResourceFile(data, reply);
             break;
@@ -588,6 +609,17 @@ bool InstalldHost::HandleExtractSoFiles(MessageParcel &data, MessageParcel &repl
     return true;
 }
 
+bool InstalldHost::HandleCopyApFile(MessageParcel &data, MessageParcel &reply)
+{
+    std::string bundleName = Str16ToStr8(data.ReadString16());
+    std::string moduleName = Str16ToStr8(data.ReadString16());
+    int32_t userId = data.ReadInt32();
+
+    ErrCode result = CopyApFile(bundleName, moduleName, userId);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
 bool InstalldHost::HandleCopyHapToTempPath(MessageParcel &data, MessageParcel &reply)
 {
     std::string bundleName = Str16ToStr8(data.ReadString16());
@@ -651,6 +683,17 @@ bool InstalldHost::HandleExtractResFileDir(MessageParcel &data, MessageParcel &r
     bool useModuleTmp = data.ReadBool();
     ErrCode result = ExtractResFileDir(bundleName, moduleName, hapFilePath, needFakeDecompression, isSystemApp,
         useNewCodeDir, useModuleTmp);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleExtractNPAPIPlugin(MessageParcel &data, MessageParcel &reply)
+{
+    std::string bundleName = Str16ToStr8(data.ReadString16());
+    std::string moduleName = Str16ToStr8(data.ReadString16());
+    std::string hapFilePath = Str16ToStr8(data.ReadString16());
+    int32_t userId = data.ReadInt32();
+    ErrCode result = ExtractNPAPIPlugin(bundleName, moduleName, hapFilePath, userId);
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
@@ -1250,6 +1293,18 @@ bool InstalldHost::HandleCopySharedHsp(MessageParcel &data, MessageParcel &reply
     return true;
 }
 
+bool InstalldHost::HandleCopyServiceHsp(MessageParcel &data, MessageParcel &reply)
+{
+    std::string bundleName = Str16ToStr8(data.ReadString16());
+    std::string moduleName = Str16ToStr8(data.ReadString16());
+    std::string sourceHspPath = Str16ToStr8(data.ReadString16());
+    uint32_t versionCode = static_cast<uint32_t>(data.ReadUint32());
+
+    ErrCode result = CopyServiceHsp(bundleName, moduleName, sourceHspPath, versionCode);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
 bool InstalldHost::HandleCopySkillHsp(MessageParcel &data, MessageParcel &reply)
 {
     std::string bundleName = Str16ToStr8(data.ReadString16());
@@ -1285,6 +1340,19 @@ bool InstalldHost::HandleCopyHapToInstallPath(MessageParcel &data, MessageParcel
     }
 
     ErrCode result = CopyHapToInstallPath(*info);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleCopyPluginHsp(MessageParcel &data, MessageParcel &reply)
+{
+    std::string hostBundleName = Str16ToStr8(data.ReadString16());
+    std::string bundleName = Str16ToStr8(data.ReadString16());
+    std::string moduleName = Str16ToStr8(data.ReadString16());
+    std::string sourceHspPath = Str16ToStr8(data.ReadString16());
+    std::string sourceSignaturePath = Str16ToStr8(data.ReadString16());
+
+    ErrCode result = CopyPluginHsp(hostBundleName, bundleName, moduleName, sourceHspPath, sourceSignaturePath);
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
@@ -1453,6 +1521,16 @@ bool InstalldHost::HandleCopyExtendResourceFile(MessageParcel &data, MessageParc
     std::string bundleName = Str16ToStr8(data.ReadString16());
     std::string moduleName = Str16ToStr8(data.ReadString16());
     ErrCode result = CopyExtendResourceFile(bundleName, moduleName);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleCopyExtendProfileFile(MessageParcel &data, MessageParcel &reply)
+{
+    std::string bundleName = Str16ToStr8(data.ReadString16());
+    std::string profileSourceRelativePath = Str16ToStr8(data.ReadString16());
+    bool isUpdate = data.ReadBool();
+    ErrCode result = CopyExtendProfileFile(bundleName, profileSourceRelativePath, isUpdate);
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
@@ -1763,6 +1841,18 @@ bool InstalldHost::HandleMoveSharedHspToCodeDir(MessageParcel &data, MessageParc
     return true;
 }
 
+bool InstalldHost::HandleMovePluginHspToCodeDir(MessageParcel &data, MessageParcel &reply)
+{
+    std::string hostBundleName = Str16ToStr8(data.ReadString16());
+    std::string pluginBundleName = Str16ToStr8(data.ReadString16());
+    std::string moduleName = Str16ToStr8(data.ReadString16());
+    std::string sourceHspPath = Str16ToStr8(data.ReadString16());
+
+    ErrCode result = MovePluginHspToCodeDir(hostBundleName, pluginBundleName, moduleName, sourceHspPath);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
 bool InstalldHost::HandleCreateDataGroupDirs(MessageParcel &data, MessageParcel &reply)
 {
     auto dataGroupSize = data.ReadUint32();
@@ -2045,6 +2135,17 @@ bool InstalldHost::HandleCreatePrintServiceDir(MessageParcel &data, MessageParce
     int32_t appIndex = data.ReadInt32();
     int32_t appUid = data.ReadInt32();
     ErrCode result = CreatePrintServiceDir(bundleName, userId, appIndex, appUid);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleCopyAbcFile(MessageParcel &data, MessageParcel &reply)
+{
+    std::string bundleName = Str16ToStr8(data.ReadString16());
+    int32_t userId = data.ReadInt32();
+    std::string abcRelativePath = Str16ToStr8(data.ReadString16());
+
+    ErrCode result = CopyAbcFile(bundleName, userId, abcRelativePath);
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

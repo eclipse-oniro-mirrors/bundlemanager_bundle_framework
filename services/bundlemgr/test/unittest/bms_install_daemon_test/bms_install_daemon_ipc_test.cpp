@@ -1706,6 +1706,21 @@ HWTEST_F(BmsInstallDaemonIpcTest, CodeSignatureParam_Marshalling_0100, Function 
 }
 
 /**
+ * @tc.number: InstalldSceneInterfacesIpc_CopyExtendProfileFile_0100
+ * @tc.name: test CopyExtendProfileFile IPC
+ * @tc.desc: Verify fixed IPC code and proxy-to-host dispatch for CopyExtendProfileFile.
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldSceneInterfacesIpc_CopyExtendProfileFile_0100,
+    Function | SmallTest | Level0)
+{
+    EXPECT_EQ(static_cast<uint32_t>(InstalldInterfaceCode::COPY_EXTEND_PROFILE_FILE), 103U);
+    auto proxy = GetInstallProxy();
+    ASSERT_NE(proxy, nullptr);
+    EXPECT_EQ(proxy->CopyExtendProfileFile(
+        TEST_BUNDLE_NAME, "ext_profile/scene_test/profile.json", false), ERR_OK);
+}
+
+/**
  * @tc.number: HapModuleExtractParamTest_0100
  * @tc.name: test Marshalling of HapModuleExtractParam
  * @tc.desc: 1. hapSrcPath survives Marshalling/ReadFromParcel round trip
@@ -1799,4 +1814,36 @@ HWTEST_F(BmsInstallDaemonIpcTest, CopyHapToTempPath_Ipc_0100, Function | SmallTe
     auto ret = proxy->CopyHapToTempPath(bundleName, hapRealPath, tempDirName, hapFileName);
     EXPECT_EQ(ret, ERR_OK);
 }
+
+/**
+ * @tc.number: CopyAbcFilet_0100
+ * @tc.name: test Marshalling function of CopyAbcFile
+ * @tc.desc: 1. calling CopyAbcFile of proxy
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, CopyAbcFile_0100, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    EXPECT_NE(proxy, nullptr);
+
+    auto ret = proxy->CopyAbcFile(TEST_BUNDLE_NAME, Constants::START_USERID, TEST_STRING);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CopyApFile_Ipc_0100
+ * @tc.name: test CopyApFile IPC serialization
+ * @tc.desc: 1. verify Proxy write order matches Host read order
+ * @tc.require:
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, CopyApFile_Ipc_0100, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    ASSERT_NE(proxy, nullptr);
+    std::string bundleName = "com.example.test";
+    std::string moduleName = "entry";
+    int32_t userId = 100;
+    auto ret = proxy->CopyApFile(bundleName, moduleName, userId);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
 } // OHOS

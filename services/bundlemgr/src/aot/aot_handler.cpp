@@ -774,30 +774,15 @@ std::string AOTHandler::GetSouceAp(const std::string &mergedAp, const std::strin
 void AOTHandler::CopyApWithBundle(const std::string &bundleName, const BundleInfo &bundleInfo,
     const int32_t userId, std::vector<std::string> &results) const
 {
-    std::string arkProfilePath = BuildArkProfilePath(userId, bundleName) + ServiceConstants::PATH_SEPARATOR;
-    ErrCode errCode;
     for (const auto &moduleName : bundleInfo.moduleNames) {
-        std::string mergedAp = arkProfilePath + PGO_MERGED_AP_PREFIX + moduleName + ServiceConstants::AP_SUFFIX;
-        std::string rtAp = arkProfilePath + PGO_RT_AP_PREFIX + moduleName + ServiceConstants::AP_SUFFIX;
-        std::string sourceAp = GetSouceAp(mergedAp, rtAp);
         std::string result;
-        if (sourceAp.empty()) {
-            result.append(bundleName).append(" ").append(moduleName).append(" get source ap failed");
+        ErrCode errCode = InstalldClient::GetInstance()->CopyApFile(bundleName, moduleName, userId);
+        if (errCode != ERR_OK) {
+            result.append(bundleName).append(" ").append(moduleName).append(" copy ap failed");
             results.emplace_back(result);
             continue;
         }
-        if (sourceAp.find(ServiceConstants::RELATIVE_PATH) != std::string::npos) {
-            return;
-        }
-        std::string destAp = COPY_AP_DEST_PATH  + bundleName + "_" + moduleName + ServiceConstants::AP_SUFFIX;
-        result.append(sourceAp);
-        errCode = InstalldClient::GetInstance()->CopyFile(sourceAp, destAp, BundleDirScene::COPY_AP_FILE);
-        if (errCode != ERR_OK) {
-            APP_LOGE("Copy ap dir %{public}s failed err %{public}d", sourceAp.c_str(), errCode);
-            result.append(" copy ap failed");
-            continue;
-        }
-        result.append(" copy ap success");
+        result.append(bundleName).append(" ").append(moduleName).append(" copy ap success");
         results.emplace_back(result);
     }
 }

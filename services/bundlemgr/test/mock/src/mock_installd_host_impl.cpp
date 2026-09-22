@@ -106,6 +106,12 @@ ErrCode InstalldHostImpl::ExtractHapModuleFiles(const HapModuleExtractParam &par
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::ExtractNPAPIPlugin(const std::string &bundleName, const std::string &moduleName,
+    const std::string &hapFilePath, int32_t userId)
+{
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::ExtractHnpFiles(const std::map<std::string, std::string> &hnpPackageMap,
     const ExtractParam &extractParam)
 {
@@ -283,8 +289,20 @@ ErrCode InstalldHostImpl::CopySharedHsp(const std::string &bundleName, const std
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::CopyServiceHsp(const std::string &bundleName, const std::string &moduleName,
+    const std::string &sourceHspPath, uint32_t versionCode)
+{
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::CopySkillHsp(const std::string &bundleName, const std::string &moduleName,
     const std::string &hspFileName, const std::string &sourceTempDir, bool isUpdate)
+{
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::CopyPluginHsp(const std::string &hostBundleName, const std::string &bundleName,
+    const std::string &moduleName, const std::string &sourceHspPath, const std::string &sourceSignaturePath)
 {
     return ERR_OK;
 }
@@ -364,6 +382,12 @@ ErrCode InstalldHostImpl::CopyExtendResourceFile(const std::string &bundleName, 
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::CopyExtendProfileFile(
+    const std::string &bundleName, const std::string &profileSourceRelativePath, bool isUpdate)
+{
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::ExtractFiles(const ExtractParam &extractParam)
 {
     return ERR_OK;
@@ -372,6 +396,11 @@ ErrCode InstalldHostImpl::ExtractFiles(const ExtractParam &extractParam)
 ErrCode InstalldHostImpl::ExtractQuickFixSoFile(const std::string &bundleName, const std::string &hqfFilePath,
     const std::string &nativeLibraryPath, const std::string &cpuAbi, bool isReplace, int32_t versionCode,
     const std::string &targetPathSuffix)
+{
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::CopyApFile(const std::string &bundleName, const std::string &moduleName, int32_t userId)
 {
     return ERR_OK;
 }
@@ -525,6 +554,12 @@ ErrCode InstalldHostImpl::MoveSharedHspToCodeDir(const std::string &bundleName, 
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::MovePluginHspToCodeDir(const std::string &hostBundleName,
+    const std::string &pluginBundleName, const std::string &moduleName, const std::string &sourceHspPath)
+{
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::CreateDataGroupDirs(const std::vector<CreateDirParam> &params)
 {
     return ERR_OK;
@@ -629,6 +664,11 @@ ErrCode InstalldHostImpl::CopyPgoFile(const std::string &bundleName, const std::
 
 ErrCode InstalldHostImpl::GetCacheDiskUsageFromPath(const std::vector<std::string> &paths,
     int64_t &statSize, int64_t timeoutMs)
+{
+    return ERR_OK;
+}
+ErrCode InstalldHostImpl::CopyAbcFile(const std::string &bundleName, int32_t userId,
+    const std::string &abcRelativePath)
 {
     return ERR_OK;
 }

@@ -116,7 +116,7 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     installer.SavePluginInfoToStorage(newInfo, hostBundleInfo);
     installer.PluginRollBack(hostBundleName);
     installer.RemovePluginDir(hostBundleInfo);
-    installer.SaveHspToInstallDir(bundlePath, moduleDir, moduleName, newInfo);
+    installer.SaveHspToInstallDir(bundlePath, moduleDir, moduleName, hostBundleName, newInfo);
     installer.RemoveEmptyDirs(moduleDir, hostBundleName);
     installer.RemoveDir(moduleDir, hostBundleName);
     installer.ProcessPluginUninstall(hostBundleInfo);
