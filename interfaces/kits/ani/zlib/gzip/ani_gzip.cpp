@@ -1052,11 +1052,6 @@ ani_string GzgetsNative(ani_env* env, ani_object instance, ani_arraybuffer aniBu
     }
     CHECK_PARAM_NULL_THROW_RETURN(buf, EINVAL, nullptr);
 
-    if (bufLen == 0) {
-        APP_LOGE("bufLen is 0");
-        AniZLibCommon::ThrowZLibNapiError(env, EINVAL);
-        return nullptr;
-    }
     char* ret = gzgets(nativeGZFile, reinterpret_cast<char*>(buf), static_cast<int>(bufLen));
     CHECK_PARAM_NULL_THROW_RETURN(ret, ENOSTR, nullptr);
 

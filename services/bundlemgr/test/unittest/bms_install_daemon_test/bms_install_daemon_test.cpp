@@ -45,6 +45,17 @@ const std::string BUNDLE_DATA_DIR_DATA_BASE = "/data/app/el2/100/database/com.ex
 const std::string BUNDLE_DATA_DIR_DATA_BASE_TEMP = "/data/app/el2/100/database/com.example.l3jsdemo/temp";
 const std::string BUNDLE_CODE_DIR = "/data/app/el1/bundle/public/com.example.l3jsdemo";
 const std::string BUNDLE_CODE_DIR_CODE = "/data/app/el1/bundle/public/com.example.l3jsdemo/code";
+const std::string BUNDLE_NEW_CODE_DIR = "/data/app/el1/bundle/public/+new-com.example.l3jsdemo";
+const std::string SECURITY_QUICK_FIX_BUNDLE_DIR =
+    "/data/service/el1/public/bms/bundle_manager_service/security_quick_fix/scene_test";
+const std::string SECURITY_QUICK_FIX_TARGET_DIR =
+    "/data/service/el1/public/bms/bundle_manager_service/security_quick_fix/" + BUNDLE_NAME13;
+const std::string EXT_PROFILE_STAGING_DIR =
+    "/data/service/el1/public/bms/bundle_manager_service/ext_profile/scene_test";
+const std::string EXT_RESOURCE_STAGING_DIR =
+    "/data/service/el1/public/bms/bundle_manager_service/ext_resource/scene_test";
+const std::string HAP_COPY_TEMP_DIR =
+    "/data/service/el1/public/bms/bundle_manager_service/com.example.l3jsdemo_tmp";
 const std::string BUNDLE_NAME = "com.example.l4jsdemo";
 const std::string TEST_CPU_ABI = "arm64";
 const std::string HAP_FILE_PATH =
@@ -70,8 +81,6 @@ const int32_t GID = 1000;
 const std::string APL = "normal";
 const std::string BUNDLE_DATA_DIR_2 = "/data/app/el2/100/base/com.example.14jsdemo";
 const std::string BUNDLE_DATA_DIR_CACHE_2 = "/data/app/el2/100/base/com.example.l4jsdemo/cache/temp";
-const std::string SECURITY_QUICK_FIX_BUNDLE_DIR =
-    "/data/service/el1/public/bms/bundle_manager_service/security_quick_fix/scene_test";
 }  // namespace
 
 class BmsInstallDaemonTest : public testing::Test {
@@ -140,6 +149,14 @@ void BmsInstallDaemonTest::TearDown()
 {
     // clear files.
     OHOS::ForceRemoveDirectory(BUNDLE_CODE_DIR);
+    OHOS::ForceRemoveDirectory(BUNDLE_NEW_CODE_DIR);
+    OHOS::ForceRemoveDirectory(SECURITY_QUICK_FIX_BUNDLE_DIR);
+    RemoveFile(SECURITY_QUICK_FIX_BUNDLE_DIR);
+    OHOS::ForceRemoveDirectory(SECURITY_QUICK_FIX_TARGET_DIR);
+    RemoveFile(SECURITY_QUICK_FIX_TARGET_DIR);
+    OHOS::ForceRemoveDirectory(EXT_PROFILE_STAGING_DIR);
+    OHOS::ForceRemoveDirectory(EXT_RESOURCE_STAGING_DIR);
+    OHOS::ForceRemoveDirectory(HAP_COPY_TEMP_DIR);
     OHOS::ForceRemoveDirectory(BUNDLE_DATA_DIR);
     OHOS::ForceRemoveDirectory(BUNDLE_DATA_DIR_DATA_BASE);
 
@@ -2970,6 +2987,33 @@ HWTEST_F(BmsInstallDaemonTest, ExtractQuickFixSoFile_0400, Function | SmallTest 
     ErrCode ret = hostImpl.ExtractQuickFixSoFile(
         "com.example", "/path/hqf.hqf", "libs/arm64", "arm64-v8a", false, 1000000, "../suffix");
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: InstalldSceneInterfaces_CopyExtendFiles_0100
+ * @tc.name: test extend resource and profile copy branches
+ * @tc.desc: Cover invalid paths, install/update targets, successful copies and copy failures.
+ */
+HWTEST_F(BmsInstallDaemonTest, InstalldSceneInterfaces_CopyExtendFiles_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    EXPECT_EQ(hostImpl.CopyExtendResourceFile("", "entry"),
+        ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    EXPECT_EQ(hostImpl.CopyExtendResourceFile(BUNDLE_NAME13, "../entry"),
+        ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    EXPECT_EQ(hostImpl.CopyExtendResourceFile(BUNDLE_NAME13, "entry"), ERR_OK);
+
+    const std::string sourceResourceDir = BUNDLE_CODE_DIR + "/ext_resource";
+    ASSERT_TRUE(OHOS::ForceCreateDirectory(sourceResourceDir));
+    EXPECT_EQ(hostImpl.CopyExtendResourceFile(BUNDLE_NAME13, "entry"),
+        ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
+    CreateFile(sourceResourceDir + "/entry.hsp", "resource");
+    EXPECT_EQ(hostImpl.CopyExtendResourceFile(BUNDLE_NAME13, "entry"), ERR_OK);
+    EXPECT_EQ(access((BUNDLE_NEW_CODE_DIR + "/ext_resource/entry.hsp").c_str(), F_OK), 0);
+    CreateFile(sourceResourceDir + "/blocked.hsp", "blocked");
+    ASSERT_TRUE(OHOS::ForceCreateDirectory(BUNDLE_NEW_CODE_DIR + "/ext_resource/blocked.hsp"));
+    EXPECT_EQ(hostImpl.CopyExtendResourceFile(BUNDLE_NAME13, "blocked"),
+        ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
 }
 
 /**

@@ -30,6 +30,7 @@
 #include "interfaces/hap_verify.h"
 #include "ipc/check_encryption_param.h"
 #include "ipc/code_signature_param.h"
+#include "ipc/copy_hap_to_install_path_param.h"
 #include "ipc/encryption_param.h"
 #include "ipc/extract_param.h"
 #include "ipc/install_hnp_param.h"
@@ -413,6 +414,8 @@ public:
 
     static bool IsValidBundleName(const std::string &bundleName);
 
+    static bool IsValidModuleName(const std::string &moduleName);
+
     static bool IsValidUserId(const int32_t userId);
 
     static bool IsValidUid(const int32_t uid);
@@ -543,6 +546,8 @@ public:
     static bool IsValidPathByDeleteUninstallTmpDirs(const std::string &dir);
     static bool IsValidPathByExtractQuickFixRes(const std::string &bundleName, const std::string &moduleName,
         const std::string &hqfFilePath);
+    static bool BuildHapToInstallPath(const CopyHapToInstallPathParam &param,
+        std::string &targetPath, std::string &signatureFilePath);
     static bool IsValidPathByExtractResourceFiles(const std::string &bundleName, const std::string &moduleName,
         const std::string &hapFilePath, bool useNewCodeDir, bool useModuleTmp);
     static bool IsValidPathByExtractArkNative(const std::string &bundleName, const std::string &moduleName,

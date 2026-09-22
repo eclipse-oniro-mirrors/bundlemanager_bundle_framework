@@ -3575,6 +3575,32 @@ bool BundleMgrProxy::QueryExtensionAbilityInfoByUriOptimal(const std::string &ur
     return true;
 }
 
+ErrCode BundleMgrProxy::QueryExtensionAbilityInfoOptimal(const Want &want, const int32_t &flag,
+    const int32_t &userId, ExtensionAbilityInfo &extensionInfo)
+{
+    LOG_NOFUNC_D(BMS_TAG_QUERY, "QEAIOptimal flag:%{public}d userId:%{public}d", flag, userId);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "QEAIOptimal write MessageParcel fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteParcelable(&want)) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "QEAIOptimal write want fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(flag)) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "QEAIOptimal write flag fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "QEAIOptimal write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetParcelableInfoWithErrCode<ExtensionAbilityInfo>(
+        BundleMgrInterfaceCode::QUERY_EXTENSION_ABILITY_INFO_OPTIMAL, data, extensionInfo);
+}
+
 bool BundleMgrProxy::ImplicitQueryInfoByPriority(const Want &want, int32_t flags, int32_t userId,
     AbilityInfo &abilityInfo, ExtensionAbilityInfo &extensionInfo)
 {
@@ -4373,6 +4399,40 @@ ErrCode BundleMgrProxy::GetSandboxExtAbilityInfos(const Want &want, int32_t appI
 
     return GetParcelableInfosWithErrCode<ExtensionAbilityInfo>(
         BundleMgrInterfaceCode::GET_SANDBOX_APP_EXTENSION_INFOS, data, infos);
+}
+
+ErrCode BundleMgrProxy::GetSandboxExtAbilityInfoOptimal(const Want &want, int32_t appIndex, int32_t flags,
+    int32_t userId, ExtensionAbilityInfo &info)
+{
+    LOG_NOFUNC_D(BMS_TAG_QUERY, "GSEAIOptimal appIndex:%{public}d userId:%{public}d", appIndex, userId);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    if (appIndex <= Constants::INITIAL_SANDBOX_APP_INDEX || appIndex > Constants::MAX_SANDBOX_APP_INDEX) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "GSEAIOptimal appIndex is invalid");
+        return ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "GSEAIOptimal write MessageParcel fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteParcelable(&want)) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "GSEAIOptimal write want fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(appIndex)) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "GSEAIOptimal write appIndex fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(flags)) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "GSEAIOptimal write flags fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "GSEAIOptimal write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetParcelableInfoWithErrCode<ExtensionAbilityInfo>(
+        BundleMgrInterfaceCode::GET_SANDBOX_EXT_ABILITY_INFO_OPTIMAL, data, info);
 }
 
 ErrCode BundleMgrProxy::GetSandboxHapModuleInfo(const AbilityInfo &abilityInfo, int32_t appIndex, int32_t userId,

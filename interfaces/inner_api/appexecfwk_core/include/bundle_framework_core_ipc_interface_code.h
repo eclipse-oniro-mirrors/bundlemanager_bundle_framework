@@ -281,6 +281,8 @@ enum class BundleMgrInterfaceCode : uint32_t {
     SET_ADDITIONAL_INFO_BY_INDEX = 255,
     GET_ALL_BUNDLE_INFO_INSTANCES = 256,
     GET_METADATA_BY_BUNDLE_NAME = 257,
+    QUERY_EXTENSION_ABILITY_INFO_OPTIMAL = 258,
+    GET_SANDBOX_EXT_ABILITY_INFO_OPTIMAL = 259,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */

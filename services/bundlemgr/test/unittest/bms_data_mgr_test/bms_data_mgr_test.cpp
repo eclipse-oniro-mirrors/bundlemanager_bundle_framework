@@ -13361,6 +13361,158 @@ HWTEST_F(BmsDataMgrTest, QueryExtensionAbilityInfoByUriOptimal_0008, Function | 
 }
 
 /**
+ * @tc.number: SortExtensionAbilityInfos_0001
+ * @tc.name: SortExtensionAbilityInfos
+ * @tc.desc: test SortExtensionAbilityInfos with empty and single-element vector
+ */
+HWTEST_F(BmsDataMgrTest, SortExtensionAbilityInfos_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::vector<ExtensionAbilityInfo> emptyInfos;
+    bundleDataMgr.SortExtensionAbilityInfos(emptyInfos);
+    EXPECT_EQ(emptyInfos.size(), static_cast<size_t>(0));
+
+    ExtensionAbilityInfo singleInfo;
+    singleInfo.bundleName = BUNDLE_NAME;
+    singleInfo.name = "extSingle";
+    std::vector<ExtensionAbilityInfo> singleInfos;
+    singleInfos.emplace_back(singleInfo);
+    bundleDataMgr.SortExtensionAbilityInfos(singleInfos);
+    EXPECT_EQ(singleInfos.size(), static_cast<size_t>(1));
+    EXPECT_EQ(singleInfos.front().bundleName, BUNDLE_NAME);
+    EXPECT_EQ(singleInfos.front().name, "extSingle");
+}
+
+/**
+ * @tc.number: SortExtensionAbilityInfos_0002
+ * @tc.name: SortExtensionAbilityInfos
+ * @tc.desc: test SortExtensionAbilityInfos puts system app before non-system app
+ */
+HWTEST_F(BmsDataMgrTest, SortExtensionAbilityInfos_0002, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    InnerBundleInfo normalInfo;
+    ApplicationInfo normalApplicationInfo;
+    normalApplicationInfo.bundleName = "com.aaa.normal";
+    normalInfo.SetBaseApplicationInfo(normalApplicationInfo);
+    bundleDataMgr.bundleInfos_.emplace("com.aaa.normal", normalInfo);
+    InnerBundleInfo systemInfo;
+    ApplicationInfo systemApplicationInfo;
+    systemApplicationInfo.bundleName = "com.zzz.system";
+    systemApplicationInfo.isSystemApp = true;
+    systemInfo.SetBaseApplicationInfo(systemApplicationInfo);
+    bundleDataMgr.bundleInfos_.emplace("com.zzz.system", systemInfo);
+
+    ExtensionAbilityInfo first;
+    first.bundleName = "com.aaa.normal";
+    ExtensionAbilityInfo second;
+    second.bundleName = "com.zzz.system";
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    extensionInfos.emplace_back(first);
+    extensionInfos.emplace_back(second);
+    bundleDataMgr.SortExtensionAbilityInfos(extensionInfos);
+    EXPECT_EQ(extensionInfos.size(), static_cast<size_t>(2));
+    EXPECT_EQ(extensionInfos.front().bundleName, "com.zzz.system");
+    EXPECT_EQ(extensionInfos.back().bundleName, "com.aaa.normal");
+}
+
+/**
+ * @tc.number: SortExtensionAbilityInfos_0003
+ * @tc.name: SortExtensionAbilityInfos
+ * @tc.desc: test SortExtensionAbilityInfos sorts by bundleName ascending in both groups
+ */
+HWTEST_F(BmsDataMgrTest, SortExtensionAbilityInfos_0003, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    const std::vector<std::pair<std::string, bool>> bundles = {
+        {"com.zzz.system", true}, {"com.aaa.system", true},
+        {"com.mmm.normal", false}, {"com.bbb.normal", false}};
+    for (const auto &bundle : bundles) {
+        InnerBundleInfo innerBundleInfo;
+        ApplicationInfo applicationInfo;
+        applicationInfo.bundleName = bundle.first;
+        applicationInfo.isSystemApp = bundle.second;
+        innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+        bundleDataMgr.bundleInfos_.emplace(bundle.first, innerBundleInfo);
+    }
+
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    for (const auto &bundle : bundles) {
+        ExtensionAbilityInfo extensionInfo;
+        extensionInfo.bundleName = bundle.first;
+        extensionInfos.emplace_back(extensionInfo);
+    }
+    bundleDataMgr.SortExtensionAbilityInfos(extensionInfos);
+    ASSERT_EQ(extensionInfos.size(), static_cast<size_t>(4));
+    EXPECT_EQ(extensionInfos[0].bundleName, "com.aaa.system");
+    EXPECT_EQ(extensionInfos[1].bundleName, "com.zzz.system");
+    EXPECT_EQ(extensionInfos[2].bundleName, "com.bbb.normal");
+    EXPECT_EQ(extensionInfos[3].bundleName, "com.mmm.normal");
+}
+
+/**
+ * @tc.number: SortExtensionAbilityInfos_0004
+ * @tc.name: SortExtensionAbilityInfos
+ * @tc.desc: test SortExtensionAbilityInfos treats unknown bundleName as non-system app
+ */
+HWTEST_F(BmsDataMgrTest, SortExtensionAbilityInfos_0004, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    InnerBundleInfo systemInfo;
+    ApplicationInfo systemApplicationInfo;
+    systemApplicationInfo.bundleName = "com.qqq.system";
+    systemApplicationInfo.isSystemApp = true;
+    systemInfo.SetBaseApplicationInfo(systemApplicationInfo);
+    bundleDataMgr.bundleInfos_.emplace("com.qqq.system", systemInfo);
+
+    ExtensionAbilityInfo first;
+    first.bundleName = "com.xxx.unknown";
+    ExtensionAbilityInfo second;
+    second.bundleName = "com.qqq.system";
+    ExtensionAbilityInfo third;
+    third.bundleName = "com.aaa.unknown";
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    extensionInfos.emplace_back(first);
+    extensionInfos.emplace_back(second);
+    extensionInfos.emplace_back(third);
+    bundleDataMgr.SortExtensionAbilityInfos(extensionInfos);
+    ASSERT_EQ(extensionInfos.size(), static_cast<size_t>(3));
+    EXPECT_EQ(extensionInfos[0].bundleName, "com.qqq.system");
+    EXPECT_EQ(extensionInfos[1].bundleName, "com.aaa.unknown");
+    EXPECT_EQ(extensionInfos[2].bundleName, "com.xxx.unknown");
+}
+
+/**
+ * @tc.number: SortExtensionAbilityInfos_0005
+ * @tc.name: SortExtensionAbilityInfos
+ * @tc.desc: test SortExtensionAbilityInfos keeps relative order of same bundleName items
+ */
+HWTEST_F(BmsDataMgrTest, SortExtensionAbilityInfos_0005, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    InnerBundleInfo systemInfo;
+    ApplicationInfo systemApplicationInfo;
+    systemApplicationInfo.bundleName = "com.same.system";
+    systemApplicationInfo.isSystemApp = true;
+    systemInfo.SetBaseApplicationInfo(systemApplicationInfo);
+    bundleDataMgr.bundleInfos_.emplace("com.same.system", systemInfo);
+
+    ExtensionAbilityInfo first;
+    first.bundleName = "com.same.system";
+    first.name = "ext1";
+    ExtensionAbilityInfo second;
+    second.bundleName = "com.same.system";
+    second.name = "ext2";
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    extensionInfos.emplace_back(first);
+    extensionInfos.emplace_back(second);
+    bundleDataMgr.SortExtensionAbilityInfos(extensionInfos);
+    ASSERT_EQ(extensionInfos.size(), static_cast<size_t>(2));
+    EXPECT_EQ(extensionInfos[0].name, "ext1");
+    EXPECT_EQ(extensionInfos[1].name, "ext2");
+}
+
+/**
  * @tc.number: GetNeedAppDetail_0001
  * @tc.name: GetNeedAppDetail
  * @tc.desc: 1. add a no-icon app (needAppDetail=true) and query true

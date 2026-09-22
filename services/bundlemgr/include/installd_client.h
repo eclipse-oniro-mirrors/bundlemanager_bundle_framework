@@ -209,6 +209,11 @@ public:
     ErrCode CopyFile(const std::string &oldPath, const std::string &newPath, BundleDirScene scene,
         const std::string &signatureFilePath = "");
 
+    ErrCode CopyHapToInstallPath(const CopyHapToInstallPathParam &copyHapToInstallPathParam);
+
+    ErrCode CopyPgoFile(const std::string &bundleName, const std::string &moduleName,
+        const std::string &pgoFileName, const std::string &pgoFileDir, int32_t userId);
+
     ErrCode CopySkillHsp(const std::string &bundleName, const std::string &moduleName,
         const std::string &hspFileName, const std::string &sourceTempDir, bool isUpdate);
 
@@ -240,6 +245,8 @@ public:
 
     ErrCode CopyFiles(const std::string &sourceDir, const std::string &destinationDir, const std::string &bundleName,
         BundleDirScene scene);
+
+    ErrCode CopyExtendResourceFile(const std::string &bundleName, const std::string &moduleName);
 
     ErrCode CopyHqfFile(const std::string &bundleName, const std::string &moduleName,
         const std::string &hqfSourceRelativePath, uint32_t versionCode, const QuickFixTargetParam &targetParam);

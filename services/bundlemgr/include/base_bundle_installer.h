@@ -32,6 +32,7 @@
 #include "hap_token_info.h"
 #include "install_param.h"
 #include "installer_bundle_tmp_info.h"
+#include "ipc/copy_hap_to_install_path_param.h"
 #include "quick_fix/appqf_info.h"
 #include "shared_bundle_installer.h"
 #include "skills_installer/skills_package_info.h"
@@ -760,6 +761,10 @@ private:
     std::string GetTempHapPath(const InnerBundleInfo &info);
     ErrCode SaveHapToInstallPath(const std::unordered_map<std::string, InnerBundleInfo> &infos,
         const InnerBundleInfo &oldInfo);
+    void BuildCopyHapToInstallPathParam(
+        const std::unordered_map<std::string, InnerBundleInfo> &infos,
+        const std::pair<std::string, std::string> &hapPathRecord,
+        CopyHapToInstallPathParam &param);
     ErrCode CheckHapEncryption(const std::unordered_map<std::string, InnerBundleInfo> &infos,
         const InnerBundleInfo &oldInfo, bool copyHapToInstallPath = true);
     void UpdateEncryptionStatus(const std::unordered_map<std::string, InnerBundleInfo> &infos,
@@ -1111,8 +1116,7 @@ private:
     void PrintStartWindowIconId(const InnerBundleInfo &info);
     bool ProcessExtProfile(const InstallParam &installParam);
     void SetHybridSpawn();
-    ErrCode ProcessDynamicIconFileWhenUpdate(const InnerBundleInfo &oldInfo, const std::string &oldPath,
-        const std::string &newPath);
+    ErrCode ProcessDynamicIconFileWhenUpdate(const InnerBundleInfo &oldInfo, const std::string &bundleName);
     bool IsBundleCrossAppSharedConfig(const std::unordered_map<std::string, InnerBundleInfo> &newInfos);
     bool CheckAddResultMsg(const InnerBundleInfo &info, bool isContainEntry);
     ErrCode CheckArkTSMode(const std::unordered_map<std::string, InnerBundleInfo> &newInfos);

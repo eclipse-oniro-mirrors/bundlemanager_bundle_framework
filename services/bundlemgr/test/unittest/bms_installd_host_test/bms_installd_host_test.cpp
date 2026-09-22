@@ -1201,6 +1201,30 @@ HWTEST_F(BmsInstalldHostTest, HandleCheckExternalSourcePluginSwitch_0100, Functi
 }
 
 /**
+ * @tc.number: HandleCopyPgoFile_0100
+ * @tc.name: test HandleCopyPgoFile with valid param
+ * @tc.desc: 1.HandleCopyPgoFile param is valid
+ */
+HWTEST_F(BmsInstalldHostTest, HandleCopyPgoFile_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    std::string bundleName = "com.example.test";
+    std::string moduleName = "entry";
+    std::string pgoFileName = "entry.ap";
+    std::string pgoFileDir = "12345_67890";
+    int32_t userId = 100;
+    data.WriteString16(Str8ToStr16(bundleName));
+    data.WriteString16(Str8ToStr16(moduleName));
+    data.WriteString16(Str8ToStr16(pgoFileName));
+    data.WriteString16(Str8ToStr16(pgoFileDir));
+    data.WriteInt32(userId);
+    bool res = installdHost.HandleCopyPgoFile(data, reply);
+    EXPECT_TRUE(res);
+}
+
+/**
  * @tc.number: HandleCheckHspPluginCertValidity_0100
  * @tc.name: test HandleCheckHspPluginCertValidity with valid param
  * @tc.desc: 1.HandleCheckHspPluginCertValidity param is valid

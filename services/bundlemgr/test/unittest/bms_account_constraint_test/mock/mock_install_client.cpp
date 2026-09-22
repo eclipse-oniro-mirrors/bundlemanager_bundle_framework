@@ -327,6 +327,11 @@ ErrCode InstalldClient::CopySkillHsp(const std::string &bundleName, const std::s
     return 0;
 }
 
+ErrCode InstalldClient::CopyHapToInstallPath(const CopyHapToInstallPathParam &copyHapToInstallPathParam)
+{
+    return 0;
+}
+
 ErrCode InstalldClient::Mkdir(const std::string &dir, const int32_t mode, const int32_t uid, const int32_t gid,
     const CreateDirParam &createDirParam)
 {
@@ -393,6 +398,11 @@ ErrCode InstalldClient::ObtainQuickFixFileDir(const std::string &dir, std::vecto
 
 ErrCode InstalldClient::CopyFiles(const std::string &sourceDir, const std::string &destinationDir,
     const std::string &bundleName, BundleDirScene scene)
+{
+    return 0;
+}
+
+ErrCode InstalldClient::CopyExtendResourceFile(const std::string &bundleName, const std::string &moduleName)
 {
     return 0;
 }
@@ -626,6 +636,12 @@ ErrCode InstalldClient::DeleteOldCacheFiles(
     const std::vector<std::string> &paths, const uint64_t cacheSize, uint64_t &cleanedSize)
 {
     return ERR_OK;
+}
+
+ErrCode InstalldClient::CopyPgoFile(const std::string &bundleName, const std::string &moduleName,
+    const std::string &pgoFileName, const std::string &pgoFileDir, int32_t userId)
+{
+    return 0;
 }
 
 ErrCode InstalldClient::GetCacheDiskUsageFromPath(const std::vector<std::string> &paths,

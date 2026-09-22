@@ -90,6 +90,36 @@ const uint32_t BUNDLE_BACKUP_ICON_ID = 16777221;
 const std::string CALLER_NAME_UT = "ut";
 const std::string DEVICETYPE = "deviceType";
 const int32_t APPINDEX = 10;
+const std::string OPTIMAL_ACTION = "action.test.optimal";
+const std::string OPTIMAL_ENTITY = "entity.test.optimal";
+
+InnerBundleInfo CreateBundleInfoForOptimalQuery(const std::string &bundleName, bool isSystemApp)
+{
+    InnerBundleInfo innerBundleInfo;
+    BundleInfo bundleInfo;
+    bundleInfo.name = bundleName;
+    bundleInfo.applicationInfo.bundleName = bundleName;
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = bundleName;
+    applicationInfo.bundleName = bundleName;
+    applicationInfo.isSystemApp = isSystemApp;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleName = bundleName;
+    innerBundleUserInfo.bundleUserInfo.enabled = true;
+    innerBundleUserInfo.bundleUserInfo.userId = USERID;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+    return innerBundleInfo;
+}
+
+Skill CreateSkillForOptimalQuery()
+{
+    Skill skill;
+    skill.actions = {OPTIMAL_ACTION};
+    skill.entities = {OPTIMAL_ENTITY};
+    return skill;
+}
 }  // namespace
 
 class BmsBundleManagerTest2 : public testing::Test {
@@ -2791,6 +2821,217 @@ HWTEST_F(BmsBundleManagerTest2, BundleMgrHostImpl_3500, Function | MediumTest | 
     auto ret = hostImpl->ParseAndFilterHaps(hapPaths, infos);
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_FALSE(infos.empty());
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfoOptimal_0100
+ * @tc.name: test QueryExtensionAbilityInfoOptimal
+ * @tc.desc: 1.foundation process queries extension ability info optimal with empty data mgr
+ */
+HWTEST_F(BmsBundleManagerTest2, QueryExtensionAbilityInfoOptimal_0100, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    Want want;
+    ExtensionAbilityInfo extensionInfo;
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    setuid(Constants::FOUNDATION_UID);
+    ScopeGuard uidGuard([&] { setuid(Constants::ROOT_UID); });
+    ErrCode ret = hostImpl->QueryExtensionAbilityInfoOptimal(want, FLAG, USERID, extensionInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfoOptimal_0200
+ * @tc.name: test QueryExtensionAbilityInfoOptimal
+ * @tc.desc: 1.foundation process queries extension ability info optimal with no matched info
+ */
+HWTEST_F(BmsBundleManagerTest2, QueryExtensionAbilityInfoOptimal_0200, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(USERID);
+    Want want;
+    want.SetAction(OPTIMAL_ACTION);
+    ExtensionAbilityInfo extensionInfo;
+    setuid(Constants::FOUNDATION_UID);
+    ScopeGuard uidGuard([&] { setuid(Constants::ROOT_UID); });
+    ErrCode ret = hostImpl->QueryExtensionAbilityInfoOptimal(want, FLAG, USERID, extensionInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfoOptimal_0300
+ * @tc.name: test QueryExtensionAbilityInfoOptimal
+ * @tc.desc: 1.foundation process queries extension ability info optimal with system and normal apps
+ */
+HWTEST_F(BmsBundleManagerTest2, QueryExtensionAbilityInfoOptimal_0300, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(USERID);
+    const std::string normalBundleName = "com.optimal.normal";
+    const std::string systemBundleName = "com.zzz.optimal.system";
+    ScopeGuard stateGuard([&] {
+        dataMgr->bundleInfos_.erase(normalBundleName);
+        dataMgr->bundleInfos_.erase(systemBundleName);
+    });
+    for (const auto &bundleName : {normalBundleName, systemBundleName}) {
+        InnerBundleInfo innerBundleInfo = CreateBundleInfoForOptimalQuery(bundleName, bundleName == systemBundleName);
+        InnerExtensionInfo innerExtensionInfo;
+        innerExtensionInfo.bundleName = bundleName;
+        innerExtensionInfo.name = bundleName + ".ExtAbility";
+        innerExtensionInfo.skills = {CreateSkillForOptimalQuery()};
+        innerBundleInfo.InsertExtensionInfo(bundleName + ".entry." + innerExtensionInfo.name, innerExtensionInfo);
+        dataMgr->bundleInfos_[bundleName] = innerBundleInfo;
+    }
+
+    Want want;
+    want.SetAction(OPTIMAL_ACTION);
+    want.AddEntity(OPTIMAL_ENTITY);
+    ExtensionAbilityInfo extensionInfo;
+    setuid(Constants::FOUNDATION_UID);
+    ScopeGuard uidGuard([&] { setuid(Constants::ROOT_UID); });
+    ErrCode ret = hostImpl->QueryExtensionAbilityInfoOptimal(want, FLAG, USERID, extensionInfo);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(extensionInfo.bundleName, systemBundleName);
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfoOptimal_0400
+ * @tc.name: test QueryExtensionAbilityInfoOptimal
+ * @tc.desc: 1.foundation process queries extension ability info optimal with two system apps
+ */
+HWTEST_F(BmsBundleManagerTest2, QueryExtensionAbilityInfoOptimal_0400, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(USERID);
+    const std::string firstName = "com.zzz.optimal.system";
+    const std::string secondName = "com.aaa.optimal.system";
+    ScopeGuard stateGuard([&] {
+        dataMgr->bundleInfos_.erase(firstName);
+        dataMgr->bundleInfos_.erase(secondName);
+    });
+    for (const auto &bundleName : {firstName, secondName}) {
+        InnerBundleInfo innerBundleInfo = CreateBundleInfoForOptimalQuery(bundleName, true);
+        InnerExtensionInfo innerExtensionInfo;
+        innerExtensionInfo.bundleName = bundleName;
+        innerExtensionInfo.name = bundleName + ".ExtAbility";
+        innerExtensionInfo.skills = {CreateSkillForOptimalQuery()};
+        innerBundleInfo.InsertExtensionInfo(bundleName + ".entry." + innerExtensionInfo.name, innerExtensionInfo);
+        dataMgr->bundleInfos_[bundleName] = innerBundleInfo;
+    }
+
+    Want want;
+    want.SetAction(OPTIMAL_ACTION);
+    want.AddEntity(OPTIMAL_ENTITY);
+    ExtensionAbilityInfo extensionInfo;
+    setuid(Constants::FOUNDATION_UID);
+    ScopeGuard uidGuard([&] { setuid(Constants::ROOT_UID); });
+    ErrCode ret = hostImpl->QueryExtensionAbilityInfoOptimal(want, FLAG, USERID, extensionInfo);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(extensionInfo.bundleName, secondName);
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfoOptimal_0500
+ * @tc.name: test QueryExtensionAbilityInfoOptimal
+ * @tc.desc: 1.non-foundation process queries extension ability info optimal
+ */
+HWTEST_F(BmsBundleManagerTest2, QueryExtensionAbilityInfoOptimal_0500, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    Want want;
+    want.SetAction(OPTIMAL_ACTION);
+    ExtensionAbilityInfo extensionInfo;
+    ErrCode ret = hostImpl->QueryExtensionAbilityInfoOptimal(want, FLAG, USERID, extensionInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    EXPECT_TRUE(extensionInfo.bundleName.empty());
+}
+
+/**
+ * @tc.number: GetSandboxExtAbilityInfoOptimal_0100
+ * @tc.name: test GetSandboxExtAbilityInfoOptimal
+ * @tc.desc: 1.foundation process queries sandbox ext ability info optimal with empty data mgr
+ */
+HWTEST_F(BmsBundleManagerTest2, GetSandboxExtAbilityInfoOptimal_0100, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    int32_t appIndex = Constants::INITIAL_SANDBOX_APP_INDEX + 1;
+    Want want;
+    ExtensionAbilityInfo info;
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    setuid(Constants::FOUNDATION_UID);
+    ScopeGuard uidGuard([&] { setuid(Constants::ROOT_UID); });
+    ErrCode ret = hostImpl->GetSandboxExtAbilityInfoOptimal(want, appIndex, FLAG, USERID, info);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: GetSandboxExtAbilityInfoOptimal_0200
+ * @tc.name: test GetSandboxExtAbilityInfoOptimal
+ * @tc.desc: 1.foundation process queries sandbox ext ability info optimal with invalid appIndex
+ */
+HWTEST_F(BmsBundleManagerTest2, GetSandboxExtAbilityInfoOptimal_0200, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    Want want;
+    ExtensionAbilityInfo info;
+    setuid(Constants::FOUNDATION_UID);
+    ScopeGuard uidGuard([&] { setuid(Constants::ROOT_UID); });
+    ErrCode ret = hostImpl->GetSandboxExtAbilityInfoOptimal(want, Constants::INITIAL_SANDBOX_APP_INDEX, FLAG,
+        USERID, info);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
+
+    ret = hostImpl->GetSandboxExtAbilityInfoOptimal(want, Constants::MAX_SANDBOX_APP_INDEX + 1, FLAG, USERID, info);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: GetSandboxExtAbilityInfoOptimal_0300
+ * @tc.name: test GetSandboxExtAbilityInfoOptimal
+ * @tc.desc: 1.foundation process queries sandbox ext ability info optimal without sandbox data
+ * @tc.note the success path needs a real sandbox app record, which is not available in the
+ *          unit test environment; the sort behavior is covered by SortExtensionAbilityInfos tests
+ */
+HWTEST_F(BmsBundleManagerTest2, GetSandboxExtAbilityInfoOptimal_0300, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(USERID);
+    int32_t appIndex = Constants::INITIAL_SANDBOX_APP_INDEX + 1;
+    Want want;
+    want.SetAction(OPTIMAL_ACTION);
+    ExtensionAbilityInfo info;
+    setuid(Constants::FOUNDATION_UID);
+    ScopeGuard uidGuard([&] { setuid(Constants::ROOT_UID); });
+    ErrCode ret = hostImpl->GetSandboxExtAbilityInfoOptimal(want, appIndex, FLAG, USERID, info);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: GetSandboxExtAbilityInfoOptimal_0400
+ * @tc.name: test GetSandboxExtAbilityInfoOptimal
+ * @tc.desc: 1.non-foundation process queries sandbox ext ability info optimal
+ */
+HWTEST_F(BmsBundleManagerTest2, GetSandboxExtAbilityInfoOptimal_0400, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    int32_t appIndex = Constants::INITIAL_SANDBOX_APP_INDEX + 1;
+    Want want;
+    want.SetAction(OPTIMAL_ACTION);
+    ExtensionAbilityInfo info;
+    ErrCode ret = hostImpl->GetSandboxExtAbilityInfoOptimal(want, appIndex, FLAG, USERID, info);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    EXPECT_TRUE(info.bundleName.empty());
 }
 
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL

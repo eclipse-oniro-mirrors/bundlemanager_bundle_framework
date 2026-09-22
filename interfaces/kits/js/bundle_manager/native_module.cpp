@@ -107,6 +107,14 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
     NAPI_CALL(env, napi_create_object(env, &nDeviceModeDistributionPolicy));
     CreateDeviceModeDistributionPolicyObject(env, nDeviceModeDistributionPolicy);
 
+    napi_value nApplicationReservedFlag = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &nApplicationReservedFlag));
+    CreateApplicationReservedFlagObject(env, nApplicationReservedFlag);
+
+    napi_value nAppSandboxPolicy = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &nAppSandboxPolicy));
+    CreateAppSandboxPolicyObject(env, nAppSandboxPolicy);
+
     napi_property_descriptor desc[] = {
         DECLARE_NAPI_FUNCTION("getBundleArchiveInfo", GetBundleArchiveInfo),
         DECLARE_NAPI_FUNCTION("getBundleArchiveInfoSync", GetBundleArchiveInfoSync),
@@ -220,6 +228,8 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("filterBundleListByDeviceModeDistributionPolicies",
             FilterBundleListByDeviceModeDistributionPolicies),
         DECLARE_NAPI_PROPERTY("DeviceModeDistributionPolicy", nDeviceModeDistributionPolicy),
+        DECLARE_NAPI_PROPERTY("AppSandboxPolicy", nAppSandboxPolicy),
+        DECLARE_NAPI_PROPERTY("ApplicationReservedFlag", nApplicationReservedFlag),
         DECLARE_NAPI_FUNCTION("getBundleExtensionPolicyInfo", GetBundleExtensionPolicyInfo),
     };
 

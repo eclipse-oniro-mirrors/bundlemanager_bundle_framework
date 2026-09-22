@@ -748,6 +748,8 @@ private:
 
     ErrCode HandleQueryExtensionAbilityInfoByUriOptimal(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleQueryExtensionAbilityInfoOptimal(MessageParcel &data, MessageParcel &reply);
+
     ErrCode HandleGetAppIdByBundleName(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetAppType(MessageParcel &data, MessageParcel &reply);
@@ -824,6 +826,8 @@ private:
     ErrCode HandleGetSandboxAbilityInfo(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetSandboxExtAbilityInfos(MessageParcel &data, MessageParcel &reply);
+
+    ErrCode HandleGetSandboxExtAbilityInfoOptimal(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetSandboxHapModuleInfo(MessageParcel &data, MessageParcel &reply);
 

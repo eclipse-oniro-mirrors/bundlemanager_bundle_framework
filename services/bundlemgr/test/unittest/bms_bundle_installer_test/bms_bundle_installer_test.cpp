@@ -248,6 +248,10 @@ const int32_t TEST_EL5_USERID = 2000;
 const std::string PLUGIN_NAME = "com.example.pluginTest1";
 const std::string TEST_RENAME_PATH = "/data/app/el2/100/sharefiles/test";
 const std::string TEST_RENAME_PATH_NEW = "/data/app/el2/100/sharefiles/test_new";
+const std::string BUNDLE_CODE_PATH_DIR_NEW_EXT_DIR =
+ 	"/data/app/el1/bundle/public/+new-com.example.example_test/ext_resource";
+const std::string BUNDLE_CODE_PATH_DIR_NEW_EXT_FILE =
+ 	"/data/app/el1/bundle/public/+new-com.example.example_test/ext_resource/moduleName.hsp";
 enum {
     BMS_BROKER_ERR_UNINSTALL_FAILED = 8585218,
 };
@@ -11454,26 +11458,25 @@ HWTEST_F(BmsBundleInstallerTest, ProcessDynamicIconFileWhenUpdate_0010, Function
     oldInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME_FOR_TEST;
     BaseBundleInstaller installer;
     // extendResourceInfo not exist
-    ErrCode ret = installer.ProcessDynamicIconFileWhenUpdate(oldInfo, "", "");
+    ErrCode ret = installer.ProcessDynamicIconFileWhenUpdate(oldInfo, BUNDLE_NAME_FOR_TEST);
     EXPECT_EQ(ret, ERR_OK);
 
     ExtendResourceInfo extendResourceInfo;
     extendResourceInfo.moduleName = MODULE_NAME_EXT;
     oldInfo.extendResourceInfos_[extendResourceInfo.moduleName] = extendResourceInfo;
     // ext file path not exist
-    ret = installer.ProcessDynamicIconFileWhenUpdate(oldInfo, "", "");
-    EXPECT_EQ(ret, ERR_OK);
+    ret = installer.ProcessDynamicIconFileWhenUpdate(oldInfo, BUNDLE_NAME_FOR_TEST);
+ 	EXPECT_EQ(ret, ERR_OK);
 
-    bool ans = OHOS::ForceCreateDirectory(BUNDLE_CODE_PATH_DIR_OLD_EXT_DIR);
-    EXPECT_TRUE(ans);
-    // ext file path exist
-    ret = installer.ProcessDynamicIconFileWhenUpdate(oldInfo, BUNDLE_CODE_PATH_DIR_OLD, BUNDLE_CODE_PATH_DIR_REAL);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
-
-    ans = OHOS::ForceRemoveDirectory(BUNDLE_CODE_PATH_DIR_OLD);
-    EXPECT_TRUE(ans);
-    ans = OHOS::ForceRemoveDirectory(BUNDLE_CODE_PATH_DIR_REAL);
-    EXPECT_TRUE(ans);
+ 	bool ans = OHOS::ForceCreateDirectory(BUNDLE_CODE_PATH_DIR_REAL_EXT_DIR);
+ 	EXPECT_TRUE(ans);
+ 	// ext file path exist
+ 	ret = installer.ProcessDynamicIconFileWhenUpdate(oldInfo, BUNDLE_NAME_FOR_TEST);
+ 	EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
+ 	ans = OHOS::ForceRemoveDirectory(BUNDLE_CODE_PATH_DIR_REAL);
+ 	EXPECT_TRUE(ans);
+ 	ans = OHOS::ForceRemoveDirectory(BUNDLE_CODE_PATH_DIR_NEW);
+ 	EXPECT_TRUE(ans);
 }
 
 /**
@@ -11488,22 +11491,22 @@ HWTEST_F(BmsBundleInstallerTest, ProcessDynamicIconFileWhenUpdate_0020, Function
     ExtendResourceInfo extendResourceInfo;
     extendResourceInfo.moduleName = MODULE_NAME_EXT;
     oldInfo.extendResourceInfos_[extendResourceInfo.moduleName] = extendResourceInfo;
-    bool ans = OHOS::ForceCreateDirectory(BUNDLE_CODE_PATH_DIR_OLD_EXT_DIR);
-    EXPECT_TRUE(ans);
-    ans = OHOS::ForceCreateDirectory(BUNDLE_CODE_PATH_DIR_REAL);
-    EXPECT_TRUE(ans);
+    bool ans = OHOS::ForceCreateDirectory(BUNDLE_CODE_PATH_DIR_REAL_EXT_DIR);
+ 	EXPECT_TRUE(ans);
+ 	ans = OHOS::ForceCreateDirectory(BUNDLE_CODE_PATH_DIR_NEW);
+ 	EXPECT_TRUE(ans);
+ 	 
+ 	// ext file path exist
+ 	BaseBundleInstaller installer;
+ 	auto ret = installer.ProcessDynamicIconFileWhenUpdate(oldInfo, BUNDLE_NAME_FOR_TEST);
+ 	EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
+ 	auto exist = access(BUNDLE_CODE_PATH_DIR_NEW_EXT_DIR.c_str(), F_OK);
+ 	EXPECT_EQ(exist, 0);
 
-    // ext file path exist
-    BaseBundleInstaller installer;
-    auto ret = installer.ProcessDynamicIconFileWhenUpdate(oldInfo, BUNDLE_CODE_PATH_DIR_OLD, BUNDLE_CODE_PATH_DIR_REAL);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
-    auto exist = access(BUNDLE_CODE_PATH_DIR_REAL_EXT_DIR.c_str(), F_OK);
-    EXPECT_EQ(exist, 0);
-
-    ans = OHOS::ForceRemoveDirectory(BUNDLE_CODE_PATH_DIR_OLD);
-    EXPECT_TRUE(ans);
-    ans = OHOS::ForceRemoveDirectory(BUNDLE_CODE_PATH_DIR_REAL);
-    EXPECT_TRUE(ans);
+ 	ans = OHOS::ForceRemoveDirectory(BUNDLE_CODE_PATH_DIR_REAL);
+ 	EXPECT_TRUE(ans);
+ 	ans = OHOS::ForceRemoveDirectory(BUNDLE_CODE_PATH_DIR_NEW);
+ 	EXPECT_TRUE(ans);
 }
 
 /**
@@ -11518,29 +11521,29 @@ HWTEST_F(BmsBundleInstallerTest, ProcessDynamicIconFileWhenUpdate_0030, Function
     ExtendResourceInfo extendResourceInfo;
     extendResourceInfo.moduleName = MODULE_NAME_EXT;
     oldInfo.extendResourceInfos_[extendResourceInfo.moduleName] = extendResourceInfo;
-    bool ans = OHOS::ForceCreateDirectory(BUNDLE_CODE_PATH_DIR_OLD_EXT_DIR);
-    EXPECT_TRUE(ans);
-    ans = OHOS::ForceCreateDirectory(BUNDLE_CODE_PATH_DIR_REAL);
-    EXPECT_TRUE(ans);
+    bool ans = OHOS::ForceCreateDirectory(BUNDLE_CODE_PATH_DIR_REAL_EXT_DIR);
+ 	EXPECT_TRUE(ans);
+ 	ans = OHOS::ForceCreateDirectory(BUNDLE_CODE_PATH_DIR_NEW);
+ 	EXPECT_TRUE(ans);
 
-    std::ofstream file;
-    file.open(BUNDLE_CODE_PATH_DIR_OLD_EXT_FILE, ios::out);
-    file << "" << endl;
-    file.close();
+ 	std::ofstream file;
+ 	file.open(BUNDLE_CODE_PATH_DIR_REAL_EXT_FILE, ios::out);
+ 	file << "" << endl;
+ 	file.close();
 
-    // ext file path exist
-    BaseBundleInstaller installer;
-    auto ret = installer.ProcessDynamicIconFileWhenUpdate(oldInfo, BUNDLE_CODE_PATH_DIR_OLD, BUNDLE_CODE_PATH_DIR_REAL);
-    EXPECT_EQ(ret, ERR_OK);
-    auto exist = access(BUNDLE_CODE_PATH_DIR_REAL_EXT_DIR.c_str(), F_OK);
-    EXPECT_EQ(exist, 0);
-    exist = access(BUNDLE_CODE_PATH_DIR_REAL_EXT_FILE.c_str(), F_OK);
-    EXPECT_EQ(exist, 0);
+ 	// ext file path exist
+ 	BaseBundleInstaller installer;
+ 	auto ret = installer.ProcessDynamicIconFileWhenUpdate(oldInfo, BUNDLE_NAME_FOR_TEST);
+ 	EXPECT_EQ(ret, ERR_OK);
+ 	auto exist = access(BUNDLE_CODE_PATH_DIR_NEW_EXT_DIR.c_str(), F_OK);
+ 	EXPECT_EQ(exist, 0);
+ 	exist = access(BUNDLE_CODE_PATH_DIR_NEW_EXT_FILE.c_str(), F_OK);
+ 	EXPECT_EQ(exist, 0);
 
-    ans = OHOS::ForceRemoveDirectory(BUNDLE_CODE_PATH_DIR_OLD);
-    EXPECT_TRUE(ans);
-    ans = OHOS::ForceRemoveDirectory(BUNDLE_CODE_PATH_DIR_REAL);
-    EXPECT_TRUE(ans);
+ 	ans = OHOS::ForceRemoveDirectory(BUNDLE_CODE_PATH_DIR_REAL);
+ 	EXPECT_TRUE(ans);
+ 	ans = OHOS::ForceRemoveDirectory(BUNDLE_CODE_PATH_DIR_NEW);
+ 	EXPECT_TRUE(ans);
 }
 
 /**
