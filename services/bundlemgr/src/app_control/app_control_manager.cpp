@@ -343,7 +343,11 @@ ErrCode AppControlManager::SetDisposedStatus(const std::string &appId, const Wan
         LOG_E(BMS_TAG_DEFAULT, "appid in white-list");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-    auto ret = appControlManagerDb_->SetDisposedStatus(APP_MARKET_CALLING, appId, want, userId);
+    auto ret = CheckDisposedWant(appId, want);
+    if (ret != ERR_OK) {
+        return ret;
+    }
+    ret = appControlManagerDb_->SetDisposedStatus(APP_MARKET_CALLING, appId, want, userId);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_DEFAULT, "SetDisposedStatus to rdb failed");
         return ret;
@@ -404,6 +408,7 @@ ErrCode AppControlManager::GetAppRunningControlRule(
     std::string key = appId + std::string("_") + std::to_string(userId);
     auto statusRet = GetAppRunningControlRuleCache(key, controlRuleResult);
     if (statusRet) {
+        RemoveSelfRedirect(bundleName, controlRuleResult.controlWant);
         if (controlRuleResult.controlMessage == INVALID_MESSAGE) {
             controlRuleResult.controlMessage = std::string();
             return ERR_BUNDLE_MANAGER_BUNDLE_NOT_SET_CONTROL;
@@ -417,6 +422,7 @@ ErrCode AppControlManager::GetAppRunningControlRule(
     }
     bool findRule = (ret == ERR_OK);
     ret = CheckAppControlRuleIntercept(bundleName, userId, findRule, controlRuleResult);
+    RemoveSelfRedirect(bundleName, controlRuleResult.controlWant);
     SetAppRunningControlRuleCache(key, controlRuleResult);
     return ret;
 }
@@ -618,6 +624,12 @@ ErrCode AppControlManager::SetDisposedRule(const std::string &callerName, const 
         LOG_E(BMS_TAG_DEFAULT, "%{public}s set rule, user:%{public}d index:%{public}d",
             callerName.c_str(), userId, appIndex);
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (rule.want != nullptr) {
+        auto ret = CheckDisposedWant(appId, *rule.want);
+        if (ret != ERR_OK) {
+            return ret;
+        }
     }
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
@@ -906,6 +918,9 @@ ErrCode AppControlManager::GetAbilityRunningControlRule(
     std::string key = GenerateAppRunningRuleCacheKey(appId, userId, appIndex);
     bool findCache = GetAbilityRunningRuleCache(key, disposedRules);
     if (findCache) {
+        for (auto &rule : disposedRules) {
+            RemoveSelfRedirect(bundleName, rule.want);
+        }
         PrintDisposedRuleInfo(disposedRules, appId);
         return ERR_OK;
     }
@@ -922,6 +937,9 @@ ErrCode AppControlManager::GetAbilityRunningControlRule(
         LOG_W(BMS_TAG_DEFAULT, "GetAbilityRunningControlRule from rdb failed");
         return ret;
     }
+    for (auto &rule : disposedRules) {
+        RemoveSelfRedirect(bundleName, rule.want);
+    }
     if (GetDisposedRuleOnlyForBms(appId, disposedRules)) {
         LOG_I(BMS_TAG_DEFAULT, "find from bms cache -n %{public}s", bundleName.c_str());
     };
@@ -935,6 +953,41 @@ ErrCode AppControlManager::GetAbilityRunningControlRule(
     }
     PrintDisposedRuleInfo(disposedRules, appId);
     return ret;
+}
+
+void AppControlManager::RemoveSelfRedirect(const std::string &bundleName, std::shared_ptr<Want> &want) const
+{
+    if (want != nullptr && !bundleName.empty() && want->GetBundleNameRef() == bundleName) {
+        // Rules may be configured before installation, when appId cannot be resolved.
+        // Keep the control rule effective without launching the controlled app again.
+        LOG_NOFUNC_W(BMS_TAG_DEFAULT, "remove self redirect from effective disposed rule");
+        want.reset();
+    }
+}
+
+ErrCode AppControlManager::CheckDisposedWant(const std::string &appId, const Want &want)
+{
+    const auto &targetBundleName = want.GetBundleNameRef();
+    if (targetBundleName.empty()) {
+        return ERR_OK;
+    }
+    auto bundleMgr = DelayedSingleton<BundleMgrService>::GetInstance();
+    if (bundleMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "BundleMgrService is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    auto dataMgr = bundleMgr->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    std::string disposedBundleName;
+    if (dataMgr->GetBundleNameByAppId(appId, disposedBundleName) == ERR_OK &&
+        disposedBundleName == targetBundleName) {
+        LOG_E(BMS_TAG_DEFAULT, "disposed want cannot redirect to the controlled app");
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+    }
+    return ERR_OK;
 }
 
 bool AppControlManager::CheckCanDispose(const std::string &appId, int32_t userId)

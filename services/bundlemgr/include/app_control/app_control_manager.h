@@ -126,6 +126,8 @@ private:
     bool GetDisposedRuleOnlyForBms(const std::string &appId, std::vector<DisposedRule> &disposedRules);
     void DeleteAbilityRunningRuleBmsCache(const std::string &appId);
     bool CheckCanDispose(const std::string &appId, int32_t userId);
+    ErrCode CheckDisposedWant(const std::string &appId, const Want &want);
+    void RemoveSelfRedirect(const std::string &bundleName, std::shared_ptr<Want> &want) const;
     void PrintDisposedRuleInfo(const std::vector<DisposedRule> &disposedRules, const std::string &key);
     std::string GenerateAppRunningRuleCacheKey(const std::string &appId, int32_t userId, int32_t appIndex);
     ErrCode GenerateRunningRuleSettingStatusMap();
