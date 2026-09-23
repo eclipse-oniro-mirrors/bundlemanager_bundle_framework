@@ -16,6 +16,8 @@
 #ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_QUICK_FIX_DEPLOYER_H
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_QUICK_FIX_DEPLOYER_H
 
+#include <mutex>
+
 #include "inner_bundle_info.h"
 #include "ipc/code_signature_param.h"
 #include "quick_fix_checker.h"
@@ -47,6 +49,7 @@ private:
     ErrCode SaveToInnerBundleInfo(const InnerAppQuickFix &newInnerAppQuickFix);
 
     ErrCode ToDeployStartStatus(const std::vector<std::string> &bundleFilePaths,
+        std::unordered_map<std::string, AppQuickFix> &infos,
         InnerAppQuickFix &newInnerAppQuickFix, InnerAppQuickFix &oldInnerAppQuickFix);
 
     ErrCode ParseAndCheckAppQuickFixInfos(
