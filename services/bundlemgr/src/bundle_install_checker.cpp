@@ -636,7 +636,7 @@ ErrCode BundleInstallChecker::CheckInstallPermission(const InstallCheckParam &ch
 
 ErrCode BundleInstallChecker::CheckDeveloperIdBundle(const InstallParam &installParam)
 {
-    #ifdef SECURITY_PRIVACY_SERVER_ENABLE
+#ifdef SECURITY_PRIVACY_SERVER_ENABLE
     auto ret = InstalldClient::GetInstance()->CheckAppSideLoadingAsync(installParam.userId);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "CheckAppSideLoadingAsync failed %{public}d", ret);

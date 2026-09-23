@@ -102,6 +102,24 @@ ErrCode InstalldClient::ExtractModuleFiles(const std::string &srcModulePath, con
         needFakeDecompression, isSystemApp);
 }
 
+ErrCode InstalldClient::ExtractHapModuleFiles(const HapModuleExtractParam &param)
+{
+    if (param.bundleName.empty() || param.moduleName.empty()) {
+        APP_LOGE("bundleName or moduleName is empty");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    if (param.hapCopySubDir.empty()) {
+        if (param.hapSrcPath.empty()) {
+            APP_LOGE("hapCopySubDir and hapSrcPath are empty");
+            return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+        }
+    } else if (param.hapFileName.empty()) {
+        APP_LOGE("hapFileName is empty");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::ExtractHapModuleFiles, param);
+}
+
 ErrCode InstalldClient::ExtractFiles(const ExtractParam &extractParam)
 {
     if (extractParam.srcPath.empty() || extractParam.targetPath.empty()) {
@@ -201,6 +219,15 @@ ErrCode InstalldClient::ExtractHnpFiles(const std::map<std::string, std::string>
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     return CallService(&IInstalld::ExtractHnpFiles, hnpPackageMap, extractParam);
+}
+
+ErrCode InstalldClient::ExtractHnpFilesByScene(const ExtractHnpFilesParam &extractHnpFilesParam)
+{
+    if (extractHnpFilesParam.hnpPackageMap.empty() || extractHnpFilesParam.bundleName.empty() ||
+        extractHnpFilesParam.moduleName.empty() || extractHnpFilesParam.srcPath.empty()) {
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::ExtractHnpFilesByScene, extractHnpFilesParam);
 }
 
 ErrCode InstalldClient::ProcessBundleInstallNative(const InstallHnpParam &installHnpParam)

@@ -3425,26 +3425,26 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckDeveloperIdBundle_0005, Function | Sm
 }
 
 /**
- * @tc.number: NotarizationCredentialEnabled_0001
- * @tc.name: test SetNotarizationCredentialEnabled and GetNotarizationCredentialEnabled
+ * @tc.number: NotarizationCredentialStatus_0001
+ * @tc.name: test SetNotarizationCredentialStatus and GetNotarizationCredentialStatus
  * @tc.desc: notarization credential enabled flag should be set and retrieved correctly
  */
-HWTEST_F(BmsBundleInstallCheckerTest, NotarizationCredentialEnabled_0001, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleInstallCheckerTest, NotarizationCredentialStatus_0001, Function | SmallTest | Level0)
 {
     InnerBundleInfo info;
-    info.SetNotarizationCredentialEnabled(true);
-    EXPECT_EQ(info.GetNotarizationCredentialEnabled(), true);
+    info.SetNotarizationCredentialStatus(1);
+    EXPECT_EQ(info.GetNotarizationCredentialStatus(), 1);
 }
 
 /**
- * @tc.number: NotarizationCredentialEnabled_0002
- * @tc.name: test InstallParam IsNotarizationCredentialEnabled
- * @tc.desc: notarization credential enabled flag from parameters map should be retrieved correctly
+ * @tc.number: NotarizationCredentialStatus_0002
+ * @tc.name: test InstallParam GetNotarizationCredentialStatus
+ * @tc.desc: notarization credential status from parameters map should be parsed correctly
  */
-HWTEST_F(BmsBundleInstallCheckerTest, NotarizationCredentialEnabled_0002, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleInstallCheckerTest, NotarizationCredentialStatus_0002, Function | SmallTest | Level0)
 {
     InstallParam installParam;
-    installParam.parameters[Constants::NOTARIZATION_CREDENTIAL_ENABLED_KEY] = InstallParam::PARAMETERS_VALUE_TRUE;
-    EXPECT_EQ(installParam.IsNotarizationCredentialEnabled(), true);
+    installParam.parameters[Constants::NOTARIZATION_CREDENTIAL_STATUS_KEY] = "1";
+    EXPECT_EQ(installParam.GetNotarizationCredentialStatus(), 1);
 }
 } // OHOS

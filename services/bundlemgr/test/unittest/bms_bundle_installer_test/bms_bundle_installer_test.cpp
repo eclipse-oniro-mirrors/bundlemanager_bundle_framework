@@ -51,6 +51,7 @@
 #include "installd/installd_load_callback.h"
 #include "installd/installd_service.h"
 #include "installd_client.h"
+#include "ipc/hap_module_extract_param.h"
 #include "install_exception_mgr.h"
 #include "mock_status_receiver.h"
 #include "parameter.h"
@@ -7488,8 +7489,7 @@ HWTEST_F(BmsBundleInstallerTest, ExtractHnpFileDir_0100, Function | SmallTest | 
     BaseBundleInstaller installer;
     std::string cpuAbi;
     std::map<std::string, std::string> hnpPackageMap;
-    std::string modulePath;
-    ErrCode ret = installer.ExtractHnpFileDir(cpuAbi, hnpPackageMap, modulePath);
+    ErrCode ret = installer.ExtractHnpFileDir(cpuAbi, hnpPackageMap, false, false);
     EXPECT_EQ(ret, ERR_APPEXECFWK_NATIVE_HNP_EXTRACT_FAILED);
 }
 
@@ -17331,6 +17331,42 @@ HWTEST_F(BmsBundleInstallerTest, ExtractModuleFiles_0100, Function | SmallTest |
     std::string targetPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + BUNDLE_NAME;
     auto ret = impl.ExtractModuleFiles(srcModulePath, targetPath, TEST_EMPTY_STRING, TEST_STRING, false, false);
     EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: ExtractHapModuleFiles_0100
+ * @tc.name: test ExtractHapModuleFiles
+ * @tc.desc: test ExtractHapModuleFiles of InstalldHostImpl with empty bundleName
+ */
+HWTEST_F(BmsBundleInstallerTest, ExtractHapModuleFiles_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    HapModuleExtractParam param;
+    param.bundleName = "";
+    param.moduleName = "entry";
+    param.hapCopySubDir = "subdir";
+    param.hapFileName = "entry.hap";
+    auto ret = impl.ExtractHapModuleFiles(param);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: ExtractHapModuleFiles_0200
+ * @tc.name: test ExtractHapModuleFiles
+ * @tc.desc: test ExtractHapModuleFiles of InstalldHostImpl with valid param
+ */
+HWTEST_F(BmsBundleInstallerTest, ExtractHapModuleFiles_0200, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    HapModuleExtractParam param;
+    param.bundleName = BUNDLE_NAME;
+    param.moduleName = MODULE_NAME;
+    param.hapCopySubDir = "subdir";
+    param.hapFileName = MODULE_NAME + ServiceConstants::INSTALL_FILE_SUFFIX;
+    param.nativeLibraryPath = "libs/arm64";
+    param.installMode = static_cast<int32_t>(HapExtractMode::NORMAL);
+    auto ret = impl.ExtractHapModuleFiles(param);
+    EXPECT_NE(ret, ERR_OK);
 }
 
 /**

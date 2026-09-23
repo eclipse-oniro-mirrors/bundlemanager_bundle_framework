@@ -18,6 +18,7 @@
 #include <cstdint>
 #include "basebundleinstallerextractmodulefiles_fuzzer.h"
 #include "base_bundle_installer.h"
+#include "installd/installd_constants.h"
 #include "securec.h"
 
 using namespace OHOS::AppExecFwk;
@@ -31,7 +32,8 @@ namespace OHOS {
         std::string modulePath = std::string(data, size);
         std::string targetSoPath;
         std::string cpuAbi;
-        auto ret1 = basebundleinstall.ExtractModuleFiles(info, modulePath, targetSoPath, cpuAbi);
+        int32_t installMode = static_cast<int32_t>(HapExtractMode::NORMAL);
+        auto ret1 = basebundleinstall.ExtractModuleFiles(info, modulePath, targetSoPath, cpuAbi, installMode);
         return true;
     }
 }

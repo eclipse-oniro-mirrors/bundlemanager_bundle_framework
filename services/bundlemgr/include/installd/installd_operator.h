@@ -33,6 +33,8 @@
 #include "ipc/copy_hap_to_install_path_param.h"
 #include "ipc/encryption_param.h"
 #include "ipc/extract_param.h"
+#include "ipc/extract_hnp_files_param.h"
+#include "ipc/hap_module_extract_param.h"
 #include "ipc/install_hnp_param.h"
 #include "ipc/skills_package_param.h"
 #include "nocopyable.h"
@@ -396,6 +398,11 @@ public:
 
     static bool IsFileNameValid(const std::string &fileName);
 
+    static bool ValidateAndBuildHnpPaths(const ExtractHnpFilesParam &param,
+        std::string &srcPath, std::string &targetPath);
+
+    static bool BuildHnpTargetPath(const ExtractHnpFilesParam &param, std::string &targetPath);
+
     static bool ResetBmsDBSecurity();
 
     /**
@@ -520,6 +527,7 @@ public:
     static bool IsValidPathByExtractModuleFiles(const std::string &srcModulePath, const std::string &targetPath,
         const std::string &targetSoPath);
     static bool IsValidCertPath(const std::string &certPath);
+    static bool IsValidPathByExtractSkillsPackage(const SkillsPackageParam &param);
     static bool IsValidPathByCopyDirScene(const std::string &sourceDir, const std::string &destinationDir,
         const std::string &bundleName, const BundleDirScene &scene);
     static bool IsValidPathByClearDirScene(const std::string &dir, const BundleDirScene &scene);
@@ -546,6 +554,9 @@ public:
     static bool IsValidPathByDeleteUninstallTmpDirs(const std::string &dir);
     static bool IsValidPathByExtractQuickFixRes(const std::string &bundleName, const std::string &moduleName,
         const std::string &hqfFilePath);
+    static ErrCode ValidateExtractHapModuleParams(const HapModuleExtractParam &param);
+    static void BuildExtractHapModulePaths(const HapModuleExtractParam &param,
+        std::string &srcModulePath, std::string &targetPath, std::string &targetSoPath);
     static bool BuildHapToInstallPath(const CopyHapToInstallPathParam &param,
         std::string &targetPath, std::string &signatureFilePath);
     static bool IsValidPathByExtractResourceFiles(const std::string &bundleName, const std::string &moduleName,

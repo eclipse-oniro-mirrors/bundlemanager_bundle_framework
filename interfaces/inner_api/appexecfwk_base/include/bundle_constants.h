@@ -64,6 +64,7 @@ constexpr int32_t ROOT_UID = 0;
 constexpr int32_t FOUNDATION_UID = 5523;
 constexpr int32_t CODE_PROTECT_UID = 7666;
 constexpr int32_t BASE_APP_UID = 10000;
+constexpr int16_t BASE_API_VERSION = 1000;
 constexpr int32_t BASE_USER_RANGE = 200000;
 constexpr int32_t MAX_APP_UID = 65535;
 constexpr int32_t STORAGE_MANAGER_UID = 1090;
@@ -272,7 +273,7 @@ constexpr const char* VERIFY_UNINSTALL_FORCED_VALUE = "true";
 //param key-value, value is the decimal string of DeviceModeDistributionPolicy enum value (0~8)
 constexpr const char* DEVICE_MODE_DISTRIBUTION_POLICY_KEY = "ohos.bms.param.deviceModeDistributionPolicy";
 
-constexpr const char* NOTARIZATION_CREDENTIAL_ENABLED_KEY = "ohos.bms.param.notarizationCredentialEnabled";
+constexpr const char* NOTARIZATION_CREDENTIAL_STATUS_KEY = "ohos.bms.param.notarizationCredentialStatus";
 
 constexpr const char* ARKTS_MODE = "arkTSMode";
 constexpr const char* MODULE_ARKTS_MODE = "moduleArkTSMode";

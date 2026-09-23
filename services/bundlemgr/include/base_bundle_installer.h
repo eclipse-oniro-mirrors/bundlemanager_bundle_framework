@@ -349,7 +349,8 @@ private:
      * @param modulePath normal files decompression path.
      * @return Returns ERR_OK if the bundle extract and renamed successfully; returns error code otherwise.
      */
-    ErrCode ExtractModule(InnerBundleInfo &info, const std::string &modulePath);
+    ErrCode ExtractModule(InnerBundleInfo &info, const std::string &modulePath,
+        bool isBundleUpdate = false, bool isModuleUpdate = false);
     /**
      * @brief Remove the code and data directories of a bundle.
      * @param info Indicates the InnerBundleInfo object of a bundle.
@@ -378,12 +379,13 @@ private:
      * @brief Extract files of the current installing module package.
      * @param info Indicates the InnerBundleInfo object of a bundle under installing.
      * @param modulePath normal files decompression path.
-     * @param targetSoPath so files decompression path.
+     * @param nativeLibraryPath modified native library path suffix (may be empty).
      * @param cpuAbi cpuAbi.
+     * @param installMode install mode: 0=normal, 1=moduleUpdate, 2=bundleUpdate.
      * @return Returns ERR_OK if the module files extraced successfully; returns error code otherwise.
      */
     ErrCode ExtractModuleFiles(const InnerBundleInfo &info, const std::string &modulePath,
-        const std::string &targetSoPath, const std::string &cpuAbi);
+        const std::string &nativeLibraryPath, const std::string &cpuAbi, int32_t installMode);
     /**
      * @brief Rename the directory of current installing module package.
      * @param info Indicates the InnerBundleInfo object of a bundle under installing.
@@ -933,7 +935,7 @@ private:
         const InnerBundleInfo &oldInfo);
 
     ErrCode ExtractHnpFileDir(const std::string &cpuAbi, const std::map<std::string, std::string> &hnpPackageMap,
-        const std::string &modulePath) const;
+        bool isBundleUpdate, bool isModuleUpdate) const;
     void DeleteOldNativeLibraryPath() const;
     std::string GetRealSoPath(const std::string &bundleName, const std::string &nativeLibraryPath,
         bool isNeedDeleteOldPath) const;

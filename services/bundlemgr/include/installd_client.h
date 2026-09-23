@@ -55,6 +55,12 @@ public:
         const std::string &targetSoPath, const std::string &cpuAbi, const bool needFakeDecompression,
         const bool isSystemApp);
     /**
+     * @brief Extract the files of a HAP module with path construction in installd.
+     * @param param Indicates the HAP module extract parameters.
+     * @return Returns ERR_OK if the HAP file extracted successfully; returns error code otherwise.
+     */
+    ErrCode ExtractHapModuleFiles(const HapModuleExtractParam &param);
+    /**
      * @brief Rename the module directory from temporaily path to the real path.
      * @param oldPath Indicates the old path name.
      * @param newPath Indicates the new path name.
@@ -282,6 +288,8 @@ public:
         const std::string &tempDirName, const std::string &hapFileName);
 
     ErrCode ExtractHnpFiles(const std::map<std::string, std::string> &hnpPackageMap, const ExtractParam &extractParam);
+
+    ErrCode ExtractHnpFilesByScene(const ExtractHnpFilesParam &extractHnpFilesParam);
 
     ErrCode ProcessBundleInstallNative(const InstallHnpParam &installHnpParam);
 

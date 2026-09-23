@@ -22,6 +22,7 @@
 #define protected public
 #include "installd_client.h"
 #include "installd_death_recipient.h"
+#include "ipc/hap_module_extract_param.h"
 #undef private
 #undef protected
 #include "ipc/create_dir_param.h"
@@ -2369,6 +2370,39 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CheckExternalSourcePluginS
     result = installClient_->CheckExternalSourcePluginSwitch(outSwitchStatus);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_CheckExternalSourcePluginSwitch_0100 end";
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_ExtractHapModuleFiles_0400
+ * @tc.name: ExtractHapModuleFiles
+ * @tc.desc: Test ExtractHapModuleFiles with empty hapCopySubDir and hapSrcPath returns error
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractHapModuleFiles_0400, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractHapModuleFiles_0400 start";
+    HapModuleExtractParam param;
+    param.bundleName = BUNDLE_NAME;
+    param.moduleName = "entry";
+    ErrCode result = installClient_->ExtractHapModuleFiles(param);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractHapModuleFiles_0400 end";
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_ExtractHapModuleFiles_0500
+ * @tc.name: ExtractHapModuleFiles
+ * @tc.desc: Test ExtractHapModuleFiles with hapSrcPath calls service
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractHapModuleFiles_0500, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractHapModuleFiles_0500 start";
+    HapModuleExtractParam param;
+    param.bundleName = BUNDLE_NAME;
+    param.moduleName = "entry";
+    param.hapSrcPath = "/system/app/com.example.test/entry.hap";
+    ErrCode result = installClient_->ExtractHapModuleFiles(param);
+    EXPECT_EQ(result, installClient_->CallService(&IInstalld::ExtractHapModuleFiles, param));
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractHapModuleFiles_0500 end";
 }
 
 /**

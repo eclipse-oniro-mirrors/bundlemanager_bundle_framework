@@ -266,11 +266,11 @@ bool __attribute__((no_sanitize("cfi"))) BinarySecurityWrapper::CheckAppSideLoad
         std::shared_lock<std::shared_mutex> readLock(mutex_);
         if (handle_ != nullptr && checkAppSideLoadingAsyncFunc_ != nullptr) {
             int32_t result = checkAppSideLoadingAsyncFunc_(userId);
-            if (result != ERR_OK) {
+            if (!result) {
                 LOG_E(BMS_TAG_INSTALLD, "CheckAppSideLoadingAsync failed %{public}d", result);
             }
             ScheduleUnload();
-            return result == ERR_OK;
+            return result;
         }
     }
 
@@ -284,12 +284,12 @@ bool __attribute__((no_sanitize("cfi"))) BinarySecurityWrapper::CheckAppSideLoad
             LOG_E(BMS_TAG_INSTALLD, "CheckAppSideLoadingAsync symbol not ready");
             return false;
         }
-        int32_t result = checkAppSideLoadingAsyncFunc_(userId);
-        if (result != ERR_OK) {
+        bool result = checkAppSideLoadingAsyncFunc_(userId);
+        if (!result) {
             LOG_E(BMS_TAG_INSTALLD, "CheckAppSideLoadingAsync failed %{public}d", result);
         }
         ScheduleUnload();
-        return result == ERR_OK;
+        return result;
     }
 }
 }  // namespace AppExecFwk

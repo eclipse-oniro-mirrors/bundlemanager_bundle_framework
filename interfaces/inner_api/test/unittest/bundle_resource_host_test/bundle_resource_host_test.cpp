@@ -924,14 +924,14 @@ HWTEST_F(BundleResourceHostTest, ApplicationInfo_Marshalling_0001, Function | Sm
 }
 
 /**
- * @tc.number: ApplicationInfo_NotarizationCredentialEnabled_0001
- * @tc.name: ApplicationInfo_NotarizationCredentialEnabled_0001
- * @tc.desc: test notarizationCredentialEnabled survives Marshalling->ReadFromParcel round-trip
+ * @tc.number: ApplicationInfo_NotarizationCredentialStatus_0001
+ * @tc.name: ApplicationInfo_NotarizationCredentialStatus_0001
+ * @tc.desc: test notarizationCredentialStatus survives Marshalling->ReadFromParcel round-trip
  */
-HWTEST_F(BundleResourceHostTest, ApplicationInfo_NotarizationCredentialEnabled_0001, Function | SmallTest | Level1)
+HWTEST_F(BundleResourceHostTest, ApplicationInfo_NotarizationCredentialStatus_0001, Function | SmallTest | Level1)
 {
     ApplicationInfo appInfo;
-    appInfo.notarizationCredentialEnabled = true;
+    appInfo.notarizationCredentialStatus = 1;
     Parcel parcel {};
     auto ret = appInfo.Marshalling(parcel);
     EXPECT_TRUE(ret);
@@ -939,7 +939,7 @@ HWTEST_F(BundleResourceHostTest, ApplicationInfo_NotarizationCredentialEnabled_0
     ApplicationInfo restored;
     ret = restored.ReadFromParcel(parcel);
     EXPECT_TRUE(ret);
-    EXPECT_EQ(restored.notarizationCredentialEnabled, true);
+    EXPECT_EQ(restored.notarizationCredentialStatus, 1);
 }
 
 /**

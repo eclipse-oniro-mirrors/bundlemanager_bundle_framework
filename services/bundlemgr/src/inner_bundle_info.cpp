@@ -2258,7 +2258,7 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const InnerBundleInfo &newInfo)
     baseApplicationInfo_->vendor = applicationInfo.vendor;
     baseApplicationInfo_->appDistributionType = applicationInfo.appDistributionType;
     baseApplicationInfo_->appProvisionType = applicationInfo.appProvisionType;
-    baseApplicationInfo_->notarizationCredentialEnabled = applicationInfo.notarizationCredentialEnabled;
+    baseApplicationInfo_->notarizationCredentialStatus = applicationInfo.notarizationCredentialStatus;
     baseApplicationInfo_->formVisibleNotify = applicationInfo.formVisibleNotify;
     baseApplicationInfo_->needAppDetail = applicationInfo.needAppDetail;
     baseApplicationInfo_->appDetailAbilityLibraryPath = applicationInfo.appDetailAbilityLibraryPath;
@@ -4789,14 +4789,14 @@ std::string InnerBundleInfo::GetAppDistributionType() const
     return baseApplicationInfo_->appDistributionType;
 }
 
-void InnerBundleInfo::SetNotarizationCredentialEnabled(bool notarizationCredentialEnabled)
+void InnerBundleInfo::SetNotarizationCredentialStatus(int32_t notarizationCredentialStatus)
 {
-    baseApplicationInfo_->notarizationCredentialEnabled = notarizationCredentialEnabled;
+    baseApplicationInfo_->notarizationCredentialStatus = notarizationCredentialStatus;
 }
 
-bool InnerBundleInfo::GetNotarizationCredentialEnabled() const
+int32_t InnerBundleInfo::GetNotarizationCredentialStatus() const
 {
-    return baseApplicationInfo_->notarizationCredentialEnabled;
+    return baseApplicationInfo_->notarizationCredentialStatus;
 }
 
 void InnerBundleInfo::SetAppProvisionType(const std::string &appProvisionType)

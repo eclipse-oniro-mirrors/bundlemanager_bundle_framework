@@ -34,6 +34,7 @@
 #include "file_ex.h"
 #include "installd/installd_operator.h"
 #include "ipc/extract_param.h"
+#include "ipc/hap_module_extract_param.h"
 #include "ipc/skills_package_param.h"
 #include "skills_installer/skills_package_info.h"
 
@@ -3832,5 +3833,412 @@ HWTEST_F(BmsInstallDaemonOperatorTest, MatchPathTemplate_0500, Function | SmallT
     EXPECT_TRUE(InstalldOperator::MatchPathTemplate("", ""));
     EXPECT_FALSE(InstalldOperator::MatchPathTemplate("", "/data/app"));
     EXPECT_TRUE(InstalldOperator::MatchPathTemplate("/data/app", "/data/app"));
+}
+
+/**
+ * @tc.number: IsValidPathByExtractSkillsPackage_0100
+ * @tc.name: test IsValidPathByExtractSkillsPackage with valid params
+ * @tc.desc: 1. all params are valid and hspPath is in HAP_COPY_PATH (normal install)
+ *           2. verify validation passes
+ */
+HWTEST_F(BmsInstallDaemonOperatorTest, IsValidPathByExtractSkillsPackage_0100, Function | SmallTest | Level0)
+{
+    SkillsPackageParam param;
+    param.bundleName = "com.example.test";
+    param.moduleName = "testModule";
+    param.extractModuleName = "testModule";
+    param.hspPath = "/data/service/el1/public/bms/bundle_manager_service/security_stream_install/test.hsp";
+    param.skillNameList.push_back("skill1");
+
+    EXPECT_TRUE(InstalldOperator::IsValidPathByExtractSkillsPackage(param));
+}
+
+/**
+ * @tc.number: IsValidPathByExtractSkillsPackage_0200
+ * @tc.name: test IsValidPathByExtractSkillsPackage with valid params in BASE_SKILL_DIR
+ * @tc.desc: 1. all params are valid and hspPath is in BASE_SKILL_DIR (copied skill)
+ *           2. verify validation passes
+ */
+HWTEST_F(BmsInstallDaemonOperatorTest, IsValidPathByExtractSkillsPackage_0200, Function | SmallTest | Level0)
+{
+    SkillsPackageParam param;
+    param.bundleName = "com.example.test";
+    param.moduleName = "testModule";
+    param.hspPath = "/data/app/el1/skills/public/com.example.test/testModule.hsp";
+    param.skillNameList.push_back("skill1");
+
+    EXPECT_TRUE(InstalldOperator::IsValidPathByExtractSkillsPackage(param));
+}
+
+/**
+ * @tc.number: IsValidPathByExtractSkillsPackage_0300
+ * @tc.name: test IsValidPathByExtractSkillsPackage with invalid moduleName containing slash
+ * @tc.desc: 1. moduleName contains '/'
+ *           2. verify validation fails
+ */
+HWTEST_F(BmsInstallDaemonOperatorTest, IsValidPathByExtractSkillsPackage_0300, Function | SmallTest | Level0)
+{
+    SkillsPackageParam param;
+    param.bundleName = "com.example.test";
+    param.moduleName = "test/module";
+    param.hspPath = "/data/app/el1/skills/public/com.example.test/testModule.hsp";
+    param.skillNameList.push_back("skill1");
+
+    EXPECT_FALSE(InstalldOperator::IsValidPathByExtractSkillsPackage(param));
+}
+
+/**
+ * @tc.number: IsValidPathByExtractSkillsPackage_0400
+ * @tc.name: test IsValidPathByExtractSkillsPackage with invalid moduleName containing path traversal
+ * @tc.desc: 1. moduleName contains '../'
+ *           2. verify validation fails
+ */
+HWTEST_F(BmsInstallDaemonOperatorTest, IsValidPathByExtractSkillsPackage_0400, Function | SmallTest | Level0)
+{
+    SkillsPackageParam param;
+    param.bundleName = "com.example.test";
+    param.moduleName = "../evil";
+    param.hspPath = "/data/app/el1/skills/public/com.example.test/testModule.hsp";
+    param.skillNameList.push_back("skill1");
+
+    EXPECT_FALSE(InstalldOperator::IsValidPathByExtractSkillsPackage(param));
+}
+
+/**
+ * @tc.number: IsValidPathByExtractSkillsPackage_0500
+ * @tc.name: test IsValidPathByExtractSkillsPackage with invalid extractModuleName containing slash
+ * @tc.desc: 1. extractModuleName contains '/'
+ *           2. verify validation fails
+ */
+HWTEST_F(BmsInstallDaemonOperatorTest, IsValidPathByExtractSkillsPackage_0500, Function | SmallTest | Level0)
+{
+    SkillsPackageParam param;
+    param.bundleName = "com.example.test";
+    param.moduleName = "testModule";
+    param.extractModuleName = "evil/module";
+    param.hspPath = "/data/app/el1/skills/public/com.example.test/testModule.hsp";
+    param.skillNameList.push_back("skill1");
+
+    EXPECT_FALSE(InstalldOperator::IsValidPathByExtractSkillsPackage(param));
+}
+
+/**
+ * @tc.number: IsValidPathByExtractSkillsPackage_0600
+ * @tc.name: test IsValidPathByExtractSkillsPackage with invalid extractModuleName path traversal
+ * @tc.desc: 1. extractModuleName contains '../'
+ *           2. verify validation fails
+ */
+HWTEST_F(BmsInstallDaemonOperatorTest, IsValidPathByExtractSkillsPackage_0600, Function | SmallTest | Level0)
+{
+    SkillsPackageParam param;
+    param.bundleName = "com.example.test";
+    param.moduleName = "testModule";
+    param.extractModuleName = "../evil";
+    param.hspPath = "/data/app/el1/skills/public/com.example.test/testModule.hsp";
+    param.skillNameList.push_back("skill1");
+
+    EXPECT_FALSE(InstalldOperator::IsValidPathByExtractSkillsPackage(param));
+}
+
+/**
+ * @tc.number: IsValidPathByExtractSkillsPackage_0700
+ * @tc.name: test IsValidPathByExtractSkillsPackage with hspPath not ending with .hap/.hsp
+ * @tc.desc: 1. hspPath ends with .txt instead of .hap/.hsp
+ *           2. verify validation fails
+ */
+HWTEST_F(BmsInstallDaemonOperatorTest, IsValidPathByExtractSkillsPackage_0700, Function | SmallTest | Level0)
+{
+    SkillsPackageParam param;
+    param.bundleName = "com.example.test";
+    param.moduleName = "testModule";
+    param.hspPath = "/data/app/el1/skills/public/com.example.test/testModule.txt";
+    param.skillNameList.push_back("skill1");
+
+    EXPECT_FALSE(InstalldOperator::IsValidPathByExtractSkillsPackage(param));
+}
+
+/**
+ * @tc.number: IsValidPathByExtractSkillsPackage_0800
+ * @tc.name: test IsValidPathByExtractSkillsPackage with preInstall system partition path
+ * @tc.desc: 1. hspPath starts with /system/app/ (preInstall scenario)
+ *           2. verify validation passes (no prefix whitelist, consistent with COPY_SKILL_HSP)
+ */
+HWTEST_F(BmsInstallDaemonOperatorTest, IsValidPathByExtractSkillsPackage_0800, Function | SmallTest | Level0)
+{
+    SkillsPackageParam param;
+    param.bundleName = "com.example.test";
+    param.moduleName = "testModule";
+    param.hspPath = "/system/app/skills/com.example.test/testModule.hsp";
+    param.skillNameList.push_back("skill1");
+
+    EXPECT_TRUE(InstalldOperator::IsValidPathByExtractSkillsPackage(param));
+}
+
+/**
+ * @tc.number: IsValidPathByExtractSkillsPackage_0900
+ * @tc.name: test IsValidPathByExtractSkillsPackage with hspPath containing path traversal
+ * @tc.desc: 1. hspPath contains '../'
+ *           2. verify validation fails
+ */
+HWTEST_F(BmsInstallDaemonOperatorTest, IsValidPathByExtractSkillsPackage_0900, Function | SmallTest | Level0)
+{
+    SkillsPackageParam param;
+    param.bundleName = "com.example.test";
+    param.moduleName = "testModule";
+    param.hspPath = "/data/app/el1/skills/public/com.example.test/../../evil.hsp";
+    param.skillNameList.push_back("skill1");
+
+    EXPECT_FALSE(InstalldOperator::IsValidPathByExtractSkillsPackage(param));
+}
+
+/**
+ * @tc.number: IsValidPathByExtractSkillsPackage_1000
+ * @tc.name: test IsValidPathByExtractSkillsPackage with empty extractModuleName using moduleName
+ * @tc.desc: 1. extractModuleName is empty, should fall back to moduleName
+ *           2. verify validation passes with valid moduleName
+ */
+HWTEST_F(BmsInstallDaemonOperatorTest, IsValidPathByExtractSkillsPackage_1000, Function | SmallTest | Level0)
+{
+    SkillsPackageParam param;
+    param.bundleName = "com.example.test";
+    param.moduleName = "testModule";
+    param.extractModuleName = "";  // empty, should use moduleName
+    param.hspPath = "/data/app/el1/skills/public/com.example.test/testModule.hsp";
+    param.skillNameList.push_back("skill1");
+
+    EXPECT_TRUE(InstalldOperator::IsValidPathByExtractSkillsPackage(param));
+}
+
+/**
+ * @tc.number: IsValidPathByExtractSkillsPackage_1100
+ * @tc.name: test IsValidPathByExtractSkillsPackage with entry/feature .hap path
+ * @tc.desc: 1. hspPath ends with .hap (entry/feature module app skills)
+ *           2. verify validation passes
+ */
+HWTEST_F(BmsInstallDaemonOperatorTest, IsValidPathByExtractSkillsPackage_1100, Function | SmallTest | Level0)
+{
+    SkillsPackageParam param;
+    param.bundleName = "com.example.test";
+    param.moduleName = "entry";
+    param.hspPath = "/data/app/el1/bundle/public/com.example.test/entry.hap";
+    param.skillNameList.push_back("skill1");
+
+    EXPECT_TRUE(InstalldOperator::IsValidPathByExtractSkillsPackage(param));
+}
+
+/**
+ * @tc.number: ValidateExtractHapModuleParams_0100
+ * @tc.name: test ValidateExtractHapModuleParams
+ * @tc.desc: 1. calling with valid params returns ERR_OK
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, ValidateExtractHapModuleParams_0100, Function | SmallTest | Level0)
+{
+    HapModuleExtractParam param;
+    param.bundleName = "com.example.test";
+    param.moduleName = "entry";
+    param.hapCopySubDir = "subdir";
+    param.hapFileName = "entry.hap";
+    param.installMode = static_cast<int32_t>(HapExtractMode::NORMAL);
+    auto ret = InstalldOperator::ValidateExtractHapModuleParams(param);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: ValidateExtractHapModuleParams_0200
+ * @tc.name: test ValidateExtractHapModuleParams
+ * @tc.desc: 1. calling with empty bundleName returns error
+ *           2. calling with empty moduleName returns error
+ *           3. calling with empty hapCopySubDir returns error
+ *           4. calling with empty hapFileName returns error
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, ValidateExtractHapModuleParams_0200, Function | SmallTest | Level0)
+{
+    HapModuleExtractParam param;
+    param.bundleName = "";
+    param.moduleName = "entry";
+    param.hapCopySubDir = "subdir";
+    param.hapFileName = "entry.hap";
+    EXPECT_EQ(InstalldOperator::ValidateExtractHapModuleParams(param),
+        ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    param.bundleName = "com.example.test";
+    param.moduleName = "";
+    EXPECT_EQ(InstalldOperator::ValidateExtractHapModuleParams(param),
+        ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    param.moduleName = "entry";
+    param.hapCopySubDir = "";
+    EXPECT_EQ(InstalldOperator::ValidateExtractHapModuleParams(param),
+        ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    param.hapCopySubDir = "subdir";
+    param.hapFileName = "";
+    EXPECT_EQ(InstalldOperator::ValidateExtractHapModuleParams(param),
+        ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: ValidateExtractHapModuleParams_0300
+ * @tc.name: test ValidateExtractHapModuleParams
+ * @tc.desc: 1. calling with invalid bundleName returns error
+ *           2. calling with invalid installMode returns error
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, ValidateExtractHapModuleParams_0300, Function | SmallTest | Level0)
+{
+    HapModuleExtractParam param;
+    param.bundleName = "invalid-name";
+    param.moduleName = "entry";
+    param.hapCopySubDir = "subdir";
+    param.hapFileName = "entry.hap";
+    EXPECT_EQ(InstalldOperator::ValidateExtractHapModuleParams(param),
+        ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    param.bundleName = "com.example.test";
+    param.installMode = -1;
+    EXPECT_EQ(InstalldOperator::ValidateExtractHapModuleParams(param),
+        ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    param.installMode = 100;
+    EXPECT_EQ(InstalldOperator::ValidateExtractHapModuleParams(param),
+        ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: BuildExtractHapModulePaths_0100
+ * @tc.name: test BuildExtractHapModulePaths
+ * @tc.desc: 1. calling with NORMAL installMode constructs correct paths
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, BuildExtractHapModulePaths_0100, Function | SmallTest | Level0)
+{
+    HapModuleExtractParam param;
+    param.bundleName = "com.example.test";
+    param.moduleName = "entry";
+    param.hapCopySubDir = "subdir";
+    param.hapFileName = "entry.hap";
+    param.nativeLibraryPath = "libs";
+    param.installMode = static_cast<int32_t>(HapExtractMode::NORMAL);
+
+    std::string srcModulePath;
+    std::string targetPath;
+    std::string targetSoPath;
+    InstalldOperator::BuildExtractHapModulePaths(param, srcModulePath, targetPath, targetSoPath);
+
+    EXPECT_FALSE(srcModulePath.empty());
+    EXPECT_TRUE(srcModulePath.find("entry.hap") != std::string::npos);
+    EXPECT_TRUE(targetPath.find("com.example.test") != std::string::npos);
+    EXPECT_TRUE(targetPath.find("entry") != std::string::npos);
+    EXPECT_FALSE(targetSoPath.empty());
+}
+
+/**
+ * @tc.number: BuildExtractHapModulePaths_0200
+ * @tc.name: test BuildExtractHapModulePaths
+ * @tc.desc: 1. calling with MODULE_UPDATE adds TMP_SUFFIX to targetPath
+ *           2. calling with BUNDLE_UPDATE adds BUNDLE_NEW_CODE_DIR
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, BuildExtractHapModulePaths_0200, Function | SmallTest | Level0)
+{
+    HapModuleExtractParam param;
+    param.bundleName = "com.example.test";
+    param.moduleName = "entry";
+    param.hapCopySubDir = "subdir";
+    param.hapFileName = "entry.hap";
+
+    // MODULE_UPDATE: targetPath should contain TMP_SUFFIX
+    param.installMode = static_cast<int32_t>(HapExtractMode::MODULE_UPDATE);
+    std::string srcModulePath;
+    std::string targetPath;
+    std::string targetSoPath;
+    InstalldOperator::BuildExtractHapModulePaths(param, srcModulePath, targetPath, targetSoPath);
+    EXPECT_TRUE(targetPath.find("_tmp") != std::string::npos);
+
+    // BUNDLE_UPDATE: baseDir should contain BUNDLE_NEW_CODE_DIR
+    param.installMode = static_cast<int32_t>(HapExtractMode::BUNDLE_UPDATE);
+    InstalldOperator::BuildExtractHapModulePaths(param, srcModulePath, targetPath, targetSoPath);
+    EXPECT_TRUE(targetPath.find("+new-") != std::string::npos);
+}
+
+/**
+ * @tc.number: BuildExtractHapModulePaths_0300
+ * @tc.name: test BuildExtractHapModulePaths
+ * @tc.desc: 1. calling with empty nativeLibraryPath results in empty targetSoPath
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, BuildExtractHapModulePaths_0300, Function | SmallTest | Level0)
+{
+    HapModuleExtractParam param;
+    param.bundleName = "com.example.test";
+    param.moduleName = "entry";
+    param.hapCopySubDir = "subdir";
+    param.hapFileName = "entry.hap";
+    param.nativeLibraryPath = "";
+    param.installMode = static_cast<int32_t>(HapExtractMode::NORMAL);
+
+    std::string srcModulePath;
+    std::string targetPath;
+    std::string targetSoPath;
+    InstalldOperator::BuildExtractHapModulePaths(param, srcModulePath, targetPath, targetSoPath);
+    EXPECT_TRUE(targetSoPath.empty());
+}
+
+/**
+ * @tc.number: ValidateExtractHapModuleParams_0400
+ * @tc.name: test ValidateExtractHapModuleParams
+ * @tc.desc: 1. calling with hapSrcPath and empty hapCopySubDir returns ERR_OK
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, ValidateExtractHapModuleParams_0400, Function | SmallTest | Level0)
+{
+    HapModuleExtractParam param;
+    param.bundleName = "com.example.test";
+    param.moduleName = "entry";
+    param.hapSrcPath = "/system/app/com.example.test/entry.hap";
+    param.installMode = static_cast<int32_t>(HapExtractMode::NORMAL);
+    auto ret = InstalldOperator::ValidateExtractHapModuleParams(param);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: ValidateExtractHapModuleParams_0500
+ * @tc.name: test ValidateExtractHapModuleParams
+ * @tc.desc: 1. calling with invalid hapSrcPath returns error
+ *           2. calling with hapSrcPath not ending with hap/hsp returns error
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, ValidateExtractHapModuleParams_0500, Function | SmallTest | Level0)
+{
+    HapModuleExtractParam param;
+    param.bundleName = "com.example.test";
+    param.moduleName = "entry";
+    param.hapSrcPath = "/system/app/../etc/entry.hap";
+    param.installMode = static_cast<int32_t>(HapExtractMode::NORMAL);
+    EXPECT_EQ(InstalldOperator::ValidateExtractHapModuleParams(param),
+        ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    param.hapSrcPath = "/system/app/com.example.test/entry.txt";
+    EXPECT_EQ(InstalldOperator::ValidateExtractHapModuleParams(param),
+        ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: BuildExtractHapModulePaths_0400
+ * @tc.name: test BuildExtractHapModulePaths
+ * @tc.desc: 1. calling with hapSrcPath uses it as srcModulePath
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, BuildExtractHapModulePaths_0400, Function | SmallTest | Level0)
+{
+    HapModuleExtractParam param;
+    param.bundleName = "com.example.test";
+    param.moduleName = "entry";
+    param.hapSrcPath = "/system/app/com.example.test/entry.hap";
+    param.nativeLibraryPath = "libs";
+    param.installMode = static_cast<int32_t>(HapExtractMode::NORMAL);
+
+    std::string srcModulePath;
+    std::string targetPath;
+    std::string targetSoPath;
+    InstalldOperator::BuildExtractHapModulePaths(param, srcModulePath, targetPath, targetSoPath);
+
+    EXPECT_EQ(srcModulePath, param.hapSrcPath);
+    EXPECT_TRUE(targetPath.find("com.example.test") != std::string::npos);
+    EXPECT_TRUE(targetPath.find("entry") != std::string::npos);
+    EXPECT_FALSE(targetSoPath.empty());
 }
 } // OHOS

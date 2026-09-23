@@ -148,6 +148,7 @@ public:
     std::string appProvisionType = "release";
     /** Whether hap is a skill */
     bool isSkillHap = false;
+    bool isSideloadApp = false;
 };
 
 /**
@@ -167,6 +168,7 @@ public:
     std::string appProvisionType = "release";
     /** Whether hap is a skill */
     bool isSkillHap = false;
+    bool isSideloadApp = false;
 };
 
 class PreAuthorizationInfo final {

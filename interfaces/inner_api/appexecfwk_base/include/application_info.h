@@ -334,7 +334,7 @@ struct ApplicationInfo : public Parcelable {
     // provision
     std::string appDistributionType = Constants::APP_DISTRIBUTION_TYPE_NONE;
     std::string appProvisionType = Constants::APP_PROVISION_TYPE_RELEASE;
-    bool notarizationCredentialEnabled = false;
+    int32_t notarizationCredentialStatus = 0;
 
     // native so
     std::string nativeLibraryPath;

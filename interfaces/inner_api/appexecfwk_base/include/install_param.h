@@ -196,10 +196,18 @@ public:
             parameters.at(ENTERPRISE_FOR_ALL_USER_KEY) == PARAMETERS_VALUE_TRUE;
     }
 
-    bool IsNotarizationCredentialEnabled() const
+    int32_t GetNotarizationCredentialStatus() const
     {
-        return parameters.find(Constants::NOTARIZATION_CREDENTIAL_ENABLED_KEY) != parameters.end() &&
-            parameters.at(Constants::NOTARIZATION_CREDENTIAL_ENABLED_KEY) == PARAMETERS_VALUE_TRUE;
+        auto it = parameters.find(Constants::NOTARIZATION_CREDENTIAL_STATUS_KEY);
+        if (it == parameters.end()) {
+            return 0;
+        }
+        char *endPos = nullptr;
+        int32_t result = static_cast<int32_t>(std::strtol(it->second.c_str(), &endPos, 10));
+        if (endPos == nullptr || *endPos != '\0') {
+            return 0;
+        }
+        return result;
     }
 
     bool IsForcedUninstall() const

@@ -49,6 +49,12 @@ public:
         const std::string &targetSoPath, const std::string &cpuAbi, const bool needFakeDecompression,
         const bool isSystemApp) override;
     /**
+     * @brief Extract the files of a HAP module with path construction in installd.
+     * @param param Indicates the HAP module extract parameters.
+     * @return Returns ERR_OK if the HAP file extracted successfully; returns error code otherwise.
+     */
+    virtual ErrCode ExtractHapModuleFiles(const HapModuleExtractParam &param) override;
+    /**
      * @brief Extract the files.
      * @param extractParam Indicates the extractParam.
      * @return Returns ERR_OK if the HAP file extracted successfully; returns error code otherwise.
@@ -107,6 +113,8 @@ public:
      */
     virtual ErrCode ExtractHnpFiles(const std::map<std::string, std::string> &hnpPackageMap,
         const ExtractParam &extractParam) override;
+
+    virtual ErrCode ExtractHnpFilesByScene(const ExtractHnpFilesParam &extractHnpFilesParam) override;
 
     virtual ErrCode ProcessBundleInstallNative(const InstallHnpParam &installHnpParam) override;
 
