@@ -16,6 +16,7 @@
 #include "bundle_backup_mgr.h"
 
 #include "app_log_wrapper.h"
+#include "app_log_tag_wrapper.h"
 #include <fcntl.h>
 #include <fstream>
 #include "bundle_backup_service.h"
@@ -54,9 +55,10 @@ ErrCode BundleBackupMgr::OnBackup(MessageParcel& data, MessageParcel& reply)
         APP_LOGE("Open backup file failed");
         return ERR_APPEXECFWK_BACKUP_FILE_IO_ERROR;
     }
+    fdsan_exchange_owner_tag(fd, 0, BMS_FDSAN_BACKUP_TAG);
     if (!reply.WriteFileDescriptor(fd)) {
         APP_LOGE("Write file descriptor failed");
-        close(fd);
+        fdsan_close_with_tag(fd, BMS_FDSAN_BACKUP_TAG);
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
@@ -68,9 +70,10 @@ ErrCode BundleBackupMgr::OnRestore(MessageParcel& data, MessageParcel& reply)
     if (fd < 0) {
         return ERR_APPEXECFWK_BACKUP_INVALID_PARAMETER;
     }
+    fdsan_exchange_owner_tag(fd, 0, BMS_FDSAN_BACKUP_TAG);
     std::string config;
     auto ret = LoadFromFile(fd, config);
-    (void)close(fd);
+    (void)fdsan_close_with_tag(fd, BMS_FDSAN_BACKUP_TAG);
     if (ret != ERR_OK) {
         APP_LOGE("LoadFromFile failed");
         return ret;

@@ -624,8 +624,6 @@ static uint64_t CalculateDirectorySizeWithCache(const std::string &dirPath,
 #define HMFS_MONITOR_FL 0x00000002
 #define HMF_IOCTL_HW_GET_FLAGS _IOR(0xf5, 70, unsigned int)
 #define HMF_IOCTL_HW_SET_FLAGS _IOR(0xf5, 71, unsigned int)
-#define BMS_FDSAN_INSTALLD_TAG 0xD001122
-
 struct fscrypt_asdp_policy {
     char version;
     char asdp_class;
@@ -1623,14 +1621,15 @@ bool InstalldOperator::FsyncNpapiPluginFile(const std::string &path)
         LOG_E(BMS_TAG_INSTALLER, "open %{public}s failed %{public}d", path.c_str(), errno);
         return false;
     }
+    fdsan_exchange_owner_tag(fileFd, 0, BMS_FDSAN_INSTALLD_TAG);
     if (fsync(fileFd) != 0) {
         if (fsync(fileFd) != 0) {
             LOG_E(BMS_TAG_INSTALLER, "retry fsync %{public}s failed %{public}d", path.c_str(), errno);
-            close(fileFd);
+            fdsan_close_with_tag(fileFd, BMS_FDSAN_INSTALLD_TAG);
             return false;
         }
     }
-    close(fileFd);
+    fdsan_close_with_tag(fileFd, BMS_FDSAN_INSTALLD_TAG);
     return true;
 }
 
@@ -3181,20 +3180,21 @@ ErrCode InstalldOperator::DecryptSoFile(const std::string &filePath, const std::
     std::string newfilePath;
     if (!PathToRealPath(filePath, newfilePath)) {
         LOG_E(BMS_TAG_INSTALLD, "file is not real path, file path: %{public}s", filePath.c_str());
-        close(dev_fd);
+        fdsan_close_with_tag(dev_fd, BMS_FDSAN_CODE_DECRYPT_TAG);
         return result;
     }
     auto fd = open(newfilePath.c_str(), O_RDONLY | O_UNCACHE);
     if (fd < 0) {
         LOG_E(BMS_TAG_INSTALLD, "open hap failed errno:%{public}d", errno);
-        close(dev_fd);
+        fdsan_close_with_tag(dev_fd, BMS_FDSAN_CODE_DECRYPT_TAG);
         return result;
     }
+    fdsan_exchange_owner_tag(fd, 0, BMS_FDSAN_INSTALLD_TAG);
     struct stat st;
     if (fstat(fd, &st) == INVALID_RETURN_VALUE) {
         LOG_E(BMS_TAG_INSTALLD, "obtain hap file status faield errno:%{public}d", errno);
-        close(dev_fd);
-        close(fd);
+        fdsan_close_with_tag(dev_fd, BMS_FDSAN_CODE_DECRYPT_TAG);
+        fdsan_close_with_tag(fd, BMS_FDSAN_INSTALLD_TAG);
         return result;
     }
     off_t innerFileSize = fileSize;
@@ -3204,8 +3204,8 @@ ErrCode InstalldOperator::DecryptSoFile(const std::string &filePath, const std::
     void *addr = mmap(NULL, innerFileSize, PROT_READ, MAP_PRIVATE, fd, offset);
     if (addr == MAP_FAILED) {
         LOG_E(BMS_TAG_INSTALLD, "mmap hap file status faield errno:%{public}d", errno);
-        close(dev_fd);
-        close(fd);
+        fdsan_close_with_tag(dev_fd, BMS_FDSAN_CODE_DECRYPT_TAG);
+        fdsan_close_with_tag(fd, BMS_FDSAN_INSTALLD_TAG);
         return result;
     }
 
@@ -3213,8 +3213,8 @@ ErrCode InstalldOperator::DecryptSoFile(const std::string &filePath, const std::
     auto outPutFd = BundleUtil::CreateFileDescriptor(tmpPath, 0);
     if (outPutFd < 0) {
         LOG_E(BMS_TAG_INSTALLD, "create fd for tmp hap file failed");
-        close(dev_fd);
-        close(fd);
+        fdsan_close_with_tag(dev_fd, BMS_FDSAN_CODE_DECRYPT_TAG);
+        fdsan_close_with_tag(fd, BMS_FDSAN_INSTALLD_TAG);
         munmap(addr, innerFileSize);
         return result;
     }
@@ -3222,9 +3222,9 @@ ErrCode InstalldOperator::DecryptSoFile(const std::string &filePath, const std::
         result = ERR_OK;
         LOG_D(BMS_TAG_INSTALLD, "write hap to temp path successfully");
     }
-    close(dev_fd);
-    close(fd);
-    close(outPutFd);
+    fdsan_close_with_tag(dev_fd, BMS_FDSAN_CODE_DECRYPT_TAG);
+    fdsan_close_with_tag(fd, BMS_FDSAN_INSTALLD_TAG);
+    fdsan_close_with_tag(outPutFd, BMS_FDSAN_TEMP_TAG);
     munmap(addr, innerFileSize);
     return result;
 }
@@ -3248,7 +3248,9 @@ ErrCode InstalldOperator::RemoveEncryptedKey(int32_t uid, const std::vector<std:
         LOG_D(BMS_TAG_INSTALLD, "ioctl successfully");
         result = ERR_OK;
     }
-    close(dev_fd);
+    if (dev_fd >= 0) {
+        fdsan_close_with_tag(dev_fd, BMS_FDSAN_CODE_DECRYPT_TAG);
+    }
     return result;
 }
 
@@ -3269,6 +3271,7 @@ int32_t InstalldOperator::CallIoctl(int32_t flag, int32_t associatedFlag, int32_
         LOG_E(BMS_TAG_INSTALLD, "call open failed errno:%{public}d", errno);
         return INVALID_RETURN_VALUE;
     }
+    fdsan_exchange_owner_tag(fd, 0, BMS_FDSAN_CODE_DECRYPT_TAG);
 
     /* build ioctl args to set key or remove key*/
     struct code_decrypt_arg firstArg;
@@ -3277,7 +3280,7 @@ int32_t InstalldOperator::CallIoctl(int32_t flag, int32_t associatedFlag, int32_
     auto ret = ioctl(fd, flag, &firstArg);
     if (ret != 0) {
         LOG_E(BMS_TAG_INSTALLD, "call ioctl failed errno:%{public}d", errno);
-        close(fd);
+        fdsan_close_with_tag(fd, BMS_FDSAN_CODE_DECRYPT_TAG);
         fd = INVALID_FILE_DESCRIPTOR;
         return ret;
     }
@@ -3292,7 +3295,7 @@ int32_t InstalldOperator::CallIoctl(int32_t flag, int32_t associatedFlag, int32_
     ret = ioctl(fd, associatedFlag, &secondArg);
     if (ret != 0) {
         LOG_E(BMS_TAG_INSTALLD, "call ioctl failed errno:%{public}d", errno);
-        close(fd);
+        fdsan_close_with_tag(fd, BMS_FDSAN_CODE_DECRYPT_TAG);
         fd = INVALID_FILE_DESCRIPTOR;
     }
     return ret;
@@ -4513,15 +4516,16 @@ bool InstalldOperator::IsRdDevice()
             PROC_CMDLINE_FILE_PATH, strerror(errno));
         return false;
     }
+    fdsan_exchange_owner_tag(fd, 0, BMS_FDSAN_INSTALLD_TAG);
     std::vector<char> buf(CMDLINE_MAX_BUF_LEN, 0);
     ssize_t bufLen = read(fd, buf.data(), CMDLINE_MAX_BUF_LEN - 1);
     if (bufLen < 0) {
         LOG_E(BMS_TAG_INSTALLD, "Read %{public}s failed, %{public}s.",
             PROC_CMDLINE_FILE_PATH, strerror(errno));
-        close(fd);
+        fdsan_close_with_tag(fd, BMS_FDSAN_INSTALLD_TAG);
         return false;
     }
-    close(fd);
+    fdsan_close_with_tag(fd, BMS_FDSAN_INSTALLD_TAG);
     return CheckDeviceMode(buf.data()) || CheckEfuseStatus(buf.data());
 }
 

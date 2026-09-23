@@ -20,6 +20,7 @@
 #include <unistd.h>
 
 #include "app_log_wrapper.h"
+#include "app_log_tag_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "bundle_constants.h"
 #include "bundle_file_util.h"
@@ -326,10 +327,11 @@ ErrCode ExtendResourceManagerProxy::CreateFd(
         APP_LOGE("invalid fd");
         return ERR_EXT_RESOURCE_MANAGER_CREATE_FD_FAILED;
     }
+    fdsan_exchange_owner_tag(fd, 0, BMS_FDSAN_EXT_TAG);
     path = reply.ReadString();
     if (path.empty()) {
         APP_LOGE("invalid path");
-        close(fd);
+        fdsan_close_with_tag(fd, BMS_FDSAN_EXT_TAG);
         return ERR_EXT_RESOURCE_MANAGER_INVALID_TARGET_DIR;
     }
     APP_LOGD("create fd success");
@@ -383,14 +385,14 @@ ErrCode ExtendResourceManagerProxy::CopyFiles(
             if (write(destFd, buffer, offset) < 0) {
                 APP_LOGE("write file to the temp dir failed, errno %{public}d", errno);
                 (void)fclose(sourceFp);
-                close(destFd);
+                fdsan_close_with_tag(destFd, BMS_FDSAN_EXT_TAG);
                 return ERR_EXT_RESOURCE_MANAGER_COPY_FILE_FAILED;
             }
         }
         destFiles.emplace_back(destPath);
         (void)fclose(sourceFp);
         fsync(destFd);
-        close(destFd);
+        fdsan_close_with_tag(destFd, BMS_FDSAN_EXT_TAG);
     }
     APP_LOGD("copy files success");
     return ERR_OK;

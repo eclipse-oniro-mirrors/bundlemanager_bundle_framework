@@ -144,22 +144,22 @@ ErrCode QuickFixManagerHost::HandleCreateFd(MessageParcel& data, MessageParcel& 
     auto ret = CreateFd(fileName, fd, path);
     if (!reply.WriteInt32(ret)) {
         LOG_E(BMS_TAG_DEFAULT, "write ret failed");
-        close(fd);
+        fdsan_close_with_tag(fd, BMS_FDSAN_TEMP_TAG);
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret == ERR_OK) {
         if (!reply.WriteFileDescriptor(fd)) {
             LOG_E(BMS_TAG_DEFAULT, "write fd failed");
-            close(fd);
+            fdsan_close_with_tag(fd, BMS_FDSAN_TEMP_TAG);
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
         if (!reply.WriteString(path)) {
             LOG_E(BMS_TAG_DEFAULT, "write path failed");
-            close(fd);
+            fdsan_close_with_tag(fd, BMS_FDSAN_TEMP_TAG);
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
     }
-    close(fd);
+    fdsan_close_with_tag(fd, BMS_FDSAN_TEMP_TAG);
     return ERR_OK;
 }
 } // AppExecFwk

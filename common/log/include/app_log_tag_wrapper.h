@@ -48,6 +48,38 @@
 #define BMS_TAG_AOT std::make_pair(0xD0011E0, "BMSAot")
 #endif
 
+#ifndef BMS_FDSAN_INSTALLER_TAG
+#define BMS_FDSAN_INSTALLER_TAG ((0xD001100ULL << 32) | 0x1)
+#endif
+
+#ifndef BMS_FDSAN_INSTALLD_TAG
+#define BMS_FDSAN_INSTALLD_TAG ((0xD001100ULL << 32) | 0x2)
+#endif
+
+#ifndef BMS_FDSAN_CODE_DECRYPT_TAG
+#define BMS_FDSAN_CODE_DECRYPT_TAG ((0xD001100ULL << 32) | 0x3)
+#endif
+
+#ifndef BMS_FDSAN_TEMP_TAG
+#define BMS_FDSAN_TEMP_TAG ((0xD001100ULL << 32) | 0x4)
+#endif
+
+#ifndef BMS_FDSAN_QUICK_FIX_TAG
+#define BMS_FDSAN_QUICK_FIX_TAG ((0xD001100ULL << 32) | 0x5)
+#endif
+
+#ifndef BMS_FDSAN_BACKUP_TAG
+#define BMS_FDSAN_BACKUP_TAG ((0xD001100ULL << 32) | 0x6)
+#endif
+
+#ifndef BMS_FDSAN_BOOT_FAIL_TAG
+#define BMS_FDSAN_BOOT_FAIL_TAG ((0xD001100ULL << 32) | 0x7)
+#endif
+
+#ifndef BMS_FDSAN_EXT_TAG
+#define BMS_FDSAN_EXT_TAG ((0xD001100ULL << 32) | 0x8)
+#endif
+
 #ifndef APPEXECFWK_FUNC_FMT
 #define APPEXECFWK_FUNC_FMT "%{public}s:%{public}s:%{public}d "
 #endif

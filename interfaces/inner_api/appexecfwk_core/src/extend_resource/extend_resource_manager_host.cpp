@@ -19,6 +19,7 @@
 #include <unistd.h>
 
 #include "app_log_wrapper.h"
+#include "app_log_tag_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "bundle_framework_core_ipc_interface_code.h"
 #include "bundle_memory_guard.h"
@@ -188,22 +189,22 @@ ErrCode ExtendResourceManagerHost::HandleCreateFd(MessageParcel& data, MessagePa
     auto ret = CreateFd(fileName, fd, path);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write ret failed");
-        close(fd);
+        fdsan_close_with_tag(fd, BMS_FDSAN_TEMP_TAG);
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret == ERR_OK) {
         if (!reply.WriteFileDescriptor(fd)) {
             APP_LOGE("write fd failed");
-            close(fd);
+            fdsan_close_with_tag(fd, BMS_FDSAN_TEMP_TAG);
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
         if (!reply.WriteString(path)) {
             APP_LOGE("write path failed");
-            close(fd);
+            fdsan_close_with_tag(fd, BMS_FDSAN_TEMP_TAG);
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
     }
-    close(fd);
+    fdsan_close_with_tag(fd, BMS_FDSAN_TEMP_TAG);
     return ERR_OK;
 }
 

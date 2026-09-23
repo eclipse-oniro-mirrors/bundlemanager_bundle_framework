@@ -318,12 +318,13 @@ void BundleUserMgrHostImpl::BootFailError(const char *exceptionInfo)
             BOOT_DETECTOR_DEV_PATH, errno, strerror(errno));
         return;
     }
+    fdsan_exchange_owner_tag(fd, 0, BMS_FDSAN_BOOT_FAIL_TAG);
 
     ret = ioctl(fd, PROCESS_BOOTFAIL, &parm); // 1: the order of the cmd
     if (ret < 0) {
         APP_LOGE("BootFailError ioctl failed, errorNo: %{public}d, :%{public}s", errno, strerror(errno));
     }
-    close(fd);
+    fdsan_close_with_tag(fd, BMS_FDSAN_BOOT_FAIL_TAG);
     return;
 }
  

@@ -550,16 +550,16 @@ ErrCode BundleInstallerProxy::WriteFile(const std::string &path, int32_t outputF
         LOG_E(BMS_TAG_INSTALLER, "open %{public}s failed, errno:%{public}d", realPath.c_str(), errno);
         return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
     }
-    fdsan_exchange_owner_tag(inputFd, 0, LOG_DOMAIN);
+    fdsan_exchange_owner_tag(inputFd, 0, BMS_FDSAN_INSTALLER_TAG);
     struct stat sourceStat;
     if (fstat(inputFd, &sourceStat) == -1) {
         LOG_E(BMS_TAG_INSTALLER, "fstat failed, errno : %{public}d", errno);
-        fdsan_close_with_tag(inputFd, LOG_DOMAIN);
+        fdsan_close_with_tag(inputFd, BMS_FDSAN_INSTALLER_TAG);
         return ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT;
     }
     if (sourceStat.st_size < 0) {
         LOG_E(BMS_TAG_INSTALLER, "invalid st_size");
-        fdsan_close_with_tag(inputFd, LOG_DOMAIN);
+        fdsan_close_with_tag(inputFd, BMS_FDSAN_INSTALLER_TAG);
         return ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT;
     }
 
@@ -574,11 +574,11 @@ ErrCode BundleInstallerProxy::WriteFile(const std::string &path, int32_t outputF
     if (singleTransfer == -1 || transferCount != static_cast<size_t>(sourceStat.st_size)) {
         LOG_E(BMS_TAG_INSTALLER, "errno: %{public}d, singleTransfer: %{public}zd, send count: %{public}zu, "
             "file size: %{public}zu", errno, singleTransfer, transferCount, static_cast<size_t>(sourceStat.st_size));
-        fdsan_close_with_tag(inputFd, LOG_DOMAIN);
+        fdsan_close_with_tag(inputFd, BMS_FDSAN_INSTALLER_TAG);
         return ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT;
     }
 
-    fdsan_close_with_tag(inputFd, LOG_DOMAIN);
+    fdsan_close_with_tag(inputFd, BMS_FDSAN_INSTALLER_TAG);
     fsync(outputFd);
 
     LOG_D(BMS_TAG_INSTALLER, "write file stream to service terminal end");
@@ -606,9 +606,10 @@ ErrCode BundleInstallerProxy::WriteHapFileToStream(sptr<IBundleStreamInstaller> 
         LOG_E(BMS_TAG_INSTALLER, "write file to stream failed due to invalid file descriptor");
         return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
     }
+    fdsan_exchange_owner_tag(outputFd, 0, BMS_FDSAN_INSTALLER_TAG);
 
     ret = WriteFile(path, outputFd);
-    close(outputFd);
+    fdsan_close_with_tag(outputFd, BMS_FDSAN_INSTALLER_TAG);
 
     return ret;
 }
@@ -634,9 +635,10 @@ ErrCode BundleInstallerProxy::WriteSignatureFileToStream(sptr<IBundleStreamInsta
         LOG_E(BMS_TAG_INSTALLER, "write file to stream failed due to invalid file descriptor");
         return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
     }
+    fdsan_exchange_owner_tag(outputFd, 0, BMS_FDSAN_INSTALLER_TAG);
 
     ret = WriteFile(path, outputFd);
-    close(outputFd);
+    fdsan_close_with_tag(outputFd, BMS_FDSAN_INSTALLER_TAG);
 
     return ret;
 }
@@ -663,9 +665,10 @@ ErrCode BundleInstallerProxy::WriteSharedFileToStream(sptr<IBundleStreamInstalle
         LOG_E(BMS_TAG_INSTALLER, "write file to stream failed due to invalid file descriptor");
         return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
     }
+    fdsan_exchange_owner_tag(outputFd, 0, BMS_FDSAN_INSTALLER_TAG);
 
     ret = WriteFile(path, outputFd);
-    close(outputFd);
+    fdsan_close_with_tag(outputFd, BMS_FDSAN_INSTALLER_TAG);
 
     return ret;
 }
@@ -692,9 +695,10 @@ ErrCode BundleInstallerProxy::WritePgoFileToStream(sptr<IBundleStreamInstaller> 
         LOG_E(BMS_TAG_INSTALLER, "write file to stream failed due to invalid file descriptor");
         return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
     }
+    fdsan_exchange_owner_tag(outputFd, 0, BMS_FDSAN_INSTALLER_TAG);
 
     ret = WriteFile(path, outputFd);
-    close(outputFd);
+    fdsan_close_with_tag(outputFd, BMS_FDSAN_INSTALLER_TAG);
 
     return ret;
 }
@@ -775,9 +779,10 @@ ErrCode BundleInstallerProxy::WriteExtProfileFileToStream(sptr<IBundleStreamInst
         LOG_E(BMS_TAG_INSTALLER, "write file to stream failed due to invalid file descriptor");
         return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
     }
+    fdsan_exchange_owner_tag(outputFd, 0, BMS_FDSAN_INSTALLER_TAG);
 
     ret = WriteFile(path, outputFd);
-    close(outputFd);
+    fdsan_close_with_tag(outputFd, BMS_FDSAN_INSTALLER_TAG);
 
     return ret;
 }
