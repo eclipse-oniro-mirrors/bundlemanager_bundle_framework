@@ -136,6 +136,10 @@ enum class InstalldInterfaceCode : uint32_t {
     EXTRACT_NPAPI_PLUGIN = 120,
     EXTRACT_RESOURCE_FILES = 121,
     EXTRACT_RES_FILE_DIR = 131,
+    BACKUP_SANDBOX_DIR = 140,
+    RECOVER_SANDBOX_DIR = 141,
+    DELETE_SANDBOX_DIR = 142,
+    DELETE_BACKUP_SANDBOX_DIR = 143,
 };
 
 } // namespace AppExecFwk

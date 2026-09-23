@@ -1066,6 +1066,54 @@ ErrCode InstalldProxy::RenameFile(const std::string &oldPath, const std::string 
     return TransactInstalldCmd(InstalldInterfaceCode::RENAME_FILE, data, reply, option);
 }
 
+ErrCode InstalldProxy::BackupSandboxDir(int32_t userId, const std::string &sandboxDir)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, Int32, userId);
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(sandboxDir));
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    return TransactInstalldCmd(InstalldInterfaceCode::BACKUP_SANDBOX_DIR, data, reply, option);
+}
+
+ErrCode InstalldProxy::RecoverSandboxDir(int32_t userId, const std::string &sandboxDir)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, Int32, userId);
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(sandboxDir));
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    return TransactInstalldCmd(InstalldInterfaceCode::RECOVER_SANDBOX_DIR, data, reply, option);
+}
+
+ErrCode InstalldProxy::DeleteSandboxDir(int32_t userId, const std::string &sandboxDir)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, Int32, userId);
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(sandboxDir));
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    return TransactInstalldCmd(InstalldInterfaceCode::DELETE_SANDBOX_DIR, data, reply, option);
+}
+
+ErrCode InstalldProxy::DeleteBackupSandboxDir(int32_t userId, const std::string &sandboxDir)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, Int32, userId);
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(sandboxDir));
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    return TransactInstalldCmd(InstalldInterfaceCode::DELETE_BACKUP_SANDBOX_DIR, data, reply, option);
+}
+
 ErrCode InstalldProxy::CopyFile(const std::string &oldPath, const std::string &newPath, BundleDirScene scene,
     const std::string &signatureFilePath)
 {

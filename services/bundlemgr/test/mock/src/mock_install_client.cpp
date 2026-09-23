@@ -363,6 +363,26 @@ ErrCode InstalldClient::RenameFile(const std::string &oldPath, const std::string
     return 0;
 }
 
+ErrCode InstalldClient::BackupSandboxDir(int32_t userId, const std::string &sandboxDir)
+{
+    return 0;
+}
+
+ErrCode InstalldClient::RecoverSandboxDir(int32_t userId, const std::string &sandboxDir)
+{
+    return 0;
+}
+
+ErrCode InstalldClient::DeleteSandboxDir(int32_t userId, const std::string &sandboxDir)
+{
+    return 0;
+}
+
+ErrCode InstalldClient::DeleteBackupSandboxDir(int32_t userId, const std::string &sandboxDir)
+{
+    return 0;
+}
+
 ErrCode InstalldClient::CopyFile(const std::string &oldPath, const std::string &newPath, BundleDirScene scene,
     const std::string &signatureFilePath)
 {

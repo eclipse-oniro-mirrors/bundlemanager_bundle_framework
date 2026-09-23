@@ -840,6 +840,35 @@ HWTEST_F(BmsInstallDaemonTest, InstalldClient_0450, Function | SmallTest | Level
 }
 
 /**
+ * @tc.number: InstalldClient_0460
+ * @tc.name: Test sandbox dir methods, a param is invalid
+ * @tc.desc: 1.Test the Backup/Recover/Delete/DeleteBackupSandboxDir of InstalldClient
+ */
+HWTEST_F(BmsInstallDaemonTest, InstalldClient_0460, Function | SmallTest | Level0)
+{
+    std::shared_ptr<InstalldService> service = std::make_shared<InstalldService>();
+    if (!service->IsServiceReady()) {
+        service->Start();
+    }
+    ErrCode ret = InstalldClient::GetInstance()->BackupSandboxDir(-1, BUNDLE_DATA_DIR);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    ret = InstalldClient::GetInstance()->BackupSandboxDir(Constants::START_USERID, "");
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    ret = InstalldClient::GetInstance()->RecoverSandboxDir(-1, BUNDLE_DATA_DIR);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    ret = InstalldClient::GetInstance()->RecoverSandboxDir(Constants::START_USERID, "");
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    ret = InstalldClient::GetInstance()->DeleteSandboxDir(-1, BUNDLE_DATA_DIR);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    ret = InstalldClient::GetInstance()->DeleteSandboxDir(Constants::START_USERID, "");
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    ret = InstalldClient::GetInstance()->DeleteBackupSandboxDir(-1, BUNDLE_DATA_DIR);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    ret = InstalldClient::GetInstance()->DeleteBackupSandboxDir(Constants::START_USERID, "");
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
  * @tc.number: InstalldClient_0500
  * @tc.name: Test MoveFile, a param is empty
  * @tc.desc: 1.Test the MoveFile of InstalldClient

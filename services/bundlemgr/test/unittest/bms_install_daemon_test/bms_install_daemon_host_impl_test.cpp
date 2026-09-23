@@ -312,6 +312,27 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_1350, Function | Sma
 }
 
 /**
+ * @tc.number: InstalldHostImplTest_1355
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling Backup/Recover/Delete/DeleteBackupSandboxDir of hostImpl
+ * @tc.require: issueI5T6P3
+ */
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_1355, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+
+    auto ret = hostImpl->BackupSandboxDir(0, TEST_STRING);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+    ret = hostImpl->RecoverSandboxDir(0, TEST_STRING);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+    ret = hostImpl->DeleteSandboxDir(0, TEST_STRING);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+    ret = hostImpl->DeleteBackupSandboxDir(0, TEST_STRING);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
  * @tc.number: InstalldHostImplTest_1400
  * @tc.name: test function of InstallHostImpl
  * @tc.desc: 1. calling CopyFile of hostImpl

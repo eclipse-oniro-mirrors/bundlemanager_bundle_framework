@@ -425,6 +425,54 @@ void FuzzRenameFile(InstalldHost& host, FuzzedDataProvider& fdp)
     host.HandleRenameFile(data, reply);
 }
 
+// BackupSandboxDir: ReadInt32(userId), ReadString16(sandboxDir)
+void FuzzBackupSandboxDir(InstalldHost& host, FuzzedDataProvider& fdp)
+{
+    MessageParcel data;
+    PrepareParcel<InstalldHost>(data);
+    MessageParcel reply;
+    WriteInt32Field(data, fdp);     // userId
+    WriteString16Field(data, fdp);  // sandboxDir
+    FinishParcel(data);
+    host.HandleBackupSandboxDir(data, reply);
+}
+
+// RecoverSandboxDir: ReadInt32(userId), ReadString16(sandboxDir)
+void FuzzRecoverSandboxDir(InstalldHost& host, FuzzedDataProvider& fdp)
+{
+    MessageParcel data;
+    PrepareParcel<InstalldHost>(data);
+    MessageParcel reply;
+    WriteInt32Field(data, fdp);     // userId
+    WriteString16Field(data, fdp);  // sandboxDir
+    FinishParcel(data);
+    host.HandleRecoverSandboxDir(data, reply);
+}
+
+// DeleteSandboxDir: ReadInt32(userId), ReadString16(sandboxDir)
+void FuzzDeleteSandboxDir(InstalldHost& host, FuzzedDataProvider& fdp)
+{
+    MessageParcel data;
+    PrepareParcel<InstalldHost>(data);
+    MessageParcel reply;
+    WriteInt32Field(data, fdp);     // userId
+    WriteString16Field(data, fdp);  // sandboxDir
+    FinishParcel(data);
+    host.HandleDeleteSandboxDir(data, reply);
+}
+
+// DeleteBackupSandboxDir: ReadInt32(userId), ReadString16(sandboxDir)
+void FuzzDeleteBackupSandboxDir(InstalldHost& host, FuzzedDataProvider& fdp)
+{
+    MessageParcel data;
+    PrepareParcel<InstalldHost>(data);
+    MessageParcel reply;
+    WriteInt32Field(data, fdp);     // userId
+    WriteString16Field(data, fdp);  // sandboxDir
+    FinishParcel(data);
+    host.HandleDeleteBackupSandboxDir(data, reply);
+}
+
 // RenameModuleDir: ReadString16(oldPath), ReadString16(newPath), ReadString16(bundleName), ReadInt32(scene)
 void FuzzRenameModuleDir(InstalldHost& host, FuzzedDataProvider& fdp)
 {
@@ -1281,6 +1329,10 @@ enum InstalldMethod {
     FUZZCLEARDIR,
     FUZZCOPYDIR,
     FUZZRENAMEFILE,
+    FUZZBACKUPSANDBOXDIR,
+    FUZZRECOVERSANDBOXDIR,
+    FUZZDELETESANDBOXDIR,
+    FUZZDELETEBACKUPSANDBOXDIR,
     FUZZRENAMEMODULEDIR,
     FUZZMOVEHAPTOCODEDIR,
     FUZZAPPLYDIFFPATCH,
@@ -1384,6 +1436,10 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
         case FUZZCLEARDIR: FuzzClearDir(installdHost, fdp);              break;
         case FUZZCOPYDIR: FuzzCopyDir(installdHost, fdp);              break;
         case FUZZRENAMEFILE: FuzzRenameFile(installdHost, fdp);            break;
+        case FUZZBACKUPSANDBOXDIR: FuzzBackupSandboxDir(installdHost, fdp); break;
+        case FUZZRECOVERSANDBOXDIR: FuzzRecoverSandboxDir(installdHost, fdp); break;
+        case FUZZDELETESANDBOXDIR: FuzzDeleteSandboxDir(installdHost, fdp); break;
+        case FUZZDELETEBACKUPSANDBOXDIR: FuzzDeleteBackupSandboxDir(installdHost, fdp); break;
         case FUZZRENAMEMODULEDIR: FuzzRenameModuleDir(installdHost, fdp);       break;
         case FUZZMOVEHAPTOCODEDIR: FuzzMoveHapToCodeDir(installdHost, fdp);     break;
         case FUZZAPPLYDIFFPATCH: FuzzApplyDiffPatch(installdHost, fdp);       break;

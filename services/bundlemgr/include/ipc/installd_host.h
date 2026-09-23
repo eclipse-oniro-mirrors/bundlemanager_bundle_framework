@@ -266,6 +266,14 @@ private:
 
     bool HandleRenameFile(MessageParcel &data, MessageParcel &reply);
 
+    bool HandleBackupSandboxDir(MessageParcel &data, MessageParcel &reply);
+
+    bool HandleRecoverSandboxDir(MessageParcel &data, MessageParcel &reply);
+
+    bool HandleDeleteSandboxDir(MessageParcel &data, MessageParcel &reply);
+
+    bool HandleDeleteBackupSandboxDir(MessageParcel &data, MessageParcel &reply);
+
     bool HandleCopyFile(MessageParcel &data, MessageParcel &reply);
 
     bool HandleCopyPluginHsp(MessageParcel &data, MessageParcel &reply);
