@@ -1530,12 +1530,11 @@ HWTEST_F(BmsInstallDaemonTest, Marshalling_0100, Function | SmallTest | Level0)
     bool res = extractParam.Marshalling(parcel);
     EXPECT_TRUE(res);
     std::string value = extractParam.ToString();
-    EXPECT_EQ("[ bundleName = " + extractParam.bundleName
-            + ", srcPath = " + HAP_FILE_PATH
-            + ", targetPath = " + TEST_PATH
-            + ", cpuAbi = " + TEST_CPU_ABI
-            + ", extractFileType = An, needRemoveOld = false, needFakeDecompression = false, isSystemApp = false]",
-            value);
+    EXPECT_EQ("[ bundleName = " + extractParam.bundleName + ", srcPath = " + HAP_FILE_PATH +
+                  ", targetPath = " + TEST_PATH + ", cpuAbi = " + TEST_CPU_ABI +
+                  ", extractFileType = An, needRemoveOld = false, needFakeDecompression = false, isSystemApp = false, "
+                  "hasBuildHash = false]",
+              value);
     extractParam.Unmarshalling(parcel);
 }
 

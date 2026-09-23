@@ -126,7 +126,7 @@ public:
 
     virtual ErrCode ExtractResFileDir(const std::string &bundleName, const std::string &moduleName,
         const std::string &hapFilePath, bool needFakeDecompression, bool isSystemApp,
-        bool useNewCodeDir, bool useModuleTmp)
+        bool useNewCodeDir, bool useModuleTmp, const bool hasBuildHash)
     {
         return ERR_OK;
     }
@@ -984,6 +984,11 @@ public:
     }
 
     virtual ErrCode CopyExtendResourceFile(const std::string &bundleName, const std::string &moduleName)
+    {
+        return ERR_OK;
+    }
+
+    virtual ErrCode BundleInstallFinished(const std::string &bundleName)
     {
         return ERR_OK;
     }

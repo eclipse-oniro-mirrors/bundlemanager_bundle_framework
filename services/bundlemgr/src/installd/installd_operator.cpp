@@ -840,7 +840,8 @@ std::string InstalldOperator::GetSameLevelTmpPath(const std::string &path)
 }
 
 bool InstalldOperator::ExtractFiles(const std::string &sourcePath, const std::string &targetSoPath,
-    const std::string &cpuAbi, const bool needFakeDecompression, const bool isSystemApp)
+    const std::string &cpuAbi, const bool needFakeDecompression, const bool isSystemApp,
+    const std::string &bundleName, const bool hasBuildHash)
 {
     LOG_D(BMS_TAG_INSTALLD, "InstalldOperator::ExtractFiles start");
     if (targetSoPath.empty()) {
@@ -867,14 +868,16 @@ bool InstalldOperator::ExtractFiles(const std::string &sourcePath, const std::st
     std::vector<ffrt::dependence> handles;
     for_each(soEntryFiles.begin(), soEntryFiles.end(),
         [&extractor, &targetSoPath, &cpuAbi, &handles, &extractSoResult, &sourcePath, &needFakeDecompression,
-            &isSystemApp](const auto &entry) {
+            &isSystemApp, &bundleName, &hasBuildHash](const auto &entry) {
             ExtractParam param;
+            param.bundleName = bundleName;
             param.srcPath = sourcePath;
             param.targetPath = targetSoPath;
             param.cpuAbi = cpuAbi;
             param.extractFileType = ExtractFileType::SO;
             param.needFakeDecompression = needFakeDecompression;
             param.isSystemApp = isSystemApp;
+            param.hasBuildHash = hasBuildHash;
             ffrt::task_handle handle = ffrt::submit_h(
                 [&extractor, entry, param, &extractSoResult]() {
                     LOG_D(BMS_TAG_INSTALLD, "Extracting file %{private}s", entry.c_str());
@@ -1504,14 +1507,22 @@ bool InstalldOperator::FakeDecompression(const BundleExtractor &extractor, const
         LOG_E(BMS_TAG_INSTALLD, "GetFileInfo failed, retry entryName : %{public}s", entryName.c_str());
         return false;
     }
-    if (!FileManagement::Decompress::CreateInnerFile(param.srcPath, targetPath, offset, length, param.isSystemApp)) {
+    FileManagement::Decompress::FileType fileType =
+        (param.extractFileType == ExtractFileType::SO ? FileManagement::Decompress::FileType::SO_FILE
+                                                      : FileManagement::Decompress::FileType::RESOURCE_FILE);
+    FileManagement::Decompress::CreateInnerFileParam innerFileParam = {
+        param.srcPath, targetPath, offset, length, param.isSystemApp, param.bundleName, fileType,
+        param.hasBuildHash};
+    if (!FileManagement::Decompress::CreateInnerFile(innerFileParam)) {
         LOG_NOFUNC_W(BMS_TAG_INSTALLD,
-            "CreateInnerFile failed %{public}s %{public}s %{public}s %{public}d %{public}d",
+            "CreateInnerFile failed %{public}s %{public}s %{public}s %{public}d %{public}d %{public}d %{public}d",
             entryName.c_str(),
             param.srcPath.c_str(),
             targetPath.c_str(),
             offset,
-            length);
+            length,
+            param.hasBuildHash,
+            fileType);
         return false;
     }
     ChangeModeFile(param, targetPath);
@@ -1556,12 +1567,14 @@ bool InstalldOperator::ExtractTargetFile(const BundleExtractor &extractor, const
     }
     LOG_D(BMS_TAG_INSTALLD,
         "entryName:%{public}s srcPath:%{public}s targetPath:%{public}s, needFakeDecompression:%{public}d, "
-        "extractFileType:%{public}d",
+        "extractFileType:%{public}d,bundleName:%{public}s,hasBuildHash:%{public}d",
         entryName.c_str(),
         param.srcPath.c_str(),
         path.c_str(),
         param.needFakeDecompression,
-        param.extractFileType);
+        param.extractFileType,
+        param.bundleName.c_str(),
+        param.hasBuildHash);
     if (param.needFakeDecompression &&
         (param.extractFileType == ExtractFileType::SO || param.extractFileType == ExtractFileType::RES_FILE) &&
         InstalldOperator::FakeDecompression(extractor, entryName, param, path)) {

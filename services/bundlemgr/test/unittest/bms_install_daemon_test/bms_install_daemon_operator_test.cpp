@@ -230,7 +230,7 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_0700, Function | Sma
 HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_0800, Function | SmallTest | Level0)
 {
     std::string path;
-    auto ret = InstalldOperator::ExtractFiles(path, TEST_STRING, TEST_STRING, false, false);
+    auto ret = InstalldOperator::ExtractFiles(path, TEST_STRING, TEST_STRING, false, false, TEST_STRING, false);
     EXPECT_FALSE(ret);
 }
 

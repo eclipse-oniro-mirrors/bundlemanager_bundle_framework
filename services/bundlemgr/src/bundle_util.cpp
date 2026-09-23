@@ -1750,9 +1750,9 @@ bool BundleUtil::CallSoEncryptedFunc(const std::string &hapPath, bool &isSoEncry
 #endif
 
 bool BundleUtil::IsSoSupportFakeDecompression(const std::string &bundleName, const bool isKeepAlive,
-    const std::string &hapPath)
+    const std::string &hapPath, const bool hasBuildHash)
 {
-    if (!FakeDecompressionCommonCheck(bundleName, isKeepAlive)) {
+    if (!FakeDecompressionCommonCheck(bundleName, isKeepAlive, hapPath, hasBuildHash)) {
         return false;
     }
 #if defined(CODE_ENCRYPTION_ENABLE)
@@ -1772,21 +1772,41 @@ bool BundleUtil::IsSoSupportFakeDecompression(const std::string &bundleName, con
 #endif
 }
 
-bool BundleUtil::IsResFileSupportFakeDecompression(const std::string &bundleName, const bool isKeepAlive)
+bool BundleUtil::IsResFileSupportFakeDecompression(const std::string &bundleName, const bool isKeepAlive,
+    const std::string &hapPath, const bool hasBuildHash)
 {
-    return FakeDecompressionCommonCheck(bundleName, isKeepAlive);
+    return FakeDecompressionCommonCheck(bundleName, isKeepAlive, hapPath, hasBuildHash);
 }
-bool BundleUtil::FakeDecompressionCommonCheck(const std::string &bundleName, const bool isKeepAlive)
+bool BundleUtil::FakeDecompressionCommonCheck(const std::string &bundleName, const bool isKeepAlive,
+    const std::string &hapPath, const bool hasBuildHash)
 {
+    APP_LOGD("FakeDecompressionCommonCheck bundleName:%{public}s isKeepAlive:%{public}d hapPath:%{public}s "
+             "hasBuildHash:%{public}d",
+             bundleName.c_str(),
+             isKeepAlive,
+             hapPath.c_str(),
+             hasBuildHash);
+    if (bundleName.empty() || hapPath.empty()) {
+        APP_LOGD("param invalid");
+        return false;
+    }
     if (!FileManagement::Decompress::GetSystemFeature()) {
         APP_LOGD("device not support FakeDecompression");
         return false;
     }
-    if (!FileManagement::Decompress::CheckBundleSupported(bundleName, isKeepAlive)) {
-        APP_LOGI("not support FakeDecompression:%{public}s %{public}d", bundleName.c_str(), isKeepAlive);
+    if (!FileManagement::Decompress::CheckBundleSupported(bundleName, isKeepAlive, hapPath, hasBuildHash)) {
+        APP_LOGI("not support FakeDecompression:%{public}s %{public}d %{public}d",
+                 bundleName.c_str(),
+                 isKeepAlive,
+                 hasBuildHash);
         return false;
     }
     return true;
+}
+
+void BundleUtil::BundleInstallFinished(const std::string &bundleName)
+{
+    InstalldClient::GetInstance()->BundleInstallFinished(bundleName);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

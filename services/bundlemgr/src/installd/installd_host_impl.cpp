@@ -49,6 +49,7 @@
 #include "config_policy_utils.h"
 #endif
 #include "directory_ex.h"
+#include "decompress.h"
 #ifdef WITH_SELINUX
 #include "hap_restorecon.h"
 #include "selinux/selinux.h"
@@ -358,7 +359,7 @@ ErrCode InstalldHostImpl::ExtractPluginModuleFiles(const ExtractModuleFilesParam
     }
 
     if (!InstalldOperator::ExtractFiles(param.bundlePath, targetSoPath, param.cpuAbi,
-        param.needFakeDecompression, param.isSystemApp)) {
+        param.needFakeDecompression, param.isSystemApp, param.bundleName, param.hasBuildHash)) {
         LOG_E(BMS_TAG_INSTALLD, "extract plugin module files failed, errno:%{public}d", errno);
         InstalldOperator::DeleteDir(targetPath);
         return ERR_APPEXECFWK_INSTALLD_EXTRACT_FAILED;
@@ -487,7 +488,7 @@ ErrCode InstalldHostImpl::ExtractHapModuleFiles(const HapModuleExtractParam &par
         return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
     }
     if (!InstalldOperator::ExtractFiles(srcModulePath, targetSoPath, param.cpuAbi,
-        param.needFakeDecompression, param.isSystemApp)) {
+        param.needFakeDecompression, param.isSystemApp, param.bundleName, param.hasBuildHash)) {
         LOG_E(BMS_TAG_INSTALLD, "ExtractHapModuleFiles failed, errno:%{public}d", errno);
         InstalldOperator::DeleteDir(targetPath);
         return ERR_APPEXECFWK_INSTALLD_EXTRACT_FAILED;
@@ -526,7 +527,7 @@ ErrCode InstalldHostImpl::ExtractServiceModuleFiles(const ExtractModuleFilesPara
         return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
     }
     if (!InstalldOperator::ExtractFiles(srcModulePath, targetSoPath, param.cpuAbi,
-        param.needFakeDecompression, param.isSystemApp)) {
+        param.needFakeDecompression, param.isSystemApp, param.bundleName, param.hasBuildHash)) {
         LOG_E(BMS_TAG_INSTALLD, "ExtractServiceModuleFiles failed, errno:%{public}d", errno);
         InstalldOperator::DeleteDir(targetPath);
         return ERR_APPEXECFWK_INSTALLD_EXTRACT_FAILED;
@@ -775,7 +776,7 @@ ErrCode InstalldHostImpl::ExtractResourceFiles(const std::string &bundleName, co
 
 ErrCode InstalldHostImpl::ExtractResFileDir(const std::string &bundleName, const std::string &moduleName,
     const std::string &hapFilePath, bool needFakeDecompression, bool isSystemApp,
-    bool useNewCodeDir, bool useModuleTmp)
+    bool useNewCodeDir, bool useModuleTmp, const bool hasBuildHash)
 {
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
@@ -805,6 +806,7 @@ ErrCode InstalldHostImpl::ExtractResFileDir(const std::string &bundleName, const
     extractParam.targetPath = targetPath;
     extractParam.needFakeDecompression = needFakeDecompression;
     extractParam.isSystemApp = isSystemApp;
+    extractParam.hasBuildHash = hasBuildHash;
     if (!InstalldOperator::ExtractFiles(extractParam)) {
         LOG_E(BMS_TAG_INSTALLD, "ExtractResFileDir failed, bundleName:%{public}s", bundleName.c_str());
         return ERR_APPEXECFWK_INSTALLD_EXTRACT_FAILED;
@@ -895,7 +897,8 @@ ErrCode InstalldHostImpl::ExtractSharedModuleFiles(const ExtractModuleFilesParam
 
     // Extract SO files
     if (!InstalldOperator::ExtractFiles(
-        param.bundlePath, targetSoPath, param.cpuAbi, param.needFakeDecompression, param.isSystemApp)) {
+        param.bundlePath, targetSoPath, param.cpuAbi, param.needFakeDecompression, param.isSystemApp, param.bundleName,
+        param.hasBuildHash)) {
         LOG_E(BMS_TAG_INSTALLD, "extract shared module so files failed, errno:%{public}d", errno);
         InstalldOperator::DeleteDir(targetPath);
         return ERR_APPEXECFWK_INSTALLD_EXTRACT_FAILED;
@@ -5279,6 +5282,20 @@ ErrCode InstalldHostImpl::CreatePrintServiceDir(const std::string &bundleName, i
     }
     CreatePrintServiceDirInner(bundleName, userId, appIndex, appUid);
     return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::BundleInstallFinished(const std::string &bundleName)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    if (!InstalldOperator::IsValidBundleName(bundleName)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid bundleName: %{public}s", bundleName.c_str());
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    LOG_I(BMS_TAG_INSTALLD, "BundleInstallFinished bundleName=%{public}s", bundleName.c_str());
+    return FileManagement::Decompress::BundelInstallFinished(bundleName);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

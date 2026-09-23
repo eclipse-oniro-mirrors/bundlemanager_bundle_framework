@@ -34,6 +34,7 @@ struct HapModuleExtractParam : public Parcelable {
     bool needFakeDecompression = false;
     bool isSystemApp = false;
     std::string hapSrcPath;           // external hap path for pre-install/OTA when not stream install
+    bool hasBuildHash = false;
 
     std::string ToString() const;
     bool ReadFromParcel(Parcel &parcel);

@@ -59,7 +59,7 @@ public:
 
     virtual ErrCode ExtractResFileDir(const std::string &bundleName, const std::string &moduleName,
         const std::string &hapFilePath, bool needFakeDecompression, bool isSystemApp,
-        bool useNewCodeDir, bool useModuleTmp) override;
+        bool useNewCodeDir, bool useModuleTmp, const bool hasBuildHash) override;
 
     virtual ErrCode ExtractNPAPIPlugin(const std::string &bundleName, const std::string &moduleName,
         const std::string &hapFilePath, int32_t userId) override;
@@ -444,6 +444,8 @@ public:
 
     virtual ErrCode CopyAbcFile(
         const std::string &bundleName, int32_t userId, const std::string &abcRelativePath) override;
+
+    virtual ErrCode BundleInstallFinished(const std::string &bundleName) override;
 
 private:
     ErrCode TransactInstalldCmd(InstalldInterfaceCode code, MessageParcel &data, MessageParcel &reply,

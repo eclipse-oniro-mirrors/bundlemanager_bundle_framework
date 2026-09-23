@@ -46,7 +46,7 @@ public:
 
     virtual ErrCode ExtractResFileDir(const std::string &bundleName, const std::string &moduleName,
         const std::string &hapFilePath, bool needFakeDecompression, bool isSystemApp,
-        bool useNewCodeDir, bool useModuleTmp) override;
+        bool useNewCodeDir, bool useModuleTmp, const bool hasBuildHash) override;
 
     /**
      * @brief Extract quick fix so files.
@@ -492,6 +492,8 @@ public:
      */
     virtual ErrCode CopyAbcFile(
         const std::string &bundleName, int32_t userId, const std::string &abcRelativePath) override;
+
+    virtual ErrCode BundleInstallFinished(const std::string &bundleName) override;
 
 private:
     std::string GetExtensionConfigPath() const;

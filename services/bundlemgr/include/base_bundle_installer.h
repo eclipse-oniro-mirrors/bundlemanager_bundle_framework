@@ -817,7 +817,7 @@ private:
     ErrCode DeliveryProfileToCodeSign() const;
     ErrCode RemoveProfileFromCodeSign(const std::string &bundleName) const;
     ErrCode ExtractResFileDir(const bool needFakeDecompression, const bool isSystemApp,
-        bool useNewCodeDir, bool useModuleTmp) const;
+        bool useNewCodeDir, bool useModuleTmp, const bool hasBuildHash) const;
     ErrCode ProcessAppSkills(InnerBundleInfo &info);
     ErrCode FinalizeAppSkills(const InnerBundleInfo &info);
     ErrCode CommitAppSkills(const InnerBundleInfo &info);
@@ -1113,8 +1113,7 @@ private:
     void RollbackCodePath(const std::string &bundleName, bool isBundleUpdate);
     void InnerProcessTargetSoPath(const InnerBundleInfo &info, const bool isBundleUpdate,
         const std::string &modulePath, std::string &nativeLibraryPath, std::string &targetSoPath);
-    ErrCode RecoverOnDemandInstallBundle(const std::string &bundleName,
-        const InstallParam &installParam, int32_t &uid);
+    ErrCode RecoverOnDemandInstallBundle(const std::string &bundleName, const InstallParam &installParam, int32_t &uid);
     void PrintStartWindowIconId(const InnerBundleInfo &info);
     bool ProcessExtProfile(const InstallParam &installParam);
     void SetHybridSpawn();

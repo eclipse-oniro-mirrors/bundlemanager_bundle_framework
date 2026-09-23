@@ -41,6 +41,7 @@ struct ExtractParam : public Parcelable {
     bool needRemoveOld = false;
     bool needFakeDecompression = false;
     bool isSystemApp = false;
+    bool hasBuildHash = false;
 
     std::string ToString() const;
     bool ReadFromParcel(Parcel &parcel);

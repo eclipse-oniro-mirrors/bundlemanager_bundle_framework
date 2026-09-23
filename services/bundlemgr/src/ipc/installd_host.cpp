@@ -474,6 +474,9 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::CREATE_PRINT_SERVICE_DIR):
             result = HandleCreatePrintServiceDir(data, reply);
             break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::BUNDLE_INSTALL_FINISHED):
+            result = HandleBundleInstallFinished(data, reply);
+            break;
         case static_cast<uint32_t>(InstalldInterfaceCode::COPY_HQF_FILE):
             result = HandleCopyHqfFile(data, reply);
             break;
@@ -639,8 +642,9 @@ bool InstalldHost::HandleExtractResFileDir(MessageParcel &data, MessageParcel &r
     bool isSystemApp = data.ReadBool();
     bool useNewCodeDir = data.ReadBool();
     bool useModuleTmp = data.ReadBool();
+    bool hasBuildHash = data.ReadBool();
     ErrCode result = ExtractResFileDir(bundleName, moduleName, hapFilePath, needFakeDecompression, isSystemApp,
-        useNewCodeDir, useModuleTmp);
+        useNewCodeDir, useModuleTmp, hasBuildHash);
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
@@ -2156,6 +2160,14 @@ bool InstalldHost::HandleCopyAbcFile(MessageParcel &data, MessageParcel &reply)
     std::string abcRelativePath = Str16ToStr8(data.ReadString16());
 
     ErrCode result = CopyAbcFile(bundleName, userId, abcRelativePath);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleBundleInstallFinished(MessageParcel &data, MessageParcel &reply)
+{
+    std::string bundleName = Str16ToStr8(data.ReadString16());
+    ErrCode result = BundleInstallFinished(bundleName);
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

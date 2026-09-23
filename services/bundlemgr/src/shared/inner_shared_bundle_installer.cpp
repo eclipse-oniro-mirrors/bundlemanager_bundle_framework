@@ -20,6 +20,7 @@
 #include "aot/aot_handler.h"
 #include "app_provision_info_manager.h"
 #include "bundle_mgr_service.h"
+#include "bundle_util.h"
 #include "installd_client.h"
 #include "ipc/extract_module_files_param.h"
 #include "ipc_skeleton.h"
@@ -256,6 +257,9 @@ ErrCode InnerSharedBundleInstaller::Install(const InstallParam &installParam)
         return result;
     }
     APP_LOGD("install shared bundle successfully: %{public}s", bundleName_.c_str());
+    if (isSoFakeDecompression_) {
+        BundleUtil::BundleInstallFinished(bundleName_);
+    }
     return result;
 }
 
@@ -800,9 +804,14 @@ ErrCode InnerSharedBundleInstaller::ProcessNativeLibrary(
         std::string tempSoPath = versionDir + ServiceConstants::PATH_SEPARATOR + tempNativeLibraryPath;
         APP_LOGD("tempSoPath=%{public}s,cpuAbi=%{public}s, bundlePath=%{public}s",
             tempSoPath.c_str(), cpuAbi.c_str(), bundlePath.c_str());
+        std::string sharedBuildHash;
+        newInfo.GetModuleBuildHash(newInfo.GetCurModuleName(), sharedBuildHash);
+        auto hasBuildHash = !sharedBuildHash.empty();
         auto needFakeDecompression = newInfo.IsFakeDecompressionEnable() &&
-            BundleUtil::IsSoSupportFakeDecompression(newInfo.GetBundleName(), newInfo.GetIsKeepAlive(), bundlePath);
+            BundleUtil::IsSoSupportFakeDecompression(newInfo.GetBundleName(), newInfo.GetIsKeepAlive(),
+                bundlePath, hasBuildHash);
         auto isSystemApp = newInfo.IsSystemApp();
+
         ExtractModuleFilesParam param;
         param.bundleName = bundleName_;
         param.versionCode = static_cast<int32_t>(newInfo.GetVersionCode());
@@ -812,8 +821,10 @@ ErrCode InnerSharedBundleInstaller::ProcessNativeLibrary(
         param.cpuAbi = cpuAbi;
         param.needFakeDecompression = needFakeDecompression;
         param.isSystemApp = isSystemApp;
+        param.hasBuildHash = hasBuildHash;
         auto result = InstalldClient::GetInstance()->ExtractSharedModuleFiles(param);
         CHECK_RESULT(result, "extract shared module files failed %{public}d");
+
         isSoFakeDecompression_ = isSoFakeDecompression_ || needFakeDecompression;
         // verify hap or hsp code signature for compressed so files
         result = VerifyCodeSignatureForNativeFiles(

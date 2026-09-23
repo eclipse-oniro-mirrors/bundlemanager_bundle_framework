@@ -582,10 +582,15 @@ ErrCode PluginInstaller::ProcessNativeLibrary(
             APP_LOGW("nativeLibraryPath is empty");
             return ERR_OK;
         }
+        std::string pluginBuildHash;
+        newInfo.GetModuleBuildHash(newInfo.GetCurModuleName(), pluginBuildHash);
+        auto hasBuildHash = !pluginBuildHash.empty();
         auto needFakeDecompression =
             newInfo.IsFakeDecompressionEnable() &&
-            BundleUtil::IsSoSupportFakeDecompression(newInfo.GetBundleName(), newInfo.GetIsKeepAlive(), bundlePath);
+            BundleUtil::IsSoSupportFakeDecompression(newInfo.GetBundleName(), newInfo.GetIsKeepAlive(),
+                bundlePath, hasBuildHash);
         auto isSystemApp = newInfo.IsSystemApp();
+
         ExtractModuleFilesParam param;
         param.hostBundleName = bundleName_;
         param.bundleNameWithTime = bundleNameWithTime_;
@@ -595,10 +600,12 @@ ErrCode PluginInstaller::ProcessNativeLibrary(
         param.cpuAbi = cpuAbi;
         param.needFakeDecompression = needFakeDecompression;
         param.isSystemApp = isSystemApp;
+        param.hasBuildHash = hasBuildHash;
         auto result = InstalldClient::GetInstance()->ExtractPluginModuleFiles(param);
         CHECK_RESULT(result, "extract plugin module files failed %{public}d");
         // soPath still needed for code signature verification
         std::string soPath = pluginBundleDir + ServiceConstants::PATH_SEPARATOR + nativeLibraryPath_;
+        isSoFakeDecompression_ = isSoFakeDecompression_ || needFakeDecompression;
         // verify hap or hsp code signature for compressed so files
         result = VerifyCodeSignatureForNativeFiles(
             bundlePath, cpuAbi, soPath, signatureFileDir_, newInfo.IsPreInstallApp());
@@ -890,6 +897,9 @@ ErrCode PluginInstaller::ProcessPluginInstall(const InnerBundleInfo &hostBundleI
     deleteDirGuard.Dismiss();
     dataRollBackGuard.Dismiss();
     APP_LOGD("install plugin bundle successfully: %{public}s", bundleName_.c_str());
+    if (isSoFakeDecompression_) {
+        BundleUtil::BundleInstallFinished(bundleName_);
+    }
     return result;
 }
 

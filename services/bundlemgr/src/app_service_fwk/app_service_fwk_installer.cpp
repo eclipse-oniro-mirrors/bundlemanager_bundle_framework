@@ -17,6 +17,7 @@
 
 #include "app_provision_info_manager.h"
 #include "bundle_mgr_service.h"
+#include "bundle_util.h"
 #include "inner_patch_info.h"
 #include "installd_client.h"
 #include "ipc/extract_module_files_param.h"
@@ -342,6 +343,9 @@ ErrCode AppServiceFwkInstaller::ProcessInstall(
         }
         PatchDataMgr::GetInstance().DeleteInnerPatchInfo(bundleName_);
         return result;
+    }
+    if (isSoNeedFakeDecompression_) {
+        BundleUtil::BundleInstallFinished(bundleName_);
     }
     return result;
 }
@@ -707,9 +711,13 @@ ErrCode AppServiceFwkInstaller::ProcessNativeLibrary(
             APP_LOGE("ProcessNativeLibrary obtain temp so path failed, moduleName:%{public}s", moduleName.c_str());
             return ERR_APPEXECFWK_INSTALLD_EXTRACT_FILES_FAILED;
         }
+        std::string appServiceBuildHash;
+        newInfo.GetModuleBuildHash(newInfo.GetCurModuleName(), appServiceBuildHash);
+        auto hasBuildHash = !appServiceBuildHash.empty();
         auto needFakeDecompression =
             newInfo.IsFakeDecompressionEnable() &&
-            BundleUtil::IsSoSupportFakeDecompression(newInfo.GetBundleName(), newInfo.GetIsKeepAlive(), bundlePath);
+            BundleUtil::IsSoSupportFakeDecompression(newInfo.GetBundleName(), newInfo.GetIsKeepAlive(),
+                bundlePath, hasBuildHash);
         auto isSystemApp = newInfo.IsSystemApp();
         APP_LOGI_NOFUNC("ExtractServiceModuleFiles bundleName:%{public}s moduleName:%{public}s cpuAbi %{public}s "
             "needFakeDecompression:%{public}d", bundleName_.c_str(), moduleName.c_str(), cpuAbi_.c_str(),
@@ -723,6 +731,7 @@ ErrCode AppServiceFwkInstaller::ProcessNativeLibrary(
         extractParam.versionCode = static_cast<int32_t>(newInfo.GetVersionCode());
         extractParam.needFakeDecompression = needFakeDecompression;
         extractParam.isSystemApp = isSystemApp;
+        extractParam.hasBuildHash = hasBuildHash;
         auto result = InstalldClient::GetInstance()->ExtractServiceModuleFiles(extractParam);
         CHECK_RESULT(result, "Extract service module files failed %{public}d");
         isSoNeedFakeDecompression_ = isSoNeedFakeDecompression_ || needFakeDecompression;

@@ -2108,6 +2108,9 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     SetIsAbcCompressed();
     InnerProcessNewBundleDataDir(installParam.isOTA || otaInstall_, oldInfo, cacheInfo);
     LOG_I(BMS_TAG_INSTALLER, "finish install %{public}s", bundleName_.c_str());
+    if (sysEventInfo_.isSoFakeDecompression || sysEventInfo_.isResourceFileFakeDecompression) {
+        BundleUtil::BundleInstallFinished(bundleName_);
+    }
     UtdHandler::InstallUtdAsync(bundleName_, userId_);
     if (installParam.needSendEvent) {
         if (isAppExist_ && !hasInstalledInUser_) {
@@ -4744,10 +4747,14 @@ ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::str
     bool useNewCodeDir = modulePath.find(ServiceConstants::BUNDLE_NEW_CODE_DIR) != std::string::npos;
     bool useModuleTmp = BundleUtil::EndWith(modulePath, ServiceConstants::TMP_SUFFIX);
     ExtractResourceFiles(info, useNewCodeDir, useModuleTmp);
+    std::string resBuildHash;
+    info.GetModuleBuildHash(info.GetCurModuleName(), resBuildHash);
+    bool hasBuildHash = !resBuildHash.empty();
     auto needFakeDecompression =
-        BundleUtil::IsResFileSupportFakeDecompression(info.GetBundleName(), info.GetIsKeepAlive());
+        BundleUtil::IsResFileSupportFakeDecompression(info.GetBundleName(), info.GetIsKeepAlive(),
+            modulePath_, hasBuildHash);
     auto isSystemApp = info.IsSystemApp();
-    result = ExtractResFileDir(needFakeDecompression, isSystemApp, useNewCodeDir, useModuleTmp);
+    result = ExtractResFileDir(needFakeDecompression, isSystemApp, useNewCodeDir, useModuleTmp, hasBuildHash);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "fail to ExtractResFileDir, error is %{public}d", result);
         return result;
@@ -5067,12 +5074,12 @@ void BaseBundleInstaller::RemoveNPAPIPluginDir()
 }
 
 ErrCode BaseBundleInstaller::ExtractResFileDir(const bool needFakeDecompression, const bool isSystemApp,
-    bool useNewCodeDir, bool useModuleTmp) const
+    bool useNewCodeDir, bool useModuleTmp, const bool hasBuildHash) const
 {
     LOG_D(BMS_TAG_INSTALLER, "ExtractResFileDir begin");
     ErrCode ret = InstalldClient::GetInstance()->ExtractResFileDir(
         GetEffectiveBundleName(), modulePackage_, modulePath_, needFakeDecompression, isSystemApp,
-        useNewCodeDir, useModuleTmp);
+        useNewCodeDir, useModuleTmp, hasBuildHash);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "ExtractResFileDir ExtractFiles failed, error is %{public}d", ret);
         return ret;
@@ -5806,14 +5813,18 @@ ErrCode BaseBundleInstaller::ExtractModuleFiles(const InnerBundleInfo &info,
     const std::string &cpuAbi, int32_t installMode)
 {
     LOG_D(BMS_TAG_INSTALLER, "extract module to %{public}s", modulePath.c_str());
+    std::string moduleBuildHash;
+    info.GetModuleBuildHash(info.GetCurModuleName(), moduleBuildHash);
+    auto hasBuildHash = !moduleBuildHash.empty();
     auto needFakeDecompression = info.IsFakeDecompressionEnable() &&
                                  BundleUtil::IsSoSupportFakeDecompression(info.GetBundleName(), info.GetIsKeepAlive(),
-                                     modulePath_);
+                                     modulePath_, hasBuildHash);
     auto isSystemApp = info.IsSystemApp();
+
     LOG_D(BMS_TAG_INSTALLER,
         "ExtractModuleFiles, nativeLibraryPath:%{public}s modulePath:%{public}s installMode:%{public}d "
-        "needFakeDecompression:%{public}d",
-        nativeLibraryPath.c_str(), modulePath.c_str(), installMode, needFakeDecompression);
+        "needFakeDecompression:%{public}d hasBuildHash:%{public}d",
+        nativeLibraryPath.c_str(), modulePath.c_str(), installMode, needFakeDecompression, hasBuildHash);
 
     // Stream install: sink constructed src path as hapCopySubDir + hapFileName.
     // Pre-install/OTA: modulePath_ is an external hap path and cannot be inferred, keep as hapSrcPath.
@@ -5847,6 +5858,7 @@ ErrCode BaseBundleInstaller::ExtractModuleFiles(const InnerBundleInfo &info,
     param.needFakeDecompression = needFakeDecompression;
     param.isSystemApp = isSystemApp;
     param.hapSrcPath = hapSrcPath;
+    param.hasBuildHash = hasBuildHash;
 
     auto result = InstalldClient::GetInstance()->ExtractHapModuleFiles(param);
     if (result != ERR_OK) {
@@ -8303,7 +8315,8 @@ ErrCode BaseBundleInstaller::InnerProcessNativeLibs(InnerBundleInfo &info, const
     bool isCompressNativeLibrary = info.IsCompressNativeLibs(info.GetCurModuleName());
     if (info.FetchNativeSoAttrs(modulePackage_, cpuAbi, nativeLibraryPath)) {
         if (isCompressNativeLibrary) {
-            InnerProcessTargetSoPath(info, isFeatureNeedUninstall_, modulePath, nativeLibraryPath, targetSoPath);
+            InnerProcessTargetSoPath(
+                info, isFeatureNeedUninstall_, modulePath, nativeLibraryPath, targetSoPath);
             // for code signature
             targetSoPathMap_.emplace(info.GetCurModuleName(), targetSoPath);
         }
@@ -8324,6 +8337,7 @@ ErrCode BaseBundleInstaller::InnerProcessNativeLibs(InnerBundleInfo &info, const
             installMode = static_cast<int32_t>(HapExtractMode::MODULE_UPDATE);
         }
         auto result = ExtractModuleFiles(info, modulePath, nativeLibraryPath, cpuAbi, installMode);
+
         CHECK_RESULT(result, "fail to extract module dir, error is %{public}d");
         // verify hap or hsp code signature for compressed so files
         result = VerifyCodeSignatureForNativeFiles(info, cpuAbi, targetSoPath, signatureFileDir);
@@ -10686,7 +10700,8 @@ void BaseBundleInstaller::RollbackCodePath(const std::string &bundleName, bool i
 }
 
 void BaseBundleInstaller::InnerProcessTargetSoPath(const InnerBundleInfo &info, const bool isBundleUpdate,
-    const std::string &modulePath, std::string &nativeLibraryPath, std::string &targetSoPath)
+                                                   const std::string &modulePath, std::string &nativeLibraryPath,
+                                                   std::string &targetSoPath)
 {
     bool isLibIsolated = info.IsLibIsolated(info.GetCurModuleName());
     // extract so file: if hap so is not isolated, then extract so to tmp path.

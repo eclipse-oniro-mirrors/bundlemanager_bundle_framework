@@ -389,6 +389,8 @@ private:
     bool HandleCreatePrintServiceDir(MessageParcel &data, MessageParcel &reply);
 
     bool HandleCopyAbcFile(MessageParcel &data, MessageParcel &reply);
+
+    bool HandleBundleInstallFinished(MessageParcel &data, MessageParcel &reply);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -62,6 +62,7 @@ bool ExtractParam::ReadFromParcel(Parcel &parcel)
     needRemoveOld = parcel.ReadBool();
     needFakeDecompression = parcel.ReadBool();
     isSystemApp = parcel.ReadBool();
+    hasBuildHash = parcel.ReadBool();
     return true;
 }
 
@@ -75,6 +76,7 @@ bool ExtractParam::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, needRemoveOld);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, needFakeDecompression);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isSystemApp);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, hasBuildHash);
     return true;
 }
 
@@ -98,7 +100,8 @@ std::string ExtractParam::ToString() const
             + ", extractFileType = " + GetExtractFileTypeStrVal(extractFileType)
             + ", needRemoveOld = " + (needRemoveOld ? "true" : "false")
             + ", needFakeDecompression = " + (needFakeDecompression ? "true" : "false")
-            + ", isSystemApp = " + (isSystemApp ? "true" : "false") + "]";
+            + ", isSystemApp = " + (isSystemApp ? "true" : "false")
+            + ", hasBuildHash = " + (hasBuildHash ? "true" : "false") + "]";
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
