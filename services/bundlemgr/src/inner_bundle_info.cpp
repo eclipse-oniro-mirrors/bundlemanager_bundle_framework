@@ -3321,7 +3321,10 @@ void InnerBundleInfo::GetBundleWithReqPermissionsV9(
 
     uint32_t tokenId = innerBundleUserInfoPtr->accessTokenId;
     std::string deviceId = baseApplicationInfo_->deviceId;
-    if (appIndex != 0) {
+    // dual-mode: the clone identity is stored on the bundleInfo itself, not in cloneInfos
+    bool isDualModeClone = isDualModeCloneApp_ &&
+        appIndex == ServiceConstants::DUAL_MODE_CLONE_APP_INDEX;
+    if (appIndex != 0 && !isDualModeClone) {
         std::string appIndexKey = InnerBundleUserInfo::AppIndexToKey(appIndex);
         if (appIndex >= Constants::CLI_SANDBOX_APP_INDEX_MIN && appIndex <= Constants::CLI_SANDBOX_APP_INDEX_MAX) {
             // cli sandbox app
