@@ -88,6 +88,7 @@ enum class ExtensionAbilityType {
     AGENT = 37,
     AGENT_UI = 38,
     MODULAR_OBJECT = 39,
+    UKEY_AUTH = 40,
     UNSPECIFIED = 255,
     UI = 256,
     HMS_ACCOUNT = 257,
