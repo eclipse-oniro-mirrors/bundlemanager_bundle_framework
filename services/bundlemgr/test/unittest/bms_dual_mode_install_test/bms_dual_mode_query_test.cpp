@@ -2450,4 +2450,44 @@ HWTEST_F(BmsDualModeQueryTest, GetAllBundleInfoInstances_AnyUserBothModes_1500,
     EXPECT_NE(static_cast<uint32_t>(bundleInfos[1].applicationInfo.applicationFlags) &
         static_cast<uint32_t>(ApplicationInfoFlag::FLAG_OTHER_INSTALLED), 0);
 }
+
+// both device modes + REQUESTED_PERMISSION: every returned instance must carry the
+// requested-permission fields; the other-mode clone instance (appIndex 10000) resolves
+// its token from the record itself, not cloneInfos (regression: states/details of the
+// clone instance were empty before the fix)
+HWTEST_F(BmsDualModeQueryTest, GetAllBundleInfoInstances_DualModeReqPermissions_1600,
+    Function | SmallTest | Level0)
+{
+    EnablePrimaryMode();
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    auto primaryInfo = MakeModeInstanceInfo(BUNDLE_NAME, TEST_USERID, false);
+    auto cloneInfo = MakeModeInstanceInfo(BUNDLE_NAME, TEST_USERID, true);
+    InnerModuleInfo moduleInfo;
+    moduleInfo.modulePackage = "entry";
+    moduleInfo.moduleName = "entry";
+    moduleInfo.name = "entry";
+    RequestPermission requestPermission;
+    requestPermission.name = "ohos.permission.INTERNET";
+    moduleInfo.bundlePermissions.AddPermission(requestPermission);
+    primaryInfo.innerModuleInfos_.emplace("entry", moduleInfo);
+    cloneInfo.innerModuleInfos_.emplace("entry", moduleInfo);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = primaryInfo;
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] = cloneInfo;
+
+    std::vector<BundleInfo> bundleInfos;
+    auto ret = dataMgr->GetAllBundleInfoInstances(BUNDLE_NAME,
+        FLAG_ALL_DEVICE_MODE |
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_REQUESTED_PERMISSION),
+        TEST_USERID, bundleInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    ASSERT_EQ(bundleInfos.size(), static_cast<size_t>(2));
+    EXPECT_EQ(CountBundleInfo(bundleInfos, BUNDLE_NAME, 0), 1);
+    EXPECT_EQ(CountBundleInfo(bundleInfos, BUNDLE_NAME, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX), 1);
+    for (const auto &instance : bundleInfos) {
+        ASSERT_EQ(instance.reqPermissions.size(), static_cast<size_t>(1));
+        EXPECT_EQ(instance.reqPermissions[0], "ohos.permission.INTERNET");
+        EXPECT_EQ(instance.reqPermissionStates.size(), instance.reqPermissions.size());
+        EXPECT_FALSE(instance.reqPermissionDetails.empty());
+    }
+}
 } // OHOS
