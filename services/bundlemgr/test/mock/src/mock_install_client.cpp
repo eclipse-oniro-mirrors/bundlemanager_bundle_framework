@@ -14,6 +14,7 @@
  */
 
 #include "installd_client.h"
+#include "mock_enterprise_cert_record.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -24,6 +25,25 @@ ErrCode g_errCode = ERR_OK;
 bool g_vectorEmpty = true;
 ErrCode g_testErrCode = ERR_OK;
 uint64_t g_inodeCount = 0;
+std::vector<std::string> g_addedCertPaths = {};
+std::vector<std::string> g_addedCertContents = {};
+std::vector<std::string> g_deletedCertPaths = {};
+// Return sequence dedicated to AddCertAndEnableKey (not the shared retList).
+std::vector<int32_t> g_addCertRetList = {};
+int32_t g_addCertRetIndex = 0;
+
+void ClearCertRecordForTest()
+{
+    g_addedCertPaths.clear();
+    g_addedCertContents.clear();
+    g_deletedCertPaths.clear();
+}
+
+void SetAddCertRetListForTest(const std::vector<int32_t> &list)
+{
+    g_addCertRetList = list;
+    g_addCertRetIndex = 0;
+}
 
 void SetTestReturnValue(const std::vector<int32_t> &list)
 {
@@ -429,6 +449,11 @@ ErrCode InstalldClient::RemoveSignProfile(const std::string &bundleName)
 
 ErrCode InstalldClient::AddCertAndEnableKey(const std::string &certPath, const std::string &certContent)
 {
+    g_addedCertPaths.push_back(certPath);
+    g_addedCertContents.push_back(certContent);
+    if (g_addCertRetIndex >= 0 && g_addCertRetIndex < static_cast<int32_t>(g_addCertRetList.size())) {
+        return g_addCertRetList[g_addCertRetIndex++];
+    }
     return ERR_OK;
 }
 
@@ -536,6 +561,9 @@ ErrCode InstalldClient::CopyDir(const std::string &sourceDir, const std::string 
 
 ErrCode InstalldClient::DeleteCertAndRemoveKey(const std::vector<std::string> &certPaths)
 {
+    for (const auto &path : certPaths) {
+        g_deletedCertPaths.push_back(path);
+    }
     return ERR_OK;
 }
 

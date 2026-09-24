@@ -6771,6 +6771,7 @@ void BundleMgrHostImpl::SetProvisionInfoToInnerBundleInfo(const std::string &hap
     } else {
         info.SetCertificate(provisionInfo.bundleInfo.distributionCertificate);
     }
+    info.SetSignatureValidity(provisionInfo.validity.notAfter, provisionInfo.validity.notBefore);
     info.SetAppPrivilegeLevel(provisionInfo.bundleInfo.apl);
     bool isDebug = provisionInfo.type == Security::Verify::ProvisionType::DEBUG;
     info.SetAppProvisionType(isDebug ? Constants::APP_PROVISION_TYPE_DEBUG : Constants::APP_PROVISION_TYPE_RELEASE);

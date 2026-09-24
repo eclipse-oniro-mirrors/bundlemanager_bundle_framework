@@ -180,6 +180,8 @@ bool SignatureInfo::ReadFromParcel(Parcel &parcel)
     fingerprint = Str16ToStr8(parcel.ReadString16());
     appIdentifier = Str16ToStr8(parcel.ReadString16());
     certificate = Str16ToStr8(parcel.ReadString16());
+    validity.notBefore = parcel.ReadInt64();
+    validity.notAfter = parcel.ReadInt64();
     return true;
 }
 
@@ -189,6 +191,8 @@ bool SignatureInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(fingerprint));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appIdentifier));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(certificate));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int64, parcel, validity.notBefore);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int64, parcel, validity.notAfter);
     return true;
 }
 

@@ -22,6 +22,7 @@
 #include "parcel.h"
 
 #include "ability_info.h"
+#include "app_provision_info.h"
 #include "application_info.h"
 #include "extension_ability_info.h"
 #include "hap_module_info.h"
@@ -109,6 +110,7 @@ struct SignatureInfo : public Parcelable {
     std::string fingerprint;
     std::string appIdentifier;
     std::string certificate;
+    Validity validity;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

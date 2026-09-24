@@ -30,7 +30,8 @@ extern const std::unordered_map<Security::Verify::AppDistType, std::string> APP_
 class BundleVerifyMgr {
 public:
     static ErrCode HapVerify(const std::string &filePath, Security::Verify::HapVerifyResult &hapVerifyResult,
-        bool readFile = false, const int32_t userId = Constants::INVALID_USERID);
+        bool readFile = false, const int32_t userId = Constants::INVALID_USERID,
+        bool skipEnterpriseResign = false);
     static void EnableDebug();
     static void DisableDebug();
     static ErrCode ParseHapProfile(const std::string &filePath, Security::Verify::HapVerifyResult &hapVerifyResult,

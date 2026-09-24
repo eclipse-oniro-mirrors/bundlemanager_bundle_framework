@@ -260,7 +260,8 @@ ErrCode BundleInstallChecker::CheckSysCap(const std::vector<std::string> &bundle
 
 ErrCode BundleInstallChecker::CheckMultipleHapsSignInfo(
     const std::vector<std::string> &bundlePaths,
-    std::vector<Security::Verify::HapVerifyResult>& hapVerifyRes, bool readFile, int32_t userId)
+    std::vector<Security::Verify::HapVerifyResult>& hapVerifyRes, bool readFile, int32_t userId,
+    bool skipEnterpriseResign)
 {
     LOG_D(BMS_TAG_INSTALLER, "Check multiple haps signInfo");
     if (bundlePaths.empty()) {
@@ -271,7 +272,8 @@ ErrCode BundleInstallChecker::CheckMultipleHapsSignInfo(
     for (const std::string &bundlePath : bundlePaths) {
         Security::Verify::HapVerifyResult hapVerifyResult;
         ErrCode verifyRes = ERR_OK;
-        verifyRes = BundleVerifyMgr::HapVerify(bundlePath, hapVerifyResult, readFile, userId);
+        verifyRes = BundleVerifyMgr::HapVerify(bundlePath, hapVerifyResult, readFile, userId,
+            skipEnterpriseResign);
 #ifndef X86_EMULATOR_MODE
         if (verifyRes != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "hap file verify failed, bundlePath: %{public}s", bundlePath.c_str());
@@ -286,7 +288,9 @@ ErrCode BundleInstallChecker::CheckMultipleHapsSignInfo(
         return ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE;
     }
 
-    if (!CheckEnterpriseResign(hapVerifyRes[0].GetProvisionInfo(), userId)) {
+    if (skipEnterpriseResign) {
+        LOG_I(BMS_TAG_INSTALLER, "skip enterprise resign check for permission-granted caller");
+    } else if (!CheckEnterpriseResign(hapVerifyRes[0].GetProvisionInfo(), userId)) {
         LOG_E(BMS_TAG_INSTALLER, "enterprise resign check failed");
         return ERR_APPEXECFWK_INSTALL_FAILED_APP_SOURCE_NOT_TRUESTED;
     }

@@ -4663,6 +4663,7 @@ void BundleDataMgr::ProcessCertificate(BundleInfo& bundleInfo, const std::string
             return;
         }
         bundleInfo.signatureInfo.certificate = appProvisionInfo.certificate;
+        bundleInfo.signatureInfo.validity = appProvisionInfo.validity;
     }
 }
 
@@ -14670,6 +14671,7 @@ ErrCode BundleDataMgr::GetSignatureInfoByUid(const int32_t uid, SignatureInfo &s
         APP_LOGW("bundleName:%{public}s GetAppProvisionInfo failed", innerBundleInfo.GetBundleName().c_str());
     } else {
         signatureInfo.certificate = appProvisionInfo.certificate;
+        signatureInfo.validity = appProvisionInfo.validity;
     }
     return ERR_OK;
 }

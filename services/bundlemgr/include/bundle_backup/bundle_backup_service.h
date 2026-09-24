@@ -34,6 +34,12 @@ public:
     ErrCode OnRestore(nlohmann::json &jsonObject);
 
 private:
+    // Cert segment of OnRestore: structure check, enterprise-device gate, cert
+    // lock and current-user scoped restore.
+    ErrCode RestoreEnterpriseCerts(const nlohmann::json &certs);
+    // Keep only cert items belonging to currentUserId (per-user backup model).
+    nlohmann::json FilterCertsByCurrentUser(const nlohmann::json &certsArray, int32_t currentUserId) const;
+
     std::shared_ptr<IShortcutDataStorage> shortcutStorage_;
     std::shared_ptr<BundleDataMgr> dataMgr_;
 };
