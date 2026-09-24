@@ -313,6 +313,7 @@ public:
     virtual ErrCode GetDiskUsageFromPath(const std::vector<std::string> &path, const std::string &bundleName,
         BundleDirScene scene, int64_t &statSize, int64_t timeoutMs = -1)
     {
+        statSize = 0;
         return ERR_OK;
     }
     /**

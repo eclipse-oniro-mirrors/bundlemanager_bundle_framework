@@ -105,6 +105,7 @@ void BundleStatusCallback::OnBundleAdded(const std::string& bundleName, const in
             AsyncCallbackInfo* asyncCallbackInfo =  reinterpret_cast<AsyncCallbackInfo*>(work->data);
             if (asyncCallbackInfo == nullptr) {
                 APP_LOGE("asyncCallbackInfo is null");
+                delete work;
                 return;
             }
             std::unique_ptr<AsyncCallbackInfo> callbackPtr {asyncCallbackInfo};
@@ -118,7 +119,14 @@ void BundleStatusCallback::OnBundleAdded(const std::string& bundleName, const in
             napi_value callback = nullptr;
             napi_value placeHolder = nullptr;
             napi_value result[2] = { 0 };
-            napi_get_reference_value(asyncCallbackInfo->env_, asyncCallbackInfo->callback_, &callback);
+            napi_status getRefRet = napi_get_reference_value(
+                asyncCallbackInfo->env_, asyncCallbackInfo->callback_, &callback);
+            if (getRefRet != napi_ok || callback == nullptr) {
+                APP_LOGE("napi_get_reference_value failed: %{public}d", getRefRet);
+                napi_close_handle_scope(asyncCallbackInfo->env_, scope);
+                delete work;
+                return;
+            }
             napi_create_string_utf8(
                 asyncCallbackInfo->env_, asyncCallbackInfo->bundleName_.c_str(), NAPI_AUTO_LENGTH, &result[0]);
             napi_create_uint32(asyncCallbackInfo->env_, asyncCallbackInfo->userId_, &result[1]);
@@ -173,6 +181,7 @@ void BundleStatusCallback::OnBundleUpdated(const std::string& bundleName, const 
             AsyncCallbackInfo* asyncCallbackInfo = reinterpret_cast<AsyncCallbackInfo*>(work->data);
             if (asyncCallbackInfo == nullptr) {
                 APP_LOGE("asyncCallbackInfo is null");
+                delete work;
                 return;
             }
             std::unique_ptr<AsyncCallbackInfo> callbackPtr {asyncCallbackInfo};
@@ -186,7 +195,14 @@ void BundleStatusCallback::OnBundleUpdated(const std::string& bundleName, const 
             napi_value callback = nullptr;
             napi_value placeHolder = nullptr;
             napi_value result[2] = { 0 };
-            napi_get_reference_value(asyncCallbackInfo->env_, asyncCallbackInfo->callback_, &callback);
+            napi_status getRefRet = napi_get_reference_value(
+                asyncCallbackInfo->env_, asyncCallbackInfo->callback_, &callback);
+            if (getRefRet != napi_ok || callback == nullptr) {
+                APP_LOGE("napi_get_reference_value failed: %{public}d", getRefRet);
+                napi_close_handle_scope(asyncCallbackInfo->env_, scope);
+                delete work;
+                return;
+            }
             napi_create_string_utf8(
                 asyncCallbackInfo->env_, asyncCallbackInfo->bundleName_.c_str(), NAPI_AUTO_LENGTH, &result[0]);
             napi_create_uint32(asyncCallbackInfo->env_, asyncCallbackInfo->userId_, &result[1]);
@@ -246,6 +262,7 @@ void BundleStatusCallback::OnBundleRemoved(const std::string& bundleName, const 
             AsyncCallbackInfo* asyncCallbackInfo =  reinterpret_cast<AsyncCallbackInfo*>(work->data);
             if (asyncCallbackInfo == nullptr) {
                 APP_LOGE("asyncCallbackInfo is null");
+                delete work;
                 return;
             }
             std::unique_ptr<AsyncCallbackInfo> callbackPtr {asyncCallbackInfo};
@@ -259,13 +276,38 @@ void BundleStatusCallback::OnBundleRemoved(const std::string& bundleName, const 
             napi_value callback = nullptr;
             napi_value placeHolder = nullptr;
             napi_value result[2] = { 0 };
-            napi_get_reference_value(asyncCallbackInfo->env_, asyncCallbackInfo->callback_, &callback);
-            napi_create_string_utf8(
+            napi_status getRefRet = napi_get_reference_value(
+                asyncCallbackInfo->env_, asyncCallbackInfo->callback_, &callback);
+            if (getRefRet != napi_ok || callback == nullptr) {
+                APP_LOGE("napi_get_reference_value failed: %{public}d", getRefRet);
+                napi_close_handle_scope(asyncCallbackInfo->env_, scope);
+                delete work;
+                return;
+            }
+            napi_status createStrRet = napi_create_string_utf8(
                 asyncCallbackInfo->env_, asyncCallbackInfo->bundleName_.c_str(), NAPI_AUTO_LENGTH, &result[0]);
-            napi_create_uint32(asyncCallbackInfo->env_, asyncCallbackInfo->userId_, &result[1]);
-            napi_call_function(
-                asyncCallbackInfo->env_, nullptr, callback, sizeof(result) / sizeof(result[0]), result, &placeHolder);
-            OHOS::AppExecFwk::HistogramUtil::ReportHistogramBoolean("AbilityKit.BundleStatusCallback.remove", true);
+            if (createStrRet != napi_ok) {
+                APP_LOGE("napi_create_string_utf8 failed: %{public}d", createStrRet);
+                napi_close_handle_scope(asyncCallbackInfo->env_, scope);
+                delete work;
+                return;
+            }
+            napi_status createUintRet = napi_create_uint32(
+                asyncCallbackInfo->env_, asyncCallbackInfo->userId_, &result[1]);
+            if (createUintRet != napi_ok) {
+                APP_LOGE("napi_create_uint32 failed: %{public}d", createUintRet);
+                napi_close_handle_scope(asyncCallbackInfo->env_, scope);
+                delete work;
+                return;
+            }
+            napi_status callRet = napi_call_function(
+                asyncCallbackInfo->env_, nullptr, callback,
+                sizeof(result) / sizeof(result[0]), result, &placeHolder);
+            if (callRet != napi_ok) {
+                APP_LOGE("napi_call_function failed: %{public}d", callRet);
+            }
+            OHOS::AppExecFwk::HistogramUtil::ReportHistogramBoolean(
+                "AbilityKit.BundleStatusCallback.remove", callRet == napi_ok);
             napi_close_handle_scope(asyncCallbackInfo->env_, scope);
             if (work != nullptr) {
                 delete work;

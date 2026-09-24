@@ -601,7 +601,14 @@ static napi_value JSLauncherServiceOn(napi_env env, napi_callback_info info)
             } else {
                 napi_value callback = nullptr;
                 napi_value placeHolder = nullptr;
-                napi_get_reference_value(env, asyncCallbackInfo->callbackRef, &callback);
+                napi_status getRefRet = napi_get_reference_value(env, asyncCallbackInfo->callbackRef, &callback);
+                if (getRefRet != napi_ok || callback == nullptr) {
+                    APP_LOGE("napi_get_reference_value failed: %{public}d", getRefRet);
+                    napi_delete_reference(env, asyncCallbackInfo->callbackRef);
+                    napi_delete_async_work(env, asyncCallbackInfo->asyncWork);
+                    delete asyncCallbackInfo;
+                    return;
+                }
                 napi_call_function(env, nullptr, callback, sizeof(result) / sizeof(result[0]), result, &placeHolder);
                 napi_delete_reference(env, asyncCallbackInfo->callbackRef);
             }
@@ -659,7 +666,14 @@ static void LauncherServiceOffComplete(napi_env env, napi_status status, void* d
     } else {
         napi_value callback = nullptr;
         napi_value placeHolder = nullptr;
-        napi_get_reference_value(env, asyncCallbackInfo->callbackRef, &callback);
+        napi_status getRefRet = napi_get_reference_value(env, asyncCallbackInfo->callbackRef, &callback);
+        if (getRefRet != napi_ok || callback == nullptr) {
+            APP_LOGE("napi_get_reference_value failed: %{public}d", getRefRet);
+            napi_delete_reference(env, asyncCallbackInfo->callbackRef);
+            napi_delete_async_work(env, asyncCallbackInfo->asyncWork);
+            delete asyncCallbackInfo;
+            return;
+        }
         napi_call_function(env, nullptr, callback, sizeof(result) / sizeof(result[0]), result, &placeHolder);
         napi_delete_reference(env, asyncCallbackInfo->callbackRef);
     }
@@ -878,7 +892,7 @@ static napi_value JSGetLauncherAbilityInfos(napi_env env, napi_callback_info inf
     if (asyncCallbackInfo->callbackRef == nullptr) {
         napi_create_promise(env, &asyncCallbackInfo->deferred, &promise);
     } else {
-        napi_get_undefined(env,  &promise);
+        napi_get_undefined(env, &promise);
     }
 
     napi_value resource = nullptr;
@@ -924,8 +938,17 @@ static napi_value JSGetLauncherAbilityInfos(napi_env env, napi_callback_info inf
                 napi_value callback = nullptr;
                 napi_value callResult = 0;
                 napi_value undefined = 0;
-                napi_get_reference_value(env, asyncCallbackInfo->callbackRef, &callback);
-                napi_call_function(env, undefined, callback, sizeof(result) / sizeof(result[0]), result, &callResult);
+                napi_status getRefRet = napi_get_reference_value(
+                    env, asyncCallbackInfo->callbackRef, &callback);
+                if (getRefRet != napi_ok || callback == nullptr) {
+                    APP_LOGE("napi_get_reference_value failed: %{public}d", getRefRet);
+                    napi_delete_reference(env, asyncCallbackInfo->callbackRef);
+                    napi_delete_async_work(env, asyncCallbackInfo->asyncWork);
+                    delete asyncCallbackInfo;
+                    return;
+                }
+                napi_call_function(env, undefined, callback,
+                    sizeof(result) / sizeof(result[0]), result, &callResult);
                 napi_delete_reference(env, asyncCallbackInfo->callbackRef);
             }
             OHOS::AppExecFwk::HistogramUtil::ReportHistogramEnumeration(
@@ -989,11 +1012,11 @@ static napi_value JSGetShortcutInfos(napi_env env, napi_callback_info info)
     if (asyncCallbackInfo->callbackRef == nullptr) {
         napi_create_promise(env, &asyncCallbackInfo->deferred, &promise);
     } else {
-        napi_get_undefined(env,  &promise);
+        napi_get_undefined(env, &promise);
     }
+
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "JSGetShortcutInfos", NAPI_AUTO_LENGTH, &resource);
-
     napi_create_async_work(
         env, nullptr, resource,
         [](napi_env env, void* data) {
@@ -1036,8 +1059,17 @@ static napi_value JSGetShortcutInfos(napi_env env, napi_callback_info info)
                 napi_value callback = nullptr;
                 napi_value callResult = 0;
                 napi_value undefined = 0;
-                napi_get_reference_value(env, asyncCallbackInfo->callbackRef, &callback);
-                napi_call_function(env, undefined, callback, sizeof(result) / sizeof(result[0]), result, &callResult);
+                napi_status getRefRet = napi_get_reference_value(
+                    env, asyncCallbackInfo->callbackRef, &callback);
+                if (getRefRet != napi_ok || callback == nullptr) {
+                    APP_LOGE("napi_get_reference_value failed: %{public}d", getRefRet);
+                    napi_delete_reference(env, asyncCallbackInfo->callbackRef);
+                    napi_delete_async_work(env, asyncCallbackInfo->asyncWork);
+                    delete asyncCallbackInfo;
+                    return;
+                }
+                napi_call_function(env, undefined, callback,
+                    sizeof(result) / sizeof(result[0]), result, &callResult);
                 napi_delete_reference(env, asyncCallbackInfo->callbackRef);
             }
             OHOS::AppExecFwk::HistogramUtil::ReportHistogramEnumeration(

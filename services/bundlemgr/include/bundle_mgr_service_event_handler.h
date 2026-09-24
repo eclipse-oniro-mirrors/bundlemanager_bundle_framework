@@ -180,6 +180,7 @@ public:
         int32_t appIndex, int32_t userId);
     ErrCode CleanSystemOptimizeShaderCache();
 private:
+    static std::shared_ptr<BundleDataMgr> GetDataMgrFromService();
     /**
      * @brief Before Bms start.
      * @return
