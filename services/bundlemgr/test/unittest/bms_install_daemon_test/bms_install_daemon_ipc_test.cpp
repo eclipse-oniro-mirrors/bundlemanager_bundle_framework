@@ -18,9 +18,11 @@
 
 #include "ipc/file_stat.h"
 #include "ipc/hap_module_extract_param.h"
+#include "ipc/skills_package_param.h"
 #include "parcel_macro.h"
 #include "installd/installd_host_impl.h"
 #include "ipc/installd_proxy.h"
+#include "skills_installer/skills_package_info.h"
 
 using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
@@ -1846,4 +1848,61 @@ HWTEST_F(BmsInstallDaemonIpcTest, CopyApFile_Ipc_0100, Function | SmallTest | Le
     EXPECT_EQ(ret, ERR_OK);
 }
 
+/**
+ * @tc.number: InstalldProxyTest_CleanBundleDirs_InvalidSize_0100
+ * @tc.name: test CleanBundleDirs rejects oversized dirs vector
+ * @tc.desc: 1. call CleanBundleDirs with dirs.size() > MAX_VEC_SIZE
+ *           2. verify it returns ERR_APPEXECFWK_INSTALLD_PARAM_ERROR without IPC
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_CleanBundleDirs_InvalidSize_0100, Function | SmallTest | Level0)
+{
+    sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
+    ASSERT_NE(installdProxy, nullptr);
+
+    // MAX_VEC_SIZE is 1000 in installd_proxy.cpp anonymous namespace; exceed it.
+    std::vector<std::string> dirs(static_cast<size_t>(1001), TEST_STRING);
+    auto ret = installdProxy->CleanBundleDirs(dirs, true, TEST_BUNDLE_NAME, BundleDirScene::CLEAN_SHADER_CACHE_DIR);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: InstalldProxyTest_GetAllBundleStats_InvalidSize_0100
+ * @tc.name: test GetAllBundleStats rejects oversized uids vector
+ * @tc.desc: 1. call GetAllBundleStats with uids.size() > Constants::CAPACITY_SIZE
+ *           2. verify it returns ERR_APPEXECFWK_INSTALLD_PARAM_ERROR without IPC
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_GetAllBundleStats_InvalidSize_0100, Function | SmallTest | Level0)
+{
+    sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
+    ASSERT_NE(installdProxy, nullptr);
+
+    // Constants::CAPACITY_SIZE == 1 * 1024 * 1000 (1024000); exceed it by one.
+    std::vector<int32_t> uids(static_cast<size_t>(Constants::CAPACITY_SIZE) + 1, UID);
+    std::vector<int64_t> bundleStats;
+    auto ret = installdProxy->GetAllBundleStats(bundleStats, uids);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: InstalldProxyTest_ExtractSkillsPackage_0100
+ * @tc.name: test ExtractSkillsPackage IPC round-trip with empty result
+ * @tc.desc: 1. call ExtractSkillsPackage via proxy->host loopback
+ *           2. host (mock) returns ERR_OK with empty skillInfoList
+ *           3. verify proxy parses the reply (InnerGetVectorFromParcelIntelligent +
+ *              ParseVectorFromParcel) and returns ERR_OK
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_ExtractSkillsPackage_0100, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    ASSERT_NE(proxy, nullptr);
+
+    SkillsPackageParam param;
+    param.bundleName = TEST_BUNDLE_NAME;
+    param.moduleName = "entry";
+    param.extractModuleName = "entry";
+    param.hspPath = "/data/app/el1/bundle/public/com.example.test/entry.hsp";
+    std::vector<SkillsPackageInfo> skillInfoList;
+    auto ret = proxy->ExtractSkillsPackage(param, skillInfoList);
+    EXPECT_EQ(ret, ERR_OK);
+}
 } // OHOS
