@@ -967,7 +967,7 @@ ErrCode PluginInstaller::ExtractPluginBundles(const std::string &bundlePath, Inn
     CHECK_RESULT(result, "ProcessNativeLibrary failed %{public}d");
 
     // save hsp and so files to installation dir
-    result = SaveHspToInstallDir(bundlePath, pluginBundleDir, moduleName, newInfo);
+    result = SaveHspToInstallDir(bundlePath, pluginBundleDir, moduleName, hostBundleName, newInfo);
     CHECK_RESULT(result, "save hsp file failed %{public}d");
 
     newInfo.AddModuleSrcDir(moduleDir);
@@ -1055,17 +1055,19 @@ ErrCode PluginInstaller::RemovePluginDir(const InnerBundleInfo &hostBundleInfo)
 ErrCode PluginInstaller::SaveHspToInstallDir(const std::string &bundlePath,
     const std::string &pluginBundleDir,
     const std::string &moduleName,
+    const std::string &hostBundleName,
     InnerBundleInfo &newInfo)
 {
     ErrCode result = ERR_OK;
     std::string hspPath = pluginBundleDir + ServiceConstants::PATH_SEPARATOR + moduleName +
         ServiceConstants::HSP_FILE_SUFFIX;
     if (!signatureFileDir_.empty()) {
-        result = InstalldClient::GetInstance()->CopyFile(
-            bundlePath, hspPath, BundleDirScene::COPY_PLUGIN_HSP, signatureFileDir_);
+        result = InstalldClient::GetInstance()->CopyPluginHsp(hostBundleName, bundleNameWithTime_, moduleName,
+            bundlePath, signatureFileDir_);
         CHECK_RESULT(result, "copy hsp to install dir failed %{public}d");
     } else {
-        result = InstalldClient::GetInstance()->MoveHapToCodeDir(bundlePath, hspPath);
+        result = InstalldClient::GetInstance()->MovePluginHspToCodeDir(hostBundleName, bundleNameWithTime_,
+            moduleName, bundlePath);
         CHECK_RESULT(result, "move hsp to install dir failed %{public}d");
         bool isCompileSdkOpenHarmony = (compileSdkType_ == COMPILE_SDK_TYPE_OPEN_HARMONY);
         result = VerifyCodeSignatureForHsp(hspPath, appIdentifier_, isEnterpriseBundle_,

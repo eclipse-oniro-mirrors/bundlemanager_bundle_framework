@@ -271,6 +271,19 @@ ErrCode InstalldProxy::ExtractQuickFixRes(const std::string &bundleName, const s
     return TransactInstalldCmd(InstalldInterfaceCode::EXTRACT_QUICK_FIX_RES, data, reply, option);
 }
 
+ErrCode InstalldProxy::CopyApFile(const std::string &bundleName, const std::string &moduleName, int32_t userId)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(moduleName));
+    INSTALLD_PARCEL_WRITE(data, Int32, userId);
+
+    MessageParcel reply;
+    MessageOption option;
+    return TransactInstalldCmd(InstalldInterfaceCode::COPY_AP_FILE_NEW, data, reply, option);
+}
+
 ErrCode InstalldProxy::ExtractResFileDir(const std::string &bundleName, const std::string &moduleName,
     const std::string &hapFilePath, bool needFakeDecompression, bool isSystemApp,
     bool useNewCodeDir, bool useModuleTmp)
@@ -287,6 +300,20 @@ ErrCode InstalldProxy::ExtractResFileDir(const std::string &bundleName, const st
     MessageParcel reply;
     MessageOption option;
     return TransactInstalldCmd(InstalldInterfaceCode::EXTRACT_RES_FILE_DIR, data, reply, option);
+}
+
+ErrCode InstalldProxy::ExtractNPAPIPlugin(const std::string &bundleName, const std::string &moduleName,
+    const std::string &hapFilePath, int32_t userId)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(moduleName));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(hapFilePath));
+    INSTALLD_PARCEL_WRITE(data, Int32, userId);
+    MessageParcel reply;
+    MessageOption option;
+    return TransactInstalldCmd(InstalldInterfaceCode::EXTRACT_NPAPI_PLUGIN, data, reply, option);
 }
 
 ErrCode InstalldProxy::ExtractResourceFiles(const std::string &bundleName, const std::string &moduleName,
@@ -1039,6 +1066,54 @@ ErrCode InstalldProxy::RenameFile(const std::string &oldPath, const std::string 
     return TransactInstalldCmd(InstalldInterfaceCode::RENAME_FILE, data, reply, option);
 }
 
+ErrCode InstalldProxy::BackupSandboxDir(int32_t userId, const std::string &sandboxDir)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, Int32, userId);
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(sandboxDir));
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    return TransactInstalldCmd(InstalldInterfaceCode::BACKUP_SANDBOX_DIR, data, reply, option);
+}
+
+ErrCode InstalldProxy::RecoverSandboxDir(int32_t userId, const std::string &sandboxDir)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, Int32, userId);
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(sandboxDir));
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    return TransactInstalldCmd(InstalldInterfaceCode::RECOVER_SANDBOX_DIR, data, reply, option);
+}
+
+ErrCode InstalldProxy::DeleteSandboxDir(int32_t userId, const std::string &sandboxDir)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, Int32, userId);
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(sandboxDir));
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    return TransactInstalldCmd(InstalldInterfaceCode::DELETE_SANDBOX_DIR, data, reply, option);
+}
+
+ErrCode InstalldProxy::DeleteBackupSandboxDir(int32_t userId, const std::string &sandboxDir)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, Int32, userId);
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(sandboxDir));
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    return TransactInstalldCmd(InstalldInterfaceCode::DELETE_BACKUP_SANDBOX_DIR, data, reply, option);
+}
+
 ErrCode InstalldProxy::CopyFile(const std::string &oldPath, const std::string &newPath, BundleDirScene scene,
     const std::string &signatureFilePath)
 {
@@ -1052,6 +1127,37 @@ ErrCode InstalldProxy::CopyFile(const std::string &oldPath, const std::string &n
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
     return TransactInstalldCmd(InstalldInterfaceCode::COPY_FILE, data, reply, option);
+}
+
+ErrCode InstalldProxy::CopyPluginHsp(const std::string &hostBundleName, const std::string &bundleName,
+    const std::string &moduleName, const std::string &sourceHspPath, const std::string &sourceSignaturePath)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(hostBundleName));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(moduleName));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(sourceHspPath));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(sourceSignaturePath));
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    return TransactInstalldCmd(InstalldInterfaceCode::COPY_PLUGIN_HSP, data, reply, option);
+}
+
+ErrCode InstalldProxy::CopyServiceHsp(const std::string &bundleName, const std::string &moduleName,
+    const std::string &sourceHspPath, uint32_t versionCode)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(moduleName));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(sourceHspPath));
+    INSTALLD_PARCEL_WRITE(data, Uint32, versionCode);
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    return TransactInstalldCmd(InstalldInterfaceCode::COPY_SERVICE_HSP, data, reply, option);
 }
 
 ErrCode InstalldProxy::CopyHapToInstallPath(const CopyHapToInstallPathParam &copyHapToInstallPathParam)
@@ -1309,6 +1415,20 @@ ErrCode InstalldProxy::CopyFiles(const std::string &sourceDir, const std::string
         return ret;
     }
     return ERR_OK;
+}
+
+ErrCode InstalldProxy::CopyExtendProfileFile(
+    const std::string &bundleName, const std::string &profileSourceRelativePath, bool isUpdate)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(profileSourceRelativePath));
+    INSTALLD_PARCEL_WRITE(data, Bool, isUpdate);
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    return TransactInstalldCmd(InstalldInterfaceCode::COPY_EXTEND_PROFILE_FILE, data, reply, option);
 }
 
 ErrCode InstalldProxy::CopyExtendResourceFile(const std::string &bundleName, const std::string &moduleName)
@@ -1726,6 +1846,21 @@ ErrCode InstalldProxy::MoveHapToCodeDir(const std::string &originPath, const std
     return TransactInstalldCmd(InstalldInterfaceCode::MOVE_HAP_TO_CODE_DIR, data, reply, option);
 }
 
+ErrCode InstalldProxy::MovePluginHspToCodeDir(const std::string &hostBundleName,
+    const std::string &pluginBundleName, const std::string &moduleName, const std::string &sourceHspPath)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(hostBundleName));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(pluginBundleName));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(moduleName));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(sourceHspPath));
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    return TransactInstalldCmd(InstalldInterfaceCode::MOVE_PLUGIN_HSP_TO_CODE_DIR, data, reply, option);
+}
+
 ErrCode InstalldProxy::MoveSharedHspToCodeDir(const std::string &bundleName, const std::string &moduleName,
     const std::string &sourceHspPath, uint32_t versionCode)
 {
@@ -2088,6 +2223,20 @@ ErrCode InstalldProxy::CreatePrintServiceDir(const std::string &bundleName, int3
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
     return TransactInstalldCmd(InstalldInterfaceCode::CREATE_PRINT_SERVICE_DIR, data, reply, option);
+}
+
+ErrCode InstalldProxy::CopyAbcFile(const std::string &bundleName, int32_t userId,
+    const std::string &abcRelativePath)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
+    INSTALLD_PARCEL_WRITE(data, Int32, userId);
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(abcRelativePath));
+
+    MessageParcel reply;
+    MessageOption option;
+    return TransactInstalldCmd(InstalldInterfaceCode::COPY_ABC_FILE, data, reply, option);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

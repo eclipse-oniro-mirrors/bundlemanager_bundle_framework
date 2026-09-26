@@ -446,6 +446,20 @@ HWTEST_F(BmsInstalldHostTest, HandleCopyFile_0100, Function | SmallTest | Level1
 }
 
 /**
+ * @tc.number: HandleCopyServiceHsp_0100
+ * @tc.name: test HandleCopyServiceHsp
+ * @tc.desc: 1.HandleCopyServiceHsp test
+ */
+HWTEST_F(BmsInstalldHostTest, HandleCopyServiceHsp_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    bool res = installdHost.HandleCopyServiceHsp(data, reply);
+    EXPECT_TRUE(res);
+}
+
+/**
  * @tc.number: HandleCopySharedHsp_0100
  * @tc.name: test HandleCopySharedHsp
  * @tc.desc: 1.HandleCopySharedHsp test
@@ -470,6 +484,34 @@ HWTEST_F(BmsInstalldHostTest, HandleCopySkillHsp_0100, Function | SmallTest | Le
     MessageParcel data;
     MessageParcel reply;
     bool res = installdHost.HandleCopySkillHsp(data, reply);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: HandleCopyPluginHsp_0100
+ * @tc.name: test HandleCopyPluginHsp
+ * @tc.desc: 1.HandleCopyPluginHsp test
+ */
+HWTEST_F(BmsInstalldHostTest, HandleCopyPluginHsp_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    bool res = installdHost.HandleCopyPluginHsp(data, reply);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: HandleMovePluginHspToCodeDir_0100
+ * @tc.name: test HandleMovePluginHspToCodeDir
+ * @tc.desc: 1.HandleMovePluginHspToCodeDir test
+ */
+HWTEST_F(BmsInstalldHostTest, HandleMovePluginHspToCodeDir_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    bool res = installdHost.HandleMovePluginHspToCodeDir(data, reply);
     EXPECT_TRUE(res);
 }
 
@@ -1124,6 +1166,26 @@ HWTEST_F(BmsInstalldHostTest, HandleDeleteOldCacheFiles_0300, Function | SmallTe
 }
 
 /**
+ * @tc.number: HandleCopyAbcFile_0100
+ * @tc.name: test HandleCopyAbcFile with valid param
+ * @tc.desc: 1.HandleCopyAbcFile param is valid
+ */
+HWTEST_F(BmsInstalldHostTest, HandleCopyAbcFile_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    std::string bundleName = "com.example.test";
+    int32_t userId = 100;
+    std::string abcRelativePath = "/data/storage/el1/bundle/entry/ets/entry.abc";
+    data.WriteString16(Str8ToStr16(bundleName));
+    data.WriteInt32(userId);
+    data.WriteString16(Str8ToStr16(abcRelativePath));
+    bool res = installdHost.HandleCopyAbcFile(data, reply);
+    EXPECT_TRUE(res);
+}
+
+/**
  * @tc.number: HandleGetCacheDiskUsageFromPath_0100
  * @tc.name: test HandleGetCacheDiskUsageFromPath
  * @tc.desc: 1.HandleGetCacheDiskUsageFromPath test
@@ -1191,6 +1253,24 @@ HWTEST_F(BmsInstalldHostTest, HandleExtractArkNative_0100, Function | SmallTest 
     data.WriteBool(false);
     data.WriteInt32(100);
     bool res = installdHost.HandleExtractArkNative(data, reply);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: HandleExtractNPAPIPlugin_0100
+ * @tc.name: test HandleExtractNPAPIPlugin
+ * @tc.desc: 1.HandleExtractNPAPIPlugin test
+ */
+HWTEST_F(BmsInstalldHostTest, HandleExtractNPAPIPlugin_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteString16(Str8ToStr16("com.example.test"));
+    data.WriteString16(Str8ToStr16("entry"));
+    data.WriteString16(Str8ToStr16("/data/test.hap"));
+    data.WriteInt32(100);
+    bool res = installdHost.HandleExtractNPAPIPlugin(data, reply);
     EXPECT_TRUE(res);
 }
 

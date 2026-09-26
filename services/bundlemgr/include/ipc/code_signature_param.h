@@ -28,7 +28,7 @@ struct CodeSignatureParam : public Parcelable {
     bool isPreInstalledBundle = false;
     bool isCompileSdkOpenHarmony = false;
     bool isInternaltestingBundle = false;
-    bool isFreelyDistributableApp = false;
+    bool isSideloadApp = false;
     bool isCompressNativeLibrary = true;
     bool isPlugin = false;
     bool isDeveloperDistribution = false;

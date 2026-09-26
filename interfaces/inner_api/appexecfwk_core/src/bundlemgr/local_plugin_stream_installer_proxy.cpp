@@ -18,6 +18,7 @@
 #include <unistd.h>
 
 #include "app_log_wrapper.h"
+#include "app_log_tag_wrapper.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -52,9 +53,10 @@ int32_t LocalPluginStreamInstallerProxy::CreatePluginFileStream(const std::strin
         APP_LOGE("CreatePluginFileStream failed due to invalid sharedFd");
         return fd;
     }
+    fdsan_exchange_owner_tag(sharedFd, 0, BMS_FDSAN_INSTALLER_TAG);
 
     fd = dup(sharedFd);
-    close(sharedFd);
+    fdsan_close_with_tag(sharedFd, BMS_FDSAN_INSTALLER_TAG);
     return fd;
 }
 

@@ -312,6 +312,27 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_1350, Function | Sma
 }
 
 /**
+ * @tc.number: InstalldHostImplTest_1355
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling Backup/Recover/Delete/DeleteBackupSandboxDir of hostImpl
+ * @tc.require: issueI5T6P3
+ */
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_1355, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+
+    auto ret = hostImpl->BackupSandboxDir(0, TEST_STRING);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+    ret = hostImpl->RecoverSandboxDir(0, TEST_STRING);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+    ret = hostImpl->DeleteSandboxDir(0, TEST_STRING);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+    ret = hostImpl->DeleteBackupSandboxDir(0, TEST_STRING);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
  * @tc.number: InstalldHostImplTest_1400
  * @tc.name: test function of InstallHostImpl
  * @tc.desc: 1. calling CopyFile of hostImpl
@@ -1730,6 +1751,19 @@ HWTEST_F(BmsInstallDaemonHostImplTest, DeleteCertAndRemoveKey_0100, Function | S
 }
 
 /**
+ * @tc.number: CheckAppSideLoadingAsync_0100
+ * @tc.name: test CheckAppSideLoadingAsync permission denied
+ * @tc.desc: 1.CheckAppSideLoadingAsync returns PERMISSION_DENIED when caller is not Foundation UID
+ */
+HWTEST_F(BmsInstallDaemonHostImplTest, CheckAppSideLoadingAsync_0100, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    auto ret = hostImpl->CheckAppSideLoadingAsync(100);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
  * @tc.number: ExtractSkillsPackage_0100
  * @tc.name: test ExtractSkillsPackage
  * @tc.desc: test ExtractSkillsPackage of InstalldHostImpl with empty bundleName
@@ -1780,6 +1814,62 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_8400, Function | Sma
     int32_t uid = 100;
     uint64_t inodeCount = 0;
     auto ret = hostImpl->GetBundleInodeCount(uid, inodeCount);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: CopyApFile_0100
+ * @tc.name: test CopyApFile permission denied
+ * @tc.desc: 1. calling CopyApFile without foundation UID
+ * @tc.require:
+ */
+HWTEST_F(BmsInstallDaemonHostImplTest, CopyApFile_0100, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    auto ret = hostImpl->CopyApFile(TEST_BUNDLE_NAME, "entry_module", 100);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: CopyApFile_0200
+ * @tc.name: test CopyApFile with invalid bundleName
+ * @tc.desc: 1. under BUNDLE_FRAMEWORK_RETURN_FALSE, permission check fails first
+ * @tc.require:
+ */
+HWTEST_F(BmsInstallDaemonHostImplTest, CopyApFile_0200, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    auto ret = hostImpl->CopyApFile("", "entry_module", 100);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: CopyApFile_0300
+ * @tc.name: test CopyApFile with empty moduleName
+ * @tc.desc: 1. under BUNDLE_FRAMEWORK_RETURN_FALSE, permission check fails first
+ * @tc.require:
+ */
+HWTEST_F(BmsInstallDaemonHostImplTest, CopyApFile_0300, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    auto ret = hostImpl->CopyApFile(TEST_BUNDLE_NAME, "", 100);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: CopyApFile_0400
+ * @tc.name: test CopyApFile with path traversal in moduleName
+ * @tc.desc: 1. under BUNDLE_FRAMEWORK_RETURN_FALSE, permission check fails first
+ * @tc.require:
+ */
+HWTEST_F(BmsInstallDaemonHostImplTest, CopyApFile_0400, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    auto ret = hostImpl->CopyApFile(TEST_BUNDLE_NAME, "../entry_module", 100);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 
@@ -1877,6 +1967,19 @@ HWTEST_F(BmsInstallDaemonHostImplTest, CopyPgoFile_0100, Function | SmallTest | 
 }
 
 /**
+ * @tc.number: ExtractNPAPIPlugin_0100
+ * @tc.name: ExtractNPAPIPlugin
+ * @tc.desc: permission denied
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, ExtractNPAPIPlugin_0100, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    auto ret = hostImpl->ExtractNPAPIPlugin(TEST_BUNDLE_NAME, "entry", "/data/test.hap", 100);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
  * @tc.number: GetCacheDiskUsageFromPath_0100
  * @tc.name: test GetCacheDiskUsageFromPath
  * @tc.desc: 1. verify GetCacheDiskUsageFromPath when permission denied
@@ -1890,6 +1993,20 @@ HWTEST_F(BmsInstallDaemonHostImplTest, GetCacheDiskUsageFromPath_0100, Function 
     auto ret = hostImpl->GetCacheDiskUsageFromPath(paths, statSize);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
     EXPECT_EQ(statSize, 0);
+}
+
+/**
+ * @tc.number: InstalldHostImplCopyExtendProfileFile_0100
+ * @tc.name: test CopyExtendProfileFile
+ * @tc.desc: Verify CopyExtendProfileFile rejects a non-foundation caller.
+ */
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplCopyExtendProfileFile_0100, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+
+    EXPECT_EQ(hostImpl->CopyExtendProfileFile(TEST_BUNDLE_NAME, "manifest.json", false),
+        ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 
 /**
@@ -1971,6 +2088,20 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplCopyHqfFile_0100, Functio
     patchTarget.type = QuickFixType::PATCH;
     EXPECT_EQ(hostImpl->CopyHqfFile(TEST_BUNDLE_NAME, "entry", "entry.hqf", 1, patchTarget),
         ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: CopyAbcFile_0100
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling CopyAbcFile of hostImpl without foundation permission
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, CopyAbcFile_0100, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+
+    auto ret = hostImpl->CopyAbcFile(TEST_BUNDLE_NAME, Constants::START_USERID, TEST_STRING);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 
 /**

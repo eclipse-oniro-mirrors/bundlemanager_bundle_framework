@@ -1148,7 +1148,7 @@ private:
     bool isEntryInstalled_ = false;
     bool isEnterpriseBundle_ = false;
     bool isInternaltestingBundle_ = false;
-    bool isFreelyDistributableApp_ = false;
+    bool isSideloadApp_ = false;
     // When it is true, it means that the same bundleName and same userId was uninstalled with keepData before
     bool existBeforeKeepDataApp_ = false;
     bool copyHapToInstallPath_ = false;

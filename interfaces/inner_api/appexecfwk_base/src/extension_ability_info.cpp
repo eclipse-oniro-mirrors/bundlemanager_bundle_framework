@@ -116,7 +116,8 @@ const std::unordered_map<std::string, ExtensionAbilityType> EXTENSION_TYPE_MAP =
     { "agent", ExtensionAbilityType::AGENT },
     { "agentUI", ExtensionAbilityType::AGENT_UI },
     { "modularObject", ExtensionAbilityType::MODULAR_OBJECT },
-    { "embeddedCashier", ExtensionAbilityType::EMBEDDED_CASHIER }
+    { "embeddedCashier", ExtensionAbilityType::EMBEDDED_CASHIER },
+    { "ukeyAuth", ExtensionAbilityType::UKEY_AUTH }
 };
 
 // the new extension type does not need to be added here

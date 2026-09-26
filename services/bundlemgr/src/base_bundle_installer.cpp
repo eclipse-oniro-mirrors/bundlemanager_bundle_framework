@@ -122,6 +122,17 @@ bool IsValidDeviceModeDistributionPolicy(DeviceModeDistributionPolicy policy)
         value <= static_cast<int32_t>(DeviceModeDistributionPolicy::FULL_COMPATIBLE_DIFFERENT_PACKAGE);
 }
 
+bool GetPathRelativeToRoot(
+    const std::string &path, const std::string &root, std::string &relativePath)
+{
+    const std::string rootPrefix = root + ServiceConstants::PATH_SEPARATOR;
+    if (path.size() <= rootPrefix.size() || path.compare(0, rootPrefix.size(), rootPrefix) != 0) {
+        return false;
+    }
+    relativePath = path.substr(rootPrefix.size());
+    return true;
+}
+
 bool IsSupportedAppSkillBundleType(BundleType bundleType)
 {
     return bundleType == BundleType::APP || bundleType == BundleType::ATOMIC_SERVICE;
@@ -1776,7 +1787,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     result = CheckShellCanInstallPreApp(newInfos);
     CHECK_RESULT(result, "check shell can install pre app failed %{public}d");
     CheckPreBundle(newInfos, installParam, isRecover);
-    if (!isFreelyDistributableApp_) {
+    if (!isSideloadApp_) {
         result = CheckInstallPermission(installParam, hapVerifyResults);
         CHECK_RESULT(result, "check install permission failed %{public}d");
     } else {
@@ -5018,14 +5029,8 @@ void BaseBundleInstaller::ExtractNPAPIPluginFiles(const std::string &modulePath)
         npapiPluginStatus_ = NpapiPluginStatus::STATUS_NOT_APPLICABLE;
         return;
     }
-    std::string targetPath = ServiceConstants::NPAPI_PLUGIN_TARGET_BASE_PATH + std::to_string(userId_) +
-        ServiceConstants::NPAPI_PLUGIN_TARGET_DIR + bundleName_;
-    ExtractParam extractParam;
-    extractParam.bundleName = bundleName_;
-    extractParam.srcPath = modulePath;
-    extractParam.targetPath = targetPath;
-    extractParam.extractFileType = ExtractFileType::NPAPI_PLUGIN;
-    ErrCode ret = InstalldClient::GetInstance()->ExtractFiles(extractParam);
+    ErrCode ret = InstalldClient::GetInstance()->ExtractNPAPIPlugin(
+        bundleName_, modulePackage_, modulePath, userId_);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "ExtractNPAPIPluginFiles failed, error is %{public}d", ret);
         npapiPluginStatus_ = NpapiPluginStatus::STATUS_EXTRACT_FAILED;
@@ -5974,7 +5979,7 @@ ErrCode BaseBundleInstaller::ParseHapFiles(
                appApiVersion, systemApiVersion, MIN_DEVELOPER_ID_API_VERSION);
             return ERR_APPEXECFWK_INSTALL_DEVELOPER_ID_BUNDLE_NOT_ALLOWED;
         }
-        isFreelyDistributableApp_ = true;
+        isSideloadApp_ = true;
         if (installParam.parameters.find(Constants::NOTARIZATION_CREDENTIAL_STATUS_KEY)
             != installParam.parameters.end()) {
             int32_t notarizationCredentialStatus = installParam.GetNotarizationCredentialStatus();
@@ -8347,7 +8352,7 @@ ErrCode BaseBundleInstaller::VerifyCodeSignatureForNativeFiles(InnerBundleInfo &
     codeSignatureParam.signatureFileDir = signatureFileDir;
     codeSignatureParam.isEnterpriseBundle = isEnterpriseBundle_;
     codeSignatureParam.isInternaltestingBundle = isInternaltestingBundle_;
-    codeSignatureParam.isFreelyDistributableApp = isFreelyDistributableApp_;
+    codeSignatureParam.isSideloadApp = isSideloadApp_;
     codeSignatureParam.appIdentifier = appIdentifier_;
     codeSignatureParam.isPreInstalledBundle = IsDataPreloadHap(modulePath_) ? false : info.IsPreInstallApp();
     codeSignatureParam.isCompileSdkOpenHarmony = (compileSdkType == COMPILE_SDK_TYPE_OPEN_HARMONY);
@@ -8385,7 +8390,7 @@ ErrCode BaseBundleInstaller::VerifyCodeSignatureForHap(const std::unordered_map<
     codeSignatureParam.signatureFileDir = signatureFileDir;
     codeSignatureParam.isEnterpriseBundle = isEnterpriseBundle_;
     codeSignatureParam.isInternaltestingBundle = isInternaltestingBundle_;
-    codeSignatureParam.isFreelyDistributableApp = isFreelyDistributableApp_;
+    codeSignatureParam.isSideloadApp = isSideloadApp_;
     codeSignatureParam.appIdentifier = appIdentifier_;
     codeSignatureParam.isCompileSdkOpenHarmony = (compileSdkType == COMPILE_SDK_TYPE_OPEN_HARMONY);
     codeSignatureParam.isPreInstalledBundle = IsDataPreloadHap(realHapPath) ? false : info.IsPreInstallApp();
@@ -10754,8 +10759,14 @@ bool BaseBundleInstaller::ProcessExtProfile(const InstallParam &installParam)
         LOG_E(BMS_TAG_INSTALLER, "fail to create ext profile dir, error is %{public}d", result);
         return false;
     }
-    if (InstalldClient::GetInstance()->CopyFile(iter->second, targetPath,
-        BundleDirScene::COPY_EXTEND_PROFILE_FILE) != ERR_OK) {
+    std::string profileSourceRelativePath;
+    if (!GetPathRelativeToRoot(
+        iter->second, ServiceConstants::HAP_COPY_PATH, profileSourceRelativePath)) {
+        LOG_E(BMS_TAG_INSTALLER, "invalid ext profile source path");
+        return false;
+    }
+    if (InstalldClient::GetInstance()->CopyExtendProfileFile(
+        effectiveBundleName, profileSourceRelativePath, false) != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "copy file from %{public}s to %{public}s failed", iter->second.c_str(),
             targetPath.c_str());
         return false;

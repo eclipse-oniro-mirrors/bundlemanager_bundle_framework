@@ -3363,7 +3363,7 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckDeveloperIdBundle_0001, Function | Sm
     BundleInstallChecker bundleInstallChecker;
     InstallParam installParam;
     auto ret = bundleInstallChecker.CheckDeveloperIdBundle(installParam);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_PLUGIN_PRIVACY_SERVER_DISABLED);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED);
 }
 
 /**
@@ -3391,7 +3391,7 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckDeveloperIdBundle_0003, Function | Sm
     InstallParam installParam;
     installParam.installDeveloperIdBundlePermissionStatus = PermissionStatus::NON_HAVE_PERMISSION_STATUS;
     auto ret = bundleInstallChecker.CheckDeveloperIdBundle(installParam);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_PLUGIN_PRIVACY_SERVER_DISABLED);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED);
 }
 
 /**
@@ -3421,7 +3421,7 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckDeveloperIdBundle_0005, Function | Sm
     installParam.installDeveloperIdBundlePermissionStatus = PermissionStatus::NON_HAVE_PERMISSION_STATUS;
     installParam.userId = Constants::DEFAULT_USERID;
     auto ret = bundleInstallChecker.CheckDeveloperIdBundle(installParam);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_PLUGIN_PRIVACY_SERVER_DISABLED);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED);
 }
 
 /**
@@ -3446,5 +3446,54 @@ HWTEST_F(BmsBundleInstallCheckerTest, NotarizationCredentialStatus_0002, Functio
     InstallParam installParam;
     installParam.parameters[Constants::NOTARIZATION_CREDENTIAL_STATUS_KEY] = "1";
     EXPECT_EQ(installParam.GetNotarizationCredentialStatus(), 1);
+}
+
+/**
+ * @tc.number: NotarizationCredentialStatus_0003
+ * @tc.name: test InstallParam GetNotarizationCredentialStatus without key
+ * @tc.desc: notarization credential status returns 0 when key is absent
+ */
+HWTEST_F(BmsBundleInstallCheckerTest, NotarizationCredentialStatus_0003, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    EXPECT_EQ(installParam.GetNotarizationCredentialStatus(), 0);
+}
+
+/**
+ * @tc.number: NotarizationCredentialStatus_0004
+ * @tc.name: test InstallParam GetNotarizationCredentialStatus with invalid string
+ * @tc.desc: notarization credential status returns 0 when value is non-numeric
+ */
+HWTEST_F(BmsBundleInstallCheckerTest, NotarizationCredentialStatus_0004, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    installParam.parameters[Constants::NOTARIZATION_CREDENTIAL_STATUS_KEY] = "invalid";
+    EXPECT_EQ(installParam.GetNotarizationCredentialStatus(), 0);
+}
+
+/**
+ * @tc.number: NotarizationCredentialStatus_0005
+ * @tc.name: test InstallParam GetNotarizationCredentialStatus with zero value
+ * @tc.desc: notarization credential status returns 0 when value is "0"
+ */
+HWTEST_F(BmsBundleInstallCheckerTest, NotarizationCredentialStatus_0005, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    installParam.parameters[Constants::NOTARIZATION_CREDENTIAL_STATUS_KEY] = "0";
+    EXPECT_EQ(installParam.GetNotarizationCredentialStatus(), 0);
+}
+
+/**
+ * @tc.number: NotarizationCredentialStatus_0006
+ * @tc.name: test InnerBundleInfo UpdateBaseApplicationInfo propagates notarizationCredentialStatus
+ * @tc.desc: UpdateBaseApplicationInfo copies notarizationCredentialStatus from newInfo
+ */
+HWTEST_F(BmsBundleInstallCheckerTest, NotarizationCredentialStatus_0006, Function | SmallTest | Level0)
+{
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    newInfo.SetNotarizationCredentialStatus(1);
+    oldInfo.UpdateBaseApplicationInfo(newInfo);
+    EXPECT_EQ(oldInfo.GetNotarizationCredentialStatus(), 1);
 }
 } // OHOS

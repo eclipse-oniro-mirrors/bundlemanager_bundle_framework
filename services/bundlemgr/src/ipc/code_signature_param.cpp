@@ -34,7 +34,7 @@ constexpr const char* CODE_SIGNATURE_SIGNATURE_FILE_PATH = "signatureFileDir";
 constexpr const char* CODE_SIGNATURE_IS_ENTERPRISE_BUNDLE = "isEnterpriseBundle";
 constexpr const char* CODE_SIGNATURE_IS_ENTERPRISE_RESIGNED = "isEnterpriseResigned";
 constexpr const char* CODE_SIGNATURE_IS_DEVELOPER_DISTRIBUTION = "isDeveloperDistribution";
-constexpr const char* CODE_SIGNATURE_IS_FREELY_DISTRIBUTABLE_APP = "isFreelyDistributableApp";
+constexpr const char* CODE_SIGNATURE_IS_FREELY_DISTRIBUTABLE_APP = "isSideloadApp";
 constexpr const char* CODE_SIGNATURE_APP_IDENTIFIER = "appIdentifier";
 constexpr const char* CODE_SIGNATURE_IS_PREINSTALLED_BUNDLE = "isPreInstalledBundle";
 constexpr const char* CODE_SIGNATURE_IS_COMPILE_SDK_OPENHARMONY = "isCompileSdkOpenHarmony";
@@ -53,7 +53,7 @@ bool CodeSignatureParam::ReadFromParcel(Parcel &parcel)
     isEnterpriseBundle = parcel.ReadBool();
     isEnterpriseResigned = parcel.ReadBool();
     isDeveloperDistribution = parcel.ReadBool();
-    isFreelyDistributableApp = parcel.ReadBool();
+    isSideloadApp = parcel.ReadBool();
     appIdentifier = Str16ToStr8(parcel.ReadString16());
     isPreInstalledBundle = parcel.ReadBool();
     isCompileSdkOpenHarmony = parcel.ReadBool();
@@ -92,7 +92,7 @@ bool CodeSignatureParam::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isEnterpriseBundle);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isEnterpriseResigned);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isDeveloperDistribution);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isFreelyDistributableApp);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isSideloadApp);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appIdentifier));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isPreInstalledBundle);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isCompileSdkOpenHarmony);
@@ -131,7 +131,7 @@ std::string CodeSignatureParam::ToString() const
         { CODE_SIGNATURE_IS_ENTERPRISE_BUNDLE, isEnterpriseBundle },
         { CODE_SIGNATURE_IS_ENTERPRISE_RESIGNED, isEnterpriseResigned },
         { CODE_SIGNATURE_IS_DEVELOPER_DISTRIBUTION, isDeveloperDistribution },
-        { CODE_SIGNATURE_IS_FREELY_DISTRIBUTABLE_APP, isFreelyDistributableApp },
+        { CODE_SIGNATURE_IS_FREELY_DISTRIBUTABLE_APP, isSideloadApp },
         { CODE_SIGNATURE_APP_IDENTIFIER, appIdentifier },
         { CODE_SIGNATURE_IS_PREINSTALLED_BUNDLE, isPreInstalledBundle },
         { CODE_SIGNATURE_IS_COMPILE_SDK_OPENHARMONY, isCompileSdkOpenHarmony },

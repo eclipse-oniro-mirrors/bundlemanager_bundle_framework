@@ -101,6 +101,15 @@ constexpr const char* HQF_DIR_PREFIX = "patch_";
 constexpr const char* HQF_PATCH_PATH = "/patch";
 constexpr const char* VERIFY_FILE_PATH = "/abcs/";
 constexpr const char* VERIFY_FILE_SUFFIX = ".abc";
+constexpr const char* DATA_STORAGE_BUNDLE = "/data/storage/el1/bundle/";
+constexpr const char* DATA_STORAGE_EL1_BASE = "/data/storage/el1/base/";
+constexpr const char* DATA_STORAGE_EL1_DATABASE = "/data/storage/el1/database/";
+constexpr const char* DATA_STORAGE_EL2_BASE = "/data/storage/el2/base/";
+constexpr const char* DATA_STORAGE_EL2_DATABASE = "/data/storage/el2/database/";
+constexpr const char* DATA_STORAGE_EL3_BASE = "/data/storage/el3/base/";
+constexpr const char* DATA_STORAGE_EL3_DATABASE = "/data/storage/el3/database/";
+constexpr const char* DATA_STORAGE_EL4_BASE = "/data/storage/el4/base/";
+constexpr const char* DATA_STORAGE_EL4_DATABASE = "/data/storage/el4/database/";
 constexpr const char* APP_EL1_PATH = "/data/app/el1/";
 constexpr const char* APP_EL2_PATH = "/data/app/el2/";
 constexpr const char* APP_EL3_PATH = "/data/app/el3/";
@@ -615,8 +624,6 @@ static uint64_t CalculateDirectorySizeWithCache(const std::string &dirPath,
 #define HMFS_MONITOR_FL 0x00000002
 #define HMF_IOCTL_HW_GET_FLAGS _IOR(0xf5, 70, unsigned int)
 #define HMF_IOCTL_HW_SET_FLAGS _IOR(0xf5, 71, unsigned int)
-#define BMS_FDSAN_INSTALLD_TAG 0xD001122
-
 struct fscrypt_asdp_policy {
     char version;
     char asdp_class;
@@ -1614,14 +1621,15 @@ bool InstalldOperator::FsyncNpapiPluginFile(const std::string &path)
         LOG_E(BMS_TAG_INSTALLER, "open %{public}s failed %{public}d", path.c_str(), errno);
         return false;
     }
+    fdsan_exchange_owner_tag(fileFd, 0, BMS_FDSAN_INSTALLD_TAG);
     if (fsync(fileFd) != 0) {
         if (fsync(fileFd) != 0) {
             LOG_E(BMS_TAG_INSTALLER, "retry fsync %{public}s failed %{public}d", path.c_str(), errno);
-            close(fileFd);
+            fdsan_close_with_tag(fileFd, BMS_FDSAN_INSTALLD_TAG);
             return false;
         }
     }
-    close(fileFd);
+    fdsan_close_with_tag(fileFd, BMS_FDSAN_INSTALLD_TAG);
     return true;
 }
 
@@ -2562,7 +2570,7 @@ ErrCode InstalldOperator::PerformCodeSignatureCheck(const CodeSignatureParam &co
     if (codeSignatureParam.isDeveloperDistribution) {
         codeSignFlag |= Security::CodeSign::CodeSignInfoFlag::IS_LOCAL_HSP_PLUGIN;
     }
-    if (codeSignatureParam.isFreelyDistributableApp) {
+    if (codeSignatureParam.isSideloadApp) {
         codeSignFlag |= Security::CodeSign::CodeSignInfoFlag::IS_SIDE_LOADING_APP;
         LOG_D(BMS_TAG_INSTALLD, "codeSignFlag add IS_SIDE_LOADING_APP");
     }
@@ -3176,20 +3184,21 @@ ErrCode InstalldOperator::DecryptSoFile(const std::string &filePath, const std::
     std::string newfilePath;
     if (!PathToRealPath(filePath, newfilePath)) {
         LOG_E(BMS_TAG_INSTALLD, "file is not real path, file path: %{public}s", filePath.c_str());
-        close(dev_fd);
+        fdsan_close_with_tag(dev_fd, BMS_FDSAN_CODE_DECRYPT_TAG);
         return result;
     }
     auto fd = open(newfilePath.c_str(), O_RDONLY | O_UNCACHE);
     if (fd < 0) {
         LOG_E(BMS_TAG_INSTALLD, "open hap failed errno:%{public}d", errno);
-        close(dev_fd);
+        fdsan_close_with_tag(dev_fd, BMS_FDSAN_CODE_DECRYPT_TAG);
         return result;
     }
+    fdsan_exchange_owner_tag(fd, 0, BMS_FDSAN_INSTALLD_TAG);
     struct stat st;
     if (fstat(fd, &st) == INVALID_RETURN_VALUE) {
         LOG_E(BMS_TAG_INSTALLD, "obtain hap file status faield errno:%{public}d", errno);
-        close(dev_fd);
-        close(fd);
+        fdsan_close_with_tag(dev_fd, BMS_FDSAN_CODE_DECRYPT_TAG);
+        fdsan_close_with_tag(fd, BMS_FDSAN_INSTALLD_TAG);
         return result;
     }
     off_t innerFileSize = fileSize;
@@ -3199,8 +3208,8 @@ ErrCode InstalldOperator::DecryptSoFile(const std::string &filePath, const std::
     void *addr = mmap(NULL, innerFileSize, PROT_READ, MAP_PRIVATE, fd, offset);
     if (addr == MAP_FAILED) {
         LOG_E(BMS_TAG_INSTALLD, "mmap hap file status faield errno:%{public}d", errno);
-        close(dev_fd);
-        close(fd);
+        fdsan_close_with_tag(dev_fd, BMS_FDSAN_CODE_DECRYPT_TAG);
+        fdsan_close_with_tag(fd, BMS_FDSAN_INSTALLD_TAG);
         return result;
     }
 
@@ -3208,8 +3217,8 @@ ErrCode InstalldOperator::DecryptSoFile(const std::string &filePath, const std::
     auto outPutFd = BundleUtil::CreateFileDescriptor(tmpPath, 0);
     if (outPutFd < 0) {
         LOG_E(BMS_TAG_INSTALLD, "create fd for tmp hap file failed");
-        close(dev_fd);
-        close(fd);
+        fdsan_close_with_tag(dev_fd, BMS_FDSAN_CODE_DECRYPT_TAG);
+        fdsan_close_with_tag(fd, BMS_FDSAN_INSTALLD_TAG);
         munmap(addr, innerFileSize);
         return result;
     }
@@ -3217,9 +3226,9 @@ ErrCode InstalldOperator::DecryptSoFile(const std::string &filePath, const std::
         result = ERR_OK;
         LOG_D(BMS_TAG_INSTALLD, "write hap to temp path successfully");
     }
-    close(dev_fd);
-    close(fd);
-    close(outPutFd);
+    fdsan_close_with_tag(dev_fd, BMS_FDSAN_CODE_DECRYPT_TAG);
+    fdsan_close_with_tag(fd, BMS_FDSAN_INSTALLD_TAG);
+    fdsan_close_with_tag(outPutFd, BMS_FDSAN_TEMP_TAG);
     munmap(addr, innerFileSize);
     return result;
 }
@@ -3243,7 +3252,9 @@ ErrCode InstalldOperator::RemoveEncryptedKey(int32_t uid, const std::vector<std:
         LOG_D(BMS_TAG_INSTALLD, "ioctl successfully");
         result = ERR_OK;
     }
-    close(dev_fd);
+    if (dev_fd >= 0) {
+        fdsan_close_with_tag(dev_fd, BMS_FDSAN_CODE_DECRYPT_TAG);
+    }
     return result;
 }
 
@@ -3264,6 +3275,7 @@ int32_t InstalldOperator::CallIoctl(int32_t flag, int32_t associatedFlag, int32_
         LOG_E(BMS_TAG_INSTALLD, "call open failed errno:%{public}d", errno);
         return INVALID_RETURN_VALUE;
     }
+    fdsan_exchange_owner_tag(fd, 0, BMS_FDSAN_CODE_DECRYPT_TAG);
 
     /* build ioctl args to set key or remove key*/
     struct code_decrypt_arg firstArg;
@@ -3272,7 +3284,7 @@ int32_t InstalldOperator::CallIoctl(int32_t flag, int32_t associatedFlag, int32_
     auto ret = ioctl(fd, flag, &firstArg);
     if (ret != 0) {
         LOG_E(BMS_TAG_INSTALLD, "call ioctl failed errno:%{public}d", errno);
-        close(fd);
+        fdsan_close_with_tag(fd, BMS_FDSAN_CODE_DECRYPT_TAG);
         fd = INVALID_FILE_DESCRIPTOR;
         return ret;
     }
@@ -3287,7 +3299,7 @@ int32_t InstalldOperator::CallIoctl(int32_t flag, int32_t associatedFlag, int32_
     ret = ioctl(fd, associatedFlag, &secondArg);
     if (ret != 0) {
         LOG_E(BMS_TAG_INSTALLD, "call ioctl failed errno:%{public}d", errno);
-        close(fd);
+        fdsan_close_with_tag(fd, BMS_FDSAN_CODE_DECRYPT_TAG);
         fd = INVALID_FILE_DESCRIPTOR;
     }
     return ret;
@@ -4508,15 +4520,16 @@ bool InstalldOperator::IsRdDevice()
             PROC_CMDLINE_FILE_PATH, strerror(errno));
         return false;
     }
+    fdsan_exchange_owner_tag(fd, 0, BMS_FDSAN_INSTALLD_TAG);
     std::vector<char> buf(CMDLINE_MAX_BUF_LEN, 0);
     ssize_t bufLen = read(fd, buf.data(), CMDLINE_MAX_BUF_LEN - 1);
     if (bufLen < 0) {
         LOG_E(BMS_TAG_INSTALLD, "Read %{public}s failed, %{public}s.",
             PROC_CMDLINE_FILE_PATH, strerror(errno));
-        close(fd);
+        fdsan_close_with_tag(fd, BMS_FDSAN_INSTALLD_TAG);
         return false;
     }
-    close(fd);
+    fdsan_close_with_tag(fd, BMS_FDSAN_INSTALLD_TAG);
     return CheckDeviceMode(buf.data()) || CheckEfuseStatus(buf.data());
 }
 
@@ -6330,6 +6343,31 @@ bool InstalldOperator::IsValidPathByExtractResFileDir(
     return true;
 }
 
+bool InstalldOperator::IsValidPathByExtractNPAPIPlugin(
+    const std::string &bundleName, const std::string &moduleName,
+    const std::string &hapFilePath, int32_t userId)
+{
+    if (!IsFileNameValid(moduleName) || moduleName.find('/') != std::string::npos) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid param exist ../ or \\..");
+        return false;
+    }
+    if (!IsValidUserId(userId)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid userId");
+        return false;
+    }
+    if (!IsFileNameValid(hapFilePath) ||
+        !(EndsWith(hapFilePath, ServiceConstants::INSTALL_FILE_SUFFIX) ||
+            EndsWith(hapFilePath, ServiceConstants::HSP_FILE_SUFFIX)) ||
+        !IsExistFile(hapFilePath)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid hapFilePath");
+        return false;
+    }
+    std::string targetPath = std::string(ServiceConstants::NPAPI_PLUGIN_TARGET_BASE_PATH) +
+        std::to_string(userId) + ServiceConstants::NPAPI_PLUGIN_TARGET_DIR + bundleName;
+    return StartsWith(targetPath, ServiceConstants::NPAPI_PLUGIN_TARGET_BASE_PATH) &&
+           IsContainsBundleName(targetPath, bundleName);
+}
+
 bool InstalldOperator::IsValidPathByExtractQuickFixRes(
     const std::string &bundleName, const std::string &moduleName, const std::string &hqfFilePath)
 {
@@ -6557,6 +6595,65 @@ bool InstalldOperator::IsValidPathByExtractArkProfile(
         return false;
     }
     return true;
+}
+
+static bool GetAbcDataDir(const std::string &path, std::string &suffix, std::string &el, std::string &baseType)
+{
+    struct DataDirEntry {
+        const char *prefix;
+        const std::string &elValue;
+        const std::string &baseTypeValue;
+    };
+    static const DataDirEntry entries[] = {
+        { DATA_STORAGE_EL1_BASE, ServiceConstants::DIR_EL1, ServiceConstants::BASE },
+        { DATA_STORAGE_EL1_DATABASE, ServiceConstants::DIR_EL1, ServiceConstants::DATABASE },
+        { DATA_STORAGE_EL2_BASE, ServiceConstants::DIR_EL2, ServiceConstants::BASE },
+        { DATA_STORAGE_EL2_DATABASE, ServiceConstants::DIR_EL2, ServiceConstants::DATABASE },
+        { DATA_STORAGE_EL3_BASE, ServiceConstants::DIR_EL3, ServiceConstants::BASE },
+        { DATA_STORAGE_EL3_DATABASE, ServiceConstants::DIR_EL3, ServiceConstants::DATABASE },
+        { DATA_STORAGE_EL4_BASE, ServiceConstants::DIR_EL4, ServiceConstants::BASE },
+        { DATA_STORAGE_EL4_DATABASE, ServiceConstants::DIR_EL4, ServiceConstants::DATABASE },
+    };
+    for (const auto &entry : entries) {
+        if (BundleUtil::StartWith(path, entry.prefix)) {
+            suffix = path.substr(strlen(entry.prefix));
+            el = entry.elValue;
+            baseType = entry.baseTypeValue;
+            return true;
+        }
+    }
+    return false;
+}
+
+std::string InstalldOperator::GetAbcRealPath(const std::string &bundleName, int32_t userId,
+    const std::string &relativePath)
+{
+    auto path = relativePath;
+    if (!BundleUtil::StartWith(path, ServiceConstants::PATH_SEPARATOR)) {
+        path = ServiceConstants::PATH_SEPARATOR + path;
+    }
+
+    if (BundleUtil::StartWith(path, DATA_STORAGE_BUNDLE)) {
+        auto suffix = path.substr(strlen(DATA_STORAGE_BUNDLE));
+        std::string filePath;
+        filePath.append(Constants::BUNDLE_CODE_DIR).append(ServiceConstants::PATH_SEPARATOR)
+            .append(bundleName).append(ServiceConstants::PATH_SEPARATOR).append(suffix);
+        return filePath;
+    }
+
+    std::string suffix;
+    std::string el;
+    std::string baseType;
+    if (!GetAbcDataDir(path, suffix, el, baseType)) {
+        LOG_E(BMS_TAG_INSTALLD, "The path %{private}s is illegal", path.c_str());
+        return "";
+    }
+
+    std::string filePath;
+    filePath.append(ServiceConstants::BUNDLE_APP_DATA_BASE_DIR).append(el)
+        .append(ServiceConstants::PATH_SEPARATOR).append(std::to_string(userId)).append(baseType)
+        .append(bundleName).append(ServiceConstants::PATH_SEPARATOR).append(suffix);
+    return filePath;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

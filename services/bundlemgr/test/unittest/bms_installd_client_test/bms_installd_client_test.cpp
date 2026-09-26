@@ -935,6 +935,119 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CopyFile_0300, TestSize.Le
 }
 
 /**
+ * @tc.number: BmsInstalldClientTest_CopyPluginHsp_0100
+ * @tc.name: CopyPluginHsp
+ * @tc.desc: Test whether CopyPluginHsp returns param error when hostBundleName is empty.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CopyPluginHsp_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_CopyPluginHsp_0100 start";
+    std::string hostBundleName = EMPTY_STRING;
+    std::string bundleName = BUNDLE_NAME;
+    std::string moduleName = MODULE_NAME;
+    std::string sourceHspPath = TMP_DIR + FILE;
+    std::string sourceSignaturePath = TMP_DIR + FILE;
+    ErrCode result = installClient_->CopyPluginHsp(hostBundleName, bundleName, moduleName, sourceHspPath,
+        sourceSignaturePath);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_CopyPluginHsp_0100 end";
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_CopyPluginHsp_0200
+ * @tc.name: CopyPluginHsp
+ * @tc.desc: Test whether CopyPluginHsp returns param error when sourceSignaturePath is empty.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CopyPluginHsp_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_CopyPluginHsp_0200 start";
+    std::string hostBundleName = BUNDLE_NAME;
+    std::string bundleName = BUNDLE_NAME;
+    std::string moduleName = MODULE_NAME;
+    std::string sourceHspPath = TMP_DIR + FILE;
+    std::string sourceSignaturePath = EMPTY_STRING;
+    ErrCode result = installClient_->CopyPluginHsp(hostBundleName, bundleName, moduleName, sourceHspPath,
+        sourceSignaturePath);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_CopyPluginHsp_0200 end";
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_CopyPluginHsp_0300
+ * @tc.name: CopyPluginHsp
+ * @tc.desc: Test whether CopyPluginHsp is called normally.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CopyPluginHsp_0300, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_CopyPluginHsp_0300 start";
+    std::string hostBundleName = BUNDLE_NAME;
+    std::string bundleName = BUNDLE_NAME;
+    std::string moduleName = MODULE_NAME;
+    std::string sourceHspPath = TMP_DIR + FILE;
+    std::string sourceSignaturePath = TMP_DIR + FILE;
+    ErrCode result = installClient_->CopyPluginHsp(hostBundleName, bundleName, moduleName, sourceHspPath,
+        sourceSignaturePath);
+    EXPECT_EQ(result, installClient_->CallService(&IInstalld::CopyPluginHsp,
+        hostBundleName, bundleName, moduleName, sourceHspPath, sourceSignaturePath));
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_CopyPluginHsp_0300 end";
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_MovePluginHspToCodeDir_0100
+ * @tc.name: MovePluginHspToCodeDir
+ * @tc.desc: Test whether MovePluginHspToCodeDir returns param error when hostBundleName is empty.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_MovePluginHspToCodeDir_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_MovePluginHspToCodeDir_0100 start";
+    std::string hostBundleName = EMPTY_STRING;
+    std::string pluginBundleName = BUNDLE_NAME;
+    std::string moduleName = MODULE_NAME;
+    std::string sourceHspPath = TMP_DIR + FILE;
+    ErrCode result = installClient_->MovePluginHspToCodeDir(hostBundleName, pluginBundleName, moduleName,
+        sourceHspPath);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_MovePluginHspToCodeDir_0100 end";
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_MovePluginHspToCodeDir_0200
+ * @tc.name: MovePluginHspToCodeDir
+ * @tc.desc: Test whether MovePluginHspToCodeDir returns param error when sourceHspPath is empty.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_MovePluginHspToCodeDir_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_MovePluginHspToCodeDir_0200 start";
+    std::string hostBundleName = BUNDLE_NAME;
+    std::string pluginBundleName = BUNDLE_NAME;
+    std::string moduleName = MODULE_NAME;
+    std::string sourceHspPath = EMPTY_STRING;
+    ErrCode result = installClient_->MovePluginHspToCodeDir(hostBundleName, pluginBundleName, moduleName,
+        sourceHspPath);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_MovePluginHspToCodeDir_0200 end";
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_MovePluginHspToCodeDir_0300
+ * @tc.name: MovePluginHspToCodeDir
+ * @tc.desc: Test whether MovePluginHspToCodeDir is called normally.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_MovePluginHspToCodeDir_0300, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_MovePluginHspToCodeDir_0300 start";
+    std::string hostBundleName = BUNDLE_NAME;
+    std::string pluginBundleName = BUNDLE_NAME;
+    std::string moduleName = MODULE_NAME;
+    std::string sourceHspPath = TMP_DIR + FILE;
+    ErrCode result = installClient_->MovePluginHspToCodeDir(hostBundleName, pluginBundleName, moduleName,
+        sourceHspPath);
+    EXPECT_EQ(result, installClient_->CallService(&IInstalld::MovePluginHspToCodeDir,
+        hostBundleName, pluginBundleName, moduleName, sourceHspPath));
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_MovePluginHspToCodeDir_0300 end";
+}
+
+/**
  * @tc.number: BmsInstalldClientTest_CopySkillHsp_0100
  * @tc.name: CopySkillHsp
  * @tc.desc: Test whether CopySkillHsp returns param error when bundleName is empty.
@@ -1130,6 +1243,92 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_MoveSharedHspToCodeDir_030
     EXPECT_EQ(result, installClient_->CallService(&IInstalld::MoveSharedHspToCodeDir,
         bundleName, moduleName, sourceHspPath, versionCode));
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_MoveSharedHspToCodeDir_0300 end";
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_CopyServiceHsp_0100
+ * @tc.name: CopyServiceHsp
+ * @tc.desc: Test whether CopyServiceHsp returns param error when versionCode is 0.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CopyServiceHsp_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_CopyServiceHsp_0100 start";
+    std::string bundleName = BUNDLE_NAME;
+    std::string moduleName = MODULE_NAME;
+    std::string sourceHspPath = FILE;
+    uint32_t versionCode = 0;
+    ErrCode result = installClient_->CopyServiceHsp(bundleName, moduleName, sourceHspPath, versionCode);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_CopyServiceHsp_0100 end";
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_CopyServiceHsp_0200
+ * @tc.name: CopyServiceHsp
+ * @tc.desc: Test whether CopyServiceHsp returns param error when sourceHspPath is empty.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CopyServiceHsp_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_CopyServiceHsp_0200 start";
+    std::string bundleName = BUNDLE_NAME;
+    std::string moduleName = MODULE_NAME;
+    std::string sourceHspPath = EMPTY_STRING;
+    uint32_t versionCode = 1;
+    ErrCode result = installClient_->CopyServiceHsp(bundleName, moduleName, sourceHspPath, versionCode);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_CopyServiceHsp_0200 end";
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_CopyServiceHsp_0300
+ * @tc.name: CopyServiceHsp
+ * @tc.desc: Test whether CopyServiceHsp is called normally.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CopyServiceHsp_0300, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_CopyServiceHsp_0300 start";
+    std::string bundleName = BUNDLE_NAME;
+    std::string moduleName = MODULE_NAME;
+    std::string sourceHspPath = FILE;
+    uint32_t versionCode = 1;
+    ErrCode result = installClient_->CopyServiceHsp(bundleName, moduleName, sourceHspPath, versionCode);
+    EXPECT_EQ(result, installClient_->CallService(&IInstalld::CopyServiceHsp,
+        bundleName, moduleName, sourceHspPath, versionCode));
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_CopyServiceHsp_0300 end";
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_CopyServiceHsp_0400
+ * @tc.name: CopyServiceHsp
+ * @tc.desc: Test whether CopyServiceHsp returns param error when bundleName is empty.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CopyServiceHsp_0400, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_CopyServiceHsp_0400 start";
+    std::string bundleName = EMPTY_STRING;
+    std::string moduleName = MODULE_NAME;
+    std::string sourceHspPath = FILE;
+    uint32_t versionCode = 1;
+    ErrCode result = installClient_->CopyServiceHsp(bundleName, moduleName, sourceHspPath, versionCode);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_CopyServiceHsp_0400 end";
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_CopyServiceHsp_0500
+ * @tc.name: CopyServiceHsp
+ * @tc.desc: Test whether CopyServiceHsp returns param error when moduleName is empty.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CopyServiceHsp_0500, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_CopyServiceHsp_0500 start";
+    std::string bundleName = BUNDLE_NAME;
+    std::string moduleName = EMPTY_STRING;
+    std::string sourceHspPath = FILE;
+    uint32_t versionCode = 1;
+    ErrCode result = installClient_->CopyServiceHsp(bundleName, moduleName, sourceHspPath, versionCode);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_CopyServiceHsp_0500 end";
 }
 
 /**
@@ -2501,6 +2700,34 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CheckHspPluginCertValidity
 }
 
 /**
+ * @tc.number: BmsInstalldClientTest_CopyExtendProfileFileInvalidParams_0100
+ * @tc.name: CopyExtendProfileFileInvalidParams
+ * @tc.desc: Verify CopyExtendProfileFile rejects invalid parameters.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CopyExtendProfileFileInvalidParams_0100,
+    TestSize.Level1)
+{
+    EXPECT_EQ(installClient_->CopyExtendProfileFile(BUNDLE_NAME, EMPTY_STRING, false),
+        ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    EXPECT_EQ(installClient_->CopyExtendProfileFile(EMPTY_STRING, "profile.json", false),
+        ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_CopyExtendProfileFileProxyError_0100
+ * @tc.name: CopyExtendProfileFileProxyError
+ * @tc.desc: Verify CopyExtendProfileFile returns proxy error when service is unavailable.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CopyExtendProfileFileProxyError_0100,
+    Function | SmallTest | Level0)
+{
+    ASSERT_NE(installClient_, nullptr);
+
+    EXPECT_EQ(installClient_->CopyExtendProfileFile(TEST_BUNDLE_NAME, "manifest.json", false),
+        ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
+}
+
+/**
  * @tc.number: BmsInstalldClientTest_ExtendResourceInterfacesInvalidParams_0100
  * @tc.name: ExtendResourceInterfacesInvalidParams
  * @tc.desc: Verify extend resource interfaces reject invalid parameters.
@@ -2542,6 +2769,17 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetAppDataDirCategorySizes
         cacheSize, filesSize, databaseSize);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_GetAppDataDirCategorySizes_0100 end";
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_ExtractNPAPIPlugin_0100
+ * @tc.name: ExtractNPAPIPlugin
+ * @tc.desc: empty params
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractNPAPIPlugin_0100, TestSize.Level1)
+{
+    ErrCode result = installClient_->ExtractNPAPIPlugin("", "entry", "/data/test.hap", 100);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
 /**
@@ -2706,6 +2944,38 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractArkProfile_0100, Te
 {
     ErrCode result = installClient_->ExtractArkProfile("", "entry", "/data/test.hap", 100);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_CopyAbcFile_0100
+ * @tc.name: CopyAbcFile
+ * @tc.desc: Test whether CopyAbcFile is called normally.(abcRelativePath is empty)
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CopyAbcFile_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_CopyAbcFile_0100 start";
+    std::string bundleName = BUNDLE_NAME;
+    int32_t userId = USERID;
+    std::string abcRelativePath = EMPTY_STRING;
+    ErrCode result = installClient_->CopyAbcFile(bundleName, userId, abcRelativePath);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_CopyAbcFile_0100 end";
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_CopyAbcFile_0200
+ * @tc.name: CopyAbcFile
+ * @tc.desc: Test whether CopyAbcFile is called normally.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CopyAbcFile_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_CopyAbcFile_0200 start";
+    std::string bundleName = BUNDLE_NAME;
+    int32_t userId = USERID;
+    std::string abcRelativePath = "modules.abc";
+    ErrCode result = installClient_->CopyAbcFile(bundleName, userId, abcRelativePath);
+    EXPECT_EQ(result, installClient_->CallService(&IInstalld::CopyAbcFile, bundleName, userId, abcRelativePath));
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_CopyAbcFile_0200 end";
 }
 } // namespace AppExecFwk
 } // namespace OHOS

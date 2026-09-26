@@ -73,6 +73,7 @@ constexpr int32_t DEV_ASSISTANT_UID = 7400;
 constexpr int32_t CODE_SIGN_UID = 3074;
 constexpr int32_t ACCOUNT_UID = 3058;
 constexpr int32_t EDM_UID = 3057;
+constexpr int32_t DECIMAL = 10;
 
 // Render Process: START_ID_FOR_RENDER_PROCESS_ISOLATION and
 // END_ID_FOR_RENDER_PROCESS_ISOLATION are defined in process_uid_define.h

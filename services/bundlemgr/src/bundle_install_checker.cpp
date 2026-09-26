@@ -613,8 +613,7 @@ ErrCode BundleInstallChecker::CheckInstallPermission(const InstallCheckParam &ch
         checkParam.installEnterpriseBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
         checkParam.installEtpNormalBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
         checkParam.installInternaltestingBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
-        checkParam.installEtpMdmBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
-        checkParam.installDeveloperIdBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS)) {
+        checkParam.installEtpMdmBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS)) {
         if (!VaildInstallPermissionForShare(checkParam, hapVerifyRes)) {
             // check third-party app install provision type
             if (checkParam.isCheckDebugApp && CheckIsDebugAppProvisionType(hapVerifyRes)) {
@@ -636,6 +635,11 @@ ErrCode BundleInstallChecker::CheckInstallPermission(const InstallCheckParam &ch
 
 ErrCode BundleInstallChecker::CheckDeveloperIdBundle(const InstallParam &installParam)
 {
+    if (installParam.installDeveloperIdBundlePermissionStatus != PermissionStatus::HAVE_PERMISSION_STATUS) {
+        LOG_E(BMS_TAG_INSTALLER, "install developer_id bundle permission denied");
+        return ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED;
+    }
+
 #ifdef SECURITY_PRIVACY_SERVER_ENABLE
     auto ret = InstalldClient::GetInstance()->CheckAppSideLoadingAsync(installParam.userId);
     if (ret != ERR_OK) {
@@ -646,11 +650,6 @@ ErrCode BundleInstallChecker::CheckDeveloperIdBundle(const InstallParam &install
     LOG_E(BMS_TAG_INSTALLER, "app side loading check failed, SECURITY_PRIVACY_SERVER_ENABLE is disabled");
     return ERR_APPEXECFWK_PLUGIN_PRIVACY_SERVER_DISABLED;
 #endif
-
-    if (installParam.installDeveloperIdBundlePermissionStatus != PermissionStatus::HAVE_PERMISSION_STATUS) {
-        LOG_E(BMS_TAG_INSTALLER, "install developer_id bundle permission denied");
-        return ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED;
-    }
     return ERR_OK;
 }
 

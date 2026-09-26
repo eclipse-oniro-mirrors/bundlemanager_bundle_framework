@@ -90,6 +90,7 @@ private:
      */
     bool HandleExtractQuickFixSoFile(MessageParcel &data, MessageParcel &reply);
     bool HandleExtractResFileDir(MessageParcel &data, MessageParcel &reply);
+    bool HandleExtractNPAPIPlugin(MessageParcel &data, MessageParcel &reply);
 
     bool HandleExtractQuickFixRes(MessageParcel &data, MessageParcel &reply);
     bool HandleExtractResourceFiles(MessageParcel &data, MessageParcel &reply);
@@ -105,6 +106,14 @@ private:
     bool HandleStopAOT(MessageParcel &data, MessageParcel &reply);
 
     bool HandleDeleteUninstallTmpDirs(MessageParcel &data, MessageParcel &reply);
+    /**
+     * @brief Handles the CopyApFile function called from a IInstalld proxy object.
+     * @param data Indicates the data to be read.
+     * @param reply Indicates the reply to be sent;
+     * @return Returns true if called successfully; returns false otherwise.
+     */
+    bool HandleCopyApFile(MessageParcel &data, MessageParcel &reply);
+
     /**
      * @brief Handles the RenameModuleDir function called from a IInstalld proxy object.
      * @param data Indicates the data to be read.
@@ -257,7 +266,19 @@ private:
 
     bool HandleRenameFile(MessageParcel &data, MessageParcel &reply);
 
+    bool HandleBackupSandboxDir(MessageParcel &data, MessageParcel &reply);
+
+    bool HandleRecoverSandboxDir(MessageParcel &data, MessageParcel &reply);
+
+    bool HandleDeleteSandboxDir(MessageParcel &data, MessageParcel &reply);
+
+    bool HandleDeleteBackupSandboxDir(MessageParcel &data, MessageParcel &reply);
+
     bool HandleCopyFile(MessageParcel &data, MessageParcel &reply);
+
+    bool HandleCopyPluginHsp(MessageParcel &data, MessageParcel &reply);
+
+    bool HandleCopyServiceHsp(MessageParcel &data, MessageParcel &reply);
 
     bool HandleCopyHapToInstallPath(MessageParcel &data, MessageParcel &reply);
 
@@ -288,6 +309,8 @@ private:
     bool HandObtainQuickFixFileDir(MessageParcel &data, MessageParcel &reply);
 
     bool HandCopyFiles(MessageParcel &data, MessageParcel &reply);
+
+    bool HandleCopyExtendProfileFile(MessageParcel &data, MessageParcel &reply);
 
     bool HandleCopyExtendResourceFile(MessageParcel &data, MessageParcel &reply);
 
@@ -330,6 +353,8 @@ private:
     bool HandleAddUserDirDeleteDfx(MessageParcel &data, MessageParcel &reply);
 
     bool HandleMoveHapToCodeDir(MessageParcel &data, MessageParcel &reply);
+
+    bool HandleMovePluginHspToCodeDir(MessageParcel &data, MessageParcel &reply);
 
     bool HandleMoveSharedHspToCodeDir(MessageParcel &data, MessageParcel &reply);
 
@@ -382,6 +407,8 @@ private:
     bool HandleGetCacheDiskUsageFromPath(MessageParcel &data, MessageParcel &reply);
 
     bool HandleCreatePrintServiceDir(MessageParcel &data, MessageParcel &reply);
+
+    bool HandleCopyAbcFile(MessageParcel &data, MessageParcel &reply);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

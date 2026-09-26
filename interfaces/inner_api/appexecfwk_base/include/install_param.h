@@ -203,7 +203,7 @@ public:
             return 0;
         }
         char *endPos = nullptr;
-        int32_t result = static_cast<int32_t>(std::strtol(it->second.c_str(), &endPos, 10));
+        int32_t result = static_cast<int32_t>(std::strtol(it->second.c_str(), &endPos, Constants::DECIMAL));
         if (endPos == nullptr || *endPos != '\0') {
             return 0;
         }

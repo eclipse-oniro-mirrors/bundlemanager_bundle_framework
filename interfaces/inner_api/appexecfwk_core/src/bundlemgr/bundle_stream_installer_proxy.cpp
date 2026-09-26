@@ -63,9 +63,10 @@ int32_t BundleStreamInstallerProxy::CreateStream(const std::string &fileName)
         LOG_E(BMS_TAG_INSTALLER, "fail to CreateStream");
         return fd;
     }
+    fdsan_exchange_owner_tag(sharedFd, 0, BMS_FDSAN_INSTALLER_TAG);
 
     fd = dup(sharedFd);
-    close(sharedFd);
+    fdsan_close_with_tag(sharedFd, BMS_FDSAN_INSTALLER_TAG);
 
     LOG_D(BMS_TAG_INSTALLER, "bundle stream installer proxy create stream end");
     return fd;
@@ -104,9 +105,10 @@ int32_t BundleStreamInstallerProxy::CreateSignatureFileStream(const std::string 
         LOG_E(BMS_TAG_INSTALLER, "fail to CreateSignatureFileStream");
         return fd;
     }
+    fdsan_exchange_owner_tag(sharedFd, 0, BMS_FDSAN_INSTALLER_TAG);
 
     fd = dup(sharedFd);
-    close(sharedFd);
+    fdsan_close_with_tag(sharedFd, BMS_FDSAN_INSTALLER_TAG);
 
     LOG_D(BMS_TAG_INSTALLER, "bundle stream installer proxy create stream end");
     return fd;
@@ -145,9 +147,10 @@ int32_t BundleStreamInstallerProxy::CreateSharedBundleStream(const std::string &
         LOG_E(BMS_TAG_INSTALLER, "fail to CreateSharedBundleStream");
         return fd;
     }
+    fdsan_exchange_owner_tag(sharedFd, 0, BMS_FDSAN_INSTALLER_TAG);
 
     fd = dup(sharedFd);
-    close(sharedFd);
+    fdsan_close_with_tag(sharedFd, BMS_FDSAN_INSTALLER_TAG);
 
     LOG_D(BMS_TAG_INSTALLER, "bundle stream installer proxy create shared bundle stream end");
     return fd;
@@ -186,9 +189,10 @@ int32_t BundleStreamInstallerProxy::CreatePgoFileStream(const std::string &modul
         LOG_E(BMS_TAG_INSTALLER, "fail to CreatePgoFileStream");
         return fd;
     }
+    fdsan_exchange_owner_tag(sharedFd, 0, BMS_FDSAN_INSTALLER_TAG);
 
     fd = dup(sharedFd);
-    close(sharedFd);
+    fdsan_close_with_tag(sharedFd, BMS_FDSAN_INSTALLER_TAG);
 
     LOG_D(BMS_TAG_INSTALLER, "create pgo file stream end");
     return fd;
@@ -222,9 +226,10 @@ int32_t BundleStreamInstallerProxy::CreateExtProfileFileStream(const std::string
         LOG_E(BMS_TAG_INSTALLER, "fail to CreateExtProfileFileStream");
         return fd;
     }
+    fdsan_exchange_owner_tag(sharedFd, 0, BMS_FDSAN_INSTALLER_TAG);
 
     fd = dup(sharedFd);
-    close(sharedFd);
+    fdsan_close_with_tag(sharedFd, BMS_FDSAN_INSTALLER_TAG);
 
     LOG_D(BMS_TAG_INSTALLER, "bundle stream installer proxy create stream end");
     return fd;

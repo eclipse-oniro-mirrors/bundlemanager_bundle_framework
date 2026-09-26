@@ -392,6 +392,66 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_1350, Function | SmallTest |
 }
 
 /**
+ * @tc.number: InstalldProxyTest_1355
+ * @tc.name: test BackupSandboxDir serialization of proxy
+ * @tc.desc: 1. calling BackupSandboxDir of proxy
+ * @tc.require: issueI5T6P3
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_1355, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    EXPECT_NE(proxy, nullptr);
+
+    auto ret = proxy->BackupSandboxDir(UID, TEST_STRING);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstalldProxyTest_1356
+ * @tc.name: test RecoverSandboxDir serialization of proxy
+ * @tc.desc: 1. calling RecoverSandboxDir of proxy
+ * @tc.require: issueI5T6P3
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_1356, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    EXPECT_NE(proxy, nullptr);
+
+    auto ret = proxy->RecoverSandboxDir(UID, TEST_STRING);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstalldProxyTest_1357
+ * @tc.name: test DeleteSandboxDir serialization of proxy
+ * @tc.desc: 1. calling DeleteSandboxDir of proxy
+ * @tc.require: issueI5T6P3
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_1357, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    EXPECT_NE(proxy, nullptr);
+
+    auto ret = proxy->DeleteSandboxDir(UID, TEST_STRING);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstalldProxyTest_1358
+ * @tc.name: test DeleteBackupSandboxDir serialization of proxy
+ * @tc.desc: 1. calling DeleteBackupSandboxDir of proxy
+ * @tc.require: issueI5T6P3
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_1358, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    EXPECT_NE(proxy, nullptr);
+
+    auto ret = proxy->DeleteBackupSandboxDir(UID, TEST_STRING);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
  * @tc.number: InstalldProxyTest_1400
  * @tc.name: test Marshalling function of FileStat
  * @tc.desc: 1. calling CopyFile of proxy
@@ -1707,23 +1767,72 @@ HWTEST_F(BmsInstallDaemonIpcTest, CodeSignatureParam_Marshalling_0100, Function 
 
 /**
  * @tc.number: CodeSignatureParam_Marshalling_0200
- * @tc.name: test isFreelyDistributableApp round-trip
- * @tc.desc: 1. isFreelyDistributableApp survives Marshalling->Unmarshalling
+ * @tc.name: test isSideloadApp round-trip
+ * @tc.desc: 1. isSideloadApp survives Marshalling->Unmarshalling
  */
 HWTEST_F(BmsInstallDaemonIpcTest, CodeSignatureParam_Marshalling_0200, Function | SmallTest | Level0)
 {
     Parcel parcel;
     CodeSignatureParam param;
     param.bundleName = "com.example.test";
-    param.isFreelyDistributableApp = true;
+    param.isSideloadApp = true;
     bool res = param.Marshalling(parcel);
     EXPECT_TRUE(res);
 
     CodeSignatureParam *unmarshalled = CodeSignatureParam::Unmarshalling(parcel);
     ASSERT_NE(unmarshalled, nullptr);
-    EXPECT_EQ(unmarshalled->isFreelyDistributableApp, true);
+    EXPECT_EQ(unmarshalled->isSideloadApp, true);
     EXPECT_EQ(unmarshalled->bundleName, param.bundleName);
     delete unmarshalled;
+}
+
+/**
+ * @tc.number: CodeSignatureParam_Marshalling_0300
+ * @tc.name: test isSideloadApp default false round-trip
+ * @tc.desc: 1. isSideloadApp defaults to false and survives Marshalling->Unmarshalling
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, CodeSignatureParam_Marshalling_0300, Function | SmallTest | Level0)
+{
+    Parcel parcel;
+    CodeSignatureParam param;
+    param.bundleName = "com.example.test";
+    EXPECT_FALSE(param.isSideloadApp);
+    bool res = param.Marshalling(parcel);
+    EXPECT_TRUE(res);
+ 
+    CodeSignatureParam *unmarshalled = CodeSignatureParam::Unmarshalling(parcel);
+    ASSERT_NE(unmarshalled, nullptr);
+    EXPECT_EQ(unmarshalled->isSideloadApp, false);
+    delete unmarshalled;
+}
+ 
+/**
+ * @tc.number: CodeSignatureParam_ToString_0100
+ * @tc.name: test ToString includes isSideloadApp
+ * @tc.desc: 1. ToString output contains isSideloadApp field
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, CodeSignatureParam_ToString_0100, Function | SmallTest | Level0)
+{
+    CodeSignatureParam param;
+    param.bundleName = "com.example.test";
+    param.isSideloadApp = true;
+    std::string str = param.ToString();
+    EXPECT_NE(str.find("isSideloadApp"), std::string::npos);
+}
+
+/**
+ * @tc.number: InstalldSceneInterfacesIpc_CopyExtendProfileFile_0100
+ * @tc.name: test CopyExtendProfileFile IPC
+ * @tc.desc: Verify fixed IPC code and proxy-to-host dispatch for CopyExtendProfileFile.
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldSceneInterfacesIpc_CopyExtendProfileFile_0100,
+    Function | SmallTest | Level0)
+{
+    EXPECT_EQ(static_cast<uint32_t>(InstalldInterfaceCode::COPY_EXTEND_PROFILE_FILE), 103U);
+    auto proxy = GetInstallProxy();
+    ASSERT_NE(proxy, nullptr);
+    EXPECT_EQ(proxy->CopyExtendProfileFile(
+        TEST_BUNDLE_NAME, "ext_profile/scene_test/profile.json", false), ERR_OK);
 }
 
 /**
@@ -1820,4 +1929,36 @@ HWTEST_F(BmsInstallDaemonIpcTest, CopyHapToTempPath_Ipc_0100, Function | SmallTe
     auto ret = proxy->CopyHapToTempPath(bundleName, hapRealPath, tempDirName, hapFileName);
     EXPECT_EQ(ret, ERR_OK);
 }
+
+/**
+ * @tc.number: CopyAbcFilet_0100
+ * @tc.name: test Marshalling function of CopyAbcFile
+ * @tc.desc: 1. calling CopyAbcFile of proxy
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, CopyAbcFile_0100, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    EXPECT_NE(proxy, nullptr);
+
+    auto ret = proxy->CopyAbcFile(TEST_BUNDLE_NAME, Constants::START_USERID, TEST_STRING);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CopyApFile_Ipc_0100
+ * @tc.name: test CopyApFile IPC serialization
+ * @tc.desc: 1. verify Proxy write order matches Host read order
+ * @tc.require:
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, CopyApFile_Ipc_0100, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    ASSERT_NE(proxy, nullptr);
+    std::string bundleName = "com.example.test";
+    std::string moduleName = "entry";
+    int32_t userId = 100;
+    auto ret = proxy->CopyApFile(bundleName, moduleName, userId);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
 } // OHOS

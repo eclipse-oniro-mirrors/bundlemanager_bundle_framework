@@ -26,6 +26,7 @@
 #include <sys/statfs.h>
 #include <vector>
 
+#include "app_log_tag_wrapper.h"
 #include "bundle_service_constants.h"
 #include "contrib/minizip/unzip.h"
 #ifdef CONFIG_POLOCY_ENABLE
@@ -564,13 +565,13 @@ void BundleUtil::MakeFsConfig(const std::string &bundleName, const std::string &
             realBundleDir.c_str(), errno, strerror(errno));
         return;
     }
-    fdsan_exchange_owner_tag(bundleIdFd, 0, LOG_DOMAIN);
+    fdsan_exchange_owner_tag(bundleIdFd, 0, BMS_FDSAN_TEMP_TAG);
     if (bundleIdFd > 0) {
         if (write(bundleIdFd, finalLabelValue.c_str(), finalLabelValue.size()) < 0) {
             APP_LOGE("write bundleId error:%{public}d", errno);
         }
     }
-    fdsan_close_with_tag(bundleIdFd, LOG_DOMAIN);
+    fdsan_close_with_tag(bundleIdFd, BMS_FDSAN_TEMP_TAG);
 }
 
 void BundleUtil::RemoveFsConfig(const std::string &bundleName, const std::string &configPath)
@@ -664,6 +665,7 @@ int32_t BundleUtil::CreateFileDescriptor(const std::string &bundlePath, long lon
         APP_LOGE("open bundlePath %{public}s failed errno:%{public}d", bundlePath.c_str(), errno);
         return fd;
     }
+    fdsan_exchange_owner_tag(fd, 0, BMS_FDSAN_TEMP_TAG);
     if (offset > 0) {
         lseek(fd, offset, SEEK_SET);
     }
@@ -687,6 +689,7 @@ int32_t BundleUtil::CreateFileDescriptorForReadOnly(const std::string &bundlePat
         APP_LOGE("open bundlePath %{public}s failed errno:%{public}d", realPath.c_str(), errno);
         return fd;
     }
+    fdsan_exchange_owner_tag(fd, 0, BMS_FDSAN_TEMP_TAG);
     if (offset > 0) {
         lseek(fd, offset, SEEK_SET);
     }
@@ -697,7 +700,7 @@ void BundleUtil::CloseFileDescriptor(std::vector<int32_t> &fdVec)
 {
     for_each(fdVec.begin(), fdVec.end(), [](const auto &fd) {
         if (fd > 0) {
-            close(fd);
+            fdsan_close_with_tag(fd, BMS_FDSAN_TEMP_TAG);
         }
     });
     fdVec.clear();
@@ -909,16 +912,16 @@ bool BundleUtil::CopyFileFast(const std::string &sourcePath, const std::string &
         APP_LOGE("sourcePath open failed, errno : %{public}d", errno);
         return CopyFile(sourcePath, destPath);
     }
-    fdsan_exchange_owner_tag(sourceFd, 0, LOG_DOMAIN);
+    fdsan_exchange_owner_tag(sourceFd, 0, BMS_FDSAN_TEMP_TAG);
     struct stat sourceStat;
     if (fstat(sourceFd, &sourceStat) == -1) {
         APP_LOGE("fstat failed, errno : %{public}d", errno);
-        fdsan_close_with_tag(sourceFd, LOG_DOMAIN);
+        fdsan_close_with_tag(sourceFd, BMS_FDSAN_TEMP_TAG);
         return CopyFile(sourcePath, destPath);
     }
     if (sourceStat.st_size < 0) {
         APP_LOGE("invalid st_size");
-        fdsan_close_with_tag(sourceFd, LOG_DOMAIN);
+        fdsan_close_with_tag(sourceFd, BMS_FDSAN_TEMP_TAG);
         return CopyFile(sourcePath, destPath);
     }
 
@@ -926,10 +929,10 @@ bool BundleUtil::CopyFileFast(const std::string &sourcePath, const std::string &
         destPath.c_str(), O_WRONLY | O_CREAT | O_TRUNC | O_UNCACHE, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     if (destFd == -1) {
         APP_LOGE("destPath open failed, errno : %{public}d", errno);
-        fdsan_close_with_tag(sourceFd, LOG_DOMAIN);
+        fdsan_close_with_tag(sourceFd, BMS_FDSAN_TEMP_TAG);
         return CopyFile(sourcePath, destPath);
     }
-    fdsan_exchange_owner_tag(destFd, 0, LOG_DOMAIN);
+    fdsan_exchange_owner_tag(destFd, 0, BMS_FDSAN_TEMP_TAG);
 
     size_t buffer = 524288; // 0.5M
     size_t transferCount = 0;
@@ -941,16 +944,16 @@ bool BundleUtil::CopyFileFast(const std::string &sourcePath, const std::string &
     if (singleTransfer == -1 || transferCount != static_cast<size_t>(sourceStat.st_size)) {
         APP_LOGE("sendfile failed, errno : %{public}d, send count : %{public}zu , file size : %{public}zu",
             errno, transferCount, static_cast<size_t>(sourceStat.st_size));
-        fdsan_close_with_tag(sourceFd, LOG_DOMAIN);
-        fdsan_close_with_tag(destFd, LOG_DOMAIN);
+        fdsan_close_with_tag(sourceFd, BMS_FDSAN_TEMP_TAG);
+        fdsan_close_with_tag(destFd, BMS_FDSAN_TEMP_TAG);
         return CopyFile(sourcePath, destPath);
     }
 
-    fdsan_close_with_tag(sourceFd, LOG_DOMAIN);
+    fdsan_close_with_tag(sourceFd, BMS_FDSAN_TEMP_TAG);
     if (needFsync) {
         (void)fsync(destFd);
     }
-    fdsan_close_with_tag(destFd, LOG_DOMAIN);
+    fdsan_close_with_tag(destFd, BMS_FDSAN_TEMP_TAG);
     APP_LOGD("sendfile success");
     return true;
 }

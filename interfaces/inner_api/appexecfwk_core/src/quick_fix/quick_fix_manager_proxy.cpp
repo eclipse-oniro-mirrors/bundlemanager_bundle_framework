@@ -206,10 +206,11 @@ ErrCode QuickFixManagerProxy::CreateFd(const std::string &fileName, int32_t &fd,
         LOG_E(BMS_TAG_DEFAULT, "invalid fd");
         return ERR_BUNDLEMANAGER_QUICK_FIX_CREATE_FD_FAILED;
     }
+    fdsan_exchange_owner_tag(fd, 0, BMS_FDSAN_QUICK_FIX_TAG);
     path = reply.ReadString();
     if (path.empty()) {
         LOG_E(BMS_TAG_DEFAULT, "invalid path");
-        close(fd);
+        fdsan_close_with_tag(fd, BMS_FDSAN_QUICK_FIX_TAG);
         return ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_TARGET_DIR;
     }
     LOG_D(BMS_TAG_DEFAULT, "create fd success");
@@ -263,14 +264,14 @@ ErrCode QuickFixManagerProxy::CopyFiles(
             if (write(destFd, buffer, offset) < 0) {
                 LOG_E(BMS_TAG_DEFAULT, "write file to the temp dir failed, errno %{public}d", errno);
                 (void)fclose(sourceFp);
-                close(destFd);
+                fdsan_close_with_tag(destFd, BMS_FDSAN_QUICK_FIX_TAG);
                 return ERR_BUNDLEMANAGER_QUICK_FIX_WRITE_FILE_FAILED;
             }
         }
         destFiles.emplace_back(destPath);
         (void)fclose(sourceFp);
         fsync(destFd);
-        close(destFd);
+        fdsan_close_with_tag(destFd, BMS_FDSAN_QUICK_FIX_TAG);
     }
     LOG_D(BMS_TAG_DEFAULT, "copy files success");
     return ERR_OK;

@@ -287,23 +287,19 @@ void BundleDistributedManager::SendCallbackRequest(int32_t resultCode, const std
 {
     APP_LOGI("sendCallbackRequest resultCode:%{public}d, transactId:%{public}s", resultCode, transactId.c_str());
     QueryRpcIdParams queryRpcIdParams;
+    uint32_t mapSize = 0;
     {
-        std::shared_lock<std::shared_mutex> lock(mutex_);
+        std::unique_lock<std::shared_mutex> lock(mutex_);
         auto queryAbilityParams = queryAbilityParamsMap_.find(transactId);
         if (queryAbilityParams == queryAbilityParamsMap_.end()) {
             APP_LOGE("Can not find transactId:%{public}s in queryAbilityParamsMap", transactId.c_str());
             return;
         }
         queryRpcIdParams = queryAbilityParams->second;
-    }
-    SendCallback(resultCode, queryRpcIdParams);
-
-    uint32_t mapSize;
-    {
-        std::unique_lock<std::shared_mutex> lock(mutex_);
-        queryAbilityParamsMap_.erase(transactId);
+        queryAbilityParamsMap_.erase(queryAbilityParams);
         mapSize = queryAbilityParamsMap_.size();
     }
+    SendCallback(resultCode, queryRpcIdParams);
 
     if (mapSize == 0) {
         auto connectAbility = DelayedSingleton<BundleMgrService>::GetInstance()->GetConnectAbility();
