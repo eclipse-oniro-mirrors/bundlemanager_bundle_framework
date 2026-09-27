@@ -76,10 +76,22 @@ ErrCode QuickFixDeployer::DeployQuickFix()
             }
         }
     });
-    // parse check multi hqf files, update status DEPLOY_START
+    // parse check multi hqf files
+    std::unordered_map<std::string, AppQuickFix> infos;
+    ret = ParseAndCheckAppQuickFixInfos(realFilePaths, infos);
+    CHECK_QUICK_FIX_RESULT_RETURN_IF_FAIL(ret);
+    // acquire per-bundle lock to serialize deploy with concurrent switch/delete/install on the same bundle
+    const std::string &bundleName = infos.begin()->second.bundleName;
+    auto svc = DelayedSingleton<BundleMgrService>::GetInstance();
+    if (svc == nullptr || svc->GetDataMgr() == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "BundleMgrService or DataMgr is nullptr bundle:%{public}s", bundleName.c_str());
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
+    }
+    std::lock_guard<std::mutex> bundleLock(svc->GetDataMgr()->GetBundleMutex(bundleName));
+    // update status DEPLOY_START
     InnerAppQuickFix newInnerAppQuickFix;
     InnerAppQuickFix oldInnerAppQuickFix;
-    ret = ToDeployStartStatus(realFilePaths, newInnerAppQuickFix, oldInnerAppQuickFix);
+    ret = ToDeployStartStatus(realFilePaths, infos, newInnerAppQuickFix, oldInnerAppQuickFix);
     CHECK_QUICK_FIX_RESULT_RETURN_IF_FAIL(ret);
     // extract diff files, apply diff patch and copy hqf, update status DEPLOY_END
     ret = ToDeployEndStatus(newInnerAppQuickFix, oldInnerAppQuickFix);
@@ -111,16 +123,17 @@ ErrCode QuickFixDeployer::DeployQuickFix()
 }
 
 ErrCode QuickFixDeployer::ToDeployStartStatus(const std::vector<std::string> &bundleFilePaths,
+    std::unordered_map<std::string, AppQuickFix> &infos,
     InnerAppQuickFix &newInnerAppQuickFix, InnerAppQuickFix &oldInnerAppQuickFix)
 {
     LOG_I(BMS_TAG_DEFAULT, "ToDeployStartStatus start");
     if (GetQuickFixDataMgr() != ERR_OK) {
         return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
-    std::unordered_map<std::string, AppQuickFix> infos;
-    // parse and check multi app quick fix info
-    ErrCode ret = ParseAndCheckAppQuickFixInfos(bundleFilePaths, infos);
-    CHECK_QUICK_FIX_RESULT_RETURN_IF_FAIL(ret);
+    if (infos.empty()) {
+        LOG_E(BMS_TAG_DEFAULT, "error: appQuickFix infos is empty");
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
+    }
 
     const AppQuickFix &appQuickFix = infos.begin()->second;
     bool isExist = quickFixDataMgr_->QueryInnerAppQuickFix(appQuickFix.bundleName, oldInnerAppQuickFix);
@@ -130,6 +143,7 @@ ErrCode QuickFixDeployer::ToDeployStartStatus(const std::vector<std::string> &bu
         return ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATCH_STATUS;
     }
     const AppQuickFix &oldAppQuickFix = oldInnerAppQuickFix.GetAppQuickFix();
+    ErrCode ret = ERR_OK;
     // exist and type same need to check version code
     if (isExist && (appQuickFix.deployingAppqfInfo.type == oldAppQuickFix.deployingAppqfInfo.type)) {
         // check current app quick fix version code

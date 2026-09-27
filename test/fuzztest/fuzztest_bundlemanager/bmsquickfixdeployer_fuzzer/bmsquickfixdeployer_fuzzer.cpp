@@ -70,16 +70,15 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     InnerAppQuickFix newInnerAppQuickFix;
     std::vector<std::string> bundleFilePaths;
     bundleFilePaths.push_back(targetPath);
-    
-    quickFixDeployer.ToDeployStartStatus(bundleFilePaths, newInnerAppQuickFix, oldInnerAppQuickFix);
-
+    std::unordered_map<std::string, AppQuickFix> infos;
     const AppQuickFix appQuickFix = CreateAppQuickFix();
+    infos.emplace(BUNDLE_NAME_MMS, appQuickFix);
+
+    quickFixDeployer.ToDeployStartStatus(bundleFilePaths, infos, newInnerAppQuickFix, oldInnerAppQuickFix);
+
     quickFixDeployer.ToDeployQuickFixResult(appQuickFix);
 
     BundleInfo bundleInfo;
-    std::unordered_map<std::string, AppQuickFix> infos;
-    quickFixDeployer.ProcessPatchDeployStart(bundleFilePaths, bundleInfo, infos);
-    infos.emplace(BUNDLE_NAME_MMS, appQuickFix);
     quickFixDeployer.ProcessPatchDeployStart(bundleFilePaths, bundleInfo, infos);
 
     quickFixDeployer.ProcessHotReloadDeployStart(bundleInfo, appQuickFix);

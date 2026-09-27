@@ -65,6 +65,14 @@ void QuickFixBootScanner::ProcessQuickFixBootUp()
         if (res != ERR_OK) {
             LOG_E(BMS_TAG_DEFAULT, "quick fix info %{public}s is processed failed with error %{public}d",
                 quickFixInfo.first.c_str(), res);
+            auto svc = DelayedSingleton<BundleMgrService>::GetInstance();
+            if (svc == nullptr || svc->GetDataMgr() == nullptr) {
+                LOG_E(BMS_TAG_DEFAULT, "BundleMgrService or DataMgr is nullptr, skip cleanup for %{public}s",
+                    quickFixInfo.first.c_str());
+                state_.reset();
+                continue;
+            }
+            std::lock_guard<std::mutex> lock(svc->GetDataMgr()->GetBundleMutex(quickFixInfo.first));
             quickFixDataMgr_->DeleteInnerAppQuickFix(quickFixInfo.first);
         }
         state_.reset();

@@ -32,6 +32,10 @@ QuickFixDeleter::QuickFixDeleter(const std::string &bundleName) : bundleName_(bu
 
 ErrCode QuickFixDeleter::Execute()
 {
+    if (GetDataMgr() != ERR_OK) {
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
+    }
+    std::lock_guard<std::mutex> lock(dataMgr_->GetBundleMutex(bundleName_));
     auto ret = DeleteQuickFix();
     if (ret != ERR_OK) {
         LOG_NOFUNC_E(BMS_TAG_DEFAULT, "DeleteQuickFix failed:%{public}d", ret);
