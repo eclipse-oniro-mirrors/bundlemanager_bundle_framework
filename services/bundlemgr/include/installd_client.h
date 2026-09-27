@@ -210,8 +210,6 @@ public:
     ErrCode MoveFile(
         const std::string &oldPath, const std::string &newPath, BundleDirScene scene, const std::string &bundleName);
 
-    ErrCode RenameFile(const std::string &oldPath, const std::string &newPath);
-
     /**
      * @brief Rename the sandbox dir of the specified user to +backup+sandboxDir under all
      *        bundle data prefix paths.

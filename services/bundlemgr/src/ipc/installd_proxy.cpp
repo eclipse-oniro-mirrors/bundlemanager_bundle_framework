@@ -1054,18 +1054,6 @@ ErrCode InstalldProxy::MoveFile(
     return TransactInstalldCmd(InstalldInterfaceCode::MOVE_FILE, data, reply, option);
 }
 
-ErrCode InstalldProxy::RenameFile(const std::string &oldPath, const std::string &newPath)
-{
-    MessageParcel data;
-    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
-    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(oldPath));
-    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(newPath));
-
-    MessageParcel reply;
-    MessageOption option(MessageOption::TF_SYNC);
-    return TransactInstalldCmd(InstalldInterfaceCode::RENAME_FILE, data, reply, option);
-}
-
 ErrCode InstalldProxy::BackupSandboxDir(int32_t userId, const std::string &sandboxDir)
 {
     MessageParcel data;

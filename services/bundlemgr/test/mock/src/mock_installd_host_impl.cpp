@@ -272,11 +272,6 @@ ErrCode InstalldHostImpl::MoveFile(
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::RenameFile(const std::string &oldPath, const std::string &newPath)
-{
-    return ERR_OK;
-}
-
 ErrCode InstalldHostImpl::BackupSandboxDir(int32_t userId, const std::string &sandboxDir)
 {
     return ERR_OK;

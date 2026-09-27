@@ -461,11 +461,6 @@ public:
         return ERR_OK;
     }
 
-    virtual ErrCode RenameFile(const std::string &oldPath, const std::string &newPath)
-    {
-        return ERR_OK;
-    }
-
     /**
      * @brief Rename the sandbox dir of the specified user to +backup+sandboxDir under all
      *        bundle data prefix paths. The full paths are concatenated inside the installd

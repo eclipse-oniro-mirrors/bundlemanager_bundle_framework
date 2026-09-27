@@ -326,8 +326,6 @@ public:
     virtual ErrCode MoveFile(const std::string &oldPath, const std::string &newPath, BundleDirScene scene,
         const std::string &bundleName) override;
 
-    virtual ErrCode RenameFile(const std::string &oldPath, const std::string &newPath) override;
-
     virtual ErrCode BackupSandboxDir(int32_t userId, const std::string &sandboxDir) override;
 
     virtual ErrCode RecoverSandboxDir(int32_t userId, const std::string &sandboxDir) override;

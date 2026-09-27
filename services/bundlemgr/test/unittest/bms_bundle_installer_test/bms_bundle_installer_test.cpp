@@ -247,8 +247,6 @@ const std::string REMOVE_PRELOAD_TEST_BUNDLE = "com.example.remove.preload.test"
 const std::string DATA_PRELOAD_HAP_PATH = "/data/preload/app/com.example.test/entry.hap";
 const int32_t TEST_EL5_USERID = 2000;
 const std::string PLUGIN_NAME = "com.example.pluginTest1";
-const std::string TEST_RENAME_PATH = "/data/app/el2/100/sharefiles/test";
-const std::string TEST_RENAME_PATH_NEW = "/data/app/el2/100/sharefiles/test_new";
 const std::string BUNDLE_CODE_PATH_DIR_NEW_EXT_DIR =
  	"/data/app/el1/bundle/public/+new-com.example.example_test/ext_resource";
 const std::string BUNDLE_CODE_PATH_DIR_NEW_EXT_FILE =
@@ -15372,39 +15370,6 @@ HWTEST_F(BmsBundleInstallerTest, MoveFile_0100, Function | SmallTest | Level0)
     std::string newPath = TEST_EMPTY_STRING;
     auto ret = impl.MoveFile(oldPath, newPath, BundleDirScene::MOVE_HAP_TO_INSTALL_DIR, BUNDLE_NAME);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-}
-
-/**
- * @tc.number: RenameFile_0100
- * @tc.name: test RenameFile
- * @tc.desc: test RenameFile of InstalldHostImpl
- */
-HWTEST_F(BmsBundleInstallerTest, RenameFile_0100, Function | SmallTest | Level0)
-{
-    InstalldHostImpl impl;
-    std::string oldPath = TEST_EMPTY_STRING;
-    std::string newPath = TEST_EMPTY_STRING;
-    auto ret = impl.RenameFile(oldPath, newPath);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-
-    oldPath = TEST_RENAME_PATH;
-    ret = impl.RenameFile(oldPath, newPath);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-
-    oldPath = TEST_EMPTY_STRING;
-    newPath = TEST_RENAME_PATH;
-    ret = impl.RenameFile(oldPath, newPath);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-
-    oldPath = TEST_RENAME_PATH;
-    newPath = TEST_RENAME_PATH_NEW;
-    ret = impl.RenameFile(oldPath, newPath);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED);
-
-    oldPath = TEST_RENAME_PATH;
-    newPath = TEST_RENAME_PATH;
-    ret = impl.RenameFile(oldPath, newPath);
-    EXPECT_EQ(ret, ERR_OK);
 }
 
 /**
