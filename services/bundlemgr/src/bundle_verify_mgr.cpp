@@ -66,13 +66,11 @@ const ErrCode HAP_VERIFY_ERR_MAP_VALUE[] = {
 } // namespace
 
 ErrCode BundleVerifyMgr::HapVerify(const std::string &filePath, HapVerifyResult &hapVerifyResult,
-    bool readFile, const int32_t userId, bool skipEnterpriseResign)
+    bool readFile, const int32_t userId)
 {
     std::string localCertDir = std::string(ServiceConstants::HAP_COPY_PATH) +
         ServiceConstants::ENTERPRISE_CERT_PATH + std::to_string(userId);
-    if (userId < Constants::START_USERID || !BundleUtil::IsExistDir(localCertDir) || skipEnterpriseResign) {
-        // skipEnterpriseResign: caller holds PERMISSION_SKIP_ENTERPRISE_RESIGN_VERIFY, run the
-        // remaining signature checks without the enterprise resign cert dir.
+    if (userId < Constants::START_USERID || !BundleUtil::IsExistDir(localCertDir)) {
         localCertDir.clear();
     }
     BmsExtensionDataMgr bmsExtensionDataMgr;

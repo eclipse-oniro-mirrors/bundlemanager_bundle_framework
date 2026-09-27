@@ -150,7 +150,7 @@ HWTEST_F(BmsEnterpriseCertBackupTest, BmsEnterpriseCertBackupTest_RestoreCheck_0
     nlohmann::json certs;
     certs["invalid"] = "object";
     EXPECT_EQ(EnterpriseCertBackupHelper::RestoreFromJson(certs, root_),
-        ERR_APPEXECFWK_BACKUP_ENTERPRISE_CERT_PARAM_ERROR);
+        ERR_APPEXECFWK_BACKUP_INVALID_PARAMETER);
 }
 
 /**
@@ -166,7 +166,7 @@ HWTEST_F(BmsEnterpriseCertBackupTest, BmsEnterpriseCertBackupTest_RestoreCheck_0
         {ServiceConstants::BACKUP_CERT_CONTENT_KEY, "QUJD"},
     }});
     EXPECT_EQ(EnterpriseCertBackupHelper::RestoreFromJson(certs, root_),
-        ERR_APPEXECFWK_BACKUP_ENTERPRISE_CERT_PARAM_ERROR);
+        ERR_APPEXECFWK_BACKUP_INVALID_PARAMETER);
 }
 
 /**
@@ -185,15 +185,15 @@ HWTEST_F(BmsEnterpriseCertBackupTest, BmsEnterpriseCertBackupTest_RestoreCheck_0
     };
     nlohmann::json badSuffix = nlohmann::json::array({makeItem(TEST_USER_ID, "a.txt", "QUJD")});
     EXPECT_EQ(EnterpriseCertBackupHelper::RestoreFromJson(badSuffix, root_),
-        ERR_APPEXECFWK_BACKUP_ENTERPRISE_CERT_PARAM_ERROR);
+        ERR_APPEXECFWK_BACKUP_INVALID_PARAMETER);
 
     nlohmann::json badUser = nlohmann::json::array({makeItem(0, "a.cer", "QUJD")});
     EXPECT_EQ(EnterpriseCertBackupHelper::RestoreFromJson(badUser, root_),
-        ERR_APPEXECFWK_BACKUP_ENTERPRISE_CERT_PARAM_ERROR);
+        ERR_APPEXECFWK_BACKUP_INVALID_PARAMETER);
 
     nlohmann::json badBase64 = nlohmann::json::array({makeItem(TEST_USER_ID, "a.cer", "!!!not-base64!!!")});
     EXPECT_EQ(EnterpriseCertBackupHelper::RestoreFromJson(badBase64, root_),
-        ERR_APPEXECFWK_BACKUP_ENTERPRISE_CERT_PARAM_ERROR);
+        ERR_APPEXECFWK_BACKUP_INVALID_PARAMETER);
 }
 
 /**
@@ -212,7 +212,7 @@ HWTEST_F(BmsEnterpriseCertBackupTest, BmsEnterpriseCertBackupTest_RestoreCheck_0
         });
     }
     EXPECT_EQ(EnterpriseCertBackupHelper::RestoreFromJson(certs, root_),
-        ERR_APPEXECFWK_BACKUP_ENTERPRISE_CERT_PARAM_ERROR);
+        ERR_APPEXECFWK_BACKUP_INVALID_PARAMETER);
 }
 
 /**
@@ -279,7 +279,7 @@ HWTEST_F(BmsEnterpriseCertBackupTest, BmsEnterpriseCertBackupTest_Restore_0200, 
     ClearCertRecordForTest();
     SetAddCertRetListForTest({ERR_OK, ERR_APPEXECFWK_BACKUP_FILE_IO_ERROR});  // first succeeds, second fails
     EXPECT_EQ(EnterpriseCertBackupHelper::RestoreFromJson(certs, root_),
-        ERR_APPEXECFWK_BACKUP_ENTERPRISE_CERT_RESTORE_FAILED);
+        ERR_APPEXECFWK_BACKUP_FILE_IO_ERROR);
     ASSERT_EQ(g_addedCertPaths.size(), 2);       // two attempts
     ASSERT_EQ(g_deletedCertPaths.size(), 1);     // rollback deleted the restored a.cer
     EXPECT_NE(g_deletedCertPaths[0].find("/a.cer"), std::string::npos);
@@ -373,7 +373,7 @@ HWTEST_F(BmsEnterpriseCertBackupTest, BmsEnterpriseCertBackupTest_Restore_0500, 
     // Sequence: restore a (ok) -> restore b (fail) -> rollback reinstalls orig (ok)
     SetAddCertRetListForTest({ERR_OK, ERR_APPEXECFWK_BACKUP_FILE_IO_ERROR, ERR_OK});
     EXPECT_EQ(EnterpriseCertBackupHelper::RestoreFromJson(certs, root_),
-        ERR_APPEXECFWK_BACKUP_ENTERPRISE_CERT_RESTORE_FAILED);
+        ERR_APPEXECFWK_BACKUP_FILE_IO_ERROR);
     // clear orig + rollback delete a
     ASSERT_EQ(g_deletedCertPaths.size(), 2);
     EXPECT_NE(g_deletedCertPaths[0].find("orig.cer"), std::string::npos);

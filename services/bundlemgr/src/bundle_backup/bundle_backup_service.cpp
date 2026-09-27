@@ -39,8 +39,8 @@ BundleBackupService::~BundleBackupService() {}
 
 ErrCode BundleBackupService::OnBackup(nlohmann::json &jsonObject)
 {
-    // Segment-independent backup: a shortcut failure does not block the cert segment;
-    // a single failure returns its own code, both failed returns the combined code.
+    // Segments run independently under one snapshot; the first failure in
+    // shortcut -> cert -> size order is returned as-is (the caller only checks OK/fail).
     // On non-ERR_OK the caller writes no file and returns no fd, so no partial backup.
     ErrCode shortcutRet = ERR_OK;
     jsonObject = nlohmann::json::object();
@@ -86,18 +86,10 @@ ErrCode BundleBackupService::OnBackup(nlohmann::json &jsonObject)
         APP_LOGE("backup config too large: %{public}zu", config.size());
         sizeRet = ERR_APPEXECFWK_BACKUP_FILE_IO_ERROR;
     }
-    if (shortcutRet != ERR_OK && certRet != ERR_OK) {
-        APP_LOGE("backup failed in both segments, shortcut: %{public}d, cert: %{public}d",
-            shortcutRet, certRet);
-        return ERR_APPEXECFWK_BACKUP_BOTH_FAILED;
-    }
-    if (shortcutRet != ERR_OK) {
-        return shortcutRet;
-    }
-    if (certRet != ERR_OK) {
-        return certRet;
-    }
-    return sizeRet;
+    ErrCode backupRet = shortcutRet != ERR_OK ? shortcutRet : (certRet != ERR_OK ? certRet : sizeRet);
+    APP_LOGI("OnBackup finish, shortcut: %{public}d, cert: %{public}d, ret: %{public}d",
+        shortcutRet, certRet, backupRet);
+    return backupRet;
 }
 
 ErrCode BundleBackupService::OnRestore(nlohmann::json &jsonObject)
@@ -125,8 +117,8 @@ ErrCode BundleBackupService::OnRestore(nlohmann::json &jsonObject)
         return ERR_APPEXECFWK_BACKUP_INVALID_JSON_STRUCTURE;
     }
     // Segment-independent restore: a shortcut failure does not block the cert segment
-    // (certs are a hard dependency of enterprise app install); a single failure returns
-    // its own code, both failed returns the combined code.
+    // (certs are a hard dependency of enterprise app install). The first failure in
+    // shortcut -> cert order is returned as-is; the caller only checks OK/fail.
     ErrCode shortcutRet = ERR_OK;
     if (jsonObject.contains(ServiceConstants::BACKUP_SHORTCUTS_KEY) &&
         jsonObject.at(ServiceConstants::BACKUP_SHORTCUTS_KEY).is_array()) {
@@ -141,15 +133,10 @@ ErrCode BundleBackupService::OnRestore(nlohmann::json &jsonObject)
     if (jsonObject.contains(ServiceConstants::BACKUP_ENTERPRISE_CERTS_KEY)) {
         certRet = RestoreEnterpriseCerts(jsonObject.at(ServiceConstants::BACKUP_ENTERPRISE_CERTS_KEY));
     }
-    if (shortcutRet != ERR_OK && certRet != ERR_OK) {
-        APP_LOGE("restore failed in both segments, shortcut: %{public}d, cert: %{public}d",
-            shortcutRet, certRet);
-        return ERR_APPEXECFWK_RESTORE_BOTH_FAILED;
-    }
-    if (shortcutRet != ERR_OK) {
-        return shortcutRet;
-    }
-    return certRet;
+    ErrCode restoreRet = shortcutRet != ERR_OK ? shortcutRet : certRet;
+    APP_LOGI("OnRestore finish, shortcut: %{public}d, cert: %{public}d, ret: %{public}d",
+        shortcutRet, certRet, restoreRet);
+    return restoreRet;
 }
 
 ErrCode BundleBackupService::RestoreEnterpriseCerts(const nlohmann::json &certs)

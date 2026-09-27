@@ -1098,6 +1098,7 @@ void BundleInstallerHost::MarkSkipEnterpriseResignVerify(InstallParam &installPa
     std::string callerCertDir = std::string(ServiceConstants::HAP_COPY_PATH) +
         ServiceConstants::ENTERPRISE_CERT_PATH + std::to_string(callerUserId);
     if (!BundleUtil::IsExistDir(callerCertDir)) {
+        LOG_I(BMS_TAG_INSTALLER, "caller cert dir not exist, no resign verify skip");
         return;
     }
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
@@ -1119,6 +1120,8 @@ void BundleInstallerHost::MarkSkipEnterpriseResignVerify(InstallParam &installPa
         installParam.parameters[ServiceConstants::BMS_PARA_SKIP_ENTERPRISE_RESIGN_VERIFY] =
             ServiceConstants::BMS_TRUE;
         LOG_I(BMS_TAG_INSTALLER, "caller %{public}s granted skip resign verify", callerBundleName.c_str());
+    } else {
+        LOG_I(BMS_TAG_INSTALLER, "caller %{public}s not granted skip resign verify", callerBundleName.c_str());
     }
 }
 
