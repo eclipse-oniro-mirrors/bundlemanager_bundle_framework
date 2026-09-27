@@ -264,8 +264,6 @@ private:
 
     bool HandleMoveFile(MessageParcel &data, MessageParcel &reply);
 
-    bool HandleRenameFile(MessageParcel &data, MessageParcel &reply);
-
     bool HandleBackupSandboxDir(MessageParcel &data, MessageParcel &reply);
 
     bool HandleRecoverSandboxDir(MessageParcel &data, MessageParcel &reply);

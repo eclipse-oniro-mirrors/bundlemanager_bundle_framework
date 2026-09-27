@@ -2802,29 +2802,6 @@ ErrCode InstalldHostImpl::MoveFile(
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::RenameFile(const std::string &oldPath, const std::string &newPath)
-{
-    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
-        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
-        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
-    }
-
-    if (!InstalldOperator::IsValidPathByBundleDirScene(BundleDirScene::RENAME_FILE, newPath) ||
-        !InstalldOperator::IsValidPathByBundleDirScene(BundleDirScene::RENAME_FILE, oldPath)) {
-        LOG_E(BMS_TAG_INSTALLD,
-            "Calling the function RenameFile with invalid param, oldPath:%{private}s, newPath:%{private}s",
-            oldPath.c_str(), newPath.c_str());
-        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-    }
-
-    if (!InstalldOperator::RenameFile(oldPath, newPath)) {
-        LOG_E(BMS_TAG_INSTALLD, "rename file %{public}s to %{public}s failed errno:%{public}d",
-            oldPath.c_str(), newPath.c_str(), errno);
-        return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
-    }
-    return ERR_OK;
-}
-
 ErrCode InstalldHostImpl::BackupSandboxDir(int32_t userId, const std::string &sandboxDir)
 {
     return ChangeSandboxDirName(userId, sandboxDir, sandboxDir,

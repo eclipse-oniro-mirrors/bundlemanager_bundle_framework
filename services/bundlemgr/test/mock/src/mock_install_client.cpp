@@ -358,11 +358,6 @@ ErrCode InstalldClient::MoveFile(
     return 0;
 }
 
-ErrCode InstalldClient::RenameFile(const std::string &oldPath, const std::string &newPath)
-{
-    return 0;
-}
-
 ErrCode InstalldClient::BackupSandboxDir(int32_t userId, const std::string &sandboxDir)
 {
     return 0;

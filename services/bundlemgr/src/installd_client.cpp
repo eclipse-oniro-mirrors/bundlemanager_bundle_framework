@@ -562,16 +562,6 @@ ErrCode InstalldClient::MoveFile(
     return CallService(&IInstalld::MoveFile, oldPath, newPath, scene, bundleName);
 }
 
-ErrCode InstalldClient::RenameFile(const std::string &oldPath, const std::string &newPath)
-{
-    if (oldPath.empty() || newPath.empty()) {
-        APP_LOGE("params are invalid");
-        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-    }
-
-    return CallService(&IInstalld::RenameFile, oldPath, newPath);
-}
-
 ErrCode InstalldClient::BackupSandboxDir(int32_t userId, const std::string &sandboxDir)
 {
     if (userId < 0 || sandboxDir.empty()) {
