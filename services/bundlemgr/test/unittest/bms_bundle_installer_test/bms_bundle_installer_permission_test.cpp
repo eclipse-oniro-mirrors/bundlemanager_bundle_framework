@@ -1131,7 +1131,8 @@ HWTEST_F(BmsBundleInstallerPermissionTest, BundleSandboxInstaller_0002, Function
 /**
  * @tc.number: BundleMgrHostImpl_0001
  * @tc.name: BundleMgrHostImpl_0001
- * @tc.desc: test GetAllBundleLabel
+ * @tc.desc: GetAllBundleLabel no longer requires system app; non-system caller
+ *           reaches the resource-not-support branch and gets the hint
  */
 HWTEST_F(BmsBundleInstallerPermissionTest, BundleMgrHostImpl_0001, Function | SmallTest | Level1)
 {
@@ -1144,14 +1145,15 @@ HWTEST_F(BmsBundleInstallerPermissionTest, BundleMgrHostImpl_0001, Function | Sm
     std::string labels;
     bool ret = localBundleMgrHostImpl->GetAllBundleLabel(userId, labels);
 
-    EXPECT_FALSE(ret);
-    EXPECT_TRUE(labels.empty());
+    EXPECT_TRUE(ret);
+    EXPECT_FALSE(labels.empty());
 }
 
 /**
  * @tc.number: BundleMgrHostImpl_0002
  * @tc.name: BundleMgrHostImpl_0002
- * @tc.desc: test GetLabelByBundleName
+ * @tc.desc: GetLabelByBundleName no longer requires system app; non-system caller
+ *           reaches the resource-not-support branch and gets the hint
  */
 HWTEST_F(BmsBundleInstallerPermissionTest, BundleMgrHostImpl_0002, Function | SmallTest | Level1)
 {
@@ -1165,8 +1167,8 @@ HWTEST_F(BmsBundleInstallerPermissionTest, BundleMgrHostImpl_0002, Function | Sm
     std::string result;
     bool ret = localBundleMgrHostImpl->GetLabelByBundleName(bundleName, userId, result);
 
-    EXPECT_FALSE(ret);
-    EXPECT_TRUE(result.empty());
+    EXPECT_TRUE(ret);
+    EXPECT_FALSE(result.empty());
 }
  
 /**

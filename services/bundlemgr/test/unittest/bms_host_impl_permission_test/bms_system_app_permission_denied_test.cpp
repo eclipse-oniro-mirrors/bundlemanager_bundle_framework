@@ -392,7 +392,8 @@ HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleMgrHostImpl_0020, TestSize.Leve
 /*
  * @tc.number: BundleMgrHostImpl_0021
  * @tc.name: BmsSystemAppPermissionDeniedTest
- * @tc.desc: GetLabelByBundleName SystemAppPermission Denied
+ * @tc.desc: GetLabelByBundleName no longer requires system app; non-system caller
+ *           reaches the data query path and fails on bundle not found
  */
 HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleMgrHostImpl_0021, TestSize.Level1)
 {
@@ -404,12 +405,14 @@ HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleMgrHostImpl_0021, TestSize.Leve
     std::string result;
     auto ret = localBundleMgrHostImpl->GetLabelByBundleName(bundleName, userId, result);
     EXPECT_EQ(ret, false);
+    EXPECT_EQ(result.empty(), true);
 }
 
 /*
  * @tc.number: BundleMgrHostImpl_0022
  * @tc.name: BmsSystemAppPermissionDeniedTest
- * @tc.desc: GetAllBundleLabel SystemAppPermission Denied
+ * @tc.desc: GetAllBundleLabel no longer requires system app; non-system caller
+ *           reaches the data query path and fails on empty bundle list
  */
 HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleMgrHostImpl_0022, TestSize.Level1)
 {
@@ -420,6 +423,7 @@ HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleMgrHostImpl_0022, TestSize.Leve
     std::string labels;
     auto ret = localBundleMgrHostImpl->GetAllBundleLabel(userId, labels);
     EXPECT_EQ(ret, false);
+    EXPECT_EQ(labels.empty(), true);
 }
 
 /**

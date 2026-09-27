@@ -6003,11 +6003,6 @@ bool BundleMgrHostImpl::GetLabelByBundleName(const std::string &bundleName, int3
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGI("GetLabelByBundleName -n %{public}s -u %{public}d", bundleName.c_str(), userId);
-    if (!BundlePermissionMgr::IsSystemApp()) {
-        APP_LOGE("Non-system app calling system api");
-        return false;
-    }
-
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
@@ -6044,10 +6039,6 @@ bool BundleMgrHostImpl::GetAllBundleLabel(int32_t userId, std::string &labels)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGI("GetAllBundleLabel -u %{public}d", userId);
-    if (!BundlePermissionMgr::IsSystemApp()) {
-        APP_LOGE("Non-system app calling system api");
-        return false;
-    }
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
