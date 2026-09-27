@@ -206,20 +206,6 @@ ErrCode InstalldProxy::ExtractHapModuleFiles(const HapModuleExtractParam &param)
     return TransactInstalldCmd(InstalldInterfaceCode::EXTRACT_HAP_MODULE_FILES, data, reply, option);
 }
 
-ErrCode InstalldProxy::ExtractFiles(const ExtractParam &extractParam)
-{
-    MessageParcel data;
-    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
-    if (!data.WriteParcelable(&extractParam)) {
-        LOG_E(BMS_TAG_INSTALLD, "WriteParcelable extractParam failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-
-    MessageParcel reply;
-    MessageOption option;
-    return TransactInstalldCmd(InstalldInterfaceCode::EXTRACT_FILES, data, reply, option);
-}
-
 ErrCode InstalldProxy::ExtractSoFiles(const std::string &bundleName, const std::string &moduleName,
     const std::string &hapFilePath, const std::string &cpuAbi, bool needFakeDecompression,
     bool isSystemApp, bool appendModuleName)
@@ -377,27 +363,6 @@ ErrCode InstalldProxy::CopyHapToTempPath(const std::string &bundleName, const st
     MessageParcel reply;
     MessageOption option;
     return TransactInstalldCmd(InstalldInterfaceCode::COPY_HAP_TO_TEMP_PATH, data, reply, option);
-}
-
-ErrCode InstalldProxy::ExtractHnpFiles(const std::map<std::string, std::string> &hnpPackageMap,
-    const ExtractParam &extractParam)
-{
-    MessageParcel data;
-    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
-    int32_t mapSize = static_cast<int32_t>(hnpPackageMap.size());
-    INSTALLD_PARCEL_WRITE(data, Int32, mapSize);
-    for (const auto &[package, type] : hnpPackageMap) {
-        INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(package));
-        INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(type));
-    }
-    if (!data.WriteParcelable(&extractParam)) {
-        LOG_E(BMS_TAG_INSTALLD, "WriteParcelable extractParam failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-
-    MessageParcel reply;
-    MessageOption option;
-    return TransactInstalldCmd(InstalldInterfaceCode::EXTRACT_HNP_FILES, data, reply, option);
 }
 
 ErrCode InstalldProxy::ExtractHnpFilesByScene(const ExtractHnpFilesParam &extractHnpFilesParam)
@@ -591,18 +556,6 @@ ErrCode InstalldProxy::RemoveDir(const std::string &dir, BundleDirScene scene, c
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
     return TransactInstalldCmd(InstalldInterfaceCode::REMOVE_DIR, data, reply, option);
-}
-
-int64_t InstalldProxy::GetDiskUsage(const std::string &dir, bool isRealPath)
-{
-    MessageParcel data;
-    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
-    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(dir));
-    INSTALLD_PARCEL_WRITE(data, Bool, isRealPath);
-
-    MessageParcel reply;
-    MessageOption option(MessageOption::TF_SYNC, WAIT_TIME);
-    return TransactInstalldCmd(InstalldInterfaceCode::GET_DISK_USAGE, data, reply, option);
 }
 
 ErrCode InstalldProxy::GetDiskUsageFromPath(const std::vector<std::string> &path, const std::string &bundleName,
@@ -1112,21 +1065,6 @@ ErrCode InstalldProxy::DeleteBackupSandboxDir(int32_t userId, const std::string 
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
     return TransactInstalldCmd(InstalldInterfaceCode::DELETE_BACKUP_SANDBOX_DIR, data, reply, option);
-}
-
-ErrCode InstalldProxy::CopyFile(const std::string &oldPath, const std::string &newPath, BundleDirScene scene,
-    const std::string &signatureFilePath)
-{
-    MessageParcel data;
-    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
-    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(oldPath));
-    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(newPath));
-    INSTALLD_PARCEL_WRITE(data, Int32, static_cast<int32_t>(scene));
-    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(signatureFilePath));
-
-    MessageParcel reply;
-    MessageOption option(MessageOption::TF_SYNC);
-    return TransactInstalldCmd(InstalldInterfaceCode::COPY_FILE, data, reply, option);
 }
 
 ErrCode InstalldProxy::CopyPluginHsp(const std::string &hostBundleName, const std::string &bundleName,

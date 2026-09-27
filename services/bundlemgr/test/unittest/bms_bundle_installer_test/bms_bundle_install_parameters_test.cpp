@@ -955,54 +955,6 @@ HWTEST_F(BmsBundleInstallParametersTest, CreateExtensionDataDir_1000, Function |
 }
 
 /**
- * @tc.number: ExtractHnpFiles_0100
- * @tc.name: test ExtractHnpFiles with empty hnpPackageMap
- * @tc.desc: 1. test empty hnpPackageMap should return param error (new branch)
- */
-HWTEST_F(BmsBundleInstallParametersTest, ExtractHnpFiles_0100, Function | SmallTest | Level0)
-{
-    InstalldHostImpl impl;
-    std::map<std::string, std::string> hnpPackageMap;
-    ExtractParam extractParam;
-    extractParam.srcPath = "/data/app/el1/bundle/public/test";
-    extractParam.targetPath = "/data/app/el1/bundle/public/target";
-    ErrCode result = impl.ExtractHnpFiles(hnpPackageMap, extractParam);
-    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-}
-
-/**
- * @tc.number: ExtractHnpFiles_0200
- * @tc.name: test ExtractHnpFiles with invalid srcPath
- * @tc.desc: 1. test invalid srcPath should return param error (new branch)
- */
-HWTEST_F(BmsBundleInstallParametersTest, ExtractHnpFiles_0200, Function | SmallTest | Level0)
-{
-    InstalldHostImpl impl;
-    std::map<std::string, std::string> hnpPackageMap = {{"key1", "value1"}};
-    ExtractParam extractParam;
-    extractParam.srcPath = "/tmp/../invalid";
-    extractParam.targetPath = "/data/app/el1/bundle/public/target";
-    ErrCode result = impl.ExtractHnpFiles(hnpPackageMap, extractParam);
-    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-}
-
-/**
- * @tc.number: ExtractHnpFiles_0300
- * @tc.name: test ExtractHnpFiles with invalid targetPath
- * @tc.desc: 1. test invalid targetPath should return param error (new branch)
- */
-HWTEST_F(BmsBundleInstallParametersTest, ExtractHnpFiles_0300, Function | SmallTest | Level0)
-{
-    InstalldHostImpl impl;
-    std::map<std::string, std::string> hnpPackageMap = {{"key1", "value1"}};
-    ExtractParam extractParam;
-    extractParam.srcPath = "/data/app/el1/bundle/public/test";
-    extractParam.targetPath = "/tmp/invalid";
-    ErrCode result = impl.ExtractHnpFiles(hnpPackageMap, extractParam);
-    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-}
-
-/**
  * @tc.number: ProcessBundleInstallNative_0100
  * @tc.name: test ProcessBundleInstallNative with invalid packageName
  * @tc.desc: 1. test invalid packageName packageName (new branch)

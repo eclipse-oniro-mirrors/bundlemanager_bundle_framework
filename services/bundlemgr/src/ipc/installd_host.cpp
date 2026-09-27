@@ -225,9 +225,6 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::DELETE_BACKUP_SANDBOX_DIR):
             result = this->HandleDeleteBackupSandboxDir(data, reply);
             break;
-        case static_cast<uint32_t>(InstalldInterfaceCode::COPY_FILE):
-            result = this->HandleCopyFile(data, reply);
-            break;
         case static_cast<uint32_t>(InstalldInterfaceCode::COPY_PLUGIN_HSP):
             result = this->HandleCopyPluginHsp(data, reply);
             break;
@@ -282,17 +279,11 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::COPY_FILES):
             result = this->HandCopyFiles(data, reply);
             break;
-        case static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_FILES):
-            result = this->HandleExtractFiles(data, reply);
-            break;
         case static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_RES_FILE_DIR):
             result = this->HandleExtractResFileDir(data, reply);
             break;
         case static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_SO_FILES):
             result = this->HandleExtractSoFiles(data, reply);
-            break;
-        case static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_HNP_FILES):
-            result = this->HandleExtractHnpFiles(data, reply);
             break;
         case static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_HNP_FILES_BY_SCENE):
             result = this->HandleExtractHnpFilesByScene(data, reply);
@@ -392,9 +383,6 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
             break;
         case static_cast<uint32_t>(InstalldInterfaceCode::CREATE_EXTENSION_DATA_DIR):
             result = this->HandleCreateExtensionDataDir(data, reply);
-            break;
-        case static_cast<uint32_t>(InstalldInterfaceCode::GET_DISK_USAGE):
-            result = this->HandleGetDiskUsage(data, reply);
             break;
         case static_cast<uint32_t>(InstalldInterfaceCode::GET_EXTENSION_SANDBOX_TYPE_LIST):
             result = this->HandleGetExtensionSandboxTypeList(data, reply);
@@ -528,40 +516,6 @@ bool InstalldHost::HandleExtractHapModuleFiles(MessageParcel &data, MessageParce
         return false;
     }
     ErrCode result = ExtractHapModuleFiles(*info);
-    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
-    return true;
-}
-
-bool InstalldHost::HandleExtractFiles(MessageParcel &data, MessageParcel &reply)
-{
-    std::unique_ptr<ExtractParam> info(data.ReadParcelable<ExtractParam>());
-    if (info == nullptr) {
-        LOG_E(BMS_TAG_INSTALLD, "readParcelableInfo failed");
-        return false;
-    }
-
-    ErrCode result = ExtractFiles(*info);
-    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
-    return true;
-}
-
-bool InstalldHost::HandleExtractHnpFiles(MessageParcel &data, MessageParcel &reply)
-{
-    std::map<std::string, std::string> hnpPackageMap;
-    int32_t mapSize = data.ReadInt32();
-    CONTAINER_SECURITY_VERIFY(data, mapSize, &hnpPackageMap);
-    for (int32_t i = 0; i < mapSize; ++i) {
-        std::string package = Str16ToStr8(data.ReadString16());
-        std::string type = Str16ToStr8(data.ReadString16());
-        hnpPackageMap.try_emplace(package, type);
-    }
-    std::unique_ptr<ExtractParam> info(data.ReadParcelable<ExtractParam>());
-    if (info == nullptr) {
-        LOG_E(BMS_TAG_INSTALLD, "readParcelableInfo failed");
-        return false;
-    }
-
-    ErrCode result = ExtractHnpFiles(hnpPackageMap, *info);
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
@@ -866,15 +820,6 @@ bool InstalldHost::HandleRemoveDir(MessageParcel &data, MessageParcel &reply)
     std::string bundleName = Str16ToStr8(data.ReadString16());
     bool async = data.ReadBool();
     ErrCode result = RemoveDir(removedDir, static_cast<BundleDirScene>(scene), bundleName, async);
-    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
-    return true;
-}
-
-bool InstalldHost::HandleGetDiskUsage(MessageParcel &data, MessageParcel &reply)
-{
-    std::string dir = Str16ToStr8(data.ReadString16());
-    bool isRealPath = data.ReadBool();
-    ErrCode result = GetDiskUsage(dir, isRealPath);
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
@@ -1312,18 +1257,6 @@ bool InstalldHost::HandleDeleteBackupSandboxDir(MessageParcel &data, MessageParc
     int32_t userId = data.ReadInt32();
     std::string sandboxDir = Str16ToStr8(data.ReadString16());
     ErrCode result = DeleteBackupSandboxDir(userId, sandboxDir);
-    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
-    return true;
-}
-
-bool InstalldHost::HandleCopyFile(MessageParcel &data, MessageParcel &reply)
-{
-    std::string oldPath = Str16ToStr8(data.ReadString16());
-    std::string newPath = Str16ToStr8(data.ReadString16());
-    int32_t scene = data.ReadInt32();
-    std::string signatureFilePath = Str16ToStr8(data.ReadString16());
-
-    ErrCode result = CopyFile(oldPath, newPath, static_cast<BundleDirScene>(scene), signatureFilePath);
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

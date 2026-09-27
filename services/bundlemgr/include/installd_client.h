@@ -105,13 +105,6 @@ public:
         bool async = false);
     /**
      * @brief Get disk usage for dir.
-     * @param dir Indicates the directory.
-     * @param isRealPath Indicates isRealPath.
-     * @return Returns true if successfully; returns false otherwise.
-     */
-    int64_t GetDiskUsage(const std::string &dir, bool isRealPath = false);
-    /**
-     * @brief Get disk usage for dir.
      * @param path Indicates the directory vector.
      * @param bundleName Indicates the bundle name for path validation.
      * @param scene Indicates the scene code for path validation.
@@ -250,9 +243,6 @@ public:
      */
     ErrCode DeleteBackupSandboxDir(int32_t userId, const std::string &sandboxDir);
 
-    ErrCode CopyFile(const std::string &oldPath, const std::string &newPath, BundleDirScene scene,
-        const std::string &signatureFilePath = "");
-
     ErrCode CopyPluginHsp(const std::string &hostBundleName, const std::string &bundleName,
         const std::string &moduleName, const std::string &sourceHspPath, const std::string &sourceSignaturePath);
 
@@ -304,8 +294,6 @@ public:
     ErrCode CopyHqfFile(const std::string &bundleName, const std::string &moduleName,
         const std::string &hqfSourceRelativePath, uint32_t versionCode, const QuickFixTargetParam &targetParam);
 
-    ErrCode ExtractFiles(const ExtractParam &extractParam);
-
     ErrCode ExtractResFileDir(const std::string &bundleName, const std::string &moduleName,
         const std::string &hapFilePath, bool needFakeDecompression, bool isSystemApp,
         bool useNewCodeDir, bool useModuleTmp);
@@ -333,8 +321,6 @@ public:
 
     ErrCode CopyHapToTempPath(const std::string &bundleName, const std::string &hapRealPath,
         const std::string &tempDirName, const std::string &hapFileName);
-
-    ErrCode ExtractHnpFiles(const std::map<std::string, std::string> &hnpPackageMap, const ExtractParam &extractParam);
 
     ErrCode CopyApFile(const std::string &bundleName, const std::string &moduleName, int32_t userId);
 

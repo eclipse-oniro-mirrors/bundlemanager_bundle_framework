@@ -409,24 +409,10 @@ bool BmsBundleInstallerPermissionTest::WriteToConfigFile(const std::string &bund
 }
 
 /**
- * @tc.number: ExtractHnpFiles_0100
- * @tc.name: test ExtractHnpFiles
- * @tc.desc: 1.Test the ExtractHnpFiles of InstalldHostImpl without permission
-*/
-HWTEST_F(BmsBundleInstallerPermissionTest, ExtractHnpFiles_0100, Function | SmallTest | Level1)
-{
-    InstalldHostImpl installdHostImpl;
-    std::map<std::string, std::string> hnpPackageMap;
-    ExtractParam extractParam;
-    auto ret = installdHostImpl.ExtractHnpFiles(hnpPackageMap, extractParam);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
-}
-
-/**
  * @tc.number: ProcessBundleInstallNative_0100
  * @tc.name: test ProcessBundleInstallNative_0100
  * @tc.desc: 1.Test the ProcessBundleInstallNative of InstalldHostImpl without permission
-*/
+ */
 HWTEST_F(BmsBundleInstallerPermissionTest, ProcessBundleInstallNative_0100, Function | SmallTest | Level1)
 {
     InstalldHostImpl installdHostImpl;
@@ -644,24 +630,10 @@ HWTEST_F(BmsBundleInstallerPermissionTest, ApplyDiffPatch_0100, Function | Small
 }
 
 /**
- * @tc.number: GetDiskUsage_0100
- * @tc.name: test GetDiskUsage
- * @tc.desc: 1.Test the GetDiskUsage of InstalldHostImpl without permission
-*/
-HWTEST_F(BmsBundleInstallerPermissionTest, GetDiskUsage_0100, Function | SmallTest | Level1)
-{
-    InstalldHostImpl installdHostImpl;
-    std::string dir;
-    bool isRealPath = false;
-    auto ret = installdHostImpl.GetDiskUsage(dir, isRealPath);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
-}
-
-/**
  * @tc.number: GetDiskUsageFromPath_0100
  * @tc.name: test GetDiskUsageFromPath
  * @tc.desc: 1.Test the GetDiskUsageFromPath of InstalldHostImpl without permission
-*/
+ */
 HWTEST_F(BmsBundleInstallerPermissionTest, GetDiskUsageFromPath_0100, Function | SmallTest | Level1)
 {
     InstalldHostImpl installdHostImpl;

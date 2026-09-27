@@ -48,8 +48,6 @@ enum IpcCode : std::int16_t {
     ON_IDLE = 3012,
     CREATE_BUNDLE_DIR = 3013,
     EXTRACT_MODULE_FILES = 3014,
-    EXTRACT_FILES = 3015,
-    EXTRACT_HNP_FILES = 3016,
     PROCESS_BUNDLE_INSTALL_NATIVE = 3017,
     PROCESS_BUNDLE_UNINSTALL_NATIVE = 3018,
     EXECUTE_AOT = 3023,
@@ -70,15 +68,6 @@ sptr<IRemoteObject> GetMockRemoteObject()
 }
 
 // Helper functions to fill structs with fuzzed data
-void FillExtractParam(FuzzedDataProvider &provider, ExtractParam &extractParam)
-{
-    extractParam.bundleName = provider.ConsumeRandomLengthString(STRING_MAX_LENGTH);
-    extractParam.srcPath = provider.ConsumeRandomLengthString(STRING_MAX_LENGTH);
-    extractParam.targetPath = provider.ConsumeRandomLengthString(STRING_MAX_LENGTH);
-    extractParam.cpuAbi = provider.ConsumeRandomLengthString(STRING_MAX_LENGTH);
-    extractParam.extractFileType = ExtractFileType::AN;
-}
-
 void FillInstallHnpParam(FuzzedDataProvider &provider, InstallHnpParam &installHnpParam)
 {
     installHnpParam.userId = provider.ConsumeRandomLengthString(STRING_MAX_LENGTH);
@@ -116,7 +105,6 @@ extern "C" int FuzzIInstalldService(FuzzedDataProvider &provider)
         IpcCode::INIT_DIR, IpcCode::START, IpcCode::STOP,
         IpcCode::ON_ADD_SYSTEM_ABILITY, IpcCode::ON_IDLE,
         IpcCode::CREATE_BUNDLE_DIR, IpcCode::EXTRACT_MODULE_FILES,
-        IpcCode::EXTRACT_FILES, IpcCode::EXTRACT_HNP_FILES,
         IpcCode::PROCESS_BUNDLE_INSTALL_NATIVE, IpcCode::PROCESS_BUNDLE_UNINSTALL_NATIVE,
         IpcCode::EXECUTE_AOT, IpcCode::PEND_SIGN_AOT,
         IpcCode::STOP_AOT, IpcCode::DELETE_UNINSTALL_TMP_DIRS,
@@ -177,18 +165,6 @@ extern "C" int FuzzIInstalldService(FuzzedDataProvider &provider)
             std::string cpuAbi = provider.ConsumeRandomLengthString(STRING_MAX_LENGTH);
             OHOS::p_installdService->hostImpl_->ExtractModuleFiles(srcModulePath, targetPath, targetSoPath, cpuAbi,
                 false, false);
-            break;
-        }
-        case IpcCode::EXTRACT_FILES: {
-            ExtractParam extractParam;
-            FillExtractParam(provider, extractParam);
-            OHOS::p_installdService->hostImpl_->ExtractFiles(extractParam);
-            break;
-        }
-        case IpcCode::EXTRACT_HNP_FILES: {
-            std::map<std::string, std::string> hnpPackageMap;
-            ExtractParam extractParam;
-            OHOS::p_installdService->hostImpl_->ExtractHnpFiles(hnpPackageMap, extractParam);
             break;
         }
         case IpcCode::PROCESS_BUNDLE_INSTALL_NATIVE: {

@@ -177,108 +177,6 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractModuleFiles_0300, T
 }
 
 /**
- * @tc.number: BmsInstalldClientTest_ExtractFiles_0100
- * @tc.name: ExtractFiles
- * @tc.desc: Test whether ExtractFiles is called normally.(extractParam.srcPath is empty)
- */
-HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractFiles_0100, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractFiles_0100 start";
-    ExtractParam extractParam;
-    extractParam.srcPath = EMPTY_STRING;
-    extractParam.targetPath = TARGET_PATH;
-    ErrCode result = installClient_->ExtractFiles(extractParam);
-    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractFiles_0100 end";
-}
-
-/**
- * @tc.number: BmsInstalldClientTest_ExtractFiles_0200
- * @tc.name: ExtractFiles
- * @tc.desc: Test whether ExtractFiles is called normally.(extractParam.targetPath is empty)
- */
-HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractFiles_0200, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractFiles_0200 start";
-    ExtractParam extractParam;
-    extractParam.srcPath = SRC_PATH;
-    extractParam.targetPath = EMPTY_STRING;
-    ErrCode result = installClient_->ExtractFiles(extractParam);
-    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractFiles_0200 end";
-}
-
-/**
- * @tc.number: BmsInstalldClientTest_ExtractFiles_0300
- * @tc.name: ExtractFiles
- * @tc.desc: Test whether ExtractFiles is called normally.
- */
-HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractFiles_0300, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractFiles_0300 start";
-    ExtractParam extractParam;
-    extractParam.srcPath = SRC_PATH;
-    extractParam.targetPath = TARGET_PATH;
-    ErrCode result = installClient_->ExtractFiles(extractParam);
-    EXPECT_EQ(result, installClient_->CallService(&IInstalld::ExtractFiles, extractParam));
-    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractFiles_0300 end";
-}
-
-/**
- * @tc.number: BmsInstalldClientTest_ExtractHnpFiles_0100
- * @tc.name: ExtractHnpFiles
- * @tc.desc: Test whether ExtractHnpFiles is called normally.(extractParam.srcPath is empty)
- */
-HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractHnpFiles_0100, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractHnpFiles_0100 start";
-    std::map<std::string, std::string> hnpPackageMap;
-    ExtractParam extractParam;
-    extractParam.srcPath = EMPTY_STRING;
-    extractParam.targetPath = TARGET_PATH;
-    ErrCode result = installClient_->ExtractHnpFiles(hnpPackageMap, extractParam);
-    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractHnpFiles_0100 end";
-}
-
-/**
- * @tc.number: BmsInstalldClientTest_ExtractHnpFiles_0200
- * @tc.name: ExtractHnpFiles
- * @tc.desc: Test whether ExtractHnpFiles is called normally.(extractParam.targetPath is empty)
- */
-HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractHnpFiles_0200, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractHnpFiles_0200 start";
-    std::map<std::string, std::string> hnpPackageMap;
-    ExtractParam extractParam;
-    extractParam.srcPath = SRC_PATH;
-    extractParam.targetPath = EMPTY_STRING;
-    ErrCode result = installClient_->ExtractHnpFiles(hnpPackageMap, extractParam);
-    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractHnpFiles_0200 end";
-}
-
-/**
- * @tc.number: BmsInstalldClientTest_ExtractHnpFiles_0300
- * @tc.name: ExtractHnpFiles
- * @tc.desc: Test whether ExtractHnpFiles is called normally.
- */
-HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractHnpFiles_0300, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractHnpFiles_0300 start";
-    std::map<std::string, std::string> hnpPackageMap = {
-        {"package", "hello.hnp"},
-        {"typp", "public"}
-    };
-    ExtractParam extractParam;
-    extractParam.srcPath = SRC_PATH;
-    extractParam.targetPath = TARGET_PATH;
-    ErrCode result = installClient_->ExtractHnpFiles(hnpPackageMap, extractParam);
-    EXPECT_EQ(result, installClient_->CallService(&IInstalld::ExtractHnpFiles, hnpPackageMap, extractParam));
-    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractHnpFiles_0300 end";
-}
-
-/**
  * @tc.number: BmsInstalldClientTest_ProcessBundleInstallNative_0100
  * @tc.name: ProcessBundleInstallNative
  * @tc.desc: Test whether ProcessBundleInstallNative is called normally.
@@ -886,52 +784,6 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_MoveFile_0300, TestSize.Le
     EXPECT_EQ(result, installClient_->CallService(
                           &IInstalld::MoveFile, oldPath, newPath, BundleDirScene::MOVE_HAP_TO_INSTALL_DIR, bundleName));
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_MoveFile_0300 end";
-}
-
-/**
- * @tc.number: BmsInstalldClientTest_CopyFile_0100
- * @tc.name: CopyFile
- * @tc.desc: Test whether CopyFile is called normally.(oldPath is empty)
- */
-HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CopyFile_0100, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "BmsInstalldClientTest_CopyFile_0100 start";
-    std::string oldPath = EMPTY_STRING;
-    std::string newPath = NEW_PATH;
-    ErrCode result = installClient_->CopyFile(oldPath, newPath, BundleDirScene::COPY_PGO_FILE);
-    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-    GTEST_LOG_(INFO) << "BmsInstalldClientTest_CopyFile_0100 end";
-}
-
-/**
- * @tc.number: BmsInstalldClientTest_CopyFile_0200
- * @tc.name: CopyFile
- * @tc.desc: Test whether CopyFile is called normally.(newPath is empty)
- */
-HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CopyFile_0200, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "BmsInstalldClientTest_CopyFile_0200 start";
-    std::string oldPath = OLD_PATH;
-    std::string newPath = EMPTY_STRING;
-    ErrCode result = installClient_->CopyFile(oldPath, newPath, BundleDirScene::COPY_PGO_FILE);
-    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-    GTEST_LOG_(INFO) << "BmsInstalldClientTest_CopyFile_0200 end";
-}
-
-/**
- * @tc.number: BmsInstalldClientTest_CopyFile_0300
- * @tc.name: CopyFile
- * @tc.desc: Test whether CopyFile is called normally.
- */
-HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CopyFile_0300, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "BmsInstalldClientTest_CopyFile_0300 start";
-    std::string oldPath = OLD_PATH;
-    std::string newPath = NEW_PATH;
-    ErrCode result = installClient_->CopyFile(oldPath, newPath, BundleDirScene::COPY_PGO_FILE);
-    EXPECT_EQ(
-        result, installClient_->CallService(&IInstalld::CopyFile, oldPath, newPath, BundleDirScene::COPY_PGO_FILE, ""));
-    GTEST_LOG_(INFO) << "BmsInstalldClientTest_CopyFile_0300 end";
 }
 
 /**
@@ -1665,34 +1517,6 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CreateBundleDataDirWithVec
     std::vector<CreateDirParam> createDirParams;
     ASSERT_NE(installClient_, nullptr);
     ErrCode result = installClient_->CreateBundleDataDirWithVector(createDirParams);
-    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
-}
-
-/**
- * @tc.number: BmsInstalldClientTest_GetDiskUsage_0100
- * @tc.name: GetDiskUsage
- * @tc.desc: call GetDiskUsage.
- */
-HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetDiskUsage_0100, TestSize.Level1)
-{
-    std::string dir;
-    bool isRealPath = true;
-    ASSERT_NE(installClient_, nullptr);
-    ErrCode result = installClient_->GetDiskUsage(dir, isRealPath);
-    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-}
-
-/**
- * @tc.number: BmsInstalldClientTest_GetDiskUsage_0200
- * @tc.name: GetDiskUsage
- * @tc.desc: call GetDiskUsage.
- */
-HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetDiskUsage_0200, TestSize.Level1)
-{
-    std::string dir = "disk.path";
-    bool isRealPath = true;
-    ASSERT_NE(installClient_, nullptr);
-    ErrCode result = installClient_->GetDiskUsage(dir, isRealPath);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
 }
 

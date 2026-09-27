@@ -106,22 +106,6 @@ void FuzzMoveFile(InstalldHost& host, FuzzedDataProvider& fdp)
     host.HandleMoveFile(data, reply);
 }
 
-// HandleCopyFile: ReadString16(oldPath), ReadString16(newPath), ReadInt32(scene), ReadString16(signatureFilePath)
-// [fix] originally missing signatureFilePath fields
-void FuzzCopyFile(InstalldHost& host, FuzzedDataProvider& fdp)
-{
-    MessageParcel data;
-    PrepareParcel<InstalldHost>(data);
-    MessageParcel reply;
-    WriteString16Field(data, fdp);  // oldPath
-    WriteString16Field(data, fdp);  // newPath
-    WriteInt32Field(data, fdp);                              // scene
-    // [fix] supplement signatureFilePath fields，makeusesignature bypass attack vector
-    WriteString16Field(data, fdp, ATTACK_CERT_BYPASS);   // signatureFilePath
-    FinishParcel(data);
-    host.HandleCopyFile(data, reply);
-}
-
 // HandleMkdir: ReadString16(dir), ReadInt32(mode), ReadInt32(uid),
 // ReadInt32(gid), ReadParcelable<CreateDirParam>
 // [fix] originally wrong: dir + isRealPath, real: dir + mode + uid + gid + CreateDirParam
@@ -600,18 +584,6 @@ void FuzzGetBundleCachePath(InstalldHost& host, FuzzedDataProvider& fdp)
     host.HandleGetBundleCachePath(data, reply);
 }
 
-// GetDiskUsage: ReadString16(dir), ReadBool(isRealPath)
-void FuzzGetDiskUsage(InstalldHost& host, FuzzedDataProvider& fdp)
-{
-    MessageParcel data;
-    PrepareParcel<InstalldHost>(data);
-    MessageParcel reply;
-    WriteString16Field(data, fdp);  // dir
-    WriteBoolField(data, fdp);                                            // isRealPath
-    FinishParcel(data);
-    host.HandleGetDiskUsage(data, reply);
-}
-
 // MigrateData: ReadInt32(size), ReadStringVector(sourcePaths), ReadString16(destinationPath)
 void FuzzMigrateDataInstalld(InstalldHost& host, FuzzedDataProvider& fdp)
 {
@@ -917,22 +889,6 @@ void FuzzGetTopNLargestItems(InstalldHost& host, FuzzedDataProvider& fdp)
     host.HandleGetTopNLargestItemsInAppDataDir(data, reply);
 }
 
-// ExtractHnpFiles: ReadInt32(mapSize), loop ReadString16(package)+ReadString16(type), ReadParcelable<ExtractParam>
-void FuzzExtractHnpFiles(InstalldHost& host, FuzzedDataProvider& fdp)
-{
-    MessageParcel data;
-    PrepareParcel<InstalldHost>(data);
-    MessageParcel reply;
-    int32_t mapSize = fdp.ConsumeIntegral<int32_t>() % MAX_GROUP_COUNT;
-    data.WriteInt32(mapSize);                                                    // mapSize
-    for (int32_t i = 0; i < mapSize; i++) {
-        WriteParcelString16(data, fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH));  // package
-        WriteParcelString16(data, fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH));  // type
-    }
-    FinishParcel(data);
-    host.HandleExtractHnpFiles(data, reply);
-}
-
 // CheckHspPluginCertValidity: ReadString16(bundleName), ReadInt32(sessionId)
 void FuzzCheckHspPluginCertValidity(InstalldHost& host, FuzzedDataProvider& fdp)
 {
@@ -1023,19 +979,6 @@ void FuzzExecuteAOT(InstalldHost& host, FuzzedDataProvider& fdp)
     data.WriteParcelable(&aotArgs);                                        // AOTArgs
     FinishParcel(data);
     host.HandleExecuteAOT(data, reply);
-}
-
-// ExtractFiles: ReadParcelable<ExtractParam>
-void FuzzExtractFiles(InstalldHost& host, FuzzedDataProvider& fdp)
-{
-    MessageParcel data;
-    PrepareParcel<InstalldHost>(data);
-    MessageParcel reply;
-    ExtractParam param;
-    GenerateExtractParam(fdp, param);
-    data.WriteParcelable(&param);                                          // ExtractParam
-    FinishParcel(data);
-    host.HandleExtractFiles(data, reply);
 }
 
 // ExtractSkillsPackage: ReadParcelable<SkillsPackageParam>
@@ -1312,7 +1255,6 @@ enum InstalldMethod {
     FUZZREMOVEDIR,
     FUZZEXTRACTMODULEFILES,
     FUZZMOVEFILE,
-    FUZZCOPYFILE,
     FUZZMKDIR,
     FUZZSETDIRAPL,
     FUZZDELETECERT,
@@ -1343,7 +1285,6 @@ enum InstalldMethod {
     FUZZISEXISTFILE,
     FUZZSCANDIR,
     FUZZGETBUNDLECACHEPATH,
-    FUZZGETDISKUSAGE,
     FUZZMIGRATEDATAINSTALLD,
     FUZZDELETEOLDCACHEFILES,
     FUZZCREATEDATAGROUPDIRS,
@@ -1367,7 +1308,6 @@ enum InstalldMethod {
     FUZZSTOPSETFILECON,
     FUZZADDUSERDIRDELETEDFX,
     FUZZGETTOPNLARGESTITEMS,
-    FUZZEXTRACTHNPFILES,
     FUZZCHECKHSPPLUGINCERTVALIDITY,
     FUZZSETARKSTARTUPCACHEAPL,
     FUZZOBTAINQUICKFIXDIR,
@@ -1375,7 +1315,6 @@ enum InstalldMethod {
     FUZZCREATEEXTENSIONDATADIR2,
     FUZZDELETEDATAGROUPDIRS,
     FUZZEXECUTEAOT,
-    FUZZEXTRACTFILES,
     FUZZEXTRACTSKILLSPACKAGE,
     FUZZBATCHGETBUNDLESTATS,
     FUZZGETDISKUSAGEFROMPATH,
@@ -1412,14 +1351,13 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     // Layer 1: Stub layer
     FuzzIpcStubLoop(installdHost, data, size, CODE_MAX);
 
-    // Layer 2: method layer - 83 methods with precise Parcel construction
+    // Layer 2: method layer - 81 methods with precise Parcel construction
     uint8_t methodSelector = fdp.ConsumeIntegral<uint8_t>();
     switch (methodSelector % INSTALLD_METHOD_MAX) {
         case FUZZCREATEBUNDLEDIR: FuzzCreateBundleDir(installdHost, fdp);          break;
         case FUZZREMOVEDIR: FuzzRemoveDir(installdHost, fdp);                break;
         case FUZZEXTRACTMODULEFILES: FuzzExtractModuleFiles(installdHost, fdp);       break;
         case FUZZMOVEFILE: FuzzMoveFile(installdHost, fdp);                 break;
-        case FUZZCOPYFILE: FuzzCopyFile(installdHost, fdp);                break;
         case FUZZMKDIR: FuzzMkdir(installdHost, fdp);                   break;
         case FUZZSETDIRAPL: FuzzSetDirApl(installdHost, fdp);               break;
         case FUZZDELETECERT: FuzzDeleteCert(installdHost, fdp);              break;
@@ -1450,7 +1388,6 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
         case FUZZISEXISTFILE: FuzzIsExistFile(installdHost, fdp);         break;
         case FUZZSCANDIR: FuzzScanDir(installdHost, fdp);             break;
         case FUZZGETBUNDLECACHEPATH: FuzzGetBundleCachePath(installdHost, fdp);   break;
-        case FUZZGETDISKUSAGE: FuzzGetDiskUsage(installdHost, fdp);        break;
         case FUZZMIGRATEDATAINSTALLD: FuzzMigrateDataInstalld(installdHost, fdp); break;
         case FUZZDELETEOLDCACHEFILES: FuzzDeleteOldCacheFiles(installdHost, fdp); break;
         case FUZZCREATEDATAGROUPDIRS: FuzzCreateDataGroupDirs(installdHost, fdp); break;
@@ -1474,7 +1411,6 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
         case FUZZSTOPSETFILECON: FuzzStopSetFileCon(installdHost, fdp);   break;
         case FUZZADDUSERDIRDELETEDFX: FuzzAddUserDirDeleteDfx(installdHost, fdp); break;
         case FUZZGETTOPNLARGESTITEMS: FuzzGetTopNLargestItems(installdHost, fdp); break;
-        case FUZZEXTRACTHNPFILES: FuzzExtractHnpFiles(installdHost, fdp);  break;
         case FUZZCHECKHSPPLUGINCERTVALIDITY: FuzzCheckHspPluginCertValidity(installdHost, fdp); break;
         case FUZZSETARKSTARTUPCACHEAPL: FuzzSetArkStartupCacheApl(installdHost, fdp); break;
         case FUZZOBTAINQUICKFIXDIR: FuzzObtainQuickFixDir(installdHost, fdp); break;
@@ -1482,7 +1418,6 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
         case FUZZCREATEEXTENSIONDATADIR2: FuzzCreateExtensionDataDir2(installdHost, fdp); break;
         case FUZZDELETEDATAGROUPDIRS: FuzzDeleteDataGroupDirs(installdHost, fdp);    break;
         case FUZZEXECUTEAOT: FuzzExecuteAOT(installdHost, fdp);       break;
-        case FUZZEXTRACTFILES: FuzzExtractFiles(installdHost, fdp);     break;
         case FUZZEXTRACTSKILLSPACKAGE: FuzzExtractSkillsPackage(installdHost, fdp); break;
         case FUZZBATCHGETBUNDLESTATS: FuzzBatchGetBundleStats(installdHost, fdp);  break;
         case FUZZGETDISKUSAGEFROMPATH: FuzzGetDiskUsageFromPath(installdHost, fdp); break;

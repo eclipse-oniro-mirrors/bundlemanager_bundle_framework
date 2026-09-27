@@ -62,11 +62,6 @@ ErrCode InstalldClient::ExtractHapModuleFiles(const HapModuleExtractParam &param
     return 0;
 }
 
-ErrCode InstalldClient::ExtractFiles(const ExtractParam &extractParam)
-{
-    return 0;
-}
-
 ErrCode InstalldClient::ExtractQuickFixSoFile(const std::string &bundleName, const std::string &hqfFilePath,
     const std::string &nativeLibraryPath, const std::string &cpuAbi, bool isReplace, int32_t versionCode,
     const std::string &targetPathSuffix)
@@ -126,12 +121,6 @@ ErrCode InstalldClient::ExtractResFileDir(const std::string &bundleName, const s
 
 ErrCode InstalldClient::ExtractNPAPIPlugin(const std::string &bundleName, const std::string &moduleName,
     const std::string &hapFilePath, int32_t userId)
-{
-    return 0;
-}
-
-ErrCode InstalldClient::ExtractHnpFiles(const std::map<std::string, std::string> &hnpPackageMap,
-    const ExtractParam &extractParam)
 {
     return 0;
 }
@@ -207,11 +196,6 @@ ErrCode InstalldClient::RemoveDir(
     if (dir.empty()) {
         return -1;
     }
-    return 0;
-}
-
-int64_t InstalldClient::GetDiskUsage(const std::string &dir, bool isRealPath)
-{
     return 0;
 }
 
@@ -346,12 +330,6 @@ ErrCode InstalldClient::DeleteSandboxDir(int32_t userId, const std::string &sand
 }
 
 ErrCode InstalldClient::DeleteBackupSandboxDir(int32_t userId, const std::string &sandboxDir)
-{
-    return 0;
-}
-
-ErrCode InstalldClient::CopyFile(const std::string &oldPath, const std::string &newPath, BundleDirScene scene,
-    const std::string &signatureFilePath)
 {
     return 0;
 }

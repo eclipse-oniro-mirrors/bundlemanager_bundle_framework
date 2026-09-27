@@ -88,16 +88,6 @@ public:
         return ERR_OK;
     }
     /**
-     * @brief Extract the files.
-     * @param extractParam Indicates the extractParam.
-     * @return Returns ERR_OK if the HAP file extracted successfully; returns error code otherwise.
-     */
-    virtual ErrCode ExtractFiles(const ExtractParam &extractParam)
-    {
-        return ERR_OK;
-    }
-
-    /**
      * @brief Extract quick fix so files.
      * @param bundleName Indicates the bundle name for path construction and validation.
      * @param hqfFilePath Indicates the source HQF file path.
@@ -156,18 +146,6 @@ public:
 
     virtual ErrCode ExtractNPAPIPlugin(const std::string &bundleName, const std::string &moduleName,
         const std::string &hapFilePath, int32_t userId)
-    {
-        return ERR_OK;
-    }
-
-    /**
-     * @brief Extract the hnpFiles.
-     * @param hnpPackageMap Indicates the hnpPackageInfo.
-     * @param extractParam Indicates the extractParam.
-     * @return Returns ERR_OK if the HAP file extracted successfully; returns error code otherwise.
-     */
-    virtual ErrCode ExtractHnpFiles(const std::map<std::string, std::string> &hnpPackageMap,
-        const ExtractParam &extractParam)
     {
         return ERR_OK;
     }
@@ -291,16 +269,6 @@ public:
         bool async = false)
     {
         return ERR_OK;
-    }
-    /**
-     * @brief Get disk usage for dir.
-     * @param dir Indicates the directory.
-     * @param isRealPath Indicates isRealPath.
-     * @return Returns true if successfully; returns false otherwise.
-     */
-    virtual int64_t GetDiskUsage(const std::string &dir, bool isRealPath = false)
-    {
-        return 0;
     }
     /**
      * @brief Get disk usage for dir.
@@ -513,19 +481,6 @@ public:
      * @return Returns ERR_OK if delete backup successfully; returns error code otherwise.
      */
     virtual ErrCode DeleteBackupSandboxDir(int32_t userId, const std::string &sandboxDir)
-    {
-        return ERR_OK;
-    }
-
-    /**
-     * @brief Copy file from oldPath to newPath.
-     * @param oldPath Indicates oldPath.
-     * @param newPath Indicates newPath.
-     * @param scene Indicates the scene code for path validation.
-     * @return Returns ERR_OK if copy file successfully; returns error code otherwise.
-     */
-    virtual ErrCode CopyFile(const std::string &oldPath, const std::string &newPath, BundleDirScene scene,
-        const std::string &signatureFilePath)
     {
         return ERR_OK;
     }

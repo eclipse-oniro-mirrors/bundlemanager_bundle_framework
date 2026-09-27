@@ -75,15 +75,6 @@ ErrCode InstalldClient::ExtractHapModuleFiles(const HapModuleExtractParam &param
     return CallService(&IInstalld::ExtractHapModuleFiles, param);
 }
 
-ErrCode InstalldClient::ExtractFiles(const ExtractParam &extractParam)
-{
-    if (extractParam.srcPath.empty() || extractParam.targetPath.empty()) {
-        APP_LOGE("src path or target path is empty");
-        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-    }
-    return CallService(&IInstalld::ExtractFiles, extractParam);
-}
-
 ErrCode InstalldClient::ExtractSoFiles(const std::string &bundleName, const std::string &moduleName,
     const std::string &hapFilePath, const std::string &cpuAbi, bool needFakeDecompression,
     bool isSystemApp, bool appendModuleName)
@@ -196,15 +187,6 @@ ErrCode InstalldClient::CopyHapToTempPath(const std::string &bundleName, const s
     return CallService(&IInstalld::CopyHapToTempPath, bundleName, hapRealPath, tempDirName, hapFileName);
 }
 
-ErrCode InstalldClient::ExtractHnpFiles(const std::map<std::string, std::string> &hnpPackageMap,
-    const ExtractParam &extractParam)
-{
-    if (extractParam.srcPath.empty() || extractParam.targetPath.empty() || hnpPackageMap.empty()) {
-        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-    }
-    return CallService(&IInstalld::ExtractHnpFiles, hnpPackageMap, extractParam);
-}
-
 ErrCode InstalldClient::ExtractHnpFilesByScene(const ExtractHnpFilesParam &extractHnpFilesParam)
 {
     if (extractHnpFilesParam.hnpPackageMap.empty() || extractHnpFilesParam.bundleName.empty() ||
@@ -305,15 +287,6 @@ ErrCode InstalldClient::RemoveDir(const std::string &dir, BundleDirScene scene, 
     }
 
     return CallService(&IInstalld::RemoveDir, dir, scene, bundleName, async);
-}
-
-int64_t InstalldClient::GetDiskUsage(const std::string &dir, bool isRealPath)
-{
-    if (dir.empty()) {
-        APP_LOGE("bundle dir is empty");
-        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-    }
-    return CallService(&IInstalld::GetDiskUsage, dir, isRealPath);
 }
 
 ErrCode InstalldClient::GetDiskUsageFromPath(const std::vector<std::string> &path, const std::string &bundleName,
@@ -610,17 +583,6 @@ ErrCode InstalldClient::DeleteBackupSandboxDir(int32_t userId, const std::string
     }
 
     return CallService(&IInstalld::DeleteBackupSandboxDir, userId, sandboxDir);
-}
-
-ErrCode InstalldClient::CopyFile(const std::string &oldPath, const std::string &newPath, BundleDirScene scene,
-    const std::string &signatureFilePath)
-{
-    if (oldPath.empty() || newPath.empty()) {
-        APP_LOGE("params are invalid");
-        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-    }
-
-    return CallService(&IInstalld::CopyFile, oldPath, newPath, scene, signatureFilePath);
 }
 
 ErrCode InstalldClient::CopyPluginHsp(const std::string &hostBundleName, const std::string &bundleName,
