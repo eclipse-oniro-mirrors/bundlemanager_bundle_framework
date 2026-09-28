@@ -4429,6 +4429,58 @@ HWTEST_F(BmsBundleMgrHostUnitTest, HandleGetDistributedBundleInfo_0100, Function
 }
 
 /**
+ * @tc.number: HandleGetMetadataByBundleName_0100
+ * @tc.name: test the HandleGetMetadataByBundleName
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetMetadataByBundleName with valid bundleName
+ */
+HWTEST_F(BmsBundleMgrHostUnitTest, HandleGetMetadataByBundleName_0100, Function | SmallTest | Level0)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteString(TEST_BUNDLE_NAME);
+    ErrCode res = bundleMgrHost.HandleGetMetadataByBundleName(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleGetMetadataByBundleName_0200
+ * @tc.name: test the HandleGetMetadataByBundleName
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetMetadataByBundleName with empty bundleName
+ */
+HWTEST_F(BmsBundleMgrHostUnitTest, HandleGetMetadataByBundleName_0200, Function | SmallTest | Level0)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteString(TEST_EMPTY_BUNDLE_NAME);
+    ErrCode res = bundleMgrHost.HandleGetMetadataByBundleName(data, reply);
+    EXPECT_EQ(res, ERR_INVALID_VALUE);
+}
+
+/**
+ * @tc.number: HandleGetMetadataByBundleName_0300
+ * @tc.name: test the HandleGetMetadataByBundleName
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetMetadataByBundleName via OnRemoteRequest
+ */
+HWTEST_F(BmsBundleMgrHostUnitTest, HandleGetMetadataByBundleName_0300, Function | SmallTest | Level0)
+{
+    BundleMgrHost bundleMgrHost;
+    uint32_t code = static_cast<uint32_t>(BundleMgrInterfaceCode::GET_METADATA_BY_BUNDLE_NAME);
+    MessageParcel data;
+    std::u16string descriptor = BundleMgrHost::GetDescriptor();
+    data.WriteInterfaceToken(descriptor);
+    data.WriteString(TEST_BUNDLE_NAME);
+    MessageParcel reply;
+    MessageOption option;
+    ErrCode res = bundleMgrHost.OnRemoteRequest(code, data, reply, option);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
  * @tc.number: HandleGetOdidResetCount_0100
  * @tc.name: test the HandleGetOdidResetCount
  * @tc.desc: 1. system running normally
