@@ -6240,15 +6240,15 @@ HWTEST_F(BmsBundleKitServiceTest, ModuleMetadata_Marshalling_0200, Function | Sm
  * @tc.number: ModuleMetadata_Unmarshalling_0100
  * @tc.name: ModuleMetadata Unmarshalling
  * @tc.desc: 1.system run normally
- *           2.test ModuleMetadata Unmarshalling with empty parcel returns empty object
+ *           2.test ModuleMetadata Unmarshalling returns nullptr when ReadFromParcel fails
  */
 HWTEST_F(BmsBundleKitServiceTest, ModuleMetadata_Unmarshalling_0100, Function | SmallTest | Level1)
 {
     MessageParcel parcel;
+    parcel.WriteString16(Str8ToStr16(MODULE_NAME_TEST));
+    parcel.WriteInt32(-1);
     std::unique_ptr<ModuleMetadata> result(ModuleMetadata::Unmarshalling(parcel));
-    ASSERT_NE(result, nullptr);
-    EXPECT_EQ(result->moduleName, "");
-    EXPECT_EQ(result->metadata.size(), 0);
+    EXPECT_EQ(result, nullptr);
 }
 
 /**
