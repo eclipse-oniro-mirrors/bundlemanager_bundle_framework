@@ -1678,6 +1678,181 @@ HWTEST_F(BmsInstalldHostTest, InstalldOperator_GetBundleDataDirPaths_Failure_010
 }
 
 /**
+ * @tc.number: HandleExtractPluginModuleFiles_0100
+ * @tc.name: test HandleExtractPluginModuleFiles
+ * @tc.desc: 1.HandleExtractPluginModuleFiles test with valid params
+ */
+HWTEST_F(BmsInstalldHostTest, HandleExtractPluginModuleFiles_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ExtractModuleFilesParam param;
+    param.hostBundleName = "com.example.test";
+    param.bundleNameWithTime = "com.example.plugin_20260101";
+    param.moduleName = "entry";
+    param.bundlePath = "/data/app/el1/bundle/public/com.example.plugin/entry.hap";
+    param.nativeLibraryPath = "libs";
+    param.cpuAbi = "arm64";
+    param.needFakeDecompression = false;
+    param.isSystemApp = false;
+    data.WriteParcelable(&param);
+    bool res = installdHost.HandleExtractPluginModuleFiles(data, reply);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: HandleExtractPluginModuleFiles_0200
+ * @tc.name: test HandleExtractPluginModuleFiles
+ * @tc.desc: 1.HandleExtractPluginModuleFiles test with empty data
+ */
+HWTEST_F(BmsInstalldHostTest, HandleExtractPluginModuleFiles_0200, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    bool res = installdHost.HandleExtractPluginModuleFiles(data, reply);
+    EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: HandleExtractServiceModuleFiles_0100
+ * @tc.name: test HandleExtractServiceModuleFiles
+ * @tc.desc: 1.HandleExtractServiceModuleFiles test with empty parcel data
+ */
+HWTEST_F(BmsInstalldHostTest, HandleExtractServiceModuleFiles_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    bool res = installdHost.HandleExtractServiceModuleFiles(data, reply);
+    EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: HandleExtractServiceModuleFiles_0200
+ * @tc.name: test HandleExtractServiceModuleFiles
+ * @tc.desc: 1.HandleExtractServiceModuleFiles test with valid param
+ */
+HWTEST_F(BmsInstalldHostTest, HandleExtractServiceModuleFiles_0200, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ExtractModuleFilesParam param;
+    param.bundleName = "com.example.test";
+    param.moduleName = "entry";
+    param.bundlePath = "/data/test/test.hsp";
+    param.nativeLibraryPath = "lib/arm64";
+    param.cpuAbi = "arm64-v8a";
+    param.versionCode = 100;
+    param.needFakeDecompression = false;
+    param.isSystemApp = false;
+    data.WriteParcelable(&param);
+    bool res = installdHost.HandleExtractServiceModuleFiles(data, reply);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: HandleExtractSharedModuleFiles_0100
+ * @tc.name: test HandleExtractSharedModuleFiles
+ * @tc.desc: 1.HandleExtractSharedModuleFiles test with valid params
+*/
+HWTEST_F(BmsInstalldHostTest, HandleExtractSharedModuleFiles_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ExtractModuleFilesParam param;
+    param.bundleName = "com.example.test";
+    param.versionCode = 100;
+    param.moduleName = "entry";
+    param.bundlePath = "/data/app/el1/bundle/public/com.example.test/entry.hsp";
+    param.nativeLibraryPath = "libs/arm64";
+    param.cpuAbi = "arm64";
+    data.WriteParcelable(&param);
+    bool res = installdHost.HandleExtractSharedModuleFiles(data, reply);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: HandleExtractSharedModuleFiles_0200
+ * @tc.name: test HandleExtractSharedModuleFiles
+ * @tc.desc: 1.HandleExtractSharedModuleFiles test with empty data
+*/
+HWTEST_F(BmsInstalldHostTest, HandleExtractSharedModuleFiles_0200, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    bool res = installdHost.HandleExtractSharedModuleFiles(data, reply);
+    EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: InstalldHostImpl_ExtractSharedModuleFiles_InvalidBundlePath_0100
+ * @tc.name: invalid bundlePath returns PARAM_ERROR
+ * @tc.desc: 1. bundlePath contains path traversal chars
+ *           2. IsFileNameValid fails, returns ERR_APPEXECFWK_INSTALLD_PARAM_ERROR
+ */
+HWTEST_F(BmsInstalldHostTest, InstalldHostImpl_ExtractSharedModuleFiles_InvalidBundlePath_0100,
+    Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    ExtractModuleFilesParam param;
+    param.bundleName = "com.example.test";
+    param.versionCode = 100;
+    param.moduleName = "entry";
+    param.bundlePath = "../invalid.hsp";
+    param.nativeLibraryPath = "libs/arm64";
+    param.cpuAbi = "arm64";
+    ErrCode ret = hostImpl.ExtractSharedModuleFiles(param);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: InstalldHostImpl_ExtractSharedModuleFiles_InvalidModuleName_0100
+ * @tc.name: invalid moduleName returns PARAM_ERROR
+ * @tc.desc: 1. moduleName contains path traversal chars
+ *           2. IsFileNameValid fails, returns ERR_APPEXECFWK_INSTALLD_PARAM_ERROR
+ */
+HWTEST_F(BmsInstalldHostTest, InstalldHostImpl_ExtractSharedModuleFiles_InvalidModuleName_0100,
+    Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    ExtractModuleFilesParam param;
+    param.bundleName = "com.example.test";
+    param.versionCode = 100;
+    param.moduleName = "../invalid";
+    param.bundlePath = "/data/app/el1/bundle/public/com.example.test/entry.hsp";
+    param.nativeLibraryPath = "libs/arm64";
+    param.cpuAbi = "arm64";
+    ErrCode ret = hostImpl.ExtractSharedModuleFiles(param);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: InstalldHostImpl_ExtractSharedModuleFiles_InvalidNativeLibraryPath_0100
+ * @tc.name: invalid nativeLibraryPath returns PARAM_ERROR
+ * @tc.desc: 1. nativeLibraryPath contains path traversal chars
+ *           2. IsFileNameValid fails, returns ERR_APPEXECFWK_INSTALLD_PARAM_ERROR
+ */
+HWTEST_F(BmsInstalldHostTest, InstalldHostImpl_ExtractSharedModuleFiles_InvalidNativeLibraryPath_0100,
+    Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    ExtractModuleFilesParam param;
+    param.bundleName = "com.example.test";
+    param.versionCode = 100;
+    param.moduleName = "entry";
+    param.bundlePath = "/data/app/el1/bundle/public/com.example.test/entry.hsp";
+    param.nativeLibraryPath = "../invalid";
+    param.cpuAbi = "arm64";
+    ErrCode ret = hostImpl.ExtractSharedModuleFiles(param);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
  * @tc.number: HandleExtractHapModuleFiles_0100
  * @tc.name: test HandleExtractHapModuleFiles
  * @tc.desc: 1.HandleExtractHapModuleFiles test with empty parcel data

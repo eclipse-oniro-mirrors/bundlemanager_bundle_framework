@@ -99,6 +99,18 @@ private:
     bool HandleProcessBundleInstallNative(MessageParcel &data, MessageParcel &reply);
     bool HandleProcessBundleUnInstallNative(MessageParcel &data, MessageParcel &reply);
 
+    bool HandleExtractPluginModuleFiles(MessageParcel &data, MessageParcel &reply);
+
+    /**
+     * @brief Handles the ExtractServiceModuleFiles function called from a IInstalld proxy object.
+     * @param data Indicates the data to be read.
+     * @param reply Indicates the reply to be sent;
+     * @return Returns true if called successfully; returns false otherwise.
+     */
+    bool HandleExtractServiceModuleFiles(MessageParcel &data, MessageParcel &reply);
+
+    bool HandleExtractSharedModuleFiles(MessageParcel &data, MessageParcel &reply);
+
     bool HandleExecuteAOT(MessageParcel &data, MessageParcel &reply);
 
     bool HandlePendSignAOT(MessageParcel &data, MessageParcel &reply);

@@ -115,6 +115,16 @@ ErrCode InstalldClient::ExtractSoFiles(const std::string &bundleName, const std:
     return 0;
 }
 
+ErrCode InstalldClient::ExtractPluginModuleFiles(const ExtractModuleFilesParam &param)
+{
+    return 0;
+}
+
+ErrCode InstalldClient::ExtractServiceModuleFiles(const ExtractModuleFilesParam &param)
+{
+    return 0;
+}
+
 ErrCode InstalldClient::CopyApFile(const std::string &bundleName, const std::string &moduleName, int32_t userId)
 {
     return 0;
@@ -160,6 +170,11 @@ ErrCode InstalldClient::ExtractNPAPIPlugin(const std::string &bundleName, const 
 
 ErrCode InstalldClient::ExtractHnpFiles(const std::map<std::string, std::string> &hnpPackageMap,
     const ExtractParam &extractParam)
+{
+    return 0;
+}
+
+ErrCode InstalldClient::ExtractSharedModuleFiles(const ExtractModuleFilesParam &param)
 {
     return 0;
 }

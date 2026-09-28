@@ -21,6 +21,7 @@
 #include "app_provision_info_manager.h"
 #include "bundle_mgr_service.h"
 #include "installd_client.h"
+#include "ipc/extract_module_files_param.h"
 #include "ipc_skeleton.h"
 #include "patch_data_mgr.h"
 
@@ -802,9 +803,17 @@ ErrCode InnerSharedBundleInstaller::ProcessNativeLibrary(
         auto needFakeDecompression = newInfo.IsFakeDecompressionEnable() &&
             BundleUtil::IsSoSupportFakeDecompression(newInfo.GetBundleName(), newInfo.GetIsKeepAlive(), bundlePath);
         auto isSystemApp = newInfo.IsSystemApp();
-        auto result = InstalldClient::GetInstance()->ExtractModuleFiles(
-            bundlePath, moduleDir, tempSoPath, cpuAbi, needFakeDecompression, isSystemApp);
-        CHECK_RESULT(result, "extract module files failed %{public}d");
+        ExtractModuleFilesParam param;
+        param.bundleName = bundleName_;
+        param.versionCode = static_cast<int32_t>(newInfo.GetVersionCode());
+        param.moduleName = moduleName;
+        param.bundlePath = bundlePath;
+        param.nativeLibraryPath = nativeLibraryPath_;
+        param.cpuAbi = cpuAbi;
+        param.needFakeDecompression = needFakeDecompression;
+        param.isSystemApp = isSystemApp;
+        auto result = InstalldClient::GetInstance()->ExtractSharedModuleFiles(param);
+        CHECK_RESULT(result, "extract shared module files failed %{public}d");
         isSoFakeDecompression_ = isSoFakeDecompression_ || needFakeDecompression;
         // verify hap or hsp code signature for compressed so files
         result = VerifyCodeSignatureForNativeFiles(
