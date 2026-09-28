@@ -245,6 +245,8 @@ void GenerateSignatureInfo(FuzzedDataProvider& fdp, SignatureInfo &signatureInfo
     signatureInfo.fingerprint = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     signatureInfo.appIdentifier = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     signatureInfo.certificate = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    signatureInfo.validity.notBefore = fdp.ConsumeIntegral<int64_t>();
+    signatureInfo.validity.notAfter = fdp.ConsumeIntegral<int64_t>();
 }
 
 template<typename T>

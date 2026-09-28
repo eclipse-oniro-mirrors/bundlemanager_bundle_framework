@@ -3473,6 +3473,48 @@ HWTEST_F(BmsDataMgrTest, GetSignatureInfoByBundleName_0002, Function | MediumTes
 }
 
 /**
+ * @tc.number: GetSignatureInfoByUid_0001
+ * @tc.name: GetSignatureInfoByUid
+ * @tc.desc: test notBefore/notAfter populated from AppProvisionInfo.validity
+ *           via GetSignatureInfoByUid with valid uid mapping
+ */
+HWTEST_F(BmsDataMgrTest, GetSignatureInfoByUid_0001, Function | MediumTest | Level1)
+{
+    const std::string bundleName = "com.example.signaturetest";
+    const int32_t userId = 100;
+    const int32_t testUid = 20000001;
+
+    BundleDataMgr bundleDataMgr;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->bundleName = bundleName;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = userId;
+    userInfo.bundleName = bundleName;
+    userInfo.uid = testUid;
+    innerBundleInfo.AddInnerBundleUserInfo(userInfo);
+    bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
+    bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
+    bundleDataMgr.AddUserId(userId);
+
+    AppProvisionInfo appProvisionInfo;
+    appProvisionInfo.certificate = "test_certificate";
+    appProvisionInfo.validity.notBefore = 90000000000;
+    appProvisionInfo.validity.notAfter = 99000000000;
+    DelayedSingleton<AppProvisionInfoManager>::GetInstance()->
+        AddAppProvisionInfo(bundleName, appProvisionInfo);
+
+    SignatureInfo signatureInfo;
+    auto ret = bundleDataMgr.GetSignatureInfoByUid(testUid, signatureInfo);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(signatureInfo.certificate, "test_certificate");
+    EXPECT_EQ(signatureInfo.validity.notBefore, 90000000000);
+    EXPECT_EQ(signatureInfo.validity.notAfter, 99000000000);
+
+    DelayedSingleton<AppProvisionInfoManager>::GetInstance()->
+        DeleteAppProvisionInfo(bundleName);
+}
+
+/**
  * @tc.number: GetOdidByBundleName_0001
  * @tc.name: GetOdidByBundleName
  * @tc.desc: test GetOdidByBundleName(const std::string &bundleName, std::string &odid)
@@ -7526,6 +7568,35 @@ HWTEST_F(BmsDataMgrTest, ProcessCertificate_0002, TestSize.Level1)
         DeleteAppProvisionInfo(BUNDLE_NAME);
     dataMgr->ProcessCertificate(bundleInfo, BUNDLE_NAME, flags);
     EXPECT_TRUE(bundleInfo.signatureInfo.certificate.empty());
+}
+
+/**
+ * @tc.number: ProcessCertificate_0003
+ * @tc.name: ProcessCertificate
+ * @tc.desc: test notBefore/notAfter populated from AppProvisionInfo.validity
+ *           when GET_BUNDLE_INFO_WITH_SIGNATURE_INFO flag is set
+ */
+HWTEST_F(BmsDataMgrTest, ProcessCertificate_0003, TestSize.Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    AppProvisionInfo appProvisionInfo;
+    appProvisionInfo.certificate = "test_certificate";
+    appProvisionInfo.validity.notBefore = 90000000000;
+    appProvisionInfo.validity.notAfter = 99000000000;
+    DelayedSingleton<AppProvisionInfoManager>::GetInstance()->
+        AddAppProvisionInfo(BUNDLE_NAME, appProvisionInfo);
+
+    BundleInfo bundleInfo;
+    int32_t flags = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO);
+    dataMgr->ProcessCertificate(bundleInfo, BUNDLE_NAME, flags);
+    EXPECT_EQ(bundleInfo.signatureInfo.certificate, "test_certificate");
+    EXPECT_EQ(bundleInfo.signatureInfo.validity.notBefore, 90000000000);
+    EXPECT_EQ(bundleInfo.signatureInfo.validity.notAfter, 99000000000);
+
+    DelayedSingleton<AppProvisionInfoManager>::GetInstance()->
+        DeleteAppProvisionInfo(BUNDLE_NAME);
 }
 
 /**

@@ -15,6 +15,7 @@
 
 import { ApplicationInfo } from 'bundleManager.ApplicationInfo';
 import { HapModuleInfo, RouterItem } from 'bundleManager.HapModuleInfo';
+import { Validity } from 'bundleManager.AppProvisionInfo';
 import bundleManager from '@ohos.bundle.bundleManager';
 
 export interface BundleInfo {
@@ -58,6 +59,7 @@ export interface SignatureInfo {
   readonly fingerprint: string;
   readonly appIdentifier: string;
   readonly certificate?: string;
+  readonly validity?: Validity;
 }
 
 export interface AppCloneIdentity {

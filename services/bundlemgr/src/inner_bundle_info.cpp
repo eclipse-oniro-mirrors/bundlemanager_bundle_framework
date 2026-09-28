@@ -5411,6 +5411,12 @@ std::string InnerBundleInfo::GetCertificate() const
     return baseBundleInfo_->signatureInfo.certificate;
 }
 
+void InnerBundleInfo::SetSignatureValidity(const int64_t notAfter, const int64_t notBefore)
+{
+    baseBundleInfo_->signatureInfo.validity.notAfter = notAfter;
+    baseBundleInfo_->signatureInfo.validity.notBefore = notBefore;
+}
+
 void InnerBundleInfo::UpdateDebug(const InnerBundleInfo &newInfo)
 {
     std::string moduleName = newInfo.GetCurrentModulePackage();
