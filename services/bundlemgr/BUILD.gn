@@ -212,6 +212,7 @@ ohos_source_set("bundle_parser") {
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_single",
+    "memmgr:memmgrclient",
   ]
 
   public_external_deps = [

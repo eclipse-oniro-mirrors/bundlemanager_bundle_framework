@@ -17,6 +17,7 @@
 
 #include "app_log_wrapper.h"
 #include "bundle_service_constants.h"
+#include "mem_mgr_client.h"
 
 namespace {
 constexpr const char* AP_PATH = "ap/";
@@ -46,7 +47,11 @@ constexpr const char* BUNDLE_PROFILE_NAME = "config.json";
 constexpr const char* MODULE_PROFILE_NAME = "module.json";
 constexpr const char* BUNDLE_PACKFILE_NAME = "pack.info";
 constexpr const char* MERGE_ABC_PATH = "ets/modules.abc";
-
+// The profile is decompressed into the memory and parsed by json, so the extracted size of the
+// profile must be limited to a part of the available memory to avoid the OOM caused by a
+// malicious package(zip bomb).
+constexpr double MAX_AVAILABLE_MEMORY_RATIO = 0.9;
+constexpr uint64_t KILOBYTE = 1024;
 }
 BundleExtractor::BundleExtractor(const std::string &source, bool parallel) : BaseExtractor(source, parallel)
 {
@@ -82,6 +87,51 @@ bool BundleExtractor::ExtractModuleProfile(std::ostream &dest) const
     }
     APP_LOGW("profile is config.json");
     return false;
+}
+
+uint32_t BundleExtractor::GetProfileUncompressedSize() const
+{
+    const char *profileName = IsNewVersion() ? MODULE_PROFILE_NAME : BUNDLE_PROFILE_NAME;
+    ZipEntry zipEntry;
+    if (!zipFile_.GetEntry(profileName, zipEntry)) {
+        APP_LOGE("profile %{public}s is not found", profileName);
+        return 0;
+    }
+    return zipEntry.uncompressedSize;
+}
+
+uint32_t BundleExtractor::GetMaxProfileUncompressedSize()
+{
+    // the available memory obtained from memmgr is in unit of KB
+    int32_t availableMemoryKb = 0;
+    if ((Memory::MemMgrClient::GetInstance().GetAvailableMemory(availableMemoryKb) != ERR_OK) ||
+        (availableMemoryKb <= 0)) {
+        // the profile size is not limited when the available memory cannot be obtained
+        APP_LOGW("get the available memory from memmgr failed");
+        return 0;
+    }
+
+    return static_cast<uint32_t>(availableMemoryKb * MAX_AVAILABLE_MEMORY_RATIO);
+}
+
+bool BundleExtractor::IsProfileSizeAllowed() const
+{
+    // the max allowed size is in unit of KB
+    auto maxProfileSizeKb = GetMaxProfileUncompressedSize();
+    if (maxProfileSizeKb == 0) {
+        // the check is skipped when the available memory cannot be obtained
+        return true;
+    }
+
+    // the declared size in the zip header is in unit of byte, convert it to KB for the comparison
+    auto profileUncompressedSizeKb = static_cast<uint32_t>((GetProfileUncompressedSize() + KILOBYTE - 1) / KILOBYTE);
+    if (profileUncompressedSizeKb > maxProfileSizeKb) {
+        APP_LOGE("profile uncompressed size(%{public}u KB) exceeds the max allowed size(%{public}u KB)",
+            profileUncompressedSizeKb, maxProfileSizeKb);
+        return false;
+    }
+
+    return true;
 }
 
 void BundleExtractor::IsHapCompress(bool &isAbcCompressed) const
