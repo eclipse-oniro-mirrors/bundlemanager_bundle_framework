@@ -252,6 +252,10 @@ void ShortcutVisibleDataStorageRdb::GetStorageShortcutInfos(const std::string &b
             APP_LOGE("Shortcut jsonObject is discarded");
             return;
         }
+        if (!jsonObject.is_object()) {
+            APP_LOGE("Shortcut jsonObject is not an object");
+            return;
+        }
         ShortcutInfo shortcutInfo;
         from_json(jsonObject, shortcutInfo);
         result.emplace_back(shortcutInfo);

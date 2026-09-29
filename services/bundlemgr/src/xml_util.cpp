@@ -120,7 +120,7 @@ void XmlUtil::ParseDisplaysMap(const xmlNodePtr& currNode, std::unordered_map<st
             continue;
         }
         std::string name;
-        uint64_t logicalId;
+        uint64_t logicalId = 0;
         for (xmlNodePtr fileNode = displayNode->xmlChildrenNode; fileNode != nullptr; fileNode = fileNode->next) {
             if (!IsValidNode(*fileNode)) {
                 APP_LOGE("invalid node!");
