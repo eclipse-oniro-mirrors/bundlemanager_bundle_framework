@@ -7371,9 +7371,7 @@ napi_value GetBundleExtensionPolicyInfo(napi_env env, napi_callback_info info)
         }
     }
     if (bundleName.empty()) {
-        napi_value businessError = BusinessError::CreateCommonError(
-            env, ERROR_PARAM_CHECK_ERROR, GET_BUNDLE_EXTENSION_POLICY_INFO, BUNDLE_PERMISSIONS);
-        napi_throw(env, businessError);
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_BUNDLENAME_EMPTY_ERROR);
         return nullptr;
     }
     if (userId == Constants::UNSPECIFIED_USERID) {
@@ -7391,7 +7389,7 @@ napi_value GetBundleExtensionPolicyInfo(napi_env env, napi_callback_info info)
     if (ret != NO_ERROR) {
         APP_LOGD("GetBundleInfoDualMode failed -n %{public}s -u %{public}d", bundleName.c_str(), userId);
         napi_value businessError = BusinessError::CreateCommonError(env, ret, GET_BUNDLE_EXTENSION_POLICY_INFO,
-            BUNDLE_PERMISSIONS);
+            Constants::PERMISSION_GET_BUNDLE_INFO_AND_INTERACT_ACROSS_LOCAL_ACCOUNTS);
         napi_throw(env, businessError);
         return nullptr;
     }
