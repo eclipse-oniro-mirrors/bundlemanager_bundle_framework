@@ -55,6 +55,8 @@ void SetGetCallingUid(int32_t uid);
 void ResetCallingUid();
 void SetNativeTokenTypeForTest(bool value);
 void SetIsNativeTokenTypeOnlyForTest(bool value);
+void SetCheckUserForegroundForTest(bool value);
+void SetPermissionResultForTest(const std::string &permissionName, bool granted);
 
 namespace OHOS {
 namespace {
@@ -4528,6 +4530,150 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, CreateSharedBundleStream_0100, F
     OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "true");
     ret = installerHostImpl.CreateSharedBundleStream(BUNDLE_NAME, APP_INDEX);
     EXPECT_EQ(ret, Constants::DEFAULT_STREAM_FD);
+
+    if (isDeveloperMode) {
+        OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "true");
+    } else {
+        OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "false");
+    }
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: Install_CheckUserForeground_0100
+ * @tc.name: test Install of BundleInstallerHost with ALLOW_USE_BM and background user
+ * @tc.desc: 1. developer mode and ALLOW_USE_BM are enabled
+ *           2. Install false when the specified user is not foreground user
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, Install_CheckUserForeground_0100, Function | SmallTest | Level0)
+{
+    auto isDeveloperMode = OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false);
+    OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "true");
+    SetPermissionResultForTest(Constants::PERMISSION_ALLOW_USE_BM, true);
+    InstallParam installParam;
+    installParam.userId = USERID;
+    std::vector<std::string> bundleFilePaths;
+    bundleInstallerHost_->Init();
+    SetUserFromShellForTest(true);
+    SetCheckUserForegroundForTest(false);
+    sptr<MockStatusReceiver> receiver(new (std::nothrow) MockStatusReceiver());
+    bool ret = bundleInstallerHost_->Install(bundleFilePaths, installParam, receiver);
+    EXPECT_FALSE(ret);
+    EXPECT_EQ(receiver->GetResultCode(), ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED);
+
+    OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "false");
+    sptr<MockStatusReceiver> receiverWithoutDevMode(new (std::nothrow) MockStatusReceiver());
+    ret = bundleInstallerHost_->Install(bundleFilePaths, installParam, receiverWithoutDevMode);
+    EXPECT_FALSE(ret);
+    EXPECT_EQ(receiverWithoutDevMode->GetResultCode(), ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+
+    if (isDeveloperMode) {
+        OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "true");
+    } else {
+        OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "false");
+    }
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: Uninstall_CheckUserForeground_0100
+ * @tc.name: test Uninstall of BundleInstallerHost with ALLOW_USE_BM and background user
+ * @tc.desc: 1. developer mode and ALLOW_USE_BM are enabled
+ *           2. Uninstall false when the specified user is not foreground user
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, Uninstall_CheckUserForeground_0100, Function | SmallTest | Level0)
+{
+    auto isDeveloperMode = OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false);
+    OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "true");
+    SetPermissionResultForTest(Constants::PERMISSION_ALLOW_USE_BM, true);
+    InstallParam installParam;
+    installParam.userId = USERID;
+    bundleInstallerHost_->Init();
+    SetUserFromShellForTest(true);
+    SetCheckUserForegroundForTest(false);
+    sptr<MockStatusReceiver> receiver(new (std::nothrow) MockStatusReceiver());
+    bool ret = bundleInstallerHost_->Uninstall(BUNDLE_NAME, installParam, receiver);
+    EXPECT_FALSE(ret);
+    EXPECT_EQ(receiver->GetResultCode(), ERR_APPEXECFWK_UNINSTALL_PERMISSION_DENIED);
+
+    OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "false");
+    sptr<MockStatusReceiver> receiverWithoutDevMode(new (std::nothrow) MockStatusReceiver());
+    ret = bundleInstallerHost_->Uninstall(BUNDLE_NAME, installParam, receiverWithoutDevMode);
+    EXPECT_FALSE(ret);
+    EXPECT_EQ(receiverWithoutDevMode->GetResultCode(), ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+
+    if (isDeveloperMode) {
+        OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "true");
+    } else {
+        OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "false");
+    }
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: UninstallParam_CheckUserForeground_0100
+ * @tc.name: test Uninstall with UninstallParam of BundleInstallerHost and background user
+ * @tc.desc: 1. developer mode and ALLOW_USE_BM are enabled
+ *           2. Uninstall false when the specified user is not foreground user
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, UninstallParam_CheckUserForeground_0100, Function | SmallTest | Level0)
+{
+    auto isDeveloperMode = OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false);
+    OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "true");
+    SetPermissionResultForTest(Constants::PERMISSION_ALLOW_USE_BM, true);
+    SetVerifyUninstallPermission(false);
+    UninstallParam uninstallParam;
+    uninstallParam.bundleName = BUNDLE_NAME;
+    uninstallParam.userId = USERID;
+    bundleInstallerHost_->Init();
+    SetCheckUserForegroundForTest(false);
+    sptr<MockStatusReceiver> receiver(new (std::nothrow) MockStatusReceiver());
+    bool ret = bundleInstallerHost_->Uninstall(uninstallParam, receiver);
+    EXPECT_FALSE(ret);
+    EXPECT_EQ(receiver->GetResultCode(), ERR_APPEXECFWK_UNINSTALL_PERMISSION_DENIED);
+
+    OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "false");
+    sptr<MockStatusReceiver> receiverWithoutDevMode(new (std::nothrow) MockStatusReceiver());
+    ret = bundleInstallerHost_->Uninstall(uninstallParam, receiverWithoutDevMode);
+    EXPECT_FALSE(ret);
+    EXPECT_EQ(receiverWithoutDevMode->GetResultCode(), ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+
+    if (isDeveloperMode) {
+        OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "true");
+    } else {
+        OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "false");
+    }
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: CreateStreamInstaller_CheckUserForeground_0100
+ * @tc.name: test CreateStreamInstaller of BundleInstallerHost with ALLOW_USE_BM and background user
+ * @tc.desc: 1. developer mode and ALLOW_USE_BM are enabled
+ *           2. CreateStreamInstaller returns nullptr when the specified user is not foreground user
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, CreateStreamInstaller_CheckUserForeground_0100,
+    Function | SmallTest | Level0)
+{
+    auto isDeveloperMode = OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false);
+    OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "true");
+    SetPermissionResultForTest(Constants::PERMISSION_ALLOW_USE_BM, true);
+    InstallParam installParam;
+    installParam.userId = USERID;
+    bundleInstallerHost_->Init();
+    SetCheckUserForegroundForTest(false);
+    sptr<MockStatusReceiver> receiver(new (std::nothrow) MockStatusReceiver());
+    std::vector<std::string> originHapPaths;
+    sptr<IBundleStreamInstaller> streamInstaller =
+        bundleInstallerHost_->CreateStreamInstaller(installParam, receiver, originHapPaths);
+    EXPECT_EQ(streamInstaller, nullptr);
+    EXPECT_EQ(receiver->GetResultCode(), ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED);
+
+    OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "false");
+    sptr<MockStatusReceiver> receiverWithoutDevMode(new (std::nothrow) MockStatusReceiver());
+    streamInstaller = bundleInstallerHost_->CreateStreamInstaller(installParam, receiverWithoutDevMode, originHapPaths);
+    EXPECT_EQ(streamInstaller, nullptr);
+    EXPECT_EQ(receiverWithoutDevMode->GetResultCode(), ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
 
     if (isDeveloperMode) {
         OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "true");

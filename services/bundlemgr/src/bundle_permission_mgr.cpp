@@ -923,6 +923,19 @@ bool BundlePermissionMgr::CheckUserFromShell(int32_t userId)
     return true;
 }
 
+bool BundlePermissionMgr::CheckUserForeground(int32_t userId)
+{
+    if (userId == Constants::DEFAULT_USERID || userId == Constants::U1 ||
+        userId == Constants::UNSPECIFIED_USERID) {
+        return true;
+    }
+    if (!AccountHelper::IsUserForeground(userId)) {
+        LOG_E(BMS_TAG_DEFAULT, "specified user %{public}d is not foreground user", userId);
+        return false;
+    }
+    return true;
+}
+
 bool BundlePermissionMgr::RefreshPreAuthorizationForOTA()
 {
     LOG_I(BMS_TAG_DEFAULT, "RefreshPreAuthorizationForOTA start");

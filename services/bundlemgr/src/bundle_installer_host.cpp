@@ -567,6 +567,11 @@ bool BundleInstallerHost::Install(const std::vector<std::string> &bundleFilePath
             statusReceiver->OnFinished(verifyResult, "");
             return false;
         }
+        if (!BundlePermissionMgr::CheckUserForeground(installParam.userId)) {
+            statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED,
+                "can not specify user not in foreground");
+            return false;
+        }
         verifiedInstallParam.isCheckDebugApp = true;
     }
 
@@ -674,6 +679,11 @@ bool BundleInstallerHost::Uninstall(
             statusReceiver->OnFinished(verifyResult, "");
             return false;
         }
+        if (!BundlePermissionMgr::CheckUserForeground(installParam.userId)) {
+            statusReceiver->OnFinished(ERR_APPEXECFWK_UNINSTALL_PERMISSION_DENIED,
+                "can not specify user not in foreground");
+            return false;
+        }
         auto checkDebugResult = CheckIsDebugAppProvisionType(bundleName, installParam.userId);
         if (checkDebugResult != ERR_OK) {
             statusReceiver->OnFinished(checkDebugResult, "");
@@ -744,6 +754,11 @@ bool BundleInstallerHost::Uninstall(const UninstallParam &uninstallParam,
         if (!OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false) ||
             !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_ALLOW_USE_BM)) {
             statusReceiver->OnFinished(verifyResult, "");
+            return false;
+        }
+        if (!BundlePermissionMgr::CheckUserForeground(uninstallParam.userId)) {
+            statusReceiver->OnFinished(ERR_APPEXECFWK_UNINSTALL_PERMISSION_DENIED,
+                "can not specify user not in foreground");
             return false;
         }
         auto checkDebugResult = CheckIsDebugAppProvisionType(uninstallParam.bundleName, uninstallParam.userId, true);
@@ -955,6 +970,11 @@ sptr<IBundleStreamInstaller> BundleInstallerHost::CreateStreamInstaller(const In
         if (!OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false) ||
             !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_ALLOW_USE_BM)) {
             statusReceiver->OnFinished(verifyResult, "");
+            return nullptr;
+        }
+        if (!BundlePermissionMgr::CheckUserForeground(installParam.userId)) {
+            statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED,
+                "can not specify user not in foreground");
             return nullptr;
         }
         verifiedInstallParam.isCheckDebugApp = true;

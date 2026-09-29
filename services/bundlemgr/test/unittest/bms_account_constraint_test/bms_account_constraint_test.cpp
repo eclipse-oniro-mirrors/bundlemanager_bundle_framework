@@ -381,4 +381,43 @@ HWTEST_F(BmsAccountConstraintTest, CheckUserFromShell_IsForeground_0003, Functio
     SetIsUserForeground(false);
     EXPECT_TRUE(BundlePermissionMgr::CheckUserFromShell(Constants::UNSPECIFIED_USERID));
 }
+
+/**
+ * @tc.number: CheckUserForeground_0001
+ * @tc.name: test CheckUserForeground with foreground user
+ * @tc.desc: 1. Set IsUserForeground to true
+ *           2. Verify CheckUserForeground returns true for a concrete user
+ */
+HWTEST_F(BmsAccountConstraintTest, CheckUserForeground_0001, Function | SmallTest | Level1)
+{
+    SetIsUserForeground(true);
+    EXPECT_TRUE(BundlePermissionMgr::CheckUserForeground(TEST_FOREGROUND_USER_ID));
+    SetIsUserForeground(false);
+}
+
+/**
+ * @tc.number: CheckUserForeground_0002
+ * @tc.name: test CheckUserForeground with background user
+ * @tc.desc: 1. Set IsUserForeground to false
+ *           2. Verify CheckUserForeground returns false for a concrete user
+ */
+HWTEST_F(BmsAccountConstraintTest, CheckUserForeground_0002, Function | SmallTest | Level1)
+{
+    SetIsUserForeground(false);
+    EXPECT_FALSE(BundlePermissionMgr::CheckUserForeground(TEST_BACKGROUND_USER_ID));
+}
+
+/**
+ * @tc.number: CheckUserForeground_0003
+ * @tc.name: test CheckUserForeground allows special user ids
+ * @tc.desc: 1. Set IsUserForeground to false
+ *           2. Verify CheckUserForeground still returns true for special constants
+ */
+HWTEST_F(BmsAccountConstraintTest, CheckUserForeground_0003, Function | SmallTest | Level1)
+{
+    SetIsUserForeground(false);
+    EXPECT_TRUE(BundlePermissionMgr::CheckUserForeground(Constants::DEFAULT_USERID));
+    EXPECT_TRUE(BundlePermissionMgr::CheckUserForeground(Constants::U1));
+    EXPECT_TRUE(BundlePermissionMgr::CheckUserForeground(Constants::UNSPECIFIED_USERID));
+}
 } // OHOS

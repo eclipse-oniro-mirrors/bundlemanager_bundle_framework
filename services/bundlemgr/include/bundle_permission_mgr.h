@@ -144,6 +144,8 @@ public:
 
     static bool CheckUserFromShell(int32_t userId);
 
+    static bool CheckUserForeground(int32_t userId);
+
     /**
      * @brief Refresh pre-authorization for all installed applications during OTA.
      * This method iterates through the default permissions configuration and
