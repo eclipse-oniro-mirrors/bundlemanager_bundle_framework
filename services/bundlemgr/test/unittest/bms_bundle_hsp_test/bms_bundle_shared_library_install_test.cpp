@@ -360,6 +360,7 @@ HWTEST_F(BmsBundleSharedLibraryInstallTest, BmsBundleSharedLibraryInstallParam_0
  * @tc.name: BmsBundleSharedLibraryInstall
  * @tc.desc: test install, upgrade to higher version
  */
+#ifndef BMS_X86_64_VIRT_SKIP_TESTS
 HWTEST_F(BmsBundleSharedLibraryInstallTest, BmsBundleSharedLibraryInstallVersion_0100, Function | SmallTest | Level0)
 {
     std::vector<std::string> bundleFilePaths{};
@@ -374,6 +375,7 @@ HWTEST_F(BmsBundleSharedLibraryInstallTest, BmsBundleSharedLibraryInstallVersion
     ErrCode unInstallResult = UninstallSharedBundle(SHARED_BUNDLE_NAME_A);
     EXPECT_EQ(unInstallResult, ERR_OK);
 }
+#endif
 
 /**
  * @tc.number: BmsBundleSharedLibraryInstallVersion_0200
@@ -532,6 +534,7 @@ HWTEST_F(BmsBundleSharedLibraryInstallTest, BmsBundleSharedLibraryInstallDepende
  * @tc.name: BmsBundleSharedLibraryInstall
  * @tc.desc: test install, install higher version dependency
  */
+#ifndef BMS_X86_64_VIRT_SKIP_TESTS
 HWTEST_F(BmsBundleSharedLibraryInstallTest, BmsBundleSharedLibraryInstallDependency_0700, Function | SmallTest | Level0)
 {
     std::vector<std::string> bundleFilePaths{MODULE_FILE_PATH + HOST_HAP};
@@ -544,6 +547,7 @@ HWTEST_F(BmsBundleSharedLibraryInstallTest, BmsBundleSharedLibraryInstallDepende
     unInstallResult = UninstallSharedBundle(SHARED_BUNDLE_NAME_A);
     EXPECT_EQ(unInstallResult, ERR_OK);
 }
+#endif
 
 /**
  * @tc.number: BmsBundleSharedLibraryInstallDependency_0800

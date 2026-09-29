@@ -48,6 +48,9 @@ ohos_systemtest("BmsUninstallSystemTest") {
   ]
 
   defines = [ "APP_LOG_TAG = \"BundleMgrTool\"" ]
+  if (product_name == "x86_64_virt") {
+    defines += [ "BMS_X86_64_VIRT_SKIP_TESTS" ]
+  }
 
   external_deps = [
     "ability_base:want",

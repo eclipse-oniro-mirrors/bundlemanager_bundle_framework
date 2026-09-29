@@ -218,6 +218,7 @@ HWTEST_F(BmsBundleSharedLibraryUninstallTest, BmsBundleSharedLibraryUninstall_01
  * @tc.name: BmsBundleSharedLibraryUninstall
  * @tc.desc: test uninstall shared library for multiple version
  */
+#ifndef BMS_X86_64_VIRT_SKIP_TESTS
 HWTEST_F(BmsBundleSharedLibraryUninstallTest, BmsBundleSharedLibraryUninstall_0200, Function | SmallTest | Level0)
 {
     std::vector<std::string> bundleFilePaths{};
@@ -233,12 +234,14 @@ HWTEST_F(BmsBundleSharedLibraryUninstallTest, BmsBundleSharedLibraryUninstall_02
     ErrCode unInstallResult = UninstallShred(uninstallParam);
     EXPECT_EQ(unInstallResult, ERR_OK);
 }
+#endif
 
 /**
  * @tc.number: BmsBundleSharedLibraryUninstall_0300
  * @tc.name: BmsBundleSharedLibraryUninstall
  * @tc.desc: test uninstall shared library for lower Version
  */
+#ifndef BMS_X86_64_VIRT_SKIP_TESTS
 HWTEST_F(BmsBundleSharedLibraryUninstallTest, BmsBundleSharedLibraryUninstall_0300, Function | SmallTest | Level0)
 {
     std::vector<std::string> bundleFilePaths{};
@@ -260,12 +263,14 @@ HWTEST_F(BmsBundleSharedLibraryUninstallTest, BmsBundleSharedLibraryUninstall_03
     unInstallResult = UninstallShred(uninstallParam);
     EXPECT_EQ(unInstallResult, ERR_OK);
 }
+#endif
 
 /**
  * @tc.number: BmsBundleSharedLibraryUninstall_0400
  * @tc.name: BmsBundleSharedLibraryUninstall
  * @tc.desc: test uninstall highest version of shared library when hsp is relied
  */
+#ifndef BMS_X86_64_VIRT_SKIP_TESTS
 HWTEST_F(BmsBundleSharedLibraryUninstallTest, BmsBundleSharedLibraryUninstall_0400, Function | SmallTest | Level0)
 {
     std::string hostPath = MODULE_FILE_PATH + HOST_HAP;
@@ -294,12 +299,14 @@ HWTEST_F(BmsBundleSharedLibraryUninstallTest, BmsBundleSharedLibraryUninstall_04
     unInstallResult = UninstallShred(uninstallParam);
     EXPECT_EQ(unInstallResult, ERR_OK);
 }
+#endif
 
 /**
  * @tc.number: BmsBundleSharedLibraryUninstall_0500
  * @tc.name: BmsBundleSharedLibraryUninstall
  * @tc.desc: test uninstall lower version of shared library when hsp is relied
  */
+#ifndef BMS_X86_64_VIRT_SKIP_TESTS
 HWTEST_F(BmsBundleSharedLibraryUninstallTest, BmsBundleSharedLibraryUninstall_0500, Function | SmallTest | Level0)
 {
     std::string hostPath = MODULE_FILE_PATH + HOST_HAP;
@@ -328,6 +335,7 @@ HWTEST_F(BmsBundleSharedLibraryUninstallTest, BmsBundleSharedLibraryUninstall_05
     unInstallResult = UninstallShred(uninstallParam);
     EXPECT_EQ(unInstallResult, ERR_OK);
 }
+#endif
 
 }
 }

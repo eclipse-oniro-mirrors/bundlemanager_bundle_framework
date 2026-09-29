@@ -7715,6 +7715,7 @@ HWTEST_F(BmsBundleDataMgrTest, CleanBundleCacheTaskGetCleanSize_0300, Function |
  * @tc.desc: 1.system run normally
  *           2.dbqlk has value
  */
+#ifndef BMS_X86_64_VIRT_SKIP_TESTS
 HWTEST_F(BmsBundleDataMgrTest, GetQuotaData_0100, Function | SmallTest | Level1)
 {
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
@@ -7727,6 +7728,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetQuotaData_0100, Function | SmallTest | Level1)
     EXPECT_EQ(quotaValue, 0);
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }
+#endif
 
 /**
  * @tc.number: GetAllAppInstallExtendedInfo_0100

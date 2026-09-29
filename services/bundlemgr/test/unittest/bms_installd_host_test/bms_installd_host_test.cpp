@@ -15,9 +15,15 @@
 #define private public
 
 #include <gtest/gtest.h>
+#ifdef BMS_X86_64_VIRT_ADAPT_TESTS
+#include <chrono>
+#endif
 #include <map>
 #include <sstream>
 #include <string>
+#ifdef BMS_X86_64_VIRT_ADAPT_TESTS
+#include <thread>
+#endif
 
 #include "bundle_mgr_service.h"
 #include "installd_host.h"
@@ -985,8 +991,16 @@ HWTEST_F(BmsInstalldHostTest, BeforeAfterRequest_0100, Function | SmallTest | Le
 
     criticalManager.AfterRequest();
     EXPECT_EQ(criticalManager.counter_, 0);
+#ifdef BMS_X86_64_VIRT_ADAPT_TESTS
+    const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(15);
+    while (criticalManager.IsCritical() && std::chrono::steady_clock::now() < deadline) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+    EXPECT_FALSE(criticalManager.IsCritical());
+#else
     std::this_thread::sleep_for(std::chrono::milliseconds(6000));
     EXPECT_FALSE(criticalManager.critical_);
+#endif
 }
 
 /**

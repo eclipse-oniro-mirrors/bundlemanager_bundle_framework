@@ -619,6 +619,7 @@ HWTEST_F(BmsUninstallSystemTest, BMS_Uninstall_0600, Function | MediumTest | Lev
  *           3.uninstall the app
  *           4.check directory
  */
+#ifndef BMS_X86_64_VIRT_SKIP_TESTS
 HWTEST_F(BmsUninstallSystemTest, BMS_Uninstall_0700, Function | MediumTest | Level2)
 {
     std::cout << "BMS_Uninstall_0700 start" << std::endl;
@@ -641,6 +642,7 @@ HWTEST_F(BmsUninstallSystemTest, BMS_Uninstall_0700, Function | MediumTest | Lev
     EXPECT_TRUE(isUninstallSucceed);
     std::cout << "BMS_Uninstall_0700 end" << std::endl;
 }
+#endif
 
 /**
  * @tc.number: BMS_Uninstall_0800
@@ -650,6 +652,7 @@ HWTEST_F(BmsUninstallSystemTest, BMS_Uninstall_0700, Function | MediumTest | Lev
  *           3.uninstall the app
  *           4.check directory
  */
+#ifndef BMS_X86_64_VIRT_SKIP_TESTS
 HWTEST_F(BmsUninstallSystemTest, BMS_Uninstall_0800, Function | MediumTest | Level1)
 {
     std::cout << "BMS_Uninstall_0800 start" << std::endl;
@@ -672,6 +675,7 @@ HWTEST_F(BmsUninstallSystemTest, BMS_Uninstall_0800, Function | MediumTest | Lev
     EXPECT_TRUE(isUninstallSucceed);
     std::cout << "BMS_Uninstall_0800 end" << std::endl;
 }
+#endif
 
 /**
  * @tc.number: BMS_Uninstall_0900

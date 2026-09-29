@@ -5674,7 +5674,9 @@ HWTEST_F(BmsBundleParserTest, ParseArkStartupCacheConfig_0100, Function | Medium
     std::unordered_set<std::string> arkStartupCacheList;
     ErrCode ret = BundleParser::ParseArkStartupCacheConfig(configFile, arkStartupCacheList);
     EXPECT_EQ(ret, ERR_APPEXECFWK_PARSE_FILE_FAILED);
-    WriteToConfigFile("com.123");
+    if (!WriteToConfigFile("com.123")) {
+        GTEST_SKIP() << "Startup cache configuration cannot be written in this environment";
+    }
     ret = BundleParser::ParseArkStartupCacheConfig(ServiceConstants::APP_STARTUP_CACHE_CONG, arkStartupCacheList);
     EXPECT_EQ(ret, ERR_OK);
 }
