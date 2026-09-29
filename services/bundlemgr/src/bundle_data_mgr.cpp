@@ -13389,33 +13389,40 @@ ErrCode BundleDataMgr::SetAdditionalInfo(const std::string& bundleName,
 ErrCode BundleDataMgr::SetAdditionalInfoByIndex(const std::string& bundleName,
     const std::string& additionalInfo, int32_t appIndex) const
 {
-    APP_LOGD("Called. BundleName: %{public}s", bundleName.c_str());
+    APP_LOGD("Called. BundleName: %{public}s, appIndex: %{public}d", bundleName.c_str(), appIndex);
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
-    std::string effectiveBundleName;
     bool needDualModeCloneApp = (appIndex == ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
-    auto filterAndAppend = [&] (const std::map<std::string, InnerBundleInfo> &infos) {
-        for (const auto &[innerBundleName, infoItem] : infos) {
-            if (innerBundleName != bundleName || needDualModeCloneApp != infoItem.IsDualModeCloneApp()) {
-                continue;
-            }
-            int32_t userId = AccountHelper::GetOsAccountLocalIdFromUid(IPCSkeleton::GetCallingUid());
-            int32_t responseUserId = infoItem.GetResponseUserId(userId);
-            if (infoItem.GetApplicationBundleType() != BundleType::SHARED &&
-                responseUserId == Constants::INVALID_USERID) {
-                    continue;
-            }
-            effectiveBundleName = needDualModeCloneApp ?
-                DualModeHelper::GetDualModeBundleName(bundleName) : bundleName;
+    int32_t userId = AccountHelper::GetOsAccountLocalIdFromUid(IPCSkeleton::GetCallingUid());
+    bool targetAppExist = false;
+    bool otherModeAppExist = false;
+    auto checkAppExist = [&] (const std::map<std::string, InnerBundleInfo> &infos) {
+        auto infoItem = infos.find(bundleName);
+        if (infoItem == infos.end()) {
+            return;
         }
+        if (infoItem->second.IsDualModeCloneApp() != needDualModeCloneApp) {
+            otherModeAppExist = true;
+            return;
+        }
+        if (infoItem->second.GetApplicationBundleType() != BundleType::SHARED &&
+            infoItem->second.GetResponseUserId(userId) == Constants::INVALID_USERID) {
+            return;
+        }
+        targetAppExist = true;
     };
-    filterAndAppend(bundleInfos_);
-    if (effectiveBundleName.empty()) {
-        filterAndAppend(tempBundleInfos_);
-    }
-    if (effectiveBundleName.empty()) {
+    checkAppExist(bundleInfos_);
+    checkAppExist(tempBundleInfos_);
+    if (!targetAppExist) {
+        if (otherModeAppExist) {
+            APP_LOGE("bundleName: %{public}s does not install app with appIndex: %{public}d",
+                bundleName.c_str(), appIndex);
+            return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
+        }
         APP_LOGE("bundleName: %{public}s does not exist.", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
+    std::string effectiveBundleName = needDualModeCloneApp ?
+        DualModeHelper::GetDualModeBundleName(bundleName) : bundleName;
 
     auto appProvisionInfoManager = DelayedSingleton<AppProvisionInfoManager>::GetInstance();
     if (appProvisionInfoManager == nullptr) {
