@@ -54,6 +54,17 @@ public:
     ErrCode ExtractModuleFiles(const std::string &srcModulePath, const std::string &targetPath,
         const std::string &targetSoPath, const std::string &cpuAbi, const bool needFakeDecompression,
         const bool isSystemApp);
+
+    /**
+     * @brief Extract service module files with path construction in installd.
+     * @param param Indicates the ExtractModuleFilesParam containing all parameters.
+     * @return Returns ERR_OK if extracted successfully; returns error code otherwise.
+     */
+    ErrCode ExtractServiceModuleFiles(const ExtractModuleFilesParam &param);
+
+    ErrCode ExtractPluginModuleFiles(const ExtractModuleFilesParam &param);
+    ErrCode ExtractSharedModuleFiles(const ExtractModuleFilesParam &param);
+
     /**
      * @brief Extract the files of a HAP module with path construction in installd.
      * @param param Indicates the HAP module extract parameters.

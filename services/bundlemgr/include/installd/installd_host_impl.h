@@ -118,6 +118,22 @@ public:
         const ExtractParam &extractParam) override;
 
     /**
+     * @brief Extract plugin module files.
+     * @param param Indicates the plugin module extract param.
+     * @return Returns ERR_OK if extracted successfully; returns error code otherwise.
+     */
+    virtual ErrCode ExtractPluginModuleFiles(const ExtractModuleFilesParam &param) override;
+
+    /**
+     * @brief Extract service module files with path construction in installd.
+     * @param param Indicates the ExtractModuleFilesParam containing all parameters.
+     * @return Returns ERR_OK if extracted successfully; returns error code otherwise.
+     */
+    virtual ErrCode ExtractServiceModuleFiles(const ExtractModuleFilesParam &param) override;
+
+    virtual ErrCode ExtractSharedModuleFiles(const ExtractModuleFilesParam &param) override;
+
+    /**
      * @brief Copy AP file for AOT profile.
      * @param bundleName Indicates the bundle name for path construction and validation.
      * @param moduleName Indicates the module name for merged/rt selection.

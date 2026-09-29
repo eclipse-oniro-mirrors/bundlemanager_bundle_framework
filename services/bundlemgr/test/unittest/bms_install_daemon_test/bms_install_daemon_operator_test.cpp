@@ -34,6 +34,7 @@
 #include "file_ex.h"
 #include "installd/installd_operator.h"
 #include "ipc/extract_param.h"
+#include "ipc/extract_module_files_param.h"
 #include "ipc/hap_module_extract_param.h"
 #include "ipc/skills_package_param.h"
 #include "skills_installer/skills_package_info.h"
@@ -3833,6 +3834,173 @@ HWTEST_F(BmsInstallDaemonOperatorTest, MatchPathTemplate_0500, Function | SmallT
     EXPECT_TRUE(InstalldOperator::MatchPathTemplate("", ""));
     EXPECT_FALSE(InstalldOperator::MatchPathTemplate("", "/data/app"));
     EXPECT_TRUE(InstalldOperator::MatchPathTemplate("/data/app", "/data/app"));
+}
+
+/**
+ * @tc.number: ValidateExtractServiceModuleParams_0100
+ * @tc.name: test ValidateExtractServiceModuleParams
+ * @tc.desc: 1. calling with valid params returns ERR_OK
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, ValidateExtractServiceModuleParams_0100, Function | SmallTest | Level0)
+{
+    auto ret = InstalldOperator::ValidateExtractServiceModuleParams(
+        "com.example.test", "entry", "/data/test/test.hsp", "lib/arm64", "arm64-v8a");
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: ValidateExtractServiceModuleParams_0200
+ * @tc.name: test ValidateExtractServiceModuleParams
+ * @tc.desc: 1. calling with empty bundleName returns error
+ *           2. calling with empty moduleName returns error
+ *           3. calling with empty bundlePath returns error
+ *           4. calling with empty nativeLibraryPath returns error
+ *           5. calling with empty cpuAbi returns error
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, ValidateExtractServiceModuleParams_0200, Function | SmallTest | Level0)
+{
+    EXPECT_EQ(InstalldOperator::ValidateExtractServiceModuleParams(
+        "", "entry", "/data/test/test.hsp", "lib/arm64", "arm64-v8a"),
+        ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    EXPECT_EQ(InstalldOperator::ValidateExtractServiceModuleParams(
+        "com.example.test", "", "/data/test/test.hsp", "lib/arm64", "arm64-v8a"),
+        ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    EXPECT_EQ(InstalldOperator::ValidateExtractServiceModuleParams(
+        "com.example.test", "entry", "", "lib/arm64", "arm64-v8a"),
+        ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    EXPECT_EQ(InstalldOperator::ValidateExtractServiceModuleParams(
+        "com.example.test", "entry", "/data/test/test.hsp", "", "arm64-v8a"),
+        ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    EXPECT_EQ(InstalldOperator::ValidateExtractServiceModuleParams(
+        "com.example.test", "entry", "/data/test/test.hsp", "lib/arm64", ""),
+        ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: ValidateExtractServiceModuleParams_0300
+ * @tc.name: test ValidateExtractServiceModuleParams
+ * @tc.desc: 1. calling with invalid bundleName returns error
+ *           2. calling with invalid moduleName returns error
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, ValidateExtractServiceModuleParams_0300, Function | SmallTest | Level0)
+{
+    EXPECT_EQ(InstalldOperator::ValidateExtractServiceModuleParams(
+        "invalid-name", "entry", "/data/test/test.hsp", "lib/arm64", "arm64-v8a"),
+        ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    EXPECT_EQ(InstalldOperator::ValidateExtractServiceModuleParams(
+        "com.example.test", "../invalid", "/data/test/test.hsp", "lib/arm64", "arm64-v8a"),
+        ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: BuildExtractServiceModulePaths_0100
+ * @tc.name: test BuildExtractServiceModulePaths
+ * @tc.desc: 1. calling with moduleName not in nativeLibraryPath prepends moduleName_tmp
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, BuildExtractServiceModulePaths_0100, Function | SmallTest | Level0)
+{
+    std::string srcModulePath;
+    std::string targetPath;
+    std::string targetSoPath;
+    InstalldOperator::BuildExtractServiceModulePaths(
+        "com.example.test", "entry", "/data/test/test.hsp", "lib/arm64", 100,
+        srcModulePath, targetPath, targetSoPath);
+
+    EXPECT_EQ(srcModulePath, "/data/test/test.hsp");
+    EXPECT_TRUE(targetPath.find("com.example.test") != std::string::npos);
+    EXPECT_TRUE(targetPath.find("entry") != std::string::npos);
+    EXPECT_TRUE(targetPath.find("v100") != std::string::npos);
+    // moduleName not in nativeLibraryPath → prepend "entry_tmp/"
+    EXPECT_TRUE(targetSoPath.find("entry_tmp") != std::string::npos);
+    EXPECT_TRUE(targetSoPath.find("lib/arm64") != std::string::npos);
+}
+
+/**
+ * @tc.number: BuildExtractServiceModulePaths_0200
+ * @tc.name: test BuildExtractServiceModulePaths
+ * @tc.desc: 1. calling with moduleName in nativeLibraryPath replaces with moduleName_tmp
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, BuildExtractServiceModulePaths_0200, Function | SmallTest | Level0)
+{
+    std::string srcModulePath;
+    std::string targetPath;
+    std::string targetSoPath;
+    InstalldOperator::BuildExtractServiceModulePaths(
+        "com.example.test", "entry", "/data/test/test.hsp", "entry/lib/arm64", 100,
+        srcModulePath, targetPath, targetSoPath);
+
+    // moduleName "entry" found in nativeLibraryPath "entry/lib/arm64" → replaced with "entry_tmp"
+    EXPECT_TRUE(targetSoPath.find("entry_tmp/lib/arm64") != std::string::npos);
+    // Should not have double "entry"
+    auto pos = targetSoPath.find("entry/entry");
+    EXPECT_EQ(pos, std::string::npos);
+}
+
+/**
+ * @tc.number: ObtainTempSoPath_0100
+ * @tc.name: test ObtainTempSoPath
+ * @tc.desc: 1. calling with empty nativeLibraryPath returns empty
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, ObtainTempSoPath_0100, Function | SmallTest | Level0)
+{
+    auto ret = InstalldOperator::ObtainTempSoPath("entry", "");
+    EXPECT_TRUE(ret.empty());
+}
+
+/**
+ * @tc.number: ObtainTempSoPath_0200
+ * @tc.name: test ObtainTempSoPath
+ * @tc.desc: 1. calling with moduleName not in nativeLibraryPath prepends moduleName_tmp
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, ObtainTempSoPath_0200, Function | SmallTest | Level0)
+{
+    auto ret = InstalldOperator::ObtainTempSoPath("entry", "lib/arm64");
+    EXPECT_EQ(ret, "entry_tmp/lib/arm64/");
+}
+
+/**
+ * @tc.number: ObtainTempSoPath_0300
+ * @tc.name: test ObtainTempSoPath
+ * @tc.desc: 1. calling with moduleName in nativeLibraryPath replaces with moduleName_tmp
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, ObtainTempSoPath_0300, Function | SmallTest | Level0)
+{
+    auto ret = InstalldOperator::ObtainTempSoPath("entry", "entry/lib/arm64");
+    EXPECT_EQ(ret, "entry_tmp/lib/arm64/");
+}
+
+/**
+ * @tc.number: ExtractModuleFilesParam_Marshalling_0100
+ * @tc.name: test ExtractModuleFilesParam Marshalling and Unmarshalling
+ * @tc.desc: 1.test Marshalling and Unmarshalling roundtrip
+ */
+HWTEST_F(BmsInstallDaemonOperatorTest, ExtractModuleFilesParam_Marshalling_0100, Function | SmallTest | Level0)
+{
+    ExtractModuleFilesParam srcParam;
+    srcParam.bundleName = "com.example.test";
+    srcParam.moduleName = "entry";
+    srcParam.bundlePath = "/data/test/test.hsp";
+    srcParam.nativeLibraryPath = "lib/arm64";
+    srcParam.cpuAbi = "arm64-v8a";
+    srcParam.versionCode = 100;
+    srcParam.needFakeDecompression = true;
+    srcParam.isSystemApp = false;
+
+    MessageParcel parcel;
+    bool ret = srcParam.Marshalling(parcel);
+    EXPECT_TRUE(ret);
+
+    ExtractModuleFilesParam *destParam = ExtractModuleFilesParam::Unmarshalling(parcel);
+    ASSERT_NE(destParam, nullptr);
+    EXPECT_EQ(destParam->bundleName, "com.example.test");
+    EXPECT_EQ(destParam->moduleName, "entry");
+    EXPECT_EQ(destParam->bundlePath, "/data/test/test.hsp");
+    EXPECT_EQ(destParam->nativeLibraryPath, "lib/arm64");
+    EXPECT_EQ(destParam->cpuAbi, "arm64-v8a");
+    EXPECT_EQ(destParam->versionCode, 100);
+    EXPECT_EQ(destParam->needFakeDecompression, true);
+    EXPECT_EQ(destParam->isSystemApp, false);
+    delete destParam;
 }
 
 /**

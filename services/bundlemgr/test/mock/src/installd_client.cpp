@@ -153,6 +153,24 @@ ErrCode InstalldClient::ExtractQuickFixSoFile(const std::string &bundleName, con
         isReplace, versionCode, targetPathSuffix);
 }
 
+ErrCode InstalldClient::ExtractPluginModuleFiles(const ExtractModuleFilesParam &param)
+{
+    if (param.hostBundleName.empty() || param.bundleNameWithTime.empty() || param.moduleName.empty() ||
+        param.bundlePath.empty() || param.nativeLibraryPath.empty() || param.cpuAbi.empty()) {
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::ExtractPluginModuleFiles, param);
+}
+
+ErrCode InstalldClient::ExtractServiceModuleFiles(const ExtractModuleFilesParam &param)
+{
+    if (param.bundleName.empty() || param.moduleName.empty() || param.bundlePath.empty() ||
+        param.nativeLibraryPath.empty() || param.cpuAbi.empty()) {
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::ExtractServiceModuleFiles, param);
+}
+
 ErrCode InstalldClient::ExtractQuickFixRes(const std::string &bundleName, const std::string &moduleName,
     const std::string &hqfFilePath, bool needFakeDecompression)
 {
@@ -236,6 +254,15 @@ ErrCode InstalldClient::ExtractHnpFiles(const std::map<std::string, std::string>
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     return CallService(&IInstalld::ExtractHnpFiles, hnpPackageMap, extractParam);
+}
+
+ErrCode InstalldClient::ExtractSharedModuleFiles(const ExtractModuleFilesParam &param)
+{
+    if (param.bundleName.empty() || param.moduleName.empty() || param.bundlePath.empty() ||
+        param.nativeLibraryPath.empty() || param.cpuAbi.empty()) {
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::ExtractSharedModuleFiles, param);
 }
 
 ErrCode InstalldClient::ExtractHnpFilesByScene(const ExtractHnpFilesParam &extractHnpFilesParam)

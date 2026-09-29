@@ -309,6 +309,64 @@ ErrCode InstalldHostImpl::CreateBundleDir(
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::ExtractPluginModuleFiles(const ExtractModuleFilesParam &param)
+{
+    LOG_D(BMS_TAG_INSTALLD, "ExtractPluginModuleFiles hostBundleName:%{public}s", param.hostBundleName.c_str());
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+
+    if (!InstalldOperator::IsValidBundleName(param.hostBundleName)) {
+        LOG_E(BMS_TAG_INSTALLD, "Calling ExtractPluginModuleFiles with invalid hostBundleName");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    if (param.bundleNameWithTime.empty() || param.moduleName.empty() || param.bundlePath.empty() ||
+        param.nativeLibraryPath.empty() || param.cpuAbi.empty()) {
+        LOG_E(BMS_TAG_INSTALLD, "Calling ExtractPluginModuleFiles with invalid param");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    if (!InstalldOperator::IsFileNameValid(param.bundleNameWithTime) ||
+        !InstalldOperator::IsFileNameValid(param.bundlePath) ||
+        !InstalldOperator::IsFileNameValid(param.moduleName) ||
+        !InstalldOperator::IsFileNameValid(param.nativeLibraryPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "Calling ExtractPluginModuleFiles with invalid bundleNameWithTime or moduleName "
+            "or nativeLibraryPath");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    std::string pluginBundleDir = std::string(Constants::BUNDLE_CODE_DIR) +
+        ServiceConstants::PATH_SEPARATOR + param.hostBundleName +
+        ServiceConstants::PATH_SEPARATOR + ServiceConstants::PLUGIN_FILE_PATH +
+        ServiceConstants::PATH_SEPARATOR + param.bundleNameWithTime;
+    std::string targetPath = pluginBundleDir + ServiceConstants::PATH_SEPARATOR + param.moduleName;
+    std::string targetSoPath = pluginBundleDir + ServiceConstants::PATH_SEPARATOR + param.nativeLibraryPath;
+
+    if (!InstalldOperator::IsValidPathByExtractModuleFiles(param.bundlePath, targetPath, targetSoPath)) {
+        LOG_E(BMS_TAG_INSTALLD,
+            "Calling the function ExtractModuleFiles with invalid param, bundlePath: %{private}s, targetPath: "
+            "%{private}s, targetSoPath: %{private}s",
+            param.bundlePath.c_str(), targetPath.c_str(), targetSoPath.c_str());
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    if (!InstalldOperator::MkRecursiveDir(targetPath, true)) {
+        LOG_E(BMS_TAG_INSTALLD, "create target dir %{private}s failed, errno:%{public}d", targetPath.c_str(), errno);
+        return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
+    }
+
+    if (!InstalldOperator::ExtractFiles(param.bundlePath, targetSoPath, param.cpuAbi,
+        param.needFakeDecompression, param.isSystemApp)) {
+        LOG_E(BMS_TAG_INSTALLD, "extract plugin module files failed, errno:%{public}d", errno);
+        InstalldOperator::DeleteDir(targetPath);
+        return ERR_APPEXECFWK_INSTALLD_EXTRACT_FAILED;
+    }
+
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::ExtractModuleFiles(const std::string &srcModulePath, const std::string &targetPath,
     const std::string &targetSoPath, const std::string &cpuAbi, const bool needFakeDecompression,
     const bool isSystemApp)
@@ -467,6 +525,45 @@ ErrCode InstalldHostImpl::ExtractHapModuleFiles(const HapModuleExtractParam &par
     if (!InstalldOperator::ExtractFiles(srcModulePath, targetSoPath, param.cpuAbi,
         param.needFakeDecompression, param.isSystemApp)) {
         LOG_E(BMS_TAG_INSTALLD, "ExtractHapModuleFiles failed, errno:%{public}d", errno);
+        InstalldOperator::DeleteDir(targetPath);
+        return ERR_APPEXECFWK_INSTALLD_EXTRACT_FAILED;
+    }
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::ExtractServiceModuleFiles(const ExtractModuleFilesParam &param)
+{
+    LOG_D(BMS_TAG_INSTALLD, "ExtractServiceModuleFiles bundleName:%{public}s moduleName:%{public}s",
+        param.bundleName.c_str(), param.moduleName.c_str());
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    ErrCode ret = InstalldOperator::ValidateExtractServiceModuleParams(
+        param.bundleName, param.moduleName, param.bundlePath, param.nativeLibraryPath, param.cpuAbi);
+    if (ret != ERR_OK) {
+        return ret;
+    }
+    std::string srcModulePath;
+    std::string targetPath;
+    std::string targetSoPath;
+    InstalldOperator::BuildExtractServiceModulePaths(
+        param.bundleName, param.moduleName, param.bundlePath, param.nativeLibraryPath, param.versionCode,
+        srcModulePath, targetPath, targetSoPath);
+    if (!InstalldOperator::IsValidPathByExtractModuleFiles(srcModulePath, targetPath, targetSoPath)) {
+        LOG_E(BMS_TAG_INSTALLD,
+            "Calling ExtractServiceModuleFiles with invalid path, srcModulePath: %{private}s, targetPath: %{private}s, "
+            "targetSoPath: %{private}s",
+            srcModulePath.c_str(), targetPath.c_str(), targetSoPath.c_str());
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    if (!InstalldOperator::MkRecursiveDir(targetPath, true)) {
+        LOG_E(BMS_TAG_INSTALLD, "create target dir %{private}s failed, errno:%{public}d", targetPath.c_str(), errno);
+        return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
+    }
+    if (!InstalldOperator::ExtractFiles(srcModulePath, targetSoPath, param.cpuAbi,
+        param.needFakeDecompression, param.isSystemApp)) {
+        LOG_E(BMS_TAG_INSTALLD, "ExtractServiceModuleFiles failed, errno:%{public}d", errno);
         InstalldOperator::DeleteDir(targetPath);
         return ERR_APPEXECFWK_INSTALLD_EXTRACT_FAILED;
     }
@@ -808,6 +905,69 @@ ErrCode InstalldHostImpl::ExtractNPAPIPlugin(const std::string &bundleName, cons
         LOG_E(BMS_TAG_INSTALLD, "ExtractNPAPIPlugin failed, bundleName:%{public}s", bundleName.c_str());
         return ERR_APPEXECFWK_INSTALLD_EXTRACT_FAILED;
     }
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::ExtractSharedModuleFiles(const ExtractModuleFilesParam &param)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+
+    if (!InstalldOperator::IsValidBundleName(param.bundleName)) {
+        LOG_E(BMS_TAG_INSTALLD, "Calling ExtractSharedModuleFiles with invalid bundleName");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    if (param.moduleName.empty() || param.bundlePath.empty() ||
+        param.nativeLibraryPath.empty() || param.cpuAbi.empty()) {
+        LOG_E(BMS_TAG_INSTALLD, "Calling ExtractSharedModuleFiles with invalid param");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    if (!InstalldOperator::IsFileNameValid(param.bundlePath) ||
+        !InstalldOperator::IsFileNameValid(param.moduleName) ||
+        !InstalldOperator::IsFileNameValid(param.nativeLibraryPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "Calling ExtractSharedModuleFiles with invalid moduleName or nativeLibraryPath");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    std::string tempNativeLibraryPath =
+        InstalldOperator::ObtainTempSoPath(param.moduleName, param.nativeLibraryPath);
+    if (tempNativeLibraryPath.empty()) {
+        LOG_E(BMS_TAG_INSTALLD, "Calling ExtractSharedModuleFiles with invalid nativeLibraryPath");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    // Construct paths
+    std::string versionDir = std::string(Constants::BUNDLE_CODE_DIR) +
+        ServiceConstants::PATH_SEPARATOR + param.bundleName +
+        ServiceConstants::PATH_SEPARATOR + HSP_VERSION_PREFIX +
+        std::to_string(param.versionCode);
+    std::string targetPath = versionDir + ServiceConstants::PATH_SEPARATOR + param.moduleName;
+    std::string targetSoPath = versionDir + ServiceConstants::PATH_SEPARATOR + tempNativeLibraryPath;
+
+    if (!InstalldOperator::IsValidPathByExtractModuleFiles(param.bundlePath, targetPath, targetSoPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "Calling ExtractSharedModuleFiles with invalid param, bundlePath: %{private}s",
+            param.bundlePath.c_str());
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    // Create the module dir
+    if (!InstalldOperator::MkRecursiveDir(targetPath, true)) {
+        LOG_E(BMS_TAG_INSTALLD, "create target dir %{private}s failed, errno:%{public}d", targetPath.c_str(), errno);
+        return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
+    }
+
+    // Extract SO files
+    if (!InstalldOperator::ExtractFiles(
+        param.bundlePath, targetSoPath, param.cpuAbi, param.needFakeDecompression, param.isSystemApp)) {
+        LOG_E(BMS_TAG_INSTALLD, "extract shared module so files failed, errno:%{public}d", errno);
+        InstalldOperator::DeleteDir(targetPath);
+        return ERR_APPEXECFWK_INSTALLD_EXTRACT_FAILED;
+    }
+
     return ERR_OK;
 }
 

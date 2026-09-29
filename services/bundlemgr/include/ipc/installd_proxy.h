@@ -101,6 +101,12 @@ public:
     virtual ErrCode ExtractHnpFiles(const std::map<std::string, std::string> &hnpPackageMap,
         const ExtractParam &extractParam) override;
 
+    virtual ErrCode ExtractPluginModuleFiles(const ExtractModuleFilesParam &param) override;
+
+    virtual ErrCode ExtractServiceModuleFiles(const ExtractModuleFilesParam &param) override;
+
+    virtual ErrCode ExtractSharedModuleFiles(const ExtractModuleFilesParam &param) override;
+
     virtual ErrCode ExtractHnpFilesByScene(const ExtractHnpFilesParam &extractHnpFilesParam) override;
 
     virtual ErrCode CopyHapToTempPath(const std::string &bundleName, const std::string &hapRealPath,

@@ -321,6 +321,15 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::INSTALL_NATIVE):
             result = this->HandleProcessBundleInstallNative(data, reply);
             break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_PLUGIN_MODULE_FILES):
+            result = this->HandleExtractPluginModuleFiles(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_SERVICE_MODULE_FILES):
+            result = this->HandleExtractServiceModuleFiles(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_SHARED_MODULE_FILES):
+            result = this->HandleExtractSharedModuleFiles(data, reply);
+            break;
         case static_cast<uint32_t>(InstalldInterfaceCode::UNINSTALL_NATIVE):
             result = this->HandleProcessBundleUnInstallNative(data, reply);
             break;
@@ -703,6 +712,44 @@ bool InstalldHost::HandleExtractNPAPIPlugin(MessageParcel &data, MessageParcel &
     std::string hapFilePath = Str16ToStr8(data.ReadString16());
     int32_t userId = data.ReadInt32();
     ErrCode result = ExtractNPAPIPlugin(bundleName, moduleName, hapFilePath, userId);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleExtractPluginModuleFiles(MessageParcel &data, MessageParcel &reply)
+{
+    std::unique_ptr<ExtractModuleFilesParam> param(data.ReadParcelable<ExtractModuleFilesParam>());
+    if (param == nullptr) {
+        LOG_E(BMS_TAG_INSTALLD, "readParcelableInfo failed");
+        return false;
+    }
+
+    ErrCode result = ExtractPluginModuleFiles(*param);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleExtractServiceModuleFiles(MessageParcel &data, MessageParcel &reply)
+{
+    std::unique_ptr<ExtractModuleFilesParam> info(data.ReadParcelable<ExtractModuleFilesParam>());
+    if (info == nullptr) {
+        LOG_E(BMS_TAG_INSTALLD, "readParcelableInfo failed");
+        return false;
+    }
+
+    ErrCode result = ExtractServiceModuleFiles(*info);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleExtractSharedModuleFiles(MessageParcel &data, MessageParcel &reply)
+{
+    std::unique_ptr<ExtractModuleFilesParam> param(data.ReadParcelable<ExtractModuleFilesParam>());
+    if (param == nullptr) {
+        LOG_E(BMS_TAG_INSTALLD, "readParcelableInfo failed");
+        return false;
+    }
+    ErrCode result = ExtractSharedModuleFiles(*param);
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
