@@ -45,7 +45,8 @@ static ani_object AniGetDisposedStatus(ani_env* env, ani_string aniAppId, ani_bo
     return nullptr;
 }
 
-static void AniDeleteDisposedStatus(ani_env* env, ani_string aniAppId, ani_int aniAppIndex, ani_boolean aniIsSync)
+static void AniDeleteDisposedStatus(ani_env* env, ani_string aniAppId, ani_int aniAppIndex, ani_boolean aniIsSync,
+    ani_boolean aniIsAppIndexSet)
 {
     APP_LOGI("AppControl not supported");
     bool isSync = CommonFunAni::AniBooleanToBool(aniIsSync);
@@ -53,7 +54,8 @@ static void AniDeleteDisposedStatus(ani_env* env, ani_string aniAppId, ani_int a
         isSync ? DELETE_DISPOSED_STATUS_SYNC : DELETE_DISPOSED_STATUS, "");
 }
 
-static ani_object AniGetDisposedRule(ani_env* env, ani_string aniAppId, ani_int aniAppIndex)
+static ani_object AniGetDisposedRule(ani_env* env, ani_string aniAppId, ani_int aniAppIndex,
+    ani_boolean aniIsAppIndexSet)
 {
     APP_LOGI("AppControl not supported");
     BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, GET_DISPOSED_STATUS_SYNC, "");
@@ -74,7 +76,8 @@ static ani_object AniGetDisposedRulesBySetter(ani_env* env, ani_string aniBundle
     return nullptr;
 }
 
-static void AniSetDisposedRule(ani_env* env, ani_string aniAppId, ani_object aniRule, ani_int aniAppIndex)
+static void AniSetDisposedRule(ani_env* env, ani_string aniAppId, ani_object aniRule, ani_int aniAppIndex,
+    ani_boolean aniIsAppIndexSet)
 {
     APP_LOGI("AppControl not supported");
     BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, SET_DISPOSED_STATUS_SYNC, "");

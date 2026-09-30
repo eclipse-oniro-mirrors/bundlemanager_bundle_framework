@@ -82,10 +82,10 @@ public:
     void SetAppInstallControlStatus();
 
     ErrCode SetDisposedRule(const std::string &callerName, const std::string &appId,
-        const DisposedRule &DisposedRule, int32_t appIndex, int32_t userId);
+        const DisposedRule &disposedRule, int32_t appIndex, int32_t userId);
 
     ErrCode GetDisposedRule(const std::string &callerName, const std::string &appId,
-        DisposedRule &DisposedRule, int32_t appIndex, int32_t userId);
+        DisposedRule &disposedRule, int32_t appIndex, int32_t userId);
     
     ErrCode GetDisposedRules(const std::string &callingName,
         int32_t userId, std::vector<DisposedRuleConfiguration> &disposedRuleConfigurations);

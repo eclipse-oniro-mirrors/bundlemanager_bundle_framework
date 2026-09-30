@@ -120,7 +120,8 @@ static ani_object AniGetDisposedStatus(ani_env* env, ani_string aniAppId, ani_bo
     return CommonFunAni::ConvertWantInfo(env, want);
 }
 
-static void AniDeleteDisposedStatus(ani_env* env, ani_string aniAppId, ani_int aniAppIndex, ani_boolean aniIsSync)
+static void AniDeleteDisposedStatus(ani_env* env, ani_string aniAppId, ani_int aniAppIndex, ani_boolean aniIsSync,
+    ani_boolean aniIsAppIndexSet)
 {
     APP_LOGD("ani DeleteDisposedStatus called");
     std::string appId;
@@ -147,8 +148,10 @@ static void AniDeleteDisposedStatus(ani_env* env, ani_string aniAppId, ani_int a
         return;
     }
 
+    bool isAppIndexSet = CommonFunAni::AniBooleanToBool(aniIsAppIndexSet);
     ErrCode ret = ERR_OK;
-    ret = appControlProxy->DeleteDisposedRuleForCloneApp(appId, aniAppIndex);
+    ret = appControlProxy->DeleteDisposedRuleForCloneApp(appId, aniAppIndex,
+        Constants::UNSPECIFIED_USERID, isAppIndexSet);
     if (ret != ERR_OK) {
         APP_LOGE("DeleteDisposedStatusSync failed ret: %{public}d", ret);
         BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret),
@@ -156,7 +159,8 @@ static void AniDeleteDisposedStatus(ani_env* env, ani_string aniAppId, ani_int a
     }
 }
 
-static ani_object AniGetDisposedRule(ani_env* env, ani_string aniAppId, ani_int aniAppIndex)
+static ani_object AniGetDisposedRule(ani_env* env, ani_string aniAppId, ani_int aniAppIndex,
+    ani_boolean aniIsAppIndexSet)
 {
     APP_LOGD("ani GetDisposedRule called");
     std::string appId;
@@ -178,9 +182,11 @@ static ani_object AniGetDisposedRule(ani_env* env, ani_string aniAppId, ani_int 
         return nullptr;
     }
 
+    bool isAppIndexSet = CommonFunAni::AniBooleanToBool(aniIsAppIndexSet);
     DisposedRule disposedRule;
     ErrCode ret = ERR_OK;
-    ret = appControlProxy->GetDisposedRuleForCloneApp(appId, disposedRule, aniAppIndex);
+    ret = appControlProxy->GetDisposedRuleForCloneApp(appId, disposedRule, aniAppIndex,
+        Constants::UNSPECIFIED_USERID, isAppIndexSet);
     if (ret != ERR_OK) {
         APP_LOGE("GetDisposedRule failed ret: %{public}d", ret);
         BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret),
@@ -246,7 +252,8 @@ static ani_object AniGetDisposedRulesBySetter(ani_env* env, ani_string aniBundle
         env, disposedRuleConfigurations, AniAppControlCommon::ConvertDisposedRuleConfiguration);
 }
 
-static void AniSetDisposedRule(ani_env* env, ani_string aniAppId, ani_object aniRule, ani_int aniAppIndex)
+static void AniSetDisposedRule(ani_env* env, ani_string aniAppId, ani_object aniRule, ani_int aniAppIndex,
+    ani_boolean aniIsAppIndexSet)
 {
     APP_LOGD("ani SetDisposedRule called");
     std::string appId;
@@ -274,8 +281,10 @@ static void AniSetDisposedRule(ani_env* env, ani_string aniAppId, ani_object ani
         return;
     }
 
+    bool isAppIndexSet = CommonFunAni::AniBooleanToBool(aniIsAppIndexSet);
     ErrCode ret = ERR_OK;
-    ret = appControlProxy->SetDisposedRuleForCloneApp(appId, rule, aniAppIndex);
+    ret = appControlProxy->SetDisposedRuleForCloneApp(appId, rule, aniAppIndex,
+        Constants::UNSPECIFIED_USERID, isAppIndexSet);
     if (ret != ERR_OK) {
         APP_LOGE("SetDisposedRule failed ret: %{public}d", ret);
         BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret),

@@ -560,8 +560,10 @@ ErrCode AppControlHost::HandleGetDisposedRuleForCloneApp(MessageParcel& data, Me
     std::string appId = data.ReadString();
     int32_t userId = data.ReadInt32();
     int32_t appIndex = data.ReadInt32();
+    // isAppIndexSet defaults to false when absent (legacy proxy), treated as "not explicitly set".
+    bool isAppIndexSet = data.ReadBool();
     DisposedRule rule;
-    ErrCode ret = GetDisposedRuleForCloneApp(appId, rule, appIndex, userId);
+    ErrCode ret = GetDisposedRuleForCloneApp(appId, rule, appIndex, userId, isAppIndexSet);
     if (!reply.WriteInt32(ret)) {
         LOG_E(BMS_TAG_DEFAULT, "write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -581,11 +583,13 @@ ErrCode AppControlHost::HandleSetDisposedRuleForCloneApp(MessageParcel& data, Me
     std::unique_ptr<DisposedRule> disposedRule(data.ReadParcelable<DisposedRule>());
     int32_t userId = data.ReadInt32();
     int32_t appIndex = data.ReadInt32();
+    // isAppIndexSet defaults to false when absent (legacy proxy), treated as "not explicitly set".
+    bool isAppIndexSet = data.ReadBool();
     if (disposedRule == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "ReadParcelable<disposedRule> failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    ErrCode ret = SetDisposedRuleForCloneApp(appId, *disposedRule, appIndex, userId);
+    ErrCode ret = SetDisposedRuleForCloneApp(appId, *disposedRule, appIndex, userId, isAppIndexSet);
     if (!reply.WriteInt32(ret)) {
         LOG_E(BMS_TAG_DEFAULT, "write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -598,7 +602,9 @@ ErrCode AppControlHost::HandleDeleteDisposedRuleForCloneApp(MessageParcel& data,
     std::string appId = data.ReadString();
     int32_t userId = data.ReadInt32();
     int32_t appIndex = data.ReadInt32();
-    ErrCode ret = DeleteDisposedRuleForCloneApp(appId, appIndex, userId);
+    // isAppIndexSet defaults to false when absent (legacy proxy), treated as "not explicitly set".
+    bool isAppIndexSet = data.ReadBool();
+    ErrCode ret = DeleteDisposedRuleForCloneApp(appId, appIndex, userId, isAppIndexSet);
     if (!reply.WriteInt32(ret)) {
         LOG_E(BMS_TAG_DEFAULT, "write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
