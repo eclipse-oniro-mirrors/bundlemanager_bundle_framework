@@ -32,6 +32,10 @@ QuickFixSwitcher::QuickFixSwitcher(const std::string &bundleName, bool enable)
 ErrCode QuickFixSwitcher::Execute()
 {
     LOG_NOFUNC_I(BMS_TAG_DEFAULT, "switch start execute");
+    if (GetDataMgr() != ERR_OK) {
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
+    }
+    std::lock_guard<std::mutex> lock(dataMgr_->GetBundleMutex(bundleName_));
     return SwitchQuickFix();
 }
 

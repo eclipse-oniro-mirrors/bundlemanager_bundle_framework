@@ -3532,7 +3532,7 @@ HWTEST_F(BmsBundleQuickFixTest, FixDeployer_0001, Function | SmallTest | Level0)
 /**
  * @tc.number: FixDeployer_0002
  * @tc.name: test ParseAndCheckAppQuickFixInfos
- * @tc.desc: ParseAndCheckAppQuickFixInfos
+ * @tc.desc: Parse non-hqf file should fail with PROFILE_PARSE_FAILED
  */
 HWTEST_F(BmsBundleQuickFixTest, FixDeployer_0002, Function | SmallTest | Level0)
 {
@@ -3542,18 +3542,10 @@ HWTEST_F(BmsBundleQuickFixTest, FixDeployer_0002, Function | SmallTest | Level0)
     auto deployer = GetQuickFixDeployer();
     EXPECT_FALSE(deployer == nullptr);
     if (deployer != nullptr) {
-        AppQuickFix appQuickFix = CreateAppQuickFix();
         std::vector<std::string> bundleFilePaths;
         bundleFilePaths.push_back(HAP_FILE_PATH1);
-        InnerAppQuickFix newInnerAppQuickFix;
-        InnerAppQuickFix oldInnerAppQuickFix;
-        ErrCode ret = deployer->ToDeployStartStatus(bundleFilePaths, newInnerAppQuickFix, oldInnerAppQuickFix);
-        EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PROFILE_PARSE_FAILED);
-        appQuickFix.deployingAppqfInfo.type = QuickFixType::PATCH;
-        appQuickFix.deployingAppqfInfo.hqfInfos[0].type = QuickFixType::PATCH;
-        appQuickFix.deployingAppqfInfo.nativeLibraryPath = "";
-        newInnerAppQuickFix.SetAppQuickFix(appQuickFix);
-        ret = deployer->ToDeployStartStatus(bundleFilePaths, newInnerAppQuickFix, oldInnerAppQuickFix);
+        std::unordered_map<std::string, AppQuickFix> infos;
+        ErrCode ret = deployer->ParseAndCheckAppQuickFixInfos(bundleFilePaths, infos);
         EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PROFILE_PARSE_FAILED);
     }
 
@@ -5488,97 +5480,77 @@ HWTEST_F(BmsBundleQuickFixTest, DeployQuickFix_0004, TestSize.Level1)
 }
 
 /**
- * @tc.number: ToDeployStartStatus_0001
- * Function: ToDeployStartStatus
- * @tc.name: test ToDeployStartStatus
- * @tc.desc: ToDeployStartStatus
+ * @tc.number: ParseAndCheckAppQuickFixInfos_0001
+ * Function: ParseAndCheckAppQuickFixInfos
+ * @tc.name: test ParseAndCheckAppQuickFixInfos with non-hqf file
+ * @tc.desc: Parse HAP file as hqf should fail with PROFILE_PARSE_FAILED
  */
-HWTEST_F(BmsBundleQuickFixTest, ToDeployStartStatus_0001, TestSize.Level1)
+HWTEST_F(BmsBundleQuickFixTest, ParseAndCheckAppQuickFixInfos_0001, TestSize.Level1)
 {
     auto deployer = GetQuickFixDeployer();
     EXPECT_FALSE(deployer == nullptr);
     if (deployer != nullptr) {
-        AppQuickFix appQuickFix = CreateAppQuickFix();
-        appQuickFix.deployingAppqfInfo.type = QuickFixType::HOT_RELOAD;
-        appQuickFix.deployingAppqfInfo.hqfInfos[0].type = QuickFixType::HOT_RELOAD;
-        appQuickFix.deployingAppqfInfo.nativeLibraryPath = "";
-        InnerAppQuickFix newInnerAppQuickFix;
-        InnerAppQuickFix oldInnerAppQuickFix;
-        newInnerAppQuickFix.SetAppQuickFix(appQuickFix);
         std::vector<std::string> bundleFilePaths;
         bundleFilePaths.push_back(HAP_FILE_PATH1);
-        ErrCode ret = deployer->ToDeployStartStatus(bundleFilePaths, newInnerAppQuickFix, oldInnerAppQuickFix);
+        std::unordered_map<std::string, AppQuickFix> infos;
+        ErrCode ret = deployer->ParseAndCheckAppQuickFixInfos(bundleFilePaths, infos);
         EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PROFILE_PARSE_FAILED);
     }
 }
 
 /**
- * @tc.number: ToDeployStartStatus_0002
- * Function: ToDeployStartStatus
- * @tc.name: test ToDeployStartStatus
- * @tc.desc: ToDeployStartStatus
+ * @tc.number: ParseAndCheckAppQuickFixInfos_0002
+ * Function: ParseAndCheckAppQuickFixInfos
+ * @tc.name: test ParseAndCheckAppQuickFixInfos with non-hqf file
+ * @tc.desc: Parse HAP file as hqf should fail with PROFILE_PARSE_FAILED
  */
-HWTEST_F(BmsBundleQuickFixTest, ToDeployStartStatus_0002, TestSize.Level1)
+HWTEST_F(BmsBundleQuickFixTest, ParseAndCheckAppQuickFixInfos_0002, TestSize.Level1)
 {
     auto deployer = GetQuickFixDeployer();
     EXPECT_FALSE(deployer == nullptr);
     if (deployer != nullptr) {
-        AppQuickFix appQuickFix = CreateAppQuickFix();
-        appQuickFix.deployingAppqfInfo.type = QuickFixType::HOT_RELOAD;
-        appQuickFix.deployingAppqfInfo.hqfInfos[0].type = QuickFixType::HOT_RELOAD;
-        appQuickFix.deployingAppqfInfo.nativeLibraryPath = QUICK_FIX_ABI;
-        InnerAppQuickFix newInnerAppQuickFix;
-        InnerAppQuickFix oldInnerAppQuickFix;
-        newInnerAppQuickFix.SetAppQuickFix(appQuickFix);
         std::vector<std::string> bundleFilePaths;
         bundleFilePaths.push_back(HAP_FILE_PATH1);
-        ErrCode ret = deployer->ToDeployStartStatus(bundleFilePaths, newInnerAppQuickFix, oldInnerAppQuickFix);
+        std::unordered_map<std::string, AppQuickFix> infos;
+        ErrCode ret = deployer->ParseAndCheckAppQuickFixInfos(bundleFilePaths, infos);
         EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PROFILE_PARSE_FAILED);
     }
 }
 
 /**
- * @tc.number: ToDeployStartStatus_0003
- * Function: ToDeployStartStatus
- * @tc.name: test ToDeployStartStatus
- * @tc.desc: ToDeployStartStatus
+ * @tc.number: ParseAndCheckAppQuickFixInfos_0003
+ * Function: ParseAndCheckAppQuickFixInfos
+ * @tc.name: test ParseAndCheckAppQuickFixInfos with non-hqf file
+ * @tc.desc: Parse HAP file as hqf should fail with PROFILE_PARSE_FAILED
  */
-HWTEST_F(BmsBundleQuickFixTest, ToDeployStartStatus_0003, TestSize.Level1)
+HWTEST_F(BmsBundleQuickFixTest, ParseAndCheckAppQuickFixInfos_0003, TestSize.Level1)
 {
     auto deployer = GetQuickFixDeployer();
     EXPECT_FALSE(deployer == nullptr);
     if (deployer != nullptr) {
-        AppQuickFix appQuickFix = CreateAppQuickFix();
-        appQuickFix.deployingAppqfInfo.type = QuickFixType::HOT_RELOAD;
-        appQuickFix.deployingAppqfInfo.hqfInfos[0].type = QuickFixType::HOT_RELOAD;
-        appQuickFix.deployingAppqfInfo.nativeLibraryPath = QUICK_FIX_SO_PATH;
-        InnerAppQuickFix newInnerAppQuickFix;
-        InnerAppQuickFix oldInnerAppQuickFix;
-        newInnerAppQuickFix.SetAppQuickFix(appQuickFix);
         std::vector<std::string> bundleFilePaths;
         bundleFilePaths.push_back(HAP_FILE_PATH1);
-        ErrCode ret = deployer->ToDeployStartStatus(bundleFilePaths, newInnerAppQuickFix, oldInnerAppQuickFix);
+        std::unordered_map<std::string, AppQuickFix> infos;
+        ErrCode ret = deployer->ParseAndCheckAppQuickFixInfos(bundleFilePaths, infos);
         EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PROFILE_PARSE_FAILED);
     }
 }
 
 /**
- * @tc.number: ToDeployStartStatus_0004
- * Function: ToDeployStartStatus
- * @tc.name: test ToDeployStartStatus
- * @tc.desc: ToDeployStartStatus
+ * @tc.number: ParseAndCheckAppQuickFixInfos_0004
+ * Function: ParseAndCheckAppQuickFixInfos
+ * @tc.name: test ParseAndCheckAppQuickFixInfos with non-existent file
+ * @tc.desc: Parse non-existent hqf file should fail with PROFILE_PARSE_FAILED
  */
-HWTEST_F(BmsBundleQuickFixTest, ToDeployStartStatus_0004, TestSize.Level1)
+HWTEST_F(BmsBundleQuickFixTest, ParseAndCheckAppQuickFixInfos_0004, TestSize.Level1)
 {
     auto deployer = GetQuickFixDeployer();
     EXPECT_FALSE(deployer == nullptr);
     if (deployer != nullptr) {
-    std::vector<std::string> bundleFilePaths = {"invalid_patch.hqf"};
-    InnerAppQuickFix newInnerAppQuickFix;
-    InnerAppQuickFix oldInnerAppQuickFix;
-    ErrCode ret = deployer_->ToDeployStartStatus(bundleFilePaths,
-        newInnerAppQuickFix, oldInnerAppQuickFix);
-    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PROFILE_PARSE_FAILED);
+        std::vector<std::string> bundleFilePaths = {"invalid_patch.hqf"};
+        std::unordered_map<std::string, AppQuickFix> infos;
+        ErrCode ret = deployer_->ParseAndCheckAppQuickFixInfos(bundleFilePaths, infos);
+        EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PROFILE_PARSE_FAILED);
     }
 }
 /**

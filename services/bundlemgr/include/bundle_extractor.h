@@ -45,6 +45,12 @@ public:
      * @return Returns true if the Profile is successfully extracted; returns false otherwise.
      */
     bool ExtractModuleProfile(std::ostream &dest) const;
+    /**
+     * @brief Check whether the declared size of the profile is allowed to be extracted, so that
+     *        an oversized profile will not exhaust the memory.
+     * @return Returns true if the profile size is within the limit; returns false otherwise.
+     */
+    bool IsProfileSizeAllowed() const;
 
     void IsHapCompress(bool &isAbcCompressed) const;
 
@@ -64,6 +70,20 @@ public:
      */
     uint32_t GetExtractedFileInodes(bool isCompressNativeLibrary, bool hasArkNativeFile,
         const std::vector<HnpPackage> &hnpPackages) const;
+
+private:
+    /**
+     * @brief Get the declared uncompressed size of the profile(module.json/config.json) in the hap.
+     * @return Returns the declared uncompressed size; returns 0 if the profile is not found.
+     */
+    uint32_t GetProfileUncompressedSize() const;
+
+    /**
+     * @brief Get the max allowed uncompressed size of the profile according to the available memory.
+     * @return Returns the max allowed size in KB, which is a part of the available memory;
+     *         returns 0 if the available memory cannot be obtained.
+     */
+    static uint32_t GetMaxProfileUncompressedSize();
 };
 
 class BundleParallelExtractor : public BundleExtractor {

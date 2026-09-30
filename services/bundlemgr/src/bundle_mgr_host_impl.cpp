@@ -1741,7 +1741,7 @@ bool BundleMgrHostImpl::GetBundleArchiveInfo(
         InnerBundleInfo info;
         BundleParser bundleParser;
         bool isAbcCompressed = false;
-        ret = bundleParser.Parse(realPath, info, isAbcCompressed);
+        ret = bundleParser.Parse(realPath, info, isAbcCompressed, true);
         if (ret != ERR_OK) {
             APP_LOGE("parse bundle info failed, error: %{public}d", ret);
             return false;
@@ -1796,7 +1796,7 @@ ErrCode BundleMgrHostImpl::GetBundleArchiveInfoV9(
     InnerBundleInfo info;
     BundleParser bundleParser;
     bool isAbcCompressed = false;
-    ret = bundleParser.Parse(realPath, info, isAbcCompressed);
+    ret = bundleParser.Parse(realPath, info, isAbcCompressed, true);
     if (ret != ERR_OK) {
         APP_LOGE("parse bundle info failed, error: %{public}d", ret);
         return ERR_BUNDLE_MANAGER_INVALID_HAP_PATH;
@@ -1864,7 +1864,7 @@ ErrCode BundleMgrHostImpl::GetBundleArchiveInfoBySandBoxPath(const std::string &
     InnerBundleInfo info;
     BundleParser bundleParser;
     bool isAbcCompressed = false;
-    ret = bundleParser.Parse(realPath, info, isAbcCompressed);
+    ret = bundleParser.Parse(realPath, info, isAbcCompressed, true);
     if (ret != ERR_OK) {
         APP_LOGE("parse bundle info failed, error: %{public}d", ret);
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
@@ -4077,7 +4077,7 @@ bool BundleMgrHostImpl::GetDistributedBundleInfo(const std::string &networkId, c
 ErrCode BundleMgrHostImpl::GetMetadataByBundleName(const std::string &bundleName,
     std::vector<ModuleMetadata> &metadataInfos)
 {
-    APP_LOGD("start GetMetadataByBundleName, bundleName : %{public}s", bundleName.c_str());
+    APP_LOGD("start GetMetadataByBundleName, bundleName=%{public}s", bundleName.c_str());
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("Non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
@@ -4102,13 +4102,20 @@ ErrCode BundleMgrHostImpl::GetMetadataByBundleName(const std::string &bundleName
     if (ret != ERR_OK) {
         return ret;
     }
+    BundleType bundleType = BundleType::APP;
+    dataMgr->GetBundleType(bundleName, bundleType);
     for (auto &moduleMetadata : metadataInfos) {
         const std::string &moduleName = moduleMetadata.moduleName;
         for (auto &metadata : moduleMetadata.metadata) {
             if (metadata.valueId == 0 || metadata.value.find(VALUE_STRING_PREFIX) != 0) {
                 continue;
             }
-            std::string resolvedValue = dataMgr->GetStringById(bundleName, moduleName, metadata.valueId, userId, "");
+            std::string resolvedValue;
+            if (bundleType == BundleType::SHARED || bundleType == BundleType::APP_SERVICE_FWK) {
+                resolvedValue = dataMgr->GetStringByIdForSharedBundle(bundleName, moduleName, metadata.valueId);
+            } else {
+                resolvedValue = dataMgr->GetStringById(bundleName, moduleName, metadata.valueId, userId, "");
+            }
             if (!resolvedValue.empty()) {
                 metadata.value = resolvedValue;
             }
@@ -6003,11 +6010,6 @@ bool BundleMgrHostImpl::GetLabelByBundleName(const std::string &bundleName, int3
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGI("GetLabelByBundleName -n %{public}s -u %{public}d", bundleName.c_str(), userId);
-    if (!BundlePermissionMgr::IsSystemApp()) {
-        APP_LOGE("Non-system app calling system api");
-        return false;
-    }
-
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
@@ -6044,10 +6046,6 @@ bool BundleMgrHostImpl::GetAllBundleLabel(int32_t userId, std::string &labels)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGI("GetAllBundleLabel -u %{public}d", userId);
-    if (!BundlePermissionMgr::IsSystemApp()) {
-        APP_LOGE("Non-system app calling system api");
-        return false;
-    }
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
@@ -6952,6 +6950,7 @@ void BundleMgrHostImpl::SetProvisionInfoToInnerBundleInfo(const std::string &hap
     } else {
         info.SetCertificate(provisionInfo.bundleInfo.distributionCertificate);
     }
+    info.SetSignatureValidity(provisionInfo.validity.notAfter, provisionInfo.validity.notBefore);
     info.SetAppPrivilegeLevel(provisionInfo.bundleInfo.apl);
     bool isDebug = provisionInfo.type == Security::Verify::ProvisionType::DEBUG;
     info.SetAppProvisionType(isDebug ? Constants::APP_PROVISION_TYPE_DEBUG : Constants::APP_PROVISION_TYPE_RELEASE);
@@ -8957,7 +8956,8 @@ ErrCode BundleMgrHostImpl::ParseAndFilterHaps(
         InnerBundleInfo info;
         BundleParser bundleParser;
         bool isAbcCompressed = false;
-        auto ret = bundleParser.Parse(hapPath, info, isAbcCompressed);
+        // the haps are from the app file provided by the caller, so the profile size must be checked
+        auto ret = bundleParser.Parse(hapPath, info, isAbcCompressed, true);
         if (ret != ERR_OK) {
             APP_LOGE("parse hap failed, path=%{private}s, err=%{public}d", hapPath.c_str(), ret);
             return ret;

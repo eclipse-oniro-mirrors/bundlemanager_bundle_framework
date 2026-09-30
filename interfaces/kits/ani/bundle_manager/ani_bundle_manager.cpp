@@ -2691,8 +2691,7 @@ static ani_object GetBundleExtensionPolicyInfoNative(ani_env* env, ani_string an
         return nullptr;
     }
     if (bundleName.empty()) {
-        BusinessErrorAni::ThrowCommonError(
-            env, ERROR_PARAM_CHECK_ERROR, GET_BUNDLE_EXTENSION_POLICY_INFO, BUNDLE_PERMISSIONS);
+        BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_BUNDLENAME_EMPTY_ERROR);
         return nullptr;
     }
  
@@ -2707,7 +2706,7 @@ static ani_object GetBundleExtensionPolicyInfoNative(ani_env* env, ani_string an
     if (ret != ERR_OK) {
         APP_LOGE("GetBundleInfoDualModeNative failed ret: %{public}d", ret);
         BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret), GET_BUNDLE_EXTENSION_POLICY_INFO,
-            Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+            Constants::PERMISSION_GET_BUNDLE_INFO_AND_INTERACT_ACROSS_LOCAL_ACCOUNTS);
         return nullptr;
     }
     dualModeBundleInfo.bundleName = bundleName;

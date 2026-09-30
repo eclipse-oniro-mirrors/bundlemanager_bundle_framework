@@ -3302,6 +3302,48 @@ HWTEST_F(BmsBundleParserTest, TestExtractByName_1000, Function | SmallTest | Lev
 }
 
 /**
+ * @tc.number: TestGetProfileUncompressedSize_0100
+ * @tc.name: get the declared uncompressed size of the profile
+ * @tc.desc: 1. system running normally
+ *           2. test get the profile size from the package which does not exist
+ */
+HWTEST_F(BmsBundleParserTest, TestGetProfileUncompressedSize_0100, Function | SmallTest | Level1)
+{
+    pathStream_ << RESOURCE_ROOT_PATH << UNKOWN_PATH << INSTALL_FILE_SUFFIX;
+    BundleExtractor bundleExtractor(pathStream_.str());
+    EXPECT_FALSE(bundleExtractor.Init());
+    EXPECT_EQ(bundleExtractor.GetProfileUncompressedSize(), 0);
+}
+
+/**
+ * @tc.number: TestGetProfileUncompressedSize_0200
+ * @tc.name: get the declared uncompressed size of the profile
+ * @tc.desc: 1. system running normally
+ *           2. test get the profile size from a valid package
+ */
+HWTEST_F(BmsBundleParserTest, TestGetProfileUncompressedSize_0200, Function | SmallTest | Level1)
+{
+    pathStream_ << RESOURCE_ROOT_PATH << NEW_APP << INSTALL_FILE_SUFFIX;
+    BundleExtractor bundleExtractor(pathStream_.str());
+    EXPECT_TRUE(bundleExtractor.Init());
+    EXPECT_NE(bundleExtractor.GetProfileUncompressedSize(), 0);
+}
+
+/**
+ * @tc.number: TestIsProfileSizeAllowed_0100
+ * @tc.name: check whether the profile size is allowed to be extracted
+ * @tc.desc: 1. system running normally
+ *           2. test a normal profile of a valid package is allowed
+ */
+HWTEST_F(BmsBundleParserTest, TestIsProfileSizeAllowed_0100, Function | SmallTest | Level1)
+{
+    pathStream_ << RESOURCE_ROOT_PATH << NEW_APP << INSTALL_FILE_SUFFIX;
+    BundleExtractor bundleExtractor(pathStream_.str());
+    EXPECT_TRUE(bundleExtractor.Init());
+    EXPECT_TRUE(bundleExtractor.IsProfileSizeAllowed());
+}
+
+/**
  * @tc.number: TestDefaultPermissionProfile_0100
  * @tc.name: test default permission profile
  * @tc.desc: 1. system running normally

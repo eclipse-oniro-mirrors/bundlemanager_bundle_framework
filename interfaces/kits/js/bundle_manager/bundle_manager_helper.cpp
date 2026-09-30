@@ -184,13 +184,13 @@ ErrCode BundleManagerHelper::GetExtensionFromBundleInfo(const BundleInfo& bundle
     for (const auto& hapModuleInfo : bundleInfo.hapModuleInfos) {
         for (const auto& extensionInfo : hapModuleInfo.extensionInfos) {
             if (extensionInfo.name == abilityName && extensionInfo.moduleName == moduleName) {
+                if (!extensionInfo.enabled) {
+                    APP_LOGI("extension disabled");
+                    return ERR_BUNDLE_MANAGER_ABILITY_DISABLED;
+                }
                 ifExists = true;
                 targetExtensionInfo = extensionInfo;
                 break;
-            }
-            if (!extensionInfo.enabled) {
-                APP_LOGI("extension disabled");
-                return ERR_BUNDLE_MANAGER_ABILITY_DISABLED;
             }
         }
         if (ifExists) {

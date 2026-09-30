@@ -1992,6 +1992,39 @@ HWTEST_F(BmsBundleManagerTest3, BundleMgrHostImpl_3800, Function | MediumTest | 
 }
 
 /**
+ * @tc.number: SetSignatureValidity_0001
+ * @tc.name: test SetSignatureValidity
+ * @tc.desc: test notBefore/notAfter set via SetSignatureValidity survive GetBundleInfoV9
+ *           with GET_BUNDLE_INFO_WITH_SIGNATURE_INFO flag (getBundleArchiveInfo return path)
+ */
+HWTEST_F(BmsBundleManagerTest3, SetSignatureValidity_0001, Function | SmallTest | Level1)
+{
+    const std::string bundleName = "com.example.validitytest";
+    InnerBundleInfo innerBundleInfo;
+    BundleInfo baseBundleInfo;
+    baseBundleInfo.name = bundleName;
+    ApplicationInfo appInfo;
+    appInfo.bundleName = bundleName;
+    innerBundleInfo.SetBaseBundleInfo(baseBundleInfo);
+    innerBundleInfo.SetBaseApplicationInfo(appInfo);
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = bundleName;
+    userInfo.bundleUserInfo.userId = USERID;
+    innerBundleInfo.AddInnerBundleUserInfo(userInfo);
+
+    const int64_t testNotBefore = 90000000000;
+    const int64_t testNotAfter = 99000000000;
+    innerBundleInfo.SetSignatureValidity(testNotAfter, testNotBefore);
+
+    BundleInfo bundleInfo;
+    int32_t flags = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO);
+    ErrCode ret = innerBundleInfo.GetBundleInfoV9(flags, bundleInfo, USERID);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(bundleInfo.signatureInfo.validity.notBefore, testNotBefore);
+    EXPECT_EQ(bundleInfo.signatureInfo.validity.notAfter, testNotAfter);
+}
+
+/**
  * @tc.number: BundleMgrHostImpl_3900
  * @tc.name: test BundleMgrHostImpl
  * @tc.desc: 1.test GetOdid

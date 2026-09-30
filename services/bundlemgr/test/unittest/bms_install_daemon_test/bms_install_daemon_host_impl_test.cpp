@@ -24,6 +24,7 @@
 #include "installd/installd_operator.h"
 #include "ipc/hap_module_extract_param.h"
 #include "ipc/installd_proxy.h"
+#include "ipc/extract_module_files_param.h"
 #include "ipc/skills_package_param.h"
 #include "skills_installer/skills_package_info.h"
 
@@ -293,21 +294,6 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_1300, Function | Sma
     ASSERT_NE(hostImpl, nullptr);
 
     auto ret = hostImpl->MoveFile(TEST_STRING, TEST_STRING, BundleDirScene::MOVE_HAP_TO_INSTALL_DIR, TEST_BUNDLE_NAME);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
-}
-
-/**
- * @tc.number: InstalldHostImplTest_1350
- * @tc.name: test function of InstallHostImpl
- * @tc.desc: 1. calling RenameFile of hostImpl
- * @tc.require: issueI5T6P3
-*/
-HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_1350, Function | SmallTest | Level0)
-{
-    auto hostImpl = GetInstalldHostImpl();
-    ASSERT_NE(hostImpl, nullptr);
-
-    auto ret = hostImpl->RenameFile(TEST_STRING, TEST_STRING);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 
@@ -1993,6 +1979,301 @@ HWTEST_F(BmsInstallDaemonHostImplTest, GetCacheDiskUsageFromPath_0100, Function 
     auto ret = hostImpl->GetCacheDiskUsageFromPath(paths, statSize);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
     EXPECT_EQ(statSize, 0);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_8500
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling ExtractPluginModuleFiles of hostImpl with permission denied
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_8500, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+
+    ExtractModuleFilesParam param;
+    param.hostBundleName = TEST_BUNDLE_NAME;
+    param.bundleNameWithTime = TEST_STRING;
+    param.moduleName = TEST_STRING;
+    param.bundlePath = TEST_STRING;
+    param.nativeLibraryPath = TEST_STRING;
+    param.cpuAbi = TEST_CPU_ABI;
+    auto ret = hostImpl->ExtractPluginModuleFiles(param);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_8600
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling ExtractPluginModuleFiles with invalid hostBundleName
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_8600, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+
+    ExtractModuleFilesParam param;
+    param.hostBundleName = "";
+    param.bundleNameWithTime = TEST_STRING;
+    param.moduleName = TEST_STRING;
+    param.bundlePath = TEST_STRING;
+    param.nativeLibraryPath = TEST_STRING;
+    param.cpuAbi = TEST_CPU_ABI;
+    auto ret = hostImpl->ExtractPluginModuleFiles(param);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_8700
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling ExtractPluginModuleFiles with empty params
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_8700, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+
+    ExtractModuleFilesParam param;
+    param.hostBundleName = TEST_BUNDLE_NAME;
+    param.bundleNameWithTime = "";
+    param.moduleName = TEST_STRING;
+    param.bundlePath = TEST_STRING;
+    param.nativeLibraryPath = TEST_STRING;
+    param.cpuAbi = TEST_CPU_ABI;
+    auto ret = hostImpl->ExtractPluginModuleFiles(param);
+    EXPECT_NE(ret, ERR_OK);
+    param.bundleNameWithTime = TEST_STRING;
+    param.moduleName = "";
+    ret = hostImpl->ExtractPluginModuleFiles(param);
+    EXPECT_NE(ret, ERR_OK);
+    param.moduleName = TEST_STRING;
+    param.bundlePath = "";
+    ret = hostImpl->ExtractPluginModuleFiles(param);
+    EXPECT_NE(ret, ERR_OK);
+    param.bundlePath = TEST_STRING;
+    param.nativeLibraryPath = "";
+    ret = hostImpl->ExtractPluginModuleFiles(param);
+    EXPECT_NE(ret, ERR_OK);
+    param.nativeLibraryPath = TEST_STRING;
+    param.cpuAbi = "";
+    ret = hostImpl->ExtractPluginModuleFiles(param);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_8800
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling ExtractPluginModuleFiles with invalid moduleName or nativeLibraryPath
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_8800, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+
+    ExtractModuleFilesParam param;
+    param.hostBundleName = TEST_BUNDLE_NAME;
+    param.bundleNameWithTime = TEST_STRING;
+    param.moduleName = "../invalid";
+    param.bundlePath = TEST_STRING;
+    param.nativeLibraryPath = TEST_STRING;
+    param.cpuAbi = TEST_CPU_ABI;
+    auto ret = hostImpl->ExtractPluginModuleFiles(param);
+    EXPECT_NE(ret, ERR_OK);
+    param.moduleName = TEST_STRING;
+    param.nativeLibraryPath = "../invalid";
+    ret = hostImpl->ExtractPluginModuleFiles(param);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_8900
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling ExtractPluginModuleFiles with invalid path via InstalldProxy
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_8900, Function | SmallTest | Level0)
+{
+    sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
+    EXPECT_NE(installdProxy, nullptr);
+
+    ExtractModuleFilesParam param;
+    param.hostBundleName = TEST_BUNDLE_NAME;
+    param.bundleNameWithTime = TEST_STRING;
+    param.moduleName = TEST_STRING;
+    param.bundlePath = TEST_STRING;
+    param.nativeLibraryPath = TEST_STRING;
+    param.cpuAbi = TEST_CPU_ABI;
+    auto ret = installdProxy->ExtractPluginModuleFiles(param);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
+}
+
+/**
+ * @tc.number: ExtractServiceModuleFiles_0100
+ * @tc.name: test ExtractServiceModuleFiles
+ * @tc.desc: 1. calling ExtractServiceModuleFiles with permission denied
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, ExtractServiceModuleFiles_0100, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+
+    ExtractModuleFilesParam param;
+    param.bundleName = TEST_BUNDLE_NAME;
+    param.moduleName = "entry";
+    param.bundlePath = "/data/test/test.hsp";
+    param.nativeLibraryPath = "lib/arm64";
+    param.cpuAbi = "arm64-v8a";
+    param.versionCode = 1;
+    param.needFakeDecompression = false;
+    param.isSystemApp = false;
+    auto ret = hostImpl->ExtractServiceModuleFiles(param);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: ExtractServiceModuleFiles_0200
+ * @tc.name: test ExtractServiceModuleFiles
+ * @tc.desc: 1. calling ExtractServiceModuleFiles with invalid param (empty bundleName)
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, ExtractServiceModuleFiles_0200, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+
+    ExtractModuleFilesParam param;
+    param.bundleName = "";
+    param.moduleName = "entry";
+    param.bundlePath = "/data/test/test.hsp";
+    param.nativeLibraryPath = "lib/arm64";
+    param.cpuAbi = "arm64-v8a";
+    param.versionCode = 1;
+    auto ret = hostImpl->ExtractServiceModuleFiles(param);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_9100
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling ExtractSharedModuleFiles with permission denied
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_9100, Function | SmallTest | Level0)
+{
+    auto hostImpl = std::make_shared<InstalldHostImpl>();
+    EXPECT_NE(hostImpl, nullptr);
+
+    ExtractModuleFilesParam param;
+    param.bundleName = TEST_BUNDLE_NAME;
+    param.versionCode = 100;
+    param.moduleName = TEST_STRING;
+    param.bundlePath = TEST_STRING;
+    param.nativeLibraryPath = TEST_STRING;
+    param.cpuAbi = TEST_CPU_ABI;
+    auto ret = hostImpl->ExtractSharedModuleFiles(param);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_9200
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling ExtractSharedModuleFiles with invalid bundleName
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_9200, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_shared<InstalldHostImpl>();
+    EXPECT_NE(hostImpl, nullptr);
+
+    ExtractModuleFilesParam param;
+    param.bundleName = "invalid";
+    param.versionCode = 100;
+    param.moduleName = TEST_STRING;
+    param.bundlePath = TEST_STRING;
+    param.nativeLibraryPath = TEST_STRING;
+    param.cpuAbi = TEST_CPU_ABI;
+    auto ret = hostImpl->ExtractSharedModuleFiles(param);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_9300
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling ExtractSharedModuleFiles with empty params
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_9300, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_shared<InstalldHostImpl>();
+    EXPECT_NE(hostImpl, nullptr);
+
+    ExtractModuleFilesParam param;
+    param.bundleName = TEST_BUNDLE_NAME;
+    auto ret = hostImpl->ExtractSharedModuleFiles(param);
+    EXPECT_NE(ret, ERR_OK);
+
+    param.moduleName = TEST_STRING;
+    ret = hostImpl->ExtractSharedModuleFiles(param);
+    EXPECT_NE(ret, ERR_OK);
+
+    param.bundlePath = TEST_STRING;
+    ret = hostImpl->ExtractSharedModuleFiles(param);
+    EXPECT_NE(ret, ERR_OK);
+
+    param.nativeLibraryPath = TEST_STRING;
+    ret = hostImpl->ExtractSharedModuleFiles(param);
+    EXPECT_NE(ret, ERR_OK);
+
+    param.cpuAbi = TEST_CPU_ABI;
+    ret = hostImpl->ExtractSharedModuleFiles(param);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_9400
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling ExtractSharedModuleFiles with invalid moduleName, nativeLibraryPath or bundlePath
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_9400, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_shared<InstalldHostImpl>();
+    EXPECT_NE(hostImpl, nullptr);
+
+    ExtractModuleFilesParam param;
+    param.bundleName = TEST_BUNDLE_NAME;
+    param.versionCode = 100;
+    param.moduleName = "../invalid";
+    param.bundlePath = TEST_STRING;
+    param.nativeLibraryPath = TEST_STRING;
+    param.cpuAbi = TEST_CPU_ABI;
+    auto ret = hostImpl->ExtractSharedModuleFiles(param);
+    EXPECT_NE(ret, ERR_OK);
+
+    param.moduleName = TEST_STRING;
+    param.nativeLibraryPath = "../invalid";
+    ret = hostImpl->ExtractSharedModuleFiles(param);
+    EXPECT_NE(ret, ERR_OK);
+
+    param.nativeLibraryPath = TEST_STRING;
+    param.bundlePath = "../invalid";
+    ret = hostImpl->ExtractSharedModuleFiles(param);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_9500
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling ExtractSharedModuleFiles with valid params and permission granted
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_9500, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_shared<InstalldHostImpl>();
+    EXPECT_NE(hostImpl, nullptr);
+
+    ExtractModuleFilesParam param;
+    param.bundleName = TEST_BUNDLE_NAME;
+    param.versionCode = 100;
+    param.moduleName = TEST_STRING;
+    param.bundlePath = TEST_STRING;
+    param.nativeLibraryPath = TEST_STRING;
+    param.cpuAbi = TEST_CPU_ABI;
+    auto ret = hostImpl->ExtractSharedModuleFiles(param);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 
 /**

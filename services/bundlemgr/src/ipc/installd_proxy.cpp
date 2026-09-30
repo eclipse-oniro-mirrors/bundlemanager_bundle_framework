@@ -257,6 +257,47 @@ ErrCode InstalldProxy::ExtractQuickFixSoFile(const std::string &bundleName, cons
     return TransactInstalldCmd(InstalldInterfaceCode::EXTRACT_QUICK_FIX_SO_FILE, data, reply, option);
 }
 
+ErrCode InstalldProxy::ExtractPluginModuleFiles(const ExtractModuleFilesParam &param)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    if (!data.WriteParcelable(&param)) {
+        LOG_E(BMS_TAG_INSTALLD, "WriteParcelable param failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    MessageOption option;
+    return TransactInstalldCmd(InstalldInterfaceCode::EXTRACT_PLUGIN_MODULE_FILES, data, reply, option);
+}
+
+ErrCode InstalldProxy::ExtractServiceModuleFiles(const ExtractModuleFilesParam &param)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    if (!data.WriteParcelable(&param)) {
+        LOG_E(BMS_TAG_INSTALLD, "WriteParcelable ExtractModuleFilesParam failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    MessageOption option;
+    return TransactInstalldCmd(InstalldInterfaceCode::EXTRACT_SERVICE_MODULE_FILES, data, reply, option);
+}
+
+ErrCode InstalldProxy::ExtractSharedModuleFiles(const ExtractModuleFilesParam &param)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    if (!data.WriteParcelable(&param)) {
+        LOG_E(BMS_TAG_INSTALLD, "WriteParcelable param failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    MessageOption option;
+    return TransactInstalldCmd(InstalldInterfaceCode::EXTRACT_SHARED_MODULE_FILES, data, reply, option);
+}
+
 ErrCode InstalldProxy::ExtractQuickFixRes(const std::string &bundleName, const std::string &moduleName,
     const std::string &hqfFilePath, bool needFakeDecompression)
 {
@@ -1052,18 +1093,6 @@ ErrCode InstalldProxy::MoveFile(
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
     return TransactInstalldCmd(InstalldInterfaceCode::MOVE_FILE, data, reply, option);
-}
-
-ErrCode InstalldProxy::RenameFile(const std::string &oldPath, const std::string &newPath)
-{
-    MessageParcel data;
-    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
-    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(oldPath));
-    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(newPath));
-
-    MessageParcel reply;
-    MessageOption option(MessageOption::TF_SYNC);
-    return TransactInstalldCmd(InstalldInterfaceCode::RENAME_FILE, data, reply, option);
 }
 
 ErrCode InstalldProxy::BackupSandboxDir(int32_t userId, const std::string &sandboxDir)

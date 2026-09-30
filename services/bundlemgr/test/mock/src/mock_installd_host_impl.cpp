@@ -123,6 +123,11 @@ ErrCode InstalldHostImpl::ExtractHnpFilesByScene(const ExtractHnpFilesParam &ext
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::ExtractSharedModuleFiles(const ExtractModuleFilesParam &param)
+{
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::ProcessBundleInstallNative(const InstallHnpParam &installHnpParam)
 {
     return ERR_OK;
@@ -272,11 +277,6 @@ ErrCode InstalldHostImpl::MoveFile(
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::RenameFile(const std::string &oldPath, const std::string &newPath)
-{
-    return ERR_OK;
-}
-
 ErrCode InstalldHostImpl::BackupSandboxDir(int32_t userId, const std::string &sandboxDir)
 {
     return ERR_OK;
@@ -416,6 +416,16 @@ ErrCode InstalldHostImpl::ExtractFiles(const ExtractParam &extractParam)
 ErrCode InstalldHostImpl::ExtractQuickFixSoFile(const std::string &bundleName, const std::string &hqfFilePath,
     const std::string &nativeLibraryPath, const std::string &cpuAbi, bool isReplace, int32_t versionCode,
     const std::string &targetPathSuffix)
+{
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::ExtractPluginModuleFiles(const ExtractModuleFilesParam &param)
+{
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::ExtractServiceModuleFiles(const ExtractModuleFilesParam &param)
 {
     return ERR_OK;
 }

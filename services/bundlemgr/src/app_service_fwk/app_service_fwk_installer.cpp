@@ -19,6 +19,7 @@
 #include "bundle_mgr_service.h"
 #include "inner_patch_info.h"
 #include "installd_client.h"
+#include "ipc/extract_module_files_param.h"
 #include "ipc_skeleton.h"
 #include "patch_data_mgr.h"
 #include "scope_guard.h"
@@ -703,24 +704,32 @@ ErrCode AppServiceFwkInstaller::ProcessNativeLibrary(
     if (isCompressNativeLibs_) {
         std::string tempNativeLibraryPath = ObtainTempSoPath(moduleName, nativeLibraryPath_);
         if (tempNativeLibraryPath.empty()) {
-            APP_LOGE("tempNativeLibraryPath is empty");
+            APP_LOGE("ProcessNativeLibrary obtain temp so path failed, moduleName:%{public}s", moduleName.c_str());
             return ERR_APPEXECFWK_INSTALLD_EXTRACT_FILES_FAILED;
         }
-
-        std::string tempSoPath =
-            versionDir + AppExecFwk::ServiceConstants::PATH_SEPARATOR + tempNativeLibraryPath;
         auto needFakeDecompression =
             newInfo.IsFakeDecompressionEnable() &&
             BundleUtil::IsSoSupportFakeDecompression(newInfo.GetBundleName(), newInfo.GetIsKeepAlive(), bundlePath);
         auto isSystemApp = newInfo.IsSystemApp();
-        APP_LOGI_NOFUNC("TempSoPath %{public}s cpuAbi %{public}s needFakeDecompression:%{public}d",
-            tempSoPath.c_str(), cpuAbi_.c_str(), needFakeDecompression);
-        auto result = InstalldClient::GetInstance()->ExtractModuleFiles(
-            bundlePath, moduleDir, tempSoPath, cpuAbi_, needFakeDecompression, isSystemApp);
-        CHECK_RESULT(result, "Extract module files failed %{public}d");
+        APP_LOGI_NOFUNC("ExtractServiceModuleFiles bundleName:%{public}s moduleName:%{public}s cpuAbi %{public}s "
+            "needFakeDecompression:%{public}d", bundleName_.c_str(), moduleName.c_str(), cpuAbi_.c_str(),
+            needFakeDecompression);
+        ExtractModuleFilesParam extractParam;
+        extractParam.bundleName = bundleName_;
+        extractParam.moduleName = moduleName;
+        extractParam.bundlePath = bundlePath;
+        extractParam.nativeLibraryPath = nativeLibraryPath_;
+        extractParam.cpuAbi = cpuAbi_;
+        extractParam.versionCode = static_cast<int32_t>(newInfo.GetVersionCode());
+        extractParam.needFakeDecompression = needFakeDecompression;
+        extractParam.isSystemApp = isSystemApp;
+        auto result = InstalldClient::GetInstance()->ExtractServiceModuleFiles(extractParam);
+        CHECK_RESULT(result, "Extract service module files failed %{public}d");
         isSoNeedFakeDecompression_ = isSoNeedFakeDecompression_ || needFakeDecompression;
         if (!copyHapToInstallPath) {
-            // verify hap or hsp code signature for compressed so files
+            // tempSoPath still needed for code signature verification
+            std::string tempSoPath =
+                versionDir + AppExecFwk::ServiceConstants::PATH_SEPARATOR + tempNativeLibraryPath;
             result = VerifyCodeSignatureForNativeFiles(bundlePath, cpuAbi_, tempSoPath);
             CHECK_RESULT(result, "fail to VerifyCodeSignature, error is %{public}d");
         }

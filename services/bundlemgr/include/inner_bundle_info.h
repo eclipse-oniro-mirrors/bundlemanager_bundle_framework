@@ -2450,6 +2450,7 @@ public:
     std::string GetAppIdentifier() const;
     void SetCertificate(const std::string &certificate);
     std::string GetCertificate() const;
+    void SetSignatureValidity(const int64_t notAfter, const int64_t notBefore);
     void AddOldAppId(const std::string &appId);
     std::vector<std::string> GetOldAppIds() const;
     void SetMoudleIsEncrpted(const std::string &packageName, bool isEncrypted);

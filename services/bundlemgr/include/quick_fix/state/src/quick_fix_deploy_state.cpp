@@ -19,6 +19,8 @@
 #include "quick_fix_deployer.h"
 #include "quick_fix_switch_state.h"
 
+#include "bundle_mgr_service.h"
+
 namespace OHOS {
 namespace AppExecFwk {
 QuickFixDeployState::QuickFixDeployState(const InnerAppQuickFix &innerQuickFixInfo)
@@ -34,7 +36,16 @@ ErrCode QuickFixDeployState::Process()
     std::vector<std::string> bundlePaths;
     std::unique_ptr<QuickFixDeployer> deployer = std::make_unique<QuickFixDeployer>(bundlePaths);
     InnerAppQuickFix oldInnerAppQuickFix;
-    auto res = deployer->ToDeployEndStatus(innerQuickFixInfo_, oldInnerAppQuickFix);
+    ErrCode res;
+    {
+        auto svc = DelayedSingleton<BundleMgrService>::GetInstance();
+        if (svc == nullptr || svc->GetDataMgr() == nullptr) {
+            APP_LOGE("BundleMgrService or DataMgr is nullptr, bundle: %{public}s", bundleName.c_str());
+            return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
+        }
+        std::lock_guard<std::mutex> bundleLock(svc->GetDataMgr()->GetBundleMutex(bundleName));
+        res = deployer->ToDeployEndStatus(innerQuickFixInfo_, oldInnerAppQuickFix);
+    }
     if (res != ERR_OK) {
         APP_LOGE("deploy quick fix failed due to %{public}d", res);
         return res;

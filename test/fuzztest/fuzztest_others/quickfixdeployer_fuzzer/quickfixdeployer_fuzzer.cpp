@@ -62,7 +62,9 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     quickFixDeployer.GetQuickFixDataMgr();
     quickFixDeployer.SaveToInnerBundleInfo(newInnerAppQuickFix);
     quickFixDeployer.ToDeployEndStatus(newInnerAppQuickFix, oldInnerAppQuickFix);
-    quickFixDeployer.ToDeployStartStatus(bundleFilePaths, newInnerAppQuickFix, oldInnerAppQuickFix);
+    const AppQuickFix appQuickFix = CreateAppQuickFix();
+    infos.emplace(BUNDLE_NAME, appQuickFix);
+    quickFixDeployer.ToDeployStartStatus(bundleFilePaths, infos, newInnerAppQuickFix, oldInnerAppQuickFix);
     quickFixDeployer.ParseAndCheckAppQuickFixInfos(bundleFilePaths, infos);
     quickFixDeployer.ToInnerAppQuickFix(infos, oldInnerAppQuickFix, newInnerAppQuickFix);
     BundleInfo bundleInfo;
@@ -70,7 +72,6 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     quickFixDeployer.GetBundleInfo(bundleName, bundleInfo);
     quickFixDeployer.ProcessPatchDeployStart(bundleFilePaths, bundleInfo, infos);
     std::unordered_map<std::string, AppQuickFix> infos1;
-    const AppQuickFix appQuickFix = CreateAppQuickFix();
     quickFixDeployer.ProcessHotReloadDeployStart(bundleInfo, appQuickFix);
     quickFixDeployer.ProcessPatchDeployEnd(appQuickFix, targetPath);
     quickFixDeployer.ProcessHotReloadDeployEnd(appQuickFix, targetPath);

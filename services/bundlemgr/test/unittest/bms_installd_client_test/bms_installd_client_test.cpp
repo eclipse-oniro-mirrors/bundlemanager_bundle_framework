@@ -26,6 +26,7 @@
 #undef private
 #undef protected
 #include "ipc/create_dir_param.h"
+#include "ipc/extract_module_files_param.h"
 #include "message_parcel.h"
 #include "parameters.h"
 
@@ -61,6 +62,8 @@ const int32_t USERID = 100;
 const int32_t UID = 1000;
 const int32_t GID = 1000;
 const std::string EMPTY_STRING = "";
+const std::string TEST_STRING = "test.string";
+const std::string TEST_CPU_ABI = "arm64";
 constexpr uint32_t INSTALLS_UID = 3060;
 }  // namespace
 
@@ -2769,6 +2772,328 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetAppDataDirCategorySizes
         cacheSize, filesSize, databaseSize);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_GetAppDataDirCategorySizes_0100 end";
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_ExtractPluginModuleFiles_0100
+ * @tc.name: ExtractPluginModuleFiles
+ * @tc.desc: Test whether ExtractPluginModuleFiles is called normally.(hostBundleName is empty)
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractPluginModuleFiles_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractPluginModuleFiles_0100 start";
+    ExtractModuleFilesParam param;
+    param.hostBundleName = EMPTY_STRING;
+    param.bundleNameWithTime = BUNDLE_NAME;
+    param.moduleName = MODULE_NAME;
+    param.bundlePath = SRC_PATH;
+    param.nativeLibraryPath = TARGET_SO_PATH;
+    param.cpuAbi = CPU_ABI;
+    ErrCode result = installClient_->ExtractPluginModuleFiles(param);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractPluginModuleFiles_0100 end";
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_ExtractPluginModuleFiles_0200
+ * @tc.name: ExtractPluginModuleFiles
+ * @tc.desc: Test whether ExtractPluginModuleFiles is called normally.(bundleNameWithTime is empty)
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractPluginModuleFiles_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractPluginModuleFiles_0200 start";
+    ExtractModuleFilesParam param;
+    param.hostBundleName = BUNDLE_NAME;
+    param.bundleNameWithTime = EMPTY_STRING;
+    param.moduleName = MODULE_NAME;
+    param.bundlePath = SRC_PATH;
+    param.nativeLibraryPath = TARGET_SO_PATH;
+    param.cpuAbi = CPU_ABI;
+    ErrCode result = installClient_->ExtractPluginModuleFiles(param);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractPluginModuleFiles_0200 end";
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_ExtractPluginModuleFiles_0300
+ * @tc.name: ExtractPluginModuleFiles
+ * @tc.desc: Test whether ExtractPluginModuleFiles is called normally.(moduleName is empty)
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractPluginModuleFiles_0300, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractPluginModuleFiles_0300 start";
+    ExtractModuleFilesParam param;
+    param.hostBundleName = BUNDLE_NAME;
+    param.bundleNameWithTime = BUNDLE_NAME;
+    param.moduleName = EMPTY_STRING;
+    param.bundlePath = SRC_PATH;
+    param.nativeLibraryPath = TARGET_SO_PATH;
+    param.cpuAbi = CPU_ABI;
+    ErrCode result = installClient_->ExtractPluginModuleFiles(param);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractPluginModuleFiles_0300 end";
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_ExtractPluginModuleFiles_0400
+ * @tc.name: ExtractPluginModuleFiles
+ * @tc.desc: Test whether ExtractPluginModuleFiles is called normally.(bundlePath is empty)
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractPluginModuleFiles_0400, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractPluginModuleFiles_0400 start";
+    ExtractModuleFilesParam param;
+    param.hostBundleName = BUNDLE_NAME;
+    param.bundleNameWithTime = BUNDLE_NAME;
+    param.moduleName = MODULE_NAME;
+    param.bundlePath = EMPTY_STRING;
+    param.nativeLibraryPath = TARGET_SO_PATH;
+    param.cpuAbi = CPU_ABI;
+    ErrCode result = installClient_->ExtractPluginModuleFiles(param);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractPluginModuleFiles_0400 end";
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_ExtractPluginModuleFiles_0500
+ * @tc.name: ExtractPluginModuleFiles
+ * @tc.desc: Test whether ExtractPluginModuleFiles is called normally.(nativeLibraryPath is empty)
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractPluginModuleFiles_0500, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractPluginModuleFiles_0500 start";
+    ExtractModuleFilesParam param;
+    param.hostBundleName = BUNDLE_NAME;
+    param.bundleNameWithTime = BUNDLE_NAME;
+    param.moduleName = MODULE_NAME;
+    param.bundlePath = SRC_PATH;
+    param.nativeLibraryPath = EMPTY_STRING;
+    param.cpuAbi = CPU_ABI;
+    ErrCode result = installClient_->ExtractPluginModuleFiles(param);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractPluginModuleFiles_0500 end";
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_ExtractPluginModuleFiles_0600
+ * @tc.name: ExtractPluginModuleFiles
+ * @tc.desc: Test whether ExtractPluginModuleFiles is called normally.(cpuAbi is empty)
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractPluginModuleFiles_0600, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractPluginModuleFiles_0600 start";
+    ExtractModuleFilesParam param;
+    param.hostBundleName = BUNDLE_NAME;
+    param.bundleNameWithTime = BUNDLE_NAME;
+    param.moduleName = MODULE_NAME;
+    param.bundlePath = SRC_PATH;
+    param.nativeLibraryPath = TARGET_SO_PATH;
+    param.cpuAbi = EMPTY_STRING;
+    ErrCode result = installClient_->ExtractPluginModuleFiles(param);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractPluginModuleFiles_0600 end";
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_ExtractPluginModuleFiles_0700
+ * @tc.name: ExtractPluginModuleFiles
+ * @tc.desc: Test whether ExtractPluginModuleFiles is called normally.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractPluginModuleFiles_0700, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractPluginModuleFiles_0700 start";
+    ExtractModuleFilesParam param;
+    param.hostBundleName = BUNDLE_NAME;
+    param.bundleNameWithTime = BUNDLE_NAME;
+    param.moduleName = MODULE_NAME;
+    param.bundlePath = SRC_PATH;
+    param.nativeLibraryPath = TARGET_SO_PATH;
+    param.cpuAbi = CPU_ABI;
+    ErrCode result = installClient_->ExtractPluginModuleFiles(param);
+    EXPECT_EQ(result, installClient_->CallService(&IInstalld::ExtractPluginModuleFiles, param));
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractPluginModuleFiles_0700 end";
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_ExtractServiceModuleFiles_0100
+ * @tc.name: ExtractServiceModuleFiles
+ * @tc.desc: Test ExtractServiceModuleFiles with empty bundleName returns error
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractServiceModuleFiles_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractServiceModuleFiles_0100 start";
+    ExtractModuleFilesParam param;
+    param.bundleName = "";
+    param.moduleName = "entry";
+    param.bundlePath = "/data/test/test.hsp";
+    param.nativeLibraryPath = "lib/arm64";
+    param.cpuAbi = "arm64-v8a";
+    param.versionCode = 100;
+    ErrCode result = installClient_->ExtractServiceModuleFiles(param);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractServiceModuleFiles_0100 end";
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_ExtractServiceModuleFiles_0200
+ * @tc.name: ExtractServiceModuleFiles
+ * @tc.desc: Test ExtractServiceModuleFiles with empty moduleName returns error
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractServiceModuleFiles_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractServiceModuleFiles_0200 start";
+    ExtractModuleFilesParam param;
+    param.bundleName = BUNDLE_NAME;
+    param.moduleName = "";
+    param.bundlePath = "/data/test/test.hsp";
+    param.nativeLibraryPath = "lib/arm64";
+    param.cpuAbi = "arm64-v8a";
+    param.versionCode = 100;
+    ErrCode result = installClient_->ExtractServiceModuleFiles(param);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractServiceModuleFiles_0200 end";
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_ExtractServiceModuleFiles_0300
+ * @tc.name: ExtractServiceModuleFiles
+ * @tc.desc: Test ExtractServiceModuleFiles with valid param calls service
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractServiceModuleFiles_0300, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractServiceModuleFiles_0300 start";
+    ExtractModuleFilesParam param;
+    param.bundleName = BUNDLE_NAME;
+    param.moduleName = "entry";
+    param.bundlePath = "/data/test/test.hsp";
+    param.nativeLibraryPath = "lib/arm64";
+    param.cpuAbi = "arm64-v8a";
+    param.versionCode = 100;
+    param.needFakeDecompression = false;
+    param.isSystemApp = false;
+    ErrCode result = installClient_->ExtractServiceModuleFiles(param);
+    EXPECT_EQ(result, installClient_->CallService(&IInstalld::ExtractServiceModuleFiles, param));
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractServiceModuleFiles_0300 end";
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_ExtractSharedModuleFiles_0100
+ * @tc.name: ExtractSharedModuleFiles
+ * @tc.desc: Test whether ExtractSharedModuleFiles is called normally.(bundleName is empty)
+*/
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractSharedModuleFiles_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractSharedModuleFiles_0100 start";
+    ExtractModuleFilesParam param;
+    param.bundleName = "";
+    param.versionCode = 100;
+    param.moduleName = TEST_STRING;
+    param.bundlePath = TEST_STRING;
+    param.nativeLibraryPath = TEST_STRING;
+    param.cpuAbi = TEST_CPU_ABI;
+    ErrCode result = installClient_->ExtractSharedModuleFiles(param);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractSharedModuleFiles_0100 end";
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_ExtractSharedModuleFiles_0200
+ * @tc.name: ExtractSharedModuleFiles
+ * @tc.desc: Test whether ExtractSharedModuleFiles is called normally.(moduleName is empty)
+*/
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractSharedModuleFiles_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractSharedModuleFiles_0200 start";
+    ExtractModuleFilesParam param;
+    param.bundleName = TEST_BUNDLE_NAME;
+    param.versionCode = 100;
+    param.moduleName = "";
+    param.bundlePath = TEST_STRING;
+    param.nativeLibraryPath = TEST_STRING;
+    param.cpuAbi = TEST_CPU_ABI;
+    ErrCode result = installClient_->ExtractSharedModuleFiles(param);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractSharedModuleFiles_0200 end";
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_ExtractSharedModuleFiles_0300
+ * @tc.name: ExtractSharedModuleFiles
+ * @tc.desc: Test whether ExtractSharedModuleFiles is called normally.(bundlePath is empty)
+*/
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractSharedModuleFiles_0300, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractSharedModuleFiles_0300 start";
+    ExtractModuleFilesParam param;
+    param.bundleName = TEST_BUNDLE_NAME;
+    param.versionCode = 100;
+    param.moduleName = TEST_STRING;
+    param.bundlePath = "";
+    param.nativeLibraryPath = TEST_STRING;
+    param.cpuAbi = TEST_CPU_ABI;
+    ErrCode result = installClient_->ExtractSharedModuleFiles(param);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractSharedModuleFiles_0300 end";
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_ExtractSharedModuleFiles_0400
+ * @tc.name: ExtractSharedModuleFiles
+ * @tc.desc: Test whether ExtractSharedModuleFiles is called normally.(nativeLibraryPath is empty)
+*/
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractSharedModuleFiles_0400, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractSharedModuleFiles_0400 start";
+    ExtractModuleFilesParam param;
+    param.bundleName = TEST_BUNDLE_NAME;
+    param.versionCode = 100;
+    param.moduleName = TEST_STRING;
+    param.bundlePath = TEST_STRING;
+    param.nativeLibraryPath = "";
+    param.cpuAbi = TEST_CPU_ABI;
+    ErrCode result = installClient_->ExtractSharedModuleFiles(param);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractSharedModuleFiles_0400 end";
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_ExtractSharedModuleFiles_0500
+ * @tc.name: ExtractSharedModuleFiles
+ * @tc.desc: Test whether ExtractSharedModuleFiles is called normally.(cpuAbi is empty)
+*/
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractSharedModuleFiles_0500, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractSharedModuleFiles_0500 start";
+    ExtractModuleFilesParam param;
+    param.bundleName = TEST_BUNDLE_NAME;
+    param.versionCode = 100;
+    param.moduleName = TEST_STRING;
+    param.bundlePath = TEST_STRING;
+    param.nativeLibraryPath = TEST_STRING;
+    param.cpuAbi = "";
+    ErrCode result = installClient_->ExtractSharedModuleFiles(param);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractSharedModuleFiles_0500 end";
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_ExtractSharedModuleFiles_0600
+ * @tc.name: ExtractSharedModuleFiles
+ * @tc.desc: Test whether ExtractSharedModuleFiles is called normally.
+*/
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractSharedModuleFiles_0600, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractSharedModuleFiles_0600 start";
+    ExtractModuleFilesParam param;
+    param.bundleName = TEST_BUNDLE_NAME;
+    param.versionCode = 100;
+    param.moduleName = TEST_STRING;
+    param.bundlePath = TEST_STRING;
+    param.nativeLibraryPath = TEST_STRING;
+    param.cpuAbi = TEST_CPU_ABI;
+    ErrCode result = installClient_->ExtractSharedModuleFiles(param);
+    EXPECT_EQ(result, installClient_->CallService(&IInstalld::ExtractSharedModuleFiles, param));
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractSharedModuleFiles_0600 end";
 }
 
 /**

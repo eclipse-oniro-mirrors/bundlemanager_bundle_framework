@@ -1255,4 +1255,65 @@ HWTEST_F(BmsBundleQuickFixMgrRdbTest, QuickFixManagerHostImpl_CopyHqfToSecurityD
     auto ret = hostImpl.CopyHqfToSecurityDir(paths, securityPaths);
     EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATH);
 }
+
+// ===== TDD tests for QuickFixDataMgr locking and re-query (#10) =====
+
+/**
+ * @tc.number: UpdateQuickFixStatus_EmptyBundleName_0300
+ * @tc.name: UpdateQuickFixStatus with empty bundleName and DEFAULT_STATUS
+ * @tc.desc: innerAppQuickFix has empty bundleName and DEFAULT_STATUS.
+ *          Call UpdateQuickFixStatus(DELETE_START). Special case: DELETE_START
+ *          from DEFAULT_STATUS should succeed.
+ */
+HWTEST_F(BmsBundleQuickFixMgrRdbTest, UpdateQuickFixStatus_EmptyBundleName_0300, Function | SmallTest | Level0)
+{
+    QuickFixDataMgr dataMgr;
+    InnerAppQuickFix innerAppQuickFix;
+    QuickFixMark mark;
+    mark.status = QuickFixStatus::DEFAULT_STATUS;
+    innerAppQuickFix.SetQuickFixMark(mark);
+    auto ret = dataMgr.UpdateQuickFixStatus(QuickFixStatus::DELETE_START, innerAppQuickFix);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: UpdateQuickFixStatus_DbEntryNotFound_0400
+ * @tc.name: UpdateQuickFixStatus uses caller status when DB entry not found
+ * @tc.desc: innerAppQuickFix has bundleName not in DB, status=DELETE_END.
+ *          Call UpdateQuickFixStatus(DELETE_START). Special case: DELETE_START
+ *          from DELETE_END should succeed.
+ */
+HWTEST_F(BmsBundleQuickFixMgrRdbTest, UpdateQuickFixStatus_DbEntryNotFound_0400, Function | SmallTest | Level0)
+{
+    QuickFixDataMgr dataMgr;
+    InnerAppQuickFix innerAppQuickFix = GenerateAppQuickFixInfo(BUNDLE_NAME, QuickFixStatus::DELETE_END);
+    auto ret = dataMgr.UpdateQuickFixStatus(QuickFixStatus::DELETE_START, innerAppQuickFix);
+    EXPECT_TRUE(ret);
+
+    dataMgr.DeleteInnerAppQuickFix(BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: QuickFixDataMgr_NullptrDb_0100
+ * @tc.name: All public methods handle nullptr quickFixManagerDb_ safely
+ * @tc.desc: With quickFixManagerDb_ set to nullptr, all methods should return false
+ *          safely (no crash).
+ */
+HWTEST_F(BmsBundleQuickFixMgrRdbTest, QuickFixDataMgr_NullptrDb_0100, Function | SmallTest | Level0)
+{
+    QuickFixDataMgr dataMgr;
+    dataMgr.quickFixManagerDb_.reset();
+    EXPECT_EQ(dataMgr.quickFixManagerDb_, nullptr);
+
+    std::map<std::string, InnerAppQuickFix> all;
+    EXPECT_FALSE(dataMgr.QueryAllInnerAppQuickFix(all));
+
+    InnerAppQuickFix fix;
+    EXPECT_FALSE(dataMgr.QueryInnerAppQuickFix(BUNDLE_NAME, fix));
+    EXPECT_FALSE(dataMgr.SaveInnerAppQuickFix(fix));
+    EXPECT_FALSE(dataMgr.DeleteInnerAppQuickFix(BUNDLE_NAME));
+
+    InnerAppQuickFix innerAppQuickFix = GenerateAppQuickFixInfo(BUNDLE_NAME, QuickFixStatus::DEPLOY_END);
+    EXPECT_FALSE(dataMgr.UpdateQuickFixStatus(QuickFixStatus::SWITCH_ENABLE_START, innerAppQuickFix));
+}
 } // OHOS

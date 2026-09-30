@@ -15,6 +15,7 @@
 
 import { ApplicationInfo } from 'bundleManager.ApplicationInfo';
 import { HapModuleInfo, RouterItem } from 'bundleManager.HapModuleInfo';
+import { Validity } from 'bundleManager.AppProvisionInfo';
 import bundleManager from '@ohos.bundle.bundleManager';
 import { BundleInfo, ReqPermissionDetail, UsedScene, SignatureInfo, AppCloneIdentity, AppClonePreference,
   DynamicIconInfo, AlternateIconInfo, BundleOptions, BundleExtensionPolicyInfo } from 'bundleManager.BundleInfo';
@@ -123,13 +124,16 @@ export class SignatureInfoInner implements SignatureInfo {
   readonly fingerprint: string = "";
   readonly appIdentifier: string = "";
   readonly certificate?: string | undefined;
+  readonly validity?: Validity | undefined;
 
   constructor() { }
-  constructor(appId: string, fingerprint: string, appIdentifier: string, certificate?: string) {
+  constructor(appId: string, fingerprint: string, appIdentifier: string, certificate?: string,
+    validity?: Validity) {
     this.appId = appId;
     this.fingerprint = fingerprint;
     this.appIdentifier = appIdentifier;
     this.certificate = certificate;
+    this.validity = validity;
   }
 }
 

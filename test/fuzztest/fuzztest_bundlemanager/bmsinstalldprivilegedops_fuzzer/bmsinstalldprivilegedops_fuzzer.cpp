@@ -413,18 +413,6 @@ void FuzzCopyDir(InstalldHost& host, FuzzedDataProvider& fdp)
     host.HandleCopyDir(data, reply);
 }
 
-// RenameFile: ReadString16(oldPath), ReadString16(newPath)
-void FuzzRenameFile(InstalldHost& host, FuzzedDataProvider& fdp)
-{
-    MessageParcel data;
-    PrepareParcel<InstalldHost>(data);
-    MessageParcel reply;
-    WriteString16Field(data, fdp);  // oldPath
-    WriteString16Field(data, fdp);  // newPath
-    FinishParcel(data);
-    host.HandleRenameFile(data, reply);
-}
-
 // BackupSandboxDir: ReadInt32(userId), ReadString16(sandboxDir)
 void FuzzBackupSandboxDir(InstalldHost& host, FuzzedDataProvider& fdp)
 {
@@ -1328,7 +1316,6 @@ enum InstalldMethod {
     FUZZCLEANBUNDLEDIRS,
     FUZZCLEARDIR,
     FUZZCOPYDIR,
-    FUZZRENAMEFILE,
     FUZZBACKUPSANDBOXDIR,
     FUZZRECOVERSANDBOXDIR,
     FUZZDELETESANDBOXDIR,
@@ -1435,7 +1422,6 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
         case FUZZCLEANBUNDLEDIRS: FuzzCleanBundleDirs(installdHost, fdp);       break;
         case FUZZCLEARDIR: FuzzClearDir(installdHost, fdp);              break;
         case FUZZCOPYDIR: FuzzCopyDir(installdHost, fdp);              break;
-        case FUZZRENAMEFILE: FuzzRenameFile(installdHost, fdp);            break;
         case FUZZBACKUPSANDBOXDIR: FuzzBackupSandboxDir(installdHost, fdp); break;
         case FUZZRECOVERSANDBOXDIR: FuzzRecoverSandboxDir(installdHost, fdp); break;
         case FUZZDELETESANDBOXDIR: FuzzDeleteSandboxDir(installdHost, fdp); break;

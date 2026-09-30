@@ -64,10 +64,10 @@ static napi_value JsLauncherCommon(napi_env env, size_t argc, napi_value *argv)
         napi_get_reference_value(env, callback, &callbackTemp);
         napi_call_function(env, nullptr, callbackTemp,
             sizeof(result) / sizeof(result[0]), result, &placeHolder);
+        napi_delete_reference(env, callback);
     } else {
         napi_reject_deferred(env, deferred, result[INDEX_ZERO]);
     }
-    napi_delete_reference(env, callback);
     return promise;
 }
 
