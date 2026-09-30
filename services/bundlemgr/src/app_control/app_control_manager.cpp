@@ -408,7 +408,6 @@ ErrCode AppControlManager::GetAppRunningControlRule(
     std::string key = appId + std::string("_") + std::to_string(userId);
     auto statusRet = GetAppRunningControlRuleCache(key, controlRuleResult);
     if (statusRet) {
-        RemoveSelfRedirect(bundleName, controlRuleResult.controlWant);
         if (controlRuleResult.controlMessage == INVALID_MESSAGE) {
             controlRuleResult.controlMessage = std::string();
             return ERR_BUNDLE_MANAGER_BUNDLE_NOT_SET_CONTROL;
@@ -422,7 +421,6 @@ ErrCode AppControlManager::GetAppRunningControlRule(
     }
     bool findRule = (ret == ERR_OK);
     ret = CheckAppControlRuleIntercept(bundleName, userId, findRule, controlRuleResult);
-    RemoveSelfRedirect(bundleName, controlRuleResult.controlWant);
     SetAppRunningControlRuleCache(key, controlRuleResult);
     return ret;
 }
@@ -918,9 +916,6 @@ ErrCode AppControlManager::GetAbilityRunningControlRule(
     std::string key = GenerateAppRunningRuleCacheKey(appId, userId, appIndex);
     bool findCache = GetAbilityRunningRuleCache(key, disposedRules);
     if (findCache) {
-        for (auto &rule : disposedRules) {
-            RemoveSelfRedirect(bundleName, rule.want);
-        }
         PrintDisposedRuleInfo(disposedRules, appId);
         return ERR_OK;
     }
@@ -937,9 +932,6 @@ ErrCode AppControlManager::GetAbilityRunningControlRule(
         LOG_W(BMS_TAG_DEFAULT, "GetAbilityRunningControlRule from rdb failed");
         return ret;
     }
-    for (auto &rule : disposedRules) {
-        RemoveSelfRedirect(bundleName, rule.want);
-    }
     if (GetDisposedRuleOnlyForBms(appId, disposedRules)) {
         LOG_I(BMS_TAG_DEFAULT, "find from bms cache -n %{public}s", bundleName.c_str());
     };
@@ -953,16 +945,6 @@ ErrCode AppControlManager::GetAbilityRunningControlRule(
     }
     PrintDisposedRuleInfo(disposedRules, appId);
     return ret;
-}
-
-void AppControlManager::RemoveSelfRedirect(const std::string &bundleName, std::shared_ptr<Want> &want) const
-{
-    if (want != nullptr && !bundleName.empty() && want->GetBundleNameRef() == bundleName) {
-        // Rules may be configured before installation, when appId cannot be resolved.
-        // Keep the control rule effective without launching the controlled app again.
-        LOG_NOFUNC_W(BMS_TAG_DEFAULT, "remove self redirect from effective disposed rule");
-        want.reset();
-    }
 }
 
 ErrCode AppControlManager::CheckDisposedWant(const std::string &appId, const Want &want)

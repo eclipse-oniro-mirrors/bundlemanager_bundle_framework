@@ -793,11 +793,6 @@ HWTEST_F(BmsBundleAppControlTest, DisposedStatus_0400, Function | SmallTest | Le
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 
-/**
- * @tc.number: DisposedStatus_0401
- * @tc.name: reject self redirection without replacing the existing disposed status
- * @tc.desc: A valid redirect remains stored after a self redirect is rejected.
- */
 HWTEST_F(BmsBundleAppControlTest, DisposedStatus_0401, Function | SmallTest | Level1)
 {
     ASSERT_EQ(InstallBundle(INSTALL_PATH), ERR_OK);
@@ -819,11 +814,6 @@ HWTEST_F(BmsBundleAppControlTest, DisposedStatus_0401, Function | SmallTest | Le
     EXPECT_EQ(storedWant.GetBundleNameRef(), TARGET_BUNDLE_NAME);
 }
 
-/**
- * @tc.number: DisposedRule_RejectSelfRedirect
- * @tc.name: reject self redirection for main and clone app rules
- * @tc.desc: Reject a self redirect before deleting the existing valid rule.
- */
 HWTEST_F(BmsBundleAppControlTest, DisposedRule_RejectSelfRedirect, Function | SmallTest | Level1)
 {
     ASSERT_EQ(InstallBundle(INSTALL_PATH), ERR_OK);
@@ -852,11 +842,6 @@ HWTEST_F(BmsBundleAppControlTest, DisposedRule_RejectSelfRedirect, Function | Sm
     }
 }
 
-/**
- * @tc.number: DisposedRule_WithoutRedirect
- * @tc.name: allow a blocking rule without a redirect Want
- * @tc.desc: Shared redirect validation does not reject rules without a target.
- */
 HWTEST_F(BmsBundleAppControlTest, DisposedRule_WithoutRedirect, Function | SmallTest | Level1)
 {
     ASSERT_EQ(InstallBundle(INSTALL_PATH), ERR_OK);
@@ -877,103 +862,6 @@ HWTEST_F(BmsBundleAppControlTest, DisposedRule_WithoutRedirect, Function | Small
     EXPECT_EQ(storedRule.want, nullptr);
 }
 
-/**
- * @tc.number: DisposedStatus_BeforeInstall
- * @tc.name: suppress a self redirect configured before installation
- * @tc.desc: Database and cache queries keep control effective and preserve valid redirects.
- */
-HWTEST_F(BmsBundleAppControlTest, DisposedStatus_BeforeInstall, Function | SmallTest | Level1)
-{
-    auto manager = DelayedSingleton<AppControlManager>::GetInstance();
-    ASSERT_NE(manager, nullptr);
-    auto dataMgr = GetBundleDataMgr();
-    ASSERT_NE(dataMgr, nullptr);
-    for (const auto &target : { BUNDLE_NAME, TARGET_BUNDLE_NAME }) {
-        std::string bundleName;
-        ASSERT_EQ(dataMgr->GetBundleNameByAppId(APPID, bundleName), ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
-        Want want;
-        want.SetElementName("", target, "EntryAbility", "entry");
-        ASSERT_EQ(manager->SetDisposedStatus(APPID, want, USERID), ERR_OK);
-        ScopeGuard disposeGuard([&] { manager->DeleteDisposedStatus(APPID, USERID); });
-        ASSERT_EQ(InstallBundle(INSTALL_PATH), ERR_OK);
-        ScopeGuard uninstallGuard([&] { UnInstallBundle(BUNDLE_NAME); });
-        manager->DeleteAppRunningControlRuleCache(APPID + "_" + std::to_string(USERID));
-
-        for (int32_t query = 0; query < 2; ++query) {
-            AppRunningControlRuleResult result;
-            ASSERT_EQ(manager->GetAppRunningControlRule(BUNDLE_NAME, USERID, result), ERR_OK);
-            if (target == BUNDLE_NAME) {
-                EXPECT_EQ(result.controlWant, nullptr);
-            } else {
-                ASSERT_NE(result.controlWant, nullptr);
-                EXPECT_EQ(result.controlWant->GetBundleNameRef(), target);
-            }
-        }
-        Want storedWant;
-        ASSERT_EQ(manager->GetDisposedStatus(APPID, storedWant, USERID), ERR_OK);
-        EXPECT_EQ(storedWant.GetBundleNameRef(), target);
-    }
-}
-
-/**
- * @tc.number: DisposedRule_BeforeInstall
- * @tc.name: suppress pre-install self redirects for main and clone rules
- * @tc.desc: Keep blocking fields and valid redirects on database and cache queries.
- */
-HWTEST_F(BmsBundleAppControlTest, DisposedRule_BeforeInstall, Function | SmallTest | Level1)
-{
-    auto manager = DelayedSingleton<AppControlManager>::GetInstance();
-    ASSERT_NE(manager, nullptr);
-    auto dataMgr = GetBundleDataMgr();
-    ASSERT_NE(dataMgr, nullptr);
-    for (const auto &target : { BUNDLE_NAME, TARGET_BUNDLE_NAME }) {
-        std::string bundleName;
-        ASSERT_EQ(dataMgr->GetBundleNameByAppId(APPID, bundleName), ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
-        DisposedRule rule;
-        rule.componentType = ComponentType::UI_ABILITY;
-        rule.disposedType = DisposedType::BLOCK_APPLICATION;
-        rule.controlType = ControlType::DISALLOWED_LIST;
-        rule.want = std::make_shared<Want>();
-        rule.want->SetElementName("", target, "EntryAbility", "entry");
-        ScopeGuard disposeGuard([&] {
-            for (int32_t appIndex : { Constants::MAIN_APP_INDEX, APP_INDEX }) {
-                manager->DeleteDisposedRule(CALLING_NAME, APPID, appIndex, USERID);
-            }
-        });
-        for (int32_t appIndex : { Constants::MAIN_APP_INDEX, APP_INDEX }) {
-            ASSERT_EQ(manager->SetDisposedRule(CALLING_NAME, APPID, rule, appIndex, USERID), ERR_OK);
-        }
-        ASSERT_EQ(InstallBundle(INSTALL_PATH), ERR_OK);
-        ScopeGuard uninstallGuard([&] { UnInstallBundle(BUNDLE_NAME); });
-        for (int32_t appIndex : { Constants::MAIN_APP_INDEX, APP_INDEX }) {
-            manager->DeleteAbilityRunningRuleCache({
-                manager->GenerateAppRunningRuleCacheKey(APPID, USERID, appIndex) });
-            for (int32_t query = 0; query < 2; ++query) {
-                std::vector<DisposedRule> results;
-                ASSERT_EQ(manager->GetAbilityRunningControlRule(BUNDLE_NAME, appIndex, USERID, results), ERR_OK);
-                ASSERT_EQ(results.size(), 1U);
-                EXPECT_EQ(results[0].disposedType, rule.disposedType);
-                EXPECT_EQ(results[0].controlType, rule.controlType);
-                if (target == BUNDLE_NAME) {
-                    EXPECT_EQ(results[0].want, nullptr);
-                } else {
-                    ASSERT_NE(results[0].want, nullptr);
-                    EXPECT_EQ(results[0].want->GetBundleNameRef(), target);
-                }
-            }
-            DisposedRule storedRule;
-            ASSERT_EQ(manager->GetDisposedRule(CALLING_NAME, APPID, storedRule, appIndex, USERID), ERR_OK);
-            ASSERT_NE(storedRule.want, nullptr);
-            EXPECT_EQ(storedRule.want->GetBundleNameRef(), target);
-        }
-    }
-}
-
-/**
- * @tc.number: DisposedWant_AppIdentifier
- * @tc.name: handle appIdentifier before and after bundle registration
- * @tc.desc: Simulate installation metadata becoming available after rules are configured.
- */
 HWTEST_F(BmsBundleAppControlTest, DisposedWant_AppIdentifier, Function | SmallTest | Level1)
 {
     const std::string bundleName = "com.ohos.disposed.identifier.test";
@@ -983,86 +871,23 @@ HWTEST_F(BmsBundleAppControlTest, DisposedWant_AppIdentifier, Function | SmallTe
     ASSERT_NE(manager, nullptr);
     auto dataMgr = GetBundleDataMgr();
     ASSERT_NE(dataMgr, nullptr);
-    std::string resolvedBundleName;
-    ASSERT_EQ(dataMgr->GetBundleNameByAppId(appIdentifier, resolvedBundleName),
-        ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
     Want want;
     want.SetElementName("", bundleName, "EntryAbility", "entry");
     DisposedRule rule;
     rule.disposedType = DisposedType::BLOCK_APPLICATION;
     rule.controlType = ControlType::DISALLOWED_LIST;
     rule.want = std::make_shared<Want>(want);
-    ScopeGuard disposeGuard([&] {
-        manager->DeleteDisposedStatus(appIdentifier, USERID);
-        manager->DeleteDisposedRule(CALLING_NAME, appIdentifier, Constants::MAIN_APP_INDEX, USERID);
-        manager->DeleteAppRunningControlRuleCache(appId + "_" + std::to_string(USERID));
-    });
-    ASSERT_EQ(manager->SetDisposedStatus(appIdentifier, want, USERID), ERR_OK);
-    ASSERT_EQ(manager->SetDisposedRule(CALLING_NAME, appIdentifier, rule, Constants::MAIN_APP_INDEX, USERID), ERR_OK);
-
     InnerBundleInfo info;
     info.baseBundleInfo_->name = bundleName;
     info.baseBundleInfo_->appId = appId;
     info.SetAppIdentifier(appIdentifier);
     ASSERT_TRUE(dataMgr->bundleInfos_.emplace(bundleName, info).second);
     ScopeGuard bundleInfoGuard([&] {
-        manager->DeleteAbilityRunningRuleCache({
-            manager->GenerateAppRunningRuleCacheKey(appId, USERID, Constants::MAIN_APP_INDEX) });
         dataMgr->bundleInfos_.erase(bundleName);
     });
-    AppRunningControlRuleResult result;
-    ASSERT_EQ(manager->GetAppRunningControlRule(bundleName, USERID, result), ERR_OK);
-    EXPECT_EQ(result.controlWant, nullptr);
-    std::vector<DisposedRule> results;
-    ASSERT_EQ(manager->GetAbilityRunningControlRule(bundleName, Constants::MAIN_APP_INDEX, USERID, results), ERR_OK);
-    ASSERT_EQ(results.size(), 1U);
-    EXPECT_EQ(results[0].want, nullptr);
     EXPECT_EQ(manager->SetDisposedStatus(appIdentifier, want, USERID), ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
     EXPECT_EQ(manager->SetDisposedRule(CALLING_NAME, appIdentifier, rule, Constants::MAIN_APP_INDEX, USERID),
         ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
-}
-
-/**
- * @tc.number: DisposedWant_SelfRedirectInCache
- * @tc.name: suppress self redirects already present in rule caches
- * @tc.desc: Cached rules still block the app without modifying the shared Want object.
- */
-HWTEST_F(BmsBundleAppControlTest, DisposedWant_SelfRedirectInCache, Function | SmallTest | Level1)
-{
-    ASSERT_EQ(InstallBundle(INSTALL_PATH), ERR_OK);
-    ScopeGuard uninstallGuard([&] { UnInstallBundle(BUNDLE_NAME); });
-    auto manager = DelayedSingleton<AppControlManager>::GetInstance();
-    ASSERT_NE(manager, nullptr);
-    const auto statusKey = APPID + "_" + std::to_string(USERID);
-    const auto ruleKey = manager->GenerateAppRunningRuleCacheKey(APPID, USERID, Constants::MAIN_APP_INDEX);
-    ScopeGuard cacheGuard([&] {
-        manager->DeleteAppRunningControlRuleCache(statusKey);
-        manager->DeleteAbilityRunningRuleCache({ ruleKey });
-    });
-    auto want = std::make_shared<Want>();
-    want->SetElementName("", BUNDLE_NAME, "EntryAbility", "entry");
-    AppRunningControlRuleResult cachedResult;
-    cachedResult.controlMessage = CONTROL_MESSAGE;
-    cachedResult.controlWant = want;
-    manager->DeleteAppRunningControlRuleCache(statusKey);
-    manager->SetAppRunningControlRuleCache(statusKey, cachedResult);
-    DisposedRule cachedRule;
-    cachedRule.disposedType = DisposedType::BLOCK_APPLICATION;
-    cachedRule.controlType = ControlType::DISALLOWED_LIST;
-    cachedRule.want = want;
-    manager->DeleteAbilityRunningRuleCache({ ruleKey });
-    manager->SetAbilityRunningRuleCache(ruleKey, { cachedRule });
-
-    AppRunningControlRuleResult result;
-    ASSERT_EQ(manager->GetAppRunningControlRule(BUNDLE_NAME, USERID, result), ERR_OK);
-    EXPECT_EQ(result.controlMessage, CONTROL_MESSAGE);
-    EXPECT_EQ(result.controlWant, nullptr);
-    std::vector<DisposedRule> results;
-    ASSERT_EQ(manager->GetAbilityRunningControlRule(BUNDLE_NAME, Constants::MAIN_APP_INDEX, USERID, results), ERR_OK);
-    ASSERT_EQ(results.size(), 1U);
-    EXPECT_EQ(results[0].disposedType, DisposedType::BLOCK_APPLICATION);
-    EXPECT_EQ(results[0].want, nullptr);
-    EXPECT_EQ(want->GetBundleNameRef(), BUNDLE_NAME);
 }
 
 /**
