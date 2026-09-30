@@ -699,7 +699,7 @@ int32_t BundleUtil::CreateFileDescriptorForReadOnly(const std::string &bundlePat
 void BundleUtil::CloseFileDescriptor(std::vector<int32_t> &fdVec)
 {
     for_each(fdVec.begin(), fdVec.end(), [](const auto &fd) {
-        if (fd > 0) {
+        if (fd >= 0) {
             fdsan_close_with_tag(fd, BMS_FDSAN_TEMP_TAG);
         }
     });
