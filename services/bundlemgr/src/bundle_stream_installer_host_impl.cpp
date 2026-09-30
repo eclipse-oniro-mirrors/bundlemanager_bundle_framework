@@ -191,8 +191,7 @@ int32_t BundleStreamInstallerHostImpl::CreateStream(const std::string &fileName)
     int32_t fd = BundleUtil::CreateFileDescriptor(filePath, 0);
     if (fd < 0) {
         APP_LOGE("stream installer create file descriptor failed");
-    }
-    if (fd > 0) {
+    } else {
         std::lock_guard<std::mutex> lock(mutex_);
         streamFdVec_.emplace_back(fd);
         isInstallSharedBundlesOnly_ = false;
@@ -263,9 +262,7 @@ int32_t BundleStreamInstallerHostImpl::CreateSignatureFileStream(const std::stri
     int32_t fd = BundleUtil::CreateFileDescriptor(filePath, 0);
     if (fd < 0) {
         APP_LOGE("stream installer create file descriptor failed");
-    }
-
-    if (fd > 0) {
+    } else {
         std::lock_guard<std::mutex> lock(mutex_);
         streamFdVec_.emplace_back(fd);
         installParam_.verifyCodeParams[moduleName] = filePath;
@@ -325,8 +322,7 @@ int32_t BundleStreamInstallerHostImpl::CreateSharedBundleStream(const std::strin
     int32_t fd = BundleUtil::CreateFileDescriptor(bundlePath, 0);
     if (fd < 0) {
         APP_LOGE("stream installer create file descriptor failed");
-    }
-    if (fd > 0) {
+    } else {
         std::lock_guard<std::mutex> lock(mutex_);
         streamFdVec_.emplace_back(fd);
     }
@@ -381,9 +377,7 @@ int32_t BundleStreamInstallerHostImpl::CreatePgoFileStream(const std::string &mo
     int32_t fd = BundleUtil::CreateFileDescriptor(filePath, 0);
     if (fd < 0) {
         APP_LOGE("stream installer create file descriptor failed");
-    }
-
-    if (fd > 0) {
+    } else {
         std::lock_guard<std::mutex> lock(mutex_);
         streamFdVec_.emplace_back(fd);
         installParam_.pgoParams[moduleName] = filePath;
@@ -418,8 +412,8 @@ int32_t BundleStreamInstallerHostImpl::CreateExtProfileFileStream(const std::str
         return Constants::DEFAULT_STREAM_FD;
     }
 
-    // to prevent the sig copied to relevant path
-    if (fileName.find(ILLEGAL_PATH_FIELD) != std::string::npos) {
+    // to prevent the ext profile copied to relevant path
+    if (fileName.find(PATH_SEPARATOR) != std::string::npos) {
         APP_LOGE("CreateStream failed due to invalid fileName");
         return Constants::DEFAULT_STREAM_FD;
     }
