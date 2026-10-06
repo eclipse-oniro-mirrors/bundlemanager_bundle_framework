@@ -582,16 +582,23 @@ ErrCode PluginInstaller::ProcessNativeLibrary(
             APP_LOGW("nativeLibraryPath is empty");
             return ERR_OK;
         }
-        std::string soPath = pluginBundleDir + ServiceConstants::PATH_SEPARATOR + nativeLibraryPath_;
-        APP_LOGD("tempSoPath=%{public}s,cpuAbi=%{public}s, bundlePath=%{public}s",
-            soPath.c_str(), cpuAbi.c_str(), bundlePath.c_str());
         auto needFakeDecompression =
             newInfo.IsFakeDecompressionEnable() &&
             BundleUtil::IsSoSupportFakeDecompression(newInfo.GetBundleName(), newInfo.GetIsKeepAlive(), bundlePath);
         auto isSystemApp = newInfo.IsSystemApp();
-        auto result = InstalldClient::GetInstance()->ExtractModuleFiles(
-            bundlePath, moduleDir, soPath, cpuAbi, needFakeDecompression, isSystemApp);
-        CHECK_RESULT(result, "extract module files failed %{public}d");
+        ExtractModuleFilesParam param;
+        param.hostBundleName = bundleName_;
+        param.bundleNameWithTime = bundleNameWithTime_;
+        param.moduleName = moduleName;
+        param.bundlePath = bundlePath;
+        param.nativeLibraryPath = nativeLibraryPath_;
+        param.cpuAbi = cpuAbi;
+        param.needFakeDecompression = needFakeDecompression;
+        param.isSystemApp = isSystemApp;
+        auto result = InstalldClient::GetInstance()->ExtractPluginModuleFiles(param);
+        CHECK_RESULT(result, "extract plugin module files failed %{public}d");
+        // soPath still needed for code signature verification
+        std::string soPath = pluginBundleDir + ServiceConstants::PATH_SEPARATOR + nativeLibraryPath_;
         // verify hap or hsp code signature for compressed so files
         result = VerifyCodeSignatureForNativeFiles(
             bundlePath, cpuAbi, soPath, signatureFileDir_, newInfo.IsPreInstallApp());

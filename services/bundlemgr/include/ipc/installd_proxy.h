@@ -86,6 +86,12 @@ public:
     virtual ErrCode ExtractArkProfile(const std::string &bundleName, const std::string &moduleName,
         const std::string &hapFilePath, int32_t userId) override;
 
+    virtual ErrCode ExtractPluginModuleFiles(const ExtractModuleFilesParam &param) override;
+
+    virtual ErrCode ExtractServiceModuleFiles(const ExtractModuleFilesParam &param) override;
+
+    virtual ErrCode ExtractSharedModuleFiles(const ExtractModuleFilesParam &param) override;
+
     virtual ErrCode ExtractHnpFilesByScene(const ExtractHnpFilesParam &extractHnpFilesParam) override;
 
     virtual ErrCode CopyHapToTempPath(const std::string &bundleName, const std::string &hapRealPath,
@@ -268,8 +274,6 @@ public:
 
     virtual ErrCode MoveFile(const std::string &oldPath, const std::string &newPath, BundleDirScene scene,
         const std::string &bundleName) override;
-
-    virtual ErrCode RenameFile(const std::string &oldPath, const std::string &newPath) override;
 
     virtual ErrCode BackupSandboxDir(int32_t userId, const std::string &sandboxDir) override;
 

@@ -1202,17 +1202,23 @@ ani_object CommonFunAni::ConvertSignatureInfo(ani_env* env, const SignatureInfo&
         }
     }
 
+    // validity?: Validity
+    ani_object validity = ConvertValidity(env, signatureInfo.validity);
+    RETURN_NULL_IF_NULL(validity);
+
     ani_value args[] = {
         { .r = appId },
         { .r = fingerprint },
         { .r = appIdentifier },
         { .r = certificateRef },
+        { .r = validity },
     };
     static const std::string ctorSig = SignatureBuilder()
         .AddClass(CommonFunAniNS::CLASSNAME_STRING)  // appId: string
         .AddClass(CommonFunAniNS::CLASSNAME_STRING)  // fingerprint: string
         .AddClass(CommonFunAniNS::CLASSNAME_STRING)  // appIdentifier: string
         .AddClass(CommonFunAniNS::CLASSNAME_STRING)  // certificate?: string
+        .AddClass(CLASSNAME_VALIDITY)                // validity?: Validity
         .BuildSignatureDescriptor();
     return CreateNewObjectByClassV2(env, CLASSNAME_SIGNATURE_INFO_INNER, ctorSig, args);
 }

@@ -37,12 +37,17 @@ public:
      * @brief Parse bundle by the path name, then save in innerBundleInfo info.
      * @param pathName Indicates the path of Bundle.
      * @param innerBundleInfo Indicates the obtained InnerBundleInfo object.
+     * @param needCheckProfileSize Indicates whether the declared size of the profile needs to be
+     *        checked before it is extracted into the memory. Only the interfaces which accept a
+     *        hap path from the caller need the check, so that a malicious package(zip bomb) cannot
+     *        exhaust the memory of the bundle manager service.
      * @return Returns ERR_OK if the bundle successfully parsed; returns ErrCode otherwise.
      */
     ErrCode Parse(
         const std::string &pathName,
         InnerBundleInfo &innerBundleInfo,
-        bool &isAbcCompressed) const;
+        bool &isAbcCompressed,
+        bool needCheckProfileSize = false) const;
 
     ErrCode ParsePackInfo(const std::string &pathName, BundlePackInfo &bundlePackInfo) const;
     /**

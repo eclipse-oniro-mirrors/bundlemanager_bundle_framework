@@ -33,6 +33,7 @@
 #include "ipc/create_dir_param.h"
 #include "ipc/encryption_param.h"
 #include "ipc/extract_hnp_files_param.h"
+#include "ipc/extract_module_files_param.h"
 #include "ipc/extract_param.h"
 #include "ipc/file_stat.h"
 #include "ipc/hap_module_extract_param.h"
@@ -146,6 +147,37 @@ public:
 
     virtual ErrCode ExtractNPAPIPlugin(const std::string &bundleName, const std::string &moduleName,
         const std::string &hapFilePath, int32_t userId)
+    {
+        return ERR_OK;
+    }
+
+    /**
+     * @brief Extract plugin module files.
+     * @param param Indicates the plugin module extract param.
+     * @return Returns ERR_OK if extracted successfully; returns error code otherwise.
+     */
+    virtual ErrCode ExtractPluginModuleFiles(const ExtractModuleFilesParam &param)
+    {
+        return ERR_OK;
+    }
+
+    /**
+     * @brief Extract service module files with path construction in installd.
+     * @param param Indicates the ExtractModuleFilesParam containing all parameters.
+     * @return Returns ERR_OK if extracted successfully; returns error code otherwise.
+     */
+    virtual ErrCode ExtractServiceModuleFiles(const ExtractModuleFilesParam &param)
+    {
+        return ERR_OK;
+    }
+
+    /**
+     * @brief Extract shared module files for HSP installation.
+     * @param param Contains bundleName, versionCode, moduleName, bundlePath, nativeLibraryPath, cpuAbi,
+     *              needFakeDecompression and isSystemApp.
+     * @return Returns ERR_OK if extracted successfully; returns error code otherwise.
+     */
+    virtual ErrCode ExtractSharedModuleFiles(const ExtractModuleFilesParam &param)
     {
         return ERR_OK;
     }
@@ -425,11 +457,6 @@ public:
      */
     virtual ErrCode MoveFile(
         const std::string &oldPath, const std::string &newPath, BundleDirScene scene, const std::string &bundleName)
-    {
-        return ERR_OK;
-    }
-
-    virtual ErrCode RenameFile(const std::string &oldPath, const std::string &newPath)
     {
         return ERR_OK;
     }

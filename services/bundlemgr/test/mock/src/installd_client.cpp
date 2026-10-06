@@ -145,6 +145,24 @@ ErrCode InstalldClient::ExtractQuickFixSoFile(const std::string &bundleName, con
         isReplace, versionCode, targetPathSuffix);
 }
 
+ErrCode InstalldClient::ExtractPluginModuleFiles(const ExtractModuleFilesParam &param)
+{
+    if (param.hostBundleName.empty() || param.bundleNameWithTime.empty() || param.moduleName.empty() ||
+        param.bundlePath.empty() || param.nativeLibraryPath.empty() || param.cpuAbi.empty()) {
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::ExtractPluginModuleFiles, param);
+}
+
+ErrCode InstalldClient::ExtractServiceModuleFiles(const ExtractModuleFilesParam &param)
+{
+    if (param.bundleName.empty() || param.moduleName.empty() || param.bundlePath.empty() ||
+        param.nativeLibraryPath.empty() || param.cpuAbi.empty()) {
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::ExtractServiceModuleFiles, param);
+}
+
 ErrCode InstalldClient::ExtractQuickFixRes(const std::string &bundleName, const std::string &moduleName,
     const std::string &hqfFilePath, bool needFakeDecompression)
 {
@@ -219,6 +237,15 @@ ErrCode InstalldClient::CopyHapToTempPath(const std::string &bundleName, const s
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     return CallService(&IInstalld::CopyHapToTempPath, bundleName, hapRealPath, tempDirName, hapFileName);
+}
+
+ErrCode InstalldClient::ExtractSharedModuleFiles(const ExtractModuleFilesParam &param)
+{
+    if (param.bundleName.empty() || param.moduleName.empty() || param.bundlePath.empty() ||
+        param.nativeLibraryPath.empty() || param.cpuAbi.empty()) {
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::ExtractSharedModuleFiles, param);
 }
 
 ErrCode InstalldClient::ExtractHnpFilesByScene(const ExtractHnpFilesParam &extractHnpFilesParam)
@@ -511,16 +538,6 @@ ErrCode InstalldClient::MoveFile(
     }
 
     return CallService(&IInstalld::MoveFile, oldPath, newPath, scene, bundleName);
-}
-
-ErrCode InstalldClient::RenameFile(const std::string &oldPath, const std::string &newPath)
-{
-    if (oldPath.empty() || newPath.empty()) {
-        APP_LOGE("params are invalid");
-        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-    }
-
-    return CallService(&IInstalld::RenameFile, oldPath, newPath);
 }
 
 ErrCode InstalldClient::BackupSandboxDir(int32_t userId, const std::string &sandboxDir)

@@ -556,6 +556,12 @@ public:
         const std::string &hapFilePath, int32_t userId);
     static bool IsValidPathByExtractQuickFixRes(const std::string &bundleName, const std::string &moduleName,
         const std::string &hqfFilePath);
+    static ErrCode ValidateExtractServiceModuleParams(const std::string &bundleName, const std::string &moduleName,
+        const std::string &bundlePath, const std::string &nativeLibraryPath, const std::string &cpuAbi);
+    static void BuildExtractServiceModulePaths(const std::string &bundleName, const std::string &moduleName,
+        const std::string &bundlePath, const std::string &nativeLibraryPath, int32_t versionCode,
+        std::string &srcModulePath, std::string &targetPath, std::string &targetSoPath);
+    static std::string ObtainTempSoPath(const std::string &moduleName, const std::string &nativeLibraryPath);
     static ErrCode ValidateExtractHapModuleParams(const HapModuleExtractParam &param);
     static void BuildExtractHapModulePaths(const HapModuleExtractParam &param,
         std::string &srcModulePath, std::string &targetPath, std::string &targetSoPath);

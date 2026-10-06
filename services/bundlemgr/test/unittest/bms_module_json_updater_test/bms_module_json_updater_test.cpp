@@ -282,6 +282,24 @@ HWTEST_F(BmsModuleJsonUpdaterTest, ParseHapModuleJson_0200, Function | SmallTest
 }
 
 /**
+ * @tc.number: ParseHapModuleJson_0300
+ * @tc.name: ParseHapModuleJson
+ * @tc.desc: 1.Test the ParseHapModuleJson function with a valid hapPath, expect return true.
+ */
+HWTEST_F(BmsModuleJsonUpdaterTest, ParseHapModuleJson_0300, Function | SmallTest | Level1)
+{
+    std::map<std::string, InnerBundleInfo> infos =
+        BmsModuleJsonUpdaterTest::bundleMgrService_->GetDataMgr()->GetAllInnerBundleInfos();
+    EXPECT_FALSE(infos.empty());
+    std::map<std::string, InnerModuleInfo> moduleInfos = infos.begin()->second.GetInnerModuleInfos();
+    EXPECT_FALSE(moduleInfos.empty());
+    const std::string hapPath = moduleInfos.begin()->second.hapPath;
+
+    InnerBundleInfo jsonInfo;
+    EXPECT_TRUE(ModuleJsonUpdater::ParseHapModuleJson(hapPath, jsonInfo));
+}
+
+/**
  * @tc.number: MergeInnerBundleInfo_0100
  * @tc.name: MergeInnerBundleInfo
  * @tc.desc: 1.Test the MergeInnerBundleInfo function with empty map, expect return false.

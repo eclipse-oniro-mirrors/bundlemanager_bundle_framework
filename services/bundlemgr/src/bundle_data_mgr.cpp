@@ -4742,6 +4742,7 @@ void BundleDataMgr::ProcessCertificate(BundleInfo& bundleInfo, const std::string
             return;
         }
         bundleInfo.signatureInfo.certificate = appProvisionInfo.certificate;
+        bundleInfo.signatureInfo.validity = appProvisionInfo.validity;
     }
 }
 
@@ -7238,7 +7239,9 @@ ErrCode BundleDataMgr::GetMetadataByBundleName(const std::string &bundleName,
         APP_LOGW("bundleName: %{public}s status is disabled", innerBundleInfo.GetBundleName().c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_DISABLED;
     }
-    if (!innerBundleInfo.HasInnerBundleUserInfo(userId)) {
+    if (innerBundleInfo.GetApplicationBundleType() != BundleType::SHARED &&
+        innerBundleInfo.GetApplicationBundleType() != BundleType::APP_SERVICE_FWK &&
+        !innerBundleInfo.HasInnerBundleUserInfo(userId)) {
         APP_LOGW("bundleName: %{public}s not installed for userId: %{public}d", bundleName.c_str(), userId);
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
@@ -10436,6 +10439,46 @@ std::string BundleDataMgr::GetStringById(const std::string &bundleName, const st
     std::string label;
     OHOS::Global::Resource::RState errValue = resourceManager->GetStringById(resId, label);
     if (errValue != OHOS::Global::Resource::RState::SUCCESS) {
+        APP_LOGW("GetStringById failed, bundleName:%{public}s, id:%{public}d", bundleName.c_str(), resId);
+        return Constants::EMPTY_STRING;
+    }
+    return label;
+#else
+    APP_LOGW("GLOBAL_RESMGR_ENABLE is false");
+    return Constants::EMPTY_STRING;
+#endif
+}
+
+std::string BundleDataMgr::GetStringByIdForSharedBundle(const std::string &bundleName,
+    const std::string &moduleName, uint32_t resId) const
+{
+    APP_LOGD("GetStringByIdForSharedBundle:%{public}s, %{public}s, %{public}d",
+        bundleName.c_str(), moduleName.c_str(), resId);
+#ifdef GLOBAL_RESMGR_ENABLE
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        APP_LOGW("can not find bundle %{public}s", bundleName.c_str());
+        return Constants::EMPTY_STRING;
+    }
+    const InnerBundleInfo &innerBundleInfo = item->second;
+    std::string hapPath;
+    for (const auto &[pkg, info] : innerBundleInfo.GetInnerModuleInfos()) {
+        if (moduleName != info.moduleName) {
+            continue;
+        }
+        hapPath = info.hapPath.empty() ? info.moduleResPath : info.hapPath;
+        if (!hapPath.empty()) {
+            break;
+        }
+    }
+    auto resourceManager = GetResourceManager(hapPath);
+    if (resourceManager == nullptr) {
+        APP_LOGE("CreateResourceManager failed, bundleName:%{public}s", bundleName.c_str());
+        return Constants::EMPTY_STRING;
+    }
+    std::string label;
+    if (resourceManager->GetStringById(resId, label) != OHOS::Global::Resource::RState::SUCCESS) {
         APP_LOGW("GetStringById failed, bundleName:%{public}s, id:%{public}d", bundleName.c_str(), resId);
         return Constants::EMPTY_STRING;
     }
@@ -15068,6 +15111,7 @@ ErrCode BundleDataMgr::GetSignatureInfoByUid(const int32_t uid, SignatureInfo &s
         APP_LOGW("bundleName:%{public}s GetAppProvisionInfo failed", innerBundleInfo.GetBundleName().c_str());
     } else {
         signatureInfo.certificate = appProvisionInfo.certificate;
+        signatureInfo.validity = appProvisionInfo.validity;
     }
     return ERR_OK;
 }

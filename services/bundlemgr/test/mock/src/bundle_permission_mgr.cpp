@@ -23,6 +23,7 @@ bool g_verifyPermission = true;
 bool g_verifyCallingBundleSdkVersion  = true;
 bool g_isBundleSelfCalling = true;
 bool g_checkUserFromShell = true;
+bool g_checkUserForeground = true;
 int32_t g_hapApiVersion = 0;
 bool g_isSystemAppFalse = false;
 bool g_verifyCallingBundleSdkVersionFalse = false;
@@ -138,6 +139,11 @@ void SetCheckUserFromShellForTest(bool value)
     g_checkUserFromShell = value;
 }
 
+void SetCheckUserForegroundForTest(bool value)
+{
+    g_checkUserForeground = value;
+}
+
 void SetVerifyCallingPermissionForTestFalse(bool value)
 {
     g_verifyPermissionFalse = value;
@@ -209,6 +215,7 @@ void ResetTestValues()
     g_verifyCallingBundleSdkVersion = true;
     g_isBundleSelfCalling = true;
     g_checkUserFromShell = true;
+    g_checkUserForeground = true;
     g_isSystemAppFalse = false;
     g_verifyCallingBundleSdkVersionFalse = false;
     g_userFromShell = false;
@@ -491,6 +498,11 @@ bool BundlePermissionMgr::VerifyCallingBundleSdkVersion(int32_t beginApiVersion)
     return g_verifyCallingBundleSdkVersion;
 }
 #endif
+
+bool BundlePermissionMgr::CheckUserForeground(int32_t userId)
+{
+    return g_checkUserForeground;
+}
 
 int32_t BundlePermissionMgr::GetHapApiVersion()
 {

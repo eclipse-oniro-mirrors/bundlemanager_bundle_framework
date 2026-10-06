@@ -94,6 +94,7 @@ static bool IsSkillScriptsRelativePath(const std::string &relativePath)
     std::replace(normalizedPath.begin(), normalizedPath.end(), '\\', '/');
     return normalizedPath == "scripts" || normalizedPath.find("scripts/") == 0;
 }
+constexpr const char* HSP_VERSION_PREFIX = "v";
 constexpr const char* PREFIX_RESOURCE_PATH = "/resources/rawfile/";
 constexpr const char* PREFIX_LIBS_PATH = "/libs/";
 constexpr const char* PREFIX_TARGET_PATH = "/print_service/";
@@ -208,9 +209,6 @@ static const std::map<BundleDirScene, std::vector<std::string>> ALLOWED_PATH_PRE
     {BundleDirScene::SCAN_DIR, { "/data/app/el1" }},
     {BundleDirScene::OBTAIN_QUICK_FIX_FILE_DIR, { "/data/app/el1/bundle/public"}},
     {BundleDirScene::HASH_SO_FILE, { "/data/app/el1/bundle/public"}},
-    {BundleDirScene::RENAME_FILE,
-        { "/data/app/el1/", "/data/app/el2/", "/data/app/el3/", "/data/app/el4/", "/data/app/el5/",
-            "/data/service/el1/", "/data/service/el2/" }},
     {BundleDirScene::REMOVE_SANDBOX_DIR,
         { "/data/app/el1/", "/data/app/el2/", "/data/app/el3/", "/data/app/el4/", "/data/app/el5/",
             "/data/service/el1/", "/data/service/el2/" }},
@@ -6315,6 +6313,70 @@ bool InstalldOperator::IsValidPathByDeleteUninstallTmpDirs(const std::string &di
     } else {
         return false;
     }
+}
+
+ErrCode InstalldOperator::ValidateExtractServiceModuleParams(const std::string &bundleName,
+    const std::string &moduleName, const std::string &bundlePath,
+    const std::string &nativeLibraryPath, const std::string &cpuAbi)
+{
+    if (bundleName.empty() || moduleName.empty() || bundlePath.empty() ||
+        nativeLibraryPath.empty() || cpuAbi.empty()) {
+        LOG_E(BMS_TAG_INSTALLD, "Calling ExtractServiceModuleFiles with invalid param");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    if (!IsValidBundleName(bundleName)) {
+        LOG_E(BMS_TAG_INSTALLD, "Calling ExtractServiceModuleFiles with invalid bundleName");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    if (!IsFileNameValid(bundlePath)) {
+        LOG_E(BMS_TAG_INSTALLD, "Calling ExtractServiceModuleFiles with invalid bundlePath");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    if (!IsFileNameValid(moduleName)) {
+        LOG_E(BMS_TAG_INSTALLD, "Calling ExtractServiceModuleFiles with invalid moduleName");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    if (!IsFileNameValid(nativeLibraryPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "Calling ExtractServiceModuleFiles with invalid nativeLibraryPath");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return ERR_OK;
+}
+
+std::string InstalldOperator::ObtainTempSoPath(const std::string &moduleName,
+    const std::string &nativeLibraryPath)
+{
+    std::string tempSoPath;
+    if (nativeLibraryPath.empty()) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid native library path");
+        return tempSoPath;
+    }
+    tempSoPath = nativeLibraryPath;
+    auto pos = tempSoPath.find(moduleName);
+    if (pos == std::string::npos) {
+        tempSoPath = moduleName + ServiceConstants::TMP_SUFFIX +
+            ServiceConstants::PATH_SEPARATOR + tempSoPath;
+    } else {
+        std::string innerTempStr = moduleName + ServiceConstants::TMP_SUFFIX;
+        tempSoPath.replace(pos, moduleName.length(), innerTempStr);
+    }
+    return tempSoPath + ServiceConstants::PATH_SEPARATOR;
+}
+
+void InstalldOperator::BuildExtractServiceModulePaths(const std::string &bundleName,
+    const std::string &moduleName, const std::string &bundlePath,
+    const std::string &nativeLibraryPath, int32_t versionCode,
+    std::string &srcModulePath, std::string &targetPath, std::string &targetSoPath)
+{
+    srcModulePath = bundlePath;
+
+    std::string baseDir = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
+        bundleName + ServiceConstants::PATH_SEPARATOR + HSP_VERSION_PREFIX +
+        std::to_string(versionCode) + ServiceConstants::PATH_SEPARATOR;
+    targetPath = baseDir + moduleName;
+
+    // ObtainTempSoPath logic: insert _tmp into moduleName within nativeLibraryPath
+    targetSoPath = baseDir + ObtainTempSoPath(moduleName, nativeLibraryPath);
 }
 
 bool InstalldOperator::IsValidPathByExtractResFileDir(

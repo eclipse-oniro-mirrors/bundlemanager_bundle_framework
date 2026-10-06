@@ -377,21 +377,6 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_1300, Function | SmallTest |
 }
 
 /**
- * @tc.number: InstalldProxyTest_1350
- * @tc.name: test Marshalling function of FileStat
- * @tc.desc: 1. calling RenameFile of proxy
- * @tc.require: issueI5T6P3
-*/
-HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_1350, Function | SmallTest | Level0)
-{
-    auto proxy = GetInstallProxy();
-    EXPECT_NE(proxy, nullptr);
-
-    auto ret = proxy->RenameFile(TEST_STRING, TEST_STRING);
-    EXPECT_EQ(ret, ERR_OK);
-}
-
-/**
  * @tc.number: InstalldProxyTest_1355
  * @tc.name: test BackupSandboxDir serialization of proxy
  * @tc.desc: 1. calling BackupSandboxDir of proxy
@@ -1748,6 +1733,77 @@ HWTEST_F(BmsInstallDaemonIpcTest, CodeSignatureParam_Marshalling_0100, Function 
     EXPECT_EQ(unmarshalled->targetSoPath, param.targetSoPath);
     EXPECT_EQ(unmarshalled->profileBlockLength, param.profileBlockLength);
     delete unmarshalled;
+}
+
+/**
+ * @tc.number: InstalldProxyTest_ExtractServiceModuleFiles_0100
+ * @tc.name: test ExtractServiceModuleFiles of proxy
+ * @tc.desc: 1. calling ExtractServiceModuleFiles with valid param
+*/
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_ExtractServiceModuleFiles_0100, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    EXPECT_NE(proxy, nullptr);
+
+    ExtractModuleFilesParam param;
+    param.bundleName = TEST_BUNDLE_NAME;
+    param.moduleName = "entry";
+    param.bundlePath = "/data/test/test.hsp";
+    param.nativeLibraryPath = "lib/arm64";
+    param.cpuAbi = "arm64-v8a";
+    param.versionCode = 100;
+    param.needFakeDecompression = false;
+    param.isSystemApp = false;
+    auto ret = proxy->ExtractServiceModuleFiles(param);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstalldProxyTest_ExtractPluginModuleFiles_0100
+ * @tc.name: test ExtractPluginModuleFiles of proxy
+ * @tc.desc: 1. calling ExtractPluginModuleFiles with valid param
+*/
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_ExtractPluginModuleFiles_0100, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    EXPECT_NE(proxy, nullptr);
+
+    ExtractModuleFilesParam param;
+    param.hostBundleName = TEST_BUNDLE_NAME;
+    param.bundleNameWithTime = "com.example.plugin.1234567890";
+    param.bundleName = TEST_BUNDLE_NAME;
+    param.moduleName = "entry";
+    param.bundlePath = "/data/test/entry.hsp";
+    param.nativeLibraryPath = "lib/arm64";
+    param.cpuAbi = "arm64-v8a";
+    param.versionCode = 100;
+    param.needFakeDecompression = false;
+    param.isSystemApp = false;
+    auto ret = proxy->ExtractPluginModuleFiles(param);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstalldProxyTest_ExtractSharedModuleFiles_0100
+ * @tc.name: test ExtractSharedModuleFiles of proxy
+ * @tc.desc: 1. calling ExtractSharedModuleFiles with valid param
+*/
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_ExtractSharedModuleFiles_0100, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    EXPECT_NE(proxy, nullptr);
+
+    ExtractModuleFilesParam param;
+    param.bundleName = TEST_BUNDLE_NAME;
+    param.moduleName = "entry";
+    param.bundlePath = "/data/test/test.hsp";
+    param.nativeLibraryPath = "lib/arm64";
+    param.cpuAbi = "arm64-v8a";
+    param.versionCode = 100;
+    param.needFakeDecompression = false;
+    param.isSystemApp = false;
+    auto ret = proxy->ExtractSharedModuleFiles(param);
+    EXPECT_EQ(ret, ERR_OK);
 }
 
 /**

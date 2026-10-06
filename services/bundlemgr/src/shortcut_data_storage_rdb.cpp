@@ -104,6 +104,10 @@ bool ShortcutDataStorageRdb::UpdateDesktopShortcutInfo(
         APP_LOGE_NOFUNC("rdbDataManager is null");
         return false;
     }
+    if (shortcutInfo.id.empty() || shortcutInfo.bundleName.empty()) {
+        APP_LOGE_NOFUNC("shortcutInfo id or bundleName is empty");
+        return false;
+    }
     nlohmann::json jsonObject;
     to_json(jsonObject, shortcutInfo);
     NativeRdb::ValuesBucket valuesBucket;
@@ -147,6 +151,10 @@ void ShortcutDataStorageRdb::GetAllDesktopShortcutInfo(int32_t userId, std::vect
         nlohmann::json jsonObject = nlohmann::json::parse(value, nullptr, false, true);
         if (jsonObject.is_discarded()) {
             APP_LOGE("Shortcut jsonObject is discarded");
+            return;
+        }
+        if (!jsonObject.is_object()) {
+            APP_LOGE("Shortcut jsonObject is not an object");
             return;
         }
         ShortcutInfo shortcutInfo;
@@ -246,6 +254,10 @@ void ShortcutDataStorageRdb::GetDesktopShortcutInfosByDefaultUserId(std::vector<
         nlohmann::json jsonObject = nlohmann::json::parse(value, nullptr, false, true);
         if (jsonObject.is_discarded()) {
             APP_LOGE("Shortcut jsonObject is discarded");
+            return;
+        }
+        if (!jsonObject.is_object()) {
+            APP_LOGE("Shortcut jsonObject is not an object");
             return;
         }
         ShortcutInfo shortcutInfo;

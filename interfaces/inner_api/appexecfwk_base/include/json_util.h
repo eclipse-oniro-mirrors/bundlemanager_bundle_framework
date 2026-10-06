@@ -79,6 +79,7 @@ void CheckArrayType(
                 if (!array.is_string()) {
                     APP_LOGE("Array element not string type");
                     parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
+                    break;
                 }
             }
             if (parseResult == ERR_OK) {

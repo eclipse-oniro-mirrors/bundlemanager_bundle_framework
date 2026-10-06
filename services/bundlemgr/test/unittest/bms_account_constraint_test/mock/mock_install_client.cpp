@@ -82,6 +82,16 @@ ErrCode InstalldClient::ExtractSoFiles(const std::string &bundleName, const std:
     return 0;
 }
 
+ErrCode InstalldClient::ExtractPluginModuleFiles(const ExtractModuleFilesParam &param)
+{
+    return 0;
+}
+
+ErrCode InstalldClient::ExtractServiceModuleFiles(const ExtractModuleFilesParam &param)
+{
+    return 0;
+}
+
 ErrCode InstalldClient::CopyApFile(const std::string &bundleName, const std::string &moduleName, int32_t userId)
 {
     return 0;
@@ -121,6 +131,11 @@ ErrCode InstalldClient::ExtractResFileDir(const std::string &bundleName, const s
 
 ErrCode InstalldClient::ExtractNPAPIPlugin(const std::string &bundleName, const std::string &moduleName,
     const std::string &hapFilePath, int32_t userId)
+{
+    return 0;
+}
+
+ErrCode InstalldClient::ExtractSharedModuleFiles(const ExtractModuleFilesParam &param)
 {
     return 0;
 }
@@ -305,11 +320,6 @@ ErrCode InstalldClient::ScanDir(
 
 ErrCode InstalldClient::MoveFile(
     const std::string &oldPath, const std::string &newPath, BundleDirScene scene, const std::string &bundleName)
-{
-    return 0;
-}
-
-ErrCode InstalldClient::RenameFile(const std::string &oldPath, const std::string &newPath)
 {
     return 0;
 }
