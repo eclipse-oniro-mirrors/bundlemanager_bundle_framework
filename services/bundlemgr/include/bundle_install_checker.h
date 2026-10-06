@@ -51,6 +51,8 @@ struct InstallCheckParam {
     PermissionStatus installEtpMdmBundlePermissionStatus = PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS;
     // status of install internaltesting bundle permission
     PermissionStatus installInternaltestingBundlePermissionStatus = PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS;
+    // status of install developer_id bundle permission
+    PermissionStatus installDeveloperIdBundlePermissionStatus = PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS;
     
     Constants::AppType appType = Constants::AppType::THIRD_PARTY_APP;
     int64_t crowdtestDeadline = Constants::INVALID_CROWDTEST_DEADLINE; // for crowdtesting type hap
@@ -159,6 +161,8 @@ public:
 
     ErrCode CheckInstallPermission(const InstallCheckParam &checkParam,
         const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
+
+    ErrCode CheckDeveloperIdBundle(const InstallParam &installParam);
 
     bool VaildInstallPermission(const InstallParam &installParam,
         const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);

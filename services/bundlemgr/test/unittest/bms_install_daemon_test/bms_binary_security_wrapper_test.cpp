@@ -428,6 +428,120 @@ HWTEST_F(BmsBinarySecurityWrapperTest, BmsBinarySecurityWrapperTest_020, Functio
 }
 
 /**
+ * @tc.number: BmsBinarySecurityWrapperTest_026
+ * @tc.name: test ResolveCheckAppSideLoadingAsyncNoLock with null handle
+ * @tc.desc: 1. ResolveCheckAppSideLoadingAsyncNoLock returns false when handle_ is null
+ */
+HWTEST_F(BmsBinarySecurityWrapperTest, BmsBinarySecurityWrapperTest_026, Function | SmallTest | Level0)
+{
+    BinarySecurityWrapper& instance = BinarySecurityWrapper::GetInstance();
+
+    void* originalHandle = instance.handle_;
+    instance.handle_ = nullptr;
+    instance.checkAppSideLoadingAsyncFunc_ = nullptr;
+
+    bool ret = instance.ResolveCheckAppSideLoadingAsyncNoLock();
+    EXPECT_FALSE(ret);
+
+    instance.handle_ = originalHandle;
+}
+
+/**
+ * @tc.number: BmsBinarySecurityWrapperTest_027
+ * @tc.name: test CheckAppSideLoadingAsync without library
+ * @tc.desc: 1. CheckAppSideLoadingAsync returns false when library unavailable
+ */
+HWTEST_F(BmsBinarySecurityWrapperTest, BmsBinarySecurityWrapperTest_027, Function | SmallTest | Level0)
+{
+    BinarySecurityWrapper& instance = BinarySecurityWrapper::GetInstance();
+
+    void* originalHandle = instance.handle_;
+    instance.handle_ = nullptr;
+    instance.checkAppSideLoadingAsyncFunc_ = nullptr;
+
+    bool ret = instance.CheckAppSideLoadingAsync(100);
+    EXPECT_FALSE(ret);
+
+    instance.handle_ = originalHandle;
+}
+
+/**
+ * @tc.number: BmsBinarySecurityWrapperTest_028
+ * @tc.name: test HasNoResolvedSymbolsNoLock when checkAppSideLoadingAsyncFunc_ is set
+ * @tc.desc: 1. HasNoResolvedSymbolsNoLock returns false when checkAppSideLoadingAsyncFunc_ is non-null
+ */
+HWTEST_F(BmsBinarySecurityWrapperTest, BmsBinarySecurityWrapperTest_028, Function | SmallTest | Level0)
+{
+    BinarySecurityWrapper& instance = BinarySecurityWrapper::GetInstance();
+
+    void* originalHandle = instance.handle_;
+    BinarySecurityWrapper::CheckAppSideLoadingAsyncFunc originalFunc =
+        instance.checkAppSideLoadingAsyncFunc_;
+    instance.handle_ = nullptr;
+    instance.processHapBinInstallFunc_ = nullptr;
+    instance.requestIndependentBinarySwitchAsyncFunc_ = nullptr;
+    instance.checkHspPluginCertValidityFunc_ = nullptr;
+    instance.checkAppSideLoadingAsyncFunc_ =
+        reinterpret_cast<BinarySecurityWrapper::CheckAppSideLoadingAsyncFunc>(0x1);
+
+    EXPECT_FALSE(instance.HasNoResolvedSymbolsNoLock());
+
+    instance.checkAppSideLoadingAsyncFunc_ = originalFunc;
+    instance.handle_ = originalHandle;
+}
+
+/**
+ * @tc.number: BmsBinarySecurityWrapperTest_029
+ * @tc.name: test UnloadLibraryNoLock resets checkAppSideLoadingAsyncFunc_
+ * @tc.desc: 1. UnloadLibraryNoLock resets checkAppSideLoadingAsyncFunc_ to nullptr
+ */
+HWTEST_F(BmsBinarySecurityWrapperTest, BmsBinarySecurityWrapperTest_029, Function | SmallTest | Level0)
+{
+    BinarySecurityWrapper& instance = BinarySecurityWrapper::GetInstance();
+
+    void* originalHandle = instance.handle_;
+    BinarySecurityWrapper::CheckAppSideLoadingAsyncFunc originalFunc =
+        instance.checkAppSideLoadingAsyncFunc_;
+    instance.handle_ = dlopen(nullptr, RTLD_LAZY);
+    ASSERT_NE(instance.handle_, nullptr);
+    instance.checkAppSideLoadingAsyncFunc_ =
+        reinterpret_cast<BinarySecurityWrapper::CheckAppSideLoadingAsyncFunc>(0x1);
+
+    instance.UnloadLibraryNoLock();
+    EXPECT_EQ(instance.handle_, nullptr);
+    EXPECT_EQ(instance.checkAppSideLoadingAsyncFunc_, nullptr);
+
+    instance.handle_ = originalHandle;
+    instance.checkAppSideLoadingAsyncFunc_ = originalFunc;
+}
+
+/**
+ * @tc.number: BmsBinarySecurityWrapperTest_030
+ * @tc.name: test CheckAppSideLoadingAsync with handle and func ready
+ * @tc.desc: 1. CheckAppSideLoadingAsync takes read-lock fast path when handle_ and func are valid
+ */
+HWTEST_F(BmsBinarySecurityWrapperTest, BmsBinarySecurityWrapperTest_030, Function | SmallTest | Level0)
+{
+    BinarySecurityWrapper& instance = BinarySecurityWrapper::GetInstance();
+
+    void* originalHandle = instance.handle_;
+    BinarySecurityWrapper::CheckAppSideLoadingAsyncFunc originalFunc =
+        instance.checkAppSideLoadingAsyncFunc_;
+
+    auto stubFunc = [](int32_t) -> int32_t { return 1; };
+    instance.handle_ = dlopen(nullptr, RTLD_LAZY);
+    ASSERT_NE(instance.handle_, nullptr);
+    instance.checkAppSideLoadingAsyncFunc_ = stubFunc;
+
+    bool ret = instance.CheckAppSideLoadingAsync(TEST_USER_ID);
+    EXPECT_TRUE(ret);
+
+    instance.UnloadLibrary();
+    instance.checkAppSideLoadingAsyncFunc_ = originalFunc;
+    instance.handle_ = originalHandle;
+}
+
+/**
  * @tc.number: BmsBinarySecurityWrapperTest_021
  * @tc.name: test UnloadLibraryNoLock when handle is null
  * @tc.desc: 1. UnloadLibraryNoLock handles nullptr handle gracefully
@@ -533,6 +647,7 @@ HWTEST_F(BmsBinarySecurityWrapperTest, BmsBinarySecurityWrapperTest_025, Functio
     EXPECT_EQ(instance.processHapBinInstallFunc_, nullptr);
     EXPECT_EQ(instance.requestIndependentBinarySwitchAsyncFunc_, nullptr);
     EXPECT_EQ(instance.checkHspPluginCertValidityFunc_, nullptr);
+    EXPECT_EQ(instance.checkAppSideLoadingAsyncFunc_, nullptr);
 
     instance.handle_ = originalHandle;
 }

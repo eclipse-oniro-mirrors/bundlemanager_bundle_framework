@@ -2097,6 +2097,17 @@ ErrCode InstalldProxy::CheckHspPluginCertValidity(const std::string &bundleName,
     return TransactInstalldCmd(InstalldInterfaceCode::CHECK_HSP_PLUGIN_CERT_VALIDITY, data, reply, option);
 }
 
+ErrCode InstalldProxy::CheckAppSideLoadingAsync(int32_t userId)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, Int32, userId);
+
+    MessageParcel reply;
+    MessageOption option;
+    return TransactInstalldCmd(InstalldInterfaceCode::CHECK_APP_SIDE_LOADING_ASYNC, data, reply, option);
+}
+
 ErrCode InstalldProxy::ResetBmsDBSecurity()
 {
     MessageParcel data;

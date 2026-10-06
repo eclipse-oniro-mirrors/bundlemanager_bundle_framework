@@ -510,7 +510,9 @@ bool BundleInstallerHost::Install(
         !BundlePermissionMgr::VerifyCallingPermissionForAll(
             ServiceConstants::PERMISSION_INSTALL_ENTERPRISE_MDM_BUNDLE) &&
         !BundlePermissionMgr::VerifyCallingPermissionForAll(
-            ServiceConstants::PERMISSION_INSTALL_INTERNALTESTING_BUNDLE)) {
+            ServiceConstants::PERMISSION_INSTALL_INTERNALTESTING_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(
+            ServiceConstants::PERMISSION_INSTALL_DEVELOPER_ID_BUNDLE)) {
         LOG_E(BMS_TAG_INSTALLER, "install permission denied");
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
         return false;
@@ -540,7 +542,9 @@ ErrCode BundleInstallerHost::VerifyInstallPermission()
         !BundlePermissionMgr::VerifyCallingPermissionForAll(
             ServiceConstants::PERMISSION_INSTALL_ENTERPRISE_MDM_BUNDLE) &&
         !BundlePermissionMgr::VerifyCallingPermissionForAll(
-            ServiceConstants::PERMISSION_INSTALL_INTERNALTESTING_BUNDLE)) {
+            ServiceConstants::PERMISSION_INSTALL_INTERNALTESTING_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(
+            ServiceConstants::PERMISSION_INSTALL_DEVELOPER_ID_BUNDLE)) {
         LOG_E(BMS_TAG_INSTALLER, "install permission denied");
         return ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED;
     }
@@ -1016,6 +1020,11 @@ bool BundleInstallerHost::IsPermissionValid(const InstallParam &installParam, In
         BundlePermissionMgr::VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_INSTALL_INTERNALTESTING_BUNDLE)
             ? PermissionStatus::HAVE_PERMISSION_STATUS
             : PermissionStatus::NON_HAVE_PERMISSION_STATUS;
+    verifiedInstallParam.installDeveloperIdBundlePermissionStatus =
+        BundlePermissionMgr::VerifyCallingPermissionForAll(
+            ServiceConstants::PERMISSION_INSTALL_DEVELOPER_ID_BUNDLE)
+            ? PermissionStatus::HAVE_PERMISSION_STATUS
+            : PermissionStatus::NON_HAVE_PERMISSION_STATUS;
     verifiedInstallParam.installUpdateSelfBundlePermissionStatus =
         BundlePermissionMgr::VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_INSTALL_SELF_BUNDLE) ?
         PermissionStatus::HAVE_PERMISSION_STATUS : PermissionStatus::NON_HAVE_PERMISSION_STATUS;
@@ -1023,6 +1032,7 @@ bool BundleInstallerHost::IsPermissionValid(const InstallParam &installParam, In
         verifiedInstallParam.installEnterpriseBundlePermissionStatus == PermissionStatus::HAVE_PERMISSION_STATUS ||
         verifiedInstallParam.installEtpNormalBundlePermissionStatus == PermissionStatus::HAVE_PERMISSION_STATUS ||
         verifiedInstallParam.installEtpMdmBundlePermissionStatus == PermissionStatus::HAVE_PERMISSION_STATUS ||
+        verifiedInstallParam.installDeveloperIdBundlePermissionStatus == PermissionStatus::HAVE_PERMISSION_STATUS ||
         verifiedInstallParam.installUpdateSelfBundlePermissionStatus == PermissionStatus::HAVE_PERMISSION_STATUS ||
         BundlePermissionMgr::VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_INSTALL_QUICK_FIX_BUNDLE));
 }
@@ -1042,6 +1052,8 @@ bool BundleInstallerHost::VerifyDestoryBundleStreamInstallerPermission()
             ServiceConstants::PERMISSION_INSTALL_ENTERPRISE_MDM_BUNDLE) &&
         !BundlePermissionMgr::VerifyCallingPermissionForAll(
             ServiceConstants::PERMISSION_INSTALL_INTERNALTESTING_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(
+            ServiceConstants::PERMISSION_INSTALL_DEVELOPER_ID_BUNDLE) &&
         !BundlePermissionMgr::VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_INSTALL_QUICK_FIX_BUNDLE)) {
         LOG_E(BMS_TAG_INSTALLER, "install permission denied");
         return false;

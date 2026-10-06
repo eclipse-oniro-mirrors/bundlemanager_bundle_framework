@@ -98,6 +98,7 @@ using namespace OHOS::Security;
 namespace {
 constexpr const char* DATA_PRELOAD_APP = "/data/preload/app/";
 constexpr const char* COMPILE_SDK_TYPE_OPEN_HARMONY = "OpenHarmony";
+constexpr int32_t MIN_DEVELOPER_ID_API_VERSION = 10;
 constexpr const char* LOG = "log";
 constexpr const char* HSP_VERSION_PREFIX = "v";
 constexpr const char* PRE_INSTALL_HSP_PATH = "/shared_bundles/";
@@ -1200,6 +1201,23 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
     result = CheckMDMUpdateBundleForSelf(installParam, oldInfo, newInfos, isAppExist_);
     CHECK_RESULT(result, "update MDM app failed %{public}d");
 
+    if (isAppExist_ && !newInfos.empty()) {
+        const auto &newInfo = newInfos.begin()->second;
+        const auto &oldDistType = oldInfo.GetAppDistributionType();
+        const auto &newDistType = newInfo.GetAppDistributionType();
+        bool oldIsSideload = (oldDistType == Constants::APP_DISTRIBUTION_TYPE_DEVELOPER) &&
+            (oldInfo.GetApplicationBundleType() == BundleType::APP);
+        bool newIsSideload = (newDistType == Constants::APP_DISTRIBUTION_TYPE_DEVELOPER) &&
+            (newInfo.GetApplicationBundleType() == BundleType::APP);
+        if (oldDistType != newDistType && (oldIsSideload || newIsSideload)) {
+            LOG_E(BMS_TAG_INSTALLER,
+                "distribution type transition not allowed, need uninstall first, "
+                "oldType: %{public}s, newType: %{public}s",
+                oldDistType.c_str(), newDistType.c_str());
+            return ERR_APPEXECFWK_INSTALL_DEVELOPER_ID_DISTRIBUTION_TYPE_CHANGED;
+        }
+    }
+
     GetExtensionDirsChange(newInfos, oldInfo);
 
     if (isAppExist_) {
@@ -1769,8 +1787,13 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     result = CheckShellCanInstallPreApp(newInfos);
     CHECK_RESULT(result, "check shell can install pre app failed %{public}d");
     CheckPreBundle(newInfos, installParam, isRecover);
-    result = CheckInstallPermission(installParam, hapVerifyResults);
-    CHECK_RESULT(result, "check install permission failed %{public}d");
+    if (!isSideloadApp_) {
+        result = CheckInstallPermission(installParam, hapVerifyResults);
+        CHECK_RESULT(result, "check install permission failed %{public}d");
+    } else {
+        result = bundleInstallChecker_->CheckDeveloperIdBundle(installParam);
+        CHECK_RESULT(result, "check developer_id bundle failed %{public}d");
+    }
     result = CheckInstallCondition(hapVerifyResults, newInfos, checkSysCapRes);
     CHECK_RESULT(result, "check install condition failed %{public}d");
     result = CheckHapBinInstallCondition(newInfos);
@@ -5939,6 +5962,32 @@ ErrCode BaseBundleInstaller::ParseHapFiles(
         DEBUG_APP_IDENTIFIER : hapVerifyRes[0].GetProvisionInfo().bundleInfo.appIdentifier;
     bundleAppIdentifier_ = hapVerifyRes[0].GetProvisionInfo().bundleInfo.appIdentifier;
     SetAppDistributionType(infos);
+    if (appDistributionType_ == Constants::APP_DISTRIBUTION_TYPE_DEVELOPER) {
+        if (bundleType_ != BundleType::APP) {
+            LOG_E(BMS_TAG_INSTALLER, "developer_id bundle type error");
+            return ERR_APPEXECFWK_INSTALL_DEVELOPER_ID_BUNDLE_NOT_ALLOWED;
+        }
+        if (infos.empty()) {
+            LOG_E(BMS_TAG_INSTALLER, "infos emtry");
+            return ERR_APPEXECFWK_INSTALL_DEVELOPER_ID_BUNDLE_NOT_ALLOWED;
+        }
+        auto appApiVersion = infos.begin()->second.GetBaseApplicationInfo()
+            .apiTargetVersion % Constants::BASE_API_VERSION;
+        auto systemApiVersion = GetSdkApiVersion();
+        if (appApiVersion < MIN_DEVELOPER_ID_API_VERSION || systemApiVersion < MIN_DEVELOPER_ID_API_VERSION) {
+            LOG_E(BMS_TAG_INSTALLER, "developer_id bundle api version %{public}d %{public}d lower than %{public}d",
+               appApiVersion, systemApiVersion, MIN_DEVELOPER_ID_API_VERSION);
+            return ERR_APPEXECFWK_INSTALL_DEVELOPER_ID_BUNDLE_NOT_ALLOWED;
+        }
+        isSideloadApp_ = true;
+        if (installParam.parameters.find(Constants::NOTARIZATION_CREDENTIAL_STATUS_KEY)
+            != installParam.parameters.end()) {
+            int32_t notarizationCredentialStatus = installParam.GetNotarizationCredentialStatus();
+            for (auto &info : infos) {
+                info.second.SetNotarizationCredentialStatus(notarizationCredentialStatus);
+            }
+        }
+    }
     UpdateExtensionSandboxInfo(infos, hapVerifyRes);
 
     // Set deviceModeDistributionPolicy + isDualModeCloneApp from installParam to InnerBundleInfo for dual-mode devices.
@@ -8303,6 +8352,7 @@ ErrCode BaseBundleInstaller::VerifyCodeSignatureForNativeFiles(InnerBundleInfo &
     codeSignatureParam.signatureFileDir = signatureFileDir;
     codeSignatureParam.isEnterpriseBundle = isEnterpriseBundle_;
     codeSignatureParam.isInternaltestingBundle = isInternaltestingBundle_;
+    codeSignatureParam.isSideloadApp = isSideloadApp_;
     codeSignatureParam.appIdentifier = appIdentifier_;
     codeSignatureParam.isPreInstalledBundle = IsDataPreloadHap(modulePath_) ? false : info.IsPreInstallApp();
     codeSignatureParam.isCompileSdkOpenHarmony = (compileSdkType == COMPILE_SDK_TYPE_OPEN_HARMONY);
@@ -8340,6 +8390,7 @@ ErrCode BaseBundleInstaller::VerifyCodeSignatureForHap(const std::unordered_map<
     codeSignatureParam.signatureFileDir = signatureFileDir;
     codeSignatureParam.isEnterpriseBundle = isEnterpriseBundle_;
     codeSignatureParam.isInternaltestingBundle = isInternaltestingBundle_;
+    codeSignatureParam.isSideloadApp = isSideloadApp_;
     codeSignatureParam.appIdentifier = appIdentifier_;
     codeSignatureParam.isCompileSdkOpenHarmony = (compileSdkType == COMPILE_SDK_TYPE_OPEN_HARMONY);
     codeSignatureParam.isPreInstalledBundle = IsDataPreloadHap(realHapPath) ? false : info.IsPreInstallApp();
@@ -9100,6 +9151,7 @@ ErrCode BaseBundleInstaller::DeliveryProfileToCodeSign() const
         provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_NORMAL ||
         provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_MDM ||
         provisionInfo.distributionType == Security::Verify::AppDistType::INTERNALTESTING ||
+        provisionInfo.distributionType == Security::Verify::AppDistType::DEVELOPER ||
         provisionInfo.type == Security::Verify::ProvisionType::DEBUG) {
         // dual-mode: deliver the sign profile under the effective (prefixed for clone) bundle name so the
         // code signature matches the isolated install identity. dualModeBundleName_ is empty for

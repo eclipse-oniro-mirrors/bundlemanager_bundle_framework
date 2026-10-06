@@ -2360,6 +2360,10 @@ public:
 
     std::string GetAppDistributionType() const;
 
+    void SetNotarizationCredentialStatus(int32_t notarizationCredentialStatus);
+
+    int32_t GetNotarizationCredentialStatus() const;
+
     void SetAppProvisionType(const std::string &appProvisionType);
 
     std::string GetAppProvisionType() const;

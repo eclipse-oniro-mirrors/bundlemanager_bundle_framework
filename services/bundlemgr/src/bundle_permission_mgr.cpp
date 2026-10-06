@@ -781,6 +781,9 @@ Security::AccessToken::HapInfoParams BundlePermissionMgr::CreateHapInfoParams(co
     hapInfo.isAtomicService = innerBundleInfo.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE;
     hapInfo.appProvisionType = innerBundleInfo.GetAppProvisionType();
     hapInfo.isSkillHap = innerBundleInfo.GetApplicationBundleType() == BundleType::SKILL;
+    hapInfo.isSideloadApp = innerBundleInfo.GetApplicationBundleType() == BundleType::APP &&
+        innerBundleInfo.GetAppDistributionType() == Constants::APP_DISTRIBUTION_TYPE_DEVELOPER;
+    LOG_D(BMS_TAG_DEFAULT, "AccessToken::HapInfoParams isSideloadApp: %{public}d", hapInfo.isSideloadApp);
     return hapInfo;
 }
 
@@ -834,7 +837,9 @@ int32_t BundlePermissionMgr::UpdateHapToken(Security::AccessToken::AccessTokenID
     updateHapInfoParams.dataRefresh = dataRefresh;
     updateHapInfoParams.appProvisionType = innerBundleInfo.GetAppProvisionType();
     updateHapInfoParams.isSkillHap = innerBundleInfo.GetApplicationBundleType() == BundleType::SKILL;
-
+    updateHapInfoParams.isSideloadApp = innerBundleInfo.GetApplicationBundleType() == BundleType::APP &&
+        innerBundleInfo.GetAppDistributionType() == Constants::APP_DISTRIBUTION_TYPE_DEVELOPER;
+    LOG_D(BMS_TAG_DEFAULT, "AccessToken::HapInfoParams isSideloadApp: %{public}d", updateHapInfoParams.isSideloadApp);
     AccessToken::HapPolicyParams hapPolicy = CreateHapPolicyParam(innerBundleInfo,
         appServiceCapabilities, isDebugGrant);
 #ifdef X86_EMULATOR_MODE

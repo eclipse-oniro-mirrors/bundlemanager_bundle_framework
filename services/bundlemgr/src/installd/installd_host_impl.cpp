@@ -3979,6 +3979,10 @@ ErrCode InstalldHostImpl::VerifyCodeSignatureForHap(const CodeSignatureParam &co
     if (codeSignatureParam.isDeveloperDistribution) {
         codeSignFlag |= Security::CodeSign::CodeSignInfoFlag::IS_LOCAL_HSP_PLUGIN;
     }
+    if (codeSignatureParam.isSideloadApp) {
+        codeSignFlag |= Security::CodeSign::CodeSignInfoFlag::IS_SIDE_LOADING_APP;
+        LOG_D(BMS_TAG_INSTALLD, "codeSignFlag add IS_SIDE_LOADING_APP");
+    }
     if (codeSignatureParam.signatureFileDir.empty()) {
         std::shared_ptr<CodeSignHelper> codeSignHelper = std::make_shared<CodeSignHelper>();
         Security::CodeSign::FileType fileType = codeSignatureParam.isPreInstalledBundle ?
@@ -5146,6 +5150,25 @@ ErrCode InstalldHostImpl::CheckHspPluginCertValidity(const std::string &bundleNa
     }
 #ifdef SECURITY_PRIVACY_SERVER_ENABLE
    
+#else
+    LOG_E(BMS_TAG_INSTALLD, "SECURITY_PRIVACY_SERVER_ENABLE is disabled");
+    return ERR_APPEXECFWK_PLUGIN_PRIVACY_SERVER_DISABLED;
+#endif
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::CheckAppSideLoadingAsync(int32_t userId)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "permission denied");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+#ifdef SECURITY_PRIVACY_SERVER_ENABLE
+    bool result = BinarySecurityWrapper::GetInstance().CheckAppSideLoadingAsync(userId);
+    if (!result) {
+        LOG_E(BMS_TAG_INSTALLD, "CheckAppSideLoadingAsync failed %{public}d", userId);
+        return ERR_APPEXECFWK_INSTALL_FAILED_VERIFY_BIN_PERMISSION;
+    }
 #else
     LOG_E(BMS_TAG_INSTALLD, "SECURITY_PRIVACY_SERVER_ENABLE is disabled");
     return ERR_APPEXECFWK_PLUGIN_PRIVACY_SERVER_DISABLED;

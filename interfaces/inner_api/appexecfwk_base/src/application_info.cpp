@@ -108,6 +108,7 @@ const char* APPLICATION_SIGNATURE_KEY = "signatureKey";
 const char* APPLICATION_TARGETBUNDLELIST = "targetBundleList";
 const char* APPLICATION_APP_DISTRIBUTION_TYPE = "appDistributionType";
 const char* APPLICATION_APP_PROVISION_TYPE = "appProvisionType";
+const char* APPLICATION_NOTARIZATION_CREDENTIAL_STATUS = "notarizationCredentialStatus";
 const char* APPLICATION_ICON_RESOURCE = "iconResource";
 const char* APPLICATION_LABEL_RESOURCE = "labelResource";
 const char* APPLICATION_DESCRIPTION_RESOURCE = "descriptionResource";
@@ -576,6 +577,7 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     appPrivilegeLevel = Str16ToStr8(parcel.ReadString16());
     appDistributionType = Str16ToStr8(parcel.ReadString16());
     appProvisionType = Str16ToStr8(parcel.ReadString16());
+    notarizationCredentialStatus = parcel.ReadInt32();
     accessTokenId = parcel.ReadUint32();
     accessTokenIdEx = parcel.ReadUint64();
     enabled = parcel.ReadBool();
@@ -838,6 +840,7 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appPrivilegeLevel));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appDistributionType));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appProvisionType));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, notarizationCredentialStatus);
 
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, accessTokenId);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint64, parcel, accessTokenIdEx);
@@ -1182,6 +1185,7 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_TARGETBUNDLELIST, applicationInfo.targetBundleList},
         {APPLICATION_APP_DISTRIBUTION_TYPE, applicationInfo.appDistributionType},
         {APPLICATION_APP_PROVISION_TYPE, applicationInfo.appProvisionType},
+        {APPLICATION_NOTARIZATION_CREDENTIAL_STATUS, applicationInfo.notarizationCredentialStatus},
         {APPLICATION_ICON_RESOURCE, applicationInfo.iconResource},
         {APPLICATION_LABEL_RESOURCE, applicationInfo.labelResource},
         {APPLICATION_DESCRIPTION_RESOURCE, applicationInfo.descriptionResource},
@@ -1395,6 +1399,8 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         applicationInfo.appDistributionType, false, parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_APP_PROVISION_TYPE,
         applicationInfo.appProvisionType, false, parseResult);
+    GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, APPLICATION_NOTARIZATION_CREDENTIAL_STATUS,
+        applicationInfo.notarizationCredentialStatus, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<Resource>(jsonObject, jsonObjectEnd, APPLICATION_ICON_RESOURCE,
         applicationInfo.iconResource, JsonType::OBJECT, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<Resource>(jsonObject, jsonObjectEnd, APPLICATION_LABEL_RESOURCE,

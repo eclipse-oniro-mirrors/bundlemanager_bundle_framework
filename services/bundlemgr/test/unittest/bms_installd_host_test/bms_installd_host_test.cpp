@@ -1362,6 +1362,22 @@ HWTEST_F(BmsInstalldHostTest, HandleCheckHspPluginCertValidity_0100, Function | 
 }
 
 /**
+ * @tc.number: HandleCheckAppSideLoadingAsync_0100
+ * @tc.name: test HandleCheckAppSideLoadingAsync with valid param
+ * @tc.desc: 1.HandleCheckAppSideLoadingAsync reads userId and writes ErrCode
+ */
+HWTEST_F(BmsInstalldHostTest, HandleCheckAppSideLoadingAsync_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    int32_t userId = 100;
+    data.WriteInt32(userId);
+    bool res = installdHost.HandleCheckAppSideLoadingAsync(data, reply);
+    EXPECT_TRUE(res);
+}
+
+/**
  * @tc.number: InstalldHostImpl_GetAppDataFileCategoryStats_0100
  * @tc.name: invalid bundleName returns PARAM_ERROR
  * @tc.desc: 1. bundleName contains path traversal chars

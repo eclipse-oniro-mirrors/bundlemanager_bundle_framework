@@ -2568,6 +2568,10 @@ ErrCode InstalldOperator::PerformCodeSignatureCheck(const CodeSignatureParam &co
     if (codeSignatureParam.isDeveloperDistribution) {
         codeSignFlag |= Security::CodeSign::CodeSignInfoFlag::IS_LOCAL_HSP_PLUGIN;
     }
+    if (codeSignatureParam.isSideloadApp) {
+        codeSignFlag |= Security::CodeSign::CodeSignInfoFlag::IS_SIDE_LOADING_APP;
+        LOG_D(BMS_TAG_INSTALLD, "codeSignFlag add IS_SIDE_LOADING_APP");
+    }
     if (codeSignatureParam.signatureFileDir.empty()) {
         std::shared_ptr<CodeSignHelper> codeSignHelper = std::make_shared<CodeSignHelper>();
         Security::CodeSign::FileType fileType = codeSignatureParam.isPreInstalledBundle ?

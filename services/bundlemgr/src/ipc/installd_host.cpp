@@ -468,6 +468,9 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::CHECK_HSP_PLUGIN_CERT_VALIDITY):
             result = HandleCheckHspPluginCertValidity(data, reply);
             break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::CHECK_APP_SIDE_LOADING_ASYNC):
+            result = HandleCheckAppSideLoadingAsync(data, reply);
+            break;
         case static_cast<uint32_t>(InstalldInterfaceCode::DELETE_OLD_CACHE_FILES):
             result = HandleDeleteOldCacheFiles(data, reply);
             break;
@@ -2094,6 +2097,14 @@ bool InstalldHost::HandleCheckHspPluginCertValidity(MessageParcel &data, Message
     std::string bundleName = Str16ToStr8(data.ReadString16());
     int32_t sessionId = data.ReadInt32();
     ErrCode result = CheckHspPluginCertValidity(bundleName, sessionId);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleCheckAppSideLoadingAsync(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t userId = data.ReadInt32();
+    ErrCode result = CheckAppSideLoadingAsync(userId);
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

@@ -702,5 +702,9 @@ ErrCode InstalldHostImpl::CopyAbcFile(const std::string &bundleName, int32_t use
 {
     return ERR_OK;
 }
+ErrCode InstalldHostImpl::CheckAppSideLoadingAsync(int32_t userId)
+{
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

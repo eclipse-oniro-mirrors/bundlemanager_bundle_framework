@@ -31,6 +31,9 @@
 #include "scope_guard.h"
 #include "securec.h"
 #include "systemcapability.h"
+#ifdef SECURITY_PRIVACY_SERVER_ENABLE
+#include "installd_client.h"
+#endif
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -627,6 +630,26 @@ ErrCode BundleInstallChecker::CheckInstallPermission(const InstallCheckParam &ch
             return ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED;
         }
     }
+    return ERR_OK;
+}
+
+ErrCode BundleInstallChecker::CheckDeveloperIdBundle(const InstallParam &installParam)
+{
+    if (installParam.installDeveloperIdBundlePermissionStatus != PermissionStatus::HAVE_PERMISSION_STATUS) {
+        LOG_E(BMS_TAG_INSTALLER, "install developer_id bundle permission denied");
+        return ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED;
+    }
+
+#ifdef SECURITY_PRIVACY_SERVER_ENABLE
+    auto ret = InstalldClient::GetInstance()->CheckAppSideLoadingAsync(installParam.userId);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "CheckAppSideLoadingAsync failed %{public}d", ret);
+        return ret;
+    }
+#else
+    LOG_E(BMS_TAG_INSTALLER, "app side loading check failed, SECURITY_PRIVACY_SERVER_ENABLE is disabled");
+    return ERR_APPEXECFWK_PLUGIN_PRIVACY_SERVER_DISABLED;
+#endif
     return ERR_OK;
 }
 

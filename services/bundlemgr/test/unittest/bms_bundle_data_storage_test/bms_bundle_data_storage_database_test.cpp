@@ -1477,6 +1477,7 @@ protected:
                 "versionName": "1.0.0",
                 "appDistributionType": "none",
                 "appProvisionType": "release",
+                "notarizationCredentialStatus":0,
                 "appQuickFix": {
                     "bundleName": "",
                     "deployedAppqfInfo": {

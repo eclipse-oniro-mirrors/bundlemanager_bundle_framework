@@ -903,6 +903,11 @@ public:
         return ERR_OK;
     }
 
+    virtual ErrCode CheckAppSideLoadingAsync(int32_t userId)
+    {
+        return ERR_OK;
+    }
+
     virtual ErrCode ResetBmsDBSecurity()
     {
         return ERR_OK;

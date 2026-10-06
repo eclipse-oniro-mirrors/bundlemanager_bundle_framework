@@ -1751,6 +1751,61 @@ HWTEST_F(BmsInstallDaemonIpcTest, CodeSignatureParam_Marshalling_0100, Function 
 }
 
 /**
+ * @tc.number: CodeSignatureParam_Marshalling_0200
+ * @tc.name: test isSideloadApp round-trip
+ * @tc.desc: 1. isSideloadApp survives Marshalling->Unmarshalling
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, CodeSignatureParam_Marshalling_0200, Function | SmallTest | Level0)
+{
+    Parcel parcel;
+    CodeSignatureParam param;
+    param.bundleName = "com.example.test";
+    param.isSideloadApp = true;
+    bool res = param.Marshalling(parcel);
+    EXPECT_TRUE(res);
+
+    CodeSignatureParam *unmarshalled = CodeSignatureParam::Unmarshalling(parcel);
+    ASSERT_NE(unmarshalled, nullptr);
+    EXPECT_EQ(unmarshalled->isSideloadApp, true);
+    EXPECT_EQ(unmarshalled->bundleName, param.bundleName);
+    delete unmarshalled;
+}
+
+/**
+ * @tc.number: CodeSignatureParam_Marshalling_0300
+ * @tc.name: test isSideloadApp default false round-trip
+ * @tc.desc: 1. isSideloadApp defaults to false and survives Marshalling->Unmarshalling
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, CodeSignatureParam_Marshalling_0300, Function | SmallTest | Level0)
+{
+    Parcel parcel;
+    CodeSignatureParam param;
+    param.bundleName = "com.example.test";
+    EXPECT_FALSE(param.isSideloadApp);
+    bool res = param.Marshalling(parcel);
+    EXPECT_TRUE(res);
+ 
+    CodeSignatureParam *unmarshalled = CodeSignatureParam::Unmarshalling(parcel);
+    ASSERT_NE(unmarshalled, nullptr);
+    EXPECT_EQ(unmarshalled->isSideloadApp, false);
+    delete unmarshalled;
+}
+
+/**
+ * @tc.number: CodeSignatureParam_ToString_0100
+ * @tc.name: test ToString includes isSideloadApp
+ * @tc.desc: 1. ToString output contains isSideloadApp field
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, CodeSignatureParam_ToString_0100, Function | SmallTest | Level0)
+{
+    CodeSignatureParam param;
+    param.bundleName = "com.example.test";
+    param.isSideloadApp = true;
+    std::string str = param.ToString();
+    EXPECT_NE(str.find("isSideloadApp"), std::string::npos);
+}
+ 
+/**
  * @tc.number: InstalldProxyTest_ExtractServiceModuleFiles_0100
  * @tc.name: test ExtractServiceModuleFiles of proxy
  * @tc.desc: 1. calling ExtractServiceModuleFiles with valid param

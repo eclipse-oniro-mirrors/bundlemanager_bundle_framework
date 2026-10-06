@@ -1737,6 +1737,19 @@ HWTEST_F(BmsInstallDaemonHostImplTest, DeleteCertAndRemoveKey_0100, Function | S
 }
 
 /**
+ * @tc.number: CheckAppSideLoadingAsync_0100
+ * @tc.name: test CheckAppSideLoadingAsync permission denied
+ * @tc.desc: 1.CheckAppSideLoadingAsync returns PERMISSION_DENIED when caller is not Foundation UID
+ */
+HWTEST_F(BmsInstallDaemonHostImplTest, CheckAppSideLoadingAsync_0100, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    auto ret = hostImpl->CheckAppSideLoadingAsync(100);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
  * @tc.number: ExtractSkillsPackage_0100
  * @tc.name: test ExtractSkillsPackage
  * @tc.desc: test ExtractSkillsPackage of InstalldHostImpl with empty bundleName

@@ -1112,6 +1112,11 @@ ErrCode InstalldClient::CheckHspPluginCertValidity(const std::string &bundleName
     return CallService(&IInstalld::CheckHspPluginCertValidity, bundleName, sessionId);
 }
 
+ErrCode InstalldClient::CheckAppSideLoadingAsync(int32_t userId)
+{
+    return CallService(&IInstalld::CheckAppSideLoadingAsync, userId);
+}
+
 ErrCode InstalldClient::ResetBmsDBSecurity()
 {
     return CallService(&IInstalld::ResetBmsDBSecurity);

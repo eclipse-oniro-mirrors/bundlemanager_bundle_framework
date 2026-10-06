@@ -924,6 +924,25 @@ HWTEST_F(BundleResourceHostTest, ApplicationInfo_Marshalling_0001, Function | Sm
 }
 
 /**
+ * @tc.number: ApplicationInfo_NotarizationCredentialStatus_0001
+ * @tc.name: ApplicationInfo_NotarizationCredentialStatus_0001
+ * @tc.desc: test notarizationCredentialStatus survives Marshalling->ReadFromParcel round-trip
+ */
+HWTEST_F(BundleResourceHostTest, ApplicationInfo_NotarizationCredentialStatus_0001, Function | SmallTest | Level1)
+{
+    ApplicationInfo appInfo;
+    appInfo.notarizationCredentialStatus = 1;
+    Parcel parcel {};
+    auto ret = appInfo.Marshalling(parcel);
+    EXPECT_TRUE(ret);
+
+    ApplicationInfo restored;
+    ret = restored.ReadFromParcel(parcel);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(restored.notarizationCredentialStatus, 1);
+}
+
+/**
  * @tc.number: ApplicationInfo_ConvertToCompatibleApplicationInfo_0001
  * @tc.name: ApplicationInfo_ConvertToCompatibleApplicationInfo_0001
  * @tc.desc: test ConvertToCompatibleApplicationInfo

@@ -436,6 +436,8 @@ public:
 
     ErrCode CheckHspPluginCertValidity(const std::string &bundleName, int32_t sessionId);
 
+    ErrCode CheckAppSideLoadingAsync(int32_t userId);
+
     ErrCode HashSoFile(const std::string& soPath, uint32_t catchSoNum, uint64_t catchSoMaxSize,
         std::vector<std::string> &soName, std::vector<std::string> &soHash);
 

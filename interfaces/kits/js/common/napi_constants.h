@@ -312,7 +312,8 @@ constexpr const char* INSTALL_PERMISSION =
     "ohos.permission.INSTALL_ENTERPRISE_MDM_BUNDLE or "
     "ohos.permission.INSTALL_ENTERPRISE_NORMAL_BUNDLE or "
     "ohos.permission.INSTALL_INTERNALTESTING_BUNDLE or "
-    "(ohos.permission.INSTALL_BUNDLE and ohos.permission.INSTALL_ALLOW_DOWNGRADE)";
+    "(ohos.permission.INSTALL_BUNDLE and ohos.permission.INSTALL_ALLOW_DOWNGRADE) or "
+    "ohos.permission.INSTALL_DEVELOPER_ID_BUNDLE";
 constexpr const char* UNINSTALL_PERMISSION = "ohos.permission.INSTALL_BUNDLE or ohos.permission.UNINSTALL_BUNDLE";
 constexpr const char* UNINSTALL_BUNDLE_PERMISSION = "ohos.permission.UNINSTALL_BUNDLE";
 constexpr const char* RECOVER_PERMISSION = "ohos.permission.INSTALL_BUNDLE or ohos.permission.RECOVER_BUNDLE";
