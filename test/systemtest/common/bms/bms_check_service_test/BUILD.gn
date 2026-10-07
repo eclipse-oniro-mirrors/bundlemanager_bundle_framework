@@ -41,6 +41,7 @@ ohos_systemtest("BmsCheckServiceTest") {
 
   external_deps = [
     "ability_base:want",
+    "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_core",
     "samgr:samgr_proxy",

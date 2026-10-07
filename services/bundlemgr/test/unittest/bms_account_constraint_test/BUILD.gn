@@ -66,6 +66,7 @@ ohos_unittest("BmsAccountConstraintTest") {
     "appverify:libhapverify",
     "bounds_checking_function:libsec_shared",
     "common_event_service:cesfwk_innerkits",
+    "c_utils:utils",
     "dfs_service:libdecompress",
     "eventhandler:libeventhandler",
     "hilog:libhilog",

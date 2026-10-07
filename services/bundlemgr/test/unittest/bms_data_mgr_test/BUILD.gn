@@ -233,7 +233,6 @@ ohos_unittest("BmsExtensionDataMgrTest") {
     "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
-    "bundle_framework:appexecfwk_core",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "googletest:gmock_main",

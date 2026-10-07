@@ -46,6 +46,7 @@ ohos_systemtest("BundleMgrSandboxAppSystemTest") {
   external_deps = [
     "ability_base:want",
     "common_event_service:cesfwk_innerkits",
+    "c_utils:utils",
     "googletest:gtest_main",
     "hilog:libhilog",
     "ipc:ipc_core",

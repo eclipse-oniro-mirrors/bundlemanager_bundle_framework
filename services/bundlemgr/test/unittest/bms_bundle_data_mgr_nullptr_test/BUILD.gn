@@ -78,6 +78,7 @@ ohos_unittest("BmsBundleDataMgrNullptrTest") {
     "appverify:libhapverify",
     "bounds_checking_function:libsec_shared",
     "common_event_service:cesfwk_innerkits",
+    "c_utils:utils",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",

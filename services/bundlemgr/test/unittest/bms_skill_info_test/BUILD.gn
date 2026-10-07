@@ -31,6 +31,7 @@ ohos_unittest("BmsSkillInfoTest") {
   ]
   external_deps = [
     "bounds_checking_function:libsec_shared",
+    "c_utils:utils",
     "googletest:gtest_main",
     "hilog:libhilog",
     "ipc:ipc_core",
