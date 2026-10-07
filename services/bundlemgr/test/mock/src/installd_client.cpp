@@ -120,14 +120,6 @@ ErrCode InstalldClient::ExtractHapModuleFiles(const HapModuleExtractParam &param
     return CallService(&IInstalld::ExtractHapModuleFiles, param);
 }
 
-ErrCode InstalldClient::ExtractFiles(const ExtractParam &extractParam)
-{
-    if (extractParam.srcPath.empty() || extractParam.targetPath.empty()) {
-        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-    }
-    return CallService(&IInstalld::ExtractFiles, extractParam);
-}
-
 ErrCode InstalldClient::ExtractSoFiles(const std::string &bundleName, const std::string &moduleName,
     const std::string &hapFilePath, const std::string &cpuAbi, bool needFakeDecompression,
     bool isSystemApp, bool appendModuleName)
@@ -245,15 +237,6 @@ ErrCode InstalldClient::CopyHapToTempPath(const std::string &bundleName, const s
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     return CallService(&IInstalld::CopyHapToTempPath, bundleName, hapRealPath, tempDirName, hapFileName);
-}
-
-ErrCode InstalldClient::ExtractHnpFiles(const std::map<std::string, std::string> &hnpPackageMap,
-    const ExtractParam &extractParam)
-{
-    if (extractParam.srcPath.empty() || extractParam.targetPath.empty() || hnpPackageMap.empty()) {
-        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-    }
-    return CallService(&IInstalld::ExtractHnpFiles, hnpPackageMap, extractParam);
 }
 
 ErrCode InstalldClient::ExtractSharedModuleFiles(const ExtractModuleFilesParam &param)
@@ -595,17 +578,6 @@ ErrCode InstalldClient::DeleteBackupSandboxDir(int32_t userId, const std::string
     }
 
     return CallService(&IInstalld::DeleteBackupSandboxDir, userId, sandboxDir);
-}
-
-ErrCode InstalldClient::CopyFile(const std::string &oldPath, const std::string &newPath, BundleDirScene scene,
-    const std::string &signatureFilePath)
-{
-    if (oldPath.empty() || newPath.empty()) {
-        APP_LOGE("params are invalid");
-        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-    }
-
-    return CallService(&IInstalld::CopyFile, oldPath, newPath, scene, signatureFilePath);
 }
 
 ErrCode InstalldClient::CopyPluginHsp(const std::string &hostBundleName, const std::string &bundleName,
@@ -955,11 +927,6 @@ ErrCode InstalldClient::GetExtensionSandboxTypeList(std::vector<std::string> &ty
 ErrCode InstalldClient::AddUserDirDeleteDfx(int32_t userId)
 {
     return CallService(&IInstalld::AddUserDirDeleteDfx, userId);
-}
-
-int64_t InstalldClient::GetDiskUsage(const std::string& dir, bool isRealPath)
-{
-    return 0;
 }
 
 ErrCode InstalldClient::MigrateData(const std::vector<std::string> &sourcePaths, const std::string &destinationPath)

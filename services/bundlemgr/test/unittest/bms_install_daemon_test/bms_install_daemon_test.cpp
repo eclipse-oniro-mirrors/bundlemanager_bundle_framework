@@ -101,7 +101,6 @@ public:
     int ExtractModuleFiles(const std::string &srcModulePath, const std::string &targetPath,
         const std::string &targetSoPath, const std::string &cpuAbi, const bool needFakeDecompression,
         const bool isSystemApp) const;
-    int ExtractFiles(const ExtractParam &extractParam) const;
     int RenameModuleDir(const std::string &oldPath, const std::string &newPath) const;
     bool CheckBundleDirExist() const;
     bool CheckBundleDataDirExist() const;
@@ -235,14 +234,6 @@ int32_t BmsInstallDaemonTest::MigrateData(
         service_->Start();
     }
     return InstalldClient::GetInstance()->MigrateData(sourcePaths, destinationPath);
-}
-
-int BmsInstallDaemonTest::ExtractFiles(const ExtractParam &extractParam) const
-{
-    if (!service_->IsServiceReady()) {
-        service_->Start();
-    }
-    return InstalldClient::GetInstance()->ExtractFiles(extractParam);
 }
 
 int BmsInstallDaemonTest::RenameModuleDir(const std::string &oldPath, const std::string &newPath) const
@@ -852,27 +843,10 @@ HWTEST_F(BmsInstallDaemonTest, InstalldClient_0460, Function | SmallTest | Level
 }
 
 /**
- * @tc.number: InstalldClient_0500
- * @tc.name: Test MoveFile, a param is empty
- * @tc.desc: 1.Test the MoveFile of InstalldClient
-*/
-HWTEST_F(BmsInstallDaemonTest, InstalldClient_0500, Function | SmallTest | Level0)
-{
-    std::shared_ptr<InstalldService> service = std::make_shared<InstalldService>();
-    if (!service->IsServiceReady()) {
-        service->Start();
-    }
-    ErrCode ret = InstalldClient::GetInstance()->CopyFile("", BUNDLE_DATA_DIR, BundleDirScene::COPY_PGO_FILE);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-    ret = InstalldClient::GetInstance()->CopyFile(BUNDLE_DATA_DIR, "", BundleDirScene::COPY_PGO_FILE);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-}
-
-/**
  * @tc.number: InstalldClient_0600
  * @tc.name: Test Mkdir, a param is empty
  * @tc.desc: 1.Test the Mkdir of InstalldClient
-*/
+ */
 HWTEST_F(BmsInstallDaemonTest, InstalldClient_0600, Function | SmallTest | Level0)
 {
     std::shared_ptr<InstalldService> service = std::make_shared<InstalldService>();
@@ -1583,29 +1557,6 @@ HWTEST_F(BmsInstallDaemonTest, GetBundleStats_2100, Function | SmallTest | Level
 }
 
 /**
- * @tc.number: ExtractFiles_0100
- * @tc.name: test the ExtractFiles
- * @tc.desc: 1. extract files success
-*/
-HWTEST_F(BmsInstallDaemonTest, ExtractFiles_0100, Function | SmallTest | Level0)
-{
-    ExtractParam extractParam;
-    extractParam.bundleName = "com.example.test";
-    ErrCode ret = ExtractFiles(extractParam);
-    EXPECT_NE(ret, ERR_OK);
-
-    extractParam.srcPath = HAP_FILE_PATH;
-    ret = ExtractFiles(extractParam);
-    EXPECT_NE(ret, ERR_OK);
-
-    extractParam.targetPath = TEST_PATH;
-    extractParam.cpuAbi = TEST_CPU_ABI;
-    extractParam.extractFileType = ExtractFileType::AN;
-    ret = ExtractFiles(extractParam);
-    EXPECT_NE(ret, ERR_OK);
-}
-
-/**
  * @tc.number: Marshalling_0100
  * @tc.name: test Marshalling
  * @tc.desc: 1.read from parcel success
@@ -1629,23 +1580,6 @@ HWTEST_F(BmsInstallDaemonTest, Marshalling_0100, Function | SmallTest | Level0)
             + ", extractFileType = An, needRemoveOld = false, needFakeDecompression = false, isSystemApp = false]",
             value);
     extractParam.Unmarshalling(parcel);
-}
-
-/**
- * @tc.number: ExtractFiles_0200
- * @tc.name: test the ExtractFiles
- * @tc.desc: 1. extract files success
-*/
-HWTEST_F(BmsInstallDaemonTest, ExtractFiles_0200, Function | SmallTest | Level0)
-{
-    ExtractParam extractParam;
-    extractParam.bundleName = "com.example.test";
-    extractParam.srcPath = BUNDLE_FILE;
-    extractParam.targetPath = TEST_PATH;
-    extractParam.cpuAbi = "";
-    extractParam.extractFileType = ExtractFileType::AP;
-    auto ret = ExtractFiles(extractParam);
-    EXPECT_EQ(ret, ERR_OK);
 }
 
 /**
@@ -1806,24 +1740,10 @@ HWTEST_F(BmsInstallDaemonTest, CreateBundleDataDirWithVector__0100, Function | S
 }
 
 /**
- * @tc.number: GetDiskUsage_0100
- * @tc.name: test function of InstallHostImpl
- * @tc.desc: 1. test GetDiskUsage
-*/
-HWTEST_F(BmsInstallDaemonTest, GetDiskUsage_0100, Function | SmallTest | Level0)
-{
-    InstalldHostImpl hostImpl;
-    std::string dir = "dir/path/";
-    bool isRealPath = true;
-    int64_t ret = hostImpl.GetDiskUsage(dir, isRealPath);
-    EXPECT_EQ(ret, 0);
-}
-
-/**
  * @tc.number: GetDiskUsageFromPath_0100
  * @tc.name: test function of InstallHostImpl
  * @tc.desc: 1. test GetDiskUsageFromPath
-*/
+ */
 HWTEST_F(BmsInstallDaemonTest, GetDiskUsageFromPath_0100, Function | SmallTest | Level0)
 {
     InstalldHostImpl hostImpl;
@@ -2082,26 +2002,6 @@ HWTEST_F(BmsInstallDaemonTest, ChangeFileStat_0100, Function | SmallTest | Level
     fileStat.uid = 5523;
     ret = hostImpl.ChangeFileStat(file, fileStat, BundleDirScene::CHANGE_BMS_FILE_STAT);
     EXPECT_EQ(ret, ERR_OK);
-}
-
-/**
- * @tc.number: ExtractFiles_InvalidBundleName_0100
- * @tc.name: test ExtractFiles with invalid bundleName via IPC
- * @tc.desc: 1. calling ExtractFiles with empty bundleName should return PARAM_ERROR
- *           2. calling ExtractFiles with invalid bundleName should return PARAM_ERROR
-*/
-HWTEST_F(BmsInstallDaemonTest, ExtractFiles_InvalidBundleName_0100, Function | SmallTest | Level0)
-{
-    ExtractParam extractParam;
-    extractParam.bundleName = "";
-    extractParam.srcPath = "/data/app/el1/bundle/public/com.example.test/entry.hap";
-    extractParam.targetPath = "/data/app/el1/bundle/public/com.example.test/";
-    auto ret = ExtractFiles(extractParam);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-
-    extractParam.bundleName = "../invalid";
-    ret = ExtractFiles(extractParam);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
 /**
@@ -2832,36 +2732,6 @@ HWTEST_F(BmsInstallDaemonTest, ProcessBinFiles_EmptyPathItem_0100, Function | Sm
     param.binFilePaths = {"/data/app/el1/bundle/public/com.example.test/bin/test", ""};
     param.isDebug = false;
     auto ret = hostImpl.ProcessBinFiles(param);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-}
-
-/**
- * @tc.number: ExtractFiles_InvalidTargetPath_0100
- * @tc.name: test ExtractFiles with invalid targetPath prefix
- * @tc.desc: 1. calling ExtractFiles with targetPath not in allowed prefix should return PARAM_ERROR
-*/
-HWTEST_F(BmsInstallDaemonTest, ExtractFiles_InvalidTargetPath_0100, Function | SmallTest | Level0)
-{
-    ExtractParam extractParam;
-    extractParam.bundleName = "com.example.test";
-    extractParam.srcPath = "/data/app/el1/bundle/public/com.example.test/entry.hap";
-    extractParam.targetPath = "/tmp/invalid";
-    auto ret = ExtractFiles(extractParam);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-}
-
-/**
- * @tc.number: ExtractFiles_EmptySrcPath_0100
- * @tc.name: test ExtractFiles with empty srcPath
- * @tc.desc: 1. calling ExtractFiles with empty srcPath should return PARAM_ERROR
-*/
-HWTEST_F(BmsInstallDaemonTest, ExtractFiles_EmptySrcPath_0100, Function | SmallTest | Level0)
-{
-    ExtractParam extractParam;
-    extractParam.bundleName = "com.example.test";
-    extractParam.srcPath = "";
-    extractParam.targetPath = "/data/app/el1/bundle/public/com.example.test/";
-    auto ret = ExtractFiles(extractParam);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 

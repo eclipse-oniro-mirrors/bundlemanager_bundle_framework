@@ -56,12 +56,6 @@ public:
      * @return Returns ERR_OK if the HAP file extracted successfully; returns error code otherwise.
      */
     virtual ErrCode ExtractHapModuleFiles(const HapModuleExtractParam &param) override;
-    /**
-     * @brief Extract the files.
-     * @param extractParam Indicates the extractParam.
-     * @return Returns ERR_OK if the HAP file extracted successfully; returns error code otherwise.
-     */
-    virtual ErrCode ExtractFiles(const ExtractParam &extractParam) override;
 
     virtual ErrCode ExtractSoFiles(const std::string &bundleName, const std::string &moduleName,
         const std::string &hapFilePath, const std::string &cpuAbi, bool needFakeDecompression,
@@ -91,15 +85,6 @@ public:
 
     virtual ErrCode ExtractArkProfile(const std::string &bundleName, const std::string &moduleName,
         const std::string &hapFilePath, int32_t userId) override;
-
-    /**
-     * @brief Extract the hnpFiles.
-     * @param hnpPackageMap Indicates the hnpPackageInfo.
-     * @param extractParam Indicates the extractParam.
-     * @return Returns ERR_OK if the HAP file extracted successfully; returns error code otherwise.
-     */
-    virtual ErrCode ExtractHnpFiles(const std::map<std::string, std::string> &hnpPackageMap,
-        const ExtractParam &extractParam) override;
 
     virtual ErrCode ExtractPluginModuleFiles(const ExtractModuleFilesParam &param) override;
 
@@ -168,13 +153,6 @@ public:
      */
     virtual ErrCode RemoveDir(const std::string &dir, BundleDirScene scene,  const std::string &bundleName = "",
         bool async = false) override;
-    /**
-     * @brief Get disk usage for dir.
-     * @param dir Indicates the directory.
-     * @param isRealPath Indicates isRealPath.
-     * @return Returns true if successfully; returns false otherwise.
-     */
-    virtual int64_t GetDiskUsage(const std::string &dir, bool isRealPath = false) override;
     /**
      * @brief Get disk usage for dir.
      * @param path Indicates the directory vector.
@@ -304,9 +282,6 @@ public:
     virtual ErrCode DeleteSandboxDir(int32_t userId, const std::string &sandboxDir) override;
 
     virtual ErrCode DeleteBackupSandboxDir(int32_t userId, const std::string &sandboxDir) override;
-
-    virtual ErrCode CopyFile(const std::string &oldPath, const std::string &newPath, BundleDirScene scene,
-        const std::string &signatureFilePath = "") override;
 
     virtual ErrCode CopyPluginHsp(const std::string &hostBundleName, const std::string &bundleName,
         const std::string &moduleName, const std::string &sourceHspPath,

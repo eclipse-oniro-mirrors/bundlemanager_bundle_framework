@@ -112,12 +112,6 @@ ErrCode InstalldHostImpl::ExtractNPAPIPlugin(const std::string &bundleName, cons
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::ExtractHnpFiles(const std::map<std::string, std::string> &hnpPackageMap,
-    const ExtractParam &extractParam)
-{
-    return ERR_OK;
-}
-
 ErrCode InstalldHostImpl::ExtractHnpFilesByScene(const ExtractHnpFilesParam &extractHnpFilesParam)
 {
     return ERR_OK;
@@ -174,11 +168,6 @@ ErrCode InstalldHostImpl::RemoveDir(
     const std::string &dir, BundleDirScene scene, const std::string &bundleName, bool async)
 {
     return ERR_OK;
-}
-
-int64_t InstalldHostImpl::GetDiskUsage(const std::string &dir, bool isRealPath)
-{
-    return 0;
 }
 
 ErrCode InstalldHostImpl::GetDiskUsageFromPath(const std::vector<std::string> &path, const std::string &bundleName,
@@ -297,12 +286,6 @@ ErrCode InstalldHostImpl::DeleteBackupSandboxDir(int32_t userId, const std::stri
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::CopyFile(const std::string &oldPath, const std::string &newPath, BundleDirScene scene,
-    const std::string &signatureFilePath)
-{
-    return ERR_OK;
-}
-
 ErrCode InstalldHostImpl::CopySharedHsp(const std::string &bundleName, const std::string &moduleName,
     const std::string &sourceHspPath, uint32_t versionCode, const std::string &sourceSignaturePath)
 {
@@ -404,11 +387,6 @@ ErrCode InstalldHostImpl::CopyExtendResourceFile(const std::string &bundleName, 
 
 ErrCode InstalldHostImpl::CopyExtendProfileFile(
     const std::string &bundleName, const std::string &profileSourceRelativePath, bool isUpdate)
-{
-    return ERR_OK;
-}
-
-ErrCode InstalldHostImpl::ExtractFiles(const ExtractParam &extractParam)
 {
     return ERR_OK;
 }

@@ -60,20 +60,6 @@ private:
      */
     bool HandleExtractHapModuleFiles(MessageParcel &data, MessageParcel &reply);
     /**
-     * @brief Handles the HandleExtractFiles function called from a IInstalld proxy object.
-     * @param data Indicates the data to be read.
-     * @param reply Indicates the reply to be sent;
-     * @return Returns true if called successfully; returns false otherwise.
-     */
-    bool HandleExtractFiles(MessageParcel &data, MessageParcel &reply);
-    /**
-     * @brief Handles the HandleExtractHnpFiles function called from a IInstalld proxy object.
-     * @param data Indicates the data to be read.
-     * @param reply Indicates the reply to be sent;
-     * @return Returns true if called successfully; returns false otherwise.
-     */
-    bool HandleExtractHnpFiles(MessageParcel &data, MessageParcel &reply);
-    /**
      * @brief Handles the CopyHapToTempPath function called from a IInstalld proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
@@ -163,13 +149,6 @@ private:
      * @return Returns true if called successfully; returns false otherwise.
      */
     bool HandleRemoveDir(MessageParcel &data, MessageParcel &reply);
-    /**
-     * @brief Handles the GetDiskUsage function called from a IInstalld proxy object.
-     * @param data Indicates the data to be read.
-     * @param reply Indicates the reply to be sent;
-     * @return Returns true if called successfully; returns false otherwise.
-     */
-    bool HandleGetDiskUsage(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the GetDiskUsage function called from a IInstalld proxy object.
      * @param data Indicates the data to be read.
@@ -283,8 +262,6 @@ private:
     bool HandleDeleteSandboxDir(MessageParcel &data, MessageParcel &reply);
 
     bool HandleDeleteBackupSandboxDir(MessageParcel &data, MessageParcel &reply);
-
-    bool HandleCopyFile(MessageParcel &data, MessageParcel &reply);
 
     bool HandleCopyPluginHsp(MessageParcel &data, MessageParcel &reply);
 

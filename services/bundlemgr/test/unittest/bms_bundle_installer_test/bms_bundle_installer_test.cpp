@@ -3383,29 +3383,6 @@ HWTEST_F(BmsBundleInstallerTest, InstalldHostImpl_0800, Function | SmallTest | L
 }
 
 /**
- * @tc.number: InstalldHostImpl_0900
- * @tc.name: test CheckArkNativeFileWithOldInfo
- * @tc.desc: 1.Test the ExtractFiles of InstalldHostImpl
-*/
-HWTEST_F(BmsBundleInstallerTest, InstalldHostImpl_0900, Function | SmallTest | Level0)
-{
-    InstalldHostImpl impl;
-
-    ExtractParam extractParam;
-    auto ret = impl.ExtractFiles(extractParam);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-
-    extractParam.bundleName = "com.example.test";
-    extractParam.srcPath = "/data/app/el1/bundle/public/com.example.test/entry.hap";
-    extractParam.targetPath = "/data/app/el1/bundle/public/com.example.test/";
-    extractParam.cpuAbi = "arm64";
-    extractParam.extractFileType = ExtractFileType::AN;
-
-    ret = impl.ExtractFiles(extractParam);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_EXTRACT_FAILED);
-}
-
-/**
  * @tc.number: InstalldHostImpl_1000
  * @tc.name: test Install
  * @tc.desc: 1.Test the Install of BundleInstallerHost
@@ -3504,33 +3481,6 @@ HWTEST_F(BmsBundleInstallerTest, InstalldHostImpl_1600, Function | SmallTest | L
 
     ret = impl.ScanDir(
         BUNDLE_DATA_DIR, ScanMode::SUB_FILE_ALL, ResultMode::ABSOLUTE_PATH, paths);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-}
-
-/**
- * @tc.number: InstalldHostImpl_1700
- * @tc.name: test Install
- * @tc.desc: 1.Test the CopyFile of InstalldHostImpl
-*/
-HWTEST_F(BmsBundleInstallerTest, InstalldHostImpl_1700, Function | SmallTest | Level0)
-{
-    InstalldHostImpl impl;
-    std::vector<std::string> paths;
-    ErrCode ret = impl.CopyFile("", "", BundleDirScene::COPY_PGO_FILE);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-}
-
-/**
- * @tc.number: InstalldHostImpl_1800
- * @tc.name: test Install
- * @tc.desc: 1.Test the ExtractHnpFiles of InstalldHostImpl
-*/
-HWTEST_F(BmsBundleInstallerTest, InstalldHostImpl_1800, Function | SmallTest | Level0)
-{
-    InstalldHostImpl impl;
-    std::map<std::string, std::string> hnpPackageMap;
-    ExtractParam extractParam;
-    auto ret = impl.ExtractHnpFiles(hnpPackageMap, extractParam);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
@@ -15052,29 +15002,6 @@ HWTEST_F(BmsBundleInstallerTest, VerifyCallingPermission_0010, Function | SmallT
 }
 
 /**
- * @tc.number: ExtractHnpFiles_0100
- * @tc.name: test ExtractHnpFiles
- * @tc.desc: test the ExtractHnpFiles of InstalldHostImpl
- */
-HWTEST_F(BmsBundleInstallerTest, ExtractHnpFiles_0100, Function | SmallTest | Level0)
-{
-    InstalldHostImpl impl;
-    std::map<std::string, std::string> hnpPackageMap;
-    ExtractParam extractParam;
-    auto ret = impl.ExtractHnpFiles(hnpPackageMap, extractParam);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-    extractParam.srcPath = INVALID_PATH;
-    ret = impl.ExtractHnpFiles(hnpPackageMap, extractParam);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-    extractParam.targetPath = BUNDLE_CODE_DIR;
-    ret = impl.ExtractHnpFiles(hnpPackageMap, extractParam);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-    hnpPackageMap.emplace(TEST_STRING, TEST_STRING);
-    ret = impl.ExtractHnpFiles(hnpPackageMap, extractParam);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_NATIVE_HNP_EXTRACT_FAILED);
-}
-
-/**
  * @tc.number: AclSetDir_0100
  * @tc.name: test AclSetDir
  * @tc.desc: test AclSetDir of InstalldHostImpl
@@ -17820,7 +17747,7 @@ HWTEST_F(BmsBundleInstallerTest, ExtractNPAPIPluginFiles_0010, Function | SmallT
     installer.ExtractNPAPIPluginFiles(installer.modulePath_);
     EXPECT_EQ(installer.npapiPluginStatus_, BaseBundleInstaller::NpapiPluginStatus::STATUS_EXTRACT_FAILED);
     
-    // scenario 2: empty modulePath, InstalldClient::ExtractFiles will fail
+    // scenario 2: empty modulePath, InstalldClient::ExtractNPAPIPlugin will fail
     installer.npapiPluginStatus_ = BaseBundleInstaller::NpapiPluginStatus::STATUS_NOT_APPLICABLE;
     installer.modulePath_ = "";
     installer.ExtractNPAPIPluginFiles(installer.modulePath_);

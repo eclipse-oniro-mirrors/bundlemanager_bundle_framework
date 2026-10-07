@@ -437,26 +437,11 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_1358, Function | SmallTest |
 }
 
 /**
- * @tc.number: InstalldProxyTest_1400
- * @tc.name: test Marshalling function of FileStat
- * @tc.desc: 1. calling CopyFile of proxy
- * @tc.require: issueI5T6P3
-*/
-HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_1400, Function | SmallTest | Level0)
-{
-    auto proxy = GetInstallProxy();
-    EXPECT_NE(proxy, nullptr);
-
-    auto ret = proxy->CopyFile(TEST_STRING, TEST_STRING, BundleDirScene::COPY_PGO_FILE);
-    EXPECT_EQ(ret, ERR_OK);
-}
-
-/**
  * @tc.number: InstalldProxyTest_1500
  * @tc.name: test Marshalling function of FileStat
  * @tc.desc: 1. calling Mkdir of proxy
  * @tc.require: issueI5T6P3
-*/
+ */
 HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_1500, Function | SmallTest | Level0)
 {
     auto proxy = GetInstallProxy();

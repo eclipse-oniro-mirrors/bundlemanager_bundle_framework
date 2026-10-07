@@ -39,7 +39,7 @@ enum class InstalldInterfaceCode : uint32_t {
     GET_BUNDLE_CACHE_PATH = 11,
     SCAN_DIR = 12,
     MOVE_FILE = 13,
-    COPY_FILE = 14,
+    // COPY_FILE = 14,    // deprecated: removed as unused
     MKDIR = 15,
     GET_FILE_STAT = 16,
     EXTRACT_DIFF_FILES = 17,
@@ -48,7 +48,7 @@ enum class InstalldInterfaceCode : uint32_t {
     IS_DIR_EMPTY = 20,
     OBTAIN_QUICK_FIX_DIR = 21,
     COPY_FILES = 22,
-    EXTRACT_FILES = 23,
+    // EXTRACT_FILES = 23,    // deprecated: removed as unused
     GET_NATIVE_LIBRARY_FILE_NAMES = 24,
     EXECUTE_AOT = 25,
     IS_EXIST_FILE = 26,
@@ -67,10 +67,10 @@ enum class InstalldInterfaceCode : uint32_t {
     STOP_AOT = 39,
     SET_ENCRYPTION_DIR = 40,
     DELETE_ENCRYPTION_KEY_ID = 41,
-    EXTRACT_HNP_FILES = 42,
+    // EXTRACT_HNP_FILES = 42,    // deprecated: removed as unused
     INSTALL_NATIVE = 43,
     UNINSTALL_NATIVE = 44,
-    GET_DISK_USAGE = 45,
+    // GET_DISK_USAGE = 45,    // deprecated: removed as unused
     PEND_SIGN_AOT = 46,
     REMOVE_EXTENSION_DIR = 47,
     IS_EXIST_EXTENSION_DIR = 48,

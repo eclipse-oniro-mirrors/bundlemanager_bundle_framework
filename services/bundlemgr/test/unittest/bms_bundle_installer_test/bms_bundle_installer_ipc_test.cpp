@@ -836,47 +836,6 @@ HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_1400, Function | SmallTe
 }
 
 /**
- * @tc.number: OnRemoteRequestTest_1500
- * @tc.name: test OnRemoteRequest of InstalldHost
- * @tc.desc: 1. Calling function with InstalldInterfaceCode EXTRACT_FILES
- */
-HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_1500, Function | SmallTest | Level0)
-{
-    uint32_t code = static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_FILES);
-    MessageParcel datas;
-    std::u16string descriptor = InstalldHost::GetDescriptor();
-    datas.WriteInterfaceToken(descriptor);
-    datas.WriteBuffer(DATA, DATA_SIZE);
-    datas.RewindRead(0);
-    MessageParcel reply;
-    MessageOption option;
-    InstalldHost installdHost;
-    int res = installdHost.OnRemoteRequest(code, datas, reply, option);
-    EXPECT_EQ(res, 0);
-}
-
-/**
- * @tc.number: OnRemoteRequestTest_1600
- * @tc.name: test OnRemoteRequest of InstalldHost
- * @tc.desc: 1. Calling function with InstalldInterfaceCode EXTRACT_HNP_FILES
- */
-HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_1600, Function | SmallTest | Level0)
-{
-    uint32_t code = static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_HNP_FILES);
-    MessageParcel datas;
-    std::u16string descriptor = InstalldHost::GetDescriptor();
-    datas.WriteInterfaceToken(descriptor);
-    datas.WriteInt32(0);
-    datas.WriteBuffer(DATA, DATA_SIZE);
-    datas.RewindRead(0);
-    MessageParcel reply;
-    MessageOption option;
-    InstalldHost installdHost;
-    int res = installdHost.OnRemoteRequest(code, datas, reply, option);
-    EXPECT_EQ(res, 0);
-}
-
-/**
  * @tc.number: OnRemoteRequestTest_1700
  * @tc.name: test OnRemoteRequest of InstalldHost
  * @tc.desc: 1. Calling function with InstalldInterfaceCode INSTALL_NATIVE
@@ -1064,26 +1023,6 @@ HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_2500, Function | SmallTe
 HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_2600, Function | SmallTest | Level0)
 {
     uint32_t code = static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_CODED_SO_FILE);
-    MessageParcel datas;
-    std::u16string descriptor = InstalldHost::GetDescriptor();
-    datas.WriteInterfaceToken(descriptor);
-    datas.WriteBuffer(DATA, DATA_SIZE);
-    datas.RewindRead(0);
-    MessageParcel reply;
-    MessageOption option;
-    InstalldHost installdHost;
-    int res = installdHost.OnRemoteRequest(code, datas, reply, option);
-    EXPECT_EQ(res, 0);
-}
-
-/**
- * @tc.number: OnRemoteRequestTest_2700
- * @tc.name: test OnRemoteRequest of InstalldHost
- * @tc.desc: 1. Calling function with InstalldInterfaceCode GET_DISK_USAGE
- */
-HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_2700, Function | SmallTest | Level0)
-{
-    uint32_t code = static_cast<uint32_t>(InstalldInterfaceCode::GET_DISK_USAGE);
     MessageParcel datas;
     std::u16string descriptor = InstalldHost::GetDescriptor();
     datas.WriteInterfaceToken(descriptor);
@@ -2227,41 +2166,6 @@ HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_8500, Function | SmallTe
     InstalldHost installdHost;
     auto res = installdHost.OnRemoteRequest(code, datas, reply, option);
     EXPECT_TRUE(res);
-}
-
-/**
- * @tc.number: HandleExtractFiles_0100
- * @tc.name: HandleExtractFiles
- * @tc.desc: test HandleExtractFiles of InstalldHost
- */
-HWTEST_F(BmsBundleInstallerIPCTest, HandleExtractFiles_0100, Function | SmallTest | Level0)
-{
-    InstalldHost host;
-    MessageParcel datas;
-    std::u16string descriptor = InstalldHost::GetDescriptor();
-    datas.WriteInterfaceToken(descriptor);
-    datas.WriteBuffer(DATA, DATA_SIZE);
-    datas.RewindRead(0);
-    MessageParcel reply;
-    bool res = host.HandleExtractFiles(datas, reply);
-    EXPECT_EQ(res, true);
-}
-
-/**
- * @tc.number: HandleExtractHnpFiles_0100
- * @tc.name: HandleExtractHnpFiles
- * @tc.desc: test HandleExtractHnpFiles of InstalldHost
- */
-HWTEST_F(BmsBundleInstallerIPCTest, HandleExtractHnpFiles_0100, Function | SmallTest | Level0)
-{
-    InstalldHost host;
-    MessageParcel datas;
-    datas.WriteInt32(0);
-    datas.WriteBuffer(DATA, DATA_SIZE);
-    datas.RewindRead(0);
-    MessageParcel reply;
-    bool res = host.HandleExtractHnpFiles(datas, reply);
-    EXPECT_EQ(res, true);
 }
 
 /**

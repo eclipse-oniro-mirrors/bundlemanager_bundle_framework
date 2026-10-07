@@ -319,26 +319,11 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_1355, Function | Sma
 }
 
 /**
- * @tc.number: InstalldHostImplTest_1400
- * @tc.name: test function of InstallHostImpl
- * @tc.desc: 1. calling CopyFile of hostImpl
- * @tc.require: issueI5T6P3
-*/
-HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_1400, Function | SmallTest | Level0)
-{
-    auto hostImpl = GetInstalldHostImpl();
-    ASSERT_NE(hostImpl, nullptr);
-
-    auto ret = hostImpl->CopyFile(TEST_STRING, TEST_STRING, BundleDirScene::COPY_PGO_FILE);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
-}
-
-/**
  * @tc.number: InstalldHostImplTest_1500
  * @tc.name: test function of InstallHostImpl
  * @tc.desc: 1. calling Mkdir of hostImpl
  * @tc.require: issueI5T6P3
-*/
+ */
 HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_1500, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
@@ -493,38 +478,11 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_2400, Function | Sma
 }
 
 /**
- * @tc.number: InstalldHostImplTest_2500
- * @tc.name: test function of InstallHostImpl
- * @tc.desc: 1. calling ExtractFiles of hostImpl
- * @tc.require: issueI5VW01
-*/
-HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_2500, Function | SmallTest | Level0)
-{
-    sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
-    EXPECT_NE(installdProxy, nullptr);
-
-    ExtractParam extractParam;
-    ErrCode ret = installdProxy->ExtractFiles(extractParam);
-    EXPECT_NE(ret, ERR_OK);
-
-    extractParam.srcPath = HAP_FILE_PATH;
-    ret = installdProxy->ExtractFiles(extractParam);
-    EXPECT_NE(ret, ERR_OK);
-
-    extractParam.bundleName = "com.example.test";
-    extractParam.targetPath = TEST_PATH;
-    extractParam.cpuAbi = TEST_CPU_ABI;
-    extractParam.extractFileType = ExtractFileType::AN;
-    ret = installdProxy->ExtractFiles(extractParam);
-    EXPECT_NE(ret, ERR_OK);
-}
-
-/**
  * @tc.number: InstalldHostImplTest_2700
  * @tc.name: test function of InstallHostImpl
  * @tc.desc: 1. calling CreateBundleDir of hostImpl
  * @tc.require: issueI5T6P3
-*/
+ */
 HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_2700, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
@@ -554,39 +512,11 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_2800, Function | Sma
 }
 
 /**
- * @tc.number: InstalldHostImplTest_2900
- * @tc.name: test function of InstallHostImpl
- * @tc.desc: 1. calling ExtractFiles of hostImpl
- * @tc.require: issueI5VW01
-*/
-HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_2900, Function | SmallTest | Level0)
-{
-    sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
-    EXPECT_NE(installdProxy, nullptr);
-
-    ExtractParam extractParam;
-    extractParam.bundleName = "com.example.test";
-    extractParam.srcPath = "";
-    extractParam.targetPath = "";
-    ErrCode ret = installdProxy->ExtractFiles(extractParam);
-    EXPECT_NE(ret, ERR_OK);
-
-    extractParam.targetPath = TEST_PATH;
-    ret = installdProxy->ExtractFiles(extractParam);
-    EXPECT_NE(ret, ERR_OK);
-
-    extractParam.targetPath = "";
-    extractParam.srcPath = HAP_FILE_PATH;
-    ret = installdProxy->ExtractFiles(extractParam);
-    EXPECT_NE(ret, ERR_OK);
-}
-
-/**
  * @tc.number: InstalldHostImplTest_3000
  * @tc.name: test function of InstallHostImpl
  * @tc.desc: 1. calling RenameModuleDir of hostImpl
  * @tc.require: issueI5T6P3
-*/
+ */
 HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_3000, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
@@ -831,21 +761,6 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_4300, Function | Sma
 }
 
 /**
- * @tc.number: InstalldHostImplTest_4400
- * @tc.name: test RegisterBundleStatusCallback
- * @tc.desc: 1.system run normally
- *           2.RegisterBundleStatusCallback failed
- */
-HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_4400, Function | SmallTest | Level1)
-{
-    InstalldHostImpl impl;
-    ExtractParam extractParam;
-    extractParam.bundleName = "com.example.test";
-    auto ret = impl.ExtractFiles(extractParam);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
-}
-
-/**
  * @tc.number: InstalldHostImplTest_4500
  * @tc.name: test RegisterBundleStatusCallback
  * @tc.desc: 1.system run normally
@@ -972,39 +887,11 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_5200, Function | Sma
 
 
 /**
- * @tc.number: InstalldHostImplTest_5300
- * @tc.name: test function of InstallHostImpl
- * @tc.desc: 1. calling ExtractHnpFiles of hostImpl
- * @tc.require: issueI5VW01
-*/
-HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_5300, Function | SmallTest | Level0)
-{
-    sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
-    EXPECT_NE(installdProxy, nullptr);
-
-    std::map<std::string, std::string> hnpPackageMap;
-    ExtractParam extractParam;
-    extractParam.srcPath = "";
-    extractParam.targetPath = "";
-    ErrCode ret = installdProxy->ExtractHnpFiles(hnpPackageMap, extractParam);
-    EXPECT_NE(ret, ERR_OK);
-
-    extractParam.targetPath = TEST_PATH;
-    ret = installdProxy->ExtractHnpFiles(hnpPackageMap, extractParam);
-    EXPECT_NE(ret, ERR_OK);
-
-    extractParam.targetPath = "";
-    extractParam.srcPath = HAP_FILE_PATH;
-    ret = installdProxy->ExtractHnpFiles(hnpPackageMap, extractParam);
-    EXPECT_NE(ret, ERR_OK);
-}
-
-/**
  * @tc.number: InstalldHostImplTest_5400
  * @tc.name: test function of InstallHostImpl
  * @tc.desc: 1. calling ProcessBundleInstallNative of hostImpl
  * @tc.require: issueI5VW01
-*/
+ */
 HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_5400, Function | SmallTest | Level0)
 {
     sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
@@ -1070,45 +957,11 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_5700, Function | Sma
 }
 
 /**
- * @tc.number: InstalldHostImplTest_5800
- * @tc.name: test function of InstallHostImpl
- * @tc.desc: 1. calling GetDiskUsage of hostImpl
- * @tc.require: issueI5VW01
-*/
-HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_5800, Function | SmallTest | Level0)
-{
-    sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
-    ASSERT_NE(installdProxy, nullptr);
-
-    std::string dir = "";
-    bool isReadPath = false;
-    int64_t res = installdProxy->GetDiskUsage(dir, isReadPath);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
-}
-
-/**
- * @tc.number: InstalldHostImplTest_5900
- * @tc.name: test function of InstallHostImpl
- * @tc.desc: 1. calling GetDiskUsage of hostImpl
- * @tc.require: issueI5VW01
-*/
-HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_5900, Function | SmallTest | Level0)
-{
-    sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
-    ASSERT_NE(installdProxy, nullptr);
-
-    std::string dir = "com.acts.example";
-    bool isReadPath = false;
-    int64_t res = installdProxy->GetDiskUsage(dir, isReadPath);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
-}
-
-/**
  * @tc.number: InstalldHostImplTest_6000
  * @tc.name: test function of InstallHostImpl
  * @tc.desc: 1. calling DeliverySignProfile of hostImpl
  * @tc.require: issueI5VW01
-*/
+ */
 HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6000, Function | SmallTest | Level0)
 {
     sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);

@@ -570,37 +570,6 @@ ErrCode InstalldHostImpl::ExtractServiceModuleFiles(const ExtractModuleFilesPara
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::ExtractFiles(const ExtractParam &extractParam)
-{
-    LOG_D(BMS_TAG_INSTALLD, "ExtractFiles extractParam %{public}s", extractParam.ToString().c_str());
-    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
-        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
-        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
-    }
-
-    if (!InstalldOperator::IsValidBundleName(extractParam.bundleName)) {
-        LOG_E(BMS_TAG_INSTALLD, "Calling the function ExtractFiles with invalid bundleName");
-        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-    }
-
-    if (extractParam.srcPath.empty() || extractParam.targetPath.empty()) {
-        LOG_E(BMS_TAG_INSTALLD, "Calling the function ExtractFiles with invalid param");
-        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-    }
-
-    if (!InstalldOperator::IsValidPathByBundleDirScene(BundleDirScene::EXTRACT_FILES, extractParam.targetPath)) {
-        LOG_E(BMS_TAG_INSTALLD, "Calling the function ExtractFiles with invalid targetPath prefix");
-        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-    }
-
-    if (!InstalldOperator::ExtractFiles(extractParam)) {
-        LOG_E(BMS_TAG_INSTALLD, "extract failed errno:%{public}d", errno);
-        return ERR_APPEXECFWK_INSTALLD_EXTRACT_FAILED;
-    }
-
-    return ERR_OK;
-}
-
 ErrCode InstalldHostImpl::ExtractQuickFixSoFile(const std::string &bundleName, const std::string &hqfFilePath,
     const std::string &nativeLibraryPath, const std::string &cpuAbi, bool isReplace, int32_t versionCode,
     const std::string &targetPathSuffix)
@@ -968,27 +937,6 @@ ErrCode InstalldHostImpl::ExtractSharedModuleFiles(const ExtractModuleFilesParam
         return ERR_APPEXECFWK_INSTALLD_EXTRACT_FAILED;
     }
 
-    return ERR_OK;
-}
-
-ErrCode InstalldHostImpl::ExtractHnpFiles(const std::map<std::string, std::string> &hnpPackageMap,
-    const ExtractParam &extractParam)
-{
-    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
-        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
-        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
-    }
-    if (!InstalldOperator::IsFileNameValid(extractParam.srcPath) ||
-        !InstalldOperator::IsValidPathByBundleDirScene(BundleDirScene::EXTRACT_HNP_FILES, extractParam.targetPath) ||
-        hnpPackageMap.empty()) {
-        LOG_E(BMS_TAG_INSTALLD, "Calling the function ExtractFiles with invalid param");
-        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-    }
-
-    if (!InstalldOperator::ExtractFiles(hnpPackageMap, extractParam)) {
-        LOG_E(BMS_TAG_INSTALLD, "extract failed errno:%{public}d", errno);
-        return ERR_APPEXECFWK_NATIVE_HNP_EXTRACT_FAILED;
-    }
     return ERR_OK;
 }
 
@@ -2097,15 +2045,6 @@ ErrCode InstalldHostImpl::RemoveDir(const std::string &dir, BundleDirScene scene
     return ERR_OK;
 }
 
-int64_t InstalldHostImpl::GetDiskUsage(const std::string &dir, bool isRealPath)
-{
-    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
-        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
-        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
-    }
-    return InstalldOperator::GetDiskUsage(dir, isRealPath);
-}
-
 ErrCode InstalldHostImpl::GetDiskUsageFromPath(const std::vector<std::string> &path, const std::string &bundleName,
     BundleDirScene scene, int64_t &statSize, int64_t timeoutMs)
 {
@@ -2984,47 +2923,6 @@ ErrCode InstalldHostImpl::DeleteBackupSandboxDir(int32_t userId, const std::stri
 {
     return ChangeSandboxDirName(userId, sandboxDir, std::string(BACKUP_DIR_PREFIX) + sandboxDir,
         std::string(DELETE_DIR_PREFIX) + sandboxDir);
-}
-
-ErrCode InstalldHostImpl::CopyFile(const std::string &oldPath, const std::string &newPath, BundleDirScene scene,
-    const std::string &signatureFilePath)
-{
-    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
-        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
-        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
-    }
-    if (!InstalldOperator::IsValidPathByCopyFileScene(oldPath, newPath, scene)) {
-        LOG_E(BMS_TAG_INSTALLD,
-            "Calling the function CopyFile with invalid param, oldPath:%{private}s, newPath:%{private}s, "
-            "scene:%{public}d",
-            oldPath.c_str(), newPath.c_str(), static_cast<int32_t>(scene));
-        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-    }
-    if (!InstalldOperator::CopyFileFast(oldPath, newPath)) {
-        LOG_E(BMS_TAG_INSTALLD, "Copy file %{private}s to %{private}s failed errno:%{public}d",
-            oldPath.c_str(), newPath.c_str(), errno);
-        return ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED;
-    }
-    mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
-    if (!OHOS::ChangeModeFile(newPath, mode)) {
-        LOG_E(BMS_TAG_INSTALLD, "change mode failed");
-        return ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED;
-    }
-
-    if (signatureFilePath.empty()) {
-        LOG_D(BMS_TAG_INSTALLD, "signature file path is empty and no need to process code signature");
-        return ERR_OK;
-    }
-
-#if defined(CODE_SIGNATURE_ENABLE)
-    Security::CodeSign::EntryMap entryMap = {{ ServiceConstants::CODE_SIGNATURE_HAP, newPath }};
-    ErrCode ret = Security::CodeSign::CodeSignUtils::EnforceCodeSignForApp(entryMap, signatureFilePath);
-    if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLD, "hap or hsp code signature failed due to %{public}d", ret);
-        return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED;
-    }
-#endif
-    return ERR_OK;
 }
 
 ErrCode InstalldHostImpl::CopyAbcFile(const std::string &bundleName, int32_t userId,

@@ -96,34 +96,6 @@ HWTEST_F(BmsInstalldHostTest, HandleExtractModuleFiles_0100, Function | SmallTes
 }
 
 /**
- * @tc.number: HandleExtractFiles_0100
- * @tc.name: test HandleExtractFiles
- * @tc.desc: 1.HandleExtractFiles test
- */
-HWTEST_F(BmsInstalldHostTest, HandleExtractFiles_0100, Function | SmallTest | Level1)
-{
-    InstalldHost installdHost;
-    MessageParcel data;
-    MessageParcel reply;
-    bool res = installdHost.HandleExtractFiles(data, reply);
-    EXPECT_FALSE(res);
-}
-
-/**
- * @tc.number: HandleExtractHnpFiles_0100
- * @tc.name: test HandleExtractHnpFiles
- * @tc.desc: 1.HandleExtractHnpFiles test
- */
-HWTEST_F(BmsInstalldHostTest, HandleExtractHnpFiles_0100, Function | SmallTest | Level1)
-{
-    InstalldHost installdHost;
-    MessageParcel data;
-    MessageParcel reply;
-    bool res = installdHost.HandleExtractHnpFiles(data, reply);
-    EXPECT_FALSE(res);
-}
-
-/**
  * @tc.number: HandleProcessBundleInstallNative_0100
  * @tc.name: test HandleProcessBundleInstallNative
  * @tc.desc: 1.HandleProcessBundleInstallNative test
@@ -278,20 +250,6 @@ HWTEST_F(BmsInstalldHostTest, HandleRemoveDir_0100, Function | SmallTest | Level
 }
 
 /**
- * @tc.number: HandleGetDiskUsage_0100
- * @tc.name: test HandleGetDiskUsage
- * @tc.desc: 1.HandleGetDiskUsage test
- */
-HWTEST_F(BmsInstalldHostTest, HandleGetDiskUsage_0100, Function | SmallTest | Level1)
-{
-    InstalldHost installdHost;
-    MessageParcel data;
-    MessageParcel reply;
-    bool res = installdHost.HandleGetDiskUsage(data, reply);
-    EXPECT_TRUE(res);
-}
-
-/**
  * @tc.number: HandleGetBundleInodeCount_0100
  * @tc.name: test HandleGetBundleInodeCount
  * @tc.desc: 1.HandleGetBundleInodeCount test
@@ -428,20 +386,6 @@ HWTEST_F(BmsInstalldHostTest, HandleMoveSharedHspToCodeDir_0100, Function | Smal
     MessageParcel data;
     MessageParcel reply;
     bool res = installdHost.HandleMoveSharedHspToCodeDir(data, reply);
-    EXPECT_TRUE(res);
-}
-
-/**
- * @tc.number: HandleCopyFile_0100
- * @tc.name: test HandleCopyFile
- * @tc.desc: 1.HandleCopyFile test
- */
-HWTEST_F(BmsInstalldHostTest, HandleCopyFile_0100, Function | SmallTest | Level1)
-{
-    InstalldHost installdHost;
-    MessageParcel data;
-    MessageParcel reply;
-    bool res = installdHost.HandleCopyFile(data, reply);
     EXPECT_TRUE(res);
 }
 
