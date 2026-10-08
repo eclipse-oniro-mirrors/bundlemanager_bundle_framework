@@ -29,6 +29,8 @@ static constexpr int GRANT_STATUS = 100;
 // Mirrors ACCESS_TOKEN_DB_ERROR_PARAM in bundle_service_constants.h; duplicated to keep the
 // test mock free of service headers.
 constexpr const char* MOCK_DB_ERROR_PARAM = "persist.accesstoken.permission.dberror";
+// controllable return value for IsCliToolToken, default true (CLI tool calling)
+bool g_isCliToolToken = true;
 unsigned int g_accessTokenID = 0;
 int32_t g_errCode = 0;
 std::vector<int32_t> g_initHapTokenRetSeq;
@@ -309,7 +311,12 @@ int AccessTokenKit::GetHapTokenInfo(AccessTokenID tokenID, HapTokenInfo& hapToke
 
 bool AccessTokenKit::IsCliToolToken(uint64_t tokenId)
 {
-    return true;
+    return g_isCliToolToken;
+}
+
+void SetIsCliToolTokenForTest(bool value)
+{
+    g_isCliToolToken = value;
 }
 }
 }

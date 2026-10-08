@@ -374,6 +374,11 @@ bool BundlePermissionMgr::IsCliToolCalling(const uint64_t callerToken)
     return false;
 }
 
+bool BundlePermissionMgr::VerifyCliToolInstall()
+{
+    return VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_ALLOW_INSTALL_DEBUG_HAP);
+}
+
 ErrCode BundlePermissionMgr::GetPermissionDef(const std::string &permissionName, PermissionDef &permissionDef)
 {
     LOG_D(BMS_TAG_DEFAULT, "BundlePermissionMgr::GetPermissionDef permission %{public}s", permissionName.c_str());

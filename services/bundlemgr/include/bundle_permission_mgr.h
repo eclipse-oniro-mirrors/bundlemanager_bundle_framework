@@ -124,6 +124,8 @@ public:
 
     static bool IsCliToolCalling(const uint64_t callerToken);
 
+    static bool VerifyCliToolInstall();
+
     static bool IsSelfCalling();
 
     static bool VerifyUninstallPermission();
