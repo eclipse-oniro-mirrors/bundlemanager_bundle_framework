@@ -164,6 +164,8 @@ constexpr const char* PERMISSION_MANAGE_EDM_POLICY = "ohos.permission.MANAGE_EDM
 constexpr const char* PERMISSION_SKIP_ENTERPRISE_RESIGN_VERIFY = "ohos.permission.SKIP_ENTERPRISE_RESIGN_VERIFY";
 constexpr const char* PERMISSION_INSTALL_INTERNALTESTING_BUNDLE = "ohos.permission.INSTALL_INTERNALTESTING_BUNDLE";
 constexpr const char* PERMISSION_INSTALL_DEVELOPER_ID_BUNDLE = "ohos.permission.INSTALL_DEVELOPER_ID_BUNDLE";
+// allows CLI tools to install debug-type bundles only
+constexpr const char* PERMISSION_ALLOW_INSTALL_DEBUG_HAP = "ohos.permission.ALLOW_INSTALL_DEBUG_HAP";
 constexpr const char* PERMISSION_MANAGE_DISPOSED_APP_STATUS = "ohos.permission.MANAGE_DISPOSED_APP_STATUS";
 constexpr const char* PERMISSION_INSTALL_SELF_BUNDLE = "ohos.permission.INSTALL_SELF_BUNDLE";
 constexpr const char* PERMISSION_UNINSTALL_BUNDLE = "ohos.permission.UNINSTALL_BUNDLE";

@@ -1782,4 +1782,119 @@ HWTEST_F(BundleInstallCheckerTest, HandleExtensionPermission_0007, TestSize.Leve
     EXPECT_EQ(extensions["com.example.test.MainExtension"].readPermission, "ohos.permission.READ_TEST");
     EXPECT_EQ(extensions["com.example.test.MainExtension"].writePermission, "ohos.permission.WRITE_TEST");
 }
+
+/**
+ * @tc.number: BundleInstallCheckerTest_0100
+ * @tc.name: test the VaildInstallPermission with debug permission.
+ * @tc.desc: debug permission holder can install APP_GALLERY debug bundle.
+ */
+HWTEST_F(BundleInstallCheckerTest, BundleInstallCheckerTest_0100, TestSize.Level2)
+{
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    hapVerifyResult.provisionInfo.appId = "testAppId";
+    hapVerifyResult.provisionInfo.distributionType = Security::Verify::AppDistType::APP_GALLERY;
+    hapVerifyResult.provisionInfo.type = Security::Verify::ProvisionType::DEBUG;
+    hapVerifyRes.emplace_back(hapVerifyResult);
+
+    InstallParam installParam;
+    installParam.isCallByShell = false;
+    installParam.installDebugBundlePermissionStatus = PermissionStatus::HAVE_PERMISSION_STATUS;
+
+    BundleInstallChecker bundleInstallChecker;
+    bool isValid = bundleInstallChecker.VaildInstallPermission(installParam, hapVerifyRes);
+    EXPECT_TRUE(isValid);
+}
+
+/**
+ * @tc.number: BundleInstallCheckerTest_0101
+ * @tc.name: test the VaildInstallPermission with debug permission.
+ * @tc.desc: debug permission holder can not install APP_GALLERY release bundle.
+ */
+HWTEST_F(BundleInstallCheckerTest, BundleInstallCheckerTest_0101, TestSize.Level2)
+{
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    hapVerifyResult.provisionInfo.appId = "testAppId";
+    hapVerifyResult.provisionInfo.distributionType = Security::Verify::AppDistType::APP_GALLERY;
+    hapVerifyResult.provisionInfo.type = Security::Verify::ProvisionType::RELEASE;
+    hapVerifyRes.emplace_back(hapVerifyResult);
+
+    InstallParam installParam;
+    installParam.isCallByShell = false;
+    installParam.installDebugBundlePermissionStatus = PermissionStatus::HAVE_PERMISSION_STATUS;
+
+    BundleInstallChecker bundleInstallChecker;
+    bool isValid = bundleInstallChecker.VaildInstallPermission(installParam, hapVerifyRes);
+    EXPECT_FALSE(isValid);
+}
+
+/**
+ * @tc.number: BundleInstallCheckerTest_0102
+ * @tc.name: test the VaildInstallPermission with debug permission.
+ * @tc.desc: debug permission holder can not install non-APP_GALLERY release bundle.
+ */
+HWTEST_F(BundleInstallCheckerTest, BundleInstallCheckerTest_0102, TestSize.Level2)
+{
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    hapVerifyResult.provisionInfo.appId = "testAppId";
+    hapVerifyResult.provisionInfo.distributionType = Security::Verify::AppDistType::CROWDTESTING;
+    hapVerifyResult.provisionInfo.type = Security::Verify::ProvisionType::RELEASE;
+    hapVerifyRes.emplace_back(hapVerifyResult);
+
+    InstallParam installParam;
+    installParam.isCallByShell = false;
+    installParam.installDebugBundlePermissionStatus = PermissionStatus::HAVE_PERMISSION_STATUS;
+
+    BundleInstallChecker bundleInstallChecker;
+    bool isValid = bundleInstallChecker.VaildInstallPermission(installParam, hapVerifyRes);
+    EXPECT_FALSE(isValid);
+}
+
+/**
+ * @tc.number: BundleInstallCheckerTest_0103
+ * @tc.name: test the VaildInstallPermission without debug permission.
+ * @tc.desc: caller without any install permission can not install debug bundle.
+ */
+HWTEST_F(BundleInstallCheckerTest, BundleInstallCheckerTest_0103, TestSize.Level2)
+{
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    hapVerifyResult.provisionInfo.appId = "testAppId";
+    hapVerifyResult.provisionInfo.distributionType = Security::Verify::AppDistType::APP_GALLERY;
+    hapVerifyResult.provisionInfo.type = Security::Verify::ProvisionType::DEBUG;
+    hapVerifyRes.emplace_back(hapVerifyResult);
+
+    InstallParam installParam;
+    installParam.isCallByShell = false;
+    installParam.installDebugBundlePermissionStatus = PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS;
+
+    BundleInstallChecker bundleInstallChecker;
+    bool isValid = bundleInstallChecker.VaildInstallPermission(installParam, hapVerifyRes);
+    EXPECT_FALSE(isValid);
+}
+
+/**
+ * @tc.number: BundleInstallCheckerTest_0104
+ * @tc.name: test the VaildInstallPermission with debug permission called by shell.
+ * @tc.desc: CLI caller (isCallByShell) with debug permission can install debug bundle.
+ */
+HWTEST_F(BundleInstallCheckerTest, BundleInstallCheckerTest_0104, TestSize.Level2)
+{
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    hapVerifyResult.provisionInfo.appId = "testAppId";
+    hapVerifyResult.provisionInfo.distributionType = Security::Verify::AppDistType::APP_GALLERY;
+    hapVerifyResult.provisionInfo.type = Security::Verify::ProvisionType::DEBUG;
+    hapVerifyRes.emplace_back(hapVerifyResult);
+
+    InstallParam installParam;
+    installParam.isCallByShell = true;
+    installParam.installDebugBundlePermissionStatus = PermissionStatus::HAVE_PERMISSION_STATUS;
+
+    BundleInstallChecker bundleInstallChecker;
+    bool isValid = bundleInstallChecker.VaildInstallPermission(installParam, hapVerifyRes);
+    EXPECT_TRUE(isValid);
+}
 } // OHOS

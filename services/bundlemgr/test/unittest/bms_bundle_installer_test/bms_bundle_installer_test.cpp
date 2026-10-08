@@ -79,6 +79,11 @@ namespace AppExecFwk {
 void ResetProcessBinFilesParamForTest();
 bool GetProcessBinFilesParamForTest(VerifyBinParam &verifyBinParam);
 }
+namespace Security {
+namespace AccessToken {
+void SetIsCliToolTokenForTest(bool value);
+}
+}
 namespace {
 const std::string SYSTEMFIEID_NAME = "com.query.test";
 const std::string SYSTEMFIEID_BUNDLE = "system_module.hap";
@@ -10961,6 +10966,102 @@ HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_7500, Function | SmallTest 
     #else
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_RELEASE_BUNDLE_NOT_ALLOWED_FOR_SHELL);
     #endif
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_7550
+ * @tc.name: test CheckShellInstall for non-CLI shell caller
+ * @tc.desc: 1.shell caller without CLI token installing APP_GALLERY RELEASE bundle is rejected
+ */
+HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_7550, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller baseBundleInstaller;
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    Security::Verify::ProvisionInfo provisionInfo;
+    provisionInfo.distributionType = Security::Verify::AppDistType::APP_GALLERY;
+    provisionInfo.type = Security::Verify::ProvisionType::RELEASE;
+    hapVerifyResult.SetProvisionInfo(provisionInfo);
+
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes{ hapVerifyResult };
+
+    baseBundleInstaller.sysEventInfo_.callingUid = ServiceConstants::SHELL_UID;
+    Security::AccessToken::SetIsCliToolTokenForTest(false);
+    auto ret = baseBundleInstaller.CheckShellInstall(hapVerifyRes);
+    Security::AccessToken::SetIsCliToolTokenForTest(true);
+    #ifdef USE_EXTENSION_DATA
+    EXPECT_EQ(ret, ERR_OK);
+    #else
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_RELEASE_BUNDLE_NOT_ALLOWED_FOR_SHELL);
+    #endif
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_7560
+ * @tc.name: test CheckShellInstall for CLI caller with non-APP_GALLERY release bundle
+ * @tc.desc: 1.CLI caller installing a non-APP_GALLERY RELEASE bundle is allowed
+ */
+HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_7560, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller baseBundleInstaller;
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    Security::Verify::ProvisionInfo provisionInfo;
+    provisionInfo.distributionType = Security::Verify::AppDistType::CROWDTESTING;
+    provisionInfo.type = Security::Verify::ProvisionType::RELEASE;
+    hapVerifyResult.SetProvisionInfo(provisionInfo);
+
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes{ hapVerifyResult };
+
+    baseBundleInstaller.sysEventInfo_.callingUid = ServiceConstants::SHELL_UID;
+    auto ret = baseBundleInstaller.CheckShellInstall(hapVerifyRes);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_7570
+ * @tc.name: test CheckShellInstall for CLI caller with non-shell uid
+ * @tc.desc: 1.CLI caller with non-shell uid installing APP_GALLERY RELEASE bundle is rejected
+ */
+HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_7570, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller baseBundleInstaller;
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    Security::Verify::ProvisionInfo provisionInfo;
+    provisionInfo.distributionType = Security::Verify::AppDistType::APP_GALLERY;
+    provisionInfo.type = Security::Verify::ProvisionType::RELEASE;
+    hapVerifyResult.SetProvisionInfo(provisionInfo);
+
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes{ hapVerifyResult };
+
+    baseBundleInstaller.sysEventInfo_.callingUid = 1234;
+    auto ret = baseBundleInstaller.CheckShellInstall(hapVerifyRes);
+    #ifdef USE_EXTENSION_DATA
+    EXPECT_EQ(ret, ERR_OK);
+    #else
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_RELEASE_BUNDLE_NOT_ALLOWED_FOR_SHELL);
+    #endif
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_7580
+ * @tc.name: test CheckShellInstall for caller matching neither
+ * @tc.desc: 1.non-shell caller without CLI token is released directly
+ */
+HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_7580, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller baseBundleInstaller;
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    Security::Verify::ProvisionInfo provisionInfo;
+    provisionInfo.distributionType = Security::Verify::AppDistType::APP_GALLERY;
+    provisionInfo.type = Security::Verify::ProvisionType::RELEASE;
+    hapVerifyResult.SetProvisionInfo(provisionInfo);
+
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes{ hapVerifyResult };
+
+    baseBundleInstaller.sysEventInfo_.callingUid = 1234;
+    Security::AccessToken::SetIsCliToolTokenForTest(false);
+    auto ret = baseBundleInstaller.CheckShellInstall(hapVerifyRes);
+    Security::AccessToken::SetIsCliToolTokenForTest(true);
+    EXPECT_EQ(ret, ERR_OK);
 }
 
 /**

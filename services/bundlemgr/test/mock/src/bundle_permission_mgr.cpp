@@ -279,6 +279,11 @@ bool BundlePermissionMgr::IsCliToolCalling(const uint64_t callerToken)
     return false;
 }
 
+bool BundlePermissionMgr::VerifyCliToolInstall()
+{
+    return false;
+}
+
 bool BundlePermissionMgr::IsSelfCalling()
 {
     return false;
@@ -354,6 +359,11 @@ bool BundlePermissionMgr::IsCliToolCalling(const uint64_t callerToken)
         return g_isCliToolCallingForDistributedTest;
     }
     return g_isCliToolCalling;
+}
+
+bool BundlePermissionMgr::VerifyCliToolInstall()
+{
+    return false;
 }
 
 bool BundlePermissionMgr::IsSelfCalling()

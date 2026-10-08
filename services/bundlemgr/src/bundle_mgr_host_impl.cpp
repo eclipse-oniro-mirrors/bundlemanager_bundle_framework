@@ -3795,7 +3795,8 @@ sptr<IBundleInstaller> BundleMgrHostImpl::GetBundleInstaller()
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("start GetBundleInstaller");
-    if (!VerifySystemApi()) {
+    if (!VerifySystemApi() &&
+        !BundlePermissionMgr::VerifyCliToolInstall()) {
         if (!OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false)) {
             APP_LOGE("developer mode is not on, non-system app calling system api");
             return nullptr;

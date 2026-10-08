@@ -530,7 +530,8 @@ bool BundleInstallerHost::Install(
 ErrCode BundleInstallerHost::VerifyInstallPermission()
 {
     if (!BundlePermissionMgr::IsSystemApp() &&
-        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
+        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE) &&
+        !BundlePermissionMgr::VerifyCliToolInstall()) {
         LOG_E(BMS_TAG_INSTALLER, "non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
@@ -544,7 +545,9 @@ ErrCode BundleInstallerHost::VerifyInstallPermission()
         !BundlePermissionMgr::VerifyCallingPermissionForAll(
             ServiceConstants::PERMISSION_INSTALL_INTERNALTESTING_BUNDLE) &&
         !BundlePermissionMgr::VerifyCallingPermissionForAll(
-            ServiceConstants::PERMISSION_INSTALL_DEVELOPER_ID_BUNDLE)) {
+            ServiceConstants::PERMISSION_INSTALL_DEVELOPER_ID_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(
+            ServiceConstants::PERMISSION_ALLOW_INSTALL_DEBUG_HAP)) {
         LOG_E(BMS_TAG_INSTALLER, "install permission denied");
         return ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED;
     }
@@ -949,7 +952,8 @@ ErrCode BundleInstallerHost::StreamInstall(const std::vector<std::string> &bundl
 ErrCode BundleInstallerHost::VerifyCreateStreamInstallerPermission(
     const InstallParam &installParam, InstallParam &verifiedInstallParam)
 {
-    if (!BundlePermissionMgr::IsSystemApp()) {
+    if (!BundlePermissionMgr::IsSystemApp() &&
+        !BundlePermissionMgr::VerifyCliToolInstall()) {
         LOG_E(BMS_TAG_INSTALLER, "non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
@@ -1025,6 +1029,9 @@ bool BundleInstallerHost::IsPermissionValid(const InstallParam &installParam, In
             ServiceConstants::PERMISSION_INSTALL_DEVELOPER_ID_BUNDLE)
             ? PermissionStatus::HAVE_PERMISSION_STATUS
             : PermissionStatus::NON_HAVE_PERMISSION_STATUS;
+    verifiedInstallParam.installDebugBundlePermissionStatus =
+        BundlePermissionMgr::VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_ALLOW_INSTALL_DEBUG_HAP) ?
+        PermissionStatus::HAVE_PERMISSION_STATUS : PermissionStatus::NON_HAVE_PERMISSION_STATUS;
     verifiedInstallParam.installUpdateSelfBundlePermissionStatus =
         BundlePermissionMgr::VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_INSTALL_SELF_BUNDLE) ?
         PermissionStatus::HAVE_PERMISSION_STATUS : PermissionStatus::NON_HAVE_PERMISSION_STATUS;
@@ -1033,13 +1040,15 @@ bool BundleInstallerHost::IsPermissionValid(const InstallParam &installParam, In
         verifiedInstallParam.installEtpNormalBundlePermissionStatus == PermissionStatus::HAVE_PERMISSION_STATUS ||
         verifiedInstallParam.installEtpMdmBundlePermissionStatus == PermissionStatus::HAVE_PERMISSION_STATUS ||
         verifiedInstallParam.installDeveloperIdBundlePermissionStatus == PermissionStatus::HAVE_PERMISSION_STATUS ||
+        verifiedInstallParam.installDebugBundlePermissionStatus == PermissionStatus::HAVE_PERMISSION_STATUS ||
         verifiedInstallParam.installUpdateSelfBundlePermissionStatus == PermissionStatus::HAVE_PERMISSION_STATUS ||
         BundlePermissionMgr::VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_INSTALL_QUICK_FIX_BUNDLE));
 }
 
 bool BundleInstallerHost::VerifyDestoryBundleStreamInstallerPermission()
 {
-    if (!BundlePermissionMgr::IsSystemApp()) {
+    if (!BundlePermissionMgr::IsSystemApp() &&
+        !BundlePermissionMgr::VerifyCliToolInstall()) {
         LOG_E(BMS_TAG_INSTALLER, "non-system app calling system api");
         return false;
     }
@@ -1054,6 +1063,8 @@ bool BundleInstallerHost::VerifyDestoryBundleStreamInstallerPermission()
             ServiceConstants::PERMISSION_INSTALL_INTERNALTESTING_BUNDLE) &&
         !BundlePermissionMgr::VerifyCallingPermissionForAll(
             ServiceConstants::PERMISSION_INSTALL_DEVELOPER_ID_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(
+            ServiceConstants::PERMISSION_ALLOW_INSTALL_DEBUG_HAP) &&
         !BundlePermissionMgr::VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_INSTALL_QUICK_FIX_BUNDLE)) {
         LOG_E(BMS_TAG_INSTALLER, "install permission denied");
         return false;

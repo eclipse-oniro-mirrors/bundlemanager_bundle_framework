@@ -322,6 +322,11 @@ bool BundlePermissionMgr::IsCliToolCalling(const uint64_t tokenId)
     return true;
 }
 
+bool BundlePermissionMgr::VerifyCliToolInstall()
+{
+    return false;
+}
+
 bool BundlePermissionMgr::RefreshPreAuthorizationForOTA()
 {
     return true;

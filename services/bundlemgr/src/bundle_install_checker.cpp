@@ -391,6 +391,7 @@ bool BundleInstallChecker::VaildInstallPermission(const InstallParam &installPar
     PermissionStatus installEnterpriseBundleStatus = installParam.installEnterpriseBundlePermissionStatus;
     PermissionStatus installEtpMdmBundleStatus = installParam.installEtpMdmBundlePermissionStatus;
     PermissionStatus installInternaltestingBundleStatus = installParam.installInternaltestingBundlePermissionStatus;
+    PermissionStatus installDebugBundleStatus = installParam.installDebugBundlePermissionStatus;
     bool isCallByShell = installParam.isCallByShell;
     if (!isCallByShell && installBundleStatus == PermissionStatus::HAVE_PERMISSION_STATUS &&
         installEnterpriseBundleStatus == PermissionStatus::HAVE_PERMISSION_STATUS &&
@@ -424,6 +425,13 @@ bool BundleInstallChecker::VaildInstallPermission(const InstallParam &installPar
                 LOG_E(BMS_TAG_INSTALLER, "install internaltesting bundle permission denied");
                 return false;
             }
+            continue;
+        }
+        // holder of ALLOW_INSTALL_DEBUG_HAP may install bundles whose provision
+        // type is DEBUG only; release-type bundles are not allowed by this permission
+        if (installDebugBundleStatus == PermissionStatus::HAVE_PERMISSION_STATUS &&
+            provisionInfo.type == Security::Verify::ProvisionType::DEBUG) {
+            LOG_I(BMS_TAG_INSTALLER, "check debug bundle permission success");
             continue;
         }
         if (installBundleStatus != PermissionStatus::HAVE_PERMISSION_STATUS) {

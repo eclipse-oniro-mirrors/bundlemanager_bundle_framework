@@ -141,6 +141,8 @@ bool BundleStreamInstallerHostImpl::VerifyCreateStreamPermission()
             ServiceConstants::PERMISSION_INSTALL_INTERNALTESTING_BUNDLE) &&
         !BundlePermissionMgr::VerifyCallingPermissionForAll(
             ServiceConstants::PERMISSION_INSTALL_DEVELOPER_ID_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(
+            ServiceConstants::PERMISSION_ALLOW_INSTALL_DEBUG_HAP) &&
         !BundlePermissionMgr::VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_INSTALL_SELF_BUNDLE) &&
         !BundlePermissionMgr::VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_INSTALL_SANDBOX_BUNDLE) &&
         !BundlePermissionMgr::VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_INSTALL_QUICK_FIX_BUNDLE) &&
@@ -216,6 +218,8 @@ int32_t BundleStreamInstallerHostImpl::CreateSignatureFileStream(const std::stri
             ServiceConstants::PERMISSION_INSTALL_INTERNALTESTING_BUNDLE) &&
         !BundlePermissionMgr::VerifyCallingPermissionForAll(
             ServiceConstants::PERMISSION_INSTALL_DEVELOPER_ID_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(
+            ServiceConstants::PERMISSION_ALLOW_INSTALL_DEBUG_HAP) &&
         !BundlePermissionMgr::VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_INSTALL_SELF_BUNDLE) &&
         !BundlePermissionMgr::VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_INSTALL_SANDBOX_BUNDLE) &&
         !BundlePermissionMgr::VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_INSTALL_QUICK_FIX_BUNDLE)) {
@@ -279,6 +283,8 @@ int32_t BundleStreamInstallerHostImpl::CreateSharedBundleStream(const std::strin
             ServiceConstants::PERMISSION_INSTALL_ENTERPRISE_MDM_BUNDLE) &&
         !BundlePermissionMgr::VerifyCallingPermissionForAll(
             ServiceConstants::PERMISSION_INSTALL_INTERNALTESTING_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(
+            ServiceConstants::PERMISSION_ALLOW_INSTALL_DEBUG_HAP) &&
         !BundlePermissionMgr::VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_INSTALL_SELF_BUNDLE) &&
         !(OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false) &&
             BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_ALLOW_USE_BM))) {
@@ -343,6 +349,8 @@ int32_t BundleStreamInstallerHostImpl::CreatePgoFileStream(const std::string &mo
             ServiceConstants::PERMISSION_INSTALL_ENTERPRISE_MDM_BUNDLE) &&
         !BundlePermissionMgr::VerifyCallingPermissionForAll(
             ServiceConstants::PERMISSION_INSTALL_INTERNALTESTING_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(
+            ServiceConstants::PERMISSION_ALLOW_INSTALL_DEBUG_HAP) &&
         !BundlePermissionMgr::VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_INSTALL_SELF_BUNDLE)) {
         APP_LOGE("CreatePgoFileStream permission denied");
         return Constants::DEFAULT_STREAM_FD;
