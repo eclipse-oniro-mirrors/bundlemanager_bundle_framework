@@ -311,6 +311,7 @@ ohos_unittest("BmsInstalldSkillDirTest") {
     "${services_path}/bundlemgr/src/ipc/critical_manager.cpp",
     "${services_path}/bundlemgr/src/ipc/encryption_param.cpp",
     "${services_path}/bundlemgr/src/ipc/extract_hnp_files_param.cpp",
+    "${services_path}/bundlemgr/src/ipc/extract_module_files_param.cpp",
     "${services_path}/bundlemgr/src/ipc/extract_param.cpp",
     "${services_path}/bundlemgr/src/ipc/hap_module_extract_param.cpp",
     "${services_path}/bundlemgr/src/ipc/file_stat.cpp",
