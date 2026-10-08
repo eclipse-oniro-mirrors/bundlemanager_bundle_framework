@@ -74,7 +74,6 @@ const int32_t MAIN_APP_INDEX = -1;
 const int32_t CLONE_APP_INDEX_MAX = 6;
 const int32_t APP_INDEX = 1;
 const int32_t UNSPECIFIED_USERID = -2;
-const int32_t DUAL_MODE_CLONE_APP_INDEX = 10000;
 }  // namespace
 
 class MockAppControlHost : public AppControlHost {
@@ -159,10 +158,38 @@ public:
         return ERR_OK;
     }
     virtual ErrCode GetDisposedRuleForCloneApp(const std::string &appId, DisposedRule& disposedRule,
-        int32_t appIndex, int32_t userId = Constants::UNSPECIFIED_USERID)
+        int32_t appIndex, int32_t userId = Constants::UNSPECIFIED_USERID, bool isAppIndexSet = false)
     {
+        RecordForCloneAppParams(appId, appIndex, userId, isAppIndexSet);
         return ERR_OK;
     }
+
+    virtual ErrCode SetDisposedRuleForCloneApp(const std::string &appId, DisposedRule& disposedRule,
+        int32_t appIndex, int32_t userId = Constants::UNSPECIFIED_USERID, bool isAppIndexSet = false)
+    {
+        RecordForCloneAppParams(appId, appIndex, userId, isAppIndexSet);
+        return ERR_OK;
+    }
+
+    virtual ErrCode DeleteDisposedRuleForCloneApp(const std::string &appId, int32_t appIndex,
+        int32_t userId = Constants::UNSPECIFIED_USERID, bool isAppIndexSet = false)
+    {
+        RecordForCloneAppParams(appId, appIndex, userId, isAppIndexSet);
+        return ERR_OK;
+    }
+
+    void RecordForCloneAppParams(const std::string &appId, int32_t appIndex, int32_t userId, bool isAppIndexSet)
+    {
+        recordAppId_ = appId;
+        recordAppIndex_ = appIndex;
+        recordUserId_ = userId;
+        recordIsAppIndexSet_ = isAppIndexSet;
+    }
+
+    std::string recordAppId_;
+    int32_t recordAppIndex_ = 0;
+    int32_t recordUserId_ = 0;
+    bool recordIsAppIndexSet_ = false;
 };
 
 class BmsBundleAppControlTest : public testing::Test {
@@ -6087,7 +6114,7 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_GetDisposedRuleForCl
     auto impl = std::make_shared<AppControlManagerHostImpl>();
     ASSERT_NE(impl, nullptr);
     DisposedRule rule;
-    auto ret = impl->GetDisposedRuleForCloneApp(APPID, rule, DUAL_MODE_CLONE_APP_INDEX, USERID);
+    auto ret = impl->GetDisposedRuleForCloneApp(APPID, rule, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX, USERID);
     EXPECT_EQ(ret, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
 }
 
@@ -6112,7 +6139,7 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_GetDisposedRuleForCl
     ASSERT_NE(impl, nullptr);
     impl->appControlManager_ = nullptr;
     DisposedRule rule;
-    auto ret = impl->GetDisposedRuleForCloneApp(APPID, rule, DUAL_MODE_CLONE_APP_INDEX, USERID);
+    auto ret = impl->GetDisposedRuleForCloneApp(APPID, rule, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX, USERID);
     EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
 }
 
@@ -6158,7 +6185,7 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_SetDisposedRuleForCl
     auto impl = std::make_shared<AppControlManagerHostImpl>();
     ASSERT_NE(impl, nullptr);
     DisposedRule rule;
-    auto ret = impl->SetDisposedRuleForCloneApp(APPID, rule, DUAL_MODE_CLONE_APP_INDEX, USERID);
+    auto ret = impl->SetDisposedRuleForCloneApp(APPID, rule, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX, USERID);
     EXPECT_EQ(ret, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
 }
 
@@ -6183,7 +6210,7 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_SetDisposedRuleForCl
     ASSERT_NE(impl, nullptr);
     impl->appControlManager_ = nullptr;
     DisposedRule rule;
-    auto ret = impl->SetDisposedRuleForCloneApp(APPID, rule, DUAL_MODE_CLONE_APP_INDEX, USERID);
+    auto ret = impl->SetDisposedRuleForCloneApp(APPID, rule, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX, USERID);
     EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
 }
 
@@ -6228,7 +6255,7 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_DeleteDisposedRuleFo
 {
     auto impl = std::make_shared<AppControlManagerHostImpl>();
     ASSERT_NE(impl, nullptr);
-    auto ret = impl->DeleteDisposedRuleForCloneApp(APPID, DUAL_MODE_CLONE_APP_INDEX, USERID);
+    auto ret = impl->DeleteDisposedRuleForCloneApp(APPID, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX, USERID);
     EXPECT_EQ(ret, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
 }
 
@@ -6252,7 +6279,7 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_DeleteDisposedRuleFo
     auto impl = std::make_shared<AppControlManagerHostImpl>();
     ASSERT_NE(impl, nullptr);
     impl->appControlManager_ = nullptr;
-    auto ret = impl->DeleteDisposedRuleForCloneApp(APPID, DUAL_MODE_CLONE_APP_INDEX, USERID);
+    auto ret = impl->DeleteDisposedRuleForCloneApp(APPID, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX, USERID);
     EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
 }
 
@@ -6300,7 +6327,7 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_SetDisposedRules_Dua
 
     DisposedRuleConfiguration config;
     config.appId = APPID;
-    config.appIndex = DUAL_MODE_CLONE_APP_INDEX;
+    config.appIndex = ServiceConstants::DUAL_MODE_CLONE_APP_INDEX;
     config.disposedRule.componentType = ComponentType::UI_ABILITY;
     config.disposedRule.disposedType = DisposedType::BLOCK_APPLICATION;
     config.disposedRule.controlType = ControlType::DISALLOWED_LIST;
@@ -6333,6 +6360,436 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_SetDisposedRules_Dua
 
     auto ret = impl->SetDisposedRules(configurations, USERID);
     EXPECT_EQ(ret, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_ResolveDualModeDefaultAppIndex_0100
+ * @tc.name: test default appIndex resolution on secondary mode with clone app
+ * @tc.desc: 1.secondary mode + clone app + appIndex not set -> resolved to 10000
+ *           2.secondary mode + clone app + appIndex explicitly set -> keep 0
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_ResolveDualModeDefaultAppIndex_0100,
+    Function | SmallTest | Level1)
+{
+    OHOS::system::SetParameter("persist.bms.test_dual_mode", "true");
+    OHOS::system::SetParameter("persist.bms.ispcmode", "1");
+    OHOS::system::SetParameter("persist.bms.mainmode", "0");
+    ScopeGuard dualModeGuard([&] {
+        OHOS::system::RemoveParameter("persist.bms.test_dual_mode");
+        OHOS::system::RemoveParameter("persist.bms.ispcmode");
+        OHOS::system::RemoveParameter("persist.bms.mainmode");
+    });
+
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    ASSERT_NE(impl->dataMgr_, nullptr);
+    InnerBundleInfo info;
+    info.baseBundleInfo_->appId = APPID;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    info.SetDualModeCloneApp(true);
+    impl->dataMgr_->bundleInfos_[BUNDLE_NAME] = info;
+    ScopeGuard bundleInfoGuard([&] { impl->dataMgr_->bundleInfos_.erase(BUNDLE_NAME); });
+
+    // appIndex not explicitly set (default MAIN_APP_INDEX) -> resolved to dual mode clone app index
+    int32_t appIndex = Constants::MAIN_APP_INDEX;
+    impl->ResolveDualModeDefaultAppIndex(APPID, false, appIndex);
+    EXPECT_EQ(appIndex, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
+
+    // appIndex explicitly set -> keep caller value
+    appIndex = Constants::MAIN_APP_INDEX;
+    impl->ResolveDualModeDefaultAppIndex(APPID, true, appIndex);
+    EXPECT_EQ(appIndex, Constants::MAIN_APP_INDEX);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_ResolveDualModeDefaultAppIndex_0200
+ * @tc.name: test default appIndex resolution with non-clone app on secondary mode
+ * @tc.desc: 1.secondary mode + non-clone (shared) app + appIndex not set -> keep 0
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_ResolveDualModeDefaultAppIndex_0200,
+    Function | SmallTest | Level1)
+{
+    OHOS::system::SetParameter("persist.bms.test_dual_mode", "true");
+    OHOS::system::SetParameter("persist.bms.ispcmode", "1");
+    OHOS::system::SetParameter("persist.bms.mainmode", "0");
+    ScopeGuard dualModeGuard([&] {
+        OHOS::system::RemoveParameter("persist.bms.test_dual_mode");
+        OHOS::system::RemoveParameter("persist.bms.ispcmode");
+        OHOS::system::RemoveParameter("persist.bms.mainmode");
+    });
+
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    ASSERT_NE(impl->dataMgr_, nullptr);
+    InnerBundleInfo info;
+    info.baseBundleInfo_->appId = APPID;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    impl->dataMgr_->bundleInfos_[BUNDLE_NAME] = info;
+    ScopeGuard bundleInfoGuard([&] { impl->dataMgr_->bundleInfos_.erase(BUNDLE_NAME); });
+
+    int32_t appIndex = Constants::MAIN_APP_INDEX;
+    impl->ResolveDualModeDefaultAppIndex(APPID, false, appIndex);
+    EXPECT_EQ(appIndex, Constants::MAIN_APP_INDEX);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_ResolveDualModeDefaultAppIndex_0300
+ * @tc.name: test default appIndex resolution on primary mode
+ * @tc.desc: 1.primary mode + clone app + appIndex not set -> keep 0
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_ResolveDualModeDefaultAppIndex_0300,
+    Function | SmallTest | Level1)
+{
+    OHOS::system::SetParameter("persist.bms.test_dual_mode", "true");
+    OHOS::system::SetParameter("persist.bms.ispcmode", "0");
+    OHOS::system::SetParameter("persist.bms.mainmode", "0");
+    ScopeGuard dualModeGuard([&] {
+        OHOS::system::RemoveParameter("persist.bms.test_dual_mode");
+        OHOS::system::RemoveParameter("persist.bms.ispcmode");
+        OHOS::system::RemoveParameter("persist.bms.mainmode");
+    });
+
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    ASSERT_NE(impl->dataMgr_, nullptr);
+    InnerBundleInfo info;
+    info.baseBundleInfo_->appId = APPID;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    impl->dataMgr_->bundleInfos_[BUNDLE_NAME] = info;
+    ScopeGuard bundleInfoGuard([&] { impl->dataMgr_->bundleInfos_.erase(BUNDLE_NAME); });
+
+    int32_t appIndex = Constants::MAIN_APP_INDEX;
+    impl->ResolveDualModeDefaultAppIndex(APPID, false, appIndex);
+    EXPECT_EQ(appIndex, Constants::MAIN_APP_INDEX);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_ResolveDualModeDefaultAppIndex_0400
+ * @tc.name: test default appIndex resolution on non-dual-mode device or unknown app
+ * @tc.desc: 1.non-dual-mode device + appIndex not set -> keep 0
+ *           2.dual-mode device but appId not found -> keep 0
+ *           3.dual-mode device but appId is empty -> keep 0
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_ResolveDualModeDefaultAppIndex_0400,
+    Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    int32_t appIndex = Constants::MAIN_APP_INDEX;
+    impl->ResolveDualModeDefaultAppIndex(APPID, false, appIndex);
+    EXPECT_EQ(appIndex, Constants::MAIN_APP_INDEX);
+
+    OHOS::system::SetParameter("persist.bms.test_dual_mode", "true");
+    OHOS::system::SetParameter("persist.bms.ispcmode", "1");
+    OHOS::system::SetParameter("persist.bms.mainmode", "0");
+    ScopeGuard dualModeGuard([&] {
+        OHOS::system::RemoveParameter("persist.bms.test_dual_mode");
+        OHOS::system::RemoveParameter("persist.bms.ispcmode");
+        OHOS::system::RemoveParameter("persist.bms.mainmode");
+    });
+
+    // no app with the appId in dataMgr -> keep 0
+    appIndex = Constants::MAIN_APP_INDEX;
+    impl->ResolveDualModeDefaultAppIndex(APPID, false, appIndex);
+    EXPECT_EQ(appIndex, Constants::MAIN_APP_INDEX);
+
+    // empty appId -> keep 0
+    std::string emptyAppId;
+    appIndex = Constants::MAIN_APP_INDEX;
+    impl->ResolveDualModeDefaultAppIndex(emptyAppId, false, appIndex);
+    EXPECT_EQ(appIndex, Constants::MAIN_APP_INDEX);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_ResolveDualModeDefaultAppIndex_0500
+ * @tc.name: test default appIndex resolution with appIdentifier on secondary mode
+ * @tc.desc: 1.secondary mode + clone app + input is appIdentifier -> resolved to 10000
+ *           2.secondary mode + clone app + appIdentifier + appIndex explicitly set -> keep 0
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_ResolveDualModeDefaultAppIndex_0500,
+    Function | SmallTest | Level1)
+{
+    OHOS::system::SetParameter("persist.bms.test_dual_mode", "true");
+    OHOS::system::SetParameter("persist.bms.ispcmode", "1");
+    OHOS::system::SetParameter("persist.bms.mainmode", "0");
+    ScopeGuard dualModeGuard([&] {
+        OHOS::system::RemoveParameter("persist.bms.test_dual_mode");
+        OHOS::system::RemoveParameter("persist.bms.ispcmode");
+        OHOS::system::RemoveParameter("persist.bms.mainmode");
+    });
+
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    ASSERT_NE(impl->dataMgr_, nullptr);
+    std::string appIdentifier = "appIdentifier_" + BUNDLE_NAME;
+    InnerBundleInfo info;
+    info.baseBundleInfo_->appId = APPID;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    info.SetAppIdentifier(appIdentifier);
+    info.SetDualModeCloneApp(true);
+    impl->dataMgr_->bundleInfos_[BUNDLE_NAME] = info;
+    ScopeGuard bundleInfoGuard([&] { impl->dataMgr_->bundleInfos_.erase(BUNDLE_NAME); });
+
+    // input is appIdentifier -> matched by GetBundleNameByAppId -> resolved to dual mode clone app index
+    int32_t appIndex = Constants::MAIN_APP_INDEX;
+    impl->ResolveDualModeDefaultAppIndex(appIdentifier, false, appIndex);
+    EXPECT_EQ(appIndex, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
+
+    // input is appIdentifier + appIndex explicitly set -> keep caller value
+    appIndex = Constants::MAIN_APP_INDEX;
+    impl->ResolveDualModeDefaultAppIndex(appIdentifier, true, appIndex);
+    EXPECT_EQ(appIndex, Constants::MAIN_APP_INDEX);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_DisposedRuleForCloneApp_DualModeDefaultIndex_0100
+ * @tc.name: test Set/Get/Delete with default appIndex on secondary mode clone app
+ * @tc.desc: 1.secondary mode + clone app + appIndex not set -> resolved to 10000 and passes validation
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_DisposedRuleForCloneApp_DualModeDefaultIndex_0100,
+    Function | SmallTest | Level1)
+{
+    OHOS::system::SetParameter("persist.bms.test_dual_mode", "true");
+    OHOS::system::SetParameter("persist.bms.ispcmode", "1");
+    OHOS::system::SetParameter("persist.bms.mainmode", "0");
+    ScopeGuard dualModeGuard([&] {
+        OHOS::system::RemoveParameter("persist.bms.test_dual_mode");
+        OHOS::system::RemoveParameter("persist.bms.ispcmode");
+        OHOS::system::RemoveParameter("persist.bms.mainmode");
+    });
+
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    ASSERT_NE(impl->dataMgr_, nullptr);
+    InnerBundleInfo info;
+    info.baseBundleInfo_->appId = APPID;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    info.SetDualModeCloneApp(true);
+    impl->dataMgr_->bundleInfos_[BUNDLE_NAME] = info;
+    ScopeGuard bundleInfoGuard([&] { impl->dataMgr_->bundleInfos_.erase(BUNDLE_NAME); });
+    impl->appControlManager_ = nullptr;
+
+    DisposedRule rule;
+    // appIndex not explicitly set -> resolved to 10000, passes appIndex validation on dual-mode device
+    auto ret = impl->SetDisposedRuleForCloneApp(APPID, rule, Constants::MAIN_APP_INDEX, USERID, false);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+    ret = impl->GetDisposedRuleForCloneApp(APPID, rule, Constants::MAIN_APP_INDEX, USERID, false);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+    ret = impl->DeleteDisposedRuleForCloneApp(APPID, Constants::MAIN_APP_INDEX, USERID, false);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: HandleGetDisposedRuleForCloneApp_0200
+ * @tc.name: test HandleGetDisposedRuleForCloneApp with isAppIndexSet true
+ * @tc.desc: 1.parcel with bool true at tail -> mock receives true
+ */
+HWTEST_F(BmsBundleAppControlTest, HandleGetDisposedRuleForCloneApp_0200, Function | SmallTest | Level1)
+{
+    sptr<MockAppControlHost> appControlHost(new MockAppControlHost());
+    ASSERT_NE(appControlHost, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteString(APPID);
+    data.WriteInt32(USERID);
+    data.WriteInt32(APP_INDEX);
+    data.WriteBool(true);
+    auto res = appControlHost->HandleGetDisposedRuleForCloneApp(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+    EXPECT_EQ(appControlHost->recordAppId_, APPID);
+    EXPECT_EQ(appControlHost->recordUserId_, USERID);
+    EXPECT_EQ(appControlHost->recordAppIndex_, APP_INDEX);
+    EXPECT_TRUE(appControlHost->recordIsAppIndexSet_);
+}
+
+/**
+ * @tc.number: HandleGetDisposedRuleForCloneApp_0300
+ * @tc.name: test HandleGetDisposedRuleForCloneApp with isAppIndexSet false
+ * @tc.desc: 1.parcel with bool false at tail -> mock receives false
+ */
+HWTEST_F(BmsBundleAppControlTest, HandleGetDisposedRuleForCloneApp_0300, Function | SmallTest | Level1)
+{
+    sptr<MockAppControlHost> appControlHost(new MockAppControlHost());
+    ASSERT_NE(appControlHost, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteString(APPID);
+    data.WriteInt32(USERID);
+    data.WriteInt32(APP_INDEX);
+    data.WriteBool(false);
+    auto res = appControlHost->HandleGetDisposedRuleForCloneApp(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+    EXPECT_EQ(appControlHost->recordAppId_, APPID);
+    EXPECT_EQ(appControlHost->recordUserId_, USERID);
+    EXPECT_EQ(appControlHost->recordAppIndex_, APP_INDEX);
+    EXPECT_FALSE(appControlHost->recordIsAppIndexSet_);
+}
+
+/**
+ * @tc.number: HandleGetDisposedRuleForCloneApp_0400
+ * @tc.name: test HandleGetDisposedRuleForCloneApp with legacy parcel without bool
+ * @tc.desc: 1.legacy parcel (proxy without isAppIndexSet field) -> ReadBool defaults to false
+ */
+HWTEST_F(BmsBundleAppControlTest, HandleGetDisposedRuleForCloneApp_0400, Function | SmallTest | Level1)
+{
+    sptr<MockAppControlHost> appControlHost(new MockAppControlHost());
+    ASSERT_NE(appControlHost, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteString(APPID);
+    data.WriteInt32(USERID);
+    data.WriteInt32(APP_INDEX);
+    auto res = appControlHost->HandleGetDisposedRuleForCloneApp(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+    EXPECT_EQ(appControlHost->recordAppId_, APPID);
+    EXPECT_EQ(appControlHost->recordUserId_, USERID);
+    EXPECT_EQ(appControlHost->recordAppIndex_, APP_INDEX);
+    EXPECT_FALSE(appControlHost->recordIsAppIndexSet_);
+}
+
+/**
+ * @tc.number: AppControlHostHandleSetDisposedRuleForCloneApp_0200
+ * @tc.name: test HandleSetDisposedRuleForCloneApp with isAppIndexSet true
+ * @tc.desc: 1.parcel with rule and bool true at tail -> mock receives true
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlHostHandleSetDisposedRuleForCloneApp_0200,
+    Function | SmallTest | Level1)
+{
+    sptr<MockAppControlHost> appControlHost(new MockAppControlHost());
+    ASSERT_NE(appControlHost, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    DisposedRule rule;
+    data.WriteString(APPID);
+    data.WriteParcelable(&rule);
+    data.WriteInt32(USERID);
+    data.WriteInt32(APP_INDEX);
+    data.WriteBool(true);
+    auto res = appControlHost->HandleSetDisposedRuleForCloneApp(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+    EXPECT_EQ(appControlHost->recordAppId_, APPID);
+    EXPECT_EQ(appControlHost->recordUserId_, USERID);
+    EXPECT_EQ(appControlHost->recordAppIndex_, APP_INDEX);
+    EXPECT_TRUE(appControlHost->recordIsAppIndexSet_);
+}
+
+/**
+ * @tc.number: AppControlHostHandleSetDisposedRuleForCloneApp_0300
+ * @tc.name: test HandleSetDisposedRuleForCloneApp with isAppIndexSet false
+ * @tc.desc: 1.parcel with rule and bool false at tail -> mock receives false
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlHostHandleSetDisposedRuleForCloneApp_0300,
+    Function | SmallTest | Level1)
+{
+    sptr<MockAppControlHost> appControlHost(new MockAppControlHost());
+    ASSERT_NE(appControlHost, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    DisposedRule rule;
+    data.WriteString(APPID);
+    data.WriteParcelable(&rule);
+    data.WriteInt32(USERID);
+    data.WriteInt32(APP_INDEX);
+    data.WriteBool(false);
+    auto res = appControlHost->HandleSetDisposedRuleForCloneApp(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+    EXPECT_EQ(appControlHost->recordAppId_, APPID);
+    EXPECT_EQ(appControlHost->recordUserId_, USERID);
+    EXPECT_EQ(appControlHost->recordAppIndex_, APP_INDEX);
+    EXPECT_FALSE(appControlHost->recordIsAppIndexSet_);
+}
+
+/**
+ * @tc.number: AppControlHostHandleSetDisposedRuleForCloneApp_0400
+ * @tc.name: test HandleSetDisposedRuleForCloneApp with legacy parcel without bool
+ * @tc.desc: 1.legacy parcel (proxy without isAppIndexSet field) -> ReadBool defaults to false
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlHostHandleSetDisposedRuleForCloneApp_0400,
+    Function | SmallTest | Level1)
+{
+    sptr<MockAppControlHost> appControlHost(new MockAppControlHost());
+    ASSERT_NE(appControlHost, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    DisposedRule rule;
+    data.WriteString(APPID);
+    data.WriteParcelable(&rule);
+    data.WriteInt32(USERID);
+    data.WriteInt32(APP_INDEX);
+    auto res = appControlHost->HandleSetDisposedRuleForCloneApp(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+    EXPECT_EQ(appControlHost->recordAppId_, APPID);
+    EXPECT_EQ(appControlHost->recordUserId_, USERID);
+    EXPECT_EQ(appControlHost->recordAppIndex_, APP_INDEX);
+    EXPECT_FALSE(appControlHost->recordIsAppIndexSet_);
+}
+
+/**
+ * @tc.number: HandleDeleteDisposedRuleForCloneApp_0100
+ * @tc.name: test HandleDeleteDisposedRuleForCloneApp with isAppIndexSet true
+ * @tc.desc: 1.parcel with bool true at tail -> mock receives true
+ */
+HWTEST_F(BmsBundleAppControlTest, HandleDeleteDisposedRuleForCloneApp_0100, Function | SmallTest | Level1)
+{
+    sptr<MockAppControlHost> appControlHost(new MockAppControlHost());
+    ASSERT_NE(appControlHost, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteString(APPID);
+    data.WriteInt32(USERID);
+    data.WriteInt32(APP_INDEX);
+    data.WriteBool(true);
+    auto res = appControlHost->HandleDeleteDisposedRuleForCloneApp(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+    EXPECT_EQ(appControlHost->recordAppId_, APPID);
+    EXPECT_EQ(appControlHost->recordUserId_, USERID);
+    EXPECT_EQ(appControlHost->recordAppIndex_, APP_INDEX);
+    EXPECT_TRUE(appControlHost->recordIsAppIndexSet_);
+}
+
+/**
+ * @tc.number: HandleDeleteDisposedRuleForCloneApp_0200
+ * @tc.name: test HandleDeleteDisposedRuleForCloneApp with isAppIndexSet false
+ * @tc.desc: 1.parcel with bool false at tail -> mock receives false
+ */
+HWTEST_F(BmsBundleAppControlTest, HandleDeleteDisposedRuleForCloneApp_0200, Function | SmallTest | Level1)
+{
+    sptr<MockAppControlHost> appControlHost(new MockAppControlHost());
+    ASSERT_NE(appControlHost, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteString(APPID);
+    data.WriteInt32(USERID);
+    data.WriteInt32(APP_INDEX);
+    data.WriteBool(false);
+    auto res = appControlHost->HandleDeleteDisposedRuleForCloneApp(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+    EXPECT_EQ(appControlHost->recordAppId_, APPID);
+    EXPECT_EQ(appControlHost->recordUserId_, USERID);
+    EXPECT_EQ(appControlHost->recordAppIndex_, APP_INDEX);
+    EXPECT_FALSE(appControlHost->recordIsAppIndexSet_);
+}
+
+/**
+ * @tc.number: HandleDeleteDisposedRuleForCloneApp_0300
+ * @tc.name: test HandleDeleteDisposedRuleForCloneApp with legacy parcel without bool
+ * @tc.desc: 1.legacy parcel (proxy without isAppIndexSet field) -> ReadBool defaults to false
+ */
+HWTEST_F(BmsBundleAppControlTest, HandleDeleteDisposedRuleForCloneApp_0300, Function | SmallTest | Level1)
+{
+    sptr<MockAppControlHost> appControlHost(new MockAppControlHost());
+    ASSERT_NE(appControlHost, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteString(APPID);
+    data.WriteInt32(USERID);
+    data.WriteInt32(APP_INDEX);
+    auto res = appControlHost->HandleDeleteDisposedRuleForCloneApp(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+    EXPECT_EQ(appControlHost->recordAppId_, APPID);
+    EXPECT_EQ(appControlHost->recordUserId_, USERID);
+    EXPECT_EQ(appControlHost->recordAppIndex_, APP_INDEX);
+    EXPECT_FALSE(appControlHost->recordIsAppIndexSet_);
 }
 
 } // OHOS

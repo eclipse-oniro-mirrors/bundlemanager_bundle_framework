@@ -700,7 +700,7 @@ ErrCode AppControlProxy::GetAbilityRunningControlRule(
 }
 
 ErrCode AppControlProxy::SetDisposedRuleForCloneApp(
-    const std::string &appId, DisposedRule &disposedRule, int32_t appIndex, int32_t userId)
+    const std::string &appId, DisposedRule &disposedRule, int32_t appIndex, int32_t userId, bool isAppIndexSet)
 {
     LOG_D(BMS_TAG_DEFAULT, "proxy begin to SetDisposedRuleForCloneApp");
     MessageParcel data;
@@ -724,6 +724,10 @@ ErrCode AppControlProxy::SetDisposedRuleForCloneApp(
         LOG_E(BMS_TAG_DEFAULT, "write appIndex failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
+    if (!data.WriteBool(isAppIndexSet)) {
+        LOG_E(BMS_TAG_DEFAULT, "write isAppIndexSet failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
     MessageParcel reply;
     ErrCode ret = SendRequest(AppControlManagerInterfaceCode::SET_DISPOSED_RULE_FOR_CLONE_APP, data, reply);
     if (ret != ERR_OK) {
@@ -739,7 +743,7 @@ ErrCode AppControlProxy::SetDisposedRuleForCloneApp(
 }
 
 ErrCode AppControlProxy::GetDisposedRuleForCloneApp(const std::string &appId, DisposedRule &rule,
-    int32_t appIndex, int32_t userId)
+    int32_t appIndex, int32_t userId, bool isAppIndexSet)
 {
     LOG_D(BMS_TAG_DEFAULT, "proxy begin to GetDisposedRuleForCloneApp");
     MessageParcel data;
@@ -759,6 +763,10 @@ ErrCode AppControlProxy::GetDisposedRuleForCloneApp(const std::string &appId, Di
         LOG_E(BMS_TAG_DEFAULT, "write appIndex failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
+    if (!data.WriteBool(isAppIndexSet)) {
+        LOG_E(BMS_TAG_DEFAULT, "write isAppIndexSet failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
     ErrCode ret = GetParcelableInfo<DisposedRule>(AppControlManagerInterfaceCode::GET_DISPOSED_RULE_FOR_CLONE_APP,
         data, rule);
     if (ret != ERR_OK) {
@@ -768,7 +776,8 @@ ErrCode AppControlProxy::GetDisposedRuleForCloneApp(const std::string &appId, Di
     return ERR_OK;
 }
 
-ErrCode AppControlProxy::DeleteDisposedRuleForCloneApp(const std::string &appId, int32_t appIndex, int32_t userId)
+ErrCode AppControlProxy::DeleteDisposedRuleForCloneApp(const std::string &appId, int32_t appIndex,
+    int32_t userId, bool isAppIndexSet)
 {
     LOG_D(BMS_TAG_DEFAULT, "proxy begin to DeleteDisposedRuleForCloneApp");
     MessageParcel data;
@@ -786,6 +795,10 @@ ErrCode AppControlProxy::DeleteDisposedRuleForCloneApp(const std::string &appId,
     }
     if (!data.WriteInt32(appIndex)) {
         LOG_E(BMS_TAG_DEFAULT, "write appIndex failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteBool(isAppIndexSet)) {
+        LOG_E(BMS_TAG_DEFAULT, "write isAppIndexSet failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     MessageParcel reply;

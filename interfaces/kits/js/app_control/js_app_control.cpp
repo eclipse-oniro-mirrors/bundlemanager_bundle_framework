@@ -68,7 +68,10 @@ static ErrCode InnerDeleteDisposedStatus(napi_env, const std::string& appId)
         APP_LOGE("AppControlProxy is null");
         return ERROR_SYSTEM_ABILITY_NOT_FOUND;
     }
-    ErrCode ret = appControlProxy->DeleteDisposedStatus(appId);
+    // Same as the ANI entry: route through DeleteDisposedRuleForCloneApp with appIndex not set,
+    // so that on a dual-mode device the current-mode (clone) instance rule is deleted.
+    ErrCode ret = appControlProxy->DeleteDisposedRuleForCloneApp(appId, Constants::MAIN_APP_INDEX,
+        Constants::UNSPECIFIED_USERID, false);
     return CommonFunc::ConvertErrCode(ret);
 }
 
@@ -280,7 +283,8 @@ napi_value DeleteDisposedStatus(napi_env env, napi_callback_info info)
     return promise;
 }
 
-static napi_value InnerDeleteDisposedStatusSync(napi_env env, std::string &appId, int32_t appIndex)
+static napi_value InnerDeleteDisposedStatusSync(napi_env env, std::string &appId, int32_t appIndex,
+    bool isAppIndexSet)
 {
     napi_value nRet;
     napi_get_undefined(env, &nRet);
@@ -299,7 +303,8 @@ static napi_value InnerDeleteDisposedStatusSync(napi_env env, std::string &appId
         return nullptr;
     }
     ErrCode ret = ERR_OK;
-    ret = appControlProxy->DeleteDisposedRuleForCloneApp(appId, appIndex);
+    ret = appControlProxy->DeleteDisposedRuleForCloneApp(appId, appIndex,
+        Constants::UNSPECIFIED_USERID, isAppIndexSet);
     ret = CommonFunc::ConvertErrCode(ret);
     if (ret != ERR_OK) {
         APP_LOGE("DeleteDisposedStatusSync failed");
@@ -330,13 +335,14 @@ napi_value DeleteDisposedStatusSync(napi_env env, napi_callback_info info)
     }
     int32_t appIndex = Constants::MAIN_APP_INDEX;
     if (args.GetMaxArgc() == ARGS_SIZE_ONE) {
-        return InnerDeleteDisposedStatusSync(env, appId, appIndex);
+        return InnerDeleteDisposedStatusSync(env, appId, appIndex, false);
     }
     if (args.GetMaxArgc() == ARGS_SIZE_TWO) {
         if (!CommonFunc::ParseInt(env, args[ARGS_POS_ONE], appIndex)) {
             APP_LOGW("parse appIndex falied");
+            return InnerDeleteDisposedStatusSync(env, appId, appIndex, false);
         }
-        return InnerDeleteDisposedStatusSync(env, appId, appIndex);
+        return InnerDeleteDisposedStatusSync(env, appId, appIndex, true);
     }
     APP_LOGE("parameter is invalid");
     BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
@@ -693,7 +699,7 @@ bool ParseDisposedRuleConfigurationArray(napi_env env, napi_value nDisposedRuleC
     return true;
 }
 
-static napi_value InnerGetDisposedRule(napi_env env, std::string &appId, int32_t appIndex)
+static napi_value InnerGetDisposedRule(napi_env env, std::string &appId, int32_t appIndex, bool isAppIndexSet)
 {
     if (appId.empty()) {
         napi_value businessError = BusinessError::CreateCommonError(
@@ -711,7 +717,8 @@ static napi_value InnerGetDisposedRule(napi_env env, std::string &appId, int32_t
     }
     DisposedRule disposedRule;
     ErrCode ret = ERR_OK;
-    ret = appControlProxy->GetDisposedRuleForCloneApp(appId, disposedRule, appIndex);
+    ret = appControlProxy->GetDisposedRuleForCloneApp(appId, disposedRule, appIndex,
+        Constants::UNSPECIFIED_USERID, isAppIndexSet);
     ret = CommonFunc::ConvertErrCode(ret);
     if (ret != ERR_OK) {
         APP_LOGE("GetDisposedStatusSync failed");
@@ -743,13 +750,14 @@ napi_value GetDisposedRule(napi_env env, napi_callback_info info)
     }
     int32_t appIndex = Constants::MAIN_APP_INDEX;
     if (args.GetMaxArgc() == ARGS_SIZE_ONE) {
-        return InnerGetDisposedRule(env, appId, appIndex);
+        return InnerGetDisposedRule(env, appId, appIndex, false);
     }
     if (args.GetMaxArgc() == ARGS_SIZE_TWO) {
         if (!CommonFunc::ParseInt(env, args[ARGS_POS_ONE], appIndex)) {
             APP_LOGW("parse appIndex falied");
+            return InnerGetDisposedRule(env, appId, appIndex, false);
         }
-        return InnerGetDisposedRule(env, appId, appIndex);
+        return InnerGetDisposedRule(env, appId, appIndex, true);
     }
     APP_LOGE("parameter is invalid");
     BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
@@ -859,7 +867,8 @@ napi_value GetDisposedRulesBySetter(napi_env env, napi_callback_info info)
     return nRuleArray;
 }
 
-static napi_value InnerSetDisposedRule(napi_env env, std::string &appId, DisposedRule &rule, int32_t appIndex)
+static napi_value InnerSetDisposedRule(napi_env env, std::string &appId, DisposedRule &rule, int32_t appIndex,
+    bool isAppIndexSet)
 {
     napi_value nRet;
     napi_get_undefined(env, &nRet);
@@ -872,7 +881,8 @@ static napi_value InnerSetDisposedRule(napi_env env, std::string &appId, Dispose
         return nRet;
     }
     ErrCode ret = ERR_OK;
-    ret = appControlProxy->SetDisposedRuleForCloneApp(appId, rule, appIndex);
+    ret = appControlProxy->SetDisposedRuleForCloneApp(appId, rule, appIndex,
+        Constants::UNSPECIFIED_USERID, isAppIndexSet);
     ret = CommonFunc::ConvertErrCode(ret);
     if (ret != NO_ERROR) {
         APP_LOGE("SetDisposedRule err = %{public}d", ret);
@@ -914,13 +924,14 @@ napi_value SetDisposedRule(napi_env env, napi_callback_info info)
     }
     int32_t appIndex = Constants::MAIN_APP_INDEX;
     if (args.GetMaxArgc() == ARGS_SIZE_TWO) {
-        return InnerSetDisposedRule(env, appId, rule, appIndex);
+        return InnerSetDisposedRule(env, appId, rule, appIndex, false);
     }
     if (args.GetMaxArgc() == ARGS_SIZE_THREE) {
         if (!CommonFunc::ParseInt(env, args[ARGS_POS_TWO], appIndex)) {
             APP_LOGW("parse appIndex falied");
+            return InnerSetDisposedRule(env, appId, rule, appIndex, false);
         }
-        return InnerSetDisposedRule(env, appId, rule, appIndex);
+        return InnerSetDisposedRule(env, appId, rule, appIndex, true);
     }
     APP_LOGE("parameter is invalid");
     BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);

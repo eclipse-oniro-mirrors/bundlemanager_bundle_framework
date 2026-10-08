@@ -145,11 +145,13 @@ export default namespace appControl {
 
   native function setDisposedStatusNative(appId: string, disposedWant: Want, isSync: boolean): void;
   native function getDisposedStatusNative(appId: string, isSync: boolean): Want;
-  native function deleteDisposedStatusNative(appId: string, appIndex: int, isSync: boolean): void;
-  native function getDisposedRuleNative(appId: string, appIndex: int): DisposedRule;
+  native function deleteDisposedStatusNative(appId: string, appIndex: int, isSync: boolean,
+    isAppIndexSet: boolean): void;
+  native function getDisposedRuleNative(appId: string, appIndex: int, isAppIndexSet: boolean): DisposedRule;
   native function getAllDisposedRulesNative(): Array<DisposedRuleConfiguration>;
   native function getAllDisposedRulesBySetterNative(bundleName: string): Array<DisposedRuleConfiguration>;
-  native function setDisposedRuleNative(appId: string, rule: DisposedRule, appIndex: int): void;
+  native function setDisposedRuleNative(appId: string, rule: DisposedRule, appIndex: int,
+    isAppIndexSet: boolean): void;
   native function setUninstallDisposedRuleNative(appIdentifier: string, rule: UninstallDisposedRule, appIndex: int): void;
   native function getUninstallDisposedRuleNative(appIdentifier: string, appIndex: int): UninstallDisposedRule;
   native function deleteUninstallDisposedRuleNative(appIdentifier: string, appIndex: int): void;
@@ -223,7 +225,7 @@ export default namespace appControl {
 
   function deleteDisposedStatus(appId: string, callback: AsyncCallback<void>): void {
     let cb = (): void => {
-      return deleteDisposedStatusNative(appId, 0, false);
+      return deleteDisposedStatusNative(appId, 0, false, false);
     };
     let p1 = taskpool.execute(cb);
     p1.then(() => {
@@ -236,7 +238,7 @@ export default namespace appControl {
   function deleteDisposedStatus(appId: string): Promise<void> {
     let p = new Promise<void>((resolve: (v: PromiseLike<void>) => void, reject: (error: BusinessError) => void) : void => {
       let cb = (): void => {
-        return deleteDisposedStatusNative(appId, 0, false);
+        return deleteDisposedStatusNative(appId, 0, false, false);
       };
       let p1 = taskpool.execute(cb);
       p1.then((): void => {
@@ -252,13 +254,13 @@ export default namespace appControl {
   function deleteDisposedStatusSync(appId: string, appIndex?: int): void
   {
     let appIndexInfo = appIndex ?? 0;
-    return deleteDisposedStatusNative(appId, appIndexInfo, true);
+    return deleteDisposedStatusNative(appId, appIndexInfo, true, appIndex !== undefined);
   }
 
   function getDisposedRule(appId: string, appIndex?: int): DisposedRule
   {
     let appIndexInfo = appIndex ?? 0;
-    return getDisposedRuleNative(appId, appIndexInfo);
+    return getDisposedRuleNative(appId, appIndexInfo, appIndex !== undefined);
   }
 
   function getAllDisposedRules(): Array<DisposedRuleConfiguration>
@@ -269,7 +271,7 @@ export default namespace appControl {
   function setDisposedRule(appId: string, rule: DisposedRule, appIndex?: int): void
   {
     let appIndexInfo = appIndex ?? 0;
-    setDisposedRuleNative(appId, rule, appIndexInfo);
+    setDisposedRuleNative(appId, rule, appIndexInfo, appIndex !== undefined);
   }
 
   function setUninstallDisposedRule(appIdentifier: string, rule: UninstallDisposedRule, appIndex?: int): void

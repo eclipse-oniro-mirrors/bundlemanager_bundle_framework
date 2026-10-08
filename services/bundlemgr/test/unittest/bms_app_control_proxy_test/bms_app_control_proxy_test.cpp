@@ -45,8 +45,37 @@ public:
     }
     int32_t SendRequest(uint32_t code, MessageParcel& data, MessageParcel& reply, MessageOption& option)
     {
+        RecordForCloneAppRequest(code, data);
         return ERR_OK;
     }
+
+    void RecordForCloneAppRequest(uint32_t code, MessageParcel& data)
+    {
+        if (code != static_cast<uint32_t>(
+            AppExecFwk::AppControlManagerInterfaceCode::SET_DISPOSED_RULE_FOR_CLONE_APP) &&
+            code != static_cast<uint32_t>(
+                AppExecFwk::AppControlManagerInterfaceCode::GET_DISPOSED_RULE_FOR_CLONE_APP) &&
+            code != static_cast<uint32_t>(
+                AppExecFwk::AppControlManagerInterfaceCode::DELETE_DISPOSED_RULE_FOR_CLONE_APP)) {
+            return;
+        }
+        (void)data.ReadInterfaceToken();
+        recordCode_ = code;
+        recordAppId_ = data.ReadString();
+        if (code == static_cast<uint32_t>(
+            AppExecFwk::AppControlManagerInterfaceCode::SET_DISPOSED_RULE_FOR_CLONE_APP)) {
+            std::unique_ptr<AppExecFwk::DisposedRule> rule(data.ReadParcelable<AppExecFwk::DisposedRule>());
+        }
+        recordUserId_ = data.ReadInt32();
+        recordAppIndex_ = data.ReadInt32();
+        recordIsAppIndexSet_ = data.ReadBool();
+    }
+
+    uint32_t recordCode_ = 0;
+    std::string recordAppId_;
+    int32_t recordUserId_ = 0;
+    int32_t recordAppIndex_ = 0;
+    bool recordIsAppIndexSet_ = false;
     bool AddDeathRecipient(const sptr<DeathRecipient>& recipient)
     {
         return ERR_OK;
@@ -917,6 +946,76 @@ HWTEST_F(BmsAppControlProxyTest, DeleteDisposedRuleForCloneApp_0200, Function | 
     int32_t userId = 100;
     auto result = appControlProxy.DeleteDisposedRuleForCloneApp(appId, appIndex, userId);
     EXPECT_EQ(result, ERR_OK);
+}
+
+/**
+ * @tc.number: SetDisposedRuleForCloneApp_0300
+ * @tc.name: test the SetDisposedRuleForCloneApp with isAppIndexSet true
+ * @tc.desc: 1.proxy writes parcel with bool true at tail
+ *           2.mock remote records the written fields
+ */
+HWTEST_F(BmsAppControlProxyTest, SetDisposedRuleForCloneApp_0300, Function | MediumTest | Level1)
+{
+    sptr<MockRemoteObject> mockRemoteObject = new MockRemoteObject();
+    AppControlProxy appControlProxy(mockRemoteObject);
+    std::string appId = "appId";
+    DisposedRule disposedRule;
+    int32_t appIndex = 10000;
+    int32_t userId = 100;
+    auto result = appControlProxy.SetDisposedRuleForCloneApp(appId, disposedRule, appIndex, userId, true);
+    EXPECT_EQ(result, ERR_OK);
+    EXPECT_EQ(mockRemoteObject->recordCode_,
+        static_cast<uint32_t>(AppControlManagerInterfaceCode::SET_DISPOSED_RULE_FOR_CLONE_APP));
+    EXPECT_EQ(mockRemoteObject->recordAppId_, appId);
+    EXPECT_EQ(mockRemoteObject->recordUserId_, userId);
+    EXPECT_EQ(mockRemoteObject->recordAppIndex_, appIndex);
+    EXPECT_TRUE(mockRemoteObject->recordIsAppIndexSet_);
+}
+
+/**
+ * @tc.number: GetDisposedRuleForCloneApp_0200
+ * @tc.name: test the GetDisposedRuleForCloneApp with isAppIndexSet true
+ * @tc.desc: 1.proxy writes parcel with bool true at tail
+ *           2.mock remote records the written fields
+ */
+HWTEST_F(BmsAppControlProxyTest, GetDisposedRuleForCloneApp_0200, Function | MediumTest | Level1)
+{
+    sptr<MockRemoteObject> mockRemoteObject = new MockRemoteObject();
+    AppControlProxy appControlProxy(mockRemoteObject);
+    std::string appId = "appId";
+    DisposedRule disposedRule;
+    int32_t appIndex = 10000;
+    int32_t userId = 100;
+    appControlProxy.GetDisposedRuleForCloneApp(appId, disposedRule, appIndex, userId, true);
+    EXPECT_EQ(mockRemoteObject->recordCode_,
+        static_cast<uint32_t>(AppControlManagerInterfaceCode::GET_DISPOSED_RULE_FOR_CLONE_APP));
+    EXPECT_EQ(mockRemoteObject->recordAppId_, appId);
+    EXPECT_EQ(mockRemoteObject->recordUserId_, userId);
+    EXPECT_EQ(mockRemoteObject->recordAppIndex_, appIndex);
+    EXPECT_TRUE(mockRemoteObject->recordIsAppIndexSet_);
+}
+
+/**
+ * @tc.number: DeleteDisposedRuleForCloneApp_0300
+ * @tc.name: test the DeleteDisposedRuleForCloneApp with isAppIndexSet true
+ * @tc.desc: 1.proxy writes parcel with bool true at tail
+ *           2.mock remote records the written fields
+ */
+HWTEST_F(BmsAppControlProxyTest, DeleteDisposedRuleForCloneApp_0300, Function | MediumTest | Level1)
+{
+    sptr<MockRemoteObject> mockRemoteObject = new MockRemoteObject();
+    AppControlProxy appControlProxy(mockRemoteObject);
+    std::string appId = "appId";
+    int32_t appIndex = 10000;
+    int32_t userId = 100;
+    auto result = appControlProxy.DeleteDisposedRuleForCloneApp(appId, appIndex, userId, true);
+    EXPECT_EQ(result, ERR_OK);
+    EXPECT_EQ(mockRemoteObject->recordCode_,
+        static_cast<uint32_t>(AppControlManagerInterfaceCode::DELETE_DISPOSED_RULE_FOR_CLONE_APP));
+    EXPECT_EQ(mockRemoteObject->recordAppId_, appId);
+    EXPECT_EQ(mockRemoteObject->recordUserId_, userId);
+    EXPECT_EQ(mockRemoteObject->recordAppIndex_, appIndex);
+    EXPECT_TRUE(mockRemoteObject->recordIsAppIndexSet_);
 }
 
 /**

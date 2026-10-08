@@ -72,7 +72,7 @@ public:
         const std::string &appId, Want &want, int32_t userId) override;
 
     virtual ErrCode SetDisposedRule(
-        const std::string &appId, DisposedRule &DisposedRule, int32_t userId) override;
+        const std::string &appId, DisposedRule &disposedRule, int32_t userId) override;
 
     virtual ErrCode SetDisposedRules(
         std::vector<DisposedRuleConfiguration> &disposedRuleConfigurations, int32_t userId) override;
@@ -81,7 +81,7 @@ public:
         std::vector<DisposedRuleConfiguration> &disposedRuleConfigurations, int32_t userId) override;
 
     virtual ErrCode GetDisposedRule(
-        const std::string &appId, DisposedRule &DisposedRule, int32_t userId) override;
+        const std::string &appId, DisposedRule &disposedRule, int32_t userId) override;
 
     virtual ErrCode GetDisposedRules(
         int32_t userId, std::vector<DisposedRuleConfiguration> &disposedRuleConfigurations) override;
@@ -94,13 +94,15 @@ public:
         std::vector<DisposedRule>& disposedRules, int32_t appIndex = Constants::MAIN_APP_INDEX) override;
     
     virtual ErrCode SetDisposedRuleForCloneApp(
-        const std::string &appId, DisposedRule &DisposedRule, int32_t appIndex, int32_t userId) override;
+        const std::string &appId, DisposedRule &disposedRule, int32_t appIndex, int32_t userId,
+        bool isAppIndexSet = false) override;
 
     virtual ErrCode GetDisposedRuleForCloneApp(
-        const std::string &appId, DisposedRule &DisposedRule, int32_t appIndex, int32_t userId) override;
+        const std::string &appId, DisposedRule &disposedRule, int32_t appIndex, int32_t userId,
+        bool isAppIndexSet = false) override;
 
     virtual ErrCode DeleteDisposedRuleForCloneApp(
-        const std::string &appId, int32_t appIndex, int32_t userId) override;
+        const std::string &appId, int32_t appIndex, int32_t userId, bool isAppIndexSet = false) override;
     
     virtual ErrCode GetUninstallDisposedRule(const std::string &appIdentifier, int32_t appIndex,
         int32_t userId, UninstallDisposedRule &rule) override;
@@ -120,6 +122,7 @@ private:
     void SendAppControlEvent(ControlActionType actionType, ControlOperationType operationType,
         const std::string &callingName, int32_t userId, int32_t appIndex, const std::vector<std::string> &appIds,
         const std::string &rule);
+    void ResolveDualModeDefaultAppIndex(const std::string &appId, bool isAppIndexSet, int32_t &appIndex);
 
     std::shared_ptr<AppControlManager> appControlManager_ = nullptr;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;

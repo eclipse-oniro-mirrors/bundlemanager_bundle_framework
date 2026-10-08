@@ -48,10 +48,11 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     std::string bundleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     std::vector<DisposedRule> rules;
     int32_t appIndex = fdp.ConsumeIntegral<int32_t>();
+    bool isAppIndexSet = fdp.ConsumeBool();
     appControl.GetAbilityRunningControlRule(bundleName, userId, rules, appIndex);
-    appControl.SetDisposedRuleForCloneApp(appId, disposedRule, appIndex, userId);
-    appControl.GetDisposedRuleForCloneApp(appId, disposedRule, appIndex, userId);
-    appControl.DeleteDisposedRuleForCloneApp(appId, appIndex, userId);
+    appControl.SetDisposedRuleForCloneApp(appId, disposedRule, appIndex, userId, isAppIndexSet);
+    appControl.GetDisposedRuleForCloneApp(appId, disposedRule, appIndex, userId, isAppIndexSet);
+    appControl.DeleteDisposedRuleForCloneApp(appId, appIndex, userId, isAppIndexSet);
     std::string appIdentifier = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     UninstallDisposedRule uninstallDisposedRule;
     appControl.SetUninstallDisposedRule(appIdentifier, uninstallDisposedRule, appIndex, userId);

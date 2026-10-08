@@ -86,11 +86,13 @@ public:
     virtual ErrCode GetAbilityRunningControlRule(const std::string &bundleName, int32_t userId,
         std::vector<DisposedRule>& disposedRules, int32_t appIndex = Constants::MAIN_APP_INDEX) override;
     virtual ErrCode GetDisposedRuleForCloneApp(const std::string &appId, DisposedRule& disposedRule,
-        int32_t appIndex, int32_t userId = Constants::UNSPECIFIED_USERID) override;
+        int32_t appIndex, int32_t userId = Constants::UNSPECIFIED_USERID,
+        bool isAppIndexSet = false) override;
     virtual ErrCode SetDisposedRuleForCloneApp(const std::string &appId, DisposedRule& disposedRule,
-        int32_t appIndex, int32_t userId = Constants::UNSPECIFIED_USERID) override;
+        int32_t appIndex, int32_t userId = Constants::UNSPECIFIED_USERID,
+        bool isAppIndexSet = false) override;
     virtual ErrCode DeleteDisposedRuleForCloneApp(const std::string &appId, int32_t appIndex,
-        int32_t userId = Constants::UNSPECIFIED_USERID) override;
+        int32_t userId = Constants::UNSPECIFIED_USERID, bool isAppIndexSet = false) override;
     
     virtual ErrCode SetUninstallDisposedRule(const std::string &appIdentifier,
         const UninstallDisposedRule &disposedRule, int32_t appIndex, int32_t userId) override;

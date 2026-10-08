@@ -819,8 +819,38 @@ ErrCode AppControlManagerHostImpl::GetAbilityRunningControlRule(const std::strin
         disposedRules);
 }
 
+void AppControlManagerHostImpl::ResolveDualModeDefaultAppIndex(const std::string &appId,
+    bool isAppIndexSet, int32_t &appIndex)
+{
+    // On a dual-mode device, when the caller does not explicitly pass appIndex, the rule should
+    // target the current-mode instance: for a different-package (clone) app in the secondary mode
+    // that is DUAL_MODE_CLONE_APP_INDEX, otherwise keep MAIN_APP_INDEX.
+    // Notes: GetBundleNameByAppId matches either appId or appIdentifier (appIdentifier uniqueness
+    // is guaranteed by the signing ecosystem, so at most one record can match); no explicit
+    // IsSecondaryMode check is needed because ClassifyDualModeApps keeps only the current-mode
+    // variant in bundleInfos_ (the other-mode variant lives in tempBundleInfos_), so in primary
+    // mode the matched record is never a dual-mode clone app.
+    if (isAppIndexSet || appIndex != Constants::MAIN_APP_INDEX || !DualModeHelper::IsDualModeDevice()) {
+        return;
+    }
+    if (dataMgr_ == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "dataMgr_ is nullptr");
+        return;
+    }
+    std::string bundleName;
+    if (dataMgr_->GetBundleNameByAppId(appId, bundleName) != ERR_OK) {
+        return;
+    }
+    InnerBundleInfo info;
+    if (!dataMgr_->FetchInnerBundleInfo(bundleName, info) || !info.IsDualModeCloneApp()) {
+        return;
+    }
+    LOG_I(BMS_TAG_DEFAULT, "resolve default appIndex to dual mode clone app, bundle:%{public}s", bundleName.c_str());
+    appIndex = ServiceConstants::DUAL_MODE_CLONE_APP_INDEX;
+}
+
 ErrCode AppControlManagerHostImpl::GetDisposedRuleForCloneApp(const std::string &appId, DisposedRule &rule,
-    int32_t appIndex, int32_t userId)
+    int32_t appIndex, int32_t userId, bool isAppIndexSet)
 {
     LOG_D(BMS_TAG_DEFAULT, "host begin to GetDisposedRuleForCloneApp");
     if (!BundlePermissionMgr::IsSystemApp()) {
@@ -832,6 +862,7 @@ ErrCode AppControlManagerHostImpl::GetDisposedRuleForCloneApp(const std::string 
         LOG_W(BMS_TAG_DEFAULT, "verify get disposed rule permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
+    ResolveDualModeDefaultAppIndex(appId, isAppIndexSet, appIndex);
     if ((appIndex < Constants::MAIN_APP_INDEX || appIndex > BundleFileUtil::GetCloneMaxCount()) &&
         (appIndex != ServiceConstants::DUAL_MODE_CLONE_APP_INDEX || !DualModeHelper::IsDualModeDevice())) {
         LOG_E(BMS_TAG_DEFAULT, "appIndex %{public}d is invalid", appIndex);
@@ -855,7 +886,7 @@ ErrCode AppControlManagerHostImpl::GetDisposedRuleForCloneApp(const std::string 
 }
 
 ErrCode AppControlManagerHostImpl::SetDisposedRuleForCloneApp(const std::string &appId, DisposedRule &rule,
-    int32_t appIndex, int32_t userId)
+    int32_t appIndex, int32_t userId, bool isAppIndexSet)
 {
     LOG_D(BMS_TAG_DEFAULT, "host begin to SetDisposedRuleForCloneApp");
     if (!BundlePermissionMgr::IsSystemApp()) {
@@ -866,6 +897,7 @@ ErrCode AppControlManagerHostImpl::SetDisposedRuleForCloneApp(const std::string 
         LOG_W(BMS_TAG_DEFAULT, "verify permission ohos.permission.MANAGE_DISPOSED_STATUS failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
+    ResolveDualModeDefaultAppIndex(appId, isAppIndexSet, appIndex);
     if ((appIndex < Constants::MAIN_APP_INDEX || appIndex > BundleFileUtil::GetCloneMaxCount()) &&
         (appIndex != ServiceConstants::DUAL_MODE_CLONE_APP_INDEX || !DualModeHelper::IsDualModeDevice())) {
         LOG_E(BMS_TAG_DEFAULT, "appIndex %{public}d is invalid", appIndex);
@@ -896,7 +928,7 @@ ErrCode AppControlManagerHostImpl::SetDisposedRuleForCloneApp(const std::string 
     return ret;
 }
 ErrCode AppControlManagerHostImpl::DeleteDisposedRuleForCloneApp(const std::string &appId, int32_t appIndex,
-    int32_t userId)
+    int32_t userId, bool isAppIndexSet)
 {
     LOG_D(BMS_TAG_DEFAULT, "host begin to DeleteDisposedRuleForCloneApp");
     if (!BundlePermissionMgr::IsSystemApp()) {
@@ -907,6 +939,7 @@ ErrCode AppControlManagerHostImpl::DeleteDisposedRuleForCloneApp(const std::stri
         LOG_W(BMS_TAG_DEFAULT, "verify permission ohos.permission.MANAGE_DISPOSED_STATUS failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
+    ResolveDualModeDefaultAppIndex(appId, isAppIndexSet, appIndex);
     if ((appIndex < Constants::MAIN_APP_INDEX || appIndex > BundleFileUtil::GetCloneMaxCount()) &&
         (appIndex != ServiceConstants::DUAL_MODE_CLONE_APP_INDEX || !DualModeHelper::IsDualModeDevice())) {
         LOG_E(BMS_TAG_DEFAULT, "appIndex %{public}d is invalid", appIndex);
