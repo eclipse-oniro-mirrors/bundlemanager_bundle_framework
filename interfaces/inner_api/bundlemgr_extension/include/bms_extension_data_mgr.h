@@ -100,6 +100,7 @@ public:
     ErrCode GetAllBundleCacheSize(int32_t userId, int64_t &cacheSize);
     ErrCode ClearAllBundleCache(int32_t userId, sptr<IRemoteObject> callback);
     ErrCode RebuildBundleResourceTable();
+    ErrCode CanOpenLink(const std::string &link, bool &canOpen);
 private:
     bool OpenHandler();
     static void *handler_;

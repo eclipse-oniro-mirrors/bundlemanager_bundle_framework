@@ -232,6 +232,10 @@ public:
     {
         return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
     }
+    virtual ErrCode CanOpenLink(const std::string &link, bool &canOpen)
+    {
+        return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
+    }
 };
 } // AppExecFwk
 } // OHOS

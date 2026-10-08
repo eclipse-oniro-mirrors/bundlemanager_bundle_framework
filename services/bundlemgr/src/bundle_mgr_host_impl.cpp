@@ -6699,7 +6699,27 @@ ErrCode BundleMgrHostImpl::CanOpenLink(
         APP_LOGE("DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    return dataMgr->CanOpenLink(link, canOpen);
+    ErrCode ret = dataMgr->CanOpenLink(link, canOpen);
+    if (ret == ERR_OK && !canOpen) {
+        bool isOversea = OHOS::system::GetBoolParameter(ServiceConstants::IS_OVERSEA, false);
+        if (isOversea) {
+            QueryCanOpenLinkByExtension(link, canOpen);
+        }
+    }
+    return ret;
+}
+
+void BundleMgrHostImpl::QueryCanOpenLinkByExtension(const std::string &link, bool &canOpen)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    bool extCanOpen = false;
+    ErrCode extRet = bmsExtensionDataMgr.CanOpenLink(link, extCanOpen);
+    if (extRet == ERR_OK) {
+        canOpen = extCanOpen;
+        APP_LOGI_NOFUNC("link:%{public}s canOpen:%{public}d (ext)", link.c_str(), canOpen);
+    } else {
+        APP_LOGW("CanOpenLink extension failed, degrade to local result");
+    }
 }
 
 ErrCode BundleMgrHostImpl::GetOdid(std::string &odid)
