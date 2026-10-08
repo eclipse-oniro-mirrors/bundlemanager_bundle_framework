@@ -48,7 +48,7 @@ const std::string TEST_BUNDLE_NAME = "com.example.testOperator";
 const std::string TEST_BUNDLE_PATCH = "/data/app/el1/bundle/public/com.example.testOperator/";
 const std::string HQF_PATCH_PATH = "/patch";
 const std::string VERIFY_FILE_PATH = "/abcs/";
-const std::string BASE_SKILL_DIR = "/data/app/el1/skills/public";
+const std::string BASE_SKILL_DIR = "/data/app/el1/bundle/public/skills";
 const std::string APP_EL1_PATH = "/data/app/el1";
 const std::string APP_EL2_PATH = "/data/app/el2";
 const std::string APP_EL3_PATH = "/data/app/el3";
@@ -4592,5 +4592,134 @@ HWTEST_F(BmsInstalldOperatorTest, BuildHapToInstallPath_0900, Function | SmallTe
     std::string signatureFilePath;
     auto ret = InstalldOperator::BuildHapToInstallPath(param, targetPath, signatureFilePath);
     EXPECT_FALSE(ret);
+}
+/**
+ * @tc.number: LegacySkillDirScene_0100
+ * @tc.name: test IsValidPathByRemoveDirScene with REMOVE_LEGACY_SKILL_DIR
+ * @tc.desc: 1. only the legacy skills dir is accepted by REMOVE_LEGACY_SKILL_DIR
+ */
+HWTEST_F(BmsInstalldOperatorTest, LegacySkillDirScene_0100, Function | SmallTest | Level0)
+{
+    EXPECT_TRUE(InstalldOperator::IsValidPathByRemoveDirScene(
+        ServiceConstants::LEGACY_SKILL_BASE_DIR, "", BundleDirScene::REMOVE_LEGACY_SKILL_DIR));
+    EXPECT_TRUE(InstalldOperator::IsValidPathByRemoveDirSceneNoBundleName(
+        ServiceConstants::LEGACY_SKILL_BASE_DIR, BundleDirScene::REMOVE_LEGACY_SKILL_DIR));
+
+    const std::string legacyDir = ServiceConstants::LEGACY_SKILL_BASE_DIR;
+    const std::vector<std::string> invalidDirs = {
+        "",
+        legacyDir + "/",
+        legacyDir + "/public",
+        legacyDir + "x",
+        legacyDir + "/../skills",
+        APP_EL1_PATH,
+        Constants::BASE_SKILL_DIR,
+        Constants::BUNDLE_CODE_DIR,
+    };
+    for (const auto &dir : invalidDirs) {
+        EXPECT_FALSE(InstalldOperator::IsValidPathByRemoveDirScene(
+            dir, "", BundleDirScene::REMOVE_LEGACY_SKILL_DIR)) << dir;
+    }
+    EXPECT_FALSE(InstalldOperator::IsValidPathByRemoveDirScene(
+        legacyDir, "", BundleDirScene::REMOVE_SKILL_BUNDLE_DIR));
+}
+
+/**
+ * @tc.number: SkillHspCopyScene_0100
+ * @tc.name: test COPY_SKILL_HSP target path
+ * @tc.desc: 1. COPY_SKILL_HSP only accepts hsp files under the skills root dir, so that CopyFile can not write an
+ *              hsp file into other dirs
+ */
+HWTEST_F(BmsInstalldOperatorTest, SkillHspCopyScene_0100, Function | SmallTest | Level0)
+{
+    const std::string sourcePath = TEST_STRING + ServiceConstants::HSP_FILE_SUFFIX;
+    const std::string skillHsp = BASE_SKILL_DIR + ServiceConstants::PATH_SEPARATOR + TEST_BUNDLE_NAME + "/entry/entry" +
+        ServiceConstants::HSP_FILE_SUFFIX;
+    EXPECT_TRUE(InstalldOperator::IsValidTargetPathByCopyFileScene(skillHsp, BundleDirScene::COPY_SKILL_HSP));
+    EXPECT_TRUE(InstalldOperator::IsValidPathByCopyFileScene(sourcePath, skillHsp, BundleDirScene::COPY_SKILL_HSP));
+
+    const std::vector<std::string> invalidTargets = {
+        TEST_BUNDLE_PATCH + "entry" + ServiceConstants::HSP_FILE_SUFFIX,
+        std::string(Constants::BUNDLE_CODE_DIR) + "/skills.demo.app/entry" + ServiceConstants::HSP_FILE_SUFFIX,
+        BASE_SKILL_DIR + ServiceConstants::HSP_FILE_SUFFIX,
+        "/data/test/entry" + std::string(ServiceConstants::HSP_FILE_SUFFIX),
+        "/data/app/el1/skills/public/com.example.test/entry" + std::string(ServiceConstants::HSP_FILE_SUFFIX),
+        BASE_SKILL_DIR + ServiceConstants::PATH_SEPARATOR + TEST_BUNDLE_NAME + "/entry/entry.hap",
+    };
+    for (const auto &targetPath : invalidTargets) {
+        EXPECT_FALSE(InstalldOperator::IsValidTargetPathByCopyFileScene(
+            targetPath, BundleDirScene::COPY_SKILL_HSP)) << targetPath;
+        EXPECT_FALSE(InstalldOperator::IsValidPathByCopyFileScene(
+            sourcePath, targetPath, BundleDirScene::COPY_SKILL_HSP)) << targetPath;
+    }
+}
+
+/**
+ * @tc.number: SkillDirScene_0100
+ * @tc.name: test the skill dir scenes
+ * @tc.desc: 1. the skill dir scenes accept the dirs under the skills root dir
+ *           2. the skill dir scenes reject the bundle code dir whose name starts with skills
+ */
+HWTEST_F(BmsInstalldOperatorTest, SkillDirScene_0100, Function | SmallTest | Level0)
+{
+    const std::string bundleName = "skills.demo.app";
+    const std::string skillDir = std::string(Constants::BASE_SKILL_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName;
+    EXPECT_TRUE(InstalldOperator::IsValidPathByCreateBundleDirScene(
+        BundleDirScene::BASE_SKILL_DIR, bundleName, skillDir));
+    EXPECT_TRUE(InstalldOperator::IsValidPathByRenameModuleDir(
+        skillDir + "/entry_tmp", skillDir + "/entry", bundleName, BundleDirScene::BASE_SKILL_DIR));
+    EXPECT_TRUE(InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
+        skillDir, bundleName, BundleDirScene::REMOVE_SKILL_BUNDLE_DIR));
+    EXPECT_TRUE(InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
+        skillDir + "/entry", bundleName, BundleDirScene::REMOVE_SKILL_MODULE_DIR));
+
+    const std::string codeDir = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName;
+    EXPECT_FALSE(InstalldOperator::IsValidPathByCreateBundleDirScene(
+        BundleDirScene::BASE_SKILL_DIR, bundleName, codeDir));
+    EXPECT_FALSE(InstalldOperator::IsValidPathByRenameModuleDir(
+        codeDir + "/entry_tmp", codeDir + "/entry", bundleName, BundleDirScene::BASE_SKILL_DIR));
+    EXPECT_FALSE(InstalldOperator::IsValidPathByRenameModuleDir(
+        skillDir + "/entry_tmp", codeDir + "/entry", bundleName, BundleDirScene::BASE_SKILL_DIR));
+    EXPECT_FALSE(InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
+        codeDir, bundleName, BundleDirScene::REMOVE_SKILL_BUNDLE_DIR));
+    EXPECT_FALSE(InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
+        codeDir + "/entry", bundleName, BundleDirScene::REMOVE_SKILL_MODULE_DIR));
+}
+
+/**
+ * @tc.number: SkillDirScene_0200
+ * @tc.name: test the skill dir scenes
+ * @tc.desc: 1. the skill dir scenes reject the dirs of other bundles under the skills root dir
+ */
+HWTEST_F(BmsInstalldOperatorTest, SkillDirScene_0200, Function | SmallTest | Level0)
+{
+    const std::string bundleName = "skills.demo.app";
+    const std::string skillDir = std::string(Constants::BASE_SKILL_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName;
+    const std::string otherSkillDir = std::string(Constants::BASE_SKILL_DIR) + ServiceConstants::PATH_SEPARATOR +
+        TEST_OTHER_BUNDLE_NAME;
+    EXPECT_FALSE(InstalldOperator::IsValidPathByCreateBundleDirScene(
+        BundleDirScene::BASE_SKILL_DIR, bundleName, otherSkillDir));
+    EXPECT_FALSE(InstalldOperator::IsValidPathByRenameModuleDir(
+        otherSkillDir + "/entry_tmp", skillDir + "/entry", bundleName, BundleDirScene::BASE_SKILL_DIR));
+    EXPECT_FALSE(InstalldOperator::IsValidPathByRenameModuleDir(
+        skillDir + "/entry_tmp", otherSkillDir + "/entry", bundleName, BundleDirScene::BASE_SKILL_DIR));
+    EXPECT_FALSE(InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
+        otherSkillDir, bundleName, BundleDirScene::REMOVE_SKILL_BUNDLE_DIR));
+}
+
+/**
+ * @tc.number: VerifyCodeSignatureScene_0100
+ * @tc.name: test IsValidPathByBundleDirScene with VERIFY_CODE_SIGNATURE
+ * @tc.desc: 1. the hsp under the skills root dir is accepted and the hsp under the legacy skills dir is rejected
+ */
+HWTEST_F(BmsInstalldOperatorTest, VerifyCodeSignatureScene_0100, Function | SmallTest | Level0)
+{
+    const std::string hspPath = ServiceConstants::PATH_SEPARATOR + TEST_BUNDLE_NAME + "/entry/entry" +
+        ServiceConstants::HSP_FILE_SUFFIX;
+    EXPECT_TRUE(InstalldOperator::IsValidPathByBundleDirScene(
+        BundleDirScene::VERIFY_CODE_SIGNATURE, BASE_SKILL_DIR + hspPath));
+    EXPECT_FALSE(InstalldOperator::IsValidPathByBundleDirScene(
+        BundleDirScene::VERIFY_CODE_SIGNATURE, std::string(ServiceConstants::LEGACY_SKILL_BASE_DIR) + "/public" +
+        hspPath));
 }
 } // OHOS

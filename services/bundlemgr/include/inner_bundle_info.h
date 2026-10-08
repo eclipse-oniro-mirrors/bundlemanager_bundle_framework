@@ -1186,6 +1186,8 @@ public:
 
     bool HasEntry() const;
 
+    bool HasAppSkill() const;
+
     bool IsHsp() const;
 
     /**

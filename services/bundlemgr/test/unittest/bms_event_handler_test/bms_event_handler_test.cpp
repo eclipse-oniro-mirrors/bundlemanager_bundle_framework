@@ -14,10 +14,17 @@
  */
 
 #include <gtest/gtest.h>
+#include <algorithm>
+#include <atomic>
+#include <chrono>
+#include <cstdint>
 #include <filesystem>
 #include <fstream>
+#include <functional>
+#include <thread>
 
 #include "app_log_wrapper.h"
+#include "iremote_proxy.h"
 #define private public
 #include "app_provision_info_manager.h"
 #include "bundle_mgr_service.h"
@@ -123,6 +130,159 @@ bool OtaFlagBitSet(uint32_t bit)
 const std::string DB_REBUILD_MARK_TEST = "dbRebuildMark";
 const std::string DB_REBUILD_MARK_DOING_TEST = "doing";
 
+const std::string SKILL_BUNDLE_NAME = "com.example.skilldir";
+const std::string SKILL_BUNDLE_NAME_TWO = "com.example.skilldir2";
+const std::string NO_SKILL_BUNDLE_NAME = "com.example.noskill";
+const std::string SKILL_NAME_ONE = "skillOne";
+const std::string SKILL_NAME_TWO = "skillTwo";
+const uint32_t MIGRATE_SKILL_DIR_FLAG = static_cast<uint32_t>(OTAFlag::MIGRATE_SKILL_DIR);
+constexpr int32_t WAIT_ROUNDS = 500;
+constexpr int32_t WAIT_INTERVAL_MS = 10;
+
+struct ExtractSkillsRecord {
+    std::string bundleName;
+    std::string moduleName;
+    std::string extractModuleName;
+    std::string hspPath;
+    std::vector<std::string> skillNameList;
+};
+
+struct RemoveDirRecord {
+    std::string dir;
+    BundleDirScene scene;
+    std::string bundleName;
+    bool async = false;
+};
+
+class SkillDirInstalldProxy : public IRemoteProxy<IInstalld> {
+public:
+    SkillDirInstalldProxy() : IRemoteProxy<IInstalld>(nullptr) {}
+
+    ErrCode ScanDir(const std::string &dir, ScanMode scanMode, ResultMode resultMode,
+        std::vector<std::string> &paths) override
+    {
+        scanDirs.emplace_back(dir);
+        auto iter = scanResults.find(dir);
+        if (iter != scanResults.end()) {
+            paths = iter->second;
+        }
+        return ERR_OK;
+    }
+
+    ErrCode ExtractSkillsPackage(const SkillsPackageParam &param,
+        std::vector<SkillsPackageInfo> &skillInfoList) override
+    {
+        extractRecords.push_back({param.bundleName, param.moduleName, param.extractModuleName, param.hspPath,
+            param.skillNameList});
+        extractCount++;
+        for (size_t i = 0; i < param.skillNameList.size() && i < extractSuccessCount; i++) {
+            SkillsPackageInfo skillInfo;
+            skillInfo.bundleName = param.bundleName;
+            skillInfo.moduleName = param.moduleName;
+            skillInfo.skillsName = param.skillNameList[i];
+            skillInfoList.emplace_back(skillInfo);
+        }
+        return extractRet;
+    }
+
+    ErrCode RemoveDir(const std::string &dir, BundleDirScene scene, const std::string &bundleName,
+        bool async) override
+    {
+        removeDirRecords.push_back({dir, scene, bundleName, async});
+        return removeDirRet;
+    }
+
+    std::map<std::string, std::vector<std::string>> scanResults;
+    std::vector<std::string> scanDirs;
+    std::vector<ExtractSkillsRecord> extractRecords;
+    std::atomic<int32_t> extractCount {0};
+    size_t extractSuccessCount = SIZE_MAX;
+    ErrCode extractRet = ERR_OK;
+    std::vector<RemoveDirRecord> removeDirRecords;
+    ErrCode removeDirRet = ERR_OK;
+};
+
+class SkillDirTestGuard {
+public:
+    explicit SkillDirTestGuard(const std::shared_ptr<BundleDataMgr> dataMgr)
+        : oldDataMgr_(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_),
+          oldProxy_(InstalldClient::GetInstance()->installdProxy_)
+    {
+        DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = dataMgr;
+        proxy_ = new (std::nothrow) SkillDirInstalldProxy();
+        InstalldClient::GetInstance()->installdProxy_ = proxy_;
+    }
+
+    ~SkillDirTestGuard()
+    {
+        InstalldClient::GetInstance()->installdProxy_ = oldProxy_;
+        DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = oldDataMgr_;
+    }
+
+    sptr<SkillDirInstalldProxy> proxy_ = nullptr;
+
+private:
+    std::shared_ptr<BundleDataMgr> oldDataMgr_;
+    sptr<IInstalld> oldProxy_;
+};
+
+InnerBundleInfo BuildSkillBundle(const std::string &bundleName,
+    const std::map<std::string, std::vector<std::string>> &moduleSkills)
+{
+    ApplicationInfo appInfo;
+    appInfo.bundleName = bundleName;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetBaseApplicationInfo(appInfo);
+    for (const auto &item : moduleSkills) {
+        InnerModuleInfo moduleInfo;
+        moduleInfo.moduleName = item.first;
+        moduleInfo.hapPath = BUNDLE_PATH + bundleName + ServiceConstants::PATH_SEPARATOR + item.first +
+            ServiceConstants::INSTALL_FILE_SUFFIX;
+        for (const auto &skillName : item.second) {
+            SkillProfile profile;
+            profile.name = skillName;
+            moduleInfo.skillProfiles.emplace_back(profile);
+        }
+        innerBundleInfo.InsertInnerModuleInfo(item.first, moduleInfo);
+    }
+    return innerBundleInfo;
+}
+
+std::string GetSkillBundleDir(const std::string &bundleName)
+{
+    return std::string(Constants::BASE_SKILL_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName;
+}
+
+class SkillBundleDirGuard {
+public:
+    explicit SkillBundleDirGuard(const std::string &bundleName)
+        : rootExisted_(BundleUtil::IsExistDir(Constants::BASE_SKILL_DIR)), bundleDir_(GetSkillBundleDir(bundleName))
+    {
+        created_ = OHOS::ForceCreateDirectory(bundleDir_);
+    }
+
+    ~SkillBundleDirGuard()
+    {
+        (void)OHOS::ForceRemoveDirectory(rootExisted_ ? bundleDir_ : std::string(Constants::BASE_SKILL_DIR));
+    }
+
+    bool created_ = false;
+
+private:
+    bool rootExisted_ = false;
+    std::string bundleDir_;
+};
+
+bool WaitUntil(const std::function<bool()> &condition)
+{
+    for (int32_t i = 0; i < WAIT_ROUNDS; i++) {
+        if (condition()) {
+            return true;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(WAIT_INTERVAL_MS));
+    }
+    return condition();
+}
 }
 class BmsEventHandlerTest : public testing::Test {
 public:
@@ -533,6 +693,426 @@ HWTEST_F(BmsEventHandlerTest, BundleBootStartEvent_0100, Function | SmallTest | 
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     handler->BundleBootStartEvent();
     EXPECT_NE(handler, nullptr);
+}
+
+/**
+ * @tc.number: BundleBootStartEvent_0200
+ * @tc.name: BundleBootStartEvent
+ * @tc.desc: test BundleBootStartEvent marks MIGRATE_SKILL_DIR on first boot
+ */
+HWTEST_F(BmsEventHandlerTest, BundleBootStartEvent_0200, Function | SmallTest | Level0)
+{
+    InitBundleMgrServiceForTest();
+    ResetOtaFlag();
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    handler->BundleBootStartEvent();
+    EXPECT_TRUE(OtaFlagBitSet(MIGRATE_SKILL_DIR_FLAG));
+    ResetOtaFlag();
+}
+
+/**
+ * @tc.number: ProcessMigrateSkillDir_0100
+ * @tc.name: ProcessMigrateSkillDir
+ * @tc.desc: test ProcessMigrateSkillDir neither extracts skills nor removes the legacy dir when MIGRATE_SKILL_DIR is
+ *           already set
+ */
+HWTEST_F(BmsEventHandlerTest, ProcessMigrateSkillDir_0100, Function | SmallTest | Level0)
+{
+    InitBundleMgrServiceForTest();
+    ResetOtaFlag();
+    EXPECT_TRUE(BMSEventHandler::UpdateOtaFlag(OTAFlag::MIGRATE_SKILL_DIR));
+    (void)OHOS::ForceRemoveDirectory(GetSkillBundleDir(SKILL_BUNDLE_NAME));
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    dataMgr->bundleInfos_.emplace(SKILL_BUNDLE_NAME, BuildSkillBundle(SKILL_BUNDLE_NAME,
+        {{MODULE_NAME, {SKILL_NAME_ONE}}}));
+    SkillDirTestGuard guard(dataMgr);
+    ASSERT_NE(guard.proxy_, nullptr);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+
+    handler->ProcessMigrateSkillDir();
+    EXPECT_TRUE(guard.proxy_->extractRecords.empty());
+    EXPECT_TRUE(guard.proxy_->removeDirRecords.empty());
+    EXPECT_TRUE(OtaFlagBitSet(MIGRATE_SKILL_DIR_FLAG));
+    ResetOtaFlag();
+}
+
+/**
+ * @tc.number: ProcessMigrateSkillDir_0200
+ * @tc.name: ProcessMigrateSkillDir
+ * @tc.desc: test ProcessMigrateSkillDir synchronously extracts the skills of the bundles whose skill dir does not
+ *           exist, synchronously removes the legacy dir and sets the flag
+ */
+HWTEST_F(BmsEventHandlerTest, ProcessMigrateSkillDir_0200, Function | SmallTest | Level0)
+{
+    InitBundleMgrServiceForTest();
+    ResetOtaFlag();
+    (void)OHOS::ForceRemoveDirectory(GetSkillBundleDir(SKILL_BUNDLE_NAME));
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    dataMgr->bundleInfos_.emplace(SKILL_BUNDLE_NAME, BuildSkillBundle(SKILL_BUNDLE_NAME,
+        {{MODULE_NAME, {SKILL_NAME_ONE}}}));
+    dataMgr->bundleInfos_.emplace(NO_SKILL_BUNDLE_NAME, BuildSkillBundle(NO_SKILL_BUNDLE_NAME, {{MODULE_NAME, {}}}));
+    SkillDirTestGuard guard(dataMgr);
+    ASSERT_NE(guard.proxy_, nullptr);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+
+    handler->ProcessMigrateSkillDir();
+    ASSERT_EQ(guard.proxy_->extractRecords.size(), 1);
+    EXPECT_EQ(guard.proxy_->extractRecords[0].bundleName, SKILL_BUNDLE_NAME);
+    EXPECT_EQ(guard.proxy_->extractRecords[0].moduleName, MODULE_NAME);
+    const auto &records = guard.proxy_->removeDirRecords;
+    ASSERT_EQ(records.size(), 1);
+    EXPECT_EQ(records[0].dir, ServiceConstants::LEGACY_SKILL_BASE_DIR);
+    EXPECT_EQ(records[0].scene, BundleDirScene::REMOVE_LEGACY_SKILL_DIR);
+    EXPECT_TRUE(records[0].bundleName.empty());
+    EXPECT_FALSE(records[0].async);
+    EXPECT_TRUE(OtaFlagBitSet(MIGRATE_SKILL_DIR_FLAG));
+    ResetOtaFlag();
+}
+
+/**
+ * @tc.number: ProcessMigrateSkillDir_0300
+ * @tc.name: ProcessMigrateSkillDir
+ * @tc.desc: test ProcessMigrateSkillDir does not extract the bundle whose skill dir exists
+ */
+HWTEST_F(BmsEventHandlerTest, ProcessMigrateSkillDir_0300, Function | SmallTest | Level0)
+{
+    InitBundleMgrServiceForTest();
+    ResetOtaFlag();
+    SkillBundleDirGuard dirGuard(SKILL_BUNDLE_NAME);
+    ASSERT_TRUE(dirGuard.created_);
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    dataMgr->bundleInfos_.emplace(SKILL_BUNDLE_NAME, BuildSkillBundle(SKILL_BUNDLE_NAME,
+        {{MODULE_NAME, {SKILL_NAME_ONE}}}));
+    SkillDirTestGuard guard(dataMgr);
+    ASSERT_NE(guard.proxy_, nullptr);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+
+    handler->ProcessMigrateSkillDir();
+    EXPECT_TRUE(guard.proxy_->extractRecords.empty());
+    EXPECT_EQ(guard.proxy_->removeDirRecords.size(), 1);
+    EXPECT_TRUE(OtaFlagBitSet(MIGRATE_SKILL_DIR_FLAG));
+    ResetOtaFlag();
+}
+
+/**
+ * @tc.number: ProcessMigrateSkillDir_0400
+ * @tc.name: ProcessMigrateSkillDir
+ * @tc.desc: test ProcessMigrateSkillDir still removes the legacy dir and sets the flag when dataMgr is nullptr
+ */
+HWTEST_F(BmsEventHandlerTest, ProcessMigrateSkillDir_0400, Function | SmallTest | Level0)
+{
+    InitBundleMgrServiceForTest();
+    ResetOtaFlag();
+    SkillDirTestGuard guard(nullptr);
+    ASSERT_NE(guard.proxy_, nullptr);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+
+    handler->ProcessMigrateSkillDir();
+    EXPECT_TRUE(guard.proxy_->extractRecords.empty());
+    EXPECT_EQ(guard.proxy_->removeDirRecords.size(), 1);
+    EXPECT_TRUE(OtaFlagBitSet(MIGRATE_SKILL_DIR_FLAG));
+    ResetOtaFlag();
+}
+
+/**
+ * @tc.number: ProcessMigrateSkillDir_0500
+ * @tc.name: ProcessMigrateSkillDir
+ * @tc.desc: test ProcessMigrateSkillDir still sets MIGRATE_SKILL_DIR when the extraction and the removal fail
+ */
+HWTEST_F(BmsEventHandlerTest, ProcessMigrateSkillDir_0500, Function | SmallTest | Level0)
+{
+    InitBundleMgrServiceForTest();
+    ResetOtaFlag();
+    (void)OHOS::ForceRemoveDirectory(GetSkillBundleDir(SKILL_BUNDLE_NAME));
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    dataMgr->bundleInfos_.emplace(SKILL_BUNDLE_NAME, BuildSkillBundle(SKILL_BUNDLE_NAME,
+        {{MODULE_NAME, {SKILL_NAME_ONE}}}));
+    SkillDirTestGuard guard(dataMgr);
+    ASSERT_NE(guard.proxy_, nullptr);
+    guard.proxy_->extractRet = ERR_APPEXECFWK_INSTALLD_EXTRACT_FILES_FAILED;
+    guard.proxy_->removeDirRet = ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+
+    handler->ProcessMigrateSkillDir();
+    EXPECT_EQ(guard.proxy_->extractRecords.size(), 1);
+    EXPECT_EQ(guard.proxy_->removeDirRecords.size(), 1);
+    EXPECT_TRUE(OtaFlagBitSet(MIGRATE_SKILL_DIR_FLAG));
+    ResetOtaFlag();
+}
+
+/**
+ * @tc.number: ProcessMigrateSkillDir_0600
+ * @tc.name: ProcessMigrateSkillDir
+ * @tc.desc: test ProcessMigrateSkillDir migrates only once
+ */
+HWTEST_F(BmsEventHandlerTest, ProcessMigrateSkillDir_0600, Function | SmallTest | Level0)
+{
+    InitBundleMgrServiceForTest();
+    ResetOtaFlag();
+    (void)OHOS::ForceRemoveDirectory(GetSkillBundleDir(SKILL_BUNDLE_NAME));
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    dataMgr->bundleInfos_.emplace(SKILL_BUNDLE_NAME, BuildSkillBundle(SKILL_BUNDLE_NAME,
+        {{MODULE_NAME, {SKILL_NAME_ONE}}}));
+    SkillDirTestGuard guard(dataMgr);
+    ASSERT_NE(guard.proxy_, nullptr);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+
+    handler->ProcessMigrateSkillDir();
+    handler->ProcessMigrateSkillDir();
+    EXPECT_EQ(guard.proxy_->extractRecords.size(), 1);
+    EXPECT_EQ(guard.proxy_->removeDirRecords.size(), 1);
+    ResetOtaFlag();
+}
+
+/**
+ * @tc.number: ExtractAppSkills_0100
+ * @tc.name: ExtractAppSkills
+ * @tc.desc: test ExtractAppSkills does nothing when the bundle is not found
+ */
+HWTEST_F(BmsEventHandlerTest, ExtractAppSkills_0100, Function | SmallTest | Level0)
+{
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    SkillDirTestGuard guard(dataMgr);
+    ASSERT_NE(guard.proxy_, nullptr);
+
+    BMSEventHandler::ExtractAppSkills(dataMgr, SKILL_BUNDLE_NAME);
+    EXPECT_TRUE(guard.proxy_->extractRecords.empty());
+}
+
+/**
+ * @tc.number: ExtractAppSkills_0200
+ * @tc.name: ExtractAppSkills
+ * @tc.desc: test ExtractAppSkills skips modules without skills and tolerates extract failure
+ */
+HWTEST_F(BmsEventHandlerTest, ExtractAppSkills_0200, Function | SmallTest | Level0)
+{
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    dataMgr->bundleInfos_.emplace(SKILL_BUNDLE_NAME, BuildSkillBundle(SKILL_BUNDLE_NAME,
+        {{MODULE_NAME, {}}, {MODULE_NAME_TWO, {SKILL_NAME_ONE}}}));
+    SkillDirTestGuard guard(dataMgr);
+    ASSERT_NE(guard.proxy_, nullptr);
+    guard.proxy_->extractRet = ERR_APPEXECFWK_INSTALLD_EXTRACT_FILES_FAILED;
+
+    BMSEventHandler::ExtractAppSkills(dataMgr, SKILL_BUNDLE_NAME);
+    ASSERT_EQ(guard.proxy_->extractRecords.size(), 1);
+    EXPECT_EQ(guard.proxy_->extractRecords[0].moduleName, MODULE_NAME_TWO);
+}
+
+/**
+ * @tc.number: ExtractAppSkills_0300
+ * @tc.name: ExtractAppSkills
+ * @tc.desc: test ExtractAppSkills when all skills or only part of the skills are extracted
+ */
+HWTEST_F(BmsEventHandlerTest, ExtractAppSkills_0300, Function | SmallTest | Level0)
+{
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    dataMgr->bundleInfos_.emplace(SKILL_BUNDLE_NAME, BuildSkillBundle(SKILL_BUNDLE_NAME,
+        {{MODULE_NAME, {SKILL_NAME_ONE, SKILL_NAME_TWO}}}));
+    SkillDirTestGuard guard(dataMgr);
+    ASSERT_NE(guard.proxy_, nullptr);
+
+    BMSEventHandler::ExtractAppSkills(dataMgr, SKILL_BUNDLE_NAME);
+    guard.proxy_->extractSuccessCount = 1;
+    BMSEventHandler::ExtractAppSkills(dataMgr, SKILL_BUNDLE_NAME);
+    ASSERT_EQ(guard.proxy_->extractRecords.size(), 2);
+    EXPECT_EQ(guard.proxy_->extractRecords[1].skillNameList.size(), 2);
+}
+
+/**
+ * @tc.number: ExtractAppSkills_0400
+ * @tc.name: ExtractAppSkills
+ * @tc.desc: test ExtractAppSkills does not call installd when the module hapPath is empty
+ */
+HWTEST_F(BmsEventHandlerTest, ExtractAppSkills_0400, Function | SmallTest | Level0)
+{
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    InnerBundleInfo innerBundleInfo = BuildSkillBundle(SKILL_BUNDLE_NAME, {{MODULE_NAME, {SKILL_NAME_ONE}}});
+    innerBundleInfo.FetchInnerModuleInfos()[MODULE_NAME].hapPath.clear();
+    dataMgr->bundleInfos_.emplace(SKILL_BUNDLE_NAME, innerBundleInfo);
+    SkillDirTestGuard guard(dataMgr);
+    ASSERT_NE(guard.proxy_, nullptr);
+
+    BMSEventHandler::ExtractAppSkills(dataMgr, SKILL_BUNDLE_NAME);
+    EXPECT_TRUE(guard.proxy_->extractRecords.empty());
+}
+
+/**
+ * @tc.number: CheckAppSkillDir_0100
+ * @tc.name: CheckAppSkillDir
+ * @tc.desc: test CheckAppSkillDir does not call installd when dataMgr is nullptr
+ */
+HWTEST_F(BmsEventHandlerTest, CheckAppSkillDir_0100, Function | SmallTest | Level0)
+{
+    SkillDirTestGuard guard(nullptr);
+    ASSERT_NE(guard.proxy_, nullptr);
+
+    BMSEventHandler::CheckAppSkillDir();
+    EXPECT_TRUE(guard.proxy_->extractRecords.empty());
+}
+
+/**
+ * @tc.number: CheckAppSkillDir_0200
+ * @tc.name: CheckAppSkillDir
+ * @tc.desc: test CheckAppSkillDir does not call installd when no bundle declares app skills
+ */
+HWTEST_F(BmsEventHandlerTest, CheckAppSkillDir_0200, Function | SmallTest | Level0)
+{
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    dataMgr->bundleInfos_.emplace(NO_SKILL_BUNDLE_NAME, BuildSkillBundle(NO_SKILL_BUNDLE_NAME, {{MODULE_NAME, {}}}));
+    SkillDirTestGuard guard(dataMgr);
+    ASSERT_NE(guard.proxy_, nullptr);
+
+    BMSEventHandler::CheckAppSkillDir();
+    EXPECT_TRUE(guard.proxy_->extractRecords.empty());
+}
+
+/**
+ * @tc.number: CheckAppSkillDir_0300
+ * @tc.name: CheckAppSkillDir
+ * @tc.desc: test CheckAppSkillDir extracts the skills of every module declaring skills of the bundles whose skill dir
+ *           does not exist
+ */
+HWTEST_F(BmsEventHandlerTest, CheckAppSkillDir_0300, Function | SmallTest | Level0)
+{
+    (void)OHOS::ForceRemoveDirectory(GetSkillBundleDir(SKILL_BUNDLE_NAME));
+    (void)OHOS::ForceRemoveDirectory(GetSkillBundleDir(SKILL_BUNDLE_NAME_TWO));
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    dataMgr->bundleInfos_.emplace(SKILL_BUNDLE_NAME, BuildSkillBundle(SKILL_BUNDLE_NAME,
+        {{MODULE_NAME, {}}, {MODULE_NAME_TWO, {SKILL_NAME_ONE, SKILL_NAME_TWO}}}));
+    dataMgr->bundleInfos_.emplace(SKILL_BUNDLE_NAME_TWO, BuildSkillBundle(SKILL_BUNDLE_NAME_TWO,
+        {{MODULE_NAME, {SKILL_NAME_TWO}}}));
+    dataMgr->bundleInfos_.emplace(NO_SKILL_BUNDLE_NAME, BuildSkillBundle(NO_SKILL_BUNDLE_NAME, {{MODULE_NAME, {}}}));
+    SkillDirTestGuard guard(dataMgr);
+    ASSERT_NE(guard.proxy_, nullptr);
+
+    BMSEventHandler::CheckAppSkillDir();
+    const auto &records = guard.proxy_->extractRecords;
+    ASSERT_EQ(records.size(), 2);
+    EXPECT_EQ(records[0].bundleName, SKILL_BUNDLE_NAME);
+    EXPECT_EQ(records[0].moduleName, MODULE_NAME_TWO);
+    EXPECT_EQ(records[0].extractModuleName, MODULE_NAME_TWO);
+    EXPECT_EQ(records[0].hspPath, BUNDLE_PATH + SKILL_BUNDLE_NAME + "/" + MODULE_NAME_TWO + ".hap");
+    EXPECT_EQ(records[0].skillNameList, std::vector<std::string>({SKILL_NAME_ONE, SKILL_NAME_TWO}));
+    EXPECT_EQ(records[1].bundleName, SKILL_BUNDLE_NAME_TWO);
+    EXPECT_EQ(records[1].moduleName, MODULE_NAME);
+    EXPECT_EQ(records[1].skillNameList, std::vector<std::string>({SKILL_NAME_TWO}));
+}
+
+/**
+ * @tc.number: CheckAppSkillDir_0400
+ * @tc.name: CheckAppSkillDir
+ * @tc.desc: test CheckAppSkillDir goes on with the next bundle when the extraction of a bundle fails
+ */
+HWTEST_F(BmsEventHandlerTest, CheckAppSkillDir_0400, Function | SmallTest | Level0)
+{
+    (void)OHOS::ForceRemoveDirectory(GetSkillBundleDir(SKILL_BUNDLE_NAME));
+    (void)OHOS::ForceRemoveDirectory(GetSkillBundleDir(SKILL_BUNDLE_NAME_TWO));
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    dataMgr->bundleInfos_.emplace(SKILL_BUNDLE_NAME, BuildSkillBundle(SKILL_BUNDLE_NAME,
+        {{MODULE_NAME, {SKILL_NAME_ONE}}}));
+    dataMgr->bundleInfos_.emplace(SKILL_BUNDLE_NAME_TWO, BuildSkillBundle(SKILL_BUNDLE_NAME_TWO,
+        {{MODULE_NAME, {SKILL_NAME_TWO}}}));
+    SkillDirTestGuard guard(dataMgr);
+    ASSERT_NE(guard.proxy_, nullptr);
+    guard.proxy_->extractRet = ERR_APPEXECFWK_INSTALLD_EXTRACT_FILES_FAILED;
+
+    BMSEventHandler::CheckAppSkillDir();
+    const auto &records = guard.proxy_->extractRecords;
+    ASSERT_EQ(records.size(), 2);
+    EXPECT_EQ(records[0].bundleName, SKILL_BUNDLE_NAME);
+    EXPECT_EQ(records[1].bundleName, SKILL_BUNDLE_NAME_TWO);
+}
+
+/**
+ * @tc.number: CheckAppSkillDir_0500
+ * @tc.name: CheckAppSkillDir
+ * @tc.desc: test CheckAppSkillDir skips the bundle whose skill dir exists and only extracts the missing one
+ */
+HWTEST_F(BmsEventHandlerTest, CheckAppSkillDir_0500, Function | SmallTest | Level0)
+{
+    SkillBundleDirGuard dirGuard(SKILL_BUNDLE_NAME);
+    ASSERT_TRUE(dirGuard.created_);
+    (void)OHOS::ForceRemoveDirectory(GetSkillBundleDir(SKILL_BUNDLE_NAME_TWO));
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    dataMgr->bundleInfos_.emplace(SKILL_BUNDLE_NAME, BuildSkillBundle(SKILL_BUNDLE_NAME,
+        {{MODULE_NAME, {SKILL_NAME_ONE}}}));
+    dataMgr->bundleInfos_.emplace(SKILL_BUNDLE_NAME_TWO, BuildSkillBundle(SKILL_BUNDLE_NAME_TWO,
+        {{MODULE_NAME, {SKILL_NAME_TWO}}}));
+    SkillDirTestGuard guard(dataMgr);
+    ASSERT_NE(guard.proxy_, nullptr);
+
+    BMSEventHandler::CheckAppSkillDir();
+    ASSERT_EQ(guard.proxy_->extractRecords.size(), 1);
+    EXPECT_EQ(guard.proxy_->extractRecords[0].bundleName, SKILL_BUNDLE_NAME_TWO);
+}
+
+/**
+ * @tc.number: CheckAppSkillDir_0600
+ * @tc.name: CheckAppSkillDir
+ * @tc.desc: test CheckAppSkillDir does not call installd when the skill dirs of all bundles exist
+ */
+HWTEST_F(BmsEventHandlerTest, CheckAppSkillDir_0600, Function | SmallTest | Level0)
+{
+    SkillBundleDirGuard dirGuard(SKILL_BUNDLE_NAME);
+    ASSERT_TRUE(dirGuard.created_);
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    dataMgr->bundleInfos_.emplace(SKILL_BUNDLE_NAME, BuildSkillBundle(SKILL_BUNDLE_NAME,
+        {{MODULE_NAME, {SKILL_NAME_ONE}}}));
+    SkillDirTestGuard guard(dataMgr);
+    ASSERT_NE(guard.proxy_, nullptr);
+
+    BMSEventHandler::CheckAppSkillDir();
+    EXPECT_TRUE(guard.proxy_->extractRecords.empty());
+}
+
+/**
+ * @tc.number: ProcessCheckAppSkillDir_0100
+ * @tc.name: ProcessCheckAppSkillDir
+ * @tc.desc: test ProcessCheckAppSkillDir runs CheckAppSkillDir in a detached thread
+ */
+HWTEST_F(BmsEventHandlerTest, ProcessCheckAppSkillDir_0100, Function | SmallTest | Level0)
+{
+    (void)OHOS::ForceRemoveDirectory(GetSkillBundleDir(SKILL_BUNDLE_NAME));
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    dataMgr->bundleInfos_.emplace(SKILL_BUNDLE_NAME, BuildSkillBundle(SKILL_BUNDLE_NAME,
+        {{MODULE_NAME, {SKILL_NAME_ONE}}}));
+    SkillDirTestGuard guard(dataMgr);
+    ASSERT_NE(guard.proxy_, nullptr);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+
+    handler->ProcessCheckAppSkillDir();
+    // the thread holds a dataMgr reference until it returns
+    EXPECT_TRUE(WaitUntil([&guard]() { return guard.proxy_->extractCount.load() >= 1; }));
+    EXPECT_TRUE(WaitUntil([&dataMgr]() { return dataMgr.use_count() == 2; }));
+    ASSERT_EQ(guard.proxy_->extractRecords.size(), 1);
+    EXPECT_EQ(guard.proxy_->extractRecords[0].bundleName, SKILL_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: ScanInstallDir_0200
+ * @tc.name: ScanInstallDir
+ * @tc.desc: test ScanInstallDir skips the skills root dir under the bundle code dir
+ */
+HWTEST_F(BmsEventHandlerTest, ScanInstallDir_0200, Function | SmallTest | Level0)
+{
+    SkillDirTestGuard guard(std::make_shared<BundleDataMgr>());
+    ASSERT_NE(guard.proxy_, nullptr);
+    const std::string skillRootHap = std::string(Constants::BASE_SKILL_DIR) + "/entry.hap";
+    const std::string appCodeDir = BUNDLE_PATH + SKILL_BUNDLE_NAME;
+    const std::string appHap = appCodeDir + "/entry.hap";
+    guard.proxy_->scanResults[Constants::BUNDLE_CODE_DIR] = {ServiceConstants::SKILL_DIR, SKILL_BUNDLE_NAME};
+    guard.proxy_->scanResults[Constants::BASE_SKILL_DIR] = {skillRootHap};
+    guard.proxy_->scanResults[appCodeDir] = {appHap};
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+
+    std::map<std::string, std::vector<std::string>> hapPathsMap;
+    handler->ScanInstallDir(hapPathsMap);
+    EXPECT_EQ(hapPathsMap.find(ServiceConstants::SKILL_DIR), hapPathsMap.end());
+    ASSERT_NE(hapPathsMap.find(SKILL_BUNDLE_NAME), hapPathsMap.end());
+    EXPECT_EQ(hapPathsMap[SKILL_BUNDLE_NAME], std::vector<std::string>({appHap}));
+    EXPECT_EQ(std::find(guard.proxy_->scanDirs.begin(), guard.proxy_->scanDirs.end(),
+        std::string(Constants::BASE_SKILL_DIR)), guard.proxy_->scanDirs.end());
 }
 
 /**

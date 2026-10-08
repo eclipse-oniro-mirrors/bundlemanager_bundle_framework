@@ -291,6 +291,104 @@ ohos_unittest("BmsInstallDaemonHostImplTest") {
   }
 }
 
+ohos_unittest("BmsInstalldSkillDirTest") {
+  use_exceptions = true
+  module_out_path = module_output_path
+
+  sources = [
+    "${services_path}/bundlemgr/src/aot/aot_args.cpp",
+    "${services_path}/bundlemgr/src/aot/aot_executor.cpp",
+    "${services_path}/bundlemgr/src/bundle_util.cpp",
+    "${services_path}/bundlemgr/src/common/serial_queue.cpp",
+    "${services_path}/bundlemgr/src/common/single_delayed_task_mgr.cpp",
+    "${services_path}/bundlemgr/src/installd/binary_security_wrapper.cpp",
+    "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
+    "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
+    "${services_path}/bundlemgr/src/ipc/check_encryption_param.cpp",
+    "${services_path}/bundlemgr/src/ipc/code_signature_param.cpp",
+    "${services_path}/bundlemgr/src/ipc/copy_hap_to_install_path_param.cpp",
+    "${services_path}/bundlemgr/src/ipc/create_dir_param.cpp",
+    "${services_path}/bundlemgr/src/ipc/critical_manager.cpp",
+    "${services_path}/bundlemgr/src/ipc/encryption_param.cpp",
+    "${services_path}/bundlemgr/src/ipc/extract_hnp_files_param.cpp",
+    "${services_path}/bundlemgr/src/ipc/extract_param.cpp",
+    "${services_path}/bundlemgr/src/ipc/hap_module_extract_param.cpp",
+    "${services_path}/bundlemgr/src/ipc/file_stat.cpp",
+    "${services_path}/bundlemgr/src/ipc/install_hnp_param.cpp",
+    "${services_path}/bundlemgr/src/ipc/installd_host.cpp",
+    "${services_path}/bundlemgr/src/ipc/installd_proxy.cpp",
+    "${services_path}/bundlemgr/src/ipc/verify_bin_param.cpp",
+    "${services_path}/bundlemgr/src/system_ability_helper.cpp",
+    "${services_path}/bundlemgr/test/mock/src/installd_permission_mgr.cpp",
+    "${services_path}/bundlemgr/src/driver_install_ext.cpp",
+  ]
+
+  sources += [ "bms_installd_skill_dir_test.cpp" ]
+
+  configs = [ "${services_path}/bundlemgr/test:bundlemgr_test_config" ]
+  cflags = []
+  if (target_cpu == "arm") {
+    cflags += [ "-DBINDER_IPC_32BIT" ]
+  }
+  deps = [
+    "${common_path}:libappexecfwk_common",
+    "${core_path}:appexecfwk_core",
+    "${services_path}/bundlemgr:bundle_parser",
+  ]
+
+  external_deps = [
+    "ability_runtime:app_manager",
+    "access_token:el5_filekey_manager_sdk",
+    "access_token:libprivacy_sdk",
+    "access_token:libtokenid_sdk",
+    "appspawn:hnpapi",
+    "appverify:libhapverify",
+    "bounds_checking_function:libsec_shared",
+    "c_utils:utils",
+    "dfs_service:libdecompress",
+    "eventhandler:libeventhandler",
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
+    "init:libbegetutil",
+    "ipc:ipc_core",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+    "selinux:libselinux",
+    "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
+  ]
+
+  external_deps += bundle_install_external_deps
+
+  defines = []
+  if (build_selinux) {
+    external_deps += [ "selinux_adapter:libhap_restorecon" ]
+    cflags += [ "-DWITH_SELINUX" ]
+  }
+  include_dirs = []
+  if (code_signature_enable) {
+    sources += [ "${services_path}/bundlemgr/src/code_sign_helper.cpp" ]
+    include_dirs += [ "${services_path}/bundlemgr/include" ]
+    external_deps += [
+      "code_signature:libcode_sign_utils",
+      "ets_runtime:libcompiler_service",
+    ]
+    defines += [ "CODE_SIGNATURE_ENABLE" ]
+  }
+  if (global_resmgr_enable) {
+    defines += [ "GLOBAL_RESMGR_ENABLE" ]
+    external_deps += [ "resource_management:global_resmgr" ]
+  }
+  if (storage_service_enable) {
+    external_deps += [ "storage_service:storage_manager_sa_proxy" ]
+    defines += [ "STORAGE_SERVICE_ENABLE" ]
+  }
+  if (udmf_enabled) {
+    defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
+    external_deps += [ "udmf:utd_client" ]
+  }
+}
+
 ohos_unittest("BmsInstallDaemonOperatorTest") {
   use_exceptions = true
   module_out_path = module_output_path
@@ -479,6 +577,7 @@ group("unittest") {
       deps += [
         ":BmsInstallDaemonHostImplTest",
         ":BmsInstallDaemonOperatorTest",
+        ":BmsInstalldSkillDirTest",
       ]
     }
   }

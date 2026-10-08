@@ -27,6 +27,7 @@
 #include "bms_key_event_mgr.h"
 #include "dual_mode_helper.h"
 #include "independent_skills_installer.h"
+#include "skills_installer_util.h"
 #include "bundle_access_token_recovery_mgr.h"
 #include "bundle_install_checker.h"
 #include "bundle_installer.h"
@@ -518,6 +519,7 @@ void BMSEventHandler::BundleBootStartEvent()
     UpdateOtaFlag(OTAFlag::UPDATE_MODULE_JSON_EXTEND_FIELDS);
     UpdateOtaFlag(OTAFlag::DELETE_RESOURCE_SLAVE_DB);
     UpdateOtaFlag(OTAFlag::MIGRATE_UNINSTALL_BUNDLE_RESOURCE);
+    UpdateOtaFlag(OTAFlag::MIGRATE_SKILL_DIR);
     (void)SaveUpdatePermissionsFlag();
     PerfProfile::GetInstance().Dump();
 }
@@ -561,6 +563,7 @@ void BMSEventHandler::BundleRebootStartEvent()
     // need check /data/service/el1/public/bms/bundle_manager_service/app_temp
     ProcessAppTmpPath();
     ProcessUpdateExtensionDirsApl();
+    ProcessCheckAppSkillDir();
     needNotifyBundleScanStatus_ = true;
     allUserIds_.clear();
     xmlMap_.clear();
@@ -891,6 +894,10 @@ void BMSEventHandler::ScanInstallDir(
     for (const auto &bundleName : bundleNameList) {
         std::vector<std::string> hapPaths;
         auto appCodePath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName;
+        // skills root dir under BUNDLE_CODE_DIR is not a bundle dir
+        if (appCodePath == Constants::BASE_SKILL_DIR) {
+            continue;
+        }
         if (!ScanDir(appCodePath, ScanMode::SUB_FILE_FILE, ResultMode::ABSOLUTE_PATH, hapPaths)) {
             LOG_E(BMS_TAG_DEFAULT, "Scan the appCodePath(%{public}s) failed", appCodePath.c_str());
             continue;
@@ -1647,6 +1654,7 @@ void BMSEventHandler::ProcessRebootBundle()
     }
     ProcessRebootQuickFixBundleInstall(QUICK_FIX_APP_PATH, true);
     ProcessRebootQuickFixUnInstallAndRecover(QUICK_FIX_APP_RECOVER_FILE);
+    ProcessMigrateSkillDir();
     XCollieHelper::ResumeFoundationWatchdog();
     ProcessBundleResourceInfo();
     ProcessAllBundleDataGroupInfo();
@@ -5781,6 +5789,71 @@ void BMSEventHandler::ProcessCheckAppEl1DirTask()
         UpdateAppDataMgr::ProcessUpdateAppDataDir(userId, bundleInfos, ServiceConstants::DIR_EL1);
     }
     LOG_I(BMS_TAG_DEFAULT, "end");
+}
+
+void BMSEventHandler::ProcessMigrateSkillDir()
+{
+    bool isMigrated = false;
+    CheckOtaFlag(OTAFlag::MIGRATE_SKILL_DIR, isMigrated);
+    if (isMigrated) {
+        LOG_D(BMS_TAG_DEFAULT, "skill dir has been migrated");
+        return;
+    }
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "migrate skill dir begin");
+    CheckAppSkillDir();
+    ErrCode ret = InstalldClient::GetInstance()->RemoveDir(
+        ServiceConstants::LEGACY_SKILL_BASE_DIR, BundleDirScene::REMOVE_LEGACY_SKILL_DIR);
+    if (ret != ERR_OK) {
+        LOG_NOFUNC_E(BMS_TAG_DEFAULT, "delete legacy skill dir failed %{public}d", ret);
+    }
+    UpdateOtaFlag(OTAFlag::MIGRATE_SKILL_DIR);
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "migrate skill dir end");
+}
+
+void BMSEventHandler::ExtractAppSkills(const std::shared_ptr<BundleDataMgr> dataMgr, const std::string &bundleName)
+{
+    InnerBundleInfo info;
+    if (!dataMgr->FetchInnerBundleInfo(bundleName, info)) {
+        return;
+    }
+    for (const auto &item : info.GetInnerModuleInfos()) {
+        const InnerModuleInfo &moduleInfo = item.second;
+        if (moduleInfo.skillProfiles.empty()) {
+            continue;
+        }
+        std::vector<std::string> skillNames;
+        for (const auto &profile : moduleInfo.skillProfiles) {
+            skillNames.emplace_back(profile.name);
+        }
+        std::vector<SkillsPackageInfo> skillInfos;
+        ErrCode ret = SkillsInstallerUtil::ExtractSkillsPackage(bundleName, moduleInfo.moduleName,
+            moduleInfo.moduleName, moduleInfo.hapPath, skillNames, skillInfos);
+        if (ret == ERR_OK && skillInfos.size() != skillNames.size()) {
+            LOG_NOFUNC_W(BMS_TAG_DEFAULT, "-n %{public}s -m %{public}s extract %{public}zu of %{public}zu skills",
+                bundleName.c_str(), moduleInfo.moduleName.c_str(), skillInfos.size(), skillNames.size());
+        }
+    }
+}
+
+void BMSEventHandler::ProcessCheckAppSkillDir()
+{
+    std::thread checkThread(CheckAppSkillDir);
+    checkThread.detach();
+}
+
+void BMSEventHandler::CheckAppSkillDir()
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_NOFUNC_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return;
+    }
+    for (const auto &bundleName : dataMgr->GetAppSkillBundleNames()) {
+        if (!BundleUtil::IsExistDirNoLog(
+            std::string(Constants::BASE_SKILL_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName)) {
+            ExtractAppSkills(dataMgr, bundleName);
+        }
+    }
 }
 
 void BMSEventHandler::CheckAndCreateShareFilesSubDataDirs()

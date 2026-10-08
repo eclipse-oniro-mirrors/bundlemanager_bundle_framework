@@ -17230,6 +17230,18 @@ ErrCode BundleDataMgr::GetAllIndependentSKills(const int32_t userId, std::vector
     return ERR_OK;
 }
 
+std::vector<std::string> BundleDataMgr::GetAppSkillBundleNames() const
+{
+    std::vector<std::string> bundleNames;
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    for (const auto &item : bundleInfos_) {
+        if (item.second.HasAppSkill()) {
+            bundleNames.emplace_back(item.second.GetBundleName());
+        }
+    }
+    return bundleNames;
+}
+
 ErrCode BundleDataMgr::GetCreateDirParamByBundleOption(
     const BundleOptionInfo &optionInfo, CreateDirParam &createDirParam) const
 {
@@ -17550,7 +17562,7 @@ void BundleDataMgr::GetSkillInfoWithFlags(const InnerBundleInfo &info,
         SkillType::INDEPENDENT_SKILL : SkillType::APP_SKILL;
     skillInfo.hapPath = moduleInfo.hapPath;
     skillInfo.abilityName = profile.abilityName;
-    skillInfo.skillPath = std::string(ServiceConstants::SKILL_FILE_PATH) + ServiceConstants::PATH_SEPARATOR +
+    skillInfo.skillPath = std::string(Constants::BASE_SKILL_DIR) + ServiceConstants::PATH_SEPARATOR +
         effectiveBundleName + ServiceConstants::PATH_SEPARATOR + skillInfo.moduleName +
         ServiceConstants::PATH_SEPARATOR + ServiceConstants::SKILL_DIR + ServiceConstants::PATH_SEPARATOR +
         skillInfo.skillName;

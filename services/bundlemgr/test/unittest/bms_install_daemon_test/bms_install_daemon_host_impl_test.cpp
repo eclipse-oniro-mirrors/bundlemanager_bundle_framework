@@ -2293,4 +2293,17 @@ HWTEST_F(BmsInstallDaemonHostImplTest, ExtractSkillsPackage_0400, Function | Sma
     EXPECT_FALSE(InstalldOperator::IsValidPathByExtractSkillsPackage(param));
     EXPECT_FALSE(InstalldOperator::IsValidBundleName("com.example/evil"));
 }
+
+/**
+ * @tc.number: RemoveLegacySkillDir_0100
+ * @tc.name: test RemoveDir with REMOVE_LEGACY_SKILL_DIR
+ * @tc.desc: 1. removing the legacy skills dir is denied for non-foundation caller
+ */
+HWTEST_F(BmsInstallDaemonHostImplTest, RemoveLegacySkillDir_0100, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    EXPECT_EQ(hostImpl->RemoveDir(ServiceConstants::LEGACY_SKILL_BASE_DIR, BundleDirScene::REMOVE_LEGACY_SKILL_DIR),
+        ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
 } // OHOS

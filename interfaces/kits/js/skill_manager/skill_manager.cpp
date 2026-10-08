@@ -75,9 +75,9 @@ static void ConvertSkillInfo(napi_env env, const SkillInfo &skillInfo, napi_valu
 
     napi_value nSkillPath;
     std::string sandboxSkillPath = skillInfo.skillPath;
-    if (sandboxSkillPath.compare(0, strlen(Constants::REAL_SKILL_PATH_PREFIX),
-        Constants::REAL_SKILL_PATH_PREFIX) == 0) {
-        sandboxSkillPath.replace(0, strlen(Constants::REAL_SKILL_PATH_PREFIX), Constants::SANDBOX_SKILL_PATH_PREFIX);
+    if (sandboxSkillPath.compare(0, strlen(Constants::BASE_SKILL_DIR),
+        Constants::BASE_SKILL_DIR) == 0) {
+        sandboxSkillPath.replace(0, strlen(Constants::BASE_SKILL_DIR), Constants::SANDBOX_SKILL_PATH_PREFIX);
     }
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, sandboxSkillPath.c_str(),
         NAPI_AUTO_LENGTH, &nSkillPath));

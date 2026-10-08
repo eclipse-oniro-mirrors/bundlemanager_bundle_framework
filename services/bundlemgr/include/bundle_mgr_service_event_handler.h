@@ -69,6 +69,7 @@ enum OTAFlag : uint32_t {
     DELETE_RESOURCE_SLAVE_DB = 0x04000000,
     MIGRATE_UNINSTALL_BUNDLE_RESOURCE = 0x08000000,
     CHECK_PRINT_SERVICE_DIR = 0x10000000,
+    MIGRATE_SKILL_DIR = 0x20000000,
 };
 
 enum class ScanResultCode : uint8_t {
@@ -784,6 +785,10 @@ private:
     bool IsPathExistInInstalledBundleInfo(const std::string &path, const BundleInfo &bundleInfo);
     void ProcessCheckAppEl1Dir();
     void static ProcessCheckAppEl1DirTask();
+    void ProcessMigrateSkillDir();
+    static void ExtractAppSkills(const std::shared_ptr<BundleDataMgr> dataMgr, const std::string &bundleName);
+    void ProcessCheckAppSkillDir();
+    static void CheckAppSkillDir();
     // check el2 data dir for all userids's bundleinfos
     void CheckAndCreateShareFilesSubDataDirs();
     void CleanTempDir() const;
