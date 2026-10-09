@@ -5065,7 +5065,7 @@ ErrCode InstalldHostImpl::CheckAppSideLoadingAsync(int32_t userId)
     bool result = BinarySecurityWrapper::GetInstance().CheckAppSideLoadingAsync(userId);
     if (!result) {
         LOG_E(BMS_TAG_INSTALLD, "CheckAppSideLoadingAsync failed %{public}d", userId);
-        return ERR_APPEXECFWK_INSTALL_FAILED_VERIFY_BIN_PERMISSION;
+        return ERR_APPEXECFWK_INSTALL_DEVELOPER_ID_BUNDLE_NOT_ALLOWED;
     }
 #else
     LOG_E(BMS_TAG_INSTALLD, "SECURITY_PRIVACY_SERVER_ENABLE is disabled");
