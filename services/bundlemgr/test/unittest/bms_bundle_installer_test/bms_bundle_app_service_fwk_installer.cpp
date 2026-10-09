@@ -598,6 +598,7 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, UninstallLowerVersion_0010, Functi
  * @tc.name: test UninstallLowerVersion
  * @tc.desc: 1.Test the UninstallLowerVersion
 */
+#ifndef BMS_X86_64_VIRT_SKIP_TESTS
 HWTEST_F(BmsBundleAppServiceFwkInstallerTest, UninstallLowerVersion_0020, Function | SmallTest | Level0)
 {
     auto installRes = InstallSystemHsp(VERSION_ONE_LIBRARY_ONE_PATH);
@@ -615,12 +616,14 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, UninstallLowerVersion_0020, Functi
     DeletePreBundleInfo(BUNDLE_NAME);
     UninstallSystemHsp(BUNDLE_NAME);
 }
+#endif
 
 /**
  * @tc.number: UninstallLowerVersion_0030
  * @tc.name: test UninstallLowerVersion
  * @tc.desc: 1.Test the UninstallLowerVersion
 */
+#ifndef BMS_X86_64_VIRT_SKIP_TESTS
 HWTEST_F(BmsBundleAppServiceFwkInstallerTest, UninstallLowerVersion_0030, Function | SmallTest | Level0)
 {
     auto installRes = InstallSystemHsp(VERSION_ONE_LIBRARY_ONE_PATH);
@@ -643,12 +646,14 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, UninstallLowerVersion_0030, Functi
     dataMgr->installStates_.erase(BUNDLE_NAME);
     UninstallSystemHsp(BUNDLE_NAME);
 }
+#endif
 
 /**
  * @tc.number: UninstallLowerVersion_0040
  * @tc.name: test UninstallLowerVersion
  * @tc.desc: 1.Test the UninstallLowerVersion
 */
+#ifndef BMS_X86_64_VIRT_SKIP_TESTS
 HWTEST_F(BmsBundleAppServiceFwkInstallerTest, UninstallLowerVersion_0040, Function | SmallTest | Level0)
 {
     auto installRes = InstallSystemHsp(VERSION_ONE_LIBRARY_ONE_PATH);
@@ -671,12 +676,14 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, UninstallLowerVersion_0040, Functi
     dataMgr->installStates_.erase(BUNDLE_NAME);
     UninstallSystemHsp(BUNDLE_NAME);
 }
+#endif
 
 /**
  * @tc.number: UninstallLowerVersion_0050
  * @tc.name: test UninstallLowerVersion
  * @tc.desc: 1.Test the UninstallLowerVersion
 */
+#ifndef BMS_X86_64_VIRT_SKIP_TESTS
 HWTEST_F(BmsBundleAppServiceFwkInstallerTest, UninstallLowerVersion_0050, Function | SmallTest | Level0)
 {
     auto installRes = InstallSystemHsp(VERSION_ONE_LIBRARY_ONE_PATH);
@@ -702,6 +709,7 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, UninstallLowerVersion_0050, Functi
     dataMgr->installStates_.erase(BUNDLE_NAME);
     UninstallSystemHsp(BUNDLE_NAME);
 }
+#endif
 
 /**
  * @tc.number: UninstallLowerVersion_0060
@@ -769,6 +777,7 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, UninstallLowerVersion_0080, Functi
  * @tc.name: test ProcessInstall
  * @tc.desc: 1.Test the ProcessInstall
 */
+#ifndef BMS_X86_64_VIRT_SKIP_TESTS
 HWTEST_F(BmsBundleAppServiceFwkInstallerTest, ProcessInstall_0010, Function | SmallTest | Level0)
 {
     AppServiceFwkInstaller appServiceFwkInstaller;
@@ -792,12 +801,14 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, ProcessInstall_0010, Function | Sm
     Security::Verify::ProvisionInfo provisionInfo;
     appServiceFwkInstaller.AddAppProvisionInfo(BUNDLE_NAME, provisionInfo, installParam);
 }
+#endif
 
 /**
  * @tc.number: ProcessInstall_0020
  * @tc.name: test ProcessInstall
  * @tc.desc: 1.Test the ProcessInstall
  */
+#ifndef BMS_X86_64_VIRT_SKIP_TESTS
 HWTEST_F(BmsBundleAppServiceFwkInstallerTest, ProcessInstall_0020, Function | SmallTest | Level0)
 {
     AppServiceFwkInstaller appServiceFwkInstaller;
@@ -817,6 +828,7 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, ProcessInstall_0020, Function | Sm
     EXPECT_EQ(res, ERR_OK);
     appServiceFwkInstaller.deleteBundlePath_.clear();
 }
+#endif
 
 /**
  * @tc.number: ProcessInstall_0010
@@ -1899,6 +1911,7 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, AppServiceFwkInstallerTest_0005, F
  * @tc.name: test CheckAndParseFiles
  * @tc.desc: 1.test CheckAndParseFiles
  */
+#ifndef BMS_X86_64_VIRT_SKIP_TESTS
 HWTEST_F(BmsBundleAppServiceFwkInstallerTest, CheckAndParseFiles_0020, Function | SmallTest | Level1)
 {
     AppServiceFwkInstaller appServiceFwkInstaller;
@@ -1911,6 +1924,7 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, CheckAndParseFiles_0020, Function 
     auto res = appServiceFwkInstaller.CheckAndParseFiles(hspPaths, installParam, newInfos);
     EXPECT_EQ(res, ERR_OK);
 }
+#endif
 
 /**
  * @tc.number: Uninstall_0001

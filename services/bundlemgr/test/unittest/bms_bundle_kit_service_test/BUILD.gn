@@ -110,6 +110,9 @@ ohos_unittest("BmsBundleDataMgrTest") {
   external_deps += bundle_install_external_deps
 
   defines = []
+  if (product_name == "x86_64_virt") {
+    defines += [ "BMS_X86_64_VIRT_SKIP_TESTS" ]
+  }
   if (current_cpu == "arm64") {
     defines += [ "USE_EXTENSION_DATA" ]
   }

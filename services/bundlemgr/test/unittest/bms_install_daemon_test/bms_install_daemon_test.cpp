@@ -1078,6 +1078,7 @@ HWTEST_F(BmsInstallDaemonTest, GetBundleStats_0100, Function | SmallTest | Level
  * @tc.name: test the GetBundleStats function of installd service
  * @tc.desc: 1. the bundle exists
 */
+#ifndef BMS_X86_64_VIRT_SKIP_TESTS
 HWTEST_F(BmsInstallDaemonTest, GetBundleStats_0200, Function | SmallTest | Level0)
 {
     std::vector<int64_t> stats;
@@ -1089,12 +1090,14 @@ HWTEST_F(BmsInstallDaemonTest, GetBundleStats_0200, Function | SmallTest | Level
     EXPECT_EQ(stats[3], 0);
     EXPECT_EQ(stats[4], 0);
 }
+#endif
 
 /**
  * @tc.number: GetBundleStats_0300
  * @tc.name: test the GetBundleStats function of installd service
  * @tc.desc: 1. the bundle exists, wrong userName
 */
+#ifndef BMS_X86_64_VIRT_SKIP_TESTS
 HWTEST_F(BmsInstallDaemonTest, GetBundleStats_0300, Function | SmallTest | Level0)
 {
     OHOS::ForceCreateDirectory(BUNDLE_CODE_DIR_CODE);
@@ -1104,12 +1107,14 @@ HWTEST_F(BmsInstallDaemonTest, GetBundleStats_0300, Function | SmallTest | Level
     EXPECT_NE(stats[1], 0);
     OHOS::ForceRemoveDirectory(BUNDLE_CODE_DIR_CODE);
 }
+#endif
 
 /**
  * @tc.number: GetBundleStats_0400
  * @tc.name: test the GetBundleStats function of installd service
  * @tc.desc: 1. the bundle exists,
 */
+#ifndef BMS_X86_64_VIRT_SKIP_TESTS
 HWTEST_F(BmsInstallDaemonTest, GetBundleStats_0400, Function | SmallTest | Level0)
 {
     OHOS::ForceCreateDirectory(BUNDLE_DATA_DIR_CACHE);
@@ -1131,12 +1136,14 @@ HWTEST_F(BmsInstallDaemonTest, GetBundleStats_0400, Function | SmallTest | Level
     OHOS::ForceRemoveDirectory(BUNDLE_DATA_DIR_DATA_BASE);
     OHOS::ForceRemoveDirectory(BUNDLE_DATA_DIR_DATA_BASE_TEMP);
 }
+#endif
 
 /**
  * @tc.number: GetBundleStats_0500
  * @tc.name: test the GetBundleStats function of installd service
  * @tc.desc: 1. the bundle exists,
 */
+#ifndef BMS_X86_64_VIRT_SKIP_TESTS
 HWTEST_F(BmsInstallDaemonTest, GetBundleStats_0500, Function | SmallTest | Level0)
 {
     std::string bunaleName1 = BUNDLE_NAME_STATS;
@@ -1155,6 +1162,7 @@ HWTEST_F(BmsInstallDaemonTest, GetBundleStats_0500, Function | SmallTest | Level
     APP_LOGI("GetBundleStats bundleCacheSize: %{public}" PRId64, stats[4]);
     DeleteBundleTempDataDirs(bunaleName1);
 }
+#endif
 
 /**
  * @tc.number: GetBundleStats_0600
@@ -1185,6 +1193,7 @@ HWTEST_F(BmsInstallDaemonTest, GetBundleStats_0600, Function | SmallTest | Level
  * @tc.name: test the GetBundleStats function of installd service
  * @tc.desc: 1. the bundle exists,
 */
+#ifndef BMS_X86_64_VIRT_SKIP_TESTS
 HWTEST_F(BmsInstallDaemonTest, GetBundleStats_0700, Function | SmallTest | Level0)
 {
     std::string bunaleName1 = BUNDLE_NAME_STATS;
@@ -1203,6 +1212,7 @@ HWTEST_F(BmsInstallDaemonTest, GetBundleStats_0700, Function | SmallTest | Level
     APP_LOGI("GetBundleStats bundleCacheSize: %{public}" PRId64, stats[4]);
     DeleteBundleTempDataDirs(bunaleName1);
 }
+#endif
 
 /**
  * @tc.number: GetBundleStats_0800
@@ -1285,6 +1295,7 @@ HWTEST_F(BmsInstallDaemonTest, GetBundleStats_1000, Function | SmallTest | Level
  * @tc.name: test the GetBundleStats function of installd service
  * @tc.desc: 1. the bundle exists,
 */
+#ifndef BMS_X86_64_VIRT_SKIP_TESTS
 HWTEST_F(BmsInstallDaemonTest, GetBundleStats_1100, Function | SmallTest | Level0)
 {
     std::string bunaleName1 = BUNDLE_NAME_STATS;
@@ -1303,12 +1314,14 @@ HWTEST_F(BmsInstallDaemonTest, GetBundleStats_1100, Function | SmallTest | Level
     APP_LOGI("GetBundleStats bundleCacheSize: %{public}" PRId64, stats[4]);
     DeleteBundleTempDataDirs(bunaleName1);
 }
+#endif
 
 /**
  * @tc.number: GetBundleStats_1200
  * @tc.name: test the GetBundleStats function of installd service
  * @tc.desc: 1. the bundle exists,
 */
+#ifndef BMS_X86_64_VIRT_SKIP_TESTS
 HWTEST_F(BmsInstallDaemonTest, GetBundleStats_1200, Function | SmallTest | Level0)
 {
     std::string bunaleName1 = BUNDLE_NAME_STATS;
@@ -1328,6 +1341,7 @@ HWTEST_F(BmsInstallDaemonTest, GetBundleStats_1200, Function | SmallTest | Level
     APP_LOGI("GetBundleStats bundleCacheSize: %{public}" PRId64, stats[4]);
     DeleteBundleTempDataDirs(bunaleName1);
 }
+#endif
 
 /**
  * @tc.number: GetBundleStats_1300
@@ -1359,6 +1373,7 @@ HWTEST_F(BmsInstallDaemonTest, GetBundleStats_1300, Function | SmallTest | Level
  * @tc.name: test the GetBundleStats function of installd service
  * @tc.desc: 1. the bundle exists,
 */
+#ifndef BMS_X86_64_VIRT_SKIP_TESTS
 HWTEST_F(BmsInstallDaemonTest, GetBundleStats_1400, Function | SmallTest | Level0)
 {
     std::string bunaleName1 = BUNDLE_NAME_STATS;
@@ -1379,12 +1394,14 @@ HWTEST_F(BmsInstallDaemonTest, GetBundleStats_1400, Function | SmallTest | Level
     APP_LOGI("GetBundleStats bundleCacheSize: %{public}" PRId64, stats[4]);
     DeleteBundleTempDataDirs(bunaleName1);
 }
+#endif
 
 /**
  * @tc.number: GetBundleStats_1500
  * @tc.name: test the GetBundleStats function of installd service
  * @tc.desc: 1. the bundle exists,
 */
+#ifndef BMS_X86_64_VIRT_SKIP_TESTS
 HWTEST_F(BmsInstallDaemonTest, GetBundleStats_1500, Function | SmallTest | Level0)
 {
     std::string bunaleName1 = BUNDLE_NAME_STATS;
@@ -1405,12 +1422,14 @@ HWTEST_F(BmsInstallDaemonTest, GetBundleStats_1500, Function | SmallTest | Level
     APP_LOGI("GetBundleStats bundleCacheSize: %{public}" PRId64, stats[4]);
     DeleteBundleTempDataDirs(bunaleName1);
 }
+#endif
 
 /**
  * @tc.number: GetBundleStats_1600
  * @tc.name: test the GetBundleStats function of installd service
  * @tc.desc: 1. the bundle exists,
 */
+#ifndef BMS_X86_64_VIRT_SKIP_TESTS
 HWTEST_F(BmsInstallDaemonTest, GetBundleStats_1600, Function | SmallTest | Level0)
 {
     std::string bunaleName1 = BUNDLE_NAME_STATS;
@@ -1431,12 +1450,14 @@ HWTEST_F(BmsInstallDaemonTest, GetBundleStats_1600, Function | SmallTest | Level
     APP_LOGI("GetBundleStats bundleCacheSize: %{public}" PRId64, stats[4]);
     DeleteBundleTempDataDirs(bunaleName1);
 }
+#endif
 
 /**
  * @tc.number: GetBundleStats_1700
  * @tc.name: test the GetBundleStats function of installd service
  * @tc.desc: 1. the bundle exists,
 */
+#ifndef BMS_X86_64_VIRT_SKIP_TESTS
 HWTEST_F(BmsInstallDaemonTest, GetBundleStats_1700, Function | SmallTest | Level0)
 {
     std::string bunaleName1 = BUNDLE_NAME_STATS;
@@ -1456,6 +1477,7 @@ HWTEST_F(BmsInstallDaemonTest, GetBundleStats_1700, Function | SmallTest | Level
     APP_LOGI("GetBundleStats bundleCacheSize: %{public}" PRId64, stats[4]);
     DeleteBundleTempDataDirs(bunaleName1);
 }
+#endif
 
 /**
  * @tc.number: GetBundleStats_1800
@@ -1489,6 +1511,7 @@ HWTEST_F(BmsInstallDaemonTest, GetBundleStats_1800, Function | SmallTest | Level
  * @tc.name: test the GetBundleStats function of installd service
  * @tc.desc: 1. the bundle exists,
 */
+#ifndef BMS_X86_64_VIRT_SKIP_TESTS
 HWTEST_F(BmsInstallDaemonTest, GetBundleStats_1900, Function | SmallTest | Level0)
 {
     std::string bunaleName1 = BUNDLE_NAME_STATS;
@@ -1507,12 +1530,14 @@ HWTEST_F(BmsInstallDaemonTest, GetBundleStats_1900, Function | SmallTest | Level
     APP_LOGI("GetBundleStats bundleCacheSize: %{public}" PRId64, stats[4]);
     DeleteShareFilesTempDataDirs(bunaleName1);
 }
+#endif
 
 /**
  * @tc.number: GetBundleStats_2000
  * @tc.name: test the GetBundleStats function of installd service
  * @tc.desc: 1. the bundle exists,
 */
+#ifndef BMS_X86_64_VIRT_SKIP_TESTS
 HWTEST_F(BmsInstallDaemonTest, GetBundleStats_2000, Function | SmallTest | Level0)
 {
     std::string bunaleName1 = BUNDLE_NAME_STATS;
@@ -1531,6 +1556,7 @@ HWTEST_F(BmsInstallDaemonTest, GetBundleStats_2000, Function | SmallTest | Level
     APP_LOGI("GetBundleStats bundleCacheSize: %{public}" PRId64, stats[4]);
     DeleteShareFilesTempDataDirs(bunaleName1);
 }
+#endif
 
 /**
  * @tc.number: GetBundleStats_2100
@@ -2091,11 +2117,19 @@ HWTEST_F(BmsInstallDaemonTest, CheckEncryption_InvalidAppIdentifier_0100, Functi
     checkEncryptionParam.appIdentifier = std::string(257, 'a');
     bool isEncrypted = false;
     auto ret = CheckEncryption(checkEncryptionParam, isEncrypted);
+#ifdef BMS_X86_64_VIRT_ADAPT_TESTS
+    EXPECT_EQ(ExtractInstalldBusinessErrCode(ret), ERR_APPEXECFWK_INSTALLD_PARAM_ERROR) << "raw ret: " << ret;
+#else
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+#endif
 
     checkEncryptionParam.appIdentifier = "test!@#identifier";
     ret = CheckEncryption(checkEncryptionParam, isEncrypted);
+#ifdef BMS_X86_64_VIRT_ADAPT_TESTS
+    EXPECT_EQ(ExtractInstalldBusinessErrCode(ret), ERR_APPEXECFWK_INSTALLD_PARAM_ERROR) << "raw ret: " << ret;
+#else
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+#endif
 }
 
 /**

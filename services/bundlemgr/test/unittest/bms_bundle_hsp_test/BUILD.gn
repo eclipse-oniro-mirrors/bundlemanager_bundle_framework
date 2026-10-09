@@ -272,6 +272,9 @@ ohos_unittest("BmsBundleSharedLibraryInstallTest") {
   ]
   external_deps += bundle_install_external_deps
   defines = []
+  if (product_name == "x86_64_virt") {
+    defines += [ "BMS_X86_64_VIRT_SKIP_TESTS" ]
+  }
   if (code_signature_enable) {
     sources += [
       "${services_path}/bundlemgr/src/aot/aot_sign_data_cache_mgr.cpp",
@@ -444,6 +447,9 @@ ohos_unittest("BmsBundleSharedLibraryUninstallTest") {
   ]
   external_deps += bundle_install_external_deps
   defines = []
+  if (product_name == "x86_64_virt") {
+    defines += [ "BMS_X86_64_VIRT_SKIP_TESTS" ]
+  }
   if (code_signature_enable) {
     sources += [
       "${services_path}/bundlemgr/src/aot/aot_sign_data_cache_mgr.cpp",

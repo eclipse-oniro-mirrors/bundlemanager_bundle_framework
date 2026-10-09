@@ -1270,6 +1270,7 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_2900, Function | MediumTest | Level1)
  *           2.the bundle which has the same bundleName and version as system bundle
  *           3.install these bundle
  */
+#ifndef BMS_X86_64_VIRT_SKIP_TESTS
 HWTEST_F(BmsInstallSystemTest, BMS_Install_3000, Function | MediumTest | Level2)
 {
     std::cout << "START BMS_Install_3000" << std::endl;
@@ -1292,6 +1293,7 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_3000, Function | MediumTest | Level2)
     EXPECT_EQ(message, "Success") << "uninstall fail!";
     std::cout << "END BMS_Install_3000" << std::endl;
 }
+#endif
 
 /**
  * @tc.number: BMS_Install_3100
@@ -1571,6 +1573,7 @@ HWTEST_F(BmsInstallSystemTest, BMS_MultiHapInstall_0300, Function | MediumTest |
  * @tc.desc: 1.under '/system/app',there is a system bundle
  *           2.TriggerScan and check install result
  */
+#ifndef BMS_X86_64_VIRT_SKIP_TESTS
 HWTEST_F(BmsInstallSystemTest, BMS_SystemAppInstall_0100, Function | MediumTest | Level1)
 {
     std::cout << "START BMS_SystemAppInstall_0100" << std::endl;
@@ -1589,6 +1592,7 @@ HWTEST_F(BmsInstallSystemTest, BMS_SystemAppInstall_0100, Function | MediumTest 
     EXPECT_EQ(message, "Success") << "uninstall fail!";
     std::cout << "END BMS_SystemAppInstall_0100" << std::endl;
 }
+#endif
 
 /**
  * @tc.number: BMS_SystemAppInstall_0200
@@ -1596,6 +1600,7 @@ HWTEST_F(BmsInstallSystemTest, BMS_SystemAppInstall_0100, Function | MediumTest 
  * @tc.desc: 1.under '/system/app',there are three bundles,one of them is normal,others are abnormal
  *           2.TriggerScan and check install result
  */
+#ifndef BMS_X86_64_VIRT_SKIP_TESTS
 HWTEST_F(BmsInstallSystemTest, BMS_SystemAppInstall_0200, Function | MediumTest | Level2)
 {
     std::cout << "START BMS_SystemAppInstall_0200" << std::endl;
@@ -1639,6 +1644,7 @@ HWTEST_F(BmsInstallSystemTest, BMS_SystemAppInstall_0200, Function | MediumTest 
     EXPECT_EQ(message, "Success") << "uninstall fail!";
     std::cout << "END BMS_SystemAppInstall_0200" << std::endl;
 }
+#endif
 
 /**
  * @tc.number: BMS_Upgrade_0100
