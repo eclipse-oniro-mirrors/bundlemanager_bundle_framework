@@ -820,6 +820,103 @@ HWTEST_F(BmsBundleAppControlTest, DisposedStatus_0400, Function | SmallTest | Le
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 
+HWTEST_F(BmsBundleAppControlTest, DisposedStatus_0401, Function | SmallTest | Level1)
+{
+    ASSERT_EQ(InstallBundle(INSTALL_PATH), ERR_OK);
+    ScopeGuard uninstallGuard([&] { UnInstallBundle(BUNDLE_NAME); });
+    auto manager = DelayedSingleton<AppControlManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+
+    Want validWant;
+    validWant.SetElementName("", TARGET_BUNDLE_NAME, "EntryAbility", "entry");
+    ASSERT_EQ(manager->SetDisposedStatus(APPID, validWant, USERID), ERR_OK);
+    ScopeGuard disposeGuard([&] { manager->DeleteDisposedStatus(APPID, USERID); });
+
+    Want selfWant;
+    selfWant.SetElementName("", BUNDLE_NAME, "EntryAbility", "entry");
+    EXPECT_EQ(manager->SetDisposedStatus(APPID, selfWant, USERID), ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+
+    Want storedWant;
+    ASSERT_EQ(manager->GetDisposedStatus(APPID, storedWant, USERID), ERR_OK);
+    EXPECT_EQ(storedWant.GetBundleNameRef(), TARGET_BUNDLE_NAME);
+}
+
+HWTEST_F(BmsBundleAppControlTest, DisposedRule_RejectSelfRedirect, Function | SmallTest | Level1)
+{
+    ASSERT_EQ(InstallBundle(INSTALL_PATH), ERR_OK);
+    ScopeGuard uninstallGuard([&] { UnInstallBundle(BUNDLE_NAME); });
+    auto manager = DelayedSingleton<AppControlManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+
+    for (int32_t appIndex : { Constants::MAIN_APP_INDEX, APP_INDEX }) {
+        DisposedRule rule;
+        rule.componentType = ComponentType::UI_ABILITY;
+        rule.disposedType = DisposedType::BLOCK_APPLICATION;
+        rule.controlType = ControlType::DISALLOWED_LIST;
+        rule.want = std::make_shared<Want>();
+        rule.want->SetElementName("", TARGET_BUNDLE_NAME, "EntryAbility", "entry");
+        ASSERT_EQ(manager->SetDisposedRule(CALLING_NAME, APPID, rule, appIndex, USERID), ERR_OK);
+        ScopeGuard disposeGuard([&] { manager->DeleteDisposedRule(CALLING_NAME, APPID, appIndex, USERID); });
+
+        rule.want->SetElementName("", BUNDLE_NAME, "EntryAbility", "entry");
+        EXPECT_EQ(manager->SetDisposedRule(CALLING_NAME, APPID, rule, appIndex, USERID),
+            ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+
+        DisposedRule storedRule;
+        ASSERT_EQ(manager->GetDisposedRule(CALLING_NAME, APPID, storedRule, appIndex, USERID), ERR_OK);
+        ASSERT_NE(storedRule.want, nullptr);
+        EXPECT_EQ(storedRule.want->GetBundleNameRef(), TARGET_BUNDLE_NAME);
+    }
+}
+
+HWTEST_F(BmsBundleAppControlTest, DisposedRule_WithoutRedirect, Function | SmallTest | Level1)
+{
+    ASSERT_EQ(InstallBundle(INSTALL_PATH), ERR_OK);
+    ScopeGuard uninstallGuard([&] { UnInstallBundle(BUNDLE_NAME); });
+    auto manager = DelayedSingleton<AppControlManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+    DisposedRule rule;
+    rule.componentType = ComponentType::UI_ABILITY;
+    rule.disposedType = DisposedType::BLOCK_APPLICATION;
+    rule.controlType = ControlType::DISALLOWED_LIST;
+    rule.want = nullptr;
+    ASSERT_EQ(manager->SetDisposedRule(CALLING_NAME, APPID, rule, Constants::MAIN_APP_INDEX, USERID), ERR_OK);
+    ScopeGuard disposeGuard([&] {
+        manager->DeleteDisposedRule(CALLING_NAME, APPID, Constants::MAIN_APP_INDEX, USERID);
+    });
+    DisposedRule storedRule;
+    EXPECT_EQ(manager->GetDisposedRule(CALLING_NAME, APPID, storedRule, Constants::MAIN_APP_INDEX, USERID), ERR_OK);
+    EXPECT_EQ(storedRule.want, nullptr);
+}
+
+HWTEST_F(BmsBundleAppControlTest, DisposedWant_AppIdentifier, Function | SmallTest | Level1)
+{
+    const std::string bundleName = "com.ohos.disposed.identifier.test";
+    const std::string appId = bundleName + "_testAppId";
+    const std::string appIdentifier = "disposed-self-redirect-test-identifier";
+    auto manager = DelayedSingleton<AppControlManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    Want want;
+    want.SetElementName("", bundleName, "EntryAbility", "entry");
+    DisposedRule rule;
+    rule.disposedType = DisposedType::BLOCK_APPLICATION;
+    rule.controlType = ControlType::DISALLOWED_LIST;
+    rule.want = std::make_shared<Want>(want);
+    InnerBundleInfo info;
+    info.baseBundleInfo_->name = bundleName;
+    info.baseBundleInfo_->appId = appId;
+    info.SetAppIdentifier(appIdentifier);
+    ASSERT_TRUE(dataMgr->bundleInfos_.emplace(bundleName, info).second);
+    ScopeGuard bundleInfoGuard([&] {
+        dataMgr->bundleInfos_.erase(bundleName);
+    });
+    EXPECT_EQ(manager->SetDisposedStatus(appIdentifier, want, USERID), ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+    EXPECT_EQ(manager->SetDisposedRule(CALLING_NAME, appIdentifier, rule, Constants::MAIN_APP_INDEX, USERID),
+        ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+}
+
 /**
  * @tc.number: DisposedStatus_0500
  * @tc.name: test deleting disposed status
