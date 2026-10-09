@@ -3675,8 +3675,9 @@ HWTEST_F(BmsBundleDataMgrTest, GetAdditionalInfoForAllUser_0100, Function | Smal
 
 /**
  * @tc.number: SetAdditionalInfo_0100
- * @tc.name: test SetAdditionalInfo
- * @tc.desc: 1.system run dualmode ERR_BUNDLE_MANAGER_INTERNAL_ERROR
+ * @tc.name: test SetAdditionalInfoByIndex with bundle not installed
+ * @tc.desc: 1.main mode and dual mode clone app are both not installed
+ *           2.get ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST
  */
 HWTEST_F(BmsBundleDataMgrTest, SetAdditionalInfo_0100, Function | SmallTest | Level0)
 {
@@ -3692,12 +3693,19 @@ HWTEST_F(BmsBundleDataMgrTest, SetAdditionalInfo_0100, Function | SmallTest | Le
     res = GetBundleDataMgr()->SetAdditionalInfoByIndex(
         bundleName1, additionalInfo, Constants::DUAL_MODE_CLONE_APP_INDEX);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    res = GetBundleDataMgr()->SetAdditionalInfoByIndex(
+        bundleName0, additionalInfo, Constants::DEFAULT_APP_INDEX);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
 /**
  * @tc.number: SetAdditionalInfo_0200
- * @tc.name: test SetAdditionalInfo
- * @tc.desc: 1.system run dualmode ERR_BUNDLE_MANAGER_INTERNAL_ERROR
+ * @tc.name: test SetAdditionalInfoByIndex when the app of appIndex is not installed
+ * @tc.desc: 1.only main mode app installed, appIndex is DUAL_MODE_CLONE_APP_INDEX
+ *           2.only dual mode clone app installed, appIndex is DEFAULT_APP_INDEX
+ *           3.dual mode clone app not installed for any user, appIndex is DUAL_MODE_CLONE_APP_INDEX
+ *           4.case 1 and 2 get ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE, case 3 gets
+ *             ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST
  */
 HWTEST_F(BmsBundleDataMgrTest, SetAdditionalInfo_0200, Function | SmallTest | Level1)
 {
@@ -3715,7 +3723,10 @@ HWTEST_F(BmsBundleDataMgrTest, SetAdditionalInfo_0200, Function | SmallTest | Le
     std::string additionalInfo = "additionalInfo";
     ErrCode res = GetBundleDataMgr()->SetAdditionalInfoByIndex(
         bundleName0, additionalInfo, Constants::DUAL_MODE_CLONE_APP_INDEX);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_EQ(res, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
+    res = GetBundleDataMgr()->SetAdditionalInfoByIndex(
+        bundleName1, additionalInfo, Constants::DEFAULT_APP_INDEX);
+    EXPECT_EQ(res, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
     res = GetBundleDataMgr()->SetAdditionalInfoByIndex(
         bundleName2, additionalInfo, Constants::DUAL_MODE_CLONE_APP_INDEX);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
