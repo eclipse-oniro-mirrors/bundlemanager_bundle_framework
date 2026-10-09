@@ -72,25 +72,6 @@ void FuzzRemoveDir(InstalldHost& host, FuzzedDataProvider& fdp)
     host.HandleRemoveDir(data, reply);
 }
 
-// HandleExtractModuleFiles: ReadString16(srcModulePath), ReadString16(targetPath),
-// ReadString16(targetSoPath), ReadString16(cpuAbi), ReadBool(needFakeDecompression), ReadBool(isSystemApp)
-// [fix] originally extra bundleName and async twofields，realmethodnotthistwofields
-void FuzzExtractModuleFiles(InstalldHost& host, FuzzedDataProvider& fdp)
-{
-    MessageParcel data;
-    PrepareParcel<InstalldHost>(data);
-    MessageParcel reply;
-    // [fix] removeextra bundleName and async，srcModulePath isfirstfields
-    WriteString16Field(data, fdp, ATTACK_ARCHIVE);               // srcModulePath
-    WriteString16Field(data, fdp);        // targetPath
-    WriteString16Field(data, fdp);        // targetSoPath
-    WriteParcelString16(data, fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH));         // cpuAbi
-    WriteBoolField(data, fdp);                                                     // needFakeDecompression
-    WriteBoolField(data, fdp);                                                     // isSystemApp
-    FinishParcel(data);
-    host.HandleExtractModuleFiles(data, reply);
-}
-
 // HandleMoveFile: ReadString16(oldPath), ReadString16(newPath), ReadInt32(scene), ReadString16(bundleName)
 // [fix] originally missing scene and bundleName twofields
 void FuzzMoveFile(InstalldHost& host, FuzzedDataProvider& fdp)
@@ -1241,7 +1222,6 @@ void FuzzExtractQuickFixSoFile(InstalldHost& host, FuzzedDataProvider& fdp)
 enum InstalldMethod {
     FUZZCREATEBUNDLEDIR = 0,
     FUZZREMOVEDIR,
-    FUZZEXTRACTMODULEFILES,
     FUZZMOVEFILE,
     FUZZMKDIR,
     FUZZSETDIRAPL,
@@ -1343,7 +1323,6 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     switch (methodSelector % INSTALLD_METHOD_MAX) {
         case FUZZCREATEBUNDLEDIR: FuzzCreateBundleDir(installdHost, fdp);          break;
         case FUZZREMOVEDIR: FuzzRemoveDir(installdHost, fdp);                break;
-        case FUZZEXTRACTMODULEFILES: FuzzExtractModuleFiles(installdHost, fdp);       break;
         case FUZZMOVEFILE: FuzzMoveFile(installdHost, fdp);                 break;
         case FUZZMKDIR: FuzzMkdir(installdHost, fdp);                   break;
         case FUZZSETDIRAPL: FuzzSetDirApl(installdHost, fdp);               break;

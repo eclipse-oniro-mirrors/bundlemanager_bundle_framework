@@ -47,7 +47,6 @@ enum IpcCode : std::int16_t {
     ON_ADD_SYSTEM_ABILITY = 3009,
     ON_IDLE = 3012,
     CREATE_BUNDLE_DIR = 3013,
-    EXTRACT_MODULE_FILES = 3014,
     PROCESS_BUNDLE_INSTALL_NATIVE = 3017,
     PROCESS_BUNDLE_UNINSTALL_NATIVE = 3018,
     EXECUTE_AOT = 3023,
@@ -104,7 +103,7 @@ extern "C" int FuzzIInstalldService(FuzzedDataProvider &provider)
         IpcCode::ON_START, IpcCode::ON_STOP, IpcCode::INIT,
         IpcCode::INIT_DIR, IpcCode::START, IpcCode::STOP,
         IpcCode::ON_ADD_SYSTEM_ABILITY, IpcCode::ON_IDLE,
-        IpcCode::CREATE_BUNDLE_DIR, IpcCode::EXTRACT_MODULE_FILES,
+        IpcCode::CREATE_BUNDLE_DIR,
         IpcCode::PROCESS_BUNDLE_INSTALL_NATIVE, IpcCode::PROCESS_BUNDLE_UNINSTALL_NATIVE,
         IpcCode::EXECUTE_AOT, IpcCode::PEND_SIGN_AOT,
         IpcCode::STOP_AOT, IpcCode::DELETE_UNINSTALL_TMP_DIRS,
@@ -156,15 +155,6 @@ extern "C" int FuzzIInstalldService(FuzzedDataProvider &provider)
             auto scene = static_cast<BundleDirScene>(provider.ConsumeIntegral<int32_t>());
             std::string bundleDir = provider.ConsumeRandomLengthString(STRING_MAX_LENGTH);
             OHOS::p_installdService->hostImpl_->CreateBundleDir(bundleName, scene, bundleDir);
-            break;
-        }
-        case IpcCode::EXTRACT_MODULE_FILES: {
-            std::string srcModulePath = provider.ConsumeRandomLengthString(STRING_MAX_LENGTH);
-            std::string targetPath = provider.ConsumeRandomLengthString(STRING_MAX_LENGTH);
-            std::string targetSoPath = provider.ConsumeRandomLengthString(STRING_MAX_LENGTH);
-            std::string cpuAbi = provider.ConsumeRandomLengthString(STRING_MAX_LENGTH);
-            OHOS::p_installdService->hostImpl_->ExtractModuleFiles(srcModulePath, targetPath, targetSoPath, cpuAbi,
-                false, false);
             break;
         }
         case IpcCode::PROCESS_BUNDLE_INSTALL_NATIVE: {

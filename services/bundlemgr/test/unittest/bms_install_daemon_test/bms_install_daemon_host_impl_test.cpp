@@ -103,21 +103,6 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_, Function | SmallTe
 }
 
 /**
- * @tc.number: InstalldHostImplTest_0200
- * @tc.name: test function of InstallHostImpl
- * @tc.desc: 1. calling ExtractModuleFiles of hostImpl
- * @tc.require: issueI5T6P3
-*/
-HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_0200, Function | SmallTest | Level0)
-{
-    auto hostImpl = GetInstalldHostImpl();
-    ASSERT_NE(hostImpl, nullptr);
-
-    auto ret = hostImpl->ExtractModuleFiles(TEST_STRING, TEST_STRING, TEST_STRING, TEST_STRING, false, false);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
-}
-
-/**
  * @tc.number: InstalldHostImplTest_0300
  * @tc.name: test function of InstallHostImpl
  * @tc.desc: 1. calling RenameModuleDir of hostImpl
@@ -490,25 +475,6 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_2700, Function | Sma
 
     auto ret = hostImpl->CreateBundleDir(TEST_BUNDLE_NAME, BundleDirScene::BUNDLE_CODE_DIR, "");
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
-}
-
-/**
- * @tc.number: InstalldHostImplTest_2800
- * @tc.name: test function of InstallHostImpl
- * @tc.desc: 1. calling ExtractModuleFiles of hostImpl
- * @tc.require: issueI5T6P3
-*/
-HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_2800, Function | SmallTest | Level0)
-{
-    auto hostImpl = GetInstalldHostImpl();
-    ASSERT_NE(hostImpl, nullptr);
-
-    auto ret = hostImpl->ExtractModuleFiles("", TEST_STRING, TEST_STRING, TEST_STRING, false, false);
-    EXPECT_NE(ret, ERR_OK);
-    ret = hostImpl->ExtractModuleFiles(TEST_STRING, "", TEST_STRING, TEST_STRING, false, false);
-    EXPECT_NE(ret, ERR_OK);
-    ret = hostImpl->ExtractModuleFiles("", "", TEST_STRING, TEST_STRING, false, false);
-    EXPECT_NE(ret, ERR_OK);
 }
 
 /**

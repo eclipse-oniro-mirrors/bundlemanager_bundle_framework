@@ -174,24 +174,6 @@ ErrCode InstalldProxy::CreateBundleDir(
     return TransactInstalldCmd(InstalldInterfaceCode::CREATE_BUNDLE_DIR, data, reply, option);
 }
 
-ErrCode InstalldProxy::ExtractModuleFiles(const std::string &srcModulePath, const std::string &targetPath,
-    const std::string &targetSoPath, const std::string &cpuAbi, const bool needFakeDecompression,
-    const bool isSystemApp)
-{
-    MessageParcel data;
-    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
-    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(srcModulePath));
-    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(targetPath));
-    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(targetSoPath));
-    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(cpuAbi));
-    INSTALLD_PARCEL_WRITE(data, Bool, needFakeDecompression);
-    INSTALLD_PARCEL_WRITE(data, Bool, isSystemApp);
-
-    MessageParcel reply;
-    MessageOption option;
-    return TransactInstalldCmd(InstalldInterfaceCode::EXTRACT_MODULE_FILES, data, reply, option);
-}
-
 ErrCode InstalldProxy::ExtractHapModuleFiles(const HapModuleExtractParam &param)
 {
     MessageParcel data;

@@ -82,20 +82,6 @@ HWTEST_F(BmsInstalldHostTest, HandleCreateBundleDir_0100, Function | SmallTest |
 }
 
 /**
- * @tc.number: HandleExtractModuleFiles_0100
- * @tc.name: test HandleExtractModuleFiles
- * @tc.desc: 1.HandleExtractModuleFiles test
- */
-HWTEST_F(BmsInstalldHostTest, HandleExtractModuleFiles_0100, Function | SmallTest | Level1)
-{
-    InstalldHost installdHost;
-    MessageParcel data;
-    MessageParcel reply;
-    bool res = installdHost.HandleExtractModuleFiles(data, reply);
-    EXPECT_TRUE(res);
-}
-
-/**
  * @tc.number: HandleProcessBundleInstallNative_0100
  * @tc.name: test HandleProcessBundleInstallNative
  * @tc.desc: 1.HandleProcessBundleInstallNative test

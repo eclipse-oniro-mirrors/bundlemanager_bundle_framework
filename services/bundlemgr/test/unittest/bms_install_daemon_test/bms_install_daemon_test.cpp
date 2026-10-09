@@ -98,9 +98,6 @@ public:
     int RemoveBundleDir(const std::string &bundleDir) const;
     int RemoveBundleDataDir(const std::string &bundleDataDir) const;
     int CleanBundleDataDir(const std::string &bundleDataDir, const std::string &bundleName, int32_t userId) const;
-    int ExtractModuleFiles(const std::string &srcModulePath, const std::string &targetPath,
-        const std::string &targetSoPath, const std::string &cpuAbi, const bool needFakeDecompression,
-        const bool isSystemApp) const;
     int RenameModuleDir(const std::string &oldPath, const std::string &newPath) const;
     bool CheckBundleDirExist() const;
     bool CheckBundleDataDirExist() const;
@@ -214,17 +211,6 @@ int BmsInstallDaemonTest::CleanBundleDataDir(const std::string &bundleDataDir,
         service_->Start();
     }
     return InstalldClient::GetInstance()->CleanBundleDataDir(bundleDataDir, bundleName, userId);
-}
-
-int BmsInstallDaemonTest::ExtractModuleFiles(const std::string &srcModulePath, const std::string &targetPath,
-    const std::string &targetSoPath, const std::string &cpuAbi, const bool needFakeDecompression,
-    const bool isSystemApp) const
-{
-    if (!service_->IsServiceReady()) {
-        service_->Start();
-    }
-    return InstalldClient::GetInstance()->ExtractModuleFiles(srcModulePath, targetPath, targetSoPath, cpuAbi,
-        needFakeDecompression, isSystemApp);
 }
 
 int32_t BmsInstallDaemonTest::MigrateData(
@@ -977,86 +963,31 @@ HWTEST_F(BmsInstallDaemonTest, InstalldClient_1000, Function | SmallTest | Level
 
 
 /**
- * @tc.number: ExtractBundleFile_0100
- * @tc.name: test the ExtractBundleFile function of installd service with flag system bundle
- * @tc.desc: 1. the bundle file is available and the target dir exists
- *           2. the origin file exists and the extracted file exists
-*/
-HWTEST_F(BmsInstallDaemonTest, ExtractBundleFile_0100, Function | SmallTest | Level0)
-{
-    CreateBundleDir(BUNDLE_CODE_DIR);
-    bool dirExist = CheckBundleDirExist();
-    EXPECT_TRUE(dirExist);
-    auto bundleFile = BUNDLE_FILE;
-    int result = ExtractModuleFiles(bundleFile, TEMP_DIR, "", "", false, false);
-    EXPECT_EQ(result, 0);
-    int result1 = RenameModuleDir(TEMP_DIR, MODULE_DIR);
-    EXPECT_EQ(result1, 0);
-}
-
-/**
- * @tc.number: ExtractBundleFile_0200
- * @tc.name: test the ExtractBundleFile function of installd service
- * @tc.desc: 1. the bundle file is illegal
- *           2. the bundle file can't be extracted and the extracted file does not exists
-*/
-HWTEST_F(BmsInstallDaemonTest, ExtractBundleFile_0200, Function | SmallTest | Level0)
-{
-    CreateBundleDir(BUNDLE_CODE_DIR);
-    bool dirExist = CheckBundleDirExist();
-    EXPECT_TRUE(dirExist);
-    int result = ExtractModuleFiles("", TEMP_DIR, "", "", false, false);
-    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-}
-
-/**
- * @tc.number: ExtractBundleFile_0300
- * @tc.name: test the ExtractBundleFile function of installd service
- * @tc.desc: 1. the temp dir does not exist
- *           2. the bundle file can't be extracted and the extracted file does not exists
-*/
-HWTEST_F(BmsInstallDaemonTest, ExtractBundleFile_0300, Function | SmallTest | Level0)
-{
-    CreateBundleDir(BUNDLE_CODE_DIR);
-    bool dirExist = CheckBundleDirExist();
-    EXPECT_TRUE(dirExist);
-    auto bundleFile = BUNDLE_FILE;
-    int result = ExtractModuleFiles(bundleFile, "", "", "", false, false);
-    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-}
-
-/**
  * @tc.number: ExtractBundleFile_0400
- * @tc.name: test the ExtractBundleFile function of installd service
+ * @tc.name: test the RenameModuleDir function of installd service
  * @tc.desc: 1. the old path does not exist
- *           2. the bundle file can't be extracted and the extracted file does not exists
+ *           2. the bundle file can't be renamed and the result is error
 */
 HWTEST_F(BmsInstallDaemonTest, ExtractBundleFile_0400, Function | SmallTest | Level0)
 {
     CreateBundleDir(BUNDLE_CODE_DIR);
     bool dirExist = CheckBundleDirExist();
     EXPECT_TRUE(dirExist);
-    auto bundleFile = BUNDLE_FILE;
-    int result = ExtractModuleFiles(bundleFile, TEMP_DIR, "", "", false, false);
-    EXPECT_EQ(result, 0);
     int result1 = RenameModuleDir("", MODULE_DIR);
     EXPECT_EQ(result1, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
 /**
  * @tc.number: ExtractBundleFile_0500
- * @tc.name: test the ExtractBundleFile function of installd service
+ * @tc.name: test the RenameModuleDir function of installd service
  * @tc.desc: 1. the new path does not exist
- *           2. the bundle file can't be extracted and the extracted file does not exists
+ *           2. the bundle file can't be renamed and the result is error
 */
 HWTEST_F(BmsInstallDaemonTest, ExtractBundleFile_0500, Function | SmallTest | Level0)
 {
     CreateBundleDir(BUNDLE_CODE_DIR);
     bool dirExist = CheckBundleDirExist();
     EXPECT_TRUE(dirExist);
-    auto bundleFile = BUNDLE_FILE;
-    int result = ExtractModuleFiles(bundleFile, TEMP_DIR, "", "", false, false);
-    EXPECT_EQ(result, 0);
     int result1 = RenameModuleDir(TEMP_DIR, "");
     EXPECT_EQ(result1, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }

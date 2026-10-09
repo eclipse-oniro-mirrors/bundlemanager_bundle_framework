@@ -51,10 +51,6 @@ public:
      * @param cpuAbi cpuAbi.
      * @return Returns ERR_OK if the HAP file extracted successfully; returns error code otherwise.
      */
-    ErrCode ExtractModuleFiles(const std::string &srcModulePath, const std::string &targetPath,
-        const std::string &targetSoPath, const std::string &cpuAbi, const bool needFakeDecompression,
-        const bool isSystemApp);
-
     /**
      * @brief Extract service module files with path construction in installd.
      * @param param Indicates the ExtractModuleFilesParam containing all parameters.
