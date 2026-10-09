@@ -42,6 +42,7 @@
 #include "inner_bundle_user_info.h"
 #include "ipc/check_encryption_param.h"
 #include "json_util.h"
+#include "launch_service.h"
 #include "plugin/plugin_bundle_info.h"
 #include "preinstalled_application_info.h"
 #include "quick_fix/app_quick_fix.h"
@@ -169,6 +170,7 @@ struct InnerModuleInfo {
     std::vector<std::string> preloads;
     std::vector<HnpPackage> hnpPackages;
     std::vector<ExecutableBinaryPath> executableBinaryPaths;
+    std::vector<LaunchService> launchServices;
     // new version fields
     std::vector<DefinePermission> definePermissions;
     // permissions stored compactly to reduce memory, see bundle_permissions.h

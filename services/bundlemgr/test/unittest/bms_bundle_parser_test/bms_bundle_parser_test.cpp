@@ -7316,4 +7316,196 @@ HWTEST_F(BmsBundleParserTest, TestParse_8300, Function | SmallTest | Level1)
     EXPECT_TRUE(hapModule->resizeable);
 }
 
+/**
+ * @tc.number: TransformTo_launchServices_0100
+ * @tc.name: launchServices with all six fields
+ * @tc.desc: valid launchServices entry parsed into InnerModuleInfo and HapModuleInfo
+ */
+HWTEST_F(BmsBundleParserTest, TransformTo_launchServices_0100, Function | SmallTest | Level1)
+{
+    nlohmann::json profileJson = MODULE_JSON;
+    profileJson["module"]["launchServices"] = R"(
+        [
+            {
+                "name": "svc",
+                "binaryPath": "/bin/launch_svc",
+                "runAtLoad": true,
+                "keepAlive": true,
+                "provideIpcService": false,
+                "type": "daemon"
+            }
+        ]
+    )"_json;
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+    profileFileBuffer << profileJson.dump();
+    BundleExtractor bundleExtractor(EMPTY_NAME);
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
+
+    auto iter = innerBundleInfo.innerModuleInfos_.find("entry");
+    ASSERT_NE(iter, innerBundleInfo.innerModuleInfos_.end());
+    ASSERT_EQ(iter->second.launchServices.size(), 1);
+    EXPECT_EQ(iter->second.launchServices[0].name, "svc");
+    EXPECT_EQ(iter->second.launchServices[0].binaryPath, "/bin/launch_svc");
+    EXPECT_TRUE(iter->second.launchServices[0].runAtLoad);
+    EXPECT_TRUE(iter->second.launchServices[0].keepAlive);
+    EXPECT_FALSE(iter->second.launchServices[0].provideIpcService);
+    EXPECT_EQ(iter->second.launchServices[0].type, LaunchServiceType::DAEMON);
+
+    auto hapModule = innerBundleInfo.FindHapModuleInfo("entry");
+    ASSERT_NE(hapModule, std::nullopt);
+    ASSERT_EQ(hapModule->launchServices.size(), 1);
+    EXPECT_EQ(hapModule->launchServices[0].name, "svc");
+    EXPECT_EQ(hapModule->launchServices[0].binaryPath, "/bin/launch_svc");
+}
+
+/**
+ * @tc.number: TransformTo_launchServices_0200
+ * @tc.name: launchServices binaryPath type error
+ * @tc.desc: binaryPath is not a string → ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR
+ */
+HWTEST_F(BmsBundleParserTest, TransformTo_launchServices_0200, Function | SmallTest | Level1)
+{
+    nlohmann::json profileJson = MODULE_JSON;
+    profileJson["module"]["launchServices"] = R"(
+        [
+            {
+                "name": "svc",
+                "binaryPath": 1
+            }
+        ]
+    )"_json;
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+    profileFileBuffer << profileJson.dump();
+    BundleExtractor bundleExtractor(EMPTY_NAME);
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR);
+}
+
+/**
+ * @tc.number: TransformTo_launchServices_0300
+ * @tc.name: launchServices missing binaryPath
+ * @tc.desc: binaryPath is absent → ERR_APPEXECFWK_PARSE_PROFILE_MISSING_PROP
+ */
+HWTEST_F(BmsBundleParserTest, TransformTo_launchServices_0300, Function | SmallTest | Level1)
+{
+    nlohmann::json profileJson = MODULE_JSON;
+    profileJson["module"]["launchServices"] = R"(
+        [
+            {
+                "name": "svc"
+            }
+        ]
+    )"_json;
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+    profileFileBuffer << profileJson.dump();
+    BundleExtractor bundleExtractor(EMPTY_NAME);
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_APPEXECFWK_PARSE_PROFILE_MISSING_PROP);
+}
+
+/**
+ * @tc.number: TransformTo_launchServices_0400
+ * @tc.name: launchServices runAtLoad type error
+ * @tc.desc: runAtLoad is not a boolean → ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR
+ */
+HWTEST_F(BmsBundleParserTest, TransformTo_launchServices_0400, Function | SmallTest | Level1)
+{
+    nlohmann::json profileJson = MODULE_JSON;
+    profileJson["module"]["launchServices"] = R"(
+        [
+            {
+                "name": "svc",
+                "binaryPath": "/bin/launch_svc",
+                "runAtLoad": "yes"
+            }
+        ]
+    )"_json;
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+    profileFileBuffer << profileJson.dump();
+    BundleExtractor bundleExtractor(EMPTY_NAME);
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR);
+}
+
+/**
+ * @tc.number: TransformTo_launchServices_0500
+ * @tc.name: launchServices unsupported type value
+ * @tc.desc: type is restricted to daemon; unknown value → entry skipped with log, parse OK with empty result
+ */
+HWTEST_F(BmsBundleParserTest, TransformTo_launchServices_0500, Function | SmallTest | Level1)
+{
+    nlohmann::json profileJson = MODULE_JSON;
+    profileJson["module"]["launchServices"] = R"(
+        [
+            {
+                "name": "svc",
+                "binaryPath": "/bin/launch_svc",
+                "type": "agent"
+            }
+        ]
+    )"_json;
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+    profileFileBuffer << profileJson.dump();
+    BundleExtractor bundleExtractor(EMPTY_NAME);
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
+
+    auto iter = innerBundleInfo.innerModuleInfos_.find("entry");
+    ASSERT_NE(iter, innerBundleInfo.innerModuleInfos_.end());
+    EXPECT_TRUE(iter->second.launchServices.empty());
+
+    auto hapModule = innerBundleInfo.FindHapModuleInfo("entry");
+    ASSERT_NE(hapModule, std::nullopt);
+    EXPECT_TRUE(hapModule->launchServices.empty());
+}
+
+/**
+ * @tc.number: TransformTo_launchServices_0600
+ * @tc.name: launchServices absent or empty array
+ * @tc.desc: launchServices key missing or empty array → parse OK with empty result
+ */
+HWTEST_F(BmsBundleParserTest, TransformTo_launchServices_0600, Function | SmallTest | Level1)
+{
+    ModuleProfile moduleProfile;
+    BundleExtractor bundleExtractor(EMPTY_NAME);
+
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+    profileFileBuffer << MODULE_JSON.dump();
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
+    auto iter = innerBundleInfo.innerModuleInfos_.find("entry");
+    ASSERT_NE(iter, innerBundleInfo.innerModuleInfos_.end());
+    EXPECT_TRUE(iter->second.launchServices.empty());
+
+    nlohmann::json emptyArrayJson = MODULE_JSON;
+    emptyArrayJson["module"]["launchServices"] = nlohmann::json::array();
+    InnerBundleInfo emptyArrayBundleInfo;
+    std::ostringstream emptyArrayBuffer;
+    emptyArrayBuffer << emptyArrayJson.dump();
+    ErrCode result2 = moduleProfile.TransformTo(
+        emptyArrayBuffer, bundleExtractor, emptyArrayBundleInfo);
+    EXPECT_EQ(result2, ERR_OK);
+    auto emptyArrayIter = emptyArrayBundleInfo.innerModuleInfos_.find("entry");
+    ASSERT_NE(emptyArrayIter, emptyArrayBundleInfo.innerModuleInfos_.end());
+    EXPECT_TRUE(emptyArrayIter->second.launchServices.empty());
+}
+
 } // OHOS

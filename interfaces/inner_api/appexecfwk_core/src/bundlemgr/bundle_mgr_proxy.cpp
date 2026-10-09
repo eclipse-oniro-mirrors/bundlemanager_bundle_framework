@@ -17,6 +17,7 @@
 
 #include <chrono>
 #include <cinttypes>
+#include <memory>
 #include <numeric>
 #include <mutex>
 #include <set>
@@ -5434,6 +5435,72 @@ ErrCode BundleMgrProxy::GetJsonProfileForSelf(ProfileType profileType, const std
     }
     MessageOption option(MessageOption::TF_SYNC | MessageOption::TF_IMAGE);
     return GetBigString(BundleMgrInterfaceCode::GET_JSON_PROFILE_FOR_SELF, data, profile, option);
+}
+
+ErrCode BundleMgrProxy::GetLaunchServices(const std::string &bundleName, const std::string &moduleName,
+    int32_t userId, LaunchServicesResult &result)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    APP_LOGD("begin to GetLaunchServices, bundleName: %{public}s, moduleName: %{public}s",
+        bundleName.c_str(), moduleName.c_str());
+    if (bundleName.empty() || moduleName.empty()) {
+        APP_LOGE("bundleName or moduleName is empty");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetLaunchServices due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to GetLaunchServices due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(moduleName)) {
+        APP_LOGE("fail to GetLaunchServices due to write moduleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to GetLaunchServices due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_LAUNCH_SERVICES, data, reply)) {
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    ErrCode ret = static_cast<ErrCode>(reply.ReadInt32());
+    if (ret != ERR_OK) {
+        APP_LOGD("host reply err %{public}d", ret);
+        return ret;
+    }
+    std::unique_ptr<LaunchServicesResult> launchServicesResult(reply.ReadParcelable<LaunchServicesResult>());
+    if (!launchServicesResult) {
+        APP_LOGE("ReadParcelable<LaunchServicesResult> failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    result = *launchServicesResult;
+    return ERR_OK;
+}
+
+ErrCode BundleMgrProxy::GetAllLaunchServices(int32_t userId, std::vector<LaunchServiceInfo> &launchServiceInfos)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    APP_LOGD("begin to GetAllLaunchServices");
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetAllLaunchServices due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to GetAllLaunchServices due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    return GetVectorFromParcelIntelligentWithErrCode<LaunchServiceInfo>(
+        BundleMgrInterfaceCode::GET_ALL_LAUNCH_SERVICES, data, launchServiceInfos);
 }
 
 sptr<IBundleResource> BundleMgrProxy::GetBundleResourceProxy()

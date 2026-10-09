@@ -187,6 +187,15 @@ struct ExecutableBinaryPath {
     std::string path;
 };
 
+struct LaunchService {
+    std::string name;
+    std::string binaryPath;
+    bool runAtLoad = false;
+    bool keepAlive = false;
+    bool provideIpcService = false;
+    std::string type = LAUNCH_SERVICE_TYPE_DAEMON;
+};
+
 struct Ability {
     bool visible = false;
     bool continuable = false;
@@ -387,6 +396,7 @@ struct Module {
     std::string formExtensionModule;
     std::string formWidgetModule;
     std::vector<ExecutableBinaryPath> executableBinaryPaths;
+    std::vector<LaunchService> launchServices;
 };
 
 struct ModuleJson {
@@ -486,6 +496,48 @@ void from_json(const nlohmann::json &jsonObject, ExecutableBinaryPath &executabl
         jsonObjectEnd,
         EXECUTABLE_BINARY_PATH,
         executableBinaryPath.path,
+        false,
+        g_parseResult);
+}
+
+void from_json(const nlohmann::json &jsonObject, LaunchService &launchService)
+{
+    APP_LOGD("read launchService tag from module.json");
+    const auto &jsonObjectEnd = jsonObject.end();
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        LAUNCH_SERVICE_NAME,
+        launchService.name,
+        true,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        LAUNCH_SERVICE_BINARY_PATH,
+        launchService.binaryPath,
+        true,
+        g_parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        LAUNCH_SERVICE_RUN_AT_LOAD,
+        launchService.runAtLoad,
+        false,
+        g_parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        LAUNCH_SERVICE_KEEP_ALIVE,
+        launchService.keepAlive,
+        false,
+        g_parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        LAUNCH_SERVICE_PROVIDE_IPC_SERVICE,
+        launchService.provideIpcService,
+        false,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        LAUNCH_SERVICE_TYPE,
+        launchService.type,
         false,
         g_parseResult);
 }
@@ -1978,6 +2030,14 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         false,
         g_parseResult,
         ArrayType::OBJECT);
+    GetValueIfFindKey<std::vector<LaunchService>>(jsonObject,
+        jsonObjectEnd,
+        MODULE_LAUNCH_SERVICES,
+        module.launchServices,
+        JsonType::ARRAY,
+        false,
+        g_parseResult,
+        ArrayType::OBJECT);
 }
 
 void from_json(const nlohmann::json &jsonObject, ModuleJson &moduleJson)
@@ -2038,6 +2098,24 @@ void GetExecutableBinaryPath(std::vector<ExecutableBinaryPath> &executableBinary
         ExecutableBinaryPath tmpExecutableBinaryPath;
         tmpExecutableBinaryPath.path = item.path;
         executableBinaryPath.emplace_back(tmpExecutableBinaryPath);
+    }
+}
+
+void GetLaunchService(std::vector<LaunchService> &launchService,
+    const std::vector<Profile::LaunchService> &profileLaunchService)
+{
+    for (const Profile::LaunchService &item : profileLaunchService) {
+        LaunchService tmpLaunchService;
+        tmpLaunchService.name = item.name;
+        tmpLaunchService.binaryPath = item.binaryPath;
+        tmpLaunchService.runAtLoad = item.runAtLoad;
+        tmpLaunchService.keepAlive = item.keepAlive;
+        tmpLaunchService.provideIpcService = item.provideIpcService;
+        if (!LaunchServiceTypeFromString(item.type, tmpLaunchService.type)) {
+            APP_LOGE("invalid launch service type: %{public}s", item.type.c_str());
+            continue;
+        }
+        launchService.emplace_back(tmpLaunchService);
     }
 }
 
@@ -2972,6 +3050,9 @@ bool ToInnerModuleInfo(
 
     // Convert Profile::ExecutableBinaryPath to AppExecFwk::ExecutableBinaryPath
     GetExecutableBinaryPath(innerModuleInfo.executableBinaryPaths, moduleJson.module.executableBinaryPaths);
+
+    // Convert Profile::LaunchService to AppExecFwk::LaunchService
+    GetLaunchService(innerModuleInfo.launchServices, moduleJson.module.launchServices);
 
     innerModuleInfo.routerMap = moduleJson.module.routerMap;
     // abilities and fileContextMenu store in InnerBundleInfo

@@ -1283,6 +1283,12 @@ public:
     virtual ErrCode GetJsonProfileForSelf(ProfileType profileType, const std::string &moduleName,
         std::string &profile) override;
 
+    virtual ErrCode GetLaunchServices(const std::string &bundleName, const std::string &moduleName,
+        int32_t userId, LaunchServicesResult &result) override;
+
+    virtual ErrCode GetAllLaunchServices(int32_t userId,
+        std::vector<LaunchServiceInfo> &launchServiceInfos) override;
+
     virtual sptr<IBundleResource> GetBundleResourceProxy() override;
 
     virtual sptr<IBundleSkillManager> GetSkillManagerProxy() override;

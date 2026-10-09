@@ -14444,4 +14444,505 @@ HWTEST_F(BmsDataMgrTest, DeleteDesktopShortcutInfoFromExtension_0002, Function |
 
     BmsExtensionDataMgr::handler_ = nullptr;
 }
+
+/**
+ * @tc.number: GetLaunchServices_0100
+ * @tc.name: GetLaunchServices
+ * @tc.desc: 1. query the launch services of a module with a configured entry
+ *           2. returns ERR_OK and the launch service fields match the inner module info
+ */
+HWTEST_F(BmsDataMgrTest, GetLaunchServices_0100, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo innerBundleInfo;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = MODULE_NAME;
+    LaunchService launchService;
+    launchService.name = "svc";
+    launchService.binaryPath = "/bin/launch_svc";
+    launchService.runAtLoad = true;
+    launchService.keepAlive = true;
+    launchService.provideIpcService = false;
+    launchService.type = LaunchServiceType::DAEMON;
+    innerModuleInfo.launchServices.emplace_back(launchService);
+    innerBundleInfo.InsertInnerModuleInfo(MODULE_NAME, innerModuleInfo);
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = Constants::START_USERID;
+    innerBundleUserInfo.bundleName = BUNDLE_NAME;
+    innerBundleInfo.innerBundleUserInfos_.emplace(std::to_string(Constants::START_USERID),
+        innerBundleUserInfo);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+
+    LaunchServicesResult result;
+    ErrCode ret = dataMgr->GetLaunchServices(BUNDLE_NAME, MODULE_NAME, Constants::ANY_USERID, result);
+    EXPECT_EQ(ret, ERR_OK);
+    ASSERT_EQ(result.launchServices.size(), 1);
+    EXPECT_EQ(result.launchServices[0].name, "svc");
+    EXPECT_EQ(result.launchServices[0].binaryPath, "/bin/launch_svc");
+    EXPECT_TRUE(result.launchServices[0].runAtLoad);
+    EXPECT_TRUE(result.launchServices[0].keepAlive);
+    EXPECT_FALSE(result.launchServices[0].provideIpcService);
+    EXPECT_EQ(result.launchServices[0].type, LaunchServiceType::DAEMON);
+
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: GetLaunchServices_0200
+ * @tc.name: GetLaunchServices
+ * @tc.desc: 1. query a launch service with a bundleName that is not installed
+ *           2. returns ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST
+ */
+HWTEST_F(BmsDataMgrTest, GetLaunchServices_0200, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+
+    LaunchServicesResult result;
+    ErrCode ret = dataMgr->GetLaunchServices(BUNDLE_NAME, MODULE_NAME, Constants::ANY_USERID, result);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetLaunchServices_0300
+ * @tc.name: GetLaunchServices
+ * @tc.desc: 1. query a launch service with invalid userId (GetUserId resolves to INVALID_USERID)
+ *           2. returns ERR_BUNDLE_MANAGER_INVALID_USER_ID
+ */
+HWTEST_F(BmsDataMgrTest, GetLaunchServices_0300, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    LaunchServicesResult result;
+    ErrCode ret = dataMgr->GetLaunchServices(BUNDLE_NAME, MODULE_NAME, Constants::INVALID_USERID, result);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+/**
+ * @tc.number: GetLaunchServices_0400
+ * @tc.name: GetLaunchServices
+ * @tc.desc: 1. query a launch service with a moduleName that does not exist in the bundle
+ *           2. returns ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST (aligned with GetJsonProfile module-level error)
+ */
+HWTEST_F(BmsDataMgrTest, GetLaunchServices_0400, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo innerBundleInfo;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = MODULE_NAME;
+    innerBundleInfo.InsertInnerModuleInfo(MODULE_NAME, innerModuleInfo);
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = Constants::START_USERID;
+    innerBundleUserInfo.bundleName = BUNDLE_NAME;
+    innerBundleInfo.innerBundleUserInfos_.emplace(std::to_string(Constants::START_USERID),
+        innerBundleUserInfo);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+
+    LaunchServicesResult result;
+    ErrCode ret = dataMgr->GetLaunchServices(BUNDLE_NAME, "noSuchModule", Constants::ANY_USERID, result);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
+
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: GetLaunchServices_0500
+ * @tc.name: GetLaunchServices
+ * @tc.desc: 1. query a module without configured launch services
+ *           2. returns ERR_OK with an empty launch services list
+ */
+HWTEST_F(BmsDataMgrTest, GetLaunchServices_0500, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo innerBundleInfo;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = MODULE_NAME;
+    innerBundleInfo.InsertInnerModuleInfo(MODULE_NAME, innerModuleInfo);
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = Constants::START_USERID;
+    innerBundleUserInfo.bundleName = BUNDLE_NAME;
+    innerBundleInfo.innerBundleUserInfos_.emplace(std::to_string(Constants::START_USERID),
+        innerBundleUserInfo);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+
+    LaunchServicesResult result;
+    ErrCode ret = dataMgr->GetLaunchServices(BUNDLE_NAME, MODULE_NAME, Constants::ANY_USERID, result);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_TRUE(result.launchServices.empty());
+
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: GetLaunchServices_0600
+ * @tc.name: GetLaunchServices
+ * @tc.desc: 1. persistence round-trip: build InnerBundleInfo with multi-module launchServices, ToJson then FromJson
+ *           2. per-module query on the restored info returns the full configured list per module (INV-1, INV-3)
+ */
+HWTEST_F(BmsDataMgrTest, GetLaunchServices_0600, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    const std::string featureModuleName = "feature";
+    InnerBundleInfo innerBundleInfo;
+    InnerModuleInfo entryModuleInfo;
+    entryModuleInfo.moduleName = MODULE_NAME;
+    LaunchService entryService;
+    entryService.name = "svc";
+    entryService.binaryPath = "/bin/launch_svc";
+    entryService.runAtLoad = true;
+    entryService.type = LaunchServiceType::DAEMON;
+    entryModuleInfo.launchServices.emplace_back(entryService);
+    innerBundleInfo.InsertInnerModuleInfo(MODULE_NAME, entryModuleInfo);
+    InnerModuleInfo featureModuleInfo;
+    featureModuleInfo.moduleName = featureModuleName;
+    LaunchService featureService;
+    featureService.name = "featureSvc";
+    featureService.binaryPath = "/bin/feature_svc";
+    featureService.provideIpcService = true;
+    featureModuleInfo.launchServices.emplace_back(featureService);
+    innerBundleInfo.InsertInnerModuleInfo(featureModuleName, featureModuleInfo);
+
+    nlohmann::json jsonObject;
+    innerBundleInfo.ToJson(jsonObject);
+    InnerBundleInfo restoredInfo;
+    EXPECT_EQ(restoredInfo.FromJson(jsonObject), 0);
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = Constants::START_USERID;
+    innerBundleUserInfo.bundleName = BUNDLE_NAME;
+    restoredInfo.innerBundleUserInfos_.emplace(std::to_string(Constants::START_USERID),
+        innerBundleUserInfo);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, restoredInfo);
+
+    LaunchServicesResult entryResult;
+    ErrCode ret = dataMgr->GetLaunchServices(BUNDLE_NAME, MODULE_NAME, Constants::ANY_USERID, entryResult);
+    EXPECT_EQ(ret, ERR_OK);
+    ASSERT_EQ(entryResult.launchServices.size(), 1);
+    EXPECT_EQ(entryResult.launchServices[0].name, "svc");
+    EXPECT_EQ(entryResult.launchServices[0].binaryPath, "/bin/launch_svc");
+    EXPECT_TRUE(entryResult.launchServices[0].runAtLoad);
+    EXPECT_FALSE(entryResult.launchServices[0].keepAlive);
+    EXPECT_EQ(entryResult.launchServices[0].type, LaunchServiceType::DAEMON);
+
+    LaunchServicesResult featureResult;
+    ret = dataMgr->GetLaunchServices(BUNDLE_NAME, featureModuleName, Constants::ANY_USERID, featureResult);
+    EXPECT_EQ(ret, ERR_OK);
+    ASSERT_EQ(featureResult.launchServices.size(), 1);
+    EXPECT_EQ(featureResult.launchServices[0].name, "featureSvc");
+    EXPECT_EQ(featureResult.launchServices[0].binaryPath, "/bin/feature_svc");
+
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: GetLaunchServices_0700
+ * @tc.name: GetLaunchServices
+ * @tc.desc: 1. query with a userId where the bundle is not installed (installed for user 100 only)
+ *           2. responseUserId resolves to INVALID_USERID, returns ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST
+ */
+HWTEST_F(BmsDataMgrTest, GetLaunchServices_0700, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo innerBundleInfo;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = MODULE_NAME;
+    LaunchService launchService;
+    launchService.name = "svc";
+    launchService.binaryPath = "/bin/launch_svc";
+    innerModuleInfo.launchServices.emplace_back(launchService);
+    innerBundleInfo.InsertInnerModuleInfo(MODULE_NAME, innerModuleInfo);
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = Constants::START_USERID;
+    innerBundleUserInfo.bundleName = BUNDLE_NAME;
+    innerBundleInfo.innerBundleUserInfos_.emplace(std::to_string(Constants::START_USERID),
+        innerBundleUserInfo);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+    dataMgr->AddUserId(Constants::START_USERID + 1);
+
+    LaunchServicesResult result;
+    ErrCode ret = dataMgr->GetLaunchServices(BUNDLE_NAME, MODULE_NAME, Constants::START_USERID + 1, result);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_TRUE(result.launchServices.empty());
+
+    dataMgr->RemoveUserId(Constants::START_USERID + 1);
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: GetLaunchServices_0800
+ * @tc.name: GetLaunchServices
+ * @tc.desc: 1. query with ALL_USERID, which is a bundle manager internal definition and not supported
+ *           2. returns ERR_BUNDLE_MANAGER_INVALID_USER_ID and the result stays empty
+ */
+HWTEST_F(BmsDataMgrTest, GetLaunchServices_0800, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    LaunchServicesResult result;
+    ErrCode ret = dataMgr->GetLaunchServices(BUNDLE_NAME, MODULE_NAME, Constants::ALL_USERID, result);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    EXPECT_TRUE(result.launchServices.empty());
+}
+
+/**
+ * @tc.number: GetAllLaunchServices_0100
+ * @tc.name: GetAllLaunchServices
+ * @tc.desc: 1. scan launch services of a single bundle with one configured module
+ *           2. returns ERR_OK and one entry carrying bundleName/moduleName context and the service fields
+ */
+HWTEST_F(BmsDataMgrTest, GetAllLaunchServices_0100, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo innerBundleInfo;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = MODULE_NAME;
+    LaunchService launchService;
+    launchService.name = "svc";
+    launchService.binaryPath = "/bin/launch_svc";
+    launchService.runAtLoad = true;
+    launchService.keepAlive = true;
+    innerModuleInfo.launchServices.emplace_back(launchService);
+    innerBundleInfo.InsertInnerModuleInfo(MODULE_NAME, innerModuleInfo);
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = Constants::START_USERID;
+    innerBundleInfo.innerBundleUserInfos_.emplace(std::to_string(Constants::START_USERID),
+        innerBundleUserInfo);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+
+    std::vector<LaunchServiceInfo> result;
+    ErrCode ret = dataMgr->GetAllLaunchServices(Constants::ANY_USERID, result);
+    EXPECT_EQ(ret, ERR_OK);
+    ASSERT_EQ(result.size(), 1);
+    EXPECT_EQ(result[0].bundleName, BUNDLE_NAME);
+    EXPECT_EQ(result[0].moduleName, MODULE_NAME);
+    EXPECT_EQ(result[0].userId, Constants::START_USERID);
+    EXPECT_EQ(result[0].appIndex, Constants::INITIAL_APP_INDEX);
+    ASSERT_EQ(result[0].launchServices.size(), 1);
+    EXPECT_EQ(result[0].launchServices[0].name, "svc");
+    EXPECT_EQ(result[0].launchServices[0].binaryPath, "/bin/launch_svc");
+    EXPECT_TRUE(result[0].launchServices[0].runAtLoad);
+    EXPECT_TRUE(result[0].launchServices[0].keepAlive);
+
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: GetAllLaunchServices_0200
+ * @tc.name: GetAllLaunchServices
+ * @tc.desc: 1. scan launch services across two bundles with multi modules, one module without launchServices
+ *           2. returns ERR_OK; modules without launchServices are skipped; entries follow natural bundleName/moduleName map order
+ */
+HWTEST_F(BmsDataMgrTest, GetAllLaunchServices_0200, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    const std::string bundleA = "com.example.aaa";
+    const std::string bundleB = "com.example.bbb";
+    InnerBundleInfo bundleInfoA;
+    InnerModuleInfo moduleA1;
+    moduleA1.moduleName = "module1";
+    LaunchService serviceA1;
+    serviceA1.name = "svcA1";
+    serviceA1.binaryPath = "/bin/svc_a1";
+    moduleA1.launchServices.emplace_back(serviceA1);
+    bundleInfoA.InsertInnerModuleInfo("module1", moduleA1);
+    InnerModuleInfo moduleA2;
+    moduleA2.moduleName = "module2";
+    LaunchService serviceA2;
+    serviceA2.name = "svcA2";
+    serviceA2.binaryPath = "/bin/svc_a2";
+    moduleA2.launchServices.emplace_back(serviceA2);
+    bundleInfoA.InsertInnerModuleInfo("module2", moduleA2);
+    InnerModuleInfo moduleA3;
+    moduleA3.moduleName = "module3";
+    bundleInfoA.InsertInnerModuleInfo("module3", moduleA3);
+    InnerBundleInfo bundleInfoB;
+    InnerModuleInfo moduleB1;
+    moduleB1.moduleName = "entry";
+    LaunchService serviceB1;
+    serviceB1.name = "svcB1";
+    serviceB1.binaryPath = "/bin/svc_b1";
+    moduleB1.launchServices.emplace_back(serviceB1);
+    bundleInfoB.InsertInnerModuleInfo("entry", moduleB1);
+    InnerBundleUserInfo userInfoA;
+    userInfoA.bundleUserInfo.userId = Constants::START_USERID;
+    bundleInfoA.innerBundleUserInfos_.emplace(std::to_string(Constants::START_USERID), userInfoA);
+    InnerBundleUserInfo userInfoB;
+    userInfoB.bundleUserInfo.userId = Constants::START_USERID;
+    bundleInfoB.innerBundleUserInfos_.emplace(std::to_string(Constants::START_USERID), userInfoB);
+    dataMgr->bundleInfos_.emplace(bundleB, bundleInfoB);
+    dataMgr->bundleInfos_.emplace(bundleA, bundleInfoA);
+
+    std::vector<LaunchServiceInfo> result;
+    ErrCode ret = dataMgr->GetAllLaunchServices(Constants::ANY_USERID, result);
+    EXPECT_EQ(ret, ERR_OK);
+    ASSERT_EQ(result.size(), 3);
+
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: GetAllLaunchServices_0300
+ * @tc.name: GetAllLaunchServices
+ * @tc.desc: 1. scan launch services with invalid userId (GetUserId resolves to INVALID_USERID)
+ *           2. returns ERR_BUNDLE_MANAGER_INVALID_USER_ID
+ */
+HWTEST_F(BmsDataMgrTest, GetAllLaunchServices_0300, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::vector<LaunchServiceInfo> result;
+    ErrCode ret = dataMgr->GetAllLaunchServices(Constants::INVALID_USERID, result);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+/**
+ * @tc.number: GetAllLaunchServices_0400
+ * @tc.name: GetAllLaunchServices
+ * @tc.desc: 1. scan launch services when no bundle is installed
+ *           2. returns ERR_OK with an empty launch service infos list
+ */
+HWTEST_F(BmsDataMgrTest, GetAllLaunchServices_0400, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    std::vector<LaunchServiceInfo> result;
+    ErrCode ret = dataMgr->GetAllLaunchServices(Constants::ANY_USERID, result);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_TRUE(result.empty());
+}
+
+/**
+ * @tc.number: GetAllLaunchServices_0500
+ * @tc.name: GetAllLaunchServices
+ * @tc.desc: 1. scan with a userId where the bundle is not installed (installed for user 100 only)
+ *           2. returns ERR_OK with an empty list; scanning with ANY_USERID still returns the entry
+ */
+HWTEST_F(BmsDataMgrTest, GetAllLaunchServices_0500, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo innerBundleInfo;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = MODULE_NAME;
+    LaunchService launchService;
+    launchService.name = "svc";
+    launchService.binaryPath = "/bin/launch_svc";
+    innerModuleInfo.launchServices.emplace_back(launchService);
+    innerBundleInfo.InsertInnerModuleInfo(MODULE_NAME, innerModuleInfo);
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = Constants::START_USERID;
+    innerBundleInfo.innerBundleUserInfos_.emplace(std::to_string(Constants::START_USERID),
+        innerBundleUserInfo);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+    dataMgr->AddUserId(Constants::START_USERID + 1);
+
+    std::vector<LaunchServiceInfo> result;
+    ErrCode ret = dataMgr->GetAllLaunchServices(Constants::START_USERID + 1, result);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_TRUE(result.empty());
+
+    ret = dataMgr->GetAllLaunchServices(Constants::ANY_USERID, result);
+    EXPECT_EQ(ret, ERR_OK);
+    ASSERT_EQ(result.size(), 1);
+    EXPECT_EQ(result[0].bundleName, BUNDLE_NAME);
+    EXPECT_EQ(result[0].moduleName, MODULE_NAME);
+    EXPECT_EQ(result[0].userId, Constants::START_USERID);
+    EXPECT_EQ(result[0].appIndex, Constants::INITIAL_APP_INDEX);
+
+    dataMgr->RemoveUserId(Constants::START_USERID + 1);
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: GetAllLaunchServices_0600
+ * @tc.name: GetAllLaunchServices
+ * @tc.desc: 1. scan launch services of a bundle with clone apps (appIndex 2 and 10, inserted unsorted)
+ *           2. returns ERR_OK; each application instance (main app and each clone) emits one entry
+ *              with identical launchServices; main index first, then clones in cloneInfos map
+ *              iteration order (lexicographic string keys: 0, 10, 2)
+ */
+HWTEST_F(BmsDataMgrTest, GetAllLaunchServices_0600, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo innerBundleInfo;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = MODULE_NAME;
+    LaunchService launchService;
+    launchService.name = "svc";
+    launchService.binaryPath = "/bin/launch_svc";
+    innerModuleInfo.launchServices.emplace_back(launchService);
+    innerBundleInfo.InsertInnerModuleInfo(MODULE_NAME, innerModuleInfo);
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = Constants::START_USERID;
+    // clone appIndexes deliberately inserted out of numeric order to verify map-iteration order
+    // passthrough (no sorting; lexicographic string keys: "10" precedes "2")
+    InnerBundleCloneInfo cloneInfo2;
+    cloneInfo2.appIndex = 2;
+    innerBundleUserInfo.cloneInfos.emplace(std::to_string(2), cloneInfo2);
+    InnerBundleCloneInfo cloneInfo10;
+    cloneInfo10.appIndex = 10;
+    innerBundleUserInfo.cloneInfos.emplace(std::to_string(10), cloneInfo10);
+    // user info key must follow NameAndUserIdToKey: bundleName + '_' + userId
+    innerBundleInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    innerBundleInfo.innerBundleUserInfos_.emplace(
+        BUNDLE_NAME + Constants::FILE_UNDERLINE + std::to_string(Constants::START_USERID),
+        innerBundleUserInfo);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+
+    std::vector<LaunchServiceInfo> result;
+    ErrCode ret = dataMgr->GetAllLaunchServices(Constants::ANY_USERID, result);
+    EXPECT_EQ(ret, ERR_OK);
+    ASSERT_EQ(result.size(), 3);
+    EXPECT_EQ(result[0].bundleName, BUNDLE_NAME);
+    EXPECT_EQ(result[0].moduleName, MODULE_NAME);
+    EXPECT_EQ(result[0].appIndex, Constants::INITIAL_APP_INDEX);
+    EXPECT_EQ(result[1].appIndex, 10);
+    EXPECT_EQ(result[2].appIndex, 2);
+    for (const auto &launchServiceInfo : result) {
+        EXPECT_EQ(launchServiceInfo.userId, Constants::START_USERID);
+        ASSERT_EQ(launchServiceInfo.launchServices.size(), 1);
+        EXPECT_EQ(launchServiceInfo.launchServices[0].name, "svc");
+    }
+
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: GetAllLaunchServices_0700
+ * @tc.name: GetAllLaunchServices
+ * @tc.desc: 1. query with ALL_USERID, which is a bundle manager internal definition and not supported
+ *           2. returns ERR_BUNDLE_MANAGER_INVALID_USER_ID and the result stays empty even when a
+ *              bundle with configured launch services exists
+ */
+HWTEST_F(BmsDataMgrTest, GetAllLaunchServices_0700, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo innerBundleInfo;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = MODULE_NAME;
+    LaunchService launchService;
+    launchService.name = "svc";
+    launchService.binaryPath = "/bin/launch_svc";
+    innerModuleInfo.launchServices.emplace_back(launchService);
+    innerBundleInfo.InsertInnerModuleInfo(MODULE_NAME, innerModuleInfo);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+
+    std::vector<LaunchServiceInfo> result;
+    ErrCode ret = dataMgr->GetAllLaunchServices(Constants::ALL_USERID, result);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    EXPECT_TRUE(result.empty());
+
+    dataMgr->bundleInfos_.clear();
+}
 } // OHOS

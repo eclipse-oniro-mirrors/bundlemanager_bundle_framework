@@ -6381,6 +6381,42 @@ ErrCode BundleMgrHostImpl::GetJsonProfile(ProfileType profileType, const std::st
     return dataMgr->GetJsonProfile(profileType, bundleName, moduleName, profile, userId);
 }
 
+ErrCode BundleMgrHostImpl::GetLaunchServices(const std::string &bundleName, const std::string &moduleName,
+    int32_t userId, LaunchServicesResult &result)
+{
+    APP_LOGD("GetLaunchServices bundleName: %{public}s, moduleName: %{public}s",
+        bundleName.c_str(), moduleName.c_str());
+    // Only allow foundation process to call
+    int32_t uid = IPCSkeleton::GetCallingUid();
+    if (uid != Constants::FOUNDATION_UID) {
+        APP_LOGE("uid: %{public}d not foundation", uid);
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->GetLaunchServices(bundleName, moduleName, userId, result);
+}
+
+ErrCode BundleMgrHostImpl::GetAllLaunchServices(int32_t userId, std::vector<LaunchServiceInfo> &launchServiceInfos)
+{
+    APP_LOGD("GetAllLaunchServices");
+    // Only allow foundation process to call
+    int32_t uid = IPCSkeleton::GetCallingUid();
+    if (uid != Constants::FOUNDATION_UID) {
+        APP_LOGE("uid: %{public}d not foundation", uid);
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->GetAllLaunchServices(userId, launchServiceInfos);
+}
+
 ErrCode BundleMgrHostImpl::GetJsonProfileForSelf(ProfileType profileType, const std::string &moduleName,
     std::string &profile)
 {

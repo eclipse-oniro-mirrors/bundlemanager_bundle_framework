@@ -111,6 +111,13 @@ const char* HAP_MODULE_INFO_HAS_INTENT = "hasIntent";
 const char* HAP_MODULE_INFO_DEDUPLICATE_HAR = "deduplicateHar";
 const char* EXECUTABLE_BINARY_PATH_KEY = "path";
 const char* HAP_MODULE_INFO_EXECUTABLE_BINARY_PATHS = "executableBinaryPaths";
+const char* HAP_MODULE_INFO_LAUNCH_SERVICES = "launchServices";
+const char* LAUNCH_SERVICE_KEY_NAME = "name";
+const char* LAUNCH_SERVICE_KEY_BINARY_PATH = "binaryPath";
+const char* LAUNCH_SERVICE_KEY_RUN_AT_LOAD = "runAtLoad";
+const char* LAUNCH_SERVICE_KEY_KEEP_ALIVE = "keepAlive";
+const char* LAUNCH_SERVICE_KEY_PROVIDE_IPC_SERVICE = "provideIpcService";
+const char* LAUNCH_SERVICE_KEY_TYPE = "type";
 const uint32_t MODULE_CAPACITY = 204800; // 200K
 }
 
@@ -267,6 +274,193 @@ void to_json(nlohmann::json &jsonObject, const ExecutableBinaryPath &executableB
     jsonObject = nlohmann::json {
         {EXECUTABLE_BINARY_PATH_KEY, executableBinaryPath.path}
     };
+}
+
+bool LaunchService::ReadFromParcel(Parcel &parcel)
+{
+    name = Str16ToStr8(parcel.ReadString16());
+    binaryPath = Str16ToStr8(parcel.ReadString16());
+    runAtLoad = parcel.ReadBool();
+    keepAlive = parcel.ReadBool();
+    provideIpcService = parcel.ReadBool();
+    int32_t typeValue = 0;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, typeValue);
+    if (typeValue != static_cast<int32_t>(LaunchServiceType::DAEMON)) {
+        APP_LOGE("invalid launch service type: %{public}d", typeValue);
+        return false;
+    }
+    type = static_cast<LaunchServiceType>(typeValue);
+    return true;
+}
+
+bool LaunchService::Marshalling(Parcel &parcel) const
+{
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(name));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(binaryPath));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, runAtLoad);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, keepAlive);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, provideIpcService);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(type));
+    return true;
+}
+
+LaunchService *LaunchService::Unmarshalling(Parcel &parcel)
+{
+    LaunchService *info = new (std::nothrow) LaunchService();
+    if (info && !info->ReadFromParcel(parcel)) {
+        APP_LOGW("read from parcel failed");
+        delete info;
+        info = nullptr;
+    }
+    return info;
+}
+
+bool LaunchServiceInfo::ReadFromParcel(Parcel &parcel)
+{
+    bundleName = Str16ToStr8(parcel.ReadString16());
+    moduleName = Str16ToStr8(parcel.ReadString16());
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, userId);
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appIndex);
+    int32_t launchServicesSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, launchServicesSize);
+    CONTAINER_SECURITY_VERIFY(parcel, launchServicesSize, &launchServices);
+    for (int32_t i = 0; i < launchServicesSize; ++i) {
+        std::unique_ptr<LaunchService> launchService(parcel.ReadParcelable<LaunchService>());
+        if (!launchService) {
+            APP_LOGE("ReadParcelable<LaunchService> failed");
+            return false;
+        }
+        launchServices.emplace_back(*launchService);
+    }
+    return true;
+}
+
+bool LaunchServiceInfo::Marshalling(Parcel &parcel) const
+{
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(bundleName));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(moduleName));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, userId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appIndex);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, launchServices.size());
+    for (auto &launchService : launchServices) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &launchService);
+    }
+    return true;
+}
+
+LaunchServiceInfo *LaunchServiceInfo::Unmarshalling(Parcel &parcel)
+{
+    LaunchServiceInfo *info = new (std::nothrow) LaunchServiceInfo();
+    if (info && !info->ReadFromParcel(parcel)) {
+        APP_LOGW("read from parcel failed");
+        delete info;
+        info = nullptr;
+    }
+    return info;
+}
+
+bool LaunchServicesResult::ReadFromParcel(Parcel &parcel)
+{
+    int32_t launchServicesSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, launchServicesSize);
+    CONTAINER_SECURITY_VERIFY(parcel, launchServicesSize, &launchServices);
+    for (int32_t i = 0; i < launchServicesSize; ++i) {
+        std::unique_ptr<LaunchService> launchService(parcel.ReadParcelable<LaunchService>());
+        if (!launchService) {
+            APP_LOGE("ReadParcelable<LaunchService> failed");
+            return false;
+        }
+        launchServices.emplace_back(*launchService);
+    }
+    developerId = Str16ToStr8(parcel.ReadString16());
+    appIdentifier = Str16ToStr8(parcel.ReadString16());
+    return true;
+}
+
+bool LaunchServicesResult::Marshalling(Parcel &parcel) const
+{
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, launchServices.size());
+    for (auto &launchService : launchServices) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &launchService);
+    }
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(developerId));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appIdentifier));
+    return true;
+}
+
+LaunchServicesResult *LaunchServicesResult::Unmarshalling(Parcel &parcel)
+{
+    LaunchServicesResult *result = new (std::nothrow) LaunchServicesResult();
+    if (result && !result->ReadFromParcel(parcel)) {
+        APP_LOGW("read from parcel failed");
+        delete result;
+        result = nullptr;
+    }
+    return result;
+}
+
+void to_json(nlohmann::json &jsonObject, const LaunchService &launchService)
+{
+    jsonObject = nlohmann::json {
+        {LAUNCH_SERVICE_KEY_NAME, launchService.name},
+        {LAUNCH_SERVICE_KEY_BINARY_PATH, launchService.binaryPath},
+        {LAUNCH_SERVICE_KEY_RUN_AT_LOAD, launchService.runAtLoad},
+        {LAUNCH_SERVICE_KEY_KEEP_ALIVE, launchService.keepAlive},
+        {LAUNCH_SERVICE_KEY_PROVIDE_IPC_SERVICE, launchService.provideIpcService},
+        {LAUNCH_SERVICE_KEY_TYPE, LaunchServiceTypeToString(launchService.type)}
+    };
+}
+
+void from_json(const nlohmann::json &jsonObject, LaunchService &launchService)
+{
+    const auto &jsonObjectEnd = jsonObject.end();
+    int32_t parseResult = ERR_OK;
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        LAUNCH_SERVICE_KEY_NAME,
+        launchService.name,
+        false,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        LAUNCH_SERVICE_KEY_BINARY_PATH,
+        launchService.binaryPath,
+        false,
+        parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        LAUNCH_SERVICE_KEY_RUN_AT_LOAD,
+        launchService.runAtLoad,
+        false,
+        parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        LAUNCH_SERVICE_KEY_KEEP_ALIVE,
+        launchService.keepAlive,
+        false,
+        parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        LAUNCH_SERVICE_KEY_PROVIDE_IPC_SERVICE,
+        launchService.provideIpcService,
+        false,
+        parseResult);
+    // Lenient semantics for this JSON round-trip path: on type parse failure the entry keeps the
+    // default type (DAEMON) and is still added. Strict type validation happens when parsing
+    // module.json (see the LaunchService parsing in module_profile.cpp).
+    std::string typeStr;
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        LAUNCH_SERVICE_KEY_TYPE,
+        typeStr,
+        false,
+        parseResult);
+    if (!typeStr.empty() && !LaunchServiceTypeFromString(typeStr, launchService.type)) {
+        parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
+    }
+    if (parseResult != ERR_OK) {
+        APP_LOGE("read LaunchService from json error, error code : %{public}d", parseResult);
+    }
 }
 
 bool ProxyData::ReadFromParcel(Parcel &parcel)
@@ -760,6 +954,17 @@ bool HapModuleInfo::ReadFromParcel(Parcel &parcel)
     abilityStageSrcEntryDelegator = Str16ToStr8(parcel.ReadString16());
     hasIntent = parcel.ReadBool();
     deduplicateHar = parcel.ReadBool();
+    int32_t launchServicesSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, launchServicesSize);
+    CONTAINER_SECURITY_VERIFY(parcel, launchServicesSize, &launchServices);
+    for (int32_t i = 0; i < launchServicesSize; ++i) {
+        std::unique_ptr<LaunchService> launchService(parcel.ReadParcelable<LaunchService>());
+        if (!launchService) {
+            APP_LOGE("ReadParcelable<LaunchService> failed");
+            return false;
+        }
+        launchServices.emplace_back(*launchService);
+    }
     return true;
 }
 
@@ -921,6 +1126,10 @@ bool HapModuleInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(abilityStageSrcEntryDelegator));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, hasIntent);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, deduplicateHar);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, launchServices.size());
+    for (auto &launchService : launchServices) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &launchService);
+    }
     return true;
 }
 
@@ -990,6 +1199,7 @@ void to_json(nlohmann::json &jsonObject, const HapModuleInfo &hapModuleInfo)
         {HAP_MODULE_INFO_ROUTER_ARRAY, hapModuleInfo.routerArray},
         {HAP_MODULE_INFO_APP_ENVIRONMENTS, hapModuleInfo.appEnvironments},
         {HAP_MODULE_INFO_EXECUTABLE_BINARY_PATHS, hapModuleInfo.executableBinaryPaths},
+        {HAP_MODULE_INFO_LAUNCH_SERVICES, hapModuleInfo.launchServices},
         {HAP_MODULE_INFO_PACKAGE_NAME, hapModuleInfo.packageName},
         {HAP_MODULE_INFO_CROS_APP_SHARED_CONFIG, hapModuleInfo.crossAppSharedConfig},
         {HAP_MODULE_ABILITY_SRC_ENTRY_DELEGATOR, hapModuleInfo.abilitySrcEntryDelegator},
@@ -1439,6 +1649,14 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
         jsonObjectEnd,
         HAP_MODULE_INFO_EXECUTABLE_BINARY_PATHS,
         hapModuleInfo.executableBinaryPaths,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::OBJECT);
+    GetValueIfFindKey<std::vector<LaunchService>>(jsonObject,
+        jsonObjectEnd,
+        HAP_MODULE_INFO_LAUNCH_SERVICES,
+        hapModuleInfo.launchServices,
         JsonType::ARRAY,
         false,
         parseResult,

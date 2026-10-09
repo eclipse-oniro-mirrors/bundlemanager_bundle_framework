@@ -935,6 +935,9 @@ private:
 
     ErrCode HandleGetJsonProfileForSelf(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleGetLaunchServices(MessageParcel &data, MessageParcel &reply);
+    ErrCode HandleGetAllLaunchServices(MessageParcel &data, MessageParcel &reply);
+
     ErrCode HandleGetBundleResourceProxy(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleGetSkillManagerProxy(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleSetAdditionalInfo(MessageParcel &data, MessageParcel &reply);

@@ -50,6 +50,7 @@
 #include "default_app_interface.h"
 #include "extend_resource_manager_interface.h"
 #include "ibundle_mgr_ext.h"
+#include "launch_service.h"
 #include "module_test_runner.h"
 #include "local_plugin_installer_interface.h"
 #include "overlay_manager_interface.h"
@@ -1864,6 +1865,49 @@ public:
      */
     virtual ErrCode GetJsonProfileForSelf(ProfileType profileType, const std::string &moduleName,
         std::string &profile)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    /**
+     * @brief Obtain all launch services of a module, together with identity info of the target application.
+     * Only the foundation process is allowed to call this interface.
+     * @param bundleName Indicates the bundle name.
+     * @param moduleName Indicates the module name.
+     * @param userId Indicates the user ID, which has no default value. UNSPECIFIED_USERID is resolved
+     *        to the calling user; ANY_USERID is resolved to the first user the bundle is installed for;
+     *        ALL_USERID is a bundle manager internal definition and is not supported, it returns
+     *        ERR_BUNDLE_MANAGER_INVALID_USER_ID; other values must be registered user IDs, otherwise
+     *        ERR_BUNDLE_MANAGER_INVALID_USER_ID is returned. The returned launch services and identity
+     *        info are user-independent.
+     * @param result Output param, the launch services of the module in configuration order, and the developerId
+     *        and appIdentifier of the target application.
+     * @return Returns ERR_OK on success, error code otherwise.
+     */
+    virtual ErrCode GetLaunchServices(const std::string &bundleName, const std::string &moduleName,
+        int32_t userId, LaunchServicesResult &result)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    /**
+     * @brief Obtain launch services of all bundles, grouped by bundle, module and application instance.
+     * Only the foundation process is allowed to call this interface.
+     * Each entry identifies one operable application instance (main app or clone app) with its userId
+     * and appIndex. Modules without configured launch services are not included.
+     * Entries are ordered by bundle name in lexicographic order; within a bundle, by module name in
+     * lexicographic order; within a module, the main application instance comes first, followed by
+     * clone app instances in the cloneInfos map iteration order, i.e. the lexicographic order of the
+     * string form of appIndex (e.g. index 10 precedes 2).
+     * @param userId Indicates the user ID, which has no default value. UNSPECIFIED_USERID is resolved
+     *        to the calling user; ALL_USERID is a bundle manager internal definition and is not
+     *        supported, it returns ERR_BUNDLE_MANAGER_INVALID_USER_ID; ANY_USERID is resolved to the
+     *        first user each bundle is installed for; other values must be registered user IDs,
+     *        otherwise ERR_BUNDLE_MANAGER_INVALID_USER_ID is returned.
+     * @param launchServiceInfos Output param, launch services of all bundles.
+     * @return Returns ERR_OK on success, error code otherwise.
+     */
+    virtual ErrCode GetAllLaunchServices(int32_t userId, std::vector<LaunchServiceInfo> &launchServiceInfos)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
