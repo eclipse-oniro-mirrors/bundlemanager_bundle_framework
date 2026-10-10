@@ -52,6 +52,7 @@ ohos_fuzztest("BMSPatchParserFuzzTest") {
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
     "bounds_checking_function:libsec_shared",
+    "c_utils:utils",
     "dfs_service:libdecompress",
     "ffrt:libffrt",
     "hilog:libhilog",
