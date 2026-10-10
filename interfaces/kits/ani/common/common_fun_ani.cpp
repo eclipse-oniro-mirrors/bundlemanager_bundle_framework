@@ -1917,7 +1917,7 @@ ani_object CommonFunAni::ConvertAppProvisionInfo(ani_env* env, const AppProvisio
 
     // appIndex?: int
     ani_object appIndex = BoxValue(env, static_cast<ani_int>(appProvisionInfo.appIndex));
-    RETURN_NULL_IF_FALSE(appIndex);
+    RETURN_NULL_IF_NULL(appIndex);
 
     // specifiedDistributionType: string
     ani_string specifiedDistributionType = nullptr;
