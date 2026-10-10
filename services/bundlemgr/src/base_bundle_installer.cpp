@@ -528,6 +528,7 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
     // Reset event fields because internal batch uninstalls reuse this installer instance.
     uninstallDeviceModeDistributionPolicy_ = DeviceModeDistributionPolicy::UNSPECIFIED;
     uninstallAppSandboxPolicy_ = AppSandboxPolicy::SHARED_SANDBOX;
+    uninstallAppIndex_ = Constants::DEFAULT_APP_INDEX;
 
     std::string developerId = GetDeveloperId(bundleName);
     std::string assetAccessGroups = GetAssetAccessGroups(bundleName);
@@ -826,6 +827,7 @@ ErrCode BaseBundleInstaller::UninstallBundle(
     // Reset event fields because internal batch uninstalls reuse this installer instance.
     uninstallDeviceModeDistributionPolicy_ = DeviceModeDistributionPolicy::UNSPECIFIED;
     uninstallAppSandboxPolicy_ = AppSandboxPolicy::SHARED_SANDBOX;
+    uninstallAppIndex_ = Constants::DEFAULT_APP_INDEX;
 
     std::string developerId;
     std::string assetAccessGroups;
@@ -6141,6 +6143,7 @@ void BaseBundleInstaller::SaveDualModeUninstallEventFields(const InnerBundleInfo
 {
     uninstallDeviceModeDistributionPolicy_ = bundleInfo.GetDeviceModeDistributionPolicy();
     uninstallAppSandboxPolicy_ = bundleInfo.GetAppSandboxPolicy();
+    uninstallAppIndex_ = bundleInfo.GetAppIndex();
 }
 
 void BaseBundleInstaller::FillDualModeUninstallEventFields(NotifyBundleEvents &uninstallRes) const
@@ -6149,6 +6152,7 @@ void BaseBundleInstaller::FillDualModeUninstallEventFields(NotifyBundleEvents &u
         uninstallRes.deviceModeDistributionPolicy = uninstallDeviceModeDistributionPolicy_;
         uninstallRes.currentMode = DualModeHelper::GetSysMode();
         uninstallRes.appSandboxPolicy = uninstallAppSandboxPolicy_;
+        uninstallRes.appIndex = uninstallAppIndex_;
     }
 }
 
