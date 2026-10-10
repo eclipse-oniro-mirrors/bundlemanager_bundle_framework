@@ -1915,6 +1915,10 @@ ani_object CommonFunAni::ConvertAppProvisionInfo(ani_env* env, const AppProvisio
     ani_string appServiceCapabilities = nullptr;
     RETURN_NULL_IF_FALSE(StringToAniStr(env, appProvisionInfo.appServiceCapabilities, appServiceCapabilities));
 
+    // appIndex?: int
+    ani_object appIndex = BoxValue(env, static_cast<ani_int>(appProvisionInfo.appIndex));
+    RETURN_NULL_IF_FALSE(appIndex);
+
     // specifiedDistributionType: string
     ani_string specifiedDistributionType = nullptr;
     RETURN_NULL_IF_FALSE(StringToAniStr(env, appProvisionInfo.specifiedDistributionType, specifiedDistributionType));
@@ -1941,7 +1945,7 @@ ani_object CommonFunAni::ConvertAppProvisionInfo(ani_env* env, const AppProvisio
         { .r = appIdentifier },
         { .r = organization },
         { .r = appServiceCapabilities },
-        { .i = appProvisionInfo.appIndex },
+        { .r = appIndex },
         { .r = specifiedDistributionType },
         { .r = additional },
         { .r = bundleName},
@@ -1960,7 +1964,7 @@ ani_object CommonFunAni::ConvertAppProvisionInfo(ani_env* env, const AppProvisio
         .AddClass(CommonFunAniNS::CLASSNAME_STRING) // appIdentifier: string
         .AddClass(CommonFunAniNS::CLASSNAME_STRING) // organization: string
         .AddClass(CommonFunAniNS::CLASSNAME_STRING) // appServiceCapabilities: string
-        .AddInt()                                   // appIndex: int
+        .AddClass(CommonFunAniNS::CLASSNAME_INT)    // appIndex: int
         .AddClass(CommonFunAniNS::CLASSNAME_STRING) // specifiedDistributionType: string
         .AddClass(CommonFunAniNS::CLASSNAME_STRING) // additional: string
         .AddClass(CommonFunAniNS::CLASSNAME_STRING) // bundleName: string
