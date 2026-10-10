@@ -40,17 +40,6 @@ public:
     virtual ErrCode CreateBundleDir(
         const std::string &bundleName, BundleDirScene scene, const std::string &bundleDir) override;
     /**
-     * @brief Extract the files of a HAP module to the code directory through a proxy object.
-     * @param srcModulePath Indicates the HAP file path.
-     * @param targetPath normal files decompression path.
-     * @param targetSoPath so files decompression path.
-     * @param cpuAbi cpuAbi.
-     * @return Returns ERR_OK if the HAP file extracted successfully; returns error code otherwise.
-     */
-    virtual ErrCode ExtractModuleFiles(const std::string &srcModulePath, const std::string &targetPath,
-        const std::string &targetSoPath, const std::string &cpuAbi, const bool needFakeDecompression,
-        const bool isSystemApp) override;
-    /**
      * @brief Extract the files of a HAP module with path construction in installd.
      * @param param Indicates the HAP module extract parameters.
      * @return Returns ERR_OK if the HAP file extracted successfully; returns error code otherwise.

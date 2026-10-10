@@ -3242,27 +3242,6 @@ HWTEST_F(BmsBundleInstallerTest, InstalldHostImpl_0100, Function | SmallTest | L
 }
 
 /**
- * @tc.number: InstalldHostImpl_0200
- * @tc.name: test CheckArkNativeFileWithOldInfo
- * @tc.desc: 1.Test the ExtractModuleFiles of InstalldHostImpl
-*/
-HWTEST_F(BmsBundleInstallerTest, InstalldHostImpl_0200, Function | SmallTest | Level0)
-{
-    InstalldHostImpl impl;
-    auto ret = impl.ExtractModuleFiles("", "", TEST_STRING, TEST_STRING, false, false);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-
-    ret = impl.ExtractModuleFiles("", TEST_STRING, TEST_STRING, TEST_STRING, false, false);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-
-    ret = impl.ExtractModuleFiles(TEST_STRING, "", TEST_STRING, TEST_STRING, false, false);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-
-    ret = impl.ExtractModuleFiles("wrong", TEST_STRING, "wrong", "wrong", false, false);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-}
-
-/**
  * @tc.number: InstalldHostImpl_0300
  * @tc.name: test CheckArkNativeFileWithOldInfo
  * @tc.desc: 1.Test the RenameModuleDir of InstalldHostImpl
@@ -17437,21 +17416,6 @@ HWTEST_F(BmsBundleInstallerTest, RemoveDir_0200, Function | SmallTest | Level0)
     InstalldHostImpl impl;
     std::string dir = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + BUNDLE_NAME;
     auto ret = impl.RemoveDir(dir, BundleDirScene::REMOVE_BUNDLE_CODE_DIR, BUNDLE_NAME);
-    EXPECT_EQ(ret, ERR_OK);
-}
-
-/**
- * @tc.number: ExtractModuleFiles_0100
- * @tc.name: test ExtractModuleFiles
- * @tc.desc: test ExtractModuleFiles of InstalldHostImpl
- */
-HWTEST_F(BmsBundleInstallerTest, ExtractModuleFiles_0100, Function | SmallTest | Level0)
-{
-    InstalldHostImpl impl;
-    std::string srcModulePath =
-        BUNDLE_NAME + ServiceConstants::PATH_SEPARATOR + MODULE_NAME + ServiceConstants::INSTALL_FILE_SUFFIX;
-    std::string targetPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + BUNDLE_NAME;
-    auto ret = impl.ExtractModuleFiles(srcModulePath, targetPath, TEST_EMPTY_STRING, TEST_STRING, false, false);
     EXPECT_EQ(ret, ERR_OK);
 }
 

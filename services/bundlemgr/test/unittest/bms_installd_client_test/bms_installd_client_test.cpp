@@ -128,58 +128,6 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CreateBundleDir_0200, Test
 }
 
 /**
- * @tc.number: BmsInstalldClientTest_ExtractModuleFiles_0100
- * @tc.name: ExtractModuleFiles
- * @tc.desc: Test whether ExtractModuleFiles is called normally.(srcModulePath is empty)
- */
-HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractModuleFiles_0100, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractModuleFiles_0100 start";
-    std::string srcModulePath = EMPTY_STRING;
-    std::string targetPath = TARGET_PATH;
-    std::string targetSoPath = TARGET_SO_PATH;
-    std::string cpuAbi = CPU_ABI;
-    ErrCode result = installClient_->ExtractModuleFiles(srcModulePath, targetPath, targetSoPath, cpuAbi, false, false);
-    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractModuleFiles_0100 end";
-}
-
-/**
- * @tc.number: BmsInstalldClientTest_ExtractModuleFiles_0200
- * @tc.name: ExtractModuleFiles
- * @tc.desc: Test whether init is called normally.(targetPath is empty)
- */
-HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractModuleFiles_0200, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractModuleFiles_0200 start";
-    std::string srcModulePath = SRC_MODULE_PATH;
-    std::string targetPath = EMPTY_STRING;
-    std::string targetSoPath = TARGET_SO_PATH;
-    std::string cpuAbi = CPU_ABI;
-    ErrCode result = installClient_->ExtractModuleFiles(srcModulePath, targetPath, targetSoPath, cpuAbi, false, false);
-    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractModuleFiles_0200 end";
-}
-
-/**
- * @tc.number: BmsInstalldClientTest_ExtractModuleFiles_0300
- * @tc.name: ExtractModuleFiles
- * @tc.desc: Test whether ExtractModuleFiles is called normally.
- */
-HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractModuleFiles_0300, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractModuleFiles_0300 start";
-    std::string srcModulePath = SRC_MODULE_PATH;
-    std::string targetPath = TARGET_PATH;
-    std::string targetSoPath = TARGET_SO_PATH;
-    std::string cpuAbi = CPU_ABI;
-    ErrCode result = installClient_->ExtractModuleFiles(srcModulePath, targetPath, targetSoPath, cpuAbi, false, false);
-    EXPECT_EQ(result, installClient_->CallService(&IInstalld::ExtractModuleFiles,
-    srcModulePath, targetPath, targetSoPath, cpuAbi, false, false));
-    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractModuleFiles_0300 end";
-}
-
-/**
  * @tc.number: BmsInstalldClientTest_ProcessBundleInstallNative_0100
  * @tc.name: ProcessBundleInstallNative
  * @tc.desc: Test whether ProcessBundleInstallNative is called normally.

@@ -144,9 +144,6 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::CREATE_BUNDLE_DIR):
             result = this->HandleCreateBundleDir(data, reply);
             break;
-        case static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_MODULE_FILES):
-            result = this->HandleExtractModuleFiles(data, reply);
-            break;
         case static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_HAP_MODULE_FILES):
             result = this->HandleExtractHapModuleFiles(data, reply);
             break;
@@ -499,20 +496,6 @@ bool InstalldHost::HandleCreateBundleDir(MessageParcel &data, MessageParcel &rep
     LOG_NOFUNC_I(BMS_TAG_INSTALLD, "CreateBundleDir bundleName=%{public}s scene=%{public}d dir=%{public}s",
         bundleName.c_str(), scene, bundleDir.c_str());
     ErrCode result = CreateBundleDir(bundleName, static_cast<BundleDirScene>(scene), bundleDir);
-    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
-    return true;
-}
-
-bool InstalldHost::HandleExtractModuleFiles(MessageParcel &data, MessageParcel &reply)
-{
-    std::string srcModulePath = Str16ToStr8(data.ReadString16());
-    std::string targetPath = Str16ToStr8(data.ReadString16());
-    std::string targetSoPath = Str16ToStr8(data.ReadString16());
-    std::string cpuAbi = Str16ToStr8(data.ReadString16());
-    bool needFakeDecompression = data.ReadBool();
-    bool isSystemApp = data.ReadBool();
-    ErrCode result =
-        ExtractModuleFiles(srcModulePath, targetPath, targetSoPath, cpuAbi, needFakeDecompression, isSystemApp);
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

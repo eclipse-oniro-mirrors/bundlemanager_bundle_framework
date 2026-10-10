@@ -27,7 +27,7 @@ enum class BundleManagerCallbackInterfaceCode : uint32_t {
 
 enum class InstalldInterfaceCode : uint32_t {
     CREATE_BUNDLE_DIR = 1,
-    EXTRACT_MODULE_FILES = 2,
+    // EXTRACT_MODULE_FILES = 2,    // deprecated: removed as unused
     RENAME_MODULE_DIR = 3,
     CREATE_BUNDLE_DATA_DIR = 4,
     CLEAN_BUNDLE_DATA_DIR = 5,

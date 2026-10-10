@@ -44,19 +44,6 @@ ErrCode InstalldClient::CreateBundleDir(
     return CallService(&IInstalld::CreateBundleDir, bundleName, scene, bundleDir);
 }
 
-ErrCode InstalldClient::ExtractModuleFiles(const std::string &srcModulePath, const std::string &targetPath,
-    const std::string &targetSoPath, const std::string &cpuAbi, const bool needFakeDecompression,
-    const bool isSystemApp)
-{
-    if (srcModulePath.empty() || targetPath.empty()) {
-        APP_LOGE("src module path or target path is empty");
-        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-    }
-
-    return CallService(&IInstalld::ExtractModuleFiles, srcModulePath, targetPath, targetSoPath, cpuAbi,
-        needFakeDecompression, isSystemApp);
-}
-
 ErrCode InstalldClient::ExtractHapModuleFiles(const HapModuleExtractParam &param)
 {
     if (param.bundleName.empty() || param.moduleName.empty()) {

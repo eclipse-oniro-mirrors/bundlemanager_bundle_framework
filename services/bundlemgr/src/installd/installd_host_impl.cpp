@@ -367,42 +367,6 @@ ErrCode InstalldHostImpl::ExtractPluginModuleFiles(const ExtractModuleFilesParam
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::ExtractModuleFiles(const std::string &srcModulePath, const std::string &targetPath,
-    const std::string &targetSoPath, const std::string &cpuAbi, const bool needFakeDecompression,
-    const bool isSystemApp)
-{
-    LOG_D(BMS_TAG_INSTALLD, "ExtractModuleFiles extract original src %{public}s and target src %{public}s",
-        srcModulePath.c_str(), targetPath.c_str());
-    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
-        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
-        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
-    }
-    if (srcModulePath.empty() || targetPath.empty()) {
-        LOG_E(BMS_TAG_INSTALLD, "Calling the function ExtractModuleFiles with invalid param");
-        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-    }
-
-    if (!InstalldOperator::IsValidPathByExtractModuleFiles(srcModulePath, targetPath, targetSoPath)) {
-        LOG_E(BMS_TAG_INSTALLD,
-            "Calling the function ExtractModuleFiles with invalid param, srcModulePath: %{private}s, targetPath: "
-            "%{private}s, targetSoPath: %{private}s",
-            srcModulePath.c_str(), targetPath.c_str(), targetSoPath.c_str());
-        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-    }
-
-    if (!InstalldOperator::MkRecursiveDir(targetPath, true)) {
-        LOG_E(BMS_TAG_INSTALLD, "create target dir %{public}s failed, errno:%{public}d", targetPath.c_str(), errno);
-        return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
-    }
-    if (!InstalldOperator::ExtractFiles(srcModulePath, targetSoPath, cpuAbi, needFakeDecompression, isSystemApp)) {
-        LOG_E(BMS_TAG_INSTALLD, "extract %{public}s to %{public}s failed errno:%{public}d",
-            srcModulePath.c_str(), targetPath.c_str(), errno);
-        InstalldOperator::DeleteDir(targetPath);
-        return ERR_APPEXECFWK_INSTALLD_EXTRACT_FAILED;
-    }
-    return ERR_OK;
-}
-
 ErrCode InstalldHostImpl::CopyApFile(const std::string &bundleName,
     const std::string &moduleName, int32_t userId)
 {

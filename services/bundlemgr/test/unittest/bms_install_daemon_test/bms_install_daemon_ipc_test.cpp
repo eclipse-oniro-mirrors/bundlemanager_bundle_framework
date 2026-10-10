@@ -183,21 +183,6 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_0100, Function | SmallTest |
 }
 
 /**
- * @tc.number: InstalldProxyTest_0200
- * @tc.name: test Marshalling function of FileStat
- * @tc.desc: 1. calling ExtractModuleFiles of proxy
- * @tc.require: issueI5T6P3
-*/
-HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_0200, Function | SmallTest | Level0)
-{
-    auto proxy = GetInstallProxy();
-    EXPECT_NE(proxy, nullptr);
-
-    auto ret = proxy->ExtractModuleFiles(TEST_STRING, TEST_STRING, TEST_STRING, TEST_STRING, false, false);
-    EXPECT_EQ(ret, ERR_OK);
-}
-
-/**
  * @tc.number: InstalldProxyTest_0300
  * @tc.name: test Marshalling function of FileStat
  * @tc.desc: 1. calling RenameModuleDir of proxy

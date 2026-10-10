@@ -46,13 +46,6 @@ private:
      */
     bool HandleCreateBundleDir(MessageParcel &data, MessageParcel &reply);
     /**
-     * @brief Handles the ExtractModuleFiles function called from a IInstalld proxy object.
-     * @param data Indicates the data to be read.
-     * @param reply Indicates the reply to be sent;
-     * @return Returns true if called successfully; returns false otherwise.
-     */
-    bool HandleExtractModuleFiles(MessageParcel &data, MessageParcel &reply);
-    /**
      * @brief Handles the ExtractHapModuleFiles function called from a IInstalld proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;

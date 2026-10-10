@@ -78,13 +78,6 @@ ErrCode InstalldClient::CreateBundleDir(
     return 0;
 }
 
-ErrCode InstalldClient::ExtractModuleFiles(const std::string &srcModulePath, const std::string &targetPath,
-    const std::string &targetSoPath, const std::string &cpuAbi, const bool needFakeDecompression,
-    const bool isSystemApp)
-{
-    return 0;
-}
-
 ErrCode InstalldClient::ExtractHapModuleFiles(const HapModuleExtractParam &param)
 {
     return 0;

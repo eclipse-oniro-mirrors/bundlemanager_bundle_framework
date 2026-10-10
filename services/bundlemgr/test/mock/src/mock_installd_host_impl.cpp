@@ -55,13 +55,6 @@ ErrCode InstalldHostImpl::CreateBundleDir(
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::ExtractModuleFiles(const std::string &srcModulePath, const std::string &targetPath,
-    const std::string &targetSoPath, const std::string &cpuAbi, const bool needFakeDecompression,
-    const bool isSystemApp)
-{
-    return ERR_OK;
-}
-
 ErrCode InstalldHostImpl::ExtractQuickFixRes(const std::string &bundleName, const std::string &moduleName,
     const std::string &hqfFilePath, bool needFakeDecompression)
 {
