@@ -3201,6 +3201,13 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallNative(const InnerBundleInfo &i
 {
     auto hnpPackages = info.GetInnerModuleInfoHnpInfo(info.GetCurModuleName()).value_or(std::vector<HnpPackage>{});
     if (!hnpPackages.empty()) {
+        // dual-mode: HNP is not supported for the secondary-mode variant of a different-package app.
+        if (!dualModeBundleName_.empty()) {
+            LOG_E(BMS_TAG_INSTALLER, "hnp not supported for secondary-mode different-package app, "
+                "bundle: %{public}s, module: %{public}s, userId: %{public}d",
+                info.GetBundleName().c_str(), info.GetCurModuleName().c_str(), userId);
+            return ERR_APPEXECFWK_INSTALL_DUAL_MODE_POLICY_NOT_SUPPORTED;
+        }
         LOG_I(BMS_TAG_INSTALLER, "hnp install: %{public}s, %{public}d", info.GetCurModuleName().c_str(), userId);
         sysEventInfo_.hasHnp = true;
         std::string moduleHnpsPath = info.GetInnerModuleInfoHnpPath(info.GetCurModuleName());
