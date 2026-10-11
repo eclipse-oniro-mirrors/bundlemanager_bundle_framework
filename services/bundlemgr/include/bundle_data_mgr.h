@@ -1704,11 +1704,6 @@ private:
      * @return Returns true on a parseable key; false only for malformed numeric keys.
      */
     static bool ParseBundleIdKey(const std::string &keyName, std::string &bundleName, int32_t &appIndex);
-    /**
-     * @brief Check whether the uid falls into the valid application bundle-id range
-     *        [BASE_APP_UID, MAX_APP_UID] after removing the user range.
-     */
-    bool IsValidAppUid(const int32_t uid) const;
     void SaveLastAllocatedBundleId();
     int32_t GetUserIdByUid(int32_t uid) const;
     bool GetAllBundleInfos(int32_t flags, std::vector<BundleInfo> &bundleInfos) const;

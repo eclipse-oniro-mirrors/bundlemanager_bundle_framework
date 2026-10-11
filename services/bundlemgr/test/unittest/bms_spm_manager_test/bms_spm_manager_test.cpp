@@ -23,6 +23,7 @@
 #include "installd_client.h"
 #include "inner_bundle_info.h"
 #include "parcel.h"
+#include "parameters.h"
 
 using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
@@ -52,6 +53,7 @@ extern bool g_updateHapTokenNeedInit;
 namespace {
 const std::string BUNDLE_NAME = "com.ohos.spm.test";
 const std::string PERMISSION_NAME = "ohos.permission.TEST_PERMISSION";
+const std::string SPM_ENABLE_PARAM = "persist.bms.spm.enable";
 constexpr int32_t TEST_USERID = 100;
 constexpr int32_t TEST_TOKENID = 12345;
 constexpr int32_t TEST_SESSION_ID = 56789;
@@ -61,7 +63,19 @@ namespace OHOS {
 
 class BmsSpmManagerTest : public testing::Test {
 public:
-    static void SetUpTestCase() {};
+    static void SetUpTestCase()
+    {
+        // Pin the switch to OFF for this binary regardless of the device state:
+        // a leftover persist.bms.spm.enable=true (e.g. from a previous
+        // BmsSpmManagerOnTest run on the same integration host) would flip
+        // IsEnabled() to true for the whole process (function-local static
+        // cache) and route every OFF-mode assertion below into the SPM ON
+        // branches. Note: this target compiles against the real SDK
+        // parameters.h (its include path wins over the mock parameter/
+        // subdirectory), which has no RemoveParameter — the explicit "false"
+        // reset works for both headers.
+        OHOS::system::SetParameter(SPM_ENABLE_PARAM, "false");
+    };
     static void TearDownTestCase() {};
     void SetUp() override
     {

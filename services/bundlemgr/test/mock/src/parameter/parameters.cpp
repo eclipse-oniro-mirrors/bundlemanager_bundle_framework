@@ -40,6 +40,19 @@ std::string GetDeviceType()
 
 bool GetBoolParameter(const std::string& key, bool def)
 {
+    // The SPM switch must never be flipped by GET_BOOL_PARAMETER_TRUE: targets
+    // defining that macro mean "unrelated boolean parameters default to true"
+    // (developer mode etc.), and a process-wide SPM ON would route every
+    // install case into the SPM ON branches where the default mock identity
+    // (tokenId = 0 / uid = 0) fails fast in InitToken. The switch always
+    // follows the explicit map value or its own default.
+    if (key == "persist.bms.spm.enable") {
+        auto item = GetParameterMap()->paramMap.find(key);
+        if (item == GetParameterMap()->paramMap.end()) {
+            return def;
+        }
+        return "true" == item->second;
+    }
 #ifndef GET_BOOL_PARAMETER_TRUE
     auto item = GetParameterMap()->paramMap.find(key);
     if (item == GetParameterMap()->paramMap.end()) {

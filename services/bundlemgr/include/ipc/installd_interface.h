@@ -989,6 +989,9 @@ public:
     }
 
     virtual ErrCode BundleInstallFinished(const std::string &bundleName)
+    {
+        return ERR_OK;
+    }
 
     /**
      * @brief Clear the provision info cached in installd for the given SPM session.

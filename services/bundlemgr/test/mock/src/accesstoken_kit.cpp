@@ -45,12 +45,19 @@ int32_t g_updateHapTokenRet = 0;
 // (unittest/bms_spm_manager_on_test) drives the SPM branches through them. ----
 int32_t g_spmCheckHapSignInfoRet = 0;
 int32_t g_spmCheckHapSignInfoSessionId = 0;
+// Records the userId of the last BundleHapList handed to CheckHapSignInfo so
+// tests can pin the cross-process skip-resign contract (userId == -1).
+int32_t g_spmCheckHapSignInfoLastUserId = 0;
 std::vector<TrustedBundleInfo> g_spmTrustedBundleInfos;
 int32_t g_spmCheckHapPermissionInfoRet = 0;
 int32_t g_spmCheckHapPermissionInfoCallCount = 0;
 int32_t g_spmPrepareHapIdentityRet = 0;
 uint64_t g_spmPrepareIdentityTokenId = 0;
 int32_t g_spmPrepareIdentityUid = 0;
+// Forces PrepareHapIdentity to ignore the desired uid and return the knob uid,
+// so tests can construct the "AT did not adopt the desired uid and reallocated
+// a new one" (mismatch) path that the default adopt-or-reallocate mock cannot.
+bool g_spmPrepareIdentityForceReallocate = false;
 int32_t g_spmUpdateHapPolicyRet = 0;
 int32_t g_spmFinishInstallRet = 0;
 int32_t g_spmFinishInstallCallCount = 0;
@@ -60,12 +67,14 @@ void ResetSpmKitMockValuesForTest()
 {
     g_spmCheckHapSignInfoRet = 0;
     g_spmCheckHapSignInfoSessionId = 0;
+    g_spmCheckHapSignInfoLastUserId = 0;
     g_spmTrustedBundleInfos.clear();
     g_spmCheckHapPermissionInfoRet = 0;
     g_spmCheckHapPermissionInfoCallCount = 0;
     g_spmPrepareHapIdentityRet = 0;
     g_spmPrepareIdentityTokenId = 0;
     g_spmPrepareIdentityUid = 0;
+    g_spmPrepareIdentityForceReallocate = false;
     g_spmUpdateHapPolicyRet = 0;
     g_spmFinishInstallRet = 0;
     g_spmFinishInstallCallCount = 0;
@@ -355,6 +364,7 @@ void SetIsCliToolTokenForTest(bool value)
 int32_t AccessTokenKit::CheckHapSignInfo(const BundleHapList& list, uint32_t flag, int32_t& sessionId,
     std::vector<TrustedBundleInfo>& bundleInfo, HapVerifyResultInfo& resultInfo)
 {
+    g_spmCheckHapSignInfoLastUserId = list.userId;
     sessionId = g_spmCheckHapSignInfoSessionId;
     bundleInfo = g_spmTrustedBundleInfos;
     return g_spmCheckHapSignInfoRet;
@@ -370,7 +380,7 @@ int32_t AccessTokenKit::CheckHapPermissionInfo(int32_t sessionId, InstallTypeEnu
 int32_t AccessTokenKit::PrepareHapIdentity(int32_t& sessionId, const HapBaseInfo& info,
     const BundlePolicy& policy, Identity& identity)
 {
-    if (identity.uid != 0) {
+    if (identity.uid != 0 && !g_spmPrepareIdentityForceReallocate) {
         // Mirrors the AT adopt-or-reallocate contract: a desired uid passed by the
         // caller is adopted and returned unchanged.
     } else {

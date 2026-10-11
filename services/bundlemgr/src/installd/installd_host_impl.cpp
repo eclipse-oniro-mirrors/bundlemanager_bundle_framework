@@ -320,9 +320,17 @@ void FillSessionProvisionInfo(const Security::Verify::ProvisionInfo &provisionIn
 void FillCodeSignParamFromProvision(const SessionProvisionInfo &info,
     CodeSignatureParam &param)
 {
+    if (param.sessionId == 0) {
+        // Legacy install (SPM OFF / no session): the BMS-provided IPC params
+        // are authoritative — keep the caller-provided profile block and
+        // fields untouched (QueryProvisionInfoBySessionId made no lookup for
+        // the zero session id, see its early return).
+        return;
+    }
     if (info.bundleName.empty()) {
-        // No session provision: the IPC-carried profile block is untrusted under
-        // SPM — drop it so downstream cannot consume caller-provided security data.
+        // No session provision under SPM ON: the IPC-carried profile block is
+        // untrusted under SPM — drop it so downstream cannot consume
+        // caller-provided security data.
         param.profileBlock.reset();
         param.profileBlockLength = 0;
         return;

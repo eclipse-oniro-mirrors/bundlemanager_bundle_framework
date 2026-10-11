@@ -63,9 +63,9 @@ bool ParseTrustedBundleInfo(const Security::AccessToken::TrustedBundleInfo &tbi,
 
 // The hmdfs/sharefs config entries are keyed by bundleId: convert the
 // AT-generated uid to its bundleId with the canonical derivation used by the
-// OFF allocator (GetUserIdByUid + BASE_USER_RANGE, see IsValidAppUid), so a uid
-// allocated by the access token service gets the fs config the local allocator
-// would have produced (GenerateBundleId does this on the OFF path).
+// OFF allocator (GetUserIdByUid + BASE_USER_RANGE), so a uid allocated by the
+// access token service gets the fs config the local allocator would have
+// produced (GenerateBundleId does this on the OFF path).
 void MakeFsConfigForNewUid(int32_t uid, const std::string &bundleName)
 {
     int32_t userId = BundleUtil::GetUserIdByUid(uid);

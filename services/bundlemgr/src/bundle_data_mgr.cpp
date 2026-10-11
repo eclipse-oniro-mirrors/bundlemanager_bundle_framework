@@ -5748,7 +5748,7 @@ ErrCode BundleDataMgr::GetBundleNameAndIndexForUid(const int32_t uid, std::strin
 ErrCode BundleDataMgr::GetBundleNameAndIndex(const int32_t uid, std::string &bundleName,
     int32_t &appIndex) const
 {
-    if (!IsValidAppUid(uid)) {
+    if (uid < Constants::BASE_APP_UID) {
         APP_LOGD("the uid(%{public}d) is not an application", uid);
         return ERR_BUNDLE_MANAGER_INVALID_UID;
     }
@@ -5821,7 +5821,7 @@ ErrCode BundleDataMgr::GetInnerBundleInfoNoLock(const std::string bundleName, co
 ErrCode BundleDataMgr::GetInnerBundleInfoAndIndexByUid(const int32_t uid, InnerBundleInfo& innerBundleInfo,
     int32_t &appIndex) const
 {
-    if (!IsValidAppUid(uid)) {
+    if (uid < Constants::BASE_APP_UID) {
         APP_LOGD("the uid(%{public}d) is not an application", uid);
         return ERR_BUNDLE_MANAGER_INVALID_UID;
     }
@@ -8355,17 +8355,6 @@ ErrCode BundleDataMgr::GenerateBundleId(const std::string &bundleName, int32_t &
 
     APP_LOGW("the bundleId exceeding the maximum value, bundleName:%{public}s", bundleName.c_str());
     return ERR_APPEXECFWK_INSTALL_BUNDLEID_EXCEED_MAX_NUMBER;
-}
-
-bool BundleDataMgr::IsValidAppUid(const int32_t uid) const
-{
-    if (uid <= 0) {
-        // negative uids can wrap the bundle-id range check below (INP-05 guard)
-        return false;
-    }
-    int32_t userId = GetUserIdByUid(uid);
-    int32_t bundleId = uid - userId * Constants::BASE_USER_RANGE;
-    return bundleId >= Constants::BASE_APP_UID && bundleId <= MAX_APP_UID;
 }
 
 void BundleDataMgr::SaveLastAllocatedBundleId()

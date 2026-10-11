@@ -38,12 +38,14 @@ namespace Security {
 namespace AccessToken {
 extern int32_t g_spmCheckHapSignInfoRet;
 extern int32_t g_spmCheckHapSignInfoSessionId;
+extern int32_t g_spmCheckHapSignInfoLastUserId;
 extern std::vector<TrustedBundleInfo> g_spmTrustedBundleInfos;
 extern int32_t g_spmCheckHapPermissionInfoRet;
 extern int32_t g_spmCheckHapPermissionInfoCallCount;
 extern int32_t g_spmPrepareHapIdentityRet;
 extern uint64_t g_spmPrepareIdentityTokenId;
 extern int32_t g_spmPrepareIdentityUid;
+extern bool g_spmPrepareIdentityForceReallocate;
 extern int32_t g_spmUpdateHapPolicyRet;
 extern int32_t g_spmFinishInstallRet;
 extern int32_t g_spmFinishInstallCallCount;
@@ -84,7 +86,19 @@ public:
         // must NOT define GET_BOOL_PARAMETER_TRUE (it would flip unrelated params).
         OHOS::system::SetParameter(SPM_ENABLE_PARAM, "true");
     };
-    static void TearDownTestCase() {};
+    static void TearDownTestCase()
+    {
+        // Reset the switch so nothing leaks past this binary: the mock
+        // parameter map is process-local, but on integration hosts the same
+        // key can resolve to the real persistent parameter service — a
+        // leftover "true" would flip every later test binary on the device
+        // into the SPM ON branches (and IsEnabled caches the value in a
+        // function-local static for the whole process). Note: this target
+        // compiles against the real SDK parameters.h (its include path does
+        // not cover the mock parameter/ subdirectory), which has no
+        // RemoveParameter — the explicit "false" reset works for both.
+        OHOS::system::SetParameter(SPM_ENABLE_PARAM, "false");
+    };
     void SetUp() override
     {
         OHOS::ResetSpmFacadeMockValues();
@@ -476,7 +490,10 @@ HWTEST_F(BmsSpmManagerOnTest, Commit_Failure_DestructorRollback_0001, Function |
  * @tc.number: BmsSpmManagerOnTest.Rollback_ExplicitAfterFailedCommit_0001
  * @tc.name: Explicit rollback still works after a failed commit
  * @tc.desc: An explicit Rollback() call (install failure path) finishes the
- *           session with isPersistent=false; the destructor adds no second call.
+ *           session with isPersistent=false. The rollback fails (-5) so the
+ *           session id is kept and the destructor retries the rollback once
+ *           more (the documented failed-rollback design: the id is only
+ *           cleared on success), adding a third non-persistent FinishInstall.
  */
 HWTEST_F(BmsSpmManagerOnTest, Rollback_ExplicitAfterFailedCommit_0001, Function | MediumTest | Level1)
 {
@@ -493,8 +510,10 @@ HWTEST_F(BmsSpmManagerOnTest, Rollback_ExplicitAfterFailedCommit_0001, Function 
         EXPECT_EQ(session.Rollback(), -5);
         EXPECT_EQ(OHOS::Security::AccessToken::g_spmFinishInstallCallCount, 2);
         EXPECT_FALSE(OHOS::Security::AccessToken::g_spmFinishInstallLastPersistent);
-    }  // session destroyed here
-    EXPECT_EQ(OHOS::Security::AccessToken::g_spmFinishInstallCallCount, 2);
+    }  // session destroyed here: the failed rollback kept the session id, so
+        // the destructor retries the rollback once more (non-persistent)
+    EXPECT_EQ(OHOS::Security::AccessToken::g_spmFinishInstallCallCount, 3);
+    EXPECT_FALSE(OHOS::Security::AccessToken::g_spmFinishInstallLastPersistent);
 }
 
 /**
@@ -820,6 +839,9 @@ HWTEST_F(BmsSpmManagerOnTest, InitToken_ActiveSession_0005, Function | MediumTes
     OHOS::Security::AccessToken::g_spmCheckHapSignInfoSessionId = TEST_SESSION_ID;
     OHOS::Security::AccessToken::g_spmPrepareIdentityTokenId = TEST_IDENTITY_TOKENID;
     OHOS::Security::AccessToken::g_spmPrepareIdentityUid = TEST_IDENTITY_UID;  // != local 9999
+    // The default mock adopts the desired uid; force the reallocation so the
+    // "AT did not adopt the desired uid" (mismatch) path is exercised.
+    OHOS::Security::AccessToken::g_spmPrepareIdentityForceReallocate = true;
     BundleInstallChecker checker;
     ErrCode errCode = ERR_OK;
     auto session = BundleSpmManager::InstallSession::CheckSignAndInitSession(
@@ -1003,9 +1025,11 @@ HWTEST_F(BmsSpmManagerOnTest, UpdateToken_Failure_0001, Function | MediumTest | 
 /**
  * @tc.number: BmsSpmManagerOnTest.CheckSignAndInitSession_SkipResign_0001
  * @tc.name: CheckSignAndInitSession with skipEnterpriseResign
- * @tc.desc: The skipEnterpriseResign flag is passed through to the OFF checker
- *           and consumed in the ON path (userId=-1 contract); the mock
- *           CheckHapSignInfo returns success.
+ * @tc.desc: The skipEnterpriseResign flag is consumed in the ON path via the
+ *           userId == -1 contract (hapList.userId tells the AT side to skip
+ *           the enterprise resign verification); without the flag the real
+ *           userId is passed through. The empty hap list keeps the trusted
+ *           info count matching (0 == 0) so the session succeeds.
  */
 HWTEST_F(BmsSpmManagerOnTest, CheckSignAndInitSession_SkipResign_0001, Function | MediumTest | Level1)
 {
@@ -1014,9 +1038,17 @@ HWTEST_F(BmsSpmManagerOnTest, CheckSignAndInitSession_SkipResign_0001, Function 
     BundleInstallChecker checker;
     ErrCode errCode = ERR_OK;
     auto session = BundleSpmManager::InstallSession::CheckSignAndInitSession(
-        TEST_USERID, {"/data/test.hap"}, false, checker, errCode, true, true);
+        TEST_USERID, {}, false, checker, errCode, true, true);
     EXPECT_EQ(errCode, ERR_OK);
     EXPECT_EQ(session.GetSessionId(), TEST_SESSION_ID);
+    // The cross-process contract: skipEnterpriseResign is carried as userId == -1.
+    EXPECT_EQ(OHOS::Security::AccessToken::g_spmCheckHapSignInfoLastUserId, -1);
+
+    // Without the flag the real userId is passed through unchanged.
+    session = BundleSpmManager::InstallSession::CheckSignAndInitSession(
+        TEST_USERID, {}, false, checker, errCode, true, false);
+    EXPECT_EQ(errCode, ERR_OK);
+    EXPECT_EQ(OHOS::Security::AccessToken::g_spmCheckHapSignInfoLastUserId, TEST_USERID);
 }
 
 } // namespace OHOS
