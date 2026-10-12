@@ -20,7 +20,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-constexpr const char* APP_PROVISION_INFO_RDB_TABLE_NAME = "app_provision_info";
+constexpr const char* APP_PROVISION_INFO_RDB_TABLE_NAME = ServiceConstants::APP_PROVISION_INFO_TABLE;
 // app provision info table key
 constexpr const char* BUNDLE_NAME = "BUNDLE_NAME";
 constexpr const char* VERSION_CODE = "VERSION_CODE";

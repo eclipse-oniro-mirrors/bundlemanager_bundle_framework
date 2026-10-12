@@ -203,12 +203,19 @@ private:
      */
     bool LoadInstallInfosFromDb();
     /**
-     * @brief Judge whether the last db rebuild was interrupted by process death.
-     *        The mark is saved before rebuild starts and is only removed after every
-     *        bundle info has been verified written into db.
-     * @return Returns true if an interrupted rebuild was detected; returns false otherwise.
+     * @brief Judge whether the db must be distrusted: either the last rebuild was
+     *        interrupted (the dbRebuildMark mark survives) or the rdb salvage
+     *        recovery gave up on this db (the .recover.failed file survives).
+     * @return Returns true if the db must be rebuilt from the install dirs.
      */
     bool IsRebuildInterrupted();
+    /**
+     * @brief Overload with an explicit failed salvage snapshot path; the
+     *        parameterless version checks the main bms db path.
+     * @param failedSnapshotPath Full path of the failed salvage snapshot file.
+     * @return Returns true if the db must be rebuilt from the install dirs.
+     */
+    bool IsRebuildInterrupted(const std::string &failedSnapshotPath);
     /**
      * @brief Persist the "rebuilding" mark before any bundle info is written into db,
      *        so an interrupted rebuild can be detected and redone on next boot even if
@@ -217,11 +224,17 @@ private:
      */
     void MarkRebuildStart();
     /**
-     * @brief Remove the "rebuilding" mark, only called when rebuild finished and every
-     *        bundle info was verified written into db completely.
-     * @return
+     * @brief Remove the "rebuilding" mark and the leftover failed salvage
+     *        snapshot, only called when rebuild finished and every bundle info
+     *        was verified written into db completely.
      */
     void MarkRebuildFinish();
+    /**
+     * @brief Overload with an explicit failed salvage snapshot path; the
+     *        parameterless version removes the main bms db one.
+     * @param failedSnapshotPath Full path of the failed salvage snapshot file.
+     */
+    void MarkRebuildFinish(const std::string &failedSnapshotPath);
     /**
      * @brief Guard against install infos lossed strategy.
      * @return Returns ResultCode for recover install infos.

@@ -28,7 +28,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-constexpr const char* BUNDLE_RDB_TABLE_NAME = "installed_bundle";
+constexpr const char* BUNDLE_RDB_TABLE_NAME = ServiceConstants::INSTALLED_BUNDLE_TABLE;
 const uint8_t MAX_THREADS = 8;  // Cap to avoid over-scheduling
 const uint8_t PARALLEL_SIZE = 30;
  // Thread-local storage for results

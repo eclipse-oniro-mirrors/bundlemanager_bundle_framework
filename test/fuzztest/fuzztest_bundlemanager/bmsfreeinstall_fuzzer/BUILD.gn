@@ -167,6 +167,7 @@ ohos_fuzztest("BMSFreeInstallFuzzTest001") {
     "${services_path}/bundlemgr/src/preinstall_data_storage_rdb.cpp",
     "${services_path}/bundlemgr/src/rdb/bms_rdb_open_callback.cpp",
     "${services_path}/bundlemgr/src/rdb/rdb_data_manager.cpp",
+    "${services_path}/bundlemgr/src/rdb/rdb_recover_manager.cpp",
   ]
   if (udmf_enabled) {
     defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
@@ -340,6 +341,7 @@ ohos_fuzztest("BMSFreeInstallFuzzTest002") {
     "${services_path}/bundlemgr/src/preinstall_data_storage_rdb.cpp",
     "${services_path}/bundlemgr/src/rdb/bms_rdb_open_callback.cpp",
     "${services_path}/bundlemgr/src/rdb/rdb_data_manager.cpp",
+    "${services_path}/bundlemgr/src/rdb/rdb_recover_manager.cpp",
   ]
   if (udmf_enabled) {
     defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
@@ -513,6 +515,7 @@ ohos_fuzztest("BMSFreeInstallFuzzTest003") {
     "${services_path}/bundlemgr/src/preinstall_data_storage_rdb.cpp",
     "${services_path}/bundlemgr/src/rdb/bms_rdb_open_callback.cpp",
     "${services_path}/bundlemgr/src/rdb/rdb_data_manager.cpp",
+    "${services_path}/bundlemgr/src/rdb/rdb_recover_manager.cpp",
   ]
   if (udmf_enabled) {
     defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
@@ -686,6 +689,7 @@ ohos_fuzztest("BMSFreeInstallFuzzTest004") {
     "${services_path}/bundlemgr/src/preinstall_data_storage_rdb.cpp",
     "${services_path}/bundlemgr/src/rdb/bms_rdb_open_callback.cpp",
     "${services_path}/bundlemgr/src/rdb/rdb_data_manager.cpp",
+    "${services_path}/bundlemgr/src/rdb/rdb_recover_manager.cpp",
   ]
   if (udmf_enabled) {
     defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]

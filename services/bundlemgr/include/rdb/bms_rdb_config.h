@@ -24,6 +24,9 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+// the generic KEY/VALUE column names live in ServiceConstants
+// (bundle_service_constants.h) next to the other shared db strings
+
 struct BmsRdbConfig {
     int32_t version { ServiceConstants::BUNDLE_RDB_VERSION };
     std::string dbPath { ServiceConstants::BUNDLE_MANAGER_SERVICE_PATH };

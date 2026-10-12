@@ -203,6 +203,30 @@ constexpr const char* BUNDLE_RESOURCE_RDB_PATH = "/data/service/el1/public/bms/b
 constexpr const char* BUNDLE_RESOURCE_BINLOG_PATH =
     "/data/service/el1/public/bms/bundle_resources/bundleResource.db_binlog";
 constexpr const char* BUNDLE_RDB_BINLOG = "binlog";
+// snapshot file suffixes used by rdb corruption salvage; the snapshot file is also the
+// durable marker meaning "salvage recovery not committed yet"
+constexpr const char* RDB_SNAPSHOT_SUFFIX = ".recover";
+constexpr const char* RDB_SNAPSHOT_FAILED_SUFFIX = ".recover.failed";
+// tmp file of an in-progress snapshot export, renamed to .recover on completion
+constexpr const char* RDB_SNAPSHOT_TMP_SUFFIX = ".recover.tmp";
+// bms_param table, shared by BmsParam and RdbDataManager salvage recovery
+constexpr const char* BMS_PARAM_TABLE_NAME = "bms_param";
+// the only tables that can be fully rebuilt by rescanning install dirs on
+// boot (provision info is re-parsed from the installed hap packages); every
+// other table in bmsdb can only be recovered from the salvage snapshot, so
+// losing them must not trigger the (useless and slow) rescan
+constexpr const char* INSTALLED_BUNDLE_TABLE = "installed_bundle";
+constexpr const char* PREINSTALLED_BUNDLE_TABLE = "preinstalled_bundle";
+constexpr const char* APP_PROVISION_INFO_TABLE = "app_provision_info";
+// dbRebuildMark value written when salvaged data may be incomplete; must match the mark
+// checked by BMSEventHandler::IsRebuildInterrupted to force a rebuild from install dirs
+constexpr const char* DB_REBUILD_MARK = "dbRebuildMark";
+constexpr const char* DB_REBUILD_MARK_DOING = "doing";
+// column names of the generic KEY/VALUE tables created when no createTableSql
+// is configured; shared by the RdbDataManager data operations, the salvage
+// recovery mark and both fallback table creations
+constexpr const char* BMS_KEY = "KEY";
+constexpr const char* BMS_VALUE = "VALUE";
 
 // thread pool
 constexpr const char* RELATIVE_PATH = "../";

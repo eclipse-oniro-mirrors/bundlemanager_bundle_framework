@@ -20,7 +20,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-constexpr const char* PRE_BUNDLE_RDB_TABLE_NAME = "preinstalled_bundle";
+constexpr const char* PRE_BUNDLE_RDB_TABLE_NAME = ServiceConstants::PREINSTALLED_BUNDLE_TABLE;
 
 // The RDB key for a PreInstallBundleInfo: the clone-prefixed name for the secondary variant
 // (IsDualModeCloneApp=true) so primary and secondary are two independent rows, the original name

@@ -14,6 +14,7 @@
  */
 
 #include "bundle_mgr_service_event_handler.h"
+#include "rdb_recover_manager.h"
 
 #include <sstream>
 #include <sys/stat.h>
@@ -143,8 +144,7 @@ constexpr const char* CODE_PROTECT_FLAG = "codeProtectFlag";
 constexpr const char* CODE_PROTECT_FLAG_CHECKED = "checked";
 // db rebuild mark in bms_param table: set before rebuild writes anything into
 // installed_bundle table, removed only after every bundle info is verified saved.
-constexpr const char* DB_REBUILD_MARK = "dbRebuildMark";
-constexpr const char* DB_REBUILD_MARK_DOING = "doing";
+// Shared with RdbDataManager salvage recovery through ServiceConstants.
 constexpr const char* KEY_STORAGE_SIZE = "storageSize";
 constexpr int32_t USER_ID_SIZE = 1;
 constexpr const char* APPSPAWN_PRELOAD_ARKWEB_ENGINE = "const.startup.appspawn.preload.arkwebEngine";
@@ -451,18 +451,28 @@ bool BMSEventHandler::LoadInstallInfosFromDb()
 
 bool BMSEventHandler::IsRebuildInterrupted()
 {
+    std::string failedSnapshot = RdbRecoverManager::BuildFailedSnapshotPath(
+        ServiceConstants::BUNDLE_MANAGER_SERVICE_PATH, ServiceConstants::BUNDLE_RDB_NAME);
+    return IsRebuildInterrupted(failedSnapshot);
+}
+
+bool BMSEventHandler::IsRebuildInterrupted(const std::string &failedSnapshotPath)
+{
     auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
-    if (bmsPara == nullptr) {
-        LOG_E(BMS_TAG_DEFAULT, "bmsPara is nullptr");
-        return false;
+    if (bmsPara != nullptr) {
+        std::string mark;
+        if (bmsPara->GetBmsParam(ServiceConstants::DB_REBUILD_MARK, mark) &&
+            mark == ServiceConstants::DB_REBUILD_MARK_DOING) {
+            return true;
+        }
     }
-
-    std::string mark;
-    if (!bmsPara->GetBmsParam(DB_REBUILD_MARK, mark)) {
-        return false;
+    // a broken salvage snapshot means the rdb recovery gave up with possibly
+    // incomplete data, the db cannot be trusted even though it is readable
+    if (access(failedSnapshotPath.c_str(), F_OK) == 0) {
+        LOG_W(BMS_TAG_DEFAULT, "salvage snapshot failed file exists, need to rebuild again");
+        return true;
     }
-
-    return mark == DB_REBUILD_MARK_DOING;
+    return false;
 }
 
 void BMSEventHandler::MarkRebuildStart()
@@ -473,12 +483,20 @@ void BMSEventHandler::MarkRebuildStart()
         return;
     }
 
-    if (!bmsPara->SaveBmsParam(DB_REBUILD_MARK, DB_REBUILD_MARK_DOING)) {
+    if (!bmsPara->SaveBmsParam(ServiceConstants::DB_REBUILD_MARK,
+        ServiceConstants::DB_REBUILD_MARK_DOING)) {
         LOG_E(BMS_TAG_DEFAULT, "save db rebuild mark failed");
     }
 }
 
 void BMSEventHandler::MarkRebuildFinish()
+{
+    std::string failedSnapshot = RdbRecoverManager::BuildFailedSnapshotPath(
+        ServiceConstants::BUNDLE_MANAGER_SERVICE_PATH, ServiceConstants::BUNDLE_RDB_NAME);
+    MarkRebuildFinish(failedSnapshot);
+}
+
+void BMSEventHandler::MarkRebuildFinish(const std::string &failedSnapshotPath)
 {
     auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
     if (bmsPara == nullptr) {
@@ -486,8 +504,17 @@ void BMSEventHandler::MarkRebuildFinish()
         return;
     }
 
-    if (!bmsPara->DeleteBmsParam(DB_REBUILD_MARK)) {
+    if (!bmsPara->DeleteBmsParam(ServiceConstants::DB_REBUILD_MARK)) {
         LOG_E(BMS_TAG_DEFAULT, "delete db rebuild mark failed");
+    }
+    // the rebuild from install dirs just re-verified every bundle info, the
+    // leftover failed salvage snapshot is no longer needed
+    if (access(failedSnapshotPath.c_str(), F_OK) == 0 && unlink(failedSnapshotPath.c_str()) != 0) {
+        LOG_E(BMS_TAG_DEFAULT, "delete failed salvage snapshot failed, errno:%{public}d", errno);
+        // a leftover failed snapshot makes every boot distrust the db and run
+        // the full install dir rescan, keep the failure visible in the events
+        EventReport::SendDbErrorEvent(ServiceConstants::BUNDLE_RDB_NAME,
+            static_cast<int32_t>(DB_OPERATION_TYPE::REBUILD), NativeRdb::E_SQLITE_IOERR);
     }
 }
 

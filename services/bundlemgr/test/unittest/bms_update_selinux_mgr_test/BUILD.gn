@@ -44,6 +44,7 @@ ohos_unittest("BmsUpdateSelinuxMgrTest") {
     "${services_path}/bundlemgr/test/mock/src/installd_service.cpp",
     # Add BmsUpdateSelinuxMgr source file
     "${services_path}/bundlemgr/src/rdb/rdb_data_manager.cpp",
+    "${services_path}/bundlemgr/src/rdb/rdb_recover_manager.cpp",
     "${services_path}/bundlemgr/src/rdb/bms_rdb_open_callback.cpp",
   ]
   # Replace real idle_manager_rdb.cpp with mock implementation for testing
