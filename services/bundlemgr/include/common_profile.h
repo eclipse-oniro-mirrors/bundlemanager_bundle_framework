@@ -301,8 +301,8 @@ constexpr uint32_t VALUE_SPECIAL_SCENARIO_PROCESSING = 1 << 12;
 // 10 0000 0000 0000 represents nearlink service
 constexpr uint32_t VALUE_NEARLINK = 1 << 13;
 
-// 1000 0000 0000 0000 represents usb connection service
-constexpr uint32_t VALUE_USB_CONNECTION = 1 << 15;
+// 100 0000 0000 0000 represents usb connection service
+constexpr uint32_t VALUE_USB_CONNECTION = 1 << 14;
 
 constexpr const char* KEY_DATA_TRANSFER = "dataTransfer";
 constexpr const char* KEY_AUDIO_PLAYBACK = "audioPlayback";
