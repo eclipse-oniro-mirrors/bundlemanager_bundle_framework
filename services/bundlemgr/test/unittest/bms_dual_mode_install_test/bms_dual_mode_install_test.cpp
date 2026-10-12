@@ -1143,6 +1143,30 @@ HWTEST_F(BmsDualModeInstallTest, SetDualModeAppInfo_ForceCloneInstallPrimaryMode
     EXPECT_EQ(infos[BUNDLE_NAME].GetAppIndex(), ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
 }
 
+// ====================== BaseBundleInstaller::ProcessBundleInstallNative (dual-mode HNP gate) ======================
+
+HWTEST_F(BmsDualModeInstallTest, ProcessBundleInstallNative_HnpNotSupported_0100, Function | SmallTest | Level0)
+{
+    // Secondary-variant install + module with hnpPackages -> rejected before any InstalldClient
+    // call; isHnpInstalled_ stays false so rollback skips the HNP cleanup.
+    EnableSecondaryMode();
+    BaseBundleInstaller installer;
+    installer.dualModeBundleName_ = DualModeHelper::GetDualModeBundleName(BUNDLE_NAME);
+    InnerBundleInfo info;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = "entry";
+    HnpPackage pkg;
+    pkg.package = "example.hnp";
+    pkg.type = "public";
+    moduleInfo.hnpPackages.push_back(pkg);
+    moduleInfo.moduleHnpsPath = "/tmp/entry/hnps";
+    info.innerModuleInfos_.try_emplace("entry", moduleInfo);
+    info.SetCurrentModulePackage("entry");
+    EXPECT_EQ(installer.ProcessBundleInstallNative(info, TEST_USERID, false),
+        OHOS::ERR_APPEXECFWK_INSTALL_DUAL_MODE_POLICY_NOT_SUPPORTED);
+    EXPECT_FALSE(installer.isHnpInstalled_);
+}
+
 // ====================== BaseBundleInstaller::CheckDualModeCategoryConsistency ======================
 
 HWTEST_F(BmsDualModeInstallTest, CheckDualModeCategoryConsistency_0100, Function | SmallTest | Level0)
