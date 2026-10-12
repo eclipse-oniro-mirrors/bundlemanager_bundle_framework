@@ -29,6 +29,8 @@ struct VerifyBinParam : public Parcelable {
     int32_t userId;
     std::vector<std::string> binFilePaths;
     bool isDebug = false;
+    // SPM session id allocated by access token service; 0 means legacy mode (SPM OFF)
+    int32_t sessionId = 0;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

@@ -160,11 +160,12 @@ ErrCode BundleSandboxAppHelper::UninstallAllSandboxApps(const std::string &bundl
 #endif
 }
 
-void BundleSandboxAppHelper::RestoreSandboxUidAndGid(std::map<int32_t, std::string> &bundleIdMap)
+void BundleSandboxAppHelper::RestoreSandboxUidAndGid(std::map<int32_t, std::string> &bundleIdMap,
+    BundleDataMgr *dataMgr)
 {
 #ifdef BUNDLE_FRAMEWORK_SANDBOX_APP
     APP_LOGD("enter RestoreSandboxUidAndGid");
-    sandboxDataMgr_->RestoreSandboxUidAndGid(bundleIdMap);
+    sandboxDataMgr_->RestoreSandboxUidAndGid(bundleIdMap, dataMgr);
 #else
     APP_LOGD("sandbox app not supported");
 #endif

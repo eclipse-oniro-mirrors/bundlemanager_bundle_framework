@@ -17,6 +17,7 @@
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_BUNDLE_PERMISSION_MGR_H
 
 #include <shared_mutex>
+#include <map>
 
 #include "accesstoken_kit.h"
 #include "bundle_constants.h"
@@ -91,6 +92,27 @@ public:
 
     static int32_t DeleteAccessTokenId(const Security::AccessToken::AccessTokenID tokenId,
         bool isTokenReserved = false);
+
+    /**
+     * @brief Finish an SPM install session by committing or rolling back it in the
+     *        access token service. Reserved for SPM stage 3; always returns ERR_OK
+     *        under SPM OFF (never called with a non-zero session id).
+     * @param sessionId Indicates the SPM session id allocated by access token service.
+     * @param isSuccess Indicates whether the install session is committed.
+     * @param modulePathMap Indicates the map from hap source path to installed path.
+     * @return Returns ERR_OK.
+     */
+    /**
+     * @brief Assemble the SPM BundlePolicy from the bundle info: the pre-authorization
+     *        list (default permission source, signature matched) plus dlp type and
+     *        debug grant flag. Permission defs/states are derived by the access token
+     *        service from the session provision (deferred permission model).
+     */
+    static Security::AccessToken::BundlePolicy CreateBundlePolicy(const InnerBundleInfo &innerBundleInfo,
+        int32_t dlpType, bool isDebugGrant);
+
+    static int32_t FinishHapInstall(int32_t sessionId, bool isSuccess,
+        const std::map<std::string, std::string> &modulePathMap);
 
     static bool GetRequestPermissionStates(BundleInfo &bundleInfo, uint32_t tokenId, const std::string deviceId);
 

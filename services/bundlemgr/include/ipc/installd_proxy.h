@@ -348,7 +348,7 @@ public:
     virtual ErrCode VerifyCodeSignatureForHap(const CodeSignatureParam &codeSignatureParam) override;
 
     virtual ErrCode DeliverySignProfile(const std::string &bundleName, int32_t profileBlockLength,
-        const unsigned char *profileBlock) override;
+        const unsigned char *profileBlock, int32_t sessionId = 0) override;
 
     virtual ErrCode RemoveSignProfile(const std::string &bundleName) override;
 
@@ -446,6 +446,8 @@ public:
         const std::string &bundleName, int32_t userId, const std::string &abcRelativePath) override;
 
     virtual ErrCode BundleInstallFinished(const std::string &bundleName) override;
+
+    virtual ErrCode ClearSessionProvisionCache(int32_t sessionId) override;
 
 private:
     ErrCode TransactInstalldCmd(InstalldInterfaceCode code, MessageParcel &data, MessageParcel &reply,

@@ -19,6 +19,7 @@
 #include <string>
 
 #include "bundle_data_mgr.h"
+#include "bundle_spm_manager.h"
 #include "inner_bundle_info.h"
 
 namespace OHOS {
@@ -54,6 +55,8 @@ public:
     ErrCode UninstallAllSandboxApps(const std::string &bundleName, int32_t userId = Constants::INVALID_USERID);
 
 private:
+    // SPM facade session; inert under SPM OFF (session id 0)
+    BundleSpmManager::InstallSession spmSession_;
     ErrCode CreateSandboxDataDir(InnerBundleInfo &info, const int32_t &uid, const int32_t &appIndex,
         const int32_t &dlpType) const;
     void SandboxAppRollBack(InnerBundleInfo &info, const int32_t &userId);

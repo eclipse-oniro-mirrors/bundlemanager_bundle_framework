@@ -75,7 +75,13 @@ ErrCode InnerSharedBundleInstaller::ParseFiles(const InstallCheckParam &checkPar
         APP_LOGD("hap syscap check failed %{public}d", result);
     }
     // verify signature info for all haps
-    result = bundleInstallChecker_->CheckMultipleHapsSignInfo(bundlePaths, hapVerifyResults_);
+    spmSession_ = BundleSpmManager::InstallSession::CheckSignAndInitSession(Constants::INVALID_USERID,
+        bundlePaths, false, *bundleInstallChecker_, result, false);
+    if (result == ERR_OK) {
+        spmSession_.GetHapVerifyResults(hapVerifyResults_);
+    }
+    // No on-demand recovery chain on this entry: wrap the raw AT recovery codes.
+    result = BundleSpmManager::WrapRecoverableSpmErrorCode(result);
     CHECK_RESULT(result, "hap files check signature info failed %{public}d");
 
     // parse bundle infos
@@ -260,6 +266,9 @@ ErrCode InnerSharedBundleInstaller::Install(const InstallParam &installParam)
     if (isSoFakeDecompression_) {
         BundleUtil::BundleInstallFinished(bundleName_);
     }
+    // SPM ON: shared bundles only borrow the AT verification inside the session and do
+    // not request permissions; close the session explicitly (rollback + cache clear).
+    spmSession_.Rollback();
     return result;
 }
 
@@ -864,6 +873,7 @@ ErrCode InnerSharedBundleInstaller::VerifyCodeSignatureForNativeFiles(const std:
     codeSignatureParam.isPreInstalledBundle = isPreInstalledBundle;
     codeSignatureParam.isCompressNativeLibrary = isCompressNativeLibs_;
     bundleInstallChecker_->ProcessCodeSignatureParam(verifyRes_, codeSignatureParam);
+    spmSession_.FillCodeSignatureParam(verifyRes_, codeSignatureParam);
     return InstalldClient::GetInstance()->VerifyCodeSignature(codeSignatureParam);
 }
 
@@ -883,6 +893,7 @@ ErrCode InnerSharedBundleInstaller::VerifyCodeSignatureForHsp(const std::string 
     codeSignatureParam.isCompileSdkOpenHarmony = isCompileSdkOpenHarmony;
     codeSignatureParam.isPreInstalledBundle = isPreInstalledBundle_;
     bundleInstallChecker_->ProcessCodeSignatureParam(verifyRes_, codeSignatureParam);
+    spmSession_.FillCodeSignatureParam(verifyRes_, codeSignatureParam);
     return InstalldClient::GetInstance()->VerifyCodeSignatureForHap(codeSignatureParam);
 }
 
@@ -908,7 +919,7 @@ ErrCode InnerSharedBundleInstaller::DeliveryProfileToCodeSign(
             APP_LOGE("invalid sign profile");
             return ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE;
         }
-        return InstalldClient::GetInstance()->DeliverySignProfile(provisionInfo.bundleInfo.bundleName,
+        return spmSession_.DeliverySignProfile(provisionInfo.bundleInfo.bundleName,
             provisionInfo.profileBlockLength, provisionInfo.profileBlock.get());
     }
     return ERR_OK;

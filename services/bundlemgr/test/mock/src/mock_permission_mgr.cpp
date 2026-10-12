@@ -273,6 +273,19 @@ Security::AccessToken::HapInfoParams BundlePermissionMgr::CreateHapInfoParams(co
     return hapInfo;
 }
 
+Security::AccessToken::BundlePolicy BundlePermissionMgr::CreateBundlePolicy(
+    const InnerBundleInfo &innerBundleInfo, int32_t dlpType, bool isDebugGrant)
+{
+    Security::AccessToken::BundlePolicy policy;
+    return policy;
+}
+
+int32_t BundlePermissionMgr::FinishHapInstall(int32_t sessionId, bool isSuccess,
+    const std::map<std::string, std::string> &modulePathMap)
+{
+    return 0;
+}
+
 int32_t BundlePermissionMgr::InitHapToken(const InnerBundleInfo &innerBundleInfo, const int32_t userId,
     const int32_t dlpType, Security::AccessToken::AccessTokenIDEx& tokenIdeEx,
     Security::AccessToken::HapInfoCheckResult &checkResult, const std::string &appServiceCapabilities,

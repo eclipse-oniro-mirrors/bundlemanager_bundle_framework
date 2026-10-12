@@ -238,6 +238,32 @@ void ResetTestValues()
 }
 namespace OHOS {
 int32_t g_testVerifyPermission = 0;
+// Instrumentation for BundleSpmManager::DeleteToken tests: call count and the
+// isTokenReserved argument of the last DeleteAccessTokenId call.
+int32_t g_deleteAccessTokenIdCount = 0;
+bool g_deleteAccessTokenIdReserved = false;
+// Controllable return values for error-conservation (AC-19) facade tests.
+int32_t g_initHapTokenRet = 0;
+int32_t g_updateHapTokenRet = 0;
+int32_t g_deleteAccessTokenIdRet = 0;
+// Argument capture of the last UpdateHapToken call (default branch) for AC-7 passthrough tests.
+bool g_updateHapTokenDataRefresh = false;
+bool g_updateHapTokenIsDebugGrant = false;
+bool g_updateHapTokenNeedInit = true;
+
+// Resets the SPM facade mock control/capture globals; call from test SetUp.
+void ResetSpmFacadeMockValues()
+{
+    g_testVerifyPermission = 0;
+    g_deleteAccessTokenIdCount = 0;
+    g_deleteAccessTokenIdReserved = false;
+    g_initHapTokenRet = 0;
+    g_updateHapTokenRet = 0;
+    g_deleteAccessTokenIdRet = 0;
+    g_updateHapTokenDataRefresh = false;
+    g_updateHapTokenIsDebugGrant = false;
+    g_updateHapTokenNeedInit = true;
+}
 namespace AppExecFwk {
 using namespace Security::AccessToken;
 
@@ -310,7 +336,19 @@ bool BundlePermissionMgr::IsBundleSelfCalling(const std::string &bundleName, con
 }
 int32_t BundlePermissionMgr::DeleteAccessTokenId(const AccessTokenID tokenId, bool isTokenReserved)
 {
+    g_deleteAccessTokenIdCount++;
+    g_deleteAccessTokenIdReserved = isTokenReserved;
     return -1;
+}
+int32_t BundlePermissionMgr::FinishHapInstall(int32_t sessionId, bool isSuccess,
+    const std::map<std::string, std::string> &modulePathMap)
+{
+    if (sessionId == 0) {
+        return ERR_OK;
+    }
+    // Mirrors the production delegation to the access token service so the
+    // ON-mode target can drive the result through AccessTokenKit::FinishInstall.
+    return AccessTokenKit::FinishInstall(sessionId, isSuccess, modulePathMap);
 }
 bool BundlePermissionMgr::VerifyAcrossUserPermission(int userId)
 {
@@ -319,7 +357,20 @@ bool BundlePermissionMgr::VerifyAcrossUserPermission(int userId)
 #else
 int32_t BundlePermissionMgr::DeleteAccessTokenId(const AccessTokenID tokenId, bool isTokenReserved)
 {
-    return 0;
+    g_deleteAccessTokenIdCount++;
+    g_deleteAccessTokenIdReserved = isTokenReserved;
+    return g_deleteAccessTokenIdRet;
+}
+
+int32_t BundlePermissionMgr::FinishHapInstall(int32_t sessionId, bool isSuccess,
+    const std::map<std::string, std::string> &modulePathMap)
+{
+    if (sessionId == 0) {
+        return ERR_OK;
+    }
+    // Mirrors the production delegation to the access token service so the
+    // ON-mode target can drive the result through AccessTokenKit::FinishInstall.
+    return AccessTokenKit::FinishInstall(sessionId, isSuccess, modulePathMap);
 }
 
 bool BundlePermissionMgr::VerifyCallingUid()
@@ -546,6 +597,13 @@ Security::AccessToken::HapPolicyParams BundlePermissionMgr::CreateHapPolicyParam
     return policy;
 }
 
+Security::AccessToken::BundlePolicy BundlePermissionMgr::CreateBundlePolicy(
+    const InnerBundleInfo &innerBundleInfo, int32_t dlpType, bool isDebugGrant)
+{
+    Security::AccessToken::BundlePolicy policy;
+    return policy;
+}
+
 void BundlePermissionMgr::ConvertPermissionDef(const Security::AccessToken::PermissionDef &permDef,
     PermissionDef &permissionDef)
 {
@@ -630,7 +688,7 @@ int32_t BundlePermissionMgr::InitHapToken(const InnerBundleInfo &innerBundleInfo
     Security::AccessToken::HapInfoCheckResult &checkResult, const std::string &appServiceCapabilities,
     const bool isDebugGrant)
 {
-    return 0;
+    return g_initHapTokenRet;
 }
 
 int32_t BundlePermissionMgr::UpdateHapToken(Security::AccessToken::AccessTokenIDEx &tokenIdeEx,
@@ -638,7 +696,10 @@ int32_t BundlePermissionMgr::UpdateHapToken(Security::AccessToken::AccessTokenID
     const std::string &appServiceCapabilities, bool dataRefresh,
     const bool isDebugGrant, const bool needInit)
 {
-    return 0;
+    g_updateHapTokenDataRefresh = dataRefresh;
+    g_updateHapTokenIsDebugGrant = isDebugGrant;
+    g_updateHapTokenNeedInit = needInit;
+    return g_updateHapTokenRet;
 }
 
 int32_t BundlePermissionMgr::RestoreHapToken(const InnerBundleInfo &innerBundleInfo,

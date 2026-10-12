@@ -114,6 +114,16 @@ ErrCode BundleCloneInstaller::InstallCloneApp(const std::string &bundleName,
     }
     SendBundleSystemEvent(bundleName, BundleEventType::INSTALL, userId, appIndex,
         false, false, InstallScene::NORMAL, result);
+    // SPM ON: this installer keeps a deferred session (the token path stays legacy
+    // even under SPM ON), so the commit is a no-op; kept for symmetry with the
+    // facade lifecycle in case a real session is adopted later.
+    if (result == ERR_OK) {
+        int32_t spmCommitRet = spmSession_.Commit({});
+        if (spmCommitRet != ERR_OK) {
+            APP_LOGE("spm session commit failed, bundleName:%{public}s errCode:%{public}d",
+                bundleName.c_str(), spmCommitRet);
+        }
+    }
 
     ResetInstallProperties();
     PerfProfile::GetInstance().SetBundleInstallEndTime(GetTickCount());
@@ -287,7 +297,12 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
     InnerBundleUserInfo tmpUserInfo;
     tmpUserInfo.bundleName = cloneBundleName;
     tmpUserInfo.bundleUserInfo.userId = userId;
-    dataMgr->GenerateUidAndGid(tmpUserInfo);
+    if (!BundleSpmManager::IsEnabled()) {
+        dataMgr->GenerateUidAndGid(tmpUserInfo);
+    }
+    // SPM ON: no local allocation — a fresh clone takes the AT-allocated identity
+    // uid from InitToken below; a keep-data reinstall with a recovered token
+    // reuses the uid persisted in the uninstall record.
     BundleUtil::MakeFsConfig(info.GetBundleName(), ServiceConstants::HMDFS_CONFIG_PATH, info.GetAppProvisionType(),
         Constants::APP_PROVISION_TYPE_FILE_NAME);
     int32_t uid = tmpUserInfo.uid;
@@ -300,16 +315,44 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
     if (dataMgr->GetAppProvisionInfo(bundleName, userId, appProvisionInfo) != ERR_OK) {
         APP_LOGE("GetAppProvisionInfo failed bundleName:%{public}s", bundleName.c_str());
     }
-    if (!RecoverHapToken(userId, appIndex, newTokenIdEx, info, appProvisionInfo.appServiceCapabilities)) {
-        if (BundlePermissionMgr::InitHapToken(info, userId, 0, newTokenIdEx, checkResult,
-            appProvisionInfo.appServiceCapabilities) != ERR_OK) {
+    int32_t recoveredUid = 0;
+    bool tokenRecovered = RecoverHapToken(userId, appIndex, newTokenIdEx, info,
+        appProvisionInfo.appServiceCapabilities, recoveredUid);
+    if (!tokenRecovered) {
+        newTokenIdEx.tokenIDEx = 0;  // discard partial writes from the failed recovery
+    }
+    if (!tokenRecovered) {
+        int32_t identityUid = 0;
+        if (spmSession_.InitToken(info, userId, 0, newTokenIdEx, checkResult,
+            appProvisionInfo.appServiceCapabilities, nullptr, false, &identityUid) != ERR_OK) {
             auto result = BundlePermissionMgr::GetCheckResultMsg(checkResult);
             APP_LOGE("bundleName:%{public}s InitHapToken failed, %{public}s", bundleName.c_str(), result.c_str());
             return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
         }
+        if (BundleSpmManager::IsEnabled() && identityUid != 0) {
+            // fresh clone under SPM ON: the AT-allocated identity uid is the clone uid
+            uid = identityUid;
+            tmpUserInfo.uid = uid;
+            tmpUserInfo.gids.clear();
+            tmpUserInfo.gids.emplace_back(uid);
+        }
+    } else if (BundleSpmManager::IsEnabled() && recoveredUid != 0) {
+        // keep-data reinstall under SPM ON: reuse the uid persisted at uninstall
+        uid = recoveredUid;
+        tmpUserInfo.uid = uid;
+        tmpUserInfo.gids.clear();
+        tmpUserInfo.gids.emplace_back(uid);
+    }
+    if (BundleSpmManager::IsEnabled() && uid == Constants::INVALID_UID) {
+        // Fail fast: neither the AT identity nor the uninstall record provided a
+        // uid — an INVALID_UID clone info would break the install downstream.
+        APP_LOGE("no uid from AT identity or uninstall record, bundleName:%{public}s appIndex:%{public}d",
+            bundleName.c_str(), appIndex);
+        return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
     }
     ScopeGuard applyAccessTokenGuard([&] {
-        BundlePermissionMgr::DeleteAccessTokenId(newTokenIdEx.tokenIdExStruct.tokenID);
+        BundleSpmManager::DeleteToken(newTokenIdEx.tokenIdExStruct.tokenID, bundleName,
+            BundleSpmManager::TokenDeleteType::NONE, uid);
     });
 
     InnerBundleCloneInfo attr = {
@@ -444,8 +487,8 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
         }
         RemoveEl5Dir(userInfo, userId, appIndex);
 
-        if (BundlePermissionMgr::DeleteAccessTokenId(accessTokenId_) !=
-            AccessToken::AccessTokenKitRet::RET_SUCCESS) {
+        if (BundleSpmManager::DeleteToken(accessTokenId_, bundleName, BundleSpmManager::TokenDeleteType::NONE,
+            uid_) != AccessToken::AccessTokenKitRet::RET_SUCCESS) {
             APP_LOGE("delete AT failed clone");
         }
         DelayedSingleton<BmsUpdateSelinuxMgr>::GetInstance()->DeleteBundle(bundleName, userId, appIndex);
@@ -782,7 +825,7 @@ std::string BundleCloneInstaller::GetDeveloperId(const std::string &bundleName)
 
 bool BundleCloneInstaller::RecoverHapToken(int32_t userId, int32_t appIndex,
     Security::AccessToken::AccessTokenIDEx &accessTokenIdEx, const InnerBundleInfo &innerBundleInfo,
-    const std::string &appServiceCapabilities)
+    const std::string &appServiceCapabilities, int32_t &recoveredUid)
 {
     if (GetDataMgr() != ERR_OK) {
         APP_LOGE("Get dataMgr nullptr");
@@ -801,11 +844,12 @@ bool BundleCloneInstaller::RecoverHapToken(int32_t userId, int32_t appIndex,
     std::string key = std::to_string(userId) + "_" + std::to_string(appIndex);
     if (uninstallBundleInfo.userInfos.find(key) != uninstallBundleInfo.userInfos.end()) {
         existBeforeKeepDataApp_ = true;
+        recoveredUid = uninstallBundleInfo.userInfos.at(key).uid;
         accessTokenIdEx.tokenIdExStruct.tokenID =
             uninstallBundleInfo.userInfos.at(key).accessTokenId;
         accessTokenIdEx.tokenIDEx = uninstallBundleInfo.userInfos.at(key).accessTokenIdEx;
         Security::AccessToken::HapInfoCheckResult checkResult;
-        if (BundlePermissionMgr::UpdateHapToken(accessTokenIdEx, innerBundleInfo, userId,
+        if (spmSession_.UpdateToken(accessTokenIdEx, innerBundleInfo, userId,
             checkResult, appServiceCapabilities) == ERR_OK) {
             return true;
         } else {

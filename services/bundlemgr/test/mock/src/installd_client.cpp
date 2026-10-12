@@ -25,6 +25,9 @@
 namespace OHOS {
 namespace AppExecFwk {
 int32_t g_remainingSuccessfulCalls = 2;
+int32_t g_clearSessionProvisionCacheCount = 0;
+// Failure injection knob for the ClearInstalldProvisionCache error log branch.
+int32_t g_clearSessionProvisionCacheRet = 0;
 bool g_mockCleanBundleDataDirResult = true;
 namespace {
 bool g_processBinFilesCalled = false;
@@ -35,6 +38,17 @@ void ResetProcessBinFilesParamForTest()
 {
     g_processBinFilesCalled = false;
     g_lastVerifyBinParam = VerifyBinParam();
+}
+
+void ResetClearSessionProvisionCacheCountForTest()
+{
+    g_clearSessionProvisionCacheCount = 0;
+    g_clearSessionProvisionCacheRet = 0;
+}
+
+int32_t GetClearSessionProvisionCacheCountForTest()
+{
+    return g_clearSessionProvisionCacheCount;
 }
 
 bool GetProcessBinFilesParamForTest(VerifyBinParam &verifyBinParam)
@@ -814,12 +828,13 @@ ErrCode InstalldClient::VerifyCodeSignatureForHap(const CodeSignatureParam &code
 }
 
 ErrCode InstalldClient::DeliverySignProfile(const std::string &bundleName, int32_t profileBlockLength,
-    const unsigned char *profileBlock)
+    const unsigned char *profileBlock, int32_t sessionId)
 {
     if (bundleName.empty() || profileBlock == nullptr) {
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-    return CallService(&IInstalld::DeliverySignProfile, bundleName, profileBlockLength, profileBlock);
+    return CallService(&IInstalld::DeliverySignProfile, bundleName, profileBlockLength, profileBlock,
+        sessionId);
 }
 
 ErrCode InstalldClient::RemoveSignProfile(const std::string &bundleName)
@@ -1142,6 +1157,14 @@ ErrCode InstalldClient::GetCacheDiskUsageFromPath(const std::vector<std::string>
 }
 
 void InstalldClient::OnLoadSystemAbilitySuccess(const sptr<IRemoteObject>& remoteObject) {}
+
+ErrCode InstalldClient::ClearSessionProvisionCache(int32_t sessionId)
+{
+    // Counting stub for BundleSpmManager tests: under SPM OFF the facade short-circuits on
+    // session id 0 before reaching here, so callers assert the count stays 0.
+    g_clearSessionProvisionCacheCount++;
+    return g_clearSessionProvisionCacheRet;
+}
 
 void InstalldClient::OnLoadSystemAbilityFail() {}
 

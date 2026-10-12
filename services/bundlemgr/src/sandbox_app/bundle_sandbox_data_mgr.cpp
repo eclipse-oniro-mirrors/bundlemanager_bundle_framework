@@ -15,7 +15,9 @@
 
 #include "bundle_sandbox_data_mgr.h"
 
+#include "bundle_data_mgr.h"
 #include "bundle_mgr_service.h"
+#include "bundle_spm_manager.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -340,7 +342,8 @@ bool BundleSandboxDataMgr::RestoreSandboxAppIndex(const std::string &bundleName,
     return true;
 }
 
-void BundleSandboxDataMgr::RestoreSandboxUidAndGid(std::map<int32_t, std::string> &bundleIdMap)
+void BundleSandboxDataMgr::RestoreSandboxUidAndGid(std::map<int32_t, std::string> &bundleIdMap,
+    BundleDataMgr *dataMgr)
 {
     APP_LOGD("RestoreSandboxUidAndGid begin");
     std::unique_lock<std::shared_mutex> lock(sandboxAppMutex_);
@@ -354,6 +357,14 @@ void BundleSandboxDataMgr::RestoreSandboxUidAndGid(std::map<int32_t, std::string
                 bundleIdMap.emplace(bundleId, info.first);
             } else {
                 bundleIdMap[bundleId] = info.first;
+            }
+            if (BundleSpmManager::IsEnabled() && dataMgr != nullptr) {
+                // SPM ON: rebuild the reverse-lookup cache entry for the restored
+                // sandbox uid (the sandbox identity is AT-allocated under SPM).
+                // One-way lock nesting: the caller holds bundleIdMapMutex_, so
+                // bundleIdMapMutex_ -> uidIndexMapMutex_ is preserved.
+                dataMgr->UpdateUidIndexMap(innerBundleUserInfo.uid,
+                    info.second.GetBundleName(), info.second.GetAppIndex());
             }
             BundleUtil::MakeFsConfig(info.first, bundleId, ServiceConstants::HMDFS_CONFIG_PATH);
             BundleUtil::MakeFsConfig(info.first, bundleId, ServiceConstants::SHAREFS_CONFIG_PATH);

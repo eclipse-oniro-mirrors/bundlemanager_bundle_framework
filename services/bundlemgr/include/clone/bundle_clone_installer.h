@@ -20,6 +20,7 @@
 
 #include "bundle_app_spawn_client.h"
 #include "bundle_data_mgr.h"
+#include "bundle_spm_manager.h"
 #include "clone_param.h"
 #include "inner_bundle_info.h"
 #include "event_report.h"
@@ -58,6 +59,8 @@ public:
         int32_t userId = Constants::INVALID_USERID);
 
 private:
+    // SPM facade session; inert under SPM OFF (session id 0)
+    BundleSpmManager::InstallSession spmSession_;
     ErrCode CreateCloneDataDir(
         InnerBundleInfo &info, const int32_t userId, const int32_t &uid, const int32_t &appIndex) const;
     ErrCode RemoveCloneDataDir(const std::string bundleName, int32_t userId, int32_t appIndex, bool sync);
@@ -82,7 +85,8 @@ private:
     std::string GetAssetAccessGroups(const std::string &bundleName);
     std::string GetDeveloperId(const std::string &bundleName);
     bool RecoverHapToken(int32_t userId, int32_t appIndex, Security::AccessToken::AccessTokenIDEx &accessTokenIdEx,
-        const InnerBundleInfo &innerBundleInfo, const std::string &appServiceCapabilities);
+        const InnerBundleInfo &innerBundleInfo, const std::string &appServiceCapabilities,
+        int32_t &recoveredUid);
     bool DeleteUninstallCloneBundleInfo(const std::string &bundleName, int32_t userId, int32_t appIndex);
     void StopRelable(const InnerBundleInfo &info, int32_t uid);
     ErrCode ProcessBundleShareFiles(const InnerBundleInfo &info, const std::string &cloneBundleName,

@@ -504,7 +504,7 @@ ErrCode InstalldClient::VerifyCodeSignatureForHap(const CodeSignatureParam &code
 }
 
 ErrCode InstalldClient::DeliverySignProfile(const std::string &bundleName, int32_t profileBlockLength,
-    const unsigned char *profileBlock)
+    const unsigned char *profileBlock, int32_t sessionId)
 {
     return ERR_OK;
 }

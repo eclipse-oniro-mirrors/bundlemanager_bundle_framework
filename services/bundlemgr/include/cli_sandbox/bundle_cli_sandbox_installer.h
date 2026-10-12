@@ -19,6 +19,7 @@
 #include <string>
 
 #include "bundle_data_mgr.h"
+#include "bundle_spm_manager.h"
 #include "event_report.h"
 #include "inner_bundle_info.h"
 #include "inner_cli_sandbox_info.h"
@@ -63,6 +64,8 @@ public:
     ErrCode DestroyAllCliSandboxApps(const std::string &bundleName, int32_t userId);
 
 private:
+    // SPM facade session; inert under SPM OFF (session id 0)
+    BundleSpmManager::InstallSession spmSession_;
     ErrCode ProcessDestroyCliSandbox(const std::string &creatorBundleName,
         const std::string &envCallerBundleName, const std::string &bundleName,
         int32_t userId, int32_t appIndex, bool skipCallerCheck);

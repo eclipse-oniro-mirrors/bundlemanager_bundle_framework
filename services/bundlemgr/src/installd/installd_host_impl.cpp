@@ -67,7 +67,12 @@
 #include "interfaces/hap_verify.h"
 #include "ipc/copy_hap_to_install_path_param.h"
 #include "ipc/verify_bin_param.h"
+#include "accesstoken_kit.h"
+#ifdef SECURITY_PRIVACY_SERVER_ENABLE
+#include "installd/binary_security_wrapper.h"
+#endif
 #include "parameters.h"
+#include "provision/provision_verify.h"
 #include "inner_bundle_clone_common.h"
 #include "policycoreutils.h"
 #include "storage_acl.h"
@@ -263,6 +268,87 @@ constexpr int64_t BLOCK_SIZE = 512;
 #if defined(CODE_SIGNATURE_ENABLE)
 using namespace OHOS::Security::CodeSign;
 #endif
+
+// appIdentifier replacement for debug provisions, aligned with the BMS legacy path.
+constexpr const char* DEBUG_APP_IDENTIFIER = "DEBUG_LIB_ID";
+constexpr const char* DEFAULT_APL_NORMAL = "normal";
+
+// Strips the sandbox appIndex decoration to get the original bundle name
+// for the access token fallback query.
+std::string GetOriginalBundleName(const std::string &bundleName)
+{
+    // sandbox installs decorate the name with a "<appIndex>_" prefix; strip it only
+    // when the leading segment is fully numeric so legit names with underscores stay.
+    auto pos = bundleName.find('_');
+    if (pos != std::string::npos && pos > 0 && pos + 1 < bundleName.size() &&
+        bundleName.find_first_not_of("0123456789") == pos) {
+        return bundleName.substr(pos + 1);
+    }
+    return bundleName;
+}
+
+void FillSessionProvisionInfo(const Security::Verify::ProvisionInfo &provisionInfo,
+    const Security::AccessToken::ProfileData &profileData, SessionProvisionInfo &info)
+{
+    info.bundleName = provisionInfo.bundleInfo.bundleName;
+    info.apl = provisionInfo.bundleInfo.apl.empty() ? DEFAULT_APL_NORMAL
+        : provisionInfo.bundleInfo.apl;
+    info.distributionType = static_cast<int32_t>(provisionInfo.distributionType);
+    info.provisionType = static_cast<int32_t>(provisionInfo.type);
+    info.isEnterpriseResigned = profileData.isEnterpriseResigned;
+    info.isDeveloperDistribution =
+        provisionInfo.distributionType == Security::Verify::AppDistType::DEVELOPER;
+    info.appIdentifier = provisionInfo.bundleInfo.appIdentifier;
+    // The profile block vector is the single source of truth: the separate length
+    // field comes from another process and must not be trusted to match the vector
+    // size (an inconsistent claimed length would cause an out-of-bound read when
+    // the block is copied into the code sign param).
+    info.profileBlockLength = static_cast<uint32_t>(profileData.profileBlock.size());
+    info.appServiceCapabilities = provisionInfo.appServiceCapabilities;
+    info.distributionCertificate = provisionInfo.bundleInfo.distributionCertificate;
+    if (!profileData.profileBlock.empty()) {
+        info.profileBlock.reset(new (std::nothrow) unsigned char[profileData.profileBlock.size()]);
+        if (info.profileBlock != nullptr) {
+            std::copy(profileData.profileBlock.begin(), profileData.profileBlock.end(),
+                info.profileBlock.get());
+        }
+    }
+}
+
+// Overwrites the code-sign security fields of param from the SPM provision when
+// the session has provision info; keeps the BMS-provided values otherwise.
+void FillCodeSignParamFromProvision(const SessionProvisionInfo &info,
+    CodeSignatureParam &param)
+{
+    if (info.bundleName.empty()) {
+        return;
+    }
+    param.bundleName = info.bundleName;
+    param.isEnterpriseResigned = info.isEnterpriseResigned;
+    param.isDeveloperDistribution = info.isDeveloperDistribution;
+    param.appIdentifier = (info.provisionType == 0) ? DEBUG_APP_IDENTIFIER : info.appIdentifier;
+    param.isEnterpriseBundle =
+        info.distributionType == static_cast<int32_t>(Security::Verify::AppDistType::ENTERPRISE) ||
+        info.distributionType ==
+            static_cast<int32_t>(Security::Verify::AppDistType::ENTERPRISE_NORMAL) ||
+        info.distributionType ==
+            static_cast<int32_t>(Security::Verify::AppDistType::ENTERPRISE_MDM);
+    param.isInternaltestingBundle =
+        info.distributionType ==
+            static_cast<int32_t>(Security::Verify::AppDistType::INTERNALTESTING);
+    if (info.profileBlockLength > 0 && info.profileBlock != nullptr) {
+        param.profileBlock.reset(new (std::nothrow) unsigned char[info.profileBlockLength]);
+        if (param.profileBlock == nullptr) {
+            // Zero the length as well: leaving the old value together with a null
+            // block would make the downstream copy dereference nullptr.
+            param.profileBlockLength = 0;
+            return;
+        }
+        std::copy(info.profileBlock.get(), info.profileBlock.get() + info.profileBlockLength,
+            param.profileBlock.get());
+        param.profileBlockLength = info.profileBlockLength;
+    }
+}
 }
 
 InstalldHostImpl::InstalldHostImpl()
@@ -1359,6 +1445,12 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
+#ifndef X86_EMULATOR_MODE
+    ErrCode aplRet = GetResolvedApl(createDirParam);
+    if (aplRet != ERR_OK) {
+        return aplRet;
+    }
+#endif
     if (!InstalldOperator::IsValidBundleName(createDirParam.bundleName) ||
         !InstalldOperator::IsValidUserId(createDirParam.userId) ||
         !InstalldOperator::IsValidUid(createDirParam.uid) || !InstalldOperator::IsValidUid(createDirParam.gid)) {
@@ -1527,6 +1619,12 @@ ErrCode InstalldHostImpl::CreateBundleDataDirWithEl(const CreateDirParam &create
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
+#ifndef X86_EMULATOR_MODE
+    ErrCode aplRet = GetResolvedApl(createDirParam);
+    if (aplRet != ERR_OK) {
+        return aplRet;
+    }
+#endif
     if (createDirParam.bundleName.empty() || createDirParam.userId < 0 ||
         createDirParam.uid < 0 || createDirParam.gid < 0) {
         LOG_E(BMS_TAG_INSTALLD, "invalid param, bundleName %{public}s userId %{public}d uid %{public}d gid %{public}d",
@@ -1710,6 +1808,12 @@ ErrCode InstalldHostImpl::CreateExtensionDir(const CreateDirParam &createDirPara
     if (createDirParam.extensionDirs.empty()) {
         return ERR_OK;
     }
+#ifndef X86_EMULATOR_MODE
+    ErrCode aplRet = GetResolvedApl(createDirParam);
+    if (aplRet != ERR_OK) {
+        return aplRet;
+    }
+#endif
     unsigned int hapFlags = GetHapFlags(createDirParam.isPreInstallApp, createDirParam.debug,
         createDirParam.isDlpSandbox, createDirParam.dlpType, true);
     LOG_I(BMS_TAG_INSTALLD, "CreateExtensionDir parent dir %{public}s for bundle %{public}s, hapFlags:%{public}d",
@@ -2697,6 +2801,12 @@ ErrCode InstalldHostImpl::SetDirsApl(const CreateDirParam &createDirParam, bool 
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
+#ifndef X86_EMULATOR_MODE
+    ErrCode aplRet = GetResolvedApl(createDirParam);
+    if (aplRet != ERR_OK) {
+        return aplRet;
+    }
+#endif
     if (!InstalldOperator::IsValidBundleName(createDirParam.bundleName) ||
         !InstalldOperator::IsValidUid(createDirParam.uid) ||
         createDirParam.extensionDirs.empty() || (createDirParam.extensionDirs.size() > MAX_BATCH_QUERY_BUNDLE_SIZE)) {
@@ -3594,6 +3704,13 @@ ErrCode InstalldHostImpl::GetNativeLibraryFileNames(const std::string &filePath,
     return ERR_OK;
 }
 
+namespace {
+// SPM provision helper (defined near its main consumer QueryProvisionInfoBySessionId):
+// forward declared here because VerifyCodeSignature* runs earlier in this file;
+// all unnamed namespace definitions in one translation unit denote the same namespace.
+void FillCodeSignParamFromProvision(const SessionProvisionInfo &info, CodeSignatureParam &param);
+} // namespace
+
 ErrCode InstalldHostImpl::VerifyCodeSignature(const CodeSignatureParam &codeSignatureParam)
 {
     LOG_D(BMS_TAG_INSTALLD, "start to process the code signature for so files");
@@ -3602,28 +3719,38 @@ ErrCode InstalldHostImpl::VerifyCodeSignature(const CodeSignatureParam &codeSign
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
 
-    LOG_D(BMS_TAG_INSTALLD, "code sign param is %{public}s", codeSignatureParam.ToString().c_str());
-    if (!InstalldOperator::IsValidBundleName(codeSignatureParam.bundleName)) {
+    // SPM: under sessionId != 0 the security fields are re-assembled from the
+    // provision cached in the access token service for this session.
+    CodeSignatureParam localParam = codeSignatureParam;
+    SessionProvisionInfo spmProvisionInfo;
+    ErrCode queryRet = QueryProvisionInfoBySessionId(codeSignatureParam.sessionId,
+        codeSignatureParam.bundleName, spmProvisionInfo);
+    if (queryRet != ERR_OK) {
+        return queryRet;
+    }
+    FillCodeSignParamFromProvision(spmProvisionInfo, localParam);
+    LOG_D(BMS_TAG_INSTALLD, "code sign param is %{public}s", localParam.ToString().c_str());
+    if (!InstalldOperator::IsValidBundleName(localParam.bundleName)) {
         LOG_E(BMS_TAG_INSTALLD, "Calling the function VerifyCodeSignature with invalid bundleName");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-    if (!InstalldOperator::IsFileNameValid(codeSignatureParam.modulePath)) {
+    if (!InstalldOperator::IsFileNameValid(localParam.modulePath)) {
         LOG_E(BMS_TAG_INSTALLD, "Calling the function VerifyCodeSignature with invalid modulePath");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-    if (!codeSignatureParam.targetSoPath.empty() &&
+    if (!localParam.targetSoPath.empty() &&
         !InstalldOperator::IsValidPathByBundleDirScene(
-            BundleDirScene::VERIFY_CODE_SIGNATURE, codeSignatureParam.targetSoPath)) {
+            BundleDirScene::VERIFY_CODE_SIGNATURE, localParam.targetSoPath)) {
         LOG_E(BMS_TAG_INSTALLD, "Calling the function VerifyCodeSignature with invalid targetSoPath prefix");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
 
-    if (codeSignatureParam.profileBlockLength >= ServiceConstants::MAX_PROFILE_BLOCK_LENGTH) {
+    if (localParam.profileBlockLength >= ServiceConstants::MAX_PROFILE_BLOCK_LENGTH) {
         LOG_E(BMS_TAG_INSTALLD, "Calling the function VerifyCodeSignature with invalid profileBlockLength: %{public}u",
-            codeSignatureParam.profileBlockLength);
+            localParam.profileBlockLength);
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-    ErrCode ret = InstalldOperator::VerifyCodeSignature(codeSignatureParam);
+    ErrCode ret = InstalldOperator::VerifyCodeSignature(localParam);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLD, "verify code signature failed: %{public}d", ret);
         return ret;
@@ -3818,69 +3945,79 @@ ErrCode InstalldHostImpl::PrepareEntryMap(const CodeSignatureParam &codeSignatur
 
 ErrCode InstalldHostImpl::VerifyCodeSignatureForHap(const CodeSignatureParam &codeSignatureParam)
 {
-    LOG_D(BMS_TAG_INSTALLD, "code sign param is %{public}s", codeSignatureParam.ToString().c_str());
 #if defined(CODE_SIGNATURE_ENABLE)
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
+    // SPM: under sessionId != 0 the security fields are re-assembled from the provision
+    // cached in the access token service for this session (after the permission gate).
+    CodeSignatureParam localParam = codeSignatureParam;
+    SessionProvisionInfo spmProvisionInfo;
+    ErrCode queryRet = QueryProvisionInfoBySessionId(codeSignatureParam.sessionId,
+        codeSignatureParam.bundleName, spmProvisionInfo);
+    if (queryRet != ERR_OK) {
+        return queryRet;
+    }
+    FillCodeSignParamFromProvision(spmProvisionInfo, localParam);
+    LOG_D(BMS_TAG_INSTALLD, "code sign param is %{public}s", localParam.ToString().c_str());
     ErrCode ret = ERR_OK;
-    if (codeSignatureParam.isCompileSdkOpenHarmony && !Security::CodeSign::CodeSignUtils::IsSupportOHCodeSign()) {
+    if (localParam.isCompileSdkOpenHarmony && !Security::CodeSign::CodeSignUtils::IsSupportOHCodeSign()) {
         LOG_D(BMS_TAG_INSTALLD, "code signature is not supported");
         return ret;
     }
     Security::CodeSign::EntryMap entryMap;
-    if ((ret = PrepareEntryMap(codeSignatureParam, entryMap)) != ERR_OK) {
+    if ((ret = PrepareEntryMap(localParam, entryMap)) != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLD, "prepare entry map failed");
         return ret;
     }
     uint32_t codeSignFlag = 0;
-    if (!codeSignatureParam.isCompressNativeLibrary) {
+    if (!localParam.isCompressNativeLibrary) {
         codeSignFlag |= Security::CodeSign::CodeSignInfoFlag::IS_UNCOMPRESSED_NATIVE_LIBS;
     }
-    if (codeSignatureParam.isEnterpriseResigned) {
+    if (localParam.isEnterpriseResigned) {
         codeSignFlag |= Security::CodeSign::CodeSignInfoFlag::IS_ENTERPRISE_RESIGN;
     }
-    if (codeSignatureParam.isDeveloperDistribution) {
+    if (localParam.isDeveloperDistribution) {
         codeSignFlag |= Security::CodeSign::CodeSignInfoFlag::IS_LOCAL_HSP_PLUGIN;
     }
-    if (codeSignatureParam.isSideloadApp) {
+    if (localParam.isSideloadApp) {
         codeSignFlag |= Security::CodeSign::CodeSignInfoFlag::IS_SIDE_LOADING_APP;
         LOG_D(BMS_TAG_INSTALLD, "codeSignFlag add IS_SIDE_LOADING_APP");
     }
-    if (codeSignatureParam.signatureFileDir.empty()) {
+    if (localParam.signatureFileDir.empty()) {
         std::shared_ptr<CodeSignHelper> codeSignHelper = std::make_shared<CodeSignHelper>();
-        Security::CodeSign::FileType fileType = codeSignatureParam.isPreInstalledBundle ?
+        Security::CodeSign::FileType fileType = localParam.isPreInstalledBundle ?
             FILE_ENTRY_ONLY : FILE_ALL;
-        if (codeSignatureParam.isEnterpriseBundle) {
+        if (localParam.isEnterpriseBundle) {
             LOG_D(BMS_TAG_INSTALLD, "Verify code signature for enterprise bundle");
             Security::CodeSign::ByteBuffer byteBuffer;
-            byteBuffer.CopyFrom(reinterpret_cast<const uint8_t *>(codeSignatureParam.profileBlock.get()),
-                codeSignatureParam.profileBlockLength);
+            byteBuffer.CopyFrom(reinterpret_cast<const uint8_t *>(localParam.profileBlock.get()),
+                localParam.profileBlockLength);
             ret = codeSignHelper->EnforceCodeSignForAppWithOwnerId(
-                codeSignatureParam.modulePath, entryMap, fileType, byteBuffer, codeSignFlag);
-        } else if (codeSignatureParam.isInternaltestingBundle) {
+                localParam.modulePath, entryMap, fileType, byteBuffer, codeSignFlag);
+        } else if (localParam.isInternaltestingBundle) {
             LOG_D(BMS_TAG_INSTALLD, "Verify code signature for internaltesting bundle");
             Security::CodeSign::ByteBuffer byteBuffer;
-            byteBuffer.CopyFrom(reinterpret_cast<const uint8_t *>(codeSignatureParam.profileBlock.get()),
-                codeSignatureParam.profileBlockLength);
+            byteBuffer.CopyFrom(reinterpret_cast<const uint8_t *>(localParam.profileBlock.get()),
+                localParam.profileBlockLength);
             ret = codeSignHelper->EnforceCodeSignForAppWithOwnerId(
-                codeSignatureParam.modulePath, entryMap, fileType, byteBuffer, codeSignFlag);
-        } else if (codeSignatureParam.isPlugin) {
+                localParam.modulePath, entryMap, fileType, byteBuffer, codeSignFlag);
+        } else if (localParam.isPlugin) {
             LOG_D(BMS_TAG_INSTALLD, "Verify code signature for plugin");
             std::string pluginId;
-            InstalldOperator::ObtainSignInfoForPlugin(codeSignatureParam.modulePath, pluginId);
-            ret = codeSignHelper->EnforceCodeSignForAppWithPluginId(codeSignatureParam.appIdentifier,
-                pluginId, codeSignatureParam.modulePath, entryMap, fileType, codeSignFlag);
+            InstalldOperator::ObtainSignInfoForPlugin(localParam.modulePath, pluginId);
+            ret = codeSignHelper->EnforceCodeSignForAppWithPluginId(localParam.appIdentifier,
+                pluginId, localParam.modulePath, entryMap, fileType, codeSignFlag);
         } else {
             LOG_D(BMS_TAG_INSTALLD, "Verify code signature for non-enterprise bundle");
             ret = codeSignHelper->EnforceCodeSignForApp(
-                codeSignatureParam.modulePath, entryMap, fileType, codeSignFlag);
+                localParam.modulePath, entryMap, fileType, codeSignFlag);
         }
-        LOG_NOFUNC_I(BMS_TAG_INSTALLD, "Verify code signature %{public}s", codeSignatureParam.modulePath.c_str());
+        LOG_NOFUNC_I(BMS_TAG_INSTALLD, "Verify code signature %{public}s", localParam.modulePath.c_str());
     } else {
-        LOG_D(BMS_TAG_INSTALLD, "Verify code signature with: %{public}s", codeSignatureParam.signatureFileDir.c_str());
-        ret = Security::CodeSign::CodeSignUtils::EnforceCodeSignForApp(entryMap, codeSignatureParam.signatureFileDir);
+        LOG_D(BMS_TAG_INSTALLD, "Verify code signature with: %{public}s", localParam.signatureFileDir.c_str());
+        ret = Security::CodeSign::CodeSignUtils::EnforceCodeSignForApp(entryMap, localParam.signatureFileDir);
     }
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLD, "hap or hsp code signature failed due to %{public}d", ret);
@@ -3896,7 +4033,7 @@ ErrCode InstalldHostImpl::VerifyCodeSignatureForHap(const CodeSignatureParam &co
 }
 
 ErrCode InstalldHostImpl::DeliverySignProfile(const std::string &bundleName, int32_t profileBlockLength,
-    const unsigned char *profileBlock)
+    const unsigned char *profileBlock, int32_t sessionId)
 {
 #if defined(CODE_SIGNATURE_ENABLE)
     LOG_I(BMS_TAG_INSTALLD, "start");
@@ -3908,6 +4045,30 @@ ErrCode InstalldHostImpl::DeliverySignProfile(const std::string &bundleName, int
     if (!InstalldOperator::IsValidBundleName(bundleName)) {
         LOG_E(BMS_TAG_INSTALLD, "Calling the function DeliverySignProfile with invalid bundleName");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    if (sessionId != 0) {
+        // SPM: fetch the profile block from the provision cached in the access
+        // token service for this session instead of the IPC payload.
+        SessionProvisionInfo spmProvisionInfo;
+        ErrCode queryRet = QueryProvisionInfoBySessionId(sessionId, bundleName, spmProvisionInfo);
+        if (queryRet != ERR_OK) {
+            return queryRet;
+        }
+        if (spmProvisionInfo.profileBlockLength == 0 || spmProvisionInfo.profileBlock == nullptr) {
+            LOG_E(BMS_TAG_INSTALLD, "session %{public}d has no profile block to deliver", sessionId);
+            return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+        }
+        Security::CodeSign::ByteBuffer spmBuffer;
+        spmBuffer.CopyFrom(spmProvisionInfo.profileBlock.get(), spmProvisionInfo.profileBlockLength);
+        std::string deliveryName = spmProvisionInfo.bundleName.empty() ? bundleName
+            : spmProvisionInfo.bundleName;
+        ErrCode spmRet = Security::CodeSign::CodeSignUtils::EnableKeyInProfile(deliveryName, spmBuffer);
+        if (spmRet != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLD, "delivery code sign profile failed due to error %{public}d", spmRet);
+            return ERR_BUNDLE_MANAGER_CODE_SIGNATURE_DELIVERY_FILE_FAILED;
+        }
+        return ERR_OK;
     }
 
     if (profileBlockLength <= 0 || profileBlockLength > ServiceConstants::MAX_PROFILE_BLOCK_LENGTH) {
@@ -5013,8 +5174,27 @@ ErrCode InstalldHostImpl::CheckHspPluginCertValidity(const std::string &bundleNa
     if (sessionId == 0) {
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
+    SessionProvisionInfo spmProvisionInfo;
+    ErrCode queryRet = QueryProvisionInfoBySessionId(sessionId, bundleName, spmProvisionInfo);
+    if (queryRet != ERR_OK) {
+        return queryRet;
+    }
+    if (spmProvisionInfo.provisionType == 0) {
+        // debug provision, skip the hsp plugin cert check (security decision, keep
+        // visible in release builds)
+        LOG_I(BMS_TAG_INSTALLD, "debug provision, skip hsp plugin cert check");
+        return ERR_OK;
+    }
 #ifdef SECURITY_PRIVACY_SERVER_ENABLE
-   
+    Security::Verify::HspPlugin hspPluginInfo;
+    hspPluginInfo.certType = Security::Verify::BinaryCertType::Binary_RELEASE;
+    int32_t parseRet = Security::Verify::ParseHspPluginInfo(
+        spmProvisionInfo.distributionCertificate, hspPluginInfo);
+    if (parseRet != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "parse hsp plugin info failed, ret %{public}d", parseRet);
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return BinarySecurityWrapper::GetInstance().CheckHspPluginCertValidity(hspPluginInfo);
 #else
     LOG_E(BMS_TAG_INSTALLD, "SECURITY_PRIVACY_SERVER_ENABLE is disabled");
     return ERR_APPEXECFWK_PLUGIN_PRIVACY_SERVER_DISABLED;
@@ -5296,6 +5476,90 @@ ErrCode InstalldHostImpl::BundleInstallFinished(const std::string &bundleName)
     }
     LOG_I(BMS_TAG_INSTALLD, "BundleInstallFinished bundleName=%{public}s", bundleName.c_str());
     return FileManagement::Decompress::BundelInstallFinished(bundleName);
+}
+
+ErrCode InstalldHostImpl::QueryProvisionInfoBySessionId(int32_t sessionId,
+    const std::string &bundleName, SessionProvisionInfo &info)
+{
+    if (sessionId == 0) {
+        // legacy install: the BMS-provided IPC params are authoritative
+        return ERR_OK;
+    }
+    {
+        std::lock_guard<std::mutex> lock(sessionProvisionCacheMutex_);
+        auto it = sessionProvisionCache_.find(sessionId);
+        if (it != sessionProvisionCache_.end()) {
+            info = it->second;
+            return ERR_OK;
+        }
+    }
+    std::vector<Security::AccessToken::TrustedBundleInfo> bundleInfoList;
+    int32_t ret = Security::AccessToken::AccessTokenKit::GetCacheSignInfoBySessionId(sessionId,
+        Security::AccessToken::SignInfoQueryFlag::QUERY_PROFILE, bundleInfoList);
+    if (ret != Security::AccessToken::AccessTokenKitRet::RET_SUCCESS || bundleInfoList.empty()) {
+        // fallback for clone or sandbox installs whose session cache is gone:
+        // query by the original undecorated bundle name.
+        bundleInfoList.clear();
+        ret = Security::AccessToken::AccessTokenKit::GetHapSignInfo(
+            GetOriginalBundleName(bundleName),
+            Security::AccessToken::SignInfoQueryFlag::QUERY_PROFILE, bundleInfoList);
+        if (ret != Security::AccessToken::AccessTokenKitRet::RET_SUCCESS || bundleInfoList.empty()) {
+            LOG_E(BMS_TAG_INSTALLD, "query provision by session %{public}d failed, ret %{public}d",
+                sessionId, ret);
+            return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+        }
+    }
+    const auto &trustedBundleInfo = bundleInfoList[0];
+    Security::Verify::ProvisionInfo provisionInfo;
+    if (Security::Verify::ParseProvision(trustedBundleInfo.profileData.provisionRaw, provisionInfo) !=
+        Security::Verify::AppProvisionVerifyResult::PROVISION_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "parse provision of session %{public}d failed", sessionId);
+        return ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE;
+    }
+    FillSessionProvisionInfo(provisionInfo, trustedBundleInfo.profileData, info);
+    if (info.profileBlock == nullptr && info.profileBlockLength > 0) {
+        LOG_E(BMS_TAG_INSTALLD, "copy profile block of session %{public}d failed", sessionId);
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    {
+        std::lock_guard<std::mutex> lock(sessionProvisionCacheMutex_);
+        sessionProvisionCache_[sessionId] = info;
+    }
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::GetResolvedApl(const CreateDirParam &createDirParam)
+{
+    if (createDirParam.sessionId == 0) {
+        return ERR_OK;
+    }
+    SessionProvisionInfo info;
+    ErrCode ret = QueryProvisionInfoBySessionId(createDirParam.sessionId,
+        createDirParam.bundleName, info);
+    if (ret != ERR_OK) {
+        return ret;
+    }
+    if (info.bundleName.empty()) {
+        // no provision available for this session, keep the caller provided apl
+        return ERR_OK;
+    }
+    if (info.apl != createDirParam.apl) {
+        LOG_E(BMS_TAG_INSTALLD, "apl mismatch, session %{public}d ipc apl %{public}s at apl %{public}s",
+            createDirParam.sessionId, createDirParam.apl.c_str(), info.apl.c_str());
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::ClearSessionProvisionCache(int32_t sessionId)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "permission denied");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    std::lock_guard<std::mutex> lock(sessionProvisionCacheMutex_);
+    sessionProvisionCache_.erase(sessionId);
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

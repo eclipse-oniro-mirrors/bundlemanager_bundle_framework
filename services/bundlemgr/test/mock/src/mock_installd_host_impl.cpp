@@ -477,7 +477,7 @@ ErrCode InstalldHostImpl::VerifyCodeSignatureForHap(const CodeSignatureParam &co
 }
 
 ErrCode InstalldHostImpl::DeliverySignProfile(const std::string &bundleName, int32_t profileBlockLength,
-    const unsigned char *profileBlock)
+    const unsigned char *profileBlock, int32_t sessionId)
 {
     return ERR_OK;
 }
@@ -659,6 +659,11 @@ ErrCode InstalldHostImpl::DeleteOldCacheFiles(
 
 ErrCode InstalldHostImpl::CopyPgoFile(const std::string &bundleName, const std::string &moduleName,
     const std::string &pgoFileName, const std::string &pgoFileDir, int32_t userId)
+{
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::ClearSessionProvisionCache(int32_t sessionId)
 {
     return ERR_OK;
 }

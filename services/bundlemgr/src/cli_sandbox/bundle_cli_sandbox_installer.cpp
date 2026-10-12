@@ -32,6 +32,7 @@
 #include "bms_update_selinux_mgr.h"
 #include "datetime_ex.h"
 #include "hitrace_meter.h"
+#include "bundle_spm_manager.h"
 #include "installd_client.h"
 #include "inner_bundle_clone_common.h"
 #include "ipc_skeleton.h"
@@ -186,20 +187,21 @@ ErrCode BundleCliSandboxInstaller::ProcessCreateCliSandbox(const std::string &cr
 
     // 9. create access token
     info.SetAppIndex(appIndex);
-    Security::AccessToken::AccessTokenIDEx newTokenIdEx;
+    Security::AccessToken::AccessTokenIDEx newTokenIdEx = {0};
     AppProvisionInfo appProvisionInfo;
     if (dataMgr_->GetAppProvisionInfo(bundleName, userId, appProvisionInfo) != ERR_OK) {
         APP_LOGE("GetAppProvisionInfo failed bundleName:%{public}s", bundleName.c_str());
     }
     Security::AccessToken::HapInfoCheckResult checkResult;
-    if (BundlePermissionMgr::InitHapToken(info, userId, 0, newTokenIdEx, checkResult,
-        appProvisionInfo.appServiceCapabilities) != ERR_OK) {
+    if (spmSession_.InitToken(info, userId, 0, newTokenIdEx, checkResult,
+        appProvisionInfo.appServiceCapabilities, nullptr, false) != ERR_OK) {
         APP_LOGE("bundleName:%{public}s InitHapToken failed", bundleName.c_str());
         return ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_GRANT_PERMISSION_FAILED;
     }
 
     ScopeGuard applyAccessTokenGuard([&] {
-        BundlePermissionMgr::DeleteAccessTokenId(newTokenIdEx.tokenIdExStruct.tokenID);
+        BundleSpmManager::DeleteToken(newTokenIdEx.tokenIdExStruct.tokenID, bundleName,
+            BundleSpmManager::TokenDeleteType::NONE);
     });
 
     uid = info.GetUid(userId);
@@ -260,6 +262,14 @@ ErrCode BundleCliSandboxInstaller::ProcessCreateCliSandbox(const std::string &cr
     appIdentifier_ = info.GetAppIdentifier();
 
     APP_LOGI("CreateCliSandboxApp %{public}s appIndex:%{public}d successfully", bundleName.c_str(), appIndex);
+    // SPM ON: this installer keeps a deferred session (the token path stays legacy
+    // even under SPM ON), so the commit is a no-op; kept for symmetry with the
+    // facade lifecycle in case a real session is adopted later.
+    int32_t spmCommitRet = spmSession_.Commit({});
+    if (spmCommitRet != ERR_OK) {
+        APP_LOGE("spm session commit failed, bundleName:%{public}s errCode:%{public}d",
+            bundleName.c_str(), spmCommitRet);
+    }
     return ERR_OK;
 }
 
@@ -483,7 +493,7 @@ ErrCode BundleCliSandboxInstaller::ProcessDestroyCliSandbox(const std::string &c
         APP_LOGW("RemoveSandboxDataDir failed");
     }
     RemoveEl5Dir(bundleName, userId, appIndex);
-    if (BundlePermissionMgr::DeleteAccessTokenId(accessTokenId_) !=
+    if (BundleSpmManager::DeleteToken(accessTokenId_, bundleName, BundleSpmManager::TokenDeleteType::NONE) !=
         Security::AccessToken::AccessTokenKitRet::RET_SUCCESS) {
         APP_LOGE("delete AT failed sandbox");
     }

@@ -206,10 +206,16 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
     InnerBundleUserInfo newUserInfo;
     newUserInfo.bundleName = bundleName;
     newUserInfo.bundleUserInfo.userId = userId;
-    ErrCode ret = dataMgr_->GenerateUidAndGid(newUserInfo);
-    if (ret != ERR_OK) {
-        return ret;
+    ErrCode ret = ERR_OK;
+    if (!BundleSpmManager::IsEnabled()) {
+        ret = dataMgr_->GenerateUidAndGid(newUserInfo);
+        if (ret != ERR_OK) {
+            return ret;
+        }
     }
+    // SPM ON: no local allocation — the uid comes from the AT identity via
+    // InitToken's identityUid output below, or from the keep-data uninstall
+    // record when the token is recovered.
     BundleUtil::MakeFsConfig(info.GetBundleName(), ServiceConstants::HMDFS_CONFIG_PATH, info.GetAppProvisionType(),
         Constants::APP_PROVISION_TYPE_FILE_NAME);
     int32_t uid = newUserInfo.uid;
@@ -217,20 +223,47 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
     // 4. generate the accesstoken id and inherit original permissions
     Security::AccessToken::AccessTokenIDEx newTokenIdEx;
     Security::AccessToken::HapInfoCheckResult checkResult;
-    if (!RecoverHapToken(bundleName, userId, newTokenIdEx, info)) {
+    int32_t recoveredUid = 0;
+    bool tokenRecovered = RecoverHapToken(bundleName, userId, newTokenIdEx, info, &recoveredUid);
+    if (!tokenRecovered) {
+        newTokenIdEx.tokenIDEx = 0;  // discard partial writes from the failed recovery
+    }
+    if (!tokenRecovered) {
         AppProvisionInfo appProvisionInfo;
         if (dataMgr_->GetAppProvisionInfo(bundleName, userId, appProvisionInfo) != ERR_OK) {
             APP_LOGE("GetAppProvisionInfo failed bundleName:%{public}s", bundleName.c_str());
         }
-        if (BundlePermissionMgr::InitHapToken(info, userId, 0, newTokenIdEx, checkResult,
-            appProvisionInfo.appServiceCapabilities) != ERR_OK) {
+        int32_t identityUid = 0;
+        if (spmSession_.InitToken(info, userId, 0, newTokenIdEx, checkResult,
+            appProvisionInfo.appServiceCapabilities, nullptr, false, &identityUid) != ERR_OK) {
             auto result = BundlePermissionMgr::GetCheckResultMsg(checkResult);
             APP_LOGE("bundleName:%{public}s InitHapToken failed, %{public}s", bundleName.c_str(), result.c_str());
             return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
         }
+        if (BundleSpmManager::IsEnabled() && identityUid != 0) {
+            // fresh install under SPM ON: the AT-allocated identity uid is the uid
+            uid = identityUid;
+        }
+    } else if (BundleSpmManager::IsEnabled() && recoveredUid != 0) {
+        // keep-data reinstall under SPM ON: reuse the uid persisted at uninstall
+        uid = recoveredUid;
+    }
+    if (BundleSpmManager::IsEnabled()) {
+        if (uid == Constants::INVALID_UID) {
+            // Fail fast: neither the AT identity nor the uninstall record provided
+            // a uid — letting INVALID_UID flow into the dir creation and the
+            // persisted user info would break the install downstream anyway.
+            APP_LOGE("no uid from AT identity or uninstall record, bundleName:%{public}s userId:%{public}d",
+                bundleName.c_str(), userId);
+            return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
+        }
+        newUserInfo.uid = uid;
+        newUserInfo.gids.clear();
+        newUserInfo.gids.emplace_back(uid);
     }
     ScopeGuard applyAccessTokenGuard([&] {
-        BundlePermissionMgr::DeleteAccessTokenId(newTokenIdEx.tokenIdExStruct.tokenID);
+        BundleSpmManager::DeleteToken(newTokenIdEx.tokenIdExStruct.tokenID, bundleName,
+            BundleSpmManager::TokenDeleteType::NONE, uid);
     });
     newUserInfo.accessTokenId = newTokenIdEx.tokenIdExStruct.tokenID;
     newUserInfo.accessTokenIdEx = newTokenIdEx.tokenIDEx;
@@ -289,6 +322,14 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
 #endif
     needNotifyAppSkill_ = true;
     APP_LOGI("InstallExisted %{public}s succesfully", bundleName.c_str());
+    // SPM ON: this installer keeps a deferred session (the token path stays legacy
+    // even under SPM ON), so the commit is a no-op; kept for symmetry with the
+    // facade lifecycle in case a real session is adopted later.
+    int32_t spmCommitRet = spmSession_.Commit({});
+    if (spmCommitRet != ERR_OK) {
+        APP_LOGE("spm session commit failed, bundleName:%{public}s errCode:%{public}d",
+            bundleName.c_str(), spmCommitRet);
+    }
     return ERR_OK;
 }
 
@@ -397,7 +438,8 @@ void BundleMultiUserInstaller::ResetInstallProperties()
 }
 
 bool BundleMultiUserInstaller::RecoverHapToken(const std::string &bundleName, const int32_t userId,
-    Security::AccessToken::AccessTokenIDEx& accessTokenIdEx, const InnerBundleInfo &innerBundleInfo)
+    Security::AccessToken::AccessTokenIDEx& accessTokenIdEx, const InnerBundleInfo &innerBundleInfo,
+    int32_t *recoveredUid)
 {
     UninstallBundleInfo uninstallBundleInfo;
     if (!dataMgr_->GetUninstallBundleInfo(bundleName, uninstallBundleInfo)) {
@@ -417,8 +459,13 @@ bool BundleMultiUserInstaller::RecoverHapToken(const std::string &bundleName, co
         if (dataMgr_->GetAppProvisionInfo(bundleName, userId, appProvisionInfo) != ERR_OK) {
             APP_LOGE("GetAppProvisionInfo failed bundleName:%{public}s", bundleName.c_str());
         }
-        if (BundlePermissionMgr::UpdateHapToken(accessTokenIdEx, innerBundleInfo, userId, checkResult,
+        if (spmSession_.UpdateToken(accessTokenIdEx, innerBundleInfo, userId, checkResult,
             appProvisionInfo.appServiceCapabilities) == ERR_OK) {
+            if (recoveredUid != nullptr) {
+                // SPM ON callers reuse the uid persisted at uninstall instead of
+                // allocating locally (the identity and its uid stay paired).
+                *recoveredUid = uninstallBundleInfo.userInfos.at(std::to_string(userId)).uid;
+            }
             return true;
         } else {
             auto result = BundlePermissionMgr::GetCheckResultMsg(checkResult);

@@ -839,13 +839,14 @@ ErrCode InstalldClient::VerifyCodeSignatureForHap(const CodeSignatureParam &code
 }
 
 ErrCode InstalldClient::DeliverySignProfile(const std::string &bundleName, int32_t profileBlockLength,
-    const unsigned char *profileBlock)
+    const unsigned char *profileBlock, int32_t sessionId)
 {
     if (bundleName.empty() || profileBlock == nullptr) {
         APP_LOGE("bundle name or profile block is empty");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-    return CallService(&IInstalld::DeliverySignProfile, bundleName, profileBlockLength, profileBlock);
+    return CallService(&IInstalld::DeliverySignProfile, bundleName, profileBlockLength, profileBlock,
+        sessionId);
 }
 
 ErrCode InstalldClient::RemoveSignProfile(const std::string &bundleName)
@@ -1178,6 +1179,11 @@ ErrCode InstalldClient::BundleInstallFinished(const std::string &bundleName)
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     return CallService(&IInstalld::BundleInstallFinished, bundleName);
+}
+
+ErrCode InstalldClient::ClearSessionProvisionCache(int32_t sessionId)
+{
+    return CallService(&IInstalld::ClearSessionProvisionCache, sessionId);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

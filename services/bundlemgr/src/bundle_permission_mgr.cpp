@@ -15,6 +15,8 @@
 
 #include "bundle_permission_mgr.h"
 
+#include "installd_client.h"
+
 #include <cinttypes>
 
 #include "access_token_error.h"
@@ -208,6 +210,61 @@ AccessToken::HapPolicyParams BundlePermissionMgr::CreateHapPolicyParam(const Inn
 int32_t BundlePermissionMgr::DeleteAccessTokenId(const AccessToken::AccessTokenID tokenId, bool isTokenReserved)
 {
     return AccessToken::AccessTokenKit::DeleteToken(tokenId, isTokenReserved);
+}
+
+Security::AccessToken::BundlePolicy BundlePermissionMgr::CreateBundlePolicy(
+    const InnerBundleInfo &innerBundleInfo, int32_t dlpType, bool isDebugGrant)
+{
+    AccessToken::BundlePolicy policy;
+    policy.dlpType = static_cast<AccessToken::DlpType>(dlpType);
+    policy.isDebugGrant = isDebugGrant;
+    DefaultPermission permission;
+    if (!GetDefaultPermission(innerBundleInfo.GetBundleName(), permission)) {
+        return policy;
+    }
+#ifdef USE_PRE_BUNDLE_PROFILE
+    if (!MatchSignature(permission, innerBundleInfo.GetCertificateFingerprint()) &&
+        !MatchSignature(permission, innerBundleInfo.GetAppId()) &&
+        !MatchSignature(permission, innerBundleInfo.GetAppIdentifier()) &&
+        !MatchSignature(permission, innerBundleInfo.GetOldAppIds())) {
+        LOG_W(BMS_TAG_DEFAULT, "bundleName:%{public}s MatchSignature failed",
+            innerBundleInfo.GetBundleName().c_str());
+        return policy;
+    }
+#endif
+    // All permissions of the matched default permission are pre-authorized: the
+    // SPM policy does not depend on the request permissions of this particular
+    // profile, so a profile that requests a subset still gets the full set.
+    for (const auto &perm : permission.grantPermission) {
+        AccessToken::PreAuthorizationInfo preAuthorizationInfo;
+        preAuthorizationInfo.permissionName = perm.name;
+        preAuthorizationInfo.userCancelable = perm.userCancellable;
+        policy.preAuthorizationInfo.emplace_back(preAuthorizationInfo);
+    }
+    return policy;
+}
+
+int32_t BundlePermissionMgr::FinishHapInstall(int32_t sessionId, bool isSuccess,
+    const std::map<std::string, std::string> &modulePathMap)
+{
+    if (sessionId == 0) {
+        return ERR_OK;
+    }
+    // isSuccess maps to the isPersistent semantics of FinishInstall: true commits and
+    // persists the session, false rolls it back without persistence.
+    auto ret = AccessToken::AccessTokenKit::FinishInstall(sessionId, isSuccess, modulePathMap);
+    if (ret == AccessToken::AccessTokenError::ERR_SERVICE_ABNORMAL ||
+        ret == AccessToken::AccessTokenError::ERR_READ_PARCEL_FAILED ||
+        ret == AccessToken::AccessTokenError::ERR_WRITE_PARCEL_FAILED) {
+        // transient IPC failure, retry once (same pattern as InitHapToken)
+        ret = AccessToken::AccessTokenKit::FinishInstall(sessionId, isSuccess, modulePathMap);
+    }
+    if (ret != AccessToken::AccessTokenKitRet::RET_SUCCESS) {
+        LOG_E(BMS_TAG_DEFAULT, "FinishInstall failed, sessionId:%{public}d errCode:%{public}d", sessionId, ret);
+        return ret;
+    }
+    InstalldClient::GetInstance()->ClearSessionProvisionCache(sessionId);
+    return ERR_OK;
 }
 
 int32_t BundlePermissionMgr::ClearUserGrantedPermissionState(const AccessToken::AccessTokenID tokenId)

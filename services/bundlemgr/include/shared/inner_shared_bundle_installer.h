@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "bundle_install_checker.h"
+#include "bundle_spm_manager.h"
 #include "bundle_common_event_mgr.h"
 #include "event_report.h"
 #include "inner_bundle_info.h"
@@ -144,6 +145,8 @@ private:
     std::string cpuAbi_;
     std::string tempSoPath_;
     std::unique_ptr<BundleInstallChecker> bundleInstallChecker_ = nullptr;
+    // SPM facade session of the current install; inert under SPM OFF (session id 0)
+    BundleSpmManager::InstallSession spmSession_;
     std::vector<Security::Verify::HapVerifyResult> hapVerifyResults_;
     std::vector<std::string> toDeleteTempHspPath_;
     // the key is the real path of each hsp file

@@ -25,6 +25,7 @@
 #include "app_log_tag_wrapper.h"
 #include "bundle_data_mgr.h"
 #include "bundle_install_checker.h"
+#include "bundle_spm_manager.h"
 #include "event_report.h"
 #include "inner_bundle_info.h"
 #include "install_param.h"
@@ -125,6 +126,8 @@ private:
     std::string appIdentifier_;
     std::string compileSdkType_;
     std::unique_ptr<BundleInstallChecker> bundleInstallChecker_ = nullptr;
+    // SPM facade session of the current install; inert under SPM OFF (session id 0)
+    BundleSpmManager::InstallSession spmSession_;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;
     std::vector<std::string> uninstallModuleVec_;
     std::vector<std::string> deleteBundlePath_;

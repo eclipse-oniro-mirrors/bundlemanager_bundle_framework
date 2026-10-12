@@ -34,6 +34,7 @@ bool VerifyBinParam::ReadFromParcel(Parcel &parcel)
         binFilePaths.emplace_back(binFilePath);
     }
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isDebug);
+    sessionId = parcel.ReadInt32();
     return true;
 }
 
@@ -47,6 +48,7 @@ bool VerifyBinParam::Marshalling(Parcel &parcel) const
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(item));
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isDebug);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, sessionId);
     return true;
 }
 

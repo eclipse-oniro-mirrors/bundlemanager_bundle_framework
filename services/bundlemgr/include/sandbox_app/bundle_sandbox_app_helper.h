@@ -31,6 +31,8 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+class BundleDataMgr;
+
 class BundleSandboxAppHelper : public DelayedSingleton<BundleSandboxAppHelper> {
 public:
     // BundleSandboxDataMgr interface
@@ -55,7 +57,7 @@ public:
 
     ErrCode UninstallAllSandboxApps(const std::string &bundleName, int32_t userId = Constants::INVALID_USERID);
 
-    void RestoreSandboxUidAndGid(std::map<int32_t, std::string> &bundleIdMap);
+    void RestoreSandboxUidAndGid(std::map<int32_t, std::string> &bundleIdMap, BundleDataMgr *dataMgr);
 
 #ifdef BUNDLE_FRAMEWORK_SANDBOX_APP
     std::shared_ptr<BundleSandboxDataMgr> GetSandboxDataMgr() const

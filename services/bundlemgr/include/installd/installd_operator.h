@@ -45,6 +45,23 @@ namespace AppExecFwk {
 using EnforceMetadataProcessForApp = int32_t (*)(const std::unordered_map<std::string, std::string> &,
     const CodeCryptoHapInfo &, bool &);
 
+// Provision info subset queried by installd from the access token service via SPM
+// session id. Reserved for SPM stage 3 (sessionProvisionCache_ value type); unused
+// under SPM OFF where session id is always 0.
+struct SessionProvisionInfo {
+    std::string bundleName;
+    std::string apl;
+    int32_t distributionType = 0;
+    int32_t provisionType = 0;
+    bool isEnterpriseResigned = false;
+    bool isDeveloperDistribution = false;
+    std::string appIdentifier;
+    uint32_t profileBlockLength = 0;
+    std::shared_ptr<unsigned char[]> profileBlock;
+    std::string distributionCertificate;
+    std::string appServiceCapabilities;
+};
+
 class InstalldOperator {
 public:
     /**

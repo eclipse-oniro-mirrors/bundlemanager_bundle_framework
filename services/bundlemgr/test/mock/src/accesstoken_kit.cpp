@@ -40,6 +40,37 @@ int32_t g_resetRecoveryStatusRet = 0;
 int32_t g_resetRecoveryStatusCallCount = 0;
 int32_t g_updateHapTokenCallCount = 0;
 int32_t g_updateHapTokenRet = 0;
+// ---- SPM ON-mode control variables: default values keep the symbol-only stub
+// behavior for the OFF-mode targets; the ON-mode target
+// (unittest/bms_spm_manager_on_test) drives the SPM branches through them. ----
+int32_t g_spmCheckHapSignInfoRet = 0;
+int32_t g_spmCheckHapSignInfoSessionId = 0;
+std::vector<TrustedBundleInfo> g_spmTrustedBundleInfos;
+int32_t g_spmCheckHapPermissionInfoRet = 0;
+int32_t g_spmCheckHapPermissionInfoCallCount = 0;
+int32_t g_spmPrepareHapIdentityRet = 0;
+uint64_t g_spmPrepareIdentityTokenId = 0;
+int32_t g_spmPrepareIdentityUid = 0;
+int32_t g_spmUpdateHapPolicyRet = 0;
+int32_t g_spmFinishInstallRet = 0;
+int32_t g_spmFinishInstallCallCount = 0;
+bool g_spmFinishInstallLastPersistent = false;
+
+void ResetSpmKitMockValuesForTest()
+{
+    g_spmCheckHapSignInfoRet = 0;
+    g_spmCheckHapSignInfoSessionId = 0;
+    g_spmTrustedBundleInfos.clear();
+    g_spmCheckHapPermissionInfoRet = 0;
+    g_spmCheckHapPermissionInfoCallCount = 0;
+    g_spmPrepareHapIdentityRet = 0;
+    g_spmPrepareIdentityTokenId = 0;
+    g_spmPrepareIdentityUid = 0;
+    g_spmUpdateHapPolicyRet = 0;
+    g_spmFinishInstallRet = 0;
+    g_spmFinishInstallCallCount = 0;
+    g_spmFinishInstallLastPersistent = false;
+}
 
 void SetAccessTokenIDForTest(unsigned int value)
 {
@@ -317,6 +348,90 @@ bool AccessTokenKit::IsCliToolToken(uint64_t tokenId)
 void SetIsCliToolTokenForTest(bool value)
 {
     g_isCliToolToken = value;
+}
+
+// ---- SPM stubs: symbol-only with the default control values; the ON-mode
+// target drives them through the g_spm* control variables above. ----
+int32_t AccessTokenKit::CheckHapSignInfo(const BundleHapList& list, uint32_t flag, int32_t& sessionId,
+    std::vector<TrustedBundleInfo>& bundleInfo, HapVerifyResultInfo& resultInfo)
+{
+    sessionId = g_spmCheckHapSignInfoSessionId;
+    bundleInfo = g_spmTrustedBundleInfos;
+    return g_spmCheckHapSignInfoRet;
+}
+
+int32_t AccessTokenKit::CheckHapPermissionInfo(int32_t sessionId, InstallTypeEnum type,
+    HapInfoCheckResult& result)
+{
+    ++g_spmCheckHapPermissionInfoCallCount;
+    return g_spmCheckHapPermissionInfoRet;
+}
+
+int32_t AccessTokenKit::PrepareHapIdentity(int32_t& sessionId, const HapBaseInfo& info,
+    const BundlePolicy& policy, Identity& identity)
+{
+    if (identity.uid != 0) {
+        // Mirrors the AT adopt-or-reallocate contract: a desired uid passed by the
+        // caller is adopted and returned unchanged.
+    } else {
+        identity.uid = g_spmPrepareIdentityUid;
+    }
+    identity.tokenId = g_spmPrepareIdentityTokenId;
+    return g_spmPrepareHapIdentityRet;
+}
+
+int32_t AccessTokenKit::UpdateHapPolicy(int32_t sessionId, int32_t tokenId,
+    const BundlePolicy& policy, int32_t& uid)
+{
+    return g_spmUpdateHapPolicyRet;
+}
+
+int32_t AccessTokenKit::FinishInstall(int32_t sessionId, bool isPersistent,
+    const std::map<std::string, std::string>& modulePathMap)
+{
+    ++g_spmFinishInstallCallCount;
+    g_spmFinishInstallLastPersistent = isPersistent;
+    return g_spmFinishInstallRet;
+}
+
+int32_t AccessTokenKit::GetHapSignInfo(const std::string& bundleName, uint32_t flag,
+    std::vector<TrustedBundleInfo>& bundleInfo)
+{
+    return 0;
+}
+
+int32_t AccessTokenKit::GetCacheSignInfoBySessionId(int32_t sessionId, uint32_t flag,
+    std::vector<TrustedBundleInfo>& bundleInfo)
+{
+    return 0;
+}
+
+int32_t AccessTokenKit::GetCachePolicyBySessionId(int32_t sessionId, const std::string& bundleName,
+    BundlePolicyInfo& bundlePolicyInfo)
+{
+    return 0;
+}
+
+int32_t AccessTokenKit::DeleteIdentity(AccessTokenID tokenID, const std::string& bundleName,
+    ReservedType type)
+{
+    return 0;
+}
+
+int32_t AccessTokenKit::MigrateInstalledBundles(const std::vector<MigratedInfo>& migratedInfoList,
+    std::vector<BundleMigrateResult>& results)
+{
+    return 0;
+}
+
+int32_t AccessTokenKit::FinishMigration()
+{
+    return 0;
+}
+
+int32_t AccessTokenKit::GetHapBaseInfoByUid(int32_t uid, HapBaseInfo& info)
+{
+    return 0;
 }
 }
 }

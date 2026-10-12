@@ -15,6 +15,9 @@
 
 #include "bundle_verify_mgr.h"
 
+#include "access_token_error.h"
+#include "accesstoken_kit.h"
+
 #include "app_log_wrapper.h"
 #include "bms_extension_data_mgr.h"
 #include "bundle_service_constants.h"
@@ -89,6 +92,29 @@ ErrCode BundleVerifyMgr::HapVerify(const std::string &filePath, HapVerifyResult 
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
     return res;
+}
+
+ErrCode BundleVerifyMgr::ConvertHapVerifyResultCode(int32_t verifyResultCode)
+{
+    using AccessTokenError = Security::AccessToken::AccessTokenError;
+    if (verifyResultCode == Security::AccessToken::AccessTokenKitRet::RET_SUCCESS) {
+        return ERR_OK;
+    }
+    switch (verifyResultCode) {
+        case AccessTokenError::ERR_PARAM_INVALID:
+            return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
+        case AccessTokenError::ERR_CHECK_MULTIPLE_HAP_FAILED:
+            return ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE;
+        case AccessTokenError::ERR_BUNDLE_ALREADY_EXIST:
+            // Leftover identity of a crashed session: pass the raw code through so
+            // InstallBundle can run the on-demand recovery and retry.
+            return verifyResultCode;
+        case AccessTokenError::ERR_HAP_SIGN_VERIFY_FAILED:
+        case AccessTokenError::ERR_SESSION_NOT_EXIST:
+        case AccessTokenError::ERR_HAP_PROVISION_INVALID:
+        default:
+            return ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE;
+    }
 }
 
 bool BundleVerifyMgr::isDebug_ = false;
