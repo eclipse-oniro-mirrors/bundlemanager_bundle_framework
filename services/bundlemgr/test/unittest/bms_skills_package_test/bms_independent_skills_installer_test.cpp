@@ -18,6 +18,7 @@
 
 #include <gtest/gtest.h>
 
+#include <filesystem>
 #include <fstream>
 #include <memory>
 #include <string>
@@ -57,7 +58,8 @@ const std::string TEST_HSP_PATH3 = "/data/test/resource/bms/skills/hsp_A.hsp";
 const std::string INVALID_HSP_PATH = "/invalid/path/test.hsp";
 const std::string TEST_APP_IDENTIFIER = "test.app.identifier";
 const std::string TEST_APP_ID = "test.app.id";
-const std::string BASE_SKILL_DIR = "/data/app/el1/skills/public";
+const std::string BASE_SKILL_DIR = "/data/app/el1/bundle/public/skills";
+const std::string SKILL_ROOT_BACKUP_DIR = "/data/app/el1/bundle/public/skills_bms_ut_backup";
 const int32_t USER_ID = 100;
 const int32_t INVALID_USER_ID = -1;
 const int32_t DEFAULT_USER_ID = 0;
@@ -65,6 +67,39 @@ const int32_t U1_USER_ID = 1;
 const uint32_t VERSION_CODE = 1000100;
 const std::string COMPILE_SDK_TYPE = "OpenHarmony";
 const int32_t WAIT_TIME = 2; // init mocked bms
+
+class SkillRootDirGuard {
+public:
+    explicit SkillRootDirGuard(bool exist)
+    {
+        std::error_code ec;
+        bool rootExist = std::filesystem::exists(BASE_SKILL_DIR, ec);
+        if (exist && !rootExist) {
+            created_ = std::filesystem::create_directories(BASE_SKILL_DIR, ec);
+        } else if (!exist && rootExist) {
+            std::filesystem::rename(BASE_SKILL_DIR, SKILL_ROOT_BACKUP_DIR, ec);
+            moved_ = !ec;
+        }
+        ready_ = std::filesystem::exists(BASE_SKILL_DIR, ec) == exist;
+    }
+
+    ~SkillRootDirGuard()
+    {
+        std::error_code ec;
+        if (created_) {
+            std::filesystem::remove_all(BASE_SKILL_DIR, ec);
+        }
+        if (moved_) {
+            std::filesystem::rename(SKILL_ROOT_BACKUP_DIR, BASE_SKILL_DIR, ec);
+        }
+    }
+
+    bool ready_ = false;
+
+private:
+    bool created_ = false;
+    bool moved_ = false;
+};
 }  // namespace
 
 class BmsIndependentSkillsInstallerTest : public testing::Test {
@@ -99,7 +134,13 @@ BmsIndependentSkillsInstallerTest::~BmsIndependentSkillsInstallerTest()
 {}
 
 void BmsIndependentSkillsInstallerTest::SetUpTestCase()
-{}
+{
+    // recover the skills root dir left by an interrupted run
+    std::error_code ec;
+    if (std::filesystem::exists(SKILL_ROOT_BACKUP_DIR, ec) && !std::filesystem::exists(BASE_SKILL_DIR, ec)) {
+        std::filesystem::rename(SKILL_ROOT_BACKUP_DIR, BASE_SKILL_DIR, ec);
+    }
+}
 
 void BmsIndependentSkillsInstallerTest::TearDownTestCase()
 {}
@@ -3275,6 +3316,8 @@ HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_RollBack_
 HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_RollBack_0002,
     Function | SmallTest | Level0)
 {
+    SkillRootDirGuard rootGuard(true);
+    ASSERT_TRUE(rootGuard.ready_);
     auto installer_ = std::make_shared<IndependentSkillsInstaller>();
     InnerBundleInfo bundleInfo;
     bundleInfo.SetIsPreInstallApp(true);
@@ -3342,6 +3385,28 @@ HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_RollBack_
     InnerBundleInfo bundleInfo;
     newInfos["bundle"] = bundleInfo;
     bool ret = installer_->RollBack(newInfos, ERR_APPEXECFWK_INSTALL_FAILED_NO_PROFILE_BLOCK_FAIL);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_RollBack_0006
+ * Function: RollBack
+ * @tc.name: test RollBack of pre install bundle without skills root dir
+ * @tc.desc: 1. system running normally
+ *           2. test RollBack does not roll back the pre install bundle when the free size of the skills root dir
+ *              can not be got
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_RollBack_0006,
+    Function | SmallTest | Level0)
+{
+    SkillRootDirGuard rootGuard(false);
+    ASSERT_TRUE(rootGuard.ready_);
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    InnerBundleInfo bundleInfo;
+    bundleInfo.SetIsPreInstallApp(true);
+    installer_->newInnerBundleInfo_ = bundleInfo;
+    installer_->bundleName_ = "com.ohos.bundlename";
+    bool ret = installer_->RollBack();
     EXPECT_FALSE(ret);
 }
 } // namespace OHOS

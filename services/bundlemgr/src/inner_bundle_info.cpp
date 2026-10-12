@@ -4772,6 +4772,13 @@ bool InnerBundleInfo::HasEntry() const
         });
 }
 
+bool InnerBundleInfo::HasAppSkill() const
+{
+    return std::any_of(innerModuleInfos_.begin(), innerModuleInfos_.end(), [](const auto &item) {
+            return !item.second.skillProfiles.empty();
+        });
+}
+
 bool InnerBundleInfo::IsHsp() const
 {
     if (!innerModuleInfos_.empty()) {

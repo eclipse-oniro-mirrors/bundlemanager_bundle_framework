@@ -122,7 +122,6 @@ constexpr const char* SYSTEM_OPTIMIZE_DIR = "/system_optimize/";
 constexpr const char* SERVICE_EL2_PATH = "/data/service/el2/";
 constexpr const char* HMDFS_CLOUD_DATA_PATH = "/hmdfs/cloud/data/";
 constexpr const char* PGO_DIR_PATH = "/data/local/pgo/";
-constexpr const char* BASE_SKILL_DIR = "/data/app/el1/skills/public";
 constexpr const char* PGO_FILE_PATH = "pgo_files";
 constexpr const char* LIBS_TMP_DIR = "libs+tmp";
 constexpr const char* DEPRECATED_ARK_CACHE_PATH = "/data/local/ark-cache";
@@ -161,7 +160,7 @@ constexpr const char* PROC_MOUNTS_PATH = "/proc/mounts";
 constexpr const char* QUOTA_DEVICE_DATA_PATH = "/data";
 constexpr const char* CACHE_DIR = "cache";
 constexpr const char* BUNDLE_BASE_CODE_DIR = "/data/app/el1/bundle";
-constexpr const char* SKILL_BASE_CODE_DIR = "/data/app/el1/skills";
+constexpr const char* BASE_SKILL_DIR_PREFIX = "/data/app/el1/bundle/public/skills/";
 constexpr const char* AP_PATH = "ap/";
 constexpr const char* AI_SUFFIX = ".ai";
 constexpr const char* DIFF_SUFFIX = ".diff";
@@ -201,7 +200,7 @@ static const std::map<BundleDirScene, std::vector<std::string>> ALLOWED_PATH_PRE
     {BundleDirScene::PEND_SIGN_AOT, {"/data/app/el1/public/aot_compiler/ark_cache",
         "/data/service/el1/public/for-all-app"}},
     {BundleDirScene::EXTRACT_FILES, {"/data/app/el1", "/data/service/el1/public", "/storage/media"}},
-    {BundleDirScene::VERIFY_CODE_SIGNATURE, {"/data/app/el1/bundle", "/data/app/el1/skills"}},
+    {BundleDirScene::VERIFY_CODE_SIGNATURE, {"/data/app/el1/bundle"}},
     {BundleDirScene::CLEAN_BUNDLE_DATA_DIR, {"/data/app", "/data/service"}},
     {BundleDirScene::CHANGE_BMS_FILE_STAT, { "/data/service/el1/public/bms/bundle_manager_service/app_install"}},
     {BundleDirScene::GET_BUNDLE_CACHE_PATH,
@@ -1843,8 +1842,7 @@ bool InstalldOperator::IsValidCodePath(const std::string &codePath)
         LOG_E(BMS_TAG_INSTALLD, "code path is empty");
         return false;
     }
-    return IsValidPath(std::string(BUNDLE_BASE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR, codePath) ||
-        IsValidPath(std::string(SKILL_BASE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR, codePath);
+    return IsValidPath(std::string(BUNDLE_BASE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR, codePath);
 }
 
 bool InstalldOperator::DeleteFiles(const std::string &dataPath)
@@ -5435,7 +5433,7 @@ bool InstalldOperator::IsValidPathByCreateBundleDirScene(
             return StartsWith(path, Constants::BUNDLE_CODE_DIR) && IsContainsBundleName(path, bundleName) &&
                    IsContainsPathPart(path, VERIFY_FILE_PATH);
         case BundleDirScene::BASE_SKILL_DIR:
-            return StartsWith(path, BASE_SKILL_DIR) && IsContainsBundleName(path, bundleName);
+            return StartsWith(path, BASE_SKILL_DIR_PREFIX) && IsContainsBundleName(path, bundleName);
         default:
             return false;
     }
@@ -5532,7 +5530,7 @@ bool InstalldOperator::IsValidPathByRenameModuleDir(
             return StartsWith(oldPath, Constants::BUNDLE_CODE_DIR) && StartsWith(newPath, Constants::BUNDLE_CODE_DIR) &&
                    IsContainsBundleName(oldPath, bundleName) && IsContainsBundleName(newPath, bundleName);
         case BundleDirScene::BASE_SKILL_DIR:
-            return StartsWith(oldPath, BASE_SKILL_DIR) && StartsWith(newPath, BASE_SKILL_DIR) &&
+            return StartsWith(oldPath, BASE_SKILL_DIR_PREFIX) && StartsWith(newPath, BASE_SKILL_DIR_PREFIX) &&
                    IsContainsBundleName(oldPath, bundleName) && IsContainsBundleName(newPath, bundleName);
         default:
             return false;
@@ -5724,7 +5722,8 @@ bool InstalldOperator::IsValidTargetPathByCopyFileScene(const std::string &targe
                        IsContainsPathPart(targetPath, HQF_PATCH_PATH)) &&
                    EndsWith(targetPath, ServiceConstants::QUICK_FIX_FILE_SUFFIX);
         case BundleDirScene::COPY_SKILL_HSP:
-            return StartsWith(targetPath, BASE_SKILL_DIR) && EndsWith(targetPath, ServiceConstants::HSP_FILE_SUFFIX);
+            return StartsWith(targetPath, BASE_SKILL_DIR_PREFIX) &&
+                   EndsWith(targetPath, ServiceConstants::HSP_FILE_SUFFIX);
         case BundleDirScene::COPY_ABC_FILE:
             return StartsWith(targetPath, Constants::BUNDLE_CODE_DIR) &&
                    IsContainsPathPart(targetPath, VERIFY_FILE_PATH) && EndsWith(targetPath, VERIFY_FILE_SUFFIX);
@@ -5819,7 +5818,7 @@ bool InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
                        IsContainsPathPart(dir, HQF_PATCH_PATH));
         case BundleDirScene::REMOVE_SKILL_MODULE_DIR:
         case BundleDirScene::REMOVE_SKILL_BUNDLE_DIR:
-            return StartsWith(dir, BASE_SKILL_DIR);
+            return StartsWith(dir, BASE_SKILL_DIR_PREFIX);
         case BundleDirScene::REMOVE_VERIFY_FILE:
             return StartsWith(dir, Constants::BUNDLE_CODE_DIR) && IsContainsPathPart(dir, VERIFY_FILE_PATH);
         case BundleDirScene::REMOVE_NPAPI_PLUGIN_DIR:
@@ -5863,6 +5862,8 @@ bool InstalldOperator::IsValidPathByRemoveDirSceneNoBundleName(const std::string
                        IsContainsPathPart(dir, ServiceConstants::DATABASE));
         case BundleDirScene::REMOVE_SANDBOX_DIR:
             return IsValidPathByBundleDirScene(BundleDirScene::REMOVE_SANDBOX_DIR, dir);
+        case BundleDirScene::REMOVE_LEGACY_SKILL_DIR:
+            return dir == ServiceConstants::LEGACY_SKILL_BASE_DIR;
         default:
             return false;
     }
@@ -5910,6 +5911,7 @@ bool InstalldOperator::IsValidPathByRemoveDirScene(
         case BundleDirScene::REMOVE_SECURITY_QUICK_FIX_DIR:
         case BundleDirScene::REMOVE_SANDBOX_DATA_DIR:
         case BundleDirScene::REMOVE_SANDBOX_DIR:
+        case BundleDirScene::REMOVE_LEGACY_SKILL_DIR:
             return IsValidPathByRemoveDirSceneNoBundleName(dir, scene);
         default:
             return false;

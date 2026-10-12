@@ -32,7 +32,7 @@ constexpr const char* GENERAL_OBJECT = "general.object";
 constexpr const char* EMPTY_STRING = "";
 constexpr const char* FILE_UNDERLINE = "_";
 constexpr const char* BUNDLE_CODE_DIR = "/data/app/el1/bundle/public";
-constexpr const char* BASE_SKILL_DIR = "/data/app/el1/skills/public";
+constexpr const char* BASE_SKILL_DIR = "/data/app/el1/bundle/public/skills";
 constexpr const char* CACHE_DIR = "cache";
 constexpr const char* UID_SEPARATOR = "#";
 constexpr int8_t START_USERID = 100;
@@ -133,7 +133,6 @@ constexpr const char* PERMISSION_MANAGE_SKILL_AND_INTERACT_ACROSS_LOCAL_ACCOUNTS
     "((ohos.permission.MANAGE_SKILL_PRIVILEGE or ohos.permission.MANAGE_SKILL) "
     "and ohos.permission.INTERACT_ACROSS_LOCAL_ACCOUNTS)";
 constexpr const char* PERMISSION_ALLOW_USE_BM = "ohos.permission.ALLOW_USE_BM";
-constexpr const char* REAL_SKILL_PATH_PREFIX = "/data/app/el1/skills/public";
 constexpr const char* SANDBOX_SKILL_PATH_PREFIX = "/data/skills";
 constexpr const char* PERMISSION_GET_BUNDLE_INFO_AND_INTERACT_ACROSS_LOCAL_ACCOUNTS =
     "ohos.permission.GET_BUNDLE_INFO_PRIVILEGED or "

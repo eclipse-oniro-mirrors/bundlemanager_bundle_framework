@@ -17,6 +17,7 @@
 #define protected public
 
 #include <gtest/gtest.h>
+#include <algorithm>
 #include <thread>
 
 #include "bundle_data_mgr.h"
@@ -38,6 +39,7 @@ namespace {
 const std::string BUNDLE_NAME_TEST = "com.example.skill.test";
 const std::string BUNDLE_NAME_TEST2 = "com.example.skill.test2";
 const std::string MODULE_NAME_ENTRY = "entry";
+const std::string MODULE_NAME_FEATURE = "feature";
 const std::string SKILL_NAME_TEST = "testSkill";
 const std::string SKILL_NAME_TEST2 = "testSkill2";
 const std::string ABILITY_NAME_TEST = "TestAbility";
@@ -854,5 +856,117 @@ HWTEST_F(BmsSkillBundleDataMgrTest, SkillBundleDataMgr_0029, TestSize.Level1)
     EXPECT_EQ(privilegedSkillInfo.skillName, systemProfile.name);
 
     MockUninstallBundle(BUNDLE_NAME_TEST2);
+}
+
+/**
+ * @tc.number: SkillBundleDataMgr_0030
+ * @tc.name: HasAppSkill
+ * @tc.desc: Test InnerBundleInfo::HasAppSkill is true only when any module declares skills
+ */
+HWTEST_F(BmsSkillBundleDataMgrTest, SkillBundleDataMgr_0030, TestSize.Level1)
+{
+    InnerBundleInfo info;
+    EXPECT_FALSE(info.HasAppSkill());
+
+    InnerModuleInfo entryModuleInfo;
+    entryModuleInfo.moduleName = MODULE_NAME_ENTRY;
+    info.InsertInnerModuleInfo(MODULE_NAME_ENTRY, entryModuleInfo);
+    EXPECT_FALSE(info.HasAppSkill());
+
+    InnerModuleInfo featureModuleInfo;
+    featureModuleInfo.moduleName = MODULE_NAME_FEATURE;
+    SkillProfile profile;
+    profile.name = SKILL_NAME_TEST;
+    featureModuleInfo.skillProfiles.emplace_back(profile);
+    info.InsertInnerModuleInfo(MODULE_NAME_FEATURE, featureModuleInfo);
+    EXPECT_TRUE(info.HasAppSkill());
+}
+
+/**
+ * @tc.number: SkillBundleDataMgr_0031
+ * @tc.name: GetAppSkillBundleNames
+ * @tc.desc: Test GetAppSkillBundleNames only returns bundles declaring app skills
+ */
+HWTEST_F(BmsSkillBundleDataMgrTest, SkillBundleDataMgr_0031, TestSize.Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    MockUninstallBundle(BUNDLE_NAME_TEST2);
+
+    SkillProfile profile;
+    profile.name = SKILL_NAME_TEST;
+    MockInstallBundleWithSkills(BUNDLE_NAME_TEST, MODULE_NAME_ENTRY, {profile});
+    MockInstallBundleWithSkills(BUNDLE_NAME_TEST2, MODULE_NAME_ENTRY, {});
+
+    std::vector<std::string> bundleNames = dataMgr->GetAppSkillBundleNames();
+    EXPECT_NE(std::find(bundleNames.begin(), bundleNames.end(), BUNDLE_NAME_TEST), bundleNames.end());
+    EXPECT_EQ(std::find(bundleNames.begin(), bundleNames.end(), BUNDLE_NAME_TEST2), bundleNames.end());
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    MockUninstallBundle(BUNDLE_NAME_TEST2);
+}
+
+/**
+ * @tc.number: SkillBundleDataMgr_0032
+ * @tc.name: GetAppSkillBundleNames
+ * @tc.desc: Test GetAppSkillBundleNames returns an empty list without app skills and only the bundles declaring
+ *           app skills otherwise
+ */
+HWTEST_F(BmsSkillBundleDataMgrTest, SkillBundleDataMgr_0032, TestSize.Level1)
+{
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    EXPECT_TRUE(dataMgr->GetAppSkillBundleNames().empty());
+
+    SkillProfile profile;
+    profile.name = SKILL_NAME_TEST;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = MODULE_NAME_ENTRY;
+    moduleInfo.skillProfiles.emplace_back(profile);
+    ApplicationInfo appInfo;
+    appInfo.bundleName = BUNDLE_NAME_TEST;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetBaseApplicationInfo(appInfo);
+    innerBundleInfo.InsertInnerModuleInfo(MODULE_NAME_ENTRY, moduleInfo);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerBundleInfo);
+
+    InnerModuleInfo noSkillModuleInfo;
+    noSkillModuleInfo.moduleName = MODULE_NAME_ENTRY;
+    ApplicationInfo noSkillAppInfo;
+    noSkillAppInfo.bundleName = BUNDLE_NAME_TEST2;
+    InnerBundleInfo noSkillBundleInfo;
+    noSkillBundleInfo.SetBaseApplicationInfo(noSkillAppInfo);
+    noSkillBundleInfo.InsertInnerModuleInfo(MODULE_NAME_ENTRY, noSkillModuleInfo);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME_TEST2, noSkillBundleInfo);
+
+    EXPECT_EQ(dataMgr->GetAppSkillBundleNames(), std::vector<std::string>({BUNDLE_NAME_TEST}));
+}
+
+/**
+ * @tc.number: SkillBundleDataMgr_0033
+ * @tc.name: FindSkillInfoFromAllBundles
+ * @tc.desc: Test skillPath of app skill is under Constants::BASE_SKILL_DIR
+ */
+HWTEST_F(BmsSkillBundleDataMgrTest, SkillBundleDataMgr_0033, TestSize.Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+
+    SkillProfile privateProfile;
+    privateProfile.name = SKILL_NAME_TEST;
+    privateProfile.abilityName = ABILITY_NAME_TEST;
+    privateProfile.visibility = "private";
+    MockInstallBundleWithSkills(BUNDLE_NAME_TEST, MODULE_NAME_ENTRY, {privateProfile});
+
+    SkillInfo skillInfo;
+    auto ret = dataMgr->FindSkillInfoFromAllBundles(privateProfile.name, 0, USERID,
+        BUNDLE_NAME_TEST, false, skillInfo);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(skillInfo.skillPath, std::string(Constants::BASE_SKILL_DIR) + "/" + BUNDLE_NAME_TEST + "/" +
+        MODULE_NAME_ENTRY + "/skills/" + SKILL_NAME_TEST);
+    EXPECT_EQ(skillInfo.skillPath.find("/data/app/el1/bundle/public/skills/"), static_cast<size_t>(0));
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
 }
 } // namespace OHOS

@@ -34,7 +34,6 @@ namespace {
 constexpr const char* COMPILE_SDK_TYPE_OPEN_HARMONY = "OpenHarmony";
 constexpr const char* DEBUG_APP_IDENTIFIER = "DEBUG_LIB_ID";
 constexpr const int64_t FIVE_MB = 1024 * 1024 * 5; // 5MB
-constexpr const char* BASE_SKILL_DIR = "/data/app/el1/skills/public";
 
 void BuildCheckParam(
     const InstallParam &installParam, InstallCheckParam &checkParam)
@@ -331,7 +330,7 @@ bool IndependentSkillsInstaller::RemoveModuleDir(
         return false;
     }
     std::string moduleDir =
-        std::string(BASE_SKILL_DIR) + AppExecFwk::ServiceConstants::PATH_SEPARATOR +
+        std::string(Constants::BASE_SKILL_DIR) + AppExecFwk::ServiceConstants::PATH_SEPARATOR +
         bundleName + AppExecFwk::ServiceConstants::PATH_SEPARATOR + moduleName;
     LOG_I(BMS_TAG_INSTALLER, "start to remove module dir: %{public}s", moduleDir.c_str());
     if (InstalldClient::GetInstance()->RemoveDir(moduleDir, BundleDirScene::REMOVE_SKILL_MODULE_DIR, bundleName) !=
@@ -350,7 +349,7 @@ bool IndependentSkillsInstaller::RemoveSkillDir(
         return false;
     }
     std::string moduleDir =
-        std::string(BASE_SKILL_DIR) + AppExecFwk::ServiceConstants::PATH_SEPARATOR +
+        std::string(Constants::BASE_SKILL_DIR) + AppExecFwk::ServiceConstants::PATH_SEPARATOR +
         bundleName + AppExecFwk::ServiceConstants::PATH_SEPARATOR + moduleName +
         AppExecFwk::ServiceConstants::PATH_SEPARATOR + skillsName;
     LOG_I(BMS_TAG_INSTALLER, "start to remove skill dir: %{public}s", moduleDir.c_str());
@@ -743,7 +742,7 @@ ErrCode IndependentSkillsInstaller::ExtractModule(
         LOG_E(BMS_TAG_INSTALLER, "skills %{public}s has no module", bundleName_.c_str());
         return ERR_SKILLS_HAS_NO_MODULE;
     }
-    std::string bundleDir = std::string(BASE_SKILL_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName_;
+    std::string bundleDir = std::string(Constants::BASE_SKILL_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName_;
     result = MkdirIfNotExist(bundleDir);
     CHECK_SKILLS_RESULT(result, "Check bundle dir failed %{public}d");
     newInfo.SetAppCodePath(bundleDir);
@@ -1107,7 +1106,7 @@ void IndependentSkillsInstaller::GetInstallEventInfo(EventInfo &eventInfo)
 bool IndependentSkillsInstaller::RollBack()
 {
     LOG_I(BMS_TAG_INSTALLER, "RollBack: %{public}s", bundleName_.c_str());
-    if (newInnerBundleInfo_.IsPreInstallApp() && !BundleUtil::CheckSystemFreeSize(BASE_SKILL_DIR, FIVE_MB)) {
+    if (newInnerBundleInfo_.IsPreInstallApp() && !BundleUtil::CheckSystemFreeSize(Constants::BASE_SKILL_DIR, FIVE_MB)) {
         LOG_W(BMS_TAG_INSTALLER, "pre bundle: %{public}s no rollback due to no space", bundleName_.c_str());
         return false;
     }
@@ -1115,7 +1114,7 @@ bool IndependentSkillsInstaller::RollBack()
     // RemoveCache
     RemoveInfo(bundleName_);
     // delete code
-    std::string bundleDir = std::string(BASE_SKILL_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName_;
+    std::string bundleDir = std::string(Constants::BASE_SKILL_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName_;
     ErrCode result =
         InstalldClient::GetInstance()->RemoveDir(bundleDir, BundleDirScene::REMOVE_SKILL_BUNDLE_DIR, bundleName_);
     if (result != ERR_OK) {
@@ -1270,7 +1269,7 @@ void IndependentSkillsInstaller::RemoveOldSkillsPath()
         LOG_E(BMS_TAG_INSTALLER, "bundle %{public}s remove old failed, manager is nullptr", bundleName_.c_str());
         return;
     }
-    std::string bundlePath = std::string(BASE_SKILL_DIR);
+    std::string bundlePath = std::string(Constants::BASE_SKILL_DIR);
     for (const auto &packageInfo : needDeleteSkillsPackageInfo_) {
         if (packageInfo.skillsName.empty()) {
             // delete module
@@ -1336,7 +1335,7 @@ ErrCode IndependentSkillsInstaller::ProcessUninstall(const std::string &bundleNa
         LOG_E(BMS_TAG_INSTALLER, "bundleName: %{public}s delete appProvisionInfo failed", bundleName.c_str());
     }
     std::string bundleDir =
-        std::string(BASE_SKILL_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName;
+        std::string(Constants::BASE_SKILL_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName;
     LOG_I(BMS_TAG_INSTALLER, "start to remove bundle dir: %{public}s", bundleDir.c_str());
     if (InstalldClient::GetInstance()->RemoveDir(bundleDir, BundleDirScene::REMOVE_SKILL_BUNDLE_DIR, bundleName) !=
         ERR_OK) {

@@ -373,8 +373,8 @@ constexpr const char* BMS_PARA_INSTALL_GRANT_PERMISSION = "ohos.bms.param.instal
 constexpr const char* PLUGIN_FILE_PATH = "+plugins";
 
 //skill path
-constexpr const char* SKILL_FILE_PATH = "/data/app/el1/skills/public";
 constexpr const char* SKILL_DIR = "skills";
+constexpr const char* LEGACY_SKILL_BASE_DIR = "/data/app/el1/skills";
 // Module dir/file suffix used while updating an existing skill module (must match BMS and installd).
 // Do not reuse TMP_SUFFIX ("_tmp") different value and semantics.
 constexpr const char* SKILL_TEMP_PATH = "+temp";

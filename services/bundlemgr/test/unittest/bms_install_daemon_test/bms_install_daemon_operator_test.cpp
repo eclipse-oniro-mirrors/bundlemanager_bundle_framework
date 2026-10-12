@@ -1549,8 +1549,8 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_8900, Function | Sma
 */
 HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_8910, Function | SmallTest | Level0)
 {
-    auto ret = InstalldOperator::IsValidCodePath("/data/app/el1/skills/public/com.test");
-    EXPECT_TRUE(ret);
+    EXPECT_TRUE(InstalldOperator::IsValidCodePath("/data/app/el1/bundle/public/skills/com.test"));
+    EXPECT_FALSE(InstalldOperator::IsValidCodePath("/data/app/el1/skills/public/com.test"));
 }
 
 /**
