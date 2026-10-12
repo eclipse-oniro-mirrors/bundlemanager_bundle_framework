@@ -27,12 +27,27 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+const std::string BACKUP_RESULT_TYPE = "ErrorInfo";
+}
 
 BundleBackupMgr::BundleBackupMgr() {}
 
 BundleBackupMgr::~BundleBackupMgr() {}
 
 ErrCode BundleBackupMgr::OnBackup(MessageParcel& data, MessageParcel& reply)
+{
+    ErrCode ret = BackupData(reply);
+    if (!reply.WriteString(SetReplyCode(ret))) {
+        APP_LOGE("Write resultInfo failed, ret is %{public}d", ret);
+        if (ret == ERR_OK) {
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+    return ret;
+}
+
+ErrCode BundleBackupMgr::BackupData(MessageParcel& reply)
 {
     nlohmann::json backupJson = nlohmann::json::array();
     std::shared_ptr<BundleBackupService> service = DelayedSingleton<BundleBackupService>::GetInstance();
@@ -49,7 +64,6 @@ ErrCode BundleBackupMgr::OnBackup(MessageParcel& data, MessageParcel& reply)
         APP_LOGE("Save backup config failed");
         return ret;
     }
-
     int32_t fd = open(BACKUP_FILE_PATH, O_RDONLY);
     if (fd < 0) {
         APP_LOGE("Open backup file failed");
@@ -65,6 +79,18 @@ ErrCode BundleBackupMgr::OnBackup(MessageParcel& data, MessageParcel& reply)
 }
 
 ErrCode BundleBackupMgr::OnRestore(MessageParcel& data, MessageParcel& reply)
+{
+    ErrCode ret = RestoreData(data);
+    if (!reply.WriteString(SetReplyCode(ret))) {
+        APP_LOGE("Write resultInfo failed, ret is %{public}d", ret);
+        if (ret == ERR_OK) {
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+    return ret;
+}
+
+ErrCode BundleBackupMgr::RestoreData(MessageParcel& data)
 {
     int32_t fd = data.ReadFileDescriptor();
     if (fd < 0) {
@@ -93,11 +119,22 @@ ErrCode BundleBackupMgr::OnRestore(MessageParcel& data, MessageParcel& reply)
         APP_LOGE("Get BundleBackupService failed");
         return ERR_APPEXECFWK_NULL_PTR;
     }
-    ret = service->OnRestore(json);
-    if (ret != ERR_OK) {
-        return ret;
-    }
-    return ERR_OK;
+    return service->OnRestore(json);
+}
+
+std::string BundleBackupMgr::SetReplyCode(int32_t replyCode)
+{
+    nlohmann::json rootInfo;
+    nlohmann::json resultInfo;
+    nlohmann::json errorInfo;
+
+    errorInfo["type"] = BACKUP_RESULT_TYPE;
+    errorInfo["errorCode"] = std::to_string(replyCode);
+    errorInfo["errorInfo"] = "";
+
+    resultInfo.push_back(errorInfo);
+    rootInfo["resultInfo"] = resultInfo;
+    return rootInfo.dump();
 }
 
 ErrCode BundleBackupMgr::SaveToFile(const std::string& config)
