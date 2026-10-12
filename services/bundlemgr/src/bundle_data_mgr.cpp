@@ -8226,15 +8226,25 @@ ErrCode BundleDataMgr::GenerateUidAndGid(InnerBundleUserInfo &innerBundleUserInf
         return ERR_APPEXECFWK_INSTALL_BUNDLENAME_IS_EMPTY;
     }
 
-    // Idempotent: an already allocated uid (e.g. adopted from the SPM identity in
-    // InitToken) must never be re-allocated from the local bundle id counter — the
-    // two allocators are independent and overwriting would drift the uid.
-    if (innerBundleUserInfo.uid != Constants::INVALID_UID) {
-        if (std::find(innerBundleUserInfo.gids.begin(), innerBundleUserInfo.gids.end(),
-            innerBundleUserInfo.uid) == innerBundleUserInfo.gids.end()) {
-            innerBundleUserInfo.gids.emplace_back(innerBundleUserInfo.uid);
+    if (BundleSpmManager::IsEnabled()) {
+        // SPM ON: the uid allocation authority is the access token service
+        // (PrepareHapIdentity in InitToken); the local bundle-id counter must
+        // never allocate. An already allocated uid (adopted from the SPM
+        // identity in InitToken) only completes its gids — re-allocating from
+        // the independent local counter would drift the uid. An INVALID uid
+        // means the AT side returned no uid for the identity — fail fast
+        // (mirrors the installer-level fail-fast) instead of allocating a
+        // BMS-side uid that would drift from the token's uid binding.
+        if (innerBundleUserInfo.uid != Constants::INVALID_UID) {
+            if (std::find(innerBundleUserInfo.gids.begin(), innerBundleUserInfo.gids.end(),
+                innerBundleUserInfo.uid) == innerBundleUserInfo.gids.end()) {
+                innerBundleUserInfo.gids.emplace_back(innerBundleUserInfo.uid);
+            }
+            return ERR_OK;
         }
-        return ERR_OK;
+        APP_LOGE("SPM ON but no uid from AT identity, bundleName:%{public}s userId:%{public}d",
+            innerBundleUserInfo.bundleName.c_str(), innerBundleUserInfo.bundleUserInfo.userId);
+        return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
     }
 
     int32_t bundleId = INVALID_BUNDLEID;

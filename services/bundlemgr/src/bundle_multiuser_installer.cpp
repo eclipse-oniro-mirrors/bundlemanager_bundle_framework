@@ -224,7 +224,7 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
     Security::AccessToken::AccessTokenIDEx newTokenIdEx;
     Security::AccessToken::HapInfoCheckResult checkResult;
     int32_t recoveredUid = 0;
-    bool tokenRecovered = RecoverHapToken(bundleName, userId, newTokenIdEx, info, &recoveredUid);
+    bool tokenRecovered = RecoverHapToken(bundleName, userId, newTokenIdEx, info, recoveredUid);
     if (!tokenRecovered) {
         newTokenIdEx.tokenIDEx = 0;  // discard partial writes from the failed recovery
     }
@@ -301,6 +301,24 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
     if (result != ERR_OK) {
         return result;
     }
+
+    // SPM ON: InitToken builds a REAL session (PrepareHapIdentity with
+    // sessionId=0 makes the AT side allocate one and write it back), so this
+    // Commit is a real FinishInstall. The session carries no bundleInfos, so the
+    // empty modulePathMap skips the package-info write. Commit BEFORE the guards
+    // are dismissed and BEFORE the resource/el5/data-group records and the
+    // keep-data uninstall record are created/deleted — on failure the
+    // still-armed guards roll the token/data dirs/user info back, the session
+    // destructor rolls the AT side back, and none of the secondary records
+    // (resource info, el5/data-group dirs, keep-data record) are touched,
+    // so both sides stay consistent with zero residue.
+    int32_t spmCommitRet = spmSession_.Commit({});
+    if (spmCommitRet != ERR_OK) {
+        APP_LOGE("spm session commit failed, bundleName:%{public}s errCode:%{public}d",
+            bundleName.c_str(), spmCommitRet);
+        return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
+    }
+
     // add new user bundle info
     BundleResourceHelper::AddResourceInfoByBundleName(bundleName, userId, ADD_RESOURCE_TYPE::CREATE_USER);
     CreateEl5Dir(info, userId, uid);
@@ -323,15 +341,6 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
 #endif
     needNotifyAppSkill_ = true;
     APP_LOGI("InstallExisted %{public}s succesfully", bundleName.c_str());
-    // SPM ON: InitToken builds a REAL session (PrepareHapIdentity with
-    // sessionId=0 makes the AT side allocate one and write it back), so this
-    // Commit is a real FinishInstall. The session carries no bundleInfos, so the
-    // empty modulePathMap skips the package-info write.
-    int32_t spmCommitRet = spmSession_.Commit({});
-    if (spmCommitRet != ERR_OK) {
-        APP_LOGE("spm session commit failed, bundleName:%{public}s errCode:%{public}d",
-            bundleName.c_str(), spmCommitRet);
-    }
     return ERR_OK;
 }
 
@@ -441,7 +450,7 @@ void BundleMultiUserInstaller::ResetInstallProperties()
 
 bool BundleMultiUserInstaller::RecoverHapToken(const std::string &bundleName, const int32_t userId,
     Security::AccessToken::AccessTokenIDEx& accessTokenIdEx, const InnerBundleInfo &innerBundleInfo,
-    int32_t *recoveredUid)
+    int32_t &recoveredUid)
 {
     if (BundleSpmManager::IsEnabled()) {
         // SPM ON: the session is still deferred here, so UpdateToken would call
@@ -471,11 +480,9 @@ bool BundleMultiUserInstaller::RecoverHapToken(const std::string &bundleName, co
         }
         if (spmSession_.UpdateToken(accessTokenIdEx, innerBundleInfo, userId, checkResult,
             appProvisionInfo.appServiceCapabilities) == ERR_OK) {
-            if (recoveredUid != nullptr) {
-                // SPM ON callers reuse the uid persisted at uninstall instead of
-                // allocating locally (the identity and its uid stay paired).
-                *recoveredUid = uninstallBundleInfo.userInfos.at(std::to_string(userId)).uid;
-            }
+            // SPM ON callers reuse the uid persisted at uninstall instead of
+            // allocating locally (the identity and its uid stay paired).
+            recoveredUid = uninstallBundleInfo.userInfos.at(std::to_string(userId)).uid;
             return true;
         } else {
             auto result = BundlePermissionMgr::GetCheckResultMsg(checkResult);

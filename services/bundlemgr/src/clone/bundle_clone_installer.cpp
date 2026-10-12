@@ -114,17 +114,6 @@ ErrCode BundleCloneInstaller::InstallCloneApp(const std::string &bundleName,
     }
     SendBundleSystemEvent(bundleName, BundleEventType::INSTALL, userId, appIndex,
         false, false, InstallScene::NORMAL, result);
-    // SPM ON: InitToken builds a REAL session (PrepareHapIdentity with
-    // sessionId=0 makes the AT side allocate one and write it back), so this
-    // Commit is a real FinishInstall. The session carries no bundleInfos, so the
-    // empty modulePathMap skips the package-info write.
-    if (result == ERR_OK) {
-        int32_t spmCommitRet = spmSession_.Commit({});
-        if (spmCommitRet != ERR_OK) {
-            APP_LOGE("spm session commit failed, bundleName:%{public}s errCode:%{public}d",
-                bundleName.c_str(), spmCommitRet);
-        }
-    }
 
     ResetInstallProperties();
     PerfProfile::GetInstance().SetBundleInstallEndTime(GetTickCount());
@@ -416,6 +405,23 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
         APP_LOGE("dataMgr add clone bundle fail, bundleName: %{public}s, userId: %{public}d, appIndex: %{public}d",
             bundleName.c_str(), userId, appIndex);
         return addRes;
+    }
+
+    // SPM ON: InitToken builds a REAL session (PrepareHapIdentity with
+    // sessionId=0 makes the AT side allocate one and write it back), so this
+    // Commit is a real FinishInstall. The session carries no bundleInfos, so the
+    // empty modulePathMap skips the package-info write. Commit BEFORE the guards
+    // are dismissed and BEFORE the el5/resource records and the keep-data
+    // uninstall record are created/deleted — on failure the still-armed guards
+    // roll the clone info/data dirs back, the session destructor rolls the AT
+    // side back, and none of the secondary records (el5 dir, resource info,
+    // keep-data record) are touched, so both sides stay consistent with zero
+    // residue.
+    int32_t spmCommitRet = spmSession_.Commit({});
+    if (spmCommitRet != ERR_OK) {
+        APP_LOGE("spm session commit failed, bundleName:%{public}s errCode:%{public}d",
+            bundleName.c_str(), spmCommitRet);
+        return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
     }
 
     ScopeGuard createEl5DirGuard([&] { RemoveEl5Dir(userInfo, userId, appIndex); });

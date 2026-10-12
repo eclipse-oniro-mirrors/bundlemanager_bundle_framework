@@ -80,10 +80,11 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     std::string testBundleName = "test";
     Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
     InnerBundleInfo innerBundleInfo;
-    bundleMultiUserInstaller.RecoverHapToken(bundleName, userId, accessTokenIdEx, innerBundleInfo);
-    bundleMultiUserInstaller.RecoverHapToken(testBundleName, userId, accessTokenIdEx, innerBundleInfo);
+    int32_t recoveredUid = 0;
+    bundleMultiUserInstaller.RecoverHapToken(bundleName, userId, accessTokenIdEx, innerBundleInfo, recoveredUid);
+    bundleMultiUserInstaller.RecoverHapToken(testBundleName, userId, accessTokenIdEx, innerBundleInfo, recoveredUid);
     bundleMultiUserInstaller.RecoverHapToken(
-        testBundleName, Constants::START_USERID, accessTokenIdEx, innerBundleInfo);
+        testBundleName, Constants::START_USERID, accessTokenIdEx, innerBundleInfo, recoveredUid);
     bundleMultiUserInstaller.RemoveDataDir(bundleName, userId);
     bundleMultiUserInstaller.GetDataMgr();
     return true;

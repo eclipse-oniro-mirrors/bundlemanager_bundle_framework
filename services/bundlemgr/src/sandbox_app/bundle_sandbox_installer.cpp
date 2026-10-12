@@ -175,6 +175,22 @@ ErrCode BundleSandboxInstaller::InstallSandboxApp(const std::string &bundleName,
         return result;
     }
 
+    // SPM ON: InitToken builds a REAL session (PrepareHapIdentity with
+    // sessionId=0 makes the AT side allocate one and write it back), so this
+    // Commit is a real FinishInstall. The session carries no bundleInfos, so the
+    // empty modulePathMap skips the package-info write. Commit BEFORE the guard
+    // is dismissed and BEFORE the sandbox info is persisted — on failure the
+    // still-armed sandboxAppGuard rolls the token/appIndex/uid/data dir back and
+    // the session destructor rolls the AT side back, and neither the in-memory
+    // sandbox info entry nor the persistent DB record exists yet (SandboxAppRollBack
+    // has no cleanup for them), so both sides stay consistent with zero residue.
+    int32_t spmCommitRet = spmSession_.Commit({});
+    if (spmCommitRet != ERR_OK) {
+        APP_LOGE("spm session commit failed, bundleName:%{public}s errCode:%{public}d",
+            bundleName_.c_str(), spmCommitRet);
+        return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
+    }
+
     // 6. store new bundleInfo to sandbox data manager
     sandboxDataMgr_->SaveSandboxAppInfo(info, newAppIndex);
 
@@ -199,17 +215,6 @@ ErrCode BundleSandboxInstaller::InstallSandboxApp(const std::string &bundleName,
     PerfProfile::GetInstance().SetBundleInstallEndTime(GetTickCount());
 
     APP_LOGD("InstallSandboxApp %{public}s succesfully", bundleName.c_str());
-    // SPM ON: InitToken builds a REAL session (PrepareHapIdentity with
-    // sessionId=0 makes the AT side allocate one and write it back), so this
-    // Commit is a real FinishInstall. The session carries no bundleInfos, so the
-    // empty modulePathMap skips the package-info write.
-    if (result == ERR_OK) {
-        int32_t spmCommitRet = spmSession_.Commit({});
-        if (spmCommitRet != ERR_OK) {
-            APP_LOGE("spm session commit failed, bundleName:%{public}s errCode:%{public}d",
-                bundleName.c_str(), spmCommitRet);
-        }
-    }
     return result;
 }
 

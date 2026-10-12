@@ -262,6 +262,20 @@ ErrCode BundleCliSandboxInstaller::ProcessCreateCliSandbox(const std::string &cr
     });
     CreateEl5Dir(info, userId, uid, appIndex);
 
+    // SPM ON: InitToken builds a REAL session (PrepareHapIdentity with
+    // sessionId=0 makes the AT side allocate one and write it back), so this
+    // Commit is a real FinishInstall. The session carries no bundleInfos, so the
+    // empty modulePathMap skips the package-info write. Commit BEFORE the guards
+    // are dismissed — on failure the still-armed guards roll the token/data
+    // dirs/sandbox info back and the session destructor rolls the AT side back,
+    // so both sides stay consistent.
+    int32_t spmCommitRet = spmSession_.Commit({});
+    if (spmCommitRet != ERR_OK) {
+        APP_LOGE("spm session commit failed, bundleName:%{public}s errCode:%{public}d",
+            bundleName.c_str(), spmCommitRet);
+        return ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_GRANT_PERMISSION_FAILED;
+    }
+
     // commit
     applyAccessTokenGuard.Dismiss();
     createDataDirGuard.Dismiss();
@@ -275,14 +289,6 @@ ErrCode BundleCliSandboxInstaller::ProcessCreateCliSandbox(const std::string &cr
     appIdentifier_ = info.GetAppIdentifier();
 
     APP_LOGI("CreateCliSandboxApp %{public}s appIndex:%{public}d successfully", bundleName.c_str(), appIndex);
-    // SPM ON: this installer keeps a deferred session (the token path stays legacy
-    // even under SPM ON), so the commit is a no-op; kept for symmetry with the
-    // facade lifecycle in case a real session is adopted later.
-    int32_t spmCommitRet = spmSession_.Commit({});
-    if (spmCommitRet != ERR_OK) {
-        APP_LOGE("spm session commit failed, bundleName:%{public}s errCode:%{public}d",
-            bundleName.c_str(), spmCommitRet);
-    }
     return ERR_OK;
 }
 

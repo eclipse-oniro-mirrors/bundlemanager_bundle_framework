@@ -51,7 +51,7 @@ private:
     ErrCode GetDataMgr();
     bool RecoverHapToken(const std::string &bundleName, const int32_t userId,
         Security::AccessToken::AccessTokenIDEx& accessTokenIdEx, const InnerBundleInfo &innerBundleInfo,
-        int32_t *recoveredUid = nullptr);
+        int32_t &recoveredUid);
     void DeleteUninstallBundleInfo(const std::string &bundleName, int32_t userId);
     ErrCode ProcessBundleShareFiles(const InnerBundleInfo &info, const int32_t userId, uint32_t tokenId);
     void SendBundleSystemEvent(const std::string &bundleName, BundleEventType bundleEventType,

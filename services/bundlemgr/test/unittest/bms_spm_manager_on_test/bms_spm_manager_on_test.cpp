@@ -186,10 +186,10 @@ HWTEST_F(BmsSpmManagerOnTest, InitToken_DeferredSession_0002, Function | MediumT
 /**
  * @tc.number: BmsSpmManagerOnTest.InitToken_ActiveSession_0001
  * @tc.name: InitToken with an active session
- * @tc.desc: PrepareHapIdentity provides the token id only; the uid/gids of the
- *           user info stay unallocated (they are filled later by
- *           BundleDataMgr::GenerateUidAndGid, same as SPM OFF) so the AT uid and
- *           the BMS uid never mix in gids.
+ * @tc.desc: PrepareHapIdentity provides the token id and the AT-allocated uid;
+ *           the uid/gids of the user info are persisted (no local re-allocation
+ *           drift — under SPM ON GenerateUidAndGid never allocates from the
+ *           bundle-id counter, an INVALID uid reaching it fails fast).
  */
 HWTEST_F(BmsSpmManagerOnTest, InitToken_ActiveSession_0001, Function | MediumTest | Level1)
 {
@@ -261,9 +261,10 @@ HWTEST_F(BmsSpmManagerOnTest, InitToken_ActiveSession_0002, Function | MediumTes
 
 /**
  * @tc.number: BmsSpmManagerOnTest.InitToken_ActiveSession_0003
- * @tc.name: InitToken keeps an unallocated uid untouched
- * @tc.desc: An existing user info whose uid is still INVALID_UID is left as-is
- *           (GenerateUidAndGid fills it later); the other fields are preserved.
+ * @tc.name: InitToken fills an unallocated uid with the AT identity uid
+ * @tc.desc: An existing user info whose uid is still INVALID_UID is filled with
+ *           the AT-allocated uid; the other fields are preserved (under SPM ON
+ *           the local bundle-id counter never allocates the uid).
  */
 HWTEST_F(BmsSpmManagerOnTest, InitToken_ActiveSession_0003, Function | MediumTest | Level1)
 {
@@ -808,9 +809,11 @@ HWTEST_F(BmsSpmManagerOnTest, InitToken_CloneInstall_0001, Function | MediumTest
 
 /**
  * @tc.number: BmsSpmManagerOnTest.InitToken_ActiveSession_0005
- * @tc.name: The desired local uid is adopted by the AT side
- * @tc.desc: An existing valid uid is passed as the desired identity and comes back
- *           unchanged (adopt-or-reallocate); the local uid and gids stay stable.
+ * @tc.name: The AT uid is authoritative when the desired local uid is not adopted
+ * @tc.desc: An existing valid uid is passed as the desired identity, but the AT
+ *           side reallocates a different one: under SPM ON the AT uid wins —
+ *           userInfo adopts the AT uid, the stale local uid's gid is dropped
+ *           (uid == gids[0]), and the installTime is preserved.
  */
 HWTEST_F(BmsSpmManagerOnTest, InitToken_ActiveSession_0005, Function | MediumTest | Level1)
 {
@@ -832,6 +835,7 @@ HWTEST_F(BmsSpmManagerOnTest, InitToken_ActiveSession_0005, Function | MediumTes
     existing.bundleName = BUNDLE_NAME;
     existing.uid = TEST_EXISTING_UID;
     existing.installTime = TEST_INSTALL_TIME;
+    existing.gids.emplace_back(TEST_EXISTING_UID);  // stale local gid to be dropped
     info.AddInnerBundleUserInfo(existing);
 
     Security::AccessToken::AccessTokenIDEx tokenIdEx = {0};
@@ -840,9 +844,10 @@ HWTEST_F(BmsSpmManagerOnTest, InitToken_ActiveSession_0005, Function | MediumTes
         ERR_OK);
     InnerBundleUserInfo userInfo;
     ASSERT_TRUE(info.GetInnerBundleUserInfo(TEST_USERID, userInfo));
-    EXPECT_EQ(userInfo.uid, TEST_EXISTING_UID);
+    EXPECT_EQ(userInfo.uid, TEST_IDENTITY_UID);  // AT uid adopted
+    ASSERT_EQ(userInfo.gids.size(), 1);
+    EXPECT_EQ(userInfo.gids.front(), TEST_IDENTITY_UID);  // stale local gid dropped
     EXPECT_EQ(userInfo.installTime, TEST_INSTALL_TIME);
-    EXPECT_TRUE(userInfo.gids.empty());  // same value adopted: no extra gid appended
 }
 
 /**
@@ -918,9 +923,12 @@ HWTEST_F(BmsSpmManagerOnTest, InitToken_CacheUid_0001, Function | MediumTest | L
 
 /**
  * @tc.number: BmsSpmManagerOnTest.InitToken_CacheUid_0002
- * @tc.name: InitToken with zero AT uid does not produce identityUid
- * @tc.desc: When PrepareHapIdentity returns uid=0 (AT did not allocate), the
- *           identityUid output stays 0 and no cache entry is written.
+ * @tc.name: InitToken with a zero AT uid fails fast
+ * @tc.desc: When PrepareHapIdentity returns uid<=0 (AT did not allocate), the
+ *           call is treated as a failed SPM interface call: InitToken returns
+ *           ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED and the
+ *           identityUid output param is not written (the sentinel is kept —
+ *           no partial handover on failure).
  */
 HWTEST_F(BmsSpmManagerOnTest, InitToken_CacheUid_0002, Function | MediumTest | Level1)
 {
@@ -938,8 +946,8 @@ HWTEST_F(BmsSpmManagerOnTest, InitToken_CacheUid_0002, Function | MediumTest | L
     int32_t identityUid = -1;  // sentinel
     int32_t ret = session.InitToken(info, TEST_USERID, 0, tokenIdEx, checkResult,
         "", nullptr, false, &identityUid);
-    EXPECT_EQ(ret, ERR_OK);
-    EXPECT_EQ(identityUid, 0);  // AT returned 0, propagated as-is
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED);
+    EXPECT_EQ(identityUid, -1);  // output param untouched on failure
 }
 
 /**

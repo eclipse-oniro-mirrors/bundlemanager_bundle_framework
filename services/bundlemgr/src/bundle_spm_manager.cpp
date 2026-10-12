@@ -16,6 +16,7 @@
 #include "bundle_spm_manager.h"
 
 #include <algorithm>
+#include <cinttypes>
 
 #include "access_token_error.h"
 #include "app_log_tag_wrapper.h"
@@ -302,10 +303,19 @@ int32_t BundleSpmManager::InstallSession::InitToken(InnerBundleInfo &info, int32
             info.GetBundleName().c_str(), ret);
         return ret;
     }
-    if (identity.tokenId == 0) {
-        LOG_NOFUNC_E(BMS_TAG_INSTALLER, "PrepareHapIdentity invalid tokenId, bundleName:%{public}s",
-            info.GetBundleName().c_str());
-        return Security::AccessToken::AccessTokenError::ERR_TOKENID_CREATE_FAILED;
+    if (identity.tokenId == 0 || identity.uid <= 0) {
+        // The identity returned by PrepareHapIdentity is incomplete — treat it
+        // as a failed SPM interface call: a zero tokenId or a non-positive uid
+        // flowing downstream would either fail the token creation or drift the
+        // token-to-uid binding (an INVALID uid would hit the centralized
+        // GenerateUidAndGid fail-fast later); fail here already. The output
+        // params (tokenIdEx / identityUid) are deliberately not written on
+        // this failure path (no partial handover).
+        LOG_NOFUNC_E(BMS_TAG_INSTALLER,
+            "PrepareHapIdentity invalid identity, bundleName:%{public}s tokenId:%{public}" PRIu64
+            " uid:%{public}d",
+            info.GetBundleName().c_str(), static_cast<uint64_t>(identity.tokenId), identity.uid);
+        return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
     }
     tokenIdEx.tokenIDEx = identity.tokenId;
     if (identityUid != nullptr) {
@@ -316,17 +326,15 @@ int32_t BundleSpmManager::InstallSession::InitToken(InnerBundleInfo &info, int32
         "tokenId:%{public}u uid:%{public}d",
         info.GetBundleName().c_str(), info.GetAppIndex(), sessionId_,
         tokenIdEx.tokenIdExStruct.tokenID, identity.uid);
-    if (identity.uid != 0) {
-        // The AT side generated (or adopted) this uid: refresh the SPM ON
-        // reverse-lookup cache so fresh installs are covered in-process too
-        // (the boot restore only repopulates it after a restart), and produce
-        // the fs config for the newly generated uid.
-        auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-        if (dataMgr != nullptr) {
-            dataMgr->UpdateUidIndexMap(identity.uid, info.GetBundleName(), info.GetAppIndex());
-        }
-        MakeFsConfigForNewUid(identity.uid, info.GetBundleName());
+    // The uid is guaranteed positive by the check above: refresh the SPM ON
+    // reverse-lookup cache so fresh installs are covered in-process too
+    // (the boot restore only repopulates it after a restart), and produce
+    // the fs config for the newly generated uid.
+    auto cacheMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (cacheMgr != nullptr) {
+        cacheMgr->UpdateUidIndexMap(identity.uid, info.GetBundleName(), info.GetAppIndex());
     }
+    MakeFsConfigForNewUid(identity.uid, info.GetBundleName());
     if (cloneInstall) {
         // Clone: the caller owns the uid handling (it builds the clone info from
         // the identity uid / the recovered record itself); the user info of `info`
@@ -346,34 +354,26 @@ int32_t BundleSpmManager::InstallSession::InitToken(InnerBundleInfo &info, int32
         bundleUserInfo.bundleUserInfo.userId = userId;
         bundleUserInfo.bundleName = info.GetBundleName();
     }
-    if (identity.uid != 0) {
-        if (userExists && bundleUserInfo.uid != Constants::INVALID_UID &&
-            bundleUserInfo.uid != identity.uid) {
-            // The AT side did not adopt the desired uid (alloc failed and it picked
-            // another one): keep the local uid — the data directories belong to it —
-            // and leave a trace; the token/uid mismatch needs an AT-side fix.
-            LOG_NOFUNC_W(BMS_TAG_INSTALLER, "AT uid %{public}d differs from local uid %{public}d, keep local, "
-                "bundleName:%{public}s", identity.uid, bundleUserInfo.uid, info.GetBundleName().c_str());
-            // The cache entry written above holds the AT uid, but the app actually
-            // runs with the local uid: rewrite the entry and drop the AT one.
-            auto cacheMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-            if (cacheMgr != nullptr) {
-                cacheMgr->RemoveUidIndexMap(identity.uid);
-                cacheMgr->UpdateUidIndexMap(bundleUserInfo.uid, info.GetBundleName(), info.GetAppIndex());
-            }
-        } else {
-            bundleUserInfo.uid = identity.uid;
-            if (std::find(bundleUserInfo.gids.begin(), bundleUserInfo.gids.end(), identity.uid) ==
-                bundleUserInfo.gids.end()) {
-                bundleUserInfo.gids.emplace_back(identity.uid);
-            }
-            info.AddInnerBundleUserInfo(bundleUserInfo);
+    if (userExists && bundleUserInfo.uid != Constants::INVALID_UID &&
+        bundleUserInfo.uid != identity.uid) {
+        // The AT side did not adopt the desired local uid and reallocated a new
+        // one: under SPM ON the AT uid is authoritative — adopt it, drop the
+        // stale local uid (its gid is cleared so uid and gids[0] stay
+        // consistent), and evict the reverse-lookup cache entry of the dropped
+        // local uid (the AT uid entry is already written above).
+        LOG_NOFUNC_W(BMS_TAG_INSTALLER, "AT uid %{public}d differs from local uid %{public}d, adopt AT uid, "
+            "bundleName:%{public}s", identity.uid, bundleUserInfo.uid, info.GetBundleName().c_str());
+        if (cacheMgr != nullptr) {
+            cacheMgr->RemoveUidIndexMap(bundleUserInfo.uid);
         }
-    } else if (!userExists) {
-        // No uid from the AT side either: keep the bare placeholder; the later
-        // GenerateUidAndGid call fills in the uid.
-        info.AddInnerBundleUserInfo(bundleUserInfo);
+        bundleUserInfo.gids.clear();
     }
+    bundleUserInfo.uid = identity.uid;
+    if (std::find(bundleUserInfo.gids.begin(), bundleUserInfo.gids.end(), identity.uid) ==
+        bundleUserInfo.gids.end()) {
+        bundleUserInfo.gids.emplace_back(identity.uid);
+    }
+    info.AddInnerBundleUserInfo(bundleUserInfo);
     return ERR_OK;
 }
 
