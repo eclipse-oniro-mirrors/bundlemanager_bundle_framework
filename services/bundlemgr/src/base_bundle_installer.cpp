@@ -2236,9 +2236,10 @@ void BaseBundleInstaller::RollBack(const std::unordered_map<std::string, InnerBu
                     : BundleSpmManager::TokenDeleteType::NONE,
                 newInfos.begin()->second.GetUid(userId_)) !=
                 AccessToken::AccessTokenKitRet::RET_SUCCESS) {
-                LOG_E(BMS_TAG_INSTALLER, "delete accessToken failed");
+                LOG_E(BMS_TAG_INSTALLER, "delete accessToken failed, tokenId:%{public}u bundleName:%{public}s",
+                    newInfos.begin()->second.GetAccessTokenId(userId_), bundleName_.c_str());
             }
-        } else if (isKeepData && BundleSpmManager::IsEnabled()) {
+        } else {
             // SPM ON: reserve the identity and provision in the access token service so a
             // re-install recovers them via PrepareHapIdentity.
             BundleSpmManager::DeleteToken(newInfos.begin()->second.GetAccessTokenId(userId_),
@@ -2271,7 +2272,11 @@ void BaseBundleInstaller::RollBack(const std::unordered_map<std::string, InnerBu
         RollBack(info.second, oldInfo);
     }
     // need delete definePermissions and requestPermissions
-    UpdateHapToken(preInfo.GetAppType() != oldInfo.GetAppType(), oldInfo);
+    // SPM ON: skip — writing the old policy into the session that is about to be
+    // rolled back is a no-op at best and can trigger an AT-side RollbackAll early.
+    if (!BundleSpmManager::IsEnabled()) {
+        UpdateHapToken(preInfo.GetAppType() != oldInfo.GetAppType(), oldInfo);
+    }
     if (isHnpInstalled_) {
         RollbackHnpInstall(GetEffectiveBundleName(), oldInfo.GetUsers());
     }
@@ -3102,23 +3107,6 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
             curInnerBundleUserInfo.bundleUserInfo.userId = userId_;
             curInnerBundleUserInfo.bundleName = bundleName;
             oldInfo.AddInnerBundleUserInfo(curInnerBundleUserInfo);
-            // SPM ON: this new-user flow never goes through ProcessBundleInstall,
-            // so the session must be created here — otherwise the Check/InitToken
-            // calls below run on a deferred session (silent no-ops / legacy path)
-            // and the AT side is never involved. Verify the installed haps over a
-            // standalone session, mirroring the OnModuleUninstalled pattern.
-            if (BundleSpmManager::IsEnabled()) {
-                BundleInstallChecker checker;
-                ErrCode createErr = ERR_OK;
-                spmSession_ = BundleSpmManager::InstallSession::CheckSignAndInitSession(userId_,
-                    oldInfo.GetAllHapPaths(),
-                    oldInfo.IsPreInstallApp(), checker, createErr, false, false);
-                if (createErr != ERR_OK) {
-                    LOG_E(BMS_TAG_INSTALLER, "spm session create failed, -n:%{public}s errCode:%{public}d",
-                        bundleName.c_str(), createErr);
-                    return BundleSpmManager::WrapRecoverableSpmErrorCode(createErr);
-                }
-            }
             ScopeGuard userGuard([&] {
                 if (!dataMgr_->GetUninstallBundleInfoWithUserAndAppIndex(effectiveBundleName, userId_,
                     Constants::INITIAL_APP_INDEX)) {
@@ -3133,23 +3121,10 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
             if (!tokenRecovered) {
                 accessTokenIdEx.tokenIDEx = 0;  // discard partial writes from the failed recovery
             }
-            // SPM ON: the permission pre-check must run first — the AT session
-            // requires CheckHapPermissionInfo before PrepareHapIdentity/UpdateHapPolicy;
-            // multi-hap apps use MERGE, single-hap updates use REPLACE.
-            Security::AccessToken::HapInfoCheckResult spmUpdateCheckResult;
-            std::vector<std::string> oldModuleNames;
-            oldInfo.GetModuleNames(oldModuleNames);
-            int32_t spmRet = spmSession_.CheckPermissionInfo(
-                oldModuleNames.size() > 1 ? Security::AccessToken::InstallTypeEnum::TYPE_MERGE
-                    : Security::AccessToken::InstallTypeEnum::TYPE_REPLACE,
-                spmUpdateCheckResult);
-            if (spmRet != ERR_OK) {
-                LOG_E(BMS_TAG_INSTALLER, "spm check permission failed, bundleName:%{public}s errCode:%{public}d",
-                    bundleName_.c_str(), spmRet);
-                SetVerifyPermissionResult(spmUpdateCheckResult);
-                // Raw AT code: map to the registered BMS code (see above).
-                return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
-            }
+            // SPM ON: the isAppExist_ flow skips CheckSignAndInitSession and
+            // CheckPermissionInfo (the haps are already verified at the original
+            // install); InitToken's PrepareHapIdentity(sessionId=0) makes the AT
+            // side auto-create the session.
             if (!tokenRecovered
                 && spmSession_.InitToken(oldInfo, userId_, 0, accessTokenIdEx, checkResult,
                     verifyRes_.GetProvisionInfo().appServiceCapabilities, nullptr, false) != ERR_OK) {
@@ -3178,21 +3153,13 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
             // SPM ON: commit the session BEFORE the bundle info is persisted — on
             // failure the still-armed user guard cleans the data directories and
             // the session destructor rolls the identity back, so both sides stay
-            // consistent. The identity mapping keeps the installed hap paths.
+            // consistent. The session carries no bundleInfos (no CheckSignAndInitSession),
+            // so the empty modulePathMap skips the package-info write.
             if (BundleSpmManager::IsEnabled()) {
-                std::map<std::string, std::string> modulePathMap;
-                for (const auto &hapPath : oldInfo.GetAllHapPaths()) {
-                    modulePathMap[hapPath] = hapPath;
-                }
-                int32_t spmCommitRet = spmSession_.Commit(modulePathMap);
+                int32_t spmCommitRet = spmSession_.Commit({});
                 if (spmCommitRet != ERR_OK) {
                     LOG_E(BMS_TAG_INSTALLER, "spm session commit failed, -n:%{public}s errCode:%{public}d",
                         bundleName_.c_str(), spmCommitRet);
-                    EventInfo eventInfo;
-                    eventInfo.bundleName = bundleName_;
-                    eventInfo.userId = userId_;
-                    eventInfo.errCode = spmCommitRet;
-                    EventReport::SendSystemEvent(BMSEventType::BUNDLE_INSTALL_EXCEPTION, eventInfo);
                     return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
                 }
             }
@@ -3206,10 +3173,16 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
                     // SPM ON: the session was already committed; undo the freshly
                     // created AT identity so the failed install leaves both sides
                     // clean. The still-armed user guard removes the data dirs (the
-                    // user is not in the DB yet). A recovered keep-data token
+                    // user is not in the DB yet). A keep-data reserved identity
                     // predates this flow and belongs to the keep-data reservation
                     // lifecycle, so it is not deleted here.
-                    if (BundleSpmManager::IsEnabled() && !tokenRecovered) {
+                    bool keepDataReinstall = false;
+                    if (BundleSpmManager::IsEnabled()) {
+                        UninstallBundleInfo uninstallRecord;
+                        keepDataReinstall = dataMgr_->GetUninstallBundleInfo(effectiveBundleName,
+                            uninstallRecord);
+                    }
+                    if (BundleSpmManager::IsEnabled() && !keepDataReinstall) {
                         int32_t delRet = BundleSpmManager::DeleteToken(
                             accessTokenIdEx.tokenIdExStruct.tokenID, bundleName,
                             BundleSpmManager::TokenDeleteType::NONE, uid);
@@ -3355,10 +3328,11 @@ ErrCode BaseBundleInstaller::RemoveBundle(InnerBundleInfo &info, const InstallPa
                 : BundleSpmManager::TokenDeleteType::NONE,
             info.GetUid(userId_)) !=
             AccessToken::AccessTokenKitRet::RET_SUCCESS) {
-            LOG_E(BMS_TAG_INSTALLER, "delete accessToken failed");
+            LOG_E(BMS_TAG_INSTALLER, "delete accessToken failed, tokenId:%{public}u bundleName:%{public}s",
+                accessTokenId_, info.GetBundleName().c_str());
         }
         DelayedSingleton<BmsUpdateSelinuxMgr>::GetInstance()->DeleteBundle(info.GetBundleName(), userId_, 0);
-    } else if (installParam.isKeepData && BundleSpmManager::IsEnabled()) {
+    } else {
         // SPM ON: reserve the identity and provision in the access token service so a
         // re-install recovers them via PrepareHapIdentity.
         BundleSpmManager::DeleteToken(accessTokenId_, info.GetBundleName(),
@@ -3488,15 +3462,12 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallStatus(InnerBundleInfo &info, i
     }
     // SPM ON: the permission pre-check must run first — the AT session requires
     // CheckHapPermissionInfo before PrepareHapIdentity/UpdateHapPolicy/FinishInstall.
-    // A recovered keep-data token means the AT side already knows this bundle
-    // (e.g. install-by-name reinstall), so the pre-check must use TYPE_REPLACE:
-    // TYPE_INSTALL on an already-installed bundle fails with ERR_BUNDLE_ALREADY_EXIST
-    // and rolls back the whole session.
+    // TYPE_INSTALL is always correct here: ProcessBundleInstallStatus runs for
+    // new installs only (the AT side has no prior record), and keep-data
+    // reinstalls go through InnerProcessBundleInstall's update branch instead.
     Security::AccessToken::HapInfoCheckResult spmCheckResult;
     int32_t spmRet = spmSession_.CheckPermissionInfo(
-        tokenRecovered ? Security::AccessToken::InstallTypeEnum::TYPE_REPLACE
-            : Security::AccessToken::InstallTypeEnum::TYPE_INSTALL,
-        spmCheckResult);
+        Security::AccessToken::InstallTypeEnum::TYPE_INSTALL, spmCheckResult);
     if (spmRet != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "spm check permission failed, bundleName:%{public}s errCode:%{public}d",
             bundleName_.c_str(), spmRet);
@@ -7910,9 +7881,10 @@ ErrCode BaseBundleInstaller::RemoveBundleUserData(
                 : BundleSpmManager::TokenDeleteType::NONE,
             innerBundleInfo.GetUid(userId_)) !=
             AccessToken::AccessTokenKitRet::RET_SUCCESS) {
-            LOG_E(BMS_TAG_INSTALLER, "delete accessToken failed");
+            LOG_E(BMS_TAG_INSTALLER, "delete accessToken failed, tokenId:%{public}u bundleName:%{public}s",
+                accessTokenId_, innerBundleInfo.GetBundleName().c_str());
         }
-    } else if (installParam.isKeepData && BundleSpmManager::IsEnabled()) {
+    } else {
         // SPM ON: reserve the identity and provision in the access token service so a
         // re-install recovers them via PrepareHapIdentity.
         BundleSpmManager::DeleteToken(accessTokenId_, innerBundleInfo.GetBundleName(),
@@ -10037,14 +10009,6 @@ ErrCode BaseBundleInstaller::MarkInstallFinish(const std::map<std::string, std::
         if (spmCommitRet != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "spm session commit failed, bundleName:%{public}s errCode:%{public}d",
                 bundleName_.c_str(), spmCommitRet);
-            // The bundle data is already persisted while the AT session is not:
-            // report the fault for auditing and fail the install — the regular
-            // failure path then rolls the business data and the session back.
-            EventInfo eventInfo;
-            eventInfo.bundleName = bundleName_;
-            eventInfo.userId = userId_;
-            eventInfo.errCode = spmCommitRet;
-            EventReport::SendSystemEvent(BMSEventType::BUNDLE_UPDATE_EXCEPTION, eventInfo);
             return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
         }
         return ERR_OK;
@@ -10068,14 +10032,6 @@ ErrCode BaseBundleInstaller::MarkInstallFinish(const std::map<std::string, std::
     if (spmCommitRet != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "spm session commit failed, bundleName:%{public}s errCode:%{public}d",
             bundleName_.c_str(), spmCommitRet);
-        // The bundle data is already persisted while the AT session is not:
-        // report the fault for auditing and fail the install — the regular
-        // failure path then rolls the business data and the session back.
-        EventInfo eventInfo;
-        eventInfo.bundleName = bundleName_;
-        eventInfo.userId = userId_;
-        eventInfo.errCode = spmCommitRet;
-        EventReport::SendSystemEvent(BMSEventType::BUNDLE_INSTALL_EXCEPTION, eventInfo);
         return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
     }
     return ERR_OK;
@@ -10482,6 +10438,13 @@ bool BaseBundleInstaller::RecoverHapToken(const std::string &bundleName, const i
     Security::AccessToken::AccessTokenIDEx& accessTokenIdEx, const InnerBundleInfo &innerBundleInfo,
     const bool isDebugGrant)
 {
+    if (BundleSpmManager::IsEnabled()) {
+        // SPM ON: do NOT recover the token/uid from the BMS uninstall record —
+        // the AT side kept the reserved identity (RESERVED_DATA) at uninstall and
+        // PrepareHapIdentity returns the SAME token and uid, so the flow below
+        // falls to InitToken which goes through the SPM init interface.
+        return false;
+    }
     UninstallBundleInfo uninstallBundleInfo;
     if (!dataMgr_->GetUninstallBundleInfo(bundleName, uninstallBundleInfo)) {
         return false;

@@ -216,8 +216,10 @@ ErrCode IndependentSkillsInstaller::ProcessInstall(
         if (spmCommitRet != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "spm session commit failed, bundleName:%{public}s errCode:%{public}d",
                 bundleName_.c_str(), spmCommitRet);
-            // The session is not committed: fail the install so the failure path
-            // rolls both the business data and the session back.
+            // The session is not committed: fail the install AND roll the persisted
+            // business data back (same as the other failure branches above) — the
+            // session destructor rolls the AT side, leaving both sides clean.
+            RollBack();
             return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
         }
     }

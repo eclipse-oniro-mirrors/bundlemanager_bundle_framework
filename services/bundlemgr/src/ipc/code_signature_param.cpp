@@ -79,7 +79,7 @@ bool CodeSignatureParam::ReadFromParcel(Parcel &parcel)
         }
         profileBlock = std::move(tempProfilePtr);
     }
-    sessionId = parcel.ReadInt32();
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, sessionId);
     return true;
 }
 

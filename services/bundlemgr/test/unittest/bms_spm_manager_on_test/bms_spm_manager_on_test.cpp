@@ -845,4 +845,170 @@ HWTEST_F(BmsSpmManagerOnTest, InitToken_ActiveSession_0005, Function | MediumTes
     EXPECT_TRUE(userInfo.gids.empty());  // same value adopted: no extra gid appended
 }
 
+/**
+ * @tc.number: BmsSpmManagerOnTest.DeleteToken_ZeroTokenId_0001
+ * @tc.name: DeleteToken rejects zero tokenId under SPM ON
+ * @tc.desc: A zero tokenId must never reach the AT side (DeleteIdentity(0, bn,
+ *           NONE) deletes EVERY token of the bundle by name there). The facade
+ *           rejects it with ERR_PARAM_INVALID.
+ */
+HWTEST_F(BmsSpmManagerOnTest, DeleteToken_ZeroTokenId_0001, Function | MediumTest | Level1)
+{
+    int32_t ret = BundleSpmManager::DeleteToken(0, BUNDLE_NAME,
+        BundleSpmManager::TokenDeleteType::NONE);
+    EXPECT_EQ(ret, Security::AccessToken::AccessTokenError::ERR_PARAM_INVALID);
+}
+
+/**
+ * @tc.number: BmsSpmManagerOnTest.DeleteToken_ZeroTokenId_ReservedData_0001
+ * @tc.name: DeleteToken rejects zero tokenId even for RESERVED types
+ * @tc.desc: The zero-tokenId rejection applies to all TokenDeleteType values.
+ */
+HWTEST_F(BmsSpmManagerOnTest, DeleteToken_ZeroTokenId_ReservedData_0001, Function | MediumTest | Level1)
+{
+    int32_t ret = BundleSpmManager::DeleteToken(0, BUNDLE_NAME,
+        BundleSpmManager::TokenDeleteType::RESERVED_DATA);
+    EXPECT_EQ(ret, Security::AccessToken::AccessTokenError::ERR_PARAM_INVALID);
+}
+
+/**
+ * @tc.number: BmsSpmManagerOnTest.DeleteToken_ValidTokenId_0001
+ * @tc.name: DeleteToken with valid tokenId passes through to AT
+ * @tc.desc: A non-zero tokenId reaches DeleteIdentity on the AT side (mock
+ *           returns 0 = RET_SUCCESS).
+ */
+HWTEST_F(BmsSpmManagerOnTest, DeleteToken_ValidTokenId_0001, Function | MediumTest | Level1)
+{
+    int32_t ret = BundleSpmManager::DeleteToken(TEST_IDENTITY_TOKENID, BUNDLE_NAME,
+        BundleSpmManager::TokenDeleteType::NONE);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsSpmManagerOnTest.InitToken_CacheUid_0001
+ * @tc.name: InitToken caches the AT-allocated uid in uidIndexMap_
+ * @tc.desc: When PrepareHapIdentity returns a non-zero uid, InitToken writes it
+ *           to the BundleDataMgr's uidIndexMap_ so the ON reverse lookup can
+ *           hit locally without an AT IPC.
+ */
+HWTEST_F(BmsSpmManagerOnTest, InitToken_CacheUid_0001, Function | MediumTest | Level1)
+{
+    OHOS::Security::AccessToken::g_spmPrepareIdentityTokenId = TEST_IDENTITY_TOKENID;
+    OHOS::Security::AccessToken::g_spmPrepareIdentityUid = TEST_IDENTITY_UID;
+
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    info.SetBaseBundleInfo(bundleInfo);
+
+    BundleSpmManager::InstallSession session;
+    Security::AccessToken::AccessTokenIDEx tokenIdEx = {0};
+    Security::AccessToken::HapInfoCheckResult checkResult;
+    int32_t identityUid = 0;
+    int32_t ret = session.InitToken(info, TEST_USERID, 0, tokenIdEx, checkResult,
+        "", nullptr, false, &identityUid);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(identityUid, TEST_IDENTITY_UID);
+    EXPECT_EQ(tokenIdEx.tokenIdExStruct.tokenID, TEST_IDENTITY_TOKENID);
+
+    // The uidIndexMap_ write goes through BundleMgrService::GetDataMgr(); in this
+    // test target the service is not initialized, so the write is a no-op (null
+    // dataMgr). The identityUid output param is the verifiable contract here.
+}
+
+/**
+ * @tc.number: BmsSpmManagerOnTest.InitToken_CacheUid_0002
+ * @tc.name: InitToken with zero AT uid does not produce identityUid
+ * @tc.desc: When PrepareHapIdentity returns uid=0 (AT did not allocate), the
+ *           identityUid output stays 0 and no cache entry is written.
+ */
+HWTEST_F(BmsSpmManagerOnTest, InitToken_CacheUid_0002, Function | MediumTest | Level1)
+{
+    OHOS::Security::AccessToken::g_spmPrepareIdentityTokenId = TEST_IDENTITY_TOKENID;
+    OHOS::Security::AccessToken::g_spmPrepareIdentityUid = 0;  // AT did not allocate
+
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    info.SetBaseBundleInfo(bundleInfo);
+
+    BundleSpmManager::InstallSession session;
+    Security::AccessToken::AccessTokenIDEx tokenIdEx = {0};
+    Security::AccessToken::HapInfoCheckResult checkResult;
+    int32_t identityUid = -1;  // sentinel
+    int32_t ret = session.InitToken(info, TEST_USERID, 0, tokenIdEx, checkResult,
+        "", nullptr, false, &identityUid);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(identityUid, 0);  // AT returned 0, propagated as-is
+}
+
+/**
+ * @tc.number: BmsSpmManagerOnTest.UpdateToken_UidOut_0001
+ * @tc.name: UpdateToken returns success and the uidOut is consumed
+ * @tc.desc: UpdateHapPolicy succeeds (mock ret=0); the uidOut handling (cache
+ *           refresh + fs config) runs with the mock's default uidOut=0.
+ */
+HWTEST_F(BmsSpmManagerOnTest, UpdateToken_UidOut_0001, Function | MediumTest | Level1)
+{
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    info.SetBaseBundleInfo(bundleInfo);
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = TEST_USERID;
+    userInfo.bundleName = BUNDLE_NAME;
+    userInfo.uid = TEST_IDENTITY_UID;
+    info.AddInnerBundleUserInfo(userInfo);
+
+    BundleSpmManager::InstallSession session;
+    Security::AccessToken::AccessTokenIDEx tokenIdEx = {0};
+    tokenIdEx.tokenIdExStruct.tokenID = TEST_IDENTITY_TOKENID;
+    Security::AccessToken::HapInfoCheckResult checkResult;
+    int32_t ret = session.UpdateToken(tokenIdEx, info, TEST_USERID, checkResult, "", false, false);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsSpmManagerOnTest.UpdateToken_Failure_0001
+ * @tc.name: UpdateToken returns the AT error code on failure
+ * @tc.desc: UpdateHapPolicy fails (mock ret != 0); the error propagates.
+ */
+HWTEST_F(BmsSpmManagerOnTest, UpdateToken_Failure_0001, Function | MediumTest | Level1)
+{
+    OHOS::Security::AccessToken::g_spmUpdateHapPolicyRet = -1;
+
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    info.SetBaseBundleInfo(bundleInfo);
+
+    BundleSpmManager::InstallSession session;
+    Security::AccessToken::AccessTokenIDEx tokenIdEx = {0};
+    tokenIdEx.tokenIdExStruct.tokenID = TEST_IDENTITY_TOKENID;
+    Security::AccessToken::HapInfoCheckResult checkResult;
+    int32_t ret = session.UpdateToken(tokenIdEx, info, TEST_USERID, checkResult, "", false, false);
+    EXPECT_NE(ret, ERR_OK);
+
+    OHOS::Security::AccessToken::g_spmUpdateHapPolicyRet = 0;
+}
+
+/**
+ * @tc.number: BmsSpmManagerOnTest.CheckSignAndInitSession_SkipResign_0001
+ * @tc.name: CheckSignAndInitSession with skipEnterpriseResign
+ * @tc.desc: The skipEnterpriseResign flag is passed through to the OFF checker
+ *           and consumed in the ON path (userId=-1 contract); the mock
+ *           CheckHapSignInfo returns success.
+ */
+HWTEST_F(BmsSpmManagerOnTest, CheckSignAndInitSession_SkipResign_0001, Function | MediumTest | Level1)
+{
+    OHOS::Security::AccessToken::g_spmCheckHapSignInfoSessionId = TEST_SESSION_ID;
+
+    BundleInstallChecker checker;
+    ErrCode errCode = ERR_OK;
+    auto session = BundleSpmManager::InstallSession::CheckSignAndInitSession(
+        TEST_USERID, {"/data/test.hap"}, false, checker, errCode, true, true);
+    EXPECT_EQ(errCode, ERR_OK);
+    EXPECT_EQ(session.GetSessionId(), TEST_SESSION_ID);
+}
+
 } // namespace OHOS

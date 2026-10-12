@@ -295,6 +295,12 @@ void BMSEventHandler::OnBmsStarting()
         int32_t migrationRet = Security::AccessToken::AccessTokenKit::FinishMigration();
         bool migrationCompleted = migrationRet == Security::AccessToken::AccessTokenError::ERR_MIGRATION_COMPLETED;
         if (migrationRet != ERR_OK && !migrationCompleted) {
+            // Transient IPC failure: retry once (same pattern as FinishHapInstall).
+            migrationRet = Security::AccessToken::AccessTokenKit::FinishMigration();
+            migrationCompleted =
+                migrationRet == Security::AccessToken::AccessTokenError::ERR_MIGRATION_COMPLETED;
+        }
+        if (migrationRet != ERR_OK && !migrationCompleted) {
             LOG_NOFUNC_W(BMS_TAG_DEFAULT, "FinishMigration failed, ret %{public}d", migrationRet);
         }
     }

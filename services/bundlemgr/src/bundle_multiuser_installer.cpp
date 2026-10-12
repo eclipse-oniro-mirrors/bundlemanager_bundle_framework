@@ -248,23 +248,24 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
         // keep-data reinstall under SPM ON: reuse the uid persisted at uninstall
         uid = recoveredUid;
     }
-    if (BundleSpmManager::IsEnabled()) {
-        if (uid == Constants::INVALID_UID) {
-            // Fail fast: neither the AT identity nor the uninstall record provided
-            // a uid — letting INVALID_UID flow into the dir creation and the
-            // persisted user info would break the install downstream anyway.
-            APP_LOGE("no uid from AT identity or uninstall record, bundleName:%{public}s userId:%{public}d",
-                bundleName.c_str(), userId);
-            return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
-        }
-        newUserInfo.uid = uid;
-        newUserInfo.gids.clear();
-        newUserInfo.gids.emplace_back(uid);
-    }
     ScopeGuard applyAccessTokenGuard([&] {
         BundleSpmManager::DeleteToken(newTokenIdEx.tokenIdExStruct.tokenID, bundleName,
             BundleSpmManager::TokenDeleteType::NONE, uid);
     });
+    if (BundleSpmManager::IsEnabled() && uid == Constants::INVALID_UID) {
+        // Fail fast: neither the AT identity nor the uninstall record provided
+        // a uid — letting INVALID_UID flow into the dir creation and the
+        // persisted user info would break the install downstream anyway. The
+        // armed guard above undoes the freshly prepared AT identity on return.
+        APP_LOGE("no uid from AT identity or uninstall record, bundleName:%{public}s userId:%{public}d",
+            bundleName.c_str(), userId);
+        return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
+    }
+    if (BundleSpmManager::IsEnabled()) {
+        newUserInfo.uid = uid;
+        newUserInfo.gids.clear();
+        newUserInfo.gids.emplace_back(uid);
+    }
     newUserInfo.accessTokenId = newTokenIdEx.tokenIdExStruct.tokenID;
     newUserInfo.accessTokenIdEx = newTokenIdEx.tokenIDEx;
     uid_ = uid;
@@ -322,9 +323,10 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
 #endif
     needNotifyAppSkill_ = true;
     APP_LOGI("InstallExisted %{public}s succesfully", bundleName.c_str());
-    // SPM ON: this installer keeps a deferred session (the token path stays legacy
-    // even under SPM ON), so the commit is a no-op; kept for symmetry with the
-    // facade lifecycle in case a real session is adopted later.
+    // SPM ON: InitToken builds a REAL session (PrepareHapIdentity with
+    // sessionId=0 makes the AT side allocate one and write it back), so this
+    // Commit is a real FinishInstall. The session carries no bundleInfos, so the
+    // empty modulePathMap skips the package-info write.
     int32_t spmCommitRet = spmSession_.Commit({});
     if (spmCommitRet != ERR_OK) {
         APP_LOGE("spm session commit failed, bundleName:%{public}s errCode:%{public}d",
@@ -441,6 +443,14 @@ bool BundleMultiUserInstaller::RecoverHapToken(const std::string &bundleName, co
     Security::AccessToken::AccessTokenIDEx& accessTokenIdEx, const InnerBundleInfo &innerBundleInfo,
     int32_t *recoveredUid)
 {
+    if (BundleSpmManager::IsEnabled()) {
+        // SPM ON: the session is still deferred here, so UpdateToken would call
+        // UpdateHapPolicy(sessionId=0) and fail with ERR_SESSION_NOT_EXIST.
+        // Keep-data recovery runs through PrepareHapIdentity instead: the AT side
+        // kept the reserved identity (and its uid), so let the flow fall to
+        // InitToken and take the uid from the identityUid output.
+        return false;
+    }
     UninstallBundleInfo uninstallBundleInfo;
     if (!dataMgr_->GetUninstallBundleInfo(bundleName, uninstallBundleInfo)) {
         return false;

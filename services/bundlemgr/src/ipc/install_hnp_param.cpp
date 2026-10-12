@@ -35,7 +35,7 @@ bool InstallHnpParam::ReadFromParcel(Parcel &parcel)
         std::string hnpPath = Str16ToStr8(parcel.ReadString16());
         hnpPaths.emplace_back(hnpPath);
     }
-    sessionId = parcel.ReadInt32();
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, sessionId);
     return true;
 }
 

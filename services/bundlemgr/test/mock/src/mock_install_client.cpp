@@ -747,5 +747,10 @@ ErrCode InstalldClient::BundleInstallFinished(const std::string &bundleName)
 {
     return ERR_OK;
 }
+
+ErrCode InstalldClient::ClearSessionProvisionCache(int32_t sessionId)
+{
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

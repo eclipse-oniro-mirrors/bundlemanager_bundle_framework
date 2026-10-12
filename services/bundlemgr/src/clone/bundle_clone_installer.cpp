@@ -114,9 +114,10 @@ ErrCode BundleCloneInstaller::InstallCloneApp(const std::string &bundleName,
     }
     SendBundleSystemEvent(bundleName, BundleEventType::INSTALL, userId, appIndex,
         false, false, InstallScene::NORMAL, result);
-    // SPM ON: this installer keeps a deferred session (the token path stays legacy
-    // even under SPM ON), so the commit is a no-op; kept for symmetry with the
-    // facade lifecycle in case a real session is adopted later.
+    // SPM ON: InitToken builds a REAL session (PrepareHapIdentity with
+    // sessionId=0 makes the AT side allocate one and write it back), so this
+    // Commit is a real FinishInstall. The session carries no bundleInfos, so the
+    // empty modulePathMap skips the package-info write.
     if (result == ERR_OK) {
         int32_t spmCommitRet = spmSession_.Commit({});
         if (spmCommitRet != ERR_OK) {
@@ -321,6 +322,18 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
     if (!tokenRecovered) {
         newTokenIdEx.tokenIDEx = 0;  // discard partial writes from the failed recovery
     }
+    // SPM ON: a BMS uninstall record for this (userId, appIndex) means the AT
+    // side kept the identity — PrepareHapIdentity returns that SAME token, and
+    // the failure rollback below must NOT delete it.
+    bool keepDataReinstall = tokenRecovered;
+    if (BundleSpmManager::IsEnabled() && !keepDataReinstall) {
+        UninstallBundleInfo uninstallRecord;
+        if (dataMgr->GetUninstallBundleInfo(bundleName, uninstallRecord)) {
+            std::string recordKey = std::to_string(userId) + "_" + std::to_string(appIndex);
+            keepDataReinstall =
+                uninstallRecord.userInfos.find(recordKey) != uninstallRecord.userInfos.end();
+        }
+    }
     if (!tokenRecovered) {
         int32_t identityUid = 0;
         if (spmSession_.InitToken(info, userId, 0, newTokenIdEx, checkResult,
@@ -330,30 +343,38 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
             return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
         }
         if (BundleSpmManager::IsEnabled() && identityUid != 0) {
-            // fresh clone under SPM ON: the AT-allocated identity uid is the clone uid
+            // fresh clone or keep-data reinstall under SPM ON: the AT-allocated
+            // identity uid is the clone uid (same value for keep-data: the AT
+            // side returns the reserved identity)
             uid = identityUid;
             tmpUserInfo.uid = uid;
             tmpUserInfo.gids.clear();
             tmpUserInfo.gids.emplace_back(uid);
         }
     } else if (BundleSpmManager::IsEnabled() && recoveredUid != 0) {
-        // keep-data reinstall under SPM ON: reuse the uid persisted at uninstall
+        // OFF keep-data reinstall (RecoverHapToken succeeded): reuse the uid
         uid = recoveredUid;
         tmpUserInfo.uid = uid;
         tmpUserInfo.gids.clear();
         tmpUserInfo.gids.emplace_back(uid);
     }
+    ScopeGuard applyAccessTokenGuard([&] {
+        // keepDataReinstall: the token from PrepareHapIdentity IS the reserved
+        // identity — deleting it would break the keep-data reservation.
+        if (keepDataReinstall) {
+            return;
+        }
+        BundleSpmManager::DeleteToken(newTokenIdEx.tokenIdExStruct.tokenID, bundleName,
+            BundleSpmManager::TokenDeleteType::NONE, uid);
+    });
     if (BundleSpmManager::IsEnabled() && uid == Constants::INVALID_UID) {
         // Fail fast: neither the AT identity nor the uninstall record provided a
-        // uid — an INVALID_UID clone info would break the install downstream.
+        // uid — an INVALID_UID clone info would break the install downstream. The
+        // armed guard above undoes the freshly prepared AT identity on return.
         APP_LOGE("no uid from AT identity or uninstall record, bundleName:%{public}s appIndex:%{public}d",
             bundleName.c_str(), appIndex);
         return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
     }
-    ScopeGuard applyAccessTokenGuard([&] {
-        BundleSpmManager::DeleteToken(newTokenIdEx.tokenIdExStruct.tokenID, bundleName,
-            BundleSpmManager::TokenDeleteType::NONE, uid);
-    });
 
     InnerBundleCloneInfo attr = {
         .userId = userId,
@@ -494,6 +515,12 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
         DelayedSingleton<BmsUpdateSelinuxMgr>::GetInstance()->DeleteBundle(bundleName, userId, appIndex);
     } else {
         isKeepData_ = true;
+        // RESERVE the identity in the AT service so a re-install recovers the
+        // same token and uid via PrepareHapIdentity. DeleteToken handles the
+        // dual state internally: OFF maps RESERVED_DATA to a no-op (legacy
+        // keep-data keeps the token active).
+        BundleSpmManager::DeleteToken(accessTokenId_, bundleName,
+            BundleSpmManager::TokenDeleteType::RESERVED_DATA, uid_);
         UninstallBundleInfo uninstallBundleInfo;
         uninstallBundleInfo.appId = appId_;
         uninstallBundleInfo.appIdentifier = appIdentifier_;
@@ -538,8 +565,15 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
 
 bool BundleCloneInstaller::DeleteUninstalledCloneData(const std::string &bundleName, int32_t userId, int32_t appIndex)
 {
+    if (BundleSpmManager::IsEnabled()) {
+        // SPM ON: the session is still deferred here, so UpdateToken would call
+        // UpdateHapPolicy(sessionId=0) and fail with ERR_SESSION_EXIST. Keep-data
+        // recovery runs through PrepareHapIdentity instead: the AT side kept the
+        // reserved identity (and its uid), so let the flow fall to InitToken.
+        return false;
+    }
     if (GetDataMgr() != ERR_OK) {
-        APP_LOGE("Get dataMgr shared_ptr nullptr");
+        APP_LOGE("Get dataMgr nullptr");
         return false;
     }
     UninstallBundleInfo uninstallBundleInfo;
@@ -827,6 +861,13 @@ bool BundleCloneInstaller::RecoverHapToken(int32_t userId, int32_t appIndex,
     Security::AccessToken::AccessTokenIDEx &accessTokenIdEx, const InnerBundleInfo &innerBundleInfo,
     const std::string &appServiceCapabilities, int32_t &recoveredUid)
 {
+    if (BundleSpmManager::IsEnabled()) {
+        // SPM ON: do NOT recover the token/uid from the BMS uninstall record —
+        // the AT side kept the identity at keep-data uninstall and
+        // PrepareHapIdentity returns the SAME token and uid. The deferred session
+        // would also make UpdateToken call UpdateHapPolicy(0) and fail.
+        return false;
+    }
     if (GetDataMgr() != ERR_OK) {
         APP_LOGE("Get dataMgr nullptr");
         return false;

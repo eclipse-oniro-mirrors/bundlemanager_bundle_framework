@@ -199,9 +199,10 @@ ErrCode BundleSandboxInstaller::InstallSandboxApp(const std::string &bundleName,
     PerfProfile::GetInstance().SetBundleInstallEndTime(GetTickCount());
 
     APP_LOGD("InstallSandboxApp %{public}s succesfully", bundleName.c_str());
-    // SPM ON: this installer keeps a deferred session (the token path stays legacy
-    // even under SPM ON), so the commit is a no-op; kept for symmetry with the
-    // facade lifecycle in case a real session is adopted later.
+    // SPM ON: InitToken builds a REAL session (PrepareHapIdentity with
+    // sessionId=0 makes the AT side allocate one and write it back), so this
+    // Commit is a real FinishInstall. The session carries no bundleInfos, so the
+    // empty modulePathMap skips the package-info write.
     if (result == ERR_OK) {
         int32_t spmCommitRet = spmSession_.Commit({});
         if (spmCommitRet != ERR_OK) {

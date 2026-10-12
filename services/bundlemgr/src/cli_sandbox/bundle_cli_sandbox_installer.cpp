@@ -193,8 +193,9 @@ ErrCode BundleCliSandboxInstaller::ProcessCreateCliSandbox(const std::string &cr
         APP_LOGE("GetAppProvisionInfo failed bundleName:%{public}s", bundleName.c_str());
     }
     Security::AccessToken::HapInfoCheckResult checkResult;
+    int32_t identityUid = 0;
     if (spmSession_.InitToken(info, userId, 0, newTokenIdEx, checkResult,
-        appProvisionInfo.appServiceCapabilities, nullptr, false) != ERR_OK) {
+        appProvisionInfo.appServiceCapabilities, nullptr, false, &identityUid) != ERR_OK) {
         APP_LOGE("bundleName:%{public}s InitHapToken failed", bundleName.c_str());
         return ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_GRANT_PERMISSION_FAILED;
     }
@@ -204,7 +205,19 @@ ErrCode BundleCliSandboxInstaller::ProcessCreateCliSandbox(const std::string &cr
             BundleSpmManager::TokenDeleteType::NONE);
     });
 
-    uid = info.GetUid(userId);
+    if (BundleSpmManager::IsEnabled()) {
+        // SPM ON: take the AT-allocated identity uid (same as the dlp sandbox /
+        // clone installers) — the base app uid would collide with the main app's
+        // own reverse-lookup cache entry and desync the persisted sandbox uid
+        // from the token's uid binding.
+        if (identityUid == 0) {
+            APP_LOGE("no uid from AT identity, bundleName:%{public}s", bundleName.c_str());
+            return ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_INTERNAL_ERROR;
+        }
+        uid = identityUid;
+    } else {
+        uid = info.GetUid(userId);
+    }
     if (uid == Constants::INVALID_UID) {
         APP_LOGE_NOFUNC("InitHapToken returned invalid uid for bundle:%{public}s", bundleName.c_str());
         return ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_INTERNAL_ERROR;

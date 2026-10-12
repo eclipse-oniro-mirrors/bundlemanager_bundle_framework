@@ -321,6 +321,10 @@ void FillCodeSignParamFromProvision(const SessionProvisionInfo &info,
     CodeSignatureParam &param)
 {
     if (info.bundleName.empty()) {
+        // No session provision: the IPC-carried profile block is untrusted under
+        // SPM — drop it so downstream cannot consume caller-provided security data.
+        param.profileBlock.reset();
+        param.profileBlockLength = 0;
         return;
     }
     param.bundleName = info.bundleName;
@@ -347,6 +351,10 @@ void FillCodeSignParamFromProvision(const SessionProvisionInfo &info,
         std::copy(info.profileBlock.get(), info.profileBlock.get() + info.profileBlockLength,
             param.profileBlock.get());
         param.profileBlockLength = info.profileBlockLength;
+    } else {
+        // Session provision without a block: same untrusted-input rule as above.
+        param.profileBlock.reset();
+        param.profileBlockLength = 0;
     }
 }
 }
@@ -1295,6 +1303,14 @@ ErrCode InstalldHostImpl::CreateSharefilesDataDirEl2(const CreateDirParam &creat
         LOG_W(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
+#ifndef X86_EMULATOR_MODE
+    // SPM: the apl carried by the IPC param must match the session provision —
+    // same fail-closed cross-check as the other dir-creation entry points.
+    ErrCode aplRet = GetResolvedApl(createDirParam);
+    if (aplRet != ERR_OK) {
+        return aplRet;
+    }
+#endif
     ErrCode res = ERR_OK;
     FileStat fileStat;
     int32_t uid = createDirParam.uid;
@@ -2730,6 +2746,14 @@ ErrCode InstalldHostImpl::SetFileConForce(const std::vector<std::string> &paths,
         LOG_E(BMS_TAG_INSTALLD, "permission denied");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
+#ifndef X86_EMULATOR_MODE
+    // SPM: the apl carried by the IPC param must match the session provision —
+    // same fail-closed cross-check as the dir-creation entry points.
+    ErrCode aplRet = GetResolvedApl(createDirParam);
+    if (aplRet != ERR_OK) {
+        return aplRet;
+    }
+#endif
 #ifdef WITH_SELINUX
     for (const auto &path : paths) {
         if (!InstalldOperator::IsValidPathByBundleDirScene(BundleDirScene::SET_FILE_CON_FORCE, path)) {

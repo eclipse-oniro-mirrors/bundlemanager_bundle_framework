@@ -49,7 +49,7 @@ bool CreateDirParam::ReadFromParcel(Parcel &parcel)
     remainingNum = parcel.ReadUint32();
     stopReason = Str16ToStr8(parcel.ReadString16());
     bundleDirScene = static_cast<BundleDirScene>(parcel.ReadInt32());
-    sessionId = parcel.ReadInt32();
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, sessionId);
     return true;
 }
 

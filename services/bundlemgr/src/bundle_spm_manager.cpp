@@ -102,7 +102,7 @@ BundleSpmManager &BundleSpmManager::GetInstance()
 
 bool BundleSpmManager::IsEnabled()
 {
-    static bool enabled = OHOS::system::GetBoolParameter(BMS_SPM_ENABLE_PARAM, true);
+    static bool enabled = OHOS::system::GetBoolParameter(BMS_SPM_ENABLE_PARAM, false);
     return enabled;
 }
 
@@ -110,7 +110,6 @@ BundleSpmManager::InstallSession BundleSpmManager::InstallSession::CheckSignAndI
     const std::vector<std::string> &bundlePaths, bool isPreInstallApp,
     BundleInstallChecker &checker, ErrCode &outErrCode, bool readFile, bool skipEnterpriseResign)
 {
-    (void)skipEnterpriseResign;
     InstallSession session;
     if (!IsEnabled()) {
         std::vector<Security::Verify::HapVerifyResult> results;
@@ -123,14 +122,17 @@ BundleSpmManager::InstallSession BundleSpmManager::InstallSession::CheckSignAndI
         return session;
     }
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "InstallSession::CheckSignAndInitSession start, userId:%{public}d hapCount:%{public}d "
-        "isPreInstallApp:%{public}d", userId, static_cast<int32_t>(bundlePaths.size()),
-        static_cast<int32_t>(isPreInstallApp));
+        "isPreInstallApp:%{public}d skipEnterpriseResign:%{public}d", userId,
+        static_cast<int32_t>(bundlePaths.size()),
+        static_cast<int32_t>(isPreInstallApp), static_cast<int32_t>(skipEnterpriseResign));
     // SPM ON: verify sign info in the access token service, which allocates the session id
     // and caches the trusted bundle info for later queries by BMS and installd.
     Security::AccessToken::BundleHapList hapList;
     hapList.hapPaths = bundlePaths;
     hapList.isPreInstalled = isPreInstallApp;
-    hapList.userId = userId;
+    // Cross-process contract: userId -1 tells the AT side to skip the enterprise
+    // resign verification (the caller holds SKIP_ENTERPRISE_RESIGN_VERIFY).
+    hapList.userId = skipEnterpriseResign ? -1 : userId;
     std::vector<Security::AccessToken::TrustedBundleInfo> trustedBundleInfos;
     Security::AccessToken::HapVerifyResultInfo resultInfo;
     int32_t ret = Security::AccessToken::AccessTokenKit::CheckHapSignInfo(hapList,
@@ -406,11 +408,17 @@ int32_t BundleSpmManager::InstallSession::UpdateToken(
     if (uidOut != 0) {
         // The AT side reports the uid bound to the token after the policy update:
         // the app's uid needs a refresh, so the reverse-lookup cache entry is
-        // rewritten with it and the fs config is regenerated for the uid.
+        // rewritten with it and the fs config is regenerated for the uid. A stale
+        // entry under the previous uid is evicted so it cannot resolve to this
+        // app if the AT side ever reuses the old uid.
         LOG_NOFUNC_I(BMS_TAG_INSTALLER, "UpdateHapPolicy refreshed uid, bundleName:%{public}s uid:%{public}d",
             info.GetBundleName().c_str(), uidOut);
         auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
         if (dataMgr != nullptr) {
+            int32_t oldUid = info.GetUid(userId);
+            if (oldUid != Constants::INVALID_UID && oldUid != 0 && oldUid != uidOut) {
+                dataMgr->RemoveUidIndexMap(oldUid);
+            }
             dataMgr->UpdateUidIndexMap(uidOut, info.GetBundleName(), info.GetAppIndex());
         }
         MakeFsConfigForNewUid(uidOut, info.GetBundleName());
@@ -669,6 +677,15 @@ int32_t BundleSpmManager::DeleteToken(Security::AccessToken::AccessTokenID token
             default:
                 return BundlePermissionMgr::DeleteAccessTokenId(tokenId, false);
         }
+    }
+    if (tokenId == 0) {
+        // A zero token id must NEVER reach the AT side: DeleteIdentity(0, bundleName,
+        // NONE) deletes EVERY token of the bundle by name there, while the legacy
+        // DeleteAccessTokenId(0) only failed harmlessly. Guards that fire before the
+        // token was assigned would otherwise wipe the installed identities.
+        LOG_NOFUNC_E(BMS_TAG_INSTALLER,
+            "DeleteToken rejected zero tokenId, bundleName:%{public}s", bundleName.c_str());
+        return Security::AccessToken::AccessTokenError::ERR_PARAM_INVALID;
     }
     // SPM ON: TokenDeleteType maps one-to-one to the AT ReservedType values (0/1/2).
     int32_t ret = Security::AccessToken::AccessTokenKit::DeleteIdentity(tokenId, bundleName,

@@ -820,19 +820,12 @@ ErrCode PluginInstaller::CheckExternalSourcePluginSwitch() const
 ErrCode PluginInstaller::CheckHspPluginCertValidity() const
 {
 #ifdef SECURITY_PRIVACY_SERVER_ENABLE
-    auto hspPlugin = verifyRes_.GetProvisionInfo().hspPluginInfo;
-    HspPluginParam hspPluginParam;
-    hspPluginParam.certType = hspPlugin.certType;
-    hspPluginParam.subjectCN = hspPlugin.subjectCN;
-    hspPluginParam.issuerCN = hspPlugin.issuerCN;
-    hspPluginParam.subjectOU = hspPlugin.subjectOU;
-    hspPluginParam.issuerC = hspPlugin.issuerC;
-    hspPluginParam.issuerO = hspPlugin.issuerO;
-    hspPluginParam.issuerOU = hspPlugin.issuerOU;
-    hspPluginParam.subjectO = hspPlugin.subjectO;
-    hspPluginParam.serialNumber = hspPlugin.serialNumber;
-    hspPluginParam.authKeyIdentifier = hspPlugin.authKeyIdentifier;
-    auto ret = InstalldClient::GetInstance()->CheckHspPluginCertValidity(hspPluginParam);
+    // SPM: the hsp plugin cert is parsed from the session provision on the
+    // installd side — pass the bundleName and the session id (same pattern as
+    // InstallSession::DeliverySignProfile); the local verifyRes_ cert fields
+    // are no longer consumed here.
+    auto ret = InstalldClient::GetInstance()->CheckHspPluginCertValidity(bundleName_,
+        spmSession_.GetSessionId());
     if (ret != ERR_OK) {
         APP_LOGE("CheckHspPluginCertValidity failed %{public}d", ret);
         return ret;

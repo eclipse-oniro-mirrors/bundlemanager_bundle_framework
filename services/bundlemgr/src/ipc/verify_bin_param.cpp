@@ -34,7 +34,7 @@ bool VerifyBinParam::ReadFromParcel(Parcel &parcel)
         binFilePaths.emplace_back(binFilePath);
     }
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isDebug);
-    sessionId = parcel.ReadInt32();
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, sessionId);
     return true;
 }
 

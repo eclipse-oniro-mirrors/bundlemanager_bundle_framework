@@ -5826,20 +5826,34 @@ ErrCode BundleDataMgr::GetInnerBundleInfoAndIndexByUid(const int32_t uid, InnerB
         return ERR_BUNDLE_MANAGER_INVALID_UID;
     }
     if (BundleSpmManager::IsEnabled()) {
-        // SPM ON: reverse lookup goes to the access token service, the local bundle
-        // id map is not maintained for identities allocated there.
-        Security::AccessToken::HapBaseInfo baseInfo;
-        if (Security::AccessToken::AccessTokenKit::GetHapBaseInfoByUid(uid, baseInfo) !=
-            Security::AccessToken::AccessTokenKitRet::RET_SUCCESS) {
-            APP_LOGW_NOFUNC("uid %{public}d is not existed in access token service", uid);
-            return ERR_BUNDLE_MANAGER_INVALID_UID;
+        // SPM ON: consult the local uid -> (bundleName, appIndex) cache first;
+        // only a miss falls back to the access token service (same pattern as
+        // GetBundleNameAndIndex).
+        std::string bundleName;
+        {
+            std::shared_lock<std::shared_mutex> lock(uidIndexMapMutex_);
+            auto indexIter = uidIndexMap_.find(uid);
+            if (indexIter != uidIndexMap_.end()) {
+                bundleName = indexIter->second.first;
+                appIndex = indexIter->second.second;
+            }
         }
-        appIndex = baseInfo.instIndex;
+        if (bundleName.empty()) {
+            APP_LOGW_NOFUNC("uid %{public}d not found in uidIndexMap_, fallback to access token service", uid);
+            Security::AccessToken::HapBaseInfo baseInfo;
+            if (Security::AccessToken::AccessTokenKit::GetHapBaseInfoByUid(uid, baseInfo) !=
+                Security::AccessToken::AccessTokenKitRet::RET_SUCCESS) {
+                APP_LOGW_NOFUNC("uid %{public}d is not existed in access token service", uid);
+                return ERR_BUNDLE_MANAGER_INVALID_UID;
+            }
+            bundleName = baseInfo.bundleName;
+            appIndex = baseInfo.instIndex;
+        }
         int32_t userId = GetUserIdByUid(uid);
         std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
-        auto bundleInfoIter = bundleInfos_.find(baseInfo.bundleName);
+        auto bundleInfoIter = bundleInfos_.find(bundleName);
         if (bundleInfoIter == bundleInfos_.end()) {
-            APP_LOGE("bundleName %{public}s is not existed in bundleInfos_", baseInfo.bundleName.c_str());
+            APP_LOGE("bundleName %{public}s is not existed in bundleInfos_", bundleName.c_str());
             return ERR_BUNDLE_MANAGER_INVALID_UID;
         }
         int32_t oriUid = bundleInfoIter->second.GetUid(userId, appIndex);
@@ -5847,7 +5861,7 @@ ErrCode BundleDataMgr::GetInnerBundleInfoAndIndexByUid(const int32_t uid, InnerB
             innerBundleInfo = bundleInfoIter->second;
             return ERR_OK;
         }
-        APP_LOGW("bn %{public}s uid %{public}d oriUid %{public}d ", baseInfo.bundleName.c_str(), uid, oriUid);
+        APP_LOGW("bn %{public}s uid %{public}d oriUid %{public}d ", bundleName.c_str(), uid, oriUid);
         return ERR_BUNDLE_MANAGER_INVALID_UID;
     }
     int32_t userId = GetUserIdByUid(uid);
@@ -8479,7 +8493,7 @@ bool BundleDataMgr::RestoreUidAndGid()
             // original name and app index are known here: pass them directly instead
             // of re-parsing the composite key. UpdateUidIndexMap locks internally;
             // called under bundleIdMapMutex_ above only via the one-way order.
-            if (spmCacheEnabled) {
+            if (spmCacheEnabled && innerBundleUserInfo.uid != Constants::INVALID_UID) {
                 UpdateUidIndexMap(innerBundleUserInfo.uid, innerBundleUserInfo.bundleName,
                     info.second.IsDualModeCloneApp()
                         ? ServiceConstants::DUAL_MODE_CLONE_APP_INDEX : 0);
@@ -15848,8 +15862,11 @@ void BundleDataMgr::RestoreUidAndGidFromUninstallInfo()
                 uninstallBundleIdMap.emplace(bundleId, bundleName);
                 // The reverse-lookup cache is keyed by uid and takes the original
                 // bundle name and the app index parsed from the user key directly:
-                // routing them through the composite key re-parse loses the app index.
-                uninstallUidIndexEntries.emplace(userInfo.uid, std::make_pair(info.first, appIndex));
+                // routing them through the composite key re-parse loses the app
+                // index. Only collected under SPM ON — OFF never reads the cache.
+                if (BundleSpmManager::IsEnabled()) {
+                    uninstallUidIndexEntries.emplace(userInfo.uid, std::make_pair(info.first, appIndex));
+                }
                 BundleUtil::MakeFsConfig(bundleName, bundleId, ServiceConstants::HMDFS_CONFIG_PATH);
                 BundleUtil::MakeFsConfig(bundleName, bundleId, ServiceConstants::SHAREFS_CONFIG_PATH);
                 BundleUtil::MakeFsConfig(info.first, ServiceConstants::HMDFS_CONFIG_PATH,
