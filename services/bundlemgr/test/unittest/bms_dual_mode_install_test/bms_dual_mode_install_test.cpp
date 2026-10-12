@@ -585,6 +585,7 @@ HWTEST_F(BmsDualModeInstallTest, DualModeUninstallEventFields_0100, Function | S
     InnerBundleInfo oldInfo = MakeResourceInfo(true);
     oldInfo.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE);
     oldInfo.SetAppSandboxPolicy(AppSandboxPolicy::ISOLATED_SANDBOX);
+    oldInfo.SetAppIndex(ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
     installer.SaveDualModeUninstallEventFields(oldInfo);
 
     NotifyBundleEvents uninstallEvent;
@@ -593,6 +594,7 @@ HWTEST_F(BmsDualModeInstallTest, DualModeUninstallEventFields_0100, Function | S
         DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE);
     EXPECT_EQ(uninstallEvent.currentMode, ServiceConstants::DUAL_MODE_VALUE_2IN1);
     EXPECT_EQ(uninstallEvent.appSandboxPolicy, AppSandboxPolicy::ISOLATED_SANDBOX);
+    EXPECT_EQ(uninstallEvent.appIndex, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
     OHOS::system::RemoveParameter(ServiceConstants::DUAL_MODE_ISPCMODE_PARAM_KEY);
 }
 
@@ -604,6 +606,7 @@ HWTEST_F(BmsDualModeInstallTest, DualModeUninstallEventFields_0200, Function | S
     InnerBundleInfo oldInfo = MakeResourceInfo(true);
     oldInfo.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE);
     oldInfo.SetAppSandboxPolicy(AppSandboxPolicy::ISOLATED_SANDBOX);
+    oldInfo.SetAppIndex(ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
     installer.SaveDualModeUninstallEventFields(oldInfo);
     NotifyBundleEvents uninstallEvent;
     uninstallEvent.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::SUB_ONLY;
@@ -615,6 +618,7 @@ HWTEST_F(BmsDualModeInstallTest, DualModeUninstallEventFields_0200, Function | S
     EXPECT_EQ(uninstallEvent.deviceModeDistributionPolicy, DeviceModeDistributionPolicy::SUB_ONLY);
     EXPECT_EQ(uninstallEvent.currentMode, 99);
     EXPECT_EQ(uninstallEvent.appSandboxPolicy, AppSandboxPolicy::ISOLATED_SANDBOX);
+    EXPECT_EQ(uninstallEvent.appIndex, Constants::DEFAULT_APP_INDEX);
 }
 
 HWTEST_F(BmsDualModeInstallTest, DualModeUninstallEventFields_0300, Function | SmallTest | Level0)
@@ -636,7 +640,51 @@ HWTEST_F(BmsDualModeInstallTest, DualModeUninstallEventFields_0300, Function | S
         DeviceModeDistributionPolicy::UNIVERSAL_IDENTICAL_PACKAGE);
     EXPECT_EQ(uninstallEvent.currentMode, ServiceConstants::DUAL_MODE_VALUE_TABLET);
     EXPECT_EQ(uninstallEvent.appSandboxPolicy, AppSandboxPolicy::SHARED_SANDBOX);
+    EXPECT_EQ(uninstallEvent.appIndex, Constants::DEFAULT_APP_INDEX);
     OHOS::system::RemoveParameter(ServiceConstants::DUAL_MODE_ISPCMODE_PARAM_KEY);
+}
+
+HWTEST_F(BmsDualModeInstallTest, DualModeUninstallEventFields_SecondarySharedApp_0400,
+    Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    BaseBundleInstaller installer;
+    InnerBundleInfo secondaryInfo = MakeResourceInfo(true);
+    secondaryInfo.SetAppIndex(ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
+    installer.SaveDualModeUninstallEventFields(secondaryInfo);
+
+    // Reusing the installer for a shared-package app must replace the previous secondary app index.
+    InnerBundleInfo sharedInfo = MakeResourceInfo(false);
+    sharedInfo.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::UNIVERSAL_IDENTICAL_PACKAGE);
+    installer.SaveDualModeUninstallEventFields(sharedInfo);
+    NotifyBundleEvents uninstallEvent;
+    installer.FillDualModeUninstallEventFields(uninstallEvent);
+    EXPECT_EQ(uninstallEvent.appIndex, Constants::DEFAULT_APP_INDEX);
+}
+
+HWTEST_F(BmsDualModeInstallTest, DualModeUninstallEventFields_ResetAppIndex_0500,
+    Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    BaseBundleInstaller installer;
+    InstallParam installParam;
+    installParam.needSendEvent = false;
+    installParam.isKeepData = true;
+
+    // Both entry points must reset the snapshot even when no installed record can be loaded.
+    installer.uninstallAppIndex_ = ServiceConstants::DUAL_MODE_CLONE_APP_INDEX;
+    EXPECT_EQ(installer.UninstallBundle(Constants::EMPTY_STRING, installParam),
+        ERR_APPEXECFWK_UNINSTALL_INVALID_NAME);
+    NotifyBundleEvents bundleEvent;
+    installer.FillDualModeUninstallEventFields(bundleEvent);
+    EXPECT_EQ(bundleEvent.appIndex, Constants::DEFAULT_APP_INDEX);
+
+    installer.uninstallAppIndex_ = ServiceConstants::DUAL_MODE_CLONE_APP_INDEX;
+    EXPECT_EQ(installer.UninstallBundle(Constants::EMPTY_STRING, MODULE_NAME, installParam),
+        ERR_APPEXECFWK_UNINSTALL_INVALID_NAME);
+    NotifyBundleEvents moduleEvent;
+    installer.FillDualModeUninstallEventFields(moduleEvent);
+    EXPECT_EQ(moduleEvent.appIndex, Constants::DEFAULT_APP_INDEX);
 }
 
 HWTEST_F(BmsDualModeInstallTest, DualModeFullUninstallDefaultParamEvent_0100, Function | SmallTest | Level0)
@@ -654,6 +702,7 @@ HWTEST_F(BmsDualModeInstallTest, DualModeFullUninstallDefaultParamEvent_0100, Fu
     InnerBundleInfo oldInfo = MakeResourceInfo(true);
     oldInfo.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE);
     oldInfo.SetAppSandboxPolicy(AppSandboxPolicy::ISOLATED_SANDBOX);
+    oldInfo.SetAppIndex(ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
     dataMgr->bundleInfos_[BUNDLE_NAME] = oldInfo;
 
     BaseBundleInstaller installer;
@@ -664,6 +713,8 @@ HWTEST_F(BmsDualModeInstallTest, DualModeFullUninstallDefaultParamEvent_0100, Fu
     EXPECT_EQ(installer.ProcessBundleUninstall(BUNDLE_NAME, installParam, uid),
         ERR_APPEXECFWK_USER_NOT_INSTALL_HAP);
 
+    // Event assembly must use the snapshot even after the application record is removed.
+    dataMgr->bundleInfos_.erase(BUNDLE_NAME);
     NotifyBundleEvents uninstallEvent;
     uninstallEvent.type = NotifyType::UNINSTALL_BUNDLE;
     installer.FillDualModeUninstallEventFields(uninstallEvent);
@@ -671,6 +722,12 @@ HWTEST_F(BmsDualModeInstallTest, DualModeFullUninstallDefaultParamEvent_0100, Fu
         DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE);
     EXPECT_EQ(uninstallEvent.currentMode, ServiceConstants::DUAL_MODE_VALUE_2IN1);
     EXPECT_EQ(uninstallEvent.appSandboxPolicy, AppSandboxPolicy::ISOLATED_SANDBOX);
+    EXPECT_EQ(uninstallEvent.appIndex, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
+    BundleCommonEventMgr eventMgr;
+    OHOS::AAFwk::Want want;
+    eventMgr.SetNotifyWant(want, uninstallEvent);
+    EXPECT_EQ(want.GetIntParam(Constants::APP_INDEX, Constants::DEFAULT_APP_INDEX),
+        ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
 }
 
 HWTEST_F(BmsDualModeInstallTest, DualModeModuleUninstallDefaultParamEvent_0100, Function | SmallTest | Level0)
@@ -688,6 +745,7 @@ HWTEST_F(BmsDualModeInstallTest, DualModeModuleUninstallDefaultParamEvent_0100, 
     InnerBundleInfo oldInfo = MakeResourceInfo(true);
     oldInfo.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::UNIVERSAL_IDENTICAL_PACKAGE);
     oldInfo.SetAppSandboxPolicy(AppSandboxPolicy::ISOLATED_SANDBOX);
+    oldInfo.SetAppIndex(ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
     dataMgr->bundleInfos_[BUNDLE_NAME] = oldInfo;
 
     BaseBundleInstaller installer;
@@ -698,6 +756,7 @@ HWTEST_F(BmsDualModeInstallTest, DualModeModuleUninstallDefaultParamEvent_0100, 
     EXPECT_EQ(installer.ProcessBundleUninstall(BUNDLE_NAME, "entry", installParam, uid),
         ERR_APPEXECFWK_USER_NOT_INSTALL_HAP);
 
+    dataMgr->bundleInfos_.erase(BUNDLE_NAME);
     NotifyBundleEvents uninstallEvent;
     uninstallEvent.type = NotifyType::UNINSTALL_MODULE;
     installer.FillDualModeUninstallEventFields(uninstallEvent);
@@ -705,6 +764,12 @@ HWTEST_F(BmsDualModeInstallTest, DualModeModuleUninstallDefaultParamEvent_0100, 
         DeviceModeDistributionPolicy::UNIVERSAL_IDENTICAL_PACKAGE);
     EXPECT_EQ(uninstallEvent.currentMode, ServiceConstants::DUAL_MODE_VALUE_2IN1);
     EXPECT_EQ(uninstallEvent.appSandboxPolicy, AppSandboxPolicy::ISOLATED_SANDBOX);
+    EXPECT_EQ(uninstallEvent.appIndex, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
+    BundleCommonEventMgr eventMgr;
+    OHOS::AAFwk::Want want;
+    eventMgr.SetNotifyWant(want, uninstallEvent);
+    EXPECT_EQ(want.GetIntParam(Constants::APP_INDEX, Constants::DEFAULT_APP_INDEX),
+        ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
 }
 
 // ====================== BaseBundleInstaller::GetEffectiveDualModePolicy ======================

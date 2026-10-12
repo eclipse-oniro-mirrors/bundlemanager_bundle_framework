@@ -1182,6 +1182,7 @@ private:
     DeviceModeDistributionPolicy uninstallDeviceModeDistributionPolicy_ =
     DeviceModeDistributionPolicy::UNSPECIFIED;
     AppSandboxPolicy uninstallAppSandboxPolicy_ = AppSandboxPolicy::SHARED_SANDBOX;
+    int32_t uninstallAppIndex_ = Constants::DEFAULT_APP_INDEX;
     std::string modulePath_;
     std::string baseDataPath_;
     std::string modulePackage_;
