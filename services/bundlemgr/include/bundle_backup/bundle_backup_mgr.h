@@ -35,6 +35,9 @@ private:
 
     ErrCode SaveToFile(const std::string& config);
     ErrCode LoadFromFile(int32_t fd, std::string& config);
+    ErrCode BackupData(MessageParcel& reply);
+    ErrCode RestoreData(MessageParcel& data);
+    std::string SetReplyCode(int32_t replyCode);
 
     const char* BACKUP_FILE_PATH = "/data/service/el1/public/bms/bundle_manager_service/backup_config.conf";
 };
