@@ -16,6 +16,9 @@
 #include "installd/installd_operator.h"
 
 #include <algorithm>
+#include <openssl/x509.h>
+#include <openssl/pem.h>
+#include <openssl/asn1.h>
 #if defined(CODE_SIGNATURE_ENABLE)
 #include "code_sign_utils.h"
 #endif
@@ -4307,6 +4310,49 @@ bool InstalldOperator::ReadCert(const std::string &path, std::vector<unsigned ch
     LOG_W(BMS_TAG_INSTALLD, "code signature feature is not supported");
 #endif
     return true;
+}
+
+ErrCode InstalldOperator::ParseEnterpriseCertInfo(
+    const std::vector<unsigned char> &certData, std::string &subjectOrg, int64_t &notAfter)
+{
+    if (certData.empty()) {
+        LOG_E(BMS_TAG_INSTALLD, "cert data is empty");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_READ_CERT_FAILED;
+    }
+    const unsigned char *dataPtr = certData.data();
+    X509 *cert = d2i_X509(nullptr, &dataPtr, static_cast<long>(certData.size()));
+    if (cert == nullptr) {
+        BIO *bio = BIO_new_mem_buf(certData.data(), static_cast<int>(certData.size()));
+        if (bio == nullptr) {
+            LOG_E(BMS_TAG_INSTALLD, "create bio failed");
+            return ERR_APPEXECFWK_ENTERPRISE_CERT_READ_CERT_FAILED;
+        }
+        cert = PEM_read_bio_X509(bio, nullptr, nullptr, nullptr);
+        BIO_free(bio);
+        if (cert == nullptr) {
+            LOG_E(BMS_TAG_INSTALLD, "parse cert failed, not DER or PEM format");
+            return ERR_APPEXECFWK_ENTERPRISE_CERT_READ_CERT_FAILED;
+        }
+    }
+
+    X509_NAME *subject = X509_get_subject_name(cert);
+    if (subject != nullptr) {
+        char orgBuf[256] = {0};
+        X509_NAME_get_text_by_NID(subject, NID_organizationName, orgBuf, sizeof(orgBuf));
+        subjectOrg = orgBuf;
+    }
+
+    const ASN1_TIME *notAfterTime = X509_get0_notAfter(cert);
+    if (notAfterTime != nullptr) {
+        struct tm tmVal = {0};
+        if (ASN1_TIME_to_tm(notAfterTime, &tmVal) == 1) {
+            notAfter = static_cast<int64_t>(timegm(&tmVal));
+        }
+    }
+
+    X509_free(cert);
+    LOG_I(BMS_TAG_INSTALLD, "parse enterprise cert info success, org: %{public}s", subjectOrg.c_str());
+    return ERR_OK;
 }
 
 bool InstalldOperator::IsValidModuleName(const std::string &moduleName)

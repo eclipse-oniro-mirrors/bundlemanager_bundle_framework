@@ -112,6 +112,7 @@ ohos_shared_library("appexecfwk_base") {
     "src/shared/shared_module_info.cpp",
     "src/shortcut_info.cpp",
     "src/skill.cpp",
+    "src/enterprise_cert_info.cpp",
   ]
 
   public_configs = [

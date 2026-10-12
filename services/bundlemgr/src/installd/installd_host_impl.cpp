@@ -4171,6 +4171,43 @@ ErrCode InstalldHostImpl::AddCertAndEnableKey(const std::string &certPath, const
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::GetEnterpriseCertInfo(const std::string &certPath, EnterpriseCertInfo &certInfo)
+{
+    LOG_I(BMS_TAG_INSTALLD, "start");
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    if (!InstalldOperator::IsValidCertPath(certPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid cert path: %{private}s", certPath.c_str());
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    size_t pos = certPath.find_last_of('/');
+    if (pos != std::string::npos) {
+        certInfo.certAlias = certPath.substr(pos + 1);
+    }
+    std::vector<unsigned char> certData;
+    if (!InstalldOperator::ReadCert(certPath, certData)) {
+        LOG_E(BMS_TAG_INSTALLD, "read cert file failed: %{private}s", certPath.c_str());
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_READ_CERT_FAILED;
+    }
+#if defined(CODE_SIGNATURE_ENABLE)
+    std::string subjectOrg;
+    int64_t notAfter = 0;
+    ErrCode parseRet = InstalldOperator::ParseEnterpriseCertInfo(certData, subjectOrg, notAfter);
+    if (parseRet != ERR_OK) {
+        LOG_W(BMS_TAG_INSTALLD, "parse cert failed: %{public}d", parseRet);
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_READ_CERT_FAILED;
+    }
+    certInfo.enterpriseName = subjectOrg;
+    certInfo.notAfter = notAfter;
+#else
+    LOG_W(BMS_TAG_INSTALLD, "code signature feature is not supported, cert info incomplete");
+#endif
+    LOG_I(BMS_TAG_INSTALLD, "end");
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::RemoveSignProfile(const std::string &bundleName)
 {
     LOG_D(BMS_TAG_INSTALLD, "start to remove sign profile");

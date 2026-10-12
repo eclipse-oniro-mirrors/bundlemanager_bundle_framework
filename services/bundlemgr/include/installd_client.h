@@ -381,6 +381,8 @@ public:
 
     ErrCode AddCertAndEnableKey(const std::string &certPath, const std::string &certContent);
 
+    ErrCode GetEnterpriseCertInfo(const std::string &certPath, EnterpriseCertInfo &certInfo);
+
     ErrCode SetEncryptionPolicy(const EncryptionParam &encryptionParam, std::string &keyId);
 
     ErrCode DeleteEncryptionKeyId(const EncryptionParam &encryptionParam);

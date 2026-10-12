@@ -1175,6 +1175,51 @@ ErrCode BundleInstallerProxy::GetEnterpriseReSignatureCert(int32_t userId, std::
     return ERR_OK;
 }
 
+ErrCode BundleInstallerProxy::GetEnterpriseReSignatureCertInfo(
+    int32_t userId, std::vector<EnterpriseCertInfo> &certInfos)
+{
+    LOG_I(BMS_TAG_INSTALLER, "get re sign cert info -u:%{public}d", userId);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+
+    if (userId < Constants::START_USERID) {
+        LOG_E(BMS_TAG_INSTALLER, "param error -u:%{public}d", userId);
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_PARAM_ERROR;
+    }
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOG_E(BMS_TAG_INSTALLER, "failed to write descriptor");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_WRITE_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        LOG_E(BMS_TAG_INSTALLER, "failed to write userId");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_WRITE_PARCEL_ERROR;
+    }
+
+    auto ret = SendInstallRequestWithErrCode(
+        BundleInstallerInterfaceCode::GET_ENTERPRISE_RE_SIGNATURE_CERT_INFO, data, reply, option);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "get sign cert info failed due to send request fail");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_SEND_REQUEST_ERROR;
+    }
+    ErrCode result = reply.ReadInt32();
+    if (result != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "Reply err : %{public}d", result);
+        return result;
+    }
+    int32_t certInfoSize = reply.ReadInt32();
+    for (int32_t i = 0; i < certInfoSize; i++) {
+        auto ptr = reply.ReadParcelable<EnterpriseCertInfo>();
+        if (ptr != nullptr) {
+            certInfos.emplace_back(*ptr);
+            delete ptr;
+        }
+    }
+    LOG_I(BMS_TAG_INSTALLER, "get sign cert info size: %{public}zu", certInfos.size());
+    return ERR_OK;
+}
+
 ErrCode BundleInstallerProxy::UninstallNewPreinstalledApps(const std::vector<std::string> &bundleNames)
 {
     MessageParcel data;

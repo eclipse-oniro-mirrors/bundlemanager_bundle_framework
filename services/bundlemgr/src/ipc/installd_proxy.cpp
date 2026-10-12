@@ -1664,6 +1664,38 @@ ErrCode InstalldProxy::AddCertAndEnableKey(const std::string &certPath, const st
     return ERR_OK;
 }
 
+ErrCode InstalldProxy::GetEnterpriseCertInfo(const std::string &certPath, EnterpriseCertInfo &certInfo)
+{
+    if (certPath.empty() || certPath.size() > Constants::BMS_MAX_PATH_LENGTH) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid cert path");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(certPath));
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    auto ret = TransactInstalldCmd(InstalldInterfaceCode::GET_ENTERPRISE_CERT_INFO, data, reply, option);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "TransactInstalldCmd failed");
+        return ret;
+    }
+    ErrCode result = reply.ReadInt32();
+    if (result != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "GetEnterpriseCertInfo failed: %{public}d", result);
+        return result;
+    }
+    auto infoPtr = reply.ReadParcelable<EnterpriseCertInfo>();
+    if (infoPtr == nullptr) {
+        LOG_E(BMS_TAG_INSTALLD, "read cert info failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    certInfo = *infoPtr;
+    delete infoPtr;
+    return ERR_OK;
+}
+
 ErrCode InstalldProxy::SetEncryptionPolicy(const EncryptionParam &encryptionParam, std::string &keyId)
 {
     MessageParcel data;

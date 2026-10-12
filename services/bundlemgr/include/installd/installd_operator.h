@@ -610,6 +610,9 @@ public:
         const std::string &hapFilePath, int32_t userId);
     static std::string GetAbcRealPath(const std::string &bundleName, int32_t userId,
         const std::string &relativePath);
+    static bool ReadCert(const std::string &path, std::vector<unsigned char> &certData);
+    static ErrCode ParseEnterpriseCertInfo(const std::vector<unsigned char> &certData,
+        std::string &subjectOrg, int64_t &notAfter);
 private:
     static bool ObtainNativeSoFile(const BundleExtractor &extractor, const std::string &cpuAbi,
         std::vector<std::string> &soEntryFiles);
@@ -651,7 +654,6 @@ private:
     static int32_t ForceCreateDirectory(const std::string &path, const OwnershipInfo &info);
     static int32_t MigrateDataCreateAhead(
         const std::string &sourcePaths, std::string &destinationPath, const OwnershipInfo &info);
-    static bool ReadCert(const std::string &path, std::vector<unsigned char> &certData);
     static std::optional<struct dqblk> GetQuotaData(int32_t uid);
     static bool CheckDeviceMode(char *buf);
     static bool CheckEfuseStatus(char *buf);

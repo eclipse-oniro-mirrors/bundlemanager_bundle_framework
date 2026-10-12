@@ -907,6 +907,15 @@ ErrCode InstalldClient::AddCertAndEnableKey(const std::string &certPath, const s
     return CallService(&IInstalld::AddCertAndEnableKey, certPath, certContent);
 }
 
+ErrCode InstalldClient::GetEnterpriseCertInfo(const std::string &certPath, EnterpriseCertInfo &certInfo)
+{
+    if (certPath.empty()) {
+        APP_LOGE("certPath is empty");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::GetEnterpriseCertInfo, certPath, std::ref(certInfo));
+}
+
 ErrCode InstalldClient::SetEncryptionPolicy(const EncryptionParam &encryptionParam, std::string &keyId)
 {
     if (encryptionParam.bundleName.empty() && encryptionParam.groupId.empty()) {
