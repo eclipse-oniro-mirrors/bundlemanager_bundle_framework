@@ -270,9 +270,12 @@ public:
     static std::string Sha256File(const std::string& filePath);
     static ErrCode GetEnterpriseReSignatureCert(int32_t userId, std::vector<std::string> &certificateAlias);
     static bool IsSoSupportFakeDecompression(const std::string &bundleName, const bool isKeepAlive,
-                                                const std::string &hapPath);
-    static bool IsResFileSupportFakeDecompression(const std::string &bundleName, const bool isKeepAlive);
-    static bool FakeDecompressionCommonCheck(const std::string &bundleName, const bool isKeepAlive);
+                                             const std::string &hapPath, const bool hasBuildHash);
+    static bool IsResFileSupportFakeDecompression(const std::string &bundleName, const bool isKeepAlive,
+                                                  const std::string &hapPath, const bool hasBuildHash);
+    static bool FakeDecompressionCommonCheck(const std::string &bundleName, const bool isKeepAlive,
+                                             const std::string &hapPath, const bool hasBuildHash);
+    static void BundleInstallFinished(const std::string &bundleName);
     /**
      * @brief Decompress zip file to dir and collect file paths.
      * @param zipFilePath Indicates the zip file path.

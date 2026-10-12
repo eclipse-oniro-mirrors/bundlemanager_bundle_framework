@@ -101,10 +101,12 @@ public:
      * @param srcModulePath Indicates the package file path.
      * @param targetSoPath so files decompression path.
      * @param cpuAbi cpuAbi.
+     * @param bundleName Indicates the bundle name.
      * @return Returns true if the package extracted successfully; returns false otherwise.
      */
     static bool ExtractFiles(const std::string &sourcePath, const std::string &targetSoPath,
-        const std::string &cpuAbi, const bool needFakeDecompression, const bool isSystemApp);
+        const std::string &cpuAbi, const bool needFakeDecompression, const bool isSystemApp,
+        const std::string &bundleName, const bool hasBuildHash);
 
     static bool IsNativeSo(const std::string &entryName, const std::string &cpuAbi);
 

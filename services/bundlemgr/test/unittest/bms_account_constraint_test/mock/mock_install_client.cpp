@@ -117,7 +117,7 @@ ErrCode InstalldClient::ExtractResourceFiles(const std::string &bundleName, cons
 
 ErrCode InstalldClient::ExtractResFileDir(const std::string &bundleName, const std::string &moduleName,
     const std::string &hapFilePath, bool needFakeDecompression, bool isSystemApp,
-    bool useNewCodeDir, bool useModuleTmp)
+    bool useNewCodeDir, bool useModuleTmp, const bool hasBuildHash)
 {
     return 0;
 }
@@ -699,6 +699,11 @@ ErrCode InstalldClient::CopyAbcFile(const std::string &bundleName, int32_t userI
     const std::string &abcRelativePath)
 {
     return 0;
+}
+
+ErrCode InstalldClient::BundleInstallFinished(const std::string &bundleName)
+{
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

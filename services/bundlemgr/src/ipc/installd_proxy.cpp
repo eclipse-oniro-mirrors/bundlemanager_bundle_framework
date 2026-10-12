@@ -295,7 +295,7 @@ ErrCode InstalldProxy::CopyApFile(const std::string &bundleName, const std::stri
 
 ErrCode InstalldProxy::ExtractResFileDir(const std::string &bundleName, const std::string &moduleName,
     const std::string &hapFilePath, bool needFakeDecompression, bool isSystemApp,
-    bool useNewCodeDir, bool useModuleTmp)
+    bool useNewCodeDir, bool useModuleTmp, const bool hasBuildHash)
 {
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
@@ -306,6 +306,7 @@ ErrCode InstalldProxy::ExtractResFileDir(const std::string &bundleName, const st
     INSTALLD_PARCEL_WRITE(data, Bool, isSystemApp);
     INSTALLD_PARCEL_WRITE(data, Bool, useNewCodeDir);
     INSTALLD_PARCEL_WRITE(data, Bool, useModuleTmp);
+    INSTALLD_PARCEL_WRITE(data, Bool, hasBuildHash);
     MessageParcel reply;
     MessageOption option;
     return TransactInstalldCmd(InstalldInterfaceCode::EXTRACT_RES_FILE_DIR, data, reply, option);
@@ -2186,6 +2187,19 @@ ErrCode InstalldProxy::CopyAbcFile(const std::string &bundleName, int32_t userId
     MessageParcel reply;
     MessageOption option;
     return TransactInstalldCmd(InstalldInterfaceCode::COPY_ABC_FILE, data, reply, option);
+}
+
+ErrCode InstalldProxy::BundleInstallFinished(const std::string &bundleName)
+{
+    LOG_D(BMS_TAG_INSTALLD, "call BundleInstallFinished, bundleName: %{public}s", bundleName.c_str());
+
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_ASYNC);
+    return TransactInstalldCmd(InstalldInterfaceCode::BUNDLE_INSTALL_FINISHED, data, reply, option);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

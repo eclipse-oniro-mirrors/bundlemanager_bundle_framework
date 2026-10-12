@@ -49,6 +49,7 @@ public:
      * @param targetPath normal files decompression path.
      * @param targetSoPath so files decompression path.
      * @param cpuAbi cpuAbi.
+     * @param bundleName Indicates the bundle name.
      * @return Returns ERR_OK if the HAP file extracted successfully; returns error code otherwise.
      */
     /**
@@ -60,7 +61,7 @@ public:
 
     ErrCode ExtractPluginModuleFiles(const ExtractModuleFilesParam &param);
     ErrCode ExtractSharedModuleFiles(const ExtractModuleFilesParam &param);
-
+        
     /**
      * @brief Extract the files of a HAP module with path construction in installd.
      * @param param Indicates the HAP module extract parameters.
@@ -301,7 +302,7 @@ public:
 
     ErrCode ExtractResFileDir(const std::string &bundleName, const std::string &moduleName,
         const std::string &hapFilePath, bool needFakeDecompression, bool isSystemApp,
-        bool useNewCodeDir, bool useModuleTmp);
+        bool useNewCodeDir, bool useModuleTmp, const bool hasBuildHash);
 
     ErrCode ExtractSoFiles(const std::string &bundleName, const std::string &moduleName,
         const std::string &hapFilePath, const std::string &cpuAbi, bool needFakeDecompression,
@@ -520,6 +521,8 @@ public:
      * @return Returns ERR_OK if copied successfully; returns error code otherwise.
      */
     ErrCode CopyAbcFile(const std::string &bundleName, int32_t userId, const std::string &abcRelativePath);
+
+    ErrCode BundleInstallFinished(const std::string &bundleName);
 
 private:
     sptr<IInstalld> GetInstalldProxy();

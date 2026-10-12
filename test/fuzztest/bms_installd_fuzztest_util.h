@@ -65,6 +65,19 @@ inline void GenerateCreateDirParam(FuzzedDataProvider& fdp, CreateDirParam& d)
     d.bundleDirScene = static_cast<BundleDirScene>(fdp.ConsumeIntegral<int32_t>());
 }
 
+// ExtractParam: 8 fields
+inline void GenerateExtractParam(FuzzedDataProvider& fdp, ExtractParam& p)
+{
+    p.bundleName = GenAttackAwareString(fdp, ATTACK_PATH_TRAVERSAL);
+    p.srcPath = GenAttackAwareString(fdp, ATTACK_PATH_TRAVERSAL);
+    p.targetPath = GenAttackAwareString(fdp, ATTACK_PATH_TRAVERSAL);
+    p.cpuAbi = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    p.needRemoveOld = fdp.ConsumeBool();
+    p.needFakeDecompression = fdp.ConsumeBool();
+    p.isSystemApp = fdp.ConsumeBool();
+    p.hasBuildHash = fdp.ConsumeBool();
+}
+
 // SkillsPackageParam: 5 fields + vector
 inline void GenerateSkillsPackageParam(FuzzedDataProvider& fdp, SkillsPackageParam& p)
 {

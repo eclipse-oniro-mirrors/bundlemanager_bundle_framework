@@ -32,6 +32,7 @@ bool HapModuleExtractParam::ReadFromParcel(Parcel &parcel)
     needFakeDecompression = parcel.ReadBool();
     isSystemApp = parcel.ReadBool();
     hapSrcPath = Str16ToStr8(parcel.ReadString16());
+    hasBuildHash = parcel.ReadBool();
     return true;
 }
 
@@ -47,6 +48,7 @@ bool HapModuleExtractParam::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, needFakeDecompression);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isSystemApp);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(hapSrcPath));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, hasBuildHash);
     return true;
 }
 
@@ -72,6 +74,7 @@ std::string HapModuleExtractParam::ToString() const
             + ", installMode = " + std::to_string(installMode)
             + ", needFakeDecompression = " + (needFakeDecompression ? "true" : "false")
             + ", isSystemApp = " + (isSystemApp ? "true" : "false")
+            + ", hasBuildHash = " + (hasBuildHash ? "true" : "false")
             + ", hapSrcPath = " + hapSrcPath + "]";
 }
 }  // namespace AppExecFwk

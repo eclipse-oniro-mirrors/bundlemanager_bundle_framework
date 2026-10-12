@@ -89,7 +89,7 @@ ErrCode InstalldHostImpl::ExtractResourceFiles(const std::string &bundleName, co
 
 ErrCode InstalldHostImpl::ExtractResFileDir(const std::string &bundleName, const std::string &moduleName,
     const std::string &hapFilePath, bool needFakeDecompression, bool isSystemApp,
-    bool useNewCodeDir, bool useModuleTmp)
+    bool useNewCodeDir, bool useModuleTmp, const bool hasBuildHash)
 {
     return ERR_OK;
 }
@@ -673,7 +673,13 @@ ErrCode InstalldHostImpl::CopyAbcFile(const std::string &bundleName, int32_t use
 {
     return ERR_OK;
 }
+
 ErrCode InstalldHostImpl::CheckAppSideLoadingAsync(int32_t userId)
+{
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::BundleInstallFinished(const std::string &bundleName)
 {
     return ERR_OK;
 }

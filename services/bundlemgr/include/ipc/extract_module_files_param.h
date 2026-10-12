@@ -43,6 +43,7 @@ struct ExtractModuleFilesParam : public Parcelable {
     bool needFakeDecompression = false;
     // whether the bundle is a system app, used by all three scenarios
     bool isSystemApp = false;
+    bool hasBuildHash = false;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

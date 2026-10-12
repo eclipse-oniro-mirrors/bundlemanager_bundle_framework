@@ -169,13 +169,13 @@ ErrCode InstalldClient::CopyApFile(const std::string &bundleName, const std::str
 
 ErrCode InstalldClient::ExtractResFileDir(const std::string &bundleName, const std::string &moduleName,
     const std::string &hapFilePath, bool needFakeDecompression, bool isSystemApp,
-    bool useNewCodeDir, bool useModuleTmp)
+    bool useNewCodeDir, bool useModuleTmp, const bool hasBuildHash)
 {
     if (bundleName.empty() || moduleName.empty() || hapFilePath.empty()) {
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     return CallService(&IInstalld::ExtractResFileDir, bundleName, moduleName, hapFilePath,
-        needFakeDecompression, isSystemApp, useNewCodeDir, useModuleTmp);
+        needFakeDecompression, isSystemApp, useNewCodeDir, useModuleTmp, hasBuildHash);
 }
 
 ErrCode InstalldClient::ExtractNPAPIPlugin(const std::string &bundleName, const std::string &moduleName,
@@ -1153,6 +1153,11 @@ ErrCode InstalldClient::CopyAbcFile(const std::string &bundleName, int32_t userI
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     return CallService(&IInstalld::CopyAbcFile, bundleName, userId, abcRelativePath);
+}
+
+ErrCode InstalldClient::BundleInstallFinished(const std::string &bundleName)
+{
+    return CallService(&IInstalld::BundleInstallFinished, bundleName);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
