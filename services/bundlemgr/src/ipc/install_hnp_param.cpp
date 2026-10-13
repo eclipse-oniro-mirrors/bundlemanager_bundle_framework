@@ -35,6 +35,7 @@ bool InstallHnpParam::ReadFromParcel(Parcel &parcel)
         std::string hnpPath = Str16ToStr8(parcel.ReadString16());
         hnpPaths.emplace_back(hnpPath);
     }
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, sessionId);
     return true;
 }
 
@@ -50,6 +51,7 @@ bool InstallHnpParam::Marshalling(Parcel &parcel) const
     for (auto &item : hnpPaths) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(item));
     }
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, sessionId);
     return true;
 }
 

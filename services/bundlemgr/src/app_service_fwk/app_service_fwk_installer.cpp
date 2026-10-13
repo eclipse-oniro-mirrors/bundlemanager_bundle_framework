@@ -208,6 +208,7 @@ ErrCode AppServiceFwkInstaller::UnInstall(
 
 void AppServiceFwkInstaller::ResetProperties()
 {
+    isAppExist_ = false;
     bundleMsg_ = "";
     uninstallModuleVec_.clear();
     versionUpgrade_ = false;
@@ -334,6 +335,19 @@ ErrCode AppServiceFwkInstaller::ProcessInstall(
     SavePreInstallBundleInfo(result, newInfos, installParam);
     PatchDataMgr::GetInstance().ProcessPatchInfo(bundleName_, hspPaths,
         newInfos.begin()->second.GetVersionCode(), AppPatchType::SERVICE_FWK, installParam.isPatch);
+    // SPM ON: permission pre-check (REPLACE for updates, INSTALL otherwise) before
+    // the session commits with the install.
+    Security::AccessToken::HapInfoCheckResult spmCheckResult;
+    int32_t spmRet = spmSession_.CheckPermissionInfo(
+        isAppExist_ ? Security::AccessToken::InstallTypeEnum::TYPE_REPLACE
+            : Security::AccessToken::InstallTypeEnum::TYPE_INSTALL,
+        spmCheckResult);
+    if (spmRet != ERR_OK) {
+        APP_LOGE("spm check permission failed %{public}d", spmRet);
+        RollBack();
+        // Raw AT code: map to the registered BMS code, no unregistered code leaks.
+        return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
+    }
     // check mark install finish
     result = MarkInstallFinish();
     if (result != ERR_OK) {
@@ -346,6 +360,24 @@ ErrCode AppServiceFwkInstaller::ProcessInstall(
     }
     if (isSoNeedFakeDecompression_) {
         BundleUtil::BundleInstallFinished(bundleName_);
+    }
+    if (result == ERR_OK) {
+        // SPM ON: commit the session with the hap path to installed path mapping.
+        std::map<std::string, std::string> modulePathMap;
+        for (const auto &infoItem : newInfos) {
+            modulePathMap[infoItem.first] =
+                infoItem.second.GetModuleHapPath(infoItem.second.GetCurrentModulePackage());
+        }
+        int32_t spmCommitRet = spmSession_.Commit(modulePathMap);
+        if (spmCommitRet != ERR_OK) {
+            APP_LOGE("spm session commit failed, bundleName:%{public}s errCode:%{public}d",
+                bundleName_.c_str(), spmCommitRet);
+            // The session is not committed: fail the install AND roll the persisted
+            // business data back (same as the other failure branches above) — the
+            // session destructor rolls the AT side, leaving both sides clean.
+            RollBack();
+            return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
+        }
     }
     return result;
 }
@@ -420,8 +452,13 @@ ErrCode AppServiceFwkInstaller::CheckAndParseFiles(
 
     // verify signature info for all haps
     std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
-    result = bundleInstallChecker_->CheckMultipleHapsSignInfo(
-        checkedHspPaths, hapVerifyResults);
+    spmSession_ = BundleSpmManager::InstallSession::CheckSignAndInitSession(Constants::INVALID_USERID,
+        checkedHspPaths, false, *bundleInstallChecker_, result, false);
+    if (result == ERR_OK) {
+        spmSession_.GetHapVerifyResults(hapVerifyResults);
+    }
+    // No on-demand recovery chain on this entry: wrap the raw AT recovery codes.
+    result = BundleSpmManager::WrapRecoverableSpmErrorCode(result);
     CHECK_RESULT(result, "Hsp files check signature info failed %{public}d");
 
     result = bundleInstallChecker_->ParseHapFiles(
@@ -644,6 +681,7 @@ ErrCode AppServiceFwkInstaller::VerifyCodeSignatureForHsp(
     codeSignatureParam.isPreInstalledBundle = false;
     codeSignatureParam.isCompressNativeLibrary = isCompressNativeLibs_;
     bundleInstallChecker_->ProcessCodeSignatureParam(verifyRes_, codeSignatureParam);
+    spmSession_.FillCodeSignatureParam(verifyRes_, codeSignatureParam);
     return InstalldClient::GetInstance()->VerifyCodeSignatureForHap(codeSignatureParam);
 }
 
@@ -1051,8 +1089,10 @@ bool AppServiceFwkInstaller::CheckNeedInstall(const std::unordered_map<std::stri
     }
     if (!(dataMgr_->FetchInnerBundleInfo(bundleName_, oldInfo))) {
         APP_LOGD("bundleName %{public}s not existed local", bundleName_.c_str());
+        isAppExist_ = false;
         return true;
     }
+    isAppExist_ = true;
     APP_LOGI_NOFUNC("%{public}s old version:%{public}d, new version:%{public}d",
         bundleName_.c_str(), oldInfo.GetVersionCode(), versionCode_);
     if (oldInfo.GetVersionCode() == versionCode_) {
@@ -1103,6 +1143,7 @@ ErrCode AppServiceFwkInstaller::VerifyCodeSignatureForNativeFiles(const std::str
     codeSignatureParam.isCompileSdkOpenHarmony = (compileSdkType_ == COMPILE_SDK_TYPE_OPEN_HARMONY);
     codeSignatureParam.isPreInstalledBundle = true;
     bundleInstallChecker_->ProcessCodeSignatureParam(verifyRes_, codeSignatureParam);
+    spmSession_.FillCodeSignatureParam(verifyRes_, codeSignatureParam);
     return InstalldClient::GetInstance()->VerifyCodeSignature(codeSignatureParam);
 }
 
@@ -1129,7 +1170,7 @@ ErrCode AppServiceFwkInstaller::DeliveryProfileToCodeSign(
             APP_LOGE("invalid sign profile");
             return ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE;
         }
-        return InstalldClient::GetInstance()->DeliverySignProfile(provisionInfo.bundleInfo.bundleName,
+        return spmSession_.DeliverySignProfile(provisionInfo.bundleInfo.bundleName,
             provisionInfo.profileBlockLength, provisionInfo.profileBlock.get());
     }
     return ERR_OK;

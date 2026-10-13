@@ -375,7 +375,7 @@ public:
         const std::string &cpuAbi, const std::string &tmpSoPath, int32_t uid);
 
     ErrCode DeliverySignProfile(const std::string &bundleName, int32_t profileBlockLength,
-        const unsigned char *profileBlock);
+        const unsigned char *profileBlock, int32_t sessionId = 0);
 
     ErrCode RemoveSignProfile(const std::string &bundleName);
 
@@ -523,6 +523,8 @@ public:
     ErrCode CopyAbcFile(const std::string &bundleName, int32_t userId, const std::string &abcRelativePath);
 
     ErrCode BundleInstallFinished(const std::string &bundleName);
+
+    ErrCode ClearSessionProvisionCache(int32_t sessionId);
 
 private:
     sptr<IInstalld> GetInstalldProxy();

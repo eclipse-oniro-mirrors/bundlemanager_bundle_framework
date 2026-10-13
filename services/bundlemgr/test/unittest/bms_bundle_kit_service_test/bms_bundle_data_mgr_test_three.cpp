@@ -32,6 +32,7 @@
 #include "bundle_file_util.h"
 #include "bundle_info.h"
 #include "bundle_permission_mgr.h"
+#include "bundle_spm_manager.h"
 #include "bundle_mgr_ext.h"
 #include "bundle_mgr_ext_register.h"
 #include "bundle_mgr_service.h"
@@ -4979,6 +4980,71 @@ HWTEST_F(BmsBundleDataMgrTest3, GetBundleNameAndIndex_0300, Function | MediumTes
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_EQ(bundleName, BUNDLE_TEST1);
     EXPECT_EQ(appIndex, 0);
+}
+
+/**
+ * @tc.number: ParseBundleIdKey_0100
+ * @tc.name: ParseBundleIdKey key formats
+ * @tc.desc: Plain, sandbox "\d+_", clone "\d+clone_" and dual-mode keys parse to
+ *           the original bundleName and appIndex; malformed numeric keys fail.
+ */
+HWTEST_F(BmsBundleDataMgrTest3, ParseBundleIdKey_0100, Function | MediumTest | Level1)
+{
+    std::string bundleName;
+    int32_t appIndex = -1;
+
+    EXPECT_TRUE(BundleDataMgr::ParseBundleIdKey(BUNDLE_TEST1, bundleName, appIndex));
+    EXPECT_EQ(bundleName, BUNDLE_TEST1);
+    EXPECT_EQ(appIndex, 0);
+
+    EXPECT_TRUE(BundleDataMgr::ParseBundleIdKey("2_" + BUNDLE_TEST1, bundleName, appIndex));
+    EXPECT_EQ(bundleName, BUNDLE_TEST1);
+    EXPECT_EQ(appIndex, 2);
+
+    EXPECT_TRUE(BundleDataMgr::ParseBundleIdKey("3clone_" + BUNDLE_TEST1, bundleName, appIndex));
+    EXPECT_EQ(bundleName, BUNDLE_TEST1);
+    EXPECT_EQ(appIndex, 3);
+
+    std::string dualModeKey = DualModeHelper::GetDualModeBundleName(BUNDLE_TEST1);
+    EXPECT_TRUE(BundleDataMgr::ParseBundleIdKey(dualModeKey, bundleName, appIndex));
+    EXPECT_EQ(bundleName, BUNDLE_TEST1);
+    EXPECT_EQ(appIndex, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
+
+    EXPECT_FALSE(BundleDataMgr::ParseBundleIdKey("12345", bundleName, appIndex));
+}
+
+/**
+ * @tc.number: UidIndexMapMaintain_0100
+ * @tc.name: uidIndexMap_ is not maintained by GenerateUidAndGid
+ * @tc.desc: GenerateUidAndGid (fresh allocation and the idempotent refresh) never
+ *           writes uidIndexMap_; the cache is maintained by the SPM-ON boot restore
+ *           and the uninstall removal only.
+ */
+HWTEST_F(BmsBundleDataMgrTest3, UidIndexMapMaintain_0100, Function | MediumTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = BUNDLE_TEST1;
+    userInfo.bundleUserInfo.userId = USERID;
+    auto ret = bundleDataMgr->GenerateUidAndGid(userInfo);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_NE(userInfo.uid, Constants::INVALID_UID);
+
+    InnerBundleUserInfo cloneUserInfo;
+    cloneUserInfo.bundleName = "1clone_" + BUNDLE_TEST1;
+    cloneUserInfo.bundleUserInfo.userId = USERID;
+    ret = bundleDataMgr->GenerateUidAndGid(cloneUserInfo);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_NE(cloneUserInfo.uid, Constants::INVALID_UID);
+
+    // idempotent refresh of an already allocated uid
+    ret = bundleDataMgr->GenerateUidAndGid(userInfo);
+    EXPECT_EQ(ret, ERR_OK);
+
+    EXPECT_TRUE(bundleDataMgr->uidIndexMap_.empty());
 }
 
 /**

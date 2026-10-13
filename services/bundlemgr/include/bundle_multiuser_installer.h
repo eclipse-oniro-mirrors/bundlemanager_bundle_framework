@@ -19,6 +19,7 @@
 #include <string>
 
 #include "bundle_data_mgr.h"
+#include "bundle_spm_manager.h"
 #include "event_report.h"
 
 namespace OHOS {
@@ -40,6 +41,8 @@ public:
 
     void ResetInstallProperties();
 private:
+    // SPM facade session; inert under SPM OFF (session id 0)
+    BundleSpmManager::InstallSession spmSession_;
     ErrCode CreateDataDir(
         InnerBundleInfo &info, const int32_t userId, const int32_t &uid) const;
     void CreateEl5Dir(InnerBundleInfo &info, const int32_t userId, const int32_t &uid);
@@ -47,7 +50,8 @@ private:
     ErrCode RemoveDataDir(const std::string bundleName, int32_t userId);
     ErrCode GetDataMgr();
     bool RecoverHapToken(const std::string &bundleName, const int32_t userId,
-        Security::AccessToken::AccessTokenIDEx& accessTokenIdEx, const InnerBundleInfo &innerBundleInfo);
+        Security::AccessToken::AccessTokenIDEx& accessTokenIdEx, const InnerBundleInfo &innerBundleInfo,
+        int32_t &recoveredUid);
     void DeleteUninstallBundleInfo(const std::string &bundleName, int32_t userId);
     ErrCode ProcessBundleShareFiles(const InnerBundleInfo &info, const int32_t userId, uint32_t tokenId);
     void SendBundleSystemEvent(const std::string &bundleName, BundleEventType bundleEventType,

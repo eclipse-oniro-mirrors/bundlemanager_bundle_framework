@@ -160,6 +160,21 @@ ErrCode IndependentSkillsInstaller::ProcessInstall(
         dataMgr_->EnableBundle(bundleName_);
     });
 
+    // SPM ON: the permission pre-check must run first — the AT session requires
+    // CheckHapPermissionInfo before PrepareHapIdentity/UpdateHapPolicy/FinishInstall
+    // (REPLACE for updates, INSTALL otherwise).
+    Security::AccessToken::HapInfoCheckResult spmCheckResult;
+    int32_t spmRet = spmSession_.CheckPermissionInfo(
+        (versionUpgrade_ || moduleUpdate_) ? Security::AccessToken::InstallTypeEnum::TYPE_REPLACE
+            : Security::AccessToken::InstallTypeEnum::TYPE_INSTALL,
+        spmCheckResult);
+    if (spmRet != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "spm check permission failed %{public}d", spmRet);
+        RollBack();
+        // Raw AT code: map to the registered BMS code, no unregistered code leaks.
+        return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
+    }
+
     if (versionUpgrade_ || moduleUpdate_) {
         result = UpdateSkillsPackage(oldInfo, newInfos, installParam);
         // need rollback
@@ -189,6 +204,24 @@ ErrCode IndependentSkillsInstaller::ProcessInstall(
         }
         PatchDataMgr::GetInstance().DeleteInnerPatchInfo(bundleName_);
         return result;
+    }
+    if (result == ERR_OK) {
+        // SPM ON: commit the session with the hap path to installed path mapping.
+        std::map<std::string, std::string> modulePathMap;
+        for (const auto &infoItem : newInfos) {
+            modulePathMap[infoItem.first] =
+                infoItem.second.GetModuleHapPath(infoItem.second.GetCurrentModulePackage());
+        }
+        int32_t spmCommitRet = spmSession_.Commit(modulePathMap);
+        if (spmCommitRet != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLER, "spm session commit failed, bundleName:%{public}s errCode:%{public}d",
+                bundleName_.c_str(), spmCommitRet);
+            // The session is not committed: fail the install AND roll the persisted
+            // business data back (same as the other failure branches above) — the
+            // session destructor rolls the AT side, leaving both sides clean.
+            RollBack();
+            return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
+        }
     }
     RemoveOldSkillsPath();
     return result;
@@ -271,8 +304,13 @@ ErrCode IndependentSkillsInstaller::CheckAndParseFiles(
 
     // verify signature info for all haps
     std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
-    result = bundleInstallChecker_->CheckMultipleHapsSignInfo(
-        checkedHspPaths, hapVerifyResults);
+    spmSession_ = BundleSpmManager::InstallSession::CheckSignAndInitSession(Constants::INVALID_USERID,
+        checkedHspPaths, false, *bundleInstallChecker_, result, false);
+    if (result == ERR_OK) {
+        spmSession_.GetHapVerifyResults(hapVerifyResults);
+    }
+    // No on-demand recovery chain on this entry: wrap the raw AT recovery codes.
+    result = BundleSpmManager::WrapRecoverableSpmErrorCode(result);
     CHECK_SKILLS_RESULT(result, "Hsp files check signature info failed %{public}d");
 
     result = bundleInstallChecker_->ParseHapFiles(
@@ -537,15 +575,16 @@ ErrCode IndependentSkillsInstaller::SaveBundleInfoToStorage()
         return ERR_APPEXECFWK_INSTALL_STATE_ERROR;
     }
     // init hapToken
-    Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
+    Security::AccessToken::AccessTokenIDEx accessTokenIdEx = {0};
     Security::AccessToken::HapInfoCheckResult checkResult;
-    ErrCode result = BundlePermissionMgr::InitHapToken(newInnerBundleInfo_, userId_, 0, accessTokenIdEx, checkResult,
-        verifyRes_.GetProvisionInfo().appServiceCapabilities, false);
+    ErrCode result = spmSession_.InitToken(newInnerBundleInfo_, userId_, 0, accessTokenIdEx, checkResult,
+        verifyRes_.GetProvisionInfo().appServiceCapabilities, nullptr, false);
     if (result != ERR_OK) {
         auto msg = BundlePermissionMgr::GetCheckResultMsg(checkResult);
         LOG_E(BMS_TAG_INSTALLER, "skills %{public}s init hapToken failed msg %{public}s, err %{public}d",
             bundleName_.c_str(), msg.c_str(), result);
-        return result;
+        // Raw AT code: map to the registered BMS code, no unregistered code leaks.
+        return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
     }
 
     newInnerBundleInfo_.SetBundleInstallTime(BundleUtil::GetCurrentTimeMs(), userId_);
@@ -575,6 +614,7 @@ ErrCode IndependentSkillsInstaller::VerifyCodeSignatureForHsp(
     codeSignatureParam.isCompileSdkOpenHarmony = (compileSdkType_ == COMPILE_SDK_TYPE_OPEN_HARMONY);
     codeSignatureParam.isPreInstalledBundle = false;
     bundleInstallChecker_->ProcessCodeSignatureParam(verifyRes_, codeSignatureParam);
+    spmSession_.FillCodeSignatureParam(verifyRes_, codeSignatureParam);
     return InstalldClient::GetInstance()->VerifyCodeSignatureForHap(codeSignatureParam);
 }
 
@@ -612,13 +652,14 @@ ErrCode IndependentSkillsInstaller::UpdateSkillsPackage(
     }
     Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
     Security::AccessToken::HapInfoCheckResult checkResult;
-    result = BundlePermissionMgr::UpdateHapToken(accessTokenIdEx, oldInfo, userId_, checkResult,
+    result = spmSession_.UpdateToken(accessTokenIdEx, oldInfo, userId_, checkResult,
         verifyRes_.GetProvisionInfo().appServiceCapabilities, false, false);
     if (result != ERR_OK) {
         auto msg = BundlePermissionMgr::GetCheckResultMsg(checkResult);
-        LOG_E(BMS_TAG_INSTALLER, "skills %{public}s CheckHapPermissionInfo failed msg %{public}s, err %{public}d",
+        LOG_E(BMS_TAG_INSTALLER, "skills %{public}s update hapToken failed msg %{public}s, err %{public}d",
             bundleName_.c_str(), msg.c_str(), result);
-        return result;
+        // Raw AT code: map to the registered BMS code, no unregistered code leaks.
+        return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
     }
     InnerProcessNeedDeleteSkillPackage(oldInfo);
     return ERR_OK;
@@ -1002,7 +1043,7 @@ ErrCode IndependentSkillsInstaller::DeliveryProfileToCodeSign(
             LOG_E(BMS_TAG_INSTALLER, "invalid sign profile");
             return ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE;
         }
-        return InstalldClient::GetInstance()->DeliverySignProfile(provisionInfo.bundleInfo.bundleName,
+        return spmSession_.DeliverySignProfile(provisionInfo.bundleInfo.bundleName,
             provisionInfo.profileBlockLength, provisionInfo.profileBlock.get());
     }
     return ERR_OK;

@@ -21,6 +21,7 @@
 #include "bundle_permission_mgr.h"
 #include "datetime_ex.h"
 #include "hitrace_meter.h"
+#include "bundle_spm_manager.h"
 #include "installd_client.h"
 #include "perf_profile.h"
 #include "share_file_helper.h"
@@ -112,14 +113,15 @@ ErrCode BundleSandboxInstaller::InstallSandboxApp(const std::string &bundleName,
     info.SetAppIndex(newAppIndex);
     info.SetIsSandbox(true);
 
-    Security::AccessToken::AccessTokenIDEx newTokenIdEx;
+    Security::AccessToken::AccessTokenIDEx newTokenIdEx = {0};
     Security::AccessToken::HapInfoCheckResult checkResult;
     AppProvisionInfo appProvisionInfo;
     if (dataMgr_->GetAppProvisionInfo(bundleName, userId, appProvisionInfo) != ERR_OK) {
         APP_LOGE("GetAppProvisionInfo failed bundleName:%{public}s", bundleName.c_str());
     }
-    if (BundlePermissionMgr::InitHapToken(info, userId_, dlpType, newTokenIdEx, checkResult,
-        appProvisionInfo.appServiceCapabilities) != ERR_OK) {
+    int32_t identityUid = 0;
+    if (spmSession_.InitToken(info, userId_, dlpType, newTokenIdEx, checkResult,
+        appProvisionInfo.appServiceCapabilities, nullptr, false, &identityUid) != ERR_OK) {
         auto result = BundlePermissionMgr::GetCheckResultMsg(checkResult);
         APP_LOGE("bundleName:%{public}s InitHapToken failed, %{public}s", bundleName_.c_str(), result.c_str());
         return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
@@ -127,8 +129,27 @@ ErrCode BundleSandboxInstaller::InstallSandboxApp(const std::string &bundleName,
 
     // 5. create data dir and generate uid and gid
     userInfo.bundleName = std::to_string(newAppIndex) + Constants::FILE_UNDERLINE + bundleName_;
+    // The struct still carries the main app's uid fetched at step 3; reset it so
+    // the OFF-path GenerateUidAndGid allocates a sandbox-specific uid instead of
+    // short-circuiting on its idempotent already-allocated branch.
+    userInfo.uid = Constants::INVALID_UID;
     userInfo.gids.clear();
-    dataMgr_->GenerateUidAndGid(userInfo);
+    if (!BundleSpmManager::IsEnabled()) {
+        dataMgr_->GenerateUidAndGid(userInfo);
+    }
+    // SPM ON: no local allocation — the sandbox takes the AT-allocated identity
+    // uid from InitToken above (mirrors the clone installer); a sandbox install
+    // always gets a fresh appIndex, so there is no recovered-uid path.
+    if (BundleSpmManager::IsEnabled()) {
+        if (identityUid == 0) {
+            // Fail fast: the AT side did not allocate a uid — an INVALID_UID user
+            // info would break the dir creation and persist a broken record.
+            APP_LOGE("no uid from AT identity, bundleName:%{public}s", bundleName_.c_str());
+            return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
+        }
+        userInfo.uid = identityUid;
+        userInfo.gids.emplace_back(identityUid);
+    }
     BundleUtil::MakeFsConfig(info.GetBundleName(), ServiceConstants::HMDFS_CONFIG_PATH, info.GetAppProvisionType(),
         Constants::APP_PROVISION_TYPE_FILE_NAME);
     userInfo.bundleName = bundleName_;
@@ -152,6 +173,22 @@ ErrCode BundleSandboxInstaller::InstallSandboxApp(const std::string &bundleName,
     if (result != ERR_OK) {
         APP_LOGE("InstallSandboxApp create sandbox dir failed");
         return result;
+    }
+
+    // SPM ON: InitToken builds a REAL session (PrepareHapIdentity with
+    // sessionId=0 makes the AT side allocate one and write it back), so this
+    // Commit is a real FinishInstall. The session carries no bundleInfos, so the
+    // empty modulePathMap skips the package-info write. Commit BEFORE the guard
+    // is dismissed and BEFORE the sandbox info is persisted — on failure the
+    // still-armed sandboxAppGuard rolls the token/appIndex/uid/data dir back and
+    // the session destructor rolls the AT side back, and neither the in-memory
+    // sandbox info entry nor the persistent DB record exists yet (SandboxAppRollBack
+    // has no cleanup for them), so both sides stay consistent with zero residue.
+    int32_t spmCommitRet = spmSession_.Commit({});
+    if (spmCommitRet != ERR_OK) {
+        APP_LOGE("spm session commit failed, bundleName:%{public}s errCode:%{public}d",
+            bundleName_.c_str(), spmCommitRet);
+        return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
     }
 
     // 6. store new bundleInfo to sandbox data manager
@@ -230,7 +267,8 @@ ErrCode BundleSandboxInstaller::UninstallSandboxApp(
 
     // 5. delete accesstoken id and appIndex
     uint32_t accessTokenId = info.GetAccessTokenId(userId_);
-    if (BundlePermissionMgr::DeleteAccessTokenId(accessTokenId) !=
+    if (BundleSpmManager::DeleteToken(accessTokenId, info.GetBundleName(),
+        BundleSpmManager::TokenDeleteType::NONE, info.GetUid(userId_)) !=
         AccessToken::AccessTokenKitRet::RET_SUCCESS) {
         APP_LOGE("delete accessToken failed");
     }
@@ -320,7 +358,10 @@ void BundleSandboxInstaller::SandboxAppRollBack(InnerBundleInfo &info, const int
     // when a sandbox is installed failed, some stuff, including uid, gid, appIndex,
     // accessToken Id and the data dir will be removed.
     APP_LOGI("SandboxAppRollBack begin");
-    BundlePermissionMgr::DeleteAccessTokenId(info.GetAccessTokenId(userId));
+    // The sandbox uid lives in the (re-)added user info: before it is added the
+    // lookup returns INVALID_UID and the eviction is skipped.
+    BundleSpmManager::DeleteToken(info.GetAccessTokenId(userId), info.GetBundleName(),
+        BundleSpmManager::TokenDeleteType::NONE, info.GetUid(userId));
     auto bundleName = info.GetBundleName();
     auto appIndex = info.GetAppIndex();
     if (sandboxDataMgr_ == nullptr) {

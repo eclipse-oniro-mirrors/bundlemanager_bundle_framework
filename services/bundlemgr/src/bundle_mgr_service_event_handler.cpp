@@ -20,6 +20,7 @@
 #include <sys/stat.h>
 
 #include "account_helper.h"
+#include "access_token_error.h"
 #include "aot/aot_handler.h"
 #include "app_log_tag_wrapper.h"
 #include "app_provision_info_manager.h"
@@ -36,6 +37,7 @@
 #include "bundle_permission_mgr.h"
 #include "bundle_resource_helper.h"
 #include "bundle_resource_constants.h"
+#include "bundle_spm_manager.h"
 #include "bundle_scanner.h"
 #include "event_report.h"
 #include "on_demand_install_data_mgr.h"
@@ -284,6 +286,24 @@ void BMSEventHandler::BeforeBmsStart()
 void BMSEventHandler::OnBmsStarting()
 {
     LOG_NOFUNC_I(BMS_TAG_DEFAULT, "BMSEventHandler OnBmsStarting start");
+    // Mark the BMS-side migration as completed for the access token service: its
+    // session APIs (e.g. UpdateHapPolicy) stay blocked with ERR_MIGRATION_COMPLETED
+    // until this is flagged. SPM ON only — under SPM OFF the session APIs are not
+    // used, so the flag (and the boot-time AT IPC) is not needed. A repeat call
+    // returns ERR_MIGRATION_COMPLETED, which is normal and not logged as a fault.
+    if (BundleSpmManager::IsEnabled()) {
+        int32_t migrationRet = Security::AccessToken::AccessTokenKit::FinishMigration();
+        bool migrationCompleted = migrationRet == Security::AccessToken::AccessTokenError::ERR_MIGRATION_COMPLETED;
+        if (migrationRet != ERR_OK && !migrationCompleted) {
+            // Transient IPC failure: retry once (same pattern as FinishHapInstall).
+            migrationRet = Security::AccessToken::AccessTokenKit::FinishMigration();
+            migrationCompleted =
+                migrationRet == Security::AccessToken::AccessTokenError::ERR_MIGRATION_COMPLETED;
+        }
+        if (migrationRet != ERR_OK && !migrationCompleted) {
+            LOG_NOFUNC_W(BMS_TAG_DEFAULT, "FinishMigration failed, ret %{public}d", migrationRet);
+        }
+    }
     ProcessCheckSystemOptimizeDir();
     // Judge whether there is install info in the persistent Db
     if (LoadInstallInfosFromDb()) {

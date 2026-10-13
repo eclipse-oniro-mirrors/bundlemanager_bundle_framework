@@ -2175,6 +2175,21 @@ HWTEST_F(BmsInstallDaemonHostImplTest, CreatePrintServiceDir_0100, Function | Sm
 }
 
 /**
+ * @tc.number: ClearSessionProvisionCache_0100
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling ClearSessionProvisionCache of hostImpl (new SPM stage-3 shell, code 81);
+ *           asserts the foundation-uid gate first, aligned with sibling cases
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, ClearSessionProvisionCache_0100, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+
+    auto ret = hostImpl->ClearSessionProvisionCache(0);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
  * @tc.number: InstalldHostImplCopyHqfFile_0100
  * @tc.name: test CopyHqfFile
  * @tc.desc: Verify CopyHqfFile rejects a non-foundation caller.

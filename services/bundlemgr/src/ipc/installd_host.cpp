@@ -459,6 +459,9 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::DELETE_OLD_CACHE_FILES):
             result = HandleDeleteOldCacheFiles(data, reply);
             break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::CLEAR_SESSION_PROVISION_CACHE):
+            result = HandleClearSessionProvisionCache(data, reply);
+            break;
         case static_cast<uint32_t>(InstalldInterfaceCode::GET_CACHE_DISK_USAGE_FROM_PATH):
             result = HandleGetCacheDiskUsageFromPath(data, reply);
             break;
@@ -1682,7 +1685,8 @@ bool InstalldHost::HandDeliverySignProfile(MessageParcel &data, MessageParcel &r
         WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
         return false;
     }
-    ErrCode result = DeliverySignProfile(bundleName, profileBlockLength, profileBlock);
+    int32_t sessionId = data.ReadInt32();
+    ErrCode result = DeliverySignProfile(bundleName, profileBlockLength, profileBlock, sessionId);
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
@@ -2168,6 +2172,14 @@ bool InstalldHost::HandleBundleInstallFinished(MessageParcel &data, MessageParce
 {
     std::string bundleName = Str16ToStr8(data.ReadString16());
     ErrCode result = BundleInstallFinished(bundleName);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleClearSessionProvisionCache(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t sessionId = data.ReadInt32();
+    ErrCode result = ClearSessionProvisionCache(sessionId);
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

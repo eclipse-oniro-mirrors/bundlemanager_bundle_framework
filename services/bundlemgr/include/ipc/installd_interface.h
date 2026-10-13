@@ -704,7 +704,7 @@ public:
     }
 
     virtual ErrCode DeliverySignProfile(const std::string &bundleName, int32_t profileBlockLength,
-        const unsigned char *profileBlock)
+        const unsigned char *profileBlock, int32_t sessionId = 0)
     {
         return ERR_OK;
     }
@@ -989,6 +989,18 @@ public:
     }
 
     virtual ErrCode BundleInstallFinished(const std::string &bundleName)
+    {
+        return ERR_OK;
+    }
+
+    /**
+     * @brief Clear the provision info cached in installd for the given SPM session.
+     *        Called by BMS after a session is committed or rolled back. Reserved for
+     *        SPM stage 3; no-op success under SPM OFF (sessionId is always 0).
+     * @param sessionId Indicates the SPM session id allocated by access token service.
+     * @return Returns ERR_OK.
+     */
+    virtual ErrCode ClearSessionProvisionCache(int32_t sessionId)
     {
         return ERR_OK;
     }

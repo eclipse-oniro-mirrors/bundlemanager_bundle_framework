@@ -95,7 +95,8 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     installer.StopRelable(info, uid);
     installer.DeleteUninstallCloneBundleInfo(bundleName, userId, appIndex);
     Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
-    installer.RecoverHapToken(userId, 1, accessTokenIdEx, info, "");
+    int32_t recoveredUid = 0;
+    installer.RecoverHapToken(userId, 1, accessTokenIdEx, info, "", recoveredUid);
     return true;
 }
 }

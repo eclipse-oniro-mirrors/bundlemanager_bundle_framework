@@ -396,7 +396,7 @@ public:
     virtual ErrCode VerifyCodeSignatureForHap(const CodeSignatureParam &codeSignatureParam) override;
 
     virtual ErrCode DeliverySignProfile(const std::string &bundleName, int32_t profileBlockLength,
-        const unsigned char *profileBlock) override;
+        const unsigned char *profileBlock, int32_t sessionId = 0) override;
 
     virtual ErrCode RemoveSignProfile(const std::string &bundleName) override;
 
@@ -495,7 +495,30 @@ public:
 
     virtual ErrCode BundleInstallFinished(const std::string &bundleName) override;
 
+    virtual ErrCode ClearSessionProvisionCache(int32_t sessionId) override;
+
+    /**
+     * @brief Query the provision info of an SPM session from the access token service.
+     *        sessionId == 0 keeps the legacy behaviour (info untouched, ERR_OK). Results
+     *        are cached per session id; the first query falls back to GetHapSignInfo with
+     *        the original bundle name for clone/sandbox installs.
+     */
+    ErrCode QueryProvisionInfoBySessionId(int32_t sessionId, const std::string &bundleName,
+        SessionProvisionInfo &info);
+
+    /**
+     * @brief Cross-check the APL carried by the IPC param against the provision info of
+     *        the SPM session. Legacy installs (sessionId == 0) skip the check.
+     */
+    ErrCode GetResolvedApl(const CreateDirParam &createDirParam);
+
 private:
+    // SPM session provision cache: session id -> provision info queried from the access
+    // token service. Pure in-memory, erased by ClearSessionProvisionCache when the
+    // session is committed or rolled back.
+    std::map<int32_t, SessionProvisionInfo> sessionProvisionCache_;
+    std::mutex sessionProvisionCacheMutex_;
+
     std::string GetExtensionConfigPath() const;
     /**
      * @brief Create /data/app/el2/userid/sharefiles/ bundle data directory.

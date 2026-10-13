@@ -1575,7 +1575,7 @@ ErrCode InstalldProxy::VerifyCodeSignatureForHap(const CodeSignatureParam &codeS
 }
 
 ErrCode InstalldProxy::DeliverySignProfile(const std::string &bundleName, int32_t profileBlockLength,
-    const unsigned char *profileBlock)
+    const unsigned char *profileBlock, int32_t sessionId)
 {
     if (profileBlockLength <= 0 || profileBlockLength > ServiceConstants::MAX_PROFILE_BLOCK_LENGTH
         || profileBlock == nullptr) {
@@ -1591,6 +1591,7 @@ ErrCode InstalldProxy::DeliverySignProfile(const std::string &bundleName, int32_
         LOG_E(BMS_TAG_INSTALLD, "Failed to write raw data");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
+    INSTALLD_PARCEL_WRITE(data, Int32, sessionId);
 
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
@@ -2200,6 +2201,17 @@ ErrCode InstalldProxy::BundleInstallFinished(const std::string &bundleName)
     MessageParcel reply;
     MessageOption option(MessageOption::TF_ASYNC);
     return TransactInstalldCmd(InstalldInterfaceCode::BUNDLE_INSTALL_FINISHED, data, reply, option);
+}
+
+ErrCode InstalldProxy::ClearSessionProvisionCache(int32_t sessionId)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, Int32, sessionId);
+
+    MessageParcel reply;
+    MessageOption option;
+    return TransactInstalldCmd(InstalldInterfaceCode::CLEAR_SESSION_PROVISION_CACHE, data, reply, option);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

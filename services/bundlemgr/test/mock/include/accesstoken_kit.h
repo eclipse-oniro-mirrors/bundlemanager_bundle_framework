@@ -16,6 +16,7 @@
 #ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_TEST_MOCK_ACCESS_TOKEN_KIT_H
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_TEST_MOCK_ACCESS_TOKEN_KIT_H
 
+#include <map>
 #include <string>
 #include <cstddef>
 #include <vector>
@@ -35,6 +36,29 @@ public:
     /* Get token type from flag in tokenId, which doesn't depend on ATM service */
     static ATokenTypeEnum GetTokenTypeFlag(AccessTokenID tokenID);
     static int VerifyAccessToken(AccessTokenID tokenID, const std::string& permissionName);
+    // ---- SPM interfaces mirrored from the real accesstoken_kit.h (test_spm_inter) ----
+    static int32_t CheckHapSignInfo(const BundleHapList& list, uint32_t flag, int32_t& sessionId,
+        std::vector<TrustedBundleInfo>& bundleInfo, HapVerifyResultInfo& resultInfo);
+    static int32_t CheckHapPermissionInfo(int32_t sessionId, InstallTypeEnum type,
+        HapInfoCheckResult& result);
+    static int32_t PrepareHapIdentity(int32_t& sessionId, const HapBaseInfo& info,
+        const BundlePolicy& policy, Identity& identity);
+    static int32_t UpdateHapPolicy(int32_t sessionId, int32_t tokenId,
+        const BundlePolicy& policy, int32_t& uid);
+    static int32_t FinishInstall(int32_t sessionId, bool isPersistent,
+        const std::map<std::string, std::string>& modulePathMap);
+    static int32_t GetHapSignInfo(const std::string& bundleName, uint32_t flag,
+        std::vector<TrustedBundleInfo>& bundleInfo);
+    static int32_t GetCacheSignInfoBySessionId(int32_t sessionId, uint32_t flag,
+        std::vector<TrustedBundleInfo>& bundleInfo);
+    static int32_t GetCachePolicyBySessionId(int32_t sessionId, const std::string& bundleName,
+        BundlePolicyInfo& bundlePolicyInfo);
+    static int32_t DeleteIdentity(AccessTokenID tokenID, const std::string& bundleName,
+        ReservedType type);
+    static int32_t MigrateInstalledBundles(const std::vector<MigratedInfo>& migratedInfoList,
+        std::vector<BundleMigrateResult>& results);
+    static int32_t FinishMigration();
+    static int32_t GetHapBaseInfoByUid(int32_t uid, HapBaseInfo& info);
     static int VerifyAccessToken(
         AccessTokenID callerTokenID, AccessTokenID firstTokenID, const std::string& permissionName);
     static int GetDefPermission(const std::string& permissionName, PermissionDef& permissionDefResult);

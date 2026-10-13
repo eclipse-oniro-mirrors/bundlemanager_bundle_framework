@@ -37,6 +37,15 @@ public:
     static ErrCode ParseHapProfile(const std::string &filePath, Security::Verify::HapVerifyResult &hapVerifyResult,
         bool readFile = false);
 
+    /**
+     * @brief Convert the access token service error code returned by SPM sign
+     *        verification (AccessTokenKit::CheckHapSignInfo) into a bundle
+     *        framework error code.
+     * @param verifyResultCode Indicates the raw error code from the access token service.
+     * @return Returns the mapped ERR_APPEXECFWK_* code.
+     */
+    static ErrCode ConvertHapVerifyResultCode(int32_t verifyResultCode);
+
 private:
     static bool isDebug_;
 };

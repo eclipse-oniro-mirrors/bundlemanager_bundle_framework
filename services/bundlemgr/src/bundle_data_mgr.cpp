@@ -27,6 +27,7 @@
 #endif
 #include "ability_manager_helper.h"
 #include "accesstoken_kit.h"
+#include "bundle_spm_manager.h"
 #include "account_helper.h"
 #include "app_install_extended_info.h"
 #include "app_mgr_client.h"
@@ -5751,6 +5752,30 @@ ErrCode BundleDataMgr::GetBundleNameAndIndex(const int32_t uid, std::string &bun
         APP_LOGD("the uid(%{public}d) is not an application", uid);
         return ERR_BUNDLE_MANAGER_INVALID_UID;
     }
+    if (BundleSpmManager::IsEnabled()) {
+        // SPM ON: consult the local uid -> (bundleName, appIndex) cache first;
+        // only a miss (identities outside the local map, e.g. dlp sandbox) falls
+        // back to the access token service.
+        {
+            std::shared_lock<std::shared_mutex> lock(uidIndexMapMutex_);
+            auto indexIter = uidIndexMap_.find(uid);
+            if (indexIter != uidIndexMap_.end()) {
+                bundleName = indexIter->second.first;
+                appIndex = indexIter->second.second;
+                return ERR_OK;
+            }
+        }
+        APP_LOGW_NOFUNC("uid %{public}d not found in uidIndexMap_, fallback to access token service", uid);
+        Security::AccessToken::HapBaseInfo baseInfo;
+        if (Security::AccessToken::AccessTokenKit::GetHapBaseInfoByUid(uid, baseInfo) !=
+            Security::AccessToken::AccessTokenKitRet::RET_SUCCESS) {
+            APP_LOGW_NOFUNC("uid %{public}d is not existed in access token service", uid);
+            return ERR_BUNDLE_MANAGER_INVALID_UID;
+        }
+        bundleName = baseInfo.bundleName;
+        appIndex = baseInfo.instIndex;
+        return ERR_OK;
+    }
     int32_t userId = GetUserIdByUid(uid);
     int32_t bundleId = uid - userId * Constants::BASE_USER_RANGE;
     if (bundleId < 0) {
@@ -5768,43 +5793,9 @@ ErrCode BundleDataMgr::GetBundleNameAndIndex(const int32_t uid, std::string &bun
     if (keyName.empty()) {
         return ERR_BUNDLE_MANAGER_INVALID_UID;
     }
-    // bundleName, sandbox_app: \d+_w+, clone_app: \d+clone_w+, others
-    if (isdigit(keyName[0])) {
-        size_t pos = keyName.find_first_not_of("0123456789");
-        if (pos == std::string::npos) {
-            return ERR_BUNDLE_MANAGER_INVALID_UID;
-        }
-        std::string index = keyName.substr(0, pos);
-        if (!OHOS::StrToInt(index, appIndex)) {
-            return ERR_BUNDLE_MANAGER_INVALID_UID;
-        }
-
-        auto clonePos = keyName.find(CLONE_BUNDLE_PREFIX);
-        if (clonePos != std::string::npos && clonePos == pos) {
-            bundleName = keyName.substr(clonePos + strlen(CLONE_BUNDLE_PREFIX));
-            return ERR_OK;
-        }
-
-        auto sandboxPos = keyName.find(Constants::FILE_UNDERLINE);
-        if (sandboxPos != std::string::npos && sandboxPos == pos) {
-            bundleName = keyName.substr(sandboxPos + strlen(Constants::FILE_UNDERLINE));
-            return ERR_OK;
-        }
+    if (!ParseBundleIdKey(keyName, bundleName, appIndex)) {
+        return ERR_BUNDLE_MANAGER_INVALID_UID;
     }
-
-    // dual-mode clone: keyName format "+clone-10000+{bundleName}"
-    if (DualModeHelper::IsDualModeCloneKey(keyName)) {
-        std::string originalName;
-        if (DualModeHelper::ParseDualModeBundleName(keyName, originalName)) {
-            bundleName = originalName;
-            appIndex = ServiceConstants::DUAL_MODE_CLONE_APP_INDEX;
-            return ERR_OK;
-        }
-        APP_LOGW("dual-mode clone key parse failed, keyName:%{public}s", keyName.c_str());
-    }
-
-    bundleName = keyName;
-    appIndex = 0;
     return ERR_OK;
 }
 
@@ -5832,6 +5823,45 @@ ErrCode BundleDataMgr::GetInnerBundleInfoAndIndexByUid(const int32_t uid, InnerB
 {
     if (uid < Constants::BASE_APP_UID) {
         APP_LOGD("the uid(%{public}d) is not an application", uid);
+        return ERR_BUNDLE_MANAGER_INVALID_UID;
+    }
+    if (BundleSpmManager::IsEnabled()) {
+        // SPM ON: consult the local uid -> (bundleName, appIndex) cache first;
+        // only a miss falls back to the access token service (same pattern as
+        // GetBundleNameAndIndex).
+        std::string bundleName;
+        {
+            std::shared_lock<std::shared_mutex> lock(uidIndexMapMutex_);
+            auto indexIter = uidIndexMap_.find(uid);
+            if (indexIter != uidIndexMap_.end()) {
+                bundleName = indexIter->second.first;
+                appIndex = indexIter->second.second;
+            }
+        }
+        if (bundleName.empty()) {
+            APP_LOGW_NOFUNC("uid %{public}d not found in uidIndexMap_, fallback to access token service", uid);
+            Security::AccessToken::HapBaseInfo baseInfo;
+            if (Security::AccessToken::AccessTokenKit::GetHapBaseInfoByUid(uid, baseInfo) !=
+                Security::AccessToken::AccessTokenKitRet::RET_SUCCESS) {
+                APP_LOGW_NOFUNC("uid %{public}d is not existed in access token service", uid);
+                return ERR_BUNDLE_MANAGER_INVALID_UID;
+            }
+            bundleName = baseInfo.bundleName;
+            appIndex = baseInfo.instIndex;
+        }
+        int32_t userId = GetUserIdByUid(uid);
+        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        auto bundleInfoIter = bundleInfos_.find(bundleName);
+        if (bundleInfoIter == bundleInfos_.end()) {
+            APP_LOGE("bundleName %{public}s is not existed in bundleInfos_", bundleName.c_str());
+            return ERR_BUNDLE_MANAGER_INVALID_UID;
+        }
+        int32_t oriUid = bundleInfoIter->second.GetUid(userId, appIndex);
+        if (oriUid == uid) {
+            innerBundleInfo = bundleInfoIter->second;
+            return ERR_OK;
+        }
+        APP_LOGW("bn %{public}s uid %{public}d oriUid %{public}d ", bundleName.c_str(), uid, oriUid);
         return ERR_BUNDLE_MANAGER_INVALID_UID;
     }
     int32_t userId = GetUserIdByUid(uid);
@@ -8196,6 +8226,27 @@ ErrCode BundleDataMgr::GenerateUidAndGid(InnerBundleUserInfo &innerBundleUserInf
         return ERR_APPEXECFWK_INSTALL_BUNDLENAME_IS_EMPTY;
     }
 
+    if (BundleSpmManager::IsEnabled()) {
+        // SPM ON: the uid allocation authority is the access token service
+        // (PrepareHapIdentity in InitToken); the local bundle-id counter must
+        // never allocate. An already allocated uid (adopted from the SPM
+        // identity in InitToken) only completes its gids — re-allocating from
+        // the independent local counter would drift the uid. An INVALID uid
+        // means the AT side returned no uid for the identity — fail fast
+        // (mirrors the installer-level fail-fast) instead of allocating a
+        // BMS-side uid that would drift from the token's uid binding.
+        if (innerBundleUserInfo.uid != Constants::INVALID_UID) {
+            if (std::find(innerBundleUserInfo.gids.begin(), innerBundleUserInfo.gids.end(),
+                innerBundleUserInfo.uid) == innerBundleUserInfo.gids.end()) {
+                innerBundleUserInfo.gids.emplace_back(innerBundleUserInfo.uid);
+            }
+            return ERR_OK;
+        }
+        APP_LOGE("SPM ON but no uid from AT identity, bundleName:%{public}s userId:%{public}d",
+            innerBundleUserInfo.bundleName.c_str(), innerBundleUserInfo.bundleUserInfo.userId);
+        return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
+    }
+
     int32_t bundleId = INVALID_BUNDLEID;
     ErrCode ret = GenerateBundleId(innerBundleUserInfo.bundleName, bundleId);
     if (ret != ERR_OK) {
@@ -8207,6 +8258,59 @@ ErrCode BundleDataMgr::GenerateUidAndGid(InnerBundleUserInfo &innerBundleUserInf
         + bundleId % Constants::BASE_USER_RANGE;
     innerBundleUserInfo.gids.emplace_back(innerBundleUserInfo.uid);
     return ERR_OK;
+}
+
+bool BundleDataMgr::ParseBundleIdKey(const std::string &keyName, std::string &bundleName, int32_t &appIndex)
+{
+    // bundleName key formats: sandbox "\d+_w+", clone "\d+clone_w+", dual-mode "+clone-10000+w+", others
+    if (!keyName.empty() && isdigit(static_cast<unsigned char>(keyName[0]))) {
+        size_t pos = keyName.find_first_not_of("0123456789");
+        if (pos == std::string::npos) {
+            return false;
+        }
+        std::string index = keyName.substr(0, pos);
+        if (!OHOS::StrToInt(index, appIndex)) {
+            return false;
+        }
+        auto clonePos = keyName.find(CLONE_BUNDLE_PREFIX);
+        if (clonePos != std::string::npos && clonePos == pos) {
+            bundleName = keyName.substr(clonePos + strlen(CLONE_BUNDLE_PREFIX));
+            return true;
+        }
+
+        auto sandboxPos = keyName.find(Constants::FILE_UNDERLINE);
+        if (sandboxPos != std::string::npos && sandboxPos == pos) {
+            bundleName = keyName.substr(sandboxPos + strlen(Constants::FILE_UNDERLINE));
+            return true;
+        }
+    }
+
+    // dual-mode clone: keyName format "+clone-10000+{bundleName}"
+    if (DualModeHelper::IsDualModeCloneKey(keyName)) {
+        std::string originalName;
+        if (DualModeHelper::ParseDualModeBundleName(keyName, originalName)) {
+            bundleName = originalName;
+            appIndex = ServiceConstants::DUAL_MODE_CLONE_APP_INDEX;
+            return true;
+        }
+        APP_LOGW("dual-mode clone key parse failed, keyName:%{public}s", keyName.c_str());
+    }
+
+    bundleName = keyName;
+    appIndex = 0;
+    return true;
+}
+
+void BundleDataMgr::UpdateUidIndexMap(int32_t uid, const std::string &bundleName, int32_t appIndex)
+{
+    std::unique_lock<std::shared_mutex> lock(uidIndexMapMutex_);
+    uidIndexMap_[uid] = {bundleName, appIndex};
+}
+
+void BundleDataMgr::RemoveUidIndexMap(int32_t uid)
+{
+    std::unique_lock<std::shared_mutex> lock(uidIndexMapMutex_);
+    uidIndexMap_.erase(uid);
 }
 
 ErrCode BundleDataMgr::GenerateBundleId(const std::string &bundleName, int32_t &bundleId)
@@ -8311,6 +8415,23 @@ void BundleDataMgr::RecycleUidAndGid(const InnerBundleInfo &info)
         return;
     }
 
+    // Only uids generated by the access token service are tracked in the
+    // reverse-lookup cache, so the uninstall removal runs under SPM ON only; it
+    // must stay independent of the allocation map below (an AT-allocated uid
+    // never has a bundleIdMap_ entry). Clone and sandbox uids of every user are
+    // evicted as well — they were cached when their identities were prepared.
+    if (BundleSpmManager::IsEnabled()) {
+        for (const auto &userInfoItem : userInfos) {
+            RemoveUidIndexMap(userInfoItem.second.uid);
+            for (const auto &cloneItem : userInfoItem.second.cloneInfos) {
+                RemoveUidIndexMap(cloneItem.second.uid);
+            }
+            for (const auto &sandboxItem : userInfoItem.second.sandboxInfos) {
+                RemoveUidIndexMap(sandboxItem.second.uid);
+            }
+        }
+    }
+
     auto innerBundleUserInfo = userInfos.begin()->second;
     int32_t bundleId = innerBundleUserInfo.uid -
         innerBundleUserInfo.bundleUserInfo.userId * Constants::BASE_USER_RANGE;
@@ -8334,22 +8455,25 @@ void BundleDataMgr::RecycleUidAndGid(const InnerBundleInfo &info)
 
 bool BundleDataMgr::RestoreUidAndGid()
 {
+    // The reverse-lookup cache only tracks uids generated by the access token
+    // service (SPM ON); under SPM OFF the boot restore leaves it empty.
+    const bool spmCacheEnabled = BundleSpmManager::IsEnabled();
     for (const auto &info : bundleInfos_) {
         bool onlyInsertOne = false;
         for (auto infoItem : info.second.GetInnerBundleUserInfos()) {
             auto innerBundleUserInfo = infoItem.second;
             AddUserId(innerBundleUserInfo.bundleUserInfo.userId);
+            // === DUAL_MODE: secondary-mode clone apps must restore bundleIdMap_ and fs config
+            // with the prefixed name, matching what CreateBundleDataDir used at install time.
+            // Otherwise the same bundleId is remapped to the original name after reboot and
+            // diverges from the install-time fs config generated under the prefixed name.
+            std::string restoreName = info.second.IsDualModeCloneApp()
+                ? DualModeHelper::GetDualModeBundleName(innerBundleUserInfo.bundleName)
+                : innerBundleUserInfo.bundleName;
             if (!onlyInsertOne) {
                 onlyInsertOne = true;
                 int32_t bundleId = innerBundleUserInfo.uid -
                     innerBundleUserInfo.bundleUserInfo.userId * Constants::BASE_USER_RANGE;
-                // === DUAL_MODE: secondary-mode clone apps must restore bundleIdMap_ and fs config
-                // with the prefixed name, matching what CreateBundleDataDir used at install time.
-                // Otherwise the same bundleId is remapped to the original name after reboot and
-                // diverges from the install-time fs config generated under the prefixed name.
-                std::string restoreName = info.second.IsDualModeCloneApp()
-                    ? DualModeHelper::GetDualModeBundleName(innerBundleUserInfo.bundleName)
-                    : innerBundleUserInfo.bundleName;
                 std::unique_lock<std::shared_mutex> lock(bundleIdMapMutex_);
                 auto item = bundleIdMap_.find(bundleId);
                 if (item == bundleIdMap_.end()) {
@@ -8362,6 +8486,16 @@ bool BundleDataMgr::RestoreUidAndGid()
                     ServiceConstants::SHAREFS_CONFIG_PATH);
                 BundleUtil::MakeFsConfig(restoreName, ServiceConstants::HMDFS_CONFIG_PATH,
                     info.second.GetAppProvisionType(), Constants::APP_PROVISION_TYPE_FILE_NAME);
+            }
+            // The reverse-lookup cache is keyed by uid, so every user's own uid gets
+            // an entry (unlike bundleIdMap_, which only needs one per bundle). The
+            // original name and app index are known here: pass them directly instead
+            // of re-parsing the composite key. UpdateUidIndexMap locks internally;
+            // called under bundleIdMapMutex_ above only via the one-way order.
+            if (spmCacheEnabled && innerBundleUserInfo.uid != Constants::INVALID_UID) {
+                UpdateUidIndexMap(innerBundleUserInfo.uid, innerBundleUserInfo.bundleName,
+                    info.second.IsDualModeCloneApp()
+                        ? ServiceConstants::DUAL_MODE_CLONE_APP_INDEX : 0);
             }
             // appClone
             std::string bundleName = info.second.GetBundleName();
@@ -8378,6 +8512,11 @@ bool BundleDataMgr::RestoreUidAndGid()
                 } else {
                     bundleIdMap_[bundleId] = cloneBundleName;
                 }
+                // UpdateUidIndexMap locks internally: one-way nesting with the
+                // bundleIdMapMutex_ held by this block.
+                if (spmCacheEnabled) {
+                    UpdateUidIndexMap(cloneInfo.uid, bundleName, cloneInfo.appIndex);
+                }
                 BundleUtil::MakeFsConfig(cloneBundleName, bundleId, ServiceConstants::HMDFS_CONFIG_PATH);
                 BundleUtil::MakeFsConfig(cloneBundleName, bundleId,
                     ServiceConstants::SHAREFS_CONFIG_PATH);
@@ -8391,6 +8530,14 @@ bool BundleDataMgr::RestoreUidAndGid()
                 int32_t bundleId = cliInfo.uid - cliInfo.userId * Constants::BASE_USER_RANGE;
                 std::string cliBundleName =
                     BundleCloneCommonHelper::GetCloneBundleIdKey(bundleName, cliInfo.appIndex);
+                {
+                    // Not registered in bundleIdMap_ (allocation is not needed for cli
+                    // sandbox), but the reverse-lookup cache covers it so the ON uid
+                    // lookup hits locally instead of falling back to the AT service.
+                    if (spmCacheEnabled) {
+                        UpdateUidIndexMap(cliInfo.uid, bundleName, cliInfo.appIndex);
+                    }
+                }
                 BundleUtil::MakeFsConfig(cliBundleName, bundleId, ServiceConstants::HMDFS_CONFIG_PATH);
                 BundleUtil::MakeFsConfig(cliBundleName, bundleId,
                     ServiceConstants::SHAREFS_CONFIG_PATH);
@@ -8431,7 +8578,7 @@ void BundleDataMgr::RestoreSandboxUidAndGid(std::map<int32_t, std::string> &bund
 {
     if (sandboxAppHelper_ != nullptr) {
         std::unique_lock<std::shared_mutex> lock(bundleIdMapMutex_);
-        sandboxAppHelper_->RestoreSandboxUidAndGid(bundleIdMap);
+        sandboxAppHelper_->RestoreSandboxUidAndGid(bundleIdMap, this);
     }
 }
 
@@ -15680,6 +15827,7 @@ void BundleDataMgr::RestoreUidAndGidFromUninstallInfo()
         return;
     }
     std::map<int32_t, std::string> uninstallBundleIdMap;
+    std::map<int32_t, std::pair<std::string, int32_t>> uninstallUidIndexEntries;
     for (const auto &info : uninstallBundleInfos) {
         if (info.second.userInfos.empty()) {
             continue;
@@ -15711,6 +15859,13 @@ void BundleDataMgr::RestoreUidAndGidFromUninstallInfo()
             auto item = bundleIdMap_.find(bundleId);
             if (item == bundleIdMap_.end()) {
                 uninstallBundleIdMap.emplace(bundleId, bundleName);
+                // The reverse-lookup cache is keyed by uid and takes the original
+                // bundle name and the app index parsed from the user key directly:
+                // routing them through the composite key re-parse loses the app
+                // index. Only collected under SPM ON — OFF never reads the cache.
+                if (BundleSpmManager::IsEnabled()) {
+                    uninstallUidIndexEntries.emplace(userInfo.uid, std::make_pair(info.first, appIndex));
+                }
                 BundleUtil::MakeFsConfig(bundleName, bundleId, ServiceConstants::HMDFS_CONFIG_PATH);
                 BundleUtil::MakeFsConfig(bundleName, bundleId, ServiceConstants::SHAREFS_CONFIG_PATH);
                 BundleUtil::MakeFsConfig(info.first, ServiceConstants::HMDFS_CONFIG_PATH,
@@ -15720,6 +15875,13 @@ void BundleDataMgr::RestoreUidAndGidFromUninstallInfo()
     }
     for (const auto &item : uninstallBundleIdMap) {
         bundleIdMap_.emplace(item.first, item.second);
+    }
+    // UpdateUidIndexMap locks internally: one-way nesting with the bundleIdMapMutex_
+    // held by this function. The cache only tracks AT-generated uids (SPM ON).
+    if (BundleSpmManager::IsEnabled()) {
+        for (const auto &item : uninstallUidIndexEntries) {
+            UpdateUidIndexMap(item.first, item.second.first, item.second.second);
+        }
     }
 }
 

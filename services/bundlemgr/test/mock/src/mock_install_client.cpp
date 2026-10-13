@@ -543,7 +543,7 @@ ErrCode InstalldClient::VerifyCodeSignatureForHap(const CodeSignatureParam &code
 }
 
 ErrCode InstalldClient::DeliverySignProfile(const std::string &bundleName, int32_t profileBlockLength,
-    const unsigned char *profileBlock)
+    const unsigned char *profileBlock, int32_t sessionId)
 {
     return ERR_OK;
 }
@@ -744,6 +744,11 @@ ErrCode InstalldClient::CopyAbcFile(const std::string &bundleName, int32_t userI
 }
 
 ErrCode InstalldClient::BundleInstallFinished(const std::string &bundleName)
+{
+    return ERR_OK;
+}
+
+ErrCode InstalldClient::ClearSessionProvisionCache(int32_t sessionId)
 {
     return ERR_OK;
 }

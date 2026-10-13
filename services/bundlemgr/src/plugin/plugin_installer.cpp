@@ -206,6 +206,9 @@ ErrCode PluginInstaller::InstallPluginInner(const std::string &hostBundleName,
     SendPluginCommonEvent(hostBundleName, bundleName_,
         isPluginExist_ ? NotifyType::UPDATE : NotifyType::INSTALL);
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "install plugin finished");
+    // SPM ON: plugins only borrow the AT verification inside the session and do not
+    // request permissions; close the session explicitly (rollback + cache clear).
+    spmSession_.Rollback();
     return ERR_OK;
 }
 
@@ -381,7 +384,11 @@ ErrCode PluginInstaller::ParseFiles(const std::vector<std::string> &pluginFilePa
     }
     // verify signature info for all haps
     std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
-    result = bundleInstallChecker_->CheckMultipleHapsSignInfo(bundlePaths, hapVerifyResults);
+    spmSession_ = BundleSpmManager::InstallSession::CheckSignAndInitSession(Constants::INVALID_USERID,
+        bundlePaths, false, *bundleInstallChecker_, result, false);
+    if (result == ERR_OK) {
+        spmSession_.GetHapVerifyResults(hapVerifyResults);
+    }
     if (result != ERR_OK) {
         APP_LOGE("check multi hap signature info failed %{public}d", result);
         return ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE;
@@ -644,6 +651,7 @@ ErrCode PluginInstaller::VerifyCodeSignatureForNativeFiles(const std::string &bu
     codeSignatureParam.isPreInstalledBundle = isPreInstalledBundle;
     codeSignatureParam.isCompressNativeLibrary = isCompressNativeLibs_;
     bundleInstallChecker_->ProcessCodeSignatureParam(verifyRes_, codeSignatureParam);
+    spmSession_.FillCodeSignatureParam(verifyRes_, codeSignatureParam);
     if (InstalldClient::GetInstance()->VerifyCodeSignature(codeSignatureParam) != ERR_OK) {
         return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED;
     }
@@ -670,6 +678,7 @@ ErrCode PluginInstaller::VerifyCodeSignatureForHsp(const std::string &hspPath,
         codeSignatureParam.pluginId = JoinPluginId();
     }
     bundleInstallChecker_->ProcessCodeSignatureParam(verifyRes_, codeSignatureParam);
+    spmSession_.FillCodeSignatureParam(verifyRes_, codeSignatureParam);
     if (InstalldClient::GetInstance()->VerifyCodeSignatureForHap(codeSignatureParam) != ERR_OK) {
         return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED;
     }
@@ -709,7 +718,7 @@ ErrCode PluginInstaller::DeliveryProfileToCodeSign(
             APP_LOGE("invalid sign profile");
             return ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE;
         }
-        return InstalldClient::GetInstance()->DeliverySignProfile(provisionInfo.bundleInfo.bundleName,
+        return spmSession_.DeliverySignProfile(provisionInfo.bundleInfo.bundleName,
             provisionInfo.profileBlockLength, provisionInfo.profileBlock.get());
     }
     return ERR_OK;
@@ -811,19 +820,12 @@ ErrCode PluginInstaller::CheckExternalSourcePluginSwitch() const
 ErrCode PluginInstaller::CheckHspPluginCertValidity() const
 {
 #ifdef SECURITY_PRIVACY_SERVER_ENABLE
-    auto hspPlugin = verifyRes_.GetProvisionInfo().hspPluginInfo;
-    HspPluginParam hspPluginParam;
-    hspPluginParam.certType = hspPlugin.certType;
-    hspPluginParam.subjectCN = hspPlugin.subjectCN;
-    hspPluginParam.issuerCN = hspPlugin.issuerCN;
-    hspPluginParam.subjectOU = hspPlugin.subjectOU;
-    hspPluginParam.issuerC = hspPlugin.issuerC;
-    hspPluginParam.issuerO = hspPlugin.issuerO;
-    hspPluginParam.issuerOU = hspPlugin.issuerOU;
-    hspPluginParam.subjectO = hspPlugin.subjectO;
-    hspPluginParam.serialNumber = hspPlugin.serialNumber;
-    hspPluginParam.authKeyIdentifier = hspPlugin.authKeyIdentifier;
-    auto ret = InstalldClient::GetInstance()->CheckHspPluginCertValidity(hspPluginParam);
+    // SPM: the hsp plugin cert is parsed from the session provision on the
+    // installd side — pass the bundleName and the session id (same pattern as
+    // InstallSession::DeliverySignProfile); the local verifyRes_ cert fields
+    // are no longer consumed here.
+    auto ret = InstalldClient::GetInstance()->CheckHspPluginCertValidity(bundleName_,
+        spmSession_.GetSessionId());
     if (ret != ERR_OK) {
         APP_LOGE("CheckHspPluginCertValidity failed %{public}d", ret);
         return ret;

@@ -34,6 +34,97 @@ class HapInfoCheckResult final {
 public:
     PermissionInfoCheckResult permCheckResult;
 };
+
+// ---- SPM structures mirrored from the real hap_token_info.h (test_spm_inter) ----
+enum class ReservedType : int32_t {
+    NONE = 0,
+    RESERVED_IDENTITY = 1,
+    RESERVED_DATA = 2,
+};
+
+enum InstallTypeEnum {
+    TYPE_INSTALL = 0,
+    TYPE_REPLACE,
+    TYPE_MERGE,
+};
+
+enum SignInfoQueryFlag : uint32_t {
+    QUERY_PROFILE = 1 << 0,
+    QUERY_MODULE_INFO = 1 << 1,
+    QUERY_SHARED_FILES = 1 << 2,
+};
+
+struct ProfileData {
+    std::string provisionRaw;
+    int32_t profileBlockLength = 0;
+    std::vector<uint8_t> profileBlock;
+    std::string appId;
+    std::string fingerprint;
+    std::string organization;
+    bool isOpenHarmony = false;
+    bool isEnterpriseResigned = false;
+};
+
+struct TrustedBundleInfo {
+    ProfileData profileData;
+    std::string moduleInfo;
+    std::string sharedFiles;
+};
+
+struct BundlePolicyInfo {
+    std::vector<std::string> reqPermissions;
+};
+
+struct HapVerifyResultInfo {
+    uint32_t index = 0;
+    int32_t errorCode = 0;
+};
+
+class HapBaseInfo final {
+public:
+    int32_t userID;
+    std::string bundleName = "";
+    int32_t instIndex = 0;
+};
+
+struct Identity final {
+    uint64_t tokenId = 0;
+    int32_t uid = 0;
+};
+
+struct BundleHapList final {
+    std::vector<std::string> hapPaths;
+    bool isPreInstalled = false;
+    int32_t userId;
+};
+
+struct MigratedInfo final {
+    std::string bundleName;
+    BundleHapList pathList;
+    std::vector<HapBaseInfo> hapBaseInfoList;
+    std::vector<int32_t> uidList;
+    std::vector<ReservedType> reservedTypeList;
+};
+
+struct BundleMigrateResult final {
+    std::vector<uint64_t> tokenIdList;
+    std::vector<ReservedType> reservedTypeList;
+    int32_t errcode = 0;
+};
+
+// Mirrors the DlpType enum of the access token SDK (see HapDlpType in
+// access_token.h): consumed by BundlePermissionMgr::CreateBundlePolicy.
+enum DlpType {
+    DLP_TYPE_NONE = 0,
+    DLP_TYPE_FULL_CONTROLLED = 1,
+    DLP_TYPE_READ_ONLY = 2,
+};
+
+struct BundlePolicy {
+    std::vector<PreAuthorizationInfo> preAuthorizationInfo;
+    int32_t dlpType = 0;
+    bool isDebugGrant = false;
+};
 } // namespace AccessToken
 } // namespace Security
 } // namespace OHOS

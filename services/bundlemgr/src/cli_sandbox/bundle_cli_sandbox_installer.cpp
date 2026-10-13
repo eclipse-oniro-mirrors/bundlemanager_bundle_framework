@@ -32,6 +32,7 @@
 #include "bms_update_selinux_mgr.h"
 #include "datetime_ex.h"
 #include "hitrace_meter.h"
+#include "bundle_spm_manager.h"
 #include "installd_client.h"
 #include "inner_bundle_clone_common.h"
 #include "ipc_skeleton.h"
@@ -186,23 +187,37 @@ ErrCode BundleCliSandboxInstaller::ProcessCreateCliSandbox(const std::string &cr
 
     // 9. create access token
     info.SetAppIndex(appIndex);
-    Security::AccessToken::AccessTokenIDEx newTokenIdEx;
+    Security::AccessToken::AccessTokenIDEx newTokenIdEx = {0};
     AppProvisionInfo appProvisionInfo;
     if (dataMgr_->GetAppProvisionInfo(bundleName, userId, appProvisionInfo) != ERR_OK) {
         APP_LOGE("GetAppProvisionInfo failed bundleName:%{public}s", bundleName.c_str());
     }
     Security::AccessToken::HapInfoCheckResult checkResult;
-    if (BundlePermissionMgr::InitHapToken(info, userId, 0, newTokenIdEx, checkResult,
-        appProvisionInfo.appServiceCapabilities) != ERR_OK) {
+    int32_t identityUid = 0;
+    if (spmSession_.InitToken(info, userId, 0, newTokenIdEx, checkResult,
+        appProvisionInfo.appServiceCapabilities, nullptr, false, &identityUid) != ERR_OK) {
         APP_LOGE("bundleName:%{public}s InitHapToken failed", bundleName.c_str());
         return ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_GRANT_PERMISSION_FAILED;
     }
 
     ScopeGuard applyAccessTokenGuard([&] {
-        BundlePermissionMgr::DeleteAccessTokenId(newTokenIdEx.tokenIdExStruct.tokenID);
+        BundleSpmManager::DeleteToken(newTokenIdEx.tokenIdExStruct.tokenID, bundleName,
+            BundleSpmManager::TokenDeleteType::NONE);
     });
 
-    uid = info.GetUid(userId);
+    if (BundleSpmManager::IsEnabled()) {
+        // SPM ON: take the AT-allocated identity uid (same as the dlp sandbox /
+        // clone installers) — the base app uid would collide with the main app's
+        // own reverse-lookup cache entry and desync the persisted sandbox uid
+        // from the token's uid binding.
+        if (identityUid == 0) {
+            APP_LOGE("no uid from AT identity, bundleName:%{public}s", bundleName.c_str());
+            return ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_INTERNAL_ERROR;
+        }
+        uid = identityUid;
+    } else {
+        uid = info.GetUid(userId);
+    }
     if (uid == Constants::INVALID_UID) {
         APP_LOGE_NOFUNC("InitHapToken returned invalid uid for bundle:%{public}s", bundleName.c_str());
         return ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_INTERNAL_ERROR;
@@ -246,6 +261,20 @@ ErrCode BundleCliSandboxInstaller::ProcessCreateCliSandbox(const std::string &cr
         RemoveEl5Dir(bundleName, userId, appIndex);
     });
     CreateEl5Dir(info, userId, uid, appIndex);
+
+    // SPM ON: InitToken builds a REAL session (PrepareHapIdentity with
+    // sessionId=0 makes the AT side allocate one and write it back), so this
+    // Commit is a real FinishInstall. The session carries no bundleInfos, so the
+    // empty modulePathMap skips the package-info write. Commit BEFORE the guards
+    // are dismissed — on failure the still-armed guards roll the token/data
+    // dirs/sandbox info back and the session destructor rolls the AT side back,
+    // so both sides stay consistent.
+    int32_t spmCommitRet = spmSession_.Commit({});
+    if (spmCommitRet != ERR_OK) {
+        APP_LOGE("spm session commit failed, bundleName:%{public}s errCode:%{public}d",
+            bundleName.c_str(), spmCommitRet);
+        return ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_GRANT_PERMISSION_FAILED;
+    }
 
     // commit
     applyAccessTokenGuard.Dismiss();
@@ -483,7 +512,7 @@ ErrCode BundleCliSandboxInstaller::ProcessDestroyCliSandbox(const std::string &c
         APP_LOGW("RemoveSandboxDataDir failed");
     }
     RemoveEl5Dir(bundleName, userId, appIndex);
-    if (BundlePermissionMgr::DeleteAccessTokenId(accessTokenId_) !=
+    if (BundleSpmManager::DeleteToken(accessTokenId_, bundleName, BundleSpmManager::TokenDeleteType::NONE) !=
         Security::AccessToken::AccessTokenKitRet::RET_SUCCESS) {
         APP_LOGE("delete AT failed sandbox");
     }

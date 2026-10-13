@@ -28,6 +28,7 @@
 #include "bundle_common_event_mgr.h"
 #include "bundle_data_mgr.h"
 #include "bundle_install_checker.h"
+#include "bundle_spm_manager.h"
 #include "event_report.h"
 #include "hap_token_info.h"
 #include "install_param.h"
@@ -1044,7 +1045,7 @@ private:
     bool SaveFirstInstallBundleInfo(const std::string &bundleName, const int32_t userId,
         bool isPreInstallApp, const InnerBundleUserInfo &innerBundleUserInfo);
     void UpdateDynamicSkills();
-    ErrCode MarkInstallFinish();
+    ErrCode MarkInstallFinish(const std::map<std::string, std::string> &modulePathMap);
     bool IsArkWeb(const std::string &bundleName) const;
     bool IsShellOrDevAssistant() const;
     void UninstallDebugAppSandbox(const std::string &bundleName, const int32_t uid,
@@ -1162,6 +1163,8 @@ private:
     InstallerState state_ = InstallerState::INSTALL_START;
     uint32_t versionCode_ = 0;
     uint32_t accessTokenId_ = 0;
+    // SPM facade session of the current install; inert under SPM OFF (session id 0)
+    BundleSpmManager::InstallSession spmSession_;
     uint32_t oldApplicationReservedFlag_ = 0;
 
     int32_t userId_ = Constants::INVALID_USERID;
