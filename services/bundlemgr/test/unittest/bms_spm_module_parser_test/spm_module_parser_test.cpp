@@ -14,7 +14,9 @@
  */
 
 #include <gtest/gtest.h>
+#include <limits>
 
+#include "inner_bundle_clone_common.h"
 #include "spm_module_parser.h"
 
 using namespace testing::ext;
@@ -939,5 +941,118 @@ HWTEST_F(SpmModuleParserTest, ParseSpmModule_5100, Function | SmallTest | Level1
         EXPECT_FALSE(ParseSpmModule(moduleJson, info)) << value;
     }
 }
+
+/**
+ * @tc.name: GetSandboxDataDirName_0100
+ * @tc.desc: Ordinary instances preserve the original bundle name.
+ */
+HWTEST_F(SpmModuleParserTest, GetSandboxDataDirName_0100, Function | SmallTest | Level1)
+{
+    EXPECT_EQ(GetSandboxDataDirName("com.example.app", 0), "com.example.app");
+    EXPECT_EQ(GetSandboxDataDirName("com.example.another", 0), "com.example.another");
+}
+
+/**
+ * @tc.name: GetSandboxDataDirName_0200
+ * @tc.desc: Clone indices 1 through 5 produce the exact directory names.
+ */
+HWTEST_F(SpmModuleParserTest, GetSandboxDataDirName_0200, Function | SmallTest | Level1)
+{
+    struct TestCase {
+        int32_t appIndex;
+        const char* expected;
+    };
+    const TestCase cases[] = {
+        {1, "+clone-1+com.example.app"},
+        {2, "+clone-2+com.example.app"},
+        {3, "+clone-3+com.example.app"},
+        {4, "+clone-4+com.example.app"},
+        {5, "+clone-5+com.example.app"},
+    };
+    for (const auto &testCase : cases) {
+        EXPECT_EQ(GetSandboxDataDirName("com.example.app", testCase.appIndex), testCase.expected);
+    }
+}
+
+/**
+ * @tc.name: GetSandboxDataDirName_0300
+ * @tc.desc: The special instance index retains all decimal digits.
+ */
+HWTEST_F(SpmModuleParserTest, GetSandboxDataDirName_0300, Function | SmallTest | Level1)
+{
+    EXPECT_EQ(GetSandboxDataDirName("com.example.app", 10000), "+clone-10000+com.example.app");
+}
+
+/**
+ * @tc.name: GetSandboxDataDirName_0400
+ * @tc.desc: Positive indices match the existing server helper.
+ */
+HWTEST_F(SpmModuleParserTest, GetSandboxDataDirName_0400, Function | SmallTest | Level1)
+{
+    const std::string bundleNames[] = {"com.example.app", "com.example.another"};
+    const int32_t appIndices[] = {1, 2, 3, 4, 5, 6, 1000, 1099, 2000, 3000, 10000,
+        std::numeric_limits<int32_t>::max()};
+    for (const auto &bundleName : bundleNames) {
+        for (const auto appIndex : appIndices) {
+            EXPECT_EQ(GetSandboxDataDirName(bundleName, appIndex),
+                BundleCloneCommonHelper::GetCloneDataDir(bundleName, appIndex));
+        }
+    }
+}
+
+/**
+ * @tc.name: GetSandboxDataDirName_0500
+ * @tc.desc: Parsed identities can be reused without service or directory setup.
+ */
+HWTEST_F(SpmModuleParserTest, GetSandboxDataDirName_0500, Function | SmallTest | Level1)
+{
+    InnerModuleInfoForSpm info;
+    ASSERT_TRUE(ParseSpmModule(VALID_MINIMAL_JSON, info));
+    const std::string originalBundleName = info.bundleName;
+    EXPECT_EQ(GetSandboxDataDirName(info.bundleName, 3), "+clone-3+com.example.test");
+    EXPECT_EQ(GetSandboxDataDirName("com.example.another", 10000), "+clone-10000+com.example.another");
+    EXPECT_EQ(GetSandboxDataDirName(info.bundleName, 0), "com.example.test");
+    EXPECT_EQ(GetSandboxDataDirName(info.bundleName, 3), "+clone-3+com.example.test");
+    EXPECT_EQ(info.bundleName, originalBundleName);
+}
+
+/**
+ * @tc.name: GetSandboxDataDirName_0600
+ * @tc.desc: Non-positive indices preserve the original bundle name, including the minimum int32_t value.
+ */
+HWTEST_F(SpmModuleParserTest, GetSandboxDataDirName_0600, Function | SmallTest | Level1)
+{
+    const std::string bundleNames[] = {"com.example.app", "com.example.another"};
+    const int32_t appIndices[] = {std::numeric_limits<int32_t>::min(), -10000, -1, 0};
+    for (const auto &bundleName : bundleNames) {
+        for (const auto appIndex : appIndices) {
+            EXPECT_EQ(GetSandboxDataDirName(bundleName, appIndex), bundleName);
+        }
+    }
+}
+
+/**
+ * @tc.name: GetSandboxDataDirName_0700
+ * @tc.desc: Other positive indices use the same naming rule without application type or index validation.
+ */
+HWTEST_F(SpmModuleParserTest, GetSandboxDataDirName_0700, Function | SmallTest | Level1)
+{
+    struct TestCase {
+        int32_t appIndex;
+        const char* expected;
+    };
+    const TestCase cases[] = {
+        {6, "+clone-6+com.example.app"},
+        {1000, "+clone-1000+com.example.app"},
+        {1099, "+clone-1099+com.example.app"},
+        {2000, "+clone-2000+com.example.app"},
+        {3000, "+clone-3000+com.example.app"},
+        {std::numeric_limits<int32_t>::max(), "+clone-2147483647+com.example.app"},
+    };
+    for (const auto &testCase : cases) {
+        EXPECT_EQ(GetSandboxDataDirName("com.example.app", testCase.appIndex), testCase.expected);
+    }
+}
+
 }  // namespace AppExecFwk
 }  // namespace OHOS

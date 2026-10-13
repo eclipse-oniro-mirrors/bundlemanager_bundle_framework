@@ -76,6 +76,15 @@ struct InnerModuleInfoForSpm {
  */
 bool ParseSpmModule(const std::string &moduleJson, InnerModuleInfoForSpm &moduleInfo);
 
+/**
+ * @brief Compute the sandbox data directory name locally without IPC or file access.
+ * @param bundleName The original bundle name.
+ * @param appIndex The application instance index.
+ * @return The original bundle name if appIndex <= 0; otherwise, "+clone-{appIndex}+{bundleName}".
+ * @note Inputs are not validated. The same naming rule applies to all application types.
+ */
+std::string GetSandboxDataDirName(const std::string &bundleName, int32_t appIndex);
+
 }  // namespace Spm
 }  // namespace AppExecFwk
 }  // namespace OHOS
