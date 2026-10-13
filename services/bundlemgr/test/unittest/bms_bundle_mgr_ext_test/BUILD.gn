@@ -39,6 +39,7 @@ ohos_unittest("BmsBundleMgrExtTest") {
     "${services_path}/bundlemgr/src/preinstall_data_storage_rdb.cpp",
     "${services_path}/bundlemgr/src/rdb/bms_rdb_open_callback.cpp",
     "${services_path}/bundlemgr/src/rdb/rdb_data_manager.cpp",
+    "${services_path}/bundlemgr/src/rdb/rdb_recover_manager.cpp",
     "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp",
     "bms_bundle_mgr_ext_test.cpp",
   ]
@@ -116,6 +117,7 @@ ohos_unittest("BmsBundleMgrExtClientTest") {
     "${services_path}/bundlemgr/src/preinstall_data_storage_rdb.cpp",
     "${services_path}/bundlemgr/src/rdb/bms_rdb_open_callback.cpp",
     "${services_path}/bundlemgr/src/rdb/rdb_data_manager.cpp",
+    "${services_path}/bundlemgr/src/rdb/rdb_recover_manager.cpp",
     "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp",
     "${services_path}/bundlemgr/test/mock/src/mock_iservice_registry.cpp",
     "bms_bundle_mgr_ext_client_test.cpp",

@@ -28,6 +28,7 @@ ohos_fuzztest("MkDirIfNotExistFuzzTest") {
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
     "${services_path}/bundlemgr/src/installd/installd_service.cpp",
     "${services_path}/bundlemgr/src/rdb/rdb_data_manager.cpp",
+    "${services_path}/bundlemgr/src/rdb/rdb_recover_manager.cpp",
   ]
 
   include_dirs += [ "${test_path}/fuzztest" ]

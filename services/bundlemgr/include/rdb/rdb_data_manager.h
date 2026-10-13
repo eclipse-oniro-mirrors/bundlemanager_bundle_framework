@@ -93,6 +93,16 @@ private:
     static std::mutex dataOpMapMutex_;
     static std::unordered_map<std::string, std::mutex> dataOpMutexMap_;
     std::shared_ptr<NativeRdb::RdbStore> rdbStore_;
+    // generation of the db file rdbStore_ was opened on; a recovery that deletes
+    // and re-creates the db bumps it and the stale cached store is re-opened.
+    // Atomic: written under rdbMutex_ but read by the RdbOpGuard of data
+    // operations after the lock was already released.
+    std::atomic<uint64_t> dbGeneration_ {0};
+    // set when a salvage rebuild failed and the next open of this instance must
+    // re-run the integrity check to retry the export; deliberately independent
+    // of isInitial_, which is managed by GetRdbRestoreMutex and stays latched
+    // for the whole process lifetime
+    bool needIntegrityCheck_ = false;
 
     BmsRdbConfig bmsRdbConfig_;
     std::shared_ptr<SingleDelayedTaskMgr> delayedTaskMgr_;

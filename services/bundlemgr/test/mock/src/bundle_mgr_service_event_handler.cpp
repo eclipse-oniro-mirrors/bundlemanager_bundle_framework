@@ -107,9 +107,16 @@ bool BMSEventHandler::IsRebuildInterrupted()
     return false;
 }
 
+bool BMSEventHandler::IsRebuildInterrupted(const std::string &failedSnapshotPath)
+{
+    return false;
+}
+
 void BMSEventHandler::MarkRebuildStart() {}
 
 void BMSEventHandler::MarkRebuildFinish() {}
+
+void BMSEventHandler::MarkRebuildFinish(const std::string &failedSnapshotPath) {}
 
 void BMSEventHandler::BundleBootStartEvent() {}
 

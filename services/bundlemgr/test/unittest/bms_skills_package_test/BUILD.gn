@@ -102,6 +102,7 @@ ohos_unittest("BmsSkillsDescriptionRdbTest") {
     "${services_path}/bundlemgr/src/preinstall_data_storage_rdb.cpp",
     "${services_path}/bundlemgr/src/rdb/bms_rdb_open_callback.cpp",
     "${services_path}/bundlemgr/src/rdb/rdb_data_manager.cpp",
+    "${services_path}/bundlemgr/src/rdb/rdb_recover_manager.cpp",
   ]
 
   if (global_i18n_enable) {
@@ -210,6 +211,7 @@ ohos_unittest("BmsIndependentSkillsInstallerTest") {
     "${services_path}/bundlemgr/src/preinstall_data_storage_rdb.cpp",
     "${services_path}/bundlemgr/src/rdb/bms_rdb_open_callback.cpp",
     "${services_path}/bundlemgr/src/rdb/rdb_data_manager.cpp",
+    "${services_path}/bundlemgr/src/rdb/rdb_recover_manager.cpp",
   ]
 
   if (global_i18n_enable) {
@@ -317,6 +319,7 @@ ohos_unittest("BmsIndependentSkillsInstallerUninstallTest") {
     "${services_path}/bundlemgr/src/preinstall_data_storage_rdb.cpp",
     "${services_path}/bundlemgr/src/rdb/bms_rdb_open_callback.cpp",
     "${services_path}/bundlemgr/src/rdb/rdb_data_manager.cpp",
+    "${services_path}/bundlemgr/src/rdb/rdb_recover_manager.cpp",
   ]
 
   if (global_i18n_enable) {

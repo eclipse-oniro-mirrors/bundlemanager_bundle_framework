@@ -21,7 +21,9 @@
 #include <filesystem>
 #include <fstream>
 #include <functional>
+#include <sys/stat.h>
 #include <thread>
+#include <unistd.h>
 
 #include "app_log_wrapper.h"
 #include "iremote_proxy.h"
@@ -459,6 +461,75 @@ HWTEST_F(BmsEventHandlerTest, MarkRebuildFinish_0100, Function | SmallTest | Lev
 
     std::string mark;
     EXPECT_FALSE(bmsParam->GetBmsParam(DB_REBUILD_MARK_TEST, mark));
+}
+
+/**
+ * @tc.number: IsRebuildInterrupted_0200
+ * @tc.name: IsRebuildInterrupted with a failed salvage snapshot
+ * @tc.desc: 1.a leftover .recover.failed file means the salvage recovery gave up
+ *           2.IsRebuildInterrupted must return true so the db is not trusted
+ *           3.MarkRebuildFinish removes the file once the rescan verified the data
+ */
+HWTEST_F(BmsEventHandlerTest, IsRebuildInterrupted_0200, Function | SmallTest | Level0)
+{
+    InitBundleMgrServiceForTest();
+    auto bmsParam = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    ASSERT_NE(bmsParam, nullptr);
+    bmsParam->DeleteBmsParam(DB_REBUILD_MARK_TEST);
+
+    std::string failedPath = "/data/test/bmsdb.db.recover.failed";
+    unlink(failedPath.c_str());
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_FALSE(handler->IsRebuildInterrupted(failedPath));
+
+    {
+        std::ofstream out(failedPath);
+        out << "x";
+    }
+    EXPECT_TRUE(handler->IsRebuildInterrupted(failedPath));
+
+    handler->MarkRebuildFinish(failedPath);
+    EXPECT_FALSE(handler->IsRebuildInterrupted(failedPath));
+    unlink(failedPath.c_str());
+}
+
+/**
+ * @tc.number: IsRebuildInterrupted_0300
+ * @tc.name: mark and failed snapshot coexistence and unlink failure
+ * @tc.desc: 1.both distrust signals at once still interrupt the rebuild
+ *           2.MarkRebuildFinish clears both
+ *           3.when the failed snapshot cannot be removed (a directory occupies
+ *             the path) the interruption stays and no crash happens
+ */
+HWTEST_F(BmsEventHandlerTest, IsRebuildInterrupted_0300, Function | SmallTest | Level0)
+{
+    InitBundleMgrServiceForTest();
+    auto bmsParam = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    ASSERT_NE(bmsParam, nullptr);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+
+    std::string failedPath = "/data/test/bmsdb.db.recover.failed";
+    unlink(failedPath.c_str());
+    rmdir(failedPath.c_str());
+    // both signals at once: the mark and the failed snapshot
+    EXPECT_TRUE(bmsParam->SaveBmsParam(DB_REBUILD_MARK_TEST, DB_REBUILD_MARK_DOING_TEST));
+    {
+        std::ofstream out(failedPath);
+        out << "x";
+    }
+    EXPECT_TRUE(handler->IsRebuildInterrupted(failedPath));
+    // MarkRebuildFinish clears both
+    handler->MarkRebuildFinish(failedPath);
+    EXPECT_FALSE(handler->IsRebuildInterrupted(failedPath));
+    // a directory occupying the path makes the unlink fail: the interruption
+    // must stay and the failure path must not crash
+    ASSERT_EQ(mkdir(failedPath.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH), 0);
+    EXPECT_TRUE(bmsParam->SaveBmsParam(DB_REBUILD_MARK_TEST, DB_REBUILD_MARK_DOING_TEST));
+    EXPECT_TRUE(handler->IsRebuildInterrupted(failedPath));
+    EXPECT_NO_THROW(handler->MarkRebuildFinish(failedPath));
+    EXPECT_TRUE(handler->IsRebuildInterrupted(failedPath));
+    bmsParam->DeleteBmsParam(DB_REBUILD_MARK_TEST);
+    ASSERT_EQ(rmdir(failedPath.c_str()), 0);
 }
 
 /**

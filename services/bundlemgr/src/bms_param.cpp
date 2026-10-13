@@ -16,18 +16,16 @@
 #include "bms_param.h"
 
 #include "app_log_wrapper.h"
+#include "bundle_service_constants.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-namespace {
-const std::string BMS_PARAM_TABLE_NAME = "bms_param";
-}
 BmsParam::BmsParam()
 {
     APP_LOGD("BmsParam instance is created");
     BmsRdbConfig bmsRdbConfig;
     bmsRdbConfig.dbName = ServiceConstants::BUNDLE_RDB_NAME;
-    bmsRdbConfig.tableName = BMS_PARAM_TABLE_NAME;
+    bmsRdbConfig.tableName = ServiceConstants::BMS_PARAM_TABLE_NAME;
     rdbDataManager_ = std::make_shared<RdbDataManager>(bmsRdbConfig);
     rdbDataManager_->CreateTable();
 }

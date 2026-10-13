@@ -37,8 +37,6 @@ const std::string TABLE_NAME = "rdbTestTable";
 const std::string KEY_ONE = "KEY_ONE";
 const std::string VALUE_ONE = "VALUE_ONE";
 const std::string BMS_BACK_UP_RDB_NAME = "rdbTestDb_slave.db";
-const std::string BMS_KEY = "KEY";
-const std::string BMS_VALUE = "VALUE";
 } // namespace
 
 class BmsBundleRdbDataManagerTest : public testing::Test {
@@ -374,8 +372,8 @@ HWTEST_F(BmsBundleRdbDataManagerTest, RdbDataManager_1800, Function | SmallTest 
     auto store = std::make_shared<MockAppProvisionInfo>();
     MockGetRdbStore(store);
     NativeRdb::ValuesBucket valuesBucket;
-    valuesBucket.PutString(BMS_KEY, KEY_ONE);
-    valuesBucket.PutString(BMS_VALUE, VALUE_ONE);
+    valuesBucket.PutString(ServiceConstants::BMS_KEY, KEY_ONE);
+    valuesBucket.PutString(ServiceConstants::BMS_VALUE, VALUE_ONE);
     auto ret = rdbDataManager->InsertData(valuesBucket);
     EXPECT_FALSE(ret);
 }

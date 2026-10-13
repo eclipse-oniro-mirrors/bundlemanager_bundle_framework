@@ -13,10 +13,14 @@
  * limitations under the License.
  */
 #include <atomic>
+#include <cerrno>
+#include <cstdint>
 #include <cstdlib>
+#include <unistd.h>
 #include "bundle_service_constants.h"
 #include "bms_extension_data_mgr.h"
 #include "rdb_data_manager.h"
+#include "rdb_recover_manager.h"
 
 #include "app_log_wrapper.h"
 #include "bundle_resource_constants.h"
@@ -28,8 +32,6 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-constexpr const char* BMS_KEY = "KEY";
-constexpr const char* BMS_VALUE = "VALUE";
 constexpr int8_t BMS_KEY_INDEX = 0;
 constexpr int8_t BMS_VALUE_INDEX = 1;
 constexpr int16_t WRITE_TIMEOUT = 300; // 300s
@@ -171,47 +173,34 @@ ErrCode RdbDataManager::GetRdbStoreFromNative()
         InstalldClient::GetInstance()->ResetBmsDBSecurity();
     }
     bool isNeedRebuildDb = false;
-    if (!isInitial_) {
+    if (!isInitial_ || needIntegrityCheck_ ||
+        RdbRecoverManager::IsCorruptionDetected(bmsRdbConfig_.dbName)) {
         isNeedRebuildDb = RdbIntegrityCheckNeedRestore();
         isInitial_ = true;
+        needIntegrityCheck_ = false;
+        if (!isNeedRebuildDb && RdbRecoverManager::IsCorruptionDetected(bmsRdbConfig_.dbName)) {
+            APP_LOGI("db %{public}s is healthy again, resume serving",
+                bmsRdbConfig_.dbName.c_str());
+            RdbRecoverManager::ClearCorruptionDetected(bmsRdbConfig_.dbName);
+        }
     }
 
     if (isNeedRebuildDb) {
-        std::string dbFile = bmsRdbConfig_.dbPath + bmsRdbConfig_.dbName;
-        rdbStore_ = nullptr;
-        NativeRdb::RdbHelper::ClearCache();
-        DeleteDbFiles(dbFile);
-        int32_t reopenErrCode = NativeRdb::E_OK;
-        rdbStore_ = NativeRdb::RdbHelper::GetRdbStore(
-            rdbStoreConfig, bmsRdbConfig_.version, bmsRdbOpenCallback, reopenErrCode);
-        if (rdbStore_ == nullptr) {
-            APP_LOGE("re-open rdb after delete failed, errCode:%{public}d", reopenErrCode);
-            SendDbErrorEvent(bmsRdbConfig_.dbName, static_cast<int32_t>(DB_OPERATION_TYPE::REBUILD), reopenErrCode);
-            return reopenErrCode;
+        ErrCode ret = RdbRecoverManager::RebuildDbWithSnapshot(
+            bmsRdbConfig_, rdbStoreConfig, rdbStore_, rebuildCode);
+        if (ret != ERR_OK) {
+            // a failed rebuild must not latch the integrity check away: allow the
+            // next open to re-detect the corruption and retry the salvage export
+            needIntegrityCheck_ = true;
+            return ret;
         }
-        // Re-create the table directly on rdbStore_ instead of calling
-        // CreateTable(), because GetRdbStoreFromNative is already running inside
-        // GetRdbStore which holds rdbMutex_; calling GetRdbStore again would
-        // self-deadlock on the non-recursive mutex.
-        std::string createTableSql;
-        if (bmsRdbConfig_.createTableSql.empty()) {
-            createTableSql = std::string("CREATE TABLE IF NOT EXISTS ")
-                + bmsRdbConfig_.tableName
-                + "(KEY TEXT NOT NULL PRIMARY KEY, VALUE TEXT NOT NULL);";
-        } else {
-            createTableSql = bmsRdbConfig_.createTableSql;
-        }
-        int32_t createRet = rdbStore_->ExecuteSql(createTableSql);
-        if (createRet != NativeRdb::E_OK) {
-            APP_LOGE("re-create table after manual rebuild failed, ret: %{public}d", createRet);
-        }
-        for (const auto &sql : bmsRdbConfig_.insertColumnSql) {
-            rdbStore_->ExecuteSql(sql);
-        }
-        InstalldClient::GetInstance()->ResetBmsDBSecurity();
-        SendDbErrorEvent(bmsRdbConfig_.dbName, static_cast<int32_t>(DB_OPERATION_TYPE::REBUILD), rebuildCode);
-        APP_LOGI("rdb manual rebuild finished: %{public}s", bmsRdbConfig_.dbName.c_str());
     }
+    ErrCode recoverRet = RdbRecoverManager::RecoverFromLeftoverSnapshot(
+        bmsRdbConfig_, rdbStoreConfig, rdbStore_);
+    if (recoverRet != ERR_OK) {
+        return recoverRet;
+    }
+    dbGeneration_ = RdbRecoverManager::GetDbGeneration(bmsRdbConfig_.dbName);
     return ERR_OK;
 }
 
@@ -220,7 +209,29 @@ std::shared_ptr<NativeRdb::RdbStore> RdbDataManager::GetRdbStore(ErrCode &result
     std::lock_guard<std::mutex> lock(rdbMutex_);
     if (rdbStore_ == nullptr) {
         result = GetRdbStoreFromNative();
+    } else if (RdbRecoverManager::IsRecovering(bmsRdbConfig_.dbName)) {
+        // a salvage recovery is running on this db from another instance: serving
+        // the cached store would interleave writes with the replay transactions
+        APP_LOGW("db %{public}s is under salvage recovery, stop serving the cached store",
+            bmsRdbConfig_.dbName.c_str());
+        rdbStore_ = nullptr;
+        result = NativeRdb::E_SQLITE_BUSY;
+    } else if (RdbRecoverManager::IsCorruptionDetected(bmsRdbConfig_.dbName)) {
+        // the salvage export of this db failed on some instance: no instance may
+        // keep serving the corrupted db until a rebuild succeeds
+        APP_LOGW("db %{public}s is corrupted and waiting for a successful rebuild",
+            bmsRdbConfig_.dbName.c_str());
+        rdbStore_ = nullptr;
+        result = NativeRdb::E_SQLITE_CORRUPT;
+    } else if (dbGeneration_ != RdbRecoverManager::GetDbGeneration(bmsRdbConfig_.dbName)) {
+        // the db file was deleted and re-created by a recovery after this store
+        // was opened, the cached handle belongs to the deleted file
+        APP_LOGW("db %{public}s was rebuilt by a recovery, re-open the store",
+            bmsRdbConfig_.dbName.c_str());
+        rdbStore_ = nullptr;
+        result = GetRdbStoreFromNative();
     }
+
     auto it = RDB_ERR_MAP.find(result);
     if (it != RDB_ERR_MAP.end()) {
         result = it->second;
@@ -269,14 +280,22 @@ bool RdbDataManager::InsertData(const std::string &key, const std::string &value
     ErrCode ret = ERR_OK;
     auto rdbStore = GetRdbStore(ret);
     if (rdbStore == nullptr) {
-        APP_LOGE("RdbStore is null");
+        if (ret == ERR_OK) {
+            APP_LOGE("RdbStore is null");
+        }
+        return false;
+    }
+    RdbOpGuard opGuard(bmsRdbConfig_.dbName, dbGeneration_);
+    if (!opGuard.IsUsable()) {
+        APP_LOGW("db %{public}s is under salvage recovery or was rebuilt, skip the operation",
+            bmsRdbConfig_.dbName.c_str());
         return false;
     }
 
     int64_t rowId = -1;
     NativeRdb::ValuesBucket valuesBucket;
-    valuesBucket.PutString(BMS_KEY, key);
-    valuesBucket.PutString(BMS_VALUE, value);
+    valuesBucket.PutString(ServiceConstants::BMS_KEY, key);
+    valuesBucket.PutString(ServiceConstants::BMS_VALUE, value);
     ret = InsertWithRetry(rdbStore, rowId, valuesBucket);
     return ret == NativeRdb::E_OK;
 }
@@ -287,14 +306,22 @@ ErrCode RdbDataManager::InsertDataWithCode(const std::string &key, const std::st
     ErrCode ret = ERR_OK;
     auto rdbStore = GetRdbStore(ret);
     if (rdbStore == nullptr) {
-        APP_LOGE("RdbStore is null");
+        if (ret == ERR_OK) {
+            APP_LOGE("RdbStore is null");
+        }
         return ret;
+    }
+    RdbOpGuard opGuard(bmsRdbConfig_.dbName, dbGeneration_);
+    if (!opGuard.IsUsable()) {
+        APP_LOGW("db %{public}s is under salvage recovery or was rebuilt, skip the operation",
+            bmsRdbConfig_.dbName.c_str());
+        return ERR_APPEXECFWK_DB_SQL_FILE_IS_LOCKED;
     }
 
     int64_t rowId = -1;
     NativeRdb::ValuesBucket valuesBucket;
-    valuesBucket.PutString(BMS_KEY, key);
-    valuesBucket.PutString(BMS_VALUE, value);
+    valuesBucket.PutString(ServiceConstants::BMS_KEY, key);
+    valuesBucket.PutString(ServiceConstants::BMS_VALUE, value);
     return InsertWithRetry(rdbStore, rowId, valuesBucket);
 }
 
@@ -304,7 +331,15 @@ bool RdbDataManager::InsertData(const NativeRdb::ValuesBucket &valuesBucket)
     ErrCode ret = ERR_OK;
     auto rdbStore = GetRdbStore(ret);
     if (rdbStore == nullptr) {
-        APP_LOGE("RdbStore is null");
+        if (ret == ERR_OK) {
+            APP_LOGE("RdbStore is null");
+        }
+        return false;
+    }
+    RdbOpGuard opGuard(bmsRdbConfig_.dbName, dbGeneration_);
+    if (!opGuard.IsUsable()) {
+        APP_LOGW("db %{public}s is under salvage recovery or was rebuilt, skip the operation",
+            bmsRdbConfig_.dbName.c_str());
         return false;
     }
 
@@ -319,7 +354,15 @@ bool RdbDataManager::BatchInsert(int64_t &outInsertNum, const std::vector<Native
     ErrCode ret = ERR_OK;
     auto rdbStore = GetRdbStore(ret);
     if (rdbStore == nullptr) {
-        APP_LOGE("RdbStore is null");
+        if (ret == ERR_OK) {
+            APP_LOGE("RdbStore is null");
+        }
+        return false;
+    }
+    RdbOpGuard opGuard(bmsRdbConfig_.dbName, dbGeneration_);
+    if (!opGuard.IsUsable()) {
+        APP_LOGW("db %{public}s is under salvage recovery or was rebuilt, skip the operation",
+            bmsRdbConfig_.dbName.c_str());
         return false;
     }
     ret = rdbStore->BatchInsert(outInsertNum, bmsRdbConfig_.tableName, valuesBuckets);
@@ -332,16 +375,24 @@ bool RdbDataManager::UpdateData(const std::string &key, const std::string &value
     ErrCode ret = ERR_OK;
     auto rdbStore = GetRdbStore(ret);
     if (rdbStore == nullptr) {
-        APP_LOGE("RdbStore is null");
+        if (ret == ERR_OK) {
+            APP_LOGE("RdbStore is null");
+        }
+        return false;
+    }
+    RdbOpGuard opGuard(bmsRdbConfig_.dbName, dbGeneration_);
+    if (!opGuard.IsUsable()) {
+        APP_LOGW("db %{public}s is under salvage recovery or was rebuilt, skip the operation",
+            bmsRdbConfig_.dbName.c_str());
         return false;
     }
 
     int32_t rowId = -1;
     NativeRdb::AbsRdbPredicates absRdbPredicates(bmsRdbConfig_.tableName);
-    absRdbPredicates.EqualTo(BMS_KEY, key);
+    absRdbPredicates.EqualTo(ServiceConstants::BMS_KEY, key);
     NativeRdb::ValuesBucket valuesBucket;
-    valuesBucket.PutString(BMS_KEY, key);
-    valuesBucket.PutString(BMS_VALUE, value);
+    valuesBucket.PutString(ServiceConstants::BMS_KEY, key);
+    valuesBucket.PutString(ServiceConstants::BMS_VALUE, value);
     ret = rdbStore->Update(rowId, valuesBucket, absRdbPredicates);
     return ret == NativeRdb::E_OK;
 }
@@ -361,7 +412,15 @@ bool RdbDataManager::UpdateData(
     ErrCode ret = ERR_OK;
     auto rdbStore = GetRdbStore(ret);
     if (rdbStore == nullptr) {
-        APP_LOGE("RdbStore is null");
+        if (ret == ERR_OK) {
+            APP_LOGE("RdbStore is null");
+        }
+        return false;
+    }
+    RdbOpGuard opGuard(bmsRdbConfig_.dbName, dbGeneration_);
+    if (!opGuard.IsUsable()) {
+        APP_LOGW("db %{public}s is under salvage recovery or was rebuilt, skip the operation",
+            bmsRdbConfig_.dbName.c_str());
         return false;
     }
     if (absRdbPredicates.GetTableName() != bmsRdbConfig_.tableName) {
@@ -380,7 +439,15 @@ bool RdbDataManager::UpdateOrInsertData(
     ErrCode ret = ERR_OK;
     auto rdbStore = GetRdbStore(ret);
     if (rdbStore == nullptr) {
-        APP_LOGE("RdbStore is null");
+        if (ret == ERR_OK) {
+            APP_LOGE("RdbStore is null");
+        }
+        return false;
+    }
+    RdbOpGuard opGuard(bmsRdbConfig_.dbName, dbGeneration_);
+    if (!opGuard.IsUsable()) {
+        APP_LOGW("db %{public}s is under salvage recovery or was rebuilt, skip the operation",
+            bmsRdbConfig_.dbName.c_str());
         return false;
     }
     if (absRdbPredicates.GetTableName() != bmsRdbConfig_.tableName) {
@@ -406,13 +473,21 @@ bool RdbDataManager::DeleteData(const std::string &key)
     ErrCode ret = ERR_OK;
     auto rdbStore = GetRdbStore(ret);
     if (rdbStore == nullptr) {
-        APP_LOGE("RdbStore is null");
+        if (ret == ERR_OK) {
+            APP_LOGE("RdbStore is null");
+        }
+        return false;
+    }
+    RdbOpGuard opGuard(bmsRdbConfig_.dbName, dbGeneration_);
+    if (!opGuard.IsUsable()) {
+        APP_LOGW("db %{public}s is under salvage recovery or was rebuilt, skip the operation",
+            bmsRdbConfig_.dbName.c_str());
         return false;
     }
 
     int32_t rowId = -1;
     NativeRdb::AbsRdbPredicates absRdbPredicates(bmsRdbConfig_.tableName);
-    absRdbPredicates.EqualTo(BMS_KEY, key);
+    absRdbPredicates.EqualTo(ServiceConstants::BMS_KEY, key);
     ret = rdbStore->Delete(rowId, absRdbPredicates);
     return ret == NativeRdb::E_OK;
 }
@@ -422,7 +497,15 @@ bool RdbDataManager::DeleteData(const NativeRdb::AbsRdbPredicates &absRdbPredica
     ErrCode ret = ERR_OK;
     auto rdbStore = GetRdbStore(ret);
     if (rdbStore == nullptr) {
-        APP_LOGE("RdbStore is null");
+        if (ret == ERR_OK) {
+            APP_LOGE("RdbStore is null");
+        }
+        return false;
+    }
+    RdbOpGuard opGuard(bmsRdbConfig_.dbName, dbGeneration_);
+    if (!opGuard.IsUsable()) {
+        APP_LOGW("db %{public}s is under salvage recovery or was rebuilt, skip the operation",
+            bmsRdbConfig_.dbName.c_str());
         return false;
     }
     if (absRdbPredicates.GetTableName() != bmsRdbConfig_.tableName) {
@@ -440,12 +523,20 @@ bool RdbDataManager::QueryData(const std::string &key, std::string &value)
     ErrCode ret = ERR_OK;
     auto rdbStore = GetRdbStore(ret);
     if (rdbStore == nullptr) {
-        APP_LOGE("RdbStore is null");
+        if (ret == ERR_OK) {
+            APP_LOGE("RdbStore is null");
+        }
+        return false;
+    }
+    RdbOpGuard opGuard(bmsRdbConfig_.dbName, dbGeneration_);
+    if (!opGuard.IsUsable()) {
+        APP_LOGW("db %{public}s is under salvage recovery or was rebuilt, skip the operation",
+            bmsRdbConfig_.dbName.c_str());
         return false;
     }
 
     NativeRdb::AbsRdbPredicates absRdbPredicates(bmsRdbConfig_.tableName);
-    absRdbPredicates.EqualTo(BMS_KEY, key);
+    absRdbPredicates.EqualTo(ServiceConstants::BMS_KEY, key);
     auto absSharedResultSet = rdbStore->QueryByStep(absRdbPredicates, std::vector<std::string>());
     if (absSharedResultSet == nullptr) {
         APP_LOGE("absSharedResultSet failed");
@@ -475,7 +566,15 @@ std::shared_ptr<NativeRdb::ResultSet> RdbDataManager::QueryData(
     ErrCode ret = ERR_OK;
     auto rdbStore = GetRdbStore(ret);
     if (rdbStore == nullptr) {
-        APP_LOGE("RdbStore is null");
+        if (ret == ERR_OK) {
+            APP_LOGE("RdbStore is null");
+        }
+        return nullptr;
+    }
+    RdbOpGuard opGuard(bmsRdbConfig_.dbName, dbGeneration_);
+    if (!opGuard.IsUsable()) {
+        APP_LOGW("db %{public}s is under salvage recovery or was rebuilt, skip the operation",
+            bmsRdbConfig_.dbName.c_str());
         return nullptr;
     }
     if (absRdbPredicates.GetTableName() != bmsRdbConfig_.tableName) {
@@ -496,7 +595,15 @@ bool RdbDataManager::QueryAllData(std::map<std::string, std::string> &datas)
     ErrCode ret = ERR_OK;
     auto rdbStore = GetRdbStore(ret);
     if (rdbStore == nullptr) {
-        APP_LOGE("RdbStore is null");
+        if (ret == ERR_OK) {
+            APP_LOGE("RdbStore is null");
+        }
+        return false;
+    }
+    RdbOpGuard opGuard(bmsRdbConfig_.dbName, dbGeneration_);
+    if (!opGuard.IsUsable()) {
+        APP_LOGW("db %{public}s is under salvage recovery or was rebuilt, skip the operation",
+            bmsRdbConfig_.dbName.c_str());
         return false;
     }
 
@@ -535,17 +642,25 @@ bool RdbDataManager::CreateTable()
 {
     std::string createTableSql;
     if (bmsRdbConfig_.createTableSql.empty()) {
-        createTableSql = std::string(
-            "CREATE TABLE IF NOT EXISTS "
+        createTableSql = std::string("CREATE TABLE IF NOT EXISTS ")
             + bmsRdbConfig_.tableName
-            + "(KEY TEXT NOT NULL PRIMARY KEY, VALUE TEXT NOT NULL);");
+            + "(" + ServiceConstants::BMS_KEY + " TEXT NOT NULL PRIMARY KEY, "
+            + ServiceConstants::BMS_VALUE + " TEXT NOT NULL);";
     } else {
         createTableSql = bmsRdbConfig_.createTableSql;
     }
     ErrCode ret = ERR_OK;
     auto rdbStore = GetRdbStore(ret);
     if (rdbStore == nullptr) {
-        APP_LOGE("RdbStore is null");
+        if (ret == ERR_OK) {
+            APP_LOGE("RdbStore is null");
+        }
+        return false;
+    }
+    RdbOpGuard opGuard(bmsRdbConfig_.dbName, dbGeneration_);
+    if (!opGuard.IsUsable()) {
+        APP_LOGW("db %{public}s is under salvage recovery or was rebuilt, skip the operation",
+            bmsRdbConfig_.dbName.c_str());
         return false;
     }
     ret = rdbStore->ExecuteSql(createTableSql);
@@ -567,7 +682,15 @@ bool RdbDataManager::ExecuteSql()
     ErrCode ret = ERR_OK;
     auto rdbStore = GetRdbStore(ret);
     if (rdbStore == nullptr) {
-        APP_LOGE("RdbStore is null");
+        if (ret == ERR_OK) {
+            APP_LOGE("RdbStore is null");
+        }
+        return false;
+    }
+    RdbOpGuard opGuard(bmsRdbConfig_.dbName, dbGeneration_);
+    if (!opGuard.IsUsable()) {
+        APP_LOGW("db %{public}s is under salvage recovery or was rebuilt, skip the operation",
+            bmsRdbConfig_.dbName.c_str());
         return false;
     }
     bool res = true;
@@ -625,7 +748,15 @@ std::shared_ptr<NativeRdb::ResultSet> RdbDataManager::QueryByStep(
     ErrCode ret = ERR_OK;
     auto rdbStore = GetRdbStore(ret);
     if (rdbStore == nullptr) {
-        APP_LOGE("RdbStore is null");
+        if (ret == ERR_OK) {
+            APP_LOGE("RdbStore is null");
+        }
+        return nullptr;
+    }
+    RdbOpGuard opGuard(bmsRdbConfig_.dbName, dbGeneration_);
+    if (!opGuard.IsUsable()) {
+        APP_LOGW("db %{public}s is under salvage recovery or was rebuilt, skip the operation",
+            bmsRdbConfig_.dbName.c_str());
         return nullptr;
     }
     if (absRdbPredicates.GetTableName() != bmsRdbConfig_.tableName) {
