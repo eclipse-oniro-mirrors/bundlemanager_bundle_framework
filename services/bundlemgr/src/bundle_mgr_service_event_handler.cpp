@@ -798,9 +798,9 @@ bool BMSEventHandler::AnalyzeCloneUserData(
         .appIndex = appIndex,
         .uid = fileStat.uid,
         .accessTokenId = accessTokenIdEx.tokenIdExStruct.tokenID,
+        .installTime = fileStat.lastModifyTime,
         .accessTokenIdEx = accessTokenIdEx.tokenIDEx,
         .gids = {fileStat.gid},
-        .installTime = fileStat.lastModifyTime,
     };
 
     // Merge the clone info into the main app's user record (keyed by bundleName +
