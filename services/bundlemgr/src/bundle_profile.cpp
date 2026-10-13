@@ -357,6 +357,7 @@ struct Module {
     std::vector<std::string> supportedModes;
     std::vector<std::string> reqCapabilities;
     std::vector<std::string> deviceType;
+    std::map<std::string, std::vector<std::string>> requiredDeviceFeatures;
     std::vector<Dependency> dependencies;
     Distro distro;
     MetaData metaData;
@@ -1596,6 +1597,14 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         true,
         g_parseResult,
         ArrayType::STRING);
+    GetMapValueIfFindKey<std::map<std::string, std::vector<std::string>>>(jsonObject,
+        jsonObjectEnd,
+        Profile::MODULE_REQUIRED_DEVICE_FEATURES,
+        module.requiredDeviceFeatures,
+        false,
+        g_parseResult,
+        JsonType::ARRAY,
+        ArrayType::STRING);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         BUNDLE_MODULE_PROFILE_KEY_COLOR_MODE,
@@ -2239,6 +2248,7 @@ bool ToInnerModuleInfo(const ProfileReader::ConfigJson &configJson, InnerModuleI
     innerModuleInfo.isModuleJson = false;
     innerModuleInfo.isLibIsolated = configJson.module.isLibIsolated;
     innerModuleInfo.deviceTypes = configJson.module.deviceType;
+    innerModuleInfo.requiredDeviceFeatures = configJson.module.requiredDeviceFeatures;
     innerModuleInfo.buildHash = configJson.module.buildHash;
     innerModuleInfo.compressNativeLibs = configJson.deveicConfig.defaultDevice.compressNativeLibs;
     innerModuleInfo.debug = configJson.deveicConfig.defaultDevice.debug;
