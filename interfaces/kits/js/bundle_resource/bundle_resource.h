@@ -42,6 +42,13 @@ struct AllLauncherAbilityResourceInfoCallback : public BaseCallbackInfo {
     uint32_t flags = static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL);
     std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
 };
+
+struct BundleResourceArchiveInfoCallback : public BaseCallbackInfo {
+    explicit BundleResourceArchiveInfoCallback(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
+    std::string filePath;
+    uint32_t flags = static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL);
+    BundleResourceInfo resourceInfo;
+};
 #endif
 napi_value GetBundleResourceInfo(napi_env env, napi_callback_info info);
 napi_value GetLauncherAbilityResourceInfo(napi_env env, napi_callback_info info);
@@ -50,6 +57,7 @@ napi_value GetAllLauncherAbilityResourceInfo(napi_env env, napi_callback_info in
 napi_value GetLauncherAbilityResourceInfoList(napi_env env, napi_callback_info info);
 napi_value GetExtensionAbilityResourceInfo(napi_env env, napi_callback_info info);
 napi_value GetAllUninstallBundleResourceInfo(napi_env env, napi_callback_info info);
+napi_value GetBundleResourceArchiveInfo(napi_env env, napi_callback_info info);
 void CreateBundleResourceFlagObject(napi_env env, napi_value value);
 }  // namespace AppExecFwk
 }  // namespace OHOS

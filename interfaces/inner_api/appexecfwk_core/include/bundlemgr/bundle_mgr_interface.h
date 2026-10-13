@@ -2386,6 +2386,18 @@ public:
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
+    /**
+     * @brief Obtains the application icon and label from an ohos Ability Package (HAP) file.
+     * @param filePath Indicates the absolute file path of the HAP or APP file.
+     * @param flags Indicates the resource info to be returned, see ResourceFlag.
+     * @param bundleResourceInfo Indicates the obtained BundleResourceInfo object.
+     * @return Returns ERR_OK if this function is successfully called; returns errCode otherwise.
+     */
+    virtual ErrCode GetBundleResourceArchiveInfo(const std::string &filePath, const uint32_t flags,
+        BundleResourceInfo &bundleResourceInfo)
+    {
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
 };
 
 #define WRITE_PARCEL(func)                                             \

@@ -897,6 +897,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_METADATA_BY_BUNDLE_NAME):
             errCode = this->HandleGetMetadataByBundleName(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_RESOURCE_ARCHIVE_INFO):
+            errCode = this->HandleGetBundleResourceArchiveInfo(data, reply);
+            break;
         default :
             APP_LOGW("bundleMgr host receives unknown code %{public}u", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -6417,6 +6420,25 @@ ErrCode BundleMgrHost::HandleGetMetadataByBundleName(MessageParcel &data, Messag
     if (ret == ERR_OK && !WriteVectorToParcelIntelligent(metadataInfos, reply)) {
         APP_LOGE("write metadata infos failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetBundleResourceArchiveInfo(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    std::string filePath = data.ReadString();
+    uint32_t flags = data.ReadUint32();
+    APP_LOGD("filePath %{private}s, flags %{public}u", filePath.c_str(), flags);
+
+    BundleResourceInfo info;
+    ErrCode ret = GetBundleResourceArchiveInfo(filePath, flags, info);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
+        return WriteParcelInfoIntelligent<BundleResourceInfo>(info, reply);
     }
     return ERR_OK;
 }

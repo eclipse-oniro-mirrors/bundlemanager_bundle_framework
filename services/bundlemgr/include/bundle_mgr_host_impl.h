@@ -31,6 +31,7 @@
 #include "bundle_stats_callback_interface.h"
 #include "event_report.h"
 #include "inner_bundle_user_info.h"
+#include "resource_info.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -560,6 +561,15 @@ public:
      */
     virtual ErrCode GetBundleArchiveInfoV9(
         const std::string &hapFilePath, int32_t flags, BundleInfo &bundleInfo) override;
+    /**
+     * @brief Obtains the application icon and label from an ohos Ability Package (HAP) file.
+     * @param filePath Indicates the absolute file path of the HAP or APP file.
+     * @param flags Indicates the resource info to be returned, see ResourceFlag.
+     * @param bundleResourceInfo Indicates the obtained BundleResourceInfo object.
+     * @return Returns ERR_OK if this function is successfully called; returns errCode otherwise.
+     */
+    virtual ErrCode GetBundleResourceArchiveInfo(const std::string &filePath, const uint32_t flags,
+        BundleResourceInfo &bundleResourceInfo) override;
     /**
      * @brief Obtain the HAP module info of a specific ability.
      * @param abilityInfo Indicates the ability.
@@ -1494,6 +1504,22 @@ private:
     void NotifyBundleStatus(const NotifyBundleEvents &installRes);
     ErrCode GetBundleArchiveInfoBySandBoxPath(
         const std::string &hapFilePath, int32_t flags, BundleInfo &bundleInfo, bool fromV9 = false);
+#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+    ErrCode GetBundleResourceArchiveInfoBySandBoxPath(
+        const std::string &filePath, const uint32_t flags, BundleResourceInfo &bundleResourceInfo);
+    ErrCode ParseAndExtractResourceInfo(
+        const std::string &filePath, const uint32_t flags,
+        int32_t userId, BundleResourceInfo &bundleResourceInfo);
+    ErrCode ParseHapFileForArchiveInfo(
+        const std::string &filePath, InnerBundleInfo &innerBundleInfo, std::string &realHapPath,
+        std::string &outTempDir);
+    ErrCode ParseAppFileForArchiveInfo(
+        const std::string &appFilePath, InnerBundleInfo &innerBundleInfo, std::string &realHapPath,
+        std::string &outTempDir);
+    void PrepareResourceInfoForArchive(
+        const InnerBundleInfo &innerBundleInfo, const std::string &realHapPath,
+        const uint32_t flags, ResourceInfo &resourceInfo);
+#endif
     ErrCode GetBundleArchiveInfoFromApp(
         const std::string &appFilePath, int32_t flags, BundleInfo &bundleInfo,
         const std::string &externalTempDir = "");
@@ -1507,6 +1533,13 @@ private:
         std::unordered_map<std::string, InnerBundleInfo> &infos);
     static ErrCode MergeInnerBundleInfos(
         const std::unordered_map<std::string, InnerBundleInfo> &infos, InnerBundleInfo &mergedInfo);
+    static void FindEntryHapPath(
+        const std::unordered_map<std::string, InnerBundleInfo> &infos,
+        const std::vector<std::string> &hapPaths,
+        std::string &realHapPath);
+    static void UpdateBaseAppInfoIfNoEntry(
+        const std::unordered_map<std::string, InnerBundleInfo> &infos,
+        InnerBundleInfo &innerBundleInfo);
     bool GetPreferableBundleInfoFromHapPaths(const std::vector<std::string> &hapPaths,
         BundleInfo &bundleInfo);
     bool IsBundleExist(const std::string &bundleName);

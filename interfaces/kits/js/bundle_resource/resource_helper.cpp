@@ -26,6 +26,7 @@ namespace OHOS {
 namespace AppExecFwk {
 
 sptr<IBundleResource> ResourceHelper::bundleResourceMgr_ = nullptr;
+sptr<IBundleMgr> ResourceHelper::bundleMgr_ = nullptr;
 std::mutex ResourceHelper::bundleResourceMutex_;
 sptr<IRemoteObject::DeathRecipient> ResourceHelper::deathRecipient_(sptr<BundleResourceMgrDeathRecipient>::MakeSptr());
 
@@ -34,6 +35,7 @@ void ResourceHelper::BundleResourceMgrDeathRecipient::OnRemoteDied([[maybe_unuse
     APP_LOGI("BundleManagerService dead");
     std::lock_guard<std::mutex> lock(bundleResourceMutex_);
     bundleResourceMgr_ = nullptr;
+    bundleMgr_ = nullptr;
 };
 
 sptr<IBundleResource> ResourceHelper::GetBundleResourceMgr()
@@ -59,6 +61,44 @@ sptr<IBundleResource> ResourceHelper::GetBundleResourceMgr()
         bundleResourceMgr_ = bundleMgr->GetBundleResourceProxy();
     }
     return bundleResourceMgr_;
+}
+
+sptr<IBundleMgr> ResourceHelper::GetBundleMgr()
+{
+    std::lock_guard<std::mutex> lock(bundleResourceMutex_);
+    if (bundleMgr_ == nullptr) {
+        auto systemAbilityManager = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+        if (systemAbilityManager == nullptr) {
+            APP_LOGE("systemAbilityManager is null");
+            return nullptr;
+        }
+        auto bundleMgrSa = systemAbilityManager->GetSystemAbility(OHOS::BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+        if (bundleMgrSa == nullptr) {
+            APP_LOGE("bundleMgrSa is null");
+            return nullptr;
+        }
+        bundleMgr_ = OHOS::iface_cast<IBundleMgr>(bundleMgrSa);
+        if (bundleMgr_ != nullptr) {
+            bundleMgr_->AsObject()->AddDeathRecipient(deathRecipient_);
+        }
+    }
+    return bundleMgr_;
+}
+
+ErrCode ResourceHelper::InnerGetBundleResourceArchiveInfo(
+    const std::string &filePath, uint32_t flags, BundleResourceInfo &resourceInfo)
+{
+    APP_LOGD("start");
+    auto bundleMgr = ResourceHelper::GetBundleMgr();
+    if (bundleMgr == nullptr) {
+        APP_LOGE("bundleMgr is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode ret = bundleMgr->GetBundleResourceArchiveInfo(filePath, flags, resourceInfo);
+    if (ret != ERR_OK) {
+        APP_LOGE("failed, filePath is %{private}s, errCode: %{public}d", filePath.c_str(), ret);
+    }
+    return CommonFunc::ConvertErrCode(ret);
 }
 
 ErrCode ResourceHelper::InnerGetBundleResourceInfo(
