@@ -76,6 +76,7 @@ const char* APPLICATION_DISTRIBUTED_NOTIFICATION_ENABLED = "distributedNotificat
 const char* APPLICATION_INSTALLED_FOR_ALL_USER = "installedForAllUser";
 const char* APPLICATION_IS_FORCE_ROTATE = "isForceRotate";
 const char* APPLICATION_PROFILEABLE = "profileable";
+const char* APPLICATION_ALLOW_AUTO_CONTROL_INTENT = "allowAutoControlIntent";
 const char* APPLICATION_ENTITY_TYPE = "entityType";
 const char* APPLICATION_PROCESS = "process";
 const char* APPLICATION_SUPPORTED_MODES = "supportedModes";
@@ -568,6 +569,7 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     skillEnabled = parcel.ReadBool();
     isForceRotate = parcel.ReadBool();
     profileable = parcel.ReadBool();
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, allowAutoControlIntent);
     allowEnableNotification = parcel.ReadBool();
     allowArkTsLargeHeap = parcel.ReadBool();
     entityType = Str16ToStr8(parcel.ReadString16());
@@ -830,6 +832,7 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, skillEnabled);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isForceRotate);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, profileable);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, allowAutoControlIntent);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, allowEnableNotification);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, allowArkTsLargeHeap);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(entityType));
@@ -1155,6 +1158,7 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_INSTALLED_FOR_ALL_USER, applicationInfo.installedForAllUser},
         {APPLICATION_IS_FORCE_ROTATE, applicationInfo.isForceRotate},
         {APPLICATION_PROFILEABLE, applicationInfo.profileable},
+        {APPLICATION_ALLOW_AUTO_CONTROL_INTENT, applicationInfo.allowAutoControlIntent},
         {APPLICATION_ALLOW_ENABLE_NOTIFICATION, applicationInfo.allowEnableNotification},
         {APPLICATION_ALLOW_ARK_TS_LARGE_HEAP, applicationInfo.allowArkTsLargeHeap},
         {APPLICATION_ENTITY_TYPE, applicationInfo.entityType},
@@ -1321,6 +1325,8 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         applicationInfo.isForceRotate, false, parseResult);
     BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_PROFILEABLE,
         applicationInfo.profileable, false, parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_ALLOW_AUTO_CONTROL_INTENT,
+        applicationInfo.allowAutoControlIntent, false, parseResult);
     BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_ALLOW_ENABLE_NOTIFICATION,
         applicationInfo.allowEnableNotification, false, parseResult);
     BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_ALLOW_ARK_TS_LARGE_HEAP,

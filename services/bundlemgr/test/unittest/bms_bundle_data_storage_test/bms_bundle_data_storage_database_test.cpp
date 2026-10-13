@@ -1534,6 +1534,7 @@ protected:
                 "installedForAllUser": false,
                 "isForceRotate": false,
                 "profileable": false,
+                "allowAutoControlIntent": false,
                 "hasPlugin": false,
                 "startMode":1,
                 "appPreloadPhase":0,
@@ -7465,5 +7466,72 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, SkillsDedup_RemoveModule_0200, Functi
     info.RemoveModuleInfo(TEST_PACK_AGE);
 
     EXPECT_EQ(info.baseExtensionInfos_.count(TEST_KEY), 0U);
+}
+
+/**
+ * @tc.name: AllowAutoControlIntent_Persistence
+ * @tc.desc: Preserve declarations in stored JSON and read legacy records as false.
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, AllowAutoControlIntent_Persistence, Function | SmallTest | Level1)
+{
+    const std::string bundleName = "com.example.automation";
+    InnerBundleInfo source = CreateBundleInfoForBundleInfoV9Test(
+        bundleName, "entry", "entry", Constants::START_USERID, 20010001);
+    source.baseApplicationInfo_->allowAutoControlIntent = true;
+    nlohmann::json stored;
+    source.ToJson(stored);
+    ASSERT_TRUE(stored["baseApplicationInfo"]["allowAutoControlIntent"].get<bool>());
+    InnerBundleInfo restored;
+    ASSERT_EQ(restored.FromJson(stored), ERR_OK);
+    EXPECT_TRUE(restored.GetBaseApplicationInfo().allowAutoControlIntent);
+
+    stored["baseApplicationInfo"].erase("allowAutoControlIntent");
+    ASSERT_EQ(restored.FromJson(stored), ERR_OK);
+    EXPECT_FALSE(restored.GetBaseApplicationInfo().allowAutoControlIntent);
+    EXPECT_EQ(restored.GetBundleName(), bundleName);
+}
+
+/**
+ * @tc.name: AllowAutoControlIntent_Update
+ * @tc.desc: Updating to false or an absent declaration replaces the old true value.
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, AllowAutoControlIntent_Update, Function | SmallTest | Level1)
+{
+    InnerBundleInfo installed;
+    InnerBundleInfo incoming;
+    incoming.baseApplicationInfo_->allowAutoControlIntent = true;
+    installed.UpdateBaseApplicationInfo(incoming);
+    ASSERT_TRUE(installed.GetBaseApplicationInfo().allowAutoControlIntent);
+    incoming.baseApplicationInfo_->allowAutoControlIntent = false;
+    installed.UpdateBaseApplicationInfo(incoming);
+    EXPECT_FALSE(installed.GetBaseApplicationInfo().allowAutoControlIntent);
+    installed.baseApplicationInfo_->allowAutoControlIntent = true;
+    installed.UpdateBaseApplicationInfo(InnerBundleInfo());
+    EXPECT_FALSE(installed.GetBaseApplicationInfo().allowAutoControlIntent);
+}
+
+/**
+ * @tc.name: AllowAutoControlIntent_PartialUpdate
+ * @tc.desc: Partial refresh copies the selected application declaration, including the default false.
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, AllowAutoControlIntent_PartialUpdate, Function | SmallTest | Level1)
+{
+    InnerBundleInfo installed;
+    InnerModuleInfo entry;
+    entry.isEntry = true;
+    installed.InsertInnerModuleInfo("entry", entry);
+
+    InnerBundleInfo refreshed;
+    refreshed.baseApplicationInfo_->allowAutoControlIntent = true;
+    installed.UpdatePartialInnerBundleInfo(refreshed);
+    ASSERT_TRUE(installed.GetBaseApplicationInfo().allowAutoControlIntent);
+
+    refreshed.baseApplicationInfo_->allowAutoControlIntent = false;
+    installed.UpdatePartialInnerBundleInfo(refreshed);
+    EXPECT_FALSE(installed.GetBaseApplicationInfo().allowAutoControlIntent);
+
+    installed.baseApplicationInfo_->allowAutoControlIntent = true;
+    installed.UpdatePartialInnerBundleInfo(InnerBundleInfo());
+    EXPECT_FALSE(installed.GetBaseApplicationInfo().allowAutoControlIntent);
 }
 } // OHOS

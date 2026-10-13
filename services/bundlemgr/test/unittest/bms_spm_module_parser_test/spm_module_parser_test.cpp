@@ -859,5 +859,85 @@ HWTEST_F(SpmModuleParserTest, ParseSpmModule_4600, Function | SmallTest | Level1
         info));
     EXPECT_EQ(info.moduleName, "com.example.entry.MainAbility");
 }
+
+/**
+ * @tc.name: ParseSpmModule_4700
+ * @tc.desc: Parse an enabled declaration and the entry type independently of its name.
+ * @tc.type: FUNC
+ */
+HWTEST_F(SpmModuleParserTest, ParseSpmModule_4700, Function | SmallTest | Level1)
+{
+    InnerModuleInfoForSpm info;
+    ASSERT_TRUE(ParseSpmModule(
+        R"({ "app": { "bundleName": "com.test", "allowAutoControlIntent": true },
+            "module": { "name": "main", "type": "entry" } })", info));
+    EXPECT_TRUE(info.allowAutoControlIntent);
+    EXPECT_EQ(info.moduleName, "main");
+    EXPECT_EQ(info.moduleType, "entry");
+}
+
+/**
+ * @tc.name: ParseSpmModule_4800
+ * @tc.desc: Parse a disabled declaration and do not infer the module type from its name.
+ * @tc.type: FUNC
+ */
+HWTEST_F(SpmModuleParserTest, ParseSpmModule_4800, Function | SmallTest | Level1)
+{
+    InnerModuleInfoForSpm info;
+    ASSERT_TRUE(ParseSpmModule(
+        R"({ "app": { "bundleName": "com.test", "allowAutoControlIntent": false },
+            "module": { "name": "entry", "type": "feature" } })", info));
+    EXPECT_FALSE(info.allowAutoControlIntent);
+    EXPECT_EQ(info.moduleName, "entry");
+    EXPECT_EQ(info.moduleType, "feature");
+}
+
+/**
+ * @tc.name: ParseSpmModule_4900
+ * @tc.desc: Preserve a feature module's declaration for the caller to select the application value.
+ * @tc.type: FUNC
+ */
+HWTEST_F(SpmModuleParserTest, ParseSpmModule_4900, Function | SmallTest | Level1)
+{
+    InnerModuleInfoForSpm info;
+    ASSERT_TRUE(ParseSpmModule(
+        R"({ "app": { "bundleName": "com.test", "allowAutoControlIntent": true },
+            "module": { "name": "feature", "type": "feature" } })", info));
+    EXPECT_TRUE(info.allowAutoControlIntent);
+    EXPECT_EQ(info.moduleType, "feature");
+}
+
+/**
+ * @tc.name: ParseSpmModule_5000
+ * @tc.desc: Missing fields use defaults, including when the output object is reused.
+ * @tc.type: FUNC
+ */
+HWTEST_F(SpmModuleParserTest, ParseSpmModule_5000, Function | SmallTest | Level1)
+{
+    InnerModuleInfoForSpm info;
+    EXPECT_FALSE(info.allowAutoControlIntent);
+    EXPECT_TRUE(info.moduleType.empty());
+    info.allowAutoControlIntent = true;
+    info.moduleType = "feature";
+    ASSERT_TRUE(ParseSpmModule(VALID_MINIMAL_JSON, info));
+    EXPECT_FALSE(info.allowAutoControlIntent);
+    EXPECT_TRUE(info.moduleType.empty());
+}
+
+/**
+ * @tc.name: ParseSpmModule_5100
+ * @tc.desc: Reject non-boolean automation declarations instead of returning a valid configuration.
+ * @tc.type: FUNC
+ */
+HWTEST_F(SpmModuleParserTest, ParseSpmModule_5100, Function | SmallTest | Level1)
+{
+    const std::vector<std::string> invalidValues = { R"("true")", "1", "null", "[]", "{}" };
+    for (const auto &value : invalidValues) {
+        InnerModuleInfoForSpm info;
+        std::string moduleJson = R"({ "app": { "bundleName": "com.test", "allowAutoControlIntent": )" +
+            value + R"( }, "module": { "name": "main", "type": "entry" } })";
+        EXPECT_FALSE(ParseSpmModule(moduleJson, info)) << value;
+    }
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

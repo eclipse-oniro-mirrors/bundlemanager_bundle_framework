@@ -31,8 +31,10 @@ constexpr const char* KEY_APP_BUNDLE_NAME = "bundleName";
 constexpr const char* KEY_APP_BUNDLE_TYPE = "bundleType";
 constexpr const char* KEY_APP_TARGET_API_VERSION = "targetAPIVersion";
 constexpr const char* KEY_APP_API_VERSION = "apiVersion";
+constexpr const char* KEY_APP_ALLOW_AUTO_CONTROL_INTENT = "allowAutoControlIntent";
 // module fields
 constexpr const char* KEY_MODULE_NAME = "name";
+constexpr const char* KEY_MODULE_TYPE = "type";
 constexpr const char* KEY_MODULE_PACKAGE = "package";
 constexpr const char* KEY_MODULE_SKILL_PROFILES = "skillProfiles";
 constexpr const char* KEY_MODULE_REQUEST_PERMISSIONS = "requestPermissions";
@@ -262,6 +264,13 @@ bool ParseSpmModule(const std::string &moduleJson, InnerModuleInfoForSpm &module
     // targetAPIVersion (optional)
     (void)ParseApiTargetVersion(appObj, moduleInfo.apiTargetVersion);
 
+    auto autoControlIt = appObj.find(KEY_APP_ALLOW_AUTO_CONTROL_INTENT);
+    if (autoControlIt != appObj.end() && !autoControlIt->is_boolean()) {
+        LOG_NOFUNC_E(BMS_TAG_DEFAULT, "parse module json failed, allowAutoControlIntent is invalid");
+        return false;
+    }
+    moduleInfo.allowAutoControlIntent = GetJsonBool(appObj, KEY_APP_ALLOW_AUTO_CONTROL_INTENT);
+
     // Parse module section
     auto moduleIt = jsonObject.find(KEY_MODULE);
     if (moduleIt == jsonObject.end() || !moduleIt->is_object()) {
@@ -269,6 +278,7 @@ bool ParseSpmModule(const std::string &moduleJson, InnerModuleInfoForSpm &module
         return false;
     }
     const auto &moduleObj = *moduleIt;
+    moduleInfo.moduleType = GetJsonString(moduleObj, KEY_MODULE_TYPE);
 
     // moduleName (required) - support both Stage model (name) and FA model (package)
     // Stage model: use "name" directly

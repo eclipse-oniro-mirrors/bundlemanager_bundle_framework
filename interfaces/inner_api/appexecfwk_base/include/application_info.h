@@ -269,6 +269,7 @@ struct ApplicationInfo : public Parcelable {
     // forceRotate only for broker
     bool isForceRotate = false;
     bool profileable = false;
+    bool allowAutoControlIntent = false;
 
     uint32_t versionCode = 0;
 

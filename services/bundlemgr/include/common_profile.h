@@ -388,6 +388,7 @@ constexpr const char* APP_ALLOW_LISTEN_BUNDLE_CHANGED_EVENT = "allowListenBundle
 constexpr const char* APP_ALTERNATE_ICONS = "alternateIcons";
 constexpr const char* APP_PRELOAD_PHASE = "appPreloadPhase";
 constexpr const char* APP_PROFILEABLE = "profileable";
+constexpr const char* APP_ALLOW_AUTO_CONTROL_INTENT = "allowAutoControlIntent";
 // multiappmode
 constexpr const char* APP_MULTI_APP_MODE = "multiAppMode";
 constexpr const char* APP_HWASAN_ENABLED = "hwasanEnabled";
