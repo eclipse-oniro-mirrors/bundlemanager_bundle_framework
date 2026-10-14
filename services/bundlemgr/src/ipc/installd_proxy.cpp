@@ -49,6 +49,7 @@ bool GetData(void *&buffer, size_t size, const void *data)
     }
     if (memcpy_s(buffer, size, data, size) != EOK) {
         free(buffer);
+        buffer = nullptr;
         LOG_E(BMS_TAG_INSTALLD, "GetData failed due to memcpy_s failed");
         return false;
     }
@@ -89,8 +90,35 @@ ErrCode GetParcelInfoFromAshMem(MessageParcel &reply, size_t dataSize, void *&da
     }
     if (memcpy_s(data, dataSize, ashDataPtr, dataSize) != EOK) {
         free(data);
+        data = nullptr;
         LOG_E(BMS_TAG_INSTALLD, "memcpy_s failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+template <typename T>
+ErrCode ParseVectorFromParcel(MessageParcel &tempParcel, std::vector<T> &parcelableInfos)
+{
+    int32_t size = tempParcel.ReadInt32();
+    if (size < 0 || size > MAX_VEC_SIZE) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid vector size %{public}d", size);
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    parcelableInfos.clear();
+    size_t readableBytes = tempParcel.GetReadableBytes();
+    size_t readSize = static_cast<size_t>(size);
+    if (readSize > readableBytes || readSize > parcelableInfos.max_size()) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid container size %{public}zu, readable %{public}zu", readSize, readableBytes);
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    for (int32_t i = 0; i < size; ++i) {
+        std::unique_ptr<T> info(tempParcel.ReadParcelable<T>());
+        if (info == nullptr) {
+            LOG_E(BMS_TAG_INSTALLD, "Read Parcelable infos failed, index %{public}d", i);
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+        parcelableInfos.emplace_back(*info);
     }
     return ERR_OK;
 }
@@ -130,23 +158,7 @@ ErrCode InnerGetVectorFromParcelIntelligent(MessageParcel &reply, std::vector<T>
         LOG_E(BMS_TAG_INSTALLD, "ParseFrom failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-
-    int32_t size = tempParcel.ReadInt32();
-    if (size < 0 || size > MAX_VEC_SIZE) {
-        LOG_E(BMS_TAG_INSTALLD, "invalid vector size %{public}d", size);
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    parcelableInfos.clear();
-    CONTAINER_SECURITY_VERIFY(tempParcel, size, &parcelableInfos);
-    for (int32_t i = 0; i < size; ++i) {
-        std::unique_ptr<T> info(tempParcel.ReadParcelable<T>());
-        if (info == nullptr) {
-            LOG_E(BMS_TAG_INSTALLD, "Read Parcelable infos failed, index %{public}d", i);
-            return ERR_APPEXECFWK_PARCEL_ERROR;
-        }
-        parcelableInfos.emplace_back(*info);
-    }
-    return ERR_OK;
+    return ParseVectorFromParcel(tempParcel, parcelableInfos);
 }
 }
 
@@ -670,10 +682,13 @@ ErrCode InstalldProxy::CleanBundleDataDirByName(const std::string &bundleName, c
 ErrCode InstalldProxy::CleanBundleDirs(const std::vector<std::string> &dirs, bool keepParent,
     const std::string &bundleName, BundleDirScene scene)
 {
+    if (dirs.size() > static_cast<size_t>(MAX_VEC_SIZE)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid dirs size %{public}zu", dirs.size());
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
-    int32_t dirSize = static_cast<int32_t>(dirs.size());
-    INSTALLD_PARCEL_WRITE(data, Uint32, dirSize);
+    INSTALLD_PARCEL_WRITE(data, Uint32, static_cast<uint32_t>(dirs.size()));
 
     for (const std::string &dir : dirs) {
         INSTALLD_PARCEL_WRITE(data, String, dir);
@@ -773,8 +788,12 @@ ErrCode InstalldProxy::GetAllBundleStats(std::vector<int64_t> &bundleStats, cons
 {
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
-    uint32_t uidSize = uids.size();
-    INSTALLD_PARCEL_WRITE(data, Uint32, uidSize);
+    if (uids.size() > static_cast<size_t>(Constants::CAPACITY_SIZE)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid uids size %{public}zu", uids.size());
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    int32_t uidSize = static_cast<int32_t>(uids.size());
+    INSTALLD_PARCEL_WRITE(data, Int32, uidSize);
     for (const auto &uid : uids) {
         INSTALLD_PARCEL_WRITE(data, Int32, uid);
     }
