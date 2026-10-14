@@ -32,7 +32,9 @@
 #include "bundle_data_mgr.h"
 #include "bundle_mgr_client.h"
 #include "bundle_mgr_client_impl.h"
+#include "bundle_mgr_host_impl.h"
 #include "bundle_mgr_service.h"
+#include "bundle_service_constants.h"
 #include "dual_mode_helper.h"
 #include "first_install_data_mgr/first_install_bundle_info.h"
 #include "get_largest_items_callback_host.h"
@@ -47,6 +49,9 @@
 #include "shortcut_visible_data_storage_rdb.h"
 #include "uninstall_data_mgr_storage_rdb.h"
 #include "want_params_wrapper.h"
+#include "bms_extension_data_mgr.h"
+#include "bundle_mgr_ext.h"
+#include "bundle_mgr_ext_register.h"
 
 using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
@@ -55,6 +60,32 @@ using OHOS::AAFwk::Want;
 
 namespace OHOS {
 namespace {
+class MockBundleMgrExtForCanOpenLink : public AppExecFwk::BundleMgrExt {
+public:
+    bool CheckApiInfo(const AppExecFwk::BundleInfo& bundleInfo) override
+    {
+        return true;
+    }
+    ErrCode CanOpenLink(const std::string &link, bool &canOpen) override
+    {
+        canOpen = true;
+        return ERR_OK;
+    }
+};
+
+class MockBundleMgrExtForCanOpenLinkFail : public AppExecFwk::BundleMgrExt {
+public:
+    bool CheckApiInfo(const AppExecFwk::BundleInfo& bundleInfo) override
+    {
+        return true;
+    }
+    ErrCode CanOpenLink(const std::string &link, bool &canOpen) override
+    {
+        canOpen = false;
+        return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
+    }
+};
+
 const std::string BUNDLE_NAME = "com.example.l3jsdemo";
 const std::string APP_NAME = "com.example.l3jsdemo";
 const std::string ABILITY_NAME = "com.example.l3jsdemo.MainAbility";
@@ -2660,6 +2691,147 @@ HWTEST_F(BmsDataMgrTest, CanOpenLink_0100, Function | SmallTest | Level1)
     bool canOpen = false;
     ErrCode ret = dataMgr->CanOpenLink(link, canOpen);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_UID);
+}
+
+/**
+ * @tc.number: CanOpenLink_Ext_0100
+ * @tc.name: test CanOpenLink orchestration uid invalid
+ * @tc.desc: 1.HostImpl::CanOpenLink with empty link → local query returns error → skip extension
+ */
+HWTEST_F(BmsDataMgrTest, CanOpenLink_Ext_0100, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    std::string link = "";
+    bool canOpen = false;
+    ErrCode ret = hostImpl->CanOpenLink(link, canOpen);
+    EXPECT_NE(ret, ERR_OK);
+    EXPECT_EQ(canOpen, false);
+}
+
+/**
+ * @tc.number: CanOpenLink_Ext_0200
+ * @tc.name: test QueryCanOpenLinkByExtension degradation
+ * @tc.desc: 1.extension not available → degrade, canOpen stays false
+ */
+HWTEST_F(BmsDataMgrTest, CanOpenLink_Ext_0200, Function | SmallTest | Level1)
+{
+    void *savedHandler = AppExecFwk::BmsExtensionDataMgr::handler_;
+    AppExecFwk::BmsExtension savedExt = AppExecFwk::BmsExtensionDataMgr::bmsExtension_;
+    AppExecFwk::BmsExtensionDataMgr::handler_ = reinterpret_cast<void *>(0x1);
+    AppExecFwk::BmsExtensionDataMgr::bmsExtension_.bmsExtensionBundleMgr.extensionName = "nonexistent_ext";
+
+    auto hostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    std::string link = "mytestscheme://test";
+    bool canOpen = false;
+    hostImpl->QueryCanOpenLinkByExtension(link, canOpen);
+    EXPECT_EQ(canOpen, false);
+
+    AppExecFwk::BmsExtensionDataMgr::handler_ = savedHandler;
+    AppExecFwk::BmsExtensionDataMgr::bmsExtension_ = savedExt;
+}
+
+/**
+ * @tc.number: CanOpenLink_Ext_0300
+ * @tc.name: test QueryCanOpenLinkByExtension extension success
+ * @tc.desc: 1.extension registered + returns success → canOpen=true
+ */
+HWTEST_F(BmsDataMgrTest, CanOpenLink_Ext_0300, Function | SmallTest | Level1)
+{
+    std::string extName = "test_canopenlink_ext";
+    BundleMgrExtRegister::GetInstance().RegisterBundleMgrExt(extName,
+        []() -> std::shared_ptr<BundleMgrExt> {
+            return std::make_shared<MockBundleMgrExtForCanOpenLink>();
+        });
+
+    void *savedHandler = AppExecFwk::BmsExtensionDataMgr::handler_;
+    AppExecFwk::BmsExtension savedExt = AppExecFwk::BmsExtensionDataMgr::bmsExtension_;
+    AppExecFwk::BmsExtensionDataMgr::handler_ = reinterpret_cast<void *>(0x1);
+    AppExecFwk::BmsExtensionDataMgr::bmsExtension_.bmsExtensionBundleMgr.extensionName = extName;
+
+    auto hostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    std::string link = "mytestscheme://test";
+    bool canOpen = false;
+    hostImpl->QueryCanOpenLinkByExtension(link, canOpen);
+    EXPECT_EQ(canOpen, true);
+
+    AppExecFwk::BmsExtensionDataMgr::handler_ = savedHandler;
+    AppExecFwk::BmsExtensionDataMgr::bmsExtension_ = savedExt;
+}
+
+/**
+ * @tc.number: CanOpenLink_Ext_0400
+ * @tc.name: test CanOpenLink local query path
+ * @tc.desc: 1.local query returns ERR_OK + canOpen=false → isOversea=false → skip extension
+ */
+HWTEST_F(BmsDataMgrTest, CanOpenLink_Ext_0400, Function | SmallTest | Level1)
+{
+    std::string testBundleName = "com.example.canopenlinktest";
+    auto serviceDataMgr = std::make_shared<BundleDataMgr>();
+    serviceDataMgr->AddUserId(USERID);
+
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo appInfo;
+    appInfo.bundleName = testBundleName;
+    innerBundleInfo.SetBaseApplicationInfo(appInfo);
+
+    InnerModuleInfo moduleInfo;
+    moduleInfo.modulePackage = MODULE_NAME;
+    moduleInfo.moduleName = MODULE_NAME;
+    moduleInfo.isEntry = true;
+    moduleInfo.querySchemes.push_back("mytestscheme");
+    innerBundleInfo.InsertInnerModuleInfo(MODULE_NAME, moduleInfo);
+
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleName = testBundleName;
+    innerBundleUserInfo.bundleUserInfo.userId = USERID;
+    innerBundleUserInfo.uid = 20000001;
+    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+
+    serviceDataMgr->bundleInfos_.emplace(testBundleName, innerBundleInfo);
+    serviceDataMgr->bundleIdMap_.emplace(1, testBundleName);
+    bundleMgrService_->dataMgr_ = serviceDataMgr;
+
+    auto hostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    std::string link = "mytestscheme://test";
+    bool canOpen = false;
+    ErrCode ret = hostImpl->CanOpenLink(link, canOpen);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(canOpen, false);
+
+    bundleMgrService_->dataMgr_ = nullptr;
+}
+
+/**
+ * @tc.number: CanOpenLink_Ext_0500
+ * @tc.name: test QueryCanOpenLinkByExtension extension return error
+ * @tc.desc: 1.extension registered + returns error → degrade, canOpen stays false
+ */
+HWTEST_F(BmsDataMgrTest, CanOpenLink_Ext_0500, Function | SmallTest | Level1)
+{
+    std::string extName = "test_canopenlink_ext_fail";
+    BundleMgrExtRegister::GetInstance().RegisterBundleMgrExt(extName,
+        []() -> std::shared_ptr<BundleMgrExt> {
+            return std::make_shared<MockBundleMgrExtForCanOpenLinkFail>();
+        });
+
+    void *savedHandler = AppExecFwk::BmsExtensionDataMgr::handler_;
+    AppExecFwk::BmsExtension savedExt = AppExecFwk::BmsExtensionDataMgr::bmsExtension_;
+    AppExecFwk::BmsExtensionDataMgr::handler_ = reinterpret_cast<void *>(0x1);
+    AppExecFwk::BmsExtensionDataMgr::bmsExtension_.bmsExtensionBundleMgr.extensionName = extName;
+
+    auto hostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    std::string link = "mytestscheme://test";
+    bool canOpen = false;
+    hostImpl->QueryCanOpenLinkByExtension(link, canOpen);
+    EXPECT_EQ(canOpen, false);
+
+    AppExecFwk::BmsExtensionDataMgr::handler_ = savedHandler;
+    AppExecFwk::BmsExtensionDataMgr::bmsExtension_ = savedExt;
 }
 
 /**

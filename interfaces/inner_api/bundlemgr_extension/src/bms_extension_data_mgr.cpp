@@ -875,5 +875,24 @@ ErrCode BmsExtensionDataMgr::RebuildBundleResourceTable()
     }
     return bundleMgrExtPtr->RebuildBundleResourceTable();
 }
+
+ErrCode BmsExtensionDataMgr::CanOpenLink(const std::string &link, bool &canOpen)
+{
+    if (Init() != ERR_OK || handler_ == nullptr) {
+        APP_LOGW("access bms-extension failed");
+        return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
+    }
+    auto bundleMgrExtPtr =
+        BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
+    if (bundleMgrExtPtr == nullptr) {
+        APP_LOGE("create class: %{public}s failed", bmsExtension_.bmsExtensionBundleMgr.extensionName.c_str());
+        return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
+    }
+    ErrCode ret = bundleMgrExtPtr->CanOpenLink(link, canOpen);
+    if (ret != ERR_OK) {
+        APP_LOGE("CanOpenLink in bms-extension failed");
+    }
+    return ret;
+}
 } // AppExecFwk
 } // OHOS

@@ -1241,6 +1241,8 @@ public:
     virtual ErrCode CanOpenLink(
         const std::string &link, bool &canOpen) override;
 
+    void QueryCanOpenLinkByExtension(const std::string &link, bool &canOpen);
+
     virtual ErrCode GetOdid(std::string &odid) override;
 
     /**
