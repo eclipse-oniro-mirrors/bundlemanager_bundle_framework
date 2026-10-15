@@ -240,7 +240,7 @@ namespace OHOS {
 int32_t g_testVerifyPermission = 0;
 // Test knobs for BundleSpmManager::CreateBundlePolicy branch coverage.
 bool g_defaultPermissionRet = true;
-DefaultPermission g_mockDefaultPermission;
+AppExecFwk::DefaultPermission g_mockDefaultPermission;
 bool g_matchSignatureRet = true;
 // Instrumentation for BundleSpmManager::DeleteToken tests: call count and the
 // isTokenReserved argument of the last DeleteAccessTokenId call.
@@ -260,7 +260,7 @@ void ResetSpmFacadeMockValues()
 {
     g_testVerifyPermission = 0;
     g_defaultPermissionRet = true;
-    g_mockDefaultPermission = DefaultPermission();
+    g_mockDefaultPermission = AppExecFwk::DefaultPermission();
     g_matchSignatureRet = true;
     g_deleteAccessTokenIdCount = 0;
     g_deleteAccessTokenIdReserved = false;

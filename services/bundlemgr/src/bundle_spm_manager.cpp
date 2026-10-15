@@ -22,7 +22,6 @@
 #include "account_helper.h"
 #include "app_log_tag_wrapper.h"
 #include "bundle_data_mgr.h"
-#include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_service_constants.h"
 #include "bundle_util.h"
@@ -104,7 +103,7 @@ BundleSpmManager &BundleSpmManager::GetInstance()
 
 bool BundleSpmManager::IsEnabled()
 {
-    static bool enabled = OHOS::system::GetBoolParameter(BMS_SPM_ENABLE_PARAM, true);
+    static bool enabled = OHOS::system::GetBoolParameter(BMS_SPM_ENABLE_PARAM, false);
     return enabled;
 }
 
@@ -267,10 +266,12 @@ BundleSpmManager::InstallSession BundleSpmManager::InstallSession::CreateDeferre
 
 BundleSpmManager::InstallSession::InstallSession(InstallSession &&other) noexcept
     : sessionId_(other.sessionId_), committed_(other.committed_),
+      identityPrepared_(other.identityPrepared_),
       hapVerifyResults_(std::move(other.hapVerifyResults_))
 {
     other.sessionId_ = 0;
     other.committed_ = false;
+    other.identityPrepared_ = false;
 }
 
 BundleSpmManager::InstallSession &BundleSpmManager::InstallSession::operator=(
@@ -283,9 +284,11 @@ BundleSpmManager::InstallSession &BundleSpmManager::InstallSession::operator=(
         }
         sessionId_ = other.sessionId_;
         committed_ = other.committed_;
+        identityPrepared_ = other.identityPrepared_;
         hapVerifyResults_ = std::move(other.hapVerifyResults_);
         other.sessionId_ = 0;
         other.committed_ = false;
+        other.identityPrepared_ = false;
     }
     return *this;
 }
@@ -306,6 +309,16 @@ int32_t BundleSpmManager::InstallSession::GetSessionId() const
 bool BundleSpmManager::InstallSession::IsActive() const
 {
     return sessionId_ != 0;
+}
+
+bool BundleSpmManager::InstallSession::IsCommitted() const
+{
+    return committed_;
+}
+
+bool BundleSpmManager::InstallSession::HasPreparedIdentity() const
+{
+    return identityPrepared_;
 }
 
 bool BundleSpmManager::InstallSession::GetHapVerifyResults(
@@ -420,19 +433,21 @@ int32_t BundleSpmManager::InstallSession::InitToken(InnerBundleInfo &info, int32
     if (identityUid != nullptr) {
         *identityUid = identity.uid;
     }
+    // Mark that THIS session prepared the identity (fresh creation or reserved
+    // adoption): the post-commit DB-failure undo may only delete tokens that
+    // were created inside the session — an update-only session (UpdateToken)
+    // keeps the pre-existing token and must never undo it.
+    identityPrepared_ = true;
     LOG_NOFUNC_I(BMS_TAG_INSTALLER,
         "PrepareHapIdentity success, bundleName:%{public}s appIndex:%{public}d sessionId:%{public}d "
         "tokenId:%{public}u uid:%{public}d",
         info.GetBundleName().c_str(), info.GetAppIndex(), sessionId_,
         tokenIdEx.tokenIdExStruct.tokenID, identity.uid);
-    // The uid is guaranteed positive by the check above: refresh the SPM ON
-    // reverse-lookup cache so fresh installs are covered in-process too
-    // (the boot restore only repopulates it after a restart), and produce
-    // the fs config for the newly generated uid.
-    auto cacheMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (cacheMgr != nullptr) {
-        cacheMgr->UpdateUidIndexMap(identity.uid, info.GetBundleName(), info.GetAppIndex());
-    }
+    // The uid is guaranteed positive by the check above: produce the fs config
+    // for the newly generated uid (the data directory creation below consumes
+    // it). The reverse-lookup map entry is NOT touched here — it is inserted at
+    // the DB-persistence point of the install (BundleDataMgr), so a failed or
+    // rolled-back install never pollutes the map.
     MakeFsConfigForNewUid(identity.uid, info.GetBundleName());
     if (cloneInstall) {
         // Clone: the caller owns the uid handling (it builds the clone info from
@@ -456,15 +471,13 @@ int32_t BundleSpmManager::InstallSession::InitToken(InnerBundleInfo &info, int32
     if (userExists && bundleUserInfo.uid != Constants::INVALID_UID &&
         bundleUserInfo.uid != identity.uid) {
         // The AT side did not adopt the desired local uid and reallocated a new
-        // one: under SPM ON the AT uid is authoritative — adopt it, drop the
+        // one: under SPM ON the AT uid is authoritative — adopt it and drop the
         // stale local uid (its gid is cleared so uid and gids[0] stay
-        // consistent), and evict the reverse-lookup cache entry of the dropped
-        // local uid (the AT uid entry is already written above).
+        // consistent). The stale entry of the abandoned uid in the reverse-
+        // lookup map is rejected by the query cross-check and dropped at the
+        // next boot restore.
         LOG_NOFUNC_W(BMS_TAG_INSTALLER, "AT uid %{public}d differs from local uid %{public}d, adopt AT uid, "
             "bundleName:%{public}s", identity.uid, bundleUserInfo.uid, info.GetBundleName().c_str());
-        if (cacheMgr != nullptr) {
-            cacheMgr->RemoveUidIndexMap(bundleUserInfo.uid);
-        }
         // Drop the fs config files keyed by the abandoned local uid as well:
         // the config layout is <configPath>/<bundleName>/<bundleId>, and the
         // old uid's derived bundleId file would collide when the uid is reused.
@@ -528,9 +541,24 @@ int32_t BundleSpmManager::InstallSession::UpdateToken(
     // cache keys or the fs config files).
     int32_t currentUid = info.GetUid(userId, appIndex);
     if (uidOut > 0 && uidOut != currentUid) {
-        // The uid bound to the token changed with the policy update: rewrite the
-        // reverse-lookup cache entry, regenerate the fs config for the new uid,
-        // and hand the refreshed uid back through the optional out param so
+        if (BundleUtil::GetUserIdByUid(uidOut) != userId) {
+            // Same user-segment consistency check as InitToken: a uid the AT side
+            // binds to THIS user's identity must fall inside this user's uid
+            // segment. A cross-user drift flowing into the reverse-lookup cache,
+            // the fs config or the persisted user info would bind the token to a
+            // uid the app can never run under — fail the install here already
+            // (the session rollback reverts the policy update).
+            LOG_NOFUNC_E(BMS_TAG_INSTALLER,
+                "UpdateHapPolicy uid outside the user segment, bundleName:%{public}s "
+                "uid:%{public}d expected userId:%{public}d",
+                info.GetBundleName().c_str(), uidOut, userId);
+            return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
+        }
+        // The uid bound to the token changed with the policy update: stage the
+        // reverse-lookup cache rewrite and the stale-entry eviction — both are
+        // applied only on a successful Commit, so a rolled-back update keeps the
+        // old entry (the AT-side rollback restores the old uid binding). The
+        // refreshed uid is still handed back through the optional out param so
         // callers with a writable info persist it (their normal save path then
         // writes the DB — otherwise the cache and the DB would split).
         LOG_NOFUNC_I(BMS_TAG_INSTALLER, "UpdateHapPolicy refreshed uid, bundleName:%{public}s "
@@ -539,19 +567,10 @@ int32_t BundleSpmManager::InstallSession::UpdateToken(
         if (refreshedUid != nullptr) {
             *refreshedUid = uidOut;
         }
-        auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-        if (dataMgr != nullptr) {
-            // Evict the stale entry only for the MAIN identity (appIndex 0):
-            // info.GetUid(userId) resolves the main-app uid, so for a clone
-            // token it would evict the main app's perfectly valid entry.
-            if (appIndex == 0) {
-                int32_t oldUid = info.GetUid(userId);
-                if (oldUid != Constants::INVALID_UID && oldUid != 0 && oldUid != uidOut) {
-                    dataMgr->RemoveUidIndexMap(oldUid);
-                }
-            }
-            dataMgr->UpdateUidIndexMap(uidOut, info.GetBundleName(), appIndex);
-        }
+        // The reverse-lookup entry of the refreshed uid is inserted at the
+        // DB-persistence point (the refreshed uid is persisted together with the
+        // info); the stale entry of the abandoned old uid is rejected by the
+        // query cross-check until the next restore drops it.
         MakeFsConfigForNewUid(uidOut, info.GetBundleName());
     }
     return ret;
@@ -758,12 +777,17 @@ bool BundleSpmManager::TryRecoverUidError(const std::string &bundleName, BundleD
         Security::AccessToken::HapBaseInfo baseInfo;
         baseInfo.userID = bundleUserInfo.userId;
         baseInfo.bundleName = bundleName;
-        // main identity of this user (app index 0)
-        baseInfo.instIndex = Constants::INITIAL_APP_INDEX;
-        migratedInfo.hapBaseInfoList.emplace_back(baseInfo);
         // Filter invalid uids from the RDB records (OTA / corruption leftovers):
         // the AT side would register them as-is and the identity would be broken.
+        // The MAIN identity's base info and uid must be staged TOGETHER — a
+        // conditional uid with an unconditional base info would misalign the
+        // parallel lists and bind every following clone identity to the wrong
+        // uid — so a corrupt main record stages nothing for the main identity
+        // while its valid clones below are still migrated.
         if (userInfo.uid > 0) {
+            // main identity of this user (app index 0)
+            baseInfo.instIndex = Constants::INITIAL_APP_INDEX;
+            migratedInfo.hapBaseInfoList.emplace_back(baseInfo);
             migratedInfo.uidList.emplace_back(userInfo.uid);
             migratedInfo.reservedTypeList.emplace_back(Security::AccessToken::ReservedType::NONE);
         }
@@ -803,21 +827,16 @@ bool BundleSpmManager::TryRecoverAlreadyExistError(const std::string &bundleName
             bundleName.c_str(), ret);
         return false;
     }
-    // The AT side deletes EVERY identity of the bundle by name (tokenId 0):
-    // evict the reverse-lookup cache entries of all this bundle's uids so the
-    // local cache stays consistent with the (now deleted) AT identities —
-    // without this, a later AT uid reuse would resolve to this bundle.
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (dataMgr != nullptr) {
-        dataMgr->RemoveUidIndexMapByBundleName(bundleName);
-    }
+    // The AT side deletes EVERY identity of the bundle by name (tokenId 0).
+    // Leftover reverse-lookup entries are rejected by the query cross-check
+    // and dropped at the next boot restore.
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "cleaned leftover identity of %{public}s, retry install",
         bundleName.c_str());
     return true;
 }
 
 int32_t BundleSpmManager::DeleteToken(Security::AccessToken::AccessTokenID tokenId,
-    const std::string &bundleName, TokenDeleteType type, int32_t uid)
+    const std::string &bundleName, TokenDeleteType type)
 {
     if (!IsEnabled()) {
         switch (type) {
@@ -841,17 +860,10 @@ int32_t BundleSpmManager::DeleteToken(Security::AccessToken::AccessTokenID token
         return Security::AccessToken::AccessTokenError::ERR_PARAM_INVALID;
     }
     // SPM ON: TokenDeleteType maps one-to-one to the AT ReservedType values (0/1/2).
-    int32_t ret = Security::AccessToken::AccessTokenKit::DeleteIdentity(tokenId, bundleName,
+    // A leftover reverse-lookup entry of the deleted identity is rejected by the
+    // query cross-check and dropped at the next boot restore.
+    return Security::AccessToken::AccessTokenKit::DeleteIdentity(tokenId, bundleName,
         static_cast<Security::AccessToken::ReservedType>(type));
-    if (ret == ERR_OK && uid != Constants::INVALID_UID && type == TokenDeleteType::NONE) {
-        // Only the NONE semantics actually deletes the identity: the reserved types
-        // keep it in the AT service, so the reverse-lookup cache entry stays with it.
-        auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-        if (dataMgr != nullptr) {
-            dataMgr->RemoveUidIndexMap(uid);
-        }
-    }
-    return ret;
 }
 } // namespace AppExecFwk
 } // namespace OHOS

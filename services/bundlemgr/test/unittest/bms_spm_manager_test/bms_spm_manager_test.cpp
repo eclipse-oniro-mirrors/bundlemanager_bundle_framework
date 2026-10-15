@@ -40,8 +40,6 @@ int32_t GetClearSessionProvisionCacheCountForTest();
 } // namespace OHOS
 
 namespace OHOS {
-void ResetClearSessionProvisionCacheCountForTest();
-int32_t GetClearSessionProvisionCacheCountForTest();
 extern int32_t g_testVerifyPermission;
 extern int32_t g_deleteAccessTokenIdCount;
 extern bool g_deleteAccessTokenIdReserved;
@@ -55,7 +53,8 @@ extern bool g_updateHapTokenNeedInit;
 extern bool g_defaultPermissionRet;
 extern AppExecFwk::DefaultPermission g_mockDefaultPermission;
 extern bool g_matchSignatureRet;
-} // namespace OHOS
+// SPM facade mock resetter defined in test/mock/src/bundle_permission_mgr.cpp.
+void ResetSpmFacadeMockValues();
 
 // SPM control variables defined in test/mock/src/accesstoken_kit.cpp.
 namespace Security {
@@ -67,6 +66,7 @@ extern bool g_spmFinishInstallLastPersistent;
 void ResetSpmKitMockValuesForTest();
 } // namespace AccessToken
 } // namespace Security
+} // namespace OHOS
 
 namespace {
 const std::string BUNDLE_NAME = "com.ohos.spm.test";

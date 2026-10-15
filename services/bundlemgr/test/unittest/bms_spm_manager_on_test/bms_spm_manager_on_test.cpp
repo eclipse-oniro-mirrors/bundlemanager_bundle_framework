@@ -46,12 +46,15 @@ extern int32_t g_spmCheckHapPermissionInfoCallCount;
 extern int32_t g_spmPrepareHapIdentityRet;
 extern uint64_t g_spmPrepareIdentityTokenId;
 extern int32_t g_spmPrepareIdentityUid;
+extern int32_t g_spmPrepareIdentitySessionId;
 extern bool g_spmPrepareIdentityForceReallocate;
 extern int32_t g_spmUpdateHapPolicyRet;
 extern int32_t g_spmUpdateHapPolicyUidOut;
 extern int32_t g_spmGetHapBaseInfoByUidRet;
 extern Security::AccessToken::HapBaseInfo g_spmGetHapBaseInfo;
 extern int32_t g_spmMigrateInstalledBundlesRet;
+extern int32_t g_spmLastMigratedBaseInfoCount;
+extern int32_t g_spmLastMigratedUidCount;
 extern int32_t g_spmDeleteIdentityRet;
 extern uint64_t g_lastDeleteIdentityTokenId;
 extern std::string g_lastDeleteIdentityBundleName;
@@ -84,6 +87,31 @@ constexpr int32_t TEST_IDENTITY_UID = 100 * 200000 + 102;
 constexpr int32_t TEST_EXISTING_UID = 100 * 200000 + 9999;
 constexpr int32_t TEST_CLONE_UID = 100 * 200000 + 1042;
 constexpr int64_t TEST_INSTALL_TIME = 555;
+
+// Constructs an ACTIVE session without real hap files. CheckSignAndInitSession
+// rejects an empty hap list (aligned with the OFF checker's param error), and a
+// non-empty list needs a parsable provision document (only available as .p7b
+// assets), so the session is engaged through the deferred InitToken path
+// instead: the g_spmPrepareIdentitySessionId mock knob makes PrepareHapIdentity
+// allocate the session id and write it back — the same contract the real AT
+// side implements for deferred callers. InitToken itself issues no
+// FinishInstall, so the call-count assertions of the callers stay untouched.
+BundleSpmManager::InstallSession MakeActiveSession()
+{
+    OHOS::Security::AccessToken::g_spmPrepareIdentitySessionId = TEST_SESSION_ID;
+    OHOS::Security::AccessToken::g_spmPrepareIdentityTokenId = TEST_IDENTITY_TOKENID;
+    OHOS::Security::AccessToken::g_spmPrepareIdentityUid = TEST_IDENTITY_UID;
+    auto session = BundleSpmManager::InstallSession::CreateDeferred();
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    info.SetBaseBundleInfo(bundleInfo);
+    OHOS::Security::AccessToken::AccessTokenIDEx tokenIdEx = {0};
+    OHOS::Security::AccessToken::HapInfoCheckResult checkResult;
+    EXPECT_EQ(session.InitToken(info, TEST_USERID, 0, tokenIdEx, checkResult, "", nullptr, false),
+        OHOS::ERR_OK);
+    return session;
+}
 } // namespace
 
 namespace OHOS {
@@ -131,24 +159,25 @@ HWTEST_F(BmsSpmManagerOnTest, IsEnabled_0001, Function | MediumTest | Level1)
 }
 
 /**
- * @tc.number: BmsSpmManagerOnTest.CheckSignAndInitSession_ActiveSession_0001
- * @tc.name: CheckSignAndInitSession with an active session
- * @tc.desc: A successful CheckHapSignInfo allocates the session id. These tests
- *           construct active sessions with an empty hap list (no real hap files
- *           in unit tests); the count contract is pinned by the mismatch tests.
+ * @tc.number: BmsSpmManagerOnTest.CheckSignAndInitSession_EmptyPaths_0001
+ * @tc.name: CheckSignAndInitSession rejects an empty hap list
+ * @tc.desc: The ON path aligns with the OFF checker (CheckMultipleHapsSignInfo
+ *           rejects an empty path list with the registered param error): fail
+ *           closed BEFORE any AT call, so no session is created and nothing is
+ *           handed to the AT side. Active-session flows are covered through the
+ *           deferred InitToken engagement (MakeActiveSession).
  */
-HWTEST_F(BmsSpmManagerOnTest, CheckSignAndInitSession_ActiveSession_0001, Function | MediumTest | Level1)
+HWTEST_F(BmsSpmManagerOnTest, CheckSignAndInitSession_EmptyPaths_0001, Function | MediumTest | Level1)
 {
     OHOS::Security::AccessToken::g_spmCheckHapSignInfoSessionId = TEST_SESSION_ID;
     BundleInstallChecker checker;
     ErrCode errCode = ERR_OK;
     auto session = BundleSpmManager::InstallSession::CheckSignAndInitSession(
         TEST_USERID, {}, false, checker, errCode, true, false);
-    EXPECT_EQ(errCode, ERR_OK);
-    EXPECT_TRUE(session.IsActive());
-    EXPECT_EQ(session.GetSessionId(), TEST_SESSION_ID);
-    std::vector<Security::Verify::HapVerifyResult> results;
-    EXPECT_FALSE(session.GetHapVerifyResults(results));
+    EXPECT_EQ(errCode, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
+    EXPECT_FALSE(session.IsActive());
+    EXPECT_EQ(session.GetSessionId(), 0);
+    EXPECT_EQ(OHOS::Security::AccessToken::g_spmFinishInstallCallCount, 0);
 }
 
 /**
@@ -163,7 +192,7 @@ HWTEST_F(BmsSpmManagerOnTest, CheckSignAndInitSession_Failure_0001, Function | M
     BundleInstallChecker checker;
     ErrCode errCode = ERR_OK;
     auto session = BundleSpmManager::InstallSession::CheckSignAndInitSession(
-        TEST_USERID, {}, false, checker, errCode, true, false);
+        TEST_USERID, {"/data/test/one.hap"}, false, checker, errCode, true, false);
     EXPECT_EQ(errCode, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
     EXPECT_FALSE(session.IsActive());
     EXPECT_EQ(session.GetSessionId(), 0);
@@ -218,14 +247,8 @@ HWTEST_F(BmsSpmManagerOnTest, InitToken_DeferredSession_0002, Function | MediumT
  */
 HWTEST_F(BmsSpmManagerOnTest, InitToken_ActiveSession_0001, Function | MediumTest | Level1)
 {
-    OHOS::Security::AccessToken::g_spmCheckHapSignInfoSessionId = TEST_SESSION_ID;
-    OHOS::Security::AccessToken::g_spmPrepareIdentityTokenId = TEST_IDENTITY_TOKENID;
-    OHOS::Security::AccessToken::g_spmPrepareIdentityUid = TEST_IDENTITY_UID;
-    BundleInstallChecker checker;
-    ErrCode errCode = ERR_OK;
-    auto session = BundleSpmManager::InstallSession::CheckSignAndInitSession(
-        TEST_USERID, {}, false, checker, errCode, true, false);
-    ASSERT_EQ(errCode, ERR_OK);
+    auto session = MakeActiveSession();
+    ASSERT_TRUE(session.IsActive());
 
     InnerBundleInfo info;
     BundleInfo bundleInfo;
@@ -252,14 +275,8 @@ HWTEST_F(BmsSpmManagerOnTest, InitToken_ActiveSession_0001, Function | MediumTes
  */
 HWTEST_F(BmsSpmManagerOnTest, InitToken_ActiveSession_0002, Function | MediumTest | Level1)
 {
-    OHOS::Security::AccessToken::g_spmCheckHapSignInfoSessionId = TEST_SESSION_ID;
-    OHOS::Security::AccessToken::g_spmPrepareIdentityTokenId = TEST_IDENTITY_TOKENID;
-    OHOS::Security::AccessToken::g_spmPrepareIdentityUid = TEST_IDENTITY_UID;
-    BundleInstallChecker checker;
-    ErrCode errCode = ERR_OK;
-    auto session = BundleSpmManager::InstallSession::CheckSignAndInitSession(
-        TEST_USERID, {}, false, checker, errCode, true, false);
-    ASSERT_EQ(errCode, ERR_OK);
+    auto session = MakeActiveSession();
+    ASSERT_TRUE(session.IsActive());
 
     InnerBundleInfo info;
     BundleInfo bundleInfo;
@@ -293,14 +310,8 @@ HWTEST_F(BmsSpmManagerOnTest, InitToken_ActiveSession_0002, Function | MediumTes
  */
 HWTEST_F(BmsSpmManagerOnTest, InitToken_ActiveSession_0003, Function | MediumTest | Level1)
 {
-    OHOS::Security::AccessToken::g_spmCheckHapSignInfoSessionId = TEST_SESSION_ID;
-    OHOS::Security::AccessToken::g_spmPrepareIdentityTokenId = TEST_IDENTITY_TOKENID;
-    OHOS::Security::AccessToken::g_spmPrepareIdentityUid = TEST_IDENTITY_UID;
-    BundleInstallChecker checker;
-    ErrCode errCode = ERR_OK;
-    auto session = BundleSpmManager::InstallSession::CheckSignAndInitSession(
-        TEST_USERID, {}, false, checker, errCode, true, false);
-    ASSERT_EQ(errCode, ERR_OK);
+    auto session = MakeActiveSession();
+    ASSERT_TRUE(session.IsActive());
 
     InnerBundleInfo info;
     BundleInfo bundleInfo;
@@ -332,13 +343,11 @@ HWTEST_F(BmsSpmManagerOnTest, InitToken_ActiveSession_0003, Function | MediumTes
  */
 HWTEST_F(BmsSpmManagerOnTest, InitToken_ActiveSession_0004, Function | MediumTest | Level1)
 {
-    OHOS::Security::AccessToken::g_spmCheckHapSignInfoSessionId = TEST_SESSION_ID;
+    auto session = MakeActiveSession();
+    ASSERT_TRUE(session.IsActive());
+    // The failure knob is set AFTER the engagement: MakeActiveSession's own
+    // InitToken must succeed to allocate the session id.
     OHOS::Security::AccessToken::g_spmPrepareHapIdentityRet = -3;
-    BundleInstallChecker checker;
-    ErrCode errCode = ERR_OK;
-    auto session = BundleSpmManager::InstallSession::CheckSignAndInitSession(
-        TEST_USERID, {}, false, checker, errCode, true, false);
-    ASSERT_EQ(errCode, ERR_OK);
 
     InnerBundleInfo info;
     BundleInfo bundleInfo;
@@ -373,13 +382,9 @@ HWTEST_F(BmsSpmManagerOnTest, UpdateToken_DeferredSession_0001, Function | Mediu
  */
 HWTEST_F(BmsSpmManagerOnTest, UpdateToken_ActiveSession_0001, Function | MediumTest | Level1)
 {
-    OHOS::Security::AccessToken::g_spmCheckHapSignInfoSessionId = TEST_SESSION_ID;
+    auto session = MakeActiveSession();
+    ASSERT_TRUE(session.IsActive());
     OHOS::Security::AccessToken::g_spmUpdateHapPolicyRet = -6;
-    BundleInstallChecker checker;
-    ErrCode errCode = ERR_OK;
-    auto session = BundleSpmManager::InstallSession::CheckSignAndInitSession(
-        TEST_USERID, {}, false, checker, errCode, true, false);
-    ASSERT_EQ(errCode, ERR_OK);
 
     InnerBundleInfo info;
     Security::AccessToken::AccessTokenIDEx tokenIdEx = {0};
@@ -409,13 +414,9 @@ HWTEST_F(BmsSpmManagerOnTest, CheckPermissionInfo_DeferredSession_0001, Function
  */
 HWTEST_F(BmsSpmManagerOnTest, CheckPermissionInfo_ActiveSession_0001, Function | MediumTest | Level1)
 {
-    OHOS::Security::AccessToken::g_spmCheckHapSignInfoSessionId = TEST_SESSION_ID;
+    auto session = MakeActiveSession();
+    ASSERT_TRUE(session.IsActive());
     OHOS::Security::AccessToken::g_spmCheckHapPermissionInfoRet = -7;
-    BundleInstallChecker checker;
-    ErrCode errCode = ERR_OK;
-    auto session = BundleSpmManager::InstallSession::CheckSignAndInitSession(
-        TEST_USERID, {}, false, checker, errCode, true, false);
-    ASSERT_EQ(errCode, ERR_OK);
 
     Security::AccessToken::HapInfoCheckResult checkResult;
     EXPECT_EQ(session.CheckPermissionInfo(Security::AccessToken::InstallTypeEnum::TYPE_REPLACE,
@@ -459,17 +460,32 @@ HWTEST_F(BmsSpmManagerOnTest, Commit_DeferredSession_0001, Function | MediumTest
  */
 HWTEST_F(BmsSpmManagerOnTest, Commit_Success_0001, Function | MediumTest | Level1)
 {
-    OHOS::Security::AccessToken::g_spmCheckHapSignInfoSessionId = TEST_SESSION_ID;
-    BundleInstallChecker checker;
-    ErrCode errCode = ERR_OK;
-    auto session = BundleSpmManager::InstallSession::CheckSignAndInitSession(
-        TEST_USERID, {}, false, checker, errCode, true, false);
-    ASSERT_EQ(errCode, ERR_OK);
+    auto session = MakeActiveSession();
+    ASSERT_TRUE(session.IsActive());
 
     EXPECT_EQ(session.Commit({}), ERR_OK);
     EXPECT_EQ(OHOS::Security::AccessToken::g_spmFinishInstallCallCount, 1);
     EXPECT_TRUE(OHOS::Security::AccessToken::g_spmFinishInstallLastPersistent);
     EXPECT_EQ(OHOS::AppExecFwk::GetClearSessionProvisionCacheCountForTest(), 1);
+}
+
+/**
+ * @tc.number: BmsSpmManagerOnTest.IsCommitted_DeferredSession_0001
+ * @tc.name: IsCommitted flips after a successful Commit
+ * @tc.desc: IsCommitted is the gating flag for the install-failure token
+ *           rollback: an uncommitted session's freshly created identity is
+ *           never persisted (the session rollback discards it, so no
+ *           DeleteIdentity is needed), while a committed session's identity
+ *           was persisted and is still deleted on failure. A session starts
+ *           uncommitted and flips on a successful Commit.
+ */
+HWTEST_F(BmsSpmManagerOnTest, IsCommitted_DeferredSession_0001, Function | MediumTest | Level1)
+{
+    auto session = BundleSpmManager::InstallSession::CreateDeferred();
+    EXPECT_FALSE(session.IsCommitted());
+    EXPECT_EQ(session.Commit({}), ERR_OK);
+    EXPECT_TRUE(session.IsCommitted());
+    EXPECT_EQ(OHOS::Security::AccessToken::g_spmFinishInstallCallCount, 0);
 }
 
 /**
@@ -480,14 +496,10 @@ HWTEST_F(BmsSpmManagerOnTest, Commit_Success_0001, Function | MediumTest | Level
  */
 HWTEST_F(BmsSpmManagerOnTest, Commit_Failure_DestructorRollback_0001, Function | MediumTest | Level1)
 {
-    OHOS::Security::AccessToken::g_spmCheckHapSignInfoSessionId = TEST_SESSION_ID;
     OHOS::Security::AccessToken::g_spmFinishInstallRet = -5;
     {
-        BundleInstallChecker checker;
-        ErrCode errCode = ERR_OK;
-        auto session = BundleSpmManager::InstallSession::CheckSignAndInitSession(
-            TEST_USERID, {}, false, checker, errCode, true, false);
-        ASSERT_EQ(errCode, ERR_OK);
+        auto session = MakeActiveSession();
+        ASSERT_TRUE(session.IsActive());
 
         EXPECT_EQ(session.Commit({}), -5);
         EXPECT_EQ(OHOS::Security::AccessToken::g_spmFinishInstallCallCount, 1);
@@ -510,14 +522,10 @@ HWTEST_F(BmsSpmManagerOnTest, Commit_Failure_DestructorRollback_0001, Function |
  */
 HWTEST_F(BmsSpmManagerOnTest, Rollback_ExplicitAfterFailedCommit_0001, Function | MediumTest | Level1)
 {
-    OHOS::Security::AccessToken::g_spmCheckHapSignInfoSessionId = TEST_SESSION_ID;
     OHOS::Security::AccessToken::g_spmFinishInstallRet = -5;
     {
-        BundleInstallChecker checker;
-        ErrCode errCode = ERR_OK;
-        auto session = BundleSpmManager::InstallSession::CheckSignAndInitSession(
-            TEST_USERID, {}, false, checker, errCode, true, false);
-        ASSERT_EQ(errCode, ERR_OK);
+        auto session = MakeActiveSession();
+        ASSERT_TRUE(session.IsActive());
 
         EXPECT_EQ(session.Commit({}), -5);
         EXPECT_EQ(session.Rollback(), -5);
@@ -537,13 +545,9 @@ HWTEST_F(BmsSpmManagerOnTest, Rollback_ExplicitAfterFailedCommit_0001, Function 
  */
 HWTEST_F(BmsSpmManagerOnTest, Destructor_Rollback_WithoutCommit_0001, Function | MediumTest | Level1)
 {
-    OHOS::Security::AccessToken::g_spmCheckHapSignInfoSessionId = TEST_SESSION_ID;
     {
-        BundleInstallChecker checker;
-        ErrCode errCode = ERR_OK;
-        auto session = BundleSpmManager::InstallSession::CheckSignAndInitSession(
-            TEST_USERID, {}, false, checker, errCode, true, false);
-        ASSERT_EQ(errCode, ERR_OK);
+        auto session = MakeActiveSession();
+        ASSERT_TRUE(session.IsActive());
         EXPECT_EQ(OHOS::Security::AccessToken::g_spmFinishInstallCallCount, 0);
     }  // session destroyed here
     EXPECT_EQ(OHOS::Security::AccessToken::g_spmFinishInstallCallCount, 1);
@@ -559,13 +563,9 @@ HWTEST_F(BmsSpmManagerOnTest, Destructor_Rollback_WithoutCommit_0001, Function |
  */
 HWTEST_F(BmsSpmManagerOnTest, MoveAssign_RollbackAfterFailedCommit_0001, Function | MediumTest | Level1)
 {
-    OHOS::Security::AccessToken::g_spmCheckHapSignInfoSessionId = TEST_SESSION_ID;
     OHOS::Security::AccessToken::g_spmFinishInstallRet = -5;
-    BundleInstallChecker checker;
-    ErrCode errCode = ERR_OK;
-    auto session = BundleSpmManager::InstallSession::CheckSignAndInitSession(
-        TEST_USERID, {}, false, checker, errCode, true, false);
-    ASSERT_EQ(errCode, ERR_OK);
+    auto session = MakeActiveSession();
+    ASSERT_TRUE(session.IsActive());
 
     EXPECT_EQ(session.Commit({}), -5);
     EXPECT_EQ(OHOS::Security::AccessToken::g_spmFinishInstallCallCount, 1);
@@ -583,12 +583,8 @@ HWTEST_F(BmsSpmManagerOnTest, MoveAssign_RollbackAfterFailedCommit_0001, Functio
  */
 HWTEST_F(BmsSpmManagerOnTest, Destructor_Rollback_WithoutCommit_0002, Function | MediumTest | Level1)
 {
-    OHOS::Security::AccessToken::g_spmCheckHapSignInfoSessionId = TEST_SESSION_ID;
-    BundleInstallChecker checker;
-    ErrCode errCode = ERR_OK;
-    auto session = BundleSpmManager::InstallSession::CheckSignAndInitSession(
-        TEST_USERID, {}, false, checker, errCode, true, false);
-    ASSERT_EQ(errCode, ERR_OK);
+    auto session = MakeActiveSession();
+    ASSERT_TRUE(session.IsActive());
 
     session = BundleSpmManager::InstallSession::CreateDeferred();
     EXPECT_EQ(OHOS::Security::AccessToken::g_spmFinishInstallCallCount, 1);
@@ -604,13 +600,9 @@ HWTEST_F(BmsSpmManagerOnTest, Destructor_Rollback_WithoutCommit_0002, Function |
  */
 HWTEST_F(BmsSpmManagerOnTest, Rollback_Success_StopsDestructorRollback_0001, Function | MediumTest | Level1)
 {
-    OHOS::Security::AccessToken::g_spmCheckHapSignInfoSessionId = TEST_SESSION_ID;
     {
-        BundleInstallChecker checker;
-        ErrCode errCode = ERR_OK;
-        auto session = BundleSpmManager::InstallSession::CheckSignAndInitSession(
-            TEST_USERID, {}, false, checker, errCode, true, false);
-        ASSERT_EQ(errCode, ERR_OK);
+        auto session = MakeActiveSession();
+        ASSERT_TRUE(session.IsActive());
 
         EXPECT_EQ(session.Rollback(), ERR_OK);
         EXPECT_EQ(OHOS::Security::AccessToken::g_spmFinishInstallCallCount, 1);
@@ -697,7 +689,7 @@ HWTEST_F(BmsSpmManagerOnTest, CheckSignAndInitSession_Failure_NoSessionLeak_0001
     BundleInstallChecker checker;
     ErrCode errCode = ERR_OK;
     auto session = BundleSpmManager::InstallSession::CheckSignAndInitSession(
-        TEST_USERID, {}, false, checker, errCode, true, false);
+        TEST_USERID, {"/data/test/one.hap"}, false, checker, errCode, true, false);
     EXPECT_EQ(errCode, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
     EXPECT_FALSE(session.IsActive());
     EXPECT_EQ(OHOS::Security::AccessToken::g_spmFinishInstallCallCount, 0);
@@ -717,7 +709,7 @@ HWTEST_F(BmsSpmManagerOnTest, CheckSignAndInitSession_ConvertResultCode_0001, Fu
     BundleInstallChecker checker;
     ErrCode errCode = ERR_OK;
     auto session = BundleSpmManager::InstallSession::CheckSignAndInitSession(
-        TEST_USERID, {}, false, checker, errCode, true, false);
+        TEST_USERID, {"/data/test/one.hap"}, false, checker, errCode, true, false);
     EXPECT_EQ(errCode, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
     EXPECT_FALSE(session.IsActive());
 
@@ -725,7 +717,7 @@ HWTEST_F(BmsSpmManagerOnTest, CheckSignAndInitSession_ConvertResultCode_0001, Fu
         Security::AccessToken::AccessTokenError::ERR_BUNDLE_ALREADY_EXIST;
     errCode = ERR_OK;
     session = BundleSpmManager::InstallSession::CheckSignAndInitSession(
-        TEST_USERID, {}, false, checker, errCode, true, false);
+        TEST_USERID, {"/data/test/one.hap"}, false, checker, errCode, true, false);
     EXPECT_EQ(errCode, Security::AccessToken::AccessTokenError::ERR_BUNDLE_ALREADY_EXIST);
     EXPECT_FALSE(session.IsActive());
 }
@@ -781,13 +773,9 @@ HWTEST_F(BmsSpmManagerOnTest, FillProvisionProfileBlock_0001, Function | MediumT
  */
 HWTEST_F(BmsSpmManagerOnTest, Commit_ClearCacheFailure_NonBlocking_0001, Function | MediumTest | Level1)
 {
-    OHOS::Security::AccessToken::g_spmCheckHapSignInfoSessionId = TEST_SESSION_ID;
     OHOS::AppExecFwk::g_clearSessionProvisionCacheRet = -9;
-    BundleInstallChecker checker;
-    ErrCode errCode = ERR_OK;
-    auto session = BundleSpmManager::InstallSession::CheckSignAndInitSession(
-        TEST_USERID, {}, false, checker, errCode, true, false);
-    ASSERT_EQ(errCode, ERR_OK);
+    auto session = MakeActiveSession();
+    ASSERT_TRUE(session.IsActive());
 
     EXPECT_EQ(session.Commit({}), ERR_OK);
     EXPECT_EQ(OHOS::Security::AccessToken::g_spmFinishInstallCallCount, 1);
@@ -805,14 +793,11 @@ HWTEST_F(BmsSpmManagerOnTest, Commit_ClearCacheFailure_NonBlocking_0001, Functio
  */
 HWTEST_F(BmsSpmManagerOnTest, InitToken_CloneInstall_0001, Function | MediumTest | Level1)
 {
-    OHOS::Security::AccessToken::g_spmCheckHapSignInfoSessionId = TEST_SESSION_ID;
-    OHOS::Security::AccessToken::g_spmPrepareIdentityTokenId = TEST_IDENTITY_TOKENID;
+    auto session = MakeActiveSession();
+    ASSERT_TRUE(session.IsActive());
+    // The clone uid knob is set AFTER the engagement (the engagement itself
+    // runs with the main-identity uid).
     OHOS::Security::AccessToken::g_spmPrepareIdentityUid = TEST_CLONE_UID;
-    BundleInstallChecker checker;
-    ErrCode errCode = ERR_OK;
-    auto session = BundleSpmManager::InstallSession::CheckSignAndInitSession(
-        TEST_USERID, {}, false, checker, errCode, true, false);
-    ASSERT_EQ(errCode, ERR_OK);
 
     InnerBundleInfo info;
     BundleInfo bundleInfo;
@@ -849,17 +834,11 @@ HWTEST_F(BmsSpmManagerOnTest, InitToken_CloneInstall_0001, Function | MediumTest
  */
 HWTEST_F(BmsSpmManagerOnTest, InitToken_ActiveSession_0005, Function | MediumTest | Level1)
 {
-    OHOS::Security::AccessToken::g_spmCheckHapSignInfoSessionId = TEST_SESSION_ID;
-    OHOS::Security::AccessToken::g_spmPrepareIdentityTokenId = TEST_IDENTITY_TOKENID;
-    OHOS::Security::AccessToken::g_spmPrepareIdentityUid = TEST_IDENTITY_UID;  // != local 9999
-    // The default mock adopts the desired uid; force the reallocation so the
-    // "AT did not adopt the desired uid" (mismatch) path is exercised.
+    auto session = MakeActiveSession();
+    ASSERT_TRUE(session.IsActive());
+    // The reallocation knob is set AFTER the engagement; the AT uid knob keeps
+    // the engagement value (!= the local desired uid 9999 below).
     OHOS::Security::AccessToken::g_spmPrepareIdentityForceReallocate = true;
-    BundleInstallChecker checker;
-    ErrCode errCode = ERR_OK;
-    auto session = BundleSpmManager::InstallSession::CheckSignAndInitSession(
-        TEST_USERID, {}, false, checker, errCode, true, false);
-    ASSERT_EQ(errCode, ERR_OK);
 
     InnerBundleInfo info;
     BundleInfo bundleInfo;
@@ -926,10 +905,11 @@ HWTEST_F(BmsSpmManagerOnTest, DeleteToken_ValidTokenId_0001, Function | MediumTe
 
 /**
  * @tc.number: BmsSpmManagerOnTest.InitToken_CacheUid_0001
- * @tc.name: InitToken caches the AT-allocated uid in uidIndexMap_
- * @tc.desc: When PrepareHapIdentity returns a non-zero uid, InitToken writes it
- *           to the BundleDataMgr's uidIndexMap_ so the ON reverse lookup can
- *           hit locally without an AT IPC.
+ * @tc.name: InitToken hands the AT-allocated uid over through the out param
+ * @tc.desc: When PrepareHapIdentity returns a non-zero uid, InitToken hands it
+ *           to the caller through the identityUid out param (the reverse-
+ *           lookup map entry is inserted at the DB-persistence point, not
+ *           inside InitToken).
  */
 HWTEST_F(BmsSpmManagerOnTest, InitToken_CacheUid_0001, Function | MediumTest | Level1)
 {
@@ -950,10 +930,6 @@ HWTEST_F(BmsSpmManagerOnTest, InitToken_CacheUid_0001, Function | MediumTest | L
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_EQ(identityUid, TEST_IDENTITY_UID);
     EXPECT_EQ(tokenIdEx.tokenIdExStruct.tokenID, TEST_IDENTITY_TOKENID);
-
-    // The uidIndexMap_ write goes through BundleMgrService::GetDataMgr(); in this
-    // test target the service is not initialized, so the write is a no-op (null
-    // dataMgr). The identityUid output param is the verifiable contract here.
 }
 
 /**
@@ -1078,6 +1054,40 @@ HWTEST_F(BmsSpmManagerOnTest, UpdateToken_UidRefresh_0001, Function | MediumTest
 }
 
 /**
+ * @tc.number: BmsSpmManagerOnTest.UpdateToken_UidOut_CrossUserSegment_0001
+ * @tc.name: A cross-user uidOut is rejected with the registered code
+ * @tc.desc: The AT side reports a uid from ANOTHER user's segment as the
+ *           refreshed binding: same user-segment consistency check as InitToken
+ *           — the call fails fast with the registered BMS code and the out
+ *           param is not written (no partial handover), so the drift can never
+ *           reach the reverse-lookup cache, the fs config or the DB.
+ */
+HWTEST_F(BmsSpmManagerOnTest, UpdateToken_UidOut_CrossUserSegment_0001, Function | MediumTest | Level1)
+{
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    info.SetBaseBundleInfo(bundleInfo);
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = TEST_USERID;
+    userInfo.bundleName = BUNDLE_NAME;
+    userInfo.uid = TEST_IDENTITY_UID;
+    info.AddInnerBundleUserInfo(userInfo);
+
+    constexpr int32_t CROSS_USER_UID = 101 * 200000 + 555;  // user 101 segment
+    OHOS::Security::AccessToken::g_spmUpdateHapPolicyUidOut = CROSS_USER_UID;
+    BundleSpmManager::InstallSession session;
+    Security::AccessToken::AccessTokenIDEx tokenIdEx = {0};
+    tokenIdEx.tokenIdExStruct.tokenID = TEST_IDENTITY_TOKENID;
+    Security::AccessToken::HapInfoCheckResult checkResult;
+    int32_t refreshedUid = 0;
+    int32_t ret = session.UpdateToken(tokenIdEx, info, TEST_USERID, checkResult, "", false, false,
+        0, &refreshedUid);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED);
+    EXPECT_EQ(refreshedUid, 0);  // output param untouched on rejection
+}
+
+/**
  * @tc.number: BmsSpmManagerOnTest.UpdateToken_Failure_0001
  * @tc.name: UpdateToken returns the AT error code on failure
  * @tc.desc: UpdateHapPolicy fails (mock ret != 0); the error propagates.
@@ -1105,10 +1115,13 @@ HWTEST_F(BmsSpmManagerOnTest, UpdateToken_Failure_0001, Function | MediumTest | 
  * @tc.number: BmsSpmManagerOnTest.CheckSignAndInitSession_SkipResign_0001
  * @tc.name: CheckSignAndInitSession with skipEnterpriseResign
  * @tc.desc: The skipEnterpriseResign flag is consumed in the ON path via the
- *           userId == -1 contract (hapList.userId tells the AT side to skip
- *           the enterprise resign verification); without the flag the real
- *           userId is passed through. The empty hap list keeps the trusted
- *           info count matching (0 == 0) so the session succeeds.
+ *           userId == -1 contract (hapList.userId tells the AT side to skip the
+ *           enterprise resign verification); without the flag the real userId
+ *           is passed through. A non-empty hap list is required to reach the AT
+ *           call (the empty list fails closed), and the mock's empty trusted
+ *           list then fails the 1:1 count check, so the session creation fails
+ *           overall — the userId contract is still pinned through the mock's
+ *           recorded last-user-id.
  */
 HWTEST_F(BmsSpmManagerOnTest, CheckSignAndInitSession_SkipResign_0001, Function | MediumTest | Level1)
 {
@@ -1117,25 +1130,29 @@ HWTEST_F(BmsSpmManagerOnTest, CheckSignAndInitSession_SkipResign_0001, Function 
     BundleInstallChecker checker;
     ErrCode errCode = ERR_OK;
     auto session = BundleSpmManager::InstallSession::CheckSignAndInitSession(
-        TEST_USERID, {}, false, checker, errCode, true, true);
-    EXPECT_EQ(errCode, ERR_OK);
-    EXPECT_EQ(session.GetSessionId(), TEST_SESSION_ID);
+        TEST_USERID, {"/data/test/one.hap"}, false, checker, errCode, true, true);
+    EXPECT_EQ(errCode, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
+    EXPECT_FALSE(session.IsActive());
     // The cross-process contract: skipEnterpriseResign is carried as userId == -1.
     EXPECT_EQ(OHOS::Security::AccessToken::g_spmCheckHapSignInfoLastUserId, -1);
 
     // Without the flag the real userId is passed through unchanged.
     session = BundleSpmManager::InstallSession::CheckSignAndInitSession(
-        TEST_USERID, {}, false, checker, errCode, true, false);
-    EXPECT_EQ(errCode, ERR_OK);
+        TEST_USERID, {"/data/test/one.hap"}, false, checker, errCode, true, false);
+    EXPECT_EQ(errCode, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
+    EXPECT_FALSE(session.IsActive());
     EXPECT_EQ(OHOS::Security::AccessToken::g_spmCheckHapSignInfoLastUserId, TEST_USERID);
 }
 
-// ===== BundleDataMgr uidIndexMap_ maintenance (UpdateUidIndexMap /
-// RemoveUidIndexMap / RemoveUidIndexMapByBundleName) =====
-// The map is only observable through the SPM ON read path of
-// GetBundleNameAndIndex (the cross-checked cache hit), so these live in the
-// ON-mode target: every case first installs the bundle info so the
-// INP-14 cross-check (persisted uid == cached uid) passes.
+// ===== BundleDataMgr reverse lookup through the reused bundleIdMap_ =====
+// Under SPM ON the uid reverse lookup derives (userId, bundleId) from the uid
+// and consults bundleIdMap_ (same path as OFF); the AT allocation contract
+// matches the local allocator (same bundleId per bundle across users), so the
+// map keeps the same shape under both modes. The hit is still cross-checked
+// against the persisted user info (defense in depth against stale entries and
+// contract violations) and a miss/mismatch falls back to the AT service. The
+// DB-persistence hooks (AddInnerBundleInfo / AddInnerBundleUserInfo) insert
+// the entries at install time, so these cases live in the ON-mode target.
 
 namespace {
 // Installs a minimal bundle with one user (uid at the given user's segment)
@@ -1165,20 +1182,28 @@ std::shared_ptr<BundleDataMgr> SetUpDataMgrWithBundle(const std::string &bundleN
 } // namespace
 
 /**
- * @tc.number: BmsSpmManagerOnTest.UidIndexMap_UpdateAndHit_0001
- * @tc.name: UpdateUidIndexMap entries resolve through the ON read path
- * @tc.desc: Entries written by UpdateUidIndexMap are resolved by
- *           GetBundleNameAndIndex (cross-checked cache hit): bundleName and
- *           appIndex round-trip correctly.
+ * @tc.number: BmsSpmManagerOnTest.BundleIdMap_LookupHit_0001
+ * @tc.name: The DB-persistence hook entries resolve through the ON read path
+ * @tc.desc: The install-time hooks insert the derived bundleId entries; the
+ *           unified read path (derive -> bundleIdMap_ -> ParseBundleIdKey ->
+ *           cross-check) resolves the main identity and a second user added
+ *           through AddInnerBundleUserInfo. Per the AT allocation contract the
+ *           second user's uid carries the SAME bundleId (same segment offset),
+ *           so both lookups converge on one shared entry.
  */
-HWTEST_F(BmsSpmManagerOnTest, UidIndexMap_UpdateAndHit_0001, Function | MediumTest | Level1)
+HWTEST_F(BmsSpmManagerOnTest, BundleIdMap_LookupHit_0001, Function | MediumTest | Level1)
 {
-    constexpr int32_t UID_A = 100 * 200000 + 101;
-    constexpr int32_t UID_B_CLONE = 100 * 200000 + 102;
+    constexpr int32_t UID_A = 100 * 200000 + 101;   // derived bundleId 101
+    constexpr int32_t UID_A2 = 101 * 200000 + 101;  // same bundleId, user 101 segment
     auto dataMgr = SetUpDataMgrWithBundle(BUNDLE_NAME, UID_A);
     ASSERT_NE(dataMgr, nullptr);
-    dataMgr->UpdateUidIndexMap(UID_A, BUNDLE_NAME, 0);
-    dataMgr->UpdateUidIndexMap(UID_B_CLONE, BUNDLE_NAME, 1);
+    InnerBundleUserInfo secondUser;
+    secondUser.bundleUserInfo.userId = 101;
+    secondUser.bundleName = BUNDLE_NAME;
+    secondUser.uid = UID_A2;
+    // AddInnerBundleUserInfo returns an ErrCode (ERR_OK on success), not a
+    // bool — assert the code, ASSERT_TRUE(ERR_OK) would always fail.
+    ASSERT_EQ(dataMgr->AddInnerBundleUserInfo(BUNDLE_NAME, secondUser), ERR_OK);
 
     std::string resolvedName;
     int32_t resolvedIndex = -1;
@@ -1186,143 +1211,81 @@ HWTEST_F(BmsSpmManagerOnTest, UidIndexMap_UpdateAndHit_0001, Function | MediumTe
     EXPECT_EQ(resolvedName, BUNDLE_NAME);
     EXPECT_EQ(resolvedIndex, 0);
 
-    EXPECT_EQ(dataMgr->GetBundleNameAndIndex(UID_B_CLONE, resolvedName, resolvedIndex), ERR_OK);
+    EXPECT_EQ(dataMgr->GetBundleNameAndIndex(UID_A2, resolvedName, resolvedIndex), ERR_OK);
     EXPECT_EQ(resolvedName, BUNDLE_NAME);
-    EXPECT_EQ(resolvedIndex, 1);
+    EXPECT_EQ(resolvedIndex, 0);
 }
 
 /**
- * @tc.number: BmsSpmManagerOnTest.UidIndexMap_UpdateOverwrite_0001
- * @tc.name: Rewriting the same uid overwrites the previous entry
- * @tc.desc: A second UpdateUidIndexMap for the same uid replaces the mapping
- *           (last write wins) — the read path resolves to the new bundle.
+ * @tc.number: BmsSpmManagerOnTest.BundleIdMap_LookupMiss_ATFallback_0001
+ * @tc.name: A local miss falls back to the access token service
+ * @tc.desc: A uid with no bundleIdMap_ entry resolves through the AT fallback
+ *           (mock knob filled); an AT-side miss resolves to INVALID_UID.
  */
-HWTEST_F(BmsSpmManagerOnTest, UidIndexMap_UpdateOverwrite_0001, Function | MediumTest | Level1)
+HWTEST_F(BmsSpmManagerOnTest, BundleIdMap_LookupMiss_ATFallback_0001, Function | MediumTest | Level1)
 {
-    constexpr int32_t UID = 100 * 200000 + 103;
-    const std::string secondBundle = BUNDLE_NAME + ".second";
-    auto dataMgr = SetUpDataMgrWithBundle(BUNDLE_NAME, UID);
+    constexpr int32_t UNKNOWN_UID = 102 * 200000 + 301;
+    auto dataMgr = SetUpDataMgrWithBundle(BUNDLE_NAME, 100 * 200000 + 101);
     ASSERT_NE(dataMgr, nullptr);
-    // Install the second bundle into the SAME manager (both visible to the read path).
-    InnerBundleInfo info;
-    BundleInfo bundleInfo;
-    bundleInfo.name = secondBundle;
-    info.SetBaseBundleInfo(bundleInfo);
-    InnerBundleUserInfo userInfo;
-    userInfo.bundleUserInfo.userId = 100;
-    userInfo.bundleName = secondBundle;
-    userInfo.uid = UID;
-    info.AddInnerBundleUserInfo(userInfo);
-    ASSERT_TRUE(dataMgr->UpdateBundleInstallState(secondBundle, InstallState::INSTALL_START));
-    ASSERT_TRUE(dataMgr->AddInnerBundleInfo(secondBundle, info));
 
-    dataMgr->UpdateUidIndexMap(UID, BUNDLE_NAME, 0);
-    dataMgr->UpdateUidIndexMap(UID, secondBundle, 0);  // overwrite
-
+    OHOS::Security::AccessToken::g_spmGetHapBaseInfoByUidRet = 0;
+    OHOS::Security::AccessToken::g_spmGetHapBaseInfo.bundleName = BUNDLE_NAME;
+    OHOS::Security::AccessToken::g_spmGetHapBaseInfo.instIndex = 2;
     std::string resolvedName;
     int32_t resolvedIndex = -1;
-    EXPECT_EQ(dataMgr->GetBundleNameAndIndex(UID, resolvedName, resolvedIndex), ERR_OK);
-    EXPECT_EQ(resolvedName, secondBundle);
-}
+    EXPECT_EQ(dataMgr->GetBundleNameAndIndex(UNKNOWN_UID, resolvedName, resolvedIndex), ERR_OK);
+    EXPECT_EQ(resolvedName, BUNDLE_NAME);
+    EXPECT_EQ(resolvedIndex, 2);
 
-/**
- * @tc.number: BmsSpmManagerOnTest.UidIndexMap_RemoveByUid_0001
- * @tc.name: RemoveUidIndexMap evicts exactly the given uid
- * @tc.desc: After RemoveUidIndexMap the uid falls back to the AT service
- *           (mock default: not found) and resolves to INVALID_UID, while
- *           other entries of the same bundle stay cached.
- */
-HWTEST_F(BmsSpmManagerOnTest, UidIndexMap_RemoveByUid_0001, Function | MediumTest | Level1)
-{
-    constexpr int32_t UID_REMOVED = 100 * 200000 + 104;
-    constexpr int32_t UID_KEPT = 100 * 200000 + 105;
-    auto dataMgr = SetUpDataMgrWithBundle(BUNDLE_NAME, UID_REMOVED);
-    ASSERT_NE(dataMgr, nullptr);
-    InnerBundleUserInfo extraUser;
-    extraUser.bundleUserInfo.userId = 101;
-    extraUser.bundleName = BUNDLE_NAME;
-    extraUser.uid = UID_KEPT;
-    // reuse the stored info: add a second user entry through a fresh copy
-    InnerBundleInfo info;
-    BundleInfo bundleInfo;
-    bundleInfo.name = BUNDLE_NAME;
-    info.SetBaseBundleInfo(bundleInfo);
-    info.AddInnerBundleUserInfo(extraUser);
-    // the existing entry blocks re-add; the second uid is mapped directly
-    dataMgr->UpdateUidIndexMap(UID_REMOVED, BUNDLE_NAME, 0);
-    dataMgr->UpdateUidIndexMap(UID_KEPT, BUNDLE_NAME, 0);
-
-    dataMgr->RemoveUidIndexMap(UID_REMOVED);
-
-    std::string resolvedName;
-    int32_t resolvedIndex = -1;
-    // removed: falls back to the AT service (mock: not found) -> invalid uid
-    EXPECT_EQ(dataMgr->GetBundleNameAndIndex(UID_REMOVED, resolvedName, resolvedIndex),
+    // AT-side miss: the mock default (-1) makes the fallback fail closed.
+    constexpr int32_t MISSING_UID = 102 * 200000 + 302;
+    OHOS::Security::AccessToken::g_spmGetHapBaseInfoByUidRet = -1;
+    EXPECT_EQ(dataMgr->GetBundleNameAndIndex(MISSING_UID, resolvedName, resolvedIndex),
         ERR_BUNDLE_MANAGER_INVALID_UID);
-    // kept entry still resolves
-    EXPECT_EQ(dataMgr->GetBundleNameAndIndex(UID_KEPT, resolvedName, resolvedIndex), ERR_OK);
-    EXPECT_EQ(resolvedName, BUNDLE_NAME);
 }
 
 /**
- * @tc.number: BmsSpmManagerOnTest.UidIndexMap_RemoveByBundleName_0001
- * @tc.name: RemoveUidIndexMapByBundleName evicts every entry of the bundle
- * @tc.desc: The by-name removal (used after the AT-side delete-by-name
- *           recovery) drops ALL uids mapped to the bundle while entries of
- *           other bundles survive.
+ * @tc.number: BmsSpmManagerOnTest.BundleIdMap_Collision_CrossCheck_0001
+ * @tc.name: A derived-bundleId collision never resolves to the wrong bundle
+ * @tc.desc: The confirmed AT contract rules this out in production (same
+ *           bundleId per bundle across users, globally unique across bundles);
+ *           the case pins the defense-in-depth behavior for a contract
+ *           violation or a stale entry: the cross-check rejects the
+ *           wrong-bundle hit and falls back to the AT service instead of
+ *           answering with the other bundle.
  */
-HWTEST_F(BmsSpmManagerOnTest, UidIndexMap_RemoveByBundleName_0001, Function | MediumTest | Level1)
+HWTEST_F(BmsSpmManagerOnTest, BundleIdMap_Collision_CrossCheck_0001, Function | MediumTest | Level1)
 {
-    constexpr int32_t UID_A1 = 100 * 200000 + 106;
-    constexpr int32_t UID_A2 = 101 * 200000 + 107;  // second USER of the same bundle
-    constexpr int32_t UID_B = 100 * 200000 + 108;
+    constexpr int32_t UID_A = 100 * 200000 + 201;   // derived bundleId 201
+    constexpr int32_t UID_B = 101 * 200000 + 201;   // SAME derived bundleId 201
     const std::string otherBundle = BUNDLE_NAME + ".other";
-    auto dataMgr = SetUpDataMgrWithBundle(BUNDLE_NAME, UID_A1);
+    auto dataMgr = SetUpDataMgrWithBundle(BUNDLE_NAME, UID_A);
     ASSERT_NE(dataMgr, nullptr);
-    // second user of the same bundle (its own segment so the cross-check hits)
-    InnerBundleInfo sameBundleInfo;
-    BundleInfo sameBundleBundleInfo;
-    sameBundleBundleInfo.name = BUNDLE_NAME;
-    sameBundleInfo.SetBaseBundleInfo(sameBundleBundleInfo);
-    InnerBundleUserInfo secondUser;
-    secondUser.bundleUserInfo.userId = 101;
-    secondUser.bundleName = BUNDLE_NAME;
-    secondUser.uid = UID_A2;
-    sameBundleInfo.AddInnerBundleUserInfo(secondUser);
-    // AddInnerBundleInfo would reject the duplicate: refresh the stored entry
-    // by removing and re-adding with both users through the user-info API.
-    ASSERT_TRUE(dataMgr->AddInnerBundleUserInfo(BUNDLE_NAME, secondUser));
-
     ASSERT_TRUE(dataMgr->UpdateBundleInstallState(otherBundle, InstallState::INSTALL_START));
     InnerBundleInfo otherInfo;
     BundleInfo otherBundleInfo;
     otherBundleInfo.name = otherBundle;
     otherInfo.SetBaseBundleInfo(otherBundleInfo);
     InnerBundleUserInfo otherUser;
-    otherUser.bundleUserInfo.userId = 100;
+    otherUser.bundleUserInfo.userId = 101;
     otherUser.bundleName = otherBundle;
     otherUser.uid = UID_B;
     otherInfo.AddInnerBundleUserInfo(otherUser);
     ASSERT_TRUE(dataMgr->AddInnerBundleInfo(otherBundle, otherInfo));
 
-    dataMgr->UpdateUidIndexMap(UID_A1, BUNDLE_NAME, 0);
-    dataMgr->UpdateUidIndexMap(UID_A2, BUNDLE_NAME, 0);
-    dataMgr->UpdateUidIndexMap(UID_B, otherBundle, 0);
-
-    // both entries of the bundle resolve before the removal
     std::string resolvedName;
     int32_t resolvedIndex = -1;
-    EXPECT_EQ(dataMgr->GetBundleNameAndIndex(UID_A1, resolvedName, resolvedIndex), ERR_OK);
-    EXPECT_EQ(dataMgr->GetBundleNameAndIndex(UID_A2, resolvedName, resolvedIndex), ERR_OK);
-
-    dataMgr->RemoveUidIndexMapByBundleName(BUNDLE_NAME);
-
-    EXPECT_EQ(dataMgr->GetBundleNameAndIndex(UID_A1, resolvedName, resolvedIndex),
+    // The collided entry maps to the OTHER bundle: the cross-check rejects it
+    // for UID_A (its user is 101, not 100) and the AT fallback (mock default:
+    // not found) fails closed — never a wrong answer.
+    EXPECT_EQ(dataMgr->GetBundleNameAndIndex(UID_A, resolvedName, resolvedIndex),
         ERR_BUNDLE_MANAGER_INVALID_UID);
-    EXPECT_EQ(dataMgr->GetBundleNameAndIndex(UID_A2, resolvedName, resolvedIndex),
-        ERR_BUNDLE_MANAGER_INVALID_UID);
+    // UID_B itself still resolves correctly through its own entry.
     EXPECT_EQ(dataMgr->GetBundleNameAndIndex(UID_B, resolvedName, resolvedIndex), ERR_OK);
     EXPECT_EQ(resolvedName, otherBundle);
+    EXPECT_EQ(resolvedIndex, 0);
+}
+
 // ===== BundleDataMgr::GenerateUidAndGid — SPM ON branch =====
 // Under SPM ON the allocation authority is the AT side: an already allocated
 // uid is only completed with its gid (idempotent), any non-positive uid fails
@@ -1428,6 +1391,8 @@ HWTEST_F(BmsSpmManagerOnTest, GenerateUidAndGid_On_EmptyBundleName_0001, Functio
     userInfo.uid = 100 * 200000 + 203;  // even a valid uid cannot pass
 
     EXPECT_EQ(dataMgr->GenerateUidAndGid(userInfo), ERR_APPEXECFWK_INSTALL_BUNDLENAME_IS_EMPTY);
+}
+
 // ===== BundleSpmManager::GetInstance / OnModuleUninstalled / TryRecover* =====
 // ParseTrustedBundleInfo is an anonymous-namespace helper whose success path
 // needs a valid provision document (only available as .p7b assets, not
@@ -1567,14 +1532,59 @@ HWTEST_F(BmsSpmManagerOnTest, TryRecoverUidError_MigrateFailed_0001, Function | 
 }
 
 /**
+ * @tc.number: BmsSpmManagerOnTest.TryRecoverUidError_ListAlignment_0001
+ * @tc.name: A corrupt main uid skips the whole record, keeping the lists aligned
+ * @tc.desc: The main identity's base info and uid must be staged TOGETHER: a
+ *           corrupt main record (uid <= 0, OTA / corruption leftover) is skipped
+ *           entirely, so the parallel hapBaseInfoList/uidList lists stay
+ *           aligned and only the valid clone identity is migrated (a
+ *           conditional uid with an unconditional base info would bind every
+ *           following clone identity to the wrong uid).
+ */
+HWTEST_F(BmsSpmManagerOnTest, TryRecoverUidError_ListAlignment_0001, Function | MediumTest | Level1)
+{
+    constexpr int32_t CLONE_UID = 100 * 200000 + 402;
+    constexpr int32_t CLONE_APP_INDEX = 1;
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_TRUE(dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::INSTALL_START));
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    info.SetBaseBundleInfo(bundleInfo);
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = TEST_USERID;
+    userInfo.bundleName = BUNDLE_NAME;
+    userInfo.uid = 0;  // corrupt main record
+    InnerBundleCloneInfo cloneInfo;
+    cloneInfo.userId = TEST_USERID;
+    cloneInfo.appIndex = CLONE_APP_INDEX;
+    cloneInfo.uid = CLONE_UID;
+    userInfo.cloneInfos.emplace(std::to_string(CLONE_APP_INDEX), cloneInfo);
+    info.AddInnerBundleUserInfo(userInfo);
+    ASSERT_TRUE(dataMgr->AddInnerBundleInfo(BUNDLE_NAME, info));
+
+    EXPECT_TRUE(BundleSpmManager::TryRecoverUidError(BUNDLE_NAME, dataMgr.get()));
+    // Only the valid clone entry is staged: both lists carry exactly one entry.
+    EXPECT_EQ(OHOS::Security::AccessToken::g_spmLastMigratedBaseInfoCount, 1);
+    EXPECT_EQ(OHOS::Security::AccessToken::g_spmLastMigratedUidCount, 1);
+
+    // Sanity counterpart: a valid main record plus the clone stages two entries.
+    auto dataMgr2 = SetUpDataMgrWithBundle(BUNDLE_NAME, 100 * 200000 + 403);
+    ASSERT_NE(dataMgr2, nullptr);
+    EXPECT_TRUE(BundleSpmManager::TryRecoverUidError(BUNDLE_NAME, dataMgr2.get()));
+    EXPECT_EQ(OHOS::Security::AccessToken::g_spmLastMigratedBaseInfoCount, 1);
+    EXPECT_EQ(OHOS::Security::AccessToken::g_spmLastMigratedUidCount, 1);
+}
+
+/**
  * @tc.number: BmsSpmManagerOnTest.TryRecoverAlreadyExistError_EmptyName_0001
  * @tc.name: An empty bundle name is rejected
  */
 HWTEST_F(BmsSpmManagerOnTest, TryRecoverAlreadyExistError_EmptyName_0001, Function | MediumTest | Level1)
 {
     EXPECT_FALSE(BundleSpmManager::TryRecoverAlreadyExistError(""));
-    // no AT call was made
-    EXPECT_NE(OHOS::Security::AccessToken::g_lastDeleteIdentityBundleName, "");
+    // no AT call was made: the recorded bundle name stays at the reset value
+    EXPECT_EQ(OHOS::Security::AccessToken::g_lastDeleteIdentityBundleName, "");
 }
 
 /**

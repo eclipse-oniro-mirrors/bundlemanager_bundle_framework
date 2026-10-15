@@ -440,6 +440,13 @@ public:
 
     static bool IsValidBundleName(const std::string &bundleName);
 
+    // Strips the clone/sandbox decoration from a composite bundle name and
+    // validates the result with the IsValidBundleName rules: clone data dir
+    // "+clone-<appIndex>+<bundleName>" and sandbox "<appIndex>_<bundleName>".
+    // On success outputs the original (undecorated) bundle name; on failure the
+    // output is untouched and the name must not be used.
+    static bool GetOriginalBundleName(const std::string &bundleName, std::string &originalBundleName);
+
     static bool IsValidModuleName(const std::string &moduleName);
 
     static bool IsValidUserId(const int32_t userId);

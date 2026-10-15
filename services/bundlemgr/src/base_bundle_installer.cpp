@@ -2233,28 +2233,46 @@ void BaseBundleInstaller::RollBack(const std::unordered_map<std::string, InnerBu
         RemoveBundleAndDataDir(newInfos.begin()->second, isKeepData);
         isKeepTokenId_ = oldInfo.HasKeepTokenIdMetadata();
         if (!isKeepData) {
-            // delete accessTokenId
-            LOG_NOFUNC_I(BMS_TAG_INSTALLER, "DeleteAccessTokenId keepTokenParam=%{public}d", isKeepTokenId_);
-            if (BundleSpmManager::DeleteToken(newInfos.begin()->second.GetAccessTokenId(userId_),
-                newInfos.begin()->second.GetBundleName(),
-                isKeepTokenId_ ? BundleSpmManager::TokenDeleteType::RESERVED_IDENTITY
-                    : BundleSpmManager::TokenDeleteType::NONE,
-                newInfos.begin()->second.GetUid(userId_)) !=
-                AccessToken::AccessTokenKitRet::RET_SUCCESS) {
-                LOG_E(BMS_TAG_INSTALLER, "delete accessToken failed, tokenId:%{public}u bundleName:%{public}s",
-                    newInfos.begin()->second.GetAccessTokenId(userId_), bundleName_.c_str());
+            // SPM ON: the first-install identity was created inside this install
+            // session. While the session is not committed the token is never
+            // persisted — the session rollback (FinishHapInstall false) discards
+            // it, so no DeleteIdentity call is needed. A committed session's
+            // identity was persisted and is still deleted here (a late failure
+            // after Commit + DB write must undo the installed token).
+            if (BundleSpmManager::IsEnabled() && !spmSession_.IsCommitted()) {
+                LOG_I(BMS_TAG_INSTALLER, "skip delete accessToken on uncommitted spm session, "
+                    "bundleName:%{public}s", bundleName_.c_str());
+            } else {
+                // delete accessTokenId
+                LOG_NOFUNC_I(BMS_TAG_INSTALLER, "DeleteAccessTokenId keepTokenParam=%{public}d", isKeepTokenId_);
+                if (BundleSpmManager::DeleteToken(newInfos.begin()->second.GetAccessTokenId(userId_),
+                    newInfos.begin()->second.GetBundleName(),
+                    isKeepTokenId_ ? BundleSpmManager::TokenDeleteType::RESERVED_IDENTITY
+                        : BundleSpmManager::TokenDeleteType::NONE) !=
+                    AccessToken::AccessTokenKitRet::RET_SUCCESS) {
+                    LOG_E(BMS_TAG_INSTALLER, "delete accessToken failed, tokenId:%{public}u bundleName:%{public}s",
+                        newInfos.begin()->second.GetAccessTokenId(userId_), bundleName_.c_str());
+                }
             }
         } else {
-            // SPM ON: reserve the identity and provision in the access token service so a
-            // re-install recovers them via PrepareHapIdentity.
-            int32_t reserveRet = BundleSpmManager::DeleteToken(
-                newInfos.begin()->second.GetAccessTokenId(userId_),
-                newInfos.begin()->second.GetBundleName(),
-                BundleSpmManager::TokenDeleteType::RESERVED_DATA,
-                newInfos.begin()->second.GetUid(userId_));
-            if (reserveRet != ERR_OK) {
-                LOG_E(BMS_TAG_INSTALLER, "reserve identity failed on rollback, -n:%{public}s errCode:%{public}d",
-                    bundleName_.c_str(), reserveRet);
+            // SPM ON: a keep-data reinstall failure on an uncommitted session
+            // needs no DeleteIdentity — the AT session rollback restores the
+            // reserved identity automatically. After a successful Commit (DB
+            // write failure) the identity was persisted in the active state, so
+            // it is explicitly moved back to the reserved state for the next
+            // re-install.
+            if (BundleSpmManager::IsEnabled() && !spmSession_.IsCommitted()) {
+                LOG_I(BMS_TAG_INSTALLER, "skip reserve accessToken on uncommitted spm session, "
+                    "bundleName:%{public}s", bundleName_.c_str());
+            } else {
+                int32_t reserveRet = BundleSpmManager::DeleteToken(
+                    newInfos.begin()->second.GetAccessTokenId(userId_),
+                    newInfos.begin()->second.GetBundleName(),
+                    BundleSpmManager::TokenDeleteType::RESERVED_DATA);
+                if (reserveRet != ERR_OK) {
+                    LOG_E(BMS_TAG_INSTALLER, "reserve identity failed on rollback, -n:%{public}s errCode:%{public}d",
+                        bundleName_.c_str(), reserveRet);
+                }
             }
         }
         // remove driver file
@@ -3209,9 +3227,13 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
                             effectiveBundleName, userId_, Constants::INITIAL_APP_INDEX);
                     }
                     if (BundleSpmManager::IsEnabled() && !keepDataReinstall) {
+                        // Same keepTokenId semantics as UndoCommittedSpmIdentity:
+                        // a keepTokenId app reserves the identity instead of the
+                        // hard delete, so the reservation survives the rollback.
                         int32_t delRet = BundleSpmManager::DeleteToken(
                             accessTokenIdEx.tokenIdExStruct.tokenID, bundleName,
-                            BundleSpmManager::TokenDeleteType::NONE, uid);
+                            isKeepTokenId_ ? BundleSpmManager::TokenDeleteType::RESERVED_IDENTITY
+                                : BundleSpmManager::TokenDeleteType::NONE);
                         if (delRet != ERR_OK) {
                             LOG_E(BMS_TAG_INSTALLER, "undo spm identity failed, -n:%{public}s errCode:%{public}d",
                                 bundleName_.c_str(), delRet);
@@ -3351,8 +3373,7 @@ ErrCode BaseBundleInstaller::RemoveBundle(InnerBundleInfo &info, const InstallPa
         LOG_NOFUNC_I(BMS_TAG_INSTALLER, "DeleteAccessTokenId keepTokenParam=%{public}d", keepTokenParam);
         if (BundleSpmManager::DeleteToken(accessTokenId_, info.GetBundleName(),
             keepTokenParam ? BundleSpmManager::TokenDeleteType::RESERVED_IDENTITY
-                : BundleSpmManager::TokenDeleteType::NONE,
-            info.GetUid(userId_)) !=
+                : BundleSpmManager::TokenDeleteType::NONE) !=
             AccessToken::AccessTokenKitRet::RET_SUCCESS) {
             LOG_E(BMS_TAG_INSTALLER, "delete accessToken failed, tokenId:%{public}u bundleName:%{public}s",
                 accessTokenId_, info.GetBundleName().c_str());
@@ -3362,7 +3383,7 @@ ErrCode BaseBundleInstaller::RemoveBundle(InnerBundleInfo &info, const InstallPa
         // SPM ON: reserve the identity and provision in the access token service so a
         // re-install recovers them via PrepareHapIdentity.
         int32_t reserveRet = BundleSpmManager::DeleteToken(accessTokenId_, info.GetBundleName(),
-            BundleSpmManager::TokenDeleteType::RESERVED_DATA, info.GetUid(userId_));
+            BundleSpmManager::TokenDeleteType::RESERVED_DATA);
         if (reserveRet != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "reserve identity failed, bundle:%{public}s errCode:%{public}d",
                 info.GetBundleName().c_str(), reserveRet);
@@ -7935,35 +7956,44 @@ ErrCode BaseBundleInstaller::RemoveBundleUserData(
     // The BMS-side info is removed: now finish the AT side (agreed ordering —
     // BMS database first, AT-side identity handling after).
     if (!installParam.isKeepData) {
-        bool keepTokenParam = isKeepTokenId_ && !installParam.isRemoveUser;
-        LOG_NOFUNC_I(BMS_TAG_INSTALLER, "DeleteAccessTokenId keepTokenParam=%{public}d", keepTokenParam);
-        if (BundleSpmManager::DeleteToken(accessTokenId_, innerBundleInfo.GetBundleName(),
-            keepTokenParam ? BundleSpmManager::TokenDeleteType::RESERVED_IDENTITY
-                : BundleSpmManager::TokenDeleteType::NONE,
-            uninstalledUid) !=
-            AccessToken::AccessTokenKitRet::RET_SUCCESS) {
-            LOG_E(BMS_TAG_INSTALLER, "delete accessToken failed, tokenId:%{public}u bundleName:%{public}s",
-                accessTokenId_, innerBundleInfo.GetBundleName().c_str());
+        // SPM ON: when called from an install-failure unwind the freshly created
+        // identity still lives in the active, uncommitted install session — it is
+        // never persisted and the session rollback discards it, so no
+        // DeleteIdentity is needed. Genuine uninstalls run with a deferred
+        // (inactive) session and keep deleting the installed token; a committed
+        // install session (late failure after Commit) is deleted as before.
+        if (BundleSpmManager::IsEnabled() && spmSession_.IsActive() && !spmSession_.IsCommitted()) {
+            LOG_I(BMS_TAG_INSTALLER, "skip delete accessToken on uncommitted spm session, "
+                "bundleName:%{public}s", bundleName.c_str());
+        } else {
+            bool keepTokenParam = isKeepTokenId_ && !installParam.isRemoveUser;
+            LOG_NOFUNC_I(BMS_TAG_INSTALLER, "DeleteAccessTokenId keepTokenParam=%{public}d", keepTokenParam);
+            if (BundleSpmManager::DeleteToken(accessTokenId_, innerBundleInfo.GetBundleName(),
+                keepTokenParam ? BundleSpmManager::TokenDeleteType::RESERVED_IDENTITY
+                    : BundleSpmManager::TokenDeleteType::NONE) !=
+                AccessToken::AccessTokenKitRet::RET_SUCCESS) {
+                LOG_E(BMS_TAG_INSTALLER, "delete accessToken failed, tokenId:%{public}u bundleName:%{public}s",
+                    accessTokenId_, innerBundleInfo.GetBundleName().c_str());
+            }
         }
     } else {
         // SPM ON: reserve the identity and provision in the access token service so a
         // re-install recovers them via PrepareHapIdentity.
         int32_t reserveRet = BundleSpmManager::DeleteToken(accessTokenId_, innerBundleInfo.GetBundleName(),
-            BundleSpmManager::TokenDeleteType::RESERVED_DATA, uninstalledUid);
+            BundleSpmManager::TokenDeleteType::RESERVED_DATA);
         if (reserveRet != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "reserve identity failed, bundle:%{public}s errCode:%{public}d",
                 innerBundleInfo.GetBundleName().c_str(), reserveRet);
         }
     }
     if (innerBundleInfo.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE) {
-        int32_t uid = innerBundleInfo.GetUid(userId_);
-        if (uid != Constants::INVALID_UID) {
+        if (uninstalledUid != Constants::INVALID_UID) {
             LOG_I(BMS_TAG_INSTALLER, "uninstall atomic service need delete quota, bundleName:%{public}s",
                 bundleName.c_str());
             std::string bundleDataDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1] +
                 ServiceConstants::PATH_SEPARATOR + std::to_string(userId_) + ServiceConstants::BASE +
                 effectiveBundleName;
-            PrepareBundleDirQuota(effectiveBundleName, uid, bundleDataDir, 0);
+            PrepareBundleDirQuota(effectiveBundleName, uninstalledUid, bundleDataDir, 0);
         }
     }
 
@@ -10152,10 +10182,21 @@ void BaseBundleInstaller::UndoCommittedSpmIdentity(const InnerBundleInfo &info)
 {
     // The SPM session was already committed but the BMS-side persistence failed:
     // undo the freshly committed AT identity so the failed install leaves both
-    // sides clean (mirrors the -n flow's DB-failure undo). A keep-data reserved
-    // identity predates this flow and belongs to the keep-data reservation
-    // lifecycle, so it is not deleted here.
-    if (!BundleSpmManager::IsEnabled()) {
+    // sides clean (mirrors the -n flow's DB-failure undo). Guards:
+    // - keep-data reinstall: the identity predates this flow and belongs to the
+    //   keep-data reservation lifecycle, so it is not deleted;
+    // - update-only session (UpdateToken, no InitToken): the token is the
+    //   installed app's LIVE identity — deleting it would break an app that
+    //   stays installed after the DB rollback. The committed policy update
+    //   cannot be un-committed (registered residual, mirrors the
+    //   CommitAppSkills failure window);
+    // - keepTokenId metadata: the undo reserves the identity instead of a hard
+    //   delete, so the reservation semantics survives the rollback.
+    if (!BundleSpmManager::IsEnabled() || !spmSession_.HasPreparedIdentity()) {
+        if (BundleSpmManager::IsEnabled() && spmSession_.IsCommitted() && !spmSession_.HasPreparedIdentity()) {
+            LOG_W(BMS_TAG_INSTALLER, "skip spm identity undo on update-only session, bundle:%{public}s",
+                bundleName_.c_str());
+        }
         return;
     }
     bool keepDataReinstall = dataMgr_->GetUninstallBundleInfoWithUserAndAppIndex(
@@ -10163,9 +10204,11 @@ void BaseBundleInstaller::UndoCommittedSpmIdentity(const InnerBundleInfo &info)
     if (keepDataReinstall) {
         return;
     }
-    int32_t uid = info.GetUid(userId_);
+    bool keepTokenId = info.HasKeepTokenIdMetadata();
     int32_t delRet = BundleSpmManager::DeleteToken(info.GetAccessTokenId(userId_),
-        info.GetBundleName(), BundleSpmManager::TokenDeleteType::NONE, uid);
+        info.GetBundleName(),
+        keepTokenId ? BundleSpmManager::TokenDeleteType::RESERVED_IDENTITY
+            : BundleSpmManager::TokenDeleteType::NONE);
     if (delRet != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "undo spm identity failed, bundle:%{public}s errCode:%{public}d",
             bundleName_.c_str(), delRet);

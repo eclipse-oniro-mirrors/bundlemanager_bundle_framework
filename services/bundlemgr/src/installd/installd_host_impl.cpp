@@ -273,35 +273,6 @@ using namespace OHOS::Security::CodeSign;
 constexpr const char* DEBUG_APP_IDENTIFIER = "DEBUG_LIB_ID";
 constexpr const char* DEFAULT_APL_NORMAL = "normal";
 
-// Strips the appIndex decoration to get the original bundle name for the
-// access token fallback query. Recognized decorations (mirroring the BMS key
-// formats, see BundleDataMgr::ParseBundleIdKey): sandbox "<N>_<name>" and
-// clone "<N>clone_<name>". A leading numeric segment must be followed by the
-// '_' (sandbox) or the literal "clone_" marker, so legit names that merely
-// contain digits/underscores ("123_app") are never mis-stripped.
-std::string GetOriginalBundleName(const std::string &bundleName)
-{
-    constexpr const char *CLONE_MARKER = "clone_";
-    if (bundleName.empty() || bundleName.find_first_not_of("0123456789") != std::string::npos) {
-        // Does not start with a numeric segment: no decoration to strip.
-        return bundleName;
-    }
-    size_t clonePos = bundleName.find(CLONE_MARKER);
-    if (clonePos != std::string::npos && clonePos > 0 &&
-        bundleName.find_first_not_of("0123456789") == clonePos &&
-        clonePos + strlen(CLONE_MARKER) < bundleName.size()) {
-        // clone "<N>clone_<name>"
-        return bundleName.substr(clonePos + strlen(CLONE_MARKER));
-    }
-    auto pos = bundleName.find('_');
-    if (pos != std::string::npos && pos > 0 && pos + 1 < bundleName.size() &&
-        bundleName.find_first_not_of("0123456789") == pos) {
-        // sandbox "<N>_<name>"
-        return bundleName.substr(pos + 1);
-    }
-    return bundleName;
-}
-
 void FillSessionProvisionInfo(const Security::Verify::ProvisionInfo &provisionInfo,
     const Security::AccessToken::ProfileData &profileData, SessionProvisionInfo &info)
 {
@@ -5568,10 +5539,18 @@ ErrCode InstalldHostImpl::QueryProvisionInfoBySessionId(int32_t sessionId,
         Security::AccessToken::SignInfoQueryFlag::QUERY_PROFILE, bundleInfoList);
     if (ret != Security::AccessToken::AccessTokenKitRet::RET_SUCCESS || bundleInfoList.empty()) {
         // fallback for clone or sandbox installs whose session cache is gone:
-        // query by the original undecorated bundle name.
+        // query by the original undecorated bundle name (same decoration-strip
+        // and validation rules as IsValidBundleName; an invalid composite name
+        // fails closed instead of querying the AT side with garbage).
+        std::string originalBundleName;
+        if (!InstalldOperator::GetOriginalBundleName(bundleName, originalBundleName)) {
+            LOG_E(BMS_TAG_INSTALLD, "invalid composite bundle name for session %{public}d",
+                sessionId);
+            return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+        }
         bundleInfoList.clear();
         ret = Security::AccessToken::AccessTokenKit::GetHapSignInfo(
-            GetOriginalBundleName(bundleName),
+            originalBundleName,
             Security::AccessToken::SignInfoQueryFlag::QUERY_PROFILE, bundleInfoList);
         if (ret != Security::AccessToken::AccessTokenKitRet::RET_SUCCESS || bundleInfoList.empty()) {
             LOG_E(BMS_TAG_INSTALLD, "query provision by session %{public}d failed, ret %{public}d",

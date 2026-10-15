@@ -201,11 +201,18 @@ ErrCode BundleCliSandboxInstaller::ProcessCreateCliSandbox(const std::string &cr
     }
 
     ScopeGuard applyAccessTokenGuard([&] {
-        // uid drives the uidIndexMap_ eviction inside DeleteToken: without it
-        // the cache entry of the deleted identity would linger and (if the AT
-        // side reuses the uid) resolve to this bundle for another app.
+        // SPM ON: the freshly created identity lives in the active install
+        // session. While the session is not committed the token is never
+        // persisted — the session rollback discards it, so no DeleteIdentity is
+        // needed. A committed session (post-commit DB failure) keeps the
+        // explicit undo at the AddCliSandboxBundle failure site.
+        if (BundleSpmManager::IsEnabled() && !spmSession_.IsCommitted()) {
+            APP_LOGI("skip delete accessToken on uncommitted spm session, bundleName:%{public}s",
+                bundleName.c_str());
+            return;
+        }
         BundleSpmManager::DeleteToken(newTokenIdEx.tokenIdExStruct.tokenID, bundleName,
-            BundleSpmManager::TokenDeleteType::NONE, uid);
+            BundleSpmManager::TokenDeleteType::NONE);
     });
 
     if (BundleSpmManager::IsEnabled()) {
@@ -219,7 +226,16 @@ ErrCode BundleCliSandboxInstaller::ProcessCreateCliSandbox(const std::string &cr
         }
         uid = identityUid;
     } else {
-        uid = info.GetUid(userId);
+        // OFF: the CLI sandbox owns a dedicated uid (mirrors the clone/dlp
+        // installers) — the composite key makes the local allocator issue a
+        // distinct bundleId (and register the reverse-lookup entry). Reusing
+        // the main app uid would collide with the main identity's entry.
+        InnerBundleUserInfo tmpUserInfo;
+        tmpUserInfo.bundleName = BundleCloneCommonHelper::GetCloneBundleIdKey(bundleName, appIndex);
+        tmpUserInfo.bundleUserInfo.userId = userId;
+        tmpUserInfo.uid = Constants::INVALID_UID;
+        dataMgr_->GenerateUidAndGid(tmpUserInfo);
+        uid = tmpUserInfo.uid;
     }
     if (uid == Constants::INVALID_UID) {
         APP_LOGE_NOFUNC("InitHapToken returned invalid uid for bundle:%{public}s", bundleName.c_str());
@@ -275,7 +291,7 @@ ErrCode BundleCliSandboxInstaller::ProcessCreateCliSandbox(const std::string &cr
         // The session is already committed but the DB write failed: undo the
         // freshly committed AT identity so both sides stay clean.
         int32_t delRet = BundleSpmManager::DeleteToken(newTokenIdEx.tokenIdExStruct.tokenID,
-            bundleName, BundleSpmManager::TokenDeleteType::NONE, uid);
+            bundleName, BundleSpmManager::TokenDeleteType::NONE);
         if (delRet != ERR_OK) {
             APP_LOGE("undo spm identity failed, bundleName:%{public}s errCode:%{public}d",
                 bundleName.c_str(), delRet);
@@ -528,8 +544,8 @@ ErrCode BundleCliSandboxInstaller::ProcessDestroyCliSandbox(const std::string &c
         APP_LOGW("RemoveSandboxDataDir failed");
     }
     RemoveEl5Dir(bundleName, userId, appIndex);
-    if (BundleSpmManager::DeleteToken(accessTokenId_, bundleName, BundleSpmManager::TokenDeleteType::NONE,
-        uid_) != Security::AccessToken::AccessTokenKitRet::RET_SUCCESS) {
+    if (BundleSpmManager::DeleteToken(accessTokenId_, bundleName, BundleSpmManager::TokenDeleteType::NONE) !=
+        Security::AccessToken::AccessTokenKitRet::RET_SUCCESS) {
         APP_LOGE("delete AT failed sandbox");
     }
     UninstallDebugAppSandbox(bundleName, uid_, appIndex, info);

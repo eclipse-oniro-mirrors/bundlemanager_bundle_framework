@@ -272,7 +272,7 @@ ErrCode BundleSandboxInstaller::UninstallSandboxApp(
     // 5. delete accesstoken id and appIndex
     uint32_t accessTokenId = info.GetAccessTokenId(userId_);
     if (BundleSpmManager::DeleteToken(accessTokenId, info.GetBundleName(),
-        BundleSpmManager::TokenDeleteType::NONE, info.GetUid(userId_)) !=
+        BundleSpmManager::TokenDeleteType::NONE) !=
         AccessToken::AccessTokenKitRet::RET_SUCCESS) {
         APP_LOGE("delete accessToken failed");
     }
@@ -366,10 +366,18 @@ void BundleSandboxInstaller::SandboxAppRollBack(InnerBundleInfo &info, const int
     // when a sandbox is installed failed, some stuff, including uid, gid, appIndex,
     // accessToken Id and the data dir will be removed.
     APP_LOGI("SandboxAppRollBack begin");
-    // The sandbox uid lives in the (re-)added user info: before it is added the
-    // lookup returns INVALID_UID and the eviction is skipped.
-    BundleSpmManager::DeleteToken(info.GetAccessTokenId(userId), info.GetBundleName(),
-        BundleSpmManager::TokenDeleteType::NONE, info.GetUid(userId));
+    // SPM ON: while the install session is not committed the freshly created
+    // identity is never persisted — the session rollback discards it, so no
+    // DeleteIdentity is needed. A committed session (SaveSandboxPersistentInfo
+    // failure after Commit) still deletes the persisted identity here — that is
+    // the undo path for this flow.
+    if (!BundleSpmManager::IsEnabled() || spmSession_.IsCommitted()) {
+        BundleSpmManager::DeleteToken(info.GetAccessTokenId(userId), info.GetBundleName(),
+            BundleSpmManager::TokenDeleteType::NONE);
+    } else {
+        APP_LOGI("skip delete accessToken on uncommitted spm session, bundleName:%{public}s",
+            info.GetBundleName().c_str());
+    }
     auto bundleName = info.GetBundleName();
     auto appIndex = info.GetAppIndex();
     if (sandboxDataMgr_ == nullptr) {

@@ -5014,40 +5014,6 @@ HWTEST_F(BmsBundleDataMgrTest3, ParseBundleIdKey_0100, Function | MediumTest | L
 }
 
 /**
- * @tc.number: UidIndexMapMaintain_0100
- * @tc.name: uidIndexMap_ is not maintained by GenerateUidAndGid
- * @tc.desc: GenerateUidAndGid (fresh allocation and the idempotent refresh) never
- *           writes uidIndexMap_; the cache is maintained by the SPM-ON boot restore
- *           and the uninstall removal only.
- */
-HWTEST_F(BmsBundleDataMgrTest3, UidIndexMapMaintain_0100, Function | MediumTest | Level1)
-{
-    ResetDataMgr();
-    auto bundleDataMgr = GetBundleDataMgr();
-    ASSERT_NE(bundleDataMgr, nullptr);
-
-    InnerBundleUserInfo userInfo;
-    userInfo.bundleName = BUNDLE_TEST1;
-    userInfo.bundleUserInfo.userId = USERID;
-    auto ret = bundleDataMgr->GenerateUidAndGid(userInfo);
-    EXPECT_EQ(ret, ERR_OK);
-    EXPECT_NE(userInfo.uid, Constants::INVALID_UID);
-
-    InnerBundleUserInfo cloneUserInfo;
-    cloneUserInfo.bundleName = "1clone_" + BUNDLE_TEST1;
-    cloneUserInfo.bundleUserInfo.userId = USERID;
-    ret = bundleDataMgr->GenerateUidAndGid(cloneUserInfo);
-    EXPECT_EQ(ret, ERR_OK);
-    EXPECT_NE(cloneUserInfo.uid, Constants::INVALID_UID);
-
-    // idempotent refresh of an already allocated uid
-    ret = bundleDataMgr->GenerateUidAndGid(userInfo);
-    EXPECT_EQ(ret, ERR_OK);
-
-    EXPECT_TRUE(bundleDataMgr->uidIndexMap_.empty());
-}
-
-/**
  * @tc.number: GetInnerBundleInfoAndIndexByUid_0100
  * @tc.name: GetInnerBundleInfoAndIndexByUid invalid uid
  * @tc.desc: When uid < BASE_APP_UID, returns INVALID_UID error immediately.

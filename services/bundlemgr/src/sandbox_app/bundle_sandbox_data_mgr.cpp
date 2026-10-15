@@ -342,14 +342,19 @@ bool BundleSandboxDataMgr::RestoreSandboxAppIndex(const std::string &bundleName,
     return true;
 }
 
-void BundleSandboxDataMgr::RestoreSandboxUidAndGid(std::map<int32_t, std::string> &bundleIdMap,
-    BundleDataMgr *dataMgr)
+void BundleSandboxDataMgr::RestoreSandboxUidAndGid(std::map<int32_t, std::string> &bundleIdMap)
 {
     APP_LOGD("RestoreSandboxUidAndGid begin");
     std::unique_lock<std::shared_mutex> lock(sandboxAppMutex_);
     for (const auto &info : sandboxAppInfos_) {
         for (const auto &infoItem : info.second.GetInnerBundleUserInfos()) {
             auto &innerBundleUserInfo = infoItem.second;
+            // Same guard as the main/clone/cli restore branches: a corrupt
+            // record (uid <= 0, OTA / corruption leftovers) must not poison the
+            // id map or the fs config with a bogus derived bundleId.
+            if (innerBundleUserInfo.uid <= 0) {
+                continue;
+            }
             int32_t bundleId = innerBundleUserInfo.uid -
                 innerBundleUserInfo.bundleUserInfo.userId * Constants::BASE_USER_RANGE;
             auto item = bundleIdMap.find(bundleId);
@@ -357,15 +362,6 @@ void BundleSandboxDataMgr::RestoreSandboxUidAndGid(std::map<int32_t, std::string
                 bundleIdMap.emplace(bundleId, info.first);
             } else {
                 bundleIdMap[bundleId] = info.first;
-            }
-            if (BundleSpmManager::IsEnabled() && dataMgr != nullptr &&
-                innerBundleUserInfo.uid != Constants::INVALID_UID && innerBundleUserInfo.uid > 0) {
-                // SPM ON: rebuild the reverse-lookup cache entry for the restored
-                // sandbox uid (the sandbox identity is AT-allocated under SPM).
-                // One-way lock nesting: the caller holds bundleIdMapMutex_, so
-                // bundleIdMapMutex_ -> uidIndexMapMutex_ is preserved.
-                dataMgr->UpdateUidIndexMap(innerBundleUserInfo.uid,
-                    info.second.GetBundleName(), info.second.GetAppIndex());
             }
             BundleUtil::MakeFsConfig(info.first, bundleId, ServiceConstants::HMDFS_CONFIG_PATH);
             BundleUtil::MakeFsConfig(info.first, bundleId, ServiceConstants::SHAREFS_CONFIG_PATH);

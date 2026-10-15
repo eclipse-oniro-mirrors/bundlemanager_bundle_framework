@@ -4317,7 +4317,8 @@ bool InstalldOperator::IsValidModuleName(const std::string &moduleName)
     return true;
 }
 
-bool InstalldOperator::IsValidBundleName(const std::string &bundleName)
+bool InstalldOperator::GetOriginalBundleName(const std::string &bundleName,
+    std::string &originalBundleName)
 {
     if (bundleName.empty() || !IsFileNameValid(bundleName)) {
         LOG_NOFUNC_E(BMS_TAG_INSTALLD, "invalid name -n %{public}s", bundleName.c_str());
@@ -4363,7 +4364,14 @@ bool InstalldOperator::IsValidBundleName(const std::string &bundleName)
             return false;
         }
     }
+    originalBundleName = tempBundleName;
     return true;
+}
+
+bool InstalldOperator::IsValidBundleName(const std::string &bundleName)
+{
+    std::string originalBundleName;
+    return GetOriginalBundleName(bundleName, originalBundleName);
 }
 
 bool InstalldOperator::IsValidUserId(const int32_t userId)

@@ -54,12 +54,18 @@ int32_t g_spmCheckHapPermissionInfoCallCount = 0;
 int32_t g_spmPrepareHapIdentityRet = 0;
 uint64_t g_spmPrepareIdentityTokenId = 0;
 int32_t g_spmPrepareIdentityUid = 0;
+// Session-id write-back knob for PrepareHapIdentity: mirrors the real AT
+// contract where a deferred caller (session id 0) makes the AT side allocate
+// the session and write the id back. CheckSignAndInitSession rejects an empty
+// hap list (aligned with the OFF checker), so the unit tests engage an active
+// session through the deferred InitToken path with this knob.
+int32_t g_spmPrepareIdentitySessionId = 0;
 // Forces PrepareHapIdentity to ignore the desired uid and return the knob uid,
 // so tests can construct the "AT did not adopt the desired uid and reallocated
 // a new one" (mismatch) path that the default adopt-or-reallocate mock cannot.
 bool g_spmPrepareIdentityForceReallocate = false;
 int32_t g_spmUpdateHapPolicyRet = 0;
-// Out-param knob for GetHapBaseInfoByUid (the uidIndexMap miss fallback):
+// Out-param knob for GetHapBaseInfoByUid (the SPM ON reverse-lookup fallback):
 // default -1 = not found, 0 + filled g_spmGetHapBaseInfo = resolved.
 int32_t g_spmGetHapBaseInfoByUidRet = -1;
 Security::AccessToken::HapBaseInfo g_spmGetHapBaseInfo;
@@ -73,6 +79,21 @@ int32_t g_spmFinishInstallRet = 0;
 std::vector<int32_t> g_spmFinishInstallRetSeq;
 int32_t g_spmFinishInstallCallCount = 0;
 bool g_spmFinishInstallLastPersistent = false;
+// Return-value knobs for the recovery paths (TryRecoverUidError /
+// TryRecoverAlreadyExistError) and the module-uninstall re-sign flow.
+int32_t g_spmMigrateInstalledBundlesRet = 0;
+int32_t g_spmDeleteIdentityRet = 0;
+// Recording knobs for MigrateInstalledBundles: the parallel lists must carry
+// the same entry count (alignment contract consumed by the AT side).
+int32_t g_spmLastMigratedBaseInfoCount = 0;
+int32_t g_spmLastMigratedUidCount = 0;
+// Recording knobs for DeleteIdentity: the recovery path currently deletes by
+// bundle name with tokenId == 0 (which the AT side interprets as "every token
+// of the bundle"); tests can assert the call shape and make that blast radius
+// visible instead of silently succeeding.
+uint64_t g_lastDeleteIdentityTokenId = 0;
+std::string g_lastDeleteIdentityBundleName;
+int32_t g_lastDeleteIdentityType = 0;
 
 void ResetSpmKitMockValuesForTest()
 {
@@ -85,6 +106,7 @@ void ResetSpmKitMockValuesForTest()
     g_spmPrepareHapIdentityRet = 0;
     g_spmPrepareIdentityTokenId = 0;
     g_spmPrepareIdentityUid = 0;
+    g_spmPrepareIdentitySessionId = 0;
     g_spmPrepareIdentityForceReallocate = false;
     g_spmUpdateHapPolicyRet = 0;
     g_spmUpdateHapPolicyUidOut = 0;
@@ -95,6 +117,8 @@ void ResetSpmKitMockValuesForTest()
     g_spmFinishInstallCallCount = 0;
     g_spmFinishInstallLastPersistent = false;
     g_spmMigrateInstalledBundlesRet = 0;
+    g_spmLastMigratedBaseInfoCount = 0;
+    g_spmLastMigratedUidCount = 0;
     g_spmDeleteIdentityRet = 0;
     g_lastDeleteIdentityTokenId = 0;
     g_lastDeleteIdentityBundleName.clear();
@@ -400,6 +424,11 @@ int32_t AccessTokenKit::CheckHapPermissionInfo(int32_t sessionId, InstallTypeEnu
 int32_t AccessTokenKit::PrepareHapIdentity(int32_t& sessionId, const HapBaseInfo& info,
     const BundlePolicy& policy, Identity& identity)
 {
+    if (sessionId == 0 && g_spmPrepareIdentitySessionId != 0) {
+        // Mirrors the real AT contract: a deferred caller (session id 0) makes
+        // the AT side allocate the session and write the id back.
+        sessionId = g_spmPrepareIdentitySessionId;
+    }
     if (identity.uid != 0 && !g_spmPrepareIdentityForceReallocate) {
         // Mirrors the AT adopt-or-reallocate contract: a desired uid passed by the
         // caller is adopted and returned unchanged.
@@ -448,18 +477,6 @@ int32_t AccessTokenKit::GetCachePolicyBySessionId(int32_t sessionId, const std::
     return 0;
 }
 
-// Return-value knobs for the recovery paths (TryRecoverUidError /
-// TryRecoverAlreadyExistError) and the module-uninstall re-sign flow.
-int32_t g_spmMigrateInstalledBundlesRet = 0;
-int32_t g_spmDeleteIdentityRet = 0;
-// Recording knobs for DeleteIdentity: the recovery path currently deletes by
-// bundle name with tokenId == 0 (which the AT side interprets as "every token
-// of the bundle"); tests can assert the call shape and make that blast radius
-// visible instead of silently succeeding.
-uint64_t g_lastDeleteIdentityTokenId = 0;
-std::string g_lastDeleteIdentityBundleName;
-int32_t g_lastDeleteIdentityType = 0;
-
 int32_t AccessTokenKit::DeleteIdentity(AccessTokenID tokenID, const std::string& bundleName,
     ReservedType type)
 {
@@ -472,6 +489,17 @@ int32_t AccessTokenKit::DeleteIdentity(AccessTokenID tokenID, const std::string&
 int32_t AccessTokenKit::MigrateInstalledBundles(const std::vector<MigratedInfo>& migratedInfoList,
     std::vector<BundleMigrateResult>& results)
 {
+    // Recording knobs: the migration lists must stay aligned (one uid per base
+    // info) — tests pin the alignment so a conditional staging bug cannot
+    // silently bind clone identities to the wrong uids.
+    if (!migratedInfoList.empty()) {
+        g_spmLastMigratedBaseInfoCount =
+            static_cast<int32_t>(migratedInfoList[0].hapBaseInfoList.size());
+        g_spmLastMigratedUidCount = static_cast<int32_t>(migratedInfoList[0].uidList.size());
+    } else {
+        g_spmLastMigratedBaseInfoCount = 0;
+        g_spmLastMigratedUidCount = 0;
+    }
     return g_spmMigrateInstalledBundlesRet;
 }
 

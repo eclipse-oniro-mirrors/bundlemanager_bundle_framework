@@ -361,8 +361,18 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
         if (keepDataReinstall) {
             return;
         }
+        // SPM ON: the freshly created identity lives in the active install
+        // session. While the session is not committed the token is never
+        // persisted — the session rollback discards it, so no DeleteIdentity is
+        // needed. A committed session (post-commit DB failure) keeps the
+        // explicit undo at the AddCloneBundle failure site.
+        if (BundleSpmManager::IsEnabled() && !spmSession_.IsCommitted()) {
+            APP_LOGI("skip delete accessToken on uncommitted spm session, bundleName:%{public}s",
+                bundleName.c_str());
+            return;
+        }
         BundleSpmManager::DeleteToken(newTokenIdEx.tokenIdExStruct.tokenID, bundleName,
-            BundleSpmManager::TokenDeleteType::NONE, uid);
+            BundleSpmManager::TokenDeleteType::NONE);
     });
     if (BundleSpmManager::IsEnabled() && uid == Constants::INVALID_UID) {
         // Fail fast: neither the AT identity nor the uninstall record provided a
@@ -432,7 +442,7 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
         // exempt — the token IS the reservation) so both sides stay clean.
         if (!keepDataReinstall) {
             int32_t delRet = BundleSpmManager::DeleteToken(newTokenIdEx.tokenIdExStruct.tokenID,
-                bundleName, BundleSpmManager::TokenDeleteType::NONE, uid);
+                bundleName, BundleSpmManager::TokenDeleteType::NONE);
             if (delRet != ERR_OK) {
                 APP_LOGE("undo spm identity failed, bundleName:%{public}s errCode:%{public}d",
                     bundleName.c_str(), delRet);
@@ -531,8 +541,8 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
         }
         RemoveEl5Dir(userInfo, userId, appIndex);
 
-        if (BundleSpmManager::DeleteToken(accessTokenId_, bundleName, BundleSpmManager::TokenDeleteType::NONE,
-            uid_) != AccessToken::AccessTokenKitRet::RET_SUCCESS) {
+        if (BundleSpmManager::DeleteToken(accessTokenId_, bundleName, BundleSpmManager::TokenDeleteType::NONE) !=
+            AccessToken::AccessTokenKitRet::RET_SUCCESS) {
             APP_LOGE("delete AT failed clone");
         }
         DelayedSingleton<BmsUpdateSelinuxMgr>::GetInstance()->DeleteBundle(bundleName, userId, appIndex);
@@ -543,7 +553,7 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
         // dual state internally: OFF maps RESERVED_DATA to a no-op (legacy
         // keep-data keeps the token active).
         int32_t reserveRet = BundleSpmManager::DeleteToken(accessTokenId_, bundleName,
-            BundleSpmManager::TokenDeleteType::RESERVED_DATA, uid_);
+            BundleSpmManager::TokenDeleteType::RESERVED_DATA);
         if (reserveRet != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "reserve identity failed, clone:%{public}s errCode:%{public}d",
                 bundleName.c_str(), reserveRet);

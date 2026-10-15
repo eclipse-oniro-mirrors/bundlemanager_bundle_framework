@@ -261,8 +261,18 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
             // deleting it would break the keep-data reservation.
             return;
         }
+        // SPM ON: the freshly created identity lives in the active install
+        // session. While the session is not committed the token is never
+        // persisted — the session rollback discards it, so no DeleteIdentity is
+        // needed. A committed session (post-commit DB failure) keeps the
+        // explicit undo at the AddInnerBundleUserInfo failure site.
+        if (BundleSpmManager::IsEnabled() && !spmSession_.IsCommitted()) {
+            APP_LOGI("skip delete accessToken on uncommitted spm session, bundleName:%{public}s",
+                bundleName.c_str());
+            return;
+        }
         BundleSpmManager::DeleteToken(newTokenIdEx.tokenIdExStruct.tokenID, bundleName,
-            BundleSpmManager::TokenDeleteType::NONE, uid);
+            BundleSpmManager::TokenDeleteType::NONE);
     });
     if (BundleSpmManager::IsEnabled() && uid == Constants::INVALID_UID) {
         // Fail fast: neither the AT identity nor the uninstall record provided
@@ -331,7 +341,7 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
         // exempt) so both sides stay clean.
         if (!keepDataReinstall) {
             int32_t delRet = BundleSpmManager::DeleteToken(newTokenIdEx.tokenIdExStruct.tokenID,
-                bundleName, BundleSpmManager::TokenDeleteType::NONE, uid);
+                bundleName, BundleSpmManager::TokenDeleteType::NONE);
             if (delRet != ERR_OK) {
                 APP_LOGE("undo spm identity failed, bundleName:%{public}s errCode:%{public}d",
                     bundleName.c_str(), delRet);
