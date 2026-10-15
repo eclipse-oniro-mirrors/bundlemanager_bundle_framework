@@ -22,6 +22,7 @@
 #include "app_provision_info_manager.h"
 #include "base_bundle_installer.h"
 #include "bundle_data_mgr.h"
+#include "bundle_data_storage_interface.h"
 #include "bundle_mgr_service.h"
 #include "data_group_info.h"
 #include "installd/installd_service.h"
@@ -58,6 +59,12 @@ constexpr int32_t TEST_GROUP_INDEX_FORE = 4;
 const int32_t WAIT_TIME = 2;
 constexpr int32_t DATA_GROUP_INDEX_START = 1;
 constexpr int32_t DATA_GROUP_UID_OFFSET = 100000;
+// Legal data group uid encoding for userId=100, uniqueId=1:
+// userId * BASE_USER_RANGE(200000) + uniqueId + DATA_GROUP_UID_OFFSET.
+constexpr int32_t TEST_GROUP_UID = 20100001;
+// uid derived by GenerateNewUserDataGroupInfos for USERID_TWO(101) from TEST_GROUP_UID
+// (the uniqueId 1 is inherited across users).
+constexpr int32_t TEST_GROUP_UID_USER_TWO = 20300001;
 }  // namespace
 
 class BmsBundleDataGroupTest : public testing::Test {
@@ -696,6 +703,446 @@ HWTEST_F(BmsBundleDataGroupTest, GenerateDataGroupUuidAndUid_0020, Function | Sm
         EXPECT_EQ(dataGroupInfo.uid, 0);
         EXPECT_EQ(dataGroupInfo.gid, 0);
         EXPECT_EQ(dataGroupInfo.uuid, "");
+    }
+}
+
+/**
+ * @tc.number: GenerateDataGroupInfos_0050
+ * @tc.name: test GenerateDataGroupInfos for dual-mode hidden variant
+ * @tc.desc: 1.GenerateDataGroupInfos with toTempBundle=true generates on tempBundleInfos_ entry
+ */
+HWTEST_F(BmsBundleDataGroupTest, GenerateDataGroupInfos_0050, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        InnerBundleUserInfo innerBundleUserInfo;
+        innerBundleUserInfo.uid = TEST_UID;
+        InnerBundleInfo primaryInfo;
+        primaryInfo.innerBundleUserInfos_.emplace(TEST_USER_KEY, innerBundleUserInfo);
+        InnerBundleInfo cloneInfo = primaryInfo;
+        dataMgr->bundleInfos_.emplace(BUNDLE_NAME, primaryInfo);
+        dataMgr->tempBundleInfos_.emplace(BUNDLE_NAME, cloneInfo);
+        ScopeGuard bundleInfoGuard([&] {
+            dataMgr->bundleInfos_.erase(BUNDLE_NAME);
+            dataMgr->tempBundleInfos_.erase(BUNDLE_NAME);
+        });
+
+        std::unordered_set<std::string> dataGroupIdList;
+        dataGroupIdList.insert(DATA_GROUP_ID_TEST_ONE);
+        dataMgr->GenerateDataGroupInfos(BUNDLE_NAME, dataGroupIdList, USERID, false, true);
+
+        auto tempInfos = dataMgr->tempBundleInfos_[BUNDLE_NAME].GetDataGroupInfos();
+        EXPECT_FALSE(tempInfos.empty());
+        ASSERT_NE(tempInfos.find(DATA_GROUP_ID_TEST_ONE), tempInfos.end());
+        ASSERT_FALSE(tempInfos[DATA_GROUP_ID_TEST_ONE].empty());
+        const auto &generated = tempInfos[DATA_GROUP_ID_TEST_ONE][0];
+        EXPECT_EQ(generated.userId, USERID);
+        EXPECT_NE(generated.uid, 0);
+        EXPECT_EQ(generated.uid, generated.gid);
+        EXPECT_FALSE(generated.uuid.empty());
+        EXPECT_TRUE(dataMgr->bundleInfos_[BUNDLE_NAME].GetDataGroupInfos().empty());
+    }
+}
+
+/**
+ * @tc.number: GenerateDataGroupInfos_0060
+ * @tc.name: test GenerateDataGroupInfos for dual-mode hidden variant not found
+ * @tc.desc: 1.GenerateDataGroupInfos with toTempBundle=true and no tempBundleInfos_ entry is no-op
+ */
+HWTEST_F(BmsBundleDataGroupTest, GenerateDataGroupInfos_0060, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        InnerBundleInfo primaryInfo;
+        dataMgr->bundleInfos_.emplace(BUNDLE_NAME, primaryInfo);
+        ScopeGuard bundleInfoGuard([&] { dataMgr->bundleInfos_.erase(BUNDLE_NAME); });
+
+        std::unordered_set<std::string> dataGroupIdList;
+        dataGroupIdList.insert(DATA_GROUP_ID_TEST_ONE);
+        dataMgr->GenerateDataGroupInfos(BUNDLE_NAME, dataGroupIdList, USERID, false, true);
+
+        EXPECT_TRUE(dataMgr->bundleInfos_[BUNDLE_NAME].GetDataGroupInfos().empty());
+    }
+}
+
+/**
+ * @tc.number: GenerateNewUserDataGroupInfos_0010
+ * @tc.name: test GenerateNewUserDataGroupInfos for dual-mode hidden variant
+ * @tc.desc: 1.GenerateNewUserDataGroupInfos with toTempBundle=true expands new user on
+ *           tempBundleInfos_ entry only
+ */
+HWTEST_F(BmsBundleDataGroupTest, GenerateNewUserDataGroupInfos_0010, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        DataGroupInfo dataGroupInfo;
+        dataGroupInfo.dataGroupId = DATA_GROUP_ID_TEST_ONE;
+        dataGroupInfo.uuid = DATA_GROUP_UUID_ONE;
+        dataGroupInfo.userId = USERID;
+        dataGroupInfo.uid = TEST_GROUP_UID;
+        dataGroupInfo.gid = TEST_GROUP_UID;
+
+        InnerBundleInfo primaryInfo;
+        InnerBundleInfo cloneInfo;
+        cloneInfo.AddDataGroupInfo(DATA_GROUP_ID_TEST_ONE, dataGroupInfo);
+        dataMgr->bundleInfos_.emplace(BUNDLE_NAME, primaryInfo);
+        dataMgr->tempBundleInfos_.emplace(BUNDLE_NAME, cloneInfo);
+        ScopeGuard bundleInfoGuard([&] {
+            dataMgr->bundleInfos_.erase(BUNDLE_NAME);
+            dataMgr->tempBundleInfos_.erase(BUNDLE_NAME);
+        });
+
+        dataMgr->GenerateNewUserDataGroupInfos(BUNDLE_NAME, USERID_TWO, true);
+
+        auto tempInfos = dataMgr->tempBundleInfos_[BUNDLE_NAME].GetDataGroupInfos();
+        ASSERT_NE(tempInfos.find(DATA_GROUP_ID_TEST_ONE), tempInfos.end());
+        bool hasNewUser = false;
+        for (const auto &info : tempInfos[DATA_GROUP_ID_TEST_ONE]) {
+            if (info.userId == USERID_TWO) {
+                hasNewUser = true;
+                // uniqueId(1) is inherited from the seed entry, so the derived uid must be the
+                // legal encoding for USERID_TWO; uuid is inherited as well (same group directory).
+                EXPECT_EQ(info.uid, TEST_GROUP_UID_USER_TWO);
+                EXPECT_EQ(info.uid, info.gid);
+                EXPECT_EQ(info.uuid, DATA_GROUP_UUID_ONE);
+            }
+        }
+        EXPECT_TRUE(hasNewUser);
+        EXPECT_TRUE(dataMgr->bundleInfos_[BUNDLE_NAME].GetDataGroupInfos().empty());
+    }
+}
+
+/**
+ * @tc.number: DeleteUserDataGroupInfos_0010
+ * @tc.name: test DeleteUserDataGroupInfos for dual-mode hidden variant
+ * @tc.desc: 1.DeleteUserDataGroupInfos with toTempBundle=true removes the user's entries on
+ *           tempBundleInfos_ entry only
+ */
+HWTEST_F(BmsBundleDataGroupTest, DeleteUserDataGroupInfos_0010, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        DataGroupInfo dataGroupInfo;
+        dataGroupInfo.dataGroupId = DATA_GROUP_ID_TEST_ONE;
+        dataGroupInfo.uuid = DATA_GROUP_UUID_ONE;
+        dataGroupInfo.userId = USERID;
+        dataGroupInfo.uid = TEST_GROUP_UID;
+        dataGroupInfo.gid = TEST_GROUP_UID;
+        DataGroupInfo dataGroupInfoUserTwo = dataGroupInfo;
+        dataGroupInfoUserTwo.userId = USERID_TWO;
+        dataGroupInfoUserTwo.uid = TEST_GROUP_UID_USER_TWO;
+        dataGroupInfoUserTwo.gid = TEST_GROUP_UID_USER_TWO;
+
+        InnerBundleInfo primaryInfo;
+        InnerBundleInfo cloneInfo;
+        cloneInfo.AddDataGroupInfo(DATA_GROUP_ID_TEST_ONE, dataGroupInfo);
+        cloneInfo.AddDataGroupInfo(DATA_GROUP_ID_TEST_ONE, dataGroupInfoUserTwo);
+        dataMgr->bundleInfos_.emplace(BUNDLE_NAME, primaryInfo);
+        dataMgr->tempBundleInfos_.emplace(BUNDLE_NAME, cloneInfo);
+        ScopeGuard bundleInfoGuard([&] {
+            dataMgr->bundleInfos_.erase(BUNDLE_NAME);
+            dataMgr->tempBundleInfos_.erase(BUNDLE_NAME);
+        });
+
+        dataMgr->DeleteUserDataGroupInfos(BUNDLE_NAME, USERID, false, true);
+
+        auto tempInfos = dataMgr->tempBundleInfos_[BUNDLE_NAME].GetDataGroupInfos();
+        ASSERT_NE(tempInfos.find(DATA_GROUP_ID_TEST_ONE), tempInfos.end());
+        // only USERID's entry is removed per-user; USERID_TWO's entry must survive
+        ASSERT_EQ(tempInfos[DATA_GROUP_ID_TEST_ONE].size(), 1u);
+        EXPECT_EQ(tempInfos[DATA_GROUP_ID_TEST_ONE][0].userId, USERID_TWO);
+        EXPECT_TRUE(dataMgr->bundleInfos_[BUNDLE_NAME].GetDataGroupInfos().empty());
+    }
+}
+
+/**
+ * @tc.number: GetDataGroupIndexMap_0020
+ * @tc.name: test GetDataGroupIndexMap with dual-mode hidden variant
+ * @tc.desc: 1.GetDataGroupIndexMap collects indexes from tempBundleInfos_ as well
+ */
+HWTEST_F(BmsBundleDataGroupTest, GetDataGroupIndexMap_0020, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        DataGroupInfo dataGroupInfo;
+        dataGroupInfo.dataGroupId = DATA_GROUP_ID_TEST_ONE;
+        dataGroupInfo.uuid = DATA_GROUP_UUID_ONE;
+        dataGroupInfo.userId = USERID;
+        dataGroupInfo.uid = TEST_GROUP_UID;
+
+        InnerBundleInfo cloneInfo;
+        cloneInfo.AddDataGroupInfo(DATA_GROUP_ID_TEST_ONE, dataGroupInfo);
+        dataMgr->tempBundleInfos_.emplace(BUNDLE_NAME, cloneInfo);
+        ScopeGuard bundleInfoGuard([&] { dataMgr->tempBundleInfos_.erase(BUNDLE_NAME); });
+
+        std::map<std::string, std::pair<int32_t, std::string>> dataGroupIndexMap;
+        std::unordered_set<int32_t> uniqueIdSet;
+        dataMgr->GetDataGroupIndexMap(dataGroupIndexMap, uniqueIdSet);
+        // index/uuid are derived exactly from the hidden variant's entry:
+        // TEST_GROUP_UID - USERID * BASE_USER_RANGE - DATA_GROUP_UID_OFFSET = 1
+        ASSERT_NE(dataGroupIndexMap.find(DATA_GROUP_ID_TEST_ONE), dataGroupIndexMap.end());
+        EXPECT_EQ(dataGroupIndexMap[DATA_GROUP_ID_TEST_ONE].first, TEST_GROUP_INDEX_ONE);
+        EXPECT_EQ(dataGroupIndexMap[DATA_GROUP_ID_TEST_ONE].second, DATA_GROUP_UUID_ONE);
+        EXPECT_NE(uniqueIdSet.find(TEST_GROUP_INDEX_ONE), uniqueIdSet.end());
+    }
+}
+
+/**
+ * @tc.number: IsDataGroupIdExistNoLock_0030
+ * @tc.name: test IsDataGroupIdExistNoLock with dual-mode hidden variant
+ * @tc.desc: 1.IsDataGroupIdExistNoLock returns true when only the tempBundleInfos_ variant holds
+ *           the data group
+ */
+HWTEST_F(BmsBundleDataGroupTest, IsDataGroupIdExistNoLock_0030, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        DataGroupInfo dataGroupInfo;
+        dataGroupInfo.dataGroupId = DATA_GROUP_ID_TEST_ONE;
+        dataGroupInfo.uuid = DATA_GROUP_UUID_ONE;
+        dataGroupInfo.userId = USERID;
+        dataGroupInfo.uid = TEST_GROUP_UID;
+
+        InnerBundleInfo cloneInfo;
+        cloneInfo.AddDataGroupInfo(DATA_GROUP_ID_TEST_ONE, dataGroupInfo);
+        dataMgr->tempBundleInfos_.emplace(BUNDLE_NAME, cloneInfo);
+        ScopeGuard bundleInfoGuard([&] { dataMgr->tempBundleInfos_.erase(BUNDLE_NAME); });
+
+        EXPECT_TRUE(dataMgr->IsDataGroupIdExistNoLock(DATA_GROUP_ID_TEST_ONE, USERID));
+    }
+}
+
+/**
+ * @tc.number: IsShareDataGroupIdNoLock_0040
+ * @tc.name: test IsShareDataGroupIdNoLock across dual-mode variants
+ * @tc.desc: 1.IsShareDataGroupIdNoLock returns true when the visible and hidden variants share
+ *           the same data group
+ */
+HWTEST_F(BmsBundleDataGroupTest, IsShareDataGroupIdNoLock_0040, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        DataGroupInfo dataGroupInfo;
+        dataGroupInfo.dataGroupId = DATA_GROUP_ID_TEST_ONE;
+        dataGroupInfo.uuid = DATA_GROUP_UUID_ONE;
+        dataGroupInfo.userId = USERID;
+        dataGroupInfo.uid = TEST_GROUP_UID;
+
+        InnerBundleInfo primaryInfo;
+        primaryInfo.AddDataGroupInfo(DATA_GROUP_ID_TEST_ONE, dataGroupInfo);
+        InnerBundleInfo cloneInfo;
+        cloneInfo.AddDataGroupInfo(DATA_GROUP_ID_TEST_ONE, dataGroupInfo);
+        dataMgr->bundleInfos_.emplace(BUNDLE_NAME, primaryInfo);
+        dataMgr->tempBundleInfos_.emplace(BUNDLE_NAME, cloneInfo);
+        ScopeGuard bundleInfoGuard([&] {
+            dataMgr->bundleInfos_.erase(BUNDLE_NAME);
+            dataMgr->tempBundleInfos_.erase(BUNDLE_NAME);
+        });
+
+        EXPECT_TRUE(dataMgr->IsShareDataGroupIdNoLock(DATA_GROUP_ID_TEST_ONE, USERID));
+    }
+}
+
+// Controllable IBundleDataStorage stub for the HandleErrorDataGroupInfos aggregation tests:
+// makes the save result deterministic and independent of the real RDB.
+class StorageResultStub final : public IBundleDataStorage {
+public:
+    explicit StorageResultStub(bool saveResult) : saveResult_(saveResult) {}
+
+    bool LoadAllData(std::map<std::string, InnerBundleInfo> &) override
+    {
+        return false;
+    }
+
+    bool SaveStorageBundleInfo(const InnerBundleInfo &) override
+    {
+        return saveResult_;
+    }
+
+    ErrCode SaveStorageBundleInfoWithCode(const InnerBundleInfo &) override
+    {
+        return ERR_OK;
+    }
+
+    bool DeleteStorageBundleInfo(const InnerBundleInfo &) override
+    {
+        return true;
+    }
+
+private:
+    bool saveResult_;
+};
+
+/**
+ * @tc.number: HandleErrorDataGroupInfos_0010
+ * @tc.name: test HandleErrorDataGroupInfos with only the hidden variant present
+ * @tc.desc: 1.A bundle name that exists only in tempBundleInfos_ is a normal dual-mode state;
+ *           the fix must succeed and the hidden variant's entries must be rewritten with the
+ *           globally assigned index (aggregate "not found in either map" must not trigger)
+ */
+HWTEST_F(BmsBundleDataGroupTest, HandleErrorDataGroupInfos_0010, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        DataGroupInfo dataGroupInfo;
+        dataGroupInfo.dataGroupId = DATA_GROUP_ID_TEST_ONE;
+        dataGroupInfo.uuid = DATA_GROUP_UUID_ONE;
+        dataGroupInfo.userId = USERID;
+        dataGroupInfo.uid = TEST_UID_INVALID;
+
+        InnerBundleUserInfo innerBundleUserInfo;
+        innerBundleUserInfo.uid = TEST_UID;
+        innerBundleUserInfo.bundleUserInfo.userId = USERID;
+        InnerBundleInfo cloneInfo;
+        cloneInfo.AddDataGroupInfo(DATA_GROUP_ID_TEST_ONE, dataGroupInfo);
+        cloneInfo.innerBundleUserInfos_.emplace(TEST_USER_KEY, innerBundleUserInfo);
+        dataMgr->tempBundleInfos_.emplace(BUNDLE_NAME, cloneInfo);
+        ScopeGuard bundleInfoGuard([&] { dataMgr->tempBundleInfos_.erase(BUNDLE_NAME); });
+        auto originalStorage = dataMgr->dataStorage_;
+        dataMgr->dataStorage_ = std::make_shared<StorageResultStub>(true);
+        ScopeGuard storageGuard([&] { dataMgr->dataStorage_ = originalStorage; });
+
+        std::map<std::string, int32_t> groupIdMap;
+        groupIdMap[DATA_GROUP_ID_TEST_ONE] = TEST_GROUP_INDEX_ONE;
+        std::map<std::string, std::set<std::string>> needProcessGroupInfoBundleNames;
+        needProcessGroupInfoBundleNames[BUNDLE_NAME] = { DATA_GROUP_ID_TEST_ONE };
+        EXPECT_TRUE(dataMgr->HandleErrorDataGroupInfos(groupIdMap, needProcessGroupInfoBundleNames));
+
+        auto tempInfos = dataMgr->tempBundleInfos_[BUNDLE_NAME].GetDataGroupInfos();
+        ASSERT_NE(tempInfos.find(DATA_GROUP_ID_TEST_ONE), tempInfos.end());
+        ASSERT_FALSE(tempInfos[DATA_GROUP_ID_TEST_ONE].empty());
+        EXPECT_EQ(tempInfos[DATA_GROUP_ID_TEST_ONE][0].userId, USERID);
+        EXPECT_EQ(tempInfos[DATA_GROUP_ID_TEST_ONE][0].uid, TEST_GROUP_UID);
+        EXPECT_EQ(tempInfos[DATA_GROUP_ID_TEST_ONE][0].uuid, DATA_GROUP_UUID_ONE);
+    }
+}
+
+/**
+ * @tc.number: HandleErrorDataGroupInfos_0020
+ * @tc.name: test HandleErrorDataGroupInfos propagates a failed save on an existing entry
+ * @tc.desc: 1.The hidden variant is found and fixed in memory, but its persistence fails:
+ *           the aggregate must report failure (a single FAILED must not be swallowed by the
+ *           other side's NOT_FOUND/OK) while the in-memory fix still completes
+ */
+HWTEST_F(BmsBundleDataGroupTest, HandleErrorDataGroupInfos_0020, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        DataGroupInfo dataGroupInfo;
+        dataGroupInfo.dataGroupId = DATA_GROUP_ID_TEST_ONE;
+        dataGroupInfo.uuid = DATA_GROUP_UUID_ONE;
+        dataGroupInfo.userId = USERID;
+        dataGroupInfo.uid = TEST_UID_INVALID;
+
+        InnerBundleUserInfo innerBundleUserInfo;
+        innerBundleUserInfo.uid = TEST_UID;
+        innerBundleUserInfo.bundleUserInfo.userId = USERID;
+        InnerBundleInfo cloneInfo;
+        cloneInfo.AddDataGroupInfo(DATA_GROUP_ID_TEST_ONE, dataGroupInfo);
+        cloneInfo.innerBundleUserInfos_.emplace(TEST_USER_KEY, innerBundleUserInfo);
+        dataMgr->tempBundleInfos_.emplace(BUNDLE_NAME, cloneInfo);
+        ScopeGuard bundleInfoGuard([&] { dataMgr->tempBundleInfos_.erase(BUNDLE_NAME); });
+        auto originalStorage = dataMgr->dataStorage_;
+        dataMgr->dataStorage_ = std::make_shared<StorageResultStub>(false);
+        ScopeGuard storageGuard([&] { dataMgr->dataStorage_ = originalStorage; });
+
+        std::map<std::string, int32_t> groupIdMap;
+        groupIdMap[DATA_GROUP_ID_TEST_ONE] = TEST_GROUP_INDEX_ONE;
+        std::map<std::string, std::set<std::string>> needProcessGroupInfoBundleNames;
+        needProcessGroupInfoBundleNames[BUNDLE_NAME] = { DATA_GROUP_ID_TEST_ONE };
+        EXPECT_FALSE(dataMgr->HandleErrorDataGroupInfos(groupIdMap, needProcessGroupInfoBundleNames));
+
+        // the in-memory fix completed despite the failed save
+        auto tempInfos = dataMgr->tempBundleInfos_[BUNDLE_NAME].GetDataGroupInfos();
+        ASSERT_NE(tempInfos.find(DATA_GROUP_ID_TEST_ONE), tempInfos.end());
+        ASSERT_FALSE(tempInfos[DATA_GROUP_ID_TEST_ONE].empty());
+        EXPECT_EQ(tempInfos[DATA_GROUP_ID_TEST_ONE][0].uid, TEST_GROUP_UID);
+        EXPECT_EQ(tempInfos[DATA_GROUP_ID_TEST_ONE][0].uuid, DATA_GROUP_UUID_ONE);
+    }
+}
+
+/**
+ * @tc.number: HandleErrorDataGroupInfos_0030
+ * @tc.name: test HandleErrorDataGroupInfos reports a name absent from both maps
+ * @tc.desc: 1.A bundle name present in neither map is an abnormal input for the scan result;
+ *           the aggregate must report failure (both sides NOT_FOUND)
+ */
+HWTEST_F(BmsBundleDataGroupTest, HandleErrorDataGroupInfos_0030, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        const std::string absentName = "com.example.demo.absentDataGroup";
+        std::map<std::string, int32_t> groupIdMap;
+        groupIdMap[DATA_GROUP_ID_TEST_ONE] = TEST_GROUP_INDEX_ONE;
+        std::map<std::string, std::set<std::string>> needProcessGroupInfoBundleNames;
+        needProcessGroupInfoBundleNames[absentName] = { DATA_GROUP_ID_TEST_ONE };
+        EXPECT_FALSE(dataMgr->HandleErrorDataGroupInfos(groupIdMap, needProcessGroupInfoBundleNames));
+    }
+}
+
+/**
+ * @tc.number: ScanAllBundleGroupInfo_0020
+ * @tc.name: test ScanAllBundleGroupInfo detects cross-variant index conflicts
+ * @tc.desc: 1.Visible and hidden variants hold different dataGroupIds sharing the same index;
+ *           the boot scan must flag the conflict and rewrite the hidden variant's uid with a
+ *           newly assigned index
+ */
+HWTEST_F(BmsBundleDataGroupTest, ScanAllBundleGroupInfo_0020, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        DataGroupInfo visibleGroup;
+        visibleGroup.dataGroupId = DATA_GROUP_ID_TEST_ONE;
+        visibleGroup.uuid = DATA_GROUP_UUID_ONE;
+        visibleGroup.userId = USERID;
+        visibleGroup.uid = TEST_GROUP_UID;  // index 1
+        DataGroupInfo hiddenGroup;
+        hiddenGroup.dataGroupId = DATA_GROUP_ID_TEST_TWO;
+        hiddenGroup.uuid = DATA_GROUP_UUID_TWO;
+        hiddenGroup.userId = USERID;
+        hiddenGroup.uid = TEST_GROUP_UID;   // same index 1 -> conflict
+
+        InnerBundleUserInfo innerBundleUserInfo;
+        innerBundleUserInfo.uid = TEST_UID;
+        innerBundleUserInfo.bundleUserInfo.userId = USERID;
+        InnerBundleInfo primaryInfo;
+        primaryInfo.AddDataGroupInfo(DATA_GROUP_ID_TEST_ONE, visibleGroup);
+        primaryInfo.innerBundleUserInfos_.emplace(TEST_USER_KEY, innerBundleUserInfo);
+        InnerBundleInfo cloneInfo;
+        cloneInfo.AddDataGroupInfo(DATA_GROUP_ID_TEST_TWO, hiddenGroup);
+        cloneInfo.innerBundleUserInfos_.emplace(TEST_USER_KEY, innerBundleUserInfo);
+        dataMgr->bundleInfos_.emplace(BUNDLE_NAME, primaryInfo);
+        dataMgr->tempBundleInfos_.emplace(BUNDLE_NAME, cloneInfo);
+        ScopeGuard bundleInfoGuard([&] {
+            dataMgr->bundleInfos_.erase(BUNDLE_NAME);
+            dataMgr->tempBundleInfos_.erase(BUNDLE_NAME);
+        });
+
+        dataMgr->ScanAllBundleGroupInfo();
+
+        // the hidden variant's conflicting entry is rewritten with the next free index (2)
+        auto tempInfos = dataMgr->tempBundleInfos_[BUNDLE_NAME].GetDataGroupInfos();
+        ASSERT_NE(tempInfos.find(DATA_GROUP_ID_TEST_TWO), tempInfos.end());
+        ASSERT_FALSE(tempInfos[DATA_GROUP_ID_TEST_TWO].empty());
+        EXPECT_EQ(tempInfos[DATA_GROUP_ID_TEST_TWO][0].uid,
+            USERID * Constants::BASE_USER_RANGE + TEST_GROUP_INDEX_TWO + DATA_GROUP_UID_OFFSET);
+        EXPECT_EQ(tempInfos[DATA_GROUP_ID_TEST_TWO][0].uuid, DATA_GROUP_UUID_TWO);
+        // the visible variant's entry keeps its original index
+        auto visibleInfos = dataMgr->bundleInfos_[BUNDLE_NAME].GetDataGroupInfos();
+        ASSERT_NE(visibleInfos.find(DATA_GROUP_ID_TEST_ONE), visibleInfos.end());
+        ASSERT_FALSE(visibleInfos[DATA_GROUP_ID_TEST_ONE].empty());
+        EXPECT_EQ(visibleInfos[DATA_GROUP_ID_TEST_ONE][0].uid, TEST_GROUP_UID);
     }
 }
 

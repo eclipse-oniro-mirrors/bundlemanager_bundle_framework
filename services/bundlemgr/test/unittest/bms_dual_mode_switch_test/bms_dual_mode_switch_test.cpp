@@ -55,6 +55,7 @@
 #include "bundle_mgr_proxy.h"
 #include "bundle_mgr_service.h"
 #include "bundle_service_constants.h"
+#include "data_group_info.h"
 #include "dual_mode_helper.h"
 #include "inner_bundle_info.h"
 #include "parameters.h"
@@ -1067,6 +1068,41 @@ HWTEST_F(BmsDualModeSwitchTest,
     switchGuard.unlock();
     EXPECT_EQ(host.UninstallCloneApp(BUNDLE_NAME_GENERIC, TEST_USERID, 0, destroyParam),
         ERR_APPEXECFWK_CLONE_UNINSTALL_INVALID_APP_INDEX);
+}
+
+// Data group infos installed on the hidden variant follow the rotation: the clone variant that
+// received its data group infos at (cross-mode) install time becomes visible in bundleInfos_
+// still carrying them — the end-to-end effect of the dual-mode data group routing fix
+HWTEST_F(BmsDualModeSwitchTest,
+    FilterBundleListByDeviceModeDistributionPolicies_0994_DataGroupFollowsRotation,
+    TestSize.Level1)
+{
+    const std::string dataGroupId = "switch-data-group-id";
+    const std::string dataGroupUuid = "5105e98a-12ae-4a4f-8ed1-fc32e5f45416";
+    EnablePrimaryMode();
+    InnerBundleInfo primaryInfo = MakePolicyInfo(
+        BUNDLE_NAME_DIFF, DeviceModeDistributionPolicy::FULL_COMPATIBLE_DIFFERENT_PACKAGE);
+    InnerBundleInfo cloneInfo = MakePolicyInfo(
+        BUNDLE_NAME_DIFF, DeviceModeDistributionPolicy::FULL_COMPATIBLE_DIFFERENT_PACKAGE, true);
+    DataGroupInfo cloneGroup;
+    cloneGroup.dataGroupId = dataGroupId;
+    cloneGroup.uuid = dataGroupUuid;
+    cloneGroup.userId = TEST_USERID;
+    // legal uid encoding: userId * BASE_USER_RANGE + uniqueId(1) + DATA_GROUP_UID_OFFSET(100000)
+    cloneGroup.uid = TEST_USERID * Constants::BASE_USER_RANGE + 1 + 100000;
+    cloneGroup.gid = cloneGroup.uid;
+    cloneInfo.AddDataGroupInfo(dataGroupId, cloneGroup);
+    dataMgr_->bundleInfos_[BUNDLE_NAME_DIFF] = primaryInfo;
+    dataMgr_->tempBundleInfos_[BUNDLE_NAME_DIFF] = cloneInfo;
+
+    EXPECT_EQ(Switch(POLICIES_VALID_MINIMAL), ERR_OK);
+    EXPECT_TRUE(IsVisible(*dataMgr_, BUNDLE_NAME_DIFF));
+    EXPECT_TRUE(dataMgr_->bundleInfos_[BUNDLE_NAME_DIFF].IsDualModeCloneApp());
+
+    const auto &visibleInfos = dataMgr_->bundleInfos_[BUNDLE_NAME_DIFF].GetDataGroupInfos();
+    ASSERT_NE(visibleInfos.find(dataGroupId), visibleInfos.end());
+    ASSERT_FALSE(visibleInfos.at(dataGroupId).empty());
+    EXPECT_EQ(visibleInfos.at(dataGroupId)[0].uuid, dataGroupUuid);
 }
 
 // Non-dual-mode device (AC-23): the host-entry guard is a zero-overhead early-out — the entry

@@ -36,6 +36,7 @@
 #include "bundle_mgr_service_event_handler.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_service_constants.h"
+#include "data_group_info.h"
 #include "dual_mode_helper.h"
 #include "inner_bundle_info.h"
 #include "install_param.h"
@@ -45,10 +46,13 @@
 #include "nlohmann/json.hpp"
 #include "parameters.h"
 #include "preinstall_data_storage_interface.h"
+#include "bundle_data_storage_interface.h"
 #include "scope_guard.h"
 #include "bundle_resource/bundle_resource_process.h"
 #include "bundle_resource/bundle_resource_manager.h"
 #include "bundle_resource_helper.h"
+#include "interfaces/hap_verify.h"
+#include "installd/installd_service.h"
 
 using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
@@ -59,6 +63,11 @@ const std::string BUNDLE_NAME = "com.example.test";
 const std::string PREFIXED_NAME = "+clone-10000+" + BUNDLE_NAME;
 const std::string CLONE_APP_NAME = "+clone-1+" + BUNDLE_NAME;  // regular clone (appIndex 1..5), not dual-mode
 const std::string MODULE_NAME = "module1";
+const std::string DUAL_MODE_DATA_GROUP_ID = "dual-mode-data-group-id";
+const std::string DUAL_MODE_DATA_GROUP_UUID = "3105e98a-12ae-4a4f-8ed1-fc32e5f45416";
+// Legal data group uid seed encoding: userId(0) * BASE_USER_RANGE + uniqueId(1) + offset(100000)
+constexpr int32_t DUAL_MODE_SEED_GROUP_UID =
+    Constants::DEFAULT_USERID * Constants::BASE_USER_RANGE + 1 + 100000;
 const int32_t TEST_USERID = 100;
 constexpr const char *TEST_DUAL_MODE_PARAM = "persist.bms.test_dual_mode";
 constexpr const char *TEST_ISPCMODE_PARAM = "persist.bms.ispcmode";
@@ -223,6 +232,43 @@ static std::shared_ptr<PreInstallStorageSpy> InstallPreInstallStorageSpy(const s
     auto storageSpy = std::make_shared<PreInstallStorageSpy>();
     dataMgr->preInstallDataStorage_ = storageSpy;
     return storageSpy;
+}
+
+// Deterministic IBundleDataStorage stub: deep install flows persist through
+// UpdateInnerBundleInfo/GenerateNewUserDataGroupInfos, and a real RDB write is neither needed
+// nor reliable in the unit-test sandbox.
+class BundleDataStorageSpy final : public IBundleDataStorage {
+public:
+    bool LoadAllData(std::map<std::string, InnerBundleInfo> &) override
+    {
+        return false;
+    }
+
+    bool SaveStorageBundleInfo(const InnerBundleInfo &) override
+    {
+        return true;
+    }
+
+    ErrCode SaveStorageBundleInfoWithCode(const InnerBundleInfo &) override
+    {
+        return ERR_OK;
+    }
+
+    bool DeleteStorageBundleInfo(const InnerBundleInfo &) override
+    {
+        return true;
+    }
+};
+
+// Start the in-process installd service (mock SA wrapper + real host) once for deep install-flow
+// tests (CreateBundleUserData reaches real directory operations); it stays up for the remainder
+// of the binary. Lazy start keeps earlier cases independent of it.
+static void EnsureInstalldService()
+{
+    static std::shared_ptr<InstalldService> installdService = std::make_shared<InstalldService>();
+    if (!installdService->IsServiceReady()) {
+        installdService->Start();
+    }
 }
 
 // ====================== DualModeHelper::GetMainmode ======================
@@ -1624,6 +1670,335 @@ HWTEST_F(BmsDualModeInstallTest, InnerProcessInstallByPreInstallInfo_0500, Funct
         ERR_APPEXECFWK_RECOVER_INVALID_BUNDLE_NAME);
     ASSERT_EQ(storageSpy->queriedBundleNames.size(), 1u);
     EXPECT_EQ(storageSpy->queriedBundleNames.front(), PREFIXED_NAME);
+}
+
+/**
+ * @tc.number: InnerProcessInstallByPreInstallInfo_0600
+ * @tc.name: test preinstall recovery expands data group infos on the hidden variant
+ * @tc.desc: 1.Primary mode + clone-key input: the fetch routes to tempBundleInfos_ and captures
+ *           the routing truth; the new user's bundle info and data group infos must both land on
+ *           the hidden clone variant (toTempBundle wiring of UpdateInnerBundleInfo and
+ *           GenerateNewUserDataGroupInfos)
+ */
+HWTEST_F(BmsDualModeInstallTest, InnerProcessInstallByPreInstallInfo_0600, Function | SmallTest | Level0)
+{
+    EnsureInstalldService();
+    EnablePrimaryMode();
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    dataMgr->dataStorage_ = std::make_shared<BundleDataStorageSpy>();
+    BaseBundleInstaller installer;
+    installer.dataMgr_ = dataMgr;
+    // hidden clone variant holding one data group entry for user 0; TEST_USERID not present yet
+    InnerBundleInfo cloneInfo = MakeCat7Info(true);
+    ApplicationInfo appInfo;
+    appInfo.bundleName = BUNDLE_NAME;
+    cloneInfo.SetBaseApplicationInfo(appInfo);
+    DataGroupInfo seedGroup;
+    seedGroup.dataGroupId = DUAL_MODE_DATA_GROUP_ID;
+    seedGroup.uuid = DUAL_MODE_DATA_GROUP_UUID;
+    seedGroup.userId = Constants::DEFAULT_USERID;
+    seedGroup.uid = DUAL_MODE_SEED_GROUP_UID;
+    seedGroup.gid = seedGroup.uid;
+    cloneInfo.AddDataGroupInfo(DUAL_MODE_DATA_GROUP_ID, seedGroup);
+    dataMgr->tempBundleInfos_.emplace(BUNDLE_NAME, cloneInfo);
+    ScopeGuard bundleInfoGuard([&] { dataMgr->tempBundleInfos_.erase(BUNDLE_NAME); });
+
+    InstallParam installParam;
+    installParam.userId = TEST_USERID;
+    installParam.isPreInstallApp = true;
+    int32_t uid = Constants::INVALID_UID;
+    ErrCode ret = installer.InnerProcessInstallByPreInstallInfo(PREFIXED_NAME, installParam, uid);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_TRUE(installer.crossModeFetchTruth_);
+    // the new user's bundle info was committed on the hidden variant (:3073, same truth as the
+    // data group expansion below)
+    EXPECT_TRUE(dataMgr->tempBundleInfos_[BUNDLE_NAME].HasInnerBundleUserInfo(TEST_USERID));
+
+    auto tempInfos = dataMgr->tempBundleInfos_[BUNDLE_NAME].GetDataGroupInfos();
+    ASSERT_NE(tempInfos.find(DUAL_MODE_DATA_GROUP_ID), tempInfos.end());
+    bool hasNewUser = false;
+    for (const auto &info : tempInfos[DUAL_MODE_DATA_GROUP_ID]) {
+        if (info.userId == TEST_USERID) {
+            hasNewUser = true;
+            EXPECT_EQ(info.uuid, DUAL_MODE_DATA_GROUP_UUID);
+        }
+    }
+    EXPECT_TRUE(hasNewUser);
+}
+
+/**
+ * @tc.number: InnerProcessInstallByPreInstallInfo_0610
+ * @tc.name: test preinstall recovery re-fetch routes the primary variant in secondary mode
+ * @tc.desc: 1.Secondary mode + original-name input: the generic fetch hits the visible clone in
+ *           bundleInfos_, the re-fetch picks the hidden primary from tempBundleInfos_ and
+ *           updates the captured truth to true; the new user's bundle info and data group
+ *           infos land on the primary (temp side), while the visible clone stays untouched
+ */
+HWTEST_F(BmsDualModeInstallTest, InnerProcessInstallByPreInstallInfo_0610, Function | SmallTest | Level0)
+{
+    EnsureInstalldService();
+    EnableSecondaryMode();
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    dataMgr->dataStorage_ = std::make_shared<BundleDataStorageSpy>();
+    BaseBundleInstaller installer;
+    installer.dataMgr_ = dataMgr;
+    // secondary mode: clone visible in bundleInfos_, primary hidden in tempBundleInfos_
+    InnerBundleInfo cloneInfo = MakeCat7Info(true);
+    ApplicationInfo appInfo;
+    appInfo.bundleName = BUNDLE_NAME;
+    cloneInfo.SetBaseApplicationInfo(appInfo);
+    InnerBundleInfo primaryInfo = MakeCat7Info(false);
+    primaryInfo.SetBaseApplicationInfo(appInfo);
+    DataGroupInfo seedGroup;
+    seedGroup.dataGroupId = DUAL_MODE_DATA_GROUP_ID;
+    seedGroup.uuid = DUAL_MODE_DATA_GROUP_UUID;
+    seedGroup.userId = Constants::DEFAULT_USERID;
+    seedGroup.uid = DUAL_MODE_SEED_GROUP_UID;
+    seedGroup.gid = seedGroup.uid;
+    primaryInfo.AddDataGroupInfo(DUAL_MODE_DATA_GROUP_ID, seedGroup);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, cloneInfo);
+    dataMgr->tempBundleInfos_.emplace(BUNDLE_NAME, primaryInfo);
+    ScopeGuard bundleInfoGuard([&] {
+        dataMgr->bundleInfos_.erase(BUNDLE_NAME);
+        dataMgr->tempBundleInfos_.erase(BUNDLE_NAME);
+    });
+
+    InstallParam installParam;
+    installParam.userId = TEST_USERID;
+    installParam.isPreInstallApp = true;
+    int32_t uid = Constants::INVALID_UID;
+    ErrCode ret = installer.InnerProcessInstallByPreInstallInfo(BUNDLE_NAME, installParam, uid);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_TRUE(installer.crossModeFetchTruth_);
+    // the new user's bundle info was committed on the re-fetched primary (temp side)
+    EXPECT_TRUE(dataMgr->tempBundleInfos_[BUNDLE_NAME].HasInnerBundleUserInfo(TEST_USERID));
+
+    auto hiddenInfos = dataMgr->tempBundleInfos_[BUNDLE_NAME].GetDataGroupInfos();
+    ASSERT_NE(hiddenInfos.find(DUAL_MODE_DATA_GROUP_ID), hiddenInfos.end());
+    bool hasNewUser = false;
+    for (const auto &info : hiddenInfos[DUAL_MODE_DATA_GROUP_ID]) {
+        if (info.userId == TEST_USERID) {
+            hasNewUser = true;
+            EXPECT_EQ(info.uuid, DUAL_MODE_DATA_GROUP_UUID);
+        }
+    }
+    EXPECT_TRUE(hasNewUser);
+    EXPECT_TRUE(dataMgr->bundleInfos_[BUNDLE_NAME].GetDataGroupInfos().empty());
+}
+
+/**
+ * @tc.number: InnerProcessInstallByPreInstallInfo_0620
+ * @tc.name: test preinstall recovery falls back to fresh install when the primary is absent
+ * @tc.desc: 1.Secondary mode + original-name input with the clone visible but no primary in
+ *           tempBundleInfos_: the re-fetch fails and the flow must treat the app as not
+ *           installed (fallback to fresh install) instead of silently creating the new user's
+ *           data on the clone; with no preinstall paths available the fresh-install branch
+ *           reports RECOVER_INVALID_BUNDLE_NAME
+ */
+HWTEST_F(BmsDualModeInstallTest, InnerProcessInstallByPreInstallInfo_0620, Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    dataMgr->dataStorage_ = std::make_shared<BundleDataStorageSpy>();
+    BaseBundleInstaller installer;
+    installer.dataMgr_ = dataMgr;
+    // clone visible, primary absent from tempBundleInfos_
+    InnerBundleInfo cloneInfo = MakeCat7Info(true);
+    ApplicationInfo appInfo;
+    appInfo.bundleName = BUNDLE_NAME;
+    cloneInfo.SetBaseApplicationInfo(appInfo);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, cloneInfo);
+    ScopeGuard bundleInfoGuard([&] { dataMgr->bundleInfos_.erase(BUNDLE_NAME); });
+
+    InstallParam installParam;
+    installParam.userId = TEST_USERID;
+    installParam.isPreInstallApp = true;
+    int32_t uid = Constants::INVALID_UID;
+    // the fallback branch must be taken (not the update path on the clone): without preinstall
+    // bundle paths the fresh-install lookup fails with RECOVER_INVALID_BUNDLE_NAME
+    EXPECT_EQ(installer.InnerProcessInstallByPreInstallInfo(BUNDLE_NAME, installParam, uid),
+        ERR_APPEXECFWK_RECOVER_INVALID_BUNDLE_NAME);
+    // no user data was created on the visible clone
+    EXPECT_FALSE(dataMgr->bundleInfos_[BUNDLE_NAME].HasInnerBundleUserInfo(TEST_USERID));
+}
+
+/**
+ * @tc.number: CreateDataGroupDirs_CrossMode_0100
+ * @tc.name: test CreateDataGroupDirs generates data group infos on the hidden variant
+ * @tc.desc: 1.Fan-out secondary pass (role=SECONDARY) in primary mode: the fetch routes to
+ *           tempBundleInfos_ and captures the truth; CreateDataGroupDirs reuses it so the data
+ *           group infos from the provision dataGroupIds land on the hidden clone variant, and
+ *           the visible primary variant is not polluted
+ */
+HWTEST_F(BmsDualModeInstallTest, CreateDataGroupDirs_CrossMode_0100, Function | SmallTest | Level0)
+{
+    EnablePrimaryMode();
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    dataMgr->dataStorage_ = std::make_shared<BundleDataStorageSpy>();
+    BaseBundleInstaller installer;
+    installer.dataMgr_ = dataMgr;
+    installer.dualModeInstallRole_ = DualModeInstallRole::SECONDARY;
+    installer.userId_ = TEST_USERID;
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, MakeCat7Info(false));
+    dataMgr->tempBundleInfos_.emplace(BUNDLE_NAME, MakeCat7Info(true));
+    ScopeGuard bundleInfoGuard([&] {
+        dataMgr->bundleInfos_.erase(BUNDLE_NAME);
+        dataMgr->tempBundleInfos_.erase(BUNDLE_NAME);
+    });
+
+    // fetch: role=SECONDARY in primary mode is cross-mode; truth is captured for the task
+    InnerBundleInfo oldInfo;
+    bool isAppExist = false;
+    EXPECT_TRUE(installer.InitTempBundleFromCache(oldInfo, isAppExist, BUNDLE_NAME));
+    EXPECT_TRUE(isAppExist);
+    EXPECT_TRUE(oldInfo.IsDualModeCloneApp());
+    EXPECT_TRUE(installer.crossModeFetchTruth_);
+
+    // commit segment: CreateDataGroupDirs reuses the captured truth
+    Security::Verify::HapVerifyResult verifyResult;
+    Security::Verify::ProvisionInfo provisionInfo;
+    provisionInfo.bundleInfo.bundleName = BUNDLE_NAME;
+    provisionInfo.bundleInfo.dataGroupIds = { DUAL_MODE_DATA_GROUP_ID };
+    verifyResult.SetProvisionInfo(provisionInfo);
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyResults = { verifyResult };
+    InnerBundleInfo emptyOldInfo;
+    EXPECT_EQ(installer.CreateDataGroupDirs(hapVerifyResults, emptyOldInfo), ERR_OK);
+
+    // the data group infos land on the hidden clone variant with a legal uid encoding
+    // (fresh dataMgr: the first free uniqueId is 1)
+    auto tempInfos = dataMgr->tempBundleInfos_[BUNDLE_NAME].GetDataGroupInfos();
+    ASSERT_NE(tempInfos.find(DUAL_MODE_DATA_GROUP_ID), tempInfos.end());
+    ASSERT_FALSE(tempInfos[DUAL_MODE_DATA_GROUP_ID].empty());
+    const auto &generated = tempInfos[DUAL_MODE_DATA_GROUP_ID][0];
+    EXPECT_EQ(generated.userId, TEST_USERID);
+    EXPECT_EQ(generated.uid, TEST_USERID * Constants::BASE_USER_RANGE + 1 + 100000);
+    EXPECT_EQ(generated.uid, generated.gid);
+    EXPECT_FALSE(generated.uuid.empty());
+    EXPECT_TRUE(dataMgr->bundleInfos_[BUNDLE_NAME].GetDataGroupInfos().empty());
+}
+
+/**
+ * @tc.number: MarkInstallFinish_CrossMode_0100
+ * @tc.name: test MarkInstallFinish commits the bundle info on the hidden variant
+ * @tc.desc: 1.Cross-mode update: with the captured truth=true, MarkInstallFinish routes
+ *           UpdateInnerBundleInfo to tempBundleInfos_; the hidden variant is committed ENABLED
+ *           and the visible map stays untouched
+ */
+HWTEST_F(BmsDualModeInstallTest, MarkInstallFinish_CrossMode_0100, Function | SmallTest | Level0)
+{
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    dataMgr->dataStorage_ = std::make_shared<BundleDataStorageSpy>();
+    BaseBundleInstaller installer;
+    installer.dataMgr_ = dataMgr;
+    installer.bundleName_ = BUNDLE_NAME;
+    installer.isAppExist_ = true;
+    installer.crossModeFetchTruth_ = true;  // simulate a cross-mode fetch
+    InnerBundleInfo cloneInfo = MakeCat7Info(true);
+    ApplicationInfo appInfo;
+    appInfo.bundleName = BUNDLE_NAME;
+    cloneInfo.SetBaseApplicationInfo(appInfo);
+    cloneInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::DISABLED);
+    dataMgr->tempBundleInfos_.emplace(BUNDLE_NAME, cloneInfo);
+    ScopeGuard bundleInfoGuard([&] { dataMgr->tempBundleInfos_.erase(BUNDLE_NAME); });
+    installer.tempInfo_.SetTempBundleInfo(cloneInfo);
+
+    // empty module path map: no SPM session is started in this test, so the session commit is a
+    // no-op returning ERR_OK and the assertion still pins the routing behavior
+    std::map<std::string, std::string> modulePathMap;
+    EXPECT_EQ(installer.MarkInstallFinish(modulePathMap), ERR_OK);
+    EXPECT_EQ(dataMgr->tempBundleInfos_[BUNDLE_NAME].GetBundleStatus(),
+        InnerBundleInfo::BundleStatus::ENABLED);
+    EXPECT_EQ(dataMgr->bundleInfos_.count(BUNDLE_NAME), 0u);
+}
+
+/**
+ * @tc.number: MarkInstallFinish_CrossMode_0200
+ * @tc.name: test MarkInstallFinish fresh-install commit lands on the hidden variant
+ * @tc.desc: 1.Cross-mode fresh install (isAppExist_=false + truth=true): AddInnerBundleInfo
+ *           must route to tempBundleInfos_ (install state keyed by the clone-prefixed name)
+ */
+HWTEST_F(BmsDualModeInstallTest, MarkInstallFinish_CrossMode_0200, Function | SmallTest | Level0)
+{
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    dataMgr->dataStorage_ = std::make_shared<BundleDataStorageSpy>();
+    BaseBundleInstaller installer;
+    installer.dataMgr_ = dataMgr;
+    installer.bundleName_ = BUNDLE_NAME;
+    installer.isAppExist_ = false;
+    installer.crossModeFetchTruth_ = true;  // simulate a cross-mode fresh install
+    InnerBundleInfo cloneInfo = MakeCat7Info(true);
+    ApplicationInfo appInfo;
+    appInfo.bundleName = BUNDLE_NAME;
+    cloneInfo.SetBaseApplicationInfo(appInfo);
+    cloneInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::DISABLED);
+    installer.tempInfo_.SetTempBundleInfo(cloneInfo);
+    // AddInnerBundleInfo requires the install state; a clone info keys it by the prefixed name
+    dataMgr->installStates_[PREFIXED_NAME] = InstallState::INSTALL_START;
+    ScopeGuard stateGuard([&] { dataMgr->installStates_.erase(PREFIXED_NAME); });
+    // the committed entry lands in tempBundleInfos_ during the call; clean it up like every
+    // other seeded map entry in this file
+    ScopeGuard bundleInfoGuard([&] { dataMgr->tempBundleInfos_.erase(BUNDLE_NAME); });
+
+    // empty module path map: no SPM session is started in this test, so the session commit is a
+    // no-op returning ERR_OK and the assertion still pins the Add-branch routing behavior
+    std::map<std::string, std::string> modulePathMap;
+    EXPECT_EQ(installer.MarkInstallFinish(modulePathMap), ERR_OK);
+    EXPECT_EQ(dataMgr->tempBundleInfos_.count(BUNDLE_NAME), 1u);
+    EXPECT_EQ(dataMgr->tempBundleInfos_[BUNDLE_NAME].GetBundleStatus(),
+        InnerBundleInfo::BundleStatus::ENABLED);
+    EXPECT_EQ(dataMgr->bundleInfos_.count(BUNDLE_NAME), 0u);
+}
+
+/**
+ * @tc.number: RemoveDataGroupDirs_DualMode_0100
+ * @tc.name: test uninstall data group cleanup follows the fetch routing truth
+ * @tc.desc: 1.Secondary mode, original-name uninstall: the fetch hits the visible clone variant
+ *           in bundleInfos_ (truth=false); the group cleanup driven by the same truth removes
+ *           the clone's per-user entries while the hidden primary variant keeps its own
+ */
+HWTEST_F(BmsDualModeInstallTest, RemoveDataGroupDirs_DualMode_0100, Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    dataMgr->dataStorage_ = std::make_shared<BundleDataStorageSpy>();
+    BaseBundleInstaller installer;
+    installer.dataMgr_ = dataMgr;
+    // secondary mode: clone visible in bundleInfos_, primary hidden in tempBundleInfos_,
+    // both variants legitimately hold the same data group
+    DataGroupInfo sharedGroup;
+    sharedGroup.dataGroupId = DUAL_MODE_DATA_GROUP_ID;
+    sharedGroup.uuid = DUAL_MODE_DATA_GROUP_UUID;
+    sharedGroup.userId = TEST_USERID;
+    sharedGroup.uid = TEST_USERID * Constants::BASE_USER_RANGE + 1 + 100000;
+    sharedGroup.gid = sharedGroup.uid;
+    InnerBundleInfo cloneInfo = MakeCat7Info(true);
+    cloneInfo.AddDataGroupInfo(DUAL_MODE_DATA_GROUP_ID, sharedGroup);
+    InnerBundleInfo primaryInfo = MakeCat7Info(false);
+    primaryInfo.AddDataGroupInfo(DUAL_MODE_DATA_GROUP_ID, sharedGroup);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, cloneInfo);
+    dataMgr->tempBundleInfos_.emplace(BUNDLE_NAME, primaryInfo);
+    ScopeGuard bundleInfoGuard([&] {
+        dataMgr->bundleInfos_.erase(BUNDLE_NAME);
+        dataMgr->tempBundleInfos_.erase(BUNDLE_NAME);
+    });
+
+    InnerBundleInfo oldInfo;
+    bool isAppExist = false;
+    EXPECT_TRUE(installer.InitTempBundleFromCache(oldInfo, isAppExist, BUNDLE_NAME));
+    EXPECT_TRUE(isAppExist);
+    EXPECT_TRUE(oldInfo.IsDualModeCloneApp());
+    EXPECT_FALSE(installer.crossModeFetchTruth_);
+
+    // the same truth drives the uninstall group cleanup (ProcessBundleUninstall wiring)
+    EXPECT_EQ(installer.RemoveDataGroupDirs(BUNDLE_NAME, TEST_USERID, false,
+        installer.crossModeFetchTruth_), ERR_OK);
+
+    auto visibleInfos = dataMgr->bundleInfos_[BUNDLE_NAME].GetDataGroupInfos();
+    ASSERT_NE(visibleInfos.find(DUAL_MODE_DATA_GROUP_ID), visibleInfos.end());
+    EXPECT_TRUE(visibleInfos[DUAL_MODE_DATA_GROUP_ID].empty());
+    auto hiddenInfos = dataMgr->tempBundleInfos_[BUNDLE_NAME].GetDataGroupInfos();
+    ASSERT_NE(hiddenInfos.find(DUAL_MODE_DATA_GROUP_ID), hiddenInfos.end());
+    EXPECT_FALSE(hiddenInfos[DUAL_MODE_DATA_GROUP_ID].empty());
 }
 
 // ====================== BaseBundleInstaller::InitTempBundleFromCache ======================

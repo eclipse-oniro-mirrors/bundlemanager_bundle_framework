@@ -22,6 +22,9 @@
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
 #include "bundle_multiuser_installer.h"
+#include "data_group_info.h"
+#include "inner_bundle_info.h"
+#include "scope_guard.h"
 
 using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
@@ -33,6 +36,9 @@ size_t DATA_SIZE = 4;
 const std::string OVER_MAX_NAME_SIZE(260, 'x');
 constexpr int32_t TEST_INSTALLER_ID = 1024;
 constexpr int32_t DEFAULT_INSTALLER_ID = 0;
+// data group uid encoding helpers: userId * BASE_USER_RANGE + uniqueId + DATA_GROUP_UID_OFFSET
+constexpr int32_t TEST_GROUP_UNIQUE_ID = 1;
+constexpr int32_t TEST_GROUP_UID_OFFSET = 100000;
 constexpr int32_t TEST_INSTALLER_UID = 100;
 constexpr int32_t INVAILD_ID = -1;
 
@@ -588,6 +594,67 @@ HWTEST_F(BmsBundleMultiuserInstallIPCTest, CreateDataGroupDir_0200, Function | S
     BundleMultiUserInstaller installer;
     installer.CreateDataGroupDir("test", TEST_INSTALLER_UID);
     EXPECT_TRUE(installer.GetDataMgr() != ERR_OK);
+}
+
+/**
+ * @tc.number: CreateDataGroupDir_0300
+ * @tc.name: CreateDataGroupDir expands the new user on both dual-mode variants
+ * @tc.desc: test CreateDataGroupDir for a dual-variant app whose entries exist in both
+ *           bundleInfos_ and tempBundleInfos_: the new user's data group entries must be
+ *           generated on both sides (the temp-side call is a no-op for single-variant apps)
+ */
+HWTEST_F(BmsBundleMultiuserInstallIPCTest, CreateDataGroupDir_0300, Function | SmallTest | Level0)
+{
+    BundleMultiUserInstaller installer;
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    installer.dataMgr_ = dataMgr;
+    const std::string bundleName = "com.example.multiuser.datagroup";
+    const std::string dataGroupId = "multiuser-data-group-id";
+    const std::string dataGroupUuid = "4105e98a-12ae-4a4f-8ed1-fc32e5f45416";
+    DataGroupInfo seedGroup;
+    seedGroup.dataGroupId = dataGroupId;
+    seedGroup.uuid = dataGroupUuid;
+    seedGroup.userId = DEFAULT_INSTALLER_ID;
+    seedGroup.uid = DEFAULT_INSTALLER_ID * Constants::BASE_USER_RANGE + TEST_GROUP_UNIQUE_ID
+        + TEST_GROUP_UID_OFFSET;
+    seedGroup.gid = seedGroup.uid;
+    InnerBundleInfo primaryInfo;
+    primaryInfo.AddDataGroupInfo(dataGroupId, seedGroup);
+    InnerBundleInfo cloneInfo;
+    cloneInfo.AddDataGroupInfo(dataGroupId, seedGroup);
+    dataMgr->bundleInfos_.emplace(bundleName, primaryInfo);
+    dataMgr->tempBundleInfos_.emplace(bundleName, cloneInfo);
+    ScopeGuard bundleInfoGuard([&] {
+        dataMgr->bundleInfos_.erase(bundleName);
+        dataMgr->tempBundleInfos_.erase(bundleName);
+    });
+
+    installer.CreateDataGroupDir(bundleName, TEST_INSTALLER_UID);
+
+    int32_t expectedUid =
+        TEST_INSTALLER_UID * Constants::BASE_USER_RANGE + TEST_GROUP_UNIQUE_ID + TEST_GROUP_UID_OFFSET;
+    auto visibleInfos = dataMgr->bundleInfos_[bundleName].GetDataGroupInfos();
+    ASSERT_NE(visibleInfos.find(dataGroupId), visibleInfos.end());
+    bool visibleHasNewUser = false;
+    for (const auto &info : visibleInfos[dataGroupId]) {
+        if (info.userId == TEST_INSTALLER_UID) {
+            visibleHasNewUser = true;
+            EXPECT_EQ(info.uid, expectedUid);
+            EXPECT_EQ(info.uuid, dataGroupUuid);
+        }
+    }
+    EXPECT_TRUE(visibleHasNewUser);
+    auto hiddenInfos = dataMgr->tempBundleInfos_[bundleName].GetDataGroupInfos();
+    ASSERT_NE(hiddenInfos.find(dataGroupId), hiddenInfos.end());
+    bool hiddenHasNewUser = false;
+    for (const auto &info : hiddenInfos[dataGroupId]) {
+        if (info.userId == TEST_INSTALLER_UID) {
+            hiddenHasNewUser = true;
+            EXPECT_EQ(info.uid, expectedUid);
+            EXPECT_EQ(info.uuid, dataGroupUuid);
+        }
+    }
+    EXPECT_TRUE(hiddenHasNewUser);
 }
 
 /**

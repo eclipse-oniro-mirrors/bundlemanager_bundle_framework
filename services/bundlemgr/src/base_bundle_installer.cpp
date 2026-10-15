@@ -2160,7 +2160,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     ProcessUpdateShortcut();
     BundleResourceHelper::AddResourceInfoByBundleName(bundleName_, userId_,
         (isAppExist_ && hasInstalledInUser_) ? ADD_RESOURCE_TYPE::UPDATE_BUNDLE : ADD_RESOURCE_TYPE::INSTALL_BUNDLE,
-        !isAppExist_, IsCrossModeInstall());
+        !isAppExist_, crossModeFetchTruth_);
     if (isAppExist_) {
         BundleResourceHelper::UpdateAlternateResourceInfoByBundleName(bundleName_);
     }
@@ -2508,7 +2508,11 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     }
 #endif
 
-    auto res = RemoveDataGroupDirs(oldInfo.GetBundleName(), userId_, installParam.isKeepData);
+    // Dual-mode: the uninstalled variant may be the hidden one stored in tempBundleInfos_;
+    // crossModeFetchTruth_ is the map the variant was actually fetched from (InitTempBundleFromCache),
+    // immune to a mid-uninstall mode param flip.
+    auto res = RemoveDataGroupDirs(oldInfo.GetBundleName(), userId_, installParam.isKeepData,
+        crossModeFetchTruth_);
     if (res != ERR_OK) {
         APP_LOGW("remove group dir failed for %{public}s", oldInfo.GetBundleName().c_str());
     }
@@ -3057,6 +3061,9 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
             if (dataMgr_->FetchTempBundleInfo(bundleName, primaryInfo)) {
                 oldInfo = primaryInfo;
                 tempInfo_.SetTempBundleInfo(oldInfo);
+                // The re-fetched primary variant lives in tempBundleInfos_; keep the captured
+                // routing truth consistent with the variant actually being processed.
+                crossModeFetchTruth_ = true;
             } else {
                 // Primary variant is absent (first-boot primary failed but clone succeeded):
                 // treat as a fresh install so the !isAppExist_ branch re-installs the primary
@@ -3168,7 +3175,9 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
 
             uid = oldInfo.GetUid(userId_);
             GetInstallEventInfo(oldInfo, sysEventInfo_);
-            bool toTempBundle = ComputeToTempBundle(oldInfo);
+            // Dual-mode: reuse the routing truth captured at fetch so the new user's bundle info
+            // and data group infos are written to the map the variant actually lives in.
+            bool toTempBundle = crossModeFetchTruth_;
             if (!dataMgr_->UpdateInnerBundleInfo(oldInfo, true, toTempBundle)) {
                 if (!dataMgr_->UpdateInnerBundleInfo(oldInfo, true, toTempBundle)) {
                     LOG_W(BMS_TAG_INSTALLER, "save mark failed, -n:%{public}s", bundleName_.c_str());
@@ -3202,7 +3211,7 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
             DefaultAppMgr::GetInstance().HandleInstallBundle(userId_, bundleName_);
 #endif
             UtdHandler::InstallUtdAsync(bundleName, userId_);
-            GenerateNewUserDataGroupInfos(oldInfo);
+            GenerateNewUserDataGroupInfos(oldInfo, toTempBundle);
             isBundleCrossAppSharedConfig_ = oldInfo.IsBundleCrossAppSharedConfig();
             // remove userid record in preInstallBundleInfo
             PreInstallBundleInfo preInstallBundleInfo;
@@ -4475,7 +4484,10 @@ ErrCode BaseBundleInstaller::CreateDataGroupDirs(
     }
     std::unordered_set<std::string> groupIds;
     GetDataGroupIds(hapVerifyResults, groupIds);
-    dataMgr_->GenerateDataGroupInfos(bundleName_, groupIds, userId_, true);
+    // Dual-mode: crossModeFetchTruth_ is captured at fetch and shared with MarkInstallFinish, so
+    // the data group infos are generated on the variant just installed (hidden cross-mode
+    // variants live in tempBundleInfos_), never diverging from the bundle-info commit.
+    dataMgr_->GenerateDataGroupInfos(bundleName_, groupIds, userId_, true, crossModeFetchTruth_);
     return ERR_OK;
 }
 
@@ -4821,13 +4833,14 @@ void BaseBundleInstaller::DeleteGroupDirsForException(const InnerBundleInfo &old
     dataMgr_->DeleteGroupDirsForException(oldInfo, userId_);
 }
 
-ErrCode BaseBundleInstaller::RemoveDataGroupDirs(const std::string &bundleName, int32_t userId, bool isKeepData) const
+ErrCode BaseBundleInstaller::RemoveDataGroupDirs(const std::string &bundleName, int32_t userId,
+    bool isKeepData, bool toTempBundle) const
 {
     if (dataMgr_ == nullptr) {
         LOG_E(BMS_TAG_INSTALLER, "dataMgr_ is nullptr");
         return ERR_APPEXECFWK_NULL_PTR;
     }
-    dataMgr_->DeleteUserDataGroupInfos(bundleName, userId, isKeepData);
+    dataMgr_->DeleteUserDataGroupInfos(bundleName, userId, isKeepData, toTempBundle);
     return ERR_OK;
 }
 
@@ -6735,13 +6748,13 @@ bool BaseBundleInstaller::UpdateExtensionDirsApl(const std::vector<std::string> 
     return res;
 }
 
-void BaseBundleInstaller::GenerateNewUserDataGroupInfos(InnerBundleInfo &info) const
+void BaseBundleInstaller::GenerateNewUserDataGroupInfos(InnerBundleInfo &info, bool toTempBundle) const
 {
     if (dataMgr_ == nullptr) {
         LOG_E(BMS_TAG_INSTALLER, "dataMgr_ is nullptr");
         return;
     }
-    dataMgr_->GenerateNewUserDataGroupInfos(info.GetBundleName(), userId_);
+    dataMgr_->GenerateNewUserDataGroupInfos(info.GetBundleName(), userId_, toTempBundle);
 }
 
 void BaseBundleInstaller::GetCreateExtensionDirs(std::unordered_map<std::string, InnerBundleInfo> &newInfos)
@@ -7286,6 +7299,9 @@ bool BaseBundleInstaller::InitTempBundleFromCache(InnerBundleInfo &info, bool &i
     if (!crossMode && isClonePackage && DualModeHelper::IsDualModeDevice()) {
         crossMode = !DualModeHelper::IsSecondaryMode();
     }
+    // Capture the routing truth for the whole task: all later routing decisions reuse it so a
+    // mode param flip mid-task cannot make them disagree with the map the variant was fetched from.
+    crossModeFetchTruth_ = crossMode;
     isAppExist = crossMode
         ? dataMgr_->FetchTempBundleInfo(lookupKey, info)
         : dataMgr_->FetchInnerBundleInfo(lookupKey, info);
@@ -8113,6 +8129,7 @@ void BaseBundleInstaller::ResetInstallProperties()
     dualModeInstallRole_ = DualModeInstallRole::NONE;
     resolvedDeviceModeDistributionPolicy_ = DeviceModeDistributionPolicy::UNSPECIFIED;
     dualModeErmsCache_ = DualModeErmsCache{};
+    crossModeFetchTruth_ = false;
     tempInfo_ = InstallerBundleTempInfo{};
     isModuleUpdate_ = false;
     isEntryInstalled_ = false;
@@ -10002,8 +10019,10 @@ ErrCode BaseBundleInstaller::MarkInstallFinish(const std::map<std::string, std::
         return ERR_APPEXECFWK_NULL_PTR;
     }
     if (isAppExist_) {
-        if (!dataMgr_->UpdateInnerBundleInfo(info, true, IsCrossModeInstall())) {
-            if (!dataMgr_->UpdateInnerBundleInfo(info, true, IsCrossModeInstall())) {
+        // Dual-mode: crossModeFetchTruth_ (captured at fetch) keeps the update target map identical
+        // to the one the old info was read from, even if mode params flip mid-install.
+        if (!dataMgr_->UpdateInnerBundleInfo(info, true, crossModeFetchTruth_)) {
+            if (!dataMgr_->UpdateInnerBundleInfo(info, true, crossModeFetchTruth_)) {
                 LOG_W(BMS_TAG_INSTALLER, "save mark failed, -n:%{public}s", bundleName_.c_str());
                 return ERR_APPEXECFWK_ADD_BUNDLE_ERROR;
             }
@@ -10024,7 +10043,7 @@ ErrCode BaseBundleInstaller::MarkInstallFinish(const std::map<std::string, std::
         }
         return ERR_OK;
     }
-    if (!dataMgr_->AddInnerBundleInfo(bundleName_, info, false, IsCrossModeInstall())) {
+    if (!dataMgr_->AddInnerBundleInfo(bundleName_, info, false, crossModeFetchTruth_)) {
         LOG_E(BMS_TAG_INSTALLER, "add bundle failed, -n:%{public}s", bundleName_.c_str());
         dataMgr_->UpdateBundleInstallState(GetEffectiveBundleName(), InstallState::UNINSTALL_START);
         dataMgr_->UpdateBundleInstallState(GetEffectiveBundleName(), InstallState::UNINSTALL_SUCCESS);
