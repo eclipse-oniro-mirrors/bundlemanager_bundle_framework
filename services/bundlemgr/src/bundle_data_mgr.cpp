@@ -11581,7 +11581,7 @@ ErrCode BundleDataMgr::GetAppProvisionInfoInDevice(const std::string &bundleName
         if (bundleType == BundleType::SHARED || bundleType == BundleType::SKILL ||
             responseUserId == Constants::INVALID_USERID) {
             APP_LOGW("userId: %{public}d is invalid, and will find next bundleInfo", userId);
-            it = bundleInfoList.erase(it); 
+            it = bundleInfoList.erase(it);
         } else {
             ++it;
         }
@@ -11590,6 +11590,7 @@ ErrCode BundleDataMgr::GetAppProvisionInfoInDevice(const std::string &bundleName
         APP_LOGW("GetAppProvisionInfoInDevice bundleName is not existed. bundleName:%{public}s", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
+    appProvisionInfos.clear();
     for (const auto& bundleInfo : bundleInfoList) {
         bool isDualModeCloneApp = bundleInfo.IsDualModeCloneApp();
         std::string effectiveBundleName = isDualModeCloneApp ?
