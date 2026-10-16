@@ -181,6 +181,11 @@ bool AccountHelper::IsPrivateSpaceUser(const int32_t userId)
     return false;
 }
 
+bool AccountHelper::IsAdminUser(const int32_t userId)
+{
+    return false;
+}
+
 bool AccountHelper::CheckUserIsolation(
     const int32_t targetUserId, const std::unordered_set<int32_t> &installedUserIds)
 {

@@ -55,7 +55,6 @@ void SetGetCallingUid(int32_t uid);
 void ResetCallingUid();
 void SetNativeTokenTypeForTest(bool value);
 void SetIsNativeTokenTypeOnlyForTest(bool value);
-void SetCheckUserForegroundForTest(bool value);
 void SetPermissionResultForTest(const std::string &permissionName, bool granted);
 
 namespace OHOS {
@@ -68,6 +67,10 @@ const std::string APPID = "appId";
 const std::string HAP_FILE_PATH = "/data/test/resource/bms/permission_bundle/";
 const std::string DEFAULT_APP_VIDEO = "VIDEO";
 const int32_t USERID = 100;
+// user 105 never exists in the os account service, so the caller of uid
+// 21000001 is never an admin user whatever the running environment is
+const int32_t NON_ADMIN_USERID = 105;
+const int32_t NON_ADMIN_CALLING_UID = 21000001;
 const int32_t FLAGS = 0;
 const int32_t UID = 0;
 const int32_t APP_INDEX = 0;
@@ -4540,26 +4543,91 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, CreateSharedBundleStream_0100, F
 }
 
 /**
- * @tc.number: Install_CheckUserForeground_0100
- * @tc.name: test Install of BundleInstallerHost with ALLOW_USE_BM and background user
- * @tc.desc: 1. developer mode and ALLOW_USE_BM are enabled
- *           2. Install false when the specified user is not foreground user
+ * @tc.number: IsAcrossUser_0001
+ * @tc.name: test IsAcrossUser of BundleInstallerHost
+ * @tc.desc: 1. unspecified user is never across user; all user applies to every
+ *              user and user 0 and user 1 are reserved system users, so they
+ *              are always across user
+ *           2. the user same as the calling user is not across user
+ *           3. the user different from the calling user is across user
  */
-HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, Install_CheckUserForeground_0100, Function | SmallTest | Level0)
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, IsAcrossUser_0001, Function | SmallTest | Level0)
+{
+    bundleInstallerHost_->Init();
+    // the default calling uid 20000001 belongs to user 100
+    ResetCallingUid();
+    EXPECT_FALSE(bundleInstallerHost_->IsAcrossUser(Constants::UNSPECIFIED_USERID));
+    EXPECT_TRUE(bundleInstallerHost_->IsAcrossUser(Constants::ALL_USERID));
+    EXPECT_TRUE(bundleInstallerHost_->IsAcrossUser(Constants::DEFAULT_USERID));
+    EXPECT_TRUE(bundleInstallerHost_->IsAcrossUser(Constants::U1));
+    EXPECT_FALSE(bundleInstallerHost_->IsAcrossUser(USERID));
+    EXPECT_TRUE(bundleInstallerHost_->IsAcrossUser(USERID + 1));
+
+    // the calling uid 5523 belongs to user 0
+    SetGetCallingUid(5523);
+    EXPECT_FALSE(bundleInstallerHost_->IsAcrossUser(Constants::UNSPECIFIED_USERID));
+    EXPECT_TRUE(bundleInstallerHost_->IsAcrossUser(Constants::ALL_USERID));
+    EXPECT_TRUE(bundleInstallerHost_->IsAcrossUser(Constants::DEFAULT_USERID));
+    EXPECT_TRUE(bundleInstallerHost_->IsAcrossUser(Constants::U1));
+    EXPECT_TRUE(bundleInstallerHost_->IsAcrossUser(USERID));
+    ResetCallingUid();
+}
+
+/**
+ * @tc.number: Install_IsAcrossUser_0100
+ * @tc.name: test Install of BundleInstallerHost with ALLOW_USE_BM and across user
+ * @tc.desc: 1. developer mode and ALLOW_USE_BM are enabled
+ *           2. Install false when the specified user is across from the calling user
+ *           3. Install true when the specified user is the same as the calling user
+ *           4. the calling user is a user that never exists in the os account
+ *              service, so it is never an admin user
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, Install_IsAcrossUser_0100, Function | SmallTest | Level0)
 {
     auto isDeveloperMode = OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false);
     OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "true");
     SetPermissionResultForTest(Constants::PERMISSION_ALLOW_USE_BM, true);
     InstallParam installParam;
-    installParam.userId = USERID;
+    // the calling uid 21000001 belongs to user 105, user 101 is across from the calling user
+    installParam.userId = USERID + 1;
     std::vector<std::string> bundleFilePaths;
     bundleInstallerHost_->Init();
     SetUserFromShellForTest(true);
-    SetCheckUserForegroundForTest(false);
+    SetGetCallingUid(NON_ADMIN_CALLING_UID);
     sptr<MockStatusReceiver> receiver(new (std::nothrow) MockStatusReceiver());
     bool ret = bundleInstallerHost_->Install(bundleFilePaths, installParam, receiver);
     EXPECT_FALSE(ret);
     EXPECT_EQ(receiver->GetResultCode(), ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED);
+
+    // user 0 and user 1 are reserved system users, requests targeting them are
+    // across user and rejected for the non-admin calling user
+    installParam.userId = Constants::DEFAULT_USERID;
+    sptr<MockStatusReceiver> receiverSystemUser(new (std::nothrow) MockStatusReceiver());
+    ret = bundleInstallerHost_->Install(bundleFilePaths, installParam, receiverSystemUser);
+    EXPECT_FALSE(ret);
+    EXPECT_EQ(receiverSystemUser->GetResultCode(), ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED);
+
+    installParam.userId = Constants::U1;
+    sptr<MockStatusReceiver> receiverU1(new (std::nothrow) MockStatusReceiver());
+    ret = bundleInstallerHost_->Install(bundleFilePaths, installParam, receiverU1);
+    EXPECT_FALSE(ret);
+    EXPECT_EQ(receiverU1->GetResultCode(), ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED);
+
+    // all user applies the install to every user, the request is across user
+    // and rejected for the non-admin calling user
+    installParam.userId = Constants::ALL_USERID;
+    sptr<MockStatusReceiver> receiverAllUser(new (std::nothrow) MockStatusReceiver());
+    ret = bundleInstallerHost_->Install(bundleFilePaths, installParam, receiverAllUser);
+    EXPECT_FALSE(ret);
+    EXPECT_EQ(receiverAllUser->GetResultCode(), ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED);
+
+    // the specified user is the same as the calling user, install task is created
+    installParam.userId = NON_ADMIN_USERID;
+    sptr<MockStatusReceiver> receiverSameUser(new (std::nothrow) MockStatusReceiver());
+    ret = bundleInstallerHost_->Install(bundleFilePaths, installParam, receiverSameUser);
+    EXPECT_TRUE(ret);
+    // the bundle file paths are empty, the asynchronous install task always fails
+    EXPECT_NE(receiverSameUser->GetResultCode(), ERR_OK);
 
     OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "false");
     sptr<MockStatusReceiver> receiverWithoutDevMode(new (std::nothrow) MockStatusReceiver());
@@ -4572,29 +4640,94 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, Install_CheckUserForeground_0100
     } else {
         OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "false");
     }
+    ResetCallingUid();
     ResetTestValues();
 }
 
 /**
- * @tc.number: Uninstall_CheckUserForeground_0100
- * @tc.name: test Uninstall of BundleInstallerHost with ALLOW_USE_BM and background user
+ * @tc.number: Uninstall_IsAcrossUser_0100
+ * @tc.name: test Uninstall of BundleInstallerHost with ALLOW_USE_BM and across user
  * @tc.desc: 1. developer mode and ALLOW_USE_BM are enabled
- *           2. Uninstall false when the specified user is not foreground user
+ *           2. Uninstall false when the specified user is across from the calling user
+ *           3. Uninstall passes the across user check when the specified user
+ *              is the same as the calling user
+ *           4. Uninstall false when the bundle is a driver bundle, the host flow
+ *              fails at the debug app provision type check and the cross-user
+ *              restriction is applied in the uninstall task
+ *           5. the calling user is a user that never exists in the os account
+ *              service, so it is never an admin user
  */
-HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, Uninstall_CheckUserForeground_0100, Function | SmallTest | Level0)
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, Uninstall_IsAcrossUser_0100, Function | SmallTest | Level0)
 {
     auto isDeveloperMode = OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false);
     OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "true");
     SetPermissionResultForTest(Constants::PERMISSION_ALLOW_USE_BM, true);
     InstallParam installParam;
-    installParam.userId = USERID;
+    // the calling uid 21000001 belongs to user 105, user 101 is across from the calling user
+    installParam.userId = USERID + 1;
     bundleInstallerHost_->Init();
     SetUserFromShellForTest(true);
-    SetCheckUserForegroundForTest(false);
+    SetGetCallingUid(NON_ADMIN_CALLING_UID);
     sptr<MockStatusReceiver> receiver(new (std::nothrow) MockStatusReceiver());
     bool ret = bundleInstallerHost_->Uninstall(BUNDLE_NAME, installParam, receiver);
     EXPECT_FALSE(ret);
     EXPECT_EQ(receiver->GetResultCode(), ERR_APPEXECFWK_UNINSTALL_PERMISSION_DENIED);
+
+    // user 0 and user 1 are reserved system users, requests targeting them are
+    // across user and rejected for the non-admin calling user
+    installParam.userId = Constants::DEFAULT_USERID;
+    sptr<MockStatusReceiver> receiverSystemUser(new (std::nothrow) MockStatusReceiver());
+    ret = bundleInstallerHost_->Uninstall(BUNDLE_NAME, installParam, receiverSystemUser);
+    EXPECT_FALSE(ret);
+    EXPECT_EQ(receiverSystemUser->GetResultCode(), ERR_APPEXECFWK_UNINSTALL_PERMISSION_DENIED);
+
+    installParam.userId = Constants::U1;
+    sptr<MockStatusReceiver> receiverU1(new (std::nothrow) MockStatusReceiver());
+    ret = bundleInstallerHost_->Uninstall(BUNDLE_NAME, installParam, receiverU1);
+    EXPECT_FALSE(ret);
+    EXPECT_EQ(receiverU1->GetResultCode(), ERR_APPEXECFWK_UNINSTALL_PERMISSION_DENIED);
+
+    // all user applies the uninstall to every user, the request is across user
+    // and rejected for the non-admin calling user
+    installParam.userId = Constants::ALL_USERID;
+    sptr<MockStatusReceiver> receiverAllUser(new (std::nothrow) MockStatusReceiver());
+    ret = bundleInstallerHost_->Uninstall(BUNDLE_NAME, installParam, receiverAllUser);
+    EXPECT_FALSE(ret);
+    EXPECT_EQ(receiverAllUser->GetResultCode(), ERR_APPEXECFWK_UNINSTALL_PERMISSION_DENIED);
+
+    // the specified user is the same as the calling user, the across user check is passed
+    // and the flow fails at the debug app provision type check
+    installParam.userId = NON_ADMIN_USERID;
+    sptr<MockStatusReceiver> receiverSameUser(new (std::nothrow) MockStatusReceiver());
+    ret = bundleInstallerHost_->Uninstall(BUNDLE_NAME, installParam, receiverSameUser);
+    EXPECT_FALSE(ret);
+    EXPECT_EQ(receiverSameUser->GetResultCode(), ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE);
+
+    // the user is not specified, the across user check is passed and the user is
+    // resolved from the calling uid, the flow fails at the debug app provision type check
+    installParam.userId = Constants::UNSPECIFIED_USERID;
+    sptr<MockStatusReceiver> receiverUnspecifiedUser(new (std::nothrow) MockStatusReceiver());
+    ret = bundleInstallerHost_->Uninstall(BUNDLE_NAME, installParam, receiverUnspecifiedUser);
+    EXPECT_FALSE(ret);
+    EXPECT_EQ(receiverUnspecifiedUser->GetResultCode(), ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE);
+
+    // a driver bundle is no longer rejected by a dedicated host check for the
+    // non-admin calling user; the cross-user restriction is applied in the
+    // uninstall task, and the host flow fails at the debug app provision type
+    // check because the driver bundle has no user info for the calling user
+    InnerBundleInfo driverInfo;
+    InnerExtensionInfo driverExtensionInfo;
+    driverExtensionInfo.type = ExtensionAbilityType::DRIVER;
+    driverInfo.InsertExtensionInfo("driver", driverExtensionInfo);
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = driverInfo;
+    installParam.userId = NON_ADMIN_USERID;
+    sptr<MockStatusReceiver> receiverDriver(new (std::nothrow) MockStatusReceiver());
+    ret = bundleInstallerHost_->Uninstall(BUNDLE_NAME, installParam, receiverDriver);
+    EXPECT_FALSE(ret);
+    EXPECT_EQ(receiverDriver->GetResultCode(), ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE);
+    dataMgr->bundleInfos_.erase(BUNDLE_NAME);
 
     OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "false");
     sptr<MockStatusReceiver> receiverWithoutDevMode(new (std::nothrow) MockStatusReceiver());
@@ -4607,16 +4740,25 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, Uninstall_CheckUserForeground_01
     } else {
         OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "false");
     }
+    ResetCallingUid();
     ResetTestValues();
 }
 
 /**
- * @tc.number: UninstallParam_CheckUserForeground_0100
- * @tc.name: test Uninstall with UninstallParam of BundleInstallerHost and background user
+ * @tc.number: UninstallParam_IsAcrossUser_0100
+ * @tc.name: test Uninstall with UninstallParam of BundleInstallerHost and across user
  * @tc.desc: 1. developer mode and ALLOW_USE_BM are enabled
- *           2. Uninstall false when the specified user is not foreground user
+ *           2. Uninstall false when the specified user is across from the calling user
+ *           3. Uninstall false when the specified user is all user or a reserved
+ *              system user
+ *           4. Uninstall passes the across user check when the specified user
+ *              is the same as the calling user
+ *           5. Uninstall false when the bundle is a driver bundle, because it
+ *              is not a debug provision type bundle
+ *           6. the calling user is a user that never exists in the os account
+ *              service, so it is never an admin user
  */
-HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, UninstallParam_CheckUserForeground_0100, Function | SmallTest | Level0)
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, UninstallParam_IsAcrossUser_0100, Function | SmallTest | Level0)
 {
     auto isDeveloperMode = OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false);
     OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "true");
@@ -4624,13 +4766,59 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, UninstallParam_CheckUserForegrou
     SetVerifyUninstallPermission(false);
     UninstallParam uninstallParam;
     uninstallParam.bundleName = BUNDLE_NAME;
-    uninstallParam.userId = USERID;
+    // the calling uid 21000001 belongs to user 105, user 101 is across from the calling user
+    uninstallParam.userId = USERID + 1;
     bundleInstallerHost_->Init();
-    SetCheckUserForegroundForTest(false);
+    SetGetCallingUid(NON_ADMIN_CALLING_UID);
     sptr<MockStatusReceiver> receiver(new (std::nothrow) MockStatusReceiver());
     bool ret = bundleInstallerHost_->Uninstall(uninstallParam, receiver);
     EXPECT_FALSE(ret);
     EXPECT_EQ(receiver->GetResultCode(), ERR_APPEXECFWK_UNINSTALL_PERMISSION_DENIED);
+
+    // all user and the reserved system users are across user for the non-admin
+    // calling user, the requests are rejected
+    uninstallParam.userId = Constants::ALL_USERID;
+    sptr<MockStatusReceiver> receiverAllUser(new (std::nothrow) MockStatusReceiver());
+    ret = bundleInstallerHost_->Uninstall(uninstallParam, receiverAllUser);
+    EXPECT_FALSE(ret);
+    EXPECT_EQ(receiverAllUser->GetResultCode(), ERR_APPEXECFWK_UNINSTALL_PERMISSION_DENIED);
+
+    uninstallParam.userId = Constants::DEFAULT_USERID;
+    sptr<MockStatusReceiver> receiverSystemUser(new (std::nothrow) MockStatusReceiver());
+    ret = bundleInstallerHost_->Uninstall(uninstallParam, receiverSystemUser);
+    EXPECT_FALSE(ret);
+    EXPECT_EQ(receiverSystemUser->GetResultCode(), ERR_APPEXECFWK_UNINSTALL_PERMISSION_DENIED);
+
+    uninstallParam.userId = Constants::U1;
+    sptr<MockStatusReceiver> receiverU1(new (std::nothrow) MockStatusReceiver());
+    ret = bundleInstallerHost_->Uninstall(uninstallParam, receiverU1);
+    EXPECT_FALSE(ret);
+    EXPECT_EQ(receiverU1->GetResultCode(), ERR_APPEXECFWK_UNINSTALL_PERMISSION_DENIED);
+
+    // the specified user is the same as the calling user, the across user check is passed
+    // and the flow fails at the debug app provision type check
+    uninstallParam.userId = NON_ADMIN_USERID;
+    sptr<MockStatusReceiver> receiverSameUser(new (std::nothrow) MockStatusReceiver());
+    ret = bundleInstallerHost_->Uninstall(uninstallParam, receiverSameUser);
+    EXPECT_FALSE(ret);
+    EXPECT_EQ(receiverSameUser->GetResultCode(), ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE);
+
+    // a driver bundle is no longer rejected by a dedicated host check for the
+    // non-admin calling user, and the host flow fails at the debug app provision
+    // type check because the driver bundle is not a debug provision type bundle
+    InnerBundleInfo driverInfo;
+    InnerExtensionInfo driverExtensionInfo;
+    driverExtensionInfo.type = ExtensionAbilityType::DRIVER;
+    driverInfo.InsertExtensionInfo("driver", driverExtensionInfo);
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = driverInfo;
+    uninstallParam.userId = NON_ADMIN_USERID;
+    sptr<MockStatusReceiver> receiverDriver(new (std::nothrow) MockStatusReceiver());
+    ret = bundleInstallerHost_->Uninstall(uninstallParam, receiverDriver);
+    EXPECT_FALSE(ret);
+    EXPECT_EQ(receiverDriver->GetResultCode(), ERR_APPEXECFWK_UNINSTALL_PERMISSION_DENIED);
+    dataMgr->bundleInfos_.erase(BUNDLE_NAME);
 
     OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "false");
     sptr<MockStatusReceiver> receiverWithoutDevMode(new (std::nothrow) MockStatusReceiver());
@@ -4643,25 +4831,30 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, UninstallParam_CheckUserForegrou
     } else {
         OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "false");
     }
+    ResetCallingUid();
     ResetTestValues();
 }
 
 /**
- * @tc.number: CreateStreamInstaller_CheckUserForeground_0100
- * @tc.name: test CreateStreamInstaller of BundleInstallerHost with ALLOW_USE_BM and background user
+ * @tc.number: CreateStreamInstaller_IsAcrossUser_0100
+ * @tc.name: test CreateStreamInstaller of BundleInstallerHost with ALLOW_USE_BM and across user
  * @tc.desc: 1. developer mode and ALLOW_USE_BM are enabled
- *           2. CreateStreamInstaller returns nullptr when the specified user is not foreground user
+ *           2. CreateStreamInstaller returns nullptr when the specified user
+ *              is across from the calling user
+ *           3. the calling user is a user that never exists in the os account
+ *              service, so it is never an admin user
  */
-HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, CreateStreamInstaller_CheckUserForeground_0100,
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, CreateStreamInstaller_IsAcrossUser_0100,
     Function | SmallTest | Level0)
 {
     auto isDeveloperMode = OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false);
     OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "true");
     SetPermissionResultForTest(Constants::PERMISSION_ALLOW_USE_BM, true);
     InstallParam installParam;
-    installParam.userId = USERID;
+    // the calling uid 21000001 belongs to user 105, user 101 is across from the calling user
+    installParam.userId = USERID + 1;
     bundleInstallerHost_->Init();
-    SetCheckUserForegroundForTest(false);
+    SetGetCallingUid(NON_ADMIN_CALLING_UID);
     sptr<MockStatusReceiver> receiver(new (std::nothrow) MockStatusReceiver());
     std::vector<std::string> originHapPaths;
     sptr<IBundleStreamInstaller> streamInstaller =
@@ -4680,6 +4873,7 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, CreateStreamInstaller_CheckUserF
     } else {
         OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "false");
     }
+    ResetCallingUid();
     ResetTestValues();
 }
 } // OHOS

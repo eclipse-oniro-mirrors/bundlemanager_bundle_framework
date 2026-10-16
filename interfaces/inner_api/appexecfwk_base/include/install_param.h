@@ -85,6 +85,11 @@ struct InstallParam : public Parcelable {
     // allow patch app downgrade install
     bool allowPatchDowngrade = false;
     bool isCheckDebugApp = false;
+    // whether the caller is allowed to install or uninstall across users. Defaults to
+    // true for privileged and in-process callers; BundleInstallerHost sets it to false
+    // for non-admin callers so the installer never fans an install or uninstall out to
+    // other users. In-process only, not marshalled over IPC.
+    bool canCrossUser = true;
     int32_t userId = Constants::UNSPECIFIED_USERID;
     InstallFlag installFlag = InstallFlag::NORMAL;
     InstallLocation installLocation = InstallLocation::INTERNAL_ONLY;

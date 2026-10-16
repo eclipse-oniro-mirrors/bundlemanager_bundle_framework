@@ -186,7 +186,10 @@ void BundleInstaller::Uninstall(const std::string &bundleName, const InstallPara
     ErrCode resultCode = ERR_OK;
     bool isDriver = IsDriverForAllUser(bundleName);
     int32_t userId = GetDriverInstallUser(bundleName);
-    if (isDriver && (userId == Constants::DEFAULT_USERID || userId == Constants::U1)) {
+    // A driver bundle can only be uninstalled for the specified user when the
+    // caller is not allowed to cross users.
+    if (isDriver && installParam.canCrossUser &&
+        (userId == Constants::DEFAULT_USERID || userId == Constants::U1)) {
         InstallParam param = installParam;
         param.userId = userId;
         resultCode = UninstallBundle(bundleName, param);
@@ -196,7 +199,7 @@ void BundleInstaller::Uninstall(const std::string &bundleName, const InstallPara
         return;
     }
     if (installParam.userId == Constants::ALL_USERID ||
-        (!installParam.isRemoveUser && isDriver)) {
+        (!installParam.isRemoveUser && isDriver && installParam.canCrossUser)) {
         std::vector<ErrCode> errCode;
         auto userInstallParam = installParam;
         for (auto userId : GetExistsCommonUserIds()) {
@@ -241,7 +244,10 @@ void BundleInstaller::Uninstall(
     ErrCode resultCode = ERR_OK;
     bool isDriver = IsDriverForAllUser(bundleName);
     int32_t userId = GetDriverInstallUser(bundleName);
-    if (isDriver && (userId == Constants::DEFAULT_USERID || userId == Constants::U1)) {
+    // A driver bundle can only be uninstalled for the specified user when the
+    // caller is not allowed to cross users.
+    if (isDriver && installParam.canCrossUser &&
+        (userId == Constants::DEFAULT_USERID || userId == Constants::U1)) {
         InstallParam param = installParam;
         param.userId = userId;
         resultCode = UninstallBundle(bundleName, modulePackage, param);
@@ -250,7 +256,7 @@ void BundleInstaller::Uninstall(
         }
         return;
     }
-    if (installParam.userId == Constants::ALL_USERID || isDriver) {
+    if (installParam.userId == Constants::ALL_USERID || (isDriver && installParam.canCrossUser)) {
         std::vector<ErrCode> errCode;
         auto userInstallParam = installParam;
         for (auto userId : GetExistsCommonUserIds()) {
@@ -312,6 +318,10 @@ void BundleInstaller::InstallForAllUsers(const InstallParam &installParam)
     std::string bundleName = GetCurrentBundleName();
     if (!IsDriverForAllUser(bundleName) && !IsEnterpriseForAllUser(installParam, bundleName)) {
         APP_LOGD("bundle %{public}s has no driver extension ability", bundleName.c_str());
+        return;
+    }
+    if (!installParam.canCrossUser) {
+        APP_LOGE("bundle %{public}s is not allowed to be installed for all users", bundleName.c_str());
         return;
     }
     APP_LOGI("bundle %{public}s need to install for all users", bundleName.c_str());
