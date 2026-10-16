@@ -1685,7 +1685,8 @@ bool InstalldHost::HandDeliverySignProfile(MessageParcel &data, MessageParcel &r
         WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
         return false;
     }
-    int32_t sessionId = data.ReadInt32();
+    int32_t sessionId = 0;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, data, sessionId);
     ErrCode result = DeliverySignProfile(bundleName, profileBlockLength, profileBlock, sessionId);
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;

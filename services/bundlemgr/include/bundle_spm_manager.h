@@ -46,6 +46,25 @@ public:
     static BundleSpmManager &GetInstance();
 
     /**
+     * @brief Assemble the SPM BundlePolicy from the bundle info: the pre-authorization
+     *        list (default permission source, signature matched) plus dlp type and
+     *        debug grant flag. Permission defs/states are derived by the access token
+     *        service from the session provision (deferred permission model).
+     */
+    static Security::AccessToken::BundlePolicy CreateBundlePolicy(const InnerBundleInfo &innerBundleInfo,
+        int32_t dlpType, bool isDebugGrant);
+
+    /**
+     * @brief Finish the AT install session: isSuccess maps to the isPersistent
+     *        semantics of FinishInstall (true commits and persists, false rolls
+     *        back without persistence); a zero session id short-circuits and a
+     *        transient AT error is retried once; on success the installd session
+     *        provision cache is cleared.
+     */
+    static int32_t FinishHapInstall(int32_t sessionId, bool isSuccess,
+        const std::map<std::string, std::string> &modulePathMap);
+
+    /**
      * @brief Whether the SPM delayed permission model is enabled.
      *        Stage 3 will read the switch from system parameters. Hard-coded to false
      *        for now so the facade keeps legacy behavior.
@@ -129,7 +148,11 @@ public:
         int32_t UpdateToken(Security::AccessToken::AccessTokenIDEx &tokenIdEx,
             const InnerBundleInfo &info, int32_t userId,
             Security::AccessToken::HapInfoCheckResult &checkResult, const std::string &caps,
-            bool dataRefresh = false, bool isDebugGrant = false);
+            bool dataRefresh = false, bool isDebugGrant = false, int32_t appIndex = 0,
+            // Optional out param: when the AT side refreshes the token-bound uid
+            // (uidOut > 0), callers with a writable info persist it back into
+            // the user info (the DB write happens through their normal save path).
+            int32_t *refreshedUid = nullptr);
 
         /**
          * @brief Pre-check app permissions inside the session. Always returns ERR_OK

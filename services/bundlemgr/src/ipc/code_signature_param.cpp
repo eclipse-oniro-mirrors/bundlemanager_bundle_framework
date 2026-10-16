@@ -60,6 +60,7 @@ bool CodeSignatureParam::ReadFromParcel(Parcel &parcel)
     isCompressNativeLibrary = parcel.ReadBool();
     isPlugin = parcel.ReadBool();
     pluginId = Str16ToStr8(parcel.ReadString16());
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, sessionId);
     profileBlockLength = parcel.ReadUint32();
     if (profileBlockLength > 0 && profileBlockLength < ServiceConstants::MAX_PROFILE_BLOCK_LENGTH) {
         uint8_t* originData = const_cast<uint8_t*>(parcel.ReadBuffer(profileBlockLength));
@@ -79,7 +80,6 @@ bool CodeSignatureParam::ReadFromParcel(Parcel &parcel)
         }
         profileBlock = std::move(tempProfilePtr);
     }
-    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, sessionId);
     return true;
 }
 
@@ -100,6 +100,7 @@ bool CodeSignatureParam::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isCompressNativeLibrary);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isPlugin);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(pluginId));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, sessionId);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, profileBlockLength);
     if (profileBlockLength > 0 && profileBlockLength < ServiceConstants::MAX_PROFILE_BLOCK_LENGTH) {
         if (!parcel.WriteBuffer(profileBlock.get(), profileBlockLength)) {
@@ -107,7 +108,6 @@ bool CodeSignatureParam::Marshalling(Parcel &parcel) const
             return false;
         }
     }
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, sessionId);
     return true;
 }
 

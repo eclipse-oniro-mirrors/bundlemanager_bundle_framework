@@ -195,6 +195,22 @@ ErrCode IndependentSkillsInstaller::ProcessInstall(
     }
     PatchDataMgr::GetInstance().ProcessPatchInfo(bundleName_, hspPaths,
         newInfos.begin()->second.GetVersionCode(), AppPatchType::SERVICE_FWK, installParam.isPatch);
+    // SPM ON: commit the session BEFORE the bundle info is persisted (agreed
+    // ordering: AT first, BMS follows). On a commit failure the business
+    // rollback below restores the persisted state and the session destructor
+    // rolls the AT side back, leaving both sides clean.
+    std::map<std::string, std::string> modulePathMap;
+    for (const auto &infoItem : newInfos) {
+        modulePathMap[infoItem.first] =
+            infoItem.second.GetModuleHapPath(infoItem.second.GetCurrentModulePackage());
+    }
+    int32_t spmCommitRet = spmSession_.Commit(modulePathMap);
+    if (spmCommitRet != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "spm session commit failed, bundleName:%{public}s errCode:%{public}d",
+            bundleName_.c_str(), spmCommitRet);
+        RollBack();
+        return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
+    }
     // check mark install finish
     result = MarkInstallFinish();
     if (result != ERR_OK) {
@@ -204,24 +220,6 @@ ErrCode IndependentSkillsInstaller::ProcessInstall(
         }
         PatchDataMgr::GetInstance().DeleteInnerPatchInfo(bundleName_);
         return result;
-    }
-    if (result == ERR_OK) {
-        // SPM ON: commit the session with the hap path to installed path mapping.
-        std::map<std::string, std::string> modulePathMap;
-        for (const auto &infoItem : newInfos) {
-            modulePathMap[infoItem.first] =
-                infoItem.second.GetModuleHapPath(infoItem.second.GetCurrentModulePackage());
-        }
-        int32_t spmCommitRet = spmSession_.Commit(modulePathMap);
-        if (spmCommitRet != ERR_OK) {
-            LOG_E(BMS_TAG_INSTALLER, "spm session commit failed, bundleName:%{public}s errCode:%{public}d",
-                bundleName_.c_str(), spmCommitRet);
-            // The session is not committed: fail the install AND roll the persisted
-            // business data back (same as the other failure branches above) — the
-            // session destructor rolls the AT side, leaving both sides clean.
-            RollBack();
-            return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
-        }
     }
     RemoveOldSkillsPath();
     return result;

@@ -298,6 +298,7 @@ public:
      *        BundleSpmManager::IsEnabled(). Takes uidIndexMapMutex_ internally.
      */
     void RemoveUidIndexMap(int32_t uid);
+    void RemoveUidIndexMapByBundleName(const std::string &bundleName);
     /**
      * @brief Recycle uid and gid .
      * @param info Indicates the InnerBundleInfo object.

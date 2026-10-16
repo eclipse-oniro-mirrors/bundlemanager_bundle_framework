@@ -113,7 +113,7 @@ struct BundleMigrateResult final {
 };
 
 // Mirrors the DlpType enum of the access token SDK (see HapDlpType in
-// access_token.h): consumed by BundlePermissionMgr::CreateBundlePolicy.
+// access_token.h): consumed by BundleSpmManager::CreateBundlePolicy.
 enum DlpType {
     DLP_TYPE_NONE = 0,
     DLP_TYPE_FULL_CONTROLLED = 1,

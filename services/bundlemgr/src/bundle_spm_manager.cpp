@@ -19,6 +19,7 @@
 #include <cinttypes>
 
 #include "access_token_error.h"
+#include "account_helper.h"
 #include "app_log_tag_wrapper.h"
 #include "bundle_data_mgr.h"
 #include "bundle_mgr_service.h"
@@ -103,8 +104,67 @@ BundleSpmManager &BundleSpmManager::GetInstance()
 
 bool BundleSpmManager::IsEnabled()
 {
-    static bool enabled = OHOS::system::GetBoolParameter(BMS_SPM_ENABLE_PARAM, false);
+    static bool enabled = OHOS::system::GetBoolParameter(BMS_SPM_ENABLE_PARAM, true);
     return enabled;
+}
+
+Security::AccessToken::BundlePolicy BundleSpmManager::CreateBundlePolicy(
+    const InnerBundleInfo &innerBundleInfo, int32_t dlpType, bool isDebugGrant)
+{
+    Security::AccessToken::BundlePolicy policy;
+    policy.dlpType = static_cast<Security::AccessToken::DlpType>(dlpType);
+    policy.isDebugGrant = isDebugGrant;
+    DefaultPermission permission;
+    if (!BundlePermissionMgr::GetDefaultPermission(innerBundleInfo.GetBundleName(), permission)) {
+        return policy;
+    }
+#ifdef USE_PRE_BUNDLE_PROFILE
+    if (!BundlePermissionMgr::MatchSignature(permission, innerBundleInfo.GetCertificateFingerprint()) &&
+        !BundlePermissionMgr::MatchSignature(permission, innerBundleInfo.GetAppId()) &&
+        !BundlePermissionMgr::MatchSignature(permission, innerBundleInfo.GetAppIdentifier()) &&
+        !BundlePermissionMgr::MatchSignature(permission, innerBundleInfo.GetOldAppIds())) {
+        LOG_W(BMS_TAG_INSTALLER, "bundleName:%{public}s MatchSignature failed",
+            innerBundleInfo.GetBundleName().c_str());
+        return policy;
+    }
+#endif
+    // All permissions of the matched default permission are pre-authorized: the
+    // SPM policy does not depend on the request permissions of this particular
+    // profile, so a profile that requests a subset still gets the full set.
+    for (const auto &perm : permission.grantPermission) {
+        Security::AccessToken::PreAuthorizationInfo preAuthorizationInfo;
+        preAuthorizationInfo.permissionName = perm.name;
+        preAuthorizationInfo.userCancelable = perm.userCancellable;
+        policy.preAuthorizationInfo.emplace_back(preAuthorizationInfo);
+    }
+    return policy;
+}
+
+int32_t BundleSpmManager::FinishHapInstall(int32_t sessionId, bool isSuccess,
+    const std::map<std::string, std::string> &modulePathMap)
+{
+    if (sessionId == 0) {
+        return ERR_OK;
+    }
+    // isSuccess maps to the isPersistent semantics of FinishInstall: true commits and
+    // persists the session, false rolls it back without persistence.
+    auto ret = Security::AccessToken::AccessTokenKit::FinishInstall(sessionId, isSuccess, modulePathMap);
+    if (ret == Security::AccessToken::AccessTokenError::ERR_WRITE_PARCEL_FAILED) {
+        // Retry ONLY when the request provably never reached the AT side
+        // (parcel write failed before the call): SERVICE_ABNORMAL and
+        // READ_PARCEL_FAILED may mean the AT side already finished the session,
+        // and a blind retry could double-apply or hit a finished session
+        // (cross-process idempotency of FinishInstall is not guaranteed —
+        // registered as a cross-repo confirmation item).
+        ret = Security::AccessToken::AccessTokenKit::FinishInstall(sessionId, isSuccess, modulePathMap);
+    }
+    if (ret != Security::AccessToken::AccessTokenKitRet::RET_SUCCESS) {
+        LOG_E(BMS_TAG_INSTALLER, "FinishInstall failed, sessionId:%{public}d errCode:%{public}d",
+            sessionId, ret);
+        return ret;
+    }
+    InstalldClient::GetInstance()->ClearSessionProvisionCache(sessionId);
+    return ERR_OK;
 }
 
 BundleSpmManager::InstallSession BundleSpmManager::InstallSession::CheckSignAndInitSession(int32_t userId,
@@ -122,17 +182,32 @@ BundleSpmManager::InstallSession BundleSpmManager::InstallSession::CheckSignAndI
         session.hapVerifyResults_ = std::move(results);
         return session;
     }
-    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "InstallSession::CheckSignAndInitSession start, userId:%{public}d hapCount:%{public}d "
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER,
+        "InstallSession::CheckSignAndInitSession start, userId:%{public}d hapCount:%{public}d "
         "isPreInstallApp:%{public}d skipEnterpriseResign:%{public}d", userId,
         static_cast<int32_t>(bundlePaths.size()),
         static_cast<int32_t>(isPreInstallApp), static_cast<int32_t>(skipEnterpriseResign));
     // SPM ON: verify sign info in the access token service, which allocates the session id
     // and caches the trusted bundle info for later queries by BMS and installd.
+    if (bundlePaths.empty()) {
+        // Align with the OFF checker (CheckMultipleHapsSignInfo rejects an empty
+        // path list): do not hand an empty hap list to the AT side.
+        LOG_NOFUNC_E(BMS_TAG_INSTALLER, "check sign failed paths empty");
+        outErrCode = ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
+        return session;
+    }
     Security::AccessToken::BundleHapList hapList;
     hapList.hapPaths = bundlePaths;
     hapList.isPreInstalled = isPreInstallApp;
-    // Cross-process contract: userId -1 tells the AT side to skip the enterprise
-    // resign verification (the caller holds SKIP_ENTERPRISE_RESIGN_VERIFY).
+    // Normalize an invalid caller userId the same way the OFF checker does
+    // (AccountHelper::GetUserIdByCallerType): the raw -1 must NEVER reach the AT
+    // side unless the caller explicitly holds SKIP_ENTERPRISE_RESIGN_VERIFY —
+    // the cross-process contract interprets userId == -1 as "skip the enterprise
+    // resign verification", so passing Constants::INVALID_USERID by accident
+    // would silently bypass that check (fail-open relative to SPM OFF).
+    if (!skipEnterpriseResign && userId < Constants::DEFAULT_USERID) {
+        userId = AccountHelper::GetUserIdByCallerType();
+    }
     hapList.userId = skipEnterpriseResign ? -1 : userId;
     std::vector<Security::AccessToken::TrustedBundleInfo> trustedBundleInfos;
     Security::AccessToken::HapVerifyResultInfo resultInfo;
@@ -153,7 +228,7 @@ BundleSpmManager::InstallSession BundleSpmManager::InstallSession::CheckSignAndI
             static_cast<int32_t>(bundlePaths.size()));
         // The AT side allocated the session inside CheckHapSignInfo; finish it
         // before dropping the id, otherwise it leaks on the AT side.
-        int32_t rollbackRet = BundlePermissionMgr::FinishHapInstall(session.sessionId_, false, {});
+        int32_t rollbackRet = BundleSpmManager::FinishHapInstall(session.sessionId_, false, {});
         if (rollbackRet != ERR_OK) {
             // Secondary failure: the AT session may leak, keep it observable.
             LOG_NOFUNC_E(BMS_TAG_INSTALLER, "rollback AT session failed, sessionId:%{public}d errCode:%{public}d",
@@ -168,7 +243,7 @@ BundleSpmManager::InstallSession BundleSpmManager::InstallSession::CheckSignAndI
         if (!ParseTrustedBundleInfo(trustedBundleInfo, provisionInfo)) {
             LOG_NOFUNC_E(BMS_TAG_INSTALLER, "ParseTrustedBundleInfo failed");
             // Same as above: the session is already allocated on the AT side.
-            int32_t rollbackRet = BundlePermissionMgr::FinishHapInstall(session.sessionId_, false, {});
+            int32_t rollbackRet = BundleSpmManager::FinishHapInstall(session.sessionId_, false, {});
             if (rollbackRet != ERR_OK) {
                 LOG_NOFUNC_E(BMS_TAG_INSTALLER, "rollback AT session failed, sessionId:%{public}d errCode:%{public}d",
                     session.sessionId_, rollbackRet);
@@ -203,7 +278,7 @@ BundleSpmManager::InstallSession &BundleSpmManager::InstallSession::operator=(
 {
     if (this != &other) {
         if (sessionId_ != 0 && !committed_) {
-            BundlePermissionMgr::FinishHapInstall(sessionId_, false, {});
+            BundleSpmManager::FinishHapInstall(sessionId_, false, {});
             ClearInstalldProvisionCache();
         }
         sessionId_ = other.sessionId_;
@@ -218,7 +293,7 @@ BundleSpmManager::InstallSession &BundleSpmManager::InstallSession::operator=(
 BundleSpmManager::InstallSession::~InstallSession()
 {
     if (sessionId_ != 0 && !committed_) {
-        BundlePermissionMgr::FinishHapInstall(sessionId_, false, {});
+        BundleSpmManager::FinishHapInstall(sessionId_, false, {});
         ClearInstalldProvisionCache();
     }
 }
@@ -280,15 +355,24 @@ int32_t BundleSpmManager::InstallSession::InitToken(InnerBundleInfo &info, int32
     hapBaseInfo.userID = userId;
     hapBaseInfo.bundleName = info.GetBundleName();
     hapBaseInfo.instIndex = info.GetAppIndex();
-    Security::AccessToken::BundlePolicy policy = BundlePermissionMgr::CreateBundlePolicy(
+    Security::AccessToken::BundlePolicy policy = BundleSpmManager::CreateBundlePolicy(
         info, dlpType, isDebugGrant);
     // Desired identity: for the MAIN app (appIndex 0) an already allocated local
     // uid is adopted (update/reinstall never moves the uid the data directories
     // belong to). For a CLONE (appIndex > 0) no desired is passed: the AT token
     // query filters by instIndex, so the AT side allocates a FRESH uid for the
     // clone instead of deriving the main app uid from the bundle-id mapping.
+    // Exception — the dual-mode clone (appIndex == DUAL_MODE_CLONE_APP_INDEX):
+    // it is installed by the BASE installer and keeps its uid in the MAIN user
+    // info (not the cloneInfos), so it must follow the main-app handling: adopt
+    // the existing uid as desired on update, persist the AT uid on fresh
+    // install. Treating it as a plain clone would leave the fresh install with
+    // no uid at all (GenerateUidAndGid fails fast under SPM ON) and would drift
+    // the update path to a freshly allocated uid while the app keeps running
+    // under the old one.
+    bool cloneInstall = info.GetAppIndex() != 0 &&
+        info.GetAppIndex() != ServiceConstants::DUAL_MODE_CLONE_APP_INDEX;
     Security::AccessToken::Identity identity;
-    bool cloneInstall = info.GetAppIndex() != 0;
     if (!cloneInstall) {
         InnerBundleUserInfo existing;
         if (info.GetInnerBundleUserInfo(userId, existing) &&
@@ -315,6 +399,21 @@ int32_t BundleSpmManager::InstallSession::InitToken(InnerBundleInfo &info, int32
             "PrepareHapIdentity invalid identity, bundleName:%{public}s tokenId:%{public}" PRIu64
             " uid:%{public}d",
             info.GetBundleName().c_str(), static_cast<uint64_t>(identity.tokenId), identity.uid);
+        return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
+    }
+    if (BundleUtil::GetUserIdByUid(identity.uid) != userId) {
+        // User-segment consistency check (no assumption about the AT-side
+        // application-uid subrange): a uid the AT side binds to THIS user's
+        // identity must fall inside this user's uid segment. A uid from
+        // another user's segment is a cross-user drift — persisting it would
+        // bind the token to a uid the app can never run under. Note this is
+        // deliberately NOT the [BASE_APP_UID, MAX_APP_UID] range check that
+        // was reverted on 2026-10-12 (that check assumed the BMS allocation
+        // subrange and could reject legitimate AT-allocated uids).
+        LOG_NOFUNC_E(BMS_TAG_INSTALLER,
+            "PrepareHapIdentity uid outside the user segment, bundleName:%{public}s "
+            "uid:%{public}d expected userId:%{public}d",
+            info.GetBundleName().c_str(), identity.uid, userId);
         return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
     }
     tokenIdEx.tokenIDEx = identity.tokenId;
@@ -366,6 +465,19 @@ int32_t BundleSpmManager::InstallSession::InitToken(InnerBundleInfo &info, int32
         if (cacheMgr != nullptr) {
             cacheMgr->RemoveUidIndexMap(bundleUserInfo.uid);
         }
+        // Drop the fs config files keyed by the abandoned local uid as well:
+        // the config layout is <configPath>/<bundleName>/<bundleId>, and the
+        // old uid's derived bundleId file would collide when the uid is reused.
+        // (MakeFsConfigForNewUid above already wrote the new uid's file.)
+        // (The data-dir ownership of the old uid remains a registered product
+        // decision — chown migration vs recycle.)
+        int32_t oldUserId = BundleUtil::GetUserIdByUid(bundleUserInfo.uid);
+        int32_t oldBundleId = bundleUserInfo.uid - oldUserId * Constants::BASE_USER_RANGE;
+        std::string oldIdFile = std::to_string(oldBundleId);
+        remove((std::string(ServiceConstants::HMDFS_CONFIG_PATH) + ServiceConstants::PATH_SEPARATOR +
+            info.GetBundleName() + ServiceConstants::PATH_SEPARATOR + oldIdFile).c_str());
+        remove((std::string(ServiceConstants::SHAREFS_CONFIG_PATH) + ServiceConstants::PATH_SEPARATOR +
+            info.GetBundleName() + ServiceConstants::PATH_SEPARATOR + oldIdFile).c_str());
         bundleUserInfo.gids.clear();
     }
     bundleUserInfo.uid = identity.uid;
@@ -380,16 +492,16 @@ int32_t BundleSpmManager::InstallSession::InitToken(InnerBundleInfo &info, int32
 int32_t BundleSpmManager::InstallSession::UpdateToken(
     Security::AccessToken::AccessTokenIDEx &tokenIdEx, const InnerBundleInfo &info, int32_t userId,
     Security::AccessToken::HapInfoCheckResult &checkResult, const std::string &caps,
-    bool dataRefresh, bool isDebugGrant)
+    bool dataRefresh, bool isDebugGrant, int32_t appIndex, int32_t *refreshedUid)
 {
     if (!IsEnabled()) {
         return BundlePermissionMgr::UpdateHapToken(tokenIdEx, info, userId, checkResult, caps,
             dataRefresh, isDebugGrant);
     }
     // SPM ON: update the hap policy bound to the existing token inside the session.
-    Security::AccessToken::BundlePolicy policy = BundlePermissionMgr::CreateBundlePolicy(
+    Security::AccessToken::BundlePolicy policy = BundleSpmManager::CreateBundlePolicy(
         info, 0, isDebugGrant);
-    int32_t uidOut = 0;
+    int32_t uidOut = Constants::INVALID_UID;
     int32_t ret = Security::AccessToken::AccessTokenKit::UpdateHapPolicy(sessionId_,
         tokenIdEx.tokenIdExStruct.tokenID, policy, uidOut);
     if (ret != Security::AccessToken::AccessTokenKitRet::RET_SUCCESS) {
@@ -405,21 +517,40 @@ int32_t BundleSpmManager::InstallSession::UpdateToken(
         "tokenId:%{public}u uid:%{public}d",
         info.GetBundleName().c_str(), userId, sessionId_,
         tokenIdEx.tokenIdExStruct.tokenID, uidOut);
-    if (uidOut != 0) {
-        // The AT side reports the uid bound to the token after the policy update:
-        // the app's uid needs a refresh, so the reverse-lookup cache entry is
-        // rewritten with it and the fs config is regenerated for the uid. A stale
-        // entry under the previous uid is evicted so it cannot resolve to this
-        // app if the AT side ever reuses the old uid.
-        LOG_NOFUNC_I(BMS_TAG_INSTALLER, "UpdateHapPolicy refreshed uid, bundleName:%{public}s uid:%{public}d",
-            info.GetBundleName().c_str(), uidOut);
+    // The AT side ALWAYS reports the token-bound uid in uidOut on success, so a
+    // bare "> 0" check would run the refresh handling on every single policy
+    // update. Compare against the CURRENT uid first: the cache rewrite, the fs
+    // config regeneration, the stale-entry eviction and the refreshedUid
+    // handover only happen on an actual uid change (an unassigned/INVALID
+    // current uid counts as a change — the cache entry must be created).
+    // Negative uidOut values never pass the comparison against a valid uid and
+    // are additionally excluded (an AT contract anomaly must never poison the
+    // cache keys or the fs config files).
+    int32_t currentUid = info.GetUid(userId, appIndex);
+    if (uidOut > 0 && uidOut != currentUid) {
+        // The uid bound to the token changed with the policy update: rewrite the
+        // reverse-lookup cache entry, regenerate the fs config for the new uid,
+        // and hand the refreshed uid back through the optional out param so
+        // callers with a writable info persist it (their normal save path then
+        // writes the DB — otherwise the cache and the DB would split).
+        LOG_NOFUNC_I(BMS_TAG_INSTALLER, "UpdateHapPolicy refreshed uid, bundleName:%{public}s "
+            "old uid:%{public}d new uid:%{public}d",
+            info.GetBundleName().c_str(), currentUid, uidOut);
+        if (refreshedUid != nullptr) {
+            *refreshedUid = uidOut;
+        }
         auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
         if (dataMgr != nullptr) {
-            int32_t oldUid = info.GetUid(userId);
-            if (oldUid != Constants::INVALID_UID && oldUid != 0 && oldUid != uidOut) {
-                dataMgr->RemoveUidIndexMap(oldUid);
+            // Evict the stale entry only for the MAIN identity (appIndex 0):
+            // info.GetUid(userId) resolves the main-app uid, so for a clone
+            // token it would evict the main app's perfectly valid entry.
+            if (appIndex == 0) {
+                int32_t oldUid = info.GetUid(userId);
+                if (oldUid != Constants::INVALID_UID && oldUid != 0 && oldUid != uidOut) {
+                    dataMgr->RemoveUidIndexMap(oldUid);
+                }
             }
-            dataMgr->UpdateUidIndexMap(uidOut, info.GetBundleName(), info.GetAppIndex());
+            dataMgr->UpdateUidIndexMap(uidOut, info.GetBundleName(), appIndex);
         }
         MakeFsConfigForNewUid(uidOut, info.GetBundleName());
     }
@@ -457,7 +588,10 @@ int32_t BundleSpmManager::InstallSession::VerifyPermission(const std::string &bu
             return ERR_OK;
         }
     }
-    return -1;
+    // Not granted in this session's cached policy: a registered BMS error code
+    // instead of a bare -1 (the ON-mode unit tests pin the code path, callers
+    // see a diagnosable value).
+    return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
 }
 
 int32_t BundleSpmManager::InstallSession::Commit(const std::map<std::string, std::string>
@@ -466,12 +600,15 @@ int32_t BundleSpmManager::InstallSession::Commit(const std::map<std::string, std
     if (!IsEnabled()) {
         return ERR_OK;
     }
-    int32_t ret = BundlePermissionMgr::FinishHapInstall(sessionId_, true, modulePathMap);
+    int32_t ret = BundleSpmManager::FinishHapInstall(sessionId_, true, modulePathMap);
     if (ret == ERR_OK) {
         committed_ = true;
+        // FinishHapInstall already cleared the installd provision cache on its
+        // success path — no second IPC here (the double clear was redundant).
+        return ret;
     }
-    // The session reached its end either way: drop the installd provision cache so
-    // a failed commit does not leak session-scoped entries in the privileged process.
+    // The session reached its end even on failure: drop the installd provision
+    // cache so a failed commit does not leak session-scoped entries.
     ClearInstalldProvisionCache();
     return ret;
 }
@@ -481,7 +618,7 @@ int32_t BundleSpmManager::InstallSession::Rollback()
     if (!IsEnabled() || committed_) {
         return ERR_OK;
     }
-    int32_t ret = BundlePermissionMgr::FinishHapInstall(sessionId_, false, {});
+    int32_t ret = BundleSpmManager::FinishHapInstall(sessionId_, false, {});
     ClearInstalldProvisionCache();
     if (ret == ERR_OK) {
         // The session is closed on the AT side; clear the local id so neither the
@@ -527,7 +664,8 @@ void BundleSpmManager::InstallSession::ClearInstalldProvisionCache()
         // Best-effort cleanup: a leftover cache entry is only a dead key for the
         // finished session (no functional impact), but log it so the retention in
         // the privileged installd process stays diagnosable.
-        LOG_NOFUNC_E(BMS_TAG_INSTALLER, "clear installd provision cache failed, sessionId:%{public}d errCode:%{public}d",
+        LOG_NOFUNC_E(BMS_TAG_INSTALLER,
+            "clear installd provision cache failed, sessionId:%{public}d errCode:%{public}d",
             sessionId_, ret);
     }
 }
@@ -563,14 +701,14 @@ int32_t BundleSpmManager::OnModuleUninstalled(const InnerBundleInfo &info, int32
     if (ret != Security::AccessToken::AccessTokenKitRet::RET_SUCCESS) {
         LOG_NOFUNC_E(BMS_TAG_INSTALLER, "OnModuleUninstall check permission failed, bundleName:%{public}s "
             "sessionId:%{public}d ret %{public}d", info.GetBundleName().c_str(), sessionId, ret);
-        BundlePermissionMgr::FinishHapInstall(sessionId, false, {});
+        BundleSpmManager::FinishHapInstall(sessionId, false, {});
         return ret;
     }
     std::map<std::string, std::string> modulePathMap;
     for (const auto &hapPath : hapList.hapPaths) {
         modulePathMap[hapPath] = hapPath;
     }
-    ret = BundlePermissionMgr::FinishHapInstall(sessionId, true, modulePathMap);
+    ret = BundleSpmManager::FinishHapInstall(sessionId, true, modulePathMap);
     if (ret != ERR_OK) {
         LOG_NOFUNC_E(BMS_TAG_INSTALLER, "OnModuleUninstall commit failed, bundleName:%{public}s "
             "sessionId:%{public}d errCode:%{public}d", info.GetBundleName().c_str(), sessionId, ret);
@@ -623,10 +761,17 @@ bool BundleSpmManager::TryRecoverUidError(const std::string &bundleName, BundleD
         // main identity of this user (app index 0)
         baseInfo.instIndex = Constants::INITIAL_APP_INDEX;
         migratedInfo.hapBaseInfoList.emplace_back(baseInfo);
-        migratedInfo.uidList.emplace_back(userInfo.uid);
-        migratedInfo.reservedTypeList.emplace_back(Security::AccessToken::ReservedType::NONE);
+        // Filter invalid uids from the RDB records (OTA / corruption leftovers):
+        // the AT side would register them as-is and the identity would be broken.
+        if (userInfo.uid > 0) {
+            migratedInfo.uidList.emplace_back(userInfo.uid);
+            migratedInfo.reservedTypeList.emplace_back(Security::AccessToken::ReservedType::NONE);
+        }
         // clone identities of this user, keyed by app index
         for (const auto &clonePair : userInfo.cloneInfos) {
+            if (clonePair.second.uid <= 0) {
+                continue;
+            }
             Security::AccessToken::HapBaseInfo cloneInfo = baseInfo;
             cloneInfo.instIndex = clonePair.second.appIndex;
             migratedInfo.hapBaseInfoList.emplace_back(cloneInfo);
@@ -657,6 +802,14 @@ bool BundleSpmManager::TryRecoverAlreadyExistError(const std::string &bundleName
         LOG_NOFUNC_E(BMS_TAG_INSTALLER, "clean leftover identity of %{public}s failed, ret %{public}d",
             bundleName.c_str(), ret);
         return false;
+    }
+    // The AT side deletes EVERY identity of the bundle by name (tokenId 0):
+    // evict the reverse-lookup cache entries of all this bundle's uids so the
+    // local cache stays consistent with the (now deleted) AT identities —
+    // without this, a later AT uid reuse would resolve to this bundle.
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr != nullptr) {
+        dataMgr->RemoveUidIndexMapByBundleName(bundleName);
     }
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "cleaned leftover identity of %{public}s, retry install",
         bundleName.c_str());

@@ -1452,11 +1452,14 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
         }
     }
 
-    if (result == ERR_OK && !BundleSpmManager::IsEnabled()) {
-        // Legacy token refresh for every user and clone after an update (OFF path
-        // only). Skipped under SPM ON: UpdateHapPolicy on the live install session
-        // invalidates it — the session's own Check/Commit carry the ON update flow,
-        // so a multi-hap install must not touch the tokens here.
+    if (result == ERR_OK) {
+        // Token refresh for every user and clone after an update. Runs under both
+        // SPM states now: aligned with the AT side, multiple UpdateHapPolicy
+        // (spmSession_.UpdateToken) calls INSIDE one live install session are
+        // supported and do not invalidate the session — this is what carries the
+        // new policy to the OTHER users' and clones' tokens (the session's
+        // Check/Commit alone only covers the identity of the current install).
+        // The session stays open here: MarkInstallFinish commits it afterwards.
         result = InnerProcessUpdateHapToken(isOldSystemApp, isDebugGrant);
         CHECK_RESULT(result, "InnerProcessUpdateHapToken failed %{public}d");
     }
@@ -2244,10 +2247,15 @@ void BaseBundleInstaller::RollBack(const std::unordered_map<std::string, InnerBu
         } else {
             // SPM ON: reserve the identity and provision in the access token service so a
             // re-install recovers them via PrepareHapIdentity.
-            BundleSpmManager::DeleteToken(newInfos.begin()->second.GetAccessTokenId(userId_),
+            int32_t reserveRet = BundleSpmManager::DeleteToken(
+                newInfos.begin()->second.GetAccessTokenId(userId_),
                 newInfos.begin()->second.GetBundleName(),
                 BundleSpmManager::TokenDeleteType::RESERVED_DATA,
                 newInfos.begin()->second.GetUid(userId_));
+            if (reserveRet != ERR_OK) {
+                LOG_E(BMS_TAG_INSTALLER, "reserve identity failed on rollback, -n:%{public}s errCode:%{public}d",
+                    bundleName_.c_str(), reserveRet);
+            }
         }
         // remove driver file
         std::shared_ptr driverInstaller = std::make_shared<DriverInstaller>();
@@ -2274,8 +2282,11 @@ void BaseBundleInstaller::RollBack(const std::unordered_map<std::string, InnerBu
         RollBack(info.second, oldInfo);
     }
     // need delete definePermissions and requestPermissions
-    // SPM ON: skip — writing the old policy into the session that is about to be
-    // rolled back is a no-op at best and can trigger an AT-side RollbackAll early.
+    // SPM ON: keep skipping this rollback-path refresh. Although the AT side now
+    // supports multiple UpdateHapPolicy calls inside one live session, this path
+    // runs while the session is heading into its rollback: any old-policy write
+    // would be reverted by the AT-side RollbackAll anyway (a no-op at best) and
+    // could trigger the rollback early.
     if (!BundleSpmManager::IsEnabled()) {
         UpdateHapToken(preInfo.GetAppType() != oldInfo.GetAppType(), oldInfo);
     }
@@ -3189,9 +3200,13 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
                     // lifecycle, so it is not deleted here.
                     bool keepDataReinstall = false;
                     if (BundleSpmManager::IsEnabled()) {
-                        UninstallBundleInfo uninstallRecord;
-                        keepDataReinstall = dataMgr_->GetUninstallBundleInfo(effectiveBundleName,
-                            uninstallRecord);
+                        // Match the userGuard granularity (user + appIndex): a
+                        // bundle-level record lookup would treat a record left
+                        // by ANOTHER user's keep-data uninstall as this user's
+                        // reservation and skip the identity undo, leaking the
+                        // freshly created identity.
+                        keepDataReinstall = dataMgr_->GetUninstallBundleInfoWithUserAndAppIndex(
+                            effectiveBundleName, userId_, Constants::INITIAL_APP_INDEX);
                     }
                     if (BundleSpmManager::IsEnabled() && !keepDataReinstall) {
                         int32_t delRet = BundleSpmManager::DeleteToken(
@@ -3346,8 +3361,12 @@ ErrCode BaseBundleInstaller::RemoveBundle(InnerBundleInfo &info, const InstallPa
     } else {
         // SPM ON: reserve the identity and provision in the access token service so a
         // re-install recovers them via PrepareHapIdentity.
-        BundleSpmManager::DeleteToken(accessTokenId_, info.GetBundleName(),
+        int32_t reserveRet = BundleSpmManager::DeleteToken(accessTokenId_, info.GetBundleName(),
             BundleSpmManager::TokenDeleteType::RESERVED_DATA, info.GetUid(userId_));
+        if (reserveRet != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLER, "reserve identity failed, bundle:%{public}s errCode:%{public}d",
+                info.GetBundleName().c_str(), reserveRet);
+        }
     }
 
     return ERR_OK;
@@ -7897,16 +7916,31 @@ ErrCode BaseBundleInstaller::RemoveBundleUserData(
         return ERR_APPEXECFWK_USER_NOT_EXIST;
     }
 
-    // delete accessTokenId
+    // Cache the identity fields before the DB removal below deletes the user
+    // info (both the in-memory copy and the persisted one): the AT-side token
+    // handling AFTER the DB removal needs them.
     accessTokenId_ = innerBundleInfo.GetAccessTokenId(userId_);
     isKeepTokenId_ = innerBundleInfo.HasKeepTokenIdMetadata();
+    int32_t uninstalledUid = innerBundleInfo.GetUid(userId_);
+
+    innerBundleInfo.RemoveInnerBundleUserInfo(userId_);
+    if (!dataMgr_->RemoveInnerBundleUserInfo(bundleName, userId_)) {
+        LOG_E(BMS_TAG_INSTALLER, "update bundle user info to db failed %{public}s when remove user",
+            bundleName.c_str());
+        // DB removal failed BEFORE any AT-side change: the identity is intact
+        // and a retry is safe (agreed ordering: BMS database first, AT after).
+        return ERR_APPEXECFWK_RMV_USERINFO_ERROR;
+    }
+
+    // The BMS-side info is removed: now finish the AT side (agreed ordering —
+    // BMS database first, AT-side identity handling after).
     if (!installParam.isKeepData) {
         bool keepTokenParam = isKeepTokenId_ && !installParam.isRemoveUser;
         LOG_NOFUNC_I(BMS_TAG_INSTALLER, "DeleteAccessTokenId keepTokenParam=%{public}d", keepTokenParam);
         if (BundleSpmManager::DeleteToken(accessTokenId_, innerBundleInfo.GetBundleName(),
             keepTokenParam ? BundleSpmManager::TokenDeleteType::RESERVED_IDENTITY
                 : BundleSpmManager::TokenDeleteType::NONE,
-            innerBundleInfo.GetUid(userId_)) !=
+            uninstalledUid) !=
             AccessToken::AccessTokenKitRet::RET_SUCCESS) {
             LOG_E(BMS_TAG_INSTALLER, "delete accessToken failed, tokenId:%{public}u bundleName:%{public}s",
                 accessTokenId_, innerBundleInfo.GetBundleName().c_str());
@@ -7914,8 +7948,12 @@ ErrCode BaseBundleInstaller::RemoveBundleUserData(
     } else {
         // SPM ON: reserve the identity and provision in the access token service so a
         // re-install recovers them via PrepareHapIdentity.
-        BundleSpmManager::DeleteToken(accessTokenId_, innerBundleInfo.GetBundleName(),
-            BundleSpmManager::TokenDeleteType::RESERVED_DATA, innerBundleInfo.GetUid(userId_));
+        int32_t reserveRet = BundleSpmManager::DeleteToken(accessTokenId_, innerBundleInfo.GetBundleName(),
+            BundleSpmManager::TokenDeleteType::RESERVED_DATA, uninstalledUid);
+        if (reserveRet != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLER, "reserve identity failed, bundle:%{public}s errCode:%{public}d",
+                innerBundleInfo.GetBundleName().c_str(), reserveRet);
+        }
     }
     if (innerBundleInfo.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE) {
         int32_t uid = innerBundleInfo.GetUid(userId_);
@@ -7927,13 +7965,6 @@ ErrCode BaseBundleInstaller::RemoveBundleUserData(
                 effectiveBundleName;
             PrepareBundleDirQuota(effectiveBundleName, uid, bundleDataDir, 0);
         }
-    }
-
-    innerBundleInfo.RemoveInnerBundleUserInfo(userId_);
-    if (!dataMgr_->RemoveInnerBundleUserInfo(bundleName, userId_)) {
-        LOG_E(BMS_TAG_INSTALLER, "update bundle user info to db failed %{public}s when remove user",
-            bundleName.c_str());
-        return ERR_APPEXECFWK_RMV_USERINFO_ERROR;
     }
 
     ErrCode result = ERR_OK;
@@ -9504,13 +9535,27 @@ ErrCode BaseBundleInstaller::UpdateHapToken(bool needUpdate, InnerBundleInfo &ne
             continue;
         }
         int32_t userId = uerInfo.second.bundleUserInfo.userId;
+        if (BundleSpmManager::IsEnabled() &&
+            uerInfo.second.accessTokenId == accessTokenId_) {
+            // SPM ON: this is the identity the live install session prepared
+            // (InitToken/PrepareHapIdentity already carries the NEW policy —
+            // for a first install it is a freshly created token, for an update
+            // the recovered one). Updating it here would touch the
+            // not-yet-committed session identity; the session's own Commit
+            // persists the policy. Tokens of OTHER users (outside this
+            // session) still get the refresh below. SPM OFF keeps the legacy
+            // refresh for every user (equivalence baseline).
+            continue;
+        }
         // Only apply isDebugGrant for the current installing user to avoid affecting other users
         bool userDebugGrant = (userId == userId_) ? isDebugGrant : false;
         Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
         accessTokenIdEx.tokenIDEx = uerInfo.second.accessTokenIdEx;
         Security::AccessToken::HapInfoCheckResult checkResult;
+        int32_t refreshedUid = 0;
         int32_t spmTokenRet = spmSession_.UpdateToken(accessTokenIdEx, newInfo, userId, checkResult,
-            verifyRes_.GetProvisionInfo().appServiceCapabilities, false, userDebugGrant);
+            verifyRes_.GetProvisionInfo().appServiceCapabilities, false, userDebugGrant, 0,
+            &refreshedUid);
         if (spmTokenRet != ERR_OK) {
             LOG_NOFUNC_E(BMS_TAG_INSTALLER, "UpdateHapToken failed %{public}s", bundleName_.c_str());
             SetVerifyPermissionResult(checkResult);
@@ -9524,14 +9569,32 @@ ErrCode BaseBundleInstaller::UpdateHapToken(bool needUpdate, InnerBundleInfo &ne
         if (needUpdate) {
             newInfo.SetAccessTokenIdEx(accessTokenIdEx, uerInfo.second.bundleUserInfo.userId);
         }
+        if (refreshedUid > 0) {
+            // The AT side refreshed the token-bound uid: persist it into the
+            // main user info so the later temp-info save keeps the DB in sync
+            // with the cache (uid and gids[0] stay paired).
+            InnerBundleUserInfo updatedUserInfo;
+            if (newInfo.GetInnerBundleUserInfo(userId, updatedUserInfo) &&
+                updatedUserInfo.uid != refreshedUid) {
+                updatedUserInfo.uid = refreshedUid;
+                updatedUserInfo.gids.clear();
+                updatedUserInfo.gids.emplace_back(refreshedUid);
+                newInfo.AddInnerBundleUserInfo(updatedUserInfo);
+                LOG_NOFUNC_I(BMS_TAG_INSTALLER,
+                    "UpdateHapToken persisted refreshed uid, bundle:%{public}s uid:%{public}d",
+                    bundleName_.c_str(), refreshedUid);
+            }
+        }
 
         const std::map<std::string, InnerBundleCloneInfo> &cloneInfos = uerInfo.second.cloneInfos;
         for (const auto &cloneInfoPair : cloneInfos) {
             Security::AccessToken::AccessTokenIDEx cloneAccessTokenIdEx;
             cloneAccessTokenIdEx.tokenIDEx = cloneInfoPair.second.accessTokenIdEx;
             Security::AccessToken::HapInfoCheckResult checkResult;
+            int32_t cloneRefreshedUid = 0;
             int32_t cloneTokenRet = spmSession_.UpdateToken(cloneAccessTokenIdEx, newInfo, userId,
-                checkResult, verifyRes_.GetProvisionInfo().appServiceCapabilities);
+                checkResult, verifyRes_.GetProvisionInfo().appServiceCapabilities, false, false,
+                cloneInfoPair.second.appIndex, &cloneRefreshedUid);
             if (cloneTokenRet != ERR_OK) {
                 LOG_NOFUNC_E(BMS_TAG_INSTALLER, "UpdateHapToken failed %{public}s", bundleName_.c_str());
                 SetVerifyPermissionResult(checkResult);
@@ -9543,6 +9606,16 @@ ErrCode BaseBundleInstaller::UpdateHapToken(bool needUpdate, InnerBundleInfo &ne
             if (needUpdate) {
                 newInfo.SetAccessTokenIdExWithAppIndex(cloneAccessTokenIdEx,
                     uerInfo.second.bundleUserInfo.userId, cloneInfoPair.second.appIndex);
+            }
+            if (cloneRefreshedUid > 0 && cloneRefreshedUid != cloneInfoPair.second.uid) {
+                // Persist the AT-refreshed clone uid so the later temp-info
+                // save keeps the DB in sync with the cache entry written by
+                // UpdateToken (same pattern as the main identity above).
+                newInfo.UpdateCloneUid(uerInfo.second.bundleUserInfo.userId,
+                    cloneInfoPair.second.appIndex, cloneRefreshedUid);
+                LOG_NOFUNC_I(BMS_TAG_INSTALLER,
+                    "UpdateHapToken persisted refreshed clone uid, bundle:%{public}s appIndex:%{public}d "
+                    "uid:%{public}d", bundleName_.c_str(), cloneInfoPair.second.appIndex, cloneRefreshedUid);
             }
         }
     }
@@ -10019,11 +10092,22 @@ ErrCode BaseBundleInstaller::MarkInstallFinish(const std::map<std::string, std::
         return ERR_APPEXECFWK_NULL_PTR;
     }
     if (isAppExist_) {
+        // SPM commit BEFORE the bundle info is persisted (agreed ordering):
+        // on a commit failure the still-armed rollback path cleans the data
+        // directories and the session destructor rolls the AT side back, so
+        // both sides stay consistent without touching the DB.
+        int32_t spmCommitRet = spmSession_.Commit(modulePathMap);
+        if (spmCommitRet != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLER, "spm session commit failed, bundleName:%{public}s errCode:%{public}d",
+                bundleName_.c_str(), spmCommitRet);
+            return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
+        }
         // Dual-mode: crossModeFetchTruth_ (captured at fetch) keeps the update target map identical
         // to the one the old info was read from, even if mode params flip mid-install.
         if (!dataMgr_->UpdateInnerBundleInfo(info, true, crossModeFetchTruth_)) {
             if (!dataMgr_->UpdateInnerBundleInfo(info, true, crossModeFetchTruth_)) {
                 LOG_W(BMS_TAG_INSTALLER, "save mark failed, -n:%{public}s", bundleName_.c_str());
+                UndoCommittedSpmIdentity(info);
                 return ERR_APPEXECFWK_ADD_BUNDLE_ERROR;
             }
         }
@@ -10035,22 +10119,25 @@ ErrCode BaseBundleInstaller::MarkInstallFinish(const std::map<std::string, std::
             LOG_E(BMS_TAG_INSTALLER, "commit app skills failed");
             return ERR_APPEXECFWK_ADD_BUNDLE_ERROR;
         }
-        int32_t spmCommitRet = spmSession_.Commit(modulePathMap);
-        if (spmCommitRet != ERR_OK) {
-            LOG_E(BMS_TAG_INSTALLER, "spm session commit failed, bundleName:%{public}s errCode:%{public}d",
-                bundleName_.c_str(), spmCommitRet);
-            return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
-        }
         return ERR_OK;
+    }
+    // SPM commit BEFORE the bundle info is persisted (agreed ordering).
+    int32_t spmCommitRet = spmSession_.Commit(modulePathMap);
+    if (spmCommitRet != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "spm session commit failed, bundleName:%{public}s errCode:%{public}d",
+            bundleName_.c_str(), spmCommitRet);
+        return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
     }
     if (!dataMgr_->AddInnerBundleInfo(bundleName_, info, false, crossModeFetchTruth_)) {
         LOG_E(BMS_TAG_INSTALLER, "add bundle failed, -n:%{public}s", bundleName_.c_str());
         dataMgr_->UpdateBundleInstallState(GetEffectiveBundleName(), InstallState::UNINSTALL_START);
         dataMgr_->UpdateBundleInstallState(GetEffectiveBundleName(), InstallState::UNINSTALL_SUCCESS);
+        UndoCommittedSpmIdentity(info);
         return ERR_APPEXECFWK_UPDATE_BUNDLE_ERROR;
     }
     if (!dataMgr_->SaveInnerBundleInfo(info)) {
         LOG_W(BMS_TAG_INSTALLER, "save mark failed, -n:%{public}s", bundleName_.c_str());
+        UndoCommittedSpmIdentity(info);
         return ERR_APPEXECFWK_UPDATE_BUNDLE_ERROR;
     }
     PrintStartWindowIconId(info);
@@ -10058,13 +10145,31 @@ ErrCode BaseBundleInstaller::MarkInstallFinish(const std::map<std::string, std::
         LOG_E(BMS_TAG_INSTALLER, "commit app skills failed");
         return ERR_APPEXECFWK_UPDATE_BUNDLE_ERROR;
     }
-    int32_t spmCommitRet = spmSession_.Commit(modulePathMap);
-    if (spmCommitRet != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLER, "spm session commit failed, bundleName:%{public}s errCode:%{public}d",
-            bundleName_.c_str(), spmCommitRet);
-        return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
-    }
     return ERR_OK;
+}
+
+void BaseBundleInstaller::UndoCommittedSpmIdentity(const InnerBundleInfo &info)
+{
+    // The SPM session was already committed but the BMS-side persistence failed:
+    // undo the freshly committed AT identity so the failed install leaves both
+    // sides clean (mirrors the -n flow's DB-failure undo). A keep-data reserved
+    // identity predates this flow and belongs to the keep-data reservation
+    // lifecycle, so it is not deleted here.
+    if (!BundleSpmManager::IsEnabled()) {
+        return;
+    }
+    bool keepDataReinstall = dataMgr_->GetUninstallBundleInfoWithUserAndAppIndex(
+        GetEffectiveBundleName(), userId_, Constants::INITIAL_APP_INDEX);
+    if (keepDataReinstall) {
+        return;
+    }
+    int32_t uid = info.GetUid(userId_);
+    int32_t delRet = BundleSpmManager::DeleteToken(info.GetAccessTokenId(userId_),
+        info.GetBundleName(), BundleSpmManager::TokenDeleteType::NONE, uid);
+    if (delRet != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "undo spm identity failed, bundle:%{public}s errCode:%{public}d",
+            bundleName_.c_str(), delRet);
+    }
 }
 
 void BaseBundleInstaller::PrintStartWindowIconId(const InnerBundleInfo &info)

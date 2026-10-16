@@ -358,7 +358,8 @@ void BundleSandboxDataMgr::RestoreSandboxUidAndGid(std::map<int32_t, std::string
             } else {
                 bundleIdMap[bundleId] = info.first;
             }
-            if (BundleSpmManager::IsEnabled() && dataMgr != nullptr) {
+            if (BundleSpmManager::IsEnabled() && dataMgr != nullptr &&
+                innerBundleUserInfo.uid != Constants::INVALID_UID && innerBundleUserInfo.uid > 0) {
                 // SPM ON: rebuild the reverse-lookup cache entry for the restored
                 // sandbox uid (the sandbox identity is AT-allocated under SPM).
                 // One-way lock nesting: the caller holds bundleIdMapMutex_, so

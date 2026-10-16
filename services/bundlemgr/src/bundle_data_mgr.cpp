@@ -5756,14 +5756,36 @@ ErrCode BundleDataMgr::GetBundleNameAndIndex(const int32_t uid, std::string &bun
         // SPM ON: consult the local uid -> (bundleName, appIndex) cache first;
         // only a miss (identities outside the local map, e.g. dlp sandbox) falls
         // back to the access token service.
+        std::string cachedBundleName;
+        int32_t cachedAppIndex = 0;
+        bool cacheHit = false;
         {
             std::shared_lock<std::shared_mutex> lock(uidIndexMapMutex_);
             auto indexIter = uidIndexMap_.find(uid);
             if (indexIter != uidIndexMap_.end()) {
-                bundleName = indexIter->second.first;
-                appIndex = indexIter->second.second;
-                return ERR_OK;
+                cachedBundleName = indexIter->second.first;
+                cachedAppIndex = indexIter->second.second;
+                cacheHit = true;
             }
+        }
+        if (cacheHit) {
+            // Cross-check the cached entry against the persisted user info
+            // (same guard as GetInnerBundleInfoAndIndexByUid): a stale entry
+            // left by a failed eviction must not resolve the calling uid to
+            // another bundle — the calling-uid identity feeds authorization
+            // decisions in several callers.
+            {
+                std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+                auto infoItem = bundleInfos_.find(cachedBundleName);
+                if (infoItem != bundleInfos_.end() &&
+                    infoItem->second.GetUid(GetUserIdByUid(uid), cachedAppIndex) == uid) {
+                    bundleName = cachedBundleName;
+                    appIndex = cachedAppIndex;
+                    return ERR_OK;
+                }
+            }
+            // Stale entry: drop through to the AT fallback instead of trusting it.
+            APP_LOGW_NOFUNC("stale uidIndexMap_ entry for uid %{public}d, falling back to AT", uid);
         }
         APP_LOGW_NOFUNC("uid %{public}d not found in uidIndexMap_, fallback to access token service", uid);
         Security::AccessToken::HapBaseInfo baseInfo;
@@ -8235,7 +8257,9 @@ ErrCode BundleDataMgr::GenerateUidAndGid(InnerBundleUserInfo &innerBundleUserInf
         // means the AT side returned no uid for the identity — fail fast
         // (mirrors the installer-level fail-fast) instead of allocating a
         // BMS-side uid that would drift from the token's uid binding.
-        if (innerBundleUserInfo.uid != Constants::INVALID_UID) {
+        // A zero uid (corrupt record) is rejected as well: it would chown the
+        // data dirs to root.
+        if (innerBundleUserInfo.uid > 0) {
             if (std::find(innerBundleUserInfo.gids.begin(), innerBundleUserInfo.gids.end(),
                 innerBundleUserInfo.uid) == innerBundleUserInfo.gids.end()) {
                 innerBundleUserInfo.gids.emplace_back(innerBundleUserInfo.uid);
@@ -8311,6 +8335,17 @@ void BundleDataMgr::RemoveUidIndexMap(int32_t uid)
 {
     std::unique_lock<std::shared_mutex> lock(uidIndexMapMutex_);
     uidIndexMap_.erase(uid);
+}
+
+void BundleDataMgr::RemoveUidIndexMapByBundleName(const std::string &bundleName)
+{
+    // Evict every reverse-lookup entry that resolves to this bundle: used after
+    // a by-name identity deletion on the AT side (which removes ALL identities
+    // of the bundle), so no stale entry survives to mis-resolve a reused uid.
+    std::unique_lock<std::shared_mutex> lock(uidIndexMapMutex_);
+    for (auto it = uidIndexMap_.begin(); it != uidIndexMap_.end();) {
+        it = (it->second.first == bundleName) ? uidIndexMap_.erase(it) : std::next(it);
+    }
 }
 
 ErrCode BundleDataMgr::GenerateBundleId(const std::string &bundleName, int32_t &bundleId)
@@ -8502,6 +8537,11 @@ bool BundleDataMgr::RestoreUidAndGid()
             std::map<std::string, InnerBundleCloneInfo> &clones = innerBundleUserInfo.cloneInfos;
             for (auto iter = clones.begin(); iter != clones.end(); iter++) {
                 auto &cloneInfo = iter->second;
+                if (cloneInfo.uid <= 0) {
+                    // Same guard as the main user info: a corrupt record must
+                    // not poison the id map / cache / fs config.
+                    continue;
+                }
                 int32_t bundleId = cloneInfo.uid - cloneInfo.userId * Constants::BASE_USER_RANGE;
                 std::string cloneBundleName =
                     BundleCloneCommonHelper::GetCloneBundleIdKey(bundleName, cloneInfo.appIndex);
@@ -8527,6 +8567,9 @@ bool BundleDataMgr::RestoreUidAndGid()
             const auto &cliSandboxInfos = innerBundleUserInfo.sandboxInfos;
             for (auto iter = cliSandboxInfos.begin(); iter != cliSandboxInfos.end(); iter++) {
                 auto &cliInfo = iter->second;
+                if (cliInfo.uid <= 0) {
+                    continue;
+                }
                 int32_t bundleId = cliInfo.uid - cliInfo.userId * Constants::BASE_USER_RANGE;
                 std::string cliBundleName =
                     BundleCloneCommonHelper::GetCloneBundleIdKey(bundleName, cliInfo.appIndex);

@@ -518,6 +518,11 @@ private:
     // session is committed or rolled back.
     std::map<int32_t, SessionProvisionInfo> sessionProvisionCache_;
     std::mutex sessionProvisionCacheMutex_;
+    // Bumped on every ClearSessionProvisionCache (guarded by the same mutex):
+    // QueryProvisionInfoBySessionId snapshots it before its un-locked AT lookup
+    // and re-checks before inserting, so an entry whose session was cleared
+    // while the lookup was in flight is never resurrected into the cache.
+    uint64_t sessionProvisionCacheGeneration_ = 0;
 
     std::string GetExtensionConfigPath() const;
     /**

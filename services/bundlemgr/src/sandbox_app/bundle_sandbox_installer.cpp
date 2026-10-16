@@ -179,11 +179,15 @@ ErrCode BundleSandboxInstaller::InstallSandboxApp(const std::string &bundleName,
     // sessionId=0 makes the AT side allocate one and write it back), so this
     // Commit is a real FinishInstall. The session carries no bundleInfos, so the
     // empty modulePathMap skips the package-info write. Commit BEFORE the guard
-    // is dismissed and BEFORE the sandbox info is persisted — on failure the
-    // still-armed sandboxAppGuard rolls the token/appIndex/uid/data dir back and
-    // the session destructor rolls the AT side back, and neither the in-memory
-    // sandbox info entry nor the persistent DB record exists yet (SandboxAppRollBack
-    // has no cleanup for them), so both sides stay consistent with zero residue.
+    // is dismissed and BEFORE the sandbox info is persisted. Failure paths:
+    // - Commit itself fails (session not committed): the destructor rolls the
+    //   AT side back, the still-armed sandboxAppGuard (SandboxAppRollBack)
+    //   cleans the token via DeleteToken.
+    // - Commit succeeds but SaveSandboxPersistentInfo fails below: the committed
+    //   AT identity is undone by SandboxAppRollBack's explicit
+    //   DeleteToken(NONE, uid) — NOT by the destructor (committed_ sessions are
+    //   no longer rolled back on destruction). Neither the in-memory sandbox
+    //   info entry nor the DB record exists yet, so both sides stay consistent.
     int32_t spmCommitRet = spmSession_.Commit({});
     if (spmCommitRet != ERR_OK) {
         APP_LOGE("spm session commit failed, bundleName:%{public}s errCode:%{public}d",
@@ -332,6 +336,10 @@ ErrCode BundleSandboxInstaller::CreateSandboxDataDir(
     createDirParam.uid = uid;
     createDirParam.gid = uid;
     createDirParam.apl = info.GetAppPrivilegeLevel();
+    // SPM ON: propagate the session id so the installd APL cross-check
+    // (GetResolvedApl) covers the derived installers as well, not just the
+    // base main path (a zero session id silently skips the check).
+    spmSession_.FillCreateDirParam(createDirParam);
     createDirParam.isPreInstallApp = info.IsPreInstallApp();
     createDirParam.debug = info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
     createDirParam.isDlpSandbox = (appIndex > DLP_SANDBOX_APP_INDEX);
