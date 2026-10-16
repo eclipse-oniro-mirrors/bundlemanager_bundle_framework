@@ -19,6 +19,7 @@
 #include "bundle_file_util.h"
 #include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
+#include "bundle_service_constants.h"
 #include "event_report.h"
 #include "hitrace_meter.h"
 #include "ipc_skeleton.h"
@@ -160,9 +161,9 @@ ErrCode DefaultAppHostImpl::SetDefaultApplicationForCustom(const int32_t userId,
 {
     LOG_NOFUNC_D(BMS_TAG_DEFAULT, "SetDefaultApplicationForCustom userId: %{public}d type: %{public}s",
         userId, type.c_str());
-    int32_t callingUid = IPCSkeleton::GetCallingUid();
-    if (callingUid != Constants::EDC_UID) {
-        LOG_NOFUNC_E(BMS_TAG_DEFAULT, "uid: %{public}d is not edc", callingUid);
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_MANAGE_EDM_POLICY)) {
+        LOG_NOFUNC_E(BMS_TAG_DEFAULT, "uid: %{public}d pid: %{public}d has no manage edm policy permission",
+            IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     if (!BundlePermissionMgr::VerifyAcrossUserPermission(userId)) {

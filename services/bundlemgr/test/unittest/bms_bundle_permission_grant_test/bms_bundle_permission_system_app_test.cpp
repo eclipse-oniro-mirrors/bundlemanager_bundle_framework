@@ -27,6 +27,7 @@
 #include "bundle_permission_mgr.h"
 #include "bundle_stream_installer_host_impl.h"
 #include "bundle_verify_mgr.h"
+#include "default_app_host_impl.h"
 #include "inner_bundle_info.h"
 #include "installd/installd_service.h"
 #include "installd_client.h"
@@ -4680,6 +4681,22 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, CreateStreamInstaller_CheckUserF
     } else {
         OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "false");
     }
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: SetDefaultApplicationForCustom_0100
+ * @tc.name: test SetDefaultApplicationForCustom
+ * @tc.desc: 1. skip the uid check when MANAGE_EDM_POLICY is granted
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, SetDefaultApplicationForCustom_0100, Function | SmallTest | Level1)
+{
+    ResetTestValues();
+    SetPermissionResultForTest(ServiceConstants::PERMISSION_MANAGE_EDM_POLICY, true);
+    auto hostImpl = std::make_unique<DefaultAppHostImpl>();
+    AAFwk::Want want;
+    auto res = hostImpl->SetDefaultApplicationForCustom(USERID, DEFAULT_APP_VIDEO, want);
+    EXPECT_NE(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
     ResetTestValues();
 }
 } // OHOS

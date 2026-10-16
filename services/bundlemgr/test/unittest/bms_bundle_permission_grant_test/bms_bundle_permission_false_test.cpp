@@ -41,6 +41,8 @@ using namespace OHOS;
 using namespace OHOS::AppExecFwk;
 using namespace OHOS::Security;
 
+int32_t GetPermissionCheckCountForTest(const std::string &permissionName);
+
 namespace OHOS {
 namespace {
 const std::string BUNDLE_NAME = "bundlName";
@@ -2179,6 +2181,22 @@ HWTEST_F(BmsBundlePermissionFalseTest, SetDefaultApplicationForCustom_0001, Func
     int32_t userId = 100;
     auto res = defaultAppHostImpl_->SetDefaultApplicationForCustom(userId, DEFAULT_APP_VIDEO, want);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: SetDefaultApplicationForCustom_0002
+ * @tc.name: test SetDefaultApplicationForCustom
+ * @tc.desc: 1. denied by MANAGE_EDM_POLICY, not by the caller uid
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, SetDefaultApplicationForCustom_0002, Function | SmallTest | Level1)
+{
+    AAFwk::Want want;
+    ElementName elementName("", "", "", "");
+    want.SetElement(elementName);
+    int32_t checked = GetPermissionCheckCountForTest(ServiceConstants::PERMISSION_MANAGE_EDM_POLICY);
+    auto res = defaultAppHostImpl_->SetDefaultApplicationForCustom(USERID, DEFAULT_APP_VIDEO, want);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    EXPECT_EQ(GetPermissionCheckCountForTest(ServiceConstants::PERMISSION_MANAGE_EDM_POLICY), checked + 1);
 }
 
 /**
