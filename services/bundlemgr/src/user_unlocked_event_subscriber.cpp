@@ -211,6 +211,7 @@ bool UpdateAppDataMgr::CreateBundleDataDir(
             return CreateEl5Dir(createDirParam);
         }
         ProcessExtensionDir(bundleInfo, createDirParam.extensionDirs);
+        ProcessPrintSericeDir(bundleInfo, createDirParam.hasDriverExtension);
         if (InstalldClient::GetInstance()->CreateBundleDataDir(createDirParam) != ERR_OK) {
             APP_LOGW("failed to CreateBundleDataDir");
         }
@@ -402,6 +403,16 @@ void UpdateAppDataMgr::ProcessExtensionDir(const BundleInfo &bundleInfo, std::ve
             ServiceConstants::FILE_SEPARATOR_LINE + info.name +
             ServiceConstants::FILE_SEPARATOR_PLUS + info.bundleName;
         dirs.emplace_back(extensionDir);
+    }
+}
+
+void UpdateAppDataMgr::ProcessPrintSericeDir(const BundleInfo &bundleInfo, bool &hasDriverExtension)
+{
+    for (const auto &extInfo : bundleInfo.extensionInfos) {
+        if (extInfo.type == ExtensionAbilityType::DRIVER) {
+            hasDriverExtension = true;
+            break;
+        }
     }
 }
 
