@@ -180,10 +180,17 @@ ErrCode BundleCliSandboxInstaller::ProcessCreateCliSandbox(const std::string &cr
     }
 
     // 8. HMDFS config
-    int32_t uid = 0;
-    std::vector<int32_t> gids;
+    std::string sandboxBundleName = BundleCloneCommonHelper::GetCloneBundleIdKey(bundleName, appIndex);
+    InnerBundleUserInfo tmpUserInfo;
+    tmpUserInfo.bundleName = sandboxBundleName;
+    tmpUserInfo.bundleUserInfo.userId = userId;
+    if (!BundleSpmManager::IsEnabled()) {
+        dataMgr_->GenerateUidAndGid(tmpUserInfo);
+    }
     BundleUtil::MakeFsConfig(info.GetBundleName(), ServiceConstants::HMDFS_CONFIG_PATH,
         info.GetAppProvisionType(), Constants::APP_PROVISION_TYPE_FILE_NAME);
+    int32_t uid = tmpUserInfo.uid;
+    std::vector<int32_t> gids;
 
     // 9. create access token
     info.SetAppIndex(appIndex);
@@ -226,16 +233,7 @@ ErrCode BundleCliSandboxInstaller::ProcessCreateCliSandbox(const std::string &cr
         }
         uid = identityUid;
     } else {
-        // OFF: the CLI sandbox owns a dedicated uid (mirrors the clone/dlp
-        // installers) — the composite key makes the local allocator issue a
-        // distinct bundleId (and register the reverse-lookup entry). Reusing
-        // the main app uid would collide with the main identity's entry.
-        InnerBundleUserInfo tmpUserInfo;
-        tmpUserInfo.bundleName = BundleCloneCommonHelper::GetCloneBundleIdKey(bundleName, appIndex);
-        tmpUserInfo.bundleUserInfo.userId = userId;
-        tmpUserInfo.uid = Constants::INVALID_UID;
-        dataMgr_->GenerateUidAndGid(tmpUserInfo);
-        uid = tmpUserInfo.uid;
+        uid = info.GetUid(userId);
     }
     if (uid == Constants::INVALID_UID) {
         APP_LOGE_NOFUNC("InitHapToken returned invalid uid for bundle:%{public}s", bundleName.c_str());
