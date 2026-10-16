@@ -11574,14 +11574,23 @@ ErrCode BundleDataMgr::GetAppProvisionInfoInDevice(const std::string &bundleName
         APP_LOGW("GetAppProvisionInfoInDevice bundleName is not existed. bundleName:%{public}s", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
-    for (const auto& bundleInfo : bundleInfoList) {
+    for (auto it = bundleInfoList.begin(); it != bundleInfoList.end(); ) {
+        const auto& bundleInfo = *it;
         auto bundleType = bundleInfo.GetApplicationBundleType();
         int32_t responseUserId = bundleInfo.GetResponseUserId(userId);
         if (bundleType == BundleType::SHARED || bundleType == BundleType::SKILL ||
             responseUserId == Constants::INVALID_USERID) {
             APP_LOGW("userId: %{public}d is invalid, and will find next bundleInfo", userId);
-            continue;
+            it = bundleInfoList.erase(it); 
+        } else {
+            ++it;
         }
+    }
+    if (bundleInfoList.empty()) {
+        APP_LOGW("GetAppProvisionInfoInDevice bundleName is not existed. bundleName:%{public}s", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    for (const auto& bundleInfo : bundleInfoList) {
         bool isDualModeCloneApp = bundleInfo.IsDualModeCloneApp();
         std::string effectiveBundleName = isDualModeCloneApp ?
             DualModeHelper::GetDualModeBundleName(bundleName) : bundleName;
@@ -11595,6 +11604,10 @@ ErrCode BundleDataMgr::GetAppProvisionInfoInDevice(const std::string &bundleName
         appProvisionInfo.bundleName = bundleName;
         appProvisionInfo.appIndex = isDualModeCloneApp ? ServiceConstants::DUAL_MODE_CLONE_APP_INDEX : 0;
         appProvisionInfos.emplace_back(appProvisionInfo);
+    }
+    if (appProvisionInfos.empty()) {
+        APP_LOGW("bundleName:%{public}s GetAppProvisionInfoInDevice failed", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     return ERR_OK;
 }
