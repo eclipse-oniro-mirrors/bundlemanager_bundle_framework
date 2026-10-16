@@ -1453,6 +1453,14 @@ public:
     {
         return baseBundleInfo_->isPreInstallApp;
     }
+    void SetBundleCheckBySpm(bool checked)
+    {
+        checkBySpm_ = checked;
+    }
+    bool IsBundleCheckBySpm() const
+    {
+        return checkBySpm_;
+    }
     /**
      * @brief Get whether the bundle is a system app.
      * @return Return whether the bundle is a system app.
@@ -2667,6 +2675,7 @@ private:
 
     // pluginBundleName -> pluginBundleInfo
     std::unordered_map<std::string, PluginBundleInfo> pluginBundleInfos_;
+    bool checkBySpm_ = false;
 };
 
 void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info);

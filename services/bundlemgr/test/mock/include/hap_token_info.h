@@ -16,6 +16,7 @@
 #ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_TEST_ACCESSTOKEN_HAP_TOKEN_INFO_H
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_TEST_ACCESSTOKEN_HAP_TOKEN_INFO_H
 
+#include <map>
 #include <string>
 #include <vector>
 
@@ -35,6 +36,8 @@ public:
     PermissionInfoCheckResult permCheckResult;
 };
 
+using FullTokenID = uint64_t;
+
 // ---- SPM structures mirrored from the real hap_token_info.h (test_spm_inter) ----
 enum class ReservedType : int32_t {
     NONE = 0,
@@ -42,10 +45,10 @@ enum class ReservedType : int32_t {
     RESERVED_DATA = 2,
 };
 
-enum InstallTypeEnum {
+enum class InstallTypeEnum {
     TYPE_INSTALL = 0,
-    TYPE_REPLACE,
-    TYPE_MERGE,
+    TYPE_REPLACE = 1,
+    TYPE_MERGE = 2,
 };
 
 enum SignInfoQueryFlag : uint32_t {
@@ -82,20 +85,26 @@ struct HapVerifyResultInfo {
 
 class HapBaseInfo final {
 public:
-    int32_t userID;
-    std::string bundleName = "";
+    int32_t userID = 0;
+    std::string bundleName;
     int32_t instIndex = 0;
 };
 
 struct Identity final {
-    uint64_t tokenId = 0;
+    FullTokenID tokenId = 0;
     int32_t uid = 0;
+};
+
+enum class MultipleMode : int32_t {
+    DEFAULT_OR_MAIN_MODE = 0,
+    SUB_MODE = 1,
 };
 
 struct BundleHapList final {
     std::vector<std::string> hapPaths;
     bool isPreInstalled = false;
-    int32_t userId;
+    int32_t userId = 0;
+    MultipleMode mode = MultipleMode::DEFAULT_OR_MAIN_MODE;
 };
 
 struct MigratedInfo final {
@@ -107,7 +116,7 @@ struct MigratedInfo final {
 };
 
 struct BundleMigrateResult final {
-    std::vector<uint64_t> tokenIdList;
+    std::vector<AccessTokenIDEx> tokenIdList;
     std::vector<ReservedType> reservedTypeList;
     int32_t errcode = 0;
 };
@@ -120,7 +129,7 @@ enum DlpType {
     DLP_TYPE_READ_ONLY = 2,
 };
 
-struct BundlePolicy {
+struct BundlePolicy final {
     std::vector<PreAuthorizationInfo> preAuthorizationInfo;
     int32_t dlpType = 0;
     bool isDebugGrant = false;
