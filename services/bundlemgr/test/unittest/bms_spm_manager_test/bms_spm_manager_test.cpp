@@ -17,9 +17,12 @@
 
 #include "access_token_error.h"
 #include "appexecfwk_errors.h"
+#include "bundle_data_mgr.h"
 #include "bundle_install_checker.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_spm_manager.h"
+#include "default_permission.h"
+#include "hap_token_info.h"
 #include "installd_client.h"
 #include "inner_bundle_info.h"
 #include "parcel.h"
@@ -37,8 +40,6 @@ int32_t GetClearSessionProvisionCacheCountForTest();
 } // namespace OHOS
 
 namespace OHOS {
-// Control variables defined in test/mock/src/bundle_permission_mgr.cpp.
-void ResetSpmFacadeMockValues();
 extern int32_t g_testVerifyPermission;
 extern int32_t g_deleteAccessTokenIdCount;
 extern bool g_deleteAccessTokenIdReserved;
@@ -48,6 +49,23 @@ extern int32_t g_deleteAccessTokenIdRet;
 extern bool g_updateHapTokenDataRefresh;
 extern bool g_updateHapTokenIsDebugGrant;
 extern bool g_updateHapTokenNeedInit;
+// Test knobs for the CreateBundlePolicy branches (mock bundle_permission_mgr).
+extern bool g_defaultPermissionRet;
+extern AppExecFwk::DefaultPermission g_mockDefaultPermission;
+extern bool g_matchSignatureRet;
+// SPM facade mock resetter defined in test/mock/src/bundle_permission_mgr.cpp.
+void ResetSpmFacadeMockValues();
+
+// SPM control variables defined in test/mock/src/accesstoken_kit.cpp.
+namespace Security {
+namespace AccessToken {
+extern int32_t g_spmFinishInstallRet;
+extern std::vector<int32_t> g_spmFinishInstallRetSeq;
+extern int32_t g_spmFinishInstallCallCount;
+extern bool g_spmFinishInstallLastPersistent;
+void ResetSpmKitMockValuesForTest();
+} // namespace AccessToken
+} // namespace Security
 } // namespace OHOS
 
 namespace {
@@ -81,6 +99,7 @@ public:
     {
         OHOS::ResetSpmFacadeMockValues();
         ResetClearSessionProvisionCacheCountForTest();
+        OHOS::Security::AccessToken::ResetSpmKitMockValuesForTest();
     };
     void TearDown() override {};
 };
@@ -624,6 +643,265 @@ HWTEST_F(BmsSpmManagerTest, IsRecoverableSpmError_0002, Function | MediumTest | 
     EXPECT_EQ(BundleSpmManager::WrapRecoverableSpmErrorCode(
         Security::AccessToken::AccessTokenError::ERR_UID_NOT_EXIST),
         Security::AccessToken::AccessTokenError::ERR_UID_NOT_EXIST);
+}
+
+// ===== BundleSpmManager::FinishHapInstall (production logic, relocated from
+// BundlePermissionMgr so it stays real in mock-linked test targets) =====
+
+/**
+ * @tc.number: BmsSpmManagerTest.FinishHapInstall_ZeroSession_0001
+ * @tc.name: A zero session id short-circuits without AT or cache activity
+ * @tc.desc: Legacy (SPM OFF / no session) callers pass session id 0: the call
+ *           returns ERR_OK immediately and neither FinishInstall nor the
+ *           installd provision-cache clear is invoked.
+ */
+HWTEST_F(BmsSpmManagerTest, FinishHapInstall_ZeroSession_0001, Function | SmallTest | Level1)
+{
+    std::map<std::string, std::string> modulePathMap;
+    EXPECT_EQ(BundleSpmManager::FinishHapInstall(0, true, modulePathMap), ERR_OK);
+    EXPECT_EQ(Security::AccessToken::g_spmFinishInstallCallCount, 0);
+    EXPECT_EQ(GetClearSessionProvisionCacheCountForTest(), 0);
+}
+
+/**
+ * @tc.number: BmsSpmManagerTest.FinishHapInstall_Success_0001
+ * @tc.name: A successful finish clears the installd provision cache
+ * @tc.desc: FinishInstall succeeds: ERR_OK is returned, the isPersistent flag
+ *           is propagated, and the session provision cache in the installd
+ *           process is cleared exactly once.
+ */
+HWTEST_F(BmsSpmManagerTest, FinishHapInstall_Success_0001, Function | SmallTest | Level1)
+{
+    Security::AccessToken::g_spmFinishInstallRet = 0;
+    std::map<std::string, std::string> modulePathMap;
+    EXPECT_EQ(BundleSpmManager::FinishHapInstall(56789, true, modulePathMap), ERR_OK);
+    EXPECT_EQ(Security::AccessToken::g_spmFinishInstallCallCount, 1);
+    EXPECT_TRUE(Security::AccessToken::g_spmFinishInstallLastPersistent);
+    EXPECT_EQ(GetClearSessionProvisionCacheCountForTest(), 1);
+}
+
+/**
+ * @tc.number: BmsSpmManagerTest.FinishHapInstall_TransientRetrySucceeds_0001
+ * @tc.name: A write-parcel failure is retried once and may succeed
+ * @tc.desc: The first FinishInstall fails with ERR_WRITE_PARCEL_FAILED (the
+ *           request provably never reached the AT side) and the retry
+ *           succeeds: ERR_OK is returned after exactly two AT calls and the
+ *           installd cache is cleared once (by the successful retry).
+ *           Ambiguous codes (SERVICE_ABNORMAL / READ_PARCEL_FAILED) are NOT
+ *           retried — see FinishHapInstall_AmbiguousNoRetry_0001.
+ */
+HWTEST_F(BmsSpmManagerTest, FinishHapInstall_TransientRetrySucceeds_0001, Function | SmallTest | Level1)
+{
+    Security::AccessToken::g_spmFinishInstallRetSeq = {
+        Security::AccessToken::AccessTokenError::ERR_WRITE_PARCEL_FAILED, 0};
+    std::map<std::string, std::string> modulePathMap;
+    EXPECT_EQ(BundleSpmManager::FinishHapInstall(56789, false, modulePathMap), ERR_OK);
+    EXPECT_EQ(Security::AccessToken::g_spmFinishInstallCallCount, 2);
+    EXPECT_FALSE(Security::AccessToken::g_spmFinishInstallLastPersistent);
+    EXPECT_EQ(GetClearSessionProvisionCacheCountForTest(), 1);
+}
+
+/**
+ * @tc.number: BmsSpmManagerTest.FinishHapInstall_TransientRetryStillFails_0001
+ * @tc.name: A still-failing retry propagates the error without cache cleanup
+ * @tc.desc: Both the first FinishInstall and its retry fail with the safe
+ *           retryable code: the last error is returned, the cache is NOT
+ *           cleared (the session is not finished on the AT side), and no
+ *           further retries.
+ */
+HWTEST_F(BmsSpmManagerTest, FinishHapInstall_TransientRetryStillFails_0001, Function | SmallTest | Level1)
+{
+    Security::AccessToken::g_spmFinishInstallRetSeq = {
+        Security::AccessToken::AccessTokenError::ERR_WRITE_PARCEL_FAILED,
+        Security::AccessToken::AccessTokenError::ERR_WRITE_PARCEL_FAILED};
+    std::map<std::string, std::string> modulePathMap;
+    EXPECT_EQ(BundleSpmManager::FinishHapInstall(56789, true, modulePathMap),
+        Security::AccessToken::AccessTokenError::ERR_WRITE_PARCEL_FAILED);
+    EXPECT_EQ(Security::AccessToken::g_spmFinishInstallCallCount, 2);
+    EXPECT_EQ(GetClearSessionProvisionCacheCountForTest(), 0);
+}
+
+/**
+ * @tc.number: BmsSpmManagerTest.FinishHapInstall_AmbiguousNoRetry_0001
+ * @tc.name: Ambiguous failures are NOT retried
+ * @tc.desc: SERVICE_ABNORMAL and READ_PARCEL_FAILED may mean the AT side
+ *           already finished the session — a blind retry could double-apply
+ *           or hit a finished session. Both codes are returned as-is after
+ *           exactly one AT call.
+ */
+HWTEST_F(BmsSpmManagerTest, FinishHapInstall_AmbiguousNoRetry_0001, Function | SmallTest | Level1)
+{
+    Security::AccessToken::g_spmFinishInstallRet =
+        Security::AccessToken::AccessTokenError::ERR_SERVICE_ABNORMAL;
+    std::map<std::string, std::string> modulePathMap;
+    EXPECT_EQ(BundleSpmManager::FinishHapInstall(56789, true, modulePathMap),
+        Security::AccessToken::AccessTokenError::ERR_SERVICE_ABNORMAL);
+    EXPECT_EQ(Security::AccessToken::g_spmFinishInstallCallCount, 1);
+    EXPECT_EQ(GetClearSessionProvisionCacheCountForTest(), 0);
+
+    Security::AccessToken::g_spmFinishInstallRet =
+        Security::AccessToken::AccessTokenError::ERR_READ_PARCEL_FAILED;
+    Security::AccessToken::g_spmFinishInstallCallCount = 0;
+    EXPECT_EQ(BundleSpmManager::FinishHapInstall(56789, true, modulePathMap),
+        Security::AccessToken::AccessTokenError::ERR_READ_PARCEL_FAILED);
+    EXPECT_EQ(Security::AccessToken::g_spmFinishInstallCallCount, 1);
+    EXPECT_EQ(GetClearSessionProvisionCacheCountForTest(), 0);
+}
+
+/**
+ * @tc.number: BmsSpmManagerTest.FinishHapInstall_NonTransientNoRetry_0001
+ * @tc.name: A non-transient failure is returned without any retry
+ * @tc.desc: A business error (not in the transient set) is returned as-is
+ *           after exactly one AT call; the installd cache stays untouched.
+ */
+HWTEST_F(BmsSpmManagerTest, FinishHapInstall_NonTransientNoRetry_0001, Function | SmallTest | Level1)
+{
+    Security::AccessToken::g_spmFinishInstallRet = -5;  // not a transient IPC error
+    std::map<std::string, std::string> modulePathMap;
+    EXPECT_EQ(BundleSpmManager::FinishHapInstall(56789, true, modulePathMap), -5);
+    EXPECT_EQ(Security::AccessToken::g_spmFinishInstallCallCount, 1);
+    EXPECT_EQ(GetClearSessionProvisionCacheCountForTest(), 0);
+}
+
+// ===== BundleSpmManager::CreateBundlePolicy =====
+
+/**
+ * @tc.number: BmsSpmManagerTest.CreateBundlePolicy_NoDefaultPermission_0001
+ * @tc.name: No default permission configured yields an empty policy
+ * @tc.desc: GetDefaultPermission reports no configuration for the bundle:
+ *           the pre-authorization list stays empty while dlpType and the
+ *           debug-grant flag are still carried.
+ */
+HWTEST_F(BmsSpmManagerTest, CreateBundlePolicy_NoDefaultPermission_0001, Function | SmallTest | Level1)
+{
+    g_defaultPermissionRet = false;
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    info.SetBaseBundleInfo(bundleInfo);
+
+    auto policy = BundleSpmManager::CreateBundlePolicy(info, 1, true);
+    EXPECT_TRUE(policy.preAuthorizationInfo.empty());
+    EXPECT_EQ(policy.dlpType, Security::AccessToken::DlpType(1));
+    EXPECT_TRUE(policy.isDebugGrant);
+}
+
+/**
+ * @tc.number: BmsSpmManagerTest.CreateBundlePolicy_FullPreAuthorization_0001
+ * @tc.name: A matched default permission is fully pre-authorized
+ * @tc.desc: The matched default permission's grant list is carried into the
+ *           policy verbatim (permissionName/userCancelable) — the full set is
+ *           pre-authorized regardless of what this particular profile
+ *           requests (full-set grant decision).
+ */
+HWTEST_F(BmsSpmManagerTest, CreateBundlePolicy_FullPreAuthorization_0001, Function | SmallTest | Level1)
+{
+    DefaultPermission defaultPermission;
+    defaultPermission.bundleName = BUNDLE_NAME;
+    PermissionInfo first;
+    first.name = "ohos.permission.TEST_A";
+    first.userCancellable = true;
+    defaultPermission.grantPermission.emplace_back(first);
+    PermissionInfo second;
+    second.name = "ohos.permission.TEST_B";
+    second.userCancellable = false;
+    defaultPermission.grantPermission.emplace_back(second);
+    g_mockDefaultPermission = defaultPermission;
+
+    InnerBundleInfo info;  // requests nothing: the policy still gets the full set
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    info.SetBaseBundleInfo(bundleInfo);
+
+    auto policy = BundleSpmManager::CreateBundlePolicy(info, 2, false);
+    ASSERT_EQ(policy.preAuthorizationInfo.size(), static_cast<size_t>(2));
+    EXPECT_EQ(policy.preAuthorizationInfo[0].permissionName, "ohos.permission.TEST_A");
+    EXPECT_TRUE(policy.preAuthorizationInfo[0].userCancelable);
+    EXPECT_EQ(policy.preAuthorizationInfo[1].permissionName, "ohos.permission.TEST_B");
+    EXPECT_FALSE(policy.preAuthorizationInfo[1].userCancelable);
+    EXPECT_EQ(policy.dlpType, Security::AccessToken::DlpType(2));
+    EXPECT_FALSE(policy.isDebugGrant);
+}
+
+#ifdef USE_PRE_BUNDLE_PROFILE
+/**
+ * @tc.number: BmsSpmManagerTest.CreateBundlePolicy_SignatureMismatch_0001
+ * @tc.name: A signature mismatch yields an empty pre-authorization list
+ * @tc.desc: Under USE_PRE_BUNDLE_PROFILE a default permission whose
+ *           signatures do not match the bundle is not pre-authorized.
+ *           (Not compiled in this target: it does not define the macro.)
+ */
+HWTEST_F(BmsSpmManagerTest, CreateBundlePolicy_SignatureMismatch_0001, Function | SmallTest | Level1)
+{
+    g_matchSignatureRet = false;
+    DefaultPermission defaultPermission;
+    defaultPermission.bundleName = BUNDLE_NAME;
+    PermissionInfo granted;
+    granted.name = "ohos.permission.TEST_A";
+    defaultPermission.grantPermission.emplace_back(granted);
+    g_mockDefaultPermission = defaultPermission;
+
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    info.SetBaseBundleInfo(bundleInfo);
+
+    auto policy = BundleSpmManager::CreateBundlePolicy(info, 0, false);
+    EXPECT_TRUE(policy.preAuthorizationInfo.empty());
+}
+#endif
+
+// ===== BundleSpmManager singleton / module-uninstall / recovery (SPM OFF) =====
+// Under SPM OFF: GetInstance is state-independent; OnModuleUninstalled is a
+// documented no-op; both recovery helpers short-circuit to false before any
+// AT call. ParseTrustedBundleInfo has no SPM OFF surface (the ON-only
+// trusted-bundle parsing runs behind CheckSignAndInitSession's AT branch).
+
+/**
+ * @tc.number: BmsSpmManagerTest.GetInstance_0001
+ * @tc.name: GetInstance returns the same non-null singleton
+ */
+HWTEST_F(BmsSpmManagerTest, GetInstance_0001, Function | SmallTest | Level1)
+{
+    auto &first = BundleSpmManager::GetInstance();
+    auto &second = BundleSpmManager::GetInstance();
+    EXPECT_EQ(&first, &second);
+}
+
+/**
+ * @tc.number: BmsSpmManagerTest.OnModuleUninstalled_Off_NoOp_0001
+ * @tc.name: OnModuleUninstalled is a no-op under SPM OFF
+ * @tc.desc: The module-uninstall re-sign flow is SPM-ON-only; under OFF it
+ *           returns ERR_OK without touching the AT side.
+ */
+HWTEST_F(BmsSpmManagerTest, OnModuleUninstalled_Off_NoOp_0001, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    info.SetBaseBundleInfo(bundleInfo);
+
+    EXPECT_EQ(BundleSpmManager::OnModuleUninstalled(info, TEST_USERID), ERR_OK);
+    EXPECT_EQ(Security::AccessToken::g_spmFinishInstallCallCount, 0);
+}
+
+/**
+ * @tc.number: BmsSpmManagerTest.TryRecoverUidError_Off_False_0001
+ * @tc.name: The uid recovery is disabled under SPM OFF
+ */
+HWTEST_F(BmsSpmManagerTest, TryRecoverUidError_Off_False_0001, Function | SmallTest | Level1)
+{
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    EXPECT_FALSE(BundleSpmManager::TryRecoverUidError(BUNDLE_NAME, dataMgr.get()));
+}
+
+/**
+ * @tc.number: BmsSpmManagerTest.TryRecoverAlreadyExistError_Off_False_0001
+ * @tc.name: The leftover-identity recovery is disabled under SPM OFF
+ */
+HWTEST_F(BmsSpmManagerTest, TryRecoverAlreadyExistError_Off_False_0001, Function | SmallTest | Level1)
+{
+    EXPECT_FALSE(BundleSpmManager::TryRecoverAlreadyExistError(BUNDLE_NAME));
 }
 
 } // namespace OHOS

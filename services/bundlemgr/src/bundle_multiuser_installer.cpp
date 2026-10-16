@@ -214,8 +214,8 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
         }
     }
     // SPM ON: no local allocation — the uid comes from the AT identity via
-    // InitToken's identityUid output below, or from the keep-data uninstall
-    // record when the token is recovered.
+    // InitToken's identityUid output below (keep-data re-installs recover the
+    // reserved identity through PrepareHapIdentity, which returns the SAME uid).
     BundleUtil::MakeFsConfig(info.GetBundleName(), ServiceConstants::HMDFS_CONFIG_PATH, info.GetAppProvisionType(),
         Constants::APP_PROVISION_TYPE_FILE_NAME);
     int32_t uid = newUserInfo.uid;
@@ -244,13 +244,35 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
             // fresh install under SPM ON: the AT-allocated identity uid is the uid
             uid = identityUid;
         }
-    } else if (BundleSpmManager::IsEnabled() && recoveredUid != 0) {
-        // keep-data reinstall under SPM ON: reuse the uid persisted at uninstall
-        uid = recoveredUid;
+    }
+
+    // SPM ON: a BMS uninstall record for this (userId, appIndex) means the AT
+    // side kept the identity reserved (RESERVED_DATA) — PrepareHapIdentity
+    // returns that SAME token, so the failure rollback below must NOT delete
+    // it (mirrors the clone installer and the -n flow keep-data guards).
+    bool keepDataReinstall = false;
+    if (BundleSpmManager::IsEnabled()) {
+        keepDataReinstall = dataMgr_->GetUninstallBundleInfoWithUserAndAppIndex(bundleName, userId,
+            Constants::INITIAL_APP_INDEX);
     }
     ScopeGuard applyAccessTokenGuard([&] {
+        if (keepDataReinstall) {
+            // The token from PrepareHapIdentity IS the reserved identity —
+            // deleting it would break the keep-data reservation.
+            return;
+        }
+        // SPM ON: the freshly created identity lives in the active install
+        // session. While the session is not committed the token is never
+        // persisted — the session rollback discards it, so no DeleteIdentity is
+        // needed. A committed session (post-commit DB failure) keeps the
+        // explicit undo at the AddInnerBundleUserInfo failure site.
+        if (BundleSpmManager::IsEnabled() && !spmSession_.IsCommitted()) {
+            APP_LOGI("skip delete accessToken on uncommitted spm session, bundleName:%{public}s",
+                bundleName.c_str());
+            return;
+        }
         BundleSpmManager::DeleteToken(newTokenIdEx.tokenIdExStruct.tokenID, bundleName,
-            BundleSpmManager::TokenDeleteType::NONE, uid);
+            BundleSpmManager::TokenDeleteType::NONE);
     });
     if (BundleSpmManager::IsEnabled() && uid == Constants::INVALID_UID) {
         // Fail fast: neither the AT identity nor the uninstall record provided
@@ -297,26 +319,35 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
     }
 
     ScopeGuard addBundleUserGuard([&] { dataMgr_->RemoveInnerBundleUserInfo(bundleName, userId); });
-    result = dataMgr_->AddInnerBundleUserInfo(bundleName, newUserInfo);
-    if (result != ERR_OK) {
-        return result;
-    }
 
     // SPM ON: InitToken builds a REAL session (PrepareHapIdentity with
     // sessionId=0 makes the AT side allocate one and write it back), so this
     // Commit is a real FinishInstall. The session carries no bundleInfos, so the
-    // empty modulePathMap skips the package-info write. Commit BEFORE the guards
-    // are dismissed and BEFORE the resource/el5/data-group records and the
-    // keep-data uninstall record are created/deleted — on failure the
-    // still-armed guards roll the token/data dirs/user info back, the session
-    // destructor rolls the AT side back, and none of the secondary records
-    // (resource info, el5/data-group dirs, keep-data record) are touched,
-    // so both sides stay consistent with zero residue.
+    // empty modulePathMap skips the package-info write. Commit BEFORE the
+    // bundle user info is persisted (agreed ordering: AT first, BMS follows) —
+    // on a commit failure the still-armed guards roll the token/data dirs back,
+    // the session destructor rolls the AT side back, and the user info is not
+    // in the DB yet.
     int32_t spmCommitRet = spmSession_.Commit({});
     if (spmCommitRet != ERR_OK) {
         APP_LOGE("spm session commit failed, bundleName:%{public}s errCode:%{public}d",
             bundleName.c_str(), spmCommitRet);
         return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
+    }
+    result = dataMgr_->AddInnerBundleUserInfo(bundleName, newUserInfo);
+    if (result != ERR_OK) {
+        // The session is already committed but the DB write failed: undo the
+        // freshly committed AT identity (keep-data reserved identities are
+        // exempt) so both sides stay clean.
+        if (!keepDataReinstall) {
+            int32_t delRet = BundleSpmManager::DeleteToken(newTokenIdEx.tokenIdExStruct.tokenID,
+                bundleName, BundleSpmManager::TokenDeleteType::NONE);
+            if (delRet != ERR_OK) {
+                APP_LOGE("undo spm identity failed, bundleName:%{public}s errCode:%{public}d",
+                    bundleName.c_str(), delRet);
+            }
+        }
+        return result;
     }
 
     // add new user bundle info
@@ -355,6 +386,10 @@ ErrCode BundleMultiUserInstaller::CreateDataDir(InnerBundleInfo &info,
     createDirParam.uid = uid;
     createDirParam.gid = uid;
     createDirParam.apl = info.GetAppPrivilegeLevel();
+    // SPM ON: propagate the session id so the installd APL cross-check
+    // (GetResolvedApl) covers the derived installers as well, not just the
+    // base main path (a zero session id silently skips the check).
+    spmSession_.FillCreateDirParam(createDirParam);
     createDirParam.isPreInstallApp = info.IsPreInstallApp();
     createDirParam.debug = info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
     createDirParam.extensionDirs = info.GetAllExtensionDirs();

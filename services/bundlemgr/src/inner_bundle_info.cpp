@@ -3865,6 +3865,24 @@ void InnerBundleInfo::SetAccessTokenIdExWithAppIndex(
     cloneItem->second.accessTokenIdEx = accessTokenIdEx.tokenIDEx;
 }
 
+void InnerBundleInfo::UpdateCloneUid(const int32_t userId, const int32_t appIndex, const int32_t uid)
+{
+    auto& key = NameAndUserIdToKey(GetBundleName(), userId);
+    auto infoItem = innerBundleUserInfos_.find(key);
+    if (infoItem == innerBundleUserInfos_.end()) {
+        return;
+    }
+
+    auto& userInfo = infoItem->second;
+    std::map<std::string, InnerBundleCloneInfo> &cloneInfos = userInfo.cloneInfos;
+    auto cloneKey = InnerBundleUserInfo::AppIndexToKey(appIndex);
+    auto cloneItem = cloneInfos.find(cloneKey);
+    if (cloneItem == cloneInfos.end()) {
+        return;
+    }
+    cloneItem->second.uid = uid;
+}
+
 void InnerBundleInfo::SetBundleUpdateTime(const int64_t time, int32_t userId)
 {
     auto& key = NameAndUserIdToKey(GetBundleName(), userId);

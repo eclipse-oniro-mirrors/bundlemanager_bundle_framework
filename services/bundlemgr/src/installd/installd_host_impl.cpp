@@ -273,20 +273,6 @@ using namespace OHOS::Security::CodeSign;
 constexpr const char* DEBUG_APP_IDENTIFIER = "DEBUG_LIB_ID";
 constexpr const char* DEFAULT_APL_NORMAL = "normal";
 
-// Strips the sandbox appIndex decoration to get the original bundle name
-// for the access token fallback query.
-std::string GetOriginalBundleName(const std::string &bundleName)
-{
-    // sandbox installs decorate the name with a "<appIndex>_" prefix; strip it only
-    // when the leading segment is fully numeric so legit names with underscores stay.
-    auto pos = bundleName.find('_');
-    if (pos != std::string::npos && pos > 0 && pos + 1 < bundleName.size() &&
-        bundleName.find_first_not_of("0123456789") == pos) {
-        return bundleName.substr(pos + 1);
-    }
-    return bundleName;
-}
-
 void FillSessionProvisionInfo(const Security::Verify::ProvisionInfo &provisionInfo,
     const Security::AccessToken::ProfileData &profileData, SessionProvisionInfo &info)
 {
@@ -4021,6 +4007,15 @@ ErrCode InstalldHostImpl::VerifyCodeSignatureForHap(const CodeSignatureParam &co
         std::shared_ptr<CodeSignHelper> codeSignHelper = std::make_shared<CodeSignHelper>();
         Security::CodeSign::FileType fileType = localParam.isPreInstalledBundle ?
             FILE_ENTRY_ONLY : FILE_ALL;
+        if (localParam.profileBlockLength >= static_cast<uint32_t>(
+            ServiceConstants::MAX_PROFILE_BLOCK_LENGTH)) {
+            // Mirror the VerifyCodeSignature bound: a parcel may claim a huge
+            // length while the block pointer is null (>= MAX skips the buffer
+            // read on deserialization) — reject before the CopyFrom below.
+            LOG_E(BMS_TAG_INSTALLD, "profileBlockLength is invalid: %{public}u",
+                localParam.profileBlockLength);
+            return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+        }
         if (localParam.isEnterpriseBundle) {
             LOG_D(BMS_TAG_INSTALLD, "Verify code signature for enterprise bundle");
             Security::CodeSign::ByteBuffer byteBuffer;
@@ -4089,6 +4084,14 @@ ErrCode InstalldHostImpl::DeliverySignProfile(const std::string &bundleName, int
         }
         if (spmProvisionInfo.profileBlockLength == 0 || spmProvisionInfo.profileBlock == nullptr) {
             LOG_E(BMS_TAG_INSTALLD, "session %{public}d has no profile block to deliver", sessionId);
+            return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+        }
+        if (spmProvisionInfo.profileBlockLength >= static_cast<uint32_t>(
+            ServiceConstants::MAX_PROFILE_BLOCK_LENGTH)) {
+            // Same bound as the legacy branch below: an AT-returned oversized
+            // block is a contract anomaly, fail closed instead of allocating.
+            LOG_E(BMS_TAG_INSTALLD, "session %{public}d profile block too large: %{public}u",
+                sessionId, spmProvisionInfo.profileBlockLength);
             return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
         }
         Security::CodeSign::ByteBuffer spmBuffer;
@@ -5517,6 +5520,7 @@ ErrCode InstalldHostImpl::QueryProvisionInfoBySessionId(int32_t sessionId,
         // legacy install: the BMS-provided IPC params are authoritative
         return ERR_OK;
     }
+    uint64_t cacheGeneration = 0;
     {
         std::lock_guard<std::mutex> lock(sessionProvisionCacheMutex_);
         auto it = sessionProvisionCache_.find(sessionId);
@@ -5524,16 +5528,29 @@ ErrCode InstalldHostImpl::QueryProvisionInfoBySessionId(int32_t sessionId,
             info = it->second;
             return ERR_OK;
         }
+        // Snapshot the generation before the un-locked AT lookup below: a
+        // ClearSessionProvisionCache racing the lookup bumps it, and the
+        // re-check before the insert then drops the stale entry instead of
+        // resurrecting a provision of an already-finished session.
+        cacheGeneration = sessionProvisionCacheGeneration_;
     }
     std::vector<Security::AccessToken::TrustedBundleInfo> bundleInfoList;
     int32_t ret = Security::AccessToken::AccessTokenKit::GetCacheSignInfoBySessionId(sessionId,
         Security::AccessToken::SignInfoQueryFlag::QUERY_PROFILE, bundleInfoList);
     if (ret != Security::AccessToken::AccessTokenKitRet::RET_SUCCESS || bundleInfoList.empty()) {
         // fallback for clone or sandbox installs whose session cache is gone:
-        // query by the original undecorated bundle name.
+        // query by the original undecorated bundle name (same decoration-strip
+        // and validation rules as IsValidBundleName; an invalid composite name
+        // fails closed instead of querying the AT side with garbage).
+        std::string originalBundleName;
+        if (!InstalldOperator::GetOriginalBundleName(bundleName, originalBundleName)) {
+            LOG_E(BMS_TAG_INSTALLD, "invalid composite bundle name for session %{public}d",
+                sessionId);
+            return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+        }
         bundleInfoList.clear();
         ret = Security::AccessToken::AccessTokenKit::GetHapSignInfo(
-            GetOriginalBundleName(bundleName),
+            originalBundleName,
             Security::AccessToken::SignInfoQueryFlag::QUERY_PROFILE, bundleInfoList);
         if (ret != Security::AccessToken::AccessTokenKitRet::RET_SUCCESS || bundleInfoList.empty()) {
             LOG_E(BMS_TAG_INSTALLD, "query provision by session %{public}d failed, ret %{public}d",
@@ -5555,6 +5572,13 @@ ErrCode InstalldHostImpl::QueryProvisionInfoBySessionId(int32_t sessionId,
     }
     {
         std::lock_guard<std::mutex> lock(sessionProvisionCacheMutex_);
+        if (sessionProvisionCacheGeneration_ != cacheGeneration) {
+            // The session was cleared while the AT lookup was in flight: do not
+            // resurrect the entry. The filled info is still returned to THIS
+            // caller (the lookup started before the clear), it just does not
+            // linger in the cache for later sessions.
+            return ERR_OK;
+        }
         sessionProvisionCache_[sessionId] = info;
     }
     return ERR_OK;
@@ -5591,6 +5615,7 @@ ErrCode InstalldHostImpl::ClearSessionProvisionCache(int32_t sessionId)
     }
     std::lock_guard<std::mutex> lock(sessionProvisionCacheMutex_);
     sessionProvisionCache_.erase(sessionId);
+    ++sessionProvisionCacheGeneration_;
     return ERR_OK;
 }
 }  // namespace AppExecFwk

@@ -201,6 +201,16 @@ ErrCode BundleCliSandboxInstaller::ProcessCreateCliSandbox(const std::string &cr
     }
 
     ScopeGuard applyAccessTokenGuard([&] {
+        // SPM ON: the freshly created identity lives in the active install
+        // session. While the session is not committed the token is never
+        // persisted — the session rollback discards it, so no DeleteIdentity is
+        // needed. A committed session (post-commit DB failure) keeps the
+        // explicit undo at the AddCliSandboxBundle failure site.
+        if (BundleSpmManager::IsEnabled() && !spmSession_.IsCommitted()) {
+            APP_LOGI("skip delete accessToken on uncommitted spm session, bundleName:%{public}s",
+                bundleName.c_str());
+            return;
+        }
         BundleSpmManager::DeleteToken(newTokenIdEx.tokenIdExStruct.tokenID, bundleName,
             BundleSpmManager::TokenDeleteType::NONE);
     });
@@ -216,7 +226,16 @@ ErrCode BundleCliSandboxInstaller::ProcessCreateCliSandbox(const std::string &cr
         }
         uid = identityUid;
     } else {
-        uid = info.GetUid(userId);
+        // OFF: the CLI sandbox owns a dedicated uid (mirrors the clone/dlp
+        // installers) — the composite key makes the local allocator issue a
+        // distinct bundleId (and register the reverse-lookup entry). Reusing
+        // the main app uid would collide with the main identity's entry.
+        InnerBundleUserInfo tmpUserInfo;
+        tmpUserInfo.bundleName = BundleCloneCommonHelper::GetCloneBundleIdKey(bundleName, appIndex);
+        tmpUserInfo.bundleUserInfo.userId = userId;
+        tmpUserInfo.uid = Constants::INVALID_UID;
+        dataMgr_->GenerateUidAndGid(tmpUserInfo);
+        uid = tmpUserInfo.uid;
     }
     if (uid == Constants::INVALID_UID) {
         APP_LOGE_NOFUNC("InitHapToken returned invalid uid for bundle:%{public}s", bundleName.c_str());
@@ -250,10 +269,33 @@ ErrCode BundleCliSandboxInstaller::ProcessCreateCliSandbox(const std::string &cr
     ScopeGuard addSandboxGuard([&] {
         dataMgr_->RemoveCliSandboxBundle(bundleName, userId, appIndex);
     });
+
+    // SPM ON: InitToken builds a REAL session (PrepareHapIdentity with
+    // sessionId=0 makes the AT side allocate one and write it back), so this
+    // Commit is a real FinishInstall. The session carries no bundleInfos, so the
+    // empty modulePathMap skips the package-info write. Commit BEFORE the
+    // sandbox info is persisted (agreed ordering: AT first, BMS follows) — on a
+    // commit failure the still-armed guards roll the token/data dirs back, the
+    // session destructor rolls the AT side back, and the sandbox entry is not
+    // in the DB yet.
+    int32_t spmCommitRet = spmSession_.Commit({});
+    if (spmCommitRet != ERR_OK) {
+        APP_LOGE("spm session commit failed, bundleName:%{public}s errCode:%{public}d",
+            bundleName.c_str(), spmCommitRet);
+        return ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_GRANT_PERMISSION_FAILED;
+    }
     ErrCode addRes = dataMgr_->AddCliSandboxBundle(bundleName, sandboxInfo);
     if (addRes != ERR_OK) {
         APP_LOGE("AddCliSandboxBundle failed, bundleName: %{public}s, appIndex: %{public}d",
             bundleName.c_str(), appIndex);
+        // The session is already committed but the DB write failed: undo the
+        // freshly committed AT identity so both sides stay clean.
+        int32_t delRet = BundleSpmManager::DeleteToken(newTokenIdEx.tokenIdExStruct.tokenID,
+            bundleName, BundleSpmManager::TokenDeleteType::NONE);
+        if (delRet != ERR_OK) {
+            APP_LOGE("undo spm identity failed, bundleName:%{public}s errCode:%{public}d",
+                bundleName.c_str(), delRet);
+        }
         return addRes;
     }
 
@@ -261,20 +303,6 @@ ErrCode BundleCliSandboxInstaller::ProcessCreateCliSandbox(const std::string &cr
         RemoveEl5Dir(bundleName, userId, appIndex);
     });
     CreateEl5Dir(info, userId, uid, appIndex);
-
-    // SPM ON: InitToken builds a REAL session (PrepareHapIdentity with
-    // sessionId=0 makes the AT side allocate one and write it back), so this
-    // Commit is a real FinishInstall. The session carries no bundleInfos, so the
-    // empty modulePathMap skips the package-info write. Commit BEFORE the guards
-    // are dismissed — on failure the still-armed guards roll the token/data
-    // dirs/sandbox info back and the session destructor rolls the AT side back,
-    // so both sides stay consistent.
-    int32_t spmCommitRet = spmSession_.Commit({});
-    if (spmCommitRet != ERR_OK) {
-        APP_LOGE("spm session commit failed, bundleName:%{public}s errCode:%{public}d",
-            bundleName.c_str(), spmCommitRet);
-        return ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_GRANT_PERMISSION_FAILED;
-    }
 
     // commit
     applyAccessTokenGuard.Dismiss();
@@ -303,6 +331,10 @@ ErrCode BundleCliSandboxInstaller::CreateSandboxDataDir(InnerBundleInfo &info,
     createDirParam.uid = uid;
     createDirParam.gid = uid;
     createDirParam.apl = info.GetAppPrivilegeLevel();
+    // SPM ON: propagate the session id so the installd APL cross-check
+    // (GetResolvedApl) covers the derived installers as well, not just the
+    // base main path (a zero session id silently skips the check).
+    spmSession_.FillCreateDirParam(createDirParam);
     createDirParam.isPreInstallApp = info.IsPreInstallApp();
     createDirParam.debug = info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
     auto result = InstalldClient::GetInstance()->CreateBundleDataDir(createDirParam);

@@ -195,6 +195,22 @@ ErrCode IndependentSkillsInstaller::ProcessInstall(
     }
     PatchDataMgr::GetInstance().ProcessPatchInfo(bundleName_, hspPaths,
         newInfos.begin()->second.GetVersionCode(), AppPatchType::SERVICE_FWK, installParam.isPatch);
+    // SPM ON: commit the session BEFORE the bundle info is persisted (agreed
+    // ordering: AT first, BMS follows). On a commit failure the business
+    // rollback below restores the persisted state and the session destructor
+    // rolls the AT side back, leaving both sides clean.
+    std::map<std::string, std::string> modulePathMap;
+    for (const auto &infoItem : newInfos) {
+        modulePathMap[infoItem.first] =
+            infoItem.second.GetModuleHapPath(infoItem.second.GetCurrentModulePackage());
+    }
+    int32_t spmCommitRet = spmSession_.Commit(modulePathMap);
+    if (spmCommitRet != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "spm session commit failed, bundleName:%{public}s errCode:%{public}d",
+            bundleName_.c_str(), spmCommitRet);
+        RollBack();
+        return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
+    }
     // check mark install finish
     result = MarkInstallFinish();
     if (result != ERR_OK) {
@@ -202,26 +218,12 @@ ErrCode IndependentSkillsInstaller::ProcessInstall(
         if (!versionUpgrade_ && !moduleUpdate_) {
             RollBack();
         }
+        // The SPM session was already committed but the DB write failed: undo
+        // the freshly created AT identity so the failed install leaves both
+        // sides clean (mirrors the base installer's UndoCommittedSpmIdentity).
+        UndoCommittedSpmIdentity();
         PatchDataMgr::GetInstance().DeleteInnerPatchInfo(bundleName_);
         return result;
-    }
-    if (result == ERR_OK) {
-        // SPM ON: commit the session with the hap path to installed path mapping.
-        std::map<std::string, std::string> modulePathMap;
-        for (const auto &infoItem : newInfos) {
-            modulePathMap[infoItem.first] =
-                infoItem.second.GetModuleHapPath(infoItem.second.GetCurrentModulePackage());
-        }
-        int32_t spmCommitRet = spmSession_.Commit(modulePathMap);
-        if (spmCommitRet != ERR_OK) {
-            LOG_E(BMS_TAG_INSTALLER, "spm session commit failed, bundleName:%{public}s errCode:%{public}d",
-                bundleName_.c_str(), spmCommitRet);
-            // The session is not committed: fail the install AND roll the persisted
-            // business data back (same as the other failure branches above) — the
-            // session destructor rolls the AT side, leaving both sides clean.
-            RollBack();
-            return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
-        }
     }
     RemoveOldSkillsPath();
     return result;
@@ -586,6 +588,9 @@ ErrCode IndependentSkillsInstaller::SaveBundleInfoToStorage()
         // Raw AT code: map to the registered BMS code, no unregistered code leaks.
         return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
     }
+    // Keep the prepared token for the post-commit DB-failure undo below: the
+    // skills flow does not persist it into the bundle info.
+    accessTokenId_ = accessTokenIdEx.tokenIdExStruct.tokenID;
 
     newInnerBundleInfo_.SetBundleInstallTime(BundleUtil::GetCurrentTimeMs(), userId_);
     if (!dataMgr_->AddInnerBundleInfo(bundleName_, newInnerBundleInfo_)) {
@@ -1298,6 +1303,30 @@ void IndependentSkillsInstaller::ResetProperties()
     bundleName_ = "";
     skillCount_ = 0;
     needDeleteSkillsPackageInfo_.clear();
+    accessTokenId_ = 0;
+}
+
+void IndependentSkillsInstaller::UndoCommittedSpmIdentity()
+{
+    // Mirror of the base installer's undo: the SPM session was already
+    // committed but the DB write (MarkInstallFinish) failed. Guards:
+    // - update-only session (no InitToken): the token, if any, predates this
+    //   flow and must never be deleted here;
+    // - keep-data reinstall: the prepared identity is the reserved one and
+    //   belongs to the keep-data reservation lifecycle.
+    if (!BundleSpmManager::IsEnabled() || !spmSession_.HasPreparedIdentity()) {
+        return;
+    }
+    if (dataMgr_ != nullptr && dataMgr_->GetUninstallBundleInfoWithUserAndAppIndex(
+        bundleName_, userId_, Constants::INITIAL_APP_INDEX)) {
+        return;
+    }
+    int32_t delRet = BundleSpmManager::DeleteToken(accessTokenId_, bundleName_,
+        BundleSpmManager::TokenDeleteType::NONE);
+    if (delRet != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "undo spm identity failed, skills:%{public}s errCode:%{public}d",
+            bundleName_.c_str(), delRet);
+    }
 }
 
 void IndependentSkillsInstaller::RemoveOldSkillsPath()

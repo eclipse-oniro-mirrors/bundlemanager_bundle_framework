@@ -1571,6 +1571,11 @@ public:
         const Security::AccessToken::AccessTokenIDEx accessTokenIdEx,
         const int32_t userId, const int32_t appIndex);
 
+    // Updates the clone identity's uid in place (clone infos keyed by appIndex):
+    // used when the AT side refreshes the token-bound uid of a clone so the
+    // persisted user info stays in sync with the reverse-lookup cache.
+    void UpdateCloneUid(const int32_t userId, const int32_t appIndex, const int32_t uid);
+
     void SetIsNewVersion(bool flag)
     {
         isNewVersion_ = flag;

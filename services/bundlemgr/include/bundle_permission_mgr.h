@@ -102,18 +102,6 @@ public:
      * @param modulePathMap Indicates the map from hap source path to installed path.
      * @return Returns ERR_OK.
      */
-    /**
-     * @brief Assemble the SPM BundlePolicy from the bundle info: the pre-authorization
-     *        list (default permission source, signature matched) plus dlp type and
-     *        debug grant flag. Permission defs/states are derived by the access token
-     *        service from the session provision (deferred permission model).
-     */
-    static Security::AccessToken::BundlePolicy CreateBundlePolicy(const InnerBundleInfo &innerBundleInfo,
-        int32_t dlpType, bool isDebugGrant);
-
-    static int32_t FinishHapInstall(int32_t sessionId, bool isSuccess,
-        const std::map<std::string, std::string> &modulePathMap);
-
     static bool GetRequestPermissionStates(BundleInfo &bundleInfo, uint32_t tokenId, const std::string deviceId);
 
     static int32_t ClearUserGrantedPermissionState(const Security::AccessToken::AccessTokenID tokenId);
@@ -179,6 +167,15 @@ public:
      */
     static bool RefreshPreAuthorizationForOTA();
 
+    // Default-permission helpers consumed by BundleSpmManager::CreateBundlePolicy
+    // (the SPM policy assembly relocated out of this class but still needs the
+    // shared default-permission source and signature matching).
+    static bool GetDefaultPermission(const std::string &bundleName, DefaultPermission &permission);
+
+    static bool MatchSignature(const DefaultPermission &permission, const std::vector<std::string> &signatures);
+
+    static bool MatchSignature(const DefaultPermission &permission, const std::string &signature);
+
 private:
     static std::vector<Security::AccessToken::PermissionDef> GetPermissionDefList(
         const InnerBundleInfo &innerBundleInfo);
@@ -201,12 +198,6 @@ private:
         const std::string &bundleName);
 
     static Security::AccessToken::ATokenAvailableTypeEnum GetAvailableType(const std::string &availableType);
-
-    static bool GetDefaultPermission(const std::string &bundleName, DefaultPermission &permission);
-
-    static bool MatchSignature(const DefaultPermission &permission, const std::vector<std::string> &signatures);
-
-    static bool MatchSignature(const DefaultPermission &permission, const std::string &signature);
 
     static bool CheckPermissionInDefaultPermissions(const DefaultPermission &defaultPermission,
         const std::string &permissionName, bool &userCancellable);

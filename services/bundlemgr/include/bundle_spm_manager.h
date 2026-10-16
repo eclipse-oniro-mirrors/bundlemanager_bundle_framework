@@ -46,9 +46,28 @@ public:
     static BundleSpmManager &GetInstance();
 
     /**
-     * @brief Whether the SPM delayed permission model is enabled.
-     *        Stage 3 will read the switch from system parameters. Hard-coded to false
-     *        for now so the facade keeps legacy behavior.
+     * @brief Assemble the SPM BundlePolicy from the bundle info: the pre-authorization
+     *        list (default permission source, signature matched) plus dlp type and
+     *        debug grant flag. Permission defs/states are derived by the access token
+     *        service from the session provision (deferred permission model).
+     */
+    static Security::AccessToken::BundlePolicy CreateBundlePolicy(const InnerBundleInfo &innerBundleInfo,
+        int32_t dlpType, bool isDebugGrant);
+
+    /**
+     * @brief Finish the AT install session: isSuccess maps to the isPersistent
+     *        semantics of FinishInstall (true commits and persists, false rolls
+     *        back without persistence); a zero session id short-circuits and a
+     *        transient AT error is retried once; on success the installd session
+     *        provision cache is cleared.
+     */
+    static int32_t FinishHapInstall(int32_t sessionId, bool isSuccess,
+        const std::map<std::string, std::string> &modulePathMap);
+
+    /**
+     * @brief Whether the SPM delayed permission model is enabled. Reads the
+     *        system parameter persist.bms.spm.enable (default false, spec FR-19);
+     *        the value is cached per process, so a change needs a restart.
      */
     static bool IsEnabled();
 
@@ -103,6 +122,16 @@ public:
 
         int32_t GetSessionId() const;
         bool IsActive() const;
+        // Whether Commit already succeeded: a committed session's identity was
+        // persisted by FinishInstall(true), so failure rollbacks still need the
+        // explicit DeleteIdentity undo; an uncommitted session's freshly created
+        // identity is discarded by the session rollback itself (never persisted).
+        bool IsCommitted() const;
+        // Whether InitToken prepared an identity inside this session (fresh
+        // creation or reserved adoption). An update-only session (UpdateToken)
+        // never sets it: its token predates the session, so the failure rollback
+        // must never delete it.
+        bool HasPreparedIdentity() const;
         bool GetHapVerifyResults(std::vector<Security::Verify::HapVerifyResult> &out) const;
 
         /**
@@ -129,7 +158,11 @@ public:
         int32_t UpdateToken(Security::AccessToken::AccessTokenIDEx &tokenIdEx,
             const InnerBundleInfo &info, int32_t userId,
             Security::AccessToken::HapInfoCheckResult &checkResult, const std::string &caps,
-            bool dataRefresh = false, bool isDebugGrant = false);
+            bool dataRefresh = false, bool isDebugGrant = false, int32_t appIndex = 0,
+            // Optional out param: when the AT side refreshes the token-bound uid
+            // (uidOut > 0), callers with a writable info persist it back into
+            // the user info (the DB write happens through their normal save path).
+            int32_t *refreshedUid = nullptr);
 
         /**
          * @brief Pre-check app permissions inside the session. Always returns ERR_OK
@@ -145,10 +178,10 @@ public:
 
         /**
          * @brief Commit the session after bundle data is persisted. Always returns
-         *        ERR_OK and triggers no IPC under SPM OFF. A failed commit must fail
-         *        the install: the callers map it to a registered BMS error code, and
-         *        the regular failure path rolls both the business data and the
-         *        session (destructor rollback) back.
+         *         ERR_OK and triggers no IPC under SPM OFF. A failed commit must fail
+         *         the install: the callers map it to a registered BMS error code, and
+         *         the regular failure path rolls both the business data and the
+         *         session (destructor rollback) back.
          */
         int32_t Commit(const std::map<std::string, std::string> &modulePathMap);
 
@@ -170,6 +203,7 @@ public:
 
         int32_t sessionId_ = 0;
         bool committed_ = false;
+        bool identityPrepared_ = false;
         std::vector<Security::Verify::HapVerifyResult> hapVerifyResults_;
     };
 
@@ -233,15 +267,11 @@ public:
      *        SPM OFF mapping: NONE -> DeleteAccessTokenId(tokenId, false);
      *        RESERVED_IDENTITY -> DeleteAccessTokenId(tokenId, true);
      *        RESERVED_DATA -> no-op (legacy keep-data keeps the token active).
-     *        SPM ON: after the identity is deleted, a valid uid also evicts the
-     *        reverse-lookup cache entry — only for the NONE semantics (the reserved
-     *        types keep the identity in the AT service, so the entry stays).
-     *        Rollback/uninstall callers pass the uid that was cached when the
-     *        identity was prepared.
+     *        SPM ON: the identity is deleted through DeleteIdentity (the
+     *        TokenDeleteType maps one-to-one to the AT ReservedType values).
      */
     static int32_t DeleteToken(Security::AccessToken::AccessTokenID tokenId,
-        const std::string &bundleName, TokenDeleteType type = TokenDeleteType::NONE,
-        int32_t uid = Constants::INVALID_UID);
+        const std::string &bundleName, TokenDeleteType type = TokenDeleteType::NONE);
 
 private:
     BundleSpmManager() = default;

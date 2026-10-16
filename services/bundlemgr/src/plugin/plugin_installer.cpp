@@ -222,6 +222,12 @@ ErrCode PluginInstaller::InstallLocalPlugin(const std::string &hostBundleName,
     ErrCode result = InstallLocalPluginInner(hostBundleName, pluginFilePaths, installPluginParam);
     SendLocalPluginSystemEvent(hostBundleName, installPluginParam.userId,
         isPluginExist_ ? LOCAL_PLUGIN_ACTION_UPDATE : LOCAL_PLUGIN_ACTION_INSTALL, result);
+    if (result == ERR_OK) {
+        // SPM ON: close the borrowed verification session explicitly (same as
+        // the normal plugin path) instead of waiting for the installer object
+        // to be destroyed — the installd provision cache is dropped right away.
+        spmSession_.Rollback();
+    }
 
     return result;
 }

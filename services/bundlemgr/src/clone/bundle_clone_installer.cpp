@@ -323,6 +323,14 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
                 uninstallRecord.userInfos.find(recordKey) != uninstallRecord.userInfos.end();
         }
     }
+    // SPM ON: RecoverHapToken never runs (short-circuits to false), so the
+    // existBeforeKeepDataApp_ flag would never be set through the OFF recovery
+    // path — derive it from the same record existence check so a successful
+    // keep-data reinstall still deletes the uninstall record (otherwise the
+    // record lingers and poisons later reinstalls / data-dir cleanup).
+    if (BundleSpmManager::IsEnabled() && keepDataReinstall) {
+        existBeforeKeepDataApp_ = true;
+    }
     if (!tokenRecovered) {
         int32_t identityUid = 0;
         if (spmSession_.InitToken(info, userId, 0, newTokenIdEx, checkResult,
@@ -353,8 +361,18 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
         if (keepDataReinstall) {
             return;
         }
+        // SPM ON: the freshly created identity lives in the active install
+        // session. While the session is not committed the token is never
+        // persisted — the session rollback discards it, so no DeleteIdentity is
+        // needed. A committed session (post-commit DB failure) keeps the
+        // explicit undo at the AddCloneBundle failure site.
+        if (BundleSpmManager::IsEnabled() && !spmSession_.IsCommitted()) {
+            APP_LOGI("skip delete accessToken on uncommitted spm session, bundleName:%{public}s",
+                bundleName.c_str());
+            return;
+        }
         BundleSpmManager::DeleteToken(newTokenIdEx.tokenIdExStruct.tokenID, bundleName,
-            BundleSpmManager::TokenDeleteType::NONE, uid);
+            BundleSpmManager::TokenDeleteType::NONE);
     });
     if (BundleSpmManager::IsEnabled() && uid == Constants::INVALID_UID) {
         // Fail fast: neither the AT identity nor the uninstall record provided a
@@ -400,28 +418,37 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
     }
 
     ScopeGuard addCloneBundleGuard([&] { dataMgr->RemoveCloneBundle(bundleName, userId, appIndex); });
-    ErrCode addRes = dataMgr->AddCloneBundle(bundleName, attr);
-    if (addRes != ERR_OK) {
-        APP_LOGE("dataMgr add clone bundle fail, bundleName: %{public}s, userId: %{public}d, appIndex: %{public}d",
-            bundleName.c_str(), userId, appIndex);
-        return addRes;
-    }
 
     // SPM ON: InitToken builds a REAL session (PrepareHapIdentity with
     // sessionId=0 makes the AT side allocate one and write it back), so this
     // Commit is a real FinishInstall. The session carries no bundleInfos, so the
-    // empty modulePathMap skips the package-info write. Commit BEFORE the guards
-    // are dismissed and BEFORE the el5/resource records and the keep-data
-    // uninstall record are created/deleted — on failure the still-armed guards
-    // roll the clone info/data dirs back, the session destructor rolls the AT
-    // side back, and none of the secondary records (el5 dir, resource info,
-    // keep-data record) are touched, so both sides stay consistent with zero
-    // residue.
+    // empty modulePathMap skips the package-info write. Commit BEFORE the clone
+    // info is persisted (agreed ordering: AT first, BMS follows) — on a commit
+    // failure the still-armed guards roll the clone info/data dirs back, the
+    // session destructor rolls the AT side back, and the clone entry is not in
+    // the DB yet.
     int32_t spmCommitRet = spmSession_.Commit({});
     if (spmCommitRet != ERR_OK) {
         APP_LOGE("spm session commit failed, bundleName:%{public}s errCode:%{public}d",
             bundleName.c_str(), spmCommitRet);
         return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
+    }
+    ErrCode addRes = dataMgr->AddCloneBundle(bundleName, attr);
+    if (addRes != ERR_OK) {
+        APP_LOGE("dataMgr add clone bundle fail, bundleName: %{public}s, userId: %{public}d, appIndex: %{public}d",
+            bundleName.c_str(), userId, appIndex);
+        // The session is already committed but the DB write failed: undo the
+        // freshly committed AT identity (keep-data reserved identities are
+        // exempt — the token IS the reservation) so both sides stay clean.
+        if (!keepDataReinstall) {
+            int32_t delRet = BundleSpmManager::DeleteToken(newTokenIdEx.tokenIdExStruct.tokenID,
+                bundleName, BundleSpmManager::TokenDeleteType::NONE);
+            if (delRet != ERR_OK) {
+                APP_LOGE("undo spm identity failed, bundleName:%{public}s errCode:%{public}d",
+                    bundleName.c_str(), delRet);
+            }
+        }
+        return addRes;
     }
 
     ScopeGuard createEl5DirGuard([&] { RemoveEl5Dir(userInfo, userId, appIndex); });
@@ -514,8 +541,8 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
         }
         RemoveEl5Dir(userInfo, userId, appIndex);
 
-        if (BundleSpmManager::DeleteToken(accessTokenId_, bundleName, BundleSpmManager::TokenDeleteType::NONE,
-            uid_) != AccessToken::AccessTokenKitRet::RET_SUCCESS) {
+        if (BundleSpmManager::DeleteToken(accessTokenId_, bundleName, BundleSpmManager::TokenDeleteType::NONE) !=
+            AccessToken::AccessTokenKitRet::RET_SUCCESS) {
             APP_LOGE("delete AT failed clone");
         }
         DelayedSingleton<BmsUpdateSelinuxMgr>::GetInstance()->DeleteBundle(bundleName, userId, appIndex);
@@ -525,8 +552,12 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
         // same token and uid via PrepareHapIdentity. DeleteToken handles the
         // dual state internally: OFF maps RESERVED_DATA to a no-op (legacy
         // keep-data keeps the token active).
-        BundleSpmManager::DeleteToken(accessTokenId_, bundleName,
-            BundleSpmManager::TokenDeleteType::RESERVED_DATA, uid_);
+        int32_t reserveRet = BundleSpmManager::DeleteToken(accessTokenId_, bundleName,
+            BundleSpmManager::TokenDeleteType::RESERVED_DATA);
+        if (reserveRet != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLER, "reserve identity failed, clone:%{public}s errCode:%{public}d",
+                bundleName.c_str(), reserveRet);
+        }
         UninstallBundleInfo uninstallBundleInfo;
         uninstallBundleInfo.appId = appId_;
         uninstallBundleInfo.appIdentifier = appIdentifier_;
@@ -571,13 +602,11 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
 
 bool BundleCloneInstaller::DeleteUninstalledCloneData(const std::string &bundleName, int32_t userId, int32_t appIndex)
 {
-    if (BundleSpmManager::IsEnabled()) {
-        // SPM ON: the session is still deferred here, so UpdateToken would call
-        // UpdateHapPolicy(sessionId=0) and fail with ERR_SESSION_EXIST. Keep-data
-        // recovery runs through PrepareHapIdentity instead: the AT side kept the
-        // reserved identity (and its uid), so let the flow fall to InitToken.
-        return false;
-    }
+    // SPM ON note: keep-data recovery itself runs through PrepareHapIdentity
+    // (the AT side kept the reserved identity); this function only clears the
+    // RESERVED data on an explicit user-requested uninstall, so the cleanup
+    // must run under SPM ON as well — only the legacy token-recovery semantics
+    // were removed.
     if (GetDataMgr() != ERR_OK) {
         APP_LOGE("Get dataMgr nullptr");
         return false;
@@ -655,6 +684,10 @@ ErrCode BundleCloneInstaller::CreateCloneDataDir(InnerBundleInfo &info,
     createDirParam.uid = uid;
     createDirParam.gid = uid;
     createDirParam.apl = info.GetAppPrivilegeLevel();
+    // SPM ON: propagate the session id so the installd APL cross-check
+    // (GetResolvedApl) covers the derived installers as well, not just the
+    // base main path (a zero session id silently skips the check).
+    spmSession_.FillCreateDirParam(createDirParam);
     createDirParam.isPreInstallApp = info.IsPreInstallApp();
     createDirParam.debug = info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
     createDirParam.hasDriverExtension = info.HasDriverExtension();

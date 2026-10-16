@@ -238,6 +238,10 @@ void ResetTestValues()
 }
 namespace OHOS {
 int32_t g_testVerifyPermission = 0;
+// Test knobs for BundleSpmManager::CreateBundlePolicy branch coverage.
+bool g_defaultPermissionRet = true;
+AppExecFwk::DefaultPermission g_mockDefaultPermission;
+bool g_matchSignatureRet = true;
 // Instrumentation for BundleSpmManager::DeleteToken tests: call count and the
 // isTokenReserved argument of the last DeleteAccessTokenId call.
 int32_t g_deleteAccessTokenIdCount = 0;
@@ -255,6 +259,9 @@ bool g_updateHapTokenNeedInit = true;
 void ResetSpmFacadeMockValues()
 {
     g_testVerifyPermission = 0;
+    g_defaultPermissionRet = true;
+    g_mockDefaultPermission = AppExecFwk::DefaultPermission();
+    g_matchSignatureRet = true;
     g_deleteAccessTokenIdCount = 0;
     g_deleteAccessTokenIdReserved = false;
     g_initHapTokenRet = 0;
@@ -340,16 +347,6 @@ int32_t BundlePermissionMgr::DeleteAccessTokenId(const AccessTokenID tokenId, bo
     g_deleteAccessTokenIdReserved = isTokenReserved;
     return -1;
 }
-int32_t BundlePermissionMgr::FinishHapInstall(int32_t sessionId, bool isSuccess,
-    const std::map<std::string, std::string> &modulePathMap)
-{
-    if (sessionId == 0) {
-        return ERR_OK;
-    }
-    // Mirrors the production delegation to the access token service so the
-    // ON-mode target can drive the result through AccessTokenKit::FinishInstall.
-    return AccessTokenKit::FinishInstall(sessionId, isSuccess, modulePathMap);
-}
 bool BundlePermissionMgr::VerifyAcrossUserPermission(int userId)
 {
     return false;
@@ -362,16 +359,6 @@ int32_t BundlePermissionMgr::DeleteAccessTokenId(const AccessTokenID tokenId, bo
     return g_deleteAccessTokenIdRet;
 }
 
-int32_t BundlePermissionMgr::FinishHapInstall(int32_t sessionId, bool isSuccess,
-    const std::map<std::string, std::string> &modulePathMap)
-{
-    if (sessionId == 0) {
-        return ERR_OK;
-    }
-    // Mirrors the production delegation to the access token service so the
-    // ON-mode target can drive the result through AccessTokenKit::FinishInstall.
-    return AccessTokenKit::FinishInstall(sessionId, isSuccess, modulePathMap);
-}
 
 bool BundlePermissionMgr::VerifyCallingUid()
 {
@@ -597,13 +584,6 @@ Security::AccessToken::HapPolicyParams BundlePermissionMgr::CreateHapPolicyParam
     return policy;
 }
 
-Security::AccessToken::BundlePolicy BundlePermissionMgr::CreateBundlePolicy(
-    const InnerBundleInfo &innerBundleInfo, int32_t dlpType, bool isDebugGrant)
-{
-    Security::AccessToken::BundlePolicy policy;
-    return policy;
-}
-
 void BundlePermissionMgr::ConvertPermissionDef(const Security::AccessToken::PermissionDef &permDef,
     PermissionDef &permissionDef)
 {
@@ -617,19 +597,26 @@ void BundlePermissionMgr::ConvertPermissionDef(
 
 bool BundlePermissionMgr::GetDefaultPermission(const std::string &bundleName, DefaultPermission &permission)
 {
+    // Test knob: drive the "no default permission configured" branch of
+    // BundleSpmManager::CreateBundlePolicy; when enabled the injectable mock
+    // permission is handed out so the pre-authorization branch is covered too.
+    if (!g_defaultPermissionRet) {
+        return false;
+    }
+    permission = g_mockDefaultPermission;
     return true;
 }
 
 bool BundlePermissionMgr::MatchSignature(const DefaultPermission &permission,
     const std::string &signature)
 {
-    return true;
+    return g_matchSignatureRet;
 }
 
 bool BundlePermissionMgr::MatchSignature(const DefaultPermission &permission,
     const std::vector<std::string> &signatures)
 {
-    return true;
+    return g_matchSignatureRet;
 }
 
 bool BundlePermissionMgr::CheckPermissionInDefaultPermissions(const DefaultPermission &defaultPermission,

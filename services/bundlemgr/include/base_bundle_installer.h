@@ -1048,6 +1048,10 @@ private:
         bool isPreInstallApp, const InnerBundleUserInfo &innerBundleUserInfo);
     void UpdateDynamicSkills();
     ErrCode MarkInstallFinish(const std::map<std::string, std::string> &modulePathMap);
+    // Undo helper for the "SPM committed but BMS persistence failed" window of
+    // the agreed commit-before-DB ordering: deletes the freshly committed AT
+    // identity (keep-data reserved identities are exempt).
+    void UndoCommittedSpmIdentity(const InnerBundleInfo &info);
     bool IsArkWeb(const std::string &bundleName) const;
     bool IsShellOrDevAssistant() const;
     void UninstallDebugAppSandbox(const std::string &bundleName, const int32_t uid,
