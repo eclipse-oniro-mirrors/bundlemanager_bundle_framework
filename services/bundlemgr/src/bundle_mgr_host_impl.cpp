@@ -3524,14 +3524,15 @@ ErrCode BundleMgrHostImpl::BatchSetApplicationEnabled(int32_t userId, int32_t en
         "disableAppIndex=%{public}d, killProcess=%{public}d, needSendEvent=%{public}d",
         userId, enableAppIndex, disableAppIndex, killProcess, needSendEvent);
 
-    auto permRet = CheckBatchSetPermission();
+    if (userId == Constants::UNSPECIFIED_USERID) {
+        userId = BundleUtil::GetUserIdByCallingUid();
+    }
+
+    auto permRet = CheckBatchSetPermission(userId);
     if (permRet != ERR_OK) {
         EventReport::SendComponentStateSysEventForException(
             "", "", userId, false, enableAppIndex, "batch_permission_denied");
         return permRet;
-    }
-    if (userId == Constants::UNSPECIFIED_USERID) {
-        userId = BundleUtil::GetUserIdByCallingUid();
     }
 
     auto dataMgr = GetDataMgrFromService();
@@ -3554,7 +3555,7 @@ ErrCode BundleMgrHostImpl::BatchSetApplicationEnabled(int32_t userId, int32_t en
         skipDisableForbidden);
 }
 
-ErrCode BundleMgrHostImpl::CheckBatchSetPermission()
+ErrCode BundleMgrHostImpl::CheckBatchSetPermission(int32_t userId)
 {
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");
@@ -3562,6 +3563,10 @@ ErrCode BundleMgrHostImpl::CheckBatchSetPermission()
     }
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_CHANGE_ABILITY_ENABLED_STATE)) {
         APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (!CheckAcrossUserPermission(userId)) {
+        APP_LOGE("verify permission across local account failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     return ERR_OK;

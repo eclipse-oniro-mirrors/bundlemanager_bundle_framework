@@ -473,5 +473,243 @@ HWTEST_F(BmsBundleMgrHostImplDualModeTest, GetAllBundleInfoInstances_0400, Funct
         TEST_USER_ID);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
+
+/**
+ * @tc.number: BatchSetApplicationEnabled_0100
+ * @tc.name: test BatchSetApplicationEnabled cross-user denied without INTERACT_ACROSS_LOCAL_ACCOUNTS
+ * @tc.desc: 1. IsSystemApp and PERMISSION_CHANGE_ABILITY_ENABLED_STATE both pass
+ *           2. Non-native token, userId differs from calling user, and
+ *              INTERACT_ACROSS_LOCAL_ACCOUNTS not granted
+ *           3. CheckBatchSetPermission returns ERR_BUNDLE_MANAGER_PERMISSION_DENIED
+ */
+HWTEST_F(BmsBundleMgrHostImplDualModeTest, BatchSetApplicationEnabled_0100, Function | SmallTest | Level1)
+{
+    SetSystemAppForTest(true);
+    SetVerifyCallingPermissionForTest(true);
+    SetNativeTokenTypeForTest(false);
+    SetPermissionResultForTest(Constants::PERMISSION_BMS_INTERACT_ACROSS_LOCAL_ACCOUNTS, false);
+
+    auto hostImpl = GetBundleMgrHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+
+    ErrCode ret = hostImpl->BatchSetApplicationEnabled(TEST_USER_ID, 1, 0, false, false);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: BatchSetApplicationEnabled_0200
+ * @tc.name: test BatchSetApplicationEnabled cross-user allowed with INTERACT_ACROSS_LOCAL_ACCOUNTS
+ * @tc.desc: 1. IsSystemApp and PERMISSION_CHANGE_ABILITY_ENABLED_STATE both pass
+ *           2. Non-native token, userId differs from calling user, but
+ *              INTERACT_ACROSS_LOCAL_ACCOUNTS is granted
+ *           3. Cross-user check passes, proceeds to dataMgr lookup
+ */
+HWTEST_F(BmsBundleMgrHostImplDualModeTest, BatchSetApplicationEnabled_0200, Function | SmallTest | Level1)
+{
+    SetSystemAppForTest(true);
+    SetVerifyCallingPermissionForTest(true);
+    SetNativeTokenTypeForTest(false);
+    SetPermissionResultForTest(Constants::PERMISSION_BMS_INTERACT_ACROSS_LOCAL_ACCOUNTS, true);
+    ClearServiceDataMgr();
+
+    auto hostImpl = GetBundleMgrHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+
+    ErrCode ret = hostImpl->BatchSetApplicationEnabled(TEST_USER_ID, 1, 0, false, false);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: BatchSetApplicationEnabled_0300
+ * @tc.name: test BatchSetApplicationEnabled native token skips cross-user check
+ * @tc.desc: 1. IsSystemApp and PERMISSION_CHANGE_ABILITY_ENABLED_STATE both pass
+ *           2. Native token, userId differs from calling user
+ *           3. Cross-user check is skipped for native token, proceeds to dataMgr lookup
+ */
+HWTEST_F(BmsBundleMgrHostImplDualModeTest, BatchSetApplicationEnabled_0300, Function | SmallTest | Level1)
+{
+    SetSystemAppForTest(true);
+    SetVerifyCallingPermissionForTest(true);
+    SetNativeTokenTypeForTest(true);
+    ClearServiceDataMgr();
+
+    auto hostImpl = GetBundleMgrHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+
+    ErrCode ret = hostImpl->BatchSetApplicationEnabled(TEST_USER_ID, 1, 0, false, false);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: BatchSetApplicationEnabled_0400
+ * @tc.name: test BatchSetApplicationEnabled same-user path without INTERACT_ACROSS_LOCAL_ACCOUNTS
+ * @tc.desc: 1. IsSystemApp and PERMISSION_CHANGE_ABILITY_ENABLED_STATE both pass
+ *           2. Non-native token, userId equals calling user (DEFAULT_USERID = 0)
+ *           3. Cross-user check passes without INTERACT_ACROSS_LOCAL_ACCOUNTS, proceeds to dataMgr lookup
+ */
+HWTEST_F(BmsBundleMgrHostImplDualModeTest, BatchSetApplicationEnabled_0400, Function | SmallTest | Level1)
+{
+    SetSystemAppForTest(true);
+    SetVerifyCallingPermissionForTest(true);
+    SetNativeTokenTypeForTest(false);
+    SetPermissionResultForTest(Constants::PERMISSION_BMS_INTERACT_ACROSS_LOCAL_ACCOUNTS, false);
+    ClearServiceDataMgr();
+
+    auto hostImpl = GetBundleMgrHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+
+    ErrCode ret = hostImpl->BatchSetApplicationEnabled(Constants::DEFAULT_USERID, 1, 0, false, false);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: BatchSetApplicationEnabled_0500
+ * @tc.name: test BatchSetApplicationEnabled with UNSPECIFIED_USERID
+ * @tc.desc: 1. IsSystemApp and PERMISSION_CHANGE_ABILITY_ENABLED_STATE both pass
+ *           2. Non-native token, userId is UNSPECIFIED_USERID, resolved to calling user
+ *           3. After resolution, userId equals callingUserId, cross-user check passes
+ */
+HWTEST_F(BmsBundleMgrHostImplDualModeTest, BatchSetApplicationEnabled_0500, Function | SmallTest | Level1)
+{
+    SetSystemAppForTest(true);
+    SetVerifyCallingPermissionForTest(true);
+    SetNativeTokenTypeForTest(false);
+    SetPermissionResultForTest(Constants::PERMISSION_BMS_INTERACT_ACROSS_LOCAL_ACCOUNTS, false);
+    ClearServiceDataMgr();
+
+    auto hostImpl = GetBundleMgrHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+
+    ErrCode ret = hostImpl->BatchSetApplicationEnabled(Constants::UNSPECIFIED_USERID, 1, 0, false, false);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: BatchSetApplicationEnabled_0600
+ * @tc.name: test BatchSetApplicationEnabled denied for non-system app
+ * @tc.desc: 1. IsSystemApp returns false
+ *           2. Function should return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED
+ */
+HWTEST_F(BmsBundleMgrHostImplDualModeTest, BatchSetApplicationEnabled_0600, Function | SmallTest | Level1)
+{
+    SetSystemAppForTest(false);
+
+    auto hostImpl = GetBundleMgrHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+
+    ErrCode ret = hostImpl->BatchSetApplicationEnabled(TEST_USER_ID, 1, 0, false, false);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
+
+/**
+ * @tc.number: BatchSetApplicationEnabled_0700
+ * @tc.name: test BatchSetApplicationEnabled denied without PERMISSION_CHANGE_ABILITY_ENABLED_STATE
+ * @tc.desc: 1. IsSystemApp returns true
+ *           2. PERMISSION_CHANGE_ABILITY_ENABLED_STATE not granted
+ *           3. Function should return ERR_BUNDLE_MANAGER_PERMISSION_DENIED
+ */
+HWTEST_F(BmsBundleMgrHostImplDualModeTest, BatchSetApplicationEnabled_0700, Function | SmallTest | Level1)
+{
+    SetSystemAppForTest(true);
+    SetVerifyCallingPermissionForTest(false);
+
+    auto hostImpl = GetBundleMgrHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+
+    ErrCode ret = hostImpl->BatchSetApplicationEnabled(TEST_USER_ID, 1, 0, false, false);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: BatchSetApplicationEnabled_0800
+ * @tc.name: test BatchSetApplicationEnabled with userId not exist
+ * @tc.desc: 1. All permission checks pass
+ *           2. dataMgr does not contain the target userId
+ *           3. Function should return ERR_APPEXECFWK_USER_NOT_EXIST
+ */
+HWTEST_F(BmsBundleMgrHostImplDualModeTest, BatchSetApplicationEnabled_0800, Function | SmallTest | Level1)
+{
+    SetSystemAppForTest(true);
+    SetVerifyCallingPermissionForTest(true);
+    SetNativeTokenTypeForTest(true);
+
+    auto service = DelayedSingleton<BundleMgrService>::GetInstance();
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    dataMgr->multiUserIdsSet_.insert(Constants::DEFAULT_USERID);
+    service->dataMgr_ = dataMgr;
+
+    auto hostImpl = GetBundleMgrHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+
+    ErrCode ret = hostImpl->BatchSetApplicationEnabled(TEST_USER_ID, 1, 0, false, false);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_USER_NOT_EXIST);
+}
+
+/**
+ * @tc.number: BatchSetApplicationEnabled_0900
+ * @tc.name: test BatchSetApplicationEnabled success path
+ * @tc.desc: 1. All permission checks pass (native token, same flow)
+ *           2. dataMgr contains TEST_USER_ID and has a valid bundle
+ *           3. Function reaches dataMgr->BatchSetApplicationEnabled and returns ERR_OK
+ */
+HWTEST_F(BmsBundleMgrHostImplDualModeTest, BatchSetApplicationEnabled_0900, Function | SmallTest | Level1)
+{
+    SetSystemAppForTest(true);
+    SetVerifyCallingPermissionForTest(true);
+    SetNativeTokenTypeForTest(true);
+    PrepareDataMgrWithBundle(TEST_BUNDLE_NAME, TEST_APP_INDEX);
+
+    auto hostImpl = GetBundleMgrHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+
+    ErrCode ret = hostImpl->BatchSetApplicationEnabled(TEST_USER_ID, 1, 2, false, false);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: BatchSetApplicationEnabled_1000
+ * @tc.name: test BatchSetApplicationEnabled UNSPECIFIED_USERID resolved and propagated to dataMgr
+ * @tc.desc: 1. userId is UNSPECIFIED_USERID, resolved to calling user (DEFAULT_USERID = 0)
+ *           2. dataMgr contains userId=0, HasUserId passes
+ *           3. Function reaches dataMgr->BatchSetApplicationEnabled with resolved userId and returns ERR_OK
+ */
+HWTEST_F(BmsBundleMgrHostImplDualModeTest, BatchSetApplicationEnabled_1000, Function | SmallTest | Level1)
+{
+    SetSystemAppForTest(true);
+    SetVerifyCallingPermissionForTest(true);
+    SetNativeTokenTypeForTest(true);
+
+    auto service = DelayedSingleton<BundleMgrService>::GetInstance();
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    dataMgr->multiUserIdsSet_.insert(Constants::DEFAULT_USERID);
+    service->dataMgr_ = dataMgr;
+
+    auto hostImpl = GetBundleMgrHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+
+    ErrCode ret = hostImpl->BatchSetApplicationEnabled(Constants::UNSPECIFIED_USERID, 1, 2, false, false);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: BatchSetApplicationEnabled_1100
+ * @tc.name: test BatchSetApplicationEnabled with INVALID_USER_ID
+ * @tc.desc: 1. userId is INVALID_USER_ID (-1), not UNSPECIFIED_USERID, so no resolution
+ *           2. Non-native token, -1 differs from calling user (0), INTERACT_ACROSS not granted
+ *           3. CheckAcrossUserPermission fails, function returns ERR_BUNDLE_MANAGER_PERMISSION_DENIED
+ */
+HWTEST_F(BmsBundleMgrHostImplDualModeTest, BatchSetApplicationEnabled_1100, Function | SmallTest | Level1)
+{
+    SetSystemAppForTest(true);
+    SetVerifyCallingPermissionForTest(true);
+    SetNativeTokenTypeForTest(false);
+    SetPermissionResultForTest(Constants::PERMISSION_BMS_INTERACT_ACROSS_LOCAL_ACCOUNTS, false);
+
+    auto hostImpl = GetBundleMgrHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+
+    ErrCode ret = hostImpl->BatchSetApplicationEnabled(INVALID_USER_ID, 1, 2, false, false);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
 }
 }
