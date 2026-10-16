@@ -379,7 +379,10 @@ void BundleMultiUserInstaller::CreateDataGroupDir(const std::string &bundleName,
         APP_LOGE("get dataMgr failed");
         return;
     }
-    dataMgr_->GenerateNewUserDataGroupInfos(bundleName, userId);
+    // Dual-mode: a dual-variant app has entries in both maps (visible + hidden clone variant);
+    // expand the new user's data group infos on both sides. A missing entry is a no-op.
+    dataMgr_->GenerateNewUserDataGroupInfos(bundleName, userId, false);
+    dataMgr_->GenerateNewUserDataGroupInfos(bundleName, userId, true);
 }
 
 void BundleMultiUserInstaller::CreateEl5Dir(InnerBundleInfo &info, const int32_t userId, const int32_t &uid)

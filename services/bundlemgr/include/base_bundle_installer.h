@@ -782,9 +782,10 @@ private:
         bool needCopyHapToInstallPath, bool needDeleteOldLibraryPath);
     void GetDataGroupIds(const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes,
         std::unordered_set<std::string> &groupIds);
-    void GenerateNewUserDataGroupInfos(InnerBundleInfo &info) const;
+    void GenerateNewUserDataGroupInfos(InnerBundleInfo &info, bool toTempBundle = false) const;
     void RemoveOldGroupDirs(const InnerBundleInfo &oldInfo) const;
-    ErrCode RemoveDataGroupDirs(const std::string &bundleName, int32_t userId, bool isKeepData = false) const;
+    ErrCode RemoveDataGroupDirs(const std::string &bundleName, int32_t userId, bool isKeepData = false,
+        bool toTempBundle = false) const;
     void DeleteGroupDirsForException(const InnerBundleInfo &oldInfo) const;
     ErrCode CreateDataGroupDirs(
         const std::vector<Security::Verify::HapVerifyResult> &hapVerifyResults, const InnerBundleInfo &oldInfo);
@@ -971,9 +972,10 @@ private:
     // device mode (primary-mode package installed while in secondary mode, or vice-versa). Such a
     // package is stored in tempBundleInfos_ (hidden) under the original bundle name, not bundleInfos_.
     bool IsCrossModeInstall() const;
-    // Compute whether a pre-install recovery should store the bundle into tempBundleInfos_
-    // (cross-mode variant). Extracted for testability — the decision is based purely on the
-    // oldInfo's distribution policy and the current device mode.
+    // Pure variant-to-map predicate kept as a truth-table documentation and test anchor ONLY.
+    // Production routing must use crossModeFetchTruth_ (captured at fetch): re-deriving the route
+    // from the current mode params mid-task can disagree with the map the variant was actually
+    // fetched from (see crossModeFetchTruth_ for the full rationale).
     static bool ComputeToTempBundle(const InnerBundleInfo &oldInfo);
     // Capture persisted values before uninstall mutates/removes InnerBundleInfo. Uninstall requests normally carry
     // an UNSPECIFIED policy, so the event must not derive these fields from InstallParam.
@@ -1182,6 +1184,17 @@ private:
     // Dual-mode preinstall state (instance-scoped, in-process, not marshalled).
     DualModeInstallRole dualModeInstallRole_ = DualModeInstallRole::NONE;
     DeviceModeDistributionPolicy resolvedDeviceModeDistributionPolicy_ = DeviceModeDistributionPolicy::UNSPECIFIED;
+    // Dual-mode routing truth captured when the existing bundle info was fetched
+    // (InitTempBundleFromCache): which map (tempBundleInfos_ vs bundleInfos_) the variant of this
+    // task actually lives in. Mode params are read live on every predicate call and are written
+    // outside BMS locks, so a mode switch landing mid-task can make re-derived routing
+    // (IsCrossModeInstall/ComputeToTempBundle) disagree with the map the variant was fetched from.
+    // All later routing decisions of this task must reuse this captured truth instead of
+    // re-deriving it (bundle-info commit, data group generation, resource info, uninstall group
+    // cleanup, preinstall new-user expansion). Write points: captured at fetch, refreshed when
+    // the preinstall recovery path re-fetches the primary variant, and reset to false in
+    // ResetInstallProperties at task boundaries.
+    bool crossModeFetchTruth_ = false;
     DeviceModeDistributionPolicy uninstallDeviceModeDistributionPolicy_ =
     DeviceModeDistributionPolicy::UNSPECIFIED;
     AppSandboxPolicy uninstallAppSandboxPolicy_ = AppSandboxPolicy::SHARED_SANDBOX;

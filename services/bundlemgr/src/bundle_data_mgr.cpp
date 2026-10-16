@@ -12866,7 +12866,8 @@ void BundleDataMgr::GenerateDataGroupUuidAndUid(DataGroupInfo &dataGroupInfo, in
 }
 
 void BundleDataMgr::GenerateDataGroupInfos(const std::string &bundleName,
-    const std::unordered_set<std::string> &dataGroupIdList, int32_t userId, bool needSaveStorage)
+    const std::unordered_set<std::string> &dataGroupIdList, int32_t userId, bool needSaveStorage,
+    bool toTempBundle)
 {
     APP_LOGD("called for user: %{public}d", userId);
     std::unordered_map<std::string, std::vector<DataGroupInfo>> dataGroupInfoMap;
@@ -12875,9 +12876,14 @@ void BundleDataMgr::GenerateDataGroupInfos(const std::string &bundleName,
     std::unordered_set<int32_t> userIds;
     {
         std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
-        auto bundleInfoItem = bundleInfos_.find(bundleName);
-        if (bundleInfoItem == bundleInfos_.end()) {
-            APP_LOGW("%{public}s not found", bundleName.c_str());
+        // Dual-mode: the cross-mode variant is stored in tempBundleInfos_ with the original name as
+        // key; route by toTempBundle (same routing as AddInnerBundleInfo/UpdateInnerBundleInfo) so
+        // the data group infos are attached to the variant being installed, not the other-mode one.
+        std::map<std::string, InnerBundleInfo> &targetMap = toTempBundle ? tempBundleInfos_ : bundleInfos_;
+        auto bundleInfoItem = targetMap.find(bundleName);
+        if (bundleInfoItem == targetMap.end()) {
+            APP_LOGW("%{public}s not found in %{public}s", bundleName.c_str(),
+                toTempBundle ? "tempBundleInfos_" : "bundleInfos_");
             return;
         }
         auto dataGroupInfos = bundleInfoItem->second.GetDataGroupInfos();
@@ -12924,7 +12930,8 @@ void BundleDataMgr::GenerateDataGroupInfos(const std::string &bundleName,
     }
 }
 
-void BundleDataMgr::GenerateNewUserDataGroupInfos(const std::string &bundleName, int32_t userId)
+void BundleDataMgr::GenerateNewUserDataGroupInfos(const std::string &bundleName, int32_t userId,
+    bool toTempBundle)
 {
     APP_LOGD("called for -b %{public}s, -u %{public}d", bundleName.c_str(), userId);
     std::unordered_map<std::string, std::vector<DataGroupInfo>> dataGroupInfoMap;
@@ -12932,9 +12939,12 @@ void BundleDataMgr::GenerateNewUserDataGroupInfos(const std::string &bundleName,
     bool hasInputMethodExtension = false;
     {
         std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
-        auto bundleInfoItem = bundleInfos_.find(bundleName);
-        if (bundleInfoItem == bundleInfos_.end()) {
-            APP_LOGW("%{public}s not found", bundleName.c_str());
+        // Dual-mode: the cross-mode variant is stored in tempBundleInfos_; route by toTempBundle.
+        std::map<std::string, InnerBundleInfo> &targetMap = toTempBundle ? tempBundleInfos_ : bundleInfos_;
+        auto bundleInfoItem = targetMap.find(bundleName);
+        if (bundleInfoItem == targetMap.end()) {
+            APP_LOGD("%{public}s not found in %{public}s", bundleName.c_str(),
+                toTempBundle ? "tempBundleInfos_" : "bundleInfos_");
             return;
         }
         auto dataGroupInfos = bundleInfoItem->second.GetDataGroupInfos();
@@ -12962,15 +12972,19 @@ void BundleDataMgr::GenerateNewUserDataGroupInfos(const std::string &bundleName,
     (void)CreateAppGroupDir(dataGroupInfoMap, userId, needCreateEl5Dir, DataDirEl::NONE, hasInputMethodExtension);
 }
 
-void BundleDataMgr::DeleteUserDataGroupInfos(const std::string &bundleName, int32_t userId, bool keepData)
+void BundleDataMgr::DeleteUserDataGroupInfos(const std::string &bundleName, int32_t userId, bool keepData,
+    bool toTempBundle)
 {
     APP_LOGD("called for -b %{public}s, -u %{public}d", bundleName.c_str(), userId);
     std::vector<std::string> uuidList;
     {
         std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
-        auto bundleInfoItem = bundleInfos_.find(bundleName);
-        if (bundleInfoItem == bundleInfos_.end()) {
-            APP_LOGW("%{public}s not found", bundleName.c_str());
+        // Dual-mode: the uninstalled variant may be the hidden one stored in tempBundleInfos_.
+        std::map<std::string, InnerBundleInfo> &targetMap = toTempBundle ? tempBundleInfos_ : bundleInfos_;
+        auto bundleInfoItem = targetMap.find(bundleName);
+        if (bundleInfoItem == targetMap.end()) {
+            APP_LOGW("%{public}s not found in %{public}s", bundleName.c_str(),
+                toTempBundle ? "tempBundleInfos_" : "bundleInfos_");
             return;
         }
         auto dataGroupInfos = bundleInfoItem->second.GetDataGroupInfos();
@@ -13002,42 +13016,60 @@ void BundleDataMgr::GetDataGroupIndexMap(
     std::map<std::string, std::pair<int32_t, std::string>> &dataGroupIndexMap,
     std::unordered_set<int32_t> &uniqueIdSet) const
 {
-    for (const auto &bundleInfo : bundleInfos_) {
-        for (const auto &infoItem : bundleInfo.second.GetDataGroupInfos()) {
-            for_each(std::begin(infoItem.second), std::end(infoItem.second), [&](const DataGroupInfo &dataGroupInfo) {
-                int32_t index = dataGroupInfo.uid - dataGroupInfo.userId * Constants::BASE_USER_RANGE
-                    - DATA_GROUP_UID_OFFSET;
-                dataGroupIndexMap[dataGroupInfo.dataGroupId] =
-                    std::pair<int32_t, std::string>(index, dataGroupInfo.uuid);
-                uniqueIdSet.insert(index);
-            });
+    // Dual-mode: hidden variants (tempBundleInfos_) also occupy data group uniqueId indexes;
+    // collect from both maps to keep the index pool globally unique.
+    auto collectFunc = [&dataGroupIndexMap, &uniqueIdSet](
+        const std::map<std::string, InnerBundleInfo> &infoMap) {
+        for (const auto &bundleInfo : infoMap) {
+            for (const auto &infoItem : bundleInfo.second.GetDataGroupInfos()) {
+                for_each(std::begin(infoItem.second), std::end(infoItem.second),
+                    [&](const DataGroupInfo &dataGroupInfo) {
+                    int32_t index = dataGroupInfo.uid - dataGroupInfo.userId * Constants::BASE_USER_RANGE
+                        - DATA_GROUP_UID_OFFSET;
+                    dataGroupIndexMap[dataGroupInfo.dataGroupId] =
+                        std::pair<int32_t, std::string>(index, dataGroupInfo.uuid);
+                    uniqueIdSet.insert(index);
+                });
+            }
         }
-    }
+    };
+    collectFunc(bundleInfos_);
+    collectFunc(tempBundleInfos_);
 }
 
+// "Share" here means the data group is held by more than one HOLDER, where a holder is a
+// bundle × mode-variant pair: the same app's primary and clone variants are two distinct holders
+// on purpose (deletion safety) — a hidden variant still uses the physical group directory, so it
+// must keep the directory from being deleted even though it is not "another app".
 bool BundleDataMgr::IsShareDataGroupIdNoLock(const std::string &dataGroupId, int32_t userId) const
 {
     APP_LOGD("IsShareDataGroupIdNoLock, dataGroupId is %{public}s", dataGroupId.c_str());
     int32_t count = 0;
-    for (const auto &info : bundleInfos_) {
-        auto dataGroupInfos = info.second.GetDataGroupInfos();
-        auto iter = dataGroupInfos.find(dataGroupId);
-        if (iter == dataGroupInfos.end()) {
-            continue;
-        }
+    auto countFunc = [&count, &dataGroupId, userId](const std::map<std::string, InnerBundleInfo> &infoMap) {
+        for (const auto &info : infoMap) {
+            auto dataGroupInfos = info.second.GetDataGroupInfos();
+            auto iter = dataGroupInfos.find(dataGroupId);
+            if (iter == dataGroupInfos.end()) {
+                continue;
+            }
 
-        auto dataGroupIter = std::find_if(std::begin(iter->second), std::end(iter->second),
-            [userId](const DataGroupInfo &dataGroupInfo) {
-            return dataGroupInfo.userId == userId;
-        });
-        if (dataGroupIter == std::end(iter->second)) {
-            continue;
+            auto dataGroupIter = std::find_if(std::begin(iter->second), std::end(iter->second),
+                [userId](const DataGroupInfo &dataGroupInfo) {
+                return dataGroupInfo.userId == userId;
+            });
+            if (dataGroupIter == std::end(iter->second)) {
+                continue;
+            }
+            count++;
         }
-        count++;
-        if (count > 1) {
-            APP_LOGW("dataGroupId: %{public}s is shared", dataGroupId.c_str());
-            return true;
-        }
+    };
+    // Dual-mode: hidden variants in tempBundleInfos_ may still share the same data group; the
+    // count accumulates across both maps (cross-map sharing must be detected as well).
+    countFunc(bundleInfos_);
+    countFunc(tempBundleInfos_);
+    if (count > 1) {
+        APP_LOGW("dataGroupId: %{public}s is held by multiple holders", dataGroupId.c_str());
+        return true;
     }
     return false;
 }
@@ -13045,23 +13077,27 @@ bool BundleDataMgr::IsShareDataGroupIdNoLock(const std::string &dataGroupId, int
 bool BundleDataMgr::IsDataGroupIdExistNoLock(const std::string &dataGroupId, int32_t userId) const
 {
     APP_LOGD("dataGroupId is %{public}s, user %{public}d", dataGroupId.c_str(), userId);
-    for (const auto &info : bundleInfos_) {
-        auto dataGroupInfos = info.second.GetDataGroupInfos();
-        auto iter = dataGroupInfos.find(dataGroupId);
-        if (iter == dataGroupInfos.end()) {
-            continue;
-        }
+    auto existFunc = [&dataGroupId, userId](const std::map<std::string, InnerBundleInfo> &infoMap) {
+        for (const auto &info : infoMap) {
+            auto dataGroupInfos = info.second.GetDataGroupInfos();
+            auto iter = dataGroupInfos.find(dataGroupId);
+            if (iter == dataGroupInfos.end()) {
+                continue;
+            }
 
-        auto dataGroupIter = std::find_if(std::begin(iter->second), std::end(iter->second),
-            [userId](const DataGroupInfo &dataGroupInfo) {
-            return dataGroupInfo.userId == userId;
-        });
-        if (dataGroupIter == std::end(iter->second)) {
-            continue;
+            auto dataGroupIter = std::find_if(std::begin(iter->second), std::end(iter->second),
+                [userId](const DataGroupInfo &dataGroupInfo) {
+                return dataGroupInfo.userId == userId;
+            });
+            if (dataGroupIter == std::end(iter->second)) {
+                continue;
+            }
+            return true;
         }
-        return true;
-    }
-    return false;
+        return false;
+    };
+    // Dual-mode: hidden variants in tempBundleInfos_ still own their data group dirs.
+    return existFunc(bundleInfos_) || existFunc(tempBundleInfos_);
 }
 
 void BundleDataMgr::DeleteGroupDirsForException(const InnerBundleInfo &oldInfo, int32_t userId) const
@@ -13070,12 +13106,27 @@ void BundleDataMgr::DeleteGroupDirsForException(const InnerBundleInfo &oldInfo, 
     std::vector<std::string> uuidList;
     {
         std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
-        const auto bundleInfoItem = bundleInfos_.find(oldInfo.GetBundleName());
-        if (bundleInfoItem == bundleInfos_.end()) {
+        // Dual-mode: the installed variant may be stored in tempBundleInfos_ (cross-mode install).
+        // NOTE: with the same original name in both maps this lookup prefers bundleInfos_ (the
+        // visible variant); correct routing would need the fetch truth — this function currently
+        // has no production caller, wire it through an explicit toTempBundle parameter if revived.
+        // A plain pointer keeps the fallback lookup readable without reassigning an iterator that
+        // originally came from bundleInfos_.
+        const InnerBundleInfo *storedInfo = nullptr;
+        auto bundleInfoItem = bundleInfos_.find(oldInfo.GetBundleName());
+        if (bundleInfoItem != bundleInfos_.end()) {
+            storedInfo = &bundleInfoItem->second;
+        } else {
+            auto tempBundleInfoItem = tempBundleInfos_.find(oldInfo.GetBundleName());
+            if (tempBundleInfoItem != tempBundleInfos_.end()) {
+                storedInfo = &tempBundleInfoItem->second;
+            }
+        }
+        if (storedInfo == nullptr) {
             APP_LOGE("find bundle %{public}s failed", oldInfo.GetBundleName().c_str());
             return;
         }
-        auto newDataGroupInfos = bundleInfoItem->second.GetDataGroupInfos();
+        auto newDataGroupInfos = storedInfo->GetDataGroupInfos();
         if (newDataGroupInfos.empty()) {
             return;
         }
@@ -13172,41 +13223,51 @@ void BundleDataMgr::ScanAllBundleGroupInfo()
     // invalid GroupId
     std::set<std::string> errorGroupIds;
     std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
-    for (const auto &info : bundleInfos_) {
-        std::unordered_map<std::string, std::vector<DataGroupInfo>> dataGroupInfos = info.second.GetDataGroupInfos();
-        if (dataGroupInfos.empty()) {
-            continue;
+    auto scanFunc = [&indexMap, &groupIdMap, &needProcessGroupInfoBundleNames, &errorGroupIds](
+        const std::map<std::string, InnerBundleInfo> &infoMap) {
+        for (const auto &info : infoMap) {
+            std::unordered_map<std::string, std::vector<DataGroupInfo>> dataGroupInfos =
+                info.second.GetDataGroupInfos();
+            if (dataGroupInfos.empty()) {
+                continue;
+            }
+            for (const auto &dataGroupItem : dataGroupInfos) {
+                std::string dataGroupId = dataGroupItem.first;
+                if (dataGroupItem.second.empty()) {
+                    APP_LOGW("dataGroupInfos is empty in %{public}s", dataGroupId.c_str());
+                    continue;
+                }
+                int32_t groupUidIndex = dataGroupItem.second[0].uid -
+                    dataGroupItem.second[0].userId * Constants::BASE_USER_RANGE - DATA_GROUP_UID_OFFSET;
+                if (indexMap.find(groupUidIndex) == indexMap.end() &&
+                    groupIdMap.find(dataGroupId) == groupIdMap.end()) {
+                    indexMap[groupUidIndex] = dataGroupId;
+                    groupIdMap[dataGroupId] = groupUidIndex;
+                    continue;
+                }
+                if (indexMap.find(groupUidIndex) == indexMap.end() &&
+                    groupIdMap.find(dataGroupId) != groupIdMap.end()) {
+                    APP_LOGW("id %{public}s has valid index %{public}d, not index %{public}d",
+                        dataGroupId.c_str(), groupIdMap[dataGroupId], groupUidIndex);
+                }
+                if (indexMap.find(groupUidIndex) != indexMap.end() && indexMap[groupUidIndex] == dataGroupId) {
+                    continue;
+                }
+                if (indexMap.find(groupUidIndex) != indexMap.end() && indexMap[groupUidIndex] != dataGroupId) {
+                    APP_LOGW("id %{public}s has invalid index %{public}d", dataGroupId.c_str(), groupUidIndex);
+                }
+                errorGroupIds.insert(dataGroupId);
+                // invalid index or groupId
+                APP_LOGW("error index %{public}d groudId %{public}s -n %{public}s",
+                    groupUidIndex, dataGroupId.c_str(), info.first.c_str());
+                needProcessGroupInfoBundleNames[info.first].insert(dataGroupId);
+            }
         }
-        for (const auto &dataGroupItem : dataGroupInfos) {
-            std::string dataGroupId = dataGroupItem.first;
-            if (dataGroupItem.second.empty()) {
-                APP_LOGW("dataGroupInfos is empty in %{public}s", dataGroupId.c_str());
-                continue;
-            }
-            int32_t groupUidIndex = dataGroupItem.second[0].uid -
-                dataGroupItem.second[0].userId * Constants::BASE_USER_RANGE - DATA_GROUP_UID_OFFSET;
-            if (indexMap.find(groupUidIndex) == indexMap.end() && groupIdMap.find(dataGroupId) == groupIdMap.end()) {
-                indexMap[groupUidIndex] = dataGroupId;
-                groupIdMap[dataGroupId] = groupUidIndex;
-                continue;
-            }
-            if (indexMap.find(groupUidIndex) == indexMap.end() && groupIdMap.find(dataGroupId) != groupIdMap.end()) {
-                APP_LOGW("id %{public}s has valid index %{public}d, not index %{public}d",
-                    dataGroupId.c_str(), groupIdMap[dataGroupId], groupUidIndex);
-            }
-            if (indexMap.find(groupUidIndex) != indexMap.end() && indexMap[groupUidIndex] == dataGroupId) {
-                continue;
-            }
-            if (indexMap.find(groupUidIndex) != indexMap.end() && indexMap[groupUidIndex] != dataGroupId) {
-                APP_LOGW("id %{public}s has invalid index %{public}d", dataGroupId.c_str(), groupUidIndex);
-            }
-            errorGroupIds.insert(dataGroupId);
-            // invalid index or groupId
-            APP_LOGW("error index %{public}d groudId %{public}s -n %{public}s",
-                groupUidIndex, dataGroupId.c_str(), info.first.c_str());
-            needProcessGroupInfoBundleNames[info.first].insert(dataGroupId);
-        }
-    }
+    };
+    // Dual-mode: hidden variants (tempBundleInfos_) also hold data group infos and share the same
+    // index pool; scan both maps so conflicts across variants are detected.
+    scanFunc(bundleInfos_);
+    scanFunc(tempBundleInfos_);
     HandleGroupIdAndIndex(errorGroupIds, indexMap, groupIdMap);
     if (!HandleErrorDataGroupInfos(groupIdMap, needProcessGroupInfoBundleNames)) {
         APP_LOGE("process bundle data group failed");
@@ -13245,23 +13306,28 @@ bool BundleDataMgr::HandleErrorDataGroupInfos(
         return true;
     }
     bool ret = true;
-    for (const auto &item : needProcessGroupInfoBundleNames) {
-        auto bundleInfoIter = bundleInfos_.find(item.first);
-        if (bundleInfoIter == bundleInfos_.end()) {
-            ret = false;
-            continue;
+    // Tri-state result: NOT_FOUND (normal for single-variant apps) must not be conflated with
+    // FAILED (entry present but the fix or its persistence failed).
+    enum class FixResult { NOT_FOUND, OK, FAILED };
+    auto fixFunc = [this, &groupIdMap](std::map<std::string, InnerBundleInfo> &infoMap,
+        const std::string &bundleName, const std::set<std::string> &groupIds,
+        const char *mapLabel) -> FixResult {
+        auto bundleInfoIter = infoMap.find(bundleName);
+        if (bundleInfoIter == infoMap.end()) {
+            return FixResult::NOT_FOUND;
         }
         std::unordered_map<std::string, std::vector<DataGroupInfo>> dataGroupInfos =
             bundleInfoIter->second.GetDataGroupInfos();
         if (dataGroupInfos.empty()) {
-            continue;
+            return FixResult::OK;
         }
+        bool ok = true;
         auto userIds = bundleInfoIter->second.GetUsers();
-        for (const auto &groudId : item.second) {
+        for (const auto &groudId : groupIds) {
             auto groupIndexIter = groupIdMap.find(groudId);
             if (groupIndexIter == groupIdMap.end()) {
                 APP_LOGW("id map not found group %{public}s", groudId.c_str());
-                ret = false;
+                ok = false;
                 continue;
             }
             auto dataGroupInfoIter = dataGroupInfos.find(groudId);
@@ -13280,7 +13346,20 @@ bool BundleDataMgr::HandleErrorDataGroupInfos(
             }
         }
         if (!dataStorage_->SaveStorageBundleInfo(bundleInfoIter->second)) {
-            APP_LOGE("SaveStorageBundleInfo bundle %{public}s failed", item.first.c_str());
+            APP_LOGE("SaveStorageBundleInfo bundle %{public}s failed in %{public}s",
+                bundleName.c_str(), mapLabel);
+            ok = false;
+        }
+        return ok ? FixResult::OK : FixResult::FAILED;
+    };
+    for (const auto &item : needProcessGroupInfoBundleNames) {
+        // Dual-mode: the same original name may exist in both maps (the visible variant and the
+        // hidden clone/other-mode variant); fix whichever entries exist. Missing from one map is
+        // normal, not an error; a failure on any existing entry must propagate.
+        FixResult visibleResult = fixFunc(bundleInfos_, item.first, item.second, "bundleInfos_");
+        FixResult hiddenResult = fixFunc(tempBundleInfos_, item.first, item.second, "tempBundleInfos_");
+        if ((visibleResult == FixResult::NOT_FOUND && hiddenResult == FixResult::NOT_FOUND) ||
+            visibleResult == FixResult::FAILED || hiddenResult == FixResult::FAILED) {
             ret = false;
         }
     }

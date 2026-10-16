@@ -1308,7 +1308,7 @@ public:
         std::unordered_set<int32_t> &uniqueIdSet) const;
     void GenerateDataGroupInfos(const std::string &bundleName,
         const std::unordered_set<std::string> &dataGroupIdList, int32_t userId,
-        bool needSaveStorage = false);
+        bool needSaveStorage = false, bool toTempBundle = false);
     bool CreateAppGroupDir(const std::string &bundleName, int32_t userId);
     bool CreateAppGroupDir(const std::unordered_map<std::string, std::vector<DataGroupInfo>> &dataGroupInfoMap,
         int32_t userId, bool needCreateEl5Dir, DataDirEl dirEl, bool hasInputMethodExtension = false);
@@ -1316,8 +1316,10 @@ public:
     void GetDataGroupIndexMap(std::map<std::string, std::pair<int32_t, std::string>> &dataGroupIndexMap,
         std::unordered_set<int32_t> &uniqueIdSet) const;
     bool IsShareDataGroupIdNoLock(const std::string &dataGroupId, int32_t userId) const;
-    void GenerateNewUserDataGroupInfos(const std::string &bundleName, int32_t userId);
-    void DeleteUserDataGroupInfos(const std::string &bundleName, int32_t userId, bool keepData);
+    void GenerateNewUserDataGroupInfos(const std::string &bundleName, int32_t userId,
+        bool toTempBundle = false);
+    void DeleteUserDataGroupInfos(const std::string &bundleName, int32_t userId, bool keepData,
+        bool toTempBundle = false);
     bool IsDataGroupIdExistNoLock(const std::string &dataGroupId, int32_t userId) const;
     void ProcessAllUserDataGroupInfosWhenBundleUpdate(InnerBundleInfo &innerBundleInfo);
     void DeleteGroupDirsForException(const InnerBundleInfo &oldInfo, int32_t userId) const;
