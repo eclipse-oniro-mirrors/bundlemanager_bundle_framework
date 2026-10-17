@@ -5843,7 +5843,6 @@ void BMSEventHandler::ProcessMigrateSkillDir()
         ServiceConstants::LEGACY_SKILL_BASE_DIR, BundleDirScene::REMOVE_LEGACY_SKILL_DIR);
     if (ret != ERR_OK) {
         LOG_NOFUNC_E(BMS_TAG_DEFAULT, "delete legacy skill dir failed %{public}d", ret);
-        return;
     }
     UpdateOtaFlag(OTAFlag::MIGRATE_SKILL_DIR);
     LOG_NOFUNC_I(BMS_TAG_DEFAULT, "migrate skill dir end");
