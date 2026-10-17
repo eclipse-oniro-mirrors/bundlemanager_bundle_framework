@@ -1423,6 +1423,14 @@ HWTEST_F(BmsSpmManagerOnTest, OnModuleUninstalled_Success_0001, Function | Mediu
     BundleInfo bundleInfo;
     bundleInfo.name = BUNDLE_NAME;
     info.SetBaseBundleInfo(bundleInfo);
+    // The empty-hap-list guard returns ERR_OK before any AT call: the flow
+    // needs at least one module with a hap path to reach verify/commit.
+    std::map<std::string, InnerModuleInfo> moduleInfos;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = "entry";
+    moduleInfo.hapPath = "/data/app/entry.hap";
+    moduleInfos.emplace("entry", moduleInfo);
+    info.AddInnerModuleInfo(moduleInfos);
 
     EXPECT_EQ(BundleSpmManager::OnModuleUninstalled(info, TEST_USERID), ERR_OK);
     // the standalone session was finished persistently
@@ -1442,6 +1450,12 @@ HWTEST_F(BmsSpmManagerOnTest, OnModuleUninstalled_VerifyFailed_0001, Function | 
     BundleInfo bundleInfo;
     bundleInfo.name = BUNDLE_NAME;
     info.SetBaseBundleInfo(bundleInfo);
+    std::map<std::string, InnerModuleInfo> moduleInfos;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = "entry";
+    moduleInfo.hapPath = "/data/app/entry.hap";
+    moduleInfos.emplace("entry", moduleInfo);
+    info.AddInnerModuleInfo(moduleInfos);
 
     EXPECT_EQ(BundleSpmManager::OnModuleUninstalled(info, TEST_USERID), -2);
     EXPECT_EQ(OHOS::Security::AccessToken::g_spmFinishInstallCallCount, 0);
@@ -1459,6 +1473,12 @@ HWTEST_F(BmsSpmManagerOnTest, OnModuleUninstalled_CheckPermissionFailed_0001, Fu
     BundleInfo bundleInfo;
     bundleInfo.name = BUNDLE_NAME;
     info.SetBaseBundleInfo(bundleInfo);
+    std::map<std::string, InnerModuleInfo> moduleInfos;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = "entry";
+    moduleInfo.hapPath = "/data/app/entry.hap";
+    moduleInfos.emplace("entry", moduleInfo);
+    info.AddInnerModuleInfo(moduleInfos);
 
     EXPECT_EQ(BundleSpmManager::OnModuleUninstalled(info, TEST_USERID), -3);
     // the allocated session is rolled back (non-persistent finish), not leaked
@@ -1478,6 +1498,12 @@ HWTEST_F(BmsSpmManagerOnTest, OnModuleUninstalled_CommitFailed_0001, Function | 
     BundleInfo bundleInfo;
     bundleInfo.name = BUNDLE_NAME;
     info.SetBaseBundleInfo(bundleInfo);
+    std::map<std::string, InnerModuleInfo> moduleInfos;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = "entry";
+    moduleInfo.hapPath = "/data/app/entry.hap";
+    moduleInfos.emplace("entry", moduleInfo);
+    info.AddInnerModuleInfo(moduleInfos);
 
     EXPECT_EQ(BundleSpmManager::OnModuleUninstalled(info, TEST_USERID), -4);
 }

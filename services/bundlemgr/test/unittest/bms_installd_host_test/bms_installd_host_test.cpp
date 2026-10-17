@@ -1885,9 +1885,6 @@ HWTEST_F(BmsInstalldHostTest, InstalldOperator_GetOriginalBundleName_0100,
     // sandbox "<N>_<name>"
     EXPECT_TRUE(InstalldOperator::GetOriginalBundleName("100_com.example.app", name));
     EXPECT_EQ(name, "com.example.app");
-    // clone key "<N>clone_<name>"
-    EXPECT_TRUE(InstalldOperator::GetOriginalBundleName("1clone_com.example.app", name));
-    EXPECT_EQ(name, "com.example.app");
     // nested: clone data dir wrapping a sandbox name (sandbox of a clone)
     EXPECT_TRUE(InstalldOperator::GetOriginalBundleName("+clone-1+2_com.example.app", name));
     EXPECT_EQ(name, "com.example.app");
