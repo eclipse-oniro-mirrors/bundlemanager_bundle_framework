@@ -10162,7 +10162,8 @@ void BaseBundleInstaller::CheckPreBundle(const std::unordered_map<std::string, I
 ErrCode BaseBundleInstaller::CheckShellCanInstallPreApp(
     const std::unordered_map<std::string, InnerBundleInfo> &newInfos)
 {
-    if (!IsShellOrDevAssistant()) {
+    if (!IsShellOrDevAssistant() && !(OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false) &&
+        BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_ALLOW_USE_BM))) {
         return ERR_OK;
     }
     if (newInfos.empty()) {

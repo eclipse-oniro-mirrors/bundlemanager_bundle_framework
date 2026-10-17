@@ -46,7 +46,7 @@ QuickFixManagerProxy::~QuickFixManagerProxy()
 
 ErrCode QuickFixManagerProxy::DeployQuickFix(const std::vector<std::string> &bundleFilePaths,
     const sptr<IQuickFixStatusCallback> &statusCallback, bool isDebug, const std::string &inputTargetPath,
-    bool isReplace, bool isCheckDebugApp)
+    bool isReplace, bool isCheckDebugApp, int32_t callerUid)
 {
     LOG_I(BMS_TAG_DEFAULT, "begin to call DeployQuickFix");
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
@@ -91,6 +91,13 @@ ErrCode QuickFixManagerProxy::DeployQuickFix(const std::vector<std::string> &bun
     }
     if (!data.WriteRemoteObject(statusCallback->AsObject())) {
         LOG_E(BMS_TAG_DEFAULT, "write parcel failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    // callerUid is written last for backward compatibility: old hosts that do not read it
+    // simply ignore the trailing data; old proxies that do not write it leave the host
+    // read returning 0, which is treated as "not provided" (fall back to calling uid).
+    if (!data.WriteInt32(callerUid)) {
+        LOG_E(BMS_TAG_DEFAULT, "write callerUid failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 

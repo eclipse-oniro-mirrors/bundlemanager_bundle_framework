@@ -84,8 +84,12 @@ ErrCode QuickFixManagerHost::HandleDeployQuickFix(MessageParcel& data, MessagePa
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     sptr<IQuickFixStatusCallback> statusCallback = iface_cast<IQuickFixStatusCallback>(object);
+    // Read the trailing callerUid; old proxies do not write it and the read yields 0,
+    // which is treated as "not provided" (fall back to the IPC calling uid).
+    int32_t callerUid = data.ReadInt32();
 
-    auto ret = DeployQuickFix(bundleFilePaths, statusCallback, isDebug, targetPath, isReplace, isCheckDebugApp);
+    auto ret = DeployQuickFix(bundleFilePaths, statusCallback, isDebug, targetPath, isReplace, isCheckDebugApp,
+        callerUid);
     if (!reply.WriteInt32(ret)) {
         LOG_E(BMS_TAG_DEFAULT, "write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;

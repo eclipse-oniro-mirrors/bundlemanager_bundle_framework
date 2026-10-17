@@ -25,6 +25,7 @@
 #include "appexecfwk_errors.h"
 #include "bundle_info.h"
 #include "bundle_mgr_service.h"
+#include "bundle_util.h"
 #include "directory_ex.h"
 #include "file_ex.h"
 #include "if_system_ability_manager.h"
@@ -6069,6 +6070,116 @@ HWTEST_F(BmsBundleQuickFixTest, QuickFixManagerHostImpl_CopyHqfToSecurityDir_020
     std::vector<std::string> securityFilePaths;
     ErrCode ret = hostImpl.CopyHqfToSecurityDir(bundleFilePaths, securityFilePaths);
     EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATH);
+}
+
+/**
+ * @tc.number: QuickFixManagerHostImpl_CreateFd_0100
+ * Function: CreateFd
+ * @tc.name: test CreateFd path contains current user id
+ * @tc.desc: 1. system running normally
+ *           2. CreateFd path should be in current user dir
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixManagerHostImpl_CreateFd_0100, Function | SmallTest | Level0)
+{
+    QuickFixManagerHostImpl hostImpl;
+    int32_t fd = -1;
+    std::string path;
+    ErrCode ret = hostImpl.CreateFd(VALID_FILE_NAME, fd, path);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_GE(fd, 0);
+    // path layout: .../quick_fix/{timestamp}{id}/{userId}/{fileName}
+    auto fileNamePos = path.rfind("/");
+    ASSERT_NE(fileNamePos, std::string::npos);
+    auto userDirPos = path.rfind("/", fileNamePos - 1);
+    ASSERT_NE(userDirPos, std::string::npos);
+    EXPECT_EQ(path.substr(userDirPos + 1, fileNamePos - userDirPos - 1),
+        std::to_string(BundleUtil::GetUserIdByCallingUid()));
+    std::vector<std::string> destFiles {path};
+    DeleteFiles(destFiles);
+}
+
+/**
+ * @tc.number: QuickFixManagerHostImpl_CheckFilePathsInCallingUser_0100
+ * Function: CheckFilePathsInCallingUser
+ * @tc.name: test CheckFilePathsInCallingUser with different paths (direct call, callerUid=-1)
+ * @tc.desc: 1. system running normally
+ *           2. path with current user dir returns ERR_OK, others return ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATH
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixManagerHostImpl_CheckFilePathsInCallingUser_0100,
+    Function | SmallTest | Level0)
+{
+    QuickFixManagerHostImpl hostImpl;
+    std::string quickFixPrefix = "/data/service/el1/public/bms/bundle_manager_service/quick_fix/";
+    std::string userIdStr = std::to_string(BundleUtil::GetUserIdByCallingUid());
+    std::string otherUserIdStr = std::to_string(BundleUtil::GetUserIdByCallingUid() + 100);
+    int32_t callerUidNotProvided = -1;
+
+    std::vector<std::string> validPaths = {quickFixPrefix + "170000000011/" + userIdStr + "/hello.hqf"};
+    EXPECT_EQ(hostImpl.CheckFilePathsInCallingUser(validPaths, callerUidNotProvided), ERR_OK);
+
+    std::vector<std::string> otherUserPaths = {quickFixPrefix + "170000000011/" + otherUserIdStr +
+        "/hello.hqf"};
+    EXPECT_EQ(hostImpl.CheckFilePathsInCallingUser(otherUserPaths, callerUidNotProvided),
+        ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATH);
+
+    std::vector<std::string> missingUserDirPaths = {quickFixPrefix + "170000000011/hello.hqf"};
+    EXPECT_EQ(hostImpl.CheckFilePathsInCallingUser(missingUserDirPaths, callerUidNotProvided),
+        ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATH);
+
+    std::vector<std::string> oldFormatPaths = {VALID_FILE_PATH_3};
+    EXPECT_EQ(hostImpl.CheckFilePathsInCallingUser(oldFormatPaths, callerUidNotProvided),
+        ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATH);
+
+    std::vector<std::string> wrongUserDirPaths = {quickFixPrefix + "170000000011/evil/hello.hqf"};
+    EXPECT_EQ(hostImpl.CheckFilePathsInCallingUser(wrongUserDirPaths, callerUidNotProvided),
+        ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATH);
+
+    std::vector<std::string> noSeparatorPaths = {"hello.hqf"};
+    EXPECT_EQ(hostImpl.CheckFilePathsInCallingUser(noSeparatorPaths, callerUidNotProvided),
+        ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATH);
+
+    std::vector<std::string> rootFilePaths = {"/hello.hqf"};
+    EXPECT_EQ(hostImpl.CheckFilePathsInCallingUser(rootFilePaths, callerUidNotProvided),
+        ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATH);
+}
+
+/**
+ * @tc.number: QuickFixManagerHostImpl_CheckFilePathsInCallingUser_0200
+ * Function: CheckFilePathsInCallingUser
+ * @tc.name: test CheckFilePathsInCallingUser with SA relay callerUid
+ * @tc.desc: 1. native token caller (SA relay, default in test env) with explicit callerUid of user 100
+ *           2. path user segment matches callerUid's user → ERR_OK
+ *           3. path user segment mismatches callerUid's user → INVALID_PATH
+ *           4. callerUid not provided (0, old parcel) → falls back to calling uid
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixManagerHostImpl_CheckFilePathsInCallingUser_0200,
+    Function | SmallTest | Level0)
+{
+    QuickFixManagerHostImpl hostImpl;
+    std::string quickFixPrefix = "/data/service/el1/public/bms/bundle_manager_service/quick_fix/";
+
+    // The test env's mock accesstoken_kit returns TOKEN_NATIVE, so IsNativeTokenType() is true.
+    // SA relay: pass the original caller's uid belonging to user 100.
+    int32_t callerUidUser100 = 20000001; // uid / 200000 = 100
+    std::string relayedUserIdStr = "100";
+
+    std::vector<std::string> validRelayPaths = {quickFixPrefix + "170000000011/" + relayedUserIdStr +
+        "/hello.hqf"};
+    EXPECT_EQ(hostImpl.CheckFilePathsInCallingUser(validRelayPaths, callerUidUser100), ERR_OK);
+
+    // SA relay with callerUid belonging to a different user than the path segment
+    int32_t callerUidUser101 = 20200001; // uid / 200000 = 101
+    std::vector<std::string> mismatchRelayPaths = {quickFixPrefix + "170000000011/" + relayedUserIdStr +
+        "/hello.hqf"};
+    EXPECT_EQ(hostImpl.CheckFilePathsInCallingUser(mismatchRelayPaths, callerUidUser101),
+        ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATH);
+
+    // SA relay with callerUid not provided (0, from old parcel): falls back to calling uid
+    int32_t callerUidNotProvided = 0;
+    std::string callingUserIdStr = std::to_string(BundleUtil::GetUserIdByCallingUid());
+    std::vector<std::string> fallbackPaths = {quickFixPrefix + "170000000011/" + callingUserIdStr +
+        "/hello.hqf"};
+    EXPECT_EQ(hostImpl.CheckFilePathsInCallingUser(fallbackPaths, callerUidNotProvided), ERR_OK);
 }
 
 /**

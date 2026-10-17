@@ -2347,6 +2347,10 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFiles(
         APP_LOGE("userId is invalid");
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
+    if (!BundlePermissionMgr::IsSystemApp() && !CheckAcrossUserPermission(userId)) {
+        APP_LOGE("verify permission across local account failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
     if (bundleName.empty() || !cleanCacheCallback) {
         APP_LOGE("the cleanCacheCallback is nullptr or bundleName empty");
         EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, true, true,
@@ -2677,6 +2681,10 @@ bool BundleMgrHostImpl::CleanBundleDataFiles(const std::string &bundleName, cons
         APP_LOGE("the  bundleName empty or invalid userid");
         return false;
     }
+    if (!BundlePermissionMgr::IsSystemApp() && !CheckAcrossUserPermission(userId)) {
+        APP_LOGE("verify permission across local account failed");
+        return false;
+    }
     if (!CheckAppIndex(bundleName, userId, appIndex) && !CheckCliSandboxAppIndex(bundleName, userId, appIndex)) {
         EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, true,
             callingUid, callingBundleName);
@@ -2891,6 +2899,28 @@ ErrCode BundleMgrHostImpl::CompileProcessAOT(const std::string &bundleName, cons
     return AOTHandler::GetInstance().HandleCompile(bundleName, compileMode, isAllBundle, compileResults);
 }
 
+bool BundleMgrHostImpl::CheckBundleExistInCallingUser(const std::string &bundleName)
+{
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return false;
+    }
+    int32_t userId = BundleUtil::GetUserIdByCallingUid();
+    InnerBundleInfo innerBundleInfo;
+    if (!dataMgr->FetchInnerBundleInfo(bundleName, innerBundleInfo)) {
+        APP_LOGE("bundle %{public}s is not exist", bundleName.c_str());
+        return false;
+    }
+    InnerBundleUserInfo innerBundleUserInfo;
+    if (!innerBundleInfo.GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
+        APP_LOGE("bundle %{public}s is not installed in current user %{public}d",
+            bundleName.c_str(), userId);
+        return false;
+    }
+    return true;
+}
+
 ErrCode BundleMgrHostImpl::CompileReset(const std::string &bundleName, bool isAllBundle)
 {
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
@@ -2904,6 +2934,9 @@ ErrCode BundleMgrHostImpl::CompileReset(const std::string &bundleName, bool isAl
         if (checkDebugResult != ERR_OK) {
             return checkDebugResult;
         }
+    }
+    if (!isAllBundle && !CheckBundleExistInCallingUser(bundleName)) {
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     AOTHandler::GetInstance().HandleResetBundleAOT(bundleName, isAllBundle);
     return ERR_OK;

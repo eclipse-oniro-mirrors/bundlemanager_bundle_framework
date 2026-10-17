@@ -9807,7 +9807,7 @@ HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFilesImpl_0100, Function | Smal
     DataMgrGuard guard;
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     int32_t appindex = 1;
-    auto ret = hostImpl->CleanBundleDataFiles(BUNDLE_NAME_TEST, DEFAULT_USERID, appindex, DEMO_UID);
+    auto ret = hostImpl->CleanBundleDataFiles(BUNDLE_NAME_TEST, DEFAULT_USERID, appindex, TEST_UID);
     EXPECT_FALSE(ret);
 }
 
@@ -9823,7 +9823,7 @@ HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFilesImpl_0200, Function | Smal
 
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     int32_t appindex = 1;
-    auto ret = hostImpl->CleanBundleDataFiles(BUNDLE_NAME_TEST, DEFAULT_USERID, appindex, DEMO_UID);
+    auto ret = hostImpl->CleanBundleDataFiles(BUNDLE_NAME_TEST, DEFAULT_USERID, appindex, TEST_UID);
     EXPECT_FALSE(ret);
     ResetTestValues();
 }
@@ -9838,7 +9838,7 @@ HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFilesImpl_0300, Function | Smal
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     int32_t appindex = -1;
-    auto ret = hostImpl->CleanBundleDataFiles(BUNDLE_NAME_TEST, DEFAULT_USERID, appindex, DEMO_UID);
+    auto ret = hostImpl->CleanBundleDataFiles(BUNDLE_NAME_TEST, DEFAULT_USERID, appindex, TEST_UID);
     EXPECT_FALSE(ret);
 }
 
@@ -13914,7 +13914,7 @@ HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFilesImpl_0400, Function | Smal
         OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "false");
     }
     int32_t appindex = 0;
-    auto ret = hostImpl->CleanBundleDataFiles(BUNDLE_NAME_TEST, DEFAULT_USERID, appindex, DEMO_UID);
+    auto ret = hostImpl->CleanBundleDataFiles(BUNDLE_NAME_TEST, DEFAULT_USERID, appindex, TEST_UID);
     EXPECT_FALSE(ret);
     if (isEnableHmos) {
         OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "true");
@@ -13942,7 +13942,7 @@ HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFilesImpl_0500, Function | Smal
         OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "true");
     }
     int32_t appindex = 0;
-    auto ret = hostImpl->CleanBundleDataFiles(BUNDLE_NAME_TEST, DEFAULT_USERID, appindex, DEMO_UID);
+    auto ret = hostImpl->CleanBundleDataFiles(BUNDLE_NAME_TEST, DEFAULT_USERID, appindex, TEST_UID);
     EXPECT_FALSE(ret);
     if (isEnableHmos) {
         OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "true");
@@ -13970,7 +13970,7 @@ HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFilesImpl_0600, Function | Smal
         OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "false");
     }
     int32_t appindex = 0;
-    auto ret = hostImpl->CleanBundleDataFiles(BUNDLE_NAME_TEST, DEFAULT_USERID, appindex, DEMO_UID);
+    auto ret = hostImpl->CleanBundleDataFiles(BUNDLE_NAME_TEST, DEFAULT_USERID, appindex, TEST_UID);
     EXPECT_FALSE(ret);
     if (!isEnableHmos) {
         OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "false");
@@ -13998,7 +13998,7 @@ HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFilesImpl_0700, Function | Smal
         OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "true");
     }
     int32_t appindex = 0;
-    auto ret = hostImpl->CleanBundleDataFiles(BUNDLE_NAME_TEST, DEFAULT_USERID, appindex, DEMO_UID);
+    auto ret = hostImpl->CleanBundleDataFiles(BUNDLE_NAME_TEST, DEFAULT_USERID, appindex, TEST_UID);
     EXPECT_FALSE(ret);
     if (!isEnableHmos) {
         OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "false");
@@ -14006,6 +14006,267 @@ HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFilesImpl_0700, Function | Smal
     if (!isEnableFusion) {
         OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "false");
     }
+}
+
+/**
+ * @tc.number: CleanBundleCacheFilesAcrossUser_0100
+ * @tc.name: test CleanBundleCacheFiles denied for cross-user caller
+ * @tc.desc: 1. caller is non-native token without INTERACT_ACROSS_LOCAL_ACCOUNTS permission
+ *           2. target userId differs from calling uid's user and is not UNSPECIFIED_USERID
+ *           3. should return ERR_BUNDLE_MANAGER_PERMISSION_DENIED
+ */
+HWTEST_F(BmsBundleKitServiceTest, CleanBundleCacheFilesAcrossUser_0100, Function | SmallTest | Level1)
+{
+    SetSystemAppForTest(true);
+    SetNativeTokenTypeForTest(false);
+    SetPermissionResultForTest(Constants::PERMISSION_BMS_INTERACT_ACROSS_LOCAL_ACCOUNTS, false);
+
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    sptr<ICleanCacheCallback> cleanCacheCallback = new (std::nothrow) ICleanCacheCallbackTest();
+    int32_t appindex = 0;
+    int32_t userId = 100; // differs from GetUserIdByCallingUid(); not UNSPECIFIED_USERID
+    ErrCode ret = hostImpl->CleanBundleCacheFiles(BUNDLE_NAME_TEST, cleanCacheCallback, userId, appindex);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: CleanBundleCacheFilesAcrossUser_0200
+ * @tc.name: test CleanBundleCacheFiles not blocked for native token caller
+ * @tc.desc: 1. caller has native token type, across-user gate is exempt
+ *           2. target userId differs from calling uid's user
+ *           3. should not be denied by the across-user check
+ */
+HWTEST_F(BmsBundleKitServiceTest, CleanBundleCacheFilesAcrossUser_0200, Function | SmallTest | Level1)
+{
+    SetSystemAppForTest(true);
+    SetNativeTokenTypeForTest(true);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    sptr<ICleanCacheCallback> cleanCacheCallback = new (std::nothrow) ICleanCacheCallbackTest();
+    int32_t appindex = 0;
+    int32_t userId = 100; // differs from GetUserIdByCallingUid(); native token is exempt
+    ErrCode ret = hostImpl->CleanBundleCacheFiles(BUNDLE_NAME_TEST, cleanCacheCallback, userId, appindex);
+    EXPECT_NE(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: CleanBundleCacheFilesAcrossUser_0300
+ * @tc.name: test CleanBundleCacheFiles not blocked for same-user caller
+ * @tc.desc: 1. caller is non-native token without INTERACT_ACROSS_LOCAL_ACCOUNTS permission
+ *           2. target userId equals calling uid's user
+ *           3. should not be denied by the across-user check
+ */
+HWTEST_F(BmsBundleKitServiceTest, CleanBundleCacheFilesAcrossUser_0300, Function | SmallTest | Level1)
+{
+    SetSystemAppForTest(true);
+    SetNativeTokenTypeForTest(false);
+    SetPermissionResultForTest(Constants::PERMISSION_BMS_INTERACT_ACROSS_LOCAL_ACCOUNTS, false);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    sptr<ICleanCacheCallback> cleanCacheCallback = new (std::nothrow) ICleanCacheCallbackTest();
+    int32_t appindex = 0;
+    int32_t userId = 0; // equals GetUserIdByCallingUid()
+    ErrCode ret = hostImpl->CleanBundleCacheFiles(BUNDLE_NAME_TEST, cleanCacheCallback, userId, appindex);
+    EXPECT_NE(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: CleanBundleDataFilesAcrossUser_0100
+ * @tc.name: test CleanBundleDataFiles denied for cross-user caller
+ * @tc.desc: 1. caller is non-native token without INTERACT_ACROSS_LOCAL_ACCOUNTS permission
+ *           2. target userId differs from calling uid's user and is not UNSPECIFIED_USERID
+ *           3. should return false
+ */
+HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFilesAcrossUser_0100, Function | SmallTest | Level1)
+{
+    SetSystemAppForTest(true);
+    SetNativeTokenTypeForTest(false);
+    SetPermissionResultForTest(Constants::PERMISSION_BMS_INTERACT_ACROSS_LOCAL_ACCOUNTS, false);
+
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    int32_t appindex = 0;
+    int32_t userId = 100; // differs from GetUserIdByCallingUid(); not UNSPECIFIED_USERID
+    bool ret = hostImpl->CleanBundleDataFiles(BUNDLE_NAME_TEST, userId, appindex);
+    EXPECT_FALSE(ret);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: CleanBundleDataFilesAcrossUser_0200
+ * @tc.name: test CleanBundleDataFiles not blocked for same-user caller
+ * @tc.desc: 1. caller is non-native token without INTERACT_ACROSS_LOCAL_ACCOUNTS permission
+ *           2. target userId equals calling uid's user and callerUid belongs to the target user
+ *           3. bundle is installed for the target user
+ *           4. should return true
+ */
+HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFilesAcrossUser_0200, Function | SmallTest | Level1)
+{
+    SetSystemAppForTest(true);
+    SetNativeTokenTypeForTest(false);
+    SetPermissionResultForTest(Constants::PERMISSION_BMS_INTERACT_ACROSS_LOCAL_ACCOUNTS, false);
+
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    int32_t appindex = 0;
+    int32_t userId = 0; // equals GetUserIdByCallingUid()
+    int32_t callerUid = BASE_TEST_UID; // belongs to user 0
+    bool ret = hostImpl->CleanBundleDataFiles(BUNDLE_NAME_TEST, userId, appindex, callerUid);
+    EXPECT_TRUE(ret);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: CleanBundleDataFilesAcrossUser_0300
+ * @tc.name: test CleanBundleDataFiles denied for callerUid not belonging to userId
+ * @tc.desc: 1. target userId equals calling uid's user
+ *           2. callerUid belongs to another user
+ *           3. should return false
+ */
+HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFilesAcrossUser_0300, Function | SmallTest | Level1)
+{
+    SetSystemAppForTest(true);
+    SetNativeTokenTypeForTest(false);
+    SetPermissionResultForTest(Constants::PERMISSION_BMS_INTERACT_ACROSS_LOCAL_ACCOUNTS, false);
+
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    int32_t appindex = 0;
+    int32_t userId = 0; // equals GetUserIdByCallingUid()
+    int32_t callerUid = TEST_UID; // belongs to user 100, not user 0
+    bool ret = hostImpl->CleanBundleDataFiles(BUNDLE_NAME_TEST, userId, appindex, callerUid);
+    EXPECT_TRUE(ret);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: CompileResetBundleInUser_0100
+ * @tc.name: test CompileReset with bundle not installed in calling user
+ * @tc.desc: 1. bundle is not installed
+ *           2. should return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST
+ */
+HWTEST_F(BmsBundleKitServiceTest, CompileResetBundleInUser_0100, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ErrCode ret = hostImpl->CompileReset(BUNDLE_NAME_TEST, false);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: CompileResetBundleInUser_0200
+ * @tc.name: test CompileReset with bundle installed in calling user
+ * @tc.desc: 1. bundle is installed under the calling user
+ *           2. should return ERR_OK
+ */
+HWTEST_F(BmsBundleKitServiceTest, CompileResetBundleInUser_0200, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ErrCode ret = hostImpl->CompileReset(BUNDLE_NAME_TEST, false);
+    EXPECT_EQ(ret, ERR_OK);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: CheckBundleExistInCallingUser_0100
+ * @tc.name: test CheckBundleExistInCallingUser with dataMgr nullptr
+ * @tc.desc: 1. test CheckBundleExistInCallingUser when dataMgr is nullptr
+ *           2. should return false
+ */
+HWTEST_F(BmsBundleKitServiceTest, CheckBundleExistInCallingUser_0100, Function | SmallTest | Level1)
+{
+    DataMgrGuard guard;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    bool ret = hostImpl->CheckBundleExistInCallingUser(BUNDLE_NAME_TEST);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: CheckBundleExistInCallingUser_0200
+ * @tc.name: test CheckBundleExistInCallingUser with bundle not exist
+ * @tc.desc: 1. test CheckBundleExistInCallingUser with empty bundleName
+ *           2. test CheckBundleExistInCallingUser when bundle is not installed
+ *           3. should return false
+ */
+HWTEST_F(BmsBundleKitServiceTest, CheckBundleExistInCallingUser_0200, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    bool ret = hostImpl->CheckBundleExistInCallingUser("");
+    EXPECT_FALSE(ret);
+    ret = hostImpl->CheckBundleExistInCallingUser(BUNDLE_NAME_TEST);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: CheckBundleExistInCallingUser_0300
+ * @tc.name: test CheckBundleExistInCallingUser with bundle not installed in calling user
+ * @tc.desc: 1. bundle is installed only for another user, not for the calling user
+ *           2. should return false
+ */
+HWTEST_F(BmsBundleKitServiceTest, CheckBundleExistInCallingUser_0300, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo appInfo;
+    AddApplicationInfo(BUNDLE_NAME_TEST, appInfo);
+    BundleInfo bundleInfo;
+    AddBundleInfo(BUNDLE_NAME_TEST, bundleInfo);
+    innerBundleInfo.SetBaseApplicationInfo(appInfo);
+
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleName = BUNDLE_NAME_TEST;
+    innerBundleUserInfo.bundleUserInfo.enabled = true;
+    innerBundleUserInfo.bundleUserInfo.userId = 100; // calling user is 0
+    innerBundleUserInfo.uid = TEST_UID;
+    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+
+    EXPECT_TRUE(dataMgr->UpdateBundleInstallState(BUNDLE_NAME_TEST, InstallState::INSTALL_START));
+    EXPECT_TRUE(dataMgr->AddInnerBundleInfo(BUNDLE_NAME_TEST, innerBundleInfo));
+    EXPECT_TRUE(dataMgr->UpdateBundleInstallState(BUNDLE_NAME_TEST, InstallState::INSTALL_SUCCESS));
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    bool ret = hostImpl->CheckBundleExistInCallingUser(BUNDLE_NAME_TEST);
+    EXPECT_FALSE(ret);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: CheckBundleExistInCallingUser_0400
+ * @tc.name: test CheckBundleExistInCallingUser with bundle installed in calling user
+ * @tc.desc: 1. bundle is installed under the calling user
+ *           2. should return true
+ */
+HWTEST_F(BmsBundleKitServiceTest, CheckBundleExistInCallingUser_0400, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    bool ret = hostImpl->CheckBundleExistInCallingUser(BUNDLE_NAME_TEST);
+    EXPECT_TRUE(ret);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
 }
 
 /**
