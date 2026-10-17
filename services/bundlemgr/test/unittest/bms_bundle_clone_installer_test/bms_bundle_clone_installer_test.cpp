@@ -584,8 +584,7 @@ HWTEST_F(BmsBundleCloneInstallerTest, RecoverHapToken_0100, Function | SmallTest
     Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
     InnerBundleInfo info;
     bundleCloneInstall_->dataMgr_ = nullptr;
-    int32_t recoveredUid = 0;
-    auto res = bundleCloneInstall_->RecoverHapToken(userId_, 1, accessTokenIdEx, info, "", recoveredUid);
+    auto res = bundleCloneInstall_->RecoverHapToken(userId_, 1, accessTokenIdEx, info, "");
     EXPECT_FALSE(res);
     bundleCloneInstall_->dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     EXPECT_NE(bundleCloneInstall_->dataMgr_, nullptr);
@@ -600,8 +599,7 @@ HWTEST_F(BmsBundleCloneInstallerTest, RecoverHapToken_0200, Function | SmallTest
 {
     Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
     InnerBundleInfo info;
-    int32_t recoveredUid = 0;
-    auto res = bundleCloneInstall_->RecoverHapToken(userId_, 1, accessTokenIdEx, info, "", recoveredUid);
+    auto res = bundleCloneInstall_->RecoverHapToken(userId_, 1, accessTokenIdEx, info, "");
     EXPECT_FALSE(res);
 }
 
@@ -622,8 +620,7 @@ HWTEST_F(BmsBundleCloneInstallerTest, RecoverHapToken_0300, Function | SmallTest
 
     Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
     InnerBundleInfo info;
-    int32_t recoveredUid = 0;
-    auto res = bundleCloneInstall_->RecoverHapToken(userId_, 1, accessTokenIdEx, info, "", recoveredUid);
+    auto res = bundleCloneInstall_->RecoverHapToken(userId_, 1, accessTokenIdEx, info, "");
     EXPECT_FALSE(res);
     EXPECT_TRUE(dataMgr->DeleteUninstallCloneBundleInfo(BUNDLE_NAME, userId_, 2));
 }
@@ -648,8 +645,7 @@ HWTEST_F(BmsBundleCloneInstallerTest, RecoverHapToken_0400, Function | SmallTest
     ApplicationInfo applicationInfo;
     applicationInfo.bundleName = BUNDLE_NAME;
     info.SetBaseApplicationInfo(applicationInfo);
-    int32_t recoveredUid = 0;
-    auto res = bundleCloneInstall_->RecoverHapToken(userId_, 1, accessTokenIdEx, info, "", recoveredUid);
+    auto res = bundleCloneInstall_->RecoverHapToken(userId_, 1, accessTokenIdEx, info, "");
     EXPECT_TRUE(res);
     EXPECT_TRUE(dataMgr->DeleteUninstallCloneBundleInfo(BUNDLE_NAME, userId_, 1));
 }

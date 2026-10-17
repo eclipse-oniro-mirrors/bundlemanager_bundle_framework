@@ -985,7 +985,7 @@ HWTEST_F(BmsSpmManagerOnTest, UpdateToken_UidOut_0001, Function | MediumTest | L
     Security::AccessToken::HapInfoCheckResult checkResult;
     int32_t refreshedUid = 0;
     int32_t ret = session.UpdateToken(tokenIdEx, info, TEST_USERID, checkResult, "", false, false,
-        0, &refreshedUid);
+        0, 0, &refreshedUid);
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_EQ(refreshedUid, 0);
 }
@@ -1016,7 +1016,7 @@ HWTEST_F(BmsSpmManagerOnTest, UpdateToken_UidUnchanged_0001, Function | MediumTe
     Security::AccessToken::HapInfoCheckResult checkResult;
     int32_t refreshedUid = 0;
     int32_t ret = session.UpdateToken(tokenIdEx, info, TEST_USERID, checkResult, "", false, false,
-        0, &refreshedUid);
+        0, 0, &refreshedUid);
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_EQ(refreshedUid, 0);  // unchanged: no handover
 }
@@ -1048,7 +1048,7 @@ HWTEST_F(BmsSpmManagerOnTest, UpdateToken_UidRefresh_0001, Function | MediumTest
     Security::AccessToken::HapInfoCheckResult checkResult;
     int32_t refreshedUid = 0;
     int32_t ret = session.UpdateToken(tokenIdEx, info, TEST_USERID, checkResult, "", false, false,
-        0, &refreshedUid);
+        0, 0, &refreshedUid);
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_EQ(refreshedUid, REFRESHED_UID);
 }
@@ -1082,7 +1082,7 @@ HWTEST_F(BmsSpmManagerOnTest, UpdateToken_UidOut_CrossUserSegment_0001, Function
     Security::AccessToken::HapInfoCheckResult checkResult;
     int32_t refreshedUid = 0;
     int32_t ret = session.UpdateToken(tokenIdEx, info, TEST_USERID, checkResult, "", false, false,
-        0, &refreshedUid);
+        0, 0, &refreshedUid);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED);
     EXPECT_EQ(refreshedUid, 0);  // output param untouched on rejection
 }

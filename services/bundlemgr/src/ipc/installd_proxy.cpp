@@ -1596,7 +1596,7 @@ ErrCode InstalldProxy::VerifyCodeSignatureForHap(const CodeSignatureParam &codeS
 ErrCode InstalldProxy::DeliverySignProfile(const std::string &bundleName, int32_t profileBlockLength,
     const unsigned char *profileBlock, int32_t sessionId)
 {
-    if (profileBlockLength <= 0 || profileBlockLength > ServiceConstants::MAX_PROFILE_BLOCK_LENGTH
+    if (profileBlockLength <= 0 || profileBlockLength >= ServiceConstants::MAX_PROFILE_BLOCK_LENGTH
         || profileBlock == nullptr) {
         LOG_E(BMS_TAG_INSTALLD, "invalid params");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;

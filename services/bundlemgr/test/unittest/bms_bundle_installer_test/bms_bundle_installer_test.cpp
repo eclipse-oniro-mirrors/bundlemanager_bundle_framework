@@ -10794,8 +10794,7 @@ HWTEST_F(BmsBundleInstallerTest, BundleMultiUserInstaller_0011, Function | Small
     Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
     InnerBundleInfo innerBundleInfo;
     installer.dataMgr_ = GetBundleDataMgr();
-    int32_t recoveredUid = 0;
-    EXPECT_FALSE(installer.RecoverHapToken(bundleName, userId, accessTokenIdEx, innerBundleInfo, recoveredUid));
+    EXPECT_FALSE(installer.RecoverHapToken(bundleName, userId, accessTokenIdEx, innerBundleInfo));
 }
 
 /**
@@ -10821,8 +10820,7 @@ HWTEST_F(BmsBundleInstallerTest, BundleMultiUserInstaller_0012, Function | Small
     Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
     InnerBundleInfo innerBundleInfo;
     installer.dataMgr_ = GetBundleDataMgr();
-    int32_t recoveredUid = 0;
-    EXPECT_FALSE(installer.RecoverHapToken(bundleName, userId, accessTokenIdEx, innerBundleInfo, recoveredUid));
+    EXPECT_FALSE(installer.RecoverHapToken(bundleName, userId, accessTokenIdEx, innerBundleInfo));
 }
 
 /**
@@ -10848,8 +10846,7 @@ HWTEST_F(BmsBundleInstallerTest, BundleMultiUserInstaller_0013, Function | Small
     Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
     InnerBundleInfo innerBundleInfo;
     installer.dataMgr_ = GetBundleDataMgr();
-    int32_t recoveredUid = 0;
-    EXPECT_FALSE(installer.RecoverHapToken(bundleName, userId, accessTokenIdEx, innerBundleInfo, recoveredUid));
+    EXPECT_FALSE(installer.RecoverHapToken(bundleName, userId, accessTokenIdEx, innerBundleInfo));
 }
 
 /**

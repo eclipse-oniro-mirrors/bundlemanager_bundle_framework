@@ -334,12 +334,18 @@ ErrCode BaseBundleInstaller::InstallBundle(
         BundleSpmManager::TryRecoverUidError(bundleName_, dataMgr_.get())) {
         LOG_I(BMS_TAG_INSTALLER, "spm uid error recovered, retry install, bundleName:%{public}s",
             bundleName_.c_str());
+        // The checker is reused across the retry: reset its per-install state
+        // (isContainEntry_), otherwise an entry-hap package fails the retry with
+        // a false "more than one entry hap".
+        bundleInstallChecker_->ResetProperties();
         result = ProcessBundleInstall(bundlePaths, installParam, appType, uid, false);
     }
     if (result == Security::AccessToken::AccessTokenError::ERR_BUNDLE_ALREADY_EXIST &&
         BundleSpmManager::TryRecoverAlreadyExistError(bundleName_)) {
         LOG_I(BMS_TAG_INSTALLER, "spm leftover identity cleaned, retry install, bundleName:%{public}s",
             bundleName_.c_str());
+        // Same checker reset as the uid-recovery retry above.
+        bundleInstallChecker_->ResetProperties();
         result = ProcessBundleInstall(bundlePaths, installParam, appType, uid, false);
     }
     // Recovery codes that survived the retries (recovery failed or the retry failed
@@ -922,7 +928,7 @@ bool BaseBundleInstaller::UninstallAppControl(
         return true;
     }
     if (!appIdentifier.empty() && std::find(appIds.begin(), appIds.end(), appIdentifier) != appIds.end()) {
-        LOG_W(BMS_TAG_INSTALLER, "appIdentifier :%{public}s is not removable", appIdentifier.c_str());
+        LOG_W(BMS_TAG_INSTALLER, "appIdentifier :%{private}s is not removable", appIdentifier.c_str());
         return false;
     }
     if (std::find(appIds.begin(), appIds.end(), appId) != appIds.end()) {
@@ -2239,7 +2245,12 @@ void BaseBundleInstaller::RollBack(const std::unordered_map<std::string, InnerBu
             // it, so no DeleteIdentity call is needed. A committed session's
             // identity was persisted and is still deleted here (a late failure
             // after Commit + DB write must undo the installed token).
-            if (BundleSpmManager::IsEnabled() && !spmSession_.IsCommitted()) {
+            if (spmIdentityUndone_) {
+                // The explicit post-commit undo (UndoCommittedSpmIdentity) already
+                // deleted the identity — do not issue a second DeleteIdentity.
+                LOG_I(BMS_TAG_INSTALLER, "skip delete accessToken, identity already undone, "
+                    "bundleName:%{public}s", bundleName_.c_str());
+            } else if (BundleSpmManager::IsEnabled() && !spmSession_.IsCommitted()) {
                 LOG_I(BMS_TAG_INSTALLER, "skip delete accessToken on uncommitted spm session, "
                     "bundleName:%{public}s", bundleName_.c_str());
             } else {
@@ -2307,6 +2318,27 @@ void BaseBundleInstaller::RollBack(const std::unordered_map<std::string, InnerBu
     // could trigger the rollback early.
     if (!BundleSpmManager::IsEnabled()) {
         UpdateHapToken(preInfo.GetAppType() != oldInfo.GetAppType(), oldInfo);
+    }
+    // SPM ON: a uid refresh during the update rewrote the content-keyed fs config
+    // file with the new uid BEFORE the failure — re-stamp it from the restored
+    // old info so the file matches the rolled-back identity (idempotent for the
+    // non-refresh case; the boot restore rewrites it as well).
+    if (BundleSpmManager::IsEnabled()) {
+        for (const auto &userItem : oldInfo.GetInnerBundleUserInfos()) {
+            const auto &userInfo = userItem.second;
+            if (userInfo.uid <= 0) {
+                continue;
+            }
+            int32_t userId = userInfo.bundleUserInfo.userId;
+            int32_t bundleId = userInfo.uid - userId * Constants::BASE_USER_RANGE;
+            if (bundleId < Constants::BASE_APP_UID || bundleId >= Constants::MAX_APP_UID) {
+                continue;
+            }
+            std::string restoreName = oldInfo.IsDualModeCloneApp()
+                ? DualModeHelper::GetDualModeBundleName(userInfo.bundleName) : userInfo.bundleName;
+            BundleUtil::MakeFsConfig(restoreName, bundleId, ServiceConstants::HMDFS_CONFIG_PATH);
+            BundleUtil::MakeFsConfig(restoreName, bundleId, ServiceConstants::SHAREFS_CONFIG_PATH);
+        }
     }
     if (isHnpInstalled_) {
         RollbackHnpInstall(GetEffectiveBundleName(), oldInfo.GetUsers());
@@ -3237,6 +3269,10 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
                         if (delRet != ERR_OK) {
                             LOG_E(BMS_TAG_INSTALLER, "undo spm identity failed, -n:%{public}s errCode:%{public}d",
                                 bundleName_.c_str(), delRet);
+                        } else {
+                            // The undo succeeded: suppress the userGuard-driven
+                            // second delete (a failed undo keeps it retrying).
+                            spmIdentityUndone_ = true;
                         }
                     }
                     return ERR_APPEXECFWK_UPDATE_BUNDLE_ERROR;
@@ -7962,7 +7998,12 @@ ErrCode BaseBundleInstaller::RemoveBundleUserData(
         // DeleteIdentity is needed. Genuine uninstalls run with a deferred
         // (inactive) session and keep deleting the installed token; a committed
         // install session (late failure after Commit) is deleted as before.
-        if (BundleSpmManager::IsEnabled() && spmSession_.IsActive() && !spmSession_.IsCommitted()) {
+        if (spmIdentityUndone_) {
+            // The explicit post-commit undo already deleted the identity — do
+            // not issue a second DeleteIdentity.
+            LOG_I(BMS_TAG_INSTALLER, "skip delete accessToken, identity already undone, "
+                "bundleName:%{public}s", bundleName.c_str());
+        } else if (BundleSpmManager::IsEnabled() && spmSession_.IsActive() && !spmSession_.IsCommitted()) {
             LOG_I(BMS_TAG_INSTALLER, "skip delete accessToken on uncommitted spm session, "
                 "bundleName:%{public}s", bundleName.c_str());
         } else {
@@ -7977,13 +8018,23 @@ ErrCode BaseBundleInstaller::RemoveBundleUserData(
             }
         }
     } else {
-        // SPM ON: reserve the identity and provision in the access token service so a
-        // re-install recovers them via PrepareHapIdentity.
-        int32_t reserveRet = BundleSpmManager::DeleteToken(accessTokenId_, innerBundleInfo.GetBundleName(),
-            BundleSpmManager::TokenDeleteType::RESERVED_DATA);
-        if (reserveRet != ERR_OK) {
-            LOG_E(BMS_TAG_INSTALLER, "reserve identity failed, bundle:%{public}s errCode:%{public}d",
-                innerBundleInfo.GetBundleName().c_str(), reserveRet);
+        // SPM ON: when called from an install-failure unwind the freshly created
+        // identity still lives in the active, uncommitted install session — the
+        // session rollback discards it, so no reservation call is needed either
+        // (same gate as the delete branch above; genuine uninstalls run with a
+        // deferred session and keep reserving).
+        if (BundleSpmManager::IsEnabled() && spmSession_.IsActive() && !spmSession_.IsCommitted()) {
+            LOG_I(BMS_TAG_INSTALLER, "skip reserve accessToken on uncommitted spm session, "
+                "bundleName:%{public}s", bundleName.c_str());
+        } else {
+            // SPM ON: reserve the identity and provision in the access token service so a
+            // re-install recovers them via PrepareHapIdentity.
+            int32_t reserveRet = BundleSpmManager::DeleteToken(accessTokenId_, innerBundleInfo.GetBundleName(),
+                BundleSpmManager::TokenDeleteType::RESERVED_DATA);
+            if (reserveRet != ERR_OK) {
+                LOG_E(BMS_TAG_INSTALLER, "reserve identity failed, bundle:%{public}s errCode:%{public}d",
+                    innerBundleInfo.GetBundleName().c_str(), reserveRet);
+            }
         }
     }
     if (innerBundleInfo.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE) {
@@ -8176,6 +8227,7 @@ void BaseBundleInstaller::ResetInstallProperties()
     oldShareFilesJson_.clear();
     singletonState_ = SingletonState::DEFAULT;
     accessTokenId_ = 0;
+    spmIdentityUndone_ = false;
     sysEventInfo_.Reset();
     moduleName_.clear();
     verifyCodeParams_.clear();
@@ -9584,8 +9636,8 @@ ErrCode BaseBundleInstaller::UpdateHapToken(bool needUpdate, InnerBundleInfo &ne
         Security::AccessToken::HapInfoCheckResult checkResult;
         int32_t refreshedUid = 0;
         int32_t spmTokenRet = spmSession_.UpdateToken(accessTokenIdEx, newInfo, userId, checkResult,
-            verifyRes_.GetProvisionInfo().appServiceCapabilities, false, userDebugGrant, 0,
-            &refreshedUid);
+            verifyRes_.GetProvisionInfo().appServiceCapabilities, false, userDebugGrant,
+            0 /* dlpType */, 0 /* appIndex */, &refreshedUid);
         if (spmTokenRet != ERR_OK) {
             LOG_NOFUNC_E(BMS_TAG_INSTALLER, "UpdateHapToken failed %{public}s", bundleName_.c_str());
             SetVerifyPermissionResult(checkResult);
@@ -9624,7 +9676,7 @@ ErrCode BaseBundleInstaller::UpdateHapToken(bool needUpdate, InnerBundleInfo &ne
             int32_t cloneRefreshedUid = 0;
             int32_t cloneTokenRet = spmSession_.UpdateToken(cloneAccessTokenIdEx, newInfo, userId,
                 checkResult, verifyRes_.GetProvisionInfo().appServiceCapabilities, false, false,
-                cloneInfoPair.second.appIndex, &cloneRefreshedUid);
+                0 /* dlpType */, cloneInfoPair.second.appIndex, &cloneRefreshedUid);
             if (cloneTokenRet != ERR_OK) {
                 LOG_NOFUNC_E(BMS_TAG_INSTALLER, "UpdateHapToken failed %{public}s", bundleName_.c_str());
                 SetVerifyPermissionResult(checkResult);
@@ -10212,7 +10264,13 @@ void BaseBundleInstaller::UndoCommittedSpmIdentity(const InnerBundleInfo &info)
     if (delRet != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "undo spm identity failed, bundle:%{public}s errCode:%{public}d",
             bundleName_.c_str(), delRet);
+        // Deliberately NOT marking the identity undone: a failed undo must let
+        // the later rollback-path deletes retry the DeleteIdentity.
+        return;
     }
+    // The undo succeeded: the later rollback-path deletes (RollBack /
+    // RemoveBundleUserData) skip their own DeleteIdentity for this identity.
+    spmIdentityUndone_ = true;
 }
 
 void BaseBundleInstaller::PrintStartWindowIconId(const InnerBundleInfo &info)

@@ -1389,6 +1389,9 @@ ErrCode BundleInstallChecker::CheckMultiNativeSo(
 void BundleInstallChecker::ResetProperties()
 {
     isContainEntry_ = false;
+    // A retry must not carry the first attempt's failure message into the
+    // success diagnostics.
+    checkResultMsg_.clear();
 }
 
 void BundleInstallChecker::ParseAppPrivilegeCapability(

@@ -22,10 +22,13 @@
 #include "account_helper.h"
 #include "app_log_tag_wrapper.h"
 #include "bundle_data_mgr.h"
+#include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_service_constants.h"
 #include "bundle_util.h"
 #include "bundle_verify_mgr.h"
+#include "dual_mode_helper.h"
+#include "inner_bundle_clone_common.h"
 #include "installd_client.h"
 #include "parameters.h"
 #include "provision/provision_verify.h"
@@ -73,6 +76,27 @@ void MakeFsConfigForNewUid(int32_t uid, const std::string &bundleName)
     BundleUtil::MakeFsConfig(bundleName, bundleId, ServiceConstants::HMDFS_CONFIG_PATH);
     BundleUtil::MakeFsConfig(bundleName, bundleId, ServiceConstants::SHAREFS_CONFIG_PATH);
 }
+
+// The fs config directory key follows the OFF allocator / boot restore
+// convention per identity type: the plain name for the main identity, the
+// dual-mode prefixed name, the clone/CLI composite "<N>clone_<name>" and the
+// DLP sandbox composite "<N>_<name>". Writing a derived identity's bundleId
+// under the MAIN name would clobber the main app's config until the next
+// restore.
+std::string GetFsConfigName(const InnerBundleInfo &info, int32_t dlpType, int32_t appIndex)
+{
+    const std::string &bundleName = info.GetBundleName();
+    if (info.IsDualModeCloneApp()) {
+        return DualModeHelper::GetDualModeBundleName(bundleName);
+    }
+    if (appIndex == 0) {
+        return bundleName;
+    }
+    if (dlpType != 0) {
+        return std::to_string(appIndex) + Constants::FILE_UNDERLINE + bundleName;
+    }
+    return BundleCloneCommonHelper::GetCloneBundleIdKey(bundleName, appIndex);
+}
 } // namespace
 
 bool BundleSpmManager::FillProvisionProfileBlock(const Security::AccessToken::ProfileData &profileData,
@@ -82,6 +106,12 @@ bool BundleSpmManager::FillProvisionProfileBlock(const Security::AccessToken::Pr
     // field comes from another process and must not be trusted to match the vector
     // size (an inconsistent claimed length would cause an out-of-bound read when
     // the block is copied downstream).
+    if (profileData.profileBlock.size() >=
+        static_cast<size_t>(ServiceConstants::MAX_PROFILE_BLOCK_LENGTH)) {
+        // An AT-side block beyond the cap is a contract anomaly: fail the parse
+        // BEFORE the allocation (the length stays the single source of truth).
+        return false;
+    }
     provisionInfo.profileBlockLength = static_cast<int32_t>(profileData.profileBlock.size());
     if (profileData.profileBlock.empty()) {
         return true;
@@ -445,10 +475,11 @@ int32_t BundleSpmManager::InstallSession::InitToken(InnerBundleInfo &info, int32
         tokenIdEx.tokenIdExStruct.tokenID, identity.uid);
     // The uid is guaranteed positive by the check above: produce the fs config
     // for the newly generated uid (the data directory creation below consumes
-    // it). The reverse-lookup map entry is NOT touched here — it is inserted at
-    // the DB-persistence point of the install (BundleDataMgr), so a failed or
-    // rolled-back install never pollutes the map.
-    MakeFsConfigForNewUid(identity.uid, info.GetBundleName());
+    // it), keyed by the identity-type composite name so a derived identity
+    // never clobbers the main app's config. The reverse-lookup map entry is NOT
+    // touched here — it is inserted at the DB-persistence point of the install
+    // (BundleDataMgr), so a failed or rolled-back install never pollutes the map.
+    MakeFsConfigForNewUid(identity.uid, GetFsConfigName(info, dlpType, info.GetAppIndex()));
     if (cloneInstall) {
         // Clone: the caller owns the uid handling (it builds the clone info from
         // the identity uid / the recovered record itself); the user info of `info`
@@ -478,19 +509,10 @@ int32_t BundleSpmManager::InstallSession::InitToken(InnerBundleInfo &info, int32
         // next boot restore.
         LOG_NOFUNC_W(BMS_TAG_INSTALLER, "AT uid %{public}d differs from local uid %{public}d, adopt AT uid, "
             "bundleName:%{public}s", identity.uid, bundleUserInfo.uid, info.GetBundleName().c_str());
-        // Drop the fs config files keyed by the abandoned local uid as well:
-        // the config layout is <configPath>/<bundleName>/<bundleId>, and the
-        // old uid's derived bundleId file would collide when the uid is reused.
-        // (MakeFsConfigForNewUid above already wrote the new uid's file.)
-        // (The data-dir ownership of the old uid remains a registered product
-        // decision — chown migration vs recycle.)
-        int32_t oldUserId = BundleUtil::GetUserIdByUid(bundleUserInfo.uid);
-        int32_t oldBundleId = bundleUserInfo.uid - oldUserId * Constants::BASE_USER_RANGE;
-        std::string oldIdFile = std::to_string(oldBundleId);
-        remove((std::string(ServiceConstants::HMDFS_CONFIG_PATH) + ServiceConstants::PATH_SEPARATOR +
-            info.GetBundleName() + ServiceConstants::PATH_SEPARATOR + oldIdFile).c_str());
-        remove((std::string(ServiceConstants::SHAREFS_CONFIG_PATH) + ServiceConstants::PATH_SEPARATOR +
-            info.GetBundleName() + ServiceConstants::PATH_SEPARATOR + oldIdFile).c_str());
+        // The fs config layout is a single content-keyed file per bundle
+        // (<configPath>/<bundleName>/<BUNDLE_ID_FILE>): MakeFsConfigForNewUid
+        // above has already overwritten its content with the new uid — no
+        // per-uid file exists to remove (the boot restore rewrites it as well).
         bundleUserInfo.gids.clear();
     }
     bundleUserInfo.uid = identity.uid;
@@ -505,7 +527,7 @@ int32_t BundleSpmManager::InstallSession::InitToken(InnerBundleInfo &info, int32
 int32_t BundleSpmManager::InstallSession::UpdateToken(
     Security::AccessToken::AccessTokenIDEx &tokenIdEx, const InnerBundleInfo &info, int32_t userId,
     Security::AccessToken::HapInfoCheckResult &checkResult, const std::string &caps,
-    bool dataRefresh, bool isDebugGrant, int32_t appIndex, int32_t *refreshedUid)
+    bool dataRefresh, bool isDebugGrant, int32_t dlpType, int32_t appIndex, int32_t *refreshedUid)
 {
     if (!IsEnabled()) {
         return BundlePermissionMgr::UpdateHapToken(tokenIdEx, info, userId, checkResult, caps,
@@ -513,7 +535,7 @@ int32_t BundleSpmManager::InstallSession::UpdateToken(
     }
     // SPM ON: update the hap policy bound to the existing token inside the session.
     Security::AccessToken::BundlePolicy policy = BundleSpmManager::CreateBundlePolicy(
-        info, 0, isDebugGrant);
+        info, dlpType, isDebugGrant);
     int32_t uidOut = Constants::INVALID_UID;
     int32_t ret = Security::AccessToken::AccessTokenKit::UpdateHapPolicy(sessionId_,
         tokenIdEx.tokenIdExStruct.tokenID, policy, uidOut);
@@ -570,8 +592,9 @@ int32_t BundleSpmManager::InstallSession::UpdateToken(
         // The reverse-lookup entry of the refreshed uid is inserted at the
         // DB-persistence point (the refreshed uid is persisted together with the
         // info); the stale entry of the abandoned old uid is rejected by the
-        // query cross-check until the next restore drops it.
-        MakeFsConfigForNewUid(uidOut, info.GetBundleName());
+        // query cross-check until the next restore drops it. The fs config key
+        // follows the identity-type composite convention (see GetFsConfigName).
+        MakeFsConfigForNewUid(uidOut, GetFsConfigName(info, dlpType, appIndex));
     }
     return ret;
 }
@@ -600,7 +623,13 @@ int32_t BundleSpmManager::InstallSession::VerifyPermission(const std::string &bu
     int32_t ret = Security::AccessToken::AccessTokenKit::GetCachePolicyBySessionId(sessionId_,
         bundleName, policyInfo);
     if (ret != Security::AccessToken::AccessTokenKitRet::RET_SUCCESS) {
-        return ret;
+        // The session policy is unavailable (session gone / query failed): the
+        // permission cannot be verified — deny with the registered code instead
+        // of leaking a raw AT code through the facade boundary.
+        LOG_NOFUNC_E(BMS_TAG_INSTALLER,
+            "VerifyPermission session policy query failed, bundleName:%{public}s ret %{public}d",
+            bundleName.c_str(), ret);
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     for (const auto &reqPermission : policyInfo.reqPermissions) {
         if (reqPermission == permission) {
@@ -700,6 +729,13 @@ int32_t BundleSpmManager::OnModuleUninstalled(const InnerBundleInfo &info, int32
     hapList.hapPaths = info.GetAllHapPaths();
     hapList.isPreInstalled = info.IsPreInstallApp();
     hapList.userId = userId;
+    if (hapList.hapPaths.empty()) {
+        // Nothing left to re-sign (defensive: the last-module uninstall takes
+        // the full-uninstall flow, this path only sees the remaining set).
+        LOG_NOFUNC_W(BMS_TAG_INSTALLER, "OnModuleUninstall empty hap list, bundleName:%{public}s",
+            info.GetBundleName().c_str());
+        return ERR_OK;
+    }
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "OnModuleUninstall begin, bundleName:%{public}s userId:%{public}d "
         "hapCount:%{public}d", info.GetBundleName().c_str(), userId,
         static_cast<int32_t>(hapList.hapPaths.size()));
@@ -731,6 +767,10 @@ int32_t BundleSpmManager::OnModuleUninstalled(const InnerBundleInfo &info, int32
     if (ret != ERR_OK) {
         LOG_NOFUNC_E(BMS_TAG_INSTALLER, "OnModuleUninstall commit failed, bundleName:%{public}s "
             "sessionId:%{public}d errCode:%{public}d", info.GetBundleName().c_str(), sessionId, ret);
+        // Best-effort rollback so the standalone session does not linger on the
+        // AT side (mirrors the check-permission failure branch above); a failed
+        // rollback keeps the leftover for the already-registered recovery.
+        BundleSpmManager::FinishHapInstall(sessionId, false, {});
         return ret;
     }
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "OnModuleUninstall success, bundleName:%{public}s sessionId:%{public}d",
@@ -783,8 +823,12 @@ bool BundleSpmManager::TryRecoverUidError(const std::string &bundleName, BundleD
         // conditional uid with an unconditional base info would misalign the
         // parallel lists and bind every following clone identity to the wrong
         // uid — so a corrupt main record stages nothing for the main identity
-        // while its valid clones below are still migrated.
-        if (userInfo.uid > 0) {
+        // while its valid clones below are still migrated. A uid outside the
+        // record's own user segment is a cross-user drift and is skipped the
+        // same way (same consistency check as InitToken).
+        bool mainUidInSegment = userInfo.uid > 0 &&
+            BundleUtil::GetUserIdByUid(userInfo.uid) == bundleUserInfo.userId;
+        if (mainUidInSegment) {
             // main identity of this user (app index 0)
             baseInfo.instIndex = Constants::INITIAL_APP_INDEX;
             migratedInfo.hapBaseInfoList.emplace_back(baseInfo);
@@ -793,7 +837,8 @@ bool BundleSpmManager::TryRecoverUidError(const std::string &bundleName, BundleD
         }
         // clone identities of this user, keyed by app index
         for (const auto &clonePair : userInfo.cloneInfos) {
-            if (clonePair.second.uid <= 0) {
+            if (clonePair.second.uid <= 0 ||
+                BundleUtil::GetUserIdByUid(clonePair.second.uid) != clonePair.second.userId) {
                 continue;
             }
             Security::AccessToken::HapBaseInfo cloneInfo = baseInfo;
@@ -819,6 +864,34 @@ bool BundleSpmManager::TryRecoverAlreadyExistError(const std::string &bundleName
 {
     if (!IsEnabled() || bundleName.empty()) {
         return false;
+    }
+    // A by-name delete (tokenId 0) wipes EVERY identity of the bundle on the AT
+    // side. When the BMS records show a live identity (an installed user), the
+    // wipe would destroy it along with the leftover — the app would stay
+    // installed while its token is gone. Refuse the auto-recovery and surface
+    // the ALREADY_EXIST error instead; a precise per-identity cleanup stays a
+    // registered cross-repo item (AT-side delete by identity). The typical
+    // leftover scenario (a crashed install left no BMS record) is unaffected.
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    InnerBundleInfo info;
+    if (dataMgr != nullptr && dataMgr->FetchInnerBundleInfo(bundleName, info)) {
+        for (const auto &userItem : info.GetInnerBundleUserInfos()) {
+            const auto &userInfo = userItem.second;
+            bool hasLiveIdentity = userInfo.uid > 0;
+            for (const auto &cloneItem : userInfo.cloneInfos) {
+                hasLiveIdentity = hasLiveIdentity || cloneItem.second.uid > 0;
+            }
+            for (const auto &sandboxItem : userInfo.sandboxInfos) {
+                hasLiveIdentity = hasLiveIdentity || sandboxItem.second.uid > 0;
+            }
+            if (hasLiveIdentity) {
+                LOG_NOFUNC_W(BMS_TAG_INSTALLER,
+                    "leftover identity of %{public}s not auto-cleaned: the by-name delete would "
+                    "destroy the live identity of user %{public}d",
+                    bundleName.c_str(), userInfo.bundleUserInfo.userId);
+                return false;
+            }
+        }
     }
     int32_t ret = Security::AccessToken::AccessTokenKit::DeleteIdentity(0, bundleName,
         Security::AccessToken::ReservedType::NONE);

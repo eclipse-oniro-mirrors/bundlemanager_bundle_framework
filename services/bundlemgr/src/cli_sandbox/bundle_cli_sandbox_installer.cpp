@@ -286,8 +286,11 @@ ErrCode BundleCliSandboxInstaller::ProcessCreateCliSandbox(const std::string &cr
     if (addRes != ERR_OK) {
         APP_LOGE("AddCliSandboxBundle failed, bundleName: %{public}s, appIndex: %{public}d",
             bundleName.c_str(), appIndex);
-        // The session is already committed but the DB write failed: undo the
-        // freshly committed AT identity so both sides stay clean.
+        // The session is already committed but the DB write failed: the explicit
+        // undo below owns the deletion — dismiss the guard so it does not issue
+        // a second DeleteIdentity for the same (already deleted) identity.
+        applyAccessTokenGuard.Dismiss();
+        // Undo the freshly committed AT identity so both sides stay clean.
         int32_t delRet = BundleSpmManager::DeleteToken(newTokenIdEx.tokenIdExStruct.tokenID,
             bundleName, BundleSpmManager::TokenDeleteType::NONE);
         if (delRet != ERR_OK) {

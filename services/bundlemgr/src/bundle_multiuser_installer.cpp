@@ -223,8 +223,7 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
     // 4. generate the accesstoken id and inherit original permissions
     Security::AccessToken::AccessTokenIDEx newTokenIdEx;
     Security::AccessToken::HapInfoCheckResult checkResult;
-    int32_t recoveredUid = 0;
-    bool tokenRecovered = RecoverHapToken(bundleName, userId, newTokenIdEx, info, recoveredUid);
+    bool tokenRecovered = RecoverHapToken(bundleName, userId, newTokenIdEx, info);
     if (!tokenRecovered) {
         newTokenIdEx.tokenIDEx = 0;  // discard partial writes from the failed recovery
     }
@@ -336,9 +335,12 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
     }
     result = dataMgr_->AddInnerBundleUserInfo(bundleName, newUserInfo);
     if (result != ERR_OK) {
-        // The session is already committed but the DB write failed: undo the
-        // freshly committed AT identity (keep-data reserved identities are
-        // exempt) so both sides stay clean.
+        // The session is already committed but the DB write failed: the explicit
+        // undo below owns the deletion — dismiss the guard so it does not issue
+        // a second DeleteIdentity for the same (already deleted) identity.
+        applyAccessTokenGuard.Dismiss();
+        // Undo the freshly committed AT identity (keep-data reserved identities
+        // are exempt) so both sides stay clean.
         if (!keepDataReinstall) {
             int32_t delRet = BundleSpmManager::DeleteToken(newTokenIdEx.tokenIdExStruct.tokenID,
                 bundleName, BundleSpmManager::TokenDeleteType::NONE);
@@ -487,8 +489,7 @@ void BundleMultiUserInstaller::ResetInstallProperties()
 }
 
 bool BundleMultiUserInstaller::RecoverHapToken(const std::string &bundleName, const int32_t userId,
-    Security::AccessToken::AccessTokenIDEx& accessTokenIdEx, const InnerBundleInfo &innerBundleInfo,
-    int32_t &recoveredUid)
+    Security::AccessToken::AccessTokenIDEx& accessTokenIdEx, const InnerBundleInfo &innerBundleInfo)
 {
     if (BundleSpmManager::IsEnabled()) {
         // SPM ON: the session is still deferred here, so UpdateToken would call
@@ -518,9 +519,6 @@ bool BundleMultiUserInstaller::RecoverHapToken(const std::string &bundleName, co
         }
         if (spmSession_.UpdateToken(accessTokenIdEx, innerBundleInfo, userId, checkResult,
             appProvisionInfo.appServiceCapabilities) == ERR_OK) {
-            // SPM ON callers reuse the uid persisted at uninstall instead of
-            // allocating locally (the identity and its uid stay paired).
-            recoveredUid = uninstallBundleInfo.userInfos.at(std::to_string(userId)).uid;
             return true;
         } else {
             auto result = BundlePermissionMgr::GetCheckResultMsg(checkResult);
