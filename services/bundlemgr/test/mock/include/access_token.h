@@ -233,6 +233,7 @@ public:
     AccessTokenID tokenID;
     /** token attribute */
     AccessTokenAttr tokenAttr;
+    int32_t uid = -1;
 };
 } // namespace AccessToken
 } // namespace Security

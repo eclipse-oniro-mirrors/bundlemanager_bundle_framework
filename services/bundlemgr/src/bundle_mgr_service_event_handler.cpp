@@ -16,8 +16,14 @@
 #include "bundle_mgr_service_event_handler.h"
 #include "rdb_recover_manager.h"
 
+#include <algorithm>
+#include <chrono>
+#include <map>
+#include <set>
 #include <sstream>
 #include <sys/stat.h>
+#include <thread>
+#include <unordered_map>
 
 #include "account_helper.h"
 #include "access_token_error.h"
@@ -25,6 +31,8 @@
 #include "app_log_tag_wrapper.h"
 #include "app_provision_info_manager.h"
 #include "app_service_fwk_installer.h"
+#include "access_token_error.h"
+#include "accesstoken_kit.h"
 #include "bms_extension_data_mgr.h"
 #include "bms_key_event_mgr.h"
 #include "dual_mode_helper.h"
@@ -286,24 +294,6 @@ void BMSEventHandler::BeforeBmsStart()
 void BMSEventHandler::OnBmsStarting()
 {
     LOG_NOFUNC_I(BMS_TAG_DEFAULT, "BMSEventHandler OnBmsStarting start");
-    // Mark the BMS-side migration as completed for the access token service: its
-    // session APIs (e.g. UpdateHapPolicy) stay blocked with ERR_MIGRATION_COMPLETED
-    // until this is flagged. SPM ON only — under SPM OFF the session APIs are not
-    // used, so the flag (and the boot-time AT IPC) is not needed. A repeat call
-    // returns ERR_MIGRATION_COMPLETED, which is normal and not logged as a fault.
-    if (BundleSpmManager::IsEnabled()) {
-        int32_t migrationRet = Security::AccessToken::AccessTokenKit::FinishMigration();
-        bool migrationCompleted = migrationRet == Security::AccessToken::AccessTokenError::ERR_MIGRATION_COMPLETED;
-        if (migrationRet != ERR_OK && !migrationCompleted) {
-            // Transient IPC failure: retry once (same pattern as FinishHapInstall).
-            migrationRet = Security::AccessToken::AccessTokenKit::FinishMigration();
-            migrationCompleted =
-                migrationRet == Security::AccessToken::AccessTokenError::ERR_MIGRATION_COMPLETED;
-        }
-        if (migrationRet != ERR_OK && !migrationCompleted) {
-            LOG_NOFUNC_W(BMS_TAG_DEFAULT, "FinishMigration failed, ret %{public}d", migrationRet);
-        }
-    }
     ProcessCheckSystemOptimizeDir();
     // Judge whether there is install info in the persistent Db
     if (LoadInstallInfosFromDb()) {
@@ -590,6 +580,7 @@ void BMSEventHandler::BundleRebootStartEvent()
         ModuleJsonUpdater::UpdateModuleJsonAsync();
         ProcessDeleteResourceSlaveDb();
         ProcessMigrateUninstallBundleResource();
+        ProcessAccessTokenMigration();
     } else {
         HandlePreInstallException();
         ProcessRebootQuickFixBundleInstall(QUICK_FIX_APP_PATH, false);
@@ -7116,6 +7107,763 @@ bool BMSEventHandler::CheckDualModeCrossInstall(bool isDualCloneApp, DeviceModeD
         return false;
     }
     return DualModeHelper::IsSecondaryMode() ? !isDualCloneApp : isDualCloneApp;
+}
+
+static constexpr size_t MIGRATION_BATCH_SIZE = 50;
+static constexpr int32_t MAX_RETRY = 5;
+static constexpr int64_t BACKOFF_INTERVALS_MS[] = {500, 1000, 1000, 2000, 2000};
+
+void BMSEventHandler::ProcessAccessTokenMigration()
+{
+    if (!BundleSpmManager::IsEnabled()) {
+        return;
+    }
+    bool migrationDone = false;
+    CheckOtaFlag(OTAFlag::MIGRATE_UID_TO_ATM, migrationDone);
+    if (migrationDone) {
+        LOG_I(BMS_TAG_DEFAULT, "Not need to migrate access_token due to has migrated");
+        FinishAccessTokenMigration();
+        return;
+    }
+    if (!InnerProcessAccessTokenMigration()) {
+        LOG_E(BMS_TAG_DEFAULT, "ProcessAccessTokenMigration failed");
+        return;
+    }
+    LOG_I(BMS_TAG_DEFAULT, "Access token migration completed and flag set");
+}
+
+bool BMSEventHandler::InnerProcessAccessTokenMigration()
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return false;
+    }
+
+    CleanDirtyUninstallData();
+
+    std::vector<Security::AccessToken::MigratedInfo> migratedList;
+
+    std::set<int32_t> allUidSet;
+
+    std::unordered_map<int32_t, Security::AccessToken::HapBaseInfo> allUidToHapInfo;
+    BuildMigrationData(dataMgr, migratedList, allUidSet, allUidToHapInfo);
+
+    std::vector<bool> successFlags(migratedList.size(), false);
+
+    std::vector<Security::AccessToken::HapBaseInfo> failedHapList;
+    std::vector<int32_t> failedUidList;
+    std::vector<int32_t> failedErrCodeList;
+    bool noIpcFailure = ExecuteMigrationWithRetry(dataMgr, migratedList, successFlags,
+        allUidSet, allUidToHapInfo, failedHapList, failedUidList, failedErrCodeList);
+    if (!noIpcFailure) {
+        LOG_E(BMS_TAG_DEFAULT, "Migration aborted: ATM service unavailable after retry");
+        return false;
+    }
+
+    MarkMigratedBundles(dataMgr, migratedList, successFlags);
+
+    FinishAccessTokenMigration();
+
+    UpdateOtaFlag(OTAFlag::MIGRATE_UID_TO_ATM);
+
+    LOG_I(BMS_TAG_DEFAULT, "Access token migration completed");
+    return true;
+}
+
+void BMSEventHandler::CleanDirtyUninstallData()
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        return;
+    }
+    std::map<std::string, UninstallBundleInfo> uninstallBundleInfos;
+    dataMgr->GetAllUninstallBundleInfo(uninstallBundleInfos);
+    int32_t cleanCount = 0;
+    for (const auto &[bundleName, info] : uninstallBundleInfos) {
+        InnerBundleInfo innerBundleInfo;
+        if (!dataMgr->FetchInnerBundleInfo(bundleName, innerBundleInfo)) {
+            continue;
+        }
+        LOG_I(BMS_TAG_DEFAULT, "Clean dirty uninstall data for installed bundle: %{public}s",
+            bundleName.c_str());
+        for (const auto &[userIdStr, dui] : info.userInfos) {
+            int32_t userId = 0;
+            int32_t appIndex = 0;
+            auto underscorePos = userIdStr.find(Constants::FILE_UNDERLINE);
+            if (underscorePos != std::string::npos) {
+                if (!OHOS::StrToInt(userIdStr.substr(0, underscorePos), userId)) {
+                    continue;
+                }
+                OHOS::StrToInt(userIdStr.substr(underscorePos + 1), appIndex);
+            } else {
+                if (!OHOS::StrToInt(userIdStr, userId)) {
+                    continue;
+                }
+            }
+            if (appIndex == 0) {
+                dataMgr->DeleteUninstallBundleInfo(bundleName, userId);
+            } else {
+                dataMgr->DeleteUninstallCloneBundleInfo(bundleName, userId, appIndex);
+            }
+            BundleResourceHelper::DeleteUninstallBundleResource(bundleName, userId, appIndex);
+        }
+        ++cleanCount;
+    }
+    if (cleanCount > 0) {
+        LOG_I(BMS_TAG_DEFAULT, "CleanDirtyUninstallData cleaned %{public}d dirty records", cleanCount);
+    }
+}
+
+void BMSEventHandler::BuildMigrationData(
+    const std::shared_ptr<BundleDataMgr> &dataMgr,
+    std::vector<Security::AccessToken::MigratedInfo> &migratedList,
+    std::set<int32_t> &allUidSet,
+    std::unordered_map<int32_t, Security::AccessToken::HapBaseInfo> &allUidToHapInfo)
+{
+    auto bundleNames = dataMgr->GetAllBundleName();
+    std::map<std::string, UninstallBundleInfo> uninstallBundleInfos;
+    dataMgr->GetAllUninstallBundleInfo(uninstallBundleInfos);
+
+    std::map<std::string, Security::AccessToken::MigratedInfo> migratedMap;
+
+    BuildFromInstalledBundles(bundleNames, dataMgr, migratedMap);
+    BuildFromSandbox(dataMgr, migratedMap);
+    BuildFromUninstallData(uninstallBundleInfos, migratedMap);
+    BuildAllUidSet(migratedMap, allUidSet, allUidToHapInfo);
+
+    for (auto &[bn, m] : migratedMap) {
+        if (m.uidList.empty()) {
+            continue;
+        }
+        migratedList.emplace_back(std::move(m));
+    }
+}
+
+void BMSEventHandler::BuildFromInstalledBundles(const std::vector<std::string> &bundleNames,
+    const std::shared_ptr<BundleDataMgr> &dataMgr,
+    std::map<std::string, Security::AccessToken::MigratedInfo> &migratedMap)
+{
+    for (const auto &bundleName : bundleNames) {
+        InnerBundleInfo info;
+        if (!dataMgr->FetchInnerBundleInfo(bundleName, info)) {
+            continue;
+        }
+        std::string bn = bundleName;
+        Security::AccessToken::MigratedInfo m;
+        m.bundleName = bn;
+        m.pathList.hapPaths = info.GetAllHapPaths();
+        m.pathList.isPreInstalled = info.IsPreInstallApp();
+        m.pathList.userId = info.GetUserId();
+        m.pathList.mode = info.IsDualModeCloneApp()
+            ? Security::AccessToken::MultipleMode::SUB_MODE
+            : Security::AccessToken::MultipleMode::DEFAULT_OR_MAIN_MODE;
+        auto userInfos = info.GetInnerBundleUserInfos();
+        for (const auto &[userIdStr, userInfo] : userInfos) {
+            int32_t userId = userInfo.bundleUserInfo.userId;
+            Security::AccessToken::HapBaseInfo hapBaseInfo{userId, bn, 0};
+            m.uidList.emplace_back(userInfo.uid);
+            m.hapBaseInfoList.emplace_back(hapBaseInfo);
+            m.reservedTypeList.emplace_back(Security::AccessToken::ReservedType::NONE);
+            for (const auto &[appIndexStr, cloneInfo] : userInfo.cloneInfos) {
+                int32_t appIndex = 0;
+                if (!OHOS::StrToInt(appIndexStr, appIndex) || appIndex <= 0) {
+                    continue;
+                }
+                int32_t cloneUserId = cloneInfo.userId;
+                Security::AccessToken::HapBaseInfo cloneHapBaseInfo{cloneUserId, bn, appIndex};
+                m.uidList.emplace_back(cloneInfo.uid);
+                m.hapBaseInfoList.emplace_back(cloneHapBaseInfo);
+                m.reservedTypeList.emplace_back(Security::AccessToken::ReservedType::NONE);
+            }
+        }
+        migratedMap[bn] = std::move(m);
+    }
+}
+
+void BMSEventHandler::BuildFromSandbox(const std::shared_ptr<BundleDataMgr> &dataMgr,
+    std::map<std::string, Security::AccessToken::MigratedInfo> &migratedMap)
+{
+    auto sandboxHelper = dataMgr->GetSandboxAppHelper();
+    if (sandboxHelper == nullptr) {
+        return;
+    }
+    auto sandboxMap = sandboxHelper->GetSandboxAppInfoMap();
+    for (const auto &[key, sandboxInfo] : sandboxMap) {
+        std::string bn = sandboxInfo.GetBundleName();
+        int32_t sandboxAppIndex = 0;
+        auto pos = key.find(Constants::FILE_UNDERLINE);
+        if (pos != std::string::npos) {
+            OHOS::StrToInt(key.substr(0, pos), sandboxAppIndex);
+        }
+        auto it = migratedMap.find(bn);
+        if (it == migratedMap.end()) {
+            continue;
+        }
+        auto &m = it->second;
+        for (const auto &[uk, ui] : sandboxInfo.GetInnerBundleUserInfos()) {
+            int32_t userId = ui.bundleUserInfo.userId;
+            m.uidList.emplace_back(ui.uid);
+            m.hapBaseInfoList.emplace_back(
+                Security::AccessToken::HapBaseInfo{userId, bn, sandboxAppIndex});
+            m.reservedTypeList.emplace_back(Security::AccessToken::ReservedType::NONE);
+        }
+    }
+}
+
+void BMSEventHandler::BuildFromUninstallData(
+    const std::map<std::string, UninstallBundleInfo> &uninstallBundleInfos,
+    std::map<std::string, Security::AccessToken::MigratedInfo> &migratedMap)
+{
+    for (const auto &[bundleName, uninstInfo] : uninstallBundleInfos) {
+        std::string bn = bundleName;
+        auto it = migratedMap.find(bn);
+        Security::AccessToken::MigratedInfo m;
+        if (it != migratedMap.end()) {
+            m = it->second;
+        } else {
+            m.bundleName = bn;
+        }
+        for (const auto &[userIdStr, dui] : uninstInfo.userInfos) {
+            int32_t userId = 0;
+            int32_t appIndex = 0;
+            auto underscorePos = userIdStr.find(Constants::FILE_UNDERLINE);
+            if (underscorePos != std::string::npos) {
+                if (!OHOS::StrToInt(userIdStr.substr(0, underscorePos), userId)) {
+                    continue;
+                }
+                OHOS::StrToInt(userIdStr.substr(underscorePos + 1), appIndex);
+            } else {
+                if (!OHOS::StrToInt(userIdStr, userId) || userId == Constants::UNSPECIFIED_USERID) {
+                    continue;
+                }
+            }
+            if (std::any_of(m.hapBaseInfoList.begin(), m.hapBaseInfoList.end(),
+                [&bn, userId, appIndex](const auto &hapInfo) {
+                    return hapInfo.bundleName == bn && hapInfo.userID == userId && hapInfo.instIndex == appIndex;
+                })) {
+                continue;
+            }
+            m.uidList.emplace_back(dui.uid);
+            m.hapBaseInfoList.emplace_back(
+                Security::AccessToken::HapBaseInfo{userId, bn, appIndex});
+            m.reservedTypeList.emplace_back(Security::AccessToken::ReservedType::RESERVED_DATA);
+        }
+        migratedMap[bn] = std::move(m);
+    }
+}
+
+void BMSEventHandler::BuildAllUidSet(
+    const std::map<std::string, Security::AccessToken::MigratedInfo> &migratedMap,
+    std::set<int32_t> &allUidSet,
+    std::unordered_map<int32_t, Security::AccessToken::HapBaseInfo> &allUidToHapInfo)
+{
+    for (const auto &[bn, m] : migratedMap) {
+        for (size_t k = 0; k < m.hapBaseInfoList.size() && k < m.uidList.size(); ++k) {
+            allUidSet.emplace(m.uidList[k]);
+            allUidToHapInfo.try_emplace(m.uidList[k], m.hapBaseInfoList[k]);
+        }
+    }
+}
+
+void BMSEventHandler::ReportMigrationEvent(
+    const std::vector<Security::AccessToken::HapBaseInfo> &hapList,
+    const std::vector<int32_t> &uidList,
+    const std::vector<int32_t> &errorCodeList,
+    int32_t errCode)
+{
+    if (hapList.empty()) {
+        return;
+    }
+    EventInfo eventInfo;
+    for (const auto &hap : hapList) {
+        eventInfo.bundleNameList.emplace_back(hap.bundleName);
+        eventInfo.userIdList.emplace_back(hap.userID);
+        eventInfo.appIndexList.emplace_back(hap.instIndex);
+    }
+    eventInfo.uidList = uidList;
+    eventInfo.errorCodeList = errorCodeList;
+    eventInfo.errCode = errCode;
+    LOG_W(BMS_TAG_DEFAULT,
+        "ReportMigrationEvent errCode=%{public}d hapCount=%{public}zu uidCount=%{public}zu",
+        errCode, hapList.size(), uidList.size());
+    EventReport::SendSystemEvent(BMSEventType::QUERY_BUNDLE_INFO, eventInfo);
+}
+
+void BMSEventHandler::FinishAccessTokenMigration()
+{
+    constexpr int32_t MAX_RETRY = 2;
+    for (int32_t i = 0; i < MAX_RETRY; ++i) {
+        int32_t ret = Security::AccessToken::AccessTokenKit::FinishMigration();
+        if (ret == 0 || ret == Security::AccessToken::AccessTokenError::ERR_MIGRATION_COMPLETED) {
+            return;
+        }
+        LOG_W(BMS_TAG_DEFAULT, "FinishMigration failed, retrying (%{public}d/%{public}d)", i + 1, MAX_RETRY);
+    }
+    LOG_E(BMS_TAG_DEFAULT, "FinishMigration all retries failed");
+}
+
+bool BMSEventHandler::IsSystemAppMigration(const Security::AccessToken::MigratedInfo &migratedInfo,
+    const std::shared_ptr<BundleDataMgr> &dataMgr)
+{
+    InnerBundleInfo info;
+    if (!dataMgr->FetchInnerBundleInfo(migratedInfo.bundleName, info)) {
+        return false;
+    }
+    return info.IsSystemApp();
+}
+
+bool BMSEventHandler::IsBundleAllResolved(
+    const Security::AccessToken::MigratedInfo &m,
+    const std::vector<Security::AccessToken::HapBaseInfo> &failedHapList,
+    const std::vector<bool> &resolved)
+{
+    for (size_t k = 0; k < m.hapBaseInfoList.size() && k < m.uidList.size(); ++k) {
+        const auto &hap = m.hapBaseInfoList[k];
+        for (size_t j = 0; j < failedHapList.size(); ++j) {
+            if (failedHapList[j].bundleName == hap.bundleName &&
+                failedHapList[j].userID == hap.userID &&
+                failedHapList[j].instIndex == hap.instIndex) {
+                if (!resolved[j]) {
+                    return false;
+                }
+                break;
+            }
+        }
+    }
+    return true;
+}
+
+bool BMSEventHandler::HasFailedEntry(
+    const Security::AccessToken::MigratedInfo &m,
+    const std::vector<Security::AccessToken::HapBaseInfo> &failedHapList)
+{
+    for (size_t k = 0; k < m.hapBaseInfoList.size(); ++k) {
+        const auto &hap = m.hapBaseInfoList[k];
+        for (const auto &failed : failedHapList) {
+            if (failed.bundleName == hap.bundleName &&
+                failed.userID == hap.userID &&
+                failed.instIndex == hap.instIndex) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+void BMSEventHandler::CompactFailedList(
+    std::vector<Security::AccessToken::HapBaseInfo> &failedHapList,
+    std::vector<int32_t> &failedUidList,
+    std::vector<int32_t> &failedErrCodeList,
+    const std::vector<bool> &resolved)
+{
+    size_t writeIdx = 0;
+    for (size_t i = 0; i < failedHapList.size(); ++i) {
+        if (!resolved[i]) {
+            if (writeIdx != i) {
+                failedHapList[writeIdx] = std::move(failedHapList[i]);
+                failedUidList[writeIdx] = failedUidList[i];
+                failedErrCodeList[writeIdx] = failedErrCodeList[i];
+            }
+            ++writeIdx;
+        }
+    }
+    failedHapList.resize(writeIdx);
+    failedUidList.resize(writeIdx);
+    failedErrCodeList.resize(writeIdx);
+}
+
+void BMSEventHandler::MarkMigratedBundles(
+    const std::shared_ptr<BundleDataMgr> &dataMgr,
+    const std::vector<Security::AccessToken::MigratedInfo> &migratedList,
+    const std::vector<bool> &successFlags)
+{
+    for (size_t i = 0; i < migratedList.size(); ++i) {
+        if (!successFlags[i]) {
+            continue;
+        }
+        const auto &bundleName = migratedList[i].bundleName;
+        dataMgr->UpdateUninstallBundleCheckBySpm(bundleName, true);
+        InnerBundleInfo info;
+        if (dataMgr->FetchInnerBundleInfo(bundleName, info)) {
+            info.SetBundleCheckBySpm(true);
+            dataMgr->UpdateInnerBundleInfo(info);
+        }
+    }
+}
+
+void BMSEventHandler::UpdateTokenIdIfChanged(const std::shared_ptr<BundleDataMgr> &dataMgr,
+    const Security::AccessToken::MigratedInfo &migratedInfo,
+    const Security::AccessToken::BundleMigrateResult &result)
+{
+    for (size_t k = 0; k < result.tokenIdList.size() &&
+        k < migratedInfo.hapBaseInfoList.size(); ++k) {
+        const auto &hapBaseInfo = migratedInfo.hapBaseInfoList[k];
+        uint64_t newTokenIdEx = result.tokenIdList[k].tokenIDEx;
+        uint32_t newTokenId = result.tokenIdList[k].tokenIdExStruct.tokenID;
+
+        InnerBundleInfo info;
+        if (!dataMgr->FetchInnerBundleInfo(hapBaseInfo.bundleName, info)) {
+            continue;
+        }
+        InnerBundleUserInfo userInfo;
+        if (!info.GetInnerBundleUserInfo(hapBaseInfo.userID, userInfo)) {
+            continue;
+        }
+        uint64_t oldTokenIdEx = 0;
+        uint32_t oldTokenId = 0;
+        if (hapBaseInfo.instIndex == 0) {
+            oldTokenIdEx = userInfo.accessTokenIdEx;
+            oldTokenId = userInfo.accessTokenId;
+        } else {
+            auto it = userInfo.cloneInfos.find(std::to_string(hapBaseInfo.instIndex));
+            if (it != userInfo.cloneInfos.end()) {
+                oldTokenIdEx = it->second.accessTokenIdEx;
+                oldTokenId = it->second.accessTokenId;
+            }
+        }
+        if (oldTokenId != 0 && oldTokenId != newTokenId) {
+            if (hapBaseInfo.instIndex == 0) {
+                userInfo.accessTokenId = newTokenId;
+                userInfo.accessTokenIdEx = newTokenIdEx;
+            } else {
+                auto it = userInfo.cloneInfos.find(std::to_string(hapBaseInfo.instIndex));
+                if (it != userInfo.cloneInfos.end()) {
+                    it->second.accessTokenId = newTokenId;
+                    it->second.accessTokenIdEx = newTokenIdEx;
+                }
+            }
+            info.AddInnerBundleUserInfo(userInfo);
+            dataMgr->UpdateInnerBundleInfo(info);
+            LOG_I(BMS_TAG_DEFAULT,
+                "Updated token: bundle=%{public}s userId=%{public}d appIndex=%{public}d",
+                hapBaseInfo.bundleName.c_str(), hapBaseInfo.userID, hapBaseInfo.instIndex);
+        }
+    }
+}
+
+void BMSEventHandler::BuildRetryList(
+    const std::vector<Security::AccessToken::HapBaseInfo> &failedHapList,
+    const std::vector<int32_t> &failedUidList,
+    const std::vector<Security::AccessToken::MigratedInfo> &migratedList,
+    std::vector<Security::AccessToken::MigratedInfo> &retryList)
+{
+    std::map<std::string, const Security::AccessToken::MigratedInfo*> originalMap;
+    for (const auto &m : migratedList) {
+        originalMap[m.bundleName] = &m;
+    }
+    auto findReservedType = [&](const std::string &bn, int32_t userId, int32_t appIndex)
+        -> Security::AccessToken::ReservedType {
+        auto it = originalMap.find(bn);
+        if (it == originalMap.end()) {
+            return Security::AccessToken::ReservedType::NONE;
+        }
+        const auto &orig = *it->second;
+        for (size_t k = 0; k < orig.hapBaseInfoList.size() && k < orig.reservedTypeList.size(); ++k) {
+            if (orig.hapBaseInfoList[k].userID == userId && orig.hapBaseInfoList[k].instIndex == appIndex) {
+                return orig.reservedTypeList[k];
+            }
+        }
+        return Security::AccessToken::ReservedType::NONE;
+    };
+
+    std::map<std::string, Security::AccessToken::MigratedInfo> retryMap;
+    for (size_t i = 0; i < failedHapList.size(); ++i) {
+        const auto &hapInfo = failedHapList[i];
+        int32_t uid = failedUidList[i];
+        auto origIt = originalMap.find(hapInfo.bundleName);
+        auto it = retryMap.find(hapInfo.bundleName);
+        if (it == retryMap.end()) {
+            Security::AccessToken::MigratedInfo m;
+            m.bundleName = hapInfo.bundleName;
+            if (origIt != originalMap.end()) {
+                m.pathList = origIt->second->pathList;
+            }
+            m.uidList.emplace_back(uid);
+            m.hapBaseInfoList.emplace_back(hapInfo);
+            m.reservedTypeList.emplace_back(findReservedType(hapInfo.bundleName, hapInfo.userID, hapInfo.instIndex));
+            retryMap[hapInfo.bundleName] = std::move(m);
+        } else {
+            auto &m = it->second;
+            m.uidList.emplace_back(uid);
+            m.hapBaseInfoList.emplace_back(hapInfo);
+            m.reservedTypeList.emplace_back(findReservedType(hapInfo.bundleName, hapInfo.userID, hapInfo.instIndex));
+        }
+    }
+    for (auto &[bn, m] : retryMap) {
+        retryList.emplace_back(std::move(m));
+    }
+    LOG_I(BMS_TAG_DEFAULT, "RetryMigrationForFailedEntries: %{public}zu bundles, %{public}zu entries",
+        retryList.size(), failedHapList.size());
+}
+
+bool BMSEventHandler::ProcessRetryBatches(const std::shared_ptr<BundleDataMgr> &dataMgr,
+    const std::vector<Security::AccessToken::MigratedInfo> &retryList,
+    const std::vector<Security::AccessToken::HapBaseInfo> &failedHapList,
+    std::vector<bool> &retryResolved)
+{
+    bool hasIpcFailure = false;
+    for (size_t batchStart = 0; batchStart < retryList.size(); batchStart += MIGRATION_BATCH_SIZE) {
+        size_t batchEnd = std::min(batchStart + MIGRATION_BATCH_SIZE, retryList.size());
+        std::vector<Security::AccessToken::MigratedInfo> batch(
+            retryList.begin() + static_cast<ptrdiff_t>(batchStart),
+            retryList.begin() + static_cast<ptrdiff_t>(batchEnd));
+        std::vector<Security::AccessToken::BundleMigrateResult> results;
+        int32_t ret = Security::AccessToken::AccessTokenKit::MigrateInstalledBundles(batch, results);
+        if (ret != 0) {
+            LOG_W(BMS_TAG_DEFAULT, "RetryMigration IPC failed ret=%{public}d, aborting", ret);
+            hasIpcFailure = true;
+            break;
+        }
+        for (size_t j = 0; j < batch.size() && j < results.size(); ++j) {
+            if (results[j].errcode != 0) {
+                continue;
+            }
+            const auto &m = batch[j];
+            for (size_t k = 0; k < m.hapBaseInfoList.size() && k < m.uidList.size(); ++k) {
+                for (size_t i = 0; i < failedHapList.size(); ++i) {
+                    if (failedHapList[i].bundleName == m.hapBaseInfoList[k].bundleName &&
+                        failedHapList[i].userID == m.hapBaseInfoList[k].userID &&
+                        failedHapList[i].instIndex == m.hapBaseInfoList[k].instIndex) {
+                        retryResolved[i] = true;
+                        break;
+                    }
+                }
+            }
+            UpdateTokenIdIfChanged(dataMgr, m, results[j]);
+        }
+    }
+    return hasIpcFailure;
+}
+
+void BMSEventHandler::UpdateRetrySuccessFlags(
+    const std::vector<Security::AccessToken::MigratedInfo> &migratedList,
+    std::vector<bool> &successFlags,
+    const std::vector<Security::AccessToken::HapBaseInfo> &failedHapList,
+    const std::vector<bool> &retryResolved)
+{
+    for (size_t i = 0; i < migratedList.size(); ++i) {
+        if (successFlags[i]) {
+            continue;
+        }
+        if (IsBundleAllResolved(migratedList[i], failedHapList, retryResolved)) {
+            successFlags[i] = true;
+        }
+    }
+}
+
+bool BMSEventHandler::RetryMigrationForFailedEntries(
+    const std::shared_ptr<BundleDataMgr> &dataMgr,
+    std::vector<Security::AccessToken::HapBaseInfo> &failedHapList,
+    std::vector<int32_t> &failedUidList,
+    std::vector<int32_t> &failedErrCodeList,
+    std::vector<bool> &successFlags,
+    const std::vector<Security::AccessToken::MigratedInfo> &migratedList)
+{
+    if (failedHapList.empty()) {
+        return false;
+    }
+    std::vector<Security::AccessToken::MigratedInfo> retryList;
+    BuildRetryList(failedHapList, failedUidList, migratedList, retryList);
+
+    std::vector<bool> retryResolved(failedHapList.size(), false);
+    bool hasIpcFailure = ProcessRetryBatches(dataMgr, retryList, failedHapList, retryResolved);
+
+    UpdateRetrySuccessFlags(migratedList, successFlags, failedHapList, retryResolved);
+    CompactFailedList(failedHapList, failedUidList, failedErrCodeList, retryResolved);
+
+    size_t remaining = failedHapList.size();
+    if (remaining > 0) {
+        LOG_I(BMS_TAG_DEFAULT, "RetryMigration: %{public}zu entries still failed", remaining);
+    } else {
+        LOG_I(BMS_TAG_DEFAULT, "RetryMigration: all entries resolved");
+    }
+    return hasIpcFailure;
+}
+
+void BMSEventHandler::SplitSystemAndNonSystem(
+    const std::vector<Security::AccessToken::MigratedInfo> &migratedList,
+    const std::shared_ptr<BundleDataMgr> &dataMgr,
+    std::vector<Security::AccessToken::MigratedInfo> &systemApps,
+    std::vector<Security::AccessToken::MigratedInfo> &nonSystemApps,
+    std::vector<size_t> &systemIndices,
+    std::vector<size_t> &nonSystemIndices)
+{
+    for (size_t i = 0; i < migratedList.size(); ++i) {
+        if (IsSystemAppMigration(migratedList[i], dataMgr)) {
+            systemApps.emplace_back(migratedList[i]);
+            systemIndices.emplace_back(i);
+        } else {
+            nonSystemApps.emplace_back(migratedList[i]);
+            nonSystemIndices.emplace_back(i);
+        }
+    }
+}
+
+void BMSEventHandler::ProcessMigrationBatch(
+    const std::shared_ptr<BundleDataMgr> &dataMgr,
+    std::vector<Security::AccessToken::MigratedInfo> &apps,
+    const std::vector<size_t> &indices,
+    std::vector<bool> &successFlags,
+    std::vector<int32_t> &migratedErrCodes)
+{
+    for (size_t batchStart = 0; batchStart < apps.size(); batchStart += MIGRATION_BATCH_SIZE) {
+        size_t batchEnd = std::min(batchStart + MIGRATION_BATCH_SIZE, apps.size());
+        std::vector<Security::AccessToken::MigratedInfo> batch(
+            apps.begin() + static_cast<ptrdiff_t>(batchStart),
+            apps.begin() + static_cast<ptrdiff_t>(batchEnd));
+        std::vector<Security::AccessToken::BundleMigrateResult> results;
+        int32_t retry = 0;
+        int32_t ret = -1;
+        while (retry < MAX_RETRY) {
+            results.clear();
+            ret = Security::AccessToken::AccessTokenKit::MigrateInstalledBundles(batch, results);
+            if (ret == 0 || ret == Security::AccessToken::AccessTokenError::ERR_MIGRATION_COMPLETED) {
+                break;
+            }
+            LOG_W(BMS_TAG_DEFAULT,
+                "Migration batch IPC failed (retry %{public}d/%{public}d) ret=%{public}d",
+                retry + 1, MAX_RETRY, ret);
+            if (retry < MAX_RETRY - 1) {
+                int64_t sleepMs = BACKOFF_INTERVALS_MS[retry];
+                std::this_thread::sleep_for(std::chrono::milliseconds(sleepMs));
+            }
+            ++retry;
+        }
+        if (ret != 0) {
+            LOG_W(BMS_TAG_DEFAULT, "Migration batch IPC failed after %{public}d retries", MAX_RETRY);
+            continue;
+        }
+        for (size_t j = 0; j < batch.size() && j < results.size() && j < indices.size(); ++j) {
+            size_t origIdx = indices[batchStart + j];
+            successFlags[origIdx] = (results[j].errcode == 0);
+            migratedErrCodes[origIdx] = results[j].errcode;
+            if (successFlags[origIdx]) {
+                UpdateTokenIdIfChanged(dataMgr, batch[j], results[j]);
+            }
+        }
+    }
+}
+
+void BMSEventHandler::CollectFailedFromHandshake(
+    const std::set<int32_t> &allUidSet,
+    const std::unordered_map<int32_t, Security::AccessToken::HapBaseInfo> &allUidToHapInfo,
+    std::vector<Security::AccessToken::HapBaseInfo> &failedHapList,
+    std::vector<int32_t> &failedUidList,
+    std::vector<int32_t> &failedErrCodeList)
+{
+    std::set<int32_t> unreceivedUids;
+    if (!allUidSet.empty()) {
+        int32_t checkRet = Security::AccessToken::AccessTokenKit::CheckMigratedUidSet(
+            allUidSet, unreceivedUids);
+        LOG_I(BMS_TAG_DEFAULT,
+            "CheckMigratedUidSet total=%{public}zu unreceived=%{public}zu ret=%{public}d",
+            allUidSet.size(), unreceivedUids.size(), checkRet);
+    }
+    for (int32_t uid : unreceivedUids) {
+        auto it = allUidToHapInfo.find(uid);
+        if (it == allUidToHapInfo.end()) {
+            LOG_W(BMS_TAG_DEFAULT, "Unreceived uid=%{public}d not found in migration data", uid);
+            continue;
+        }
+        failedHapList.emplace_back(it->second);
+        failedUidList.emplace_back(uid);
+        failedErrCodeList.emplace_back(Security::AccessToken::ERR_MIGRATION_UID_EXISTED);
+    }
+}
+
+void BMSEventHandler::CollectFailedFromBatches(
+    const std::vector<Security::AccessToken::MigratedInfo> &migratedList,
+    const std::vector<bool> &successFlags,
+    const std::vector<int32_t> &migratedErrCodes,
+    std::vector<Security::AccessToken::HapBaseInfo> &failedHapList,
+    std::vector<int32_t> &failedUidList,
+    std::vector<int32_t> &failedErrCodeList)
+{
+    for (size_t i = 0; i < migratedList.size(); ++i) {
+        if (successFlags[i]) {
+            continue;
+        }
+        for (size_t k = 0; k < migratedList[i].hapBaseInfoList.size() &&
+            k < migratedList[i].uidList.size(); ++k) {
+            const auto &hap = migratedList[i].hapBaseInfoList[k];
+            int32_t uid = migratedList[i].uidList[k];
+            bool alreadyInFailed = false;
+            for (const auto &failed : failedHapList) {
+                if (failed.bundleName == hap.bundleName &&
+                    failed.userID == hap.userID &&
+                    failed.instIndex == hap.instIndex) {
+                    alreadyInFailed = true;
+                    break;
+                }
+            }
+            if (alreadyInFailed) {
+                continue;
+            }
+            failedHapList.emplace_back(hap);
+            failedUidList.emplace_back(uid);
+            int32_t errCode = migratedErrCodes[i] != 0 ?
+                migratedErrCodes[i] : ERR_APPEXECFWK_ACCESS_TOKEN_MIGRATION_FAILED;
+            failedErrCodeList.emplace_back(errCode);
+        }
+    }
+}
+
+void BMSEventHandler::RecheckSuccessFlags(
+    const std::vector<Security::AccessToken::MigratedInfo> &migratedList,
+    std::vector<bool> &successFlags,
+    const std::vector<Security::AccessToken::HapBaseInfo> &failedHapList)
+{
+    for (size_t i = 0; i < migratedList.size(); ++i) {
+        successFlags[i] = !HasFailedEntry(migratedList[i], failedHapList);
+    }
+}
+
+bool BMSEventHandler::ExecuteMigrationWithRetry(
+    const std::shared_ptr<BundleDataMgr> &dataMgr,
+    std::vector<Security::AccessToken::MigratedInfo> &migratedList,
+    std::vector<bool> &successFlags,
+    const std::set<int32_t> &allUidSet,
+    const std::unordered_map<int32_t, Security::AccessToken::HapBaseInfo> &allUidToHapInfo,
+    std::vector<Security::AccessToken::HapBaseInfo> &failedHapList,
+    std::vector<int32_t> &failedUidList,
+    std::vector<int32_t> &failedErrCodeList)
+{
+    successFlags.assign(migratedList.size(), false);
+    std::vector<int32_t> migratedErrCodes(migratedList.size(), 0);
+
+    std::vector<Security::AccessToken::MigratedInfo> systemApps;
+    std::vector<Security::AccessToken::MigratedInfo> nonSystemApps;
+    std::vector<size_t> systemIndices;
+    std::vector<size_t> nonSystemIndices;
+    SplitSystemAndNonSystem(migratedList, dataMgr,
+        systemApps, nonSystemApps, systemIndices, nonSystemIndices);
+
+    ProcessMigrationBatch(dataMgr, systemApps, systemIndices, successFlags, migratedErrCodes);
+    ProcessMigrationBatch(dataMgr, nonSystemApps, nonSystemIndices, successFlags, migratedErrCodes);
+
+    CollectFailedFromHandshake(allUidSet, allUidToHapInfo, failedHapList, failedUidList, failedErrCodeList);
+    CollectFailedFromBatches(migratedList, successFlags, migratedErrCodes, failedHapList, failedUidList,
+        failedErrCodeList);
+
+    LOG_I(BMS_TAG_DEFAULT, "Failed entries: %{public}zu", failedHapList.size());
+
+    RecheckSuccessFlags(migratedList, successFlags, failedHapList);
+
+    bool hasIpcFailure = RetryMigrationForFailedEntries(dataMgr, failedHapList, failedUidList,
+        failedErrCodeList, successFlags, migratedList);
+    if (hasIpcFailure) {
+        LOG_E(BMS_TAG_DEFAULT, "Migration aborted: ATM service unavailable after retry, "
+            "%{public}zu entries unresolved, will not call FinishMigration or SPM fallback",
+            failedHapList.size());
+        ReportMigrationEvent(failedHapList, failedUidList, failedErrCodeList,
+            ERR_APPEXECFWK_ACCESS_TOKEN_MIGRATION_FAILED);
+        return false;
+    }
+
+    ReportMigrationEvent(failedHapList, failedUidList, failedErrCodeList,
+        ERR_APPEXECFWK_ACCESS_TOKEN_MIGRATION_FAILED);
+    return true;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

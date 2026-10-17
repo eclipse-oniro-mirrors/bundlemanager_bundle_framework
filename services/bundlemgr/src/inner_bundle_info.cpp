@@ -149,6 +149,7 @@ constexpr const char* UNINSTALL_STATE = "uninstallState";
 constexpr const char* PLUGIN_BUNDLE_INFOS = "pluginBundleInfos";
 constexpr const char* IS_DELAY_AGING = "isDelayAging";
 constexpr const char* IS_DUAL_MODE_CLONE_APP = "isDualModeCloneApp";
+constexpr const char* CHECK_BY_SPM = "checkBySpm";
 constexpr int8_t SINGLE_HSP_VERSION = 1;
 const std::map<std::string, IsolationMode> ISOLATION_MODE_MAP = {
     {"isolationOnly", IsolationMode::ISOLATION_ONLY},
@@ -476,6 +477,7 @@ InnerBundleInfo &InnerBundleInfo::operator=(const InnerBundleInfo &info)
     this->uninstallState_ = info.uninstallState_;
     this->pluginBundleInfos_ = info.pluginBundleInfos_;
     this->isDelayAging_ = info.isDelayAging_;
+    this->checkBySpm_ = info.checkBySpm_;
     return *this;
 }
 
@@ -664,6 +666,7 @@ void InnerBundleInfo::ToJson(nlohmann::json &jsonObject) const
     jsonObject[UNINSTALL_STATE] = uninstallState_;
     jsonObject[IS_DELAY_AGING] = isDelayAging_;
     jsonObject[IS_DUAL_MODE_CLONE_APP] = isDualModeCloneApp_;
+    jsonObject[CHECK_BY_SPM] = checkBySpm_;
 }
 
 void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
@@ -1766,6 +1769,12 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
             jsonObjectEnd,
             IS_DUAL_MODE_CLONE_APP,
             isDualModeCloneApp_,
+            false,
+            parseResult);
+        BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+            jsonObjectEnd,
+            CHECK_BY_SPM,
+            checkBySpm_,
             false,
             parseResult);
     if (parseResult != ERR_OK) {

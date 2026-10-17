@@ -1272,6 +1272,19 @@ bool BundleDataMgr::DeleteUninstallBundleInfo(const std::string &bundleName, int
     return uninstallDataMgr_->UpdateUninstallBundleInfo(bundleName, uninstallBundleInfo);
 }
 
+bool BundleDataMgr::UpdateUninstallBundleCheckBySpm(const std::string &bundleName, bool checkBySpm)
+{
+    if (uninstallDataMgr_ == nullptr) {
+        return false;
+    }
+    UninstallBundleInfo uninstallBundleInfo;
+    if (!uninstallDataMgr_->GetUninstallBundleInfo(bundleName, uninstallBundleInfo)) {
+        return false;
+    }
+    uninstallBundleInfo.checkBySpm = checkBySpm;
+    return uninstallDataMgr_->UpdateUninstallBundleInfo(bundleName, uninstallBundleInfo);
+}
+
 bool BundleDataMgr::RemoveUninstalledBundleinfos(int32_t userId)
 {
     if (uninstallDataMgr_ == nullptr) {

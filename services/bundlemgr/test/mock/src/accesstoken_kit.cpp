@@ -15,6 +15,7 @@
 
 #include "accesstoken_kit.h"
 
+#include <set>
 #include "interfaces/hap_verify.h"
 #include "parameters.h"
 
@@ -505,6 +506,15 @@ int32_t AccessTokenKit::MigrateInstalledBundles(const std::vector<MigratedInfo>&
 
 int32_t AccessTokenKit::FinishMigration()
 {
+    return 0;
+}
+
+int32_t AccessTokenKit::CheckMigratedUidSet(
+    const std::set<int32_t, std::less<int32_t>, std::allocator<int32_t>>& totalUids,
+    std::set<int32_t, std::less<int32_t>, std::allocator<int32_t>>& unreceivedUids)
+{
+    (void)totalUids;
+    unreceivedUids.clear();
     return 0;
 }
 

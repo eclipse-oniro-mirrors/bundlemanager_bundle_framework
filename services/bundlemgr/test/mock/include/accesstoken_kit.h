@@ -17,6 +17,7 @@
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_TEST_MOCK_ACCESS_TOKEN_KIT_H
 
 #include <map>
+#include <set>
 #include <string>
 #include <cstddef>
 #include <vector>
@@ -58,6 +59,9 @@ public:
     static int32_t MigrateInstalledBundles(const std::vector<MigratedInfo>& migratedInfoList,
         std::vector<BundleMigrateResult>& results);
     static int32_t FinishMigration();
+    static int32_t CheckMigratedUidSet(
+        const std::set<int32_t, std::less<int32_t>, std::allocator<int32_t>>& totalUids,
+        std::set<int32_t, std::less<int32_t>, std::allocator<int32_t>>& unreceivedUids);
     static int32_t GetHapBaseInfoByUid(int32_t uid, HapBaseInfo& info);
     static int VerifyAccessToken(
         AccessTokenID callerTokenID, AccessTokenID firstTokenID, const std::string& permissionName);

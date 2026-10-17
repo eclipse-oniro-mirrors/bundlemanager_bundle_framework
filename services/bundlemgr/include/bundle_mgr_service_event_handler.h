@@ -18,15 +18,19 @@
 
 #include <list>
 #include <map>
+#include <set>
+#include <unordered_map>
 #include <unordered_set>
 
 #include "bundle_constants.h"
 #include "bundle_data_mgr.h"
 #include "bundle_mgr_host_impl.h"
 #include "bundle_verify_mgr.h"
+#include "accesstoken_kit.h"
 #include "common_event_manager.h"
 #include "common_event_subscriber.h"
 #include "common_event_support.h"
+#include "hap_token_info.h"
 #include "pre_install_bundle_info.h"
 #include "pre_install_exception_mgr.h"
 #include "pre_scan_info.h"
@@ -70,6 +74,7 @@ enum OTAFlag : uint32_t {
     MIGRATE_UNINSTALL_BUNDLE_RESOURCE = 0x08000000,
     CHECK_PRINT_SERVICE_DIR = 0x10000000,
     MIGRATE_SKILL_DIR = 0x20000000,
+    MIGRATE_UID_TO_ATM = 0x40000000,
 };
 
 enum class ScanResultCode : uint8_t {
@@ -927,6 +932,115 @@ private:
     bool otaNewInstallWhitelistLoaded_ = false;
     bool multiUserInstallThirdPreloadApp_ = true;
     std::unordered_set<std::string> otaNewInstallWhitelist_;
+
+    // ── Access Token Migration ──
+    void ProcessAccessTokenMigration();
+    bool InnerProcessAccessTokenMigration();
+    void FinishAccessTokenMigration();
+    void CleanDirtyUninstallData();
+    bool IsSystemAppMigration(const Security::AccessToken::MigratedInfo &migratedInfo,
+        const std::shared_ptr<BundleDataMgr> &dataMgr);
+
+    // Migration data building
+    void BuildMigrationData(const std::shared_ptr<BundleDataMgr> &dataMgr,
+        std::vector<Security::AccessToken::MigratedInfo> &migratedList,
+        std::set<int32_t> &allUidSet,
+        std::unordered_map<int32_t, Security::AccessToken::HapBaseInfo> &allUidToHapInfo);
+    void BuildFromInstalledBundles(const std::vector<std::string> &bundleNames,
+        const std::shared_ptr<BundleDataMgr> &dataMgr,
+        std::map<std::string, Security::AccessToken::MigratedInfo> &migratedMap);
+    void BuildFromSandbox(const std::shared_ptr<BundleDataMgr> &dataMgr,
+        std::map<std::string, Security::AccessToken::MigratedInfo> &migratedMap);
+    void BuildFromUninstallData(
+        const std::map<std::string, UninstallBundleInfo> &uninstallBundleInfos,
+        std::map<std::string, Security::AccessToken::MigratedInfo> &migratedMap);
+    void BuildAllUidSet(const std::map<std::string, Security::AccessToken::MigratedInfo> &migratedMap,
+        std::set<int32_t> &allUidSet,
+        std::unordered_map<int32_t, Security::AccessToken::HapBaseInfo> &allUidToHapInfo);
+
+    bool ExecuteMigrationWithRetry(const std::shared_ptr<BundleDataMgr> &dataMgr,
+        std::vector<Security::AccessToken::MigratedInfo> &migratedList,
+        std::vector<bool> &successFlags,
+        const std::set<int32_t> &allUidSet,
+        const std::unordered_map<int32_t, Security::AccessToken::HapBaseInfo> &allUidToHapInfo,
+        std::vector<Security::AccessToken::HapBaseInfo> &failedHapList,
+        std::vector<int32_t> &failedUidList,
+        std::vector<int32_t> &failedErrCodeList);
+    void SplitSystemAndNonSystem(const std::vector<Security::AccessToken::MigratedInfo> &migratedList,
+        const std::shared_ptr<BundleDataMgr> &dataMgr,
+        std::vector<Security::AccessToken::MigratedInfo> &systemApps,
+        std::vector<Security::AccessToken::MigratedInfo> &nonSystemApps,
+        std::vector<size_t> &systemIndices,
+        std::vector<size_t> &nonSystemIndices);
+    void ProcessMigrationBatch(const std::shared_ptr<BundleDataMgr> &dataMgr,
+        std::vector<Security::AccessToken::MigratedInfo> &apps,
+        const std::vector<size_t> &indices,
+        std::vector<bool> &successFlags,
+        std::vector<int32_t> &migratedErrCodes);
+    void CollectFailedFromHandshake(const std::set<int32_t> &allUidSet,
+        const std::unordered_map<int32_t, Security::AccessToken::HapBaseInfo> &allUidToHapInfo,
+        std::vector<Security::AccessToken::HapBaseInfo> &failedHapList,
+        std::vector<int32_t> &failedUidList,
+        std::vector<int32_t> &failedErrCodeList);
+    void CollectFailedFromBatches(
+        const std::vector<Security::AccessToken::MigratedInfo> &migratedList,
+        const std::vector<bool> &successFlags,
+        const std::vector<int32_t> &migratedErrCodes,
+        std::vector<Security::AccessToken::HapBaseInfo> &failedHapList,
+        std::vector<int32_t> &failedUidList,
+        std::vector<int32_t> &failedErrCodeList);
+    void RecheckSuccessFlags(
+        const std::vector<Security::AccessToken::MigratedInfo> &migratedList,
+        std::vector<bool> &successFlags,
+        const std::vector<Security::AccessToken::HapBaseInfo> &failedHapList);
+
+    // Retry
+    bool RetryMigrationForFailedEntries(
+        const std::shared_ptr<BundleDataMgr> &dataMgr,
+        std::vector<Security::AccessToken::HapBaseInfo> &failedHapList,
+        std::vector<int32_t> &failedUidList,
+        std::vector<int32_t> &failedErrCodeList,
+        std::vector<bool> &successFlags,
+        const std::vector<Security::AccessToken::MigratedInfo> &migratedList);
+    void BuildRetryList(
+        const std::vector<Security::AccessToken::HapBaseInfo> &failedHapList,
+        const std::vector<int32_t> &failedUidList,
+        const std::vector<Security::AccessToken::MigratedInfo> &migratedList,
+        std::vector<Security::AccessToken::MigratedInfo> &retryList);
+    bool ProcessRetryBatches(const std::shared_ptr<BundleDataMgr> &dataMgr,
+        const std::vector<Security::AccessToken::MigratedInfo> &retryList,
+        const std::vector<Security::AccessToken::HapBaseInfo> &failedHapList,
+        std::vector<bool> &retryResolved);
+    void UpdateRetrySuccessFlags(
+        const std::vector<Security::AccessToken::MigratedInfo> &migratedList,
+        std::vector<bool> &successFlags,
+        const std::vector<Security::AccessToken::HapBaseInfo> &failedHapList,
+        const std::vector<bool> &retryResolved);
+
+    // Shared helpers
+    void MarkMigratedBundles(const std::shared_ptr<BundleDataMgr> &dataMgr,
+        const std::vector<Security::AccessToken::MigratedInfo> &migratedList,
+        const std::vector<bool> &successFlags);
+    void UpdateTokenIdIfChanged(const std::shared_ptr<BundleDataMgr> &dataMgr,
+        const Security::AccessToken::MigratedInfo &migratedInfo,
+        const Security::AccessToken::BundleMigrateResult &result);
+    void ReportMigrationEvent(
+        const std::vector<Security::AccessToken::HapBaseInfo> &hapList,
+        const std::vector<int32_t> &uidList,
+        const std::vector<int32_t> &errorCodeList,
+        int32_t errCode);
+    static bool IsBundleAllResolved(
+        const Security::AccessToken::MigratedInfo &m,
+        const std::vector<Security::AccessToken::HapBaseInfo> &failedHapList,
+        const std::vector<bool> &resolved);
+    static bool HasFailedEntry(
+        const Security::AccessToken::MigratedInfo &m,
+        const std::vector<Security::AccessToken::HapBaseInfo> &failedHapList);
+    static void CompactFailedList(
+        std::vector<Security::AccessToken::HapBaseInfo> &failedHapList,
+        std::vector<int32_t> &failedUidList,
+        std::vector<int32_t> &failedErrCodeList,
+        const std::vector<bool> &resolved);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
