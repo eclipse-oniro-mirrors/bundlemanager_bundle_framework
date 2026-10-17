@@ -565,7 +565,7 @@ void to_json(nlohmann::json &jsonObject, const FormInfo &formInfo)
         {JSON_KEY_GROUP_ID, formInfo.groupId},
         {JSON_KEY_SUPPORT_DEVICE_TYPE, formInfo.supportDeviceTypes},
         {JSON_KEY_SUPPORT_DEVICE_PERFORMANCE_CLASSES, formInfo.supportDevicePerformanceClasses},
-        {JSON_KEY_STANDBY, formInfo.standby}
+        {JSON_KEY_STANDBY, formInfo.standby},
         {JSON_KEY_IS_COLOR_MODE_REFRESH_ENABLED, formInfo.isColorModeRefreshEnabled},
     };
 }
