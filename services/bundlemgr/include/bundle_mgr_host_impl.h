@@ -1549,7 +1549,7 @@ private:
     ErrCode HandleKillProcess(const std::string &bundleName, int32_t userId, int32_t appIndex,
         bool isEnable, bool killProcess);
 
-    ErrCode CheckBatchSetPermission();
+    ErrCode CheckBatchSetPermission(int32_t userId);
 
     // Check frequency limit for GetTopNLargestItemsInAppDataDir
     ErrCode CheckGetTopNLargestItemsFrequencyLimit();
