@@ -327,6 +327,11 @@ bool BundlePermissionMgr::VerifyCliToolInstall()
     return false;
 }
 
+bool BundlePermissionMgr::VerifyCliToolInstallOnly()
+{
+    return false;
+}
+
 bool BundlePermissionMgr::RefreshPreAuthorizationForOTA()
 {
     return true;

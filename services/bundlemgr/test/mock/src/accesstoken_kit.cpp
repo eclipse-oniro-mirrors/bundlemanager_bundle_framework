@@ -16,6 +16,8 @@
 #include "accesstoken_kit.h"
 
 #include <set>
+#include <unordered_map>
+
 #include "interfaces/hap_verify.h"
 #include "parameters.h"
 
@@ -30,8 +32,19 @@ static constexpr int GRANT_STATUS = 100;
 // Mirrors ACCESS_TOKEN_DB_ERROR_PARAM in bundle_service_constants.h; duplicated to keep the
 // test mock free of service headers.
 constexpr const char* MOCK_DB_ERROR_PARAM = "persist.accesstoken.permission.dberror";
-// controllable return value for IsCliToolToken, default true (CLI tool calling)
-bool g_isCliToolToken = true;
+// controllable per-permission results for VerifyAccessToken, empty by default (keeps original behavior)
+std::unordered_map<std::string, int> g_verifyAccessTokenResults;
+// runtime-controllable token type for GetTokenTypeFlag, defaults keep the
+// original compile-time behavior of each section
+#ifdef BUNDLE_PERMISSION_DEF_LIST
+ATokenTypeEnum g_tokenTypeFlag = TOKEN_SHELL;
+#else
+#ifdef BUNDLE_FRAMEWORK_SYSTEM_APP_FALSE
+ATokenTypeEnum g_tokenTypeFlag = TOKEN_INVALID;
+#else
+ATokenTypeEnum g_tokenTypeFlag = TOKEN_NATIVE;
+#endif
+#endif
 unsigned int g_accessTokenID = 0;
 int32_t g_errCode = 0;
 std::vector<int32_t> g_initHapTokenRetSeq;
@@ -245,6 +258,10 @@ int AccessTokenKit::GrantPermission(AccessTokenID tokenID, const std::string& pe
 
 int AccessTokenKit::VerifyAccessToken(AccessTokenID tokenID, const std::string& permissionName)
 {
+    auto verifyIter = g_verifyAccessTokenResults.find(permissionName);
+    if (verifyIter != g_verifyAccessTokenResults.end()) {
+        return verifyIter->second;
+    }
 #ifdef BUNDLE_PERMISSION_DEF_TRUE
     if (permissionName == "testName") {
         return 0;
@@ -263,7 +280,7 @@ int AccessTokenKit::GetDefPermission(const std::string& permissionName, Permissi
 
 ATokenTypeEnum AccessTokenKit::GetTokenTypeFlag(AccessTokenID tokenID)
 {
-    return TOKEN_SHELL;
+    return g_tokenTypeFlag;
 }
 #else
 int AccessTokenKit::GetReqPermissions(AccessTokenID tokenID, std::vector<PermissionStateFull>& reqPermList,
@@ -279,6 +296,10 @@ int AccessTokenKit::GrantPermission(AccessTokenID tokenID, const std::string& pe
 
 int AccessTokenKit::VerifyAccessToken(AccessTokenID tokenID, const std::string& permissionName)
 {
+    auto verifyIter = g_verifyAccessTokenResults.find(permissionName);
+    if (verifyIter != g_verifyAccessTokenResults.end()) {
+        return verifyIter->second;
+    }
     return 0;
 }
 
@@ -289,11 +310,7 @@ int AccessTokenKit::GetDefPermission(const std::string& permissionName, Permissi
 
 ATokenTypeEnum AccessTokenKit::GetTokenTypeFlag(AccessTokenID tokenID)
 {
-#ifdef BUNDLE_FRAMEWORK_SYSTEM_APP_FALSE
-    return TOKEN_INVALID;
-#else
-    return TOKEN_NATIVE;
-#endif
+    return g_tokenTypeFlag;
 }
 #endif
 
@@ -396,12 +413,22 @@ int AccessTokenKit::GetHapTokenInfo(AccessTokenID tokenID, HapTokenInfo& hapToke
 
 bool AccessTokenKit::IsCliToolToken(uint64_t tokenId)
 {
-    return g_isCliToolToken;
+    return true;
 }
 
-void SetIsCliToolTokenForTest(bool value)
+void SetVerifyAccessTokenResultForTest(const std::string& permissionName, int result)
 {
-    g_isCliToolToken = value;
+    g_verifyAccessTokenResults[permissionName] = result;
+}
+
+void SetTokenTypeFlagForTest(ATokenTypeEnum tokenType)
+{
+    g_tokenTypeFlag = tokenType;
+}
+
+void ResetVerifyAccessTokenResultsForTest()
+{
+    g_verifyAccessTokenResults.clear();
 }
 
 // ---- SPM stubs: symbol-only with the default control values; the ON-mode

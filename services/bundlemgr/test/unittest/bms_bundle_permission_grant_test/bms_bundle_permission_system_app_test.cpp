@@ -58,6 +58,8 @@ void SetNativeTokenTypeForTest(bool value);
 void SetIsNativeTokenTypeOnlyForTest(bool value);
 void SetCheckUserForegroundForTest(bool value);
 void SetPermissionResultForTest(const std::string &permissionName, bool granted);
+void SetVerifyCliToolInstallOnlyForTest(bool value);
+void SetVerifyCliToolInstallForTest(bool value);
 
 namespace OHOS {
 namespace {
@@ -4697,6 +4699,289 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, SetDefaultApplicationForCustom_0
     AAFwk::Want want;
     auto res = hostImpl->SetDefaultApplicationForCustom(USERID, DEFAULT_APP_VIDEO, want);
     EXPECT_NE(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: Install_CliToolUserForeground_0100
+ * @tc.name: test Install of BundleInstallerHost with ALLOW_INSTALL_DEBUG_HAP only and background user
+ * @tc.desc: 1. caller holds ALLOW_INSTALL_DEBUG_HAP only
+ *           2. Install false when the specified user is not foreground user
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, Install_CliToolUserForeground_0100, Function | SmallTest | Level0)
+{
+    SetUserFromShellForTest(true);
+    SetSystemAppFalseForTest(true);
+    SetIsSelfCalling(false);
+    SetVerifyCallingPermissionForTest(false);
+    SetPermissionResultForTest(ServiceConstants::PERMISSION_ALLOW_INSTALL_DEBUG_HAP, true);
+    SetVerifyCliToolInstallOnlyForTest(true);
+    SetCheckUserForegroundForTest(false);
+    InstallParam installParam;
+    installParam.userId = USERID;
+    std::vector<std::string> bundleFilePaths;
+    bundleInstallerHost_->Init();
+    sptr<MockStatusReceiver> receiver(new (std::nothrow) MockStatusReceiver());
+    bool ret = bundleInstallerHost_->Install(bundleFilePaths, installParam, receiver);
+    EXPECT_FALSE(ret);
+    EXPECT_EQ(receiver->GetResultCode(), ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: CreateStreamInstaller_CliToolUserForeground_0100
+ * @tc.name: test CreateStreamInstaller of BundleInstallerHost with ALLOW_INSTALL_DEBUG_HAP only and
+ *           background user
+ * @tc.desc: 1. caller holds ALLOW_INSTALL_DEBUG_HAP only
+ *           2. CreateStreamInstaller returns nullptr when the specified user is not foreground user
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, CreateStreamInstaller_CliToolUserForeground_0100,
+    Function | SmallTest | Level0)
+{
+    SetSystemAppFalseForTest(true);
+    SetIsSelfCalling(false);
+    SetVerifyCallingPermissionForTest(false);
+    SetPermissionResultForTest(ServiceConstants::PERMISSION_ALLOW_INSTALL_DEBUG_HAP, true);
+    SetVerifyCliToolInstallOnlyForTest(true);
+    SetCheckUserForegroundForTest(false);
+    InstallParam installParam;
+    installParam.userId = USERID;
+    bundleInstallerHost_->Init();
+    sptr<MockStatusReceiver> receiver(new (std::nothrow) MockStatusReceiver());
+    std::vector<std::string> originHapPaths;
+    sptr<IBundleStreamInstaller> streamInstaller =
+        bundleInstallerHost_->CreateStreamInstaller(installParam, receiver, originHapPaths);
+    EXPECT_EQ(streamInstaller, nullptr);
+    EXPECT_EQ(receiver->GetResultCode(), ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: Install_NonSystemCliToolChain_0100
+ * @tc.name: test Install of BundleInstallerHost with real non-system CLI tool chain
+ * @tc.desc: 1. non-system caller without sdk version exemption, entering via ALLOW_INSTALL_DEBUG_HAP
+ *           2. Install false when the specified user is not foreground user
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, Install_NonSystemCliToolChain_0100,
+    Function | SmallTest | Level0)
+{
+    SetUserFromShellForTest(true);
+    SetSystemAppFalseForTest(false);
+    SetVerifyCallingBundleSdkVersionForTestFalse(false);
+    SetVerifyCliToolInstallForTest(true);
+    SetIsSelfCalling(false);
+    SetVerifyCallingPermissionForTest(false);
+    SetPermissionResultForTest(ServiceConstants::PERMISSION_ALLOW_INSTALL_DEBUG_HAP, true);
+    SetVerifyCliToolInstallOnlyForTest(true);
+    SetCheckUserForegroundForTest(false);
+    InstallParam installParam;
+    installParam.userId = USERID;
+    std::vector<std::string> bundleFilePaths;
+    bundleInstallerHost_->Init();
+    sptr<MockStatusReceiver> receiver(new (std::nothrow) MockStatusReceiver());
+    bool ret = bundleInstallerHost_->Install(bundleFilePaths, installParam, receiver);
+    EXPECT_FALSE(ret);
+    EXPECT_EQ(receiver->GetResultCode(), ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: CreateStreamInstaller_NonSystemCliToolChain_0100
+ * @tc.name: test CreateStreamInstaller of BundleInstallerHost with real non-system CLI tool chain
+ * @tc.desc: 1. non-system caller entering via ALLOW_INSTALL_DEBUG_HAP
+ *           2. CreateStreamInstaller returns nullptr when the specified user is not foreground user
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, CreateStreamInstaller_NonSystemCliToolChain_0100,
+    Function | SmallTest | Level0)
+{
+    SetSystemAppFalseForTest(false);
+    SetVerifyCliToolInstallForTest(true);
+    SetIsSelfCalling(false);
+    SetVerifyCallingPermissionForTest(false);
+    SetPermissionResultForTest(ServiceConstants::PERMISSION_ALLOW_INSTALL_DEBUG_HAP, true);
+    SetVerifyCliToolInstallOnlyForTest(true);
+    SetCheckUserForegroundForTest(false);
+    InstallParam installParam;
+    installParam.userId = USERID;
+    bundleInstallerHost_->Init();
+    sptr<MockStatusReceiver> receiver(new (std::nothrow) MockStatusReceiver());
+    std::vector<std::string> originHapPaths;
+    sptr<IBundleStreamInstaller> streamInstaller =
+        bundleInstallerHost_->CreateStreamInstaller(installParam, receiver, originHapPaths);
+    EXPECT_EQ(streamInstaller, nullptr);
+    EXPECT_EQ(receiver->GetResultCode(), ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: CreateStreamInstaller_CliToolUserForeground_0200
+ * @tc.name: test CreateStreamInstaller with ALLOW_INSTALL_DEBUG_HAP only and foreground user
+ * @tc.desc: 1. non-system caller entering via ALLOW_INSTALL_DEBUG_HAP
+ *           2. CreateStreamInstaller succeeds when the specified user is foreground user
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, CreateStreamInstaller_CliToolUserForeground_0200,
+    Function | SmallTest | Level0)
+{
+    SetSystemAppFalseForTest(false);
+    SetVerifyCliToolInstallForTest(true);
+    SetIsSelfCalling(false);
+    SetVerifyCallingPermissionForTest(false);
+    SetPermissionResultForTest(ServiceConstants::PERMISSION_ALLOW_INSTALL_DEBUG_HAP, true);
+    SetVerifyCliToolInstallOnlyForTest(true);
+    SetCheckUserForegroundForTest(true);
+    InstallParam installParam;
+    installParam.userId = USERID;
+    bundleInstallerHost_->Init();
+    sptr<MockStatusReceiver> receiver(new (std::nothrow) MockStatusReceiver());
+    std::vector<std::string> originHapPaths;
+    sptr<IBundleStreamInstaller> streamInstaller =
+        bundleInstallerHost_->CreateStreamInstaller(installParam, receiver, originHapPaths);
+    EXPECT_NE(streamInstaller, nullptr);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: CreateStreamInstaller_CliToolUnspecifiedUserId_0100
+ * @tc.name: test CreateStreamInstaller with ALLOW_INSTALL_DEBUG_HAP only and unspecified userId
+ * @tc.desc: 1. non-system caller entering via ALLOW_INSTALL_DEBUG_HAP without specifying a user
+ *           2. CreateStreamInstaller succeeds for unspecified userId
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, CreateStreamInstaller_CliToolUnspecifiedUserId_0100,
+    Function | SmallTest | Level0)
+{
+    SetSystemAppFalseForTest(false);
+    SetVerifyCliToolInstallForTest(true);
+    SetIsSelfCalling(false);
+    SetVerifyCallingPermissionForTest(false);
+    SetPermissionResultForTest(ServiceConstants::PERMISSION_ALLOW_INSTALL_DEBUG_HAP, true);
+    SetVerifyCliToolInstallOnlyForTest(true);
+    SetCheckUserForegroundForTest(true);
+    InstallParam installParam;
+    installParam.userId = Constants::UNSPECIFIED_USERID;
+    bundleInstallerHost_->Init();
+    sptr<MockStatusReceiver> receiver(new (std::nothrow) MockStatusReceiver());
+    std::vector<std::string> originHapPaths;
+    sptr<IBundleStreamInstaller> streamInstaller =
+        bundleInstallerHost_->CreateStreamInstaller(installParam, receiver, originHapPaths);
+    EXPECT_NE(streamInstaller, nullptr);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: CreateStreamInstaller_RegularHolderNotRestricted_0100
+ * @tc.name: test CreateStreamInstaller with INSTALL_BUNDLE holder and background user
+ * @tc.desc: 1. caller holds INSTALL_BUNDLE, not the debug-hap-only channel
+ *           2. CreateStreamInstaller succeeds even when the specified user is not foreground user
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, CreateStreamInstaller_RegularHolderNotRestricted_0100,
+    Function | SmallTest | Level0)
+{
+    SetSystemAppFalseForTest(true);
+    SetIsSelfCalling(false);
+    SetVerifyCallingPermissionForTest(false);
+    SetPermissionResultForTest(Constants::PERMISSION_INSTALL_BUNDLE, true);
+    SetVerifyCliToolInstallOnlyForTest(false);
+    SetCheckUserForegroundForTest(false);
+    InstallParam installParam;
+    installParam.userId = USERID;
+    bundleInstallerHost_->Init();
+    sptr<MockStatusReceiver> receiver(new (std::nothrow) MockStatusReceiver());
+    std::vector<std::string> originHapPaths;
+    sptr<IBundleStreamInstaller> streamInstaller =
+        bundleInstallerHost_->CreateStreamInstaller(installParam, receiver, originHapPaths);
+    EXPECT_NE(streamInstaller, nullptr);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: Install_CliToolUserForeground_0200
+ * @tc.name: test Install with ALLOW_INSTALL_DEBUG_HAP only and foreground user
+ * @tc.desc: 1. caller holds ALLOW_INSTALL_DEBUG_HAP only
+ *           2. Install passes the foreground user restriction when the specified user is foreground
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, Install_CliToolUserForeground_0200,
+    Function | SmallTest | Level0)
+{
+    SetUserFromShellForTest(true);
+    SetSystemAppFalseForTest(true);
+    SetIsSelfCalling(false);
+    SetVerifyCallingPermissionForTest(false);
+    SetPermissionResultForTest(ServiceConstants::PERMISSION_ALLOW_INSTALL_DEBUG_HAP, true);
+    SetVerifyCliToolInstallOnlyForTest(true);
+    SetCheckUserForegroundForTest(true);
+    InstallParam installParam;
+    installParam.userId = USERID;
+    std::vector<std::string> bundleFilePaths;
+    bundleInstallerHost_->Init();
+    sptr<MockStatusReceiver> receiver(new (std::nothrow) MockStatusReceiver());
+    bool ret = bundleInstallerHost_->Install(bundleFilePaths, installParam, receiver);
+    EXPECT_TRUE(ret);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: StreamInstall_CliToolFinalJump_0100
+ * @tc.name: test stream installer final commit with ALLOW_INSTALL_DEBUG_HAP only and background user
+ * @tc.desc: 1. non-system caller holds ALLOW_INSTALL_DEBUG_HAP only, entry passes with
+ *              the foreground user
+ *           2. user switches to background before the final commit
+ *           3. final commit re-enters BundleInstallerHost::Install and is denied by the
+ *              foreground-user restriction with PERMISSION_DENIED
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, StreamInstall_CliToolFinalJump_0100,
+    Function | SmallTest | Level0)
+{
+    SetUserFromShellForTest(true);
+    SetSystemAppFalseForTest(false);
+    SetVerifyCliToolInstallForTest(true);
+    SetIsSelfCalling(false);
+    SetVerifyCallingPermissionForTest(false);
+    SetPermissionResultForTest(ServiceConstants::PERMISSION_ALLOW_INSTALL_DEBUG_HAP, true);
+    SetVerifyCliToolInstallOnlyForTest(true);
+    SetCheckUserForegroundForTest(true);
+    InstallParam installParam;
+    installParam.userId = USERID;
+    bundleInstallerHost_->Init();
+    sptr<MockStatusReceiver> receiver(new (std::nothrow) MockStatusReceiver());
+    std::vector<std::string> originHapPaths;
+    sptr<IBundleStreamInstaller> streamInstaller =
+        bundleInstallerHost_->CreateStreamInstaller(installParam, receiver, originHapPaths);
+    ASSERT_NE(streamInstaller, nullptr);
+    SetCheckUserForegroundForTest(false);
+    bool ret = streamInstaller->Install();
+    EXPECT_FALSE(ret);
+    EXPECT_EQ(receiver->GetResultCode(), ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: StreamInstall_CliToolFinalJump_0200
+ * @tc.name: test stream installer final commit with ALLOW_INSTALL_DEBUG_HAP only and foreground user
+ * @tc.desc: 1. non-system caller holds ALLOW_INSTALL_DEBUG_HAP only
+ *           2. final commit passes the foreground-user restriction in
+ *              BundleInstallerHost::Install when the specified user stays foreground
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, StreamInstall_CliToolFinalJump_0200,
+    Function | SmallTest | Level0)
+{
+    SetUserFromShellForTest(true);
+    SetSystemAppFalseForTest(false);
+    SetVerifyCliToolInstallForTest(true);
+    SetIsSelfCalling(false);
+    SetVerifyCallingPermissionForTest(false);
+    SetPermissionResultForTest(ServiceConstants::PERMISSION_ALLOW_INSTALL_DEBUG_HAP, true);
+    SetVerifyCliToolInstallOnlyForTest(true);
+    SetCheckUserForegroundForTest(true);
+    InstallParam installParam;
+    installParam.userId = USERID;
+    bundleInstallerHost_->Init();
+    sptr<MockStatusReceiver> receiver(new (std::nothrow) MockStatusReceiver());
+    std::vector<std::string> originHapPaths;
+    sptr<IBundleStreamInstaller> streamInstaller =
+        bundleInstallerHost_->CreateStreamInstaller(installParam, receiver, originHapPaths);
+    ASSERT_NE(streamInstaller, nullptr);
+    bool ret = streamInstaller->Install();
+    EXPECT_TRUE(ret);
     ResetTestValues();
 }
 } // OHOS

@@ -6146,14 +6146,7 @@ ErrCode BaseBundleInstaller::CheckShellInstall(std::vector<Security::Verify::Hap
 #ifdef X86_EMULATOR_MODE
     return CheckShellInstallForEmulator(hapVerifyRes);
 #else
-    if (hapVerifyRes.empty()) {
-        return ERR_OK;
-    }
-    // Both shell/dev-assistant callers and CLI tool callers must pass the
-    // provision judgment below, which only allows debug-type bundles
-    // (a non-debug bundle is defined as APP_GALLERY + RELEASE).
-    // Callers matching neither are released directly.
-    if (!IsShellOrDevAssistant() && !BundlePermissionMgr::IsCliToolCalling(callerToken_)) {
+    if (!IsShellOrDevAssistant() || hapVerifyRes.empty()) {
         return ERR_OK;
     }
     Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes.begin()->GetProvisionInfo();
