@@ -447,6 +447,13 @@ public:
     // output is untouched and the name must not be used.
     static bool GetOriginalBundleName(const std::string &bundleName, std::string &originalBundleName);
 
+    // Whether the name is a dual-mode clone name (the
+    // CLONE_PREFIX + DUAL_MODE_CLONE_APP_INDEX + "+" prefixed variant, same
+    // construction as DualModeHelper::IsDualModeCloneKey). The installd process
+    // cannot link DualModeHelper (it lives in the bundle manager sources), so
+    // the check is self-contained here.
+    static bool IsDualModeCloneName(const std::string &bundleName);
+
     static bool IsValidModuleName(const std::string &moduleName);
 
     static bool IsValidUserId(const int32_t userId);

@@ -4374,6 +4374,16 @@ bool InstalldOperator::IsValidBundleName(const std::string &bundleName)
     return GetOriginalBundleName(bundleName, originalBundleName);
 }
 
+bool InstalldOperator::IsDualModeCloneName(const std::string &bundleName)
+{
+    // Self-contained check (the installd process does not link DualModeHelper):
+    // same construction as DualModeHelper::IsDualModeCloneKey — the dual-mode
+    // clone prefix is CLONE_PREFIX + DUAL_MODE_CLONE_APP_INDEX + "+".
+    std::string dualModePrefix = std::string(ServiceConstants::CLONE_PREFIX) +
+        std::to_string(ServiceConstants::DUAL_MODE_CLONE_APP_INDEX) + ServiceConstants::PLUS_SIGN;
+    return bundleName.find(dualModePrefix) == 0;
+}
+
 bool InstalldOperator::IsValidUserId(const int32_t userId)
 {
     return userId >= 0;

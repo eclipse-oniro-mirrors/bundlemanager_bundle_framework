@@ -1813,6 +1813,33 @@ HWTEST_F(BmsInstalldHostTest, InstalldHostImpl_ExtractSharedModuleFiles_InvalidN
 }
 
 /**
+ * @tc.number: InstalldOperator_IsDualModeCloneName_0100
+ * @tc.name: test IsDualModeCloneName dual-mode prefix detection
+ * @tc.desc: Only the exact dual-mode clone prefix "+clone-10000+" (appIndex
+ *           == DUAL_MODE_CLONE_APP_INDEX) matches; plain names, ordinary
+ *           clone names and sandbox names do not. Keep the prefix in sync
+ *           with DualModeHelper::IsDualModeCloneKey.
+ */
+HWTEST_F(BmsInstalldHostTest, InstalldOperator_IsDualModeCloneName_0100,
+    Function | SmallTest | Level1)
+{
+    // dual-mode clone name: positive
+    EXPECT_TRUE(InstalldOperator::IsDualModeCloneName("+clone-10000+com.example.app"));
+    // plain name: negative
+    EXPECT_FALSE(InstalldOperator::IsDualModeCloneName("com.example.app"));
+    // ordinary clone data dir (appIndex != 10000): negative
+    EXPECT_FALSE(InstalldOperator::IsDualModeCloneName("+clone-1+com.example.app"));
+    // sandbox composite: negative
+    EXPECT_FALSE(InstalldOperator::IsDualModeCloneName("100_com.example.app"));
+    // clone key format: negative
+    EXPECT_FALSE(InstalldOperator::IsDualModeCloneName("1clone_com.example.app"));
+    // boundary: empty is false; the bare prefix matches (same as
+    // DualModeHelper::IsDualModeCloneKey — no suffix emptiness check there)
+    EXPECT_FALSE(InstalldOperator::IsDualModeCloneName(""));
+    EXPECT_TRUE(InstalldOperator::IsDualModeCloneName("+clone-10000+"));
+}
+
+/**
  * @tc.number: HandleExtractHapModuleFiles_0100
  * @tc.name: test HandleExtractHapModuleFiles
  * @tc.desc: 1.HandleExtractHapModuleFiles test with empty parcel data
