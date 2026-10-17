@@ -381,6 +381,25 @@ bool BundlePermissionMgr::VerifyCliToolInstall()
     return VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_ALLOW_INSTALL_DEBUG_HAP);
 }
 
+// Check whether the non-system caller's install capability comes solely from ALLOW_INSTALL_DEBUG_HAP.
+bool BundlePermissionMgr::VerifyCliToolInstallOnly()
+{
+    if (IsSystemApp() || IsSelfCalling() ||
+        !VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_ALLOW_INSTALL_DEBUG_HAP)) {
+        return false;
+    }
+    // holds none of the regular install permissions
+    return !VerifyCallingPermissionsForAll({
+        Constants::PERMISSION_INSTALL_BUNDLE,
+        ServiceConstants::PERMISSION_INSTALL_ENTERPRISE_BUNDLE,
+        ServiceConstants::PERMISSION_INSTALL_ENTERPRISE_NORMAL_BUNDLE,
+        ServiceConstants::PERMISSION_INSTALL_ENTERPRISE_MDM_BUNDLE,
+        ServiceConstants::PERMISSION_INSTALL_INTERNALTESTING_BUNDLE,
+        ServiceConstants::PERMISSION_INSTALL_DEVELOPER_ID_BUNDLE,
+        ServiceConstants::PERMISSION_INSTALL_SELF_BUNDLE,
+        ServiceConstants::PERMISSION_INSTALL_QUICK_FIX_BUNDLE});
+}
+
 ErrCode BundlePermissionMgr::GetPermissionDef(const std::string &permissionName, PermissionDef &permissionDef)
 {
     LOG_D(BMS_TAG_DEFAULT, "BundlePermissionMgr::GetPermissionDef permission %{public}s", permissionName.c_str());

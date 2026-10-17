@@ -581,6 +581,12 @@ bool BundleInstallerHost::Install(const std::vector<std::string> &bundleFilePath
         }
         verifiedInstallParam.isCheckDebugApp = true;
     }
+    if (!BundlePermissionMgr::CheckUserForeground(installParam.userId) &&
+        BundlePermissionMgr::VerifyCliToolInstallOnly()) {
+        statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED,
+            "can not specify user not in foreground");
+        return false;
+    }
 
     if (!CheckInstallDowngradeParam(verifiedInstallParam)) {
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
@@ -986,6 +992,12 @@ sptr<IBundleStreamInstaller> BundleInstallerHost::CreateStreamInstaller(const In
             return nullptr;
         }
         verifiedInstallParam.isCheckDebugApp = true;
+    }
+    if (!BundlePermissionMgr::CheckUserForeground(installParam.userId) &&
+        BundlePermissionMgr::VerifyCliToolInstallOnly()) {
+        statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED,
+            "can not specify user not in foreground");
+        return nullptr;
     }
     auto uid = IPCSkeleton::GetCallingUid();
     sptr<BundleStreamInstallerHostImpl> streamInstaller(new (std::nothrow) BundleStreamInstallerHostImpl(

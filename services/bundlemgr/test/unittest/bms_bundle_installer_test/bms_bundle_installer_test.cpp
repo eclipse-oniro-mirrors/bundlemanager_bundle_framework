@@ -42,6 +42,7 @@
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
 #include "bundle_multiuser_installer.h"
+#include "bundle_permission_mgr.h"
 #include "bundle_resource_helper.h"
 #include "bundle_resource_manager.h"
 #include "directory_ex.h"
@@ -81,7 +82,9 @@ bool GetProcessBinFilesParamForTest(VerifyBinParam &verifyBinParam);
 }
 namespace Security {
 namespace AccessToken {
-void SetIsCliToolTokenForTest(bool value);
+void SetVerifyAccessTokenResultForTest(const std::string& permissionName, int result);
+void ResetVerifyAccessTokenResultsForTest();
+void SetTokenTypeFlagForTest(ATokenTypeEnum tokenType);
 }
 }
 namespace {
@@ -10951,36 +10954,9 @@ HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_7500, Function | SmallTest 
 }
 
 /**
- * @tc.number: BaseBundleInstaller_7550
- * @tc.name: test CheckShellInstall for non-CLI shell caller
- * @tc.desc: 1.shell caller without CLI token installing APP_GALLERY RELEASE bundle is rejected
- */
-HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_7550, Function | SmallTest | Level0)
-{
-    BaseBundleInstaller baseBundleInstaller;
-    Security::Verify::HapVerifyResult hapVerifyResult;
-    Security::Verify::ProvisionInfo provisionInfo;
-    provisionInfo.distributionType = Security::Verify::AppDistType::APP_GALLERY;
-    provisionInfo.type = Security::Verify::ProvisionType::RELEASE;
-    hapVerifyResult.SetProvisionInfo(provisionInfo);
-
-    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes{ hapVerifyResult };
-
-    baseBundleInstaller.sysEventInfo_.callingUid = ServiceConstants::SHELL_UID;
-    Security::AccessToken::SetIsCliToolTokenForTest(false);
-    auto ret = baseBundleInstaller.CheckShellInstall(hapVerifyRes);
-    Security::AccessToken::SetIsCliToolTokenForTest(true);
-    #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(ret, ERR_OK);
-    #else
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_RELEASE_BUNDLE_NOT_ALLOWED_FOR_SHELL);
-    #endif
-}
-
-/**
  * @tc.number: BaseBundleInstaller_7560
- * @tc.name: test CheckShellInstall for CLI caller with non-APP_GALLERY release bundle
- * @tc.desc: 1.CLI caller installing a non-APP_GALLERY RELEASE bundle is allowed
+ * @tc.name: test CheckShellInstall for shell caller with non-APP_GALLERY release bundle
+ * @tc.desc: 1.shell caller installing a non-APP_GALLERY RELEASE bundle is allowed
  */
 HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_7560, Function | SmallTest | Level0)
 {
@@ -11001,7 +10977,9 @@ HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_7560, Function | SmallTest 
 /**
  * @tc.number: BaseBundleInstaller_7570
  * @tc.name: test CheckShellInstall for CLI caller with non-shell uid
- * @tc.desc: 1.CLI caller with non-shell uid installing APP_GALLERY RELEASE bundle is rejected
+ * @tc.desc: 1.CLI caller with non-shell uid is not provision-checked in CheckShellInstall;
+ *           the debug-only enforcement for the CLI channel is handled by
+ *           BundleInstallChecker::VaildInstallPermission
  */
 HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_7570, Function | SmallTest | Level0)
 {
@@ -11016,17 +10994,13 @@ HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_7570, Function | SmallTest 
 
     baseBundleInstaller.sysEventInfo_.callingUid = 1234;
     auto ret = baseBundleInstaller.CheckShellInstall(hapVerifyRes);
-    #ifdef USE_EXTENSION_DATA
     EXPECT_EQ(ret, ERR_OK);
-    #else
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_RELEASE_BUNDLE_NOT_ALLOWED_FOR_SHELL);
-    #endif
 }
 
 /**
  * @tc.number: BaseBundleInstaller_7580
- * @tc.name: test CheckShellInstall for caller matching neither
- * @tc.desc: 1.non-shell caller without CLI token is released directly
+ * @tc.name: test CheckShellInstall for dev-assistant caller with APP_GALLERY release bundle
+ * @tc.desc: 1.dev-assistant caller installing an APP_GALLERY RELEASE bundle is rejected
  */
 HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_7580, Function | SmallTest | Level0)
 {
@@ -11039,11 +11013,150 @@ HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_7580, Function | SmallTest 
 
     std::vector<Security::Verify::HapVerifyResult> hapVerifyRes{ hapVerifyResult };
 
-    baseBundleInstaller.sysEventInfo_.callingUid = 1234;
-    Security::AccessToken::SetIsCliToolTokenForTest(false);
+    baseBundleInstaller.sysEventInfo_.callingUid = Constants::DEV_ASSISTANT_UID;
     auto ret = baseBundleInstaller.CheckShellInstall(hapVerifyRes);
-    Security::AccessToken::SetIsCliToolTokenForTest(true);
+    #ifdef USE_EXTENSION_DATA
     EXPECT_EQ(ret, ERR_OK);
+    #else
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_RELEASE_BUNDLE_NOT_ALLOWED_FOR_SHELL);
+    #endif
+}
+
+namespace {
+// deny all regular install permissions checked by VerifyCliToolInstallOnly
+void SetRegularInstallPermissionsDeniedForTest()
+{
+    Security::AccessToken::SetVerifyAccessTokenResultForTest(Constants::PERMISSION_INSTALL_BUNDLE, -1);
+    Security::AccessToken::SetVerifyAccessTokenResultForTest(
+        ServiceConstants::PERMISSION_INSTALL_ENTERPRISE_BUNDLE, -1);
+    Security::AccessToken::SetVerifyAccessTokenResultForTest(
+        ServiceConstants::PERMISSION_INSTALL_ENTERPRISE_NORMAL_BUNDLE, -1);
+    Security::AccessToken::SetVerifyAccessTokenResultForTest(
+        ServiceConstants::PERMISSION_INSTALL_ENTERPRISE_MDM_BUNDLE, -1);
+    Security::AccessToken::SetVerifyAccessTokenResultForTest(
+        ServiceConstants::PERMISSION_INSTALL_INTERNALTESTING_BUNDLE, -1);
+    Security::AccessToken::SetVerifyAccessTokenResultForTest(
+        ServiceConstants::PERMISSION_INSTALL_DEVELOPER_ID_BUNDLE, -1);
+    Security::AccessToken::SetVerifyAccessTokenResultForTest(
+        ServiceConstants::PERMISSION_INSTALL_SELF_BUNDLE, -1);
+    Security::AccessToken::SetVerifyAccessTokenResultForTest(
+        ServiceConstants::PERMISSION_INSTALL_QUICK_FIX_BUNDLE, -1);
+}
+} // namespace
+
+/**
+ * @tc.number: VerifyCliToolInstallOnly_0001
+ * @tc.name: test VerifyCliToolInstallOnly with only ALLOW_INSTALL_DEBUG_HAP granted
+ * @tc.desc: 1.system app caller is exempt
+ *           2.non-system caller with only ALLOW_INSTALL_DEBUG_HAP granted returns true
+ */
+HWTEST_F(BmsBundleInstallerTest, VerifyCliToolInstallOnly_0001, Function | SmallTest | Level0)
+{
+    Security::AccessToken::SetVerifyAccessTokenResultForTest(
+        ServiceConstants::PERMISSION_ALLOW_INSTALL_DEBUG_HAP, 0);
+    SetRegularInstallPermissionsDeniedForTest();
+    EXPECT_FALSE(BundlePermissionMgr::VerifyCliToolInstallOnly());
+    Security::AccessToken::SetTokenTypeFlagForTest(Security::AccessToken::TOKEN_HAP);
+    EXPECT_TRUE(BundlePermissionMgr::VerifyCliToolInstallOnly());
+    Security::AccessToken::ResetVerifyAccessTokenResultsForTest();
+    Security::AccessToken::SetTokenTypeFlagForTest(Security::AccessToken::TOKEN_NATIVE);
+}
+
+/**
+ * @tc.number: VerifyCliToolInstallOnly_0002
+ * @tc.name: test VerifyCliToolInstallOnly with INSTALL_BUNDLE also granted
+ * @tc.desc: 1.grant ALLOW_INSTALL_DEBUG_HAP and INSTALL_BUNDLE
+ *           2.VerifyCliToolInstallOnly returns false
+ */
+HWTEST_F(BmsBundleInstallerTest, VerifyCliToolInstallOnly_0002, Function | SmallTest | Level0)
+{
+    Security::AccessToken::SetTokenTypeFlagForTest(Security::AccessToken::TOKEN_HAP);
+    Security::AccessToken::SetVerifyAccessTokenResultForTest(
+        ServiceConstants::PERMISSION_ALLOW_INSTALL_DEBUG_HAP, 0);
+    SetRegularInstallPermissionsDeniedForTest();
+    Security::AccessToken::SetVerifyAccessTokenResultForTest(Constants::PERMISSION_INSTALL_BUNDLE, 0);
+    EXPECT_FALSE(BundlePermissionMgr::VerifyCliToolInstallOnly());
+    Security::AccessToken::ResetVerifyAccessTokenResultsForTest();
+    Security::AccessToken::SetTokenTypeFlagForTest(Security::AccessToken::TOKEN_NATIVE);
+}
+
+/**
+ * @tc.number: VerifyCliToolInstallOnly_0003
+ * @tc.name: test VerifyCliToolInstallOnly with ALLOW_INSTALL_DEBUG_HAP denied
+ * @tc.desc: 1.deny ALLOW_INSTALL_DEBUG_HAP
+ *           2.VerifyCliToolInstallOnly returns false
+ */
+HWTEST_F(BmsBundleInstallerTest, VerifyCliToolInstallOnly_0003, Function | SmallTest | Level0)
+{
+    Security::AccessToken::SetTokenTypeFlagForTest(Security::AccessToken::TOKEN_HAP);
+    Security::AccessToken::SetVerifyAccessTokenResultForTest(
+        ServiceConstants::PERMISSION_ALLOW_INSTALL_DEBUG_HAP, -1);
+    EXPECT_FALSE(BundlePermissionMgr::VerifyCliToolInstallOnly());
+    Security::AccessToken::ResetVerifyAccessTokenResultsForTest();
+    Security::AccessToken::SetTokenTypeFlagForTest(Security::AccessToken::TOKEN_NATIVE);
+}
+
+/**
+ * @tc.number: VerifyCliToolInstallOnly_0004
+ * @tc.name: test VerifyCliToolInstallOnly with each regular install permission granted
+ * @tc.desc: 1.grant ALLOW_INSTALL_DEBUG_HAP and each of the eight regular install permissions
+ *           2.VerifyCliToolInstallOnly returns false for every combination
+ */
+HWTEST_F(BmsBundleInstallerTest, VerifyCliToolInstallOnly_0004, Function | SmallTest | Level0)
+{
+    Security::AccessToken::SetTokenTypeFlagForTest(Security::AccessToken::TOKEN_HAP);
+    const std::vector<std::string> regularInstallPermissions = {
+        Constants::PERMISSION_INSTALL_BUNDLE,
+        ServiceConstants::PERMISSION_INSTALL_ENTERPRISE_BUNDLE,
+        ServiceConstants::PERMISSION_INSTALL_ENTERPRISE_NORMAL_BUNDLE,
+        ServiceConstants::PERMISSION_INSTALL_ENTERPRISE_MDM_BUNDLE,
+        ServiceConstants::PERMISSION_INSTALL_INTERNALTESTING_BUNDLE,
+        ServiceConstants::PERMISSION_INSTALL_DEVELOPER_ID_BUNDLE,
+        ServiceConstants::PERMISSION_INSTALL_SELF_BUNDLE,
+        ServiceConstants::PERMISSION_INSTALL_QUICK_FIX_BUNDLE};
+    for (const auto &permission : regularInstallPermissions) {
+        Security::AccessToken::SetVerifyAccessTokenResultForTest(
+            ServiceConstants::PERMISSION_ALLOW_INSTALL_DEBUG_HAP, 0);
+        SetRegularInstallPermissionsDeniedForTest();
+        Security::AccessToken::SetVerifyAccessTokenResultForTest(permission, 0);
+        EXPECT_FALSE(BundlePermissionMgr::VerifyCliToolInstallOnly()) << "permission: " << permission;
+        Security::AccessToken::ResetVerifyAccessTokenResultsForTest();
+    }
+    Security::AccessToken::SetTokenTypeFlagForTest(Security::AccessToken::TOKEN_NATIVE);
+}
+
+/**
+ * @tc.number: VerifyCliToolInstallOnly_0005
+ * @tc.name: test VerifyCliToolInstallOnly with INSTALL_SANDBOX_BUNDLE also granted
+ * @tc.desc: 1.grant ALLOW_INSTALL_DEBUG_HAP and INSTALL_SANDBOX_BUNDLE, deny the eight
+ *              regular install permissions
+ *           2.VerifyCliToolInstallOnly returns true: INSTALL_SANDBOX_BUNDLE grants no
+ *              install entry on either path and must not exclude the caller from the
+ *              foreground-user restriction
+ */
+HWTEST_F(BmsBundleInstallerTest, VerifyCliToolInstallOnly_0005, Function | SmallTest | Level0)
+{
+    Security::AccessToken::SetTokenTypeFlagForTest(Security::AccessToken::TOKEN_HAP);
+    Security::AccessToken::SetVerifyAccessTokenResultForTest(
+        ServiceConstants::PERMISSION_ALLOW_INSTALL_DEBUG_HAP, 0);
+    SetRegularInstallPermissionsDeniedForTest();
+    Security::AccessToken::SetVerifyAccessTokenResultForTest(
+        ServiceConstants::PERMISSION_INSTALL_SANDBOX_BUNDLE, 0);
+    EXPECT_TRUE(BundlePermissionMgr::VerifyCliToolInstallOnly());
+    Security::AccessToken::ResetVerifyAccessTokenResultsForTest();
+    Security::AccessToken::SetTokenTypeFlagForTest(Security::AccessToken::TOKEN_NATIVE);
+}
+
+/**
+ * @tc.number: BundlePermissionMgr_CheckUserForeground_0100
+ * @tc.name: test CheckUserForeground with special user ids
+ * @tc.desc: 1.DEFAULT_USERID, U1 and UNSPECIFIED_USERID are always foreground
+ */
+HWTEST_F(BmsBundleInstallerTest, BundlePermissionMgr_CheckUserForeground_0100, Function | SmallTest | Level0)
+{
+    EXPECT_TRUE(BundlePermissionMgr::CheckUserForeground(Constants::DEFAULT_USERID));
+    EXPECT_TRUE(BundlePermissionMgr::CheckUserForeground(Constants::U1));
+    EXPECT_TRUE(BundlePermissionMgr::CheckUserForeground(Constants::UNSPECIFIED_USERID));
 }
 
 /**

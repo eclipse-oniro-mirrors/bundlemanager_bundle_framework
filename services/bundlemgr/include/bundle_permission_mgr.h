@@ -136,6 +136,8 @@ public:
 
     static bool VerifyCliToolInstall();
 
+    static bool VerifyCliToolInstallOnly();
+
     static bool IsSelfCalling();
 
     static bool VerifyUninstallPermission();
