@@ -218,10 +218,9 @@ ErrCode IndependentSkillsInstaller::ProcessInstall(
         if (!versionUpgrade_ && !moduleUpdate_) {
             RollBack();
         }
-        // The SPM session was already committed but the DB write failed: undo
-        // the freshly created AT identity so the failed install leaves both
-        // sides clean (mirrors the base installer's UndoCommittedSpmIdentity).
-        UndoCommittedSpmIdentity();
+        // SPM ON creates no skills identity (no InitToken), so there is nothing
+        // to undo on a DB failure; under SPM OFF the undo concept does not
+        // exist (legacy tokens are managed by the AT side alone).
         PatchDataMgr::GetInstance().DeleteInnerPatchInfo(bundleName_);
         return result;
     }
@@ -576,21 +575,23 @@ ErrCode IndependentSkillsInstaller::SaveBundleInfoToStorage()
         LOG_E(BMS_TAG_INSTALLER, "UpdateBundleInstallState failed");
         return ERR_APPEXECFWK_INSTALL_STATE_ERROR;
     }
-    // init hapToken
-    Security::AccessToken::AccessTokenIDEx accessTokenIdEx = {0};
-    Security::AccessToken::HapInfoCheckResult checkResult;
-    ErrCode result = spmSession_.InitToken(newInnerBundleInfo_, userId_, 0, accessTokenIdEx, checkResult,
-        verifyRes_.GetProvisionInfo().appServiceCapabilities, nullptr, false);
-    if (result != ERR_OK) {
-        auto msg = BundlePermissionMgr::GetCheckResultMsg(checkResult);
-        LOG_E(BMS_TAG_INSTALLER, "skills %{public}s init hapToken failed msg %{public}s, err %{public}d",
-            bundleName_.c_str(), msg.c_str(), result);
-        // Raw AT code: map to the registered BMS code, no unregistered code leaks.
-        return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
+    if (!BundleSpmManager::IsEnabled()) {
+        // Legacy (SPM OFF): the hap token is initialized through InitHapToken —
+        // the pre-SPM behavior, not persisted into the bundle info.
+        // SPM ON: a skills package carries no identity — no PrepareHapIdentity,
+        // no token id, nothing persisted.
+        Security::AccessToken::AccessTokenIDEx accessTokenIdEx = {0};
+        Security::AccessToken::HapInfoCheckResult checkResult;
+        ErrCode result = spmSession_.InitToken(newInnerBundleInfo_, userId_, 0, accessTokenIdEx, checkResult,
+            verifyRes_.GetProvisionInfo().appServiceCapabilities, nullptr, false);
+        if (result != ERR_OK) {
+            auto msg = BundlePermissionMgr::GetCheckResultMsg(checkResult);
+            LOG_E(BMS_TAG_INSTALLER, "skills %{public}s init hapToken failed msg %{public}s, err %{public}d",
+                bundleName_.c_str(), msg.c_str(), result);
+            // Raw AT code: map to the registered BMS code, no unregistered code leaks.
+            return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
+        }
     }
-    // Keep the prepared token for the post-commit DB-failure undo below: the
-    // skills flow does not persist it into the bundle info.
-    accessTokenId_ = accessTokenIdEx.tokenIdExStruct.tokenID;
 
     newInnerBundleInfo_.SetBundleInstallTime(BundleUtil::GetCurrentTimeMs(), userId_);
     if (!dataMgr_->AddInnerBundleInfo(bundleName_, newInnerBundleInfo_)) {
@@ -655,16 +656,20 @@ ErrCode IndependentSkillsInstaller::UpdateSkillsPackage(
             LOG_E(BMS_TAG_INSTALLER, "UninstallLowerVersion failed %{public}d, can not rollback", result);
         }
     }
-    Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
-    Security::AccessToken::HapInfoCheckResult checkResult;
-    result = spmSession_.UpdateToken(accessTokenIdEx, oldInfo, userId_, checkResult,
-        verifyRes_.GetProvisionInfo().appServiceCapabilities, false, false);
-    if (result != ERR_OK) {
-        auto msg = BundlePermissionMgr::GetCheckResultMsg(checkResult);
-        LOG_E(BMS_TAG_INSTALLER, "skills %{public}s update hapToken failed msg %{public}s, err %{public}d",
-            bundleName_.c_str(), msg.c_str(), result);
-        // Raw AT code: map to the registered BMS code, no unregistered code leaks.
-        return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
+    if (!BundleSpmManager::IsEnabled()) {
+        // Legacy (SPM OFF): the hap token is re-initialized (pre-SPM
+        // UpdateHapToken with needInit). SPM ON: no identity, nothing to refresh.
+        Security::AccessToken::AccessTokenIDEx accessTokenIdEx = {0};
+        Security::AccessToken::HapInfoCheckResult checkResult;
+        result = spmSession_.UpdateToken(accessTokenIdEx, oldInfo, userId_, checkResult,
+            verifyRes_.GetProvisionInfo().appServiceCapabilities, false, false);
+        if (result != ERR_OK) {
+            auto msg = BundlePermissionMgr::GetCheckResultMsg(checkResult);
+            LOG_E(BMS_TAG_INSTALLER, "skills %{public}s update hapToken failed msg %{public}s, err %{public}d",
+                bundleName_.c_str(), msg.c_str(), result);
+            // Raw AT code: map to the registered BMS code, no unregistered code leaks.
+            return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
+        }
     }
     InnerProcessNeedDeleteSkillPackage(oldInfo);
     return ERR_OK;
@@ -1303,30 +1308,6 @@ void IndependentSkillsInstaller::ResetProperties()
     bundleName_ = "";
     skillCount_ = 0;
     needDeleteSkillsPackageInfo_.clear();
-    accessTokenId_ = 0;
-}
-
-void IndependentSkillsInstaller::UndoCommittedSpmIdentity()
-{
-    // Mirror of the base installer's undo: the SPM session was already
-    // committed but the DB write (MarkInstallFinish) failed. Guards:
-    // - update-only session (no InitToken): the token, if any, predates this
-    //   flow and must never be deleted here;
-    // - keep-data reinstall: the prepared identity is the reserved one and
-    //   belongs to the keep-data reservation lifecycle.
-    if (!BundleSpmManager::IsEnabled() || !spmSession_.HasPreparedIdentity()) {
-        return;
-    }
-    if (dataMgr_ != nullptr && dataMgr_->GetUninstallBundleInfoWithUserAndAppIndex(
-        bundleName_, userId_, Constants::INITIAL_APP_INDEX)) {
-        return;
-    }
-    int32_t delRet = BundleSpmManager::DeleteToken(accessTokenId_, bundleName_,
-        BundleSpmManager::TokenDeleteType::NONE);
-    if (delRet != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLER, "undo spm identity failed, skills:%{public}s errCode:%{public}d",
-            bundleName_.c_str(), delRet);
-    }
 }
 
 void IndependentSkillsInstaller::RemoveOldSkillsPath()

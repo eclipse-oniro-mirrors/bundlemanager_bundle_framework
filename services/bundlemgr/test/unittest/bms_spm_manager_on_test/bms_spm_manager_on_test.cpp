@@ -985,7 +985,7 @@ HWTEST_F(BmsSpmManagerOnTest, UpdateToken_UidOut_0001, Function | MediumTest | L
     Security::AccessToken::HapInfoCheckResult checkResult;
     int32_t refreshedUid = 0;
     int32_t ret = session.UpdateToken(tokenIdEx, info, TEST_USERID, checkResult, "", false, false,
-        0, &refreshedUid);
+        0, 0, &refreshedUid);
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_EQ(refreshedUid, 0);
 }
@@ -1016,7 +1016,7 @@ HWTEST_F(BmsSpmManagerOnTest, UpdateToken_UidUnchanged_0001, Function | MediumTe
     Security::AccessToken::HapInfoCheckResult checkResult;
     int32_t refreshedUid = 0;
     int32_t ret = session.UpdateToken(tokenIdEx, info, TEST_USERID, checkResult, "", false, false,
-        0, &refreshedUid);
+        0, 0, &refreshedUid);
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_EQ(refreshedUid, 0);  // unchanged: no handover
 }
@@ -1048,7 +1048,7 @@ HWTEST_F(BmsSpmManagerOnTest, UpdateToken_UidRefresh_0001, Function | MediumTest
     Security::AccessToken::HapInfoCheckResult checkResult;
     int32_t refreshedUid = 0;
     int32_t ret = session.UpdateToken(tokenIdEx, info, TEST_USERID, checkResult, "", false, false,
-        0, &refreshedUid);
+        0, 0, &refreshedUid);
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_EQ(refreshedUid, REFRESHED_UID);
 }
@@ -1082,7 +1082,7 @@ HWTEST_F(BmsSpmManagerOnTest, UpdateToken_UidOut_CrossUserSegment_0001, Function
     Security::AccessToken::HapInfoCheckResult checkResult;
     int32_t refreshedUid = 0;
     int32_t ret = session.UpdateToken(tokenIdEx, info, TEST_USERID, checkResult, "", false, false,
-        0, &refreshedUid);
+        0, 0, &refreshedUid);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED);
     EXPECT_EQ(refreshedUid, 0);  // output param untouched on rejection
 }
@@ -1423,6 +1423,14 @@ HWTEST_F(BmsSpmManagerOnTest, OnModuleUninstalled_Success_0001, Function | Mediu
     BundleInfo bundleInfo;
     bundleInfo.name = BUNDLE_NAME;
     info.SetBaseBundleInfo(bundleInfo);
+    // The empty-hap-list guard returns ERR_OK before any AT call: the flow
+    // needs at least one module with a hap path to reach verify/commit.
+    std::map<std::string, InnerModuleInfo> moduleInfos;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = "entry";
+    moduleInfo.hapPath = "/data/app/entry.hap";
+    moduleInfos.emplace("entry", moduleInfo);
+    info.AddInnerModuleInfo(moduleInfos);
 
     EXPECT_EQ(BundleSpmManager::OnModuleUninstalled(info, TEST_USERID), ERR_OK);
     // the standalone session was finished persistently
@@ -1442,6 +1450,12 @@ HWTEST_F(BmsSpmManagerOnTest, OnModuleUninstalled_VerifyFailed_0001, Function | 
     BundleInfo bundleInfo;
     bundleInfo.name = BUNDLE_NAME;
     info.SetBaseBundleInfo(bundleInfo);
+    std::map<std::string, InnerModuleInfo> moduleInfos;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = "entry";
+    moduleInfo.hapPath = "/data/app/entry.hap";
+    moduleInfos.emplace("entry", moduleInfo);
+    info.AddInnerModuleInfo(moduleInfos);
 
     EXPECT_EQ(BundleSpmManager::OnModuleUninstalled(info, TEST_USERID), -2);
     EXPECT_EQ(OHOS::Security::AccessToken::g_spmFinishInstallCallCount, 0);
@@ -1459,6 +1473,12 @@ HWTEST_F(BmsSpmManagerOnTest, OnModuleUninstalled_CheckPermissionFailed_0001, Fu
     BundleInfo bundleInfo;
     bundleInfo.name = BUNDLE_NAME;
     info.SetBaseBundleInfo(bundleInfo);
+    std::map<std::string, InnerModuleInfo> moduleInfos;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = "entry";
+    moduleInfo.hapPath = "/data/app/entry.hap";
+    moduleInfos.emplace("entry", moduleInfo);
+    info.AddInnerModuleInfo(moduleInfos);
 
     EXPECT_EQ(BundleSpmManager::OnModuleUninstalled(info, TEST_USERID), -3);
     // the allocated session is rolled back (non-persistent finish), not leaked
@@ -1478,6 +1498,12 @@ HWTEST_F(BmsSpmManagerOnTest, OnModuleUninstalled_CommitFailed_0001, Function | 
     BundleInfo bundleInfo;
     bundleInfo.name = BUNDLE_NAME;
     info.SetBaseBundleInfo(bundleInfo);
+    std::map<std::string, InnerModuleInfo> moduleInfos;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = "entry";
+    moduleInfo.hapPath = "/data/app/entry.hap";
+    moduleInfos.emplace("entry", moduleInfo);
+    info.AddInnerModuleInfo(moduleInfos);
 
     EXPECT_EQ(BundleSpmManager::OnModuleUninstalled(info, TEST_USERID), -4);
 }

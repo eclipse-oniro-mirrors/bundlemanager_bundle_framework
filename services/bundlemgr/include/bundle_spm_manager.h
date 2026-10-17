@@ -155,10 +155,17 @@ public:
         // instIndex so the main app uid is never derived) and the clone uid handling
         // is owned by the caller (the user info of `info` stays untouched).
 
+        // dlpType: the DLP type carried into the ON-path policy (0 = normal
+        // token; the DLP sandbox flows use InitToken, which takes it as a
+        // leading parameter). checkResult: filled by the SPM OFF passthrough
+        // (UpdateHapToken); under SPM ON the policy update produces no
+        // permission-check result — the failure is carried by the return code
+        // and the facade log, GetCheckResultMsg returns empty.
         int32_t UpdateToken(Security::AccessToken::AccessTokenIDEx &tokenIdEx,
             const InnerBundleInfo &info, int32_t userId,
             Security::AccessToken::HapInfoCheckResult &checkResult, const std::string &caps,
-            bool dataRefresh = false, bool isDebugGrant = false, int32_t appIndex = 0,
+            bool dataRefresh = false, bool isDebugGrant = false, int32_t dlpType = 0,
+            int32_t appIndex = 0,
             // Optional out param: when the AT side refreshes the token-bound uid
             // (uidOut > 0), callers with a writable info persist it back into
             // the user info (the DB write happens through their normal save path).

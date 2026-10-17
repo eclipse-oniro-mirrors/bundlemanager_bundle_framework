@@ -107,7 +107,6 @@ private:
         const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes) const;
     ErrCode VerifyCodeSignatureForHsp(const std::string &realHspPath) const;
     ErrCode MarkInstallFinish();
-    void UndoCommittedSpmIdentity();
     void RemoveOldSkillsPath();
     void MarkPreInstallState(const std::string &bundleName, bool isUninstalled);
     ErrCode BeforeUninstall(const std::string &bundleName, const int32_t userId);
@@ -129,9 +128,6 @@ private:
     std::unique_ptr<BundleInstallChecker> bundleInstallChecker_ = nullptr;
     // SPM facade session of the current install; inert under SPM OFF (session id 0)
     BundleSpmManager::InstallSession spmSession_;
-    // Token prepared by this install's InitToken (kept for the post-commit
-    // DB-failure undo; the skills flow does not persist it into the bundle info)
-    Security::AccessToken::AccessTokenID accessTokenId_ = 0;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;
     std::vector<std::string> uninstallModuleVec_;
     std::vector<std::string> deleteBundlePath_;

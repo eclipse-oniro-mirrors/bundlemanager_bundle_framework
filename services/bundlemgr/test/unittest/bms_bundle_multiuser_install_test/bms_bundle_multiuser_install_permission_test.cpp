@@ -113,8 +113,7 @@ HWTEST_F(BmsBundleMultiuserInstallPermissionTest, RecoverHapToken_0100, Function
     installer.dataMgr_->UpdateUninstallBundleInfo("test", unInstallBundleInfo);
     Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
     InnerBundleInfo innerBundleInfo;
-    int32_t recoveredUid = 0;
-    auto res = installer.RecoverHapToken("test", 100, accessTokenIdEx, innerBundleInfo, recoveredUid);
+    auto res = installer.RecoverHapToken("test", 100, accessTokenIdEx, innerBundleInfo);
     EXPECT_EQ(res, false);
     installer.dataMgr_->DeleteUninstallBundleInfo("test", 100);
 }

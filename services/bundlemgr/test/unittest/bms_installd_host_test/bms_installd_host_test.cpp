@@ -1864,4 +1864,51 @@ HWTEST_F(BmsInstalldHostTest, HandleCreatePrintServiceDir_0100, Function | Small
     EXPECT_TRUE(res);
 }
 
+/**
+ * @tc.number: InstalldOperator_GetOriginalBundleName_0100
+ * @tc.name: test GetOriginalBundleName decoration stripping
+ * @tc.desc: Strips the clone data dir "+clone-<N>+<name>", the sandbox
+ *           "<N>_<name>", the clone key "<N>clone_<name>" and the dual-mode
+ *           prefixed name back to the original bundle name; plain names pass
+ *           through; malformed inputs fail closed.
+ */
+HWTEST_F(BmsInstalldHostTest, InstalldOperator_GetOriginalBundleName_0100,
+    Function | SmallTest | Level1)
+{
+    std::string name;
+    // plain name: passthrough
+    EXPECT_TRUE(InstalldOperator::GetOriginalBundleName("com.example.app", name));
+    EXPECT_EQ(name, "com.example.app");
+    // clone data dir "+clone-<N>+<name>"
+    EXPECT_TRUE(InstalldOperator::GetOriginalBundleName("+clone-1+com.example.app", name));
+    EXPECT_EQ(name, "com.example.app");
+    // sandbox "<N>_<name>"
+    EXPECT_TRUE(InstalldOperator::GetOriginalBundleName("100_com.example.app", name));
+    EXPECT_EQ(name, "com.example.app");
+    // nested: clone data dir wrapping a sandbox name (sandbox of a clone)
+    EXPECT_TRUE(InstalldOperator::GetOriginalBundleName("+clone-1+2_com.example.app", name));
+    EXPECT_EQ(name, "com.example.app");
+    // malformed: empty / all digits
+    EXPECT_FALSE(InstalldOperator::GetOriginalBundleName("", name));
+    EXPECT_FALSE(InstalldOperator::GetOriginalBundleName("12345", name));
+}
+
+/**
+ * @tc.number: InstalldOperator_IsValidBundleName_0100
+ * @tc.name: test IsValidBundleName delegates to GetOriginalBundleName
+ * @tc.desc: The validation runs the full strip-and-check chain: decorated
+ *           names valid iff their stripped remainder is a legal bundle name.
+ */
+HWTEST_F(BmsInstalldHostTest, InstalldOperator_IsValidBundleName_0100,
+    Function | SmallTest | Level1)
+{
+    EXPECT_TRUE(InstalldOperator::IsValidBundleName("com.example.app"));
+    EXPECT_TRUE(InstalldOperator::IsValidBundleName("+clone-1+com.example.app"));
+    EXPECT_TRUE(InstalldOperator::IsValidBundleName("100_com.example.app"));
+    EXPECT_FALSE(InstalldOperator::IsValidBundleName(""));
+    EXPECT_FALSE(InstalldOperator::IsValidBundleName("12345"));
+    // a stripped remainder that is not a legal name (starts with a digit)
+    EXPECT_FALSE(InstalldOperator::IsValidBundleName("+clone-1+123_app"));
+}
+
 } // OHOS

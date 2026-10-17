@@ -1164,6 +1164,11 @@ private:
     bool isBundleCrossAppSharedConfig_ = false;
     bool isHnpInstalled_ = false;
     bool isKeepTokenId_ = false;
+    // Set when an explicit post-commit identity undo already ran (UndoCommitted-
+    // SpmIdentity / the -n flow inline undo): the later rollback-path deletes
+    // (RollBack / RemoveBundleUserData) skip so no second DeleteIdentity is
+    // issued for the same identity. Fresh installer instance per request.
+    bool spmIdentityUndone_ = false;
     bool hasShareFilesProcessed_ = false;
     bool hasOldShareFilesJsonSaved_ = false;
     InstallerState state_ = InstallerState::INSTALL_START;

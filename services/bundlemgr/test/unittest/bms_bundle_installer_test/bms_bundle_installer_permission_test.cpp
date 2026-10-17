@@ -1010,8 +1010,7 @@ HWTEST_F(BmsBundleInstallerPermissionTest, BundleMultiUserInstaller_0001, Functi
     oldInnerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
 
     Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
-    int32_t recoveredUid = 0;
-    auto ret = installer.RecoverHapToken(bundleName, 100, accessTokenIdEx, oldInnerBundleInfo, recoveredUid);
+    auto ret = installer.RecoverHapToken(bundleName, 100, accessTokenIdEx, oldInnerBundleInfo);
     EXPECT_EQ(ret, false);
     EXPECT_TRUE(dataMgr->DeleteUninstallBundleInfo(bundleName, 100));
 }
@@ -1041,8 +1040,7 @@ HWTEST_F(BmsBundleInstallerPermissionTest, BundleMultiUserInstaller_0002, Functi
     oldInnerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
 
     Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
-    int32_t recoveredUid = 0;
-    auto ret = installer.RecoverHapToken(bundleName, 100, accessTokenIdEx, oldInnerBundleInfo, recoveredUid);
+    auto ret = installer.RecoverHapToken(bundleName, 100, accessTokenIdEx, oldInnerBundleInfo);
     EXPECT_EQ(ret, false);
     EXPECT_TRUE(dataMgr->uninstallDataMgr_->DeleteUninstallBundleInfo(bundleName));
 }

@@ -305,9 +305,8 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
     if (dataMgr->GetAppProvisionInfo(bundleName, userId, appProvisionInfo) != ERR_OK) {
         APP_LOGE("GetAppProvisionInfo failed bundleName:%{public}s", bundleName.c_str());
     }
-    int32_t recoveredUid = 0;
     bool tokenRecovered = RecoverHapToken(userId, appIndex, newTokenIdEx, info,
-        appProvisionInfo.appServiceCapabilities, recoveredUid);
+        appProvisionInfo.appServiceCapabilities);
     if (!tokenRecovered) {
         newTokenIdEx.tokenIDEx = 0;  // discard partial writes from the failed recovery
     }
@@ -348,13 +347,10 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
             tmpUserInfo.gids.clear();
             tmpUserInfo.gids.emplace_back(uid);
         }
-    } else if (BundleSpmManager::IsEnabled() && recoveredUid != 0) {
-        // OFF keep-data reinstall (RecoverHapToken succeeded): reuse the uid
-        uid = recoveredUid;
-        tmpUserInfo.uid = uid;
-        tmpUserInfo.gids.clear();
-        tmpUserInfo.gids.emplace_back(uid);
     }
+    // OFF keep-data reinstall (tokenRecovered): the uid is reconstructed by the
+    // by-name allocation below (GenerateBundleId returns the bundle's existing
+    // bundleId, so the composed uid equals the one persisted at uninstall).
     ScopeGuard applyAccessTokenGuard([&] {
         // keepDataReinstall: the token from PrepareHapIdentity IS the reserved
         // identity — deleting it would break the keep-data reservation.
@@ -437,9 +433,12 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
     if (addRes != ERR_OK) {
         APP_LOGE("dataMgr add clone bundle fail, bundleName: %{public}s, userId: %{public}d, appIndex: %{public}d",
             bundleName.c_str(), userId, appIndex);
-        // The session is already committed but the DB write failed: undo the
-        // freshly committed AT identity (keep-data reserved identities are
-        // exempt — the token IS the reservation) so both sides stay clean.
+        // The session is already committed but the DB write failed: the explicit
+        // undo below owns the deletion — dismiss the guard so it does not issue
+        // a second DeleteIdentity for the same (already deleted) identity.
+        applyAccessTokenGuard.Dismiss();
+        // Undo the freshly committed AT identity (keep-data reserved identities
+        // are exempt — the token IS the reservation) so both sides stay clean.
         if (!keepDataReinstall) {
             int32_t delRet = BundleSpmManager::DeleteToken(newTokenIdEx.tokenIdExStruct.tokenID,
                 bundleName, BundleSpmManager::TokenDeleteType::NONE);
@@ -898,7 +897,7 @@ std::string BundleCloneInstaller::GetDeveloperId(const std::string &bundleName)
 
 bool BundleCloneInstaller::RecoverHapToken(int32_t userId, int32_t appIndex,
     Security::AccessToken::AccessTokenIDEx &accessTokenIdEx, const InnerBundleInfo &innerBundleInfo,
-    const std::string &appServiceCapabilities, int32_t &recoveredUid)
+    const std::string &appServiceCapabilities)
 {
     if (BundleSpmManager::IsEnabled()) {
         // SPM ON: do NOT recover the token/uid from the BMS uninstall record —
@@ -924,7 +923,6 @@ bool BundleCloneInstaller::RecoverHapToken(int32_t userId, int32_t appIndex,
     std::string key = std::to_string(userId) + "_" + std::to_string(appIndex);
     if (uninstallBundleInfo.userInfos.find(key) != uninstallBundleInfo.userInfos.end()) {
         existBeforeKeepDataApp_ = true;
-        recoveredUid = uninstallBundleInfo.userInfos.at(key).uid;
         accessTokenIdEx.tokenIdExStruct.tokenID =
             uninstallBundleInfo.userInfos.at(key).accessTokenId;
         accessTokenIdEx.tokenIDEx = uninstallBundleInfo.userInfos.at(key).accessTokenIdEx;

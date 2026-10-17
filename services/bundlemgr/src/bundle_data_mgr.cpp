@@ -165,7 +165,6 @@ constexpr const char* URI_SEPARATOR = "://";
 constexpr uint8_t PARAM_URI_SEPARATOR_LEN = 4;
 constexpr int8_t INVALID_BUNDLEID = -1;
 constexpr int32_t DATA_GROUP_UID_OFFSET = 100000;
-constexpr int32_t MAX_APP_UID = 65535;
 constexpr int8_t ONLY_ONE_USER = 1;
 constexpr const char* LAST_ALLOCATED_BUNDLE_ID_KEY = "lastAllocatedBundleId";
 constexpr unsigned int OTA_CODE_ENCRYPTION_TIMEOUT = 4 * 60;
@@ -222,7 +221,7 @@ BundleDataMgr::BundleDataMgr()
     uninstallDataMgr_ = std::make_shared<UninstallDataMgrStorageRdb>();
     firstInstallDataMgr_ = std::make_shared<FirstInstallDataMgrStorageRdb>();
     baseAppUid_ = system::GetIntParameter<int32_t>("const.product.baseappid", Constants::BASE_APP_UID);
-    if (baseAppUid_ < Constants::BASE_APP_UID || baseAppUid_ >= MAX_APP_UID) {
+    if (baseAppUid_ < Constants::BASE_APP_UID || baseAppUid_ >= Constants::MAX_APP_UID) {
         baseAppUid_ = Constants::BASE_APP_UID;
     }
     lastAllocatedBundleId_ = baseAppUid_;
@@ -8381,7 +8380,7 @@ ErrCode BundleDataMgr::GenerateBundleId(const std::string &bundleName, int32_t &
     int32_t start = lastAllocatedBundleId_;
     int32_t cursor = start;
     do {
-        cursor = (cursor >= MAX_APP_UID) ? baseAppUid_ : cursor + 1;
+        cursor = (cursor >= Constants::MAX_APP_UID) ? baseAppUid_ : cursor + 1;
         if (bundleIdMap_.find(cursor) == bundleIdMap_.end()) {
             APP_LOGD("the %{public}d app install bundleName:%{public}s", cursor, bundleName.c_str());
             bundleId = cursor;
@@ -8502,18 +8501,28 @@ bool BundleDataMgr::RestoreUidAndGid()
                 onlyInsertOne = true;
                 int32_t bundleId = innerBundleUserInfo.uid -
                     innerBundleUserInfo.bundleUserInfo.userId * Constants::BASE_USER_RANGE;
-                std::unique_lock<std::shared_mutex> lock(bundleIdMapMutex_);
-                auto item = bundleIdMap_.find(bundleId);
-                if (item == bundleIdMap_.end()) {
-                    bundleIdMap_.emplace(bundleId, restoreName);
+                // Same range check as RestoreUidAndGidFromUninstallInfo: a
+                // corrupt record must not poison the id map or the fs config.
+                // Only the main write is skipped — the clone/cli identities of
+                // this user are independent records and still restore below.
+                if (bundleId < Constants::BASE_APP_UID || bundleId >= Constants::MAX_APP_UID) {
+                    APP_LOGW("invalid main bundleId %{public}d, uid %{public}d", bundleId,
+                        innerBundleUserInfo.uid);
+                    onlyInsertOne = false;
                 } else {
-                    bundleIdMap_[bundleId] = restoreName;
+                    std::unique_lock<std::shared_mutex> lock(bundleIdMapMutex_);
+                    auto item = bundleIdMap_.find(bundleId);
+                    if (item == bundleIdMap_.end()) {
+                        bundleIdMap_.emplace(bundleId, restoreName);
+                    } else {
+                        bundleIdMap_[bundleId] = restoreName;
+                    }
+                    BundleUtil::MakeFsConfig(restoreName, bundleId, ServiceConstants::HMDFS_CONFIG_PATH);
+                    BundleUtil::MakeFsConfig(restoreName, bundleId,
+                        ServiceConstants::SHAREFS_CONFIG_PATH);
+                    BundleUtil::MakeFsConfig(restoreName, ServiceConstants::HMDFS_CONFIG_PATH,
+                        info.second.GetAppProvisionType(), Constants::APP_PROVISION_TYPE_FILE_NAME);
                 }
-                BundleUtil::MakeFsConfig(restoreName, bundleId, ServiceConstants::HMDFS_CONFIG_PATH);
-                BundleUtil::MakeFsConfig(restoreName, bundleId,
-                    ServiceConstants::SHAREFS_CONFIG_PATH);
-                BundleUtil::MakeFsConfig(restoreName, ServiceConstants::HMDFS_CONFIG_PATH,
-                    info.second.GetAppProvisionType(), Constants::APP_PROVISION_TYPE_FILE_NAME);
             }
             // appClone
             std::string bundleName = info.second.GetBundleName();
@@ -8526,6 +8535,10 @@ bool BundleDataMgr::RestoreUidAndGid()
                     continue;
                 }
                 int32_t bundleId = cloneInfo.uid - cloneInfo.userId * Constants::BASE_USER_RANGE;
+                if (bundleId < Constants::BASE_APP_UID || bundleId >= Constants::MAX_APP_UID) {
+                    APP_LOGW("invalid clone bundleId %{public}d, uid %{public}d", bundleId, cloneInfo.uid);
+                    continue;
+                }
                 std::string cloneBundleName =
                     BundleCloneCommonHelper::GetCloneBundleIdKey(bundleName, cloneInfo.appIndex);
                 std::unique_lock<std::shared_mutex> lock(bundleIdMapMutex_);
@@ -8560,6 +8573,10 @@ bool BundleDataMgr::RestoreUidAndGid()
                     continue;
                 }
                 int32_t bundleId = cliInfo.uid - cliInfo.userId * Constants::BASE_USER_RANGE;
+                if (bundleId < Constants::BASE_APP_UID || bundleId >= Constants::MAX_APP_UID) {
+                    APP_LOGW("invalid cli sandbox bundleId %{public}d, uid %{public}d", bundleId, cliInfo.uid);
+                    continue;
+                }
                 std::string cliBundleName =
                     BundleCloneCommonHelper::GetCloneBundleIdKey(bundleName, cliInfo.appIndex);
                 std::unique_lock<std::shared_mutex> lock(bundleIdMapMutex_);
@@ -8589,7 +8606,7 @@ bool BundleDataMgr::RestoreUidAndGid()
         if (bmsPara->GetBmsParam(LAST_ALLOCATED_BUNDLE_ID_KEY, val)) {
             int32_t persisted = 0;
             if (OHOS::StrToInt(val, persisted)
-                && persisted >= baseAppUid_ && persisted < MAX_APP_UID) {
+                && persisted >= baseAppUid_ && persisted < Constants::MAX_APP_UID) {
                 lastAllocatedBundleId_ = persisted;
                 restored = true;
             } else {
@@ -15984,9 +16001,19 @@ void BundleDataMgr::RestoreUidAndGidFromUninstallInfo()
             if (!ParseUserKey(userKey, userId, appIndex)) {
                 continue;
             }
+            // Same uid/userId validity guard as the main restore path: a corrupt
+            // record (non-positive uid / negative user id) can derive a bundleId
+            // that passes the [BASE_APP_UID, MAX_APP_UID) range check below
+            // (e.g. uid=-190000 with userKey "-1_0" derives 10000) and poison
+            // the id map and the fs config.
+            if (userInfo.uid <= 0 || userId < 0) {
+                APP_LOGW("invalid uninstall record, userId %{public}d uid %{public}d", userId,
+                    userInfo.uid);
+                continue;
+            }
 
             int32_t bundleId = userInfo.uid - userId * Constants::BASE_USER_RANGE;
-            if (bundleId < Constants::BASE_APP_UID || bundleId >= MAX_APP_UID) {
+            if (bundleId < Constants::BASE_APP_UID || bundleId >= Constants::MAX_APP_UID) {
                 APP_LOGW("invalid bundleId: %{public}d", bundleId);
                 continue;
             }

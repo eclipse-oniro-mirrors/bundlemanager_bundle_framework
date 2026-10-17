@@ -2667,8 +2667,9 @@ HWTEST_F(BmsInstallDaemonTest, VerifyCodeSignature_1MBBoundary_0100, Function | 
 /**
  * @tc.number: DeliverySignProfile_1MBBoundary_0100
  * @tc.name: test DeliverySignProfile with profileBlockLength = 1MB
- * @tc.desc: 1. calling DeliverySignProfile with profileBlockLength = 1MB should pass param check
- *           2. DeliverySignProfile uses > MAX_PROFILE_BLOCK_LENGTH, so 1MB is legal
+ * @tc.desc: 1. calling DeliverySignProfile with profileBlockLength = 1MB is rejected:
+ *           the bound is unified to >= MAX_PROFILE_BLOCK_LENGTH across all chains
+ *           (session, direct, serialization) — exactly 1MB fails closed everywhere
 */
 HWTEST_F(BmsInstallDaemonTest, DeliverySignProfile_1MBBoundary_0100, Function | SmallTest | Level0)
 {
@@ -2676,8 +2677,8 @@ HWTEST_F(BmsInstallDaemonTest, DeliverySignProfile_1MBBoundary_0100, Function | 
     int32_t profileBlockLength = 1024 * 1024; // exactly 1MB
     unsigned char *profileBlock = new unsigned char[1024 * 1024];
     auto ret = DeliverySignProfile(bundleName, profileBlockLength, profileBlock);
-    // 1MB is a legal parameter value, should not return PARAM_ERROR
-    EXPECT_NE(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    // 1MB hits the unified >= bound: rejected with PARAM_ERROR
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     delete[] profileBlock;
 }
 

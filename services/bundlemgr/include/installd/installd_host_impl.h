@@ -515,7 +515,10 @@ public:
 private:
     // SPM session provision cache: session id -> provision info queried from the access
     // token service. Pure in-memory, erased by ClearSessionProvisionCache when the
-    // session is committed or rolled back.
+    // session is committed or rolled back. Bounded: entries of sessions abandoned
+    // by a crashed BMS process have no clearer, so the oldest entries are evicted
+    // once the cache reaches the bound (a dropped entry re-queries on demand).
+    static constexpr size_t MAX_SESSION_PROVISION_CACHE_SIZE = 128;
     std::map<int32_t, SessionProvisionInfo> sessionProvisionCache_;
     std::mutex sessionProvisionCacheMutex_;
     // Bumped on every ClearSessionProvisionCache (guarded by the same mutex):

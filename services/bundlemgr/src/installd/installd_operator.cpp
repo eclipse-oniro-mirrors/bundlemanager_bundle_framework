@@ -1120,7 +1120,7 @@ bool InstalldOperator::ProcessBundleInstallNative(const InstallHnpParam &param)
         return false;
     }
     if (strcpy_s(hapInfo.appIdentifier, sizeof(hapInfo.appIdentifier), param.appIdentifier.c_str()) != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLD, "failed to strcpy_s appIdentifier: %{public}s", param.appIdentifier.c_str());
+        LOG_E(BMS_TAG_INSTALLD, "failed to strcpy_s appIdentifier: %{private}s", param.appIdentifier.c_str());
         return false;
     }
     size_t count = param.hnpPaths.size();
@@ -2651,7 +2651,7 @@ ErrCode InstalldOperator::CheckEncryption(const CheckEncryptionParam &checkEncry
     const std::string cpuAbi = checkEncryptionParam.cpuAbi;
     InstallBundleType installBundleType = checkEncryptionParam.installBundleType;
     const bool isCompressNativeLibrary = checkEncryptionParam.isCompressNativeLibrary;
-    LOG_D(BMS_TAG_INSTALLD, "a %{public}s, t %{public}d, p %{public}s", checkEncryptionParam.appIdentifier.c_str(),
+    LOG_D(BMS_TAG_INSTALLD, "a %{private}s, t %{public}d, p %{public}s", checkEncryptionParam.appIdentifier.c_str(),
         static_cast<int32_t>(installBundleType), checkEncryptionParam.modulePath.c_str());
     BundleExtractor extractor(checkEncryptionParam.modulePath);
     if (!extractor.Init()) {
@@ -2700,7 +2700,7 @@ ErrCode InstalldOperator::CheckHapEncryption(const CheckEncryptionParam &checkEn
     InstallBundleType installBundleType = checkEncryptionParam.installBundleType;
     const bool isCompressNativeLibrary = checkEncryptionParam.isCompressNativeLibrary;
     LOG_D(BMS_TAG_INSTALLD, "p %{public}s, t %{public}d, "
-        "a %{public}s, c is %{public}d", hapPath.c_str(),
+        "a %{private}s, c is %{public}d", hapPath.c_str(),
         static_cast<int32_t>(installBundleType), checkEncryptionParam.appIdentifier.c_str(), isCompressNativeLibrary);
 #if defined(CODE_ENCRYPTION_ENABLE)
     std::unordered_map<std::string, std::string> entryMap;
@@ -4340,12 +4340,14 @@ bool InstalldOperator::GetOriginalBundleName(const std::string &bundleName,
         }
         tempBundleName = tempBundleName.substr(plusPos + 1);
     }
-    // sanbox bundleName: <appIndex>_<bundleName>
-    auto pos = bundleName.find(Constants::FILE_UNDERLINE);
+    // sanbox bundleName: <appIndex>_<bundleName> — evaluated on the post-clone-
+    // strip remainder (the sandbox of a clone shares the clone-prefixed name),
+    // not on the original input.
+    auto pos = tempBundleName.find(Constants::FILE_UNDERLINE);
     if (pos != std::string::npos) {
         int32_t appIndex = 0;
-        if (OHOS::StrToInt(bundleName.substr(0, pos), appIndex)) {
-            tempBundleName = bundleName.substr(pos + 1);
+        if (OHOS::StrToInt(tempBundleName.substr(0, pos), appIndex)) {
+            tempBundleName = tempBundleName.substr(pos + 1);
         }
     }
     // for normal bundleName
@@ -4407,7 +4409,7 @@ bool InstalldOperator::IsValidAppIdentifier(const std::string &appIdentifier)
     }
     for (const auto &c : appIdentifier) {
         if (!isalnum(static_cast<unsigned char>(c)) && (c != '-') && (c != '_') && (c != '.')) {
-            LOG_NOFUNC_E(BMS_TAG_INSTALLD, "invalid appIdentifier format: %{public}s", appIdentifier.c_str());
+            LOG_NOFUNC_E(BMS_TAG_INSTALLD, "invalid appIdentifier format: %{private}s", appIdentifier.c_str());
             return false;
         }
     }

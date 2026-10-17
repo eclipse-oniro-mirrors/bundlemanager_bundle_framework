@@ -3747,7 +3747,9 @@ ErrCode InstalldHostImpl::VerifyCodeSignature(const CodeSignatureParam &codeSign
         return queryRet;
     }
     FillCodeSignParamFromProvision(spmProvisionInfo, localParam);
-    LOG_D(BMS_TAG_INSTALLD, "code sign param is %{public}s", localParam.ToString().c_str());
+    // The stringified param carries the appIdentifier: keep the private
+    // annotation consistent with the direct appIdentifier log below.
+    LOG_D(BMS_TAG_INSTALLD, "code sign param is %{private}s", localParam.ToString().c_str());
     if (!InstalldOperator::IsValidBundleName(localParam.bundleName)) {
         LOG_E(BMS_TAG_INSTALLD, "Calling the function VerifyCodeSignature with invalid bundleName");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
@@ -3978,7 +3980,9 @@ ErrCode InstalldHostImpl::VerifyCodeSignatureForHap(const CodeSignatureParam &co
         return queryRet;
     }
     FillCodeSignParamFromProvision(spmProvisionInfo, localParam);
-    LOG_D(BMS_TAG_INSTALLD, "code sign param is %{public}s", localParam.ToString().c_str());
+    // The stringified param carries the appIdentifier: keep the private
+    // annotation consistent with the direct appIdentifier log below.
+    LOG_D(BMS_TAG_INSTALLD, "code sign param is %{private}s", localParam.ToString().c_str());
     ErrCode ret = ERR_OK;
     if (localParam.isCompileSdkOpenHarmony && !Security::CodeSign::CodeSignUtils::IsSupportOHCodeSign()) {
         LOG_D(BMS_TAG_INSTALLD, "code signature is not supported");
@@ -4106,7 +4110,7 @@ ErrCode InstalldHostImpl::DeliverySignProfile(const std::string &bundleName, int
         return ERR_OK;
     }
 
-    if (profileBlockLength <= 0 || profileBlockLength > ServiceConstants::MAX_PROFILE_BLOCK_LENGTH) {
+    if (profileBlockLength <= 0 || profileBlockLength >= ServiceConstants::MAX_PROFILE_BLOCK_LENGTH) {
         LOG_E(BMS_TAG_INSTALLD, "Calling the function DeliverySignProfile with invalid profileBlockLength: %{public}d",
             profileBlockLength);
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
@@ -5168,7 +5172,7 @@ ErrCode InstalldHostImpl::ProcessBinFiles(const VerifyBinParam &verifyBinParam)
         infos.emplace_back(binInfo);
 #endif
     }
-    LOG_D(BMS_TAG_INSTALLD, "bundleName:%{public}s, appIdentifier:%{public}s",
+    LOG_D(BMS_TAG_INSTALLD, "bundleName:%{public}s, appIdentifier:%{private}s",
         verifyBinParam.bundleName.c_str(), verifyBinParam.appIdentifier.c_str());
 #ifdef SECURITY_PRIVACY_SERVER_ENABLE
     auto result = BinarySecurityWrapper::GetInstance().ProcessHapBinInstall(verifyBinParam.bundleName,
@@ -5559,6 +5563,13 @@ ErrCode InstalldHostImpl::QueryProvisionInfoBySessionId(int32_t sessionId,
         }
     }
     const auto &trustedBundleInfo = bundleInfoList[0];
+    if (trustedBundleInfo.profileData.profileBlock.size() >=
+        static_cast<size_t>(ServiceConstants::MAX_PROFILE_BLOCK_LENGTH)) {
+        // Cap the allocation BEFORE the copy into the session cache entry: the
+        // per-param checks downstream only cover their own copies.
+        LOG_E(BMS_TAG_INSTALLD, "profile block of session %{public}d exceeds the cap", sessionId);
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
     Security::Verify::ProvisionInfo provisionInfo;
     if (Security::Verify::ParseProvision(trustedBundleInfo.profileData.provisionRaw, provisionInfo) !=
         Security::Verify::AppProvisionVerifyResult::PROVISION_OK) {
@@ -5579,6 +5590,16 @@ ErrCode InstalldHostImpl::QueryProvisionInfoBySessionId(int32_t sessionId,
             // linger in the cache for later sessions.
             return ERR_OK;
         }
+        // Capacity bound: entries of sessions abandoned by a crashed BMS process
+        // are never evicted by ClearSessionProvisionCache (nobody finishes those
+        // sessions). Drop the oldest entries when the bound is reached — this is
+        // only a cache, a dropped entry is re-queried from the AT side on demand.
+        if (sessionProvisionCache_.size() >= MAX_SESSION_PROVISION_CACHE_SIZE) {
+            size_t evictCount = sessionProvisionCache_.size() - MAX_SESSION_PROVISION_CACHE_SIZE + 1;
+            for (size_t i = 0; i < evictCount && !sessionProvisionCache_.empty(); i++) {
+                sessionProvisionCache_.erase(sessionProvisionCache_.begin());
+            }
+        }
         sessionProvisionCache_[sessionId] = info;
     }
     return ERR_OK;
@@ -5596,8 +5617,12 @@ ErrCode InstalldHostImpl::GetResolvedApl(const CreateDirParam &createDirParam)
         return ret;
     }
     if (info.bundleName.empty()) {
-        // no provision available for this session, keep the caller provided apl
-        return ERR_OK;
+        // A parsed provision always carries a bundle name — an empty one means
+        // the session provision is malformed, and trusting the caller-provided
+        // APL then would silently skip the cross-check (fail-open). Fail closed.
+        LOG_E(BMS_TAG_INSTALLD, "session provision has no bundle name, session %{public}d",
+            createDirParam.sessionId);
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     if (info.apl != createDirParam.apl) {
         LOG_E(BMS_TAG_INSTALLD, "apl mismatch, session %{public}d ipc apl %{public}s at apl %{public}s",
