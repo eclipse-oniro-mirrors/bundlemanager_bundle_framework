@@ -7882,6 +7882,67 @@ HWTEST_F(BmsDataMgrTest, GetAppProvisionInfoInDevice_0003, TestSize.Level1)
 }
 
 /**
+ * @tc.number: GetAppProvisionInfoInDevice_0004
+ * @tc.name: get app provision info in device of bundle installed in another user
+ * @tc.desc: 1. bundle is installed for user 100 only
+ *           2. query provision info with userId 101, returns BUNDLE_NOT_EXIST with empty vector
+ */
+HWTEST_F(BmsDataMgrTest, GetAppProvisionInfoInDevice_0004, TestSize.Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseBundleInfo_->name = BUNDLE_NAME;
+    innerBundleInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleName = BUNDLE_NAME;
+    innerBundleUserInfo.bundleUserInfo.userId = USERID;
+    std::string userInfoKey = BUNDLE_NAME + Constants::FILE_UNDERLINE + std::to_string(USERID);
+    innerBundleInfo.innerBundleUserInfos_.emplace(userInfoKey, innerBundleUserInfo);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+
+    dataMgr->AddUserId(USERID);
+    int32_t queryUserId = USERID + 1;
+    dataMgr->AddUserId(queryUserId);
+
+    std::vector<AppProvisionInfo> appProvisionInfos;
+    ErrCode ret = dataMgr->GetAppProvisionInfoInDevice(BUNDLE_NAME, queryUserId, appProvisionInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_TRUE(appProvisionInfos.empty());
+}
+
+/**
+ * @tc.number: GetAppProvisionInfoInDevice_0005
+ * @tc.name: get app provision info in device of installed bundle without provision record
+ * @tc.desc: 1. bundle is installed for user 100
+ *           2. no provision record in AppProvisionInfoManager, returns INTERNAL_ERROR with empty vector
+ */
+HWTEST_F(BmsDataMgrTest, GetAppProvisionInfoInDevice_0005, TestSize.Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    DelayedSingleton<AppProvisionInfoManager>::GetInstance()->DeleteAppProvisionInfo(BUNDLE_NAME);
+
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseBundleInfo_->name = BUNDLE_NAME;
+    innerBundleInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleName = BUNDLE_NAME;
+    innerBundleUserInfo.bundleUserInfo.userId = USERID;
+    std::string userInfoKey = BUNDLE_NAME + Constants::FILE_UNDERLINE + std::to_string(USERID);
+    innerBundleInfo.innerBundleUserInfos_.emplace(userInfoKey, innerBundleUserInfo);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+
+    dataMgr->AddUserId(USERID);
+
+    std::vector<AppProvisionInfo> appProvisionInfos;
+    ErrCode ret = dataMgr->GetAppProvisionInfoInDevice(BUNDLE_NAME, USERID, appProvisionInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    EXPECT_TRUE(appProvisionInfos.empty());
+}
+
+/**
  * @tc.number: GetAllAppProvisionInfoInDevice_0001
  * @tc.name: get all app provision info in device with invalid userId
  * @tc.desc: 1. system running normally
