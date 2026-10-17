@@ -220,6 +220,22 @@ bool AccountHelper::IsPrivateSpaceUser(const int32_t userId)
 #endif
 }
 
+bool AccountHelper::IsAdminUser(const int32_t userId)
+{
+#ifdef ACCOUNT_ENABLE
+    AccountSA::OsAccountInfo osAccountInfo;
+    int32_t ret = AccountSA::OsAccountManager::QueryOsAccountById(userId, osAccountInfo);
+    if (ret != 0) {
+        APP_LOGE("QueryOsAccountById failed, userId:%{public}d ret:%{public}d", userId, ret);
+        return false;
+    }
+    return osAccountInfo.GetType() == AccountSA::OsAccountType::ADMIN;
+#else
+    APP_LOGI("ACCOUNT_ENABLE is false");
+    return false;
+#endif
+}
+
 bool AccountHelper::CheckUserIsolation(
     const int32_t targetUserId, const std::unordered_set<int32_t> &installedUserIds)
 {

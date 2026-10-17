@@ -16738,6 +16738,98 @@ HWTEST_F(BmsBundleInstallerTest, RecoverDriverForAllUsers_0100, Function | Small
 }
 
 /**
+ * @tc.number: UninstallDriverCanCrossUser_0100
+ * @tc.name: test Uninstall of BundleInstaller with driver bundle
+ * @tc.desc: 1.A driver bundle installed for user 0 or user 1 is only uninstalled
+ *              for the specified user when canCrossUser is false
+ *           2.A driver bundle installed for user 0 or user 1 is uninstalled for
+ *              the driver install user when canCrossUser is true
+*/
+HWTEST_F(BmsBundleInstallerTest, UninstallDriverCanCrossUser_0100, Function | SmallTest | Level0)
+{
+    BundleInstaller installer(1, nullptr);
+    installer.InitDataMgr();
+    ASSERT_NE(installer.dataMgr_, nullptr);
+    InnerBundleInfo driverInfo;
+    InnerExtensionInfo driverExtensionInfo;
+    driverExtensionInfo.type = ExtensionAbilityType::DRIVER;
+    driverInfo.InsertExtensionInfo("driver", driverExtensionInfo);
+    // the shared bundle type makes the uninstall flow exit early while the user
+    // id of the uninstall target is still recorded
+    driverInfo.baseApplicationInfo_->bundleType = BundleType::SHARED;
+    // the driver bundle is only installed for user 0
+    InnerBundleUserInfo driverUserInfo;
+    driverUserInfo.bundleUserInfo.userId = Constants::DEFAULT_USERID;
+    driverInfo.innerBundleUserInfos_["testDriverBundle_0"] = driverUserInfo;
+    installer.dataMgr_->bundleInfos_["testDriverBundle"] = driverInfo;
+
+    // canCrossUser is false: the driver bundle is only uninstalled for the
+    // specified user instead of the driver install user
+    InstallParam installParam;
+    installParam.userId = USERID;
+    installParam.canCrossUser = false;
+    installer.Uninstall("testDriverBundle", installParam);
+    EXPECT_EQ(installer.userId_, USERID);
+
+    installer.dataMgr_->bundleInfos_["testDriverBundle"] = driverInfo;
+    // canCrossUser is true: the driver bundle is uninstalled for the driver
+    // install user (user 0)
+    installParam.canCrossUser = true;
+    installer.Uninstall("testDriverBundle", installParam);
+    EXPECT_EQ(installer.userId_, Constants::DEFAULT_USERID);
+
+    installer.dataMgr_->bundleInfos_.erase("testDriverBundle");
+}
+
+/**
+ * @tc.number: UninstallDriverCanCrossUser_0200
+ * @tc.name: test Uninstall of BundleInstaller with driver bundle
+ * @tc.desc: 1.A driver bundle is only uninstalled for the specified user when
+ *              canCrossUser is false, instead of all the existing users
+ *           2.A driver bundle is uninstalled for all the existing users when
+ *              canCrossUser is true
+*/
+HWTEST_F(BmsBundleInstallerTest, UninstallDriverCanCrossUser_0200, Function | SmallTest | Level0)
+{
+    BundleInstaller installer(1, nullptr);
+    installer.InitDataMgr();
+    ASSERT_NE(installer.dataMgr_, nullptr);
+    installer.dataMgr_->AddUserId(USERID);
+    installer.dataMgr_->AddUserId(USERID + 1);
+    InnerBundleInfo driverInfo;
+    InnerExtensionInfo driverExtensionInfo;
+    driverExtensionInfo.type = ExtensionAbilityType::DRIVER;
+    driverInfo.InsertExtensionInfo("driver", driverExtensionInfo);
+    // the shared bundle type makes the uninstall flow exit early while the user
+    // id of the uninstall target is still recorded
+    driverInfo.baseApplicationInfo_->bundleType = BundleType::SHARED;
+    // the driver bundle is only installed for the specified user
+    InnerBundleUserInfo driverUserInfo;
+    driverUserInfo.bundleUserInfo.userId = USERID;
+    driverInfo.innerBundleUserInfos_["testDriverBundle_100"] = driverUserInfo;
+    installer.dataMgr_->bundleInfos_["testDriverBundle"] = driverInfo;
+
+    // canCrossUser is false: the driver bundle is only uninstalled for the
+    // specified user instead of all the existing users
+    InstallParam installParam;
+    installParam.userId = USERID;
+    installParam.canCrossUser = false;
+    installer.Uninstall("testDriverBundle", installParam);
+    EXPECT_EQ(installer.userId_, USERID);
+
+    installer.dataMgr_->bundleInfos_["testDriverBundle"] = driverInfo;
+    // canCrossUser is true: the driver bundle is uninstalled for all the
+    // existing users, so the last uninstalled user is the biggest existing one
+    installParam.canCrossUser = true;
+    installer.Uninstall("testDriverBundle", installParam);
+    auto userIds = installer.GetExistsCommonUserIds();
+    ASSERT_FALSE(userIds.empty());
+    EXPECT_EQ(installer.userId_, *userIds.rbegin());
+
+    installer.dataMgr_->bundleInfos_.erase("testDriverBundle");
+}
+
+/**
  * @tc.number: InstallForAllUsers_0100
  * @tc.name: test BundleInstaller
  * @tc.desc: 1.Test the InstallForAllUsers of BundleInstaller
@@ -16757,6 +16849,30 @@ HWTEST_F(BmsBundleInstallerTest, InstallForAllUsers_0100, Function | SmallTest |
     installer.InstallForAllUsers(installParam);
     EXPECT_FALSE(installer.isAppExist_);
     installer.Uninstall("testBundleName", "", installParam);
+    installer.dataMgr_->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: InstallForAllUsers_0200
+ * @tc.name: test BundleInstaller
+ * @tc.desc: 1.Test the InstallForAllUsers of BundleInstaller with canCrossUser false
+*/
+HWTEST_F(BmsBundleInstallerTest, InstallForAllUsers_0200, Function | SmallTest | Level0)
+{
+    BundleInstaller installer(1,nullptr);
+    installer.InitDataMgr();
+    InstallParam installParam;
+    installParam.canCrossUser = false;
+    InnerBundleInfo info;
+    InnerExtensionInfo innerExtensionInfo;
+    innerExtensionInfo.type = ExtensionAbilityType::DRIVER;
+    info.InsertExtensionInfo("key", innerExtensionInfo);
+    installer.dataMgr_->bundleInfos_.try_emplace("testBundleName", info);
+    installer.isAppExist_ = true;
+    installer.bundleName_ = "testBundleName";
+    // cross-user fan-out is not allowed, no install happens for other users
+    installer.InstallForAllUsers(installParam);
+    EXPECT_TRUE(installer.isAppExist_);
     installer.dataMgr_->bundleInfos_.clear();
 }
 

@@ -285,6 +285,15 @@ private:
     bool IsPermissionValid(const InstallParam &installParam, InstallParam &installParam2);
     bool CheckUninstallDisposedRule(const std::string &bundleName, int32_t userId, int32_t appIndex, bool isKeepData,
         const std::string &modulePackage = "");
+    /**
+     * @brief Checks whether the user to be operated on is different from the user of the caller.
+     *        UNSPECIFIED_USERID never counts as across-user; ALL_USERID applies to every
+     *        user and user 0 and user 1 are reserved system users, so they always count
+     *        as across-user.
+     * @param userId Indicates the user id to be operated on.
+     * @return Returns true if the operation crosses users; returns false otherwise.
+     */
+    bool IsAcrossUser(int32_t userId);
     ErrCode InnerAddEnterpriseResignCert(
         const std::string &certAlias, const std::string &certContent, int32_t userId);
     ErrCode VerifyInstallPermission();

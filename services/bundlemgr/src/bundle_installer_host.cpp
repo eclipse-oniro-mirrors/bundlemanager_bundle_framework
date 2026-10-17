@@ -25,6 +25,7 @@
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
 #include "app_control_manager.h"
 #endif
+#include "account_helper.h"
 #include "app_log_tag_wrapper.h"
 #include "bundle_clone_installer.h"
 #include "bundle_cli_sandbox_installer.h"
@@ -574,10 +575,15 @@ bool BundleInstallerHost::Install(const std::vector<std::string> &bundleFilePath
             statusReceiver->OnFinished(verifyResult, "");
             return false;
         }
-        if (!BundlePermissionMgr::CheckUserForeground(installParam.userId)) {
-            statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED,
-                "can not specify user not in foreground");
-            return false;
+        // Admin users may install for any user; non-admin users are restricted to
+        // their own user and cross-user fan-out is disabled.
+        if (!AccountHelper::IsAdminUser(BundleUtil::GetUserIdByCallingUid())) {
+            verifiedInstallParam.canCrossUser = false;
+            if (IsAcrossUser(installParam.userId)) {
+                statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED,
+                    "can not specify user across from calling user");
+                return false;
+            }
         }
         verifiedInstallParam.isCheckDebugApp = true;
     }
@@ -636,6 +642,23 @@ ErrCode BundleInstallerHost::VerifyUninstallPermission(bool isCheckSdkVersion)
     return ERR_OK;
 }
 
+bool BundleInstallerHost::IsAcrossUser(int32_t userId)
+{
+    // UNSPECIFIED_USERID is not a real user; it is resolved from the calling uid
+    // by CheckInstallParam or CheckIsDebugAppProvisionType afterwards.
+    if (userId == Constants::UNSPECIFIED_USERID) {
+        return false;
+    }
+    // ALL_USERID applies the operation to every user, user 0 and user 1 are
+    // reserved system users; operating on them from a normal caller always
+    // counts as across user.
+    if (userId == Constants::ALL_USERID ||
+        userId == Constants::DEFAULT_USERID || userId == Constants::U1) {
+        return true;
+    }
+    return userId != BundleUtil::GetUserIdByCallingUid();
+}
+
 ErrCode BundleInstallerHost::CheckIsDebugAppProvisionType(const std::string &bundleName, int32_t userId, bool isHsp)
 {
     std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
@@ -685,6 +708,7 @@ bool BundleInstallerHost::Uninstall(
         statusReceiver->OnFinished(ERR_APPEXECFWK_USER_NOT_INSTALL_HAP, "can not specify user in shell");
         return false;
     }
+    InstallParam verifiedInstallParam = installParam;
     auto verifyResult = VerifyUninstallPermission(true);
     if (verifyResult != ERR_OK) {
         if (!OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false) ||
@@ -692,10 +716,15 @@ bool BundleInstallerHost::Uninstall(
             statusReceiver->OnFinished(verifyResult, "");
             return false;
         }
-        if (!BundlePermissionMgr::CheckUserForeground(installParam.userId)) {
-            statusReceiver->OnFinished(ERR_APPEXECFWK_UNINSTALL_PERMISSION_DENIED,
-                "can not specify user not in foreground");
-            return false;
+        // Admin users may uninstall for any user; non-admin users are restricted to
+        // their own user and cross-user uninstall is disabled for them.
+        if (!AccountHelper::IsAdminUser(BundleUtil::GetUserIdByCallingUid())) {
+            verifiedInstallParam.canCrossUser = false;
+            if (IsAcrossUser(installParam.userId)) {
+                statusReceiver->OnFinished(ERR_APPEXECFWK_UNINSTALL_PERMISSION_DENIED,
+                    "can not specify user across from calling user");
+                return false;
+            }
         }
         auto checkDebugResult = CheckIsDebugAppProvisionType(bundleName, installParam.userId);
         if (checkDebugResult != ERR_OK) {
@@ -716,7 +745,7 @@ bool BundleInstallerHost::Uninstall(
         statusReceiver->OnFinished(ERR_APPEXECFWK_UNINSTALL_DISPOSED_RULE_FAILED, "");
         return false;
     }
-    manager_->CreateUninstallTask(bundleName, CheckInstallParam(installParam), statusReceiver);
+    manager_->CreateUninstallTask(bundleName, CheckInstallParam(verifiedInstallParam), statusReceiver);
     return true;
 }
 
@@ -769,10 +798,14 @@ bool BundleInstallerHost::Uninstall(const UninstallParam &uninstallParam,
             statusReceiver->OnFinished(verifyResult, "");
             return false;
         }
-        if (!BundlePermissionMgr::CheckUserForeground(uninstallParam.userId)) {
-            statusReceiver->OnFinished(ERR_APPEXECFWK_UNINSTALL_PERMISSION_DENIED,
-                "can not specify user not in foreground");
-            return false;
+        // Admin users may uninstall for any user; non-admin users are restricted
+        // to their own user.
+        if (!AccountHelper::IsAdminUser(BundleUtil::GetUserIdByCallingUid())) {
+            if (IsAcrossUser(uninstallParam.userId)) {
+                statusReceiver->OnFinished(ERR_APPEXECFWK_UNINSTALL_PERMISSION_DENIED,
+                    "can not specify user across from calling user");
+                return false;
+            }
         }
         auto checkDebugResult = CheckIsDebugAppProvisionType(uninstallParam.bundleName, uninstallParam.userId, true);
         if (checkDebugResult != ERR_OK) {
@@ -986,10 +1019,15 @@ sptr<IBundleStreamInstaller> BundleInstallerHost::CreateStreamInstaller(const In
             statusReceiver->OnFinished(verifyResult, "");
             return nullptr;
         }
-        if (!BundlePermissionMgr::CheckUserForeground(installParam.userId)) {
-            statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED,
-                "can not specify user not in foreground");
-            return nullptr;
+        // Admin users may install for any user; non-admin users are restricted to
+        // their own user and cross-user fan-out is disabled.
+        if (!AccountHelper::IsAdminUser(BundleUtil::GetUserIdByCallingUid())) {
+            verifiedInstallParam.canCrossUser = false;
+            if (IsAcrossUser(installParam.userId)) {
+                statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED,
+                    "can not specify user across from calling user");
+                return nullptr;
+            }
         }
         verifiedInstallParam.isCheckDebugApp = true;
     }
