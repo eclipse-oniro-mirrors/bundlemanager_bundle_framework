@@ -25,6 +25,7 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+class BundleDataMgr;
 class UserUnlockedEventSubscriber final : public EventFwk::CommonEventSubscriber {
 public:
     explicit UserUnlockedEventSubscriber(const EventFwk::CommonEventSubscribeInfo &subscribeInfo);
@@ -41,6 +42,8 @@ public:
     static void UpdateAppDataDirSelinuxLabel(int32_t userId);
     static void ProcessUpdateAppDataDir(
         int32_t userId, const std::vector<BundleInfo> &bundleInfos, const std::string &elDir);
+    static void ProcessUpdateCloneDataDir(int32_t userId, const std::shared_ptr<BundleDataMgr> &dataMgr);
+    static void ProcessCloneBundleDirs(int32_t userId, const std::shared_ptr<BundleDataMgr> &dataMgr);
     static void ProcessUpdateAppLogDir(const std::vector<BundleInfo> &bundleInfos, int32_t userId);
     static void ProcessFileManagerDir(const std::vector<BundleInfo> &bundleInfos, int32_t userId);
     static void ProcessExtensionDir(const BundleInfo &bundleInfo, std::vector<std::string> &dirs);

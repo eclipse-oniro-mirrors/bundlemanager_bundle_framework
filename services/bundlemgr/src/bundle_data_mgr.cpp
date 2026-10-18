@@ -8354,6 +8354,127 @@ void BundleDataMgr::InsertBundleIdMapEntries(const InnerBundleInfo &info)
     }
 }
 
+namespace {
+std::string ComputeEffectiveName(const std::string &bundleName, int32_t appIndex, bool isDualModeClone)
+{
+    if (appIndex > 0) {
+        return BundleCloneCommonHelper::GetCloneBundleIdKey(bundleName, appIndex);
+    }
+    if (isDualModeClone) {
+        return DualModeHelper::GetDualModeBundleName(bundleName);
+    }
+    return bundleName;
+}
+
+void EraseOldBundleIdEntry(std::map<int32_t, std::string> &bundleIdMap,
+    int32_t oldBundleId, const std::string &effectiveName, bool &needRemoveOld)
+{
+    auto it = bundleIdMap.find(oldBundleId);
+    if (it != bundleIdMap.end() && it->second == effectiveName) {
+        bundleIdMap.erase(it);
+        needRemoveOld = true;
+        return;
+    }
+    APP_LOGW("UpdateBundleUid: oldBundleId %{public}d not matching effectiveName %{public}s in bundleIdMap_, "
+        "may be duplicate bundleId scenario, skip erase", oldBundleId, effectiveName.c_str());
+    if (access((std::string(ServiceConstants::HMDFS_CONFIG_PATH) + ServiceConstants::PATH_SEPARATOR +
+        effectiveName).c_str(), F_OK) == 0) {
+        needRemoveOld = true;
+    }
+}
+
+void InsertNewBundleIdEntry(std::map<int32_t, std::string> &bundleIdMap,
+    int32_t &lastAllocatedBundleId, int32_t newBundleId,
+    const std::string &effectiveName, bool &needSaveBundleId)
+{
+    auto insertResult = bundleIdMap.emplace(newBundleId, effectiveName);
+    if (!insertResult.second) {
+        if (insertResult.first->second != effectiveName) {
+            APP_LOGW("UpdateBundleUid: newBundleId %{public}d already in use by %{public}s, overwriting",
+                newBundleId, insertResult.first->second.c_str());
+        }
+        bundleIdMap[newBundleId] = effectiveName;
+    }
+    if (newBundleId > lastAllocatedBundleId) {
+        lastAllocatedBundleId = newBundleId;
+        needSaveBundleId = true;
+    }
+}
+} // anonymous namespace
+
+ErrCode BundleDataMgr::UpdateBundleUid(const std::string &bundleName, int32_t userId,
+    int32_t appIndex, int32_t oldUid, int32_t newUid, bool isDualModeClone)
+{
+    if (bundleName.empty()) {
+        return ERR_APPEXECFWK_INSTALL_BUNDLENAME_IS_EMPTY;
+    }
+    if (oldUid <= 0 || newUid <= 0) {
+        APP_LOGE("UpdateBundleUid: invalid uid value");
+        return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
+    }
+    int32_t oldBundleId = oldUid - userId * Constants::BASE_USER_RANGE;
+    int32_t newBundleId = newUid - userId * Constants::BASE_USER_RANGE;
+    if (oldBundleId == newBundleId) {
+        return ERR_OK;
+    }
+
+    std::string effectiveName = ComputeEffectiveName(bundleName, appIndex, isDualModeClone);
+    bool needRemoveOld = false;
+    bool needSaveBundleId = false;
+    UpdateBundleIdMapForUid(oldBundleId, newBundleId, effectiveName,
+        needRemoveOld, needSaveBundleId);
+    UpdateFsConfigForUid(effectiveName, newBundleId, needRemoveOld, needSaveBundleId);
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::UpdateSandboxBundleUid(const std::string &bundleName, int32_t userId,
+    int32_t appIndex, int32_t oldUid, int32_t newUid)
+{
+    if (bundleName.empty()) {
+        return ERR_APPEXECFWK_INSTALL_BUNDLENAME_IS_EMPTY;
+    }
+    if (oldUid <= 0 || newUid <= 0) {
+        APP_LOGE("UpdateSandboxBundleUid: invalid uid value");
+        return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
+    }
+    int32_t oldBundleId = oldUid - userId * Constants::BASE_USER_RANGE;
+    int32_t newBundleId = newUid - userId * Constants::BASE_USER_RANGE;
+    if (oldBundleId == newBundleId) {
+        return ERR_OK;
+    }
+    std::string effectiveName = BundleCloneCommonHelper::GetCloneBundleIdKey(bundleName, appIndex);
+    bool needRemoveOld = false;
+    bool needSaveBundleId = false;
+    UpdateBundleIdMapForUid(oldBundleId, newBundleId, effectiveName,
+        needRemoveOld, needSaveBundleId);
+    UpdateFsConfigForUid(effectiveName, newBundleId, needRemoveOld, needSaveBundleId);
+    return ERR_OK;
+}
+
+void BundleDataMgr::UpdateBundleIdMapForUid(int32_t oldBundleId, int32_t newBundleId,
+    const std::string &effectiveName, bool &needRemoveOld, bool &needSaveBundleId)
+{
+    std::unique_lock<std::shared_mutex> lock(bundleIdMapMutex_);
+    EraseOldBundleIdEntry(bundleIdMap_, oldBundleId, effectiveName, needRemoveOld);
+    InsertNewBundleIdEntry(bundleIdMap_, lastAllocatedBundleId_, newBundleId, effectiveName, needSaveBundleId);
+    APP_LOGI("UpdateBundleUid: effectiveName=%{public}s oldBundleId=%{public}d newBundleId=%{public}d cursor=%{public}d",
+        effectiveName.c_str(), oldBundleId, newBundleId, lastAllocatedBundleId_);
+}
+
+void BundleDataMgr::UpdateFsConfigForUid(const std::string &effectiveName, int32_t newBundleId,
+    bool needRemoveOld, bool needSaveBundleId)
+{
+    if (needRemoveOld) {
+        BundleUtil::RemoveFsConfig(effectiveName, ServiceConstants::HMDFS_CONFIG_PATH);
+        BundleUtil::RemoveFsConfig(effectiveName, ServiceConstants::SHAREFS_CONFIG_PATH);
+    }
+    BundleUtil::MakeFsConfig(effectiveName, newBundleId, ServiceConstants::HMDFS_CONFIG_PATH);
+    BundleUtil::MakeFsConfig(effectiveName, newBundleId, ServiceConstants::SHAREFS_CONFIG_PATH);
+    if (needSaveBundleId) {
+        SaveLastAllocatedBundleId();
+    }
+}
+
 ErrCode BundleDataMgr::GenerateBundleId(const std::string &bundleName, int32_t &bundleId)
 {
     std::unique_lock<std::shared_mutex> lock(bundleIdMapMutex_);

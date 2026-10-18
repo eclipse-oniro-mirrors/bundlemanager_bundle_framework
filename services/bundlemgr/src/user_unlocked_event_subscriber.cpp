@@ -22,6 +22,7 @@
 #include "app_log_tag_wrapper.h"
 #include "bundle_mgr_service.h"
 #include "dual_mode_helper.h"
+#include "inner_bundle_clone_common.h"
 #include "pre_install_bundle_info.h"
 #if defined (BUNDLE_FRAMEWORK_SANDBOX_APP) && defined (DLP_PERMISSION_ENABLE)
 #include "dlp_permission_kit.h"
@@ -69,6 +70,75 @@ std::string GetDirBundleName(const BundleInfo &bundleInfo)
         dirBundleName = DualModeHelper::GetDualModeBundleName(bundleInfo.name);
     }
     return dirBundleName;
+}
+
+bool IsCloneDirUidMatched(const std::string &bundleName,
+    int32_t userId, const InnerBundleCloneInfo &cloneInfo)
+{
+    std::string cloneDirName = BundleCloneCommonHelper::GetCloneDataDir(
+        bundleName, cloneInfo.appIndex);
+    std::string cloneBaseDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR +
+        ServiceConstants::BUNDLE_EL[1] + ServiceConstants::PATH_SEPARATOR +
+        std::to_string(userId) + ServiceConstants::BASE + cloneDirName;
+    bool isExist = false;
+    if (InstalldClient::GetInstance()->IsExistDir(cloneBaseDir, isExist) != ERR_OK ||
+        !isExist) {
+        APP_LOGD("CloneDir check: bundle=%{public}s appIndex=%{public}d dir not exist",
+            bundleName.c_str(), cloneInfo.appIndex);
+        return false;
+    }
+    FileStat fileStat;
+    if (InstalldClient::GetInstance()->GetFileStat(cloneBaseDir,
+        BundleDirScene::GET_DATA_BASE_FILE_STAT, fileStat) != ERR_OK) {
+        APP_LOGW("CloneDir check: bundle=%{public}s appIndex=%{public}d GetFileStat failed",
+            bundleName.c_str(), cloneInfo.appIndex);
+        return false;
+    }
+    if (fileStat.uid != cloneInfo.uid) {
+        APP_LOGD("CloneDir check: bundle=%{public}s appIndex=%{public}d uid mismatch, need recreate",
+            bundleName.c_str(), cloneInfo.appIndex);
+        return false;
+    }
+    return true;
+}
+
+void CreateCloneDataDir(const std::string &bundleName,
+    int32_t userId, const InnerBundleCloneInfo &cloneInfo, const InnerBundleInfo &info)
+{
+    APP_LOGD("CloneDir create: bundle=%{public}s appIndex=%{public}d",
+        bundleName.c_str(), cloneInfo.appIndex);
+    CreateDirParam param;
+    param.bundleName = BundleCloneCommonHelper::GetCloneDataDir(
+        bundleName, cloneInfo.appIndex);
+    param.userId = userId;
+    param.uid = cloneInfo.uid;
+    param.gid = cloneInfo.uid;
+    param.appIndex = cloneInfo.appIndex;
+    param.apl = info.GetAppPrivilegeLevel();
+    param.isPreInstallApp = info.IsPreInstallApp();
+    param.debug = info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
+    param.hasDriverExtension = info.HasDriverExtension();
+    param.createDirFlag = CreateDirFlag::CREATE_DIR_ALL;
+    if (InstalldClient::GetInstance()->CreateBundleDataDir(param) != ERR_OK) {
+        APP_LOGW("CloneDir create failed, bundle:%{public}s appIndex:%{public}d",
+            bundleName.c_str(), cloneInfo.appIndex);
+    }
+}
+
+void ProcessCloneDirsForBundle(const std::string &bundleName,
+    int32_t userId, const InnerBundleInfo &info, const InnerBundleUserInfo &userInfo)
+{
+    APP_LOGD("CloneDir bundle: bundle=%{public}s %{public}zu clones",
+        bundleName.c_str(), userInfo.cloneInfos.size());
+    for (const auto &[idx, cloneInfo] : userInfo.cloneInfos) {
+        if (cloneInfo.appIndex <= 0) {
+            continue;
+        }
+        if (IsCloneDirUidMatched(bundleName, userId, cloneInfo)) {
+            continue;
+        }
+        CreateCloneDataDir(bundleName, userId, cloneInfo, info);
+    }
 }
 }
 UserUnlockedEventSubscriber::UserUnlockedEventSubscriber(
@@ -334,6 +404,7 @@ void UpdateAppDataMgr::UpdateAppDataDirSelinuxLabel(int32_t userId)
     ReturnIfNewTask(ProcessUpdateAppDataDir, tempTaskNum, userId, bundleInfos, ServiceConstants::DIR_EL4);
 #endif
     ReturnIfNewTask(ProcessUpdateAppDataDir, tempTaskNum, userId, bundleInfos, ServiceConstants::DIR_EL5);
+    ReturnIfNewTask(ProcessUpdateCloneDataDir, tempTaskNum, userId, dataMgr);
     ReturnIfNewTask(ProcessUpdateAppLogDir, tempTaskNum, bundleInfos, userId);
     ReturnIfNewTask(ProcessFileManagerDir, tempTaskNum, bundleInfos, userId);
     ReturnIfNewTask(ProcessNewBackupDir, tempTaskNum, bundleInfos, userId);
@@ -389,6 +460,39 @@ void UpdateAppDataMgr::ProcessUpdateAppDataDir(
             bundleInfo.applicationInfo.appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG,
             bundleInfo.uid) != ERR_OK) {
             APP_LOGW_NOFUNC("failed to SetDirApl baseDataDir dir");
+        }
+    }
+}
+
+void UpdateAppDataMgr::ProcessUpdateCloneDataDir(int32_t userId,
+    const std::shared_ptr<BundleDataMgr> &dataMgr)
+{
+    bool migrateDone = false;
+    BMSEventHandler::CheckOtaFlag(OTAFlag::MIGRATE_UID_TO_ATM, migrateDone);
+    if (migrateDone && dataMgr != nullptr) {
+        APP_LOGI("ProcessUpdateCloneDataDir userId=%{public}d start", userId);
+        ProcessCloneBundleDirs(userId, dataMgr);
+        APP_LOGI("ProcessUpdateCloneDataDir userId=%{public}d done", userId);
+    } else {
+        APP_LOGD("ProcessUpdateCloneDataDir skip: migrateDone=%{public}d dataMgr=%{public}s",
+            static_cast<int32_t>(migrateDone), dataMgr != nullptr ? "ok" : "null");
+    }
+}
+
+void UpdateAppDataMgr::ProcessCloneBundleDirs(int32_t userId,
+    const std::shared_ptr<BundleDataMgr> &dataMgr)
+{
+    auto bundleNames = dataMgr->GetAllBundleName();
+    APP_LOGI("ProcessCloneBundleDirs userId=%{public}d %{public}zu bundles",
+        userId, bundleNames.size());
+    for (const auto &bundleName : bundleNames) {
+        InnerBundleInfo info;
+        if (!dataMgr->FetchInnerBundleInfo(bundleName, info)) {
+            continue;
+        }
+        InnerBundleUserInfo userInfo;
+        if (info.GetInnerBundleUserInfo(userId, userInfo)) {
+            ProcessCloneDirsForBundle(bundleName, userId, info, userInfo);
         }
     }
 }
