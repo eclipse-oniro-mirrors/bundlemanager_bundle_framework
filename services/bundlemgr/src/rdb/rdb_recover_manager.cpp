@@ -754,8 +754,6 @@ bool RdbRecoverManager::RestoreFromSnapshotFile(const std::string &dbName, int32
                 // cannot be rebuilt from install dirs, the loss is permanent
                 APP_LOGW("table %{public}s was unreadable, its data is lost",
                     fields[FIELD_INDEX_FIRST].c_str());
-                EventReport::SendDbErrorEvent(dbName, static_cast<int32_t>(DB_OPERATION_TYPE::REBUILD),
-                    NativeRdb::E_SQLITE_CORRUPT);
             }
             continue;
         }
@@ -864,8 +862,6 @@ bool RdbRecoverManager::RestoreFromSnapshotFile(const std::string &dbName, int32
                         // salvaged partially and cannot be rebuilt from install dirs
                         APP_LOGW("table %{public}s was salvaged partially, some rows are lost",
                             tableName.c_str());
-                        EventReport::SendDbErrorEvent(dbName,
-                            static_cast<int32_t>(DB_OPERATION_TYPE::REBUILD), NativeRdb::E_SQLITE_CORRUPT);
                     }
                 }
                 break;
