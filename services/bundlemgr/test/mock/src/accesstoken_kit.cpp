@@ -58,6 +58,9 @@ int32_t g_updateHapTokenRet = 0;
 // behavior for the OFF-mode targets; the ON-mode target
 // (unittest/bms_spm_manager_on_test) drives the SPM branches through them. ----
 int32_t g_spmCheckHapSignInfoRet = 0;
+// Recording knob for the mode-aware GetHapSignInfo overload: the MultipleMode
+// value of the last call (tests pin the dual-mode dispatch contract).
+int32_t g_spmLastGetHapSignInfoMode = -100;
 int32_t g_spmCheckHapSignInfoSessionId = 0;
 // Records the userId of the last BundleHapList handed to CheckHapSignInfo so
 // tests can pin the cross-process skip-resign contract (userId == -1).
@@ -490,6 +493,13 @@ int32_t AccessTokenKit::FinishInstall(int32_t sessionId, bool isPersistent,
 int32_t AccessTokenKit::GetHapSignInfo(const std::string& bundleName, uint32_t flag,
     std::vector<TrustedBundleInfo>& bundleInfo)
 {
+    return 0;
+}
+
+int32_t AccessTokenKit::GetHapSignInfo(const std::string& bundleName, uint32_t flag,
+    MultipleMode mode, std::vector<TrustedBundleInfo>& bundleInfo)
+{
+    g_spmLastGetHapSignInfoMode = static_cast<int32_t>(mode);
     return 0;
 }
 

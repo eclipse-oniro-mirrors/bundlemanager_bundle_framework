@@ -5553,9 +5553,20 @@ ErrCode InstalldHostImpl::QueryProvisionInfoBySessionId(int32_t sessionId,
             return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
         }
         bundleInfoList.clear();
+        // Dual-mode query mode: the check runs on the DECORATED input name (the
+        // dual-mode prefix is already stripped from originalBundleName and would
+        // never match there) — a dual-mode clone name queries the SUB-mode
+        // identity, every other name queries the default/main mode; the explicit
+        // mode avoids the CURRENT_MODE runtime resolution which is not allowed
+        // for install paths. The prefix check is self-contained in the operator
+        // because the installd process does not link DualModeHelper.
+        Security::AccessToken::MultipleMode queryMode =
+            InstalldOperator::IsDualModeCloneName(bundleName)
+            ? Security::AccessToken::MultipleMode::SUB_MODE
+            : Security::AccessToken::MultipleMode::DEFAULT_OR_MAIN_MODE;
         ret = Security::AccessToken::AccessTokenKit::GetHapSignInfo(
             originalBundleName,
-            Security::AccessToken::SignInfoQueryFlag::QUERY_PROFILE, bundleInfoList);
+            Security::AccessToken::SignInfoQueryFlag::QUERY_PROFILE, queryMode, bundleInfoList);
         if (ret != Security::AccessToken::AccessTokenKitRet::RET_SUCCESS || bundleInfoList.empty()) {
             LOG_E(BMS_TAG_INSTALLD, "query provision by session %{public}d failed, ret %{public}d",
                 sessionId, ret);
