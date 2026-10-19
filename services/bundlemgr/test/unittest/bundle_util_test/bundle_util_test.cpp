@@ -15,7 +15,10 @@
 
 #include <cstdio>
 #include <cstring>
+#include <fcntl.h>
 #include <fstream>
+#include <unistd.h>
+#include <vector>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <libxml/globals.h>
@@ -1221,5 +1224,41 @@ HWTEST_F(BundleUtilTest, IsFileNameValid_1000, TestSize.Level2)
 HWTEST_F(BundleUtilTest, IsFileNameValid_1100, TestSize.Level2)
 {
     EXPECT_TRUE(BundleUtil::IsFileNameValid("entry"));
+}
+
+/**
+ * @tc.number: CloseFileDescriptor_0100
+ * @tc.name: test the CloseFileDescriptor.
+ * @tc.desc: test CloseFileDescriptor closes fd 0 and positive fds, skips negative ones and clears the vector.
+ */
+HWTEST_F(BundleUtilTest, CloseFileDescriptor_0100, TestSize.Level2)
+{
+    struct RestoreGuard {
+        int32_t savedStdin;
+        RestoreGuard() : savedStdin(dup(0)) {}
+        ~RestoreGuard()
+        {
+            if (savedStdin >= 0) {
+                dup2(savedStdin, 0);
+                close(savedStdin);
+            }
+            std::remove("/data/local/tmp/bundle_util_close_fd_0");
+            std::remove("/data/local/tmp/bundle_util_close_fd_1");
+        }
+    } guard;
+
+    ASSERT_GE(guard.savedStdin, 0);
+    close(0);
+    int32_t fdZero = BundleUtil::CreateFileDescriptor("/data/local/tmp/bundle_util_close_fd_0", 0);
+    int32_t fdOther = BundleUtil::CreateFileDescriptor("/data/local/tmp/bundle_util_close_fd_1", 0);
+    ASSERT_EQ(fdZero, 0);
+    ASSERT_GE(fdOther, 0);
+
+    std::vector<int32_t> fdVec = { fdZero, fdOther, -1 };
+    BundleUtil::CloseFileDescriptor(fdVec);
+
+    EXPECT_EQ(fcntl(0, F_GETFD), -1);
+    EXPECT_EQ(fcntl(fdOther, F_GETFD), -1);
+    EXPECT_TRUE(fdVec.empty());
 }
 } // OHOS
