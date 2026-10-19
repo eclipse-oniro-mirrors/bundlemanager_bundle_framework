@@ -33,6 +33,10 @@ std::mutex DualModeHelper::ermsMutex_;
 void *DualModeHelper::ermsHandle_ = nullptr;
 ErmsGetPolicyFunc DualModeHelper::ermsGetPolicyFunc_ = nullptr;
 
+std::once_flag DualModeHelper::dualModeCacheFlag_;
+bool DualModeHelper::cachedIsDualMode_ = false;
+int32_t DualModeHelper::cachedMainmode_ = ServiceConstants::DUAL_MODE_VALUE_INVALID;
+
 namespace {
 // Test-injection params (kept in this file, not in ServiceConstants). When persist.bms.test_dual_mode
 // is true, ispcmode/mainmode are read from persist.bms.ispcmode / persist.bms.mainmode instead of
@@ -102,22 +106,43 @@ int32_t ReadValidIspcmodeParam()
 int32_t DualModeHelper::GetSysMode()
 {
     // Current mode = ispcmode (0=tablet, 1=2in1, -1=not read/illegal).
+    // Always read in real-time: the user can switch modes at runtime.
     return ReadValidIspcmodeParam();
+}
+
+void DualModeHelper::InitDualModeCache()
+{
+    // const.sceneboard.mainmode is a const parameter — never changes after boot.
+    cachedMainmode_ = ReadValidModeParam(ServiceConstants::DUAL_MODE_MAINMODE_PARAM_KEY);
+    // persist.sceneboard.ispcmode when present is always 0/1 (bool), so its validity never changes.
+    int32_t ispcmode = ReadValidIspcmodeParam();
+    cachedIsDualMode_ = IsValidModeValue(ispcmode) && IsValidModeValue(cachedMainmode_);
+    LOG_D(BMS_TAG_INSTALLER, "InitDualModeCache isDualMode:%{public}d mainmode:%{public}d",
+        cachedIsDualMode_, cachedMainmode_);
 }
 
 bool DualModeHelper::IsDualModeDevice()
 {
-    // Read system parameters directly each call (no cache).
-    // A dual-mode device requires both ispcmode and mainmode to be valid (0 or 1).
-    int32_t ispcmode = ReadValidIspcmodeParam();
-    int32_t mainmode = ReadValidModeParam(GetMainmodeParamKey());
-    return IsValidModeValue(ispcmode) && IsValidModeValue(mainmode);
+    // Test mode: bypass cache so test cases can drive different values per case.
+    if (IsTestDualMode()) {
+        int32_t ispcmode = ReadValidIspcmodeParam();
+        int32_t mainmode = ReadValidModeParam(GetMainmodeParamKey());
+        return IsValidModeValue(ispcmode) && IsValidModeValue(mainmode);
+    }
+    // Production: result is stable after boot (mainmode is const, ispcmode validity unchanged).
+    std::call_once(dualModeCacheFlag_, InitDualModeCache);
+    return cachedIsDualMode_;
 }
 
 int32_t DualModeHelper::GetMainmode()
 {
-    // Read system parameter directly (no cache).
-    return ReadValidModeParam(GetMainmodeParamKey());
+    // Test mode: bypass cache so test cases can drive different values per case.
+    if (IsTestDualMode()) {
+        return ReadValidModeParam(GetMainmodeParamKey());
+    }
+    // Production: const parameter, cached once at boot.
+    std::call_once(dualModeCacheFlag_, InitDualModeCache);
+    return cachedMainmode_;
 }
 
 int32_t DualModeHelper::MapDeviceTypeToMode(const std::string &deviceType)
@@ -136,15 +161,28 @@ int32_t DualModeHelper::MapDeviceTypeToMode(const std::string &deviceType)
 
 bool DualModeHelper::IsSecondaryMode()
 {
-    // Read system parameters directly each call (no cache).
-    // Non-dual-mode device (either param invalid) is never secondary.
+    // Test mode: bypass cache so test cases can drive different values per case.
+    if (IsTestDualMode()) {
+        int32_t ispcmode = ReadValidIspcmodeParam();
+        int32_t mainmode = ReadValidModeParam(GetMainmodeParamKey());
+        if (!IsValidModeValue(ispcmode) || !IsValidModeValue(mainmode)) {
+            return false;
+        }
+        return ispcmode != mainmode;
+    }
+    // Production: use cached dual-mode + cached mainmode; read ispcmode in real-time
+    // because the user can switch modes at runtime. On non-dual-mode devices, skip the
+    // ispcmode read entirely (most devices are non-dual-mode — this is the hot path).
+    std::call_once(dualModeCacheFlag_, InitDualModeCache);
+    if (!cachedIsDualMode_) {
+        return false;
+    }
     int32_t ispcmode = ReadValidIspcmodeParam();
-    int32_t mainmode = ReadValidModeParam(GetMainmodeParamKey());
-    if (!IsValidModeValue(ispcmode) || !IsValidModeValue(mainmode)) {
+    if (!IsValidModeValue(ispcmode)) {
         return false;
     }
     // Secondary mode: current mode differs from main mode.
-    return ispcmode != mainmode;
+    return ispcmode != cachedMainmode_;
 }
 
 bool DualModeHelper::IsTestDualMode()
