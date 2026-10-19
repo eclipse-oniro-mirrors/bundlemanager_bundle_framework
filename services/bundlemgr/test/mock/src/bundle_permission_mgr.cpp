@@ -24,10 +24,6 @@ bool g_verifyCallingBundleSdkVersion  = true;
 bool g_isBundleSelfCalling = true;
 bool g_checkUserFromShell = true;
 bool g_checkUserForeground = true;
-// controllable return value for VerifyCliToolInstallOnly, default false (not the debug-hap channel)
-bool g_verifyCliToolInstallOnly = false;
-// controllable return value for VerifyCliToolInstall, default false (no ALLOW_INSTALL_DEBUG_HAP)
-bool g_verifyCliToolInstall = false;
 int32_t g_hapApiVersion = 0;
 bool g_isSystemAppFalse = false;
 bool g_verifyCallingBundleSdkVersionFalse = false;
@@ -148,16 +144,6 @@ void SetCheckUserForegroundForTest(bool value)
     g_checkUserForeground = value;
 }
 
-void SetVerifyCliToolInstallOnlyForTest(bool value)
-{
-    g_verifyCliToolInstallOnly = value;
-}
-
-void SetVerifyCliToolInstallForTest(bool value)
-{
-    g_verifyCliToolInstall = value;
-}
-
 void SetVerifyCallingPermissionForTestFalse(bool value)
 {
     g_verifyPermissionFalse = value;
@@ -230,8 +216,6 @@ void ResetTestValues()
     g_isBundleSelfCalling = true;
     g_checkUserFromShell = true;
     g_checkUserForeground = true;
-    g_verifyCliToolInstallOnly = false;
-    g_verifyCliToolInstall = false;
     g_isSystemAppFalse = false;
     g_verifyCallingBundleSdkVersionFalse = false;
     g_userFromShell = false;
@@ -330,12 +314,7 @@ bool BundlePermissionMgr::IsCliToolCalling(const uint64_t callerToken)
 
 bool BundlePermissionMgr::VerifyCliToolInstall()
 {
-    return g_verifyCliToolInstall;
-}
-
-bool BundlePermissionMgr::VerifyCliToolInstallOnly()
-{
-    return g_verifyCliToolInstallOnly;
+    return false;
 }
 
 bool BundlePermissionMgr::IsSelfCalling()
@@ -422,12 +401,7 @@ bool BundlePermissionMgr::IsCliToolCalling(const uint64_t callerToken)
 
 bool BundlePermissionMgr::VerifyCliToolInstall()
 {
-    return g_verifyCliToolInstall;
-}
-
-bool BundlePermissionMgr::VerifyCliToolInstallOnly()
-{
-    return g_verifyCliToolInstallOnly;
+    return false;
 }
 
 bool BundlePermissionMgr::IsSelfCalling()
