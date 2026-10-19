@@ -202,6 +202,15 @@ void SetErrCodeForTest(int32_t value)
     g_errCode = value;
 }
 
+void SetPermissionDeniedForTest(const std::string& permissionName, bool denied)
+{
+    if (denied) {
+        g_verifyAccessTokenResults[permissionName] = -1;
+    } else {
+        g_verifyAccessTokenResults.erase(permissionName);
+    }
+}
+
 void PushInitHapTokenResultForTest(int32_t ret)
 {
     g_initHapTokenRetSeq.push_back(ret);
@@ -273,6 +282,11 @@ void SetSpmPrepareIdentityForTest(uint64_t tokenId, int32_t uid)
 {
     g_spmPrepareIdentityTokenId = tokenId;
     g_spmPrepareIdentityUid = uid;
+}
+
+void SetSpmPrepareIdentityResultForTest(int32_t ret)
+{
+    g_spmPrepareHapIdentityRet = ret;
 }
 
 void SetSpmPrepareIdentityUidFollowUserForTest(bool followUser)
