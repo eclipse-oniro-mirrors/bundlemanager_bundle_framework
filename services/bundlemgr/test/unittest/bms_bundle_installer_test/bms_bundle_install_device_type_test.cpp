@@ -14,13 +14,17 @@
  */
 
 #include <gtest/gtest.h>
+#include <sstream>
 #include <unordered_map>
 #include <vector>
 
 #include "appexecfwk_errors.h"
 #include "bundle_install_checker.h"
+#include "bundle_extractor.h"
+#include "bundle_profile.h"
 #include "inner_bundle_info.h"
 #include "bundle_mgr_service.h"
+#include "parameters.h"
 
 using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
@@ -30,6 +34,86 @@ const std::string TEST_BUNDLE_NAME = "com.test.demo";
 const std::string DEVICE_TYPE_OF_PHONE = "phone";
 const std::string DEVICE_TYPE_OF_DEFAULT = "default";
 const std::string DEVICE_TYPE_OF_CAR = "car";
+const std::string FA_MODULE_PACKAGE = "com.example.fadevfeat";
+
+const nlohmann::json FA_CONFIG_JSON = R"(
+{
+    "app":{
+        "apiVersion":{
+            "compatible":8,
+            "releaseType":"Release",
+            "target":8
+        },
+        "bundleName":"com.example.fadevfeat",
+        "vendor":"example",
+        "version":{
+            "code":1000000,
+            "name":"1.0.0"
+        }
+    },
+    "deviceConfig":{
+        "default":{
+            "debug":true
+        }
+    },
+    "module":{
+        "abilities":[
+            {
+                "icon":"$media:icon",
+                "label":"$string:MainAbility_label",
+                "launchType":"standard",
+                "name":".MainAbility",
+                "orientation":"unspecified",
+                "srcLanguage":"ets",
+                "srcPath":"MainAbility",
+                "type":"page",
+                "visible":true
+            }
+        ],
+        "deviceType":[
+            "car"
+        ],
+        "requiredDeviceFeatures":{
+            "phone":[
+                "large_screen",
+                "paint"
+            ],
+            "2in1":[
+                "paint"
+            ],
+            "wearable":[
+                "child"
+            ]
+        },
+        "distro":{
+            "deliveryWithInstall":true,
+            "installationFree":false,
+            "moduleName":"entry",
+            "moduleType":"entry",
+            "virtualMachine":"ark0.0.0.2"
+        },
+        "js":[
+            {
+                "mode":{
+                    "syntax":"ets",
+                    "type":"pageAbility"
+                },
+                "name":".MainAbility",
+                "pages":[
+                    "pages/index"
+                ],
+                "window":{
+                    "autoDesignWidth":false,
+                    "designWidth":720
+                }
+            }
+        ],
+        "mainAbility":".MainAbility",
+        "name":".entry",
+        "package":"com.example.fadevfeat"
+    }
+}
+)"_json;
 }; // namespace
 
 extern char *g_testDeviceType;
@@ -394,5 +478,95 @@ HWTEST_F(BmsBundleInstallDeviceTypeTest, IsSubSet_0100, Function | SmallTest | L
 
     EXPECT_FALSE(checker.IsSubSet(vec5, vec6));
     EXPECT_FALSE(checker.IsSubSet(vec6, vec5));
+}
+
+/**
+ * @tc.number: DeviceTypeTest_1100
+ * @tc.name: test FA config.json requiredDeviceFeatures fallback passes in CheckDeviceType
+ * @tc.desc: 1. Parse FA config.json with requiredDeviceFeatures declared in module
+ *           2. Module deviceTypes does not contain current device type
+ *           3. Required features are subset of provided device features, install check passes
+ */
+HWTEST_F(BmsBundleInstallDeviceTypeTest, DeviceTypeTest_1100, Function | SmallTest | Level0)
+{
+    BundleProfile bundleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+    profileFileBuffer << FA_CONFIG_JSON.dump();
+    BundleExtractor bundleExtractor("");
+    ErrCode parseResult = bundleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    ASSERT_EQ(parseResult, ERR_OK);
+
+    // requiredDeviceFeatures is parsed from FA config.json
+    auto requiredDeviceFeatures = innerBundleInfo.GetRequiredDeviceFeatures(FA_MODULE_PACKAGE);
+    ASSERT_EQ(requiredDeviceFeatures.size(), 3);
+    auto itPhone = requiredDeviceFeatures.find(DEVICE_TYPE_OF_PHONE);
+    ASSERT_NE(itPhone, requiredDeviceFeatures.end());
+    EXPECT_EQ(itPhone->second.size(), 2);
+    EXPECT_EQ(itPhone->second[0], "large_screen");
+    EXPECT_EQ(itPhone->second[1], "paint");
+    auto it2in1 = requiredDeviceFeatures.find("2in1");
+    ASSERT_NE(it2in1, requiredDeviceFeatures.end());
+    EXPECT_EQ(it2in1->second.size(), 1);
+    EXPECT_EQ(it2in1->second[0], "paint");
+    auto itWearable = requiredDeviceFeatures.find("wearable");
+    ASSERT_NE(itWearable, requiredDeviceFeatures.end());
+    EXPECT_EQ(itWearable->second.size(), 1);
+    EXPECT_EQ(itWearable->second[0], "child");
+
+    innerBundleInfo.SetCurrentModulePackage(FA_MODULE_PACKAGE);
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    infos.emplace("test.hap", innerBundleInfo);
+
+    // current device type is phone while module only declares car, fallback to requiredDeviceFeatures
+    g_testDeviceType = const_cast<char *>(DEVICE_TYPE_OF_PHONE.c_str());
+    constexpr const char* supportAppTypesKey = "const.bms.supportAppTypes";
+    constexpr const char* providedDeviceFeaturesKey = "const.product.providedDeviceFeatures";
+    OHOS::system::SetParameter(supportAppTypesKey, "");
+    OHOS::system::SetParameter(providedDeviceFeaturesKey, "large_screen,paint,child");
+
+    BundleInstallChecker checker;
+    auto ret = checker.CheckDeviceType(infos, ERR_OK);
+    EXPECT_EQ(ret, ERR_OK);
+
+    OHOS::system::SetParameter(providedDeviceFeaturesKey, "");
+    g_testDeviceType = const_cast<char *>("");
+}
+
+/**
+ * @tc.number: DeviceTypeTest_1200
+ * @tc.name: test FA config.json requiredDeviceFeatures fallback rejected in CheckDeviceType
+ * @tc.desc: 1. Parse FA config.json with requiredDeviceFeatures declared in module
+ *           2. Module deviceTypes does not contain current device type
+ *           3. Required features are not subset of provided device features, install check fails
+ */
+HWTEST_F(BmsBundleInstallDeviceTypeTest, DeviceTypeTest_1200, Function | SmallTest | Level0)
+{
+    BundleProfile bundleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+    profileFileBuffer << FA_CONFIG_JSON.dump();
+    BundleExtractor bundleExtractor("");
+    ErrCode parseResult = bundleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    ASSERT_EQ(parseResult, ERR_OK);
+
+    innerBundleInfo.SetCurrentModulePackage(FA_MODULE_PACKAGE);
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    infos.emplace("test.hap", innerBundleInfo);
+
+    g_testDeviceType = const_cast<char *>(DEVICE_TYPE_OF_PHONE.c_str());
+    constexpr const char* supportAppTypesKey = "const.bms.supportAppTypes";
+    constexpr const char* providedDeviceFeaturesKey = "const.product.providedDeviceFeatures";
+    OHOS::system::SetParameter(supportAppTypesKey, "");
+    OHOS::system::SetParameter(providedDeviceFeaturesKey, "paint");
+
+    BundleInstallChecker checker;
+    auto ret = checker.CheckDeviceType(infos, ERR_OK);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_DEVICE_TYPE_NOT_SUPPORTED);
+
+    OHOS::system::SetParameter(providedDeviceFeaturesKey, "");
+    g_testDeviceType = const_cast<char *>("");
 }
 } // OHOS
