@@ -56,6 +56,7 @@ void SetGetCallingUid(int32_t uid);
 void ResetCallingUid();
 void SetNativeTokenTypeForTest(bool value);
 void SetIsNativeTokenTypeOnlyForTest(bool value);
+void SetCheckUserForegroundForTest(bool value);
 void SetPermissionResultForTest(const std::string &permissionName, bool granted);
 void SetVerifyCliToolInstallOnlyForTest(bool value);
 void SetVerifyCliToolInstallForTest(bool value);
