@@ -18,6 +18,7 @@
 
 #include "bundle_resource_interface.h"
 #include "bundle_resource_info.h"
+#include "bundle_mgr_interface.h"
 #include "iservice_registry.h"
 
 namespace OHOS {
@@ -25,8 +26,11 @@ namespace AppExecFwk {
 class ResourceHelper {
 public:
     static sptr<IBundleResource> GetBundleResourceMgr();
+    static sptr<IBundleMgr> GetBundleMgr();
     static ErrCode InnerGetBundleResourceInfo(
         const std::string &bundleName, uint32_t flags, int32_t appIndex, BundleResourceInfo &resourceInfo);
+    static ErrCode InnerGetBundleResourceArchiveInfo(
+        const std::string &filePath, uint32_t flags, BundleResourceInfo &resourceInfo);
     static ErrCode InnerGetLauncherAbilityResourceInfo(
         const std::string &bundleName, uint32_t flags, int32_t appIndex,
         std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfo);
@@ -46,6 +50,7 @@ private:
         void OnRemoteDied([[maybe_unused]] const wptr<IRemoteObject>& remote) override;
     };
     static sptr<IBundleResource> bundleResourceMgr_;
+    static sptr<IBundleMgr> bundleMgr_;
     static std::mutex bundleResourceMutex_;
     static sptr<IRemoteObject::DeathRecipient> deathRecipient_;
 };

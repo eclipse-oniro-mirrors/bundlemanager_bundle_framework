@@ -35,6 +35,7 @@
 #include "bundle_permission_mgr.h"
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
 #include "bundle_resource_manager.h"
+#include "bundle_resource_parser.h"
 #endif
 #include "bundle_service_constants.h"
 #include "bundle_util.h"
@@ -9032,6 +9033,50 @@ ErrCode BundleMgrHostImpl::MergeInnerBundleInfos(
     return ERR_OK;
 }
 
+void BundleMgrHostImpl::FindEntryHapPath(
+    const std::unordered_map<std::string, InnerBundleInfo> &infos,
+    const std::vector<std::string> &hapPaths,
+    std::string &realHapPath)
+{
+    for (const auto &[path, info] : infos) {
+        if (info.HasEntry()) {
+            realHapPath = path;
+            break;
+        }
+    }
+    if (realHapPath.empty()) {
+        for (const auto &path : hapPaths) {
+            if (infos.find(path) != infos.end()) {
+                realHapPath = path;
+                break;
+            }
+        }
+    }
+}
+
+void BundleMgrHostImpl::UpdateBaseAppInfoIfNoEntry(
+    const std::unordered_map<std::string, InnerBundleInfo> &infos,
+    InnerBundleInfo &innerBundleInfo)
+{
+    for (const auto &[path, info] : infos) {
+        if (info.HasEntry()) {
+            return;
+        }
+    }
+    std::string lastModuleName;
+    const InnerBundleInfo *lastFeatureInfo = nullptr;
+    for (const auto &[path, info] : infos) {
+        std::string moduleName = info.GetCurrentModulePackage();
+        if (lastModuleName.empty() || moduleName > lastModuleName) {
+            lastModuleName = moduleName;
+            lastFeatureInfo = &info;
+        }
+    }
+    if (lastFeatureInfo != nullptr) {
+        innerBundleInfo.UpdateBaseApplicationInfo(*lastFeatureInfo);
+    }
+}
+
 ErrCode BundleMgrHostImpl::GetBundleArchiveInfoFromApp(
     const std::string &appFilePath, int32_t flags, BundleInfo &bundleInfo,
     const std::string &externalTempDir)
@@ -9157,6 +9202,234 @@ ErrCode BundleMgrHostImpl::GetAllBundleInfoInstances(const std::string &bundleNa
     }
     return res;
 }
+
+ErrCode BundleMgrHostImpl::GetBundleResourceArchiveInfo(
+    const std::string &filePath, const uint32_t flags, BundleResourceInfo &bundleResourceInfo)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    APP_LOGD("start GetBundleResourceArchiveInfo, filePath : %{private}s, flags : %{public}u",
+        filePath.c_str(), flags);
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(
+        ServiceConstants::PERMISSION_GET_BUNDLE_RESOURCES)) {
+        APP_LOGE_NOFUNC("GetBundleResourceArchiveInfo permission denied %{public}d %{public}d",
+            IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (filePath.empty()) {
+        APP_LOGE("filePath is empty");
+        return ERR_BUNDLE_MANAGER_INVALID_HAP_PATH;
+    }
+    if (filePath.find(ServiceConstants::RELATIVE_PATH) != std::string::npos) {
+        APP_LOGD("invalid filePath");
+        return ERR_BUNDLE_MANAGER_INVALID_HAP_PATH;
+    }
+#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+    int32_t userId = BundleUtil::GetUserIdByCallingUid();
+    if (filePath.find(ServiceConstants::SANDBOX_DATA_PATH) == 0 ||
+        filePath.find(ServiceConstants::APP_INSTALL_SANDBOX_PATH) == 0) {
+        APP_LOGD("sandbox path, delegate to GetBundleResourceArchiveInfoBySandBoxPath");
+        return GetBundleResourceArchiveInfoBySandBoxPath(filePath, flags, bundleResourceInfo);
+    }
+    return ParseAndExtractResourceInfo(filePath, flags, userId, bundleResourceInfo);
+#else
+    APP_LOGW("BUNDLE_FRAMEWORK_BUNDLE_RESOURCE not support");
+    return ERR_BUNDLE_MANAGER_GLOBAL_RES_MGR_ENABLE_DISABLED;
+#endif
+}
+
+#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+ErrCode BundleMgrHostImpl::GetBundleResourceArchiveInfoBySandBoxPath(
+    const std::string &filePath, const uint32_t flags, BundleResourceInfo &bundleResourceInfo)
+{
+    APP_LOGD("start GetBundleResourceArchiveInfoBySandBoxPath");
+    std::string bundleName;
+    if (!ObtainCallingBundleName(bundleName)) {
+        APP_LOGE("get calling bundleName failed");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    if (filePath.find(ServiceConstants::APP_INSTALL_SANDBOX_PATH) == 0 &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(
+            Constants::PERMISSION_ACCESS_APP_INSTALL_DIR)) {
+        APP_LOGE("verify ACCESS_APP_INSTALL_DIR failed");
+        return ERR_BUNDLE_MANAGER_INVALID_HAP_PATH;
+    }
+    std::string hapRealPath;
+    if (!BundleUtil::RevertToRealPath(filePath, bundleName, hapRealPath)) {
+        APP_LOGE("RevertToRealPath failed");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    std::string tempDirName = std::to_string(BundleUtil::GetCurrentTimeNs()) + "_" +
+        std::to_string(++g_tempDirUniqueCounter);
+    std::string tempHapPath = std::string(ServiceConstants::BUNDLE_MANAGER_SERVICE_PATH) +
+        ServiceConstants::PATH_SEPARATOR + tempDirName;
+    if (!BundleUtil::CreateDir(tempHapPath)) {
+        APP_LOGE("create temp dir failed");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    ScopeGuard tempHapPathGuard([tempHapPath] { BundleUtil::DeleteDir(tempHapPath); });
+    std::string hapFileName = filePath.substr(filePath.find_last_of("/") + 1);
+    if (InstalldClient::GetInstance()->CopyHapToTempPath(bundleName, hapRealPath,
+        tempDirName, hapFileName) != ERR_OK) {
+        APP_LOGE("copy hap file to temp path failed");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    std::string tempHapFile = tempHapPath + ServiceConstants::PATH_SEPARATOR + hapFileName;
+    int32_t userId = BundleUtil::GetUserIdByCallingUid();
+    return ParseAndExtractResourceInfo(tempHapFile, flags, userId, bundleResourceInfo);
+}
+#endif
+
+#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+ErrCode BundleMgrHostImpl::ParseAppFileForArchiveInfo(
+    const std::string &appFilePath, InnerBundleInfo &innerBundleInfo, std::string &realHapPath,
+    std::string &outTempDir)
+{
+    APP_LOGD("start ParseAppFileForArchiveInfo");
+    std::string realPath;
+    ErrCode ret = BundleUtil::CheckAppFilePath(appFilePath, realPath);
+    if (ret != ERR_OK) {
+        APP_LOGE("app file path %{private}s invalid", appFilePath.c_str());
+        return ERR_BUNDLE_MANAGER_INVALID_HAP_PATH;
+    }
+    std::string tempDir;
+    if (!PrepareAppTempDir("", tempDir)) {
+        APP_LOGE("create temp dir failed for app file");
+        return ERR_BUNDLE_MANAGER_INVALID_HAP_PATH;
+    }
+    ScopeGuard dirGuard([&tempDir]() { BundleUtil::DeleteDir(tempDir); });
+    std::vector<std::string> hapPaths;
+    if (!DecompressAppFile(realPath, tempDir, hapPaths)) {
+        APP_LOGE("decompress app file failed");
+        return ERR_BUNDLE_MANAGER_INVALID_HAP_PATH;
+    }
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    ret = ParseAndFilterHaps(hapPaths, infos);
+    if (ret != ERR_OK) {
+        return ret;
+    }
+    for (auto &[path, info] : infos) {
+        info.SetModuleHapPath(path);
+    }
+    FindEntryHapPath(infos, hapPaths, realHapPath);
+    ret = MergeInnerBundleInfos(infos, innerBundleInfo);
+    if (ret != ERR_OK) {
+        return ret;
+    }
+    UpdateBaseAppInfoIfNoEntry(infos, innerBundleInfo);
+    outTempDir = tempDir;
+    dirGuard.Dismiss();
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHostImpl::ParseHapFileForArchiveInfo(
+    const std::string &filePath, InnerBundleInfo &innerBundleInfo, std::string &realHapPath,
+    std::string &outTempDir)
+{
+    APP_LOGD("start ParseHapFileForArchiveInfo, filePath : %{private}s", filePath.c_str());
+    if (BundleUtil::CheckFileType(filePath, ServiceConstants::APP_FILE_SUFFIX)) {
+        return ParseAppFileForArchiveInfo(filePath, innerBundleInfo, realHapPath, outTempDir);
+    }
+    std::string realPath;
+    ErrCode ret = BundleUtil::CheckFilePath(filePath, realPath);
+    if (ret != ERR_OK) {
+        APP_LOGE("file path %{private}s invalid", filePath.c_str());
+        return ERR_BUNDLE_MANAGER_INVALID_HAP_PATH;
+    }
+    BundleParser bundleParser;
+    bool isAbcCompressed = false;
+    ret = bundleParser.Parse(realPath, innerBundleInfo, isAbcCompressed, true);
+    if (ret != ERR_OK) {
+        APP_LOGE("parse bundle info failed, error: %{public}d", ret);
+        return ERR_BUNDLE_MANAGER_INVALID_HAP_PATH;
+    }
+    innerBundleInfo.SetModuleHapPath(realPath);
+    realHapPath = realPath;
+    return ERR_OK;
+}
+
+void BundleMgrHostImpl::PrepareResourceInfoForArchive(
+    const InnerBundleInfo &innerBundleInfo, const std::string &realHapPath,
+    const uint32_t flags, ResourceInfo &resourceInfo)
+{
+    ApplicationInfo appInfo = innerBundleInfo.GetBaseApplicationInfo();
+    innerBundleInfo.AdaptMainLauncherResourceInfo(appInfo);
+    resourceInfo.bundleName_ = innerBundleInfo.GetBundleName();
+    resourceInfo.labelId_ = appInfo.labelResource.id;
+    resourceInfo.iconId_ = appInfo.iconResource.id;
+    resourceInfo.moduleName_ = appInfo.labelResource.moduleName;
+    const auto &moduleInfos = innerBundleInfo.GetInnerModuleInfos();
+    for (const auto &iter : moduleInfos) {
+        if (iter.second.moduleName == resourceInfo.moduleName_) {
+            resourceInfo.hapPath_ = iter.second.hapPath;
+            break;
+        }
+    }
+    if (resourceInfo.hapPath_.empty()) {
+        resourceInfo.hapPath_ = realHapPath;
+    }
+    uint32_t resourceFlags = flags;
+    bool hasAll = (resourceFlags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL)) != 0;
+    bool hasLabel = (resourceFlags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL)) != 0;
+    bool hasIcon = (resourceFlags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON)) != 0;
+    bool hasDrawable =
+        (resourceFlags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR)) != 0;
+    if (!hasAll && !hasLabel && !hasIcon && !hasDrawable) {
+        resourceFlags |= static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL);
+        hasAll = true;
+    }
+    resourceInfo.labelNeedParse_ = hasLabel || hasAll;
+    resourceInfo.iconNeedParse_ = hasIcon || hasAll || hasDrawable;
+}
+
+ErrCode BundleMgrHostImpl::ParseAndExtractResourceInfo(
+    const std::string &filePath, const uint32_t flags,
+    int32_t userId, BundleResourceInfo &bundleResourceInfo)
+{
+    APP_LOGD("start ParseAndExtractResourceInfo, filePath : %{private}s, flags : %{public}u",
+        filePath.c_str(), flags);
+    InnerBundleInfo innerBundleInfo;
+    std::string realHapPath;
+    std::string tempDir;
+    ErrCode ret = ParseHapFileForArchiveInfo(filePath, innerBundleInfo, realHapPath, tempDir);
+    if (ret != ERR_OK) {
+        return ret;
+    }
+    ScopeGuard tempDirGuard([&tempDir]() {
+        if (!tempDir.empty()) {
+            BundleUtil::DeleteDir(tempDir);
+        }
+    });
+    ResourceInfo resourceInfo;
+    PrepareResourceInfoForArchive(innerBundleInfo, realHapPath, flags, resourceInfo);
+    if (resourceInfo.labelId_ == 0 && resourceInfo.iconId_ == 0) {
+        resourceInfo.label_ = innerBundleInfo.GetBundleName();
+        bundleResourceInfo.bundleName = resourceInfo.bundleName_;
+        bundleResourceInfo.label = resourceInfo.label_;
+        return ERR_OK;
+    }
+    BundleResourceParser parser;
+    if (!parser.ParseResourceInfo(userId, resourceInfo)) {
+        APP_LOGE("ParseResourceInfo fail, filePath : %{private}s, labelId : %{public}d, iconId : %{public}d",
+            filePath.c_str(), resourceInfo.labelId_, resourceInfo.iconId_);
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    if (resourceInfo.label_.empty()) {
+        resourceInfo.label_ = innerBundleInfo.GetBundleName();
+    }
+    bundleResourceInfo.bundleName = resourceInfo.bundleName_;
+    bundleResourceInfo.label = resourceInfo.label_;
+    bundleResourceInfo.icon = resourceInfo.icon_;
+    bundleResourceInfo.foreground = resourceInfo.foreground_;
+    bundleResourceInfo.background = resourceInfo.background_;
+    APP_LOGD("end ParseAndExtractResourceInfo, bundleName : %{public}s",
+        bundleResourceInfo.bundleName.c_str());
+    return ERR_OK;
+}
+#endif
 
 }  // namespace AppExecFwk
 }  // namespace OHOS

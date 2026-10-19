@@ -1876,6 +1876,33 @@ ErrCode BundleMgrProxy::GetBundleArchiveInfoV9(const std::string &hapFilePath, i
         BundleMgrInterfaceCode::GET_BUNDLE_ARCHIVE_INFO_WITH_INT_FLAGS_V9, data, bundleInfo);
 }
 
+ErrCode BundleMgrProxy::GetBundleResourceArchiveInfo(const std::string &filePath, const uint32_t flags,
+    BundleResourceInfo &bundleResourceInfo)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    APP_LOGD("begin to GetBundleResourceArchiveInfo of %{private}s", filePath.c_str());
+    if (filePath.empty()) {
+        APP_LOGE("fail to GetBundleResourceArchiveInfo due to params empty");
+        return ERR_BUNDLE_MANAGER_INVALID_HAP_PATH;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetBundleResourceArchiveInfo due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(filePath)) {
+        APP_LOGE("fail to GetBundleResourceArchiveInfo due to write filePath fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteUint32(flags)) {
+        APP_LOGE("fail to GetBundleResourceArchiveInfo due to write flags fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetParcelInfoIntelligent<BundleResourceInfo>(
+        BundleMgrInterfaceCode::GET_BUNDLE_RESOURCE_ARCHIVE_INFO, data, bundleResourceInfo);
+}
+
 bool BundleMgrProxy::GetHapModuleInfo(const AbilityInfo &abilityInfo, HapModuleInfo &hapModuleInfo)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);

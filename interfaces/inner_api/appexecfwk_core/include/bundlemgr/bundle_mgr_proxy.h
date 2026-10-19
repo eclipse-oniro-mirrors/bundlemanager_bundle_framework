@@ -580,6 +580,16 @@ public:
     virtual ErrCode GetBundleArchiveInfoV9(
         const std::string &hapFilePath, int32_t flags, BundleInfo &bundleInfo) override;
     /**
+     * @brief Obtains the application icon and label from an ohos Ability Package (HAP) file
+     *          through the proxy object.
+     * @param hapFilePath Indicates the absolute file path of the HAP or APP file.
+     * @param flags Indicates the resource info to be returned, see ResourceFlag.
+     * @param bundleResourceInfo Indicates the obtained BundleResourceInfo object.
+     * @return Returns ERR_OK if this function is successfully called; returns errCode otherwise.
+     */
+    virtual ErrCode GetBundleResourceArchiveInfo(const std::string &filePath, const uint32_t flags,
+        BundleResourceInfo &bundleResourceInfo) override;
+    /**
      * @brief Obtain the HAP module info of a specific ability through the proxy object.
      * @param abilityInfo Indicates the ability.
      * @param hapModuleInfo Indicates the obtained HapModuleInfo object.

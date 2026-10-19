@@ -45,6 +45,11 @@ constexpr const char* GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR = "GET_RESOURCE
 constexpr const char* GET_RESOURCE_INFO_ONLY_WITH_MAIN_ABILITY = "GET_RESOURCE_INFO_ONLY_WITH_MAIN_ABILITY";
 const size_t MAX_ARRAY_NUM = 1000;
 
+constexpr const char* ARCHIVE_ERR_MSG_PERMISSION_DENIED = "Permission verification failed.";
+constexpr const char* ARCHIVE_ERR_MSG_NOT_SYSTEM_APP =
+    "Permission verification failed. A non-system application calls a system Api.";
+constexpr const char* ARCHIVE_ERR_MSG_INVALID_HAP_PATH = "The filePath is invalid";
+
 static void ConvertBundleResourceInfo(
     napi_env env,
     const BundleResourceInfo &bundleResourceInfo,
@@ -207,6 +212,103 @@ napi_value GetBundleResourceInfo(napi_env env, napi_callback_info info)
     ConvertBundleResourceInfo(env, resourceInfo, nBundleResourceInfo);
     APP_LOGI("NAPI end");
     return nBundleResourceInfo;
+}
+
+void GetBundleResourceArchiveInfoExec(napi_env env, void *data)
+{
+    BundleResourceArchiveInfoCallback *asyncCallbackInfo =
+        reinterpret_cast<BundleResourceArchiveInfoCallback *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+    asyncCallbackInfo->err = ResourceHelper::InnerGetBundleResourceArchiveInfo(
+        asyncCallbackInfo->filePath, asyncCallbackInfo->flags, asyncCallbackInfo->resourceInfo);
+}
+
+void GetBundleResourceArchiveInfoComplete(napi_env env, napi_status status, void *data)
+{
+    BundleResourceArchiveInfoCallback *asyncCallbackInfo =
+        reinterpret_cast<BundleResourceArchiveInfoCallback *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+    std::unique_ptr<BundleResourceArchiveInfoCallback> callbackPtr {asyncCallbackInfo};
+    napi_value result[ARGS_SIZE_TWO] = {0};
+    if (asyncCallbackInfo->err == NO_ERROR) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
+        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result[1]));
+        ConvertBundleResourceInfo(env, asyncCallbackInfo->resourceInfo, result[1]);
+    } else {
+        std::string errMsg;
+        switch (asyncCallbackInfo->err) {
+            case ERROR_PERMISSION_DENIED_ERROR:
+                errMsg = ARCHIVE_ERR_MSG_PERMISSION_DENIED;
+                break;
+            case ERROR_NOT_SYSTEM_APP:
+                errMsg = ARCHIVE_ERR_MSG_NOT_SYSTEM_APP;
+                break;
+            case ERROR_INVALID_HAP_PATH:
+                errMsg = ARCHIVE_ERR_MSG_INVALID_HAP_PATH;
+                break;
+            default:
+                result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
+                    GET_BUNDLE_RESOURCE_ARCHIVE_INFO, PERMISSION_GET_BUNDLE_RESOURCES);
+                break;
+        }
+        if (!errMsg.empty()) {
+            result[0] = BusinessError::CreateError(env, asyncCallbackInfo->err, errMsg);
+        }
+    }
+    CommonFunc::NapiReturnDeferred<BundleResourceArchiveInfoCallback>(
+        env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
+}
+
+napi_value GetBundleResourceArchiveInfo(napi_env env, napi_callback_info info)
+{
+    APP_LOGI("NAPI start");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_THREE)) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    BundleResourceArchiveInfoCallback *asyncCallbackInfo = new (std::nothrow) BundleResourceArchiveInfoCallback(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return nullptr;
+    }
+    std::unique_ptr<BundleResourceArchiveInfoCallback> callbackPtr {asyncCallbackInfo};
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], asyncCallbackInfo->filePath)) {
+        APP_LOGE("parse filePath failed");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, HAP_FILE_PATH, TYPE_STRING);
+        return nullptr;
+    }
+    int32_t flags = 0;
+    if (args.GetMaxArgc() >= ARGS_SIZE_TWO) {
+        if (!CommonFunc::ParseInt(env, args[ARGS_POS_ONE], flags)) {
+            APP_LOGW("parse flags failed");
+        }
+    }
+    if (flags <= 0) {
+        flags = static_cast<int32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL);
+    }
+    asyncCallbackInfo->flags = static_cast<uint32_t>(flags);
+    if (args.GetMaxArgc() >= ARGS_SIZE_THREE) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, args[ARGS_POS_TWO], &valueType);
+        if (valueType == napi_function) {
+            NAPI_CALL(env, napi_create_reference(env, args[ARGS_POS_TWO],
+                NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+        }
+    }
+    auto promise = CommonFunc::AsyncCallNativeMethod<BundleResourceArchiveInfoCallback>(
+        env, asyncCallbackInfo, GET_BUNDLE_RESOURCE_ARCHIVE_INFO,
+        GetBundleResourceArchiveInfoExec, GetBundleResourceArchiveInfoComplete);
+    callbackPtr.release();
+    APP_LOGI("NAPI end");
+    return promise;
 }
 
 napi_value GetLauncherAbilityResourceInfo(napi_env env, napi_callback_info info)

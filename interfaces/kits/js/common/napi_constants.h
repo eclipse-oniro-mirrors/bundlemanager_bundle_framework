@@ -250,6 +250,7 @@ constexpr const char* GET_ALL_LAUNCHER_ABILITY_RESOURCE_INFO = "GetAllLauncherAb
 constexpr const char* GET_LAUNCHER_ABILITY_RESOURCE_INFO_LIST = "getLauncherAbilityResourceInfoList";
 constexpr const char* GET_EXTENSION_ABILITY_RESOURCE_INFO = "GetExtensionAbilityResourceInfo";
 constexpr const char* GET_ALL_UNINSTALL_BUNDLE_RESOURCE_INFO = "GetAllUninstalledBundleResourceInfo";
+constexpr const char* GET_BUNDLE_RESOURCE_ARCHIVE_INFO = "GetBundleResourceArchiveInfo";
 
 // shortcut_manager
 constexpr const char* ADD_DESKTOP_SHORTCUT_INFO = "AddDesktopShortcutInfo";
