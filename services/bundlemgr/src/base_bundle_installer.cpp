@@ -7111,7 +7111,7 @@ std::vector<std::string> BaseBundleInstaller::GetBinFilePaths(const InnerBundleI
         return binFilePaths;
     }
     std::string prefix = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
-        info.GetBundleName() + ServiceConstants::PATH_SEPARATOR + nativeLibraryPath;
+        GetEffectiveBundleName() + ServiceConstants::PATH_SEPARATOR + nativeLibraryPath;
     if (prefix.back() != ServiceConstants::FILE_SEPARATOR_CHAR) {
         prefix += ServiceConstants::FILE_SEPARATOR_CHAR;
     }
@@ -7156,9 +7156,10 @@ ErrCode BaseBundleInstaller::ProcessBinFiles(
         LOG_D(BMS_TAG_INSTALLER, "binFilePaths is empty");
         return ERR_OK;
     }
-    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "ProcessBinFiles start -n %{public}s", bundleName_.c_str());
+    std::string bundleName = GetEffectiveBundleName();
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "ProcessBinFiles start -n %{public}s", bundleName.c_str());
     VerifyBinParam verifyBinParam;
-    verifyBinParam.bundleName = bundleName_;
+    verifyBinParam.bundleName = bundleName;
     verifyBinParam.appIdentifier = appIdentifier_;
     verifyBinParam.userId = userId_;
     verifyBinParam.binFilePaths = binFilePaths;

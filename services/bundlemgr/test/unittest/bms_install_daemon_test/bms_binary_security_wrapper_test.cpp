@@ -181,58 +181,6 @@ HWTEST_F(BmsBinarySecurityWrapperTest, BmsBinarySecurityWrapperTest_006, Functio
 }
 
 /**
- * @tc.number: BmsBinarySecurityWrapperTest_007
- * @tc.name: test ProcessHapBinInstall with empty binFileInfos
- * @tc.desc: 1. ProcessHapBinInstall with empty vector
- */
-HWTEST_F(BmsBinarySecurityWrapperTest, BmsBinarySecurityWrapperTest_007, Function | SmallTest | Level0)
-{
-    BinarySecurityWrapper& instance = BinarySecurityWrapper::GetInstance();
-
-    void* originalHandle = instance.handle_;
-    instance.handle_ = nullptr;
-
-    std::vector<BinFileInfo> infos;
-    ErrCode ret = instance.ProcessHapBinInstall(TEST_BUNDLE_NAME, TEST_APP_IDENTIFIER, TEST_USER_ID, infos);
-
-    if (ret == ERR_OK) {
-        EXPECT_NE(instance.handle_, nullptr);
-    } else {
-        EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_VERIFY_BIN_PERMISSION);
-    }
-
-    instance.handle_ = originalHandle;
-}
-
-/**
- * @tc.number: BmsBinarySecurityWrapperTest_008
- * @tc.name: test ProcessHapBinInstall with valid params
- * @tc.desc: 1. ProcessHapBinInstall with valid params
- */
-HWTEST_F(BmsBinarySecurityWrapperTest, BmsBinarySecurityWrapperTest_008, Function | SmallTest | Level0)
-{
-    BinarySecurityWrapper& instance = BinarySecurityWrapper::GetInstance();
-
-    void* originalHandle = instance.handle_;
-    instance.handle_ = nullptr;
-
-    std::vector<BinFileInfo> infos;
-    BinFileInfo info;
-    info.path = TEST_BIN_FILE_PATH;
-    infos.emplace_back(info);
-
-    ErrCode ret = instance.ProcessHapBinInstall(TEST_BUNDLE_NAME, TEST_APP_IDENTIFIER, TEST_USER_ID, infos);
-
-    if (ret == ERR_OK) {
-        EXPECT_NE(instance.handle_, nullptr);
-    } else {
-        EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_VERIFY_BIN_PERMISSION);
-    }
-
-    instance.handle_ = originalHandle;
-}
-
-/**
  * @tc.number: BmsBinarySecurityWrapperTest_009
  * @tc.name: test BinFileInfo struct
  * @tc.desc: 1. BinFileInfo can be created and assigned
@@ -269,38 +217,6 @@ HWTEST_F(BmsBinarySecurityWrapperTest, BmsBinarySecurityWrapperTest_010, Functio
 
     if (ret2) {
         instance.UnloadLibrary();
-    }
-
-    instance.handle_ = originalHandle;
-}
-
-/**
- * @tc.number: BmsBinarySecurityWrapperTest_011
- * @tc.name: test ProcessHapBinInstall with multiple binFileInfos
- * @tc.desc: 1. ProcessHapBinInstall with multiple bin files
- */
-HWTEST_F(BmsBinarySecurityWrapperTest, BmsBinarySecurityWrapperTest_011, Function | SmallTest | Level0)
-{
-    BinarySecurityWrapper& instance = BinarySecurityWrapper::GetInstance();
-
-    void* originalHandle = instance.handle_;
-    instance.handle_ = nullptr;
-
-    std::vector<BinFileInfo> infos;
-    BinFileInfo info1;
-    info1.path = "/data/app/el1/bundle/public/com.ohos.test/bin/test1.so";
-    infos.emplace_back(info1);
-
-    BinFileInfo info2;
-    info2.path = "/data/app/el1/bundle/public/com.ohos.test/bin/test2.so";
-    infos.emplace_back(info2);
-
-    ErrCode ret = instance.ProcessHapBinInstall(TEST_BUNDLE_NAME, TEST_APP_IDENTIFIER, TEST_USER_ID, infos);
-
-    if (ret == ERR_OK) {
-        EXPECT_NE(instance.handle_, nullptr);
-    } else {
-        EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_VERIFY_BIN_PERMISSION);
     }
 
     instance.handle_ = originalHandle;

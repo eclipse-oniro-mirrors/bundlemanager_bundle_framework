@@ -5174,9 +5174,11 @@ ErrCode InstalldHostImpl::ProcessBinFiles(const VerifyBinParam &verifyBinParam)
     }
     LOG_D(BMS_TAG_INSTALLD, "bundleName:%{public}s, appIdentifier:%{private}s",
         verifyBinParam.bundleName.c_str(), verifyBinParam.appIdentifier.c_str());
+    std::string realName = verifyBinParam.bundleName;
+    int32_t appIndex = InstalldOperator::GetAppIndexByBundleName(realName);
 #ifdef SECURITY_PRIVACY_SERVER_ENABLE
-    auto result = BinarySecurityWrapper::GetInstance().ProcessHapBinInstall(verifyBinParam.bundleName,
-        verifyBinParam.appIdentifier, verifyBinParam.userId, infos);
+    auto result = BinarySecurityWrapper::GetInstance().ProcessHapBinInstall(realName,
+        verifyBinParam.appIdentifier, verifyBinParam.userId, infos, appIndex);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLD, "ProcessHapBinInstall failed %{public}d", result);
         return ERR_APPEXECFWK_INSTALL_FAILED_VERIFY_BIN_PERMISSION;

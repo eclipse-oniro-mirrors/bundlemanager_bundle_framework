@@ -472,6 +472,8 @@ public:
 
     static bool ObtainSignInfoForPlugin(const std::string &appServiceCapabilities, std::string &pluginId);
 
+    static int32_t GetAppIndexByBundleName(std::string &bundleName);
+
     /**
      * @brief Recursively find largest files/directories up to 6 levels, then drill down to largest file.
      * @param dirPaths Indicates the vector of directory paths to scan.

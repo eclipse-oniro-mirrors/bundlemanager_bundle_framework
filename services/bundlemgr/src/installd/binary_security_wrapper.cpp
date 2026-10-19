@@ -154,13 +154,13 @@ void BinarySecurityWrapper::ScheduleUnload()
 ErrCode __attribute__((no_sanitize("cfi"))) BinarySecurityWrapper::ProcessHapBinInstall(
     const std::string &bundleName,
     const std::string &appIdentifier, int32_t userId,
-    const std::vector<BinFileInfo> &binFileInfos)
+    const std::vector<BinFileInfo> &binFileInfos, int32_t appIndex)
 {
     // Fast path: library already loaded, use shared read lock
     {
         std::shared_lock<std::shared_mutex> readLock(mutex_);
         if (handle_ != nullptr && processHapBinInstallFunc_ != nullptr) {
-            ErrCode result = processHapBinInstallFunc_(bundleName, appIdentifier, userId, binFileInfos);
+            ErrCode result = processHapBinInstallFunc_(bundleName, appIdentifier, userId, appIndex, binFileInfos);
             if (result != ERR_OK) {
                 LOG_E(BMS_TAG_INSTALLD, "ProcessHapBinInstall failed %{public}d", result);
             }
@@ -176,7 +176,7 @@ ErrCode __attribute__((no_sanitize("cfi"))) BinarySecurityWrapper::ProcessHapBin
             LOG_E(BMS_TAG_INSTALLD, "LoadLibrary failed");
             return ERR_APPEXECFWK_INSTALL_FAILED_VERIFY_BIN_PERMISSION;
         }
-        ErrCode result = processHapBinInstallFunc_(bundleName, appIdentifier, userId, binFileInfos);
+        ErrCode result = processHapBinInstallFunc_(bundleName, appIdentifier, userId, appIndex, binFileInfos);
         if (result != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLD, "ProcessHapBinInstall failed %{public}d", result);
         }

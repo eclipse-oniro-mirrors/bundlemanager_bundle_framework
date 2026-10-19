@@ -4370,6 +4370,29 @@ bool InstalldOperator::GetOriginalBundleName(const std::string &bundleName,
     return true;
 }
 
+int32_t InstalldOperator::GetAppIndexByBundleName(std::string &bundleName)
+{
+    int32_t appIndex = 0;
+    if (bundleName.empty() || !IsFileNameValid(bundleName)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid name -n %{public}s", bundleName.c_str());
+        return appIndex;
+    }
+    if (bundleName.find(ServiceConstants::CLONE_PREFIX) == 0) {
+        std::string tempBundleName = bundleName.substr(strlen(ServiceConstants::CLONE_PREFIX));
+        size_t plusPos = tempBundleName.find(ServiceConstants::PLUS_SIGN);
+        if (plusPos == std::string::npos) {
+            LOG_E(BMS_TAG_INSTALLD, "invalid clone bundle name -n %{public}s", bundleName.c_str());
+            return false;
+        }
+        if (!OHOS::StrToInt(tempBundleName.substr(0, plusPos), appIndex)) {
+            LOG_E(BMS_TAG_INSTALLD, "StrToInt failed -n %{public}s", bundleName.c_str());
+            return false;
+        }
+        bundleName = tempBundleName.substr(plusPos + 1);
+    }
+    return appIndex;
+}
+
 bool InstalldOperator::IsValidBundleName(const std::string &bundleName)
 {
     std::string originalBundleName;

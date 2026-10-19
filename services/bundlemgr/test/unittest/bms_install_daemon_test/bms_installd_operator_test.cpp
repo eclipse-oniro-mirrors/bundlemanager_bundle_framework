@@ -4708,6 +4708,118 @@ HWTEST_F(BmsInstalldOperatorTest, SkillDirScene_0200, Function | SmallTest | Lev
 }
 
 /**
+ * @tc.number: GetAppIndexByBundleName_0100
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling GetAppIndexByBundleName of InstalldOperator with empty bundleName
+*/
+HWTEST_F(BmsInstalldOperatorTest, GetAppIndexByBundleName_0100, Function | SmallTest | Level0)
+{
+    std::string bundleName;
+    auto ret = InstalldOperator::GetAppIndexByBundleName(bundleName);
+    EXPECT_EQ(ret, 0);
+    EXPECT_TRUE(bundleName.empty());
+}
+ 
+/**
+ * @tc.number: GetAppIndexByBundleName_0200
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling GetAppIndexByBundleName of InstalldOperator with invalid bundleName
+*/
+HWTEST_F(BmsInstalldOperatorTest, GetAppIndexByBundleName_0200, Function | SmallTest | Level0)
+{
+    std::string bundleName = "../com.example.testOperator";
+    auto ret = InstalldOperator::GetAppIndexByBundleName(bundleName);
+    EXPECT_EQ(ret, 0);
+    EXPECT_EQ(bundleName, "../com.example.testOperator");
+}
+ 
+/**
+ * @tc.number: GetAppIndexByBundleName_0400
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling GetAppIndexByBundleName of InstalldOperator with clone bundleName
+*/
+HWTEST_F(BmsInstalldOperatorTest, GetAppIndexByBundleName_0400, Function | SmallTest | Level0)
+{
+    std::string cloneBundleName = std::string(ServiceConstants::CLONE_PREFIX) +
+        std::to_string(ServiceConstants::CLONE_APP_INDEX_MIN) + ServiceConstants::PLUS_SIGN + TEST_BUNDLE_NAME;
+    auto ret = InstalldOperator::GetAppIndexByBundleName(cloneBundleName);
+    EXPECT_EQ(ret, ServiceConstants::CLONE_APP_INDEX_MIN);
+    EXPECT_EQ(cloneBundleName, TEST_BUNDLE_NAME);
+}
+ 
+/**
+ * @tc.number: GetAppIndexByBundleName_0500
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling GetAppIndexByBundleName of InstalldOperator with dual mode bundleName
+*/
+HWTEST_F(BmsInstalldOperatorTest, GetAppIndexByBundleName_0500, Function | SmallTest | Level0)
+{
+    std::string dualModeBundleName = std::string(ServiceConstants::CLONE_PREFIX) +
+        std::to_string(ServiceConstants::DUAL_MODE_CLONE_APP_INDEX) + ServiceConstants::PLUS_SIGN + TEST_BUNDLE_NAME;
+    auto ret = InstalldOperator::GetAppIndexByBundleName(dualModeBundleName);
+    EXPECT_EQ(ret, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
+    EXPECT_EQ(dualModeBundleName, TEST_BUNDLE_NAME);
+}
+ 
+/**
+ * @tc.number: GetAppIndexByBundleName_0600
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling GetAppIndexByBundleName of InstalldOperator with clone bundleName without plus sign
+*/
+HWTEST_F(BmsInstalldOperatorTest, GetAppIndexByBundleName_0600, Function | SmallTest | Level0)
+{
+    std::string bundleName = std::string(ServiceConstants::CLONE_PREFIX) + TEST_BUNDLE_NAME;
+    auto ret = InstalldOperator::GetAppIndexByBundleName(bundleName);
+    EXPECT_EQ(ret, 0);
+    EXPECT_EQ(bundleName, std::string(ServiceConstants::CLONE_PREFIX) + TEST_BUNDLE_NAME);
+}
+ 
+/**
+ * @tc.number: GetAppIndexByBundleName_0700
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling GetAppIndexByBundleName of InstalldOperator with non-numeric app index
+*/
+HWTEST_F(BmsInstalldOperatorTest, GetAppIndexByBundleName_0700, Function | SmallTest | Level0)
+{
+    std::string bundleName = std::string(ServiceConstants::CLONE_PREFIX) + "abc" +
+        ServiceConstants::PLUS_SIGN + TEST_BUNDLE_NAME;
+    auto ret = InstalldOperator::GetAppIndexByBundleName(bundleName);
+    EXPECT_EQ(ret, 0);
+    EXPECT_EQ(bundleName, std::string(ServiceConstants::CLONE_PREFIX) + "abc" +
+        ServiceConstants::PLUS_SIGN + TEST_BUNDLE_NAME);
+}
+ 
+/**
+ * @tc.number: GetAppIndexByBundleName_0800
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling GetAppIndexByBundleName of InstalldOperator with empty app index
+*/
+HWTEST_F(BmsInstalldOperatorTest, GetAppIndexByBundleName_0800, Function | SmallTest | Level0)
+{
+    std::string bundleName = std::string(ServiceConstants::CLONE_PREFIX) +
+        ServiceConstants::PLUS_SIGN + TEST_BUNDLE_NAME;
+    auto ret = InstalldOperator::GetAppIndexByBundleName(bundleName);
+    EXPECT_EQ(ret, 0);
+    EXPECT_EQ(bundleName, std::string(ServiceConstants::CLONE_PREFIX) +
+        ServiceConstants::PLUS_SIGN + TEST_BUNDLE_NAME);
+}
+ 
+/**
+ * @tc.number: GetAppIndexByBundleName_0900
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling GetAppIndexByBundleName of InstalldOperator with plus sign in real bundleName
+*/
+HWTEST_F(BmsInstalldOperatorTest, GetAppIndexByBundleName_0900, Function | SmallTest | Level0)
+{
+    const std::string realName = TEST_BUNDLE_NAME + ServiceConstants::PLUS_SIGN + "suffix";
+    std::string bundleName = std::string(ServiceConstants::CLONE_PREFIX) +
+        std::to_string(ServiceConstants::CLONE_APP_INDEX_MAX) + ServiceConstants::PLUS_SIGN + realName;
+    auto ret = InstalldOperator::GetAppIndexByBundleName(bundleName);
+    EXPECT_EQ(ret, ServiceConstants::CLONE_APP_INDEX_MAX);
+    EXPECT_EQ(bundleName, realName);
+}
+
+/**
  * @tc.number: VerifyCodeSignatureScene_0100
  * @tc.name: test IsValidPathByBundleDirScene with VERIFY_CODE_SIGNATURE
  * @tc.desc: 1. the hsp under the skills root dir is accepted and the hsp under the legacy skills dir is rejected
