@@ -1041,6 +1041,92 @@ private:
         std::vector<int32_t> &failedUidList,
         std::vector<int32_t> &failedErrCodeList,
         const std::vector<bool> &resolved);
+
+    // SPM fallback
+    void FallbackWithSpmSession(
+        const std::shared_ptr<BundleDataMgr> &dataMgr,
+        std::vector<Security::AccessToken::HapBaseInfo> &failedHapList,
+        std::vector<int32_t> &failedUidList,
+        std::vector<int32_t> &failedErrCodeList,
+        std::vector<bool> &successFlags,
+        const std::vector<Security::AccessToken::MigratedInfo> &migratedList);
+    void ProcessBundleFallback(
+        const std::shared_ptr<BundleDataMgr> &dataMgr,
+        const std::string &bundleName,
+        const std::vector<size_t> &indices,
+        std::vector<Security::AccessToken::HapBaseInfo> &failedHapList,
+        std::vector<int32_t> &failedUidList,
+        std::vector<bool> &resolved,
+        const std::vector<Security::AccessToken::MigratedInfo> &migratedList);
+    bool GetExistingTokenId(const std::shared_ptr<BundleDataMgr> &dataMgr,
+        const InnerBundleInfo &info,
+        const Security::AccessToken::HapBaseInfo &hapInfo,
+        const InnerBundleUserInfo &userInfo,
+        uint32_t &existingTokenId,
+        uint64_t &existingTokenIdEx,
+        int32_t &dlpType);
+    void UpdateBundleInfoAfterFallback(
+        const std::shared_ptr<BundleDataMgr> &dataMgr,
+        const std::string &bundleName,
+        const Security::AccessToken::HapBaseInfo &hapInfo,
+        int32_t resolvedUid,
+        uint32_t existingTokenId,
+        uint64_t existingTokenIdEx,
+        bool uidChanged);
+    void UpdateSuccessFlagsAndCheckBySpm(
+        const std::shared_ptr<BundleDataMgr> &dataMgr,
+        const std::vector<Security::AccessToken::MigratedInfo> &migratedList,
+        std::vector<bool> &successFlags,
+        const std::vector<Security::AccessToken::HapBaseInfo> &failedHapList,
+        const std::vector<bool> &resolved);
+
+    struct FallbackResult {
+        size_t idx;
+        Security::AccessToken::HapBaseInfo hapInfo;
+        int32_t resolvedUid;
+        uint32_t existingTokenId;
+        uint64_t existingTokenIdEx;
+        bool uidChanged;
+    };
+    void CollectFallbackPendingResults(
+        const std::shared_ptr<BundleDataMgr> &dataMgr,
+        const InnerBundleInfo &info,
+        const std::vector<size_t> &indices,
+        std::vector<Security::AccessToken::HapBaseInfo> &failedHapList,
+        std::vector<int32_t> &failedUidList,
+        int32_t sessionId,
+        std::vector<FallbackResult> &pendingResults);
+    void CommitFallbackResults(
+        const std::shared_ptr<BundleDataMgr> &dataMgr,
+        const std::string &bundleName,
+        InnerBundleInfo &info,
+        const Security::AccessToken::MigratedInfo *migratedInfo,
+        int32_t sessionId,
+        std::vector<FallbackResult> &pendingResults,
+        std::vector<int32_t> &failedUidList,
+        std::vector<bool> &resolved);
+    void ApplySingleFallbackResult(
+        const std::shared_ptr<BundleDataMgr> &dataMgr,
+        const std::string &bundleName,
+        InnerBundleInfo &info,
+        const FallbackResult &r,
+        std::vector<int32_t> &failedUidList,
+        std::vector<bool> &resolved);
+
+    // OTA fallback collection
+    void CheckAndFallbackUnmigratedBundles();
+    void CollectUnmigratedMainAndClone(
+        const std::shared_ptr<BundleDataMgr> &dataMgr,
+        std::vector<Security::AccessToken::HapBaseInfo> &failedHapList,
+        std::vector<int32_t> &failedUidList,
+        std::vector<int32_t> &failedErrCodeList,
+        std::map<std::string, Security::AccessToken::MigratedInfo> &failedMigratedMap);
+    void CollectUnmigratedSandbox(
+        const std::shared_ptr<BundleDataMgr> &dataMgr,
+        std::vector<Security::AccessToken::HapBaseInfo> &failedHapList,
+        std::vector<int32_t> &failedUidList,
+        std::vector<int32_t> &failedErrCodeList,
+        std::map<std::string, Security::AccessToken::MigratedInfo> &failedMigratedMap);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

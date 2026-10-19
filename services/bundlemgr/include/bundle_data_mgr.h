@@ -279,6 +279,14 @@ public:
      * @return Returns true if this function is successfully called; returns false otherwise.
      */
     ErrCode GenerateUidAndGid(InnerBundleUserInfo &innerBundleUserInfo);
+    ErrCode UpdateBundleUid(const std::string &bundleName, int32_t userId,
+        int32_t appIndex, int32_t oldUid, int32_t newUid, bool isDualModeClone = false);
+    ErrCode UpdateSandboxBundleUid(const std::string &bundleName, int32_t userId,
+        int32_t appIndex, int32_t oldUid, int32_t newUid);
+    void UpdateBundleIdMapForUid(int32_t oldBundleId, int32_t newBundleId,
+        const std::string &effectiveName, bool &needRemoveOld, bool &needSaveBundleId);
+    void UpdateFsConfigForUid(const std::string &effectiveName, int32_t newBundleId,
+        bool needRemoveOld, bool needSaveBundleId);
     /**
      * @brief Recycle uid and gid .
      * @param info Indicates the InnerBundleInfo object.
