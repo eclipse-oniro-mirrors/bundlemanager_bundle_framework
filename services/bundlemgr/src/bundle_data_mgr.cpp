@@ -18270,6 +18270,7 @@ ErrCode BundleDataMgr::GetDualModeBundleInfo(const std::string &bundleName, int3
     const InnerBundleInfo &innerBundleInfo = item->second;
     int32_t appIndex = (innerBundleInfo.GetAppIndex() / ServiceConstants::DUAL_MODE_CLONE_APP_INDEX) == 0 ?
         0 : ServiceConstants::DUAL_MODE_CLONE_APP_INDEX;
+    dualModeBundleInfo.bundleName = bundleName;
     dualModeBundleInfo.appIndex = appIndex;
     dualModeBundleInfo.deviceModeDistributionPolicy = innerBundleInfo.GetBaseBundleInfo().deviceModeDistributionPolicy;
     dualModeBundleInfo.appSandboxPolicy = innerBundleInfo.GetBaseBundleInfo().appSandboxPolicy;
