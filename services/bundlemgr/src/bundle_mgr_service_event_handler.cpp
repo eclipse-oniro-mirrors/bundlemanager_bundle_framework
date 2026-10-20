@@ -159,9 +159,7 @@ constexpr const char* KEY_STORAGE_SIZE = "storageSize";
 constexpr int32_t USER_ID_SIZE = 1;
 constexpr const char* APPSPAWN_PRELOAD_ARKWEB_ENGINE = "const.startup.appspawn.preload.arkwebEngine";
 constexpr const char* OTA_NEW_INSTALL_ENABLE_PARAM = "const.bms.ota_new_install_enable";
-constexpr const char* OTA_NEW_INSTALL_WHITELIST_PATH = "/sys_prod/etc/app/allow_ota_new_install_whitelist.json";
 constexpr const char* OTA_NEW_INSTALL_MULTIUSER_PARAM = "const.bms.multiUserInstallThirdPreloadApp";
-constexpr const char* OTA_NEW_INSTALL_LIST_KEY = "install_list";
 constexpr const char* OOBE_AGREE_TERMS_EVENT = "custom.event.OOBE.HWSTARTUPGUIDE.FINISHED";
 constexpr int32_t OTA_TIMEOUT_SECONDS = 60 * 9;
 constexpr const char* OTA_SYSTEM_HSP_TASK = "OTA_SYSTEM_HSP_TASK";
@@ -2534,23 +2532,12 @@ void BMSEventHandler::LoadOtaNewInstallWhitelist()
         return;
     }
 
-    nlohmann::json jsonBuf;
-    if (!BundleParser::ReadFileIntoJson(OTA_NEW_INSTALL_WHITELIST_PATH, jsonBuf) ||
-        !jsonBuf.is_object() || !jsonBuf.contains(OTA_NEW_INSTALL_LIST_KEY)) {
-        LOG_NOFUNC_W(BMS_TAG_DEFAULT, "OTA_NEW_INSTALL_WHITELIST_PATH read failed");
+    if (!BundleParser::LoadWhitelistFromFile(
+        ServiceConstants::ALLOW_OTA_NEW_INSTALL_WHITELIST_PATH, otaNewInstallWhitelist_)) {
         return;
     }
-
-    auto installList = jsonBuf.value(OTA_NEW_INSTALL_LIST_KEY, nlohmann::json::array());
-    if (!installList.is_array() || installList.empty()) {
+    if (otaNewInstallWhitelist_.empty()) {
         LOG_NOFUNC_W(BMS_TAG_DEFAULT, "OTA_NEW_INSTALL_WHITELIST_PATH empty");
-        return;
-    }
-    for (const auto &item : installList) {
-        if (!item.is_string()) {
-            continue;
-        }
-        otaNewInstallWhitelist_.insert(item.get<std::string>());
     }
 }
 

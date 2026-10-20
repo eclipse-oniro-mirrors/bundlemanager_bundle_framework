@@ -18,6 +18,7 @@
 
 #include <set>
 #include <string>
+#include <unordered_set>
 
 #include "app_privilege_capability.h"
 #include "appexecfwk_errors.h"
@@ -130,6 +131,17 @@ public:
         const std::string &configFile, std::vector<RouterItem> &routerArray) const;
 
     static ErrCode ParseNoDisablingList(const std::string &configPath, std::vector<std::string> &noDisablingList);
+
+    /**
+     * @brief Load a whitelist (bundle name set) from a JSON file of the form
+     *        {"install_list": ["bundleName", ...]}.
+     * @param filePath Indicates the whitelist file path.
+     * @param whitelist Indicates the loaded bundle names, cleared before loading.
+     * @return Returns true if the file is read and has a valid shape;
+     *         returns false otherwise (whitelist left empty).
+     */
+    static bool LoadWhitelistFromFile(const std::string &filePath,
+        std::unordered_set<std::string> &whitelist);
 
     /**
      * @brief Parse bundleNames by the configFile.

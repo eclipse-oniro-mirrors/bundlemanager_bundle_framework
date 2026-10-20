@@ -100,6 +100,8 @@ constexpr const char* EXTENSION_DIR = "+extension-";
 constexpr const char* FILE_SEPARATOR_LINE = "-";
 constexpr const char* FILE_SEPARATOR_PLUS = "+";
 constexpr const char* BUNDLE_MANAGER_SERVICE_PATH = "/data/service/el1/public/bms/bundle_manager_service";
+constexpr const char* ALLOW_OTA_NEW_INSTALL_WHITELIST_PATH =
+    "/sys_prod/etc/app/allow_ota_new_install_whitelist.json";
 constexpr const char* SANDBOX_DATA_PATH = "/data/storage/el2/base";
 constexpr const char* APP_INSTALL_SANDBOX_PATH = "/data/bms_app_install";
 constexpr const char* APP_CLONE_SANDBOX_PATH = "/data/bms_app_clone/";
