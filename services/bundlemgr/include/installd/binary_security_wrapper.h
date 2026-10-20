@@ -37,7 +37,7 @@ public:
 
     ErrCode ProcessHapBinInstall(const std::string &bundleName,
         const std::string &appIdentifier, int32_t userId,
-        const std::vector<BinFileInfo> &binFileInfos, int32_t appIndex);
+        const std::vector<BinFileInfo> &binFileInfos, int32_t appIndex, int32_t sessionId);
 
     ErrCode RequestIndependentBinarySwitchAsync(int32_t &outSwitchStatus);
 
@@ -66,7 +66,7 @@ private:
     void ScheduleUnload();
 
     using ProcessHapBinInstallFunc = int32_t(*)(const std::string&, const std::string&,
-        int32_t, int32_t, const std::vector<BinFileInfo>&);
+        int32_t, int32_t, int32_t, const std::vector<BinFileInfo>&);
     using RequestIndependentBinarySwitchAsyncFunc = int32_t(*)(int32_t &);
     using CheckHspPluginCertValidityFunc = int32_t(*)(Security::Verify::HspPlugin &);
     using CheckAppSideLoadingAsyncFunc = int32_t(*)(int32_t);
