@@ -247,7 +247,12 @@ bool PatchProfile::DefaultNativeSo(
 
 bool PatchProfile::ParseNativeSo(const PatchExtractor &patchExtractor, AppqfInfo &appqfInfo)
 {
-    std::string abis = GetAbiList();
+    const char* abisRaw = GetAbiList();
+    if (abisRaw == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "GetAbiList return null");
+        return false;
+    }
+    std::string abis = abisRaw;
     std::vector<std::string> abiList;
     SplitStr(abis, ServiceConstants::ABI_SEPARATOR, abiList, false, false);
     if (abiList.empty()) {

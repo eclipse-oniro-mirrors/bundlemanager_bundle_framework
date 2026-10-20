@@ -188,7 +188,12 @@ void AOTHandler::DeleteHostPrivateSharedHspAOT(
 
 bool AOTHandler::IsSupportARM64() const
 {
-    std::string abis = GetAbiList();
+    const char* abisRaw = GetAbiList();
+    if (abisRaw == nullptr) {
+        APP_LOGE("GetAbiList return null");
+        return false;
+    }
+    std::string abis = abisRaw;
     APP_LOGD("abi list : %{public}s", abis.c_str());
     std::vector<std::string> abiList;
     SplitStr(abis, ServiceConstants::ABI_SEPARATOR, abiList, false, false);

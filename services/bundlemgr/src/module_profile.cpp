@@ -2114,7 +2114,12 @@ bool ParserNativeSo(
     const BundleExtractor &bundleExtractor,
     InnerBundleInfo &innerBundleInfo)
 {
-    std::string abis = GetAbiList();
+    const char* abisRaw = GetAbiList();
+    if (abisRaw == nullptr) {
+        APP_LOGE("GetAbiList return null");
+        return false;
+    }
+    std::string abis = abisRaw;
     std::vector<std::string> abiList;
     SplitStr(abis, ServiceConstants::ABI_SEPARATOR, abiList, false, false);
     if (abiList.empty()) {
@@ -2332,7 +2337,12 @@ bool ParserArkNativeFilePath(
     const BundleExtractor &bundleExtractor,
     InnerBundleInfo &innerBundleInfo)
 {
-    std::string abis = GetAbiList();
+    const char* abisRaw = GetAbiList();
+    if (abisRaw == nullptr) {
+        APP_LOGE("GetAbiList return null");
+        return false;
+    }
+    std::string abis = abisRaw;
     std::vector<std::string> abiList;
     SplitStr(abis, ServiceConstants::ABI_SEPARATOR, abiList, false, false);
     if (abiList.empty()) {
