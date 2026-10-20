@@ -327,6 +327,65 @@ HWTEST_F(BmsDualModeInstallTest, IsDualModeDevice_0200, Function | SmallTest | L
     EXPECT_TRUE(DualModeHelper::IsDualModeDevice());
 }
 
+// ====================== DualModeHelper::IsDualModeDevice (production cache) ======================
+// These tests verify the production cache path (test_dual_mode not set). In the test environment
+// the production params (const.sceneboard.mainmode / persist.sceneboard.ispcmode) are absent,
+// so the cached result is false (non-dual-mode device).
+
+// Production cache correctness: IsDualModeDevice() returns false and populates cached values.
+HWTEST_F(BmsDualModeInstallTest, IsDualModeDevice_ProductionCache_0100, Function | SmallTest | Level0)
+{
+    OHOS::system::RemoveParameter(TEST_DUAL_MODE_PARAM);
+    EXPECT_FALSE(DualModeHelper::IsDualModeDevice());
+    EXPECT_FALSE(DualModeHelper::cachedIsDualMode_);
+    EXPECT_EQ(DualModeHelper::cachedMainmode_, ServiceConstants::DUAL_MODE_VALUE_INVALID);
+}
+
+// Production cache is used, not re-read: after call_once initializes cachedIsDualMode_ to
+// false, directly setting it to true causes IsDualModeDevice() to return true. If the cache
+// were broken (re-reading params every call), it would return false despite the tampered value.
+HWTEST_F(BmsDualModeInstallTest, IsDualModeDevice_ProductionCache_0200, Function | SmallTest | Level0)
+{
+    OHOS::system::RemoveParameter(TEST_DUAL_MODE_PARAM);
+    DualModeHelper::IsDualModeDevice();
+    DualModeHelper::cachedIsDualMode_ = true;
+    ScopeGuard cacheGuard([&] { DualModeHelper::cachedIsDualMode_ = false; });
+    EXPECT_TRUE(DualModeHelper::IsDualModeDevice());
+}
+
+// Test mode bypass: changing params between calls produces different results, proving the
+// test mode (persist.bms.test_dual_mode=true) bypasses the cache entirely.
+HWTEST_F(BmsDualModeInstallTest, IsDualModeDevice_TestModeBypass_0100, Function | SmallTest | Level0)
+{
+    SetDualModeCache(
+        ServiceConstants::DUAL_MODE_VALUE_INVALID, ServiceConstants::DUAL_MODE_VALUE_INVALID);
+    EXPECT_FALSE(DualModeHelper::IsDualModeDevice());
+    SetDualModeCache(ServiceConstants::DUAL_MODE_VALUE_2IN1, ServiceConstants::DUAL_MODE_VALUE_TABLET);
+    EXPECT_TRUE(DualModeHelper::IsDualModeDevice());
+    SetDualModeCache(
+        ServiceConstants::DUAL_MODE_VALUE_TABLET, ServiceConstants::DUAL_MODE_VALUE_INVALID);
+    EXPECT_FALSE(DualModeHelper::IsDualModeDevice());
+}
+
+// ====================== DualModeHelper::GetMainmode (production cache) ======================
+
+// Production cache: GetMainmode() returns cached INVALID when const param is absent.
+HWTEST_F(BmsDualModeInstallTest, GetMainmode_ProductionCache_0100, Function | SmallTest | Level0)
+{
+    OHOS::system::RemoveParameter(TEST_DUAL_MODE_PARAM);
+    EXPECT_EQ(DualModeHelper::GetMainmode(), ServiceConstants::DUAL_MODE_VALUE_INVALID);
+}
+
+// ====================== DualModeHelper::IsSecondaryMode (production cache) ======================
+
+// Production cache: IsSecondaryMode() returns false on non-dual-mode device without reading
+// ispcmode (cachedIsDualMode_ false -> early return, zero IPC).
+HWTEST_F(BmsDualModeInstallTest, IsSecondaryMode_ProductionCache_0100, Function | SmallTest | Level0)
+{
+    OHOS::system::RemoveParameter(TEST_DUAL_MODE_PARAM);
+    EXPECT_FALSE(DualModeHelper::IsSecondaryMode());
+}
+
 // ====================== DualModeHelper::IsSecondaryMode ======================
 
 HWTEST_F(BmsDualModeInstallTest, IsSecondaryMode_0100, Function | SmallTest | Level0)

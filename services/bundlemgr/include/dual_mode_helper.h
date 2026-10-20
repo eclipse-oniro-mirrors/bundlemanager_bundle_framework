@@ -42,16 +42,22 @@ public:
     static int32_t GetSysMode();
 
     // Whether the device is a dual-mode device.
-    // Reads system parameters directly each call (no cache); returns true only when both
-    // ispcmode and mainmode are valid (0 or 1).
+    // Production: result is cached (initialized once via call_once) because const.sceneboard.mainmode
+    // is a const parameter and persist.sceneboard.ispcmode, when present, is always 0/1 (valid),
+    // so the dual-mode determination never changes after boot.
+    // Test mode (persist.bms.test_dual_mode): bypasses cache and reads params directly each call.
     static bool IsDualModeDevice();
 
     // Whether the device is currently in secondary mode.
-    // Reads system parameters directly each call (no cache).
+    // Production: uses cached IsDualModeDevice and cached mainmode, but reads ispcmode in real-time
+    // because the user can switch modes at runtime.
+    // Test mode: bypasses cache and reads all params directly each call.
     // Secondary: isDualModeDevice && (ispcmode != mainmode). Other cases are primary / non-dual-mode.
     static bool IsSecondaryMode();
 
     // Read the main mode (const.sceneboard.mainmode) directly: 0=tablet, 1=2in1, -1=invalid.
+    // Production: cached (const parameter, never changes after boot).
+    // Test mode: reads directly each call.
     // Used by the dual-mode preinstall fan-out to tell the primary deviceType from the secondary one.
     static int32_t GetMainmode();
 
@@ -120,6 +126,15 @@ private:
     static void *ermsHandle_;
     static ErmsGetPolicyFunc ermsGetPolicyFunc_;
     static bool OpenErmsHandle();
+
+    // Cached dual-mode state for production (test mode bypasses cache).
+    // Initialized once via call_once on first access; never refreshed.
+    // const.sceneboard.mainmode is a const parameter (never changes after boot);
+    // persist.sceneboard.ispcmode when present is always 0/1, so IsDualModeDevice is stable.
+    static std::once_flag dualModeCacheFlag_;
+    static bool cachedIsDualMode_;
+    static int32_t cachedMainmode_;
+    static void InitDualModeCache();
 };
 
 }  // namespace AppExecFwk
