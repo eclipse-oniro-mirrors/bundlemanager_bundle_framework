@@ -133,7 +133,7 @@ BundleSpmManager &BundleSpmManager::GetInstance()
 
 bool BundleSpmManager::IsEnabled()
 {
-    static bool enabled = OHOS::system::GetBoolParameter(BMS_SPM_ENABLE_PARAM, false);
+    static bool enabled = OHOS::system::GetBoolParameter(BMS_SPM_ENABLE_PARAM, true);
     return enabled;
 }
 
