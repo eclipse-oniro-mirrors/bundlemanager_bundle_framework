@@ -96,6 +96,14 @@ struct HmpBundlePathInfo {
     std::string hspDir;
 };
 
+// Parsed result of the preinstall dir scan of the guard recovery: the preinstall
+// source dir and the per-hap parse results of one bundle, kept so the
+// preinstalled_bundle rows lost from a salvaged db can be rebuilt.
+struct PreInstallParsedInfo {
+    std::string bundleDir;                                      // preinstall source dir
+    std::unordered_map<std::string, InnerBundleInfo> hapInfos;  // hapPath -> parsed info
+};
+
 // === Dual-mode OTA support ===
 // Dual-mode information of a package (the step-1 parse result).
 // Same-name-same-package (IDENTICAL policies): the haps are the scan path itself; same-name-different-package
@@ -246,12 +254,59 @@ private:
      */
     ResultCode GuardAgainstInstallInfosLossedStrategy();
     /**
+     * @brief Rebuild the preinstalled_bundle rows lost from a salvaged db: for
+     *        every preinstall dir parsed during the guard recovery, save a fresh
+     *        PreInstallBundleInfo when no row exists in the db. Existing rows
+     *        (survived the salvage or written earlier in this recovery) are
+     *        handled the way the first-boot preinstall does: the fields derived
+     *        from the current preinstall source are refreshed and the paths of
+     *        the possibly several preinstall dirs accumulate, while the runtime
+     *        state (force uninstalled users etc.) is kept.
+     * @param preInstallParsedInfos Indicates the parsed preinstall dir results.
+     * @param userInfoMaps Indicates the scanned user infos.
+     * @return Returns true when every lost row was saved successfully.
+     */
+    bool RebuildPreInstallBundleInfos(
+        const std::map<std::string, PreInstallParsedInfo> &preInstallParsedInfos,
+        const std::map<std::string, std::vector<InnerBundleUserInfo>> &userInfoMaps);
+    /**
+     * @brief Refresh an existing preinstalled_bundle row following the
+     *        first-boot preinstall logic, keeping its runtime state.
+     * @param dataMgr Indicates the BundleDataMgr.
+     * @param bundleName Indicates the bundle name.
+     * @param parsedInfo Indicates the parsed preinstall dir results.
+     * @param currentInfo Indicates the current row read from db, refreshed in
+     *        place from the parse result.
+     * @return Returns true when the row was saved successfully (or the
+     *         refreshed content is identical to the row read from db).
+     */
+    bool RefreshPreInstallBundleInfo(const std::shared_ptr<BundleDataMgr> &dataMgr,
+        const std::string &bundleName, const PreInstallParsedInfo &parsedInfo,
+        PreInstallBundleInfo &currentInfo);
+    /**
+     * @brief Populate the fields derived from the current preinstall source
+     *        onto the row, mirroring the install-time needSavePreInstallInfo
+     *        block of the first-boot preinstall: the hap paths accumulate and
+     *        the source-derived fields (appType, versionCode, removable,
+     *        label/icon/description/moduleName, systemApp, bundleType,
+     *        u1Enable) are refreshed in place. Fields only a real install may
+     *        change (isUninstalled, force uninstalled users, ota new install
+     *        users) are left untouched. The hapInfos must
+     *        not be empty, both call sites filter it beforehand.
+     * @param parsedInfo Indicates the parsed preinstall dir results.
+     * @param preInstallBundleInfo Indicates the row to populate in place.
+     */
+    void PopulatePreInstallInfoFromParse(const PreInstallParsedInfo &parsedInfo,
+        PreInstallBundleInfo &preInstallBundleInfo);
+    /**
      * @brief Scan and analyze install infos.
      * @param installInfos Indicates the install infos.
+     * @param preInstallParsedInfos Indicates the parsed preinstall dir results.
      * @return
      */
     void ScanAndAnalyzeInstallInfos(
-        std::map<std::string, std::vector<InnerBundleInfo>> &installInfos);
+        std::map<std::string, std::vector<InnerBundleInfo>> &installInfos,
+        std::map<std::string, PreInstallParsedInfo> &preInstallParsedInfos);
     /**
      * @brief Scan and analyze common install dir.
      * @param installInfos Indicates the install infos.
@@ -281,12 +336,28 @@ private:
      * @param isPreInstallApp Indicates is preInstallApp or not.
      * @param bundleDirs Indicates the bundleDirs which will be analyzed.
      * @param installInfos Indicates the install infos.
+     * @param preInstallParsedInfos Indicates the parsed preinstall dir results,
+     *        only filled when isPreInstallApp is true.
      * @return
      */
     void AnalyzeHaps(
         bool isPreInstallApp,
         const std::vector<std::string> &bundleDirs,
-        std::map<std::string, std::vector<InnerBundleInfo>> &installInfos);
+        std::map<std::string, std::vector<InnerBundleInfo>> &installInfos,
+        std::map<std::string, PreInstallParsedInfo> &preInstallParsedInfos);
+    /**
+     * @brief Collect the parsed preinstall hap infos of one dir into the
+     *        preInstallParsedInfos map, grouped by bundle name: a second dir
+     *        of the same bundle merges its hap paths into the existing entry
+     *        while the first dir is kept for the removable lookup.
+     * @param bundleDir Indicates the preinstall dir the haps were parsed from.
+     * @param hapInfos Indicates the parsed hap infos of the dir, moved from.
+     * @param preInstallParsedInfos Indicates the collected results.
+     * @return
+     */
+    static void CollectPreInstallParsedInfos(const std::string &bundleDir,
+        std::unordered_map<std::string, InnerBundleInfo> &hapInfos,
+        std::map<std::string, PreInstallParsedInfo> &preInstallParsedInfos);
     /**
      * @brief Get preBundle install dir.
      * @param bundleDirs Indicates the bundleDirs.

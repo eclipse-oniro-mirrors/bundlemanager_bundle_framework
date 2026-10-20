@@ -152,7 +152,8 @@ ResultCode BMSEventHandler::GuardAgainstInstallInfosLossedStrategy()
     }
 
     std::map<std::string, std::vector<InnerBundleInfo>> installInfos;
-    ScanAndAnalyzeInstallInfos(installInfos);
+    std::map<std::string, PreInstallParsedInfo> preInstallParsedInfos;
+    ScanAndAnalyzeInstallInfos(installInfos, preInstallParsedInfos);
     if (installInfos.empty()) {
         return ResultCode::SYSTEM_ERROR;
     }
@@ -188,7 +189,8 @@ ResultCode BMSEventHandler::ReInstallAllInstallDirApps()
     return ResultCode::REINSTALL_OK;
 }
 
-void BMSEventHandler::ScanAndAnalyzeInstallInfos(std::map<std::string, std::vector<InnerBundleInfo>>& installInfos)
+void BMSEventHandler::ScanAndAnalyzeInstallInfos(std::map<std::string, std::vector<InnerBundleInfo>>& installInfos,
+    std::map<std::string, PreInstallParsedInfo>& preInstallParsedInfos)
 {
     std::map<std::string, std::vector<std::string>> hapPathsMap;
     ScanInstallDir(hapPathsMap);
@@ -196,7 +198,7 @@ void BMSEventHandler::ScanAndAnalyzeInstallInfos(std::map<std::string, std::vect
 
     std::vector<std::string> preInstallDirs;
     GetPreInstallDir(preInstallDirs);
-    AnalyzeHaps(true, preInstallDirs, installInfos);
+    AnalyzeHaps(true, preInstallDirs, installInfos, preInstallParsedInfos);
 }
 
 void BMSEventHandler::ScanInstallDir(std::map<std::string, std::vector<std::string>>& hapPathsMap)
@@ -255,12 +257,14 @@ void BMSEventHandler::AnalyzeHaps(bool isPreInstallApp,
     std::map<std::string, std::vector<InnerBundleInfo>>& installInfos)
 {
     for (const auto& hapPaths : hapPathsMap) {
-        AnalyzeHaps(isPreInstallApp, hapPaths.second, installInfos);
+        std::map<std::string, PreInstallParsedInfo> preInstallParsedInfos;
+        AnalyzeHaps(isPreInstallApp, hapPaths.second, installInfos, preInstallParsedInfos);
     }
 }
 
 void BMSEventHandler::AnalyzeHaps(bool isPreInstallApp, const std::vector<std::string>& bundleDirs,
-    std::map<std::string, std::vector<InnerBundleInfo>>& installInfos)
+    std::map<std::string, std::vector<InnerBundleInfo>>& installInfos,
+    std::map<std::string, PreInstallParsedInfo>& preInstallParsedInfos)
 {
     for (const auto& bundleDir : bundleDirs) {
         std::unordered_map<std::string, InnerBundleInfo> hapInfos;

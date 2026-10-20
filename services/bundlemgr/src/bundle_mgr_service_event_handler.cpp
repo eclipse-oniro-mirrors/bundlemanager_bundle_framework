@@ -218,6 +218,37 @@ void MoveTempPath(const std::vector<std::string> &fromPaths,
     }
 }
 
+// Fill the label/icon/description/moduleName/systemApp/bundleType fields of a
+// PreInstallBundleInfo from the parsed haps, preferring the entry hap. Shared
+// by the guard-recovery population (PopulatePreInstallInfoFromParse) and the
+// on-demand install info conversion (ConvertToOnDemandInstallBundleInfo);
+// mirrors the install-time needSavePreInstallInfo block in
+// base_bundle_installer.cpp — keep the copies in sync when fields change.
+void FillPreInstallResourceInfo(const std::unordered_map<std::string, InnerBundleInfo> &hapInfos,
+    PreInstallBundleInfo &preInstallBundleInfo)
+{
+    for (const auto &hapInfo : hapInfos) {
+        auto applicationInfo = hapInfo.second.GetBaseApplicationInfo();
+        if (hapInfo.second.HasEntry() || preInstallBundleInfo.GetModuleName().empty()) {
+            hapInfo.second.AdaptMainLauncherResourceInfo(applicationInfo, true);
+            preInstallBundleInfo.SetLabelId(applicationInfo.labelResource.id);
+            preInstallBundleInfo.SetIconId(applicationInfo.iconResource.id);
+            preInstallBundleInfo.SetDescriptionId(applicationInfo.descriptionId);
+            preInstallBundleInfo.SetModuleName(applicationInfo.labelResource.moduleName);
+        }
+        preInstallBundleInfo.SetSystemApp(applicationInfo.isSystemApp);
+        auto moduleMap = hapInfo.second.GetInnerModuleInfos();
+        if (hapInfo.second.GetIsNewVersion()) {
+            preInstallBundleInfo.SetBundleType(hapInfo.second.GetApplicationBundleType());
+        } else if (!moduleMap.empty() && moduleMap.begin()->second.distro.installationFree) {
+            preInstallBundleInfo.SetBundleType(BundleType::ATOMIC_SERVICE);
+        }
+        if (!moduleMap.empty() && moduleMap.begin()->second.distro.moduleType == Profile::MODULE_TYPE_ENTRY) {
+            break;
+        }
+    }
+}
+
 class InnerReceiverImpl : public StatusReceiverHost {
 public:
     InnerReceiverImpl() = default;
@@ -638,7 +669,10 @@ ResultCode BMSEventHandler::GuardAgainstInstallInfosLossedStrategy()
     // When data exist, but parse all userinfo fails, reinstall all app.
     // For example: the AT database is lost or others.
     if (scanResultCode == ScanResultCode::SCAN_HAS_DATA_PARSE_FAILED) {
-        // Reinstall all app from install dir
+        // Reinstall all app from install dir. Unlike the preinstall branch
+        // below, a failed reinstall here KEEPS the rebuild mark on purpose:
+        // the installed side has not been verified in this branch, so the
+        // next boot must distrust the db and redo the whole recovery.
         ResultCode reinstallResult = ReInstallAllInstallDirApps();
         if (reinstallResult == ResultCode::REINSTALL_OK) {
             MarkRebuildFinish();
@@ -650,7 +684,8 @@ ResultCode BMSEventHandler::GuardAgainstInstallInfosLossedStrategy()
     // it can be judged that some bundles has installed.
     // Check install dir, and parse the hap in install dir to InnerBundleInfo
     std::map<std::string, std::vector<InnerBundleInfo>> installInfos;
-    ScanAndAnalyzeInstallInfos(installInfos);
+    std::map<std::string, PreInstallParsedInfo> preInstallParsedInfos;
+    ScanAndAnalyzeInstallInfos(installInfos, preInstallParsedInfos);
     if (installInfos.empty()) {
         LOG_E(BMS_TAG_DEFAULT, "check bundle path failed due to hap lossd or parse failed");
         return ResultCode::SYSTEM_ERROR;
@@ -665,9 +700,151 @@ ResultCode BMSEventHandler::GuardAgainstInstallInfosLossedStrategy()
     // Recover system-level HSP and inter-app shared bundles which are not scanned
     ReInstallSystemHspAndSharedBundles();
 
+    // The rdb salvage recovery may have restored preinstalled_bundle only
+    // partially while the rescan above rebuilt installed_bundle only: rebuild
+    // the lost preinstall rows before the rebuild mark is cleared, otherwise
+    // the partial table is trusted as complete from now on.
+    if (!RebuildPreInstallBundleInfos(preInstallParsedInfos, innerBundleUserInfoMaps)) {
+        // Never keep the rebuild mark for failed preinstall rows: the installed
+        // side has been verified and saved, and the mark would make the next
+        // boot distrust the db and redo the whole recovery, whose rescan would
+        // overwrite the bundle infos written by the user's install/uninstall/
+        // update operations since this boot (and resurrect keep-data
+        // uninstalled bundles from the preinstall dirs). The rows that could
+        // not be saved stay missing until the next OTA rebuilds them.
+        LOG_E(BMS_TAG_DEFAULT, "rebuild preinstall infos failed, the failed rows stay missing "
+            "until the next OTA");
+    }
+
+    // Resync the in-memory snapshot with the db: rows written earlier in this
+    // recovery by ReInstallSystemHspAndSharedBundles (e.g. system HSPs, whose
+    // dirs are not part of the scanned preinstall dirs) are not in the
+    // snapshot yet, and the same-boot consumers (preinstall exception
+    // handling, OTA install decisions) must see them.
+    hasLoadAllPreInstallBundleInfosFromDb_ = false;
+    LoadAllPreInstallBundleInfos();
+
     // Every bundle info has been verified written into db, rebuild is complete.
     MarkRebuildFinish();
     return ResultCode::RECOVER_OK;
+}
+
+bool BMSEventHandler::RebuildPreInstallBundleInfos(
+    const std::map<std::string, PreInstallParsedInfo> &preInstallParsedInfos,
+    const std::map<std::string, std::vector<InnerBundleUserInfo>> &userInfoMaps)
+{
+    if (preInstallParsedInfos.empty()) {
+        return true;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "dataMgr is null");
+        return false;
+    }
+    bool allSaved = true;
+    int32_t failedCount = 0;
+    for (const auto &parsedIter : preInstallParsedInfos) {
+        const std::string &bundleName = parsedIter.first;
+        if (bundleName.empty() || parsedIter.second.hapInfos.empty()) {
+            continue;
+        }
+        // query the current row directly instead of trusting the loadExistData_
+        // snapshot: rows written earlier in this recovery (e.g. by
+        // ReInstallSystemHspAndSharedBundles) are not in the snapshot yet
+        PreInstallBundleInfo currentInfo;
+        if (dataMgr->GetPreInstallBundleInfo(bundleName, currentInfo)) {
+            if (!RefreshPreInstallBundleInfo(dataMgr, bundleName, parsedIter.second, currentInfo)) {
+                allSaved = false;
+                failedCount++;
+            }
+            continue;
+        }
+        PreInstallBundleInfo preInstallBundleInfo;
+        // handle the lost row the way the first-boot preinstall does
+        PopulatePreInstallInfoFromParse(parsedIter.second, preInstallBundleInfo);
+        // no user data dir means the bundle is not installed for any user:
+        // keep the row as recoverable instead of marking it installed
+        preInstallBundleInfo.SetIsUninstalled(userInfoMaps.find(bundleName) == userInfoMaps.end());
+        if (!dataMgr->SavePreInstallBundleInfo(bundleName, preInstallBundleInfo)) {
+            LOG_E(BMS_TAG_DEFAULT, "rebuild preInstall info of %{public}s failed", bundleName.c_str());
+            allSaved = false;
+            failedCount++;
+            continue;
+        }
+        loadExistData_[bundleName] = preInstallBundleInfo;
+    }
+    LOG_I(BMS_TAG_DEFAULT, "rebuild preinstall infos finished, total:%{public}zu failed:%{public}d",
+        preInstallParsedInfos.size(), failedCount);
+    return allSaved;
+}
+
+bool BMSEventHandler::RefreshPreInstallBundleInfo(
+    const std::shared_ptr<BundleDataMgr> &dataMgr,
+    const std::string &bundleName, const PreInstallParsedInfo &parsedInfo, PreInstallBundleInfo &currentInfo)
+{
+    // keep the in-memory snapshot coherent with the row just read from db
+    loadExistData_[bundleName] = currentInfo;
+    // handle the row the way the first-boot preinstall does: refresh the
+    // fields derived from the current preinstall source and accumulate the
+    // paths, while the runtime state (uninstalled flag, force uninstalled
+    // users, ota new install users) is kept because no real install happened
+    PreInstallBundleInfo beforeInfo = currentInfo;
+    PopulatePreInstallInfoFromParse(parsedInfo, currentInfo);
+    // most rows are already in sync with their preinstall source: skip the
+    // write when the refreshed content is identical to the row read from db,
+    // the whole recovery must not rewrite the table row by row
+    if (beforeInfo.ToString() == currentInfo.ToString()) {
+        return true;
+    }
+    if (!dataMgr->SavePreInstallBundleInfo(bundleName, currentInfo)) {
+        LOG_E(BMS_TAG_DEFAULT, "refresh preInstall info of %{public}s failed", bundleName.c_str());
+        return false;
+    }
+    loadExistData_[bundleName] = currentInfo;
+    LOG_D(BMS_TAG_DEFAULT, "preInstall info of %{public}s exists, refreshed from the current preinstall source",
+        bundleName.c_str());
+    return true;
+}
+
+// Populate the fields derived from the current preinstall source onto the row,
+// mirroring the install-time needSavePreInstallInfo block of the first-boot
+// preinstall. Fields only a real install may change (isUninstalled, force
+// uninstalled users, ota new install users) are left
+// untouched: an existing row keeps its runtime state, a fresh row leaves them
+// at their defaults.
+void BMSEventHandler::PopulatePreInstallInfoFromParse(const PreInstallParsedInfo &parsedInfo,
+    PreInstallBundleInfo &preInstallBundleInfo)
+{
+    const auto &hapInfos = parsedInfo.hapInfos;
+    // defensive only: both call sites filter empty hapInfos beforehand
+    if (hapInfos.empty()) {
+        return;
+    }
+    std::unique_ptr<BundleInstallChecker> bundleInstallChecker = std::make_unique<BundleInstallChecker>();
+    const InnerBundleInfo &representativeInfo = hapInfos.begin()->second;
+    preInstallBundleInfo.SetBundleName(representativeInfo.GetBundleName());
+    preInstallBundleInfo.SetAppType(representativeInfo.GetAppType());
+    preInstallBundleInfo.SetVersionCode(bundleInstallChecker->GetVersionCode(hapInfos));
+    // a preinstall bundle may be preinstalled from several different dirs:
+    // the paths accumulate across the dirs like the first-boot installs do,
+    // never replace the collected set. This intentionally diverges from the
+    // OTA path (UpdatePreinstallDBForNotUpdatedBundle) which clears the paths
+    // and re-adds the current ones: a stale path of a removed preinstall dir
+    // is pruned by the next OTA, not by this recovery.
+    for (const auto &hapInfo : hapInfos) {
+        preInstallBundleInfo.AddBundlePath(hapInfo.first);
+    }
+#ifdef USE_PRE_BUNDLE_PROFILE
+    // the removable config is looked up by the FIRST dir of the bundle, the
+    // same first-wins rule the OTA needInstallMap accumulation applies; the
+    // sequential first-boot installs end up with the LAST dir's config, the
+    // divergence is accepted for the recovery
+    preInstallBundleInfo.SetRemovable(IsPreInstallRemovable(parsedInfo.bundleDir));
+#else
+    preInstallBundleInfo.SetRemovable(representativeInfo.IsRemovable());
+#endif
+    FillPreInstallResourceInfo(hapInfos, preInstallBundleInfo);
+    preInstallBundleInfo.SetU1Enable(representativeInfo.IsU1Enable());
 }
 
 ScanResultCode BMSEventHandler::ScanAndAnalyzeUserDatas(
@@ -906,7 +1083,8 @@ ResultCode BMSEventHandler::ReInstallAllInstallDirApps()
 }
 
 void BMSEventHandler::ScanAndAnalyzeInstallInfos(
-    std::map<std::string, std::vector<InnerBundleInfo>> &installInfos)
+    std::map<std::string, std::vector<InnerBundleInfo>> &installInfos,
+    std::map<std::string, PreInstallParsedInfo> &preInstallParsedInfos)
 {
     // Scan the installed directory
     std::map<std::string, std::vector<std::string>> hapPathsMap;
@@ -916,7 +1094,7 @@ void BMSEventHandler::ScanAndAnalyzeInstallInfos(
     // Scan preBundle directory
     std::vector<std::string> preInstallDirs;
     GetPreInstallDir(preInstallDirs);
-    AnalyzeHaps(true, preInstallDirs, installInfos);
+    AnalyzeHaps(true, preInstallDirs, installInfos, preInstallParsedInfos);
 }
 
 void BMSEventHandler::ScanInstallDir(
@@ -1129,7 +1307,8 @@ void BMSEventHandler::AnalyzeHaps(
 void BMSEventHandler::AnalyzeHaps(
     bool isPreInstallApp,
     const std::vector<std::string> &bundleDirs,
-    std::map<std::string, std::vector<InnerBundleInfo>> &installInfos)
+    std::map<std::string, std::vector<InnerBundleInfo>> &installInfos,
+    std::map<std::string, PreInstallParsedInfo> &preInstallParsedInfos)
 {
     for (const auto &bundleDir : bundleDirs) {
         std::unordered_map<std::string, InnerBundleInfo> hapInfos;
@@ -1137,8 +1316,34 @@ void BMSEventHandler::AnalyzeHaps(
             LOG_E(BMS_TAG_DEFAULT, "Parse bundleDir(%{public}s) failed", bundleDir.c_str());
             continue;
         }
-
+        // the copy (CollectInstallInfos) must run before the move
+        // (CollectPreInstallParsedInfos): a reorder would silently leave
+        // installInfos with moved-from empty entries
         CollectInstallInfos(hapInfos, installInfos);
+        if (!isPreInstallApp) {
+            continue;
+        }
+        CollectPreInstallParsedInfos(bundleDir, hapInfos, preInstallParsedInfos);
+    }
+}
+
+void BMSEventHandler::CollectPreInstallParsedInfos(const std::string &bundleDir,
+    std::unordered_map<std::string, InnerBundleInfo> &hapInfos,
+    std::map<std::string, PreInstallParsedInfo> &preInstallParsedInfos)
+{
+    for (auto &hapInfo : hapInfos) {
+        std::string parsedBundleName = hapInfo.second.GetBundleName();
+        auto resultIter = preInstallParsedInfos.find(parsedBundleName);
+        if (resultIter == preInstallParsedInfos.end()) {
+            PreInstallParsedInfo parsedInfo;
+            parsedInfo.bundleDir = bundleDir;
+            parsedInfo.hapInfos.emplace(hapInfo.first, std::move(hapInfo.second));
+            preInstallParsedInfos.emplace(parsedBundleName, std::move(parsedInfo));
+            continue;
+        }
+        // a second preinstall dir of the same bundle (e.g. module update):
+        // merge the hap paths and keep the first dir for the removable lookup
+        resultIter->second.hapInfos.emplace(hapInfo.first, std::move(hapInfo.second));
     }
 }
 
@@ -6199,24 +6404,7 @@ void BMSEventHandler::ConvertToOnDemandInstallBundleInfo(const std::unordered_ma
     }
     preInstallBundleInfo.SetRemovable(true);
     preInstallBundleInfo.SetIsUninstalled(false);
-    for (const auto &innerBundleInfo : infos) {
-        auto applicationInfo = innerBundleInfo.second.GetBaseApplicationInfo();
-        innerBundleInfo.second.AdaptMainLauncherResourceInfo(applicationInfo, true);
-        preInstallBundleInfo.SetLabelId(applicationInfo.labelResource.id);
-        preInstallBundleInfo.SetIconId(applicationInfo.iconResource.id);
-        preInstallBundleInfo.SetDescriptionId(applicationInfo.descriptionId);
-        preInstallBundleInfo.SetModuleName(applicationInfo.labelResource.moduleName);
-        preInstallBundleInfo.SetSystemApp(applicationInfo.isSystemApp);
-        auto moduleMap = innerBundleInfo.second.GetInnerModuleInfos();
-        if (innerBundleInfo.second.GetIsNewVersion()) {
-            preInstallBundleInfo.SetBundleType(innerBundleInfo.second.GetApplicationBundleType());
-        } else if (!moduleMap.empty() && moduleMap.begin()->second.distro.installationFree) {
-            preInstallBundleInfo.SetBundleType(BundleType::ATOMIC_SERVICE);
-        }
-        if (!moduleMap.empty() && moduleMap.begin()->second.distro.moduleType == Profile::MODULE_TYPE_ENTRY) {
-            break;
-        }
-    }
+    FillPreInstallResourceInfo(infos, preInstallBundleInfo);
 }
 
 void BMSEventHandler::CreateUninstalledPreloadDir()

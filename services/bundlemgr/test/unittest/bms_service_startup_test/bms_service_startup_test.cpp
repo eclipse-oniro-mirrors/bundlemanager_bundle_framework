@@ -115,7 +115,8 @@ HWTEST_F(BmsServiceStartupTest, GuardAgainst_003, Function | SmallTest | Level0)
 {
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     std::map<std::string, std::vector<InnerBundleInfo>> installInfos;
-    handler->ScanAndAnalyzeInstallInfos(installInfos);
+    std::map<std::string, PreInstallParsedInfo> preInstallParsedInfos;
+    handler->ScanAndAnalyzeInstallInfos(installInfos, preInstallParsedInfos);
     EXPECT_EQ(false, installInfos.empty());
 }
 
@@ -358,7 +359,8 @@ HWTEST_F(BmsServiceStartupTest, PreInstall_007, Function | SmallTest | Level0)
     std::map<std::string, std::vector<InnerBundleUserInfo>> userInfoMaps;
     bool res = handler->CombineBundleInfoAndUserInfo(installInfos, userInfoMaps);
     EXPECT_EQ(res, false);
-    handler->ScanAndAnalyzeInstallInfos(installInfos);
+    std::map<std::string, PreInstallParsedInfo> preInstallParsedInfos;
+    handler->ScanAndAnalyzeInstallInfos(installInfos, preInstallParsedInfos);
     handler->ScanAndAnalyzeUserDatas(userInfoMaps);
     res = handler->CombineBundleInfoAndUserInfo(installInfos, userInfoMaps);
     EXPECT_EQ(res, false);

@@ -56,6 +56,14 @@ extern bool g_mockSubscribeResult;
 extern bool g_mockSubscribeCalled;
 
 namespace OHOS {
+namespace Security {
+namespace AccessToken {
+    void SetAccessTokenIDForTest(unsigned int value);
+}
+}
+}
+
+namespace OHOS {
 namespace {
     const std::string CALL_MOCK_BUNDLE_DIR_SUCCESS = "callMockBundleDirSuccess";
     const std::string CALL_MOCK_BUNDLE_DIR_FAILED = "callMockBundleDirFailed";
@@ -131,6 +139,15 @@ bool OtaFlagBitSet(uint32_t bit)
 
 const std::string DB_REBUILD_MARK_TEST = "dbRebuildMark";
 const std::string DB_REBUILD_MARK_DOING_TEST = "doing";
+
+const std::string REBUILD_PREINSTALL_NAME_A = "com.example.rebuildpreinstall.a";
+const std::string REBUILD_PREINSTALL_NAME_B = "com.example.rebuildpreinstall.b";
+const std::string REBUILD_PREINSTALL_NAME_C = "com.example.rebuildpreinstall.c";
+const std::string REBUILD_PREINSTALL_NAME_D = "com.example.rebuildpreinstall.d";
+const std::string REBUILD_PREINSTALL_DIR = "/system/app/rebuildpreinstall";
+const std::string REBUILD_PREINSTALL_SECOND_DIR = "/sys_prod/etc/app/module_update/rebuildpreinstall";
+constexpr uint32_t REBUILD_PREINSTALL_VERSION = 100;
+constexpr uint32_t REBUILD_PREINSTALL_ORIGINAL_VERSION = 50;
 
 const std::string SKILL_BUNDLE_NAME = "com.example.skilldir";
 const std::string SKILL_BUNDLE_NAME_TWO = "com.example.skilldir2";
@@ -228,6 +245,37 @@ private:
     sptr<IInstalld> oldProxy_;
 };
 
+// Installd proxy for the guard-recovery test: ScanDir answers from the
+// configured map (unknown dirs return an empty result), GetFileStat reports a
+// plain directory so AnalyzeUserData accepts the fabricated user data.
+class GuardRecoveryInstalldProxy : public IRemoteProxy<IInstalld> {
+public:
+    GuardRecoveryInstalldProxy() : IRemoteProxy<IInstalld>(nullptr) {}
+
+    ErrCode ScanDir(const std::string &dir, ScanMode scanMode, ResultMode resultMode,
+        std::vector<std::string> &paths) override
+    {
+        paths.clear();
+        auto iter = scanResults.find(dir);
+        if (iter != scanResults.end()) {
+            paths = iter->second;
+        }
+        return ERR_OK;
+    }
+
+    ErrCode GetFileStat(const std::string &file, BundleDirScene scene, FileStat &fileStat) override
+    {
+        fileStat.isDir = true;
+        fileStat.uid = TEST_UID;
+        fileStat.gid = TEST_UID;
+        fileStat.mode = 0;
+        fileStat.lastModifyTime = 0;
+        return ERR_OK;
+    }
+
+    std::map<std::string, std::vector<std::string>> scanResults;
+};
+
 InnerBundleInfo BuildSkillBundle(const std::string &bundleName,
     const std::map<std::string, std::vector<std::string>> &moduleSkills)
 {
@@ -248,6 +296,42 @@ InnerBundleInfo BuildSkillBundle(const std::string &bundleName,
         innerBundleInfo.InsertInnerModuleInfo(item.first, moduleInfo);
     }
     return innerBundleInfo;
+}
+
+InnerBundleInfo BuildParsedPreInstallInfo(const std::string &bundleName)
+{
+    ApplicationInfo appInfo;
+    appInfo.bundleName = bundleName;
+    // explicit removable so the non-USE_PRE_BUNDLE_PROFILE build takes a
+    // deterministic value from the hap info (its default is true)
+    appInfo.removable = false;
+    BundleInfo bundleInfo;
+    bundleInfo.versionCode = REBUILD_PREINSTALL_VERSION;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetBaseApplicationInfo(appInfo);
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    return innerBundleInfo;
+}
+
+PreInstallParsedInfo BuildPreInstallParsedInfo(const std::string &bundleName)
+{
+    PreInstallParsedInfo parsedInfo;
+    parsedInfo.bundleDir = REBUILD_PREINSTALL_DIR;
+    parsedInfo.hapInfos.emplace(REBUILD_PREINSTALL_DIR + ServiceConstants::PATH_SEPARATOR +
+        bundleName + ServiceConstants::INSTALL_FILE_SUFFIX, BuildParsedPreInstallInfo(bundleName));
+    return parsedInfo;
+}
+
+PreInstallParsedInfo BuildMultiPathParsedInfo(const std::string &bundleName)
+{
+    PreInstallParsedInfo parsedInfo;
+    parsedInfo.bundleDir = REBUILD_PREINSTALL_DIR;
+    parsedInfo.hapInfos.emplace(REBUILD_PREINSTALL_DIR + ServiceConstants::PATH_SEPARATOR +
+        bundleName + ServiceConstants::INSTALL_FILE_SUFFIX, BuildParsedPreInstallInfo(bundleName));
+    // the same preinstall bundle preinstalled from a second, different dir
+    parsedInfo.hapInfos.emplace(REBUILD_PREINSTALL_SECOND_DIR + ServiceConstants::PATH_SEPARATOR +
+        bundleName + "_feature" + ServiceConstants::INSTALL_FILE_SUFFIX, BuildParsedPreInstallInfo(bundleName));
+    return parsedInfo;
 }
 
 std::string GetSkillBundleDir(const std::string &bundleName)
@@ -530,6 +614,316 @@ HWTEST_F(BmsEventHandlerTest, IsRebuildInterrupted_0300, Function | SmallTest | 
     EXPECT_TRUE(handler->IsRebuildInterrupted(failedPath));
     bmsParam->DeleteBmsParam(DB_REBUILD_MARK_TEST);
     ASSERT_EQ(rmdir(failedPath.c_str()), 0);
+}
+
+/**
+ * @tc.number: RebuildPreInstallBundleInfos_0100
+ * @tc.name: RebuildPreInstallBundleInfos
+ * @tc.desc: rows lost from the salvaged preinstalled_bundle table are rebuilt
+ *           from the parsed preinstall dirs: a bundle with user data is marked
+ *           installed, a bundle without user data stays recoverable.
+ */
+HWTEST_F(BmsEventHandlerTest, RebuildPreInstallBundleInfos_0100, Function | SmallTest | Level0)
+{
+    InitBundleDataMgrForTest();
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    PreInstallBundleInfo cleanInfo;
+    cleanInfo.SetBundleName(REBUILD_PREINSTALL_NAME_A);
+    dataMgr->DeletePreInstallBundleInfo(REBUILD_PREINSTALL_NAME_A, cleanInfo);
+    cleanInfo.SetBundleName(REBUILD_PREINSTALL_NAME_B);
+    dataMgr->DeletePreInstallBundleInfo(REBUILD_PREINSTALL_NAME_B, cleanInfo);
+
+    std::map<std::string, PreInstallParsedInfo> preInstallParsedInfos;
+    preInstallParsedInfos.emplace(REBUILD_PREINSTALL_NAME_A, BuildPreInstallParsedInfo(REBUILD_PREINSTALL_NAME_A));
+    preInstallParsedInfos.emplace(REBUILD_PREINSTALL_NAME_B, BuildPreInstallParsedInfo(REBUILD_PREINSTALL_NAME_B));
+
+    std::map<std::string, std::vector<InnerBundleUserInfo>> userInfoMaps;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = REBUILD_PREINSTALL_NAME_A;
+    userInfoMaps[REBUILD_PREINSTALL_NAME_A].emplace_back(userInfo);
+
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_TRUE(handler->RebuildPreInstallBundleInfos(preInstallParsedInfos, userInfoMaps));
+
+    PreInstallBundleInfo rebuiltA;
+    EXPECT_TRUE(dataMgr->GetPreInstallBundleInfo(REBUILD_PREINSTALL_NAME_A, rebuiltA));
+    EXPECT_EQ(rebuiltA.GetBundleName(), REBUILD_PREINSTALL_NAME_A);
+    EXPECT_EQ(rebuiltA.GetVersionCode(), REBUILD_PREINSTALL_VERSION);
+    EXPECT_FALSE(rebuiltA.IsUninstalled());
+    EXPECT_FALSE(rebuiltA.GetBundlePaths().empty());
+
+    PreInstallBundleInfo rebuiltB;
+    EXPECT_TRUE(dataMgr->GetPreInstallBundleInfo(REBUILD_PREINSTALL_NAME_B, rebuiltB));
+    EXPECT_TRUE(rebuiltB.IsUninstalled());
+    EXPECT_FALSE(rebuiltB.GetBundlePaths().empty());
+
+    cleanInfo.SetBundleName(REBUILD_PREINSTALL_NAME_A);
+    dataMgr->DeletePreInstallBundleInfo(REBUILD_PREINSTALL_NAME_A, cleanInfo);
+    cleanInfo.SetBundleName(REBUILD_PREINSTALL_NAME_B);
+    dataMgr->DeletePreInstallBundleInfo(REBUILD_PREINSTALL_NAME_B, cleanInfo);
+}
+
+/**
+ * @tc.number: RebuildPreInstallBundleInfos_0200
+ * @tc.name: RebuildPreInstallBundleInfos
+ * @tc.desc: a row that survived the salvage is handled the way the first-boot
+ *           preinstall does: source-derived fields (versionCode) are refreshed
+ *           and paths accumulate, while the runtime state (uninstalled flag,
+ *           force uninstalled users) is kept.
+ */
+HWTEST_F(BmsEventHandlerTest, RebuildPreInstallBundleInfos_0200, Function | SmallTest | Level0)
+{
+    InitBundleDataMgrForTest();
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    PreInstallBundleInfo cleanInfo;
+    cleanInfo.SetBundleName(REBUILD_PREINSTALL_NAME_C);
+    dataMgr->DeletePreInstallBundleInfo(REBUILD_PREINSTALL_NAME_C, cleanInfo);
+
+    PreInstallBundleInfo survived;
+    survived.SetBundleName(REBUILD_PREINSTALL_NAME_C);
+    survived.SetVersionCode(REBUILD_PREINSTALL_ORIGINAL_VERSION);
+    survived.SetIsUninstalled(true);
+    survived.AddForceUnisntalledUser(TEST_U100);
+    survived.AddBundlePath(REBUILD_PREINSTALL_DIR + "/survived.hap");
+    ASSERT_TRUE(dataMgr->SavePreInstallBundleInfo(REBUILD_PREINSTALL_NAME_C, survived));
+
+    std::map<std::string, PreInstallParsedInfo> preInstallParsedInfos;
+    preInstallParsedInfos.emplace(REBUILD_PREINSTALL_NAME_C, BuildPreInstallParsedInfo(REBUILD_PREINSTALL_NAME_C));
+    std::map<std::string, std::vector<InnerBundleUserInfo>> userInfoMaps;
+
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_TRUE(handler->RebuildPreInstallBundleInfos(preInstallParsedInfos, userInfoMaps));
+
+    PreInstallBundleInfo afterRebuild;
+    EXPECT_TRUE(dataMgr->GetPreInstallBundleInfo(REBUILD_PREINSTALL_NAME_C, afterRebuild));
+    // source-derived field refreshed from the current preinstall source
+    EXPECT_EQ(afterRebuild.GetVersionCode(), REBUILD_PREINSTALL_VERSION);
+    // runtime state kept: no real install happened during the recovery
+    EXPECT_TRUE(afterRebuild.IsUninstalled());
+    EXPECT_TRUE(afterRebuild.HasForceUninstalledUser(TEST_U100));
+    // paths accumulate across the preinstall dirs, the original path is kept
+    EXPECT_TRUE(afterRebuild.HasBundlePath(REBUILD_PREINSTALL_DIR + "/survived.hap"));
+    EXPECT_TRUE(afterRebuild.HasBundlePath(REBUILD_PREINSTALL_DIR + ServiceConstants::PATH_SEPARATOR +
+        REBUILD_PREINSTALL_NAME_C + ServiceConstants::INSTALL_FILE_SUFFIX));
+
+    dataMgr->DeletePreInstallBundleInfo(REBUILD_PREINSTALL_NAME_C, cleanInfo);
+}
+
+/**
+ * @tc.number: RebuildPreInstallBundleInfos_0300
+ * @tc.name: RebuildPreInstallBundleInfos
+ * @tc.desc: empty parsed infos need no rebuild and succeed; a null dataMgr or
+ *           a failing preinstall storage must fail the rebuild instead of
+ *           pretending success (the caller clears the rebuild mark anyway and
+ *           trusts the db, so user operations are never overwritten by a
+ *           redundant full recovery on the next boot).
+ */
+HWTEST_F(BmsEventHandlerTest, RebuildPreInstallBundleInfos_0300, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    std::map<std::string, PreInstallParsedInfo> preInstallParsedInfos;
+    std::map<std::string, std::vector<InnerBundleUserInfo>> userInfoMaps;
+    EXPECT_TRUE(handler->RebuildPreInstallBundleInfos(preInstallParsedInfos, userInfoMaps));
+
+    preInstallParsedInfos.emplace(REBUILD_PREINSTALL_NAME_A, BuildPreInstallParsedInfo(REBUILD_PREINSTALL_NAME_A));
+    auto service = DelayedSingleton<BundleMgrService>::GetInstance();
+    auto oldDataMgr = service->dataMgr_;
+    service->dataMgr_ = nullptr;
+    EXPECT_FALSE(handler->RebuildPreInstallBundleInfos(preInstallParsedInfos, userInfoMaps));
+    service->dataMgr_ = oldDataMgr;
+
+    InitBundleDataMgrForTest();
+    auto dataMgr = service->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    auto oldStorage = dataMgr->preInstallDataStorage_;
+    dataMgr->preInstallDataStorage_ = nullptr;
+    EXPECT_FALSE(handler->RebuildPreInstallBundleInfos(preInstallParsedInfos, userInfoMaps));
+    dataMgr->preInstallDataStorage_ = oldStorage;
+}
+
+/**
+ * @tc.number: RebuildPreInstallBundleInfos_0400
+ * @tc.name: RebuildPreInstallBundleInfos
+ * @tc.desc: a preinstall bundle preinstalled from several different dirs is
+ *           handled the way the first-boot preinstall does: the source-derived
+ *           fields (versionCode, removable) are refreshed from the current
+ *           preinstall source, the paths of all the dirs accumulate, and the
+ *           runtime state (uninstalled flag, force uninstalled users) is kept.
+ */
+HWTEST_F(BmsEventHandlerTest, RebuildPreInstallBundleInfos_0400, Function | SmallTest | Level0)
+{
+    InitBundleDataMgrForTest();
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    PreInstallBundleInfo cleanInfo;
+    cleanInfo.SetBundleName(REBUILD_PREINSTALL_NAME_D);
+    dataMgr->DeletePreInstallBundleInfo(REBUILD_PREINSTALL_NAME_D, cleanInfo);
+    // normalize the global preinstall profile state so IsPreInstallRemovable
+    // takes a deterministic value for the unmatched test dir regardless of
+    // what earlier test cases loaded, and reload it for the later cases
+    BMSEventHandler::ClearPreInstallCache();
+
+    // the original row aggregates only the first preinstall dir and carries
+    // runtime state plus stale field values from the last real install
+    PreInstallBundleInfo original;
+    original.SetBundleName(REBUILD_PREINSTALL_NAME_D);
+    original.SetVersionCode(REBUILD_PREINSTALL_ORIGINAL_VERSION);
+    original.SetRemovable(true);
+    original.SetIsUninstalled(true);
+    original.AddForceUnisntalledUser(TEST_U100);
+    original.AddBundlePath(REBUILD_PREINSTALL_DIR + ServiceConstants::PATH_SEPARATOR +
+        REBUILD_PREINSTALL_NAME_D + ServiceConstants::INSTALL_FILE_SUFFIX);
+    ASSERT_TRUE(dataMgr->SavePreInstallBundleInfo(REBUILD_PREINSTALL_NAME_D, original));
+
+    std::map<std::string, PreInstallParsedInfo> preInstallParsedInfos;
+    preInstallParsedInfos.emplace(REBUILD_PREINSTALL_NAME_D,
+        BuildMultiPathParsedInfo(REBUILD_PREINSTALL_NAME_D));
+    std::map<std::string, std::vector<InnerBundleUserInfo>> userInfoMaps;
+
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_TRUE(handler->RebuildPreInstallBundleInfos(preInstallParsedInfos, userInfoMaps));
+
+    PreInstallBundleInfo afterRebuild;
+    EXPECT_TRUE(dataMgr->GetPreInstallBundleInfo(REBUILD_PREINSTALL_NAME_D, afterRebuild));
+    // source-derived fields refreshed from the current preinstall source
+    EXPECT_EQ(afterRebuild.GetVersionCode(), REBUILD_PREINSTALL_VERSION);
+    EXPECT_FALSE(afterRebuild.IsRemovable());
+    // runtime state kept: no real install happened during the recovery
+    EXPECT_TRUE(afterRebuild.IsUninstalled());
+    EXPECT_TRUE(afterRebuild.HasForceUninstalledUser(TEST_U100));
+    // the paths of all the preinstall dirs accumulate into the row
+    EXPECT_TRUE(afterRebuild.HasBundlePath(REBUILD_PREINSTALL_DIR + ServiceConstants::PATH_SEPARATOR +
+        REBUILD_PREINSTALL_NAME_D + ServiceConstants::INSTALL_FILE_SUFFIX));
+    EXPECT_TRUE(afterRebuild.HasBundlePath(REBUILD_PREINSTALL_SECOND_DIR + ServiceConstants::PATH_SEPARATOR +
+        REBUILD_PREINSTALL_NAME_D + "_feature" + ServiceConstants::INSTALL_FILE_SUFFIX));
+    // the in-memory snapshot is kept coherent for the consumers of this boot
+    EXPECT_NE(handler->loadExistData_.find(REBUILD_PREINSTALL_NAME_D), handler->loadExistData_.end());
+
+    dataMgr->DeletePreInstallBundleInfo(REBUILD_PREINSTALL_NAME_D, cleanInfo);
+    BMSEventHandler::LoadPreInstallProFile();
+}
+
+/**
+ * @tc.number: AnalyzeHaps_0200
+ * @tc.name: CollectPreInstallParsedInfos
+ * @tc.desc: the preinstall capture of AnalyzeHaps, extracted into
+ *           CollectPreInstallParsedInfos (driving AnalyzeHaps itself needs
+ *           real hap parsing, unavailable in the unit-test environment): the
+ *           haps of one dir are grouped by bundle name, a second dir of the
+ *           same bundle merges its hap paths into the same entry while the
+ *           first dir is kept for the removable lookup, and a different
+ *           bundle gets its own entry.
+ */
+HWTEST_F(BmsEventHandlerTest, AnalyzeHaps_0200, Function | SmallTest | Level0)
+{
+    const std::string &firstDir = REBUILD_PREINSTALL_DIR;
+    const std::string &secondDir = REBUILD_PREINSTALL_SECOND_DIR;
+    const std::string &bundleName = REBUILD_PREINSTALL_NAME_A;
+    const std::string secondDirHapPath = secondDir + ServiceConstants::PATH_SEPARATOR + bundleName +
+        "_entry" + ServiceConstants::INSTALL_FILE_SUFFIX;
+    std::map<std::string, PreInstallParsedInfo> preInstallParsedInfos;
+
+    std::unordered_map<std::string, InnerBundleInfo> firstDirHaps;
+    firstDirHaps.emplace(firstDir + ServiceConstants::PATH_SEPARATOR + bundleName +
+        ServiceConstants::INSTALL_FILE_SUFFIX, BuildParsedPreInstallInfo(bundleName));
+    firstDirHaps.emplace(firstDir + ServiceConstants::PATH_SEPARATOR + bundleName + "_feature" +
+        ServiceConstants::INSTALL_FILE_SUFFIX, BuildParsedPreInstallInfo(bundleName));
+    BMSEventHandler::CollectPreInstallParsedInfos(firstDir, firstDirHaps, preInstallParsedInfos);
+    ASSERT_EQ(preInstallParsedInfos.size(), static_cast<size_t>(1));
+    auto firstEntry = preInstallParsedInfos.find(bundleName);
+    ASSERT_NE(firstEntry, preInstallParsedInfos.end());
+    EXPECT_EQ(firstEntry->second.bundleDir, firstDir);
+    EXPECT_EQ(firstEntry->second.hapInfos.size(), static_cast<size_t>(2));
+
+    // a second dir of the same bundle: the hap paths merge into the same
+    // entry while the first dir is kept for the removable lookup
+    std::unordered_map<std::string, InnerBundleInfo> secondDirHaps;
+    secondDirHaps.emplace(secondDirHapPath, BuildParsedPreInstallInfo(bundleName));
+    BMSEventHandler::CollectPreInstallParsedInfos(secondDir, secondDirHaps, preInstallParsedInfos);
+    EXPECT_EQ(preInstallParsedInfos.size(), static_cast<size_t>(1));
+    EXPECT_EQ(firstEntry->second.bundleDir, firstDir);
+    EXPECT_EQ(firstEntry->second.hapInfos.size(), static_cast<size_t>(3));
+    EXPECT_EQ(firstEntry->second.hapInfos.count(secondDirHapPath), static_cast<size_t>(1));
+
+    // a different bundle gets its own entry with its own dir
+    std::unordered_map<std::string, InnerBundleInfo> otherBundleHaps;
+    otherBundleHaps.emplace(secondDir + ServiceConstants::PATH_SEPARATOR + REBUILD_PREINSTALL_NAME_B +
+        ServiceConstants::INSTALL_FILE_SUFFIX, BuildParsedPreInstallInfo(REBUILD_PREINSTALL_NAME_B));
+    BMSEventHandler::CollectPreInstallParsedInfos(secondDir, otherBundleHaps, preInstallParsedInfos);
+    EXPECT_EQ(preInstallParsedInfos.size(), static_cast<size_t>(2));
+    auto secondEntry = preInstallParsedInfos.find(REBUILD_PREINSTALL_NAME_B);
+    ASSERT_NE(secondEntry, preInstallParsedInfos.end());
+    EXPECT_EQ(secondEntry->second.bundleDir, secondDir);
+    EXPECT_EQ(secondEntry->second.hapInfos.size(), static_cast<size_t>(1));
+}
+
+/**
+ * @tc.number: GuardAgainstInstallInfosLossedStrategy_0200
+ * @tc.name: GuardAgainstInstallInfosLossedStrategy
+ * @tc.desc: the recovery contract: a failed preinstall rebuild must NOT keep
+ *           the rebuild mark — the guard clears the mark and returns
+ *           RECOVER_OK, so the next boot trusts the db instead of rerunning
+ *           the whole recovery that would overwrite the user's install/
+ *           uninstall/update operations. Needs one parseable preinstall hap
+ *           on the device image, skipped otherwise.
+ */
+HWTEST_F(BmsEventHandlerTest, GuardAgainstInstallInfosLossedStrategy_0200, Function | SmallTest | Level0)
+{
+    InitBundleMgrServiceForTest();
+    InitBundleDataMgrForTest();
+    auto service = DelayedSingleton<BundleMgrService>::GetInstance();
+    auto dataMgr = service->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    auto bmsParam = service->GetBmsParam();
+    ASSERT_NE(bmsParam, nullptr);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+
+    // the recovery rescan needs at least one parseable preinstall dir on the
+    // image; the deep path cannot run without it
+    std::vector<std::string> preInstallDirs;
+    handler->GetPreInstallDir(preInstallDirs);
+    std::unordered_map<std::string, InnerBundleInfo> hapInfos;
+    bool parseable = !preInstallDirs.empty() &&
+        handler->CheckAndParseHapFiles(preInstallDirs.front(), true, hapInfos) && !hapInfos.empty();
+    if (!parseable) {
+        GTEST_SKIP() << "no parseable preinstall hap on this image";
+    }
+
+    // the rdb salvage left the rebuild mark behind
+    ASSERT_TRUE(bmsParam->SaveBmsParam(DB_REBUILD_MARK_TEST, DB_REBUILD_MARK_DOING_TEST));
+    EXPECT_TRUE(handler->IsRebuildInterrupted());
+
+    // fabricate the scanned user data so the recovery takes the rescan path
+    GuardRecoveryInstalldProxy *proxy = new GuardRecoveryInstalldProxy();
+    std::string baseDataDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[0];
+    std::string userDataDir = baseDataDir + ServiceConstants::PATH_SEPARATOR + std::to_string(TEST_U100) +
+        ServiceConstants::BASE;
+    proxy->scanResults[baseDataDir] = {std::to_string(TEST_U100)};
+    proxy->scanResults[userDataDir] = {REBUILD_PREINSTALL_NAME_A};
+    auto oldProxy = InstalldClient::GetInstance()->installdProxy_;
+    InstalldClient::GetInstance()->installdProxy_ = proxy;
+    AccessToken::SetAccessTokenIDForTest(1);
+
+    // the preinstall rows cannot be saved: the rebuild must fail
+    auto oldStorage = dataMgr->preInstallDataStorage_;
+    dataMgr->preInstallDataStorage_ = nullptr;
+
+    ResultCode rc = handler->GuardAgainstInstallInfosLossedStrategy();
+
+    // restore the environment before any assertion can abort the test
+    dataMgr->preInstallDataStorage_ = oldStorage;
+    InstalldClient::GetInstance()->installdProxy_ = oldProxy;
+    AccessToken::SetAccessTokenIDForTest(0);
+    bmsParam->DeleteBmsParam(DB_REBUILD_MARK_TEST);
+
+    EXPECT_EQ(rc, ResultCode::RECOVER_OK);
+    // the mark is cleared even though the rebuild failed: the next boot must
+    // trust the db instead of rerunning the whole recovery
+    EXPECT_FALSE(handler->IsRebuildInterrupted());
+    std::string mark;
+    EXPECT_FALSE(bmsParam->GetBmsParam(DB_REBUILD_MARK_TEST, mark));
 }
 
 /**
