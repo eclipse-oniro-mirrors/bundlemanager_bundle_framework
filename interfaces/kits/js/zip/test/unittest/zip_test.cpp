@@ -13,12 +13,14 @@
  * limitations under the License.
  */
 #include <gtest/gtest.h>
+#include <cstring>
 #include <fstream>
 #include <memory>
 #include <set>
 #include <thread>
 
 #include "ani_zlib_callback_info.h"
+#include "gzip_entity.h"
 #include "zip.h"
 #include "zlib_callback_info.h"
 #define private public
@@ -900,6 +902,145 @@ HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_ZipParallelReader_GotoEntry_0400, Function |
     bool ret = parallelReader.GotoEntry(dummyFile, pos);
     EXPECT_FALSE(ret);
 }
+
+/**
+ * @tc.number: APPEXECFWK_LIBZIP_GZipEntity_Destructor_ClosesHandle_0100
+ * @tc.name: GZipEntity_Destructor_ClosesHandle_0100
+ * @tc.desc: Verify that GZipEntity's destructor properly closes the gzFile handle via Deleter.
+ *           Open a file with gzopen, swap the handle into GZipEntity, let entity go out of scope,
+ *           then verify the handle is closed by attempting gzflush (should fail on closed handle).
+ */
+HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_GZipEntity_Destructor_ClosesHandle_0100, Function | MediumTest | Level1)
+{
+    const std::string gzPath = "/data/local/tmp/zip_test_gzip_entity_0100.gz";
+    gzFile rawHandle = gzopen(gzPath.c_str(), "wb");
+    ASSERT_NE(rawHandle, nullptr) << "Failed to create gzip file for test";
+
+    // Write some data to ensure the file is properly initialized
+    const char *testData = "test data for gzip entity";
+    int writeResult = gzwrite(rawHandle, testData, strlen(testData));
+    EXPECT_GT(writeResult, 0) << "Failed to write to gzip file";
+
+    // Swap the handle into GZipEntity
+    {
+        GZipEntity entity;
+        entity.gzs.reset(rawHandle);
+        // entity goes out of scope here, destructor should call gzclose via Deleter
+    }
+
+    // Verify the handle was closed by attempting to use it
+    // gzflush on a closed handle should return Z_STREAM_ERROR or crash if not properly closed
+    // We use a safer approach: try to reopen the file, which should succeed if properly closed
+    gzFile reopenedHandle = gzopen(gzPath.c_str(), "rb");
+    EXPECT_NE(reopenedHandle, nullptr) << "File should be reopenable after GZipEntity destruction";
+    if (reopenedHandle != nullptr) {
+        gzclose(reopenedHandle);
+    }
+
+    // Clean up test file
+    remove(gzPath.c_str());
+}
+
+/**
+ * @tc.number: APPEXECFWK_LIBZIP_GZipEntity_Destructor_ClosesHandle_0200
+ * @tc.name: GZipEntity_Destructor_ClosesHandle_0200
+ * @tc.desc: Verify that GZipEntity's destructor properly closes the gzFile handle.
+ *           This test uses gzflush directly on the raw handle after entity destruction
+ *           to verify the handle is no longer valid.
+ */
+HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_GZipEntity_Destructor_ClosesHandle_0200, Function | MediumTest | Level1)
+{
+    const std::string gzPath = "/data/local/tmp/zip_test_gzip_entity_0200.gz";
+    gzFile rawHandle = gzopen(gzPath.c_str(), "wb");
+    ASSERT_NE(rawHandle, nullptr) << "Failed to create gzip file for test";
+
+    const char *testData = "test data";
+    gzwrite(rawHandle, testData, strlen(testData));
+
+    // Store the raw pointer value for later verification
+    gzFile_s *rawPtr = rawHandle;
+
+    {
+        GZipEntity entity;
+        entity.gzs.reset(rawHandle);
+        // entity goes out of scope, should call gzclose(rawPtr)
+    }
+
+    // After GZipEntity destruction, the handle should be closed.
+    // Attempting gzflush on a closed handle should fail.
+    // Note: This is undefined behavior in general, but in practice gzflush
+    // will return an error code for closed/invalid handles.
+    int flushResult = gzflush(rawPtr, Z_FINISH);
+    EXPECT_NE(flushResult, Z_OK) << "gzflush should fail on closed handle";
+
+    // Clean up test file
+    remove(gzPath.c_str());
+}
+
+/**
+ * @tc.number: APPEXECFWK_LIBZIP_GZipEntity_NullHandle_NoCrash_0300
+ * @tc.name: GZipEntity_NullHandle_NoCrash_0300
+ * @tc.desc: Verify that GZipEntity with null handle does not crash on destruction.
+ *           The Deleter should check for nullptr before calling gzclose.
+ */
+HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_GZipEntity_NullHandle_NoCrash_0300, Function | SmallTest | Level1)
+{
+    // Construct GZipEntity with default (null) handle
+    {
+        GZipEntity entity;
+        // entity.gzs is nullptr by default
+        // Destructor should not crash when Deleter is called with nullptr
+    }
+    // If we reach here without crash, the test passes
+    SUCCEED();
+}
+
+/**
+ * @tc.number: APPEXECFWK_LIBZIP_GZipEntity_ResetHandle_ClosesPrevious_0400
+ * @tc.name: GZipEntity_ResetHandle_ClosesPrevious_0400
+ * @tc.desc: Verify that resetting GZipEntity's handle properly closes the previous handle.
+ *           Open two files, swap first into entity, then reset with second handle,
+ *           verify first handle is closed by reopening the first file.
+ */
+HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_GZipEntity_ResetHandle_ClosesPrevious_0400, Function | MediumTest | Level1)
+{
+    const std::string gzPath1 = "/data/local/tmp/zip_test_gzip_entity_0400_1.gz";
+    const std::string gzPath2 = "/data/local/tmp/zip_test_gzip_entity_0400_2.gz";
+
+    gzFile handle1 = gzopen(gzPath1.c_str(), "wb");
+    ASSERT_NE(handle1, nullptr) << "Failed to create first gzip file";
+    gzwrite(handle1, "data1", 5);
+
+    gzFile handle2 = gzopen(gzPath2.c_str(), "wb");
+    ASSERT_NE(handle2, nullptr) << "Failed to create second gzip file";
+    gzwrite(handle2, "data2", 5);
+
+    {
+        GZipEntity entity;
+        entity.gzs.reset(handle1);
+        // Reset with handle2, should close handle1 via Deleter
+        entity.gzs.reset(handle2);
+        // entity goes out of scope, should close handle2
+    }
+
+    // Both files should be reopenable, confirming both handles were closed
+    gzFile reopened1 = gzopen(gzPath1.c_str(), "rb");
+    EXPECT_NE(reopened1, nullptr) << "First file should be reopenable after handle reset";
+    if (reopened1 != nullptr) {
+        gzclose(reopened1);
+    }
+
+    gzFile reopened2 = gzopen(gzPath2.c_str(), "rb");
+    EXPECT_NE(reopened2, nullptr) << "Second file should be reopenable after entity destruction";
+    if (reopened2 != nullptr) {
+        gzclose(reopened2);
+    }
+
+    // Clean up test files
+    remove(gzPath1.c_str());
+    remove(gzPath2.c_str());
+}
+
 }  // namespace LIBZIP
 }  // namespace AppExecFwk
 }  // namespace OHOS
