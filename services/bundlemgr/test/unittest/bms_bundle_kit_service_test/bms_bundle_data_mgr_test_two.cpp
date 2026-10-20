@@ -2048,6 +2048,41 @@ HWTEST_F(BmsBundleDataMgrTest2, RegisterBundleEventCallback_0003, Function | Med
 }
 
 /**
+ * @tc.number: RegisterBundleEventCallback_0004
+ * @tc.name: test BundleMgrHostImpl::RegisterBundleEventCallback
+ * @tc.desc: 1. system run normally
+ *           2. called by subfoundation uid
+ */
+HWTEST_F(BmsBundleDataMgrTest2, RegisterBundleEventCallback_0004, Function | MediumTest | Level1)
+{
+    sptr<IBundleEventCallbackTest> bundleEventCallback = new (std::nothrow) IBundleEventCallbackTest();
+    auto saveuid = getuid();
+    setuid(Constants::SUBFOUNDATION_UID);
+    bool ret = bundleMgrHostImpl_->RegisterBundleEventCallback(bundleEventCallback);
+    setuid(saveuid);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: RegisterBundleEventCallback_0005
+ * @tc.name: test BundleMgrHostImpl::RegisterBundleEventCallback
+ * @tc.desc: 1. system run normally
+ *           2. called by subfoundation uid and enter if (dataMgr == nullptr)
+ */
+HWTEST_F(BmsBundleDataMgrTest2, RegisterBundleEventCallback_0005, Function | MediumTest | Level1)
+{
+    ASSERT_NE(bundleMgrHostImpl_, nullptr);
+    sptr<IBundleEventCallbackTest> bundleEventCallback = new (std::nothrow) IBundleEventCallbackTest();
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    auto saveuid = getuid();
+    setuid(Constants::SUBFOUNDATION_UID);
+    bool ret = bundleMgrHostImpl_->RegisterBundleEventCallback(bundleEventCallback);
+    setuid(saveuid);
+    EXPECT_FALSE(ret);
+}
+
+/**
  * @tc.number: UnregisterBundleEventCallback_0001
  * @tc.name: test BundleMgrHostImpl::UnregisterBundleEventCallback
  * @tc.desc: 1. system run normally
@@ -2093,6 +2128,41 @@ HWTEST_F(BmsBundleDataMgrTest2, UnregisterBundleEventCallback_0003, Function | M
     ScopeGuard stateGuard([&] { ResetDataMgr(); });
     auto saveuid = getuid();
     setuid(Constants::FOUNDATION_UID);
+    bool ret = bundleMgrHostImpl_->UnregisterBundleEventCallback(bundleEventCallback);
+    setuid(saveuid);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: UnregisterBundleEventCallback_0004
+ * @tc.name: test BundleMgrHostImpl::UnregisterBundleEventCallback
+ * @tc.desc: 1. system run normally
+ *           2. called by subfoundation uid
+ */
+HWTEST_F(BmsBundleDataMgrTest2, UnregisterBundleEventCallback_0004, Function | MediumTest | Level1)
+{
+    sptr<IBundleEventCallbackTest> bundleEventCallback = new (std::nothrow) IBundleEventCallbackTest();
+    auto saveuid = getuid();
+    setuid(Constants::SUBFOUNDATION_UID);
+    bool ret = bundleMgrHostImpl_->UnregisterBundleEventCallback(bundleEventCallback);
+    setuid(saveuid);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: UnregisterBundleEventCallback_0005
+ * @tc.name: test BundleMgrHostImpl::UnregisterBundleEventCallback
+ * @tc.desc: 1. system run normally
+ *           2. called by subfoundation uid and enter if (dataMgr == nullptr)
+ */
+HWTEST_F(BmsBundleDataMgrTest2, UnregisterBundleEventCallback_0005, Function | MediumTest | Level1)
+{
+    ASSERT_NE(bundleMgrHostImpl_, nullptr);
+    sptr<IBundleEventCallbackTest> bundleEventCallback = new (std::nothrow) IBundleEventCallbackTest();
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    auto saveuid = getuid();
+    setuid(Constants::SUBFOUNDATION_UID);
     bool ret = bundleMgrHostImpl_->UnregisterBundleEventCallback(bundleEventCallback);
     setuid(saveuid);
     EXPECT_FALSE(ret);

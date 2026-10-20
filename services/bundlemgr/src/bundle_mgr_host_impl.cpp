@@ -2779,7 +2779,7 @@ bool BundleMgrHostImpl::RegisterBundleEventCallback(const sptr<IBundleEventCallb
         return false;
     }
     auto uid = IPCSkeleton::GetCallingUid();
-    if (uid != Constants::FOUNDATION_UID) {
+    if (uid != Constants::FOUNDATION_UID && uid != Constants::SUBFOUNDATION_UID) {
         APP_LOGE("verify calling uid failed, uid : %{public}d", uid);
         return false;
     }
@@ -2799,7 +2799,7 @@ bool BundleMgrHostImpl::UnregisterBundleEventCallback(const sptr<IBundleEventCal
         return false;
     }
     auto uid = IPCSkeleton::GetCallingUid();
-    if (uid != Constants::FOUNDATION_UID) {
+    if (uid != Constants::FOUNDATION_UID && uid != Constants::SUBFOUNDATION_UID) {
         APP_LOGE("verify calling uid failed, uid : %{public}d", uid);
         return false;
     }

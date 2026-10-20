@@ -62,6 +62,7 @@ constexpr int32_t MAX_INSTALL_PARAM_VALUE_LENGTH = 1024;
 constexpr int32_t INVALID_UID = -1;
 constexpr int32_t ROOT_UID = 0;
 constexpr int32_t FOUNDATION_UID = 5523;
+constexpr int32_t SUBFOUNDATION_UID = 6061;
 constexpr int32_t CODE_PROTECT_UID = 7666;
 constexpr int32_t BASE_APP_UID = 10000;
 constexpr int16_t BASE_API_VERSION = 1000;
