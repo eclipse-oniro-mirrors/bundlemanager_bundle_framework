@@ -904,4 +904,114 @@ HWTEST_F(BmsSpmManagerTest, TryRecoverAlreadyExistError_Off_False_0001, Function
     EXPECT_FALSE(BundleSpmManager::TryRecoverAlreadyExistError(BUNDLE_NAME));
 }
 
+/**
+ * @tc.number: ConvertHapVerifyResultCode_0100
+ * @tc.name: errorCode 0 + ret success returns ERR_OK
+ * @tc.desc: Both the AT call and the per-hap verification succeeded:
+ *           errorCode == 0 and ret == RET_SUCCESS -> ERR_OK.
+ */
+HWTEST_F(BmsSpmManagerTest, ConvertHapVerifyResultCode_0100, Function | SmallTest | Level1)
+{
+    EXPECT_EQ(BundleVerifyMgr::ConvertHapVerifyResultCode(
+        Security::Verify::HapVerifyResultCode::VERIFY_SUCCESS,
+        Security::AccessToken::AccessTokenKitRet::RET_SUCCESS),
+        ERR_OK);
+}
+
+/**
+ * @tc.number: ConvertHapVerifyResultCode_0200
+ * @tc.name: errorCode 0 + AT-level ret maps to pre-SPM BMS codes
+ * @tc.desc: errorCode == 0 (no per-hap result, AT call itself failed):
+ *           the AT-level ret is mapped to the pre-SPM BMS error codes —
+ *           PARAM_INVALID→PARAM_ERROR, CHECK_MULTIPLE_HAP→INCOMPATIBLE_SIGNATURE,
+ *           ALREADY_EXIST→passthrough (recovery chain), others→SIGNATURE_FAILURE.
+ */
+HWTEST_F(BmsSpmManagerTest, ConvertHapVerifyResultCode_0200, Function | SmallTest | Level1)
+{
+    using ATE = Security::AccessToken::AccessTokenError;
+    EXPECT_EQ(BundleVerifyMgr::ConvertHapVerifyResultCode(
+        Security::Verify::HapVerifyResultCode::VERIFY_SUCCESS, ATE::ERR_PARAM_INVALID),
+        ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
+    EXPECT_EQ(BundleVerifyMgr::ConvertHapVerifyResultCode(
+        Security::Verify::HapVerifyResultCode::VERIFY_SUCCESS, ATE::ERR_CHECK_MULTIPLE_HAP_FAILED),
+        ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE);
+    EXPECT_EQ(BundleVerifyMgr::ConvertHapVerifyResultCode(
+        Security::Verify::HapVerifyResultCode::VERIFY_SUCCESS, ATE::ERR_BUNDLE_ALREADY_EXIST),
+        ATE::ERR_BUNDLE_ALREADY_EXIST);
+    EXPECT_EQ(BundleVerifyMgr::ConvertHapVerifyResultCode(
+        Security::Verify::HapVerifyResultCode::VERIFY_SUCCESS, ATE::ERR_HAP_SIGN_VERIFY_FAILED),
+        ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
+    EXPECT_EQ(BundleVerifyMgr::ConvertHapVerifyResultCode(
+        Security::Verify::HapVerifyResultCode::VERIFY_SUCCESS, ATE::ERR_SESSION_NOT_EXIST),
+        ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
+    EXPECT_EQ(BundleVerifyMgr::ConvertHapVerifyResultCode(
+        Security::Verify::HapVerifyResultCode::VERIFY_SUCCESS, ATE::ERR_HAP_PROVISION_INVALID),
+        ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
+    EXPECT_EQ(BundleVerifyMgr::ConvertHapVerifyResultCode(
+        Security::Verify::HapVerifyResultCode::VERIFY_SUCCESS, ATE::ERR_SERVICE_ABNORMAL),
+        ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
+}
+
+/**
+ * @tc.number: ConvertHapVerifyResultCode_0300
+ * @tc.name: Each known HapVerifyResultCode maps to its registered BMS code
+ * @tc.desc: All 17 non-success HapVerifyResultCode values (excluding
+ *           VERIFY_SUCCESS) map through the shared HAP_VERIFY_ERR_MAP —
+ *           the same mapping the OFF-path verification uses.
+ */
+HWTEST_F(BmsSpmManagerTest, ConvertHapVerifyResultCode_0300, Function | SmallTest | Level1)
+{
+    using VR = Security::Verify::HapVerifyResultCode;
+    EXPECT_EQ(BundleVerifyMgr::ConvertHapVerifyResultCode(VR::FILE_PATH_INVALID),
+        ERR_APPEXECFWK_INSTALL_FAILED_INVALID_SIGNATURE_FILE_PATH);
+    EXPECT_EQ(BundleVerifyMgr::ConvertHapVerifyResultCode(VR::OPEN_FILE_ERROR),
+        ERR_APPEXECFWK_INSTALL_FAILED_BAD_BUNDLE_SIGNATURE_FILE);
+    EXPECT_EQ(BundleVerifyMgr::ConvertHapVerifyResultCode(VR::SIGNATURE_NOT_FOUND),
+        ERR_APPEXECFWK_INSTALL_FAILED_NO_BUNDLE_SIGNATURE);
+    EXPECT_EQ(BundleVerifyMgr::ConvertHapVerifyResultCode(VR::VERIFY_APP_PKCS7_FAIL),
+        ERR_APPEXECFWK_INSTALL_FAILED_VERIFY_APP_PKCS7_FAIL);
+    EXPECT_EQ(BundleVerifyMgr::ConvertHapVerifyResultCode(VR::PROFILE_PARSE_FAIL),
+        ERR_APPEXECFWK_INSTALL_FAILED_PROFILE_PARSE_FAIL);
+    EXPECT_EQ(BundleVerifyMgr::ConvertHapVerifyResultCode(VR::APP_SOURCE_NOT_TRUSTED),
+        ERR_APPEXECFWK_INSTALL_FAILED_APP_SOURCE_NOT_TRUESTED);
+    EXPECT_EQ(BundleVerifyMgr::ConvertHapVerifyResultCode(VR::GET_DIGEST_FAIL),
+        ERR_APPEXECFWK_INSTALL_FAILED_BAD_DIGEST);
+    EXPECT_EQ(BundleVerifyMgr::ConvertHapVerifyResultCode(VR::VERIFY_INTEGRITY_FAIL),
+        ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_INTEGRITY_VERIFICATION_FAILURE);
+    EXPECT_EQ(BundleVerifyMgr::ConvertHapVerifyResultCode(VR::FILE_SIZE_TOO_LARGE),
+        ERR_APPEXECFWK_INSTALL_FAILED_FILE_SIZE_TOO_LARGE);
+    EXPECT_EQ(BundleVerifyMgr::ConvertHapVerifyResultCode(VR::GET_PUBLICKEY_FAIL),
+        ERR_APPEXECFWK_INSTALL_FAILED_BAD_PUBLICKEY);
+    EXPECT_EQ(BundleVerifyMgr::ConvertHapVerifyResultCode(VR::GET_SIGNATURE_FAIL),
+        ERR_APPEXECFWK_INSTALL_FAILED_BAD_BUNDLE_SIGNATURE);
+    EXPECT_EQ(BundleVerifyMgr::ConvertHapVerifyResultCode(VR::NO_PROFILE_BLOCK_FAIL),
+        ERR_APPEXECFWK_INSTALL_FAILED_NO_PROFILE_BLOCK_FAIL);
+    EXPECT_EQ(BundleVerifyMgr::ConvertHapVerifyResultCode(VR::VERIFY_SIGNATURE_FAIL),
+        ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
+    EXPECT_EQ(BundleVerifyMgr::ConvertHapVerifyResultCode(VR::VERIFY_SOURCE_INIT_FAIL),
+        ERR_APPEXECFWK_INSTALL_FAILED_VERIFY_SOURCE_INIT_FAIL);
+    EXPECT_EQ(BundleVerifyMgr::ConvertHapVerifyResultCode(VR::DEVICE_UNAUTHORIZED),
+        ERR_APPEXECFWK_INSTALL_FAILED_DEVICE_UNAUTHORIZED);
+    EXPECT_EQ(BundleVerifyMgr::ConvertHapVerifyResultCode(VR::CERTIFICATE_EXPIRED),
+        ERR_APPEXECFWK_INSTALL_FAILED_CERTIFICATE_EXPIRED);
+    EXPECT_EQ(BundleVerifyMgr::ConvertHapVerifyResultCode(VR::VERIFY_ENTERPRISE_RESIGN_FAIL),
+        ERR_APPEXECFWK_INSTALL_FAILED_VERIFY_ENTERPRISE_RESIGN_FAIL);
+}
+
+/**
+ * @tc.number: ConvertHapVerifyResultCode_0400
+ * @tc.name: Unknown errorCode and unknown ret both fold into signature failure
+ * @tc.desc: verifyResultCode not in HAP_VERIFY_ERR_MAP_KEY and ret is an
+ *           arbitrary positive/negative number — generic signature failure.
+ */
+HWTEST_F(BmsSpmManagerTest, ConvertHapVerifyResultCode_0400, Function | SmallTest | Level1)
+{
+    EXPECT_EQ(BundleVerifyMgr::ConvertHapVerifyResultCode(99999),
+        ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
+    // A small negative like -1 is NOT unknown: HapVerifyResultCode::FILE_PATH_INVALID
+    // is -1 (covered by the _0300 mapping above) — use an out-of-range negative here.
+    EXPECT_EQ(BundleVerifyMgr::ConvertHapVerifyResultCode(-99999),
+        ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
+}
+
 } // namespace OHOS

@@ -62,12 +62,19 @@ int32_t g_spmCheckHapSignInfoRet = 0;
 // value of the last call (tests pin the dual-mode dispatch contract).
 int32_t g_spmLastGetHapSignInfoMode = -100;
 int32_t g_spmCheckHapSignInfoSessionId = 0;
-// Records the userId of the last BundleHapList handed to CheckHapSignInfo so
-// tests can pin the cross-process skip-resign contract (userId == -1).
+// Records the userIdForEnterpriseSign of the last BundleHapList handed to
+// CheckHapSignInfo so tests can pin the cross-process skip-resign contract
+// (userId == -1).
 int32_t g_spmCheckHapSignInfoLastUserId = 0;
 std::vector<TrustedBundleInfo> g_spmTrustedBundleInfos;
 int32_t g_spmCheckHapPermissionInfoRet = 0;
 int32_t g_spmCheckHapPermissionInfoCallCount = 0;
+// Records the MultipleMode of the last CheckHapPermissionInfo call (sentinel
+// -100 = no call yet): the AT side moved the install mode from
+// CheckHapSignInfo's BundleHapList to CheckHapPermissionInfo (AT PR #5133), so
+// tests pin the dual-mode install contract here — a different-package install
+// verifies its permissions against the SUB-mode identity.
+int32_t g_spmCheckHapPermissionInfoLastMode = -100;
 int32_t g_spmPrepareHapIdentityRet = 0;
 uint64_t g_spmPrepareIdentityTokenId = 0;
 int32_t g_spmPrepareIdentityUid = 0;
@@ -120,6 +127,7 @@ void ResetSpmKitMockValuesForTest()
     g_spmTrustedBundleInfos.clear();
     g_spmCheckHapPermissionInfoRet = 0;
     g_spmCheckHapPermissionInfoCallCount = 0;
+    g_spmCheckHapPermissionInfoLastMode = -100;
     g_spmPrepareHapIdentityRet = 0;
     g_spmPrepareIdentityTokenId = 0;
     g_spmPrepareIdentityUid = 0;
@@ -439,16 +447,17 @@ void ResetVerifyAccessTokenResultsForTest()
 int32_t AccessTokenKit::CheckHapSignInfo(const BundleHapList& list, uint32_t flag, int32_t& sessionId,
     std::vector<TrustedBundleInfo>& bundleInfo, HapVerifyResultInfo& resultInfo)
 {
-    g_spmCheckHapSignInfoLastUserId = list.userId;
+    g_spmCheckHapSignInfoLastUserId = list.userIdForEnterpriseSign;
     sessionId = g_spmCheckHapSignInfoSessionId;
     bundleInfo = g_spmTrustedBundleInfos;
     return g_spmCheckHapSignInfoRet;
 }
 
 int32_t AccessTokenKit::CheckHapPermissionInfo(int32_t sessionId, InstallTypeEnum type,
-    HapInfoCheckResult& result)
+    MultipleMode mode, HapInfoCheckResult& result)
 {
     ++g_spmCheckHapPermissionInfoCallCount;
+    g_spmCheckHapPermissionInfoLastMode = static_cast<int32_t>(mode);
     return g_spmCheckHapPermissionInfoRet;
 }
 
@@ -470,9 +479,12 @@ int32_t AccessTokenKit::PrepareHapIdentity(int32_t& sessionId, const HapBaseInfo
     return g_spmPrepareHapIdentityRet;
 }
 
-int32_t AccessTokenKit::UpdateHapPolicy(int32_t sessionId, int32_t tokenId,
+int32_t AccessTokenKit::UpdateHapPolicy(int32_t sessionId, AccessTokenIDEx& tokenIdEx,
     const BundlePolicy& policy, int32_t& uid)
 {
+    // Mirrors the real AT contract (AT PR #5133): the low 32 bits locate the
+    // token; the high 32 bits (tokenAttr) are refreshed in place on success and
+    // left untouched on the error path. The mock keeps the attr unchanged.
     uid = g_spmUpdateHapPolicyUidOut;
     return g_spmUpdateHapPolicyRet;
 }

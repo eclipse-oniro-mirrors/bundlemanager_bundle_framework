@@ -173,12 +173,26 @@ public:
 
         /**
          * @brief Pre-check app permissions inside the session. Always returns ERR_OK
-         *        under SPM OFF; installType carries the same InstallTypeEnum
-         *        (TYPE_INSTALL/TYPE_REPLACE/TYPE_MERGE) consumed by
-         *        AccessTokenKit::CheckHapPermissionInfo.
+         *         under SPM OFF; installType carries the same InstallTypeEnum
+         *         (TYPE_INSTALL/TYPE_REPLACE/TYPE_MERGE) consumed by
+         *         AccessTokenKit::CheckHapPermissionInfo. The dual-mode identity
+         *         (MultipleMode) of this install is passed HERE — not at the
+         *         sign-check session creation, where the install's dual-mode
+         *         identity is not settled yet — because the AT side consumes the
+         *         mode through this call (moved from CheckHapSignInfo, AT PR
+         *         #5133).
+         * @param installType Indicates the install type (install/replace/merge).
+         * @param checkResult Outputs the permission check result.
+         * @param mode Indicates the dual-mode identity of this install on the AT
+         *        side: an install running under the dual-mode clone name (the
+         *        secondary variant, e.g. a non-empty dualModeBundleName_ in the
+         *        base installer) uses SUB_MODE, every other install uses the
+         *        default/main mode.
          */
         int32_t CheckPermissionInfo(Security::AccessToken::InstallTypeEnum installType,
-            Security::AccessToken::HapInfoCheckResult &checkResult);
+            Security::AccessToken::HapInfoCheckResult &checkResult,
+            Security::AccessToken::MultipleMode mode
+                = Security::AccessToken::MultipleMode::DEFAULT_OR_MAIN_MODE);
 
         int32_t VerifyPermission(const std::string &bundleName, const std::string &permission,
             int32_t userId);

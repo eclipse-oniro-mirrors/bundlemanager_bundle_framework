@@ -43,6 +43,7 @@ extern int32_t g_spmCheckHapSignInfoLastUserId;
 extern std::vector<TrustedBundleInfo> g_spmTrustedBundleInfos;
 extern int32_t g_spmCheckHapPermissionInfoRet;
 extern int32_t g_spmCheckHapPermissionInfoCallCount;
+extern int32_t g_spmCheckHapPermissionInfoLastMode;
 extern int32_t g_spmPrepareHapIdentityRet;
 extern uint64_t g_spmPrepareIdentityTokenId;
 extern int32_t g_spmPrepareIdentityUid;
@@ -1115,7 +1116,7 @@ HWTEST_F(BmsSpmManagerOnTest, UpdateToken_Failure_0001, Function | MediumTest | 
  * @tc.number: BmsSpmManagerOnTest.CheckSignAndInitSession_SkipResign_0001
  * @tc.name: CheckSignAndInitSession with skipEnterpriseResign
  * @tc.desc: The skipEnterpriseResign flag is consumed in the ON path via the
- *           userId == -1 contract (hapList.userId tells the AT side to skip the
+ *           userId == -1 contract (hapList.userIdForEnterpriseSign tells the AT side to skip the
  *           enterprise resign verification); without the flag the real userId
  *           is passed through. A non-empty hap list is required to reach the AT
  *           call (the empty list fails closed), and the mock's empty trusted
@@ -1142,6 +1143,47 @@ HWTEST_F(BmsSpmManagerOnTest, CheckSignAndInitSession_SkipResign_0001, Function 
     EXPECT_EQ(errCode, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
     EXPECT_FALSE(session.IsActive());
     EXPECT_EQ(OHOS::Security::AccessToken::g_spmCheckHapSignInfoLastUserId, TEST_USERID);
+}
+
+/**
+ * @tc.number: BmsSpmManagerOnTest.CheckPermissionInfo_DualModeMode_0001
+ * @tc.name: CheckPermissionInfo forwards the caller-decided dual mode
+ * @tc.desc: The dual-mode install contract after AT PR #5133 moved the mode
+ *           from CheckHapSignInfo's BundleHapList to CheckHapPermissionInfo:
+ *           the mode is decided by the CALLER at permission-check time — by
+ *           then the install's dual-mode identity is settled (the base
+ *           installer keys it on the dual-mode clone name: non-empty means the
+ *           SUB-mode identity), which is not known at the sign-check session
+ *           creation — and the facade forwards it unchanged as
+ *           CheckHapPermissionInfo's mode parameter; an omitted mode
+ *           (plugin/HSP/skills flows) defaults to the main mode.
+ */
+HWTEST_F(BmsSpmManagerOnTest, CheckPermissionInfo_DualModeMode_0001, Function | MediumTest | Level1)
+{
+    auto session = BundleSpmManager::InstallSession::CreateDeferred();
+    Security::AccessToken::HapInfoCheckResult checkResult;
+    constexpr int32_t MODE_SUB =
+        static_cast<int32_t>(Security::AccessToken::MultipleMode::SUB_MODE);
+    constexpr int32_t MODE_MAIN =
+        static_cast<int32_t>(Security::AccessToken::MultipleMode::DEFAULT_OR_MAIN_MODE);
+
+    // Explicit SUB_MODE (different-package install) is forwarded unchanged.
+    EXPECT_EQ(session.CheckPermissionInfo(
+        Security::AccessToken::InstallTypeEnum::TYPE_INSTALL, checkResult,
+        Security::AccessToken::MultipleMode::SUB_MODE), ERR_OK);
+    EXPECT_EQ(OHOS::Security::AccessToken::g_spmCheckHapPermissionInfoCallCount, 1);
+    EXPECT_EQ(OHOS::Security::AccessToken::g_spmCheckHapPermissionInfoLastMode, MODE_SUB);
+
+    // Explicit DEFAULT_OR_MAIN_MODE is forwarded unchanged.
+    EXPECT_EQ(session.CheckPermissionInfo(
+        Security::AccessToken::InstallTypeEnum::TYPE_REPLACE, checkResult,
+        Security::AccessToken::MultipleMode::DEFAULT_OR_MAIN_MODE), ERR_OK);
+    EXPECT_EQ(OHOS::Security::AccessToken::g_spmCheckHapPermissionInfoLastMode, MODE_MAIN);
+
+    // Omitted mode (non-dual-mode flows) defaults to the main mode.
+    EXPECT_EQ(session.CheckPermissionInfo(
+        Security::AccessToken::InstallTypeEnum::TYPE_MERGE, checkResult), ERR_OK);
+    EXPECT_EQ(OHOS::Security::AccessToken::g_spmCheckHapPermissionInfoLastMode, MODE_MAIN);
 }
 
 // ===== BundleDataMgr reverse lookup through the reused bundleIdMap_ =====
@@ -1436,11 +1478,49 @@ HWTEST_F(BmsSpmManagerOnTest, OnModuleUninstalled_Success_0001, Function | Mediu
     // the standalone session was finished persistently
     EXPECT_EQ(OHOS::Security::AccessToken::g_spmFinishInstallCallCount, 1);
     EXPECT_TRUE(OHOS::Security::AccessToken::g_spmFinishInstallLastPersistent);
+    // non-clone bundle: the re-sign session runs in the default/main mode
+    EXPECT_EQ(OHOS::Security::AccessToken::g_spmCheckHapPermissionInfoLastMode,
+        static_cast<int32_t>(Security::AccessToken::MultipleMode::DEFAULT_OR_MAIN_MODE));
+}
+
+/**
+ * @tc.number: BmsSpmManagerOnTest.OnModuleUninstalled_DualModeClone_0001
+ * @tc.name: A dual-mode clone app re-signs its modules in the SUB mode
+ * @tc.desc: The identity-based mode rule, same as the install path's
+ *           dualModeBundleName_ check (the installer derives that name from
+ *           this very flag): the remaining modules of a dual-mode clone app
+ *           are re-signed against the SUB-mode identity on the AT side.
+ */
+HWTEST_F(BmsSpmManagerOnTest, OnModuleUninstalled_DualModeClone_0001, Function | MediumTest | Level1)
+{
+    OHOS::Security::AccessToken::g_spmCheckHapSignInfoSessionId = TEST_SESSION_ID;
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    info.SetBaseBundleInfo(bundleInfo);
+    info.SetDualModeCloneApp(true);
+    std::map<std::string, InnerModuleInfo> moduleInfos;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = "entry";
+    moduleInfo.hapPath = "/data/app/entry.hap";
+    moduleInfos.emplace("entry", moduleInfo);
+    info.AddInnerModuleInfo(moduleInfos);
+
+    EXPECT_EQ(BundleSpmManager::OnModuleUninstalled(info, TEST_USERID), ERR_OK);
+    EXPECT_EQ(OHOS::Security::AccessToken::g_spmCheckHapPermissionInfoLastMode,
+        static_cast<int32_t>(Security::AccessToken::MultipleMode::SUB_MODE));
+    EXPECT_EQ(OHOS::Security::AccessToken::g_spmFinishInstallCallCount, 1);
+    EXPECT_TRUE(OHOS::Security::AccessToken::g_spmFinishInstallLastPersistent);
 }
 
 /**
  * @tc.number: BmsSpmManagerOnTest.OnModuleUninstalled_VerifyFailed_0001
- * @tc.name: A verification failure propagates the raw AT code
+ * @tc.name: A verification failure maps to the registered BMS signature error
+ * @tc.desc: Same conversion contract as CheckSignAndInitSession's failure path
+ *           (no raw AT code leaks through the facade boundary): an unknown AT
+ *           ret folds into ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_
+ *           VERIFICATION_FAILURE; no session rollback is issued (the AT side
+ *           owns the cleanup of its failed session).
  */
 HWTEST_F(BmsSpmManagerOnTest, OnModuleUninstalled_VerifyFailed_0001, Function | MediumTest | Level1)
 {
@@ -1457,7 +1537,8 @@ HWTEST_F(BmsSpmManagerOnTest, OnModuleUninstalled_VerifyFailed_0001, Function | 
     moduleInfos.emplace("entry", moduleInfo);
     info.AddInnerModuleInfo(moduleInfos);
 
-    EXPECT_EQ(BundleSpmManager::OnModuleUninstalled(info, TEST_USERID), -2);
+    EXPECT_EQ(BundleSpmManager::OnModuleUninstalled(info, TEST_USERID),
+        ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
     EXPECT_EQ(OHOS::Security::AccessToken::g_spmFinishInstallCallCount, 0);
 }
 

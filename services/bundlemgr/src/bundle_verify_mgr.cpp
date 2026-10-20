@@ -94,21 +94,34 @@ ErrCode BundleVerifyMgr::HapVerify(const std::string &filePath, HapVerifyResult 
     return res;
 }
 
-ErrCode BundleVerifyMgr::ConvertHapVerifyResultCode(int32_t verifyResultCode)
+ErrCode BundleVerifyMgr::ConvertHapVerifyResultCode(int32_t verifyResultCode, int32_t ret)
 {
+    // Per-hap verification error: errorCode != 0 -> map through the shared
+    // HAP_VERIFY_ERR_MAP (same mapping as the OFF-path verification).
+    if (verifyResultCode != Security::Verify::HapVerifyResultCode::VERIFY_SUCCESS) {
+        size_t len = sizeof(HAP_VERIFY_ERR_MAP_KEY) / sizeof(HAP_VERIFY_ERR_MAP_KEY[0]);
+        for (size_t i = 0; i < len; i++) {
+            if (verifyResultCode == HAP_VERIFY_ERR_MAP_KEY[i]) {
+                return HAP_VERIFY_ERR_MAP_VALUE[i];
+            }
+        }
+        return ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE;
+    }
+    // errorCode == 0 (no per-hap result): the AT call itself failed — map
+    // the AT-level return code to the pre-SPM BMS error code.
     using AccessTokenError = Security::AccessToken::AccessTokenError;
-    if (verifyResultCode == Security::AccessToken::AccessTokenKitRet::RET_SUCCESS) {
+    if (ret == Security::AccessToken::AccessTokenKitRet::RET_SUCCESS) {
         return ERR_OK;
     }
-    switch (verifyResultCode) {
+    switch (ret) {
         case AccessTokenError::ERR_PARAM_INVALID:
             return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
         case AccessTokenError::ERR_CHECK_MULTIPLE_HAP_FAILED:
             return ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE;
         case AccessTokenError::ERR_BUNDLE_ALREADY_EXIST:
-            // Leftover identity of a crashed session: pass the raw code through so
-            // InstallBundle can run the on-demand recovery and retry.
-            return verifyResultCode;
+            // Leftover identity of a crashed session: pass the raw code through
+            // so InstallBundle can run the on-demand recovery and retry.
+            return ret;
         case AccessTokenError::ERR_HAP_SIGN_VERIFY_FAILED:
         case AccessTokenError::ERR_SESSION_NOT_EXIST:
         case AccessTokenError::ERR_HAP_PROVISION_INVALID:

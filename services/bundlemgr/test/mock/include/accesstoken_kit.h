@@ -41,10 +41,10 @@ public:
     static int32_t CheckHapSignInfo(const BundleHapList& list, uint32_t flag, int32_t& sessionId,
         std::vector<TrustedBundleInfo>& bundleInfo, HapVerifyResultInfo& resultInfo);
     static int32_t CheckHapPermissionInfo(int32_t sessionId, InstallTypeEnum type,
-        HapInfoCheckResult& result);
+        MultipleMode mode, HapInfoCheckResult& result);
     static int32_t PrepareHapIdentity(int32_t& sessionId, const HapBaseInfo& info,
         const BundlePolicy& policy, Identity& identity);
-    static int32_t UpdateHapPolicy(int32_t sessionId, int32_t tokenId,
+    static int32_t UpdateHapPolicy(int32_t sessionId, AccessTokenIDEx& tokenIdEx,
         const BundlePolicy& policy, int32_t& uid);
     static int32_t FinishInstall(int32_t sessionId, bool isPersistent,
         const std::map<std::string, std::string>& modulePathMap);

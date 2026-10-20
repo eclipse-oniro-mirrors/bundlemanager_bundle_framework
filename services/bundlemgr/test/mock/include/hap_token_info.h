@@ -103,13 +103,17 @@ enum class MultipleMode : int32_t {
 struct BundleHapList final {
     std::vector<std::string> hapPaths;
     bool isPreInstalled = false;
-    int32_t userId = 0;
-    MultipleMode mode = MultipleMode::DEFAULT_OR_MAIN_MODE;
+    // Renamed from userId (AT PR #5133): the userId consumed by the enterprise
+    // sign verification; -1 tells the AT side to skip that verification.
+    int32_t userIdForEnterpriseSign = 0;
 };
 
 struct MigratedInfo final {
     std::string bundleName;
     BundleHapList pathList;
+    // Moved from pathList.mode (AT PR #5133): the identity mode of this bundle
+    // on the AT side (a dual-mode clone app migrates into the SUB mode).
+    MultipleMode mode = MultipleMode::DEFAULT_OR_MAIN_MODE;
     std::vector<HapBaseInfo> hapBaseInfoList;
     std::vector<int32_t> uidList;
     std::vector<ReservedType> reservedTypeList;
