@@ -1030,6 +1030,9 @@ napi_value ZipNExporter::DeflateSetDictionary(napi_env env, napi_callback_info i
         if (!arg || !zipEntity || !zipEntity->zs) {
             return NapiBusinessError(EFAULT, true);
         }
+        if (dictionaryLen > UINT_MAX) {
+            return NapiBusinessError(EINVAL, true);
+        }
         arg->errCode = deflateSetDictionary(
             zipEntity->zs.get(), reinterpret_cast<const Bytef *>(dictionary), static_cast<uInt>(dictionaryLen));
         if (arg->errCode < 0) {
@@ -1833,6 +1836,9 @@ napi_value ZipNExporter::InflateSetDictionary(napi_env env, napi_callback_info i
     auto cbExec = [arg, zipEntity, buf, bufLen](napi_env env) -> NapiBusinessError {
         if (!arg || !zipEntity || !zipEntity->zs) {
             return NapiBusinessError(EFAULT, true);
+        }
+        if (bufLen > UINT_MAX) {
+            return NapiBusinessError(EINVAL, true);
         }
         arg->errCode = inflateSetDictionary(zipEntity->zs.get(), static_cast<Bytef *>(buf), static_cast<uInt>(bufLen));
         if (arg->errCode < 0) {

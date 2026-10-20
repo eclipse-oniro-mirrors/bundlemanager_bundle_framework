@@ -3677,6 +3677,195 @@ HWTEST_F(BmsBundleInstallerTest, ZipFile_0800, Function | SmallTest | Level1)
 }
 
 /**
+ * @tc.number: ZipFile_0801
+ * @tc.name: Test GetDataOffsetRelative boundary check — dataOffset+length exceeds fileLength
+ * @tc.desc: Create a temp file with a valid LocalHeader, inject an entry, then set
+ *           fileLength_ small so the boundary check fires (offset within file but
+ *           dataOffset + compressedSize > fileLength_).
+ */
+HWTEST_F(BmsBundleInstallerTest, ZipFile_0801, Function | SmallTest | Level1)
+{
+    const std::string entryName = "test.txt";
+    const std::string tmpPath = RESOURCE_ROOT_PATH + "zip_file_0801_test.zip";
+
+    // Build a minimal valid local header + file name
+    LocalHeader lh = {0};
+    lh.signature = 0x04034b50;  // LOCAL_HEADER_SIGNATURE
+    lh.compressionMethod = 0;   // store
+    lh.flags = 0;               // no data descriptor
+    lh.nameSize = static_cast<uint16_t>(entryName.size());
+    lh.extraSize = 0;
+    lh.crc = 0;
+    lh.compressedSize = 200;    // larger than fileLength_ we will set
+    lh.uncompressedSize = 200;
+
+    FILE *fp = fopen(tmpPath.c_str(), "wb");
+    ASSERT_NE(fp, nullptr);
+    fwrite(&lh, sizeof(LocalHeader), 1, fp);
+    fwrite(entryName.data(), entryName.size(), 1, fp);
+    // Write some padding data
+    std::vector<char> padding(300, 0);
+    fwrite(padding.data(), padding.size(), 1, fp);
+    fclose(fp);
+
+    ZipFile file(tmpPath);
+    file.file_ = fopen(tmpPath.c_str(), "rb");
+    ASSERT_NE(file.file_, nullptr);
+    file.fileStartPos_ = 0;
+    file.fileLength_ = 50;  // smaller than offset + compressedSize → boundary check fires
+
+    // Inject entry into entriesMap_
+    ZipEntry zipEntry;
+    zipEntry.fileName = entryName;
+    zipEntry.compressionMethod = 0;
+    zipEntry.flags = 0;
+    zipEntry.localHeaderOffset = 0;
+    zipEntry.crc = 0;
+    zipEntry.compressedSize = 200;
+    zipEntry.uncompressedSize = 200;
+    file.entriesMap_[entryName] = zipEntry;
+
+    ZipPos offset;
+    uint32_t length = 0;
+    bool ret = file.GetDataOffsetRelative(entryName, offset, length);
+    // boundary check: length(200) > fileLength_(50) → return false
+    EXPECT_EQ(ret, false);
+
+    if (file.file_ != nullptr) {
+        fclose(file.file_);
+        file.file_ = nullptr;
+    }
+    remove(tmpPath.c_str());
+}
+
+/**
+ * @tc.number: ZipFile_0802
+ * @tc.name: Test GetDataOffsetRelative boundary check — offset < fileStartPos_
+ * @tc.desc: Set fileStartPos_ beyond the computed offset to trigger the first boundary check.
+ *           Since offset = localHeaderOffset + headerSize + fileStartPos_ and all are unsigned,
+ *           we use a very large fileStartPos_ that causes offset to wrap around via
+ *           integer overflow — but in practice, we set fileLength_ large enough to pass the
+ *           localHeaderOffset check and set fileStartPos_ to a value larger than the data offset.
+ */
+HWTEST_F(BmsBundleInstallerTest, ZipFile_0802, Function | SmallTest | Level1)
+{
+    const std::string entryName = "a.txt";
+    const std::string tmpPath = RESOURCE_ROOT_PATH + "zip_file_0802_test.zip";
+
+    LocalHeader lh = {0};
+    lh.signature = 0x04034b50;
+    lh.compressionMethod = 0;
+    lh.flags = 0;
+    lh.nameSize = static_cast<uint16_t>(entryName.size());
+    lh.extraSize = 0;
+    lh.crc = 0;
+    lh.compressedSize = 10;
+    lh.uncompressedSize = 10;
+
+    FILE *fp = fopen(tmpPath.c_str(), "wb");
+    ASSERT_NE(fp, nullptr);
+    fwrite(&lh, sizeof(LocalHeader), 1, fp);
+    fwrite(entryName.data(), entryName.size(), 1, fp);
+    std::vector<char> padding(100, 0);
+    fwrite(padding.data(), padding.size(), 1, fp);
+    fclose(fp);
+
+    ZipFile file(tmpPath);
+    file.file_ = fopen(tmpPath.c_str(), "rb");
+    ASSERT_NE(file.file_, nullptr);
+
+    // Set fileStartPos_ very large so the boundary check for dataOffset+length fires.
+    // offset = 0 + sizeof(LocalHeader) + 5 + fileStartPos_ = 35 + fileStartPos_
+    // dataOffset = offset - fileStartPos_ = 35
+    // With fileLength_ = 40 and length = 10: dataOffset(35) > fileLength_(40) - length(10) = 30 → true
+    file.fileStartPos_ = 1000;
+    file.fileLength_ = 40;
+
+    ZipEntry zipEntry;
+    zipEntry.fileName = entryName;
+    zipEntry.compressionMethod = 0;
+    zipEntry.flags = 0;
+    zipEntry.localHeaderOffset = 0;
+    zipEntry.crc = 0;
+    zipEntry.compressedSize = 10;
+    zipEntry.uncompressedSize = 10;
+    file.entriesMap_[entryName] = zipEntry;
+
+    ZipPos offset;
+    uint32_t length = 0;
+    bool ret = file.GetDataOffsetRelative(entryName, offset, length);
+    // dataOffset(35) > fileLength_(40) - length(10) = 30 → return false
+    EXPECT_EQ(ret, false);
+
+    if (file.file_ != nullptr) {
+        fclose(file.file_);
+        file.file_ = nullptr;
+    }
+    remove(tmpPath.c_str());
+}
+
+/**
+ * @tc.number: ZipFile_0803
+ * @tc.name: Test GetDataOffsetRelative — boundary check passes, returns true
+ * @tc.desc: Set fileLength_ large enough so the boundary check passes and the function
+ *           returns true. This covers the happy path after the boundary check.
+ */
+HWTEST_F(BmsBundleInstallerTest, ZipFile_0803, Function | SmallTest | Level1)
+{
+    const std::string entryName = "b.txt";
+    const std::string tmpPath = RESOURCE_ROOT_PATH + "zip_file_0803_test.zip";
+
+    LocalHeader lh = {0};
+    lh.signature = 0x04034b50;
+    lh.compressionMethod = 0;
+    lh.flags = 0;
+    lh.nameSize = static_cast<uint16_t>(entryName.size());
+    lh.extraSize = 0;
+    lh.crc = 0;
+    lh.compressedSize = 10;
+    lh.uncompressedSize = 10;
+
+    FILE *fp = fopen(tmpPath.c_str(), "wb");
+    ASSERT_NE(fp, nullptr);
+    fwrite(&lh, sizeof(LocalHeader), 1, fp);
+    fwrite(entryName.data(), entryName.size(), 1, fp);
+    std::vector<char> padding(100, 0);
+    fwrite(padding.data(), padding.size(), 1, fp);
+    fclose(fp);
+
+    ZipFile file(tmpPath);
+    file.file_ = fopen(tmpPath.c_str(), "rb");
+    ASSERT_NE(file.file_, nullptr);
+
+    // fileLength_ large enough: offset = 0 + 30 + 5 + 0 = 35, dataOffset = 35
+    // length = 10, fileLength_ = 100: 10 <= 100 and 35 <= 100-10=90 → passes
+    file.fileStartPos_ = 0;
+    file.fileLength_ = 100;
+
+    ZipEntry zipEntry;
+    zipEntry.fileName = entryName;
+    zipEntry.compressionMethod = 0;
+    zipEntry.flags = 0;
+    zipEntry.localHeaderOffset = 0;
+    zipEntry.crc = 0;
+    zipEntry.compressedSize = 10;
+    zipEntry.uncompressedSize = 10;
+    file.entriesMap_[entryName] = zipEntry;
+
+    ZipPos offset;
+    uint32_t length = 0;
+    bool ret = file.GetDataOffsetRelative(entryName, offset, length);
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(length, 10);
+
+    if (file.file_ != nullptr) {
+        fclose(file.file_);
+        file.file_ = nullptr;
+    }
+    remove(tmpPath.c_str());
+}
+
+/**
  * @tc.number: ZipFile_0900
  * @tc.name: Test ZipFile
  * @tc.desc: 1.Test CheckEndDir

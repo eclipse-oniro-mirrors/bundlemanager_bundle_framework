@@ -78,6 +78,15 @@ enum ReturnStatus {
         return ret;                                                                                \
     }
 
+inline bool CheckFlushType(int flush)
+{
+    if ((flush) < FLUSH_TYPE_NO_FLUSH || (flush) > FLUSH_TYPE_TREES) {
+        APP_LOGE("flush parameter =[%{public}d] value is incorrect", static_cast<int>(flush));
+        return false;
+    }
+    return true;
+}
+
 #define COMPRESS_STRATEGY_CHECK(strategy, false)                                                      \
     if (!(strategy == COMPRESS_STRATEGY_DEFAULT_STRATEGY || strategy == COMPRESS_STRATEGY_FILTERED || \
             strategy == COMPRESS_STRATEGY_HUFFMAN_ONLY || strategy == COMPRESS_STRATEGY_RLE ||        \
@@ -581,14 +590,16 @@ bool UnwrapOptionsParams(OPTIONS &options, napi_env env, napi_value arg)
         NAPI_CALL_BASE(env, napi_typeof(env, jsProValue, &jsValueType), false);
 
         int ret = 0;
-        if (strProName == std::string("flush")) {
-            if (UnwrapIntValue(env, jsProValue, ret)) {
-                options.flush = static_cast<FLUSH_TYPE>(ret);
+        if (strProName == std::string("flush") && UnwrapIntValue(env, jsProValue, ret)) {
+            if (!CheckFlushType(ret)) {
+                return false;
             }
-        } else if (strProName == std::string("finishFlush")) {
-            if (UnwrapIntValue(env, jsProValue, ret)) {
-                options.finishFlush = static_cast<FLUSH_TYPE>(ret);
+            options.flush = static_cast<FLUSH_TYPE>(ret);
+        } else if (strProName == std::string("finishFlush") && UnwrapIntValue(env, jsProValue, ret)) {
+            if (!CheckFlushType(ret)) {
+                return false;
             }
+            options.finishFlush = static_cast<FLUSH_TYPE>(ret);
         } else if (strProName == std::string("chunkSize")) {
             if (UnwrapIntValue(env, jsProValue, ret)) {
                 options.chunkSize = ret;
@@ -749,7 +760,7 @@ napi_value ZipFileWrap(napi_env env, napi_callback_info info, AsyncZipCallbackIn
         if (valuetype == napi_function) {
             napi_ref callbackRef = nullptr;
             napi_get_undefined(env,  &promise);
-            napi_create_reference(env, args[PARAM3], 1, &callbackRef);
+            NAPI_CALL(env, napi_create_reference(env, args[PARAM3], NAPI_RETURN_ONE, &callbackRef));
             asyncZipCallbackInfo->zlibCallbackInfo =
                 std::make_shared<ZlibCallbackInfo>(env, callbackRef, nullptr, true);
         }
@@ -799,7 +810,7 @@ napi_value NAPI_UnzipFile(napi_env env, napi_callback_info info)
         if (valuetype == napi_function) {
             napi_ref callbackRef = nullptr;
             napi_get_undefined(env,  &promise);
-            napi_create_reference(env, args[PARAM3], 1, &callbackRef);
+            NAPI_CALL(env, napi_create_reference(env, args[PARAM3], NAPI_RETURN_ONE, &callbackRef));
             asyncZipCallbackInfo->zlibCallbackInfo =
                 std::make_shared<ZlibCallbackInfo>(env, callbackRef, nullptr, true);
         }

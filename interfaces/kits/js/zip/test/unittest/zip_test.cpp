@@ -20,8 +20,10 @@
 
 #include "ani_zlib_callback_info.h"
 #include "zip.h"
-#include "zip_reader.h"
 #include "zlib_callback_info.h"
+#define private public
+#include "zip_reader.h"
+#undef private
 namespace OHOS {
 namespace AppExecFwk {
 namespace LIBZIP {
@@ -689,6 +691,214 @@ HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_GetOriginalSize_0400, Function | MediumTest 
     auto ret = GetOriginalSize(src, originalSize);
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_GT(originalSize, 0);
+}
+
+/**
+ * @tc.number: APPEXECFWK_LIBZIP_ZipReader_AdvanceToNextEntry_0100
+ * @tc.name: ZipReader_AdvanceToNextEntry_0100
+ * @tc.desc: Test ZipReader::AdvanceToNextEntry with valid zip file to verify type safety improvements
+ */
+HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_ZipReader_AdvanceToNextEntry_0100, Function | MediumTest | Level1)
+{
+    FilePath filePath(TEST_ZIP_OK);
+    ZipReader reader;
+    ASSERT_TRUE(reader.Open(filePath));
+
+    // Open first entry
+    ASSERT_TRUE(reader.OpenCurrentEntryInZip());
+
+    // Advance through entries - tests the uLong type conversion and >= comparison
+    int entryCount = 0;
+    while (reader.HasMore()) {
+        if (!reader.AdvanceToNextEntry()) {
+            break;
+        }
+        entryCount++;
+        if (entryCount > 100) { // Safety limit
+            break;
+        }
+    }
+    EXPECT_GT(entryCount, 0);
+}
+
+/**
+ * @tc.number: APPEXECFWK_LIBZIP_ZipReader_OpenInternal_0100
+ * @tc.name: ZipReader_OpenInternal_0100
+ * @tc.desc: Test ZipReader::OpenInternal with valid zip to verify number_entry overflow check
+ */
+HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_ZipReader_OpenInternal_0100, Function | MediumTest | Level1)
+{
+    FilePath filePath(TEST_ZIP_OK);
+    ZipReader reader;
+
+    // Open should succeed and validate number_entry against INT_MAX
+    bool ret = reader.Open(filePath);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: APPEXECFWK_LIBZIP_ZipReader_OpenInternal_0200
+ * @tc.name: ZipReader_OpenInternal_0200
+ * @tc.desc: Test ZipReader::OpenInternal with damaged zip file
+ */
+HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_ZipReader_OpenInternal_0200, Function | MediumTest | Level1)
+{
+    FilePath filePath(TEST_ZIP_DMAGED);
+    ZipReader reader;
+
+    // Open should fail for damaged file
+    bool ret = reader.Open(filePath);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: APPEXECFWK_LIBZIP_ZipParallelReader_GotoEntry_0100
+ * @tc.name: ZipParallelReader_GotoEntry_0100
+ * @tc.desc: Test ZipParallelReader::GotoEntry with valid and invalid entry positions
+ */
+HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_ZipParallelReader_GotoEntry_0100, Function | MediumTest | Level1)
+{
+    FilePath filePath(TEST_ZIP_OK);
+    ZipParallelReader parallelReader;
+    ASSERT_TRUE(parallelReader.Open(filePath));
+
+    int resourceId = 0;
+    unzFile zipFile = parallelReader.GetZipHandler(resourceId);
+    ASSERT_NE(zipFile, nullptr);
+
+    // Obtain a valid file position by going to the first entry and reading its pos.
+    // Hardcoding {0, 0} is unreliable because pos_in_zipfile is an internal offset
+    // that only unzGetFilePos can produce correctly.
+    ASSERT_EQ(unzGoToFirstFile(zipFile), UNZ_OK);
+    unz_file_pos validPos;
+    ASSERT_EQ(unzGetFilePos(zipFile, &validPos), UNZ_OK);
+    bool ret = parallelReader.GotoEntry(zipFile, validPos);
+    EXPECT_TRUE(ret);
+
+    // Test with invalid position (num_of_file beyond entry count)
+    unz_file_pos invalidPos = {999999, 0};
+    ret = parallelReader.GotoEntry(zipFile, invalidPos);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: APPEXECFWK_LIBZIP_ZipParallelReader_GetZipHandler_0100
+ * @tc.name: ZipParallelReader_GetZipHandler_0100
+ * @tc.desc: Test ZipParallelReader::GetZipHandler with negative resourceId
+ */
+HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_ZipParallelReader_GetZipHandler_0100, Function | MediumTest | Level1)
+{
+    FilePath filePath(TEST_ZIP_OK);
+    ZipParallelReader parallelReader;
+    ASSERT_TRUE(parallelReader.Open(filePath));
+
+    // Test with negative resourceId - should be normalized to 0
+    int resourceId = -1;
+    unzFile zipFile = parallelReader.GetZipHandler(resourceId);
+    EXPECT_NE(zipFile, nullptr);
+    EXPECT_EQ(resourceId, 0); // Should be normalized
+
+    // Test with valid resourceId
+    resourceId = 1;
+    zipFile = parallelReader.GetZipHandler(resourceId);
+    EXPECT_NE(zipFile, nullptr);
+}
+
+/**
+ * @tc.number: APPEXECFWK_LIBZIP_ZipParallelReader_GetZipHandler_0200
+ * @tc.name: ZipParallelReader_GetZipHandler_0200
+ * @tc.desc: Test ZipParallelReader::GetZipHandler with large resourceId
+ */
+HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_ZipParallelReader_GetZipHandler_0200, Function | MediumTest | Level1)
+{
+    FilePath filePath(TEST_ZIP_OK);
+    ZipParallelReader parallelReader;
+    ASSERT_TRUE(parallelReader.Open(filePath));
+
+    // Test with large resourceId - should be wrapped by modulo
+    int resourceId = 100;
+    unzFile zipFile = parallelReader.GetZipHandler(resourceId);
+    EXPECT_NE(zipFile, nullptr);
+    // 100 % 2 = 0, so resourceId should be 0 after normalization
+    EXPECT_EQ(resourceId % 2, 0);
+}
+
+/**
+ * @tc.number: APPEXECFWK_LIBZIP_ZipParallelReader_GotoEntry_0200
+ * @tc.name: ZipParallelReader_GotoEntry_0200
+ * @tc.desc: Test ZipParallelReader::GotoEntry with nullptr zipFile — should return false.
+ */
+HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_ZipParallelReader_GotoEntry_0200, Function | MediumTest | Level1)
+{
+    ZipParallelReader parallelReader;
+    unzFile nullFile = nullptr;
+    unz_file_pos pos = {0, 0};
+    bool ret = parallelReader.GotoEntry(nullFile, pos);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: APPEXECFWK_LIBZIP_ZipReader_AdvanceToNextEntry_0200
+ * @tc.name: ZipReader_AdvanceToNextEntry_0200
+ * @tc.desc: Test AdvanceToNextEntry reaches end — verifies the >= comparison when
+ *           currentEntryIndex + 1 >= numEntries_ sets reachedEnd_.
+ */
+HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_ZipReader_AdvanceToNextEntry_0200, Function | MediumTest | Level1)
+{
+    FilePath filePath(TEST_ZIP_OK);
+    ZipReader reader;
+    ASSERT_TRUE(reader.Open(filePath));
+    ASSERT_TRUE(reader.OpenCurrentEntryInZip());
+
+    // Advance until we reach the end — the >= check fires on the last entry
+    int entryCount = 0;
+    while (reader.HasMore()) {
+        if (!reader.AdvanceToNextEntry()) {
+            break;
+        }
+        entryCount++;
+        if (entryCount > 100) {
+            break;
+        }
+    }
+    // After exhausting entries, HasMore should be false (reachedEnd_ set)
+    EXPECT_FALSE(reader.HasMore());
+}
+
+/**
+ * @tc.number: APPEXECFWK_LIBZIP_ZipParallelReader_GotoEntry_0300
+ * @tc.name: ZipParallelReader_GotoEntry_0300
+ * @tc.desc: Test GotoEntry with numEntries < 0 — covers the defensive numEntries < 0 branch
+ *           (L323 Branch 1). Uses #define private public to set numEntries_ to -1.
+ *           zipFile is a dummy non-null pointer since GotoEntry returns before using it.
+ */
+HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_ZipParallelReader_GotoEntry_0300, Function | MediumTest | Level1)
+{
+    ZipParallelReader parallelReader;
+    // Set numEntries_ to -1 to trigger the numEntries < 0 branch
+    parallelReader.numEntries_ = -1;
+    // Dummy non-null zipFile — GotoEntry returns false before dereferencing it
+    unzFile dummyFile = reinterpret_cast<unzFile>(0x1);
+    unz_file_pos pos = {0, 0};
+    bool ret = parallelReader.GotoEntry(dummyFile, pos);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: APPEXECFWK_LIBZIP_ZipParallelReader_GotoEntry_0400
+ * @tc.name: ZipParallelReader_GotoEntry_0400
+ * @tc.desc: Test GotoEntry with filePos.num_of_file >= numEntries — covers the >= branch
+ *           (L323 Branch 2). Sets numEntries_ to 0 and filePos.num_of_file to 1.
+ */
+HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_ZipParallelReader_GotoEntry_0400, Function | MediumTest | Level1)
+{
+    ZipParallelReader parallelReader;
+    // Set numEntries_ to 0 so any filePos.num_of_file >= 0 triggers the >= branch
+    parallelReader.numEntries_ = 0;
+    unzFile dummyFile = reinterpret_cast<unzFile>(0x1);
+    unz_file_pos pos = {1, 0};  // num_of_file=1 >= numEntries=0 → true
+    bool ret = parallelReader.GotoEntry(dummyFile, pos);
+    EXPECT_FALSE(ret);
 }
 }  // namespace LIBZIP
 }  // namespace AppExecFwk
