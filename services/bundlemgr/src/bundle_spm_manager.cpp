@@ -231,22 +231,24 @@ BundleSpmManager::InstallSession BundleSpmManager::InstallSession::CheckSignAndI
     // Normalize an invalid caller userId the same way the OFF checker does
     // (AccountHelper::GetUserIdByCallerType): the raw -1 must NEVER reach the AT
     // side unless the caller explicitly holds SKIP_ENTERPRISE_RESIGN_VERIFY —
-    // the cross-process contract interprets userId == -1 as "skip the enterprise
-    // resign verification", so passing Constants::INVALID_USERID by accident
-    // would silently bypass that check (fail-open relative to SPM OFF).
+    // the cross-process contract interprets userIdForEnterpriseSign == -1 as
+    // "skip the enterprise resign verification", so passing
+    // Constants::INVALID_USERID by accident would silently bypass that check
+    // (fail-open relative to SPM OFF).
     if (!skipEnterpriseResign && userId < Constants::DEFAULT_USERID) {
         userId = AccountHelper::GetUserIdByCallerType();
     }
-    hapList.userId = skipEnterpriseResign ? -1 : userId;
+    hapList.userIdForEnterpriseSign = skipEnterpriseResign ? -1 : userId;
     std::vector<Security::AccessToken::TrustedBundleInfo> trustedBundleInfos;
     Security::AccessToken::HapVerifyResultInfo resultInfo;
     int32_t ret = Security::AccessToken::AccessTokenKit::CheckHapSignInfo(hapList,
         Security::AccessToken::SignInfoQueryFlag::QUERY_PROFILE, session.sessionId_,
         trustedBundleInfos, resultInfo);
     if (ret != Security::AccessToken::AccessTokenKitRet::RET_SUCCESS) {
-        LOG_NOFUNC_E(BMS_TAG_INSTALLER, "CheckHapSignInfo failed, ret %{public}d", ret);
+        LOG_NOFUNC_E(BMS_TAG_INSTALLER, "CheckHapSignInfo failed, ret %{public}d errorCode %{public}d",
+            ret, resultInfo.errorCode);
         session.sessionId_ = 0;
-        outErrCode = BundleVerifyMgr::ConvertHapVerifyResultCode(ret);
+        outErrCode = BundleVerifyMgr::ConvertHapVerifyResultCode(resultInfo.errorCode, ret);
         return session;
     }
     if (trustedBundleInfos.size() != bundlePaths.size()) {
@@ -537,8 +539,14 @@ int32_t BundleSpmManager::InstallSession::UpdateToken(
     Security::AccessToken::BundlePolicy policy = BundleSpmManager::CreateBundlePolicy(
         info, dlpType, isDebugGrant);
     int32_t uidOut = Constants::INVALID_UID;
+    // tokenIdEx is an in/out parameter since AT PR #5133: the low 32 bits locate
+    // the token, and on success the AT side refreshes the high 32 bits (tokenAttr,
+    // same source as the FinishInstall commit value) in place — handing the
+    // caller's reference through keeps the refreshed attr on the caller's token
+    // record (their normal save path persists it). The error path leaves the
+    // input untouched (AT-side contract).
     int32_t ret = Security::AccessToken::AccessTokenKit::UpdateHapPolicy(sessionId_,
-        tokenIdEx.tokenIdExStruct.tokenID, policy, uidOut);
+        tokenIdEx, policy, uidOut);
     if (ret != Security::AccessToken::AccessTokenKitRet::RET_SUCCESS) {
         LOG_NOFUNC_E(BMS_TAG_INSTALLER,
             "UpdateHapPolicy failed, bundleName:%{public}s userId:%{public}d sessionId:%{public}d "
@@ -601,14 +609,20 @@ int32_t BundleSpmManager::InstallSession::UpdateToken(
 
 int32_t BundleSpmManager::InstallSession::CheckPermissionInfo(
     Security::AccessToken::InstallTypeEnum installType,
-    Security::AccessToken::HapInfoCheckResult &checkResult)
+    Security::AccessToken::HapInfoCheckResult &checkResult,
+    Security::AccessToken::MultipleMode mode)
 {
     if (!IsEnabled()) {
         return ERR_OK;
     }
     // SPM ON: pre-check app permissions inside the session (install/replace/merge).
+    // The dual-mode identity of this install rides along — the AT side moved the
+    // mode consumption from CheckHapSignInfo to this call (AT PR #5133), and the
+    // caller decides it HERE because the effective dual-mode policy is only
+    // resolved on the parsed bundle info by now (never at the sign-check session
+    // creation, where a preinstall first pass is still UNSPECIFIED).
     return Security::AccessToken::AccessTokenKit::CheckHapPermissionInfo(sessionId_,
-        installType, checkResult);
+        installType, mode, checkResult);
 }
 
 int32_t BundleSpmManager::InstallSession::VerifyPermission(const std::string &bundleName,
@@ -728,7 +742,7 @@ int32_t BundleSpmManager::OnModuleUninstalled(const InnerBundleInfo &info, int32
     Security::AccessToken::BundleHapList hapList;
     hapList.hapPaths = info.GetAllHapPaths();
     hapList.isPreInstalled = info.IsPreInstallApp();
-    hapList.userId = userId;
+    hapList.userIdForEnterpriseSign = userId;
     if (hapList.hapPaths.empty()) {
         // Nothing left to re-sign (defensive: the last-module uninstall takes
         // the full-uninstall flow, this path only sees the remaining set).
@@ -746,13 +760,20 @@ int32_t BundleSpmManager::OnModuleUninstalled(const InnerBundleInfo &info, int32
         Security::AccessToken::SignInfoQueryFlag::QUERY_PROFILE, sessionId,
         trustedBundleInfos, resultInfo);
     if (ret != Security::AccessToken::AccessTokenKitRet::RET_SUCCESS) {
-        LOG_NOFUNC_E(BMS_TAG_INSTALLER, "OnModuleUninstall verify failed, bundleName:%{public}s ret %{public}d",
-            info.GetBundleName().c_str(), ret);
-        return ret;
+        LOG_NOFUNC_E(BMS_TAG_INSTALLER, "OnModuleUninstall verify failed, bundleName:%{public}s "
+            "ret %{public}d errorCode %{public}d", info.GetBundleName().c_str(), ret, resultInfo.errorCode);
+        return BundleVerifyMgr::ConvertHapVerifyResultCode(resultInfo.errorCode, ret);
     }
     Security::AccessToken::HapInfoCheckResult checkResult;
+    // Same identity-based rule as the install path (dualModeBundleName_ there —
+    // the installer derives it from this very flag via InitDualModeBundleName):
+    // the remaining modules of a dual-mode clone app are re-signed against the
+    // SUB-mode identity; every other bundle uses the default/main mode.
+    Security::AccessToken::MultipleMode mode = info.IsDualModeCloneApp()
+        ? Security::AccessToken::MultipleMode::SUB_MODE
+        : Security::AccessToken::MultipleMode::DEFAULT_OR_MAIN_MODE;
     ret = Security::AccessToken::AccessTokenKit::CheckHapPermissionInfo(sessionId,
-        Security::AccessToken::InstallTypeEnum::TYPE_REPLACE, checkResult);
+        Security::AccessToken::InstallTypeEnum::TYPE_REPLACE, mode, checkResult);
     if (ret != Security::AccessToken::AccessTokenKitRet::RET_SUCCESS) {
         LOG_NOFUNC_E(BMS_TAG_INSTALLER, "OnModuleUninstall check permission failed, bundleName:%{public}s "
             "sessionId:%{public}d ret %{public}d", info.GetBundleName().c_str(), sessionId, ret);
@@ -811,6 +832,11 @@ bool BundleSpmManager::TryRecoverUidError(const std::string &bundleName, BundleD
     migratedInfo.bundleName = bundleName;
     migratedInfo.pathList.hapPaths = info.GetAllHapPaths();
     migratedInfo.pathList.isPreInstalled = info.IsPreInstallApp();
+    // Identity mode of the migration entry (same rule as the boot migration
+    // builder): a dual-mode clone app migrates into the SUB mode.
+    migratedInfo.mode = info.IsDualModeCloneApp()
+        ? Security::AccessToken::MultipleMode::SUB_MODE
+        : Security::AccessToken::MultipleMode::DEFAULT_OR_MAIN_MODE;
     for (const auto &userInfoPair : info.GetInnerBundleUserInfos()) {
         const auto &userInfo = userInfoPair.second;
         const auto &bundleUserInfo = userInfo.bundleUserInfo;

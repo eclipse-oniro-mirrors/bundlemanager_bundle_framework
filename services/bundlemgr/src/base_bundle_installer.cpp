@@ -1283,12 +1283,21 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
         // isFeatureNeedUninstall_ is settled by the version compatibility checks
         // just above: true on any version change (upgrade or allowed downgrade,
         // rejected downgrades never reach this point), false on equal versions.
+        // DUAL_MODE: the mode is decided HERE, not at the sign-check session
+        // creation — by now the install's identity is settled: a non-empty
+        // dualModeBundleName_ (set by InitDualModeBundleName before this flow)
+        // means the haps are installed under the dual-mode clone name, i.e. the
+        // SUB-mode identity on the AT side; an empty one (original name /
+        // non-dual-mode flows) uses the default/main mode.
+        Security::AccessToken::MultipleMode spmMode = dualModeBundleName_.empty()
+            ? Security::AccessToken::MultipleMode::DEFAULT_OR_MAIN_MODE
+            : Security::AccessToken::MultipleMode::SUB_MODE;
         Security::AccessToken::HapInfoCheckResult spmCheckResult;
         int32_t spmRet = spmSession_.CheckPermissionInfo(
             isFeatureNeedUninstall_
                 ? Security::AccessToken::InstallTypeEnum::TYPE_REPLACE
                 : Security::AccessToken::InstallTypeEnum::TYPE_MERGE,
-            spmCheckResult);
+            spmCheckResult, spmMode);
         if (spmRet != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "spm check permission failed, bundleName:%{public}s errCode:%{public}d",
                 bundleName_.c_str(), spmRet);
@@ -3559,9 +3568,17 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallStatus(InnerBundleInfo &info, i
     // TYPE_INSTALL is always correct here: ProcessBundleInstallStatus runs for
     // new installs only (the AT side has no prior record), and keep-data
     // reinstalls go through InnerProcessBundleInstall's update branch instead.
+    // DUAL_MODE: same as the update branch — the mode is decided here from the
+    // install's identity: dualModeBundleName_ was settled by InitDualModeBundleName
+    // before InnerProcessBundleInstall, so a non-empty value (install running
+    // under the dual-mode clone name) checks the permissions against the
+    // SUB-mode identity on the AT side; an empty one uses the default/main mode.
+    Security::AccessToken::MultipleMode spmMode = dualModeBundleName_.empty()
+        ? Security::AccessToken::MultipleMode::DEFAULT_OR_MAIN_MODE
+        : Security::AccessToken::MultipleMode::SUB_MODE;
     Security::AccessToken::HapInfoCheckResult spmCheckResult;
     int32_t spmRet = spmSession_.CheckPermissionInfo(
-        Security::AccessToken::InstallTypeEnum::TYPE_INSTALL, spmCheckResult);
+        Security::AccessToken::InstallTypeEnum::TYPE_INSTALL, spmCheckResult, spmMode);
     if (spmRet != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "spm check permission failed, bundleName:%{public}s errCode:%{public}d",
             bundleName_.c_str(), spmRet);

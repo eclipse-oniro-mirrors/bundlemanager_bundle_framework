@@ -170,7 +170,6 @@ ErrCode IndependentSkillsInstaller::ProcessInstall(
         spmCheckResult);
     if (spmRet != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "spm check permission failed %{public}d", spmRet);
-        RollBack();
         // Raw AT code: map to the registered BMS code, no unregistered code leaks.
         return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
     }
@@ -1162,6 +1161,18 @@ bool IndependentSkillsInstaller::RollBack()
         return false;
     }
     bool rollBackResult = true;
+    // SPM ON: by-name cleanup of any leftover AT identity (skills carry no
+    // identity — this clears a possible leftover from a previous OFF-mode
+    // install). Runs for both update and fresh-install rollbacks.
+    if (BundleSpmManager::IsEnabled()) {
+        int32_t delRet = Security::AccessToken::AccessTokenKit::DeleteIdentity(0, bundleName_,
+            Security::AccessToken::ReservedType::NONE);
+        if (delRet != Security::AccessToken::AccessTokenKitRet::RET_SUCCESS) {
+            LOG_W(BMS_TAG_INSTALLER, "skills rollback by-name delete identity, bundle:%{public}s ret %{public}d",
+                bundleName_.c_str(), delRet);
+        }
+    }
+    // Fresh-install rollback: no previous version to keep
     // RemoveCache
     RemoveInfo(bundleName_);
     // delete code
@@ -1376,6 +1387,19 @@ ErrCode IndependentSkillsInstaller::ProcessUninstall(const std::string &bundleNa
     if (!dataMgr_->UpdateBundleInstallState(bundleName, InstallState::UNINSTALL_SUCCESS)) {
         LOG_E(BMS_TAG_INSTALLER, "delete inner info failed for bundle %{public}s", bundleName.c_str());
         return ERR_APPEXECFWK_UPDATE_BUNDLE_INSTALL_STATUS_ERROR;
+    }
+    // SPM ON: the skills flow never persists a token id (no InitToken under
+    // ON), so the per-identity delete is not applicable. A by-name delete
+    // (tokenId=0) clears any leftover AT-side identity that might have been
+    // created by a previous OFF-mode install — skills bundles are expected
+    // to carry no identity, this is a cleanup call.
+    if (BundleSpmManager::IsEnabled()) {
+        int32_t delRet = Security::AccessToken::AccessTokenKit::DeleteIdentity(0, bundleName,
+            Security::AccessToken::ReservedType::NONE);
+        if (delRet != Security::AccessToken::AccessTokenKitRet::RET_SUCCESS) {
+            LOG_W(BMS_TAG_INSTALLER, "skills uninstall by-name delete identity, bundle:%{public}s ret %{public}d",
+                bundleName.c_str(), delRet);
+        }
     }
     MarkPreInstallState(bundleName, true);
     result = SkillsDescriptionManager::GetInstance()->DeleteSkillDescriptions(bundleName);

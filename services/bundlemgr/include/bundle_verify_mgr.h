@@ -44,7 +44,7 @@ public:
      * @param verifyResultCode Indicates the raw error code from the access token service.
      * @return Returns the mapped ERR_APPEXECFWK_* code.
      */
-    static ErrCode ConvertHapVerifyResultCode(int32_t verifyResultCode);
+    static ErrCode ConvertHapVerifyResultCode(int32_t verifyResultCode, int32_t ret = 0);
 
 private:
     static bool isDebug_;

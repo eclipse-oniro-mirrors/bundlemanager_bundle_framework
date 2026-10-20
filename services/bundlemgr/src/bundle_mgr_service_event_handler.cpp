@@ -7279,8 +7279,8 @@ void BMSEventHandler::BuildFromInstalledBundles(const std::vector<std::string> &
         m.bundleName = bn;
         m.pathList.hapPaths = info.GetAllHapPaths();
         m.pathList.isPreInstalled = info.IsPreInstallApp();
-        m.pathList.userId = info.GetUserId();
-        m.pathList.mode = info.IsDualModeCloneApp()
+        m.pathList.userIdForEnterpriseSign = info.GetUserId();
+        m.mode = info.IsDualModeCloneApp()
             ? Security::AccessToken::MultipleMode::SUB_MODE
             : Security::AccessToken::MultipleMode::DEFAULT_OR_MAIN_MODE;
         auto userInfos = info.GetInnerBundleUserInfos();
@@ -8167,7 +8167,7 @@ bool PrepareSpmFallbackSession(const InnerBundleInfo &info,
     Security::AccessToken::BundleHapList hapList;
     hapList.hapPaths = migratedInfo ? migratedInfo->pathList.hapPaths : info.GetAllHapPaths();
     hapList.isPreInstalled = info.IsPreInstallApp();
-    hapList.userId = info.GetUserId();
+    hapList.userIdForEnterpriseSign = info.GetUserId();
     std::vector<Security::AccessToken::TrustedBundleInfo> trustedBundleInfos;
     Security::AccessToken::HapVerifyResultInfo resultInfo;
     int32_t signRet = Security::AccessToken::AccessTokenKit::CheckHapSignInfo(
@@ -8180,9 +8180,17 @@ bool PrepareSpmFallbackSession(const InnerBundleInfo &info,
         }
         return false;
     }
+    // Identity mode of the re-sign session: the migration entry carries it
+    // (moved from pathList.mode); a bundle without one falls back to the same
+    // per-variant rule the migration builders use.
+    Security::AccessToken::MultipleMode mode = migratedInfo != nullptr
+        ? migratedInfo->mode
+        : (info.IsDualModeCloneApp()
+            ? Security::AccessToken::MultipleMode::SUB_MODE
+            : Security::AccessToken::MultipleMode::DEFAULT_OR_MAIN_MODE);
     Security::AccessToken::HapInfoCheckResult permResult;
     int32_t permRet = Security::AccessToken::AccessTokenKit::CheckHapPermissionInfo(
-        sessionId, Security::AccessToken::InstallTypeEnum::TYPE_REPLACE, permResult);
+        sessionId, Security::AccessToken::InstallTypeEnum::TYPE_REPLACE, mode, permResult);
     if (permRet != 0) {
         LOG_E(BMS_TAG_DEFAULT, "Fallback: CheckHapPermissionInfo failed sessionId=%{public}d ret=%{public}d",
             sessionId, permRet);
@@ -8264,8 +8272,8 @@ void BMSEventHandler::CollectUnmigratedMainAndClone(
         m.bundleName = bundleName;
         m.pathList.hapPaths = info.GetAllHapPaths();
         m.pathList.isPreInstalled = info.IsPreInstallApp();
-        m.pathList.userId = info.GetUserId();
-        m.pathList.mode = info.IsDualModeCloneApp()
+        m.pathList.userIdForEnterpriseSign = info.GetUserId();
+        m.mode = info.IsDualModeCloneApp()
             ? Security::AccessToken::MultipleMode::SUB_MODE
             : Security::AccessToken::MultipleMode::DEFAULT_OR_MAIN_MODE;
         for (const auto &[userIdStr, userInfo] : info.GetInnerBundleUserInfos()) {
@@ -8434,8 +8442,14 @@ void BMSEventHandler::CollectFallbackPendingResults(
             info, dlpType,
             info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG);
         int32_t resolvedUid = oldUid;
+        // UpdateHapPolicy takes AccessTokenIDEx as an in/out parameter (AT PR
+        // #5133): the low 32 bits locate the token and the high 32 bits come
+        // back refreshed (same source as the FinishInstall commit value), so the
+        // AT-refreshed tokenAttr is what gets persisted below.
+        Security::AccessToken::AccessTokenIDEx tokenIdEx;
+        tokenIdEx.tokenIDEx = existingTokenIdEx;
         int32_t policyRet = Security::AccessToken::AccessTokenKit::UpdateHapPolicy(
-            sessionId, static_cast<int32_t>(existingTokenId), policy, resolvedUid);
+            sessionId, tokenIdEx, policy, resolvedUid);
         if (policyRet != 0) {
             LOG_E(BMS_TAG_DEFAULT,
                 "Fallback: bundle=%{public}s userId=%{public}d appIndex=%{public}d "
@@ -8444,7 +8458,8 @@ void BMSEventHandler::CollectFallbackPendingResults(
             continue;
         }
         bool uidChanged = (resolvedUid != 0 && resolvedUid != oldUid);
-        pendingResults.push_back({idx, hapInfo, resolvedUid, existingTokenId, existingTokenIdEx, uidChanged});
+        pendingResults.push_back({idx, hapInfo, resolvedUid, existingTokenId,
+            tokenIdEx.tokenIDEx, uidChanged});
     }
 }
 
