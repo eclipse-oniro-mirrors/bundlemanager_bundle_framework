@@ -144,7 +144,9 @@ ErrCode QuickFixManagerHost::HandleCreateFd(MessageParcel& data, MessageParcel& 
     auto ret = CreateFd(fileName, fd, path);
     if (!reply.WriteInt32(ret)) {
         LOG_E(BMS_TAG_DEFAULT, "write ret failed");
-        fdsan_close_with_tag(fd, BMS_FDSAN_TEMP_TAG);
+        if (fd >= 0) {
+            fdsan_close_with_tag(fd, BMS_FDSAN_TEMP_TAG);
+        }
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret == ERR_OK) {
