@@ -469,6 +469,7 @@ constexpr const char* HNP_TYPE = "type";
 constexpr const char* HNP_INDEPENDENT_SIGN = "independentSign";
 // executableBinaryPath
 constexpr const char* EXECUTABLE_BINARY_PATH = "path";
+constexpr const char* EXECUTABLE_BINARY_PERMISSION_CONTROL_MODE = "permissionControlMode";
 // metadata reserved
 constexpr const char* META_DATA_FORM = "ohos.extension.form";
 constexpr const char* META_DATA_SHORTCUTS = "ohos.ability.shortcuts";

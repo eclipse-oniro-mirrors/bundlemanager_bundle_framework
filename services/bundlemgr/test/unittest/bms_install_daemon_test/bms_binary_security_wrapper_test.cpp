@@ -187,16 +187,23 @@ HWTEST_F(BmsBinarySecurityWrapperTest, BmsBinarySecurityWrapperTest_006, Functio
  */
 HWTEST_F(BmsBinarySecurityWrapperTest, BmsBinarySecurityWrapperTest_009, Function | SmallTest | Level0)
 {
+    constexpr int32_t inheritParentProcess = 1;
+    constexpr int32_t independent = 0;
     BinFileInfo info1;
     info1.path = TEST_BIN_FILE_PATH;
+    info1.permissionControlMode = inheritParentProcess;
     EXPECT_EQ(info1.path, TEST_BIN_FILE_PATH);
+    EXPECT_EQ(info1.permissionControlMode, inheritParentProcess);
 
     BinFileInfo info2;
     info2 = info1;
     EXPECT_EQ(info2.path, TEST_BIN_FILE_PATH);
+    EXPECT_EQ(info2.permissionControlMode, inheritParentProcess);
 
     BinFileInfo info3 = info1;
     EXPECT_EQ(info3.path, TEST_BIN_FILE_PATH);
+    EXPECT_EQ(info3.permissionControlMode, inheritParentProcess);
+    EXPECT_EQ(BinFileInfo().permissionControlMode, independent);
 }
 
 /**

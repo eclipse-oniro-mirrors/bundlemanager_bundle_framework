@@ -5133,7 +5133,8 @@ ErrCode InstalldHostImpl::ProcessBinFiles(const VerifyBinParam &verifyBinParam)
 #ifdef SECURITY_PRIVACY_SERVER_ENABLE
     std::vector<BinFileInfo> infos;
 #endif
-    for (const auto &path : verifyBinParam.binFilePaths) {
+    for (size_t i = 0; i < verifyBinParam.binFilePaths.size(); ++i) {
+        const auto &path = verifyBinParam.binFilePaths[i];
         std::string binFilePath;
         if (!PathToRealPath(path, binFilePath)) {
             LOG_E(BMS_TAG_INSTALLD, "not real path: %{public}s", path.c_str());
@@ -5169,6 +5170,12 @@ ErrCode InstalldHostImpl::ProcessBinFiles(const VerifyBinParam &verifyBinParam)
         }
         BinFileInfo binInfo;
         binInfo.path = binFilePath;
+        if (i < verifyBinParam.permissionControlModes.size()) {
+            binInfo.permissionControlMode = verifyBinParam.permissionControlModes[i];
+        }
+        LOG_D(BMS_TAG_INSTALLD,
+            "ProcessHapBinInstall pass to BSS -n %{public}s path=%{private}s mode=%{public}d",
+            verifyBinParam.bundleName.c_str(), binInfo.path.c_str(), binInfo.permissionControlMode);
         infos.emplace_back(binInfo);
 #endif
     }

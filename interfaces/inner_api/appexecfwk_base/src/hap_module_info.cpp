@@ -110,6 +110,7 @@ const char* HAP_MODULE_INFO_FORM_WIDGET_MODULE = "formWidgetModule";
 const char* HAP_MODULE_INFO_HAS_INTENT = "hasIntent";
 const char* HAP_MODULE_INFO_DEDUPLICATE_HAR = "deduplicateHar";
 const char* EXECUTABLE_BINARY_PATH_KEY = "path";
+const char* EXECUTABLE_BINARY_PERMISSION_CONTROL_MODE_KEY = "permissionControlMode";
 const char* HAP_MODULE_INFO_EXECUTABLE_BINARY_PATHS = "executableBinaryPaths";
 const uint32_t MODULE_CAPACITY = 204800; // 200K
 }
@@ -227,12 +228,14 @@ void from_json(const nlohmann::json &jsonObject, Dependency &dependency)
 bool ExecutableBinaryPath::ReadFromParcel(Parcel &parcel)
 {
     path = Str16ToStr8(parcel.ReadString16());
+    permissionControlMode = static_cast<PermissionControlMode>(parcel.ReadInt32());
     return true;
 }
 
 bool ExecutableBinaryPath::Marshalling(Parcel &parcel) const
 {
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(path));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(permissionControlMode));
     return true;
 }
 
@@ -257,6 +260,14 @@ void from_json(const nlohmann::json &jsonObject, ExecutableBinaryPath &executabl
         executableBinaryPath.path,
         false,
         parseResult);
+    GetValueIfFindKey<PermissionControlMode>(jsonObject,
+        jsonObjectEnd,
+        EXECUTABLE_BINARY_PERMISSION_CONTROL_MODE_KEY,
+        executableBinaryPath.permissionControlMode,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("read ExecutableBinaryPath from json error, error code : %{public}d", parseResult);
     }
@@ -265,7 +276,8 @@ void from_json(const nlohmann::json &jsonObject, ExecutableBinaryPath &executabl
 void to_json(nlohmann::json &jsonObject, const ExecutableBinaryPath &executableBinaryPath)
 {
     jsonObject = nlohmann::json {
-        {EXECUTABLE_BINARY_PATH_KEY, executableBinaryPath.path}
+        {EXECUTABLE_BINARY_PATH_KEY, executableBinaryPath.path},
+        {EXECUTABLE_BINARY_PERMISSION_CONTROL_MODE_KEY, executableBinaryPath.permissionControlMode}
     };
 }
 

@@ -20,6 +20,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <string>
+#include <utility>
 #include <sys/stat.h>
 #include "nocopyable.h"
 
@@ -483,10 +484,13 @@ private:
 
     ErrCode CheckHapBinInstallCondition(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
 
-    std::vector<std::string> GetBinFilePaths(const InnerBundleInfo &info,
-        const std::string &nativeLibraryPath) const;
+    std::vector<std::pair<std::string, PermissionControlMode>> GetBinFilePaths(const InnerBundleInfo &info,
+		const std::string &nativeLibraryPath) const;
 
     ErrCode ProcessBinFiles(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
+
+    // Soft-fail notify BSS bin uninstall via ProcessBinFiles(isUninstall=true).
+    void ProcessBinUninstall() const;
 
     ErrCode CheckInstallPermission(const InstallParam &installParam,
         std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);

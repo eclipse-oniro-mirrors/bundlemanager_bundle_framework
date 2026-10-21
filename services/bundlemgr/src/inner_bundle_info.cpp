@@ -173,6 +173,7 @@ constexpr const char* MODULE_DEBUG = "debug";
 constexpr const char* MODULE_CROS_APP_SHARED_CONFIG = "crossAppSharedConfig";
 constexpr const char* MODULE_ABILITY_SRC_ENTRY_DELEGATOR = "abilitySrcEntryDelegator";
 constexpr const char* EXECUTABLE_BINARY_PATH = "path";
+constexpr const char* EXECUTABLE_BINARY_PERMISSION_CONTROL_MODE = "permissionControlMode";
 // SkillsAgent field constants
 constexpr const char* SKILL_PROFILE_NAME = "name";
 constexpr const char* SKILL_PROFILE_ABILITY_NAME = "abilityName";
@@ -268,6 +269,14 @@ void from_json(const nlohmann::json &jsonObject, ExecutableBinaryPath &executabl
         executableBinaryPath.path,
         false,
         parseResult);
+    GetValueIfFindKey<PermissionControlMode>(jsonObject,
+        jsonObjectEnd,
+        EXECUTABLE_BINARY_PERMISSION_CONTROL_MODE,
+        executableBinaryPath.permissionControlMode,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("read ExecutableBinaryPath from json error, error code : %{public}d", parseResult);
     }
@@ -276,7 +285,8 @@ void from_json(const nlohmann::json &jsonObject, ExecutableBinaryPath &executabl
 void to_json(nlohmann::json &jsonObject, const ExecutableBinaryPath &executableBinaryPath)
 {
     jsonObject = nlohmann::json {
-        {EXECUTABLE_BINARY_PATH, executableBinaryPath.path}
+        {EXECUTABLE_BINARY_PATH, executableBinaryPath.path},
+        {EXECUTABLE_BINARY_PERMISSION_CONTROL_MODE, executableBinaryPath.permissionControlMode}
     };
 }
 

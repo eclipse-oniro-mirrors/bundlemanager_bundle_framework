@@ -28,9 +28,12 @@ struct VerifyBinParam : public Parcelable {
     std::string appIdentifier;
     int32_t userId;
     std::vector<std::string> binFilePaths;
+    std::vector<int32_t> permissionControlModes;
     bool isDebug = false;
     // SPM session id allocated by access token service; 0 means legacy mode (SPM OFF)
     int32_t sessionId = 0;
+    // true: notify BSS uninstall (no bin paths); false: install/register bins
+    bool isUninstall = false;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

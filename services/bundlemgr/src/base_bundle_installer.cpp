@@ -2074,6 +2074,10 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
         }
     });
 
+    // update: soft-uninstall BSS registration before re-install bins
+    if (isAppExist_) {
+        ProcessBinUninstall();
+    }
     // process bin file permission
     result = ProcessBinFiles(newInfos);
     CHECK_RESULT_WITH_ROLLBACK(result, "process bin files failed %{public}d", newInfos, oldInfo);
@@ -2567,6 +2571,8 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     // Uninstall all CLI sandbox apps
     auto cliSandboxInstaller = std::make_shared<BundleCliSandboxInstaller>();
     cliSandboxInstaller->DestroyAllCliSandboxApps(bundleName, userId_);
+
+    ProcessBinUninstall();
 
     RemoveAppClonePreference(bundleName, userId_);
 
@@ -7119,16 +7125,16 @@ ErrCode BaseBundleInstaller::CheckHapBinInstallCondition(const std::unordered_ma
     return ERR_OK;
 }
 
-std::vector<std::string> BaseBundleInstaller::GetBinFilePaths(const InnerBundleInfo &info,
-    const std::string &nativeLibraryPath) const
+std::vector<std::pair<std::string, PermissionControlMode>> BaseBundleInstaller::GetBinFilePaths(const InnerBundleInfo &info,
+	const std::string &nativeLibraryPath) const
 {
-    std::vector<std::string> binFilePaths;
+    std::vector<std::pair<std::string, PermissionControlMode>> binFilePaths;
     if (nativeLibraryPath.empty()) {
         LOG_E(BMS_TAG_INSTALLER, "nativeLibraryPath is empty");
         return binFilePaths;
     }
     std::string prefix = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
-        GetEffectiveBundleName() + ServiceConstants::PATH_SEPARATOR + nativeLibraryPath;
+        info.GetBundleName() + ServiceConstants::PATH_SEPARATOR + nativeLibraryPath;
     if (prefix.back() != ServiceConstants::FILE_SEPARATOR_CHAR) {
         prefix += ServiceConstants::FILE_SEPARATOR_CHAR;
     }
@@ -7147,7 +7153,12 @@ std::vector<std::string> BaseBundleInstaller::GetBinFilePaths(const InnerBundleI
                 continue;
             }
             binPath = binPath.substr(libsPrefix.length());
-            binFilePaths.push_back(prefix + binPath);
+            std::string absolutePath = prefix + binPath;
+            binFilePaths.emplace_back(absolutePath, executableBinaryPath.permissionControlMode);
+            LOG_D(BMS_TAG_INSTALLER,
+                "GetBinFilePaths path=%{private}s permissionControlMode=%{public}d",
+                absolutePath.c_str(),
+                static_cast<int32_t>(executableBinaryPath.permissionControlMode));
         }
     }
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "binFilePaths size: %{public}zu", binFilePaths.size());
@@ -7161,13 +7172,17 @@ ErrCode BaseBundleInstaller::ProcessBinFiles(
         return ERR_OK;
     }
     std::vector<std::string> binFilePaths;
+    std::vector<int32_t> permissionControlModes;
     for (const auto &infoPair : infos) {
         const InnerBundleInfo &info = infoPair.second;
         std::string cpuAbi;
         std::string nativeLibraryPath;
         info.FetchNativeSoAttrs(info.GetCurrentModulePackage(), cpuAbi, nativeLibraryPath);
-        auto paths = GetBinFilePaths(info, nativeLibraryPath);
-        binFilePaths.insert(binFilePaths.end(), paths.begin(), paths.end());
+        auto pathsWithMode = GetBinFilePaths(info, nativeLibraryPath);
+        for (const auto &item : pathsWithMode) {
+            binFilePaths.push_back(item.first);
+            permissionControlModes.push_back(static_cast<int32_t>(item.second));
+        }
     }
     if (binFilePaths.empty()) {
         LOG_D(BMS_TAG_INSTALLER, "binFilePaths is empty");
@@ -7180,11 +7195,29 @@ ErrCode BaseBundleInstaller::ProcessBinFiles(
     verifyBinParam.appIdentifier = appIdentifier_;
     verifyBinParam.userId = userId_;
     verifyBinParam.binFilePaths = binFilePaths;
+    verifyBinParam.permissionControlModes = permissionControlModes;
     // The provision type of all input HAPs has been checked for consistency.
     verifyBinParam.isDebug = infos.begin()->second.GetAppProvisionType() == Constants::APP_PROVISION_TYPE_DEBUG;
+    verifyBinParam.isUninstall = false;
     spmSession_.FillVerifyBinParam(verifyBinParam);
 
     return InstalldClient::GetInstance()->ProcessBinFiles(verifyBinParam);
+}
+
+void BaseBundleInstaller::ProcessBinUninstall() const
+{
+    VerifyBinParam verifyBinParam;
+    verifyBinParam.bundleName = GetEffectiveBundleName();
+    verifyBinParam.appIdentifier = appIdentifier_;
+    verifyBinParam.userId = userId_;
+    verifyBinParam.isUninstall = true;
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "ProcessBinUninstall start -n %{public}s -u %{public}d",
+        verifyBinParam.bundleName.c_str(), verifyBinParam.userId);
+    ErrCode ret = InstalldClient::GetInstance()->ProcessBinFiles(verifyBinParam);
+    if (ret != ERR_OK) {
+        LOG_W(BMS_TAG_INSTALLER, "ProcessBinUninstall soft-fail %{public}d -n %{public}s",
+            ret, verifyBinParam.bundleName.c_str());
+    }
 }
 
 ErrCode BaseBundleInstaller::CheckInstallPermission(const InstallParam &installParam,
