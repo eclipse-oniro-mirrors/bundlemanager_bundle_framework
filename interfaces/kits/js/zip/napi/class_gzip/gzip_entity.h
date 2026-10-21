@@ -30,6 +30,17 @@ public:
     {}
 };
 
+template <>
+class Deleter<gzFile_s> {
+public:
+    void operator()(gzFile_s *ptr) const
+    {
+        if (ptr != nullptr) {
+            gzclose(ptr);
+        }
+    }
+};
+
 struct GZipEntity {
     std::unique_ptr<gzFile_s, Deleter<gzFile_s>> gzs = {};
 };

@@ -951,7 +951,7 @@ std::tuple<bool, int32_t, int32_t, int32_t, int32_t> CommonFunc::UnwrapDeflateTu
         return {false, 0, 0, 0, 0};
     }
 
-    return {true, maxLazy, maxLazy, niceLength, maxChain};
+    return {true, goodLength, maxLazy, niceLength, maxChain};
 }
 
 std::tuple<bool, void *, size_t> CommonFunc::UnwrapArrayBufferParams(napi_env env, const NapiFuncArg &funcArg)

@@ -638,6 +638,19 @@ bool ZipFile::GetDataOffsetRelative(const std::string &file, ZipPos &offset, uin
 
     offset = GetEntryDataOffset(zipEntry, extraSize);
     length = zipEntry.compressedSize;
+    // boundary check: data range must be within file content length (relative to fileStartPos_)
+    // Use overflow-safe comparison: check length first, then dataOffset against remaining space
+    if (offset < fileStartPos_) {
+        APP_LOGE("offset(%{public}llu) < fileStartPos_(%{public}llu) for entry %{private}s",
+            offset, fileStartPos_, file.c_str());
+        return false;
+    }
+    ZipPos dataOffset = offset - fileStartPos_;
+    if (length > fileLength_ || dataOffset > fileLength_ - length) {
+        APP_LOGE("dataOffset(%{public}llu)+compressedSize(%{public}u) > fileLength(%{public}llu) for entry %{private}s",
+            dataOffset, length, fileLength_, file.c_str());
+        return false;
+    }
     return true;
 }
 
