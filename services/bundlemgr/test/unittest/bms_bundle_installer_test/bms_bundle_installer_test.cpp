@@ -24,6 +24,7 @@
 #include <fcntl.h>
 #include <fstream>
 #include <filesystem>
+#include <optional>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -36,6 +37,7 @@
 #ifdef APP_DOMAIN_VERIFY_ENABLED
 #include "app_domain_verify_mgr_client.h"
 #endif
+#include "account_helper.h"
 #include "app_service_fwk/app_service_fwk_installer.h"
 #include "bundle_info.h"
 #include "bundle_installer.h"
@@ -45,6 +47,8 @@
 #include "bundle_permission_mgr.h"
 #include "bundle_resource_helper.h"
 #include "bundle_resource_manager.h"
+#include "common_event_data.h"
+#include "common_event_subscriber.h"
 #include "directory_ex.h"
 #include "file_ex.h"
 #include "hmp_bundle_installer.h"
@@ -62,6 +66,7 @@
 #include "shared/shared_bundle_installer.h"
 #include "system_bundle_installer.h"
 #include "utd_handler.h"
+#include "user_unlocked_event_subscriber.h"
 #include "want.h"
 #include "uninstall_bundle_info.h"
 #include "installd/installd_permission_mgr.h"
@@ -19761,4 +19766,702 @@ HWTEST_F(BmsBundleInstallerTest, InstallParam_InstanceIsDisableInstallEventRepor
     installParam.parameters[Constants::DISABLE_INSTALL_EVENT_REPORT_KEY] = "false";
     EXPECT_FALSE(installParam.IsDisableInstallEventReport());
 }
+
+namespace {
+const std::string DUAL_UPGRADE_WHITELIST_TEST_PATH = "/data/local/tmp/dual_upgrade_whitelist_test.json";
+const std::string DUAL_UPGRADE_BUNDLE_NAME = "com.test.dualupgrade.app";
+const std::string DUAL_UPGRADE_BUNDLE_PATH = "/data/preloads/app/com.test.dualupgrade.app.hap";
+const std::string OOBE_HWSTARTUPGUIDE_FINISHED_EVENT = "custom.event.OOBE.HWSTARTUPGUIDE.FINISHED";
+const std::string OOBE_OTA_EVENT_PARAM = "ota";
+
+void WriteWhitelistFile(const std::string &content)
+{
+    std::ofstream file(DUAL_UPGRADE_WHITELIST_TEST_PATH);
+    file << content;
+    file.close();
+}
+
+InnerBundleInfo MakeDualUpgradeInnerBundleInfo()
+{
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->bundleName = DUAL_UPGRADE_BUNDLE_NAME;
+    innerBundleInfo.SetApplicationBundleType(BundleType::APP);
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = TEST_U100;
+    innerBundleUserInfo.bundleName = DUAL_UPGRADE_BUNDLE_NAME;
+    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+    return innerBundleInfo;
+}
+
+PreInstallBundleInfo MakeDualUpgradePreInstallBundleInfo()
+{
+    PreInstallBundleInfo preInstallBundleInfo;
+    preInstallBundleInfo.SetBundleName(DUAL_UPGRADE_BUNDLE_NAME);
+    preInstallBundleInfo.AddBundlePath(DUAL_UPGRADE_BUNDLE_PATH);
+    return preInstallBundleInfo;
+}
+} // namespace
+
+/**
+ * @tc.number: LoadDualUpgradeWhitelist_0001
+ * @tc.name: test LoadDualUpgradeWhitelist
+ * @tc.desc: 1.whitelist file not exist, return empty set
+ */
+HWTEST_F(BmsBundleInstallerTest, LoadDualUpgradeWhitelist_0001, Function | SmallTest | Level0)
+{
+    remove(DUAL_UPGRADE_WHITELIST_TEST_PATH.c_str());
+    BundleUserMgrHostImpl host;
+    auto whitelist = host.LoadDualUpgradeWhitelist(DUAL_UPGRADE_WHITELIST_TEST_PATH);
+    EXPECT_TRUE(whitelist.empty());
+}
+
+/**
+ * @tc.number: LoadDualUpgradeWhitelist_0002
+ * @tc.name: test LoadDualUpgradeWhitelist
+ * @tc.desc: 1.whitelist file content is invalid json, return empty set
+ */
+HWTEST_F(BmsBundleInstallerTest, LoadDualUpgradeWhitelist_0002, Function | SmallTest | Level0)
+{
+    WriteWhitelistFile("not a json content");
+    BundleUserMgrHostImpl host;
+    auto whitelist = host.LoadDualUpgradeWhitelist(DUAL_UPGRADE_WHITELIST_TEST_PATH);
+    EXPECT_TRUE(whitelist.empty());
+    remove(DUAL_UPGRADE_WHITELIST_TEST_PATH.c_str());
+}
+
+/**
+ * @tc.number: LoadDualUpgradeWhitelist_0003
+ * @tc.name: test LoadDualUpgradeWhitelist
+ * @tc.desc: 1.install_list missing or not array, top-level json not object or
+ *           empty file, return empty set
+ */
+HWTEST_F(BmsBundleInstallerTest, LoadDualUpgradeWhitelist_0003, Function | SmallTest | Level0)
+{
+    WriteWhitelistFile("{\"key\": \"value\"}");
+    BundleUserMgrHostImpl host;
+    auto whitelist = host.LoadDualUpgradeWhitelist(DUAL_UPGRADE_WHITELIST_TEST_PATH);
+    EXPECT_TRUE(whitelist.empty());
+
+    WriteWhitelistFile("{\"install_list\": \"not_array\"}");
+    whitelist = host.LoadDualUpgradeWhitelist(DUAL_UPGRADE_WHITELIST_TEST_PATH);
+    EXPECT_TRUE(whitelist.empty());
+
+    WriteWhitelistFile("[1, 2]");
+    whitelist = host.LoadDualUpgradeWhitelist(DUAL_UPGRADE_WHITELIST_TEST_PATH);
+    EXPECT_TRUE(whitelist.empty());
+
+    WriteWhitelistFile("");
+    whitelist = host.LoadDualUpgradeWhitelist(DUAL_UPGRADE_WHITELIST_TEST_PATH);
+    EXPECT_TRUE(whitelist.empty());
+    remove(DUAL_UPGRADE_WHITELIST_TEST_PATH.c_str());
+}
+
+/**
+ * @tc.number: LoadDualUpgradeWhitelist_0004
+ * @tc.name: test LoadDualUpgradeWhitelist
+ * @tc.desc: 1.valid whitelist file, return bundleName set, skip non-string item
+ */
+HWTEST_F(BmsBundleInstallerTest, LoadDualUpgradeWhitelist_0004, Function | SmallTest | Level0)
+{
+    WriteWhitelistFile("{\"install_list\": [\"com.test.app1\", \"com.test.app2\", \"com.test.app1\", 100]}");
+    BundleUserMgrHostImpl host;
+    auto whitelist = host.LoadDualUpgradeWhitelist(DUAL_UPGRADE_WHITELIST_TEST_PATH);
+    EXPECT_EQ(whitelist.size(), static_cast<size_t>(2));
+    EXPECT_NE(whitelist.find("com.test.app1"), whitelist.end());
+    EXPECT_NE(whitelist.find("com.test.app2"), whitelist.end());
+
+    WriteWhitelistFile("{\"install_list\": []}");
+    whitelist = host.LoadDualUpgradeWhitelist(DUAL_UPGRADE_WHITELIST_TEST_PATH);
+    EXPECT_TRUE(whitelist.empty());
+    remove(DUAL_UPGRADE_WHITELIST_TEST_PATH.c_str());
+}
+
+/**
+ * @tc.number: MarkDualUpgradeOtaNewInstallUsers_0001
+ * @tc.name: test MarkDualUpgradeOtaNewInstallUsers
+ * @tc.desc: 1.normal app in whitelist, mark actual userId and persisted
+ */
+HWTEST_F(BmsBundleInstallerTest, MarkDualUpgradeOtaNewInstallUsers_0001, Function | SmallTest | Level0)
+{
+    auto dataMgr = bundleMgrService_->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    auto preInstallBundleInfo = MakeDualUpgradePreInstallBundleInfo();
+    EXPECT_TRUE(dataMgr->SavePreInstallBundleInfo(DUAL_UPGRADE_BUNDLE_NAME, preInstallBundleInfo));
+    dataMgr->bundleInfos_[DUAL_UPGRADE_BUNDLE_NAME] = MakeDualUpgradeInnerBundleInfo();
+    BundleUserMgrHostImpl host;
+    std::unordered_set<std::string> whitelist = {DUAL_UPGRADE_BUNDLE_NAME};
+    host.MarkDualUpgradeOtaNewInstallUsers(TEST_U100, whitelist);
+
+    PreInstallBundleInfo savedInfo;
+    EXPECT_TRUE(dataMgr->GetPreInstallBundleInfo(DUAL_UPGRADE_BUNDLE_NAME, savedInfo));
+    EXPECT_TRUE(savedInfo.HasOtaNewInstallUser(TEST_U100));
+
+    dataMgr->DeletePreInstallBundleInfo(DUAL_UPGRADE_BUNDLE_NAME, preInstallBundleInfo);
+    dataMgr->bundleInfos_.erase(DUAL_UPGRADE_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: MarkDualUpgradeOtaNewInstallUsers_0002
+ * @tc.name: test MarkDualUpgradeOtaNewInstallUsers
+ * @tc.desc: 1.when creating the primary user, singleton app marks default
+ *           user, u1enable app marks U1
+ */
+HWTEST_F(BmsBundleInstallerTest, MarkDualUpgradeOtaNewInstallUsers_0002, Function | SmallTest | Level0)
+{
+    auto dataMgr = bundleMgrService_->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    const std::string singletonName = "com.test.dualupgrade.singleton";
+    const std::string u1Name = "com.test.dualupgrade.u1";
+    PreInstallBundleInfo singletonInfo;
+    singletonInfo.SetBundleName(singletonName);
+    singletonInfo.AddBundlePath(DUAL_UPGRADE_BUNDLE_PATH);
+    PreInstallBundleInfo u1Info;
+    u1Info.SetBundleName(u1Name);
+    u1Info.AddBundlePath(DUAL_UPGRADE_BUNDLE_PATH);
+    EXPECT_TRUE(dataMgr->SavePreInstallBundleInfo(singletonName, singletonInfo));
+    EXPECT_TRUE(dataMgr->SavePreInstallBundleInfo(u1Name, u1Info));
+
+    InnerBundleInfo singletonInnerInfo;
+    singletonInnerInfo.baseApplicationInfo_->bundleName = singletonName;
+    singletonInnerInfo.SetApplicationBundleType(BundleType::APP);
+    singletonInnerInfo.SetSingleton(true);
+    InnerBundleUserInfo singletonUserInfo;
+    singletonUserInfo.bundleUserInfo.userId = Constants::DEFAULT_USERID;
+    singletonUserInfo.bundleName = singletonName;
+    singletonInnerInfo.AddInnerBundleUserInfo(singletonUserInfo);
+    dataMgr->bundleInfos_[singletonName] = singletonInnerInfo;
+    InnerBundleInfo u1InnerInfo;
+    u1InnerInfo.baseApplicationInfo_->bundleName = u1Name;
+    u1InnerInfo.SetApplicationBundleType(BundleType::APP);
+    u1InnerInfo.SetAllowedAcls({Constants::PERMISSION_U1_ENABLED});
+    InnerBundleUserInfo u1UserInfo;
+    u1UserInfo.bundleUserInfo.userId = Constants::U1;
+    u1UserInfo.bundleName = u1Name;
+    u1InnerInfo.AddInnerBundleUserInfo(u1UserInfo);
+    dataMgr->bundleInfos_[u1Name] = u1InnerInfo;
+    BundleUserMgrHostImpl host;
+    std::unordered_set<std::string> whitelist = {singletonName, u1Name};
+    host.MarkDualUpgradeOtaNewInstallUsers(TEST_U100, whitelist);
+
+    PreInstallBundleInfo savedSingletonInfo;
+    EXPECT_TRUE(dataMgr->GetPreInstallBundleInfo(singletonName, savedSingletonInfo));
+    EXPECT_TRUE(savedSingletonInfo.HasOtaNewInstallUser(Constants::DEFAULT_USERID));
+    EXPECT_FALSE(savedSingletonInfo.HasOtaNewInstallUser(Constants::U1));
+    EXPECT_TRUE(savedSingletonInfo.HasOtaNewInstallUser(TEST_U100));
+
+    PreInstallBundleInfo savedU1Info;
+    EXPECT_TRUE(dataMgr->GetPreInstallBundleInfo(u1Name, savedU1Info));
+    EXPECT_TRUE(savedU1Info.HasOtaNewInstallUser(Constants::U1));
+    EXPECT_FALSE(savedU1Info.HasOtaNewInstallUser(Constants::DEFAULT_USERID));
+    EXPECT_TRUE(savedU1Info.HasOtaNewInstallUser(TEST_U100));
+
+    dataMgr->DeletePreInstallBundleInfo(singletonName, singletonInfo);
+    dataMgr->DeletePreInstallBundleInfo(u1Name, u1Info);
+    dataMgr->bundleInfos_.erase(singletonName);
+    dataMgr->bundleInfos_.erase(u1Name);
+}
+
+/**
+ * @tc.number: MarkDualUpgradeOtaNewInstallUsers_0003
+ * @tc.name: test MarkDualUpgradeOtaNewInstallUsers
+ * @tc.desc: 1.preload app in whitelist (preload partition or data partition
+ *           path), skip mark
+ */
+HWTEST_F(BmsBundleInstallerTest, MarkDualUpgradeOtaNewInstallUsers_0003, Function | SmallTest | Level0)
+{
+    auto dataMgr = bundleMgrService_->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    PreInstallBundleInfo preInstallBundleInfo;
+    preInstallBundleInfo.SetBundleName(DUAL_UPGRADE_BUNDLE_NAME);
+    preInstallBundleInfo.AddBundlePath("/preload/app/com.test.dualupgrade.app.hap");
+    EXPECT_TRUE(dataMgr->SavePreInstallBundleInfo(DUAL_UPGRADE_BUNDLE_NAME, preInstallBundleInfo));
+    dataMgr->bundleInfos_[DUAL_UPGRADE_BUNDLE_NAME] = MakeDualUpgradeInnerBundleInfo();
+    BundleUserMgrHostImpl host;
+    std::unordered_set<std::string> whitelist = {DUAL_UPGRADE_BUNDLE_NAME};
+    host.MarkDualUpgradeOtaNewInstallUsers(TEST_U100, whitelist);
+
+    PreInstallBundleInfo savedInfo;
+    EXPECT_TRUE(dataMgr->GetPreInstallBundleInfo(DUAL_UPGRADE_BUNDLE_NAME, savedInfo));
+    EXPECT_FALSE(savedInfo.HasOtaNewInstallUser(TEST_U100));
+
+    PreInstallBundleInfo dataPreloadInfo;
+    dataPreloadInfo.SetBundleName(DUAL_UPGRADE_BUNDLE_NAME);
+    dataPreloadInfo.AddBundlePath("/data/preload/app/com.test.dualupgrade.app.hap");
+    EXPECT_TRUE(dataMgr->SavePreInstallBundleInfo(DUAL_UPGRADE_BUNDLE_NAME, dataPreloadInfo));
+    host.MarkDualUpgradeOtaNewInstallUsers(TEST_U100, whitelist);
+    EXPECT_TRUE(dataMgr->GetPreInstallBundleInfo(DUAL_UPGRADE_BUNDLE_NAME, savedInfo));
+    EXPECT_FALSE(savedInfo.HasOtaNewInstallUser(TEST_U100));
+
+    dataMgr->DeletePreInstallBundleInfo(DUAL_UPGRADE_BUNDLE_NAME, preInstallBundleInfo);
+    dataMgr->bundleInfos_.erase(DUAL_UPGRADE_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: MarkDualUpgradeOtaNewInstallUsers_0004
+ * @tc.name: test MarkDualUpgradeOtaNewInstallUsers
+ * @tc.desc: 1.shared or app_service_fwk type app in whitelist, skip mark
+ */
+HWTEST_F(BmsBundleInstallerTest, MarkDualUpgradeOtaNewInstallUsers_0004, Function | SmallTest | Level0)
+{
+    auto dataMgr = bundleMgrService_->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    const std::string sharedName = "com.test.dualupgrade.shared";
+    const std::string appServiceFwkName = "com.test.dualupgrade.appservice";
+    PreInstallBundleInfo sharedInfo;
+    sharedInfo.SetBundleName(sharedName);
+    sharedInfo.AddBundlePath(DUAL_UPGRADE_BUNDLE_PATH);
+    PreInstallBundleInfo appServiceFwkInfo;
+    appServiceFwkInfo.SetBundleName(appServiceFwkName);
+    appServiceFwkInfo.AddBundlePath(DUAL_UPGRADE_BUNDLE_PATH);
+    EXPECT_TRUE(dataMgr->SavePreInstallBundleInfo(sharedName, sharedInfo));
+    EXPECT_TRUE(dataMgr->SavePreInstallBundleInfo(appServiceFwkName, appServiceFwkInfo));
+
+    InnerBundleInfo sharedInnerInfo;
+    sharedInnerInfo.baseApplicationInfo_->bundleName = sharedName;
+    sharedInnerInfo.SetApplicationBundleType(BundleType::SHARED);
+    dataMgr->bundleInfos_[sharedName] = sharedInnerInfo;
+    InnerBundleInfo appServiceFwkInnerInfo;
+    appServiceFwkInnerInfo.baseApplicationInfo_->bundleName = appServiceFwkName;
+    appServiceFwkInnerInfo.SetApplicationBundleType(BundleType::APP_SERVICE_FWK);
+    dataMgr->bundleInfos_[appServiceFwkName] = appServiceFwkInnerInfo;
+    BundleUserMgrHostImpl host;
+    std::unordered_set<std::string> whitelist = {sharedName, appServiceFwkName};
+    host.MarkDualUpgradeOtaNewInstallUsers(TEST_U100, whitelist);
+
+    PreInstallBundleInfo savedSharedInfo;
+    EXPECT_TRUE(dataMgr->GetPreInstallBundleInfo(sharedName, savedSharedInfo));
+    EXPECT_FALSE(savedSharedInfo.HasOtaNewInstallUser(TEST_U100));
+    PreInstallBundleInfo savedAppServiceFwkInfo;
+    EXPECT_TRUE(dataMgr->GetPreInstallBundleInfo(appServiceFwkName, savedAppServiceFwkInfo));
+    EXPECT_FALSE(savedAppServiceFwkInfo.HasOtaNewInstallUser(TEST_U100));
+
+    dataMgr->DeletePreInstallBundleInfo(sharedName, sharedInfo);
+    dataMgr->DeletePreInstallBundleInfo(appServiceFwkName, appServiceFwkInfo);
+    dataMgr->bundleInfos_.erase(sharedName);
+    dataMgr->bundleInfos_.erase(appServiceFwkName);
+}
+
+/**
+ * @tc.number: MarkDualUpgradeOtaNewInstallUsers_0005
+ * @tc.name: test MarkDualUpgradeOtaNewInstallUsers
+ * @tc.desc: 1.hideDesktopIcon app in whitelist, skip mark
+ */
+HWTEST_F(BmsBundleInstallerTest, MarkDualUpgradeOtaNewInstallUsers_0005, Function | SmallTest | Level0)
+{
+    auto dataMgr = bundleMgrService_->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    auto preInstallBundleInfo = MakeDualUpgradePreInstallBundleInfo();
+    EXPECT_TRUE(dataMgr->SavePreInstallBundleInfo(DUAL_UPGRADE_BUNDLE_NAME, preInstallBundleInfo));
+    InnerBundleInfo innerBundleInfo = MakeDualUpgradeInnerBundleInfo();
+    innerBundleInfo.SetHideDesktopIcon(true);
+    dataMgr->bundleInfos_[DUAL_UPGRADE_BUNDLE_NAME] = innerBundleInfo;
+    BundleUserMgrHostImpl host;
+    std::unordered_set<std::string> whitelist = {DUAL_UPGRADE_BUNDLE_NAME};
+    host.MarkDualUpgradeOtaNewInstallUsers(TEST_U100, whitelist);
+
+    PreInstallBundleInfo savedInfo;
+    EXPECT_TRUE(dataMgr->GetPreInstallBundleInfo(DUAL_UPGRADE_BUNDLE_NAME, savedInfo));
+    EXPECT_FALSE(savedInfo.HasOtaNewInstallUser(TEST_U100));
+
+    dataMgr->DeletePreInstallBundleInfo(DUAL_UPGRADE_BUNDLE_NAME, preInstallBundleInfo);
+    dataMgr->bundleInfos_.erase(DUAL_UPGRADE_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: MarkDualUpgradeOtaNewInstallUsers_0006
+ * @tc.name: test MarkDualUpgradeOtaNewInstallUsers
+ * @tc.desc: 1.app not in whitelist or not installed or empty whitelist, skip mark
+ */
+HWTEST_F(BmsBundleInstallerTest, MarkDualUpgradeOtaNewInstallUsers_0006, Function | SmallTest | Level0)
+{
+    auto dataMgr = bundleMgrService_->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    auto preInstallBundleInfo = MakeDualUpgradePreInstallBundleInfo();
+    EXPECT_TRUE(dataMgr->SavePreInstallBundleInfo(DUAL_UPGRADE_BUNDLE_NAME, preInstallBundleInfo));
+    dataMgr->bundleInfos_[DUAL_UPGRADE_BUNDLE_NAME] = MakeDualUpgradeInnerBundleInfo();
+    BundleUserMgrHostImpl host;
+    std::unordered_set<std::string> emptyWhitelist;
+    host.MarkDualUpgradeOtaNewInstallUsers(TEST_U100, emptyWhitelist);
+    host.MarkDualUpgradeOtaNewInstallUsers(TEST_U100, {"com.test.other"});
+
+    PreInstallBundleInfo savedInfo;
+    EXPECT_TRUE(dataMgr->GetPreInstallBundleInfo(DUAL_UPGRADE_BUNDLE_NAME, savedInfo));
+    EXPECT_FALSE(savedInfo.HasOtaNewInstallUser(TEST_U100));
+
+    dataMgr->bundleInfos_.erase(DUAL_UPGRADE_BUNDLE_NAME);
+    host.MarkDualUpgradeOtaNewInstallUsers(TEST_U100, {DUAL_UPGRADE_BUNDLE_NAME});
+    EXPECT_TRUE(dataMgr->GetPreInstallBundleInfo(DUAL_UPGRADE_BUNDLE_NAME, savedInfo));
+    EXPECT_FALSE(savedInfo.HasOtaNewInstallUser(TEST_U100));
+
+    dataMgr->DeletePreInstallBundleInfo(DUAL_UPGRADE_BUNDLE_NAME, preInstallBundleInfo);
+    dataMgr->bundleInfos_.erase(DUAL_UPGRADE_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: OnCreateNewUser_DualUpgradeMark_0001
+ * @tc.name: test OnCreateNewUser without dual upgrade skip
+ * @tc.desc: 1.needToSkipPreBundleInstall is false, no app marked
+ *           2.allowList restricts preInstallBundleInfos to the test bundle, so
+ *             CheckCriticalAppAreInstalled is not affected by real pre-install
+ *             records in the device-shared RDB or extension critical app list
+ *           3.bundleInfos_ snapshot keeps GetAdditionalBundleInfos (which
+ *             bypasses allowList) empty; pre-install exception record left by
+ *             the failed install (needReinstall=true for START_USERID) is
+ *             cleaned up after the call
+ */
+HWTEST_F(BmsBundleInstallerTest, OnCreateNewUser_DualUpgradeMark_0001, Function | MediumTest | Level1)
+{
+    auto dataMgr = bundleMgrService_->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    auto preInstallBundleInfo = MakeDualUpgradePreInstallBundleInfo();
+    EXPECT_TRUE(dataMgr->SavePreInstallBundleInfo(DUAL_UPGRADE_BUNDLE_NAME, preInstallBundleInfo));
+    auto savedBundleInfos = dataMgr->bundleInfos_;
+    dataMgr->bundleInfos_.clear();
+    dataMgr->bundleInfos_[DUAL_UPGRADE_BUNDLE_NAME] = MakeDualUpgradeInnerBundleInfo();
+    BundleUserMgrHostImpl host;
+    const std::vector<std::string> allowList = {DUAL_UPGRADE_BUNDLE_NAME};
+    auto ret = host.OnCreateNewUser(TEST_U100, false, {},
+        std::make_optional<std::vector<std::string>>(allowList));
+    EXPECT_EQ(ret, ERR_OK);
+
+    PreInstallBundleInfo savedInfo;
+    EXPECT_TRUE(dataMgr->GetPreInstallBundleInfo(DUAL_UPGRADE_BUNDLE_NAME, savedInfo));
+    EXPECT_FALSE(savedInfo.HasOtaNewInstallUser(TEST_U100));
+
+    dataMgr->bundleInfos_ = savedBundleInfos;
+    dataMgr->bundleInfos_.erase(DUAL_UPGRADE_BUNDLE_NAME);
+    dataMgr->DeletePreInstallBundleInfo(DUAL_UPGRADE_BUNDLE_NAME, preInstallBundleInfo);
+    auto preInstallExceptionMgr = bundleMgrService_->GetPreInstallExceptionMgr();
+    if (preInstallExceptionMgr != nullptr) {
+        preInstallExceptionMgr->DeletePreInstallExceptionBundleName(DUAL_UPGRADE_BUNDLE_NAME);
+    }
+}
+
+/**
+ * @tc.number: DualUpgradeOtaNewInstallMarkClean_0001
+ * @tc.name: test dual upgrade mark clean by data model
+ * @tc.desc: 1.marked bundle's otaNewInstallUsers can be cleared by data model
+ *           round-trip (DeleteOtaNewInstallUser + SavePreInstallBundleInfo);
+ *           the real OOBE clean entry is covered by OobeOtaNewInstallMarkClean_0001
+ */
+HWTEST_F(BmsBundleInstallerTest, DualUpgradeOtaNewInstallMarkClean_0001, Function | SmallTest | Level0)
+{
+    auto dataMgr = bundleMgrService_->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    auto preInstallBundleInfo = MakeDualUpgradePreInstallBundleInfo();
+    EXPECT_TRUE(dataMgr->SavePreInstallBundleInfo(DUAL_UPGRADE_BUNDLE_NAME, preInstallBundleInfo));
+    dataMgr->bundleInfos_[DUAL_UPGRADE_BUNDLE_NAME] = MakeDualUpgradeInnerBundleInfo();
+    BundleUserMgrHostImpl host;
+    std::unordered_set<std::string> whitelist = {DUAL_UPGRADE_BUNDLE_NAME};
+    host.MarkDualUpgradeOtaNewInstallUsers(TEST_U100, whitelist);
+
+    PreInstallBundleInfo markedInfo;
+    EXPECT_TRUE(dataMgr->GetPreInstallBundleInfo(DUAL_UPGRADE_BUNDLE_NAME, markedInfo));
+    EXPECT_TRUE(markedInfo.HasOtaNewInstallUser(TEST_U100));
+    markedInfo.DeleteOtaNewInstallUser(TEST_U100);
+    markedInfo.DeleteOtaNewInstallUser(Constants::DEFAULT_USERID);
+    markedInfo.DeleteOtaNewInstallUser(Constants::U1);
+    EXPECT_FALSE(markedInfo.HasOtaNewInstallUser(TEST_U100));
+    EXPECT_TRUE(dataMgr->SavePreInstallBundleInfo(DUAL_UPGRADE_BUNDLE_NAME, markedInfo));
+
+    PreInstallBundleInfo cleanedInfo;
+    EXPECT_TRUE(dataMgr->GetPreInstallBundleInfo(DUAL_UPGRADE_BUNDLE_NAME, cleanedInfo));
+    EXPECT_FALSE(cleanedInfo.HasOtaNewInstallUser(TEST_U100));
+
+    dataMgr->DeletePreInstallBundleInfo(DUAL_UPGRADE_BUNDLE_NAME, preInstallBundleInfo);
+    dataMgr->bundleInfos_.erase(DUAL_UPGRADE_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: OobeOtaNewInstallMarkClean_0001
+ * @tc.name: test real OOBE clean entry clears ota new install marks
+ * @tc.desc: 1.OOBE_HWSTARTUPGUIDE.FINISHED with ota=false is ignored
+ *           2.OOBE_HWSTARTUPGUIDE.FINISHED with ota=true clears the globally
+ *             visible DEFAULT_USERID/U1 marks via UserUnlockedEventSubscriber;
+ *             when the foreground user is unavailable the entry skips cleaning
+ */
+HWTEST_F(BmsBundleInstallerTest, OobeOtaNewInstallMarkClean_0001, Function | MediumTest | Level1)
+{
+    auto dataMgr = bundleMgrService_->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    auto preInstallBundleInfo = MakeDualUpgradePreInstallBundleInfo();
+    preInstallBundleInfo.AddOtaNewInstallUser(Constants::DEFAULT_USERID);
+    preInstallBundleInfo.AddOtaNewInstallUser(Constants::U1);
+    EXPECT_TRUE(dataMgr->SavePreInstallBundleInfo(DUAL_UPGRADE_BUNDLE_NAME, preInstallBundleInfo));
+    EventFwk::MatchingSkills matchingSkills;
+    matchingSkills.AddEvent(OOBE_HWSTARTUPGUIDE_FINISHED_EVENT);
+    EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
+    auto subscriber = std::make_shared<UserUnlockedEventSubscriber>(subscribeInfo);
+
+    AAFwk::Want want;
+    want.SetAction(OOBE_HWSTARTUPGUIDE_FINISHED_EVENT);
+    want.SetParam(OOBE_OTA_EVENT_PARAM, false);
+    EventFwk::CommonEventData data;
+    data.SetWant(want);
+    subscriber->OnReceiveEvent(data);
+    PreInstallBundleInfo savedInfo;
+    ASSERT_TRUE(dataMgr->GetPreInstallBundleInfo(DUAL_UPGRADE_BUNDLE_NAME, savedInfo));
+    EXPECT_FALSE(savedInfo.GetOtaNewInstallUsers().empty());
+
+    want.SetParam(OOBE_OTA_EVENT_PARAM, true);
+    data.SetWant(want);
+    subscriber->OnReceiveEvent(data);
+    PreInstallBundleInfo cleanedInfo;
+    ASSERT_TRUE(dataMgr->GetPreInstallBundleInfo(DUAL_UPGRADE_BUNDLE_NAME, cleanedInfo));
+    if (AccountHelper::GetCurrentActiveUserId() == Constants::INVALID_USERID) {
+        // Foreground user unavailable: the entry skips cleaning, marks stay.
+        EXPECT_FALSE(cleanedInfo.GetOtaNewInstallUsers().empty());
+    } else {
+        // DEFAULT_USERID/U1 marks are globally visible to any foreground user,
+        // so the entry clears them whichever user it reads.
+        EXPECT_TRUE(cleanedInfo.GetOtaNewInstallUsers().empty());
+    }
+
+    dataMgr->DeletePreInstallBundleInfo(DUAL_UPGRADE_BUNDLE_NAME, preInstallBundleInfo);
+}
+
+/**
+ * @tc.number: MarkDualUpgradeOtaNewInstallUsers_0007
+ * @tc.name: test MarkDualUpgradeOtaNewInstallUsers
+ * @tc.desc: 1.app in whitelist and installed but has no pre-install record, skip mark
+ */
+HWTEST_F(BmsBundleInstallerTest, MarkDualUpgradeOtaNewInstallUsers_0007, Function | SmallTest | Level0)
+{
+    auto dataMgr = bundleMgrService_->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    const std::string missingName = "com.test.dualupgrade.missing";
+    PreInstallBundleInfo preInstallBundleInfo;
+    preInstallBundleInfo.SetBundleName(missingName);
+    preInstallBundleInfo.AddBundlePath(DUAL_UPGRADE_BUNDLE_PATH);
+    dataMgr->DeletePreInstallBundleInfo(missingName, preInstallBundleInfo);
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->bundleName = missingName;
+    innerBundleInfo.SetApplicationBundleType(BundleType::APP);
+    dataMgr->bundleInfos_[missingName] = innerBundleInfo;
+    BundleUserMgrHostImpl host;
+    std::unordered_set<std::string> whitelist = {missingName};
+    host.MarkDualUpgradeOtaNewInstallUsers(TEST_U100, whitelist);
+
+    PreInstallBundleInfo savedInfo;
+    EXPECT_FALSE(dataMgr->GetPreInstallBundleInfo(missingName, savedInfo));
+
+    dataMgr->DeletePreInstallBundleInfo(missingName, preInstallBundleInfo);
+    dataMgr->bundleInfos_.erase(missingName);
+}
+
+/**
+ * @tc.number: MarkDualUpgradeOtaNewInstallUsers_0008
+ * @tc.name: test MarkDualUpgradeOtaNewInstallUsers
+ * @tc.desc: 1.app with empty bundlePaths is still marked
+ *           2.only the first bundle path is checked against the preload prefix
+ */
+HWTEST_F(BmsBundleInstallerTest, MarkDualUpgradeOtaNewInstallUsers_0008, Function | SmallTest | Level0)
+{
+    auto dataMgr = bundleMgrService_->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    const std::string emptyPathsName = "com.test.dualupgrade.emptypaths";
+    const std::string multiPathName = "com.test.dualupgrade.multipaths";
+    PreInstallBundleInfo emptyPathsInfo;
+    emptyPathsInfo.SetBundleName(emptyPathsName);
+    PreInstallBundleInfo multiPathInfo;
+    multiPathInfo.SetBundleName(multiPathName);
+    multiPathInfo.AddBundlePath(DUAL_UPGRADE_BUNDLE_PATH);
+    multiPathInfo.AddBundlePath("/preload/app/com.test.dualupgrade.other.hap");
+    EXPECT_TRUE(dataMgr->SavePreInstallBundleInfo(emptyPathsName, emptyPathsInfo));
+    EXPECT_TRUE(dataMgr->SavePreInstallBundleInfo(multiPathName, multiPathInfo));
+    InnerBundleInfo emptyPathsInnerInfo;
+    emptyPathsInnerInfo.baseApplicationInfo_->bundleName = emptyPathsName;
+    emptyPathsInnerInfo.SetApplicationBundleType(BundleType::APP);
+    InnerBundleUserInfo emptyPathsUserInfo;
+    emptyPathsUserInfo.bundleUserInfo.userId = TEST_U100;
+    emptyPathsUserInfo.bundleName = emptyPathsName;
+    emptyPathsInnerInfo.AddInnerBundleUserInfo(emptyPathsUserInfo);
+    dataMgr->bundleInfos_[emptyPathsName] = emptyPathsInnerInfo;
+    InnerBundleInfo multiPathInnerInfo;
+    multiPathInnerInfo.baseApplicationInfo_->bundleName = multiPathName;
+    multiPathInnerInfo.SetApplicationBundleType(BundleType::APP);
+    InnerBundleUserInfo multiPathUserInfo;
+    multiPathUserInfo.bundleUserInfo.userId = TEST_U100;
+    multiPathUserInfo.bundleName = multiPathName;
+    multiPathInnerInfo.AddInnerBundleUserInfo(multiPathUserInfo);
+    dataMgr->bundleInfos_[multiPathName] = multiPathInnerInfo;
+    BundleUserMgrHostImpl host;
+    std::unordered_set<std::string> whitelist = {emptyPathsName, multiPathName};
+    host.MarkDualUpgradeOtaNewInstallUsers(TEST_U100, whitelist);
+
+    PreInstallBundleInfo savedEmptyPathsInfo;
+    EXPECT_TRUE(dataMgr->GetPreInstallBundleInfo(emptyPathsName, savedEmptyPathsInfo));
+    EXPECT_TRUE(savedEmptyPathsInfo.HasOtaNewInstallUser(TEST_U100));
+    PreInstallBundleInfo savedMultiPathInfo;
+    EXPECT_TRUE(dataMgr->GetPreInstallBundleInfo(multiPathName, savedMultiPathInfo));
+    EXPECT_TRUE(savedMultiPathInfo.HasOtaNewInstallUser(TEST_U100));
+
+    dataMgr->DeletePreInstallBundleInfo(emptyPathsName, emptyPathsInfo);
+    dataMgr->DeletePreInstallBundleInfo(multiPathName, multiPathInfo);
+    dataMgr->bundleInfos_.erase(emptyPathsName);
+    dataMgr->bundleInfos_.erase(multiPathName);
+}
+
+/**
+ * @tc.number: MarkDualUpgradeOtaNewInstallUsers_0009
+ * @tc.name: test MarkDualUpgradeOtaNewInstallUsers
+ * @tc.desc: 1.app both singleton and u1 enabled, singleton takes precedence and
+ *           only DEFAULT_USERID is marked when creating the primary user
+ */
+HWTEST_F(BmsBundleInstallerTest, MarkDualUpgradeOtaNewInstallUsers_0009, Function | SmallTest | Level0)
+{
+    auto dataMgr = bundleMgrService_->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    const std::string singletonU1Name = "com.test.dualupgrade.singletonu1";
+    PreInstallBundleInfo preInstallBundleInfo;
+    preInstallBundleInfo.SetBundleName(singletonU1Name);
+    preInstallBundleInfo.AddBundlePath(DUAL_UPGRADE_BUNDLE_PATH);
+    EXPECT_TRUE(dataMgr->SavePreInstallBundleInfo(singletonU1Name, preInstallBundleInfo));
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->bundleName = singletonU1Name;
+    innerBundleInfo.SetApplicationBundleType(BundleType::APP);
+    innerBundleInfo.SetSingleton(true);
+    innerBundleInfo.SetAllowedAcls({Constants::PERMISSION_U1_ENABLED});
+    InnerBundleUserInfo singletonU1UserInfo;
+    singletonU1UserInfo.bundleUserInfo.userId = Constants::DEFAULT_USERID;
+    singletonU1UserInfo.bundleName = singletonU1Name;
+    innerBundleInfo.AddInnerBundleUserInfo(singletonU1UserInfo);
+    dataMgr->bundleInfos_[singletonU1Name] = innerBundleInfo;
+    BundleUserMgrHostImpl host;
+    std::unordered_set<std::string> whitelist = {singletonU1Name};
+    host.MarkDualUpgradeOtaNewInstallUsers(TEST_U100, whitelist);
+
+    PreInstallBundleInfo savedInfo;
+    EXPECT_TRUE(dataMgr->GetPreInstallBundleInfo(singletonU1Name, savedInfo));
+    auto markedUsers = savedInfo.GetOtaNewInstallUsers();
+    EXPECT_EQ(markedUsers.size(), static_cast<size_t>(1));
+    EXPECT_EQ(markedUsers.front(), Constants::DEFAULT_USERID);
+    EXPECT_FALSE(savedInfo.HasOtaNewInstallUser(Constants::U1));
+
+    dataMgr->DeletePreInstallBundleInfo(singletonU1Name, preInstallBundleInfo);
+    dataMgr->bundleInfos_.erase(singletonU1Name);
+}
+
+/**
+ * @tc.number: MarkDualUpgradeOtaNewInstallUsers_0010
+ * @tc.name: test MarkDualUpgradeOtaNewInstallUsers
+ * @tc.desc: 1.dataMgr is nullptr, return without marking
+ */
+HWTEST_F(BmsBundleInstallerTest, MarkDualUpgradeOtaNewInstallUsers_0010, Function | SmallTest | Level0)
+{
+    auto dataMgr = bundleMgrService_->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    auto preInstallBundleInfo = MakeDualUpgradePreInstallBundleInfo();
+    EXPECT_TRUE(dataMgr->SavePreInstallBundleInfo(DUAL_UPGRADE_BUNDLE_NAME, preInstallBundleInfo));
+    dataMgr->bundleInfos_[DUAL_UPGRADE_BUNDLE_NAME] = MakeDualUpgradeInnerBundleInfo();
+    ClearDataMgr();
+
+    BundleUserMgrHostImpl host;
+    std::unordered_set<std::string> whitelist = {DUAL_UPGRADE_BUNDLE_NAME};
+    host.MarkDualUpgradeOtaNewInstallUsers(TEST_U100, whitelist);
+
+    PreInstallBundleInfo savedInfo;
+    EXPECT_TRUE(dataMgr->GetPreInstallBundleInfo(DUAL_UPGRADE_BUNDLE_NAME, savedInfo));
+    EXPECT_FALSE(savedInfo.HasOtaNewInstallUser(TEST_U100));
+
+    bundleMgrService_->dataMgr_ = dataMgr;
+    dataMgr->DeletePreInstallBundleInfo(DUAL_UPGRADE_BUNDLE_NAME, preInstallBundleInfo);
+    dataMgr->bundleInfos_.erase(DUAL_UPGRADE_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: MarkDualUpgradeOtaNewInstallUsers_0011
+ * @tc.name: test MarkDualUpgradeOtaNewInstallUsers
+ * @tc.desc: 1.app in whitelist but only installed for the default user, not for
+ *           the user being created, skip mark so the oobe uninstall flow cannot
+ *           remove the default user's existing bundle via redirect
+ */
+HWTEST_F(BmsBundleInstallerTest, MarkDualUpgradeOtaNewInstallUsers_0011, Function | SmallTest | Level0)
+{
+    auto dataMgr = bundleMgrService_->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    const std::string staleName = "com.test.dualupgrade.stale";
+    PreInstallBundleInfo preInstallBundleInfo;
+    preInstallBundleInfo.SetBundleName(staleName);
+    preInstallBundleInfo.AddBundlePath(DUAL_UPGRADE_BUNDLE_PATH);
+    EXPECT_TRUE(dataMgr->SavePreInstallBundleInfo(staleName, preInstallBundleInfo));
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->bundleName = staleName;
+    innerBundleInfo.SetApplicationBundleType(BundleType::APP);
+    InnerBundleUserInfo staleUserInfo;
+    staleUserInfo.bundleUserInfo.userId = Constants::DEFAULT_USERID;
+    staleUserInfo.bundleName = staleName;
+    innerBundleInfo.AddInnerBundleUserInfo(staleUserInfo);
+    dataMgr->bundleInfos_[staleName] = innerBundleInfo;
+    BundleUserMgrHostImpl host;
+    std::unordered_set<std::string> whitelist = {staleName};
+    host.MarkDualUpgradeOtaNewInstallUsers(TEST_U100, whitelist);
+
+    PreInstallBundleInfo savedInfo;
+    EXPECT_TRUE(dataMgr->GetPreInstallBundleInfo(staleName, savedInfo));
+    EXPECT_FALSE(savedInfo.HasOtaNewInstallUser(TEST_U100));
+    EXPECT_FALSE(savedInfo.HasOtaNewInstallUser(Constants::DEFAULT_USERID));
+
+    dataMgr->DeletePreInstallBundleInfo(staleName, preInstallBundleInfo);
+    dataMgr->bundleInfos_.erase(staleName);
+}
+
+/**
+ * @tc.number: MarkDualUpgradeOtaNewInstallUsers_0012
+ * @tc.name: test MarkDualUpgradeOtaNewInstallUsers
+ * @tc.desc: 1.creating a non-primary user skips marking globally visible
+ *           singleton/u1 apps (0/U1 marks are visible to all users), normal
+ *           app is still marked for the created user
+ */
+HWTEST_F(BmsBundleInstallerTest, MarkDualUpgradeOtaNewInstallUsers_0012, Function | SmallTest | Level0)
+{
+    auto dataMgr = bundleMgrService_->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    const int32_t nonPrimaryUserId = 101;
+    const std::string singletonName = "com.test.dualupgrade.singleton.np";
+    const std::string normalName = "com.test.dualupgrade.normal.np";
+    PreInstallBundleInfo singletonInfo;
+    singletonInfo.SetBundleName(singletonName);
+    singletonInfo.AddBundlePath(DUAL_UPGRADE_BUNDLE_PATH);
+    PreInstallBundleInfo normalInfo;
+    normalInfo.SetBundleName(normalName);
+    normalInfo.AddBundlePath(DUAL_UPGRADE_BUNDLE_PATH);
+    EXPECT_TRUE(dataMgr->SavePreInstallBundleInfo(singletonName, singletonInfo));
+    EXPECT_TRUE(dataMgr->SavePreInstallBundleInfo(normalName, normalInfo));
+    InnerBundleInfo singletonInnerInfo;
+    singletonInnerInfo.baseApplicationInfo_->bundleName = singletonName;
+    singletonInnerInfo.SetApplicationBundleType(BundleType::APP);
+    singletonInnerInfo.SetSingleton(true);
+    InnerBundleUserInfo singletonUserInfo;
+    singletonUserInfo.bundleUserInfo.userId = Constants::DEFAULT_USERID;
+    singletonUserInfo.bundleName = singletonName;
+    singletonInnerInfo.AddInnerBundleUserInfo(singletonUserInfo);
+    dataMgr->bundleInfos_[singletonName] = singletonInnerInfo;
+    InnerBundleInfo normalInnerInfo;
+    normalInnerInfo.baseApplicationInfo_->bundleName = normalName;
+    normalInnerInfo.SetApplicationBundleType(BundleType::APP);
+    InnerBundleUserInfo normalUserInfo;
+    normalUserInfo.bundleUserInfo.userId = nonPrimaryUserId;
+    normalUserInfo.bundleName = normalName;
+    normalInnerInfo.AddInnerBundleUserInfo(normalUserInfo);
+    dataMgr->bundleInfos_[normalName] = normalInnerInfo;
+
+    BundleUserMgrHostImpl host;
+    std::unordered_set<std::string> whitelist = {singletonName, normalName};
+    host.MarkDualUpgradeOtaNewInstallUsers(nonPrimaryUserId, whitelist);
+
+    PreInstallBundleInfo savedSingletonInfo;
+    EXPECT_TRUE(dataMgr->GetPreInstallBundleInfo(singletonName, savedSingletonInfo));
+    EXPECT_FALSE(savedSingletonInfo.HasOtaNewInstallUser(nonPrimaryUserId));
+    EXPECT_FALSE(savedSingletonInfo.HasOtaNewInstallUser(Constants::DEFAULT_USERID));
+    PreInstallBundleInfo savedNormalInfo;
+    EXPECT_TRUE(dataMgr->GetPreInstallBundleInfo(normalName, savedNormalInfo));
+    EXPECT_TRUE(savedNormalInfo.HasOtaNewInstallUser(nonPrimaryUserId));
+
+    dataMgr->DeletePreInstallBundleInfo(singletonName, savedSingletonInfo);
+    dataMgr->DeletePreInstallBundleInfo(normalName, savedNormalInfo);
+    dataMgr->bundleInfos_.erase(singletonName);
+    dataMgr->bundleInfos_.erase(normalName);
+}
+
 } // OHOS

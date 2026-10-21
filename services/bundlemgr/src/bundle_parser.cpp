@@ -40,6 +40,7 @@ static constexpr const char* ROUTER_ITEM_KEY_CUSTOM_DATA = "customData";
 static constexpr const uint16_t DATA_MAX_LENGTH = 4096;
 constexpr const char* NO_DISABLING_CONFIG_KEY = "residentProcessInExtremeMemory";
 constexpr const char* NO_DISABLING_KEY_BUNDLE_NAME = "bundleName";
+constexpr const char* INSTALL_LIST_KEY = "install_list";
 
 bool ParseStr(const char *buf, const int itemLen, int totalLen, std::vector<std::string> &sysCaps)
 {
@@ -65,6 +66,24 @@ bool ParseStr(const char *buf, const int itemLen, int totalLen, std::vector<std:
     return true;
 }
 } // namespace
+
+bool BundleParser::LoadWhitelistFromFile(const std::string &filePath,
+    std::unordered_set<std::string> &whitelist)
+{
+    whitelist.clear();
+    nlohmann::json jsonBuf;
+    if (!ReadFileIntoJson(filePath, jsonBuf) || !jsonBuf.is_object() ||
+        !jsonBuf.contains(INSTALL_LIST_KEY) || !jsonBuf[INSTALL_LIST_KEY].is_array()) {
+        APP_LOGW_NOFUNC("load whitelist failed or invalid, path: %{public}s", filePath.c_str());
+        return false;
+    }
+    for (const auto &item : jsonBuf[INSTALL_LIST_KEY]) {
+        if (item.is_string()) {
+            whitelist.emplace(item.get<std::string>());
+        }
+    }
+    return true;
+}
 
 bool BundleParser::ReadFileIntoJson(const std::string &filePath, nlohmann::json &jsonBuf)
 {

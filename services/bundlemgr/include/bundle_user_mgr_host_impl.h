@@ -16,6 +16,8 @@
 #ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_BUNDLE_USER_MGR_HOST_IMPL_H
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_BUNDLE_USER_MGR_HOST_IMPL_H
 
+#include <unordered_set>
+
 #include "bundle_data_mgr.h"
 #include "bundle_installer_host.h"
 #include "bundle_user_mgr_host.h"
@@ -67,6 +69,9 @@ private:
         int32_t userId, bool needToSkipPreBundleInstall,
         std::set<PreInstallBundleInfo> &preInstallBundleInfos,
         const std::optional<std::vector<std::string>> &allowList = std::nullopt);
+    std::unordered_set<std::string> LoadDualUpgradeWhitelist(const std::string &filePath);
+    void MarkDualUpgradeOtaNewInstallUsers(int32_t userId,
+        const std::unordered_set<std::string> &whitelist);
     void UninstallBackupUninstallList(int32_t userId, bool needToSkipPreBundleInstall);
     void GetAdditionalBundleInfos(std::set<PreInstallBundleInfo> &preInstallBundleInfos);
     void DeleteAllDisposedRulesForUser(int32_t userId);

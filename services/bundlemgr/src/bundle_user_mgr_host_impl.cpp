@@ -28,6 +28,7 @@
 #include "bms_update_selinux_mgr.h"
 #include "bundle_hitrace_chain.h"
 #include "bundle_mgr_service.h"
+#include "bundle_parser.h"
 #include "bundle_resource_helper.h"
 #include "bundle_util.h"
 #include "dual_mode_helper.h"
@@ -279,6 +280,10 @@ ErrCode BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId, bool needToSkipPr
         bundlePromise->WaitForAllTasksExecute();
         APP_LOGI("OnCreateNewUser wait complete");
     }
+    if (needToSkipPreBundleInstall) {
+        MarkDualUpgradeOtaNewInstallUsers(userId,
+            LoadDualUpgradeWhitelist(ServiceConstants::ALLOW_OTA_NEW_INSTALL_WHITELIST_PATH));
+    }
     CheckSystemHspInstallPath();
     ErrCode res = CheckCriticalAppAreInstalled(userId, preInstallBundleInfos);
     if (res != ERR_OK) {
@@ -291,6 +296,103 @@ ErrCode BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId, bool needToSkipPr
     }
     IPCSkeleton::SetCallingIdentity(identity);
     return ERR_OK;
+}
+
+std::unordered_set<std::string> BundleUserMgrHostImpl::LoadDualUpgradeWhitelist(const std::string &filePath)
+{
+    std::unordered_set<std::string> whitelist;
+    BundleParser::LoadWhitelistFromFile(filePath, whitelist);
+    return whitelist;
+}
+
+// Dual-upgrade scenario: when pre-bundle installation is skipped while creating a
+// new user, whitelist apps that are already installed still count as ota-new-installed
+// for that user. Mark them in the pre-install record so the oobe clean entry and the
+// new-preinstalled-app uninstall flow can recognize them later. Iterate the whitelist
+// directly: it is far smaller than the full pre-install set.
+void BundleUserMgrHostImpl::MarkDualUpgradeOtaNewInstallUsers(int32_t userId,
+    const std::unordered_set<std::string> &whitelist)
+{
+    if (whitelist.empty()) {
+        return;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return;
+    }
+    int32_t markedNum = 0;
+    for (const auto &bundleName : whitelist) {
+        PreInstallBundleInfo preInstallBundleInfo;
+        if (!dataMgr->GetPreInstallBundleInfo(bundleName, preInstallBundleInfo)) {
+            APP_LOGD("get preInstallBundleInfo failed, bundleName: %{public}s", bundleName.c_str());
+            continue;
+        }
+        // Preload apps must not be marked as ota-new-installed: preload partition
+        // apps are already filtered out and marked uninstalled by
+        // GetAllPreInstallBundleInfos in skip mode (defensive second line here),
+        // while data partition preload apps are managed by their own OTA
+        // lifecycle and are excluded from OTA uninstall flows as well.
+        const std::vector<std::string> bundlePaths = preInstallBundleInfo.GetBundlePaths();
+        if (!bundlePaths.empty() && (bundlePaths.front().find(PRELOAD_APP) == 0 ||
+            bundlePaths.front().find(DATA_PRELOAD_APP) == 0)) {
+            APP_LOGW_NOFUNC("skip mark preload app, bundleName: %{public}s", bundleName.c_str());
+            continue;
+        }
+        // Only installed bundles can be ota-new-installed for the user.
+        InnerBundleInfo innerBundleInfo;
+        if (!dataMgr->FetchInnerBundleInfo(bundleName, innerBundleInfo)) {
+            APP_LOGW_NOFUNC("bundle not installed, skip mark, bundleName: %{public}s", bundleName.c_str());
+            continue;
+        }
+        // Shared bundles and app-service frameworks are cross-user by nature and
+        // are not listed in the oobe new-preinstalled-app flow.
+        BundleType bundleType = innerBundleInfo.GetApplicationBundleType();
+        if (bundleType == BundleType::SHARED || bundleType == BundleType::APP_SERVICE_FWK) {
+            APP_LOGW_NOFUNC("skip mark hsp type app, bundleName: %{public}s", bundleName.c_str());
+            continue;
+        }
+        // Hide-desktop-icon apps are invisible in the oobe list, skip them.
+        if (innerBundleInfo.IsHideDesktopIconForEvent()) {
+            APP_LOGW_NOFUNC("skip mark hideDesktopIcon app, bundleName: %{public}s", bundleName.c_str());
+            continue;
+        }
+        // Singleton apps live in the default user and u1-enabled apps live in U1;
+        // both are headless users and their 0/U1 marks are globally visible to
+        // all users. Only the primary user's oobe flow manages such globally
+        // visible apps, so the marks are only made when creating user 100 and
+        // never for other users.
+        if ((innerBundleInfo.IsSingleton() || innerBundleInfo.IsU1Enable())
+            && userId != Constants::START_USERID) {
+            APP_LOGD("skip mark globally visible app for non-primary user, bundleName: %{public}s"
+                ", userId: %{public}d", bundleName.c_str(), userId);
+            continue;
+        }
+        int32_t markedUserId = userId;
+        if (innerBundleInfo.IsSingleton()) {
+            markedUserId = Constants::DEFAULT_USERID;
+        } else if (innerBundleInfo.IsU1Enable()) {
+            markedUserId = Constants::U1;
+        }
+        // Only mark the user the app is genuinely installed for. A bundle that
+        // merely exists in memory (e.g. installed for the default user before the
+        // upgrade) must not be marked for the created user, otherwise it would
+        // enter the oobe new-preinstalled-app list and the uninstall flow could
+        // remove the existing bundle of another user via the user-0/u1 redirect.
+        if (!innerBundleInfo.HasInnerBundleUserInfo(markedUserId)) {
+            APP_LOGW_NOFUNC("bundle not installed for marked user, skip mark, bundleName: %{public}s"
+                ", markedUserId: %{public}d", bundleName.c_str(), markedUserId);
+            continue;
+        }
+        preInstallBundleInfo.AddOtaNewInstallUser(markedUserId);
+        if (!dataMgr->SavePreInstallBundleInfo(bundleName, preInstallBundleInfo)) {
+            APP_LOGE("save preInstallBundleInfo failed, bundleName: %{public}s", bundleName.c_str());
+            continue;
+        }
+        markedNum++;
+    }
+    APP_LOGI_NOFUNC("mark ota new install user done, -u: %{public}d, whitelist: %{public}zu, marked: %{public}d",
+        userId, whitelist.size(), markedNum);
 }
 
 void BundleUserMgrHostImpl::BootFailError(const char *exceptionInfo)
