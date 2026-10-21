@@ -104,7 +104,9 @@ ErrCode BundleBackupMgr::RestoreData(MessageParcel& data)
         APP_LOGE("LoadFromFile failed");
         return ret;
     }
-    (void)remove(BACKUP_FILE_PATH);
+    if (remove(BACKUP_FILE_PATH) != 0) {
+        APP_LOGE("Remove backup file failed, errno: %{public}d", errno);
+    }
     if (config.empty() || !nlohmann::json::accept(config)) {
         APP_LOGE("Invalid JSON format");
         return ERR_APPEXECFWK_BACKUP_INVALID_JSON_STRUCTURE;
