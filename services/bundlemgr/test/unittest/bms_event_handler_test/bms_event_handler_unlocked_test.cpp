@@ -14,6 +14,7 @@
  */
 
 #include <gtest/gtest.h>
+#include <algorithm>
 #include <fstream>
 #include <cstdio>
 #include <dirent.h>
@@ -349,7 +350,10 @@ HWTEST_F(BmsEventHandlerUnLockedTest, UserUnlockedEventSubscriber_0800, Function
     updateAppDataMgr.DeleteUninstallTmpDirs({});
     updateAppDataMgr.DeleteUninstallTmpDirs({100});
     updateAppDataMgr.DeleteUninstallTmpDirs({0, 1});
-    EXPECT_EQ(dirs.size(), ServiceConstants::BUNDLE_EL.size() * 2);
+    EXPECT_EQ(dirs.size(), ServiceConstants::BUNDLE_EL.size() * 2 + 1);
+    std::string hmdfsAccountDataDir = ServiceConstants::HMDFS_ACCOUNT_DATA_PATH;
+    hmdfsAccountDataDir.replace(hmdfsAccountDataDir.find("%"), 1, "100");
+    EXPECT_NE(std::find(dirs.begin(), dirs.end(), hmdfsAccountDataDir), dirs.end());
 }
 
 /**

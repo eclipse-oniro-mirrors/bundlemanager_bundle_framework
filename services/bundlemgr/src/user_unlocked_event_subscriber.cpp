@@ -282,6 +282,11 @@ std::vector<std::string> UpdateAppDataMgr::GetBundleDataDirs(const int32_t userI
             dirs.emplace_back(dataPath.string());
         }
     }
+    // residual =uninstall_tmp_ dirs renamed from async-uninstalled hmdfs account data dirs
+    std::string hmdfsAccountDataDir = ServiceConstants::HMDFS_ACCOUNT_DATA_PATH;
+    hmdfsAccountDataDir = hmdfsAccountDataDir.replace(
+        hmdfsAccountDataDir.find("%"), 1, std::to_string(userId));
+    dirs.emplace_back(hmdfsAccountDataDir);
     return dirs;
 }
 
