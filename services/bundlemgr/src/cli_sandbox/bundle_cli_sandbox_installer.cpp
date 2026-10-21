@@ -232,8 +232,6 @@ ErrCode BundleCliSandboxInstaller::ProcessCreateCliSandbox(const std::string &cr
             return ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_INTERNAL_ERROR;
         }
         uid = identityUid;
-    } else {
-        uid = info.GetUid(userId);
     }
     if (uid == Constants::INVALID_UID) {
         APP_LOGE_NOFUNC("InitHapToken returned invalid uid for bundle:%{public}s", bundleName.c_str());

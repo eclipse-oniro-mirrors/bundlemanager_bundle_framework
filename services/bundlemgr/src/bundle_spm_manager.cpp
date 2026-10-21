@@ -247,7 +247,6 @@ BundleSpmManager::InstallSession BundleSpmManager::InstallSession::CheckSignAndI
     if (ret != Security::AccessToken::AccessTokenKitRet::RET_SUCCESS) {
         LOG_NOFUNC_E(BMS_TAG_INSTALLER, "CheckHapSignInfo failed, ret %{public}d errorCode %{public}d",
             ret, resultInfo.errorCode);
-        session.sessionId_ = 0;
         outErrCode = BundleVerifyMgr::ConvertHapVerifyResultCode(resultInfo.errorCode, ret);
         return session;
     }
@@ -257,35 +256,57 @@ BundleSpmManager::InstallSession BundleSpmManager::InstallSession::CheckSignAndI
         LOG_NOFUNC_E(BMS_TAG_INSTALLER, "CheckHapSignInfo returned %{public}d entries for %{public}d haps",
             static_cast<int32_t>(trustedBundleInfos.size()),
             static_cast<int32_t>(bundlePaths.size()));
-        // The AT side allocated the session inside CheckHapSignInfo; finish it
-        // before dropping the id, otherwise it leaks on the AT side.
-        int32_t rollbackRet = BundleSpmManager::FinishHapInstall(session.sessionId_, false, {});
-        if (rollbackRet != ERR_OK) {
-            // Secondary failure: the AT session may leak, keep it observable.
-            LOG_NOFUNC_E(BMS_TAG_INSTALLER, "rollback AT session failed, sessionId:%{public}d errCode:%{public}d",
-                session.sessionId_, rollbackRet);
-        }
-        session.sessionId_ = 0;
+        // The uncommitted session rides back with the return value: the
+        // InstallSession destructor (or a retry's move-assignment) rolls it
+        // back on the AT side — no explicit FinishHapInstall needed here.
         outErrCode = ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE;
         return session;
     }
     for (const auto &trustedBundleInfo : trustedBundleInfos) {
         Security::Verify::ProvisionInfo provisionInfo;
         if (!ParseTrustedBundleInfo(trustedBundleInfo, provisionInfo)) {
+#ifndef X86_EMULATOR_MODE
             LOG_NOFUNC_E(BMS_TAG_INSTALLER, "ParseTrustedBundleInfo failed");
-            // Same as above: the session is already allocated on the AT side.
-            int32_t rollbackRet = BundleSpmManager::FinishHapInstall(session.sessionId_, false, {});
-            if (rollbackRet != ERR_OK) {
-                LOG_NOFUNC_E(BMS_TAG_INSTALLER, "rollback AT session failed, sessionId:%{public}d errCode:%{public}d",
-                    session.sessionId_, rollbackRet);
-            }
-            session.sessionId_ = 0;
             outErrCode = ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE;
             return session;
+#else
+            // Mirror the OFF checker (BundleInstallChecker::CheckMultipleHapsSignInfo):
+            // on the emulator an unsigned hap's verify failure must not block the
+            // install — the OFF path tolerates verifyRes != ERR_OK and clears the
+            // appId of an invalid provision, so continue with a default provision.
+            LOG_NOFUNC_E(BMS_TAG_INSTALLER, "ParseTrustedBundleInfo failed, continue with default provision");
+            provisionInfo = Security::Verify::ProvisionInfo();
+#endif
         }
         Security::Verify::HapVerifyResult hapVerifyResult;
         hapVerifyResult.SetProvisionInfo(provisionInfo);
         session.hapVerifyResults_.emplace_back(std::move(hapVerifyResult));
+    }
+    if (session.hapVerifyResults_.empty()) {
+        LOG_E(BMS_TAG_INSTALLER, "no sign info in the all haps");
+        outErrCode = ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE;
+        return session;
+    }
+    if (skipEnterpriseResign) {
+        LOG_I(BMS_TAG_INSTALLER, "skip enterprise resign check for permission-granted caller");
+    } else if (!checker.CheckEnterpriseResign(session.hapVerifyResults_[0].GetProvisionInfo(), userId)) {
+        LOG_E(BMS_TAG_INSTALLER, "enterprise resign check failed");
+        outErrCode = ERR_APPEXECFWK_INSTALL_FAILED_APP_SOURCE_NOT_TRUESTED;
+        return session;
+    }
+    if (!checker.CheckProvisionInfoIsValid(session.hapVerifyResults_)) {
+#ifndef X86_EMULATOR_MODE
+        LOG_E(BMS_TAG_INSTALLER, "CheckProvisionInfoIsValid failed");
+        outErrCode = ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE;
+        return session;
+#else
+        // on emulator if check signature failed clear appid
+        for (auto &verifyRes : session.hapVerifyResults_) {
+            Security::Verify::ProvisionInfo provisionInfo = verifyRes.GetProvisionInfo();
+            provisionInfo.appId = Constants::EMPTY_STRING;
+            verifyRes.SetProvisionInfo(provisionInfo);
+        }
+#endif
     }
     outErrCode = ERR_OK;
     return session;

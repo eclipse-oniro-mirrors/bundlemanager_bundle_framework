@@ -633,7 +633,9 @@ HWTEST_F(BmsSpmManagerOnTest, IsRecoverableSpmError_0001, Function | MediumTest 
  * @tc.number: BmsSpmManagerOnTest.CheckSignAndInitSession_TrustedInfoParseFailure_0001
  * @tc.name: CheckSignAndInitSession fails on an unparsable provision
  * @tc.desc: An injected trusted bundle info whose provision raw cannot be parsed
- *           fails the session creation with the signature error.
+ *           fails the session creation with the signature error. The uncommitted
+ *           session rides back with the return value and the InstallSession
+ *           destructor rolls it back on the AT side (deferred RAII rollback).
  */
 HWTEST_F(BmsSpmManagerOnTest, CheckSignAndInitSession_TrustedInfoParseFailure_0001, Function | MediumTest | Level1)
 {
@@ -645,10 +647,13 @@ HWTEST_F(BmsSpmManagerOnTest, CheckSignAndInitSession_TrustedInfoParseFailure_00
     OHOS::Security::AccessToken::g_spmTrustedBundleInfos.push_back(tbi);
     BundleInstallChecker checker;
     ErrCode errCode = ERR_OK;
-    auto session = BundleSpmManager::InstallSession::CheckSignAndInitSession(
-        TEST_USERID, {"/data/test/one.hap"}, false, checker, errCode, true, false);
-    EXPECT_EQ(errCode, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
-    EXPECT_FALSE(session.IsActive());
+    {
+        auto session = BundleSpmManager::InstallSession::CheckSignAndInitSession(
+            TEST_USERID, {"/data/test/one.hap"}, false, checker, errCode, true, false);
+        EXPECT_EQ(errCode, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
+        EXPECT_TRUE(session.IsActive());
+        EXPECT_EQ(OHOS::Security::AccessToken::g_spmFinishInstallCallCount, 0);
+    }  // session destroyed here
     // The AT session allocated by CheckHapSignInfo is rolled back, not leaked.
     EXPECT_EQ(OHOS::Security::AccessToken::g_spmFinishInstallCallCount, 1);
     EXPECT_FALSE(OHOS::Security::AccessToken::g_spmFinishInstallLastPersistent);
@@ -668,14 +673,132 @@ HWTEST_F(BmsSpmManagerOnTest, CheckSignAndInitSession_CountMismatch_0001, Functi
     OHOS::Security::AccessToken::g_spmTrustedBundleInfos.push_back(tbi);
     BundleInstallChecker checker;
     ErrCode errCode = ERR_OK;
-    auto session = BundleSpmManager::InstallSession::CheckSignAndInitSession(
-        TEST_USERID, {"/data/test/one.hap", "/data/test/two.hap"}, false, checker, errCode, true,
-        false);
-    EXPECT_EQ(errCode, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
-    EXPECT_FALSE(session.IsActive());
+    {
+        auto session = BundleSpmManager::InstallSession::CheckSignAndInitSession(
+            TEST_USERID, {"/data/test/one.hap", "/data/test/two.hap"}, false, checker, errCode, true,
+            false);
+        EXPECT_EQ(errCode, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
+        EXPECT_TRUE(session.IsActive());
+        EXPECT_EQ(OHOS::Security::AccessToken::g_spmFinishInstallCallCount, 0);
+    }  // session destroyed here
     // The AT session allocated by CheckHapSignInfo is rolled back, not leaked.
     EXPECT_EQ(OHOS::Security::AccessToken::g_spmFinishInstallCallCount, 1);
     EXPECT_FALSE(OHOS::Security::AccessToken::g_spmFinishInstallLastPersistent);
+}
+
+namespace {
+// Builds a HapVerifyResult carrying a hand-filled provision (no .p7b asset is
+// needed): the provision consistency checks consume the provision fields only.
+Security::Verify::HapVerifyResult MakeProvisionResult(const std::string &appId,
+    const std::string &appIdentifier, const std::string &apl)
+{
+    Security::Verify::ProvisionInfo provisionInfo;
+    provisionInfo.appId = appId;
+    provisionInfo.bundleInfo.appIdentifier = appIdentifier;
+    provisionInfo.bundleInfo.apl = apl;
+    provisionInfo.distributionType = Security::Verify::AppDistType::NONE_TYPE;
+    provisionInfo.type = Security::Verify::ProvisionType::RELEASE;
+    Security::Verify::HapVerifyResult result;
+    result.SetProvisionInfo(provisionInfo);
+    return result;
+}
+} // namespace
+
+/**
+ * @tc.number: BmsSpmManagerOnTest.CheckProvisionInfoIsValid_EmptyInput_0001
+ * @tc.name: CheckProvisionInfoIsValid rejects an empty result list
+ * @tc.desc: The empty-input guard added for the SPM ON-path consumption: with no
+ *           verify results at all there is no valid provision info, so the check
+ *           fails closed instead of reading hapVerifyRes[0] out of bounds.
+ */
+HWTEST_F(BmsSpmManagerOnTest, CheckProvisionInfoIsValid_EmptyInput_0001, Function | SmallTest | Level1)
+{
+    BundleInstallChecker checker;
+    std::vector<Security::Verify::HapVerifyResult> emptyResults;
+    EXPECT_FALSE(checker.CheckProvisionInfoIsValid(emptyResults));
+}
+
+/**
+ * @tc.number: BmsSpmManagerOnTest.CheckProvisionInfoIsValid_Consistent_0001
+ * @tc.name: CheckProvisionInfoIsValid passes consistent provisions
+ * @tc.desc: Results whose appId/apl/appIdentifier/distributionType/provisionType
+ *           all match are consistent — the contract the SPM ON path relies on
+ *           for the AT-returned provisions of one install.
+ */
+HWTEST_F(BmsSpmManagerOnTest, CheckProvisionInfoIsValid_Consistent_0001, Function | SmallTest | Level1)
+{
+    BundleInstallChecker checker;
+    std::vector<Security::Verify::HapVerifyResult> results;
+    results.emplace_back(MakeProvisionResult("app-1", "id-1", "normal"));
+    results.emplace_back(MakeProvisionResult("app-1", "id-1", "normal"));
+    EXPECT_TRUE(checker.CheckProvisionInfoIsValid(results));
+}
+
+/**
+ * @tc.number: BmsSpmManagerOnTest.CheckProvisionInfoIsValid_InconsistentAppId_0001
+ * @tc.name: CheckProvisionInfoIsValid rejects a mismatched appId
+ * @tc.desc: A hap list whose entries carry different appIds is inconsistent —
+ *           the mixed signed/unsigned shape the emulator tolerance clears the
+ *           appIds for; on non-emulator builds the install fails closed with
+ *           the incompatible-signature error.
+ */
+HWTEST_F(BmsSpmManagerOnTest, CheckProvisionInfoIsValid_InconsistentAppId_0001, Function | SmallTest | Level1)
+{
+    BundleInstallChecker checker;
+    std::vector<Security::Verify::HapVerifyResult> results;
+    results.emplace_back(MakeProvisionResult("app-1", "id-1", "normal"));
+    results.emplace_back(MakeProvisionResult("app-2", "id-1", "normal"));
+    EXPECT_FALSE(checker.CheckProvisionInfoIsValid(results));
+}
+
+/**
+ * @tc.number: BmsSpmManagerOnTest.CheckSignAndInitSession_Failure_DeferredRollback_0001
+ * @tc.name: A failed CheckHapSignInfo that leaves a session id rides back for RAII rollback
+ * @tc.desc: When the AT call fails after the mock wrote a session id, the id is
+ *           NOT dropped on the floor: the uncommitted session rides back with
+ *           the return value and the InstallSession destructor performs the
+ *           deferred rollback — no explicit FinishHapInstall in the branch.
+ */
+HWTEST_F(BmsSpmManagerOnTest, CheckSignAndInitSession_Failure_DeferredRollback_0001, Function | MediumTest | Level1)
+{
+    OHOS::Security::AccessToken::g_spmCheckHapSignInfoSessionId = TEST_SESSION_ID;
+    OHOS::Security::AccessToken::g_spmCheckHapSignInfoRet = -1;
+    BundleInstallChecker checker;
+    ErrCode errCode = ERR_OK;
+    {
+        auto session = BundleSpmManager::InstallSession::CheckSignAndInitSession(
+            TEST_USERID, {"/data/test/one.hap"}, false, checker, errCode, true, false);
+        EXPECT_EQ(errCode, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
+        EXPECT_TRUE(session.IsActive());
+        EXPECT_EQ(OHOS::Security::AccessToken::g_spmFinishInstallCallCount, 0);
+    }  // session destroyed here
+    EXPECT_EQ(OHOS::Security::AccessToken::g_spmFinishInstallCallCount, 1);
+    EXPECT_FALSE(OHOS::Security::AccessToken::g_spmFinishInstallLastPersistent);
+}
+
+/**
+ * @tc.number: BmsSpmManagerOnTest.InstallSession_MoveAssignment_RollsBackOldUncommitted_0001
+ * @tc.name: Move-assigning a fresh session rolls the old uncommitted one back first
+ * @tc.desc: The retry-shaped takeover: when CheckSignAndInitSession assigns a
+ *           new session over an existing uncommitted one, the move-assignment
+ *           rolls the OLD session back on the AT side before the takeover —
+ *           this is the deferred-rollback path the error branches rely on
+ *           (e.g. the InstallBundle recovery retry).
+ */
+HWTEST_F(BmsSpmManagerOnTest, InstallSession_MoveAssignment_RollsBackOldUncommitted_0001,
+    Function | MediumTest | Level1)
+{
+    auto oldSession = MakeActiveSession();
+    ASSERT_TRUE(oldSession.IsActive());
+    EXPECT_EQ(OHOS::Security::AccessToken::g_spmFinishInstallCallCount, 0);
+    auto newSession = MakeActiveSession();
+    ASSERT_TRUE(newSession.IsActive());
+    EXPECT_EQ(OHOS::Security::AccessToken::g_spmFinishInstallCallCount, 0);
+    oldSession = std::move(newSession);
+    EXPECT_EQ(OHOS::Security::AccessToken::g_spmFinishInstallCallCount, 1);
+    EXPECT_FALSE(OHOS::Security::AccessToken::g_spmFinishInstallLastPersistent);
+    EXPECT_TRUE(oldSession.IsActive());
+    EXPECT_FALSE(newSession.IsActive());
 }
 
 /**
@@ -1122,7 +1245,9 @@ HWTEST_F(BmsSpmManagerOnTest, UpdateToken_Failure_0001, Function | MediumTest | 
  *           call (the empty list fails closed), and the mock's empty trusted
  *           list then fails the 1:1 count check, so the session creation fails
  *           overall — the userId contract is still pinned through the mock's
- *           recorded last-user-id.
+ *           recorded last-user-id. The uncommitted session rides back with the
+ *           return value; the next move-assignment (or the destructor) performs
+ *           the deferred rollback.
  */
 HWTEST_F(BmsSpmManagerOnTest, CheckSignAndInitSession_SkipResign_0001, Function | MediumTest | Level1)
 {
@@ -1133,16 +1258,19 @@ HWTEST_F(BmsSpmManagerOnTest, CheckSignAndInitSession_SkipResign_0001, Function 
     auto session = BundleSpmManager::InstallSession::CheckSignAndInitSession(
         TEST_USERID, {"/data/test/one.hap"}, false, checker, errCode, true, true);
     EXPECT_EQ(errCode, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
-    EXPECT_FALSE(session.IsActive());
+    EXPECT_TRUE(session.IsActive());
     // The cross-process contract: skipEnterpriseResign is carried as userId == -1.
     EXPECT_EQ(OHOS::Security::AccessToken::g_spmCheckHapSignInfoLastUserId, -1);
 
-    // Without the flag the real userId is passed through unchanged.
+    // Without the flag the real userId is passed through unchanged; the
+    // move-assignment below rolls the first uncommitted session back first.
     session = BundleSpmManager::InstallSession::CheckSignAndInitSession(
         TEST_USERID, {"/data/test/one.hap"}, false, checker, errCode, true, false);
     EXPECT_EQ(errCode, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
-    EXPECT_FALSE(session.IsActive());
+    EXPECT_TRUE(session.IsActive());
     EXPECT_EQ(OHOS::Security::AccessToken::g_spmCheckHapSignInfoLastUserId, TEST_USERID);
+    EXPECT_EQ(OHOS::Security::AccessToken::g_spmFinishInstallCallCount, 1);
+    EXPECT_FALSE(OHOS::Security::AccessToken::g_spmFinishInstallLastPersistent);
 }
 
 /**

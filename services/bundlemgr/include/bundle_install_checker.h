@@ -83,6 +83,19 @@ public:
         bool skipEnterpriseResign = false);
 
     /**
+     * @brief Check the enterprise resign state of the given provision. Also used
+     *        by the SPM ON path on the AT-returned provision.
+     */
+    bool CheckEnterpriseResign(const Security::Verify::ProvisionInfo &provisionInfo, const int32_t userId);
+
+    /**
+     * @brief Check the cross-hap consistency of the provision info (appId/apl/
+     *        distributionType/provisionType/appIdentifier must match). Also used
+     *        by the SPM ON path on the AT-returned provisions.
+     */
+    bool CheckProvisionInfoIsValid(const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
+
+    /**
      * @brief To check the hap hash param.
      * @param infos .Indicates all innerBundleInfo for all haps need to be installed.
      * @param hashParams .Indicates all hashParams in installParam.
@@ -323,8 +336,6 @@ private:
 
     bool CheckProxyPermissionLevel(const std::string &permissionName) const;
     bool MatchOldSignatures(const std::string &bundleName, const std::vector<std::string> &appSignatures);
-    bool CheckEnterpriseResign(const Security::Verify::ProvisionInfo &provisionInfo, const int32_t userId);
-    bool CheckProvisionInfoIsValid(const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
     std::tuple<bool, std::string, std::string> GetValidReleaseType(
         const std::unordered_map<std::string, InnerBundleInfo> &infos);
 

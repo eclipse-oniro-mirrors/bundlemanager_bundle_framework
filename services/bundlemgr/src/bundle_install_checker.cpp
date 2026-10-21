@@ -339,6 +339,10 @@ bool BundleInstallChecker::CheckEnterpriseResign(
 bool BundleInstallChecker::CheckProvisionInfoIsValid(
     const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes)
 {
+    if (hapVerifyRes.empty()) {
+        LOG_E(BMS_TAG_INSTALLER, "hapVerifyRes is empty");
+        return false;
+    }
     auto appId = hapVerifyRes[0].GetProvisionInfo().appId;
     auto appIdentifier = hapVerifyRes[0].GetProvisionInfo().bundleInfo.appIdentifier;
     auto apl = hapVerifyRes[0].GetProvisionInfo().bundleInfo.apl;
