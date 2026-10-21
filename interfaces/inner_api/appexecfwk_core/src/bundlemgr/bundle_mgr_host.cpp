@@ -6415,7 +6415,8 @@ ErrCode BundleMgrHost::HandleGetMetadataByBundleName(MessageParcel &data, Messag
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret == ERR_OK && !WriteVectorToParcelIntelligent(metadataInfos, reply)) {
-        APP_LOGE("write metadata infos failed");
+        APP_LOGE("write metadata infos failed, bundleName=%{public}s, metadataCount=%{public}zu",
+            bundleName.c_str(), metadataInfos.size());
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
