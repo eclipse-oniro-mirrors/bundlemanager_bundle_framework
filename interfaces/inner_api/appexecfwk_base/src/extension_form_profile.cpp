@@ -206,6 +206,7 @@ struct ExtensionFormProfileInfo {
     bool resizable = false;
     std::string groupId;
     Standby standby;
+    bool isColorModeRefreshEnabled = false;
 };
 
 struct ExtensionFormProfileInfoStruct {
@@ -561,6 +562,12 @@ void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfo &exten
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        ExtensionFormProfileReader::IS_COLOR_MODE_REFRESH_ENABLED,
+        extensionFormProfileInfo.isColorModeRefreshEnabled,
+        false,
+        g_parseResult);
 }
 
 void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfoStruct &profileInfo)
@@ -818,6 +825,7 @@ void TransformToFormInfoExt(const ExtensionFormProfileInfo &form, ExtensionFormI
     info.standby.isSupported = form.standby.isSupported;
     info.standby.isAdapted = form.standby.isAdapted;
     info.standby.isPrivacySensitive = form.standby.isPrivacySensitive;
+    info.isColorModeRefreshEnabled = form.isColorModeRefreshEnabled;
 }
 
 bool TransformToExtensionFormInfo(const ExtensionFormProfileInfo &form, ExtensionFormInfo &info)

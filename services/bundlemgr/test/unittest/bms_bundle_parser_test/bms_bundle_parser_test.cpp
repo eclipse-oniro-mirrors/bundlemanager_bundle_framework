@@ -5538,10 +5538,12 @@ HWTEST_F(BmsBundleParserTest, FormInfo_0300, Function | MediumTest | Level1)
     nlohmann::json jsonObject;
     jsonObject["name"] = "testName";
     jsonObject["resizable"] = true;
+    jsonObject["isColorModeRefreshEnabled"] = true;
     FormInfo formInfo;
     from_json(jsonObject, formInfo);
     EXPECT_EQ(formInfo.name, "testName");
     EXPECT_TRUE(formInfo.resizable);
+    EXPECT_TRUE(formInfo.isColorModeRefreshEnabled);
 }
 
 /**
@@ -5555,9 +5557,11 @@ HWTEST_F(BmsBundleParserTest, FormInfo_0400, Function | MediumTest | Level1)
     FormInfo formInfo;
     formInfo.name = "testName";
     formInfo.resizable = true;
+    formInfo.isColorModeRefreshEnabled = true;
     to_json(jsonObject, formInfo);
     EXPECT_TRUE(jsonObject["resizable"]);
     EXPECT_EQ(jsonObject["name"], "testName");
+    EXPECT_TRUE(jsonObject["isColorModeRefreshEnabled"]);
 }
 
 /**

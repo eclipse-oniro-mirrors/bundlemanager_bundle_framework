@@ -51,6 +51,7 @@ struct ExtensionFormInfo {
     bool resizable = false;
     std::string groupId;
     FormStandby standby;
+    bool isColorModeRefreshEnabled = false;
 
     std::vector<int32_t> supportDimensions {};
     std::vector<int32_t> conditionUpdate {};

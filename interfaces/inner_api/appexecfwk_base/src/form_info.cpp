@@ -92,6 +92,7 @@ const char* JSON_KEY_STANDBY_IS_SUPPORTED = "isSupported";
 const char* JSON_KEY_STANDBY_IS_ADAPTED = "isAdapted";
 const char* JSON_KEY_STANDBY_IS_PRIVACY_SENSITIVE = "isPrivacySensitive";
 const char* JSON_KEY_TRIGGER_TYPES = "triggerTypes";
+const char* JSON_KEY_IS_COLOR_MODE_REFRESH_ENABLED = "isColorModeRefreshEnabled";
 }  // namespace
 
 FormInfo::FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormInfo &formInfo)
@@ -183,6 +184,7 @@ void FormInfo::SetInfoByFormExt(const ExtensionFormInfo &formInfo)
     standby.isSupported = formInfo.standby.isSupported;
     standby.isAdapted = formInfo.standby.isAdapted;
     standby.isPrivacySensitive = formInfo.standby.isPrivacySensitive;
+    isColorModeRefreshEnabled = formInfo.isColorModeRefreshEnabled;
 }
 
 bool FormInfo::ReadCustomizeData(Parcel &parcel)
@@ -333,6 +335,7 @@ bool FormInfo::ReadFromParcel(Parcel &parcel)
     standby.isSupported = parcel.ReadBool();
     standby.isAdapted = parcel.ReadBool();
     standby.isPrivacySensitive = parcel.ReadBool();
+    isColorModeRefreshEnabled = parcel.ReadBool();
     return true;
 }
 
@@ -459,6 +462,7 @@ bool FormInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, standby.isSupported);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, standby.isAdapted);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, standby.isPrivacySensitive);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isColorModeRefreshEnabled);
     return true;
 }
 
@@ -561,7 +565,8 @@ void to_json(nlohmann::json &jsonObject, const FormInfo &formInfo)
         {JSON_KEY_GROUP_ID, formInfo.groupId},
         {JSON_KEY_SUPPORT_DEVICE_TYPE, formInfo.supportDeviceTypes},
         {JSON_KEY_SUPPORT_DEVICE_PERFORMANCE_CLASSES, formInfo.supportDevicePerformanceClasses},
-        {JSON_KEY_STANDBY, formInfo.standby}
+        {JSON_KEY_STANDBY, formInfo.standby},
+        {JSON_KEY_IS_COLOR_MODE_REFRESH_ENABLED, formInfo.isColorModeRefreshEnabled},
     };
 }
 
@@ -1064,6 +1069,12 @@ void from_json(const nlohmann::json &jsonObject, FormInfo &formInfo)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_IS_COLOR_MODE_REFRESH_ENABLED,
+        formInfo.isColorModeRefreshEnabled,
+        false,
+        parseResult);
     if (parseResult != ERR_OK) {
         APP_LOGE("read formInfo jsonObject error : %{public}d", parseResult);
     }
