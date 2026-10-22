@@ -272,6 +272,10 @@ public:
     void UpdateBaseBundleInfoIntoOld(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo);
     bool UpdateInnerBundleInfo(InnerBundleInfo &innerBundleInfo, bool needSaveStorage = true,
         bool toTempBundle = false);
+    // Update ONLY the device mode distribution policy and persist. No ODID side-effect
+    // (unlike UpdateInnerBundleInfo), which is why OTA policy refresh uses it.
+    bool UpdateAppCategoryAndPersist(const std::string &bundleName,
+        DeviceModeDistributionPolicy deviceModeDistributionPolicy);
     bool UpdatePartialInnerBundleInfo(const InnerBundleInfo &info);
     /**
      * @brief Generate UID and GID for a bundle.

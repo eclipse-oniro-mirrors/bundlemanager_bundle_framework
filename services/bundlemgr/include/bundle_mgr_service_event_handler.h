@@ -767,6 +767,7 @@ private:
     void ProcessRouterMap();
     void InnerProcessRouterMap();
     void ProcessEmptyOdid();
+    void ProcessRefreshStockAppCategory();
     bool IsSystemUpgrade();
     bool IsTestSystemUpgrade();
     bool IsSystemFingerprintChanged();
@@ -899,6 +900,8 @@ private:
     void ProcessUpdatePermissions();
     bool IsPermissionsUpdated();
     bool SaveUpdatePermissionsFlag();
+    bool IsStockCategoryRefreshed();
+    bool SaveStockCategoryRefreshedFlag();
     void ProcessUpdateExtensionDirsApl();
     bool CleanAllBundleEl1ArkStartupCacheLocal();
     bool ProcessCheckSystemOptimizeDir();

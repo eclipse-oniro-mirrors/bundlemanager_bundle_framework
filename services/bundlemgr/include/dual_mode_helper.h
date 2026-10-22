@@ -17,6 +17,7 @@
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_DUAL_MODE_HELPER_H
 
 #include <cstdint>
+#include <functional>
 #include <map>
 #include <mutex>
 #include <set>
@@ -28,6 +29,9 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+
+class InnerBundleInfo;  // forward declaration; full type only needed in .cpp
+class BundleDataMgr;    // forward declaration; RefreshStockAppCategories takes BundleDataMgr&
 
 // Helper for dual-mode (PC/PAD) application installation.
 // Only *_DIFFERENT_PACKAGE policy apps (same bundle name, different package body)
@@ -120,6 +124,34 @@ public:
         const std::string &appDistributionType,
         int32_t &policy,
         std::map<std::string, std::vector<std::string>> &modeHapMap);
+
+    // Query app policy from erms (ecological_rule_manager) through the dlopen layer above.
+    // Returns UNSPECIFIED (default policy) when the query fails or the returned policy is out
+    // of range (requirement: erms interface failure -> default 0).
+    static DeviceModeDistributionPolicy QueryAppCategoryFromErms(const std::string &bundleName,
+        const std::string &bundleDir, const std::string &distributionType);
+
+    // Convert an erms-returned int policy to DeviceModeDistributionPolicy; values outside
+    // the valid enum range (0..8) fall back to UNSPECIFIED.
+    static DeviceModeDistributionPolicy ToDeviceModePolicy(int32_t ermsPolicy);
+
+    // Resolve stock app policy: preinstall/in-house app -> ask erms; other app -> UNSPECIFIED
+    // without calling erms (avoid blind erms queries).
+    static DeviceModeDistributionPolicy ResolveStockAppCategory(const InnerBundleInfo &info);
+
+    // Injectable erms query for testing (production wires it to QueryAppCategoryFromErms).
+    using ErmsCategoryQueryFunc = std::function<DeviceModeDistributionPolicy(const std::string &bundleName,
+        const std::string &bundleDir, const std::string &distributionType)>;
+
+    // Injectable-core overload for unit-testing the erms-hit branch.
+    static DeviceModeDistributionPolicy ResolveStockAppCategory(const InnerBundleInfo &info,
+        const ErmsCategoryQueryFunc &ermsQuery);
+
+    // Drive OTA stock-app policy refresh over bundleInfos_. Idempotent (only UNSPECIFIED apps),
+    // per-app immediate persist (resumable, no ODID); default (0) resolutions are value-equal to
+    // the untouched state and are not persisted. No-op on non-dual-mode devices / marker set.
+    static void RefreshStockAppCategories(BundleDataMgr &dataMgr, const std::function<bool()> &isMarkerSet,
+        const std::function<void()> &markDone, const ErmsCategoryQueryFunc &ermsQuery);
 
 private:
     static std::mutex ermsMutex_;

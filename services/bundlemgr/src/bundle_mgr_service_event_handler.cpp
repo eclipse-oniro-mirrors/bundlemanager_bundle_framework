@@ -125,6 +125,7 @@ const std::vector<std::string> FINGERPRINTS = {
     "const.comp.hl.product_base_version.real"
 };
 constexpr const char* OTA_FLAG = "otaFlag";
+constexpr const char* STOCK_CATEGORY_REFRESHED = "dualModeStockCategoryRefreshed";
 // pre bundle profile
 constexpr const char* DEFAULT_PRE_BUNDLE_ROOT_DIR = "/system";
 constexpr const char* MODULE_UPDATE_PRODUCT_SUFFIX = "/etc/app/module_update";
@@ -620,6 +621,10 @@ void BMSEventHandler::BundleRebootStartEvent()
         ProcessRouterMap();
         ProcessEmptyOdid();
     }
+    // Stock-app dual-mode category refresh: mounted outside the upgrade branch so EVERY boot
+    // resumes an interrupted pass (marker unset); detached and internally gated, so the per-boot
+    // cost is negligible.
+    ProcessRefreshStockAppCategory();
     // need process main bundle status
     BmsKeyEventMgr::ProcessMainBundleStatusFinally();
 
@@ -2318,6 +2323,38 @@ void BMSEventHandler::InnerProcessCheckInstallSource()
                 preInstallBundleInfo.GetBundleName().c_str());
         }
     }
+}
+
+void BMSEventHandler::ProcessRefreshStockAppCategory()
+{
+    LOG_I(BMS_TAG_DEFAULT, "DualOTARefresh: refresh task start (async)");
+    // Detached: per-app erms queries would scale boot latency with app count. dataMgr shared_ptr
+    // and process-lifetime `this` are safe; bundleInfos_ access is serialized via bundleInfoMutex_.
+    std::thread([this]() {
+        auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+        if (dataMgr == nullptr) {
+            LOG_E(BMS_TAG_DEFAULT, "DualOTARefresh: dataMgr is nullptr, skip");
+            return;
+        }
+        // Fast path: skip when not a dual-mode device or the pass already completed — both gates
+        // are re-checked inside RefreshStockAppCategories, so this is purely a cheap early return.
+        if (!DualModeHelper::IsDualModeDevice() || IsStockCategoryRefreshed()) {
+            LOG_D(BMS_TAG_DEFAULT, "DualOTARefresh: skip, not dual-mode device or already refreshed");
+            return;
+        }
+        // erms dir derivation (hapPath parent) lives in ResolveStockAppCategory/GetErmsBundleDir;
+        // production query goes through the dlopen layer (call failure -> default policy).
+        DualModeHelper::ErmsCategoryQueryFunc ermsQuery =
+            [](const std::string &bundleName,
+               const std::string &bundleDir,
+               const std::string &distributionType) -> DeviceModeDistributionPolicy {
+            return DualModeHelper::QueryAppCategoryFromErms(bundleName, bundleDir, distributionType);
+        };
+        DualModeHelper::RefreshStockAppCategories(*dataMgr,
+            [this]() { return IsStockCategoryRefreshed(); },
+            [this]() { (void)SaveStockCategoryRefreshedFlag(); },
+            ermsQuery);
+    }).detach();
 }
 
 std::string BMSEventHandler::ConvertApplicationFlagToInstallSource(int32_t flag)
@@ -6573,6 +6610,35 @@ bool BMSEventHandler::SaveUpdatePermissionsFlag()
     if (!bmsPara->SaveBmsParam(ServiceConstants::UPDATE_PERMISSIONS_FLAG,
         std::string{ ServiceConstants::UPDATE_PERMISSIONS_FLAG_UPDATED })) {
         LOG_E(BMS_TAG_DEFAULT, "save updatePermissionsFlag failed");
+        return false;
+    }
+    return true;
+}
+
+bool BMSEventHandler::IsStockCategoryRefreshed()
+{
+    auto bmsParam = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    if (bmsParam == nullptr) {
+        LOG_W(BMS_TAG_DEFAULT, "DualOTARefresh: bmsParam is nullptr");
+        return false;
+    }
+    std::string value;
+    if (bmsParam->GetBmsParam(STOCK_CATEGORY_REFRESHED, value)) {
+        LOG_I(BMS_TAG_DEFAULT, "DualOTARefresh: marker already set");
+        return true;
+    }
+    return false;
+}
+
+bool BMSEventHandler::SaveStockCategoryRefreshedFlag()
+{
+    auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    if (bmsPara == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "DualOTARefresh: bmsPara is nullptr");
+        return false;
+    }
+    if (!bmsPara->SaveBmsParam(STOCK_CATEGORY_REFRESHED, "true")) {
+        LOG_E(BMS_TAG_DEFAULT, "DualOTARefresh: save marker failed");
         return false;
     }
     return true;

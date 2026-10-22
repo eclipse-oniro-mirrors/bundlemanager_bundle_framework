@@ -21,13 +21,17 @@
 #define private public
 #define protected public
 #include <gtest/gtest.h>
+#include <chrono>
+#include <functional>
 #include <string>
+#include <thread>
 #include <unordered_map>
 #include <vector>
 
 #include "appexecfwk_errors.h"
 #include "application_info.h"
 #include "bundle_info.h"
+#include "preinstall_data_storage_interface.h"
 #include "base_bundle_installer.h"
 #include "bundle_data_mgr.h"
 #include "bundle_data_storage_rdb.h"
@@ -2279,6 +2283,854 @@ HWTEST_F(BmsDualModeInstallTest, ClassifyDualModeAppsNoLock_0600, Function | Sma
     EXPECT_TRUE(dataMgr->bundleInfos_.empty());  // primary hidden in secondary mode
     ASSERT_EQ(dataMgr->tempBundleInfos_.count(BUNDLE_NAME), 1u);
     EXPECT_FALSE(dataMgr->tempBundleInfos_[BUNDLE_NAME].IsDualModeCloneApp());  // the hidden primary
+}
+
+
+// ====================== helpers for OTA refresh (driver + persist) tests ======================
+
+// Minimal IBundleDataStorage stub whose SaveStorageBundleInfo always fails, to drive the
+// UpdateAppCategoryAndPersist / RefreshStockAppCategories failure (marker-not-set) path without
+// touching the real RDB. The other methods are never reached by the refresh path.
+class FailingDataStorage : public IBundleDataStorage {
+public:
+    bool LoadAllData(std::map<std::string, InnerBundleInfo> &infos) override { return false; }
+    bool SaveStorageBundleInfo(const InnerBundleInfo &innerBundleInfo) override { return false; }
+    ErrCode SaveStorageBundleInfoWithCode(const InnerBundleInfo &innerBundleInfo) override { return 1; }
+    bool DeleteStorageBundleInfo(const InnerBundleInfo &innerBundleInfo) override { return false; }
+};
+
+// Build an InnerBundleInfo whose single module "entry" has the given deviceTypes and hapPath.
+// hapPath drives the erms query dir (architect rule: hapPath minus the file name), so cases that
+// assert the queried dir must seed it; empty default keeps dir-agnostic cases unchanged.
+static InnerBundleInfo MakeInfoWithDeviceTypes(const std::vector<std::string> &deviceTypes,
+    const std::string &hapPath = "")
+{
+    InnerBundleInfo info;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.deviceTypes = deviceTypes;
+    moduleInfo.hapPath = hapPath;
+    info.InsertInnerModuleInfo("entry", moduleInfo);
+    return info;
+}
+
+// Build a BundleDataMgr for refresh tests: real maps, dataStorage_ nulled so
+// UpdateAppCategoryAndPersist updates memory and returns true without touching the RDB (matches
+// the established pattern in bms_bundle_data_mgr_test_two.cpp / bms_data_mgr_test.cpp).
+static std::shared_ptr<BundleDataMgr> MakeRefreshDataMgr()
+{
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    dataMgr->dataStorage_ = nullptr;
+    return dataMgr;
+}
+
+// An erms query stub that never reports a policy (simulates erms miss / interface failure:
+// production falls back to the default policy UNSPECIFIED per requirement).
+static DualModeHelper::ErmsCategoryQueryFunc ErmsAlwaysMiss()
+{
+    return [](const std::string &, const std::string &,
+        const std::string &) -> DeviceModeDistributionPolicy {
+        return DeviceModeDistributionPolicy::UNSPECIFIED;
+    };
+}
+
+// Recording IBundleDataStorage stub: SaveStorageBundleInfo records the (bundleName, policy) pair it
+// was handed and returns the controllable saveResult. Lets tests observe BOTH that a persist happened
+// at all (the explicit-UNSPECIFIED-write contract) and which value was persisted, without the real RDB.
+class RecordingDataStorage : public IBundleDataStorage {
+public:
+    bool LoadAllData(std::map<std::string, InnerBundleInfo> &infos) override { return false; }
+    bool SaveStorageBundleInfo(const InnerBundleInfo &innerBundleInfo) override
+    {
+        savedNames.push_back(innerBundleInfo.GetBundleName());
+        savedPolicies.push_back(innerBundleInfo.GetDeviceModeDistributionPolicy());
+        return saveResult;
+    }
+    ErrCode SaveStorageBundleInfoWithCode(const InnerBundleInfo &innerBundleInfo) override { return 1; }
+    bool DeleteStorageBundleInfo(const InnerBundleInfo &innerBundleInfo) override { return false; }
+
+    std::vector<std::string> savedNames;
+    std::vector<DeviceModeDistributionPolicy> savedPolicies;
+    bool saveResult = true;
+};
+
+/**
+ * @tc.number: QueryAppCategoryFromErms_0100
+ * @tc.name: test QueryAppCategoryFromErms guards empty input
+ * @tc.desc: erms query is skipped (default policy UNSPECIFIED) when bundleName/bundleDir is
+ *           empty; the real dlopen path only behaves deterministically on a device that ships
+ *           the erms so, which unit tests must not assume, so only the guard is asserted here.
+ */
+HWTEST_F(BmsDualModeInstallTest, QueryAppCategoryFromErms_0100, Function | SmallTest | Level0)
+{
+    EXPECT_EQ(DualModeHelper::QueryAppCategoryFromErms("",
+        "/data/app/el1/bundle/public/com.example.app",
+        Constants::APP_DISTRIBUTION_TYPE_APP_GALLERY),
+        DeviceModeDistributionPolicy::UNSPECIFIED);
+    EXPECT_EQ(DualModeHelper::QueryAppCategoryFromErms("com.example.app", "",
+        Constants::APP_DISTRIBUTION_TYPE_APP_GALLERY),
+        DeviceModeDistributionPolicy::UNSPECIFIED);
+    EXPECT_EQ(DualModeHelper::QueryAppCategoryFromErms("", "", ""),
+        DeviceModeDistributionPolicy::UNSPECIFIED);
+}
+
+/**
+ * @tc.number: ToDeviceModePolicy_0100
+ * @tc.name: test erms int policy to DeviceModeDistributionPolicy conversion
+ * @tc.desc: valid erms values (0..8) map to the enum; out-of-range values (-1, 9) fall back to
+ *           UNSPECIFIED (requirement: erms failure/invalid -> default policy 0).
+ */
+HWTEST_F(BmsDualModeInstallTest, ToDeviceModePolicy_0100, Function | SmallTest | Level0)
+{
+    EXPECT_EQ(DualModeHelper::ToDeviceModePolicy(0), DeviceModeDistributionPolicy::UNSPECIFIED);
+    EXPECT_EQ(DualModeHelper::ToDeviceModePolicy(1), DeviceModeDistributionPolicy::MAIN_ONLY);
+    EXPECT_EQ(DualModeHelper::ToDeviceModePolicy(3),
+        DeviceModeDistributionPolicy::UNIVERSAL_IDENTICAL_PACKAGE);
+    EXPECT_EQ(DualModeHelper::ToDeviceModePolicy(8),
+        DeviceModeDistributionPolicy::FULL_COMPATIBLE_DIFFERENT_PACKAGE);
+    EXPECT_EQ(DualModeHelper::ToDeviceModePolicy(-1), DeviceModeDistributionPolicy::UNSPECIFIED);
+    EXPECT_EQ(DualModeHelper::ToDeviceModePolicy(9), DeviceModeDistributionPolicy::UNSPECIFIED);
+}
+
+/**
+ * @tc.number: ResolveStockAppCategory_0100
+ * @tc.name: test ResolveStockAppCategory three-way classification (erms-primary, no deviceType)
+ * @tc.desc: preinstall+erms-hit -> erms policy; preinstall+erms-miss -> UNSPECIFIED(default);
+ *           in-house(enterprise)+erms-hit -> erms policy; other(app_gallery) -> UNSPECIFIED,
+ *           erms NOT consulted (performance).
+ */
+HWTEST_F(BmsDualModeInstallTest, ResolveStockAppCategory_0100, Function | SmallTest | Level0)
+{
+    // erms-hit stub returns a definitive policy and records the bundleDir it was queried with;
+    // erms-miss stub returns UNSPECIFIED.
+    std::string seenBundleDir;
+    DualModeHelper::ErmsCategoryQueryFunc hitMain = [&seenBundleDir](const std::string &,
+        const std::string &bundleDir, const std::string &) -> DeviceModeDistributionPolicy {
+        seenBundleDir = bundleDir;
+        return DeviceModeDistributionPolicy::MAIN_ONLY;
+    };
+    DualModeHelper::ErmsCategoryQueryFunc miss = [](const std::string &, const std::string &,
+        const std::string &) -> DeviceModeDistributionPolicy {
+        return DeviceModeDistributionPolicy::UNSPECIFIED;
+    };
+
+    // 1) preinstall + erms hit (MAIN_ONLY) -> MAIN_ONLY; bundleDir = hapPath parent = preset root
+    //    (preinstall apps are installed in place, hapPath points at /system/app/<dir>/<x>.hap)
+    InnerBundleInfo preInfo = MakeInfoWithDeviceTypes({ "tablet" },
+        "/system/app/ExampleApp/Entry-default.hap");
+    preInfo.SetIsPreInstallApp(true);
+    preInfo.SetAppCodePath("/data/app/el1/bundle/public/com.example.app");
+    EXPECT_EQ(DualModeHelper::ResolveStockAppCategory(preInfo, hitMain),
+        DeviceModeDistributionPolicy::MAIN_ONLY);
+    EXPECT_EQ(seenBundleDir, "/system/app/ExampleApp");
+
+    // 2) preinstall + erms miss -> UNSPECIFIED (default 0)
+    EXPECT_EQ(DualModeHelper::ResolveStockAppCategory(preInfo, miss),
+        DeviceModeDistributionPolicy::UNSPECIFIED);
+
+    // 3) in-house (enterprise) + erms hit -> erms policy (SUB_ONLY); bundleDir = hapPath parent =
+    //    install root (non-preinstall hapPath points at the copy under codePath)
+    InnerBundleInfo inHouseInfo = MakeInfoWithDeviceTypes({ "2in1" },
+        "/data/app/el1/bundle/public/com.example.inhouse/entry.hap");
+    inHouseInfo.SetIsPreInstallApp(false);
+    inHouseInfo.SetAppDistributionType(Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE);
+    std::string seenInHouseDir;
+    DualModeHelper::ErmsCategoryQueryFunc hitSub = [&seenInHouseDir](const std::string &,
+        const std::string &bundleDir, const std::string &) -> DeviceModeDistributionPolicy {
+        seenInHouseDir = bundleDir;
+        return DeviceModeDistributionPolicy::SUB_ONLY;
+    };
+    EXPECT_EQ(DualModeHelper::ResolveStockAppCategory(inHouseInfo, hitSub),
+        DeviceModeDistributionPolicy::SUB_ONLY);
+    EXPECT_EQ(seenInHouseDir, "/data/app/el1/bundle/public/com.example.inhouse");
+
+    // 4) other app (app_gallery, non-preinstall) -> UNSPECIFIED, erms NOT called
+    InnerBundleInfo otherInfo = MakeInfoWithDeviceTypes({ "tablet" });
+    otherInfo.SetIsPreInstallApp(false);
+    otherInfo.SetAppDistributionType(Constants::APP_DISTRIBUTION_TYPE_APP_GALLERY);
+    bool ermsCalled = false;
+    DualModeHelper::ErmsCategoryQueryFunc mustNotCall = [&](const std::string &, const std::string &,
+        const std::string &) -> DeviceModeDistributionPolicy {
+        ermsCalled = true;
+        return DeviceModeDistributionPolicy::MAIN_ONLY;
+    };
+    EXPECT_EQ(DualModeHelper::ResolveStockAppCategory(otherInfo, mustNotCall),
+        DeviceModeDistributionPolicy::UNSPECIFIED);
+    EXPECT_FALSE(ermsCalled);
+}
+
+// ResolveStockAppCategory injectable-erms branches (preinstall erms-hit, other-app skip-erms) are
+// covered by ResolveStockAppCategory_0100 above, so no separate injectable-only cases are needed.
+
+/**
+ * @tc.number: ResolveStockAppCategory_0200
+ * @tc.name: test production ResolveStockAppCategory wiring for non-eligible app
+ * @tc.desc: production overload (no injected query) on a non-preinstall app_gallery app resolves to
+ *           UNSPECIFIED without consulting erms — deterministic regardless of erms availability,
+ *           because the eligibility gate runs before the (real) erms query is ever invoked.
+ */
+HWTEST_F(BmsDualModeInstallTest, ResolveStockAppCategory_0200, Function | SmallTest | Level0)
+{
+    InnerBundleInfo otherInfo = MakeInfoWithDeviceTypes({ "tablet" });
+    otherInfo.SetIsPreInstallApp(false);
+    otherInfo.SetAppDistributionType(Constants::APP_DISTRIBUTION_TYPE_APP_GALLERY);
+    EXPECT_EQ(DualModeHelper::ResolveStockAppCategory(otherInfo),
+        DeviceModeDistributionPolicy::UNSPECIFIED);
+}
+
+/**
+ * @tc.number: ResolveStockAppCategory_0400
+ * @tc.name: test ResolveStockAppCategory with null erms query
+ * @tc.desc: eligible (preinstall) app but a null ErmsCategoryQueryFunc -> the !ermsQuery guard
+ *           returns UNSPECIFIED instead of invoking the callable (defensive, mirrors production
+ *           callers always wiring a non-null query).
+ */
+HWTEST_F(BmsDualModeInstallTest, ResolveStockAppCategory_0400, Function | SmallTest | Level0)
+{
+    InnerBundleInfo preInfo = MakeInfoWithDeviceTypes({ "tablet" });
+    preInfo.SetIsPreInstallApp(true);
+    preInfo.SetAppCodePath("/data/app/el1/bundle/public/com.example.app");
+    DualModeHelper::ErmsCategoryQueryFunc nullQuery;  // default-constructed std::function == null
+    EXPECT_EQ(DualModeHelper::ResolveStockAppCategory(preInfo, nullQuery),
+        DeviceModeDistributionPolicy::UNSPECIFIED);
+
+    // null query is also safe for the non-eligible path (same guard short-circuits on eligibility)
+    InnerBundleInfo otherInfo = MakeInfoWithDeviceTypes({ "tablet" });
+    otherInfo.SetIsPreInstallApp(false);
+    otherInfo.SetAppDistributionType(Constants::APP_DISTRIBUTION_TYPE_APP_GALLERY);
+    EXPECT_EQ(DualModeHelper::ResolveStockAppCategory(otherInfo, nullQuery),
+        DeviceModeDistributionPolicy::UNSPECIFIED);
+}
+
+/**
+ * @tc.number: ResolveStockAppCategory_0500
+ * @tc.name: test near-miss distribution types are not in-house
+ * @tc.desc: only plain "enterprise" counts as in-house (team decision): enterprise_normal /
+ *           enterprise_mdm / internaltesting / crowdtesting on a non-preinstall app are NOT
+ *           erms-eligible -> UNSPECIFIED and erms is never consulted for them.
+ */
+HWTEST_F(BmsDualModeInstallTest, ResolveStockAppCategory_0500, Function | SmallTest | Level0)
+{
+    const std::vector<std::string> notInHouse = { "enterprise_normal", "enterprise_mdm",
+        "internaltesting", "crowdtesting" };
+    for (const auto &type : notInHouse) {
+        InnerBundleInfo info = MakeInfoWithDeviceTypes({ "tablet" });
+        info.SetIsPreInstallApp(false);
+        info.SetAppDistributionType(type);
+        bool ermsCalled = false;
+        DualModeHelper::ErmsCategoryQueryFunc mustNotCall = [&](const std::string &,
+            const std::string &, const std::string &) -> DeviceModeDistributionPolicy {
+            ermsCalled = true;
+            return DeviceModeDistributionPolicy::MAIN_ONLY;
+        };
+        EXPECT_EQ(DualModeHelper::ResolveStockAppCategory(info, mustNotCall),
+            DeviceModeDistributionPolicy::UNSPECIFIED) << "type: " << type;
+        EXPECT_FALSE(ermsCalled) << "type: " << type;
+    }
+}
+
+/**
+ * @tc.number: ResolveStockAppCategory_0600
+ * @tc.name: test erms dir selection across mixed-partition hapPaths
+ * @tc.desc: dir = hapPath parent; a preinstall app partially updated online must take its first
+ *           hap outside BUNDLE_CODE_DIR (preset partition) regardless of module order; a fully
+ *           updated preinstall app and in-house apps take the first hap's parent (install root).
+ */
+HWTEST_F(BmsDualModeInstallTest, ResolveStockAppCategory_0600, Function | SmallTest | Level0)
+{
+    auto makeInfo = [](bool isPreInstall, const std::vector<std::string> &hapPaths) {
+        InnerBundleInfo info;
+        int32_t idx = 0;
+        for (const auto &hapPath : hapPaths) {
+            InnerModuleInfo moduleInfo;
+            moduleInfo.modulePackage = "m" + std::to_string(idx);
+            moduleInfo.hapPath = hapPath;
+            info.InsertInnerModuleInfo(moduleInfo.modulePackage, moduleInfo);
+            idx++;
+        }
+        info.SetIsPreInstallApp(isPreInstall);
+        return info;
+    };
+    std::string seenDir;
+    DualModeHelper::ErmsCategoryQueryFunc record = [&seenDir](const std::string &,
+        const std::string &bundleDir, const std::string &) -> DeviceModeDistributionPolicy {
+        seenDir = bundleDir;
+        return DeviceModeDistributionPolicy::MAIN_ONLY;
+    };
+
+    // 1) preinstall partially updated: entry(updated, /data, first in map order) + retained hsp
+    //    (/system) -> preset root wins despite the /data module sorting first
+    InnerBundleInfo mixed = makeInfo(true, {
+        "/data/app/el1/bundle/public/com.example.mix/entry.hap",
+        "/system/app/MixApp/zz_feature.hsp" });
+    EXPECT_EQ(DualModeHelper::ResolveStockAppCategory(mixed, record),
+        DeviceModeDistributionPolicy::MAIN_ONLY);
+    EXPECT_EQ(seenDir, "/system/app/MixApp");
+
+    // 2) preinstall fully updated online (all haps under BUNDLE_CODE_DIR) -> accepted
+    //    degradation: the /data install root
+    InnerBundleInfo updated = makeInfo(true, {
+        "/data/app/el1/bundle/public/com.example.upd/entry.hap" });
+    EXPECT_EQ(DualModeHelper::ResolveStockAppCategory(updated, record),
+        DeviceModeDistributionPolicy::MAIN_ONLY);
+    EXPECT_EQ(seenDir, "/data/app/el1/bundle/public/com.example.upd");
+
+    // 3) in-house (non-preinstall): first hap's parent == install root
+    InnerBundleInfo inHouse = makeInfo(false, {
+        "/data/app/el1/bundle/public/com.example.inhouse/entry.hap",
+        "/data/app/el1/bundle/public/com.example.inhouse/feature.hsp" });
+    inHouse.SetAppDistributionType(Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE);
+    EXPECT_EQ(DualModeHelper::ResolveStockAppCategory(inHouse, record),
+        DeviceModeDistributionPolicy::MAIN_ONLY);
+    EXPECT_EQ(seenDir, "/data/app/el1/bundle/public/com.example.inhouse");
+}
+
+// ====================== BundleDataMgr::UpdateAppCategoryAndPersist ==========================
+// Sets policy on the bundleInfos_ entry; dataStorage_ null -> persist skipped, returns true.
+HWTEST_F(BmsDualModeInstallTest, UpdateAppCategoryAndPersist_BundleInfos_0100, Function | SmallTest | Level0)
+{
+    auto dataMgr = MakeRefreshDataMgr();
+    InnerBundleInfo info;
+    info.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::UNSPECIFIED);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = info;
+
+    EXPECT_TRUE(dataMgr->UpdateAppCategoryAndPersist(BUNDLE_NAME, DeviceModeDistributionPolicy::MAIN_ONLY));
+    EXPECT_EQ(dataMgr->bundleInfos_[BUNDLE_NAME].GetDeviceModeDistributionPolicy(),
+        DeviceModeDistributionPolicy::MAIN_ONLY);
+}
+
+// tempBundleInfos_ entry is also updatable (driver currently only feeds bundleInfos_, but the
+// method must handle both maps).
+HWTEST_F(BmsDualModeInstallTest, UpdateAppCategoryAndPersist_TempBundleInfos_0200, Function | SmallTest | Level0)
+{
+    auto dataMgr = MakeRefreshDataMgr();
+    InnerBundleInfo info;
+    info.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::UNSPECIFIED);
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] = info;
+
+    EXPECT_TRUE(dataMgr->UpdateAppCategoryAndPersist(BUNDLE_NAME, DeviceModeDistributionPolicy::SUB_ONLY));
+    EXPECT_EQ(dataMgr->tempBundleInfos_[BUNDLE_NAME].GetDeviceModeDistributionPolicy(),
+        DeviceModeDistributionPolicy::SUB_ONLY);
+}
+
+// Unknown bundleName -> false, nothing changes.
+HWTEST_F(BmsDualModeInstallTest, UpdateAppCategoryAndPersist_NotFound_0300, Function | SmallTest | Level0)
+{
+    auto dataMgr = MakeRefreshDataMgr();
+    EXPECT_FALSE(dataMgr->UpdateAppCategoryAndPersist("no.such.app",
+        DeviceModeDistributionPolicy::MAIN_ONLY));
+}
+
+// Empty bundleName -> false.
+HWTEST_F(BmsDualModeInstallTest, UpdateAppCategoryAndPersist_EmptyName_0400, Function | SmallTest | Level0)
+{
+    auto dataMgr = MakeRefreshDataMgr();
+    EXPECT_FALSE(dataMgr->UpdateAppCategoryAndPersist("",
+        DeviceModeDistributionPolicy::MAIN_ONLY));
+}
+
+// SaveStorageBundleInfo failure (FailingDataStorage) -> returns false.
+HWTEST_F(BmsDualModeInstallTest, UpdateAppCategoryAndPersist_PersistFail_0500, Function | SmallTest | Level0)
+{
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    dataMgr->dataStorage_ = std::make_shared<FailingDataStorage>();
+    InnerBundleInfo info;
+    info.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::UNSPECIFIED);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = info;
+
+    EXPECT_FALSE(dataMgr->UpdateAppCategoryAndPersist(BUNDLE_NAME,
+        DeviceModeDistributionPolicy::MAIN_ONLY));
+}
+
+// Persist success (RecordingDataStorage, save -> true) -> returns true, the saved info carries the
+// NEW policy, and the in-memory entry is updated (both effects observable via the recording stub).
+HWTEST_F(BmsDualModeInstallTest, UpdateAppCategoryAndPersist_PersistSuccess_0600, Function | SmallTest | Level0)
+{
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    auto storage = std::make_shared<RecordingDataStorage>();
+    dataMgr->dataStorage_ = storage;
+    InnerBundleInfo info = MakeNamedInfo(BUNDLE_NAME);
+    info.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::UNSPECIFIED);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = info;
+
+    EXPECT_TRUE(dataMgr->UpdateAppCategoryAndPersist(BUNDLE_NAME,
+        DeviceModeDistributionPolicy::FULL_COMPATIBLE_DIFFERENT_PACKAGE));
+    EXPECT_EQ(dataMgr->bundleInfos_[BUNDLE_NAME].GetDeviceModeDistributionPolicy(),
+        DeviceModeDistributionPolicy::FULL_COMPATIBLE_DIFFERENT_PACKAGE);
+    ASSERT_EQ(storage->savedNames.size(), 1u);
+    EXPECT_EQ(storage->savedNames.front(), BUNDLE_NAME);
+    EXPECT_EQ(storage->savedPolicies.front(), DeviceModeDistributionPolicy::FULL_COMPATIBLE_DIFFERENT_PACKAGE);
+}
+
+// tempBundleInfos_ entry + failing storage -> false (temp-map persist-failure branch).
+HWTEST_F(BmsDualModeInstallTest, UpdateAppCategoryAndPersist_TempPersistFail_0700, Function | SmallTest | Level0)
+{
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    dataMgr->dataStorage_ = std::make_shared<FailingDataStorage>();
+    InnerBundleInfo info;
+    info.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::UNSPECIFIED);
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] = info;
+
+    EXPECT_FALSE(dataMgr->UpdateAppCategoryAndPersist(BUNDLE_NAME,
+        DeviceModeDistributionPolicy::MAIN_ONLY));
+}
+
+// tempBundleInfos_ entry + succeeding storage -> true and the temp entry's policy is persisted.
+HWTEST_F(BmsDualModeInstallTest, UpdateAppCategoryAndPersist_TempPersistSuccess_0800, Function | SmallTest | Level0)
+{
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    auto storage = std::make_shared<RecordingDataStorage>();
+    dataMgr->dataStorage_ = storage;
+    InnerBundleInfo info = MakeNamedInfo(BUNDLE_NAME);
+    info.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::UNSPECIFIED);
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] = info;
+
+    EXPECT_TRUE(dataMgr->UpdateAppCategoryAndPersist(BUNDLE_NAME,
+        DeviceModeDistributionPolicy::SUB_ONLY));
+    EXPECT_EQ(dataMgr->tempBundleInfos_[BUNDLE_NAME].GetDeviceModeDistributionPolicy(),
+        DeviceModeDistributionPolicy::SUB_ONLY);
+    ASSERT_EQ(storage->savedNames.size(), 1u);
+    EXPECT_EQ(storage->savedNames.front(), BUNDLE_NAME);
+    EXPECT_EQ(storage->savedPolicies.front(), DeviceModeDistributionPolicy::SUB_ONLY);
+}
+
+// ====================== BMSEventHandler OTA stock-app category refresh (12079) ======================
+// Covers the reboot-mounted refresh end-to-end via the singleton (mock BmsParam is an in-memory
+// map). Private methods are reachable via #define private public; EnsureBmsParam lazily installs
+// the mock; RefreshHandler is process-lifetime; each case clears the process-global marker key.
+
+namespace {
+const std::string STOCK_CATEGORY_MARKER = "dualModeStockCategoryRefreshed";
+const int64_t REFRESH_WAIT_MS = 5000;      // generous poll deadline for the detached thread
+const int64_t REFRESH_SETTLE_MS = 500;     // bounded wait on the "must NOT run" paths
+
+// Lazily install and return the singleton service's (mocked) BmsParam.
+std::shared_ptr<BmsParam> EnsureBmsParam()
+{
+    auto service = DelayedSingleton<BundleMgrService>::GetInstance();
+    if (service->bmsParam_ == nullptr) {
+        service->bmsParam_ = std::make_shared<BmsParam>();
+    }
+    return service->bmsParam_;
+}
+
+// Process-lifetime BMSEventHandler for the detached-thread cases (captured `this` stays valid).
+std::shared_ptr<BMSEventHandler> RefreshHandler()
+{
+    static auto handler = std::make_shared<BMSEventHandler>();
+    return handler;
+}
+
+void ClearStockCategoryMarker()
+{
+    EnsureBmsParam()->DeleteBmsParam(STOCK_CATEGORY_MARKER);
+}
+
+// Poll cond() every 20ms until true or the deadline elapses; returns the final cond() value.
+bool PollUntil(const std::function<bool()> &cond, int64_t timeoutMs)
+{
+    constexpr int64_t stepMs = 20;
+    for (int64_t waited = 0; waited < timeoutMs; waited += stepMs) {
+        if (cond()) {
+            return true;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(stepMs));
+    }
+    return cond();
+}
+
+}  // namespace
+
+// ====================== BMSEventHandler::IsStockCategoryRefreshed / SaveStockCategoryRefreshedFlag =====
+
+HWTEST_F(BmsDualModeInstallTest, IsStockCategoryRefreshed_0100, Function | SmallTest | Level0)
+{
+    // marker key absent -> false (pass has not run yet)
+    ClearStockCategoryMarker();
+    EXPECT_FALSE(RefreshHandler()->IsStockCategoryRefreshed());
+}
+
+HWTEST_F(BmsDualModeInstallTest, IsStockCategoryRefreshed_0200, Function | SmallTest | Level0)
+{
+    // marker key present -> true (any value counts: GetBmsParam only fails when the key is absent)
+    ClearStockCategoryMarker();
+    ASSERT_TRUE(EnsureBmsParam()->SaveBmsParam(STOCK_CATEGORY_MARKER, "true"));
+    EXPECT_TRUE(RefreshHandler()->IsStockCategoryRefreshed());
+    ClearStockCategoryMarker();
+}
+
+HWTEST_F(BmsDualModeInstallTest, IsStockCategoryRefreshed_NullBmsParam_0300, Function | SmallTest | Level0)
+{
+    // bmsParam_ null (service not Init()ed) -> defensive false; restored afterwards
+    auto service = DelayedSingleton<BundleMgrService>::GetInstance();
+    auto saved = service->bmsParam_;
+    service->bmsParam_ = nullptr;
+    EXPECT_FALSE(RefreshHandler()->IsStockCategoryRefreshed());
+    service->bmsParam_ = saved;
+}
+
+HWTEST_F(BmsDualModeInstallTest, SaveStockCategoryRefreshedFlag_0100, Function | SmallTest | Level0)
+{
+    // save succeeds (mock) -> true, and the round trip IsStockCategoryRefreshed observes it
+    ClearStockCategoryMarker();
+    EXPECT_TRUE(RefreshHandler()->SaveStockCategoryRefreshedFlag());
+    EXPECT_TRUE(RefreshHandler()->IsStockCategoryRefreshed());
+    ClearStockCategoryMarker();
+}
+
+HWTEST_F(BmsDualModeInstallTest, SaveStockCategoryRefreshedFlag_NullBmsParam_0200, Function | SmallTest | Level0)
+{
+    // bmsPara null -> defensive false; restored afterwards
+    auto service = DelayedSingleton<BundleMgrService>::GetInstance();
+    auto saved = service->bmsParam_;
+    service->bmsParam_ = nullptr;
+    EXPECT_FALSE(RefreshHandler()->SaveStockCategoryRefreshedFlag());
+    service->bmsParam_ = saved;
+}
+
+// ====================== BMSEventHandler::ProcessRefreshStockAppCategory ======================
+// Each case wires service->dataMgr_ / bmsParam_ / the DualModeHelper cache first (the detached
+// thread re-reads the singleton). "Must NOT run" cases hold their gate open for the whole case, so
+// assertions hold under any scheduling; the settle wait only covers thread startup.
+
+HWTEST_F(BmsDualModeInstallTest, ProcessRefreshStockAppCategory_NullDataMgr_0100, Function | SmallTest | Level0)
+{
+    // dataMgr null -> thread exits at the first guard; nothing refreshed, marker untouched
+    ClearStockCategoryMarker();
+    auto service = DelayedSingleton<BundleMgrService>::GetInstance();
+    auto saved = service->dataMgr_;
+    service->dataMgr_ = nullptr;
+    RefreshHandler()->ProcessRefreshStockAppCategory();
+    std::this_thread::sleep_for(std::chrono::milliseconds(REFRESH_SETTLE_MS));
+    EXPECT_FALSE(RefreshHandler()->IsStockCategoryRefreshed());
+    service->dataMgr_ = saved;
+    ClearStockCategoryMarker();
+}
+
+HWTEST_F(BmsDualModeInstallTest, ProcessRefreshStockAppCategory_NonDualMode_0200, Function | SmallTest | Level0)
+{
+    // not a dual-mode device (SetUp cleared the cache) -> fast-path gate returns before the preset
+    // map is even built; pending app untouched and marker NOT set (a later single->dual OTA retriggers)
+    ClearStockCategoryMarker();
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    InnerBundleInfo pending = MakeNamedInfo("com.example.refresh.pending");
+    pending.SetIsPreInstallApp(true);
+    pending.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::UNSPECIFIED);
+    dataMgr->bundleInfos_["com.example.refresh.pending"] = pending;
+    auto service = DelayedSingleton<BundleMgrService>::GetInstance();
+    auto saved = service->dataMgr_;
+    service->dataMgr_ = dataMgr;
+
+    RefreshHandler()->ProcessRefreshStockAppCategory();
+    std::this_thread::sleep_for(std::chrono::milliseconds(REFRESH_SETTLE_MS));
+    EXPECT_EQ(dataMgr->bundleInfos_["com.example.refresh.pending"].GetDeviceModeDistributionPolicy(),
+        DeviceModeDistributionPolicy::UNSPECIFIED);  // untouched
+    EXPECT_FALSE(RefreshHandler()->IsStockCategoryRefreshed());
+
+    service->dataMgr_ = saved;
+    ClearStockCategoryMarker();
+}
+
+HWTEST_F(BmsDualModeInstallTest, ProcessRefreshStockAppCategory_MarkerAlreadySet_0300, Function | SmallTest | Level0)
+{
+    // dual-mode device but the pass already completed (marker set) -> gate returns; pending app
+    // untouched (idempotence across reboots)
+    EnableSecondaryMode();
+    ClearStockCategoryMarker();
+    ASSERT_TRUE(EnsureBmsParam()->SaveBmsParam(STOCK_CATEGORY_MARKER, "true"));
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    InnerBundleInfo pending = MakeNamedInfo("com.example.refresh.pending");
+    pending.SetIsPreInstallApp(true);
+    pending.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::UNSPECIFIED);
+    dataMgr->bundleInfos_["com.example.refresh.pending"] = pending;
+    auto service = DelayedSingleton<BundleMgrService>::GetInstance();
+    auto saved = service->dataMgr_;
+    service->dataMgr_ = dataMgr;
+
+    RefreshHandler()->ProcessRefreshStockAppCategory();
+    std::this_thread::sleep_for(std::chrono::milliseconds(REFRESH_SETTLE_MS));
+    EXPECT_EQ(dataMgr->bundleInfos_["com.example.refresh.pending"].GetDeviceModeDistributionPolicy(),
+        DeviceModeDistributionPolicy::UNSPECIFIED);  // untouched
+    EXPECT_TRUE(RefreshHandler()->IsStockCategoryRefreshed());  // marker still set
+
+    service->dataMgr_ = saved;
+    ClearStockCategoryMarker();
+}
+
+// ====================== DualModeHelper::RefreshStockAppCategories (driver) ==================
+// Drives the OTA refresh loop with injected marker funcs + erms lambda (no BmsParam / real erms).
+
+// Non-dual-mode device -> no-op (no apps touched, marker not set).
+HWTEST_F(BmsDualModeInstallTest, Refresh_NonDualModeDevice_NoOp_0100, Function | SmallTest | Level0)
+{
+    // SetUp() cleared the cache -> not a dual-mode device.
+    auto dataMgr = MakeRefreshDataMgr();
+    InnerBundleInfo info = MakeInfoWithDeviceTypes({ "tablet" });
+    info.SetIsPreInstallApp(true);
+    info.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::UNSPECIFIED);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = info;
+    bool markerSet = false;
+    DualModeHelper::RefreshStockAppCategories(*dataMgr,
+        [&]() { return markerSet; }, [&]() { markerSet = true; },
+        [](const std::string &, const std::string &, const std::string &) -> DeviceModeDistributionPolicy {
+            return DeviceModeDistributionPolicy::MAIN_ONLY;
+        });
+    EXPECT_EQ(dataMgr->bundleInfos_[BUNDLE_NAME].GetDeviceModeDistributionPolicy(),
+        DeviceModeDistributionPolicy::UNSPECIFIED);
+    EXPECT_FALSE(markerSet);
+}
+
+// Dual-mode + marker already set -> no-op (skip whole pass).
+HWTEST_F(BmsDualModeInstallTest, Refresh_MarkerSet_NoOp_0200, Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();  // dual-mode device
+    auto dataMgr = MakeRefreshDataMgr();
+    InnerBundleInfo info = MakeInfoWithDeviceTypes({ "tablet" });
+    info.SetIsPreInstallApp(true);
+    info.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::UNSPECIFIED);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = info;
+    DualModeHelper::RefreshStockAppCategories(*dataMgr,
+        []() { return true; }, []() {},  // marker already set
+        ErmsAlwaysMiss());
+    EXPECT_EQ(dataMgr->bundleInfos_[BUNDLE_NAME].GetDeviceModeDistributionPolicy(),
+        DeviceModeDistributionPolicy::UNSPECIFIED);
+}
+
+// Dual-mode, fresh, preinstall + erms hit -> persist real policy + set marker.
+HWTEST_F(BmsDualModeInstallTest, Refresh_PreInstallErmsHit_Persist_SetMarker_0300, Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    auto dataMgr = MakeRefreshDataMgr();
+    InnerBundleInfo info = MakeInfoWithDeviceTypes({ "tablet" });
+    info.SetIsPreInstallApp(true);
+    info.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::UNSPECIFIED);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = info;
+    bool markerSet = false;
+    DualModeHelper::RefreshStockAppCategories(*dataMgr,
+        [&]() { return markerSet; }, [&]() { markerSet = true; },
+        [](const std::string &, const std::string &, const std::string &) -> DeviceModeDistributionPolicy {
+            return DeviceModeDistributionPolicy::MAIN_ONLY;  // erms hit
+        });
+    EXPECT_EQ(dataMgr->bundleInfos_[BUNDLE_NAME].GetDeviceModeDistributionPolicy(),
+        DeviceModeDistributionPolicy::MAIN_ONLY);
+    EXPECT_TRUE(markerSet);
+}
+
+// Dual-mode, fresh, preinstall + erms miss (erms unavailable) -> resolves the default 0, which is
+// NOT persisted (value-equals the never-touched default), marker set.
+HWTEST_F(BmsDualModeInstallTest, Refresh_PreInstallErmsMiss_Default_SetMarker_0400, Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    auto storage = std::make_shared<RecordingDataStorage>();
+    dataMgr->dataStorage_ = storage;
+    InnerBundleInfo info = MakeInfoWithDeviceTypes({ "tablet" });
+    info.SetIsPreInstallApp(true);
+    info.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::UNSPECIFIED);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = info;
+    bool markerSet = false;
+    DualModeHelper::RefreshStockAppCategories(*dataMgr,
+        [&]() { return markerSet; }, [&]() { markerSet = true; },
+        ErmsAlwaysMiss());
+    EXPECT_EQ(dataMgr->bundleInfos_[BUNDLE_NAME].GetDeviceModeDistributionPolicy(),
+        DeviceModeDistributionPolicy::UNSPECIFIED);  // erms miss -> default 0, memory untouched
+    EXPECT_EQ(storage->savedNames.size(), 0u);  // default resolution -> NO persist at all
+    EXPECT_TRUE(markerSet);
+}
+
+// Dual-mode, fresh, other app (non-preinstall, app_gallery) -> default 0 resolved but NOT
+// persisted, erms NOT called, marker set (decided default is not a failure).
+HWTEST_F(BmsDualModeInstallTest, Refresh_OtherApp_Default_NoErms_SetMarker_0500, Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    auto storage = std::make_shared<RecordingDataStorage>();
+    dataMgr->dataStorage_ = storage;
+    InnerBundleInfo info = MakeInfoWithDeviceTypes({ "tablet" });
+    info.SetIsPreInstallApp(false);
+    info.SetAppDistributionType(Constants::APP_DISTRIBUTION_TYPE_APP_GALLERY);
+    info.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::UNSPECIFIED);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = info;
+    bool markerSet = false;
+    bool ermsCalled = false;
+    DualModeHelper::RefreshStockAppCategories(*dataMgr,
+        [&]() { return markerSet; }, [&]() { markerSet = true; },
+        [&](const std::string &, const std::string &, const std::string &) -> DeviceModeDistributionPolicy {
+            ermsCalled = true;
+            return DeviceModeDistributionPolicy::MAIN_ONLY;
+        });
+    EXPECT_EQ(dataMgr->bundleInfos_[BUNDLE_NAME].GetDeviceModeDistributionPolicy(),
+        DeviceModeDistributionPolicy::UNSPECIFIED);  // default 0, not overwritten by a real policy
+    EXPECT_FALSE(ermsCalled);  // other app must NOT trigger erms (performance)
+    EXPECT_EQ(storage->savedNames.size(), 0u);  // default resolution -> NO persist at all
+    EXPECT_TRUE(markerSet);
+}
+
+// Resume after interrupt: marker unset, one app already has a real policy (skipped), one
+// preinstall+erms-hit still UNSPECIFIED -> only the latter is persisted, then marker set.
+HWTEST_F(BmsDualModeInstallTest, Refresh_Resume_AfterInterrupt_0600, Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    auto dataMgr = MakeRefreshDataMgr();
+    InnerBundleInfo done = MakeInfoWithDeviceTypes({ "tablet" });
+    done.SetIsPreInstallApp(true);
+    done.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::MAIN_ONLY);  // already refreshed
+    InnerBundleInfo todo = MakeInfoWithDeviceTypes({ "tablet" });
+    todo.SetIsPreInstallApp(true);
+    todo.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::UNSPECIFIED);  // still pending
+    dataMgr->bundleInfos_["com.example.done"] = done;
+    dataMgr->bundleInfos_["com.example.todo"] = todo;
+    bool markerSet = false;
+    DualModeHelper::RefreshStockAppCategories(*dataMgr,
+        [&]() { return markerSet; }, [&]() { markerSet = true; },
+        [](const std::string &, const std::string &, const std::string &) -> DeviceModeDistributionPolicy {
+            return DeviceModeDistributionPolicy::MAIN_ONLY;
+        });
+    EXPECT_EQ(dataMgr->bundleInfos_["com.example.done"].GetDeviceModeDistributionPolicy(),
+        DeviceModeDistributionPolicy::MAIN_ONLY);  // untouched
+    EXPECT_EQ(dataMgr->bundleInfos_["com.example.todo"].GetDeviceModeDistributionPolicy(),
+        DeviceModeDistributionPolicy::MAIN_ONLY);  // refreshed this boot
+    EXPECT_TRUE(markerSet);
+}
+
+// Persist failure -> marker NOT set (will retry next reboot).
+HWTEST_F(BmsDualModeInstallTest, Refresh_PersistFail_MarkerNotSet_0700, Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    dataMgr->dataStorage_ = std::make_shared<FailingDataStorage>();  // persist always fails
+    InnerBundleInfo info = MakeInfoWithDeviceTypes({ "tablet" });
+    info.SetIsPreInstallApp(true);
+    info.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::UNSPECIFIED);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = info;
+    bool markerSet = false;
+    DualModeHelper::RefreshStockAppCategories(*dataMgr,
+        [&]() { return markerSet; }, [&]() { markerSet = true; },
+        [](const std::string &, const std::string &, const std::string &) -> DeviceModeDistributionPolicy {
+            return DeviceModeDistributionPolicy::MAIN_ONLY;  // erms hit, but persist fails
+        });
+    EXPECT_FALSE(markerSet);  // persist failed -> marker NOT set -> retries next boot
+}
+
+// Null marker funcs: isMarkerSet=null proceeds with the refresh (guard is `isMarkerSet && ...`);
+// markDone=null on an all-Ok pass must not crash (guarded by `allOk && markDone`).
+HWTEST_F(BmsDualModeInstallTest, Refresh_NullMarkerFuncs_0800, Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    auto dataMgr = MakeRefreshDataMgr();
+    InnerBundleInfo info = MakeInfoWithDeviceTypes({ "tablet" });
+    info.SetIsPreInstallApp(true);
+    info.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::UNSPECIFIED);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = info;
+    DualModeHelper::RefreshStockAppCategories(*dataMgr,
+        nullptr, nullptr,  // both marker funcs null
+        [](const std::string &, const std::string &, const std::string &) -> DeviceModeDistributionPolicy {
+            return DeviceModeDistributionPolicy::MAIN_ONLY;
+        });
+    // refresh ran to completion despite the null marker funcs
+    EXPECT_EQ(dataMgr->bundleInfos_[BUNDLE_NAME].GetDeviceModeDistributionPolicy(),
+        DeviceModeDistributionPolicy::MAIN_ONLY);
+}
+
+// App vanished before its Fetch (empty-string map key: GetAllBundleName yields it, FetchInnerBundleInfo
+// rejects it) -> skipped WITHOUT failing allOk, so the pass still completes and sets the marker.
+HWTEST_F(BmsDualModeInstallTest, Refresh_VanishedApp_EmptyKey_Skipped_0900, Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    auto dataMgr = MakeRefreshDataMgr();
+    dataMgr->bundleInfos_[""] = MakeInfoWithDeviceTypes({ "tablet" });  // "vanished" entry
+    InnerBundleInfo pending = MakeInfoWithDeviceTypes({ "tablet" });
+    pending.SetIsPreInstallApp(true);
+    pending.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::UNSPECIFIED);
+    dataMgr->bundleInfos_["com.example.pending"] = pending;
+    bool markerSet = false;
+    DualModeHelper::RefreshStockAppCategories(*dataMgr,
+        [&]() { return markerSet; }, [&]() { markerSet = true; },
+        [](const std::string &, const std::string &, const std::string &) -> DeviceModeDistributionPolicy {
+            return DeviceModeDistributionPolicy::MAIN_ONLY;
+        });
+    EXPECT_EQ(dataMgr->bundleInfos_["com.example.pending"].GetDeviceModeDistributionPolicy(),
+        DeviceModeDistributionPolicy::MAIN_ONLY);  // healthy app still refreshed
+    EXPECT_TRUE(markerSet);  // vanished app is terminal, NOT a refresh failure
+}
+
+// Persist contract (decided 2026-08-29): only NON-default resolutions are persisted; default (0)
+// resolutions for erms misses / non-eligible apps are value-equal to the untouched default and are
+// skipped. Driven with a RecordingDataStorage so the persist/no-persist split is observable;
+// already-categorized apps are not re-saved.
+HWTEST_F(BmsDualModeInstallTest, Refresh_OnlyNonDefaultPersisted_1000, Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    auto storage = std::make_shared<RecordingDataStorage>();
+    dataMgr->dataStorage_ = storage;
+
+    InnerBundleInfo preMiss = MakeNamedInfo("com.example.preinstall.miss");
+    preMiss.SetIsPreInstallApp(true);
+    preMiss.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::UNSPECIFIED);
+    dataMgr->bundleInfos_["com.example.preinstall.miss"] = preMiss;
+
+    InnerBundleInfo preHit = MakeNamedInfo("com.example.preinstall.hit");
+    preHit.SetIsPreInstallApp(true);
+    preHit.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::UNSPECIFIED);
+    dataMgr->bundleInfos_["com.example.preinstall.hit"] = preHit;
+
+    InnerBundleInfo other = MakeNamedInfo("com.example.other");
+    other.SetIsPreInstallApp(false);
+    other.SetAppDistributionType(Constants::APP_DISTRIBUTION_TYPE_APP_GALLERY);
+    other.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::UNSPECIFIED);
+    dataMgr->bundleInfos_["com.example.other"] = other;
+
+    InnerBundleInfo done = MakeNamedInfo("com.example.done");
+    done.SetIsPreInstallApp(true);
+    done.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::MAIN_ONLY);  // already set
+    dataMgr->bundleInfos_["com.example.done"] = done;
+
+    bool markerSet = false;
+    DualModeHelper::RefreshStockAppCategories(*dataMgr,
+        [&]() { return markerSet; }, [&]() { markerSet = true; },
+        [](const std::string &bundleName, const std::string &, const std::string &) ->
+            DeviceModeDistributionPolicy {
+            return bundleName == "com.example.preinstall.hit"
+                ? DeviceModeDistributionPolicy::SUB_ONLY      // erms hit
+                : DeviceModeDistributionPolicy::UNSPECIFIED;  // erms miss
+        });
+
+    // hit -> erms value persisted; miss & other -> default resolved, NOT persisted; done -> untouched
+    EXPECT_EQ(dataMgr->bundleInfos_["com.example.preinstall.hit"].GetDeviceModeDistributionPolicy(),
+        DeviceModeDistributionPolicy::SUB_ONLY);
+    EXPECT_EQ(dataMgr->bundleInfos_["com.example.preinstall.miss"].GetDeviceModeDistributionPolicy(),
+        DeviceModeDistributionPolicy::UNSPECIFIED);
+    EXPECT_EQ(dataMgr->bundleInfos_["com.example.other"].GetDeviceModeDistributionPolicy(),
+        DeviceModeDistributionPolicy::UNSPECIFIED);
+    EXPECT_EQ(dataMgr->bundleInfos_["com.example.done"].GetDeviceModeDistributionPolicy(),
+        DeviceModeDistributionPolicy::MAIN_ONLY);
+    // exactly the erms-hit app was persisted; miss / other resolved the default and produced no
+    // save at all; the already-categorized app was not re-saved
+    ASSERT_EQ(storage->savedNames.size(), 1u);
+    EXPECT_EQ(storage->savedNames[0], "com.example.preinstall.hit");
+    EXPECT_EQ(storage->savedPolicies[0], DeviceModeDistributionPolicy::SUB_ONLY);
+    EXPECT_TRUE(markerSet);
+}
+
+// Loop scope contract: only bundleInfos_ is iterated (tempBundleInfos_ holds already-categorized
+// apps of the other mode). A temp-only app is never touched by the OTA pass.
+HWTEST_F(BmsDualModeInstallTest, Refresh_TempOnlyApp_NotRefreshed_1100, Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    auto dataMgr = MakeRefreshDataMgr();
+    InnerBundleInfo tempOnly = MakeInfoWithDeviceTypes({ "tablet" });
+    tempOnly.SetIsPreInstallApp(true);
+    tempOnly.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::UNSPECIFIED);
+    dataMgr->tempBundleInfos_["com.example.temponly"] = tempOnly;
+    bool markerSet = false;
+    DualModeHelper::RefreshStockAppCategories(*dataMgr,
+        [&]() { return markerSet; }, [&]() { markerSet = true; },
+        [](const std::string &, const std::string &, const std::string &) -> DeviceModeDistributionPolicy {
+            return DeviceModeDistributionPolicy::MAIN_ONLY;
+        });
+    EXPECT_EQ(dataMgr->tempBundleInfos_["com.example.temponly"].GetDeviceModeDistributionPolicy(),
+        DeviceModeDistributionPolicy::UNSPECIFIED);  // untouched
+    EXPECT_TRUE(markerSet);  // empty bundleInfos_ -> trivially complete
 }
 
 // ====================== ResourceInfo::GetOriginalKey (extensionAbilityType branch, resource_info.cpp:70-72) =====
