@@ -942,42 +942,6 @@ HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_GZipEntity_Destructor_ClosesHandle_0100, Fun
 }
 
 /**
- * @tc.number: APPEXECFWK_LIBZIP_GZipEntity_Destructor_ClosesHandle_0200
- * @tc.name: GZipEntity_Destructor_ClosesHandle_0200
- * @tc.desc: Verify that GZipEntity's destructor properly closes the gzFile handle.
- *           This test uses gzflush directly on the raw handle after entity destruction
- *           to verify the handle is no longer valid.
- */
-HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_GZipEntity_Destructor_ClosesHandle_0200, Function | MediumTest | Level1)
-{
-    const std::string gzPath = "/data/local/tmp/zip_test_gzip_entity_0200.gz";
-    gzFile rawHandle = gzopen(gzPath.c_str(), "wb");
-    ASSERT_NE(rawHandle, nullptr) << "Failed to create gzip file for test";
-
-    const char *testData = "test data";
-    gzwrite(rawHandle, testData, strlen(testData));
-
-    // Store the raw pointer value for later verification
-    gzFile_s *rawPtr = rawHandle;
-
-    {
-        GZipEntity entity;
-        entity.gzs.reset(rawHandle);
-        // entity goes out of scope, should call gzclose(rawPtr)
-    }
-
-    // After GZipEntity destruction, the handle should be closed.
-    // Attempting gzflush on a closed handle should fail.
-    // Note: This is undefined behavior in general, but in practice gzflush
-    // will return an error code for closed/invalid handles.
-    int flushResult = gzflush(rawPtr, Z_FINISH);
-    EXPECT_NE(flushResult, Z_OK) << "gzflush should fail on closed handle";
-
-    // Clean up test file
-    remove(gzPath.c_str());
-}
-
-/**
  * @tc.number: APPEXECFWK_LIBZIP_GZipEntity_NullHandle_NoCrash_0300
  * @tc.name: GZipEntity_NullHandle_NoCrash_0300
  * @tc.desc: Verify that GZipEntity with null handle does not crash on destruction.
