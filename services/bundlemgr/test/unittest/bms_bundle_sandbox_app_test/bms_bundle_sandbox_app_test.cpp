@@ -54,7 +54,7 @@ const std::string BUNDLE_NAME_TEST = "com.sandbox.test";
 int32_t INVALID_DLP_TYPE = 0;
 int32_t DLP_TYPE_1 = 1;
 int32_t DLP_TYPE_2 = 2;
-int32_t DLP_TYPE_5 = 5;
+int32_t DLP_TYPE_7 = 7;
 int32_t INVALID_APP_INDEX = 0;
 int32_t APP_INDEX_1 = Constants::INITIAL_SANDBOX_APP_INDEX + 1;
 int32_t APP_INDEX_2 = Constants::INITIAL_SANDBOX_APP_INDEX + 2;
@@ -443,7 +443,7 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_0300, Function | SmallTest 
     EXPECT_EQ(installRes, ERR_OK);
 
     int32_t appIndex = 0;
-    auto ret = InstallSandboxApp(BUNDLE_NAME, DLP_TYPE_5, USERID, appIndex);
+    auto ret = InstallSandboxApp(BUNDLE_NAME, DLP_TYPE_7, USERID, appIndex);
     EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
 
     auto uninstallRes = UninstallBundle(BUNDLE_NAME);
