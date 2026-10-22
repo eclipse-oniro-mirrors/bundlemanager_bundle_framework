@@ -45,7 +45,7 @@ std::mutex g_mutex;
 DlopenMode g_dlopenMode = DlopenMode::REAL;
 std::string g_missingSymbol;
 void *g_mockLibHandle = nullptr;
-const char *g_pendingError = nullptr;
+std::string g_pendingError;
 std::atomic<int32_t> g_dlopenCount { 0 };
 std::atomic<int32_t> g_dlcloseCount { 0 };
 
@@ -127,7 +127,7 @@ void ResetDlHooks()
     g_dlopenMode = DlopenMode::REAL;
     g_missingSymbol.clear();
     g_mockLibHandle = nullptr;
-    g_pendingError = nullptr;
+    g_pendingError.clear();
     g_dlopenCount.store(0);
     g_dlcloseCount.store(0);
 }
@@ -172,11 +172,12 @@ int HookDlclose(void *handle)
 
 char *HookDlerror()
 {
+    static std::string error;
     std::lock_guard<std::mutex> lock(g_mutex);
-    if (g_pendingError != nullptr) {
-        const char *error = g_pendingError;
-        g_pendingError = nullptr;
-        return const_cast<char *>(error);
+    if (!g_pendingError.empty()) {
+        error = g_pendingError;
+        g_pendingError.clear();
+        return error.data();
     }
     return dlerror();
 }

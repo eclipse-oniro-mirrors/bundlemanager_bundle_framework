@@ -128,8 +128,7 @@ __attribute__((no_sanitize("cfi"))) void ZstdWrapper::FreeDStreamDeleter(ZstdDSt
     (void)GetInstance().api_.freeDStream(zds);
 }
 
-__attribute__((no_sanitize("cfi")))
-std::unique_ptr<ZstdDStream, void (*)(ZstdDStream *)> ZstdWrapper::CreateDStream()
+__attribute__((no_sanitize("cfi"))) std::unique_ptr<ZstdDStream, void (*)(ZstdDStream *)> ZstdWrapper::CreateDStream()
 {
     return {api_.createDStream(), FreeDStreamDeleter};
 }

@@ -209,8 +209,8 @@ bool StepBlockData(MockDStream &stream, ZstdOutBuffer &output, ZstdInBuffer &inp
 {
     size_t len = std::min({ stream.blockRemaining, input.size - input.pos, output.size - output.pos });
     if (len > 0) {
-        std::memcpy(static_cast<uint8_t *>(output.dst) + output.pos,
-            static_cast<const uint8_t *>(input.src) + input.pos, len);
+        std::copy_n(static_cast<const uint8_t *>(input.src) + input.pos, len,
+            static_cast<uint8_t *>(output.dst) + output.pos);
         input.pos += len;
         output.pos += len;
         stream.blockRemaining -= len;
