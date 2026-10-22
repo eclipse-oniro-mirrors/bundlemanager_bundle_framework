@@ -245,7 +245,6 @@ bool ModuleMetadata::Marshalling(Parcel &parcel) const
 {
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(moduleName));
     int32_t metadataSize = static_cast<int32_t>(metadata.size());
-    CONTAINER_SECURITY_VERIFY(parcel, metadataSize, &metadata);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, metadataSize);
     for (const auto &item : metadata) {
         if (!parcel.WriteParcelable(&item)) {

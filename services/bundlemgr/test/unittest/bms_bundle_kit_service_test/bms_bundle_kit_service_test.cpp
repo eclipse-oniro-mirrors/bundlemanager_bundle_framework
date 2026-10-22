@@ -6546,6 +6546,53 @@ HWTEST_F(BmsBundleKitServiceTest, ModuleMetadata_Marshalling_0300, Function | Sm
 }
 
 /**
+ * @tc.number: ModuleMetadata_Marshalling_0400
+ * @tc.name: ModuleMetadata Marshalling boundary items
+ * @tc.desc: 1.system run normally
+ *           2.test ModuleMetadata Marshalling with item count larger than moduleName bytes
+ */
+HWTEST_F(BmsBundleKitServiceTest, ModuleMetadata_Marshalling_0400, Function | SmallTest | Level1)
+{
+    ModuleMetadata moduleMetadata;
+    moduleMetadata.moduleName = MODULE_NAME_TEST;
+    constexpr int32_t metadataSize = 100; // larger than bytes of serialized moduleName (72 for MODULE_NAME_TEST)
+    for (int32_t i = 0; i < metadataSize; ++i) {
+        moduleMetadata.metadata.push_back(Metadata("name" + std::to_string(i), "value", "resource"));
+    }
+    MessageParcel parcel;
+    EXPECT_EQ(moduleMetadata.Marshalling(parcel), true);
+    std::unique_ptr<ModuleMetadata> result(ModuleMetadata::Unmarshalling(parcel));
+    ASSERT_NE(result, nullptr);
+    EXPECT_EQ(result->moduleName, MODULE_NAME_TEST);
+    ASSERT_EQ(static_cast<int32_t>(result->metadata.size()), metadataSize);
+    EXPECT_EQ(result->metadata[0].name, "name0");
+    EXPECT_EQ(result->metadata[metadataSize - 1].name, "name99");
+}
+
+/**
+ * @tc.number: ModuleMetadata_Marshalling_0500
+ * @tc.name: ModuleMetadata Marshalling large items
+ * @tc.desc: 1.system run normally
+ *           2.test ModuleMetadata Marshalling with 540 metadata items
+ */
+HWTEST_F(BmsBundleKitServiceTest, ModuleMetadata_Marshalling_0500, Function | SmallTest | Level1)
+{
+    ModuleMetadata moduleMetadata;
+    moduleMetadata.moduleName = MODULE_NAME_TEST;
+    constexpr int32_t metadataSize = 540;
+    for (int32_t i = 0; i < metadataSize; ++i) {
+        moduleMetadata.metadata.push_back(Metadata("name" + std::to_string(i), "value", "resource"));
+    }
+    MessageParcel parcel;
+    EXPECT_EQ(moduleMetadata.Marshalling(parcel), true);
+    std::unique_ptr<ModuleMetadata> result(ModuleMetadata::Unmarshalling(parcel));
+    ASSERT_NE(result, nullptr);
+    EXPECT_EQ(result->moduleName, MODULE_NAME_TEST);
+    ASSERT_EQ(static_cast<int32_t>(result->metadata.size()), metadataSize);
+    EXPECT_EQ(result->metadata[metadataSize - 1].name, "name539");
+}
+
+/**
  * @tc.number: ModuleMetadata_ReadFromParcel_0100
  * @tc.name: ModuleMetadata ReadFromParcel negative size
  * @tc.desc: 1.system run normally
