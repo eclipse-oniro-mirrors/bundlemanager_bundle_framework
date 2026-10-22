@@ -1238,16 +1238,20 @@ HWTEST_F(BmsSpmManagerOnTest, UpdateToken_Failure_0001, Function | MediumTest | 
 /**
  * @tc.number: BmsSpmManagerOnTest.CheckSignAndInitSession_SkipResign_0001
  * @tc.name: CheckSignAndInitSession with skipEnterpriseResign
- * @tc.desc: The skipEnterpriseResign flag is consumed in the ON path via the
- *           userId == -1 contract (hapList.userIdForEnterpriseSign tells the AT side to skip the
- *           enterprise resign verification); without the flag the real userId
- *           is passed through. A non-empty hap list is required to reach the AT
- *           call (the empty list fails closed), and the mock's empty trusted
- *           list then fails the 1:1 count check, so the session creation fails
- *           overall — the userId contract is still pinned through the mock's
- *           recorded last-user-id. The uncommitted session rides back with the
- *           return value; the next move-assignment (or the destructor) performs
- *           the deferred rollback.
+ * @tc.desc: The skipEnterpriseResign flag must NOT alter the userId
+ *           forwarded to the AT side: the resign block crypto verification
+ *           runs with the real userId with or without the permission (the
+ *           AT side maps userIdForEnterpriseSign == -1 to an EMPTY cert dir,
+ *           which does not skip the block check — it makes every
+ *           block-carrying hap fail 8522695), so the flag only exempts the
+ *           local CheckEnterpriseResign policy gate. A non-empty hap list is
+ *           required to reach the AT call (the empty list fails closed), and
+ *           the mock's empty trusted list then fails the 1:1 count check, so
+ *           the session creation fails overall — the userId contract is
+ *           still pinned through the mock's recorded last-user-id. The
+ *           uncommitted session rides back with the return value; the next
+ *           move-assignment (or the destructor) performs the deferred
+ *           rollback.
  */
 HWTEST_F(BmsSpmManagerOnTest, CheckSignAndInitSession_SkipResign_0001, Function | MediumTest | Level1)
 {
@@ -1259,8 +1263,10 @@ HWTEST_F(BmsSpmManagerOnTest, CheckSignAndInitSession_SkipResign_0001, Function 
         TEST_USERID, {"/data/test/one.hap"}, false, checker, errCode, true, true);
     EXPECT_EQ(errCode, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
     EXPECT_TRUE(session.IsActive());
-    // The cross-process contract: skipEnterpriseResign is carried as userId == -1.
-    EXPECT_EQ(OHOS::Security::AccessToken::g_spmCheckHapSignInfoLastUserId, -1);
+    // With the flag the SAME real userId is forwarded: the AT-side crypto
+    // gate (resign block vs local cert dir) must run identically with or
+    // without the skip permission.
+    EXPECT_EQ(OHOS::Security::AccessToken::g_spmCheckHapSignInfoLastUserId, TEST_USERID);
 
     // Without the flag the real userId is passed through unchanged; the
     // move-assignment below rolls the first uncommitted session back first.
