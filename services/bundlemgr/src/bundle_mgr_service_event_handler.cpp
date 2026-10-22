@@ -598,8 +598,8 @@ void BMSEventHandler::BundleRebootStartEvent()
     }
 #endif
     if (IsSystemUpgrade()) {
-        ProcessAccessTokenMigration();
         EventReport::SendCpuSceneEvent(FOUNDATION_PROCESS_NAME, SCENE_ID_OTA_INSTALL);
+        ProcessAccessTokenMigration();
         OnBundleRebootStart();
         HandlePreInstallException(false);
         HandleOTACodeEncryption();
