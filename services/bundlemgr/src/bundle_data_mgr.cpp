@@ -9057,6 +9057,7 @@ bool BundleDataMgr::InnerProcessShortcutId(const int64_t updateTime,
 ErrCode BundleDataMgr::GetShortcutInfoV9(
     const std::string &bundleName, int32_t userId, std::vector<ShortcutInfo> &shortcutInfos) const
 {
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
         APP_LOGW("input invalid userid, bundleName:%{public}s, userId:%{public}d", bundleName.c_str(), userId);
@@ -15321,14 +15322,30 @@ ErrCode BundleDataMgr::AddDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, 
         APP_LOGW("Input invalid userid, userId:%{public}d", userId);
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
+    if (shortcutInfo.bundleName.empty()) {
+        APP_LOGW("bundleName is empty");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
     bool isEnabled = false;
     ErrCode ret = IsApplicationEnabled(shortcutInfo.bundleName, shortcutInfo.appIndex, isEnabled, userId);
     if (ret != ERR_OK) {
-        APP_LOGD("IsApplicationEnabled ret:%{public}d, bundleName:%{public}s, appIndex:%{public}d, userId:%{public}d",
-            ret, shortcutInfo.bundleName.c_str(), shortcutInfo.appIndex, userId);
-        return ret;
-    }
-    if (!isEnabled) {
+        if (ret == ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST && BundleUtil::IsVmEnabled()) {
+            // Lake app: bundle not installed locally, managed by BMSExt.
+            // Skip isEnabled check since local bundle info is unavailable.
+            // Caller permission is already verified at HostImpl layer:
+            //   1. IsSystemApp() ensures only system apps can call this API.
+            //   2. VerifyCallingPermissionForAll(PERMISSION_MANAGER_SHORTCUT) ensures
+            //      the caller holds the required shortcut permission.
+            // BMSExt ownership verification is not required here because shortcut write
+            // operations are idempotent and BMSExt reconciles state on next sync.
+            APP_LOGD("Bundle not exist locally, skip enabled check for lake app, bundleName:%{public}s",
+                shortcutInfo.bundleName.c_str());
+        } else {
+            APP_LOGD("IsApplicationEnabled ret:%{public}d, bundleName:%{public}s, appIndex:%{public}d, userId:%{public}d",
+                ret, shortcutInfo.bundleName.c_str(), shortcutInfo.appIndex, userId);
+            return ret;
+        }
+    } else if (!isEnabled) {
         APP_LOGD("BundleName: %{public}s is disabled, appIndex:%{public}d, userId:%{public}d",
             shortcutInfo.bundleName.c_str(), shortcutInfo.appIndex, userId);
         return ERR_BUNDLE_MANAGER_APPLICATION_DISABLED;

@@ -90,9 +90,11 @@ const nlohmann::json EXTENSIONS_JSON_5 = R"(
 }
 )"_json;
 enum {
-    BMS_BROKER_ERR_INSTALL_FAILED = 8585217,
-    BMS_BROKER_ERR_UNINSTALL_FAILED = 8585218,
+    ERR_BUNDLE_MANAGER_EXTENSION_INVALID_PARAM = 8585217,
+    ERR_BUNDLE_MANAGER_EXTENSION_PERMISSION_DENIED = 8585218,
+    ERR_BUNDLE_MANAGER_EXTENSION_INVALID_USER_ID = 8585605,
 };
+constexpr int32_t MAX_USERID_LIMIT = 1000;
 }  // namespace
 
 class BmsExtensionDataMgrTest : public testing::Test {
@@ -124,6 +126,8 @@ public:
     bool IsTargetApp(const std::string &bundleName, const std::string &appIdentifier) override;
     bool IsTargetAppTest(const std::string &bundleName, const std::string &appIdentifier);
     bool BmsIsTargetAppTest(const std::string& bundleName, const std::string& appIdentifier);
+    ErrCode GetShortcutInfos(const std::string &bundleName, int32_t userId,
+        std::vector<ShortcutInfo> &shortcutInfos) override;
 };
 
 std::shared_ptr<BundleMgrService> BmsExtensionDataMgrTest::bundleMgrService_ =
@@ -230,6 +234,24 @@ std::string BundleMgrExtTest::GetCompatibleDeviceType(const std::string& bundleN
 ErrCode BundleMgrExtTest::BatchGetCompatibleDeviceType(
     const std::vector<std::string> &bundleNames, std::vector<BundleCompatibleDeviceType> &compatibleDeviceTypes)
 {
+    return ERR_OK;
+}
+
+ErrCode BundleMgrExtTest::GetShortcutInfos(const std::string &bundleName, int32_t userId,
+    std::vector<ShortcutInfo> &shortcutInfos)
+{
+    if (bundleName.empty()) {
+        return ERR_BUNDLE_MANAGER_EXTENSION_INVALID_PARAM;
+    }
+    if (bundleName == "com.test.permission.denied") {
+        return ERR_BUNDLE_MANAGER_EXTENSION_PERMISSION_DENIED;
+    }
+    if (userId < 0 || userId > MAX_USERID_LIMIT) {
+        return ERR_BUNDLE_MANAGER_EXTENSION_INVALID_USER_ID;
+    }
+    ShortcutInfo info;
+    info.bundleName = bundleName;
+    shortcutInfos.emplace_back(info);
     return ERR_OK;
 }
 
@@ -415,8 +437,8 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0011, Function | SmallTest
 #if defined(USE_EXTENSION_DATA) && defined(CONTAIN_BROKER_CLIENT_ENABLED)
     EXPECT_THAT(res, testing::AnyOf(
         ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
-        BMS_BROKER_ERR_UNINSTALL_FAILED,
-        BMS_BROKER_ERR_INSTALL_FAILED,
+        ERR_BUNDLE_MANAGER_EXTENSION_PERMISSION_DENIED,
+        ERR_BUNDLE_MANAGER_EXTENSION_INVALID_PARAM,
         ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR));
 #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
@@ -435,8 +457,8 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0012, Function | SmallTest
 #if defined(USE_EXTENSION_DATA) && defined(CONTAIN_BROKER_CLIENT_ENABLED)
     EXPECT_THAT(res, testing::AnyOf(
         ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
-        BMS_BROKER_ERR_UNINSTALL_FAILED,
-        BMS_BROKER_ERR_INSTALL_FAILED));
+        ERR_BUNDLE_MANAGER_EXTENSION_PERMISSION_DENIED,
+        ERR_BUNDLE_MANAGER_EXTENSION_INVALID_PARAM));
 #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
 #endif
@@ -454,8 +476,8 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0013, Function | SmallTest
 #if defined(USE_EXTENSION_DATA) && defined(CONTAIN_BROKER_CLIENT_ENABLED)
     EXPECT_THAT(res, testing::AnyOf(
         ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
-        BMS_BROKER_ERR_UNINSTALL_FAILED,
-        BMS_BROKER_ERR_INSTALL_FAILED));
+        ERR_BUNDLE_MANAGER_EXTENSION_PERMISSION_DENIED,
+        ERR_BUNDLE_MANAGER_EXTENSION_INVALID_PARAM));
 #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
 #endif
@@ -488,8 +510,8 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0015, Function | SmallTest
 #if defined(USE_EXTENSION_DATA) && defined(CONTAIN_BROKER_CLIENT_ENABLED)
     EXPECT_THAT(res, testing::AnyOf(
         ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
-        BMS_BROKER_ERR_UNINSTALL_FAILED,
-        BMS_BROKER_ERR_INSTALL_FAILED,
+        ERR_BUNDLE_MANAGER_EXTENSION_PERMISSION_DENIED,
+        ERR_BUNDLE_MANAGER_EXTENSION_INVALID_PARAM,
         ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR));
 #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
@@ -1534,8 +1556,8 @@ HWTEST_F(BmsExtensionDataMgrTest, QueryAbilityInfos_001, Function | SmallTest | 
     #ifdef CONTAIN_BROKER_CLIENT_ENABLED
     EXPECT_THAT(res, testing::AnyOf(
         ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
-        BMS_BROKER_ERR_UNINSTALL_FAILED,
-        BMS_BROKER_ERR_INSTALL_FAILED));
+        ERR_BUNDLE_MANAGER_EXTENSION_PERMISSION_DENIED,
+        ERR_BUNDLE_MANAGER_EXTENSION_INVALID_PARAM));
     #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
     #endif
@@ -1548,8 +1570,8 @@ HWTEST_F(BmsExtensionDataMgrTest, QueryAbilityInfos_001, Function | SmallTest | 
 #if defined(USE_EXTENSION_DATA) && defined(CONTAIN_BROKER_CLIENT_ENABLED)
     EXPECT_THAT(res, testing::AnyOf(
         ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
-        BMS_BROKER_ERR_UNINSTALL_FAILED,
-        BMS_BROKER_ERR_INSTALL_FAILED));
+        ERR_BUNDLE_MANAGER_EXTENSION_PERMISSION_DENIED,
+        ERR_BUNDLE_MANAGER_EXTENSION_INVALID_PARAM));
 #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
 #endif
@@ -1576,8 +1598,8 @@ HWTEST_F(BmsExtensionDataMgrTest, QueryAbilityInfosWithFlag_001, Function | Smal
     #ifdef CONTAIN_BROKER_CLIENT_ENABLED
     EXPECT_THAT(res, testing::AnyOf(
         ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
-        BMS_BROKER_ERR_UNINSTALL_FAILED,
-        BMS_BROKER_ERR_INSTALL_FAILED));
+        ERR_BUNDLE_MANAGER_EXTENSION_PERMISSION_DENIED,
+        ERR_BUNDLE_MANAGER_EXTENSION_INVALID_PARAM));
     #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
     #endif
@@ -1591,8 +1613,8 @@ HWTEST_F(BmsExtensionDataMgrTest, QueryAbilityInfosWithFlag_001, Function | Smal
 #if defined(USE_EXTENSION_DATA) && defined(CONTAIN_BROKER_CLIENT_ENABLED)
     EXPECT_THAT(res, testing::AnyOf(
         ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
-        BMS_BROKER_ERR_UNINSTALL_FAILED,
-        BMS_BROKER_ERR_INSTALL_FAILED));
+        ERR_BUNDLE_MANAGER_EXTENSION_PERMISSION_DENIED,
+        ERR_BUNDLE_MANAGER_EXTENSION_INVALID_PARAM));
 #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
 #endif
@@ -1617,8 +1639,8 @@ HWTEST_F(BmsExtensionDataMgrTest, GetBundleInfos_001, Function | SmallTest | Lev
     #ifdef CONTAIN_BROKER_CLIENT_ENABLED
     EXPECT_THAT(res, testing::AnyOf(
         ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
-        BMS_BROKER_ERR_UNINSTALL_FAILED,
-        BMS_BROKER_ERR_INSTALL_FAILED));
+        ERR_BUNDLE_MANAGER_EXTENSION_PERMISSION_DENIED,
+        ERR_BUNDLE_MANAGER_EXTENSION_INVALID_PARAM));
     #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
     #endif
@@ -1631,8 +1653,8 @@ HWTEST_F(BmsExtensionDataMgrTest, GetBundleInfos_001, Function | SmallTest | Lev
 #if defined(USE_EXTENSION_DATA) && defined(CONTAIN_BROKER_CLIENT_ENABLED)
     EXPECT_THAT(res, testing::AnyOf(
         ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
-        BMS_BROKER_ERR_UNINSTALL_FAILED,
-        BMS_BROKER_ERR_INSTALL_FAILED));
+        ERR_BUNDLE_MANAGER_EXTENSION_PERMISSION_DENIED,
+        ERR_BUNDLE_MANAGER_EXTENSION_INVALID_PARAM));
 #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
 #endif
@@ -1652,8 +1674,8 @@ HWTEST_F(BmsExtensionDataMgrTest, Uninstall_001, Function | SmallTest | Level0)
 #if defined(USE_EXTENSION_DATA) && defined(CONTAIN_BROKER_CLIENT_ENABLED)
     EXPECT_THAT(res, testing::AnyOf(
         ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
-        BMS_BROKER_ERR_UNINSTALL_FAILED,
-        BMS_BROKER_ERR_INSTALL_FAILED));
+        ERR_BUNDLE_MANAGER_EXTENSION_PERMISSION_DENIED,
+        ERR_BUNDLE_MANAGER_EXTENSION_INVALID_PARAM));
 #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
 #endif
@@ -1675,8 +1697,8 @@ HWTEST_F(BmsExtensionDataMgrTest, GetBundleStats_001, Function | SmallTest | Lev
 #if defined(USE_EXTENSION_DATA) && defined(CONTAIN_BROKER_CLIENT_ENABLED)
     EXPECT_THAT(res, testing::AnyOf(
         ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
-        BMS_BROKER_ERR_UNINSTALL_FAILED,
-        BMS_BROKER_ERR_INSTALL_FAILED));
+        ERR_BUNDLE_MANAGER_EXTENSION_PERMISSION_DENIED,
+        ERR_BUNDLE_MANAGER_EXTENSION_INVALID_PARAM));
 #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
 #endif
@@ -1687,8 +1709,8 @@ HWTEST_F(BmsExtensionDataMgrTest, GetBundleStats_001, Function | SmallTest | Lev
 #if defined(USE_EXTENSION_DATA) && defined(CONTAIN_BROKER_CLIENT_ENABLED)
     EXPECT_THAT(res, testing::AnyOf(
         ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
-        BMS_BROKER_ERR_UNINSTALL_FAILED,
-        BMS_BROKER_ERR_INSTALL_FAILED));
+        ERR_BUNDLE_MANAGER_EXTENSION_PERMISSION_DENIED,
+        ERR_BUNDLE_MANAGER_EXTENSION_INVALID_PARAM));
 #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
 #endif
@@ -1709,8 +1731,8 @@ HWTEST_F(BmsExtensionDataMgrTest, ClearData_001, Function | SmallTest | Level0)
 #if defined(USE_EXTENSION_DATA) && defined(CONTAIN_BROKER_CLIENT_ENABLED)
     EXPECT_THAT(res, testing::AnyOf(
         ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
-        BMS_BROKER_ERR_UNINSTALL_FAILED,
-        BMS_BROKER_ERR_INSTALL_FAILED));
+        ERR_BUNDLE_MANAGER_EXTENSION_PERMISSION_DENIED,
+        ERR_BUNDLE_MANAGER_EXTENSION_INVALID_PARAM));
 #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
 #endif
@@ -1721,8 +1743,8 @@ HWTEST_F(BmsExtensionDataMgrTest, ClearData_001, Function | SmallTest | Level0)
 #if defined(USE_EXTENSION_DATA) && defined(CONTAIN_BROKER_CLIENT_ENABLED)
     EXPECT_THAT(res, testing::AnyOf(
         ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
-        BMS_BROKER_ERR_UNINSTALL_FAILED,
-        BMS_BROKER_ERR_INSTALL_FAILED));
+        ERR_BUNDLE_MANAGER_EXTENSION_PERMISSION_DENIED,
+        ERR_BUNDLE_MANAGER_EXTENSION_INVALID_PARAM));
 #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
 #endif
@@ -1744,8 +1766,8 @@ HWTEST_F(BmsExtensionDataMgrTest, ClearCache_001, Function | SmallTest | Level0)
 #if defined(USE_EXTENSION_DATA) && defined(CONTAIN_BROKER_CLIENT_ENABLED)
     EXPECT_THAT(res, testing::AnyOf(
         ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
-        BMS_BROKER_ERR_UNINSTALL_FAILED,
-        BMS_BROKER_ERR_INSTALL_FAILED));
+        ERR_BUNDLE_MANAGER_EXTENSION_PERMISSION_DENIED,
+        ERR_BUNDLE_MANAGER_EXTENSION_INVALID_PARAM));
 #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
 #endif
@@ -1756,8 +1778,8 @@ HWTEST_F(BmsExtensionDataMgrTest, ClearCache_001, Function | SmallTest | Level0)
 #if defined(USE_EXTENSION_DATA) && defined(CONTAIN_BROKER_CLIENT_ENABLED)
     EXPECT_THAT(res, testing::AnyOf(
         ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
-        BMS_BROKER_ERR_UNINSTALL_FAILED,
-        BMS_BROKER_ERR_INSTALL_FAILED));
+        ERR_BUNDLE_MANAGER_EXTENSION_PERMISSION_DENIED,
+        ERR_BUNDLE_MANAGER_EXTENSION_INVALID_PARAM));
 #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
 #endif
@@ -2268,8 +2290,8 @@ HWTEST_F(BmsExtensionDataMgrTest, GetBundleNamesForUidExt_0100, Function | Small
 #if defined(USE_EXTENSION_DATA) && defined(CONTAIN_BROKER_CLIENT_ENABLED)
     EXPECT_THAT(ret, testing::AnyOf(
         ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
-        BMS_BROKER_ERR_UNINSTALL_FAILED,
-        BMS_BROKER_ERR_INSTALL_FAILED,
+        ERR_BUNDLE_MANAGER_EXTENSION_PERMISSION_DENIED,
+        ERR_BUNDLE_MANAGER_EXTENSION_INVALID_PARAM,
         REMOTE_RESULT));
 #else
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
@@ -2563,5 +2585,261 @@ HWTEST_F(BmsExtensionDataMgrTest, RebuildBundleResourceTable_0002, Function | Sm
     BundleMgrExtTest bundleMgrExtTest;
     ErrCode res = bundleMgrExtTest.RebuildBundleResourceTable();
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR);
+}
+
+/**
+ * @tc.number: ConvertShortcutInfosErrCode_0001
+ * @tc.name: ConvertShortcutInfosErrCode with ERR_BUNDLE_MANAGER_EXTENSION_INVALID_PARAM
+ * @tc.desc: test ConvertShortcutInfosErrCode with ERR_BUNDLE_MANAGER_EXTENSION_INVALID_PARAM (8585217),
+ *           triggered by empty bundle name, should return ERR_BUNDLE_MANAGER_PARAM_ERROR
+ */
+HWTEST_F(BmsExtensionDataMgrTest, ConvertShortcutInfosErrCode_0001, Function | SmallTest | Level1)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    ErrCode ret = bmsExtensionDataMgr.ConvertShortcutInfosErrCode(ERR_BUNDLE_MANAGER_EXTENSION_INVALID_PARAM);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: ConvertShortcutInfosErrCode_0002
+ * @tc.name: ConvertShortcutInfosErrCode with ERR_BUNDLE_MANAGER_EXTENSION_PERMISSION_DENIED
+ * @tc.desc: test ConvertShortcutInfosErrCode with ERR_BUNDLE_MANAGER_EXTENSION_PERMISSION_DENIED (8585218),
+ *           triggered by caller not using BMS_UID, should return ERR_BUNDLE_MANAGER_PERMISSION_DENIED
+ */
+HWTEST_F(BmsExtensionDataMgrTest, ConvertShortcutInfosErrCode_0002, Function | SmallTest | Level1)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    ErrCode ret = bmsExtensionDataMgr.ConvertShortcutInfosErrCode(ERR_BUNDLE_MANAGER_EXTENSION_PERMISSION_DENIED);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: ConvertShortcutInfosErrCode_0003
+ * @tc.name: ConvertShortcutInfosErrCode with ERR_BUNDLE_MANAGER_EXTENSION_INVALID_USER_ID
+ * @tc.desc: test ConvertShortcutInfosErrCode with ERR_BUNDLE_MANAGER_EXTENSION_INVALID_USER_ID (8585605),
+ *           triggered by invalid userId, should return ERR_BUNDLE_MANAGER_INVALID_USER_ID
+ */
+HWTEST_F(BmsExtensionDataMgrTest, ConvertShortcutInfosErrCode_0003, Function | SmallTest | Level1)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    ErrCode ret = bmsExtensionDataMgr.ConvertShortcutInfosErrCode(ERR_BUNDLE_MANAGER_EXTENSION_INVALID_USER_ID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+/**
+ * @tc.number: ConvertShortcutInfosErrCode_0004
+ * @tc.name: ConvertShortcutInfosErrCode with unknown error code
+ * @tc.desc: test ConvertShortcutInfosErrCode with unknown error code,
+ *           should return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR
+ */
+HWTEST_F(BmsExtensionDataMgrTest, ConvertShortcutInfosErrCode_0004, Function | SmallTest | Level1)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    ErrCode ret = bmsExtensionDataMgr.ConvertShortcutInfosErrCode(9999999);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+}
+
+/**
+ * @tc.number: GetShortcutInfos_0001
+ * @tc.name: GetShortcutInfos with Init failed
+ * @tc.desc: test GetShortcutInfos when Init failed,
+ *           should return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR or ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR
+ */
+HWTEST_F(BmsExtensionDataMgrTest, GetShortcutInfos_0001, Function | SmallTest | Level1)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    bmsExtensionDataMgr.handler_ = nullptr;
+    std::string bundleName = "test.bundle";
+    int32_t userId = USERID;
+    std::vector<ShortcutInfo> shortcutInfos;
+    ErrCode ret = bmsExtensionDataMgr.GetShortcutInfos(bundleName, userId, shortcutInfos);
+#ifdef USE_EXTENSION_DATA
+    EXPECT_THAT(ret, testing::AnyOf(
+        ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR,
+        ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR));
+#else
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+#endif
+}
+
+/**
+ * @tc.number: GetShortcutInfos_0002
+ * @tc.name: GetShortcutInfos with bundleMgrExtPtr nullptr
+ * @tc.desc: test GetShortcutInfos when bundleMgrExtPtr is nullptr,
+ *           should return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR
+ */
+HWTEST_F(BmsExtensionDataMgrTest, GetShortcutInfos_0002, Function | SmallTest | Level1)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    int16_t handleTest = 1;
+    bmsExtensionDataMgr.handler_ = &handleTest;
+    bmsExtensionDataMgr.bmsExtension_.bmsExtensionBundleMgr.extensionName = "nonexistent";
+    std::string bundleName = "test.bundle";
+    int32_t userId = USERID;
+    std::vector<ShortcutInfo> shortcutInfos;
+    ErrCode ret = bmsExtensionDataMgr.GetShortcutInfos(bundleName, userId, shortcutInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+}
+
+/**
+ * @tc.number: GetShortcutInfos_ConvertErrCode_0001
+ * @tc.name: GetShortcutInfos converts 8585217 to ERR_BUNDLE_MANAGER_PARAM_ERROR
+ * @tc.desc: test GetShortcutInfos when bundleMgrExtPtr->GetShortcutInfos returns 8585217
+ *           (triggered by empty bundle name), should convert to ERR_BUNDLE_MANAGER_PARAM_ERROR
+ */
+HWTEST_F(BmsExtensionDataMgrTest, GetShortcutInfos_ConvertErrCode_0001, Function | SmallTest | Level1)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    int16_t handleTest = 1;
+    bmsExtensionDataMgr.handler_ = &handleTest;
+    bmsExtensionDataMgr.bmsExtension_.bmsExtensionBundleMgr.extensionName = "BundleMgrExtTest";
+    BundleMgrExtRegister::GetInstance().RegisterBundleMgrExt("BundleMgrExtTest",
+        []() -> std::shared_ptr<BundleMgrExt> { return std::make_shared<BundleMgrExtTest>(); });
+    std::string bundleName = "";
+    int32_t userId = USERID;
+    std::vector<ShortcutInfo> shortcutInfos;
+    ErrCode ret = bmsExtensionDataMgr.GetShortcutInfos(bundleName, userId, shortcutInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: GetShortcutInfos_ConvertErrCode_0002
+ * @tc.name: GetShortcutInfos converts 8585218 to ERR_BUNDLE_MANAGER_PERMISSION_DENIED
+ * @tc.desc: test GetShortcutInfos when bundleMgrExtPtr->GetShortcutInfos returns 8585218
+ *           (triggered by special bundle name), should convert to ERR_BUNDLE_MANAGER_PERMISSION_DENIED
+ */
+HWTEST_F(BmsExtensionDataMgrTest, GetShortcutInfos_ConvertErrCode_0002, Function | SmallTest | Level1)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    int16_t handleTest = 1;
+    bmsExtensionDataMgr.handler_ = &handleTest;
+    bmsExtensionDataMgr.bmsExtension_.bmsExtensionBundleMgr.extensionName = "BundleMgrExtTest";
+    BundleMgrExtRegister::GetInstance().RegisterBundleMgrExt("BundleMgrExtTest",
+        []() -> std::shared_ptr<BundleMgrExt> { return std::make_shared<BundleMgrExtTest>(); });
+    std::string bundleName = "com.test.permission.denied";
+    int32_t userId = USERID;
+    std::vector<ShortcutInfo> shortcutInfos;
+    ErrCode ret = bmsExtensionDataMgr.GetShortcutInfos(bundleName, userId, shortcutInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: GetShortcutInfos_ConvertErrCode_0003
+ * @tc.name: GetShortcutInfos converts 8585605 to ERR_BUNDLE_MANAGER_INVALID_USER_ID
+ * @tc.desc: test GetShortcutInfos when bundleMgrExtPtr->GetShortcutInfos returns 8585605
+ *           (triggered by invalid userId), should convert to ERR_BUNDLE_MANAGER_INVALID_USER_ID
+ */
+HWTEST_F(BmsExtensionDataMgrTest, GetShortcutInfos_ConvertErrCode_0003, Function | SmallTest | Level1)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    int16_t handleTest = 1;
+    bmsExtensionDataMgr.handler_ = &handleTest;
+    bmsExtensionDataMgr.bmsExtension_.bmsExtensionBundleMgr.extensionName = "BundleMgrExtTest";
+    BundleMgrExtRegister::GetInstance().RegisterBundleMgrExt("BundleMgrExtTest",
+        []() -> std::shared_ptr<BundleMgrExt> { return std::make_shared<BundleMgrExtTest>(); });
+    std::string bundleName = "test.bundle";
+    int32_t userId = -1;
+    std::vector<ShortcutInfo> shortcutInfos;
+    ErrCode ret = bmsExtensionDataMgr.GetShortcutInfos(bundleName, userId, shortcutInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+/**
+ * @tc.number: GetShortcutInfos_ConvertErrCode_0004
+ * @tc.name: GetShortcutInfos returns ERR_OK when bundleMgrExtPtr->GetShortcutInfos succeeds
+ * @tc.desc: test GetShortcutInfos when bundleMgrExtPtr->GetShortcutInfos returns ERR_OK,
+ *           should return ERR_OK and fill shortcutInfos
+ */
+HWTEST_F(BmsExtensionDataMgrTest, GetShortcutInfos_ConvertErrCode_0004, Function | SmallTest | Level1)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    int16_t handleTest = 1;
+    bmsExtensionDataMgr.handler_ = &handleTest;
+    bmsExtensionDataMgr.bmsExtension_.bmsExtensionBundleMgr.extensionName = "BundleMgrExtTest";
+    BundleMgrExtRegister::GetInstance().RegisterBundleMgrExt("BundleMgrExtTest",
+        []() -> std::shared_ptr<BundleMgrExt> { return std::make_shared<BundleMgrExtTest>(); });
+    std::string bundleName = "test.bundle";
+    int32_t userId = USERID;
+    std::vector<ShortcutInfo> shortcutInfos;
+    ErrCode ret = bmsExtensionDataMgr.GetShortcutInfos(bundleName, userId, shortcutInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(shortcutInfos.size(), 1u);
+}
+
+/**
+ * @tc.number: GetShortcutInfos_0003
+ * @tc.name: GetShortcutInfos with empty bundleName
+ * @tc.desc: test GetShortcutInfos when bundleName is empty,
+ *           should return ERR_BUNDLE_MANAGER_PARAM_ERROR
+ */
+HWTEST_F(BmsExtensionDataMgrTest, GetShortcutInfos_0003, Function | SmallTest | Level1)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    int16_t handleTest = 1;
+    bmsExtensionDataMgr.handler_ = &handleTest;
+    bmsExtensionDataMgr.bmsExtension_.bmsExtensionBundleMgr.extensionName = "BundleMgrExtTest";
+    BundleMgrExtRegister::GetInstance().RegisterBundleMgrExt("BundleMgrExtTest",
+        []() -> std::shared_ptr<BundleMgrExt> { return std::make_shared<BundleMgrExtTest>(); });
+    std::string bundleName = "";
+    int32_t userId = USERID;
+    std::vector<ShortcutInfo> shortcutInfos;
+    ErrCode ret = bmsExtensionDataMgr.GetShortcutInfos(bundleName, userId, shortcutInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: GetShortcutInfos_ConvertErrCode_0005
+ * @tc.name: GetShortcutInfos converts unknown error code to ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR
+ * @tc.desc: test GetShortcutInfos when bundleMgrExtPtr->GetShortcutInfos returns unknown error code,
+ *           should convert to ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR (default branch)
+ */
+HWTEST_F(BmsExtensionDataMgrTest, GetShortcutInfos_ConvertErrCode_0005, Function | SmallTest | Level1)
+{
+    class MockBundleMgrExtUnknownErr : public AppExecFwk::BundleMgrExt {
+    public:
+        bool CheckApiInfo(const BundleInfo& bundleInfo) override
+        {
+            return true;
+        }
+
+        ErrCode GetShortcutInfos(const std::string &bundleName, int32_t userId,
+            std::vector<ShortcutInfo> &shortcutInfos) override
+        {
+            return 9999999;
+        }
+    };
+
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    int16_t handleTest = 1;
+    bmsExtensionDataMgr.handler_ = &handleTest;
+    bmsExtensionDataMgr.bmsExtension_.bmsExtensionBundleMgr.extensionName = "MockUnknownErrExt";
+    BundleMgrExtRegister::GetInstance().RegisterBundleMgrExt("MockUnknownErrExt",
+        []() -> std::shared_ptr<BundleMgrExt> { return std::make_shared<MockBundleMgrExtUnknownErr>(); });
+    std::string bundleName = "test.bundle";
+    int32_t userId = USERID;
+    std::vector<ShortcutInfo> shortcutInfos;
+    ErrCode ret = bmsExtensionDataMgr.GetShortcutInfos(bundleName, userId, shortcutInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+}
+
+/**
+ * @tc.number: BMSExtErrorCodeConsistency_0001
+ * @tc.name: Verify BMSExt error codes are consistent between test and production
+ * @tc.desc: static_assert to ensure test-defined BMSExt error codes match production values,
+ *           catching any drift when BMSExt updates its error codes
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BMSExtErrorCodeConsistency_0001, Function | SmallTest | Level1)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    static_assert(ERR_BUNDLE_MANAGER_EXTENSION_INVALID_PARAM ==
+        bmsExtensionDataMgr.ERR_BUNDLE_MANAGER_EXTENSION_INVALID_PARAM,
+        "ERR_BUNDLE_MANAGER_EXTENSION_INVALID_PARAM mismatch with production");
+    static_assert(ERR_BUNDLE_MANAGER_EXTENSION_PERMISSION_DENIED ==
+        bmsExtensionDataMgr.ERR_BUNDLE_MANAGER_EXTENSION_PERMISSION_DENIED,
+        "ERR_BUNDLE_MANAGER_EXTENSION_PERMISSION_DENIED mismatch with production");
+    static_assert(ERR_BUNDLE_MANAGER_EXTENSION_INVALID_USER_ID ==
+        bmsExtensionDataMgr.ERR_BUNDLE_MANAGER_EXTENSION_INVALID_USER_ID,
+        "ERR_BUNDLE_MANAGER_EXTENSION_INVALID_USER_ID mismatch with production");
+    SUCCEED();
 }
 } // OHOS
