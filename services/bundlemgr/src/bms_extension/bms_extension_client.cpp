@@ -528,15 +528,15 @@ ErrCode BmsExtensionClient::GetShortcutInfos(const std::string &bundleName, int3
     LOG_D(BMS_TAG_QUERY, "start to get shortcut infos from bms extension, bundleName:%{public}s, userId:%{public}d",
         bundleName.c_str(), userId);
     if (bmsExtensionImpl_ == nullptr) {
-        LOG_W(BMS_TAG_QUERY, "bmsExtensionImpl_ is null");
+        LOG_E(BMS_TAG_QUERY, "bmsExtensionImpl_ is null");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    ErrCode res = bmsExtensionImpl_->GetShortcutInfos(bundleName, userId, shortcutInfos);
-    if (res != ERR_OK) {
-        LOG_W(BMS_TAG_QUERY, "get shortcut infos from bms extension failed, bundleName:%{public}s, code:%{public}d",
-            bundleName.c_str(), res);
+    ErrCode ret = bmsExtensionImpl_->GetShortcutInfos(bundleName, userId, shortcutInfos);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_QUERY, "get shortcut infos from bms extension failed, bundleName:%{public}s, code:%{public}d",
+            bundleName.c_str(), ret);
     }
-    return res;
+    return ret;
 }
 
 const std::shared_ptr<BundleDataMgr> BmsExtensionClient::GetDataMgr() const

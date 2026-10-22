@@ -3969,7 +3969,7 @@ ErrCode BundleMgrHostImpl::QueryShortcutInfosFromExtension(const std::string &bu
         APP_LOGD("GetShortcutInfos from BMSExt success, bundleName:%{public}s, size:%{public}zu",
             bundleName.c_str(), shortcutInfos.size());
     } else {
-        APP_LOGW("GetShortcutInfos from BMSExt failed, bundleName:%{public}s, extRet:%{public}d",
+        APP_LOGE("GetShortcutInfos from BMSExt failed, bundleName:%{public}s, extRet:%{public}d",
             bundleName.c_str(), extRet);
     }
     return extRet;

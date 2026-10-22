@@ -905,7 +905,7 @@ ErrCode BmsExtensionDataMgr::ConvertShortcutInfosErrCode(ErrCode ret)
         case ERR_BUNDLE_MANAGER_EXTENSION_INVALID_USER_ID:
             return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
         default:
-            LOG_W(BMS_TAG_EXT, "Unknown extension error code: %{public}d, return extension internal error", ret);
+            LOG_E(BMS_TAG_EXT, "Unknown extension error code: %{public}d, return extension internal error", ret);
             return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
     }
 }
@@ -914,23 +914,28 @@ ErrCode BmsExtensionDataMgr::GetShortcutInfos(const std::string &bundleName, int
     std::vector<ShortcutInfo> &shortcutInfos)
 {
     if (bundleName.empty()) {
-        LOG_W(BMS_TAG_EXT, "bundleName is empty");
+        LOG_E(BMS_TAG_EXT, "bundleName is empty");
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
-    if ((Init() != ERR_OK) || handler_ == nullptr) {
-        LOG_W(BMS_TAG_EXT, "GetShortcutInfos link failed");
+    ErrCode initRet = Init();
+    if (initRet != ERR_OK) {
+        LOG_E(BMS_TAG_EXT, "GetShortcutInfos Init failed, initRet:%{public}d", initRet);
+        return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
+    }
+    if (handler_ == nullptr) {
+        LOG_E(BMS_TAG_EXT, "GetShortcutInfos handler_ is null");
         return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
     }
     auto bundleMgrExtPtr =
         BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
     if (bundleMgrExtPtr == nullptr) {
-        LOG_W(BMS_TAG_EXT, "GetBundleMgrExt failed");
+        LOG_E(BMS_TAG_EXT, "GetBundleMgrExt failed");
         return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
     }
     LOG_I(BMS_TAG_EXT, "EXT GetShortcutInfos -n %{public}s -u %{public}d", bundleName.c_str(), userId);
     ErrCode ret = bundleMgrExtPtr->GetShortcutInfos(bundleName, userId, shortcutInfos);
     if (ret != ERR_OK) {
-        LOG_W(BMS_TAG_EXT, "GetShortcutInfos from ext failed, bundleName:%{public}s, ret:%{public}d",
+        LOG_E(BMS_TAG_EXT, "GetShortcutInfos from ext failed, bundleName:%{public}s, ret:%{public}d",
             bundleName.c_str(), ret);
         ret = ConvertShortcutInfosErrCode(ret);
     }

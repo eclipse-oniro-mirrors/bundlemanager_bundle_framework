@@ -15322,10 +15322,6 @@ ErrCode BundleDataMgr::AddDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, 
         APP_LOGW("Input invalid userid, userId:%{public}d", userId);
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
-    if (shortcutInfo.bundleName.empty()) {
-        APP_LOGW("bundleName is empty");
-        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
-    }
     bool isEnabled = false;
     ErrCode ret = IsApplicationEnabled(shortcutInfo.bundleName, shortcutInfo.appIndex, isEnabled, userId);
     if (ret != ERR_OK) {
