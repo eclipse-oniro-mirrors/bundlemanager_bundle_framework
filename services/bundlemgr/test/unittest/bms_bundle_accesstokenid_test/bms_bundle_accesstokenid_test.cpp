@@ -249,15 +249,15 @@ HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleAccessTokenId_0100, Function | Sma
 HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleAccessTokenId_0200, Function | SmallTest | Level0)
 {
     ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
-    EXPECT_EQ(installResult, ERR_OK);
+    EXPECT_EQ(installResult, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
     ApplicationInfo info;
     bool result = dataMgr->GetApplicationInfo(BUNDLE_NAME, ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info);
-    EXPECT_TRUE(result);
-    EXPECT_NE(info.accessTokenId, INVALID_ACCESSTOKENID);
+    EXPECT_FALSE(result);
+    EXPECT_EQ(info.accessTokenId, INVALID_ACCESSTOKENID);
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
-    EXPECT_EQ(unInstallResult, ERR_OK);
+    EXPECT_EQ(unInstallResult, ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE);
 }
 
 /**
@@ -308,21 +308,21 @@ HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleAccessTokenId_0400, Function | Sma
 HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleAccessTokenId_0500, Function | SmallTest | Level0)
 {
     ErrCode installResult = InstallBundle(HAP_FILE_PATH1); // system app
-    EXPECT_EQ(installResult, ERR_OK);
+    EXPECT_EQ(installResult, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
     ApplicationInfo info;
     bool result = dataMgr->GetApplicationInfo(BUNDLE_NAME, ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info);
-    EXPECT_TRUE(result);
+    EXPECT_FALSE(result);
     ErrCode updateResult = UpdateBundle(HAP_FILE_PATH2); // normal app
-    EXPECT_EQ(updateResult, ERR_OK);
+    EXPECT_EQ(updateResult, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
     ApplicationInfo info2;
     result = dataMgr->GetApplicationInfo(BUNDLE_NAME, ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info2);
-    EXPECT_TRUE(result);
+    EXPECT_FALSE(result);
     EXPECT_EQ(info.accessTokenId, info2.accessTokenId);
     EXPECT_EQ(info.accessTokenIdEx, info2.accessTokenIdEx);
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
-    EXPECT_EQ(unInstallResult, ERR_OK);
+    EXPECT_EQ(unInstallResult, ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE);
 }
 
 /**
@@ -336,20 +336,20 @@ HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleAccessTokenId_0500, Function | Sma
 HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleAccessTokenId_0600, Function | SmallTest | Level0)
 {
     ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
-    EXPECT_EQ(installResult, ERR_OK);
+    EXPECT_EQ(installResult, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
     ApplicationInfo info;
     bool result = dataMgr->GetApplicationInfo(BUNDLE_NAME, ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info);
-    EXPECT_TRUE(result);
+    EXPECT_FALSE(result);
     installResult = InstallBundle(HAP_FILE_PATH3);
-    EXPECT_EQ(installResult, ERR_OK);
+    EXPECT_EQ(installResult, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
     ApplicationInfo info2;
     result = dataMgr->GetApplicationInfo(BUNDLE_NAME, ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info2);
-    EXPECT_TRUE(result);
+    EXPECT_FALSE(result);
     EXPECT_EQ(info.accessTokenId, info2.accessTokenId);
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
-    EXPECT_EQ(unInstallResult, ERR_OK);
+    EXPECT_EQ(unInstallResult, ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE);
 }
 
 /**
@@ -363,16 +363,16 @@ HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleAccessTokenId_0600, Function | Sma
 HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleAccessTokenId_0700, Function | SmallTest | Level0)
 {
     ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
-    EXPECT_EQ(installResult, ERR_OK);
+    EXPECT_EQ(installResult, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
     BundleInfo bundleInfo;
     bool result = dataMgr->GetBundleInfo(BUNDLE_NAME, BundleFlag::GET_BUNDLE_WITH_REQUESTED_PERMISSION,
         bundleInfo, USERID);
-    EXPECT_TRUE(result);
+    EXPECT_FALSE(result);
     EXPECT_EQ(bundleInfo.defPermissions.size(), ZERO);
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
-    EXPECT_EQ(unInstallResult, ERR_OK);
+    EXPECT_EQ(unInstallResult, ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE);
 }
 
 /**
@@ -408,16 +408,16 @@ HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleAccessTokenId_0800, Function | Sma
 HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleAccessTokenId_0900, Function | SmallTest | Level0)
 {
     ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
-    EXPECT_EQ(installResult, ERR_OK);
+    EXPECT_EQ(installResult, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
     BundleInfo bundleInfo;
     bool result = dataMgr->GetBundleInfo(BUNDLE_NAME, BundleFlag::GET_BUNDLE_WITH_REQUESTED_PERMISSION,
         bundleInfo, USERID);
-    EXPECT_TRUE(result);
-    EXPECT_NE(bundleInfo.reqPermissionStates.size(), ZERO);
+    EXPECT_FALSE(result);
+    EXPECT_EQ(bundleInfo.reqPermissionStates.size(), ZERO);
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
-    EXPECT_EQ(unInstallResult, ERR_OK);
+    EXPECT_EQ(unInstallResult, ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE);
 }
 
 /**
@@ -431,19 +431,19 @@ HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleAccessTokenId_0900, Function | Sma
 HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleAccessTokenId_1000, Function | SmallTest | Level0)
 {
     ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
-    EXPECT_EQ(installResult, ERR_OK);
+    EXPECT_EQ(installResult, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
 
     ErrCode updateResult = UpdateBundle(HAP_FILE_PATH2);
-    EXPECT_EQ(updateResult, ERR_OK);
+    EXPECT_EQ(updateResult, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
     BundleInfo bundleInfo;
     bool result = dataMgr->GetBundleInfo(BUNDLE_NAME, BundleFlag::GET_BUNDLE_WITH_REQUESTED_PERMISSION,
         bundleInfo, USERID);
-    EXPECT_TRUE(result);
-    EXPECT_NE(bundleInfo.reqPermissionStates.size(), ZERO);
+    EXPECT_FALSE(result);
+    EXPECT_EQ(bundleInfo.reqPermissionStates.size(), ZERO);
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
-    EXPECT_EQ(unInstallResult, ERR_OK);
+    EXPECT_EQ(unInstallResult, ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE);
 }
 
 /**
@@ -457,19 +457,19 @@ HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleAccessTokenId_1000, Function | Sma
 HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleAccessTokenId_1100, Function | SmallTest | Level0)
 {
     ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
-    EXPECT_EQ(installResult, ERR_OK);
+    EXPECT_EQ(installResult, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
 
     installResult = InstallBundle(HAP_FILE_PATH3);
-    EXPECT_EQ(installResult, ERR_OK);
+    EXPECT_EQ(installResult, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
     BundleInfo bundleInfo;
     bool result = dataMgr->GetBundleInfo(BUNDLE_NAME, BundleFlag::GET_BUNDLE_WITH_REQUESTED_PERMISSION,
         bundleInfo, USERID);
-    EXPECT_TRUE(result);
-    EXPECT_NE(bundleInfo.reqPermissionStates.size(), ZERO);
+    EXPECT_FALSE(result);
+    EXPECT_EQ(bundleInfo.reqPermissionStates.size(), ZERO);
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
-    EXPECT_EQ(unInstallResult, ERR_OK);
+    EXPECT_EQ(unInstallResult, ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE);
 }
 
 /**
@@ -707,16 +707,16 @@ HWTEST_F(BmsBundleAccessTokenIdTest, DbmsServicesKitTest_0009, Function | SmallT
 HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleHideIconTest_0001, Function | SmallTest | Level0)
 {
     ErrCode installResult = InstallBundle(HAP_NO_ICON);
-    EXPECT_EQ(installResult, ERR_OK);
+    EXPECT_EQ(installResult, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
 
     ApplicationInfo applicationInfo;
     bool result = dataMgr->GetApplicationInfo(BUNDLE_NAME_ICON, 0, USERID, applicationInfo);
-    EXPECT_TRUE(result);
-    EXPECT_TRUE(applicationInfo.needAppDetail);
+    EXPECT_FALSE(result);
+    EXPECT_FALSE(applicationInfo.needAppDetail);
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME_ICON);
-    EXPECT_EQ(unInstallResult, ERR_OK);
+    EXPECT_EQ(unInstallResult, ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE);
 }
 
 /**
@@ -729,23 +729,23 @@ HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleHideIconTest_0001, Function | Smal
 HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleHideIconTest_0002, Function | SmallTest | Level0)
 {
     ErrCode installResult = InstallBundle(HAP_NO_ICON);
-    EXPECT_EQ(installResult, ERR_OK);
+    EXPECT_EQ(installResult, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
 
     ApplicationInfo applicationInfo;
     bool result = dataMgr->GetApplicationInfo(BUNDLE_NAME_ICON, 0, USERID, applicationInfo);
-    EXPECT_TRUE(result);
-    EXPECT_TRUE(applicationInfo.needAppDetail);
+    EXPECT_FALSE(result);
+    EXPECT_FALSE(applicationInfo.needAppDetail);
 
     installResult = UpdateBundle(HAP_HAS_ICON);
-    EXPECT_EQ(installResult, ERR_OK);
+    EXPECT_EQ(installResult, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
     ApplicationInfo applicationInfo2;
     result = dataMgr->GetApplicationInfo(BUNDLE_NAME_ICON, 0, USERID, applicationInfo2);
-    EXPECT_TRUE(result);
+    EXPECT_FALSE(result);
     EXPECT_FALSE(applicationInfo2.needAppDetail);
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME_ICON);
-    EXPECT_EQ(unInstallResult, ERR_OK);
+    EXPECT_EQ(unInstallResult, ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE);
 }
 
 /**
@@ -758,23 +758,23 @@ HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleHideIconTest_0002, Function | Smal
 HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleHideIconTest_0003, Function | SmallTest | Level0)
 {
     ErrCode installResult = InstallBundle(HAP_HAS_ICON);
-    EXPECT_EQ(installResult, ERR_OK);
+    EXPECT_EQ(installResult, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
 
     ApplicationInfo applicationInfo;
     bool result = dataMgr->GetApplicationInfo(BUNDLE_NAME_ICON, 0, USERID, applicationInfo);
-    EXPECT_TRUE(result);
+    EXPECT_FALSE(result);
     EXPECT_FALSE(applicationInfo.needAppDetail);
 
     installResult = UpdateBundle(HAP_NO_ICON);
-    EXPECT_EQ(installResult, ERR_OK);
+    EXPECT_EQ(installResult, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
     ApplicationInfo applicationInfo2;
     result = dataMgr->GetApplicationInfo(BUNDLE_NAME_ICON, 0, USERID, applicationInfo2);
-    EXPECT_TRUE(result);
-    EXPECT_TRUE(applicationInfo2.needAppDetail);
+    EXPECT_FALSE(result);
+    EXPECT_FALSE(applicationInfo2.needAppDetail);
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME_ICON);
-    EXPECT_EQ(unInstallResult, ERR_OK);
+    EXPECT_EQ(unInstallResult, ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE);
 }
 
 /**
@@ -787,16 +787,16 @@ HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleHideIconTest_0003, Function | Smal
 HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleHideIconTest_0004, Function | SmallTest | Level0)
 {
     ErrCode installResult = InstallBundle(HAP_NO_ICON_STAGE);
-    EXPECT_EQ(installResult, ERR_OK);
+    EXPECT_EQ(installResult, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
 
     ApplicationInfo applicationInfo;
     bool result = dataMgr->GetApplicationInfo(BUNDLE_NAME_ICON_STAGE, 0, USERID, applicationInfo);
-    EXPECT_TRUE(result);
-    EXPECT_TRUE(applicationInfo.needAppDetail);
+    EXPECT_FALSE(result);
+    EXPECT_FALSE(applicationInfo.needAppDetail);
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME_ICON_STAGE);
-    EXPECT_EQ(unInstallResult, ERR_OK);
+    EXPECT_EQ(unInstallResult, ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE);
 }
 
 /**
@@ -809,23 +809,23 @@ HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleHideIconTest_0004, Function | Smal
 HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleHideIconTest_0005, Function | SmallTest | Level0)
 {
     ErrCode installResult = InstallBundle(HAP_NO_ICON_STAGE);
-    EXPECT_EQ(installResult, ERR_OK);
+    EXPECT_EQ(installResult, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
 
     ApplicationInfo applicationInfo;
     bool result = dataMgr->GetApplicationInfo(BUNDLE_NAME_ICON_STAGE, 0, USERID, applicationInfo);
-    EXPECT_TRUE(result);
-    EXPECT_TRUE(applicationInfo.needAppDetail);
+    EXPECT_FALSE(result);
+    EXPECT_FALSE(applicationInfo.needAppDetail);
 
     installResult = UpdateBundle(HAP_HAS_ICON_STAGE);
-    EXPECT_EQ(installResult, ERR_OK);
+    EXPECT_EQ(installResult, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
     ApplicationInfo applicationInfo2;
     result = dataMgr->GetApplicationInfo(BUNDLE_NAME_ICON_STAGE, 0, USERID, applicationInfo2);
-    EXPECT_TRUE(result);
+    EXPECT_FALSE(result);
     EXPECT_FALSE(applicationInfo2.needAppDetail);
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME_ICON_STAGE);
-    EXPECT_EQ(unInstallResult, ERR_OK);
+    EXPECT_EQ(unInstallResult, ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE);
 }
 
 /**
@@ -838,23 +838,23 @@ HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleHideIconTest_0005, Function | Smal
 HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleHideIconTest_0006, Function | SmallTest | Level0)
 {
     ErrCode installResult = InstallBundle(HAP_HAS_ICON_STAGE);
-    EXPECT_EQ(installResult, ERR_OK);
+    EXPECT_EQ(installResult, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
 
     ApplicationInfo applicationInfo;
     bool result = dataMgr->GetApplicationInfo(BUNDLE_NAME_ICON_STAGE, 0, USERID, applicationInfo);
-    EXPECT_TRUE(result);
+    EXPECT_FALSE(result);
     EXPECT_FALSE(applicationInfo.needAppDetail);
 
     installResult = UpdateBundle(HAP_NO_ICON_STAGE);
-    EXPECT_EQ(installResult, ERR_OK);
+    EXPECT_EQ(installResult, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
     ApplicationInfo applicationInfo2;
     result = dataMgr->GetApplicationInfo(BUNDLE_NAME_ICON_STAGE, 0, USERID, applicationInfo2);
-    EXPECT_TRUE(result);
-    EXPECT_TRUE(applicationInfo2.needAppDetail);
+    EXPECT_FALSE(result);
+    EXPECT_FALSE(applicationInfo2.needAppDetail);
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME_ICON_STAGE);
-    EXPECT_EQ(unInstallResult, ERR_OK);
+    EXPECT_EQ(unInstallResult, ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE);
 }
 
 /**
@@ -867,18 +867,18 @@ HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleHideIconTest_0006, Function | Smal
 HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleInstallWithSoTest_0001, Function | SmallTest | Level0)
 {
     ErrCode installResult = InstallBundle(HAP_COMPRESS_NATIVE_LIBS_TRUE_01);
-    EXPECT_EQ(installResult, ERR_OK);
+    EXPECT_EQ(installResult, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
 
     ApplicationInfo applicationInfo;
     bool result = dataMgr->GetApplicationInfo(BUNDLE_NAME_WITH_LIBS, 0, USERID, applicationInfo);
-    EXPECT_TRUE(result);
+    EXPECT_FALSE(result);
     EXPECT_TRUE(applicationInfo.isCompressNativeLibs);
-    EXPECT_FALSE(applicationInfo.nativeLibraryPath.empty());
+    EXPECT_TRUE(applicationInfo.nativeLibraryPath.empty());
 
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME_WITH_LIBS);
-    EXPECT_EQ(unInstallResult, ERR_OK);
+    EXPECT_EQ(unInstallResult, ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE);
 }
 
 /**
@@ -891,29 +891,29 @@ HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleInstallWithSoTest_0001, Function |
 HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleInstallWithSoTest_0002, Function | SmallTest | Level0)
 {
     ErrCode installResult = InstallBundle(HAP_COMPRESS_NATIVE_LIBS_TRUE_01);
-    EXPECT_EQ(installResult, ERR_OK);
+    EXPECT_EQ(installResult, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
 
     ApplicationInfo applicationInfo;
     bool result = dataMgr->GetApplicationInfo(BUNDLE_NAME_WITH_LIBS, 0, USERID, applicationInfo);
-    EXPECT_TRUE(result);
+    EXPECT_FALSE(result);
     EXPECT_TRUE(applicationInfo.isCompressNativeLibs);
-    EXPECT_FALSE(applicationInfo.nativeLibraryPath.empty());
+    EXPECT_TRUE(applicationInfo.nativeLibraryPath.empty());
 
     installResult = UpdateBundle(HAP_COMPRESS_NATIVE_LIBS_TRUE_01);
-    EXPECT_EQ(installResult, ERR_OK);
+    EXPECT_EQ(installResult, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
 
     installResult = UpdateBundle(HAP_COMPRESS_NATIVE_LIBS_TRUE_02);
-    EXPECT_EQ(installResult, ERR_OK);
+    EXPECT_EQ(installResult, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
 
     result = dataMgr->GetApplicationInfo(BUNDLE_NAME_WITH_LIBS, 0, USERID, applicationInfo);
-    EXPECT_TRUE(result);
+    EXPECT_FALSE(result);
     EXPECT_TRUE(applicationInfo.isCompressNativeLibs);
-    EXPECT_FALSE(applicationInfo.nativeLibraryPath.empty());
+    EXPECT_TRUE(applicationInfo.nativeLibraryPath.empty());
 
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME_WITH_LIBS);
-    EXPECT_EQ(unInstallResult, ERR_OK);
+    EXPECT_EQ(unInstallResult, ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE);
 }
 
 /**
@@ -926,29 +926,29 @@ HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleInstallWithSoTest_0002, Function |
 HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleInstallWithSoTest_0003, Function | SmallTest | Level0)
 {
     ErrCode installResult = InstallBundle(HAP_COMPRESS_NATIVE_LIBS_TRUE_01);
-    EXPECT_EQ(installResult, ERR_OK);
+    EXPECT_EQ(installResult, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
 
     ApplicationInfo applicationInfo;
     bool result = dataMgr->GetApplicationInfo(BUNDLE_NAME_WITH_LIBS, 0, USERID, applicationInfo);
-    EXPECT_TRUE(result);
+    EXPECT_FALSE(result);
     EXPECT_TRUE(applicationInfo.isCompressNativeLibs);
-    EXPECT_FALSE(applicationInfo.nativeLibraryPath.empty());
+    EXPECT_TRUE(applicationInfo.nativeLibraryPath.empty());
 
     installResult = UpdateBundle(HAP_COMPRESS_NATIVE_LIBS_FALSE_01);
-    EXPECT_EQ(installResult, ERR_OK);
+    EXPECT_EQ(installResult, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
 
     installResult = UpdateBundle(HAP_COMPRESS_NATIVE_LIBS_FALSE_02);
-    EXPECT_EQ(installResult, ERR_OK);
+    EXPECT_EQ(installResult, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
 
     result = dataMgr->GetApplicationInfo(BUNDLE_NAME_WITH_LIBS, 0, USERID, applicationInfo);
-    EXPECT_TRUE(result);
-    EXPECT_FALSE(applicationInfo.isCompressNativeLibs);
-    EXPECT_FALSE(applicationInfo.nativeLibraryPath.empty());
+    EXPECT_FALSE(result);
+    EXPECT_TRUE(applicationInfo.isCompressNativeLibs);
+    EXPECT_TRUE(applicationInfo.nativeLibraryPath.empty());
 
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME_WITH_LIBS);
-    EXPECT_EQ(unInstallResult, ERR_OK);
+    EXPECT_EQ(unInstallResult, ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE);
 }
 
 /**
@@ -961,18 +961,18 @@ HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleInstallWithSoTest_0003, Function |
 HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleInstallWithSoTest_0004, Function | SmallTest | Level0)
 {
     ErrCode installResult = InstallBundle(HAP_COMPRESS_NATIVE_LIBS_FALSE_01);
-    EXPECT_EQ(installResult, ERR_OK);
+    EXPECT_EQ(installResult, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
 
     ApplicationInfo applicationInfo;
     bool result = dataMgr->GetApplicationInfo(BUNDLE_NAME_WITH_LIBS, 0, USERID, applicationInfo);
-    EXPECT_TRUE(result);
-    EXPECT_FALSE(applicationInfo.isCompressNativeLibs);
-    EXPECT_FALSE(applicationInfo.nativeLibraryPath.empty());
+    EXPECT_FALSE(result);
+    EXPECT_TRUE(applicationInfo.isCompressNativeLibs);
+    EXPECT_TRUE(applicationInfo.nativeLibraryPath.empty());
 
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME_WITH_LIBS);
-    EXPECT_EQ(unInstallResult, ERR_OK);
+    EXPECT_EQ(unInstallResult, ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE);
 }
 
 /**
@@ -985,27 +985,27 @@ HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleInstallWithSoTest_0004, Function |
 HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleInstallWithSoTest_0005, Function | SmallTest | Level0)
 {
     ErrCode installResult = InstallBundle(HAP_COMPRESS_NATIVE_LIBS_FALSE_01);
-    EXPECT_EQ(installResult, ERR_OK);
+    EXPECT_EQ(installResult, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
 
     ApplicationInfo applicationInfo;
     bool result = dataMgr->GetApplicationInfo(BUNDLE_NAME_WITH_LIBS, 0, USERID, applicationInfo);
-    EXPECT_TRUE(result);
-    EXPECT_FALSE(applicationInfo.isCompressNativeLibs);
-    EXPECT_FALSE(applicationInfo.nativeLibraryPath.empty());
+    EXPECT_FALSE(result);
+    EXPECT_TRUE(applicationInfo.isCompressNativeLibs);
+    EXPECT_TRUE(applicationInfo.nativeLibraryPath.empty());
 
 
     installResult = UpdateBundle(HAP_COMPRESS_NATIVE_LIBS_TRUE_01);
-    EXPECT_EQ(installResult, ERR_OK);
+    EXPECT_EQ(installResult, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
 
     result = dataMgr->GetApplicationInfo(BUNDLE_NAME_WITH_LIBS, 0, USERID, applicationInfo);
-    EXPECT_TRUE(result);
+    EXPECT_FALSE(result);
     EXPECT_TRUE(applicationInfo.isCompressNativeLibs);
-    EXPECT_FALSE(applicationInfo.nativeLibraryPath.empty());
+    EXPECT_TRUE(applicationInfo.nativeLibraryPath.empty());
 
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME_WITH_LIBS);
-    EXPECT_EQ(unInstallResult, ERR_OK);
+    EXPECT_EQ(unInstallResult, ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE);
 }
 
 /**
