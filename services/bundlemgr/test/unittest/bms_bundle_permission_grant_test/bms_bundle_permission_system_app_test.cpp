@@ -493,6 +493,43 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_2500
 }
 
 /**
+ * @tc.number: SetModuleRemovable_0100
+ * @tc.name: test SetModuleRemovable of BundleMgrHostImpl
+ * @tc.desc: 1. system running normally
+ *           2. SetModuleRemovable false by non-system app
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, SetModuleRemovable_0100, Function | SmallTest | Level0)
+{
+    bool isEnable = false;
+    bool ret = bundleMgrHostImpl_->SetModuleRemovable(BUNDLE_NAME, MOUDLE_NAME, isEnable);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: SetExtNameOrMIMEToApp_0100
+ * @tc.name: test SetExtNameOrMIMEToApp of BundleMgrHostImpl
+ * @tc.desc: 1. system running normally
+ *           2. SetExtNameOrMIMEToApp failed by non-system app
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, SetExtNameOrMIMEToApp_0100, Function | SmallTest | Level0)
+{
+    ErrCode ret = bundleMgrHostImpl_->SetExtNameOrMIMEToApp(BUNDLE_NAME, MOUDLE_NAME, ABILITY_NAME, "", "");
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
+
+/**
+ * @tc.number: DelExtNameOrMIMEToApp_0100
+ * @tc.name: test DelExtNameOrMIMEToApp of BundleMgrHostImpl
+ * @tc.desc: 1. system running normally
+ *           2. DelExtNameOrMIMEToApp failed by non-system app
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, DelExtNameOrMIMEToApp_0100, Function | SmallTest | Level0)
+{
+    ErrCode ret = bundleMgrHostImpl_->DelExtNameOrMIMEToApp(BUNDLE_NAME, MOUDLE_NAME, ABILITY_NAME, "", "");
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
+
+/**
  * @tc.number: BmsBundleSyetemAppFalseTest_2600
  * @tc.name: test SetApplicationEnabled of BundleMgrHostImpl
  * @tc.desc: 1. system running normally
@@ -4394,18 +4431,22 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, CompileProcessAOT_0100, Function
 {
     std::string compileMode = "testCompileMode";
     std::vector<std::string> compileResults;
-    SetVerifyCallingPermissionForTest(true);
-    auto ret = bundleMgrHostImpl_->CompileProcessAOT(BUNDLE_NAME, compileMode, true, compileResults);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED);
-
     auto isDeveloperMode = OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false);
+    // non-system app with privileged permission can not bypass system api check
     OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "false");
-    SetVerifyCallingPermissionForTest(false);
-    ret = bundleMgrHostImpl_->CompileProcessAOT(BUNDLE_NAME, compileMode, true, compileResults);
+    SetVerifyCallingPermissionForTest(true);
+    auto ret = bundleMgrHostImpl_->CompileProcessAOT(BUNDLE_NAME, compileMode, false, compileResults);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 
+    // developer mode on, but no ALLOW_USE_BM permission
     OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "true");
-    ret = bundleMgrHostImpl_->CompileProcessAOT(BUNDLE_NAME, compileMode, true, compileResults);
+    SetVerifyCallingPermissionForTest(false);
+    ret = bundleMgrHostImpl_->CompileProcessAOT(BUNDLE_NAME, compileMode, false, compileResults);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+
+    // developer mode on with ALLOW_USE_BM permission, non-debug app can not compile
+    SetVerifyCallingPermissionForTest(true);
+    ret = bundleMgrHostImpl_->CompileProcessAOT(BUNDLE_NAME, compileMode, false, compileResults);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
     if (isDeveloperMode) {
         OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "true");
@@ -4422,18 +4463,22 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, CompileProcessAOT_0100, Function
  */
 HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, CompileReset_0100, Function | SmallTest | Level0)
 {
-    SetVerifyCallingPermissionForTest(true);
-    auto ret = bundleMgrHostImpl_->CompileReset(BUNDLE_NAME, true);
-    EXPECT_EQ(ret, ERR_OK);
-
     auto isDeveloperMode = OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false);
+    // non-system app with privileged permission can not bypass system api check
     OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "false");
-    SetVerifyCallingPermissionForTest(false);
-    ret = bundleMgrHostImpl_->CompileReset(BUNDLE_NAME, true);
+    SetVerifyCallingPermissionForTest(true);
+    auto ret = bundleMgrHostImpl_->CompileReset(BUNDLE_NAME, false);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 
+    // developer mode on, but no ALLOW_USE_BM permission
     OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "true");
-    ret = bundleMgrHostImpl_->CompileReset(BUNDLE_NAME, true);
+    SetVerifyCallingPermissionForTest(false);
+    ret = bundleMgrHostImpl_->CompileReset(BUNDLE_NAME, false);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+
+    // developer mode on with ALLOW_USE_BM permission, non-debug app can not reset
+    SetVerifyCallingPermissionForTest(true);
+    ret = bundleMgrHostImpl_->CompileReset(BUNDLE_NAME, false);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
     if (isDeveloperMode) {
         OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "true");

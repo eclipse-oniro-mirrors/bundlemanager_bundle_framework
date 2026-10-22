@@ -2877,7 +2877,8 @@ ErrCode BundleMgrHostImpl::CheckIsDebugAppProvisionType(const std::string& bundl
 ErrCode BundleMgrHostImpl::CompileProcessAOT(const std::string &bundleName, const std::string &compileMode,
     bool isAllBundle, std::vector<std::string> &compileResults)
 {
-    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) ||
+        !BundlePermissionMgr::IsSystemApp()) {
         if (!OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false) ||
             !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_ALLOW_USE_BM)) {
             APP_LOGE_NOFUNC("CompileProcessAOT permission denied %{public}d %{public}d",
@@ -2894,7 +2895,8 @@ ErrCode BundleMgrHostImpl::CompileProcessAOT(const std::string &bundleName, cons
 
 ErrCode BundleMgrHostImpl::CompileReset(const std::string &bundleName, bool isAllBundle)
 {
-    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) ||
+        !BundlePermissionMgr::IsSystemApp()) {
         if (!OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false) ||
             !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_ALLOW_USE_BM)) {
             APP_LOGE_NOFUNC("CompileReset permission denied %{public}d %{public}d",
@@ -2923,6 +2925,10 @@ ErrCode BundleMgrHostImpl::ResetAllAOT()
 
 ErrCode BundleMgrHostImpl::CopyAp(const std::string &bundleName, bool isAllBundle, std::vector<std::string> &results)
 {
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE_NOFUNC("CopyAp permission denied %{public}d %{public}d",
             IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
@@ -3228,6 +3234,11 @@ ErrCode BundleMgrHostImpl::IsModuleRemovable(const std::string &bundleName, cons
 
 bool BundleMgrHostImpl::SetModuleRemovable(const std::string &bundleName, const std::string &moduleName, bool isEnable)
 {
+    // check permission
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return false;
+    }
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE("SetModuleRemovable failed due to lack of permission");
         return false;
@@ -5940,6 +5951,10 @@ ErrCode BundleMgrHostImpl::SetExtNameOrMIMEToApp(const std::string &bundleName, 
     APP_LOGD("SetExtNameOrMIMEToApp bundleName: %{public}s, moduleName: %{public}s, \
         abilityName: %{public}s, extName: %{public}s, mimeType: %{public}s",
         bundleName.c_str(), moduleName.c_str(), abilityName.c_str(), extName.c_str(), mimeType.c_str());
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE_NOFUNC("SetExtNameOrMIMEToApp permission denied %{public}d %{public}d",
             IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
@@ -5959,6 +5974,10 @@ ErrCode BundleMgrHostImpl::DelExtNameOrMIMEToApp(const std::string &bundleName, 
     APP_LOGD("DelExtNameOrMIMEToApp bundleName: %{public}s, moduleName: %{public}s, \
         abilityName: %{public}s, extName: %{public}s, mimeType: %{public}s",
         bundleName.c_str(), moduleName.c_str(), abilityName.c_str(), extName.c_str(), mimeType.c_str());
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE_NOFUNC("DelExtNameOrMIMEToApp permission denied %{public}d %{public}d",
             IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
