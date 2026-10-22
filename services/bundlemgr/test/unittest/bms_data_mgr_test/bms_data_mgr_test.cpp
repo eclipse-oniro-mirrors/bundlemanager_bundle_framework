@@ -4868,16 +4868,16 @@ HWTEST_F(BmsDataMgrTest, GetShortcutInfoV9_0005, Function | SmallTest | Level1)
 
 /**
  * @tc.number: GetShortcutInfoV9_0006
- * @tc.name: GetShortcutInfoV9 with UNSPECIFIED_USERID
- * @tc.desc: test GetShortcutInfoV9 with UNSPECIFIED_USERID,
- *           should resolve userId from calling uid
+ * @tc.name: GetShortcutInfoV9 with valid registered userId
+ * @tc.desc: test GetShortcutInfoV9 with valid registered userId and non-existent bundle,
+ *           should return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST
  */
 HWTEST_F(BmsDataMgrTest, GetShortcutInfoV9_0006, Function | SmallTest | Level1)
 {
     BundleDataMgr bundleDataMgr;
-    bundleDataMgr.AddUserId(Constants::DEFAULT_USERID);
+    bundleDataMgr.AddUserId(USERID);
     std::string bundleName = "com.test.bundle";
-    int32_t userId = Constants::UNSPECIFIED_USERID;
+    int32_t userId = USERID;
     std::vector<ShortcutInfo> shortcutInfos;
     auto ret = bundleDataMgr.GetShortcutInfoV9(bundleName, userId, shortcutInfos);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
