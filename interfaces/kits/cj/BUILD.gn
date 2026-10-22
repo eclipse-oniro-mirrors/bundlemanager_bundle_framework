@@ -19,7 +19,7 @@ config("cj_bundle_manager_ffi_config") {
   include_dirs = [ "src/" ]
 }
 
-ohos_shared_library("cj_bundle_manager_ffi") {
+ohos_source_set("cj_bundle_manager_ffi_source") {
   public_configs = [ ":cj_bundle_manager_ffi_config" ]
 
   branch_protector_ret = "pac_ret"
@@ -110,6 +110,30 @@ ohos_shared_library("cj_bundle_manager_ffi") {
   if (current_os == "mingw") {
     defines += [ "WINDOWS_PLATFORM" ]
   }
+
+  subsystem_name = "bundlemanager"
+  part_name = "bundle_framework"
+}
+
+ohos_shared_library("cj_bundle_manager_ffi") {
+  branch_protector_ret = "pac_ret"
+
+  sanitize = {
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    integer_overflow = true
+    ubsan = true
+  }
+
+  public_configs = [ ":cj_bundle_manager_ffi_config" ]
+
+  deps = [ ":cj_bundle_manager_ffi_source" ]
+
+  external_deps = [ "hilog:libhilog" ]
+
+  version_script = "libcj_bundle_manager_ffi.map"
 
   innerapi_tags = [ "platformsdk" ]
   subsystem_name = "bundlemanager"

@@ -37,7 +37,7 @@ ohos_unittest("BundleManagerConvertTest") {
     "${base_path}:appexecfwk_base",
     "${common_path}:libappexecfwk_common",
     "${core_path}:appexecfwk_core",
-    "${kits_path}/cj:cj_bundle_manager_ffi",
+    "${kits_path}/cj:cj_bundle_manager_ffi_source",
   ]
 
   defines = [ "APP_LOG_TAG = \"BundleMgrTool\"" ]
