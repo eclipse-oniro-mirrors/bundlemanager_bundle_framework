@@ -9057,7 +9057,6 @@ bool BundleDataMgr::InnerProcessShortcutId(const int64_t updateTime,
 ErrCode BundleDataMgr::GetShortcutInfoV9(
     const std::string &bundleName, int32_t userId, std::vector<ShortcutInfo> &shortcutInfos) const
 {
-    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
         APP_LOGW("input invalid userid, bundleName:%{public}s, userId:%{public}d", bundleName.c_str(), userId);
