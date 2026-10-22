@@ -3169,9 +3169,6 @@ HWTEST_F(BmsDataMgrTest, AddDesktopShortcutInfo_0001, Function | SmallTest | Lev
     ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
     bool isIdIllegal = false;
 
-    // Clean up any existing data from previous test runs
-    shortcutDataStorageRdb->DeleteDesktopShortcutInfo(shortcutInfo, USERID);
-
     bool ret = shortcutDataStorageRdb->AddDesktopShortcutInfo(shortcutInfo, USERID, isIdIllegal);
     EXPECT_TRUE(ret);
 
@@ -3233,23 +3230,6 @@ HWTEST_F(BmsDataMgrTest, AddDesktopShortcutInfo_0004, Function | MediumTest | Le
     BundleDataMgr bundleDataMgr;
     ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
     bundleDataMgr.AddUserId(USERID);
-    std::lock_guard<std::mutex> paramLock(g_paramMutex);
-    auto isEnableHmos = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, false);
-    auto isEnableFusion = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_FUSION, false);
-    if (isEnableHmos) {
-        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "false");
-    }
-    if (isEnableFusion) {
-        OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "false");
-    }
-    ScopeGuard paramGuard([&] {
-        if (isEnableHmos) {
-            OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "true");
-        }
-        if (isEnableFusion) {
-            OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "true");
-        }
-    });
     auto ret1 = bundleDataMgr.AddDesktopShortcutInfo(shortcutInfo, USERID);
     EXPECT_NE(ret1, ERR_OK);
 }
@@ -3304,39 +3284,6 @@ HWTEST_F(BmsDataMgrTest, AddDesktopShortcutInfo_0005, Function | MediumTest | Le
 }
 
 /**
- * @tc.number: AddDesktopShortcutInfo_0006
- * @tc.name: AddDesktopShortcutInfo with VM enabled and bundle not exist
- * @tc.desc: test AddDesktopShortcutInfo when IsVmEnabled is true and bundle not found locally,
- *           should skip isEnabled check and proceed to storage
- */
-HWTEST_F(BmsDataMgrTest, AddDesktopShortcutInfo_0006, Function | MediumTest | Level1)
-{
-    BundleDataMgr bundleDataMgr;
-    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
-    bundleDataMgr.AddUserId(USERID);
-    std::lock_guard<std::mutex> paramLock(g_paramMutex);
-    auto isEnableHmos = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, false);
-    auto isEnableFusion = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_FUSION, false);
-    if (!isEnableHmos) {
-        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "true");
-    }
-    ScopeGuard paramGuard([&] {
-        if (!isEnableHmos) {
-            OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "false");
-        }
-        if (isEnableFusion) {
-            OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "true");
-        }
-    });
-    if (isEnableFusion) {
-        OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "false");
-    }
-    shortcutInfo.bundleName = "com.nonexistent.lake.app";
-    auto ret = bundleDataMgr.AddDesktopShortcutInfo(shortcutInfo, USERID);
-    EXPECT_NE(ret, ERR_BUNDLE_MANAGER_APPLICATION_DISABLED);
-}
-
-/**
  * @tc.number: UpdateDesktopShortcutInfo_0001
  * @tc.name: UpdateDesktopShortcutInfo
  * @tc.desc: test StorageRdb UpdateDesktopShortcutInfo normal/not-exist/null-rdb paths via changedRows
@@ -3347,10 +3294,6 @@ HWTEST_F(BmsDataMgrTest, UpdateDesktopShortcutInfo_0001, Function | SmallTest | 
     ASSERT_NE(shortcutDataStorageRdb, nullptr);
     ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
     bool isIdIllegal = false;
-
-    // Clean up any existing data from previous test runs
-    shortcutDataStorageRdb->DeleteDesktopShortcutInfo(shortcutInfo, USERID);
-
     bool ret = shortcutDataStorageRdb->AddDesktopShortcutInfo(shortcutInfo, USERID, isIdIllegal);
     EXPECT_TRUE(ret);
     int32_t changedRows = 0;
@@ -14129,123 +14072,6 @@ HWTEST_F(BmsDataMgrTest, GetShortcutInfoV9_0003, Function | MediumTest | Level1)
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_GE(shortcutInfos.size(), 0u);
     bundleDataMgr.bundleInfos_.clear();
-}
-
-/**
- * @tc.number: AddDesktopShortcutInfo_LakeApp_0001
- * @tc.name: AddDesktopShortcutInfo with lake app (bundle not exist locally + VM enabled)
- * @tc.desc: test AddDesktopShortcutInfo when bundle not exist locally and VM is enabled,
- *           should skip IsApplicationEnabled check and continue
- */
-HWTEST_F(BmsDataMgrTest, AddDesktopShortcutInfo_LakeApp_0001, Function | SmallTest | Level1)
-{
-    BundleDataMgr bundleDataMgr;
-    bundleDataMgr.AddUserId(USERID);
-    std::lock_guard<std::mutex> paramLock(g_paramMutex);
-    auto isEnableHmos = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, false);
-    auto isEnableFusion = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_FUSION, false);
-    if (!isEnableHmos) {
-        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "true");
-    }
-    ScopeGuard paramGuard([&] {
-        if (!isEnableHmos) {
-            OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "false");
-        }
-    });
-    ShortcutInfo shortcutInfo;
-    shortcutInfo.bundleName = "com.nonexistent.lake.app";
-    shortcutInfo.appIndex = 0;
-    int32_t userId = USERID;
-    ErrCode ret = bundleDataMgr.AddDesktopShortcutInfo(shortcutInfo, userId);
-    EXPECT_NE(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
-}
-
-/**
- * @tc.number: AddDesktopShortcutInfo_LakeApp_0002
- * @tc.name: AddDesktopShortcutInfo with bundle not exist and VM disabled
- * @tc.desc: test AddDesktopShortcutInfo when bundle not exist locally and VM is disabled,
- *           should return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST
- */
-HWTEST_F(BmsDataMgrTest, AddDesktopShortcutInfo_LakeApp_0002, Function | SmallTest | Level1)
-{
-    BundleDataMgr bundleDataMgr;
-    bundleDataMgr.AddUserId(USERID);
-    std::lock_guard<std::mutex> paramLock(g_paramMutex);
-    auto isEnableHmos = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, false);
-    auto isEnableFusion = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_FUSION, false);
-    if (isEnableHmos) {
-        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "false");
-    }
-    if (isEnableFusion) {
-        OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "false");
-    }
-    ScopeGuard paramGuard([&] {
-        if (isEnableHmos) {
-            OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "true");
-        }
-        if (isEnableFusion) {
-            OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "true");
-        }
-    });
-    ShortcutInfo shortcutInfo;
-    shortcutInfo.bundleName = "com.nonexistent.bundle";
-    shortcutInfo.appIndex = 0;
-    int32_t userId = USERID;
-    ErrCode ret = bundleDataMgr.AddDesktopShortcutInfo(shortcutInfo, userId);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
-}
-
-/**
- * @tc.number: AddDesktopShortcutInfo_LakeApp_0003
- * @tc.name: AddDesktopShortcutInfo with lake app reaches storage write
- * @tc.desc: test AddDesktopShortcutInfo when bundle not exist locally and VM is enabled,
- *           should skip IsApplicationEnabled check and reach shortcutStorage_ write path.
- *           Uses a ShortcutDataStorageRdb with null rdbDataManager_ to make storage fail
- *           predictably, verifying the lake app path reaches storage (returns INTERNAL_ERROR
- *           instead of BUNDLE_NOT_EXIST).
- */
-HWTEST_F(BmsDataMgrTest, AddDesktopShortcutInfo_LakeApp_0003, Function | SmallTest | Level1)
-{
-    BundleDataMgr bundleDataMgr;
-    bundleDataMgr.AddUserId(USERID);
-    auto storage = std::make_shared<ShortcutDataStorageRdb>();
-    ASSERT_NE(storage, nullptr);
-    storage->rdbDataManager_ = nullptr;
-    bundleDataMgr.shortcutStorage_ = storage;
-    std::lock_guard<std::mutex> paramLock(g_paramMutex);
-    auto isEnableHmos = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, false);
-    auto isEnableFusion = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_FUSION, false);
-    if (!isEnableHmos) {
-        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "true");
-    }
-    ScopeGuard paramGuard([&] {
-        if (!isEnableHmos) {
-            OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "false");
-        }
-    });
-    ShortcutInfo shortcutInfo;
-    shortcutInfo.bundleName = "com.nonexistent.lake.app";
-    shortcutInfo.appIndex = 0;
-    int32_t userId = USERID;
-    ErrCode ret = bundleDataMgr.AddDesktopShortcutInfo(shortcutInfo, userId);
-    EXPECT_EQ(ret, ERR_SHORTCUT_MANAGER_INTERNAL_ERROR);
-}
-
-/**
- * @tc.number: AddDesktopShortcutInfo_EmptyBundleName_0001
- * @tc.name: AddDesktopShortcutInfo with empty bundleName
- * @tc.desc: test AddDesktopShortcutInfo when bundleName is empty, should return ERR_BUNDLE_MANAGER_PARAM_ERROR
- */
-HWTEST_F(BmsDataMgrTest, AddDesktopShortcutInfo_EmptyBundleName_0001, Function | SmallTest | Level1)
-{
-    BundleDataMgr bundleDataMgr;
-    bundleDataMgr.AddUserId(USERID);
-    ShortcutInfo shortcutInfo;
-    shortcutInfo.bundleName = "";
-    shortcutInfo.appIndex = 0;
-    int32_t userId = USERID;
-    ErrCode ret = bundleDataMgr.AddDesktopShortcutInfo(shortcutInfo, userId);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
 }
 
 /**

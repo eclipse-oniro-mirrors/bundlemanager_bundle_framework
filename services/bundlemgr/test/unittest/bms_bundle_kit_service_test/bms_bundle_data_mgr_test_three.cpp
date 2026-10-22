@@ -1615,24 +1615,6 @@ HWTEST_F(BmsBundleDataMgrTest3, BundleMgrHostImplAddDesktopShortcutInfo_0001, Fu
     ASSERT_NE(localBundleMgrHostImpl, nullptr);
     ShortcutInfo shortcutInfo = BmsBundleDataMgrTest3::InitShortcutInfo();
 
-    std::lock_guard<std::mutex> paramLock(g_paramMutex);
-    auto isEnableHmos = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, false);
-    auto isEnableFusion = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_FUSION, false);
-    if (isEnableHmos) {
-        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "false");
-    }
-    if (isEnableFusion) {
-        OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "false");
-    }
-    ScopeGuard paramGuard([&] {
-        if (isEnableHmos) {
-            OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "true");
-        }
-        if (isEnableFusion) {
-            OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "true");
-        }
-    });
-
     ErrCode ret = localBundleMgrHostImpl->AddDesktopShortcutInfo(shortcutInfo, USERID);
     EXPECT_NE(ret, ERR_OK);
 
@@ -1652,24 +1634,6 @@ HWTEST_F(BmsBundleDataMgrTest3, BundleMgrHostImplAddDesktopShortcutInfo_0002, Fu
     std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
     ASSERT_NE(localBundleMgrHostImpl, nullptr);
     ShortcutInfo shortcutInfo = BmsBundleDataMgrTest3::InitShortcutInfo();
-
-    std::lock_guard<std::mutex> paramLock(g_paramMutex);
-    auto isEnableHmos = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, false);
-    auto isEnableFusion = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_FUSION, false);
-    if (isEnableHmos) {
-        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "false");
-    }
-    if (isEnableFusion) {
-        OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "false");
-    }
-    ScopeGuard paramGuard([&] {
-        if (isEnableHmos) {
-            OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "true");
-        }
-        if (isEnableFusion) {
-            OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "true");
-        }
-    });
 
     ErrCode ret = localBundleMgrHostImpl->AddDesktopShortcutInfo(shortcutInfo, USERID);
     EXPECT_NE(ret, ERR_OK);

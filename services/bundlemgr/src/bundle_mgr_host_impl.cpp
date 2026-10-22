@@ -3951,7 +3951,7 @@ ErrCode BundleMgrHostImpl::GetShortcutInfoV9(const std::string &bundleName,
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     ErrCode ret = dataMgr->GetShortcutInfoV9(bundleName, userId, shortcutInfos);
-    if (ret == ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST && !bundleName.empty() && BundleUtil::IsVmEnabled()) {
+    if (!bundleName.empty() && BundleUtil::IsVmEnabled()) {
         int32_t resolvedUserId = dataMgr->GetUserId(userId);
         ret = QueryShortcutInfosFromExtension(bundleName, resolvedUserId, shortcutInfos);
     }
