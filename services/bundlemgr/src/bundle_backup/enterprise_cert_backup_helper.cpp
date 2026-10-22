@@ -169,7 +169,7 @@ ErrCode ParseAndValidateCerts(const nlohmann::json &certsArray, std::vector<Cert
 {
     if (!certsArray.is_array()) {
         APP_LOGE("certs json is not array");
-        return ERR_APPEXECFWK_BACKUP_ENTERPRISE_CERT_PARAM_ERROR;
+        return ERR_APPEXECFWK_BACKUP_INVALID_PARAMETER;
     }
     std::map<int32_t, int32_t> userCertCount;
     for (const auto &item : certsArray) {
@@ -177,39 +177,39 @@ ErrCode ParseAndValidateCerts(const nlohmann::json &certsArray, std::vector<Cert
             !item.contains(ServiceConstants::BACKUP_CERT_ALIAS_KEY) ||
             !item.contains(ServiceConstants::BACKUP_CERT_CONTENT_KEY)) {
             APP_LOGE("cert item missing fields");
-            return ERR_APPEXECFWK_BACKUP_ENTERPRISE_CERT_PARAM_ERROR;
+            return ERR_APPEXECFWK_BACKUP_INVALID_PARAMETER;
         }
         if (!item.at(ServiceConstants::BACKUP_CERT_USER_ID_KEY).is_number_integer()) {
             APP_LOGE("cert userId is not integer");
-            return ERR_APPEXECFWK_BACKUP_ENTERPRISE_CERT_PARAM_ERROR;
+            return ERR_APPEXECFWK_BACKUP_INVALID_PARAMETER;
         }
         int32_t userId = item.at(ServiceConstants::BACKUP_CERT_USER_ID_KEY).get<int32_t>();
         if (userId < Constants::START_USERID) {
             APP_LOGE("cert userId invalid: %{public}d", userId);
-            return ERR_APPEXECFWK_BACKUP_ENTERPRISE_CERT_PARAM_ERROR;
+            return ERR_APPEXECFWK_BACKUP_INVALID_PARAMETER;
         }
         if (!item.at(ServiceConstants::BACKUP_CERT_ALIAS_KEY).is_string() ||
             !item.at(ServiceConstants::BACKUP_CERT_CONTENT_KEY).is_string()) {
             APP_LOGE("cert alias or content is not string");
-            return ERR_APPEXECFWK_BACKUP_ENTERPRISE_CERT_PARAM_ERROR;
+            return ERR_APPEXECFWK_BACKUP_INVALID_PARAMETER;
         }
         std::string alias = item.at(ServiceConstants::BACKUP_CERT_ALIAS_KEY).get<std::string>();
         if (alias.empty() || alias.size() > static_cast<size_t>(Constants::MAX_FILE_NAME_LENGTH) ||
             !EndWith(alias, ServiceConstants::CER_SUFFIX) ||
             alias.find(ServiceConstants::PATH_SEPARATOR) != std::string::npos) {
             APP_LOGE("cert alias invalid: %{public}s", alias.c_str());
-            return ERR_APPEXECFWK_BACKUP_ENTERPRISE_CERT_PARAM_ERROR;
+            return ERR_APPEXECFWK_BACKUP_INVALID_PARAMETER;
         }
         std::string encoded = item.at(ServiceConstants::BACKUP_CERT_CONTENT_KEY).get<std::string>();
         std::string content;
         if (!DecodeBase64(encoded, content) || content.empty() ||
             content.size() > static_cast<size_t>(Constants::CAPACITY_SIZE)) {
             APP_LOGE("cert content invalid, encoded size: %{public}zu", encoded.size());
-            return ERR_APPEXECFWK_BACKUP_ENTERPRISE_CERT_PARAM_ERROR;
+            return ERR_APPEXECFWK_BACKUP_INVALID_PARAMETER;
         }
         if (++userCertCount[userId] > ServiceConstants::MAX_ENTERPRISE_RESIGN_CERT_NUM) {
             APP_LOGE("cert num exceed max for user: %{public}d", userId);
-            return ERR_APPEXECFWK_BACKUP_ENTERPRISE_CERT_PARAM_ERROR;
+            return ERR_APPEXECFWK_BACKUP_INVALID_PARAMETER;
         }
         items.push_back(CertItem{userId, alias, content});
     }
@@ -268,7 +268,7 @@ ErrCode RollbackRestoredCerts(const std::vector<std::string> &restoredPaths,
     }
     if (snapshot.certs.empty()) {
         APP_LOGW("no local cert snapshot to rollback, device left with cleared certs");
-        return ERR_APPEXECFWK_BACKUP_ENTERPRISE_CERT_RESTORE_FAILED;
+        return ERR_APPEXECFWK_BACKUP_FILE_IO_ERROR;
     }
     for (const auto &cert : snapshot.certs) {
         ErrCode addRet = InstalldClient::GetInstance()->AddCertAndEnableKey(
@@ -277,7 +277,7 @@ ErrCode RollbackRestoredCerts(const std::vector<std::string> &restoredPaths,
             APP_LOGE("rollback reinstall local cert failed, err: %{public}d", addRet);
         }
     }
-    return ERR_APPEXECFWK_BACKUP_ENTERPRISE_CERT_RESTORE_FAILED;
+    return ERR_APPEXECFWK_BACKUP_FILE_IO_ERROR;
 }
 
 // Back up all certs in one user dir (.cer -> base64 -> JSON array).
@@ -341,7 +341,7 @@ ErrCode ClearUserCerts(const std::string &certRootDir, int32_t userId, LocalCert
     DIR *userDirHandle = opendir(userDir.c_str());
     if (userDirHandle == nullptr) {
         APP_LOGE("opendir user dir failed, errno: %{public}d", errno);
-        return ERR_APPEXECFWK_BACKUP_ENTERPRISE_CERT_RESTORE_FAILED;
+        return ERR_APPEXECFWK_BACKUP_FILE_IO_ERROR;
     }
     ErrCode clearRet = ERR_OK;
     struct dirent *fileEntry = nullptr;
@@ -358,7 +358,7 @@ ErrCode ClearUserCerts(const std::string &certRootDir, int32_t userId, LocalCert
             {BuildCertFilePath(certRootDir, userId, fileName)});
         if (delRet != ERR_OK) {
             APP_LOGE("clear local cert failed, err: %{public}d", delRet);
-            clearRet = ERR_APPEXECFWK_BACKUP_ENTERPRISE_CERT_RESTORE_FAILED;
+            clearRet = ERR_APPEXECFWK_BACKUP_FILE_IO_ERROR;
         }
     }
     closedir(userDirHandle);

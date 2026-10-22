@@ -275,12 +275,21 @@ ErrCode BundleInstallChecker::CheckMultipleHapsSignInfo(
     for (const std::string &bundlePath : bundlePaths) {
         Security::Verify::HapVerifyResult hapVerifyResult;
         ErrCode verifyRes = ERR_OK;
-        verifyRes = BundleVerifyMgr::HapVerify(bundlePath, hapVerifyResult, readFile, userId,
-            skipEnterpriseResign);
+        verifyRes = BundleVerifyMgr::HapVerify(bundlePath, hapVerifyResult, readFile, userId);
 #ifndef X86_EMULATOR_MODE
         if (verifyRes != ERR_OK) {
-            LOG_E(BMS_TAG_INSTALLER, "hap file verify failed, bundlePath: %{public}s", bundlePath.c_str());
-            return verifyRes;
+            if (skipEnterpriseResign &&
+                verifyRes == ERR_APPEXECFWK_INSTALL_FAILED_VERIFY_ENTERPRISE_RESIGN_FAIL) {
+                // VERIFY_ENTERPRISE_RESIGN_FAIL is returned only by the local-cert comparison,
+                // the last gate of the appverify chain: every other signature, integrity and
+                // profile check has passed and only the resign block does not match the local
+                // certs. Callers holding PERMISSION_SKIP_ENTERPRISE_RESIGN_VERIFY may install
+                // such haps untagged (isEnterpriseResigned stays false).
+                LOG_I(BMS_TAG_INSTALLER, "resign verify failed under skip permission, skip the resign check");
+            } else {
+                LOG_E(BMS_TAG_INSTALLER, "hap file verify failed, bundlePath: %{public}s", bundlePath.c_str());
+                return verifyRes;
+            }
         }
 #endif
         hapVerifyRes.emplace_back(hapVerifyResult);
