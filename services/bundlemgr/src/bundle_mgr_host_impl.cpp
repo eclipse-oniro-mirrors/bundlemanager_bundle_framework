@@ -55,6 +55,7 @@
 #include "parameters.h"
 #include "on_demand_install_data_mgr.h"
 #include "param_validator.h"
+#include "pre_compress_handler.h"
 #include "system_ability_helper.h"
 #include "inner_bundle_clone_common.h"
 #include "dual_mode_helper.h"
@@ -6558,7 +6559,9 @@ bool BundleMgrHostImpl::GetPreferableBundleInfoFromHapPaths(const std::vector<st
     }
     for (auto hapPath: hapPaths) {
         BundleInfo resultBundleInfo;
-        if (!GetBundleArchiveInfo(hapPath, GET_BUNDLE_DEFAULT, resultBundleInfo)) {
+        ScopedDecompressedHap scopedHap(hapPath);
+        if (!scopedHap.IsValid() ||
+            !GetBundleArchiveInfo(scopedHap.GetHapPath(), GET_BUNDLE_DEFAULT, resultBundleInfo)) {
             return false;
         }
         bundleInfo = resultBundleInfo;

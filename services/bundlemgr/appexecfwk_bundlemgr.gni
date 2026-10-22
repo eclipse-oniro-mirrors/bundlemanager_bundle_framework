@@ -95,6 +95,8 @@ bundle_install_sources = [
   "${services_path}/bundlemgr/src/module_json_updater.cpp",
   "${services_path}/bundlemgr/src/oobe_preload_uninstall_mgr.cpp",
   "${services_path}/bundlemgr/src/plugin/plugin_installer.cpp",
+  "${services_path}/bundlemgr/src/pre_compress/pre_compress_handler.cpp",
+  "${services_path}/bundlemgr/src/pre_compress/zstd_wrapper.cpp",
   "${services_path}/bundlemgr/src/pre_install_bundle_info.cpp",
   "${services_path}/bundlemgr/src/pre_install_exception_mgr.cpp",
   "${services_path}/bundlemgr/src/sandbox_app/bundle_sandbox_app_helper.cpp",
@@ -313,6 +315,8 @@ bundle_resource = [
   "${services_path}/bundlemgr/src/bundle_resource/bundle_resource_rdb.cpp",
   "${services_path}/bundlemgr/src/bundle_resource/bundle_resource_register.cpp",
   "${services_path}/bundlemgr/src/bundle_resource/bundle_resource_theme_process.cpp",
+  "${services_path}/bundlemgr/src/bundle_resource/pre_compress_bundle_resource_rdb.cpp",
+  "${services_path}/bundlemgr/src/bundle_resource/pre_compress_theme_resource_rdb.cpp",
   "${services_path}/bundlemgr/src/bundle_resource/resource_info.cpp",
   "${services_path}/bundlemgr/src/bundle_resource/uninstall_bundle_resource_rdb.cpp",
 ]

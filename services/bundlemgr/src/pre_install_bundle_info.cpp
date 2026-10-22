@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -37,6 +37,7 @@ constexpr const char* OTA_NEW_INSTALL_USERS = "otaNewInstallUsers";
 constexpr const char* DESCRIPTION_ID = "descriptionId";
 constexpr const char* IS_DUAL_MODE_CLONE_APP = "isDualModeCloneApp";
 constexpr const char* DEVICE_MODE_DISTRIBUTION_POLICY = "deviceModeDistributionPolicy";
+constexpr const char* COMPRESSED = "compressed";
 
 }  // namespace
 
@@ -59,6 +60,7 @@ void PreInstallBundleInfo::ToJson(nlohmann::json &jsonObject) const
     jsonObject[U1_ENABLE] = u1Enable_;
     jsonObject[IS_DUAL_MODE_CLONE_APP] = isDualModeCloneApp_;
     jsonObject[DEVICE_MODE_DISTRIBUTION_POLICY] = static_cast<int32_t>(deviceModeDistributionPolicy_);
+    jsonObject[COMPRESSED] = compressed_;
 }
 
 int32_t PreInstallBundleInfo::FromJson(const nlohmann::json &jsonObject)
@@ -101,6 +103,8 @@ int32_t PreInstallBundleInfo::FromJson(const nlohmann::json &jsonObject)
     GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, DEVICE_MODE_DISTRIBUTION_POLICY,
         policyValue, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     deviceModeDistributionPolicy_ = static_cast<DeviceModeDistributionPolicy>(policyValue);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, COMPRESSED,
+        compressed_, false, parseResult);
     return parseResult;
 }
 
@@ -124,6 +128,7 @@ std::string PreInstallBundleInfo::ToString() const
     jsonObject[U1_ENABLE] = u1Enable_;
     jsonObject[IS_DUAL_MODE_CLONE_APP] = isDualModeCloneApp_;
     jsonObject[DEVICE_MODE_DISTRIBUTION_POLICY] = static_cast<int32_t>(deviceModeDistributionPolicy_);
+    jsonObject[COMPRESSED] = compressed_;
     return jsonObject.dump();
 }
 

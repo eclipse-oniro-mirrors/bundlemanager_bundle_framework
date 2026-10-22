@@ -462,5 +462,17 @@ bool BundleResourceHelper::MigrateUninstallBundleResource()
     return false;
 #endif
 }
+
+void BundleResourceHelper::RefreshPreCompressBundleResource()
+{
+#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    if (manager == nullptr) {
+        APP_LOGE_NOFUNC("failed, manager is nullptr");
+        return;
+    }
+    manager->RefreshPreCompressBundleResource();
+#endif
+}
 } // AppExecFwk
 } // OHOS

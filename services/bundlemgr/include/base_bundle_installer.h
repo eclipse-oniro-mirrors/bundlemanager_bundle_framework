@@ -758,6 +758,11 @@ private:
     ErrCode CopyHapsToSecurityDir(const InstallParam &installParam, std::vector<std::string> &bundlePaths);
     ErrCode ParseHapPaths(const InstallParam &installParam, const std::vector<std::string> &inBundlePaths,
         std::vector<std::string> &parsedPaths);
+    ErrCode PrepareCompressedPreloadPaths(const InstallParam &installParam,
+        std::vector<std::string> &parsedPaths);
+    std::string GetOriginalSourcePath(const std::string &path) const;
+    void ProcessAgConfigFile(const InstallParam &installParam, bool oldIsCompressedPreload,
+        bool newIsCompressedPreload);
     ErrCode RenameAllTempDir(const std::unordered_map<std::string, InnerBundleInfo> &newInfos) const;
     ErrCode FindSignatureFileDir(const std::string &moduleName, std::string &signatureFileDir);
     ErrCode MoveFileToRealInstallationDir(const std::unordered_map<std::string, InnerBundleInfo> &infos);
@@ -1225,6 +1230,9 @@ private:
     std::unordered_map<std::string, bool> installedModules_;
     std::vector<std::string> uninstallModuleVec_;
     std::map<std::string, std::string> hapPathRecords_;
+    // key is the decompressed hap path in the temp dir
+    // value is the compressed archive it came from, under the preload image
+    std::unordered_map<std::string, std::string> decompressedSourceMap_;
     // utilizing for code-signature
     std::map<std::string, std::string> verifyCodeParams_;
     std::vector<std::string> toDeleteTempHapPath_;

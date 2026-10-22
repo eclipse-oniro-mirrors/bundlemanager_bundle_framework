@@ -5981,12 +5981,14 @@ bool InstalldOperator::IsValidPathByMoveHapToCodeDir(const std::string &originPa
         return false;
     }
 
+    const std::string agConfigSuffix =
+        std::string(ServiceConstants::PATH_SEPARATOR) + ServiceConstants::AG_CONFIG_FILE;
     bool isValidOriginPath = StartsWith(originPath, ServiceConstants::HAP_COPY_PATH) &&
         (EndsWith(originPath, ServiceConstants::INSTALL_FILE_SUFFIX) ||
-            EndsWith(originPath, ServiceConstants::HSP_FILE_SUFFIX));
+            EndsWith(originPath, ServiceConstants::HSP_FILE_SUFFIX) || EndsWith(originPath, agConfigSuffix));
     bool isValidTargetPath = StartsWith(targetPath, Constants::BUNDLE_CODE_DIR) &&
         (EndsWith(targetPath, ServiceConstants::INSTALL_FILE_SUFFIX) ||
-            EndsWith(targetPath, ServiceConstants::HSP_FILE_SUFFIX));
+            EndsWith(targetPath, ServiceConstants::HSP_FILE_SUFFIX) || EndsWith(targetPath, agConfigSuffix));
 
     return isValidOriginPath && isValidTargetPath;
 }

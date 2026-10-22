@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -105,6 +105,7 @@ struct PreScanInfo {
     std::string bundleDir;
     std::string appIdentifier;
     bool onDemandInstall = false;
+    bool compressed = false;
 
     bool operator < (const PreScanInfo &preScanInfo) const
     {
@@ -128,6 +129,7 @@ struct PreScanInfo {
         appIdentifier.clear();
         isDataPreloadHap = false;
         onDemandInstall = false;
+        compressed = false;
     }
 
     std::string ToString() const
@@ -136,6 +138,7 @@ struct PreScanInfo {
             + ", removable = " + GetBoolStrVal(removable)
             + ", appIdentifier = " + appIdentifier
             + ", isDataPreloadHap = " + GetBoolStrVal(isDataPreloadHap)
+            + ", compressed = " + GetBoolStrVal(compressed)
             + ", priority = " + std::to_string(priority) + "]";
     }
 };

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -502,13 +502,20 @@ ErrCode BundleResourceHostImpl::GetAllUninstallBundleResourceInfo(const int32_t 
         APP_LOGE("manager is nullptr");
         return ERR_APPEXECFWK_NULL_PTR;
     }
-    if (!manager->GetAllUninstallBundleResourceInfo(userId, flags, bundleResourceInfos)) {
+    bool isPreCompress = (flags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_PRE_COMPRESS_BUNDLE)) ==
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_PRE_COMPRESS_BUNDLE);
+    bool ret = isPreCompress ?
+        manager->GetAllUninstallPreCompressBundleResourceInfo(userId, flags, bundleResourceInfos) :
+        manager->GetAllUninstallBundleResourceInfo(userId, flags, bundleResourceInfos);
+    if (!ret) {
         APP_LOGE("get all uninstall bundle resource failed, flags:%{public}u -u:%{public}d", flags, userId);
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    FilterUninstallResource(userId, bundleResourceInfos);
-    // dual-mode: normalize after the keep-data filter (it matches prefixed storage names)
-    BundleResourceManager::NormalizeDualModeUninstallResourceInfos(bundleResourceInfos);
+    if (!isPreCompress) {
+        FilterUninstallResource(userId, bundleResourceInfos);
+        // dual-mode: normalize after the keep-data filter (it matches prefixed storage names)
+        BundleResourceManager::NormalizeDualModeUninstallResourceInfos(bundleResourceInfos);
+    }
     if ((flags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL)) ==
         static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL)) {
         APP_LOGD("need sort by label");

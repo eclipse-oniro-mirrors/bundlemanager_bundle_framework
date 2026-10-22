@@ -29,6 +29,9 @@
 #include "bundle_system_state.h"
 #include "inner_bundle_info.h"
 #include "launcher_ability_info.h"
+#include "pre_install_bundle_info.h"
+#include "pre_compress_bundle_resource_rdb.h"
+#include "pre_compress_theme_resource_rdb.h"
 #include "resource_info.h"
 #include "resource_manager.h"
 #include "singleton.h"
@@ -148,6 +151,11 @@ public:
 
     bool MigrateUninstallBundleResource();
 
+    void RefreshPreCompressBundleResource();
+
+    bool GetAllUninstallPreCompressBundleResourceInfo(const int32_t userId, const uint32_t flags,
+        std::vector<BundleResourceInfo> &bundleResourceInfos);
+
     int32_t GetUserId();
 
     void RebuildResourceDb();
@@ -225,12 +233,24 @@ private:
 
     std::set<int32_t> GetUserIdsForAddResource(const int32_t userId);
 
+    bool AddPreCompressBundleResource(const PreInstallBundleInfo &preInstallBundleInfo);
+
+    void AddPreCompressThemeResource(const int32_t userId, const uint32_t tempTaskNumber);
+
+    bool GetThemeIconFromIconRdb(const int32_t userId, ResourceInfo &resourceInfo);
+
+    bool ParseThemeIconFromThemeDir(const int32_t userId, ResourceInfo &resourceInfo);
+
+    bool GetRecoverablePreCompressBundleNames(const int32_t userId, std::vector<std::string> &bundleNames);
+
     std::atomic_uint currentTaskNum_ = 0;
     std::atomic_uint currentChangeType_ = 0;
     std::mutex mutex_;
     std::shared_ptr<BundleResourceRdb> bundleResourceRdb_;
     std::shared_ptr<BundleResourceIconRdb> bundleResourceIconRdb_;
     std::shared_ptr<UninstallBundleResourceRdb> uninstallBundleResourceRdb_;
+    std::shared_ptr<PreCompressBundleResourceRdb> preCompressBundleResourceRdb_;
+    std::shared_ptr<PreCompressThemeResourceRdb> preCompressThemeResourceRdb_;
     std::shared_ptr<SingleDelayedTaskMgr> delayedTaskMgr_ = nullptr;
     static std::mutex g_sysResMutex;
     static std::shared_ptr<Global::Resource::ResourceManager> g_resMgr;

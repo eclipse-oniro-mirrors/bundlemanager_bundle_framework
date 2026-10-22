@@ -1,4 +1,4 @@
-# Copyright (c) 2022-2025 Huawei Device Co., Ltd.
+# Copyright (c) 2022-2026 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -58,6 +58,8 @@ ohos_unittest("BmsBundleResourceManagerTest") {
     "${services_path}/bundlemgr/src/bundle_resource/bundle_resource_manager.cpp",
     "${services_path}/bundlemgr/src/bundle_resource/bundle_resource_rdb.cpp",
     "${services_path}/bundlemgr/src/bundle_resource/bundle_resource_icon_rdb.cpp",
+    "${services_path}/bundlemgr/src/bundle_resource/pre_compress_bundle_resource_rdb.cpp",
+    "${services_path}/bundlemgr/src/bundle_resource/pre_compress_theme_resource_rdb.cpp",
     "${services_path}/bundlemgr/src/bundle_resource/uninstall_bundle_resource_rdb.cpp",
   ]
 

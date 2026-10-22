@@ -2567,6 +2567,14 @@ public:
     {
         return isDualModeCloneApp_;
     }
+    void SetCompressedPreload(bool isCompressedPreload)
+    {
+        isCompressedPreload_ = isCompressedPreload;
+    }
+    bool IsCompressedPreload() const
+    {
+        return isCompressedPreload_;
+    }
     bool isAbilityNameExist(const std::string &moduleName, const std::string &abilityName) const;
     bool GetPluginBundleInfoByName(
         const int32_t userId, const std::string pluginBundleName, PluginBundleInfo &pluginBundleInfo) const;
@@ -2622,7 +2630,8 @@ private:
 
     // Dual-mode: true if installed as secondary-mode different-package app (DB key + dir prefixed).
     bool isDualModeCloneApp_ = false;
-    
+
+    bool isCompressedPreload_ = false;
     BundleStatus bundleStatus_ = BundleStatus::ENABLED;
     int32_t appIndex_ = Constants::INITIAL_APP_INDEX;
     // apply quick fix frequency

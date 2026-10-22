@@ -2522,4 +2522,57 @@ HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_Init_UnInit_ConcurrentSafety
         EXPECT_TRUE(BundlePermissionMgr::defaultPermissions_.empty());
     }
 }
+/**
+ * @tc.number: PreInstallBundleInfo_Compressed_0100
+ * @tc.name: test the compressed field of PreInstallBundleInfo
+ * @tc.desc: 1. compressed is false by default and kept by SetCompressed
+ *           2. compressed survives ToJson and FromJson and is written by ToString
+ */
+HWTEST_F(BmsServiceStartupTest, PreInstallBundleInfo_Compressed_0100, Function | SmallTest | Level0)
+{
+    const std::string archivePath = "/preload/app/com.example.compressed/entry.hap.zst";
+    PreInstallBundleInfo info;
+    EXPECT_FALSE(info.IsCompressed());
+    info.SetBundleName(BUNDLE_TEMP_NAME);
+    info.SetVersionCode(1);
+    info.AddBundlePath(archivePath);
+    info.SetCompressed(true);
+    EXPECT_TRUE(info.IsCompressed());
+
+    nlohmann::json jsonObject;
+    info.ToJson(jsonObject);
+    ASSERT_TRUE(jsonObject.contains("compressed"));
+    EXPECT_TRUE(jsonObject.at("compressed").get<bool>());
+    PreInstallBundleInfo parsedInfo;
+    EXPECT_EQ(parsedInfo.FromJson(jsonObject), ERR_OK);
+    EXPECT_TRUE(parsedInfo.IsCompressed());
+    EXPECT_EQ(parsedInfo.GetBundlePaths(), std::vector<std::string> { archivePath });
+    EXPECT_NE(info.ToString().find("\"compressed\":true"), std::string::npos);
+
+    info.SetCompressed(false);
+    EXPECT_FALSE(info.IsCompressed());
+    EXPECT_NE(info.ToString().find("\"compressed\":false"), std::string::npos);
+}
+
+/**
+ * @tc.number: PreInstallBundleInfo_Compressed_0200
+ * @tc.name: test FromJson of the compressed field
+ * @tc.desc: 1. a record saved before the field existed is read as not compressed without error
+ *           2. a compressed field of a wrong type fails the parse
+ */
+HWTEST_F(BmsServiceStartupTest, PreInstallBundleInfo_Compressed_0200, Function | SmallTest | Level0)
+{
+    nlohmann::json oldRecord;
+    oldRecord["bundleName"] = BUNDLE_TEMP_NAME;
+    oldRecord["versionCode"] = 1;
+    oldRecord["bundlePaths"] = std::vector<std::string> { "/preload/app/com.example.plain/entry.hap" };
+    PreInstallBundleInfo oldInfo;
+    EXPECT_EQ(oldInfo.FromJson(oldRecord), ERR_OK);
+    EXPECT_FALSE(oldInfo.IsCompressed());
+
+    oldRecord["compressed"] = "true";
+    PreInstallBundleInfo wrongTypeInfo;
+    EXPECT_NE(wrongTypeInfo.FromJson(oldRecord), ERR_OK);
+    EXPECT_FALSE(wrongTypeInfo.IsCompressed());
+}
 } // OHOS

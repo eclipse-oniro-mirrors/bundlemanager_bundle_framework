@@ -47,8 +47,10 @@
 #include "bundle_resource_constants.h"
 #include "bundle_spm_manager.h"
 #include "bundle_scanner.h"
+#include "bundle_util.h"
 #include "event_report.h"
 #include "on_demand_install_data_mgr.h"
+#include "pre_compress_handler.h"
 #ifdef CONFIG_POLOCY_ENABLE
 #include "config_policy_utils.h"
 #endif
@@ -437,6 +439,7 @@ void BMSEventHandler::AfterBmsStart()
     RegisterOobeAgreeTermsEvent();
     RemoveUnreservedSandbox();
     ProcessCheckAppEl1Dir();
+    ProcessPreCompressBundleResource();
     ProcessCheckSystemOptimizeDir();
 #ifdef WEBVIEW_ENABLE
     NotifyFWKAfterBmsStart();
@@ -1730,11 +1733,12 @@ void BMSEventHandler::ProcessSystemBundleInstall(
     installParam.userId = userId;
     installParam.isPreInstallApp = true;
     installParam.isFirstBootInstall = true;
+    installParam.compressedPreload = preScanInfo.compressed;
     installParam.SetKillProcess(false);
     installParam.needSendEvent = false;
     installParam.removable = preScanInfo.removable;
     installParam.needSavePreInstallInfo = true;
-    installParam.copyHapToInstallPath = false;
+    installParam.copyHapToInstallPath = installParam.compressedPreload;
     installParam.isDataPreloadHap = preScanInfo.isDataPreloadHap;
     installParam.appIdentifier = preScanInfo.appIdentifier;
     installParam.preinstallSourceFlag = ApplicationInfoFlag::FLAG_BOOT_INSTALLED;
@@ -1754,11 +1758,12 @@ void BMSEventHandler::ProcessSystemBundleInstall(
     installParam.userId = userId;
     installParam.isPreInstallApp = true;
     installParam.isFirstBootInstall = true;
+    installParam.compressedPreload = IsPreInstallCompressed(bundleDir);
     installParam.SetKillProcess(false);
     installParam.needSendEvent = false;
     installParam.removable = false;
     installParam.needSavePreInstallInfo = true;
-    installParam.copyHapToInstallPath = false;
+    installParam.copyHapToInstallPath = installParam.compressedPreload;
     installParam.preinstallSourceFlag = ApplicationInfoFlag::FLAG_BOOT_INSTALLED;
     SystemBundleInstaller installer;
     ErrCode ret = installer.InstallSystemBundle(bundleDir, installParam, appType);
@@ -2047,7 +2052,9 @@ void BMSEventHandler::InnerProcessCheckPreinstallData()
         BundleInfo resultBundleInfo;
         auto preinstalledAppPaths = preInstallBundleInfo.GetBundlePaths();
         for (auto preinstalledAppPath: preinstalledAppPaths) {
-            if (!impl.GetBundleArchiveInfo(preinstalledAppPath, GET_BUNDLE_DEFAULT, resultBundleInfo)) {
+            ScopedDecompressedHap scopedHap(preinstalledAppPath);
+            if (!scopedHap.IsValid() ||
+                !impl.GetBundleArchiveInfo(scopedHap.GetHapPath(), GET_BUNDLE_DEFAULT, resultBundleInfo)) {
                 LOG_E(BMS_TAG_DEFAULT, "Get bundle archive info fail");
                 break;
             }
@@ -2260,7 +2267,9 @@ void BMSEventHandler::InnerProcessCheckRecoverableApplicationInfo()
         auto preinstalledAppPaths = preInstallBundleInfo.GetBundlePaths();
         for (auto preinstalledAppPath: preinstalledAppPaths) {
             BundleInfo archiveBundleInfo;
-            if (!impl.GetBundleArchiveInfo(preinstalledAppPath, GET_BUNDLE_DEFAULT, archiveBundleInfo)) {
+            ScopedDecompressedHap scopedHap(preinstalledAppPath);
+            if (!scopedHap.IsValid() ||
+                !impl.GetBundleArchiveInfo(scopedHap.GetHapPath(), GET_BUNDLE_DEFAULT, archiveBundleInfo)) {
                 LOG_E(BMS_TAG_DEFAULT, "Get bundle archive info fail");
                 break;
             }
@@ -2563,12 +2572,16 @@ bool BMSEventHandler::NeedProcessOtaNewPreloadInstall(const std::string &bundleN
         bool hideDesktopIcon = false;
         BundleInstallChecker bundleInstallChecker;
         std::vector<std::string> filePaths;
-        ErrCode checkRet = BundleUtil::CheckFilePath({scanPath}, filePaths);
+        ErrCode checkRet = IsPreInstallCompressed(scanPath) ?
+            PreCompressHandler::GetCompressedArchivesFromBundlePath(scanPath, filePaths) :
+            BundleUtil::CheckFilePath({scanPath}, filePaths);
         if (checkRet != ERR_OK || filePaths.empty()) {
             LOG_NOFUNC_W(BMS_TAG_DEFAULT, "obtain real path failed : %{public}s", bundleName.c_str());
             return false;
         }
-        if (bundleInstallChecker.GetHideDesktopIconByBundlePath(filePaths.front(), hideDesktopIcon)) {
+        ScopedDecompressedHap scopedHap(filePaths.front());
+        if (scopedHap.IsValid() &&
+            bundleInstallChecker.GetHideDesktopIconByBundlePath(scopedHap.GetHapPath(), hideDesktopIcon)) {
             bypassByHideDesktopIcon = hideDesktopIcon;
         }
     }
@@ -2926,6 +2939,12 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
                     break;
                 }
                 if (!IsPathExistInInstalledBundleInfo(item.first, hasInstalledInfo)) {
+                    updateBundle = true;
+                    break;
+                }
+                if (info.IsCompressedPreload() && !PreCompressHandler::IsCompressedArchive(item.first)) {
+                    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "OTA -n %{public}s preload is no longer compressed",
+                        bundleName.c_str());
                     updateBundle = true;
                     break;
                 }
@@ -4217,7 +4236,10 @@ void BMSEventHandler::ProcessRebootBundleUninstall()
                 continue;
             }
             LOG_I(BMS_TAG_DEFAULT, "ProcessRebootBundleUninstall OTA uninstall app(%{public}s)", bundleName.c_str());
-            if (InnerProcessUninstallForExistPreBundle(hasInstalledInfo)) {
+            InnerBundleInfo innerBundleInfo;
+            bool isFactoryCompressed = dataMgr->FetchInnerBundleInfo(bundleName, innerBundleInfo) &&
+                innerBundleInfo.IsCompressedPreload();
+            if (!isFactoryCompressed && InnerProcessUninstallForExistPreBundle(hasInstalledInfo)) {
                 continue;
             }
             SystemBundleInstaller installer;
@@ -4697,11 +4719,12 @@ bool BMSEventHandler::OTAInstallSystemBundle(
     installParam.installFlag = InstallFlag::REPLACE_EXISTING;
     installParam.removable = removable;
     installParam.needSavePreInstallInfo = true;
-    installParam.copyHapToInstallPath = false;
     installParam.isOTA = true;
     installParam.preinstallSourceFlag = ApplicationInfoFlag::FLAG_OTA_INSTALLED;
     installParam.forceDualModeCloneInstall = forceDualModeCloneInstall;
     installParam.deviceModeDistributionPolicy = deviceModeDistributionPolicy;
+    installParam.compressedPreload = std::any_of(filePaths.begin(), filePaths.end(), IsPreInstallCompressed);
+    installParam.copyHapToInstallPath = installParam.compressedPreload;
     SystemBundleInstaller installer;
     ErrCode ret = installer.OTAInstallSystemBundle(filePaths, installParam, appType);
     if (ret == ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON) {
@@ -4730,10 +4753,11 @@ bool BMSEventHandler::OTAInstallSystemBundleNeedCheckUser(
     installParam.installFlag = InstallFlag::REPLACE_EXISTING;
     installParam.removable = removable;
     installParam.needSavePreInstallInfo = true;
-    installParam.copyHapToInstallPath = false;
     installParam.isOTA = true;
     installParam.preinstallSourceFlag = ApplicationInfoFlag::FLAG_OTA_INSTALLED;
     installParam.deviceModeDistributionPolicy = deviceModeDistributionPolicy;
+    installParam.compressedPreload = std::any_of(filePaths.begin(), filePaths.end(), IsPreInstallCompressed);
+    installParam.copyHapToInstallPath = installParam.compressedPreload;
     SystemBundleInstaller installer;
     ErrCode ret = installer.OTAInstallSystemBundleNeedCheckUser(filePaths, installParam, bundleName, appType);
     LOG_NOFUNC_I(BMS_TAG_DEFAULT, "bundle %{public}s with return code: %{public}d", bundleName.c_str(), ret);
@@ -4767,11 +4791,12 @@ bool BMSEventHandler::OTAInstallSystemBundleTargetUser(const std::vector<std::st
     installParam.installFlag = InstallFlag::REPLACE_EXISTING;
     installParam.removable = removable;
     installParam.needSavePreInstallInfo = true;
-    installParam.copyHapToInstallPath = false;
     installParam.isOTA = true;
     installParam.preinstallSourceFlag = ApplicationInfoFlag::FLAG_OTA_INSTALLED;
     installParam.forceDualModeCloneInstall = forceDualModeCloneInstall;
     installParam.deviceModeDistributionPolicy = deviceModeDistributionPolicy;
+    installParam.compressedPreload = std::any_of(filePaths.begin(), filePaths.end(), IsPreInstallCompressed);
+    installParam.copyHapToInstallPath = installParam.compressedPreload;
     // support patch app downgrade install
     if (isPatchDowngrade) {
         installParam.allowPatchDowngrade = true;
@@ -4909,11 +4934,12 @@ bool BMSEventHandler::ParseHapFiles(
     const std::string &hapFilePath,
     std::unordered_map<std::string, InnerBundleInfo> &infos)
 {
-    std::vector<std::string> hapFilePathVec { hapFilePath };
     std::vector<std::string> realPaths;
-    auto ret = BundleUtil::CheckFilePath(hapFilePathVec, realPaths);
-    if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_DEFAULT, "File path %{public}s invalid", hapFilePath.c_str());
+    std::vector<std::string> tempDirs;
+    std::unordered_map<std::string, std::string> sourceMap;
+    ScopeGuard tempDirGuard([&tempDirs] { BundleUtil::DeleteTempDirs(tempDirs); });
+    if (!PreCompressHandler::PrepareScanPaths(
+        hapFilePath, IsPreInstallCompressed(hapFilePath), realPaths, tempDirs, sourceMap)) {
         return false;
     }
 
@@ -4921,7 +4947,7 @@ bool BMSEventHandler::ParseHapFiles(
     for (auto realPath : realPaths) {
         InnerBundleInfo innerBundleInfo;
         bool isAbcCompressed = false;
-        ret = bundleParser.Parse(realPath, innerBundleInfo, isAbcCompressed);
+        auto ret = bundleParser.Parse(realPath, innerBundleInfo, isAbcCompressed);
         if (ret != ERR_OK) {
             LOG_E(BMS_TAG_DEFAULT, "Parse bundle info failed, error: %{public}d", ret);
             continue;
@@ -4929,6 +4955,7 @@ bool BMSEventHandler::ParseHapFiles(
 
         infos.emplace(realPath, innerBundleInfo);
     }
+    PreCompressHandler::RekeyInfosToSource(sourceMap, infos);
 
     if (infos.empty()) {
         LOG_E(BMS_TAG_DEFAULT, "Parse hap(%{public}s) empty ", hapFilePath.c_str());
@@ -4936,6 +4963,18 @@ bool BMSEventHandler::ParseHapFiles(
     }
 
     return true;
+}
+
+bool BMSEventHandler::IsPreInstallCompressed(const std::string &path)
+{
+    if (PreCompressHandler::IsCompressedArchive(path)) {
+        return true;
+    }
+    auto isCompressedDir = [&path](const PreScanInfo &info) {
+        return info.compressed && (info.bundleDir == path);
+    };
+    return std::any_of(installList_.begin(), installList_.end(), isCompressedDir) ||
+        std::any_of(onDemandInstallList_.begin(), onDemandInstallList_.end(), isCompressedDir);
 }
 
 bool BMSEventHandler::IsPreInstallRemovable(const std::string &path)
@@ -5695,6 +5734,12 @@ void BMSEventHandler::CheckALLResourceInfo()
     ProcessBundleResourceThread.detach();
 }
 
+void BMSEventHandler::ProcessPreCompressBundleResource()
+{
+    std::thread preCompressResourceThread(BundleResourceHelper::RefreshPreCompressBundleResource);
+    preCompressResourceThread.detach();
+}
+
 void BMSEventHandler::ProcessBundleResourceInfo()
 {
     LOG_I(BMS_TAG_DEFAULT, "ProcessBundleResourceInfo start");
@@ -5835,6 +5880,7 @@ void BMSEventHandler::UpdatePreinstallDBForNotUpdatedBundle(const std::string &b
             findEntry = true;
         }
     }
+    preInstallBundleInfo.SetCompressed(PreCompressHandler::IsCompressedArchive(innerBundleInfos.begin()->first));
     if (!dataMgr->SavePreInstallBundleInfo(bundleName, preInstallBundleInfo)) {
         LOG_NOFUNC_I(BMS_TAG_DEFAULT, "update preinstall DB fail -n %{public}s", bundleName.c_str());
     }
@@ -6349,14 +6395,15 @@ bool BMSEventHandler::ParseOnDemandHapFiles(const std::string &hapFilePath,
     std::unique_ptr<BundleInstallChecker> bundleInstallChecker =
         std::make_unique<BundleInstallChecker>();
 
-    std::vector<std::string> hapFilePathVec { hapFilePath };
     std::vector<std::string> realPaths;
-    auto ret = BundleUtil::CheckFilePath(hapFilePathVec, realPaths);
-    if (ret != ERR_OK) {
-        LOG_W(BMS_TAG_DEFAULT, "File path %{public}s invalid", hapFilePath.c_str());
+    std::vector<std::string> tempDirs;
+    std::unordered_map<std::string, std::string> sourceMap;
+    ScopeGuard tempDirGuard([&tempDirs] { BundleUtil::DeleteTempDirs(tempDirs); });
+    if (!PreCompressHandler::PrepareScanPaths(
+        hapFilePath, IsPreInstallCompressed(hapFilePath), realPaths, tempDirs, sourceMap)) {
         return false;
     }
-    ret = bundleInstallChecker->CheckMultipleHapsSignInfo(realPaths, hapVerifyResults);
+    auto ret = bundleInstallChecker->CheckMultipleHapsSignInfo(realPaths, hapVerifyResults);
     if (ret != ERR_OK || hapVerifyResults.empty()) {
         LOG_W(BMS_TAG_DEFAULT, "check signInfo failed");
         return false;
@@ -6374,6 +6421,7 @@ bool BMSEventHandler::ParseOnDemandHapFiles(const std::string &hapFilePath,
         LOG_W(BMS_TAG_DEFAULT, "check app label info failed");
         return false;
     }
+    PreCompressHandler::RekeyInfosToSource(sourceMap, infos);
     return true;
 }
 
@@ -6389,6 +6437,7 @@ void BMSEventHandler::ConvertToOnDemandInstallBundleInfo(const std::unordered_ma
     for (const auto &item : infos) {
         preInstallBundleInfo.AddBundlePath(item.first);
     }
+    preInstallBundleInfo.SetCompressed(PreCompressHandler::IsCompressedArchive(infos.begin()->first));
     preInstallBundleInfo.SetRemovable(true);
     preInstallBundleInfo.SetIsUninstalled(false);
     FillPreInstallResourceInfo(infos, preInstallBundleInfo);
@@ -6687,6 +6736,7 @@ void BMSEventHandler::ProcessRecoverList(const std::string &bundleName, const st
             findEntry = true;
         }
     }
+    preInstallBundleInfo.SetCompressed(PreCompressHandler::IsCompressedArchive(infos.begin()->first));
     preInstallBundleInfo.SetBundleName(bundleName);
     preInstallBundleInfo.SetAppType(appType);
     preInstallBundleInfo.SetRemovable(removable);
