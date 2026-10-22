@@ -598,6 +598,7 @@ void BMSEventHandler::BundleRebootStartEvent()
     }
 #endif
     if (IsSystemUpgrade()) {
+        ProcessAccessTokenMigration();
         EventReport::SendCpuSceneEvent(FOUNDATION_PROCESS_NAME, SCENE_ID_OTA_INSTALL);
         OnBundleRebootStart();
         HandlePreInstallException(false);
@@ -609,7 +610,6 @@ void BMSEventHandler::BundleRebootStartEvent()
         ModuleJsonUpdater::UpdateModuleJsonAsync();
         ProcessDeleteResourceSlaveDb();
         ProcessMigrateUninstallBundleResource();
-        ProcessAccessTokenMigration();
     } else {
         HandlePreInstallException();
         ProcessRebootQuickFixBundleInstall(QUICK_FIX_APP_PATH, false);
