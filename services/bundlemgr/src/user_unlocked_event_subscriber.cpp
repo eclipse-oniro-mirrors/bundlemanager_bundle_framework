@@ -95,8 +95,9 @@ bool IsCloneDirUidMatched(const std::string &bundleName,
         return false;
     }
     if (fileStat.uid != cloneInfo.uid) {
-        APP_LOGD("CloneDir check: bundle=%{public}s appIndex=%{public}d uid mismatch, need recreate",
-            bundleName.c_str(), cloneInfo.appIndex);
+        APP_LOGD("CloneDir check: bundle=%{public}s appIndex=%{public}d "
+            "uid mismatch dir=%{public}d expected=%{public}d, need recreate",
+            bundleName.c_str(), cloneInfo.appIndex, fileStat.uid, cloneInfo.uid);
         return false;
     }
     return true;
@@ -120,8 +121,11 @@ void CreateCloneDataDir(const std::string &bundleName,
     param.hasDriverExtension = info.HasDriverExtension();
     param.createDirFlag = CreateDirFlag::CREATE_DIR_ALL;
     if (InstalldClient::GetInstance()->CreateBundleDataDir(param) != ERR_OK) {
-        APP_LOGW("CloneDir create failed, bundle:%{public}s appIndex:%{public}d",
-            bundleName.c_str(), cloneInfo.appIndex);
+        APP_LOGW("CloneDir create failed, bundle:%{public}s appIndex:%{public}d uid:%{public}d",
+            bundleName.c_str(), cloneInfo.appIndex, cloneInfo.uid);
+    } else {
+        APP_LOGI("CloneDir create: bundle=%{public}s appIndex=%{public}d uid=%{public}d",
+            bundleName.c_str(), cloneInfo.appIndex, cloneInfo.uid);
     }
 }
 
@@ -138,6 +142,114 @@ void ProcessCloneDirsForBundle(const std::string &bundleName,
             continue;
         }
         CreateCloneDataDir(bundleName, userId, cloneInfo, info);
+    }
+}
+
+bool IsSandboxDirUidMatched(const std::string &dirName,
+    int32_t userId, int32_t appIndex, int32_t expectedUid)
+{
+    std::string baseDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR +
+        ServiceConstants::BUNDLE_EL[1] + ServiceConstants::PATH_SEPARATOR +
+        std::to_string(userId) + ServiceConstants::BASE + dirName;
+    bool isExist = false;
+    if (InstalldClient::GetInstance()->IsExistDir(baseDir, isExist) != ERR_OK ||
+        !isExist) {
+        APP_LOGD("SandboxDir check: appIndex=%{public}d dir not exist",
+            appIndex);
+        return false;
+    }
+    FileStat fileStat;
+    if (InstalldClient::GetInstance()->GetFileStat(baseDir,
+        BundleDirScene::GET_DATA_BASE_FILE_STAT, fileStat) != ERR_OK) {
+        APP_LOGW("SandboxDir check: appIndex=%{public}d GetFileStat failed",
+            appIndex);
+        return false;
+    }
+    if (fileStat.uid != expectedUid) {
+        APP_LOGD("SandboxDir check: appIndex=%{public}d "
+            "uid mismatch dir=%{public}d expected=%{public}d",
+            appIndex, fileStat.uid, expectedUid);
+        return false;
+    }
+    return true;
+}
+
+void CreateSandboxDataDir(const std::string &dirName,
+    int32_t userId, int32_t appIndex, int32_t uid, const InnerBundleInfo &info)
+{
+    APP_LOGD("SandboxDir create: appIndex=%{public}d", appIndex);
+    CreateDirParam param;
+    param.bundleName = dirName;
+    param.userId = userId;
+    param.uid = uid;
+    param.gid = uid;
+    param.appIndex = appIndex;
+    param.apl = info.GetAppPrivilegeLevel();
+    param.isPreInstallApp = info.IsPreInstallApp();
+    param.debug = info.GetBaseApplicationInfo().appProvisionType ==
+        Constants::APP_PROVISION_TYPE_DEBUG;
+    param.hasDriverExtension = info.HasDriverExtension();
+    param.createDirFlag = CreateDirFlag::CREATE_DIR_ALL;
+    if (InstalldClient::GetInstance()->CreateBundleDataDir(param) != ERR_OK) {
+        APP_LOGW("SandboxDir create failed, appIndex:%{public}d uid:%{public}d",
+            appIndex, uid);
+    } else {
+        APP_LOGI("SandboxDir create: appIndex=%{public}d uid=%{public}d",
+            appIndex, uid);
+    }
+}
+
+void ProcessCliSandboxDirsForBundle(const std::string &bundleName,
+    int32_t userId, const InnerBundleInfo &info, const InnerBundleUserInfo &userInfo)
+{
+    APP_LOGD("SandboxDir cli: bundle=%{public}s %{public}zu cli sandboxes",
+        bundleName.c_str(), userInfo.sandboxInfos.size());
+    for (const auto &[key, sandboxInfo] : userInfo.sandboxInfos) {
+        std::string dirName = BundleCloneCommonHelper::GetCloneDataDir(
+            bundleName, sandboxInfo.appIndex);
+        if (IsSandboxDirUidMatched(dirName, userId,
+            sandboxInfo.appIndex, sandboxInfo.uid)) {
+            continue;
+        }
+        CreateSandboxDataDir(dirName, userId,
+            sandboxInfo.appIndex, sandboxInfo.uid, info);
+    }
+}
+
+void ProcessDlpSandboxEntry(const std::string &key,
+    const InnerBundleInfo &sandboxInfo, int32_t userId)
+{
+    std::string bn = sandboxInfo.GetBundleName();
+    int32_t appIndex = 0;
+    auto pos = key.find(Constants::FILE_UNDERLINE);
+    if (pos != std::string::npos) {
+        OHOS::StrToInt(key.substr(0, pos), appIndex);
+    }
+    std::string dirName = std::to_string(appIndex) +
+        Constants::FILE_UNDERLINE + bn;
+    InnerBundleUserInfo userInfo;
+    if (!sandboxInfo.GetInnerBundleUserInfo(userId, userInfo)) {
+        APP_LOGW("DlpSandbox: bundle=%{public}s userId=%{public}d appIndex=%{public}d "
+            "userInfo not found", bn.c_str(), userId, appIndex);
+        return;
+    }
+    if (IsSandboxDirUidMatched(dirName, userId, appIndex, userInfo.uid)) {
+        return;
+    }
+    CreateSandboxDataDir(dirName, userId, appIndex, userInfo.uid, sandboxInfo);
+}
+
+void ProcessDlpSandboxDirs(const std::shared_ptr<BundleDataMgr> &dataMgr, int32_t userId)
+{
+    auto sandboxHelper = dataMgr->GetSandboxAppHelper();
+    if (sandboxHelper == nullptr) {
+        APP_LOGD("SandboxDir dlp: sandbox helper null, skip");
+        return;
+    }
+    auto sandboxMap = sandboxHelper->GetSandboxAppInfoMap();
+    APP_LOGD("SandboxDir dlp: %{public}zu dlp sandboxes", sandboxMap.size());
+    for (const auto &[key, sandboxInfo] : sandboxMap) {
+        ProcessDlpSandboxEntry(key, sandboxInfo, userId);
     }
 }
 }
@@ -493,8 +605,10 @@ void UpdateAppDataMgr::ProcessCloneBundleDirs(int32_t userId,
         InnerBundleUserInfo userInfo;
         if (info.GetInnerBundleUserInfo(userId, userInfo)) {
             ProcessCloneDirsForBundle(bundleName, userId, info, userInfo);
+            ProcessCliSandboxDirsForBundle(bundleName, userId, info, userInfo);
         }
     }
+    ProcessDlpSandboxDirs(dataMgr, userId);
 }
 
 void UpdateAppDataMgr::ProcessExtensionDir(const BundleInfo &bundleInfo, std::vector<std::string> &dirs)

@@ -4679,6 +4679,9 @@ void BaseBundleInstaller::GetUninstallBundleInfo(bool isKeepData, int32_t userId
     uninstallBundleInfo.appIdentifier = oldInfo.GetAppIdentifier();
     uninstallBundleInfo.appProvisionType = oldInfo.GetAppProvisionType();
     uninstallBundleInfo.bundleType = oldInfo.GetApplicationBundleType();
+    uninstallBundleInfo.checkBySpm = oldInfo.IsBundleCheckBySpm();
+    LOG_I(BMS_TAG_INSTALLER, "propagate checkBySpm=%{public}d to uninstall info bundle:%{public}s",
+        oldInfo.IsBundleCheckBySpm(), oldInfo.GetBundleName().c_str());
     uninstallBundleInfo.deviceModeDistributionPolicy = oldInfo.GetDeviceModeDistributionPolicy();
     oldInfo.GetModuleNames(uninstallBundleInfo.moduleNames);
 }
@@ -10221,6 +10224,9 @@ ErrCode BaseBundleInstaller::MarkInstallFinish(const std::map<std::string, std::
             bundleName_.c_str(), spmCommitRet);
         return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
     }
+    info.SetBundleCheckBySpm(true);
+    LOG_I(BMS_TAG_INSTALLER, "mark checkBySpm=true (new install) bundle:%{public}s",
+        bundleName_.c_str());
     if (!dataMgr_->AddInnerBundleInfo(bundleName_, info, false, crossModeFetchTruth_)) {
         LOG_E(BMS_TAG_INSTALLER, "add bundle failed, -n:%{public}s", bundleName_.c_str());
         dataMgr_->UpdateBundleInstallState(GetEffectiveBundleName(), InstallState::UNINSTALL_START);

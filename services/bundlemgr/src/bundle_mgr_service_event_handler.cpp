@@ -600,6 +600,7 @@ void BMSEventHandler::BundleRebootStartEvent()
 #endif
     if (IsSystemUpgrade()) {
         EventReport::SendCpuSceneEvent(FOUNDATION_PROCESS_NAME, SCENE_ID_OTA_INSTALL);
+        ProcessAccessTokenMigration();
         OnBundleRebootStart();
         HandlePreInstallException(false);
         HandleOTACodeEncryption();
@@ -610,7 +611,6 @@ void BMSEventHandler::BundleRebootStartEvent()
         ModuleJsonUpdater::UpdateModuleJsonAsync();
         ProcessDeleteResourceSlaveDb();
         ProcessMigrateUninstallBundleResource();
-        ProcessAccessTokenMigration();
     } else {
         HandlePreInstallException();
         ProcessRebootQuickFixBundleInstall(QUICK_FIX_APP_PATH, false);
@@ -7408,13 +7408,27 @@ bool BMSEventHandler::InnerProcessAccessTokenMigration()
     }
 
     size_t successCount = 0;
-    for (auto f : successFlags) {
-        if (f) {
+    size_t failedCount = 0;
+    for (size_t i = 0; i < successFlags.size(); ++i) {
+        if (successFlags[i]) {
             ++successCount;
+        } else {
+            ++failedCount;
+            for (size_t k = 0; k < migratedList[i].hapBaseInfoList.size() &&
+                k < migratedList[i].uidList.size(); ++k) {
+                LOG_W(BMS_TAG_DEFAULT,
+                    "Migration: still failed bundle=%{public}s userId=%{public}d "
+                    "appIndex=%{public}d uid=%{public}d",
+                    migratedList[i].hapBaseInfoList[k].bundleName.c_str(),
+                    migratedList[i].hapBaseInfoList[k].userID,
+                    migratedList[i].hapBaseInfoList[k].instIndex,
+                    migratedList[i].uidList[k]);
+            }
         }
     }
-    LOG_I(BMS_TAG_DEFAULT, "Migration: %{public}zu bundles succeeded, %{public}zu failed",
-        successCount, successFlags.size() - successCount);
+    LOG_I(BMS_TAG_DEFAULT,
+        "Migration: %{public}zu bundles succeeded, %{public}zu failed",
+        successCount, failedCount);
 
     MarkMigratedBundles(dataMgr, migratedList, successFlags);
     LOG_I(BMS_TAG_DEFAULT, "Migration: marked %{public}zu bundles as checkBySpm", successCount);
@@ -7426,8 +7440,8 @@ bool BMSEventHandler::InnerProcessAccessTokenMigration()
     if (!failedHapList.empty()) {
         LOG_I(BMS_TAG_DEFAULT, "Migration: start SPM fallback for %{public}zu failed entries",
             failedHapList.size());
-        FallbackWithSpmSession(dataMgr, failedHapList, failedUidList, failedErrCodeList,
-            successFlags, migratedList);
+        FallbackWithSpmSession(dataMgr, failedHapList, failedUidList,
+            failedErrCodeList, successFlags, migratedList);
     }
 
     LOG_I(BMS_TAG_DEFAULT, "Migration: completed");
@@ -7491,6 +7505,7 @@ void BMSEventHandler::BuildMigrationData(
     std::map<std::string, Security::AccessToken::MigratedInfo> migratedMap;
 
     BuildFromInstalledBundles(bundleNames, dataMgr, migratedMap);
+    BuildFromTempBundles(dataMgr, migratedMap);
     LOG_I(BMS_TAG_DEFAULT, "Migration: built from %{public}zu installed bundles", bundleNames.size());
     BuildFromSandbox(dataMgr, migratedMap);
     BuildFromUninstallData(uninstallBundleInfos, migratedMap);
@@ -7506,47 +7521,156 @@ void BMSEventHandler::BuildMigrationData(
     }
 }
 
+namespace {
+struct UpdatePayload {
+    int32_t resolvedUid;
+    uint32_t existingTokenId;
+    uint64_t existingTokenIdEx;
+    bool uidChanged;
+};
+
+void UpdateSandboxTokenIfChanged(const std::shared_ptr<BundleDataMgr> &dataMgr,
+    const Security::AccessToken::HapBaseInfo &hapBaseInfo,
+    uint32_t newTokenId, uint64_t newTokenIdEx);
+void GetTokenIdFromUserInfo(const Security::AccessToken::HapBaseInfo &hapInfo,
+    const InnerBundleUserInfo &userInfo,
+    uint32_t &existingTokenId, uint64_t &existingTokenIdEx);
+void UpdateMainUserInfo(InnerBundleUserInfo &userInfo,
+    const UpdatePayload &payload);
+void UpdateCloneUserInfo(int32_t instIndex,
+    InnerBundleUserInfo &userInfo, const UpdatePayload &payload);
+void UpdateCliSandboxUserInfo(int32_t instIndex,
+    InnerBundleUserInfo &userInfo, const UpdatePayload &payload);
+
+void CollectCloneUidEntries(const std::string &bundleName,
+    const InnerBundleUserInfo &userInfo,
+    Security::AccessToken::MigratedInfo &m)
+{
+    for (const auto &[key, cloneInfo] : userInfo.cloneInfos) {
+        int32_t appIndex = 0;
+        if (!OHOS::StrToInt(key, appIndex) || appIndex <= 0) {
+            continue;
+        }
+        m.uidList.emplace_back(cloneInfo.uid);
+        m.hapBaseInfoList.emplace_back(
+            Security::AccessToken::HapBaseInfo{cloneInfo.userId, bundleName, appIndex});
+        m.reservedTypeList.emplace_back(Security::AccessToken::ReservedType::NONE);
+    }
+}
+
+void CollectSandboxUidEntries(const std::string &bundleName,
+    const InnerBundleUserInfo &userInfo,
+    Security::AccessToken::MigratedInfo &m)
+{
+    for (const auto &[key, sandboxInfo] : userInfo.sandboxInfos) {
+        m.uidList.emplace_back(sandboxInfo.uid);
+        m.hapBaseInfoList.emplace_back(
+            Security::AccessToken::HapBaseInfo{
+                sandboxInfo.userId, bundleName, sandboxInfo.appIndex});
+        m.reservedTypeList.emplace_back(Security::AccessToken::ReservedType::NONE);
+    }
+}
+
+void CollectUserUidEntries(const std::string &bundleName,
+    const InnerBundleUserInfo &userInfo,
+    int32_t mainInstIndex,
+    Security::AccessToken::MigratedInfo &m)
+{
+    int32_t userId = userInfo.bundleUserInfo.userId;
+    m.uidList.emplace_back(userInfo.uid);
+    m.hapBaseInfoList.emplace_back(
+        Security::AccessToken::HapBaseInfo{userId, bundleName, mainInstIndex});
+    m.reservedTypeList.emplace_back(Security::AccessToken::ReservedType::NONE);
+    CollectCloneUidEntries(bundleName, userInfo, m);
+    CollectSandboxUidEntries(bundleName, userInfo, m);
+}
+
+void BuildMigratedInfoForBundle(const std::string &bundleName,
+    const InnerBundleInfo &info,
+    std::map<std::string, Security::AccessToken::MigratedInfo> &migratedMap)
+{
+    std::string mapKey = info.IsDualModeCloneApp()
+        ? DualModeHelper::GetDualModeBundleName(bundleName) : bundleName;
+    auto &m = migratedMap[mapKey];
+    m.bundleName = bundleName;
+    m.pathList.hapPaths = info.GetAllHapPaths();
+    m.pathList.isPreInstalled = info.IsPreInstallApp();
+    m.pathList.userIdForEnterpriseSign = info.GetUserId();
+    m.mode = info.IsDualModeCloneApp()
+        ? Security::AccessToken::MultipleMode::SUB_MODE
+        : Security::AccessToken::MultipleMode::DEFAULT_OR_MAIN_MODE;
+    int32_t mainInstIndex = info.IsDualModeCloneApp()
+        ? ServiceConstants::DUAL_MODE_CLONE_APP_INDEX : info.GetAppIndex();
+    for (const auto &[userIdStr, userInfo] : info.GetInnerBundleUserInfos()) {
+        CollectUserUidEntries(bundleName, userInfo, mainInstIndex, m);
+    }
+    LOG_D(BMS_TAG_DEFAULT, "Migration: built bundle=%{public}s mode=%{public}d "
+        "%{public}zu uid entries",
+        bundleName.c_str(), static_cast<int32_t>(m.mode), m.uidList.size());
+}
+} // anonymous namespace
+
 void BMSEventHandler::BuildFromInstalledBundles(const std::vector<std::string> &bundleNames,
     const std::shared_ptr<BundleDataMgr> &dataMgr,
     std::map<std::string, Security::AccessToken::MigratedInfo> &migratedMap)
 {
     for (const auto &bundleName : bundleNames) {
         InnerBundleInfo info;
-        if (!dataMgr->FetchInnerBundleInfo(bundleName, info)) {
-            continue;
+        if (dataMgr->FetchInnerBundleInfo(bundleName, info)) {
+            BuildMigratedInfoForBundle(bundleName, info, migratedMap);
         }
-        std::string bn = bundleName;
-        Security::AccessToken::MigratedInfo m;
-        m.bundleName = bn;
-        m.pathList.hapPaths = info.GetAllHapPaths();
-        m.pathList.isPreInstalled = info.IsPreInstallApp();
-        m.pathList.userIdForEnterpriseSign = info.GetUserId();
-        m.mode = info.IsDualModeCloneApp()
-            ? Security::AccessToken::MultipleMode::SUB_MODE
-            : Security::AccessToken::MultipleMode::DEFAULT_OR_MAIN_MODE;
-        auto userInfos = info.GetInnerBundleUserInfos();
-        for (const auto &[userIdStr, userInfo] : userInfos) {
-            int32_t userId = userInfo.bundleUserInfo.userId;
-            Security::AccessToken::HapBaseInfo hapBaseInfo{userId, bn, 0};
-            m.uidList.emplace_back(userInfo.uid);
-            m.hapBaseInfoList.emplace_back(hapBaseInfo);
-            m.reservedTypeList.emplace_back(Security::AccessToken::ReservedType::NONE);
-            for (const auto &[appIndexStr, cloneInfo] : userInfo.cloneInfos) {
-                int32_t appIndex = 0;
-                if (!OHOS::StrToInt(appIndexStr, appIndex) || appIndex <= 0) {
-                    continue;
-                }
-                int32_t cloneUserId = cloneInfo.userId;
-                Security::AccessToken::HapBaseInfo cloneHapBaseInfo{cloneUserId, bn, appIndex};
-                m.uidList.emplace_back(cloneInfo.uid);
-                m.hapBaseInfoList.emplace_back(cloneHapBaseInfo);
-                m.reservedTypeList.emplace_back(Security::AccessToken::ReservedType::NONE);
-            }
-        }
-        LOG_D(BMS_TAG_DEFAULT, "Migration: built from installed bundle=%{public}s, %{public}zu uid entries",
-            bn.c_str(), m.uidList.size());
-        migratedMap[bn] = std::move(m);
     }
+}
+
+void BMSEventHandler::BuildFromTempBundles(
+    const std::shared_ptr<BundleDataMgr> &dataMgr,
+    std::map<std::string, Security::AccessToken::MigratedInfo> &migratedMap)
+{
+    auto tempBundleNames = dataMgr->GetAllTempBundleName();
+    LOG_D(BMS_TAG_DEFAULT, "Migration: built from %{public}zu temp (other-mode) bundles",
+        tempBundleNames.size());
+    for (const auto &bundleName : tempBundleNames) {
+        InnerBundleInfo info;
+        if (dataMgr->FetchTempBundleInfo(bundleName, info)) {
+            BuildMigratedInfoForBundle(bundleName, info, migratedMap);
+        }
+    }
+}
+
+void AppendSandboxUidEntries(
+    const std::string &bn, int32_t sandboxAppIndex,
+    const InnerBundleInfo &sandboxInfo,
+    Security::AccessToken::MigratedInfo &m)
+{
+    for (const auto &[uk, ui] : sandboxInfo.GetInnerBundleUserInfos()) {
+        int32_t userId = ui.bundleUserInfo.userId;
+        m.uidList.emplace_back(ui.uid);
+        m.hapBaseInfoList.emplace_back(
+            Security::AccessToken::HapBaseInfo{userId, bn, sandboxAppIndex});
+        m.reservedTypeList.emplace_back(Security::AccessToken::ReservedType::NONE);
+    }
+}
+
+void ProcessSandboxEntry(const std::string &key,
+    const InnerBundleInfo &sandboxInfo,
+    std::map<std::string, Security::AccessToken::MigratedInfo> &migratedMap,
+    size_t &addedCount)
+{
+    std::string bn = sandboxInfo.GetBundleName();
+    int32_t sandboxAppIndex = 0;
+    auto pos = key.find(Constants::FILE_UNDERLINE);
+    if (pos != std::string::npos) {
+        OHOS::StrToInt(key.substr(0, pos), sandboxAppIndex);
+    }
+    std::string mapKey = sandboxInfo.IsDualModeCloneApp()
+        ? DualModeHelper::GetDualModeBundleName(bn) : bn;
+    auto it = migratedMap.find(mapKey);
+    if (it == migratedMap.end()) {
+        return;
+    }
+    size_t before = it->second.uidList.size();
+    AppendSandboxUidEntries(bn, sandboxAppIndex, sandboxInfo, it->second);
+    addedCount += it->second.uidList.size() - before;
 }
 
 void BMSEventHandler::BuildFromSandbox(const std::shared_ptr<BundleDataMgr> &dataMgr,
@@ -7560,28 +7684,68 @@ void BMSEventHandler::BuildFromSandbox(const std::shared_ptr<BundleDataMgr> &dat
     auto sandboxMap = sandboxHelper->GetSandboxAppInfoMap();
     size_t addedCount = 0;
     for (const auto &[key, sandboxInfo] : sandboxMap) {
-        std::string bn = sandboxInfo.GetBundleName();
-        int32_t sandboxAppIndex = 0;
-        auto pos = key.find(Constants::FILE_UNDERLINE);
-        if (pos != std::string::npos) {
-            OHOS::StrToInt(key.substr(0, pos), sandboxAppIndex);
-        }
-        auto it = migratedMap.find(bn);
-        if (it == migratedMap.end()) {
-            continue;
-        }
-        auto &m = it->second;
-        size_t before = m.uidList.size();
-        for (const auto &[uk, ui] : sandboxInfo.GetInnerBundleUserInfos()) {
-            int32_t userId = ui.bundleUserInfo.userId;
-            m.uidList.emplace_back(ui.uid);
-            m.hapBaseInfoList.emplace_back(
-                Security::AccessToken::HapBaseInfo{userId, bn, sandboxAppIndex});
-            m.reservedTypeList.emplace_back(Security::AccessToken::ReservedType::NONE);
-        }
-        addedCount += m.uidList.size() - before;
+        ProcessSandboxEntry(key, sandboxInfo, migratedMap, addedCount);
     }
     LOG_D(BMS_TAG_DEFAULT, "Migration: built from sandbox, added %{public}zu uid entries", addedCount);
+}
+
+bool ParseUninstallUserIdStr(const std::string &userIdStr,
+    int32_t &userId, int32_t &appIndex)
+{
+    auto underscorePos = userIdStr.find(Constants::FILE_UNDERLINE);
+    if (underscorePos == std::string::npos) {
+        return OHOS::StrToInt(userIdStr, userId) &&
+            userId != Constants::UNSPECIFIED_USERID;
+    }
+    if (!OHOS::StrToInt(userIdStr.substr(0, underscorePos), userId)) {
+        return false;
+    }
+    OHOS::StrToInt(userIdStr.substr(underscorePos + 1), appIndex);
+    return true;
+}
+
+bool IsHapBaseInfoDuplicate(
+    const std::vector<Security::AccessToken::HapBaseInfo> &hapBaseInfoList,
+    const std::string &bn, int32_t userId, int32_t appIndex)
+{
+    return std::any_of(hapBaseInfoList.begin(), hapBaseInfoList.end(),
+        [&bn, userId, appIndex](const auto &hapInfo) {
+            return hapInfo.bundleName == bn && hapInfo.userID == userId &&
+                hapInfo.instIndex == appIndex;
+        });
+}
+
+void AppendUninstallUidEntries(const std::string &bn,
+    const UninstallBundleInfo &uninstInfo,
+    std::map<std::string, Security::AccessToken::MigratedInfo> &migratedMap)
+{
+    for (const auto &[userIdStr, dui] : uninstInfo.userInfos) {
+        int32_t userId = 0;
+        int32_t appIndex = 0;
+        if (!ParseUninstallUserIdStr(userIdStr, userId, appIndex)) {
+            continue;
+        }
+        bool isClone = appIndex ==
+            ServiceConstants::DUAL_MODE_CLONE_APP_INDEX;
+        std::string mapKey = isClone
+            ? DualModeHelper::GetDualModeBundleName(bn) : bn;
+        auto &m = migratedMap[mapKey];
+        if (m.bundleName.empty()) {
+            m.bundleName = bn;
+            m.pathList.userIdForEnterpriseSign = Constants::DEFAULT_USERID;
+            m.mode = isClone
+                ? Security::AccessToken::MultipleMode::SUB_MODE
+                : Security::AccessToken::MultipleMode::DEFAULT_OR_MAIN_MODE;
+        }
+        if (IsHapBaseInfoDuplicate(m.hapBaseInfoList, bn, userId, appIndex)) {
+            continue;
+        }
+        m.uidList.emplace_back(dui.uid);
+        m.hapBaseInfoList.emplace_back(
+            Security::AccessToken::HapBaseInfo{userId, bn, appIndex});
+        m.reservedTypeList.emplace_back(
+            Security::AccessToken::ReservedType::RESERVED_DATA);
+    }
 }
 
 void BMSEventHandler::BuildFromUninstallData(
@@ -7589,42 +7753,10 @@ void BMSEventHandler::BuildFromUninstallData(
     std::map<std::string, Security::AccessToken::MigratedInfo> &migratedMap)
 {
     for (const auto &[bundleName, uninstInfo] : uninstallBundleInfos) {
-        std::string bn = bundleName;
-        auto it = migratedMap.find(bn);
-        Security::AccessToken::MigratedInfo m;
-        if (it != migratedMap.end()) {
-            m = it->second;
-        } else {
-            m.bundleName = bn;
-        }
-        for (const auto &[userIdStr, dui] : uninstInfo.userInfos) {
-            int32_t userId = 0;
-            int32_t appIndex = 0;
-            auto underscorePos = userIdStr.find(Constants::FILE_UNDERLINE);
-            if (underscorePos != std::string::npos) {
-                if (!OHOS::StrToInt(userIdStr.substr(0, underscorePos), userId)) {
-                    continue;
-                }
-                OHOS::StrToInt(userIdStr.substr(underscorePos + 1), appIndex);
-            } else {
-                if (!OHOS::StrToInt(userIdStr, userId) || userId == Constants::UNSPECIFIED_USERID) {
-                    continue;
-                }
-            }
-            if (std::any_of(m.hapBaseInfoList.begin(), m.hapBaseInfoList.end(),
-                [&bn, userId, appIndex](const auto &hapInfo) {
-                    return hapInfo.bundleName == bn && hapInfo.userID == userId && hapInfo.instIndex == appIndex;
-                })) {
-                continue;
-            }
-            m.uidList.emplace_back(dui.uid);
-            m.hapBaseInfoList.emplace_back(
-                Security::AccessToken::HapBaseInfo{userId, bn, appIndex});
-            m.reservedTypeList.emplace_back(Security::AccessToken::ReservedType::RESERVED_DATA);
-        }
-        LOG_D(BMS_TAG_DEFAULT, "Migration: built from uninstall-retained bundle=%{public}s, %{public}zu uid entries",
-            bn.c_str(), m.uidList.size());
-        migratedMap[bn] = std::move(m);
+        AppendUninstallUidEntries(bundleName, uninstInfo, migratedMap);
+        LOG_D(BMS_TAG_DEFAULT,
+            "Migration: built from uninstall-retained bundle=%{public}s",
+            bundleName.c_str());
     }
 }
 
@@ -7683,10 +7815,35 @@ bool BMSEventHandler::IsSystemAppMigration(const Security::AccessToken::Migrated
     const std::shared_ptr<BundleDataMgr> &dataMgr)
 {
     InnerBundleInfo info;
-    if (!dataMgr->FetchInnerBundleInfo(migratedInfo.bundleName, info)) {
-        return false;
+    bool expectClone = migratedInfo.mode ==
+        Security::AccessToken::MultipleMode::SUB_MODE;
+    if (!dataMgr->FetchInnerBundleInfo(migratedInfo.bundleName, info) ||
+        info.IsDualModeCloneApp() != expectClone) {
+        if (!dataMgr->FetchTempBundleInfo(migratedInfo.bundleName, info)) {
+            return false;
+        }
     }
     return info.IsSystemApp();
+}
+
+bool IsHapMatched(const Security::AccessToken::HapBaseInfo &a,
+    const Security::AccessToken::HapBaseInfo &b)
+{
+    return a.bundleName == b.bundleName &&
+        a.userID == b.userID && a.instIndex == b.instIndex;
+}
+
+bool FindHapInFailedList(const Security::AccessToken::HapBaseInfo &hap,
+    const std::vector<Security::AccessToken::HapBaseInfo> &failedHapList,
+    size_t &foundIdx)
+{
+    for (size_t j = 0; j < failedHapList.size(); ++j) {
+        if (IsHapMatched(failedHapList[j], hap)) {
+            foundIdx = j;
+            return true;
+        }
+    }
+    return false;
 }
 
 bool BMSEventHandler::IsBundleAllResolved(
@@ -7695,16 +7852,12 @@ bool BMSEventHandler::IsBundleAllResolved(
     const std::vector<bool> &resolved)
 {
     for (size_t k = 0; k < m.hapBaseInfoList.size() && k < m.uidList.size(); ++k) {
-        const auto &hap = m.hapBaseInfoList[k];
-        for (size_t j = 0; j < failedHapList.size(); ++j) {
-            if (failedHapList[j].bundleName == hap.bundleName &&
-                failedHapList[j].userID == hap.userID &&
-                failedHapList[j].instIndex == hap.instIndex) {
-                if (!resolved[j]) {
-                    return false;
-                }
-                break;
-            }
+        size_t foundIdx = 0;
+        if (!FindHapInFailedList(m.hapBaseInfoList[k], failedHapList, foundIdx)) {
+            continue;
+        }
+        if (!resolved[foundIdx]) {
+            return false;
         }
     }
     return true;
@@ -7715,13 +7868,9 @@ bool BMSEventHandler::HasFailedEntry(
     const std::vector<Security::AccessToken::HapBaseInfo> &failedHapList)
 {
     for (size_t k = 0; k < m.hapBaseInfoList.size(); ++k) {
-        const auto &hap = m.hapBaseInfoList[k];
-        for (const auto &failed : failedHapList) {
-            if (failed.bundleName == hap.bundleName &&
-                failed.userID == hap.userID &&
-                failed.instIndex == hap.instIndex) {
-                return true;
-            }
+        size_t foundIdx = 0;
+        if (FindHapInFailedList(m.hapBaseInfoList[k], failedHapList, foundIdx)) {
+            return true;
         }
     }
     return false;
@@ -7749,6 +7898,29 @@ void BMSEventHandler::CompactFailedList(
     failedErrCodeList.resize(writeIdx);
 }
 
+void MarkSingleBundleCheckBySpm(
+    const std::shared_ptr<BundleDataMgr> &dataMgr,
+    const std::string &bundleName, bool isDualModeClone)
+{
+    dataMgr->UpdateUninstallBundleCheckBySpm(bundleName, true);
+    InnerBundleInfo info;
+    if (dataMgr->FetchInnerBundleInfo(bundleName, info) &&
+        info.IsDualModeCloneApp() == isDualModeClone) {
+        info.SetBundleCheckBySpm(true);
+        dataMgr->UpdateInnerBundleInfo(info, true, false);
+        LOG_D(BMS_TAG_DEFAULT, "Migration: marked bundle=%{public}s as checkBySpm",
+            bundleName.c_str());
+        return;
+    }
+    if (dataMgr->FetchTempBundleInfo(bundleName, info) &&
+        info.IsDualModeCloneApp() == isDualModeClone) {
+        info.SetBundleCheckBySpm(true);
+        dataMgr->UpdateInnerBundleInfo(info, true, true);
+        LOG_D(BMS_TAG_DEFAULT, "Migration: marked bundle=%{public}s as checkBySpm",
+            bundleName.c_str());
+    }
+}
+
 void BMSEventHandler::MarkMigratedBundles(
     const std::shared_ptr<BundleDataMgr> &dataMgr,
     const std::vector<Security::AccessToken::MigratedInfo> &migratedList,
@@ -7758,15 +7930,74 @@ void BMSEventHandler::MarkMigratedBundles(
         if (!successFlags[i]) {
             continue;
         }
-        const auto &bundleName = migratedList[i].bundleName;
-        dataMgr->UpdateUninstallBundleCheckBySpm(bundleName, true);
-        InnerBundleInfo info;
-        if (dataMgr->FetchInnerBundleInfo(bundleName, info)) {
-            info.SetBundleCheckBySpm(true);
-            dataMgr->UpdateInnerBundleInfo(info);
-            LOG_D(BMS_TAG_DEFAULT, "Migration: marked bundle=%{public}s as checkBySpm", bundleName.c_str());
-        }
+        MarkSingleBundleCheckBySpm(dataMgr, migratedList[i].bundleName,
+            migratedList[i].mode ==
+                Security::AccessToken::MultipleMode::SUB_MODE);
     }
+}
+
+bool PrepareTokenUpdateContext(
+    const std::shared_ptr<BundleDataMgr> &dataMgr,
+    const Security::AccessToken::HapBaseInfo &hapBaseInfo,
+    InnerBundleInfo &info, bool &fromTemp,
+    InnerBundleUserInfo &userInfo)
+{
+    bool expectClone = hapBaseInfo.instIndex ==
+        ServiceConstants::DUAL_MODE_CLONE_APP_INDEX;
+    if (!dataMgr->FetchInnerBundleInfo(hapBaseInfo.bundleName, info) ||
+        info.IsDualModeCloneApp() != expectClone) {
+        if (!dataMgr->FetchTempBundleInfo(hapBaseInfo.bundleName, info)) {
+            return false;
+        }
+        fromTemp = true;
+    }
+    return info.GetInnerBundleUserInfo(hapBaseInfo.userID, userInfo);
+}
+
+void ApplyTokenIdUpdate(InnerBundleUserInfo &userInfo,
+    const Security::AccessToken::HapBaseInfo &hapBaseInfo,
+    uint32_t newTokenId, uint64_t newTokenIdEx)
+{
+    UpdatePayload payload{0, newTokenId, newTokenIdEx, false};
+    if (hapBaseInfo.instIndex == 0 ||
+        hapBaseInfo.instIndex == ServiceConstants::DUAL_MODE_CLONE_APP_INDEX) {
+        UpdateMainUserInfo(userInfo, payload);
+    }
+    UpdateCloneUserInfo(hapBaseInfo.instIndex, userInfo, payload);
+    UpdateCliSandboxUserInfo(hapBaseInfo.instIndex, userInfo, payload);
+}
+
+void UpdateTokenIdForEntry(
+    const std::shared_ptr<BundleDataMgr> &dataMgr,
+    const Security::AccessToken::HapBaseInfo &hapBaseInfo,
+    uint32_t newTokenId, uint64_t newTokenIdEx)
+{
+    InnerBundleInfo info;
+    bool fromTemp = false;
+    InnerBundleUserInfo userInfo;
+    if (!PrepareTokenUpdateContext(dataMgr, hapBaseInfo,
+        info, fromTemp, userInfo)) {
+        return;
+    }
+    uint32_t oldTokenId = 0;
+    uint64_t oldTokenIdEx = 0;
+    GetTokenIdFromUserInfo(hapBaseInfo, userInfo, oldTokenId, oldTokenIdEx);
+    if (oldTokenId == newTokenId) {
+        return;
+    }
+    if (oldTokenId == 0) {
+        UpdateSandboxTokenIfChanged(dataMgr, hapBaseInfo,
+            newTokenId, newTokenIdEx);
+        return;
+    }
+    ApplyTokenIdUpdate(userInfo, hapBaseInfo, newTokenId, newTokenIdEx);
+    info.AddInnerBundleUserInfo(userInfo);
+    dataMgr->UpdateInnerBundleInfo(info, true, fromTemp);
+    LOG_I(BMS_TAG_DEFAULT,
+        "Updated token: bundle=%{public}s userId=%{public}d appIndex=%{public}d "
+        "oldToken=%{private}u newToken=%{private}u",
+        hapBaseInfo.bundleName.c_str(), hapBaseInfo.userID,
+        hapBaseInfo.instIndex, oldTokenId, newTokenId);
 }
 
 void BMSEventHandler::UpdateTokenIdIfChanged(const std::shared_ptr<BundleDataMgr> &dataMgr,
@@ -7775,47 +8006,9 @@ void BMSEventHandler::UpdateTokenIdIfChanged(const std::shared_ptr<BundleDataMgr
 {
     for (size_t k = 0; k < result.tokenIdList.size() &&
         k < migratedInfo.hapBaseInfoList.size(); ++k) {
-        const auto &hapBaseInfo = migratedInfo.hapBaseInfoList[k];
-        uint64_t newTokenIdEx = result.tokenIdList[k].tokenIDEx;
-        uint32_t newTokenId = result.tokenIdList[k].tokenIdExStruct.tokenID;
-
-        InnerBundleInfo info;
-        if (!dataMgr->FetchInnerBundleInfo(hapBaseInfo.bundleName, info)) {
-            continue;
-        }
-        InnerBundleUserInfo userInfo;
-        if (!info.GetInnerBundleUserInfo(hapBaseInfo.userID, userInfo)) {
-            continue;
-        }
-        uint64_t oldTokenIdEx = 0;
-        uint32_t oldTokenId = 0;
-        if (hapBaseInfo.instIndex == 0) {
-            oldTokenIdEx = userInfo.accessTokenIdEx;
-            oldTokenId = userInfo.accessTokenId;
-        } else {
-            auto it = userInfo.cloneInfos.find(std::to_string(hapBaseInfo.instIndex));
-            if (it != userInfo.cloneInfos.end()) {
-                oldTokenIdEx = it->second.accessTokenIdEx;
-                oldTokenId = it->second.accessTokenId;
-            }
-        }
-        if (oldTokenId != 0 && oldTokenId != newTokenId) {
-            if (hapBaseInfo.instIndex == 0) {
-                userInfo.accessTokenId = newTokenId;
-                userInfo.accessTokenIdEx = newTokenIdEx;
-            } else {
-                auto it = userInfo.cloneInfos.find(std::to_string(hapBaseInfo.instIndex));
-                if (it != userInfo.cloneInfos.end()) {
-                    it->second.accessTokenId = newTokenId;
-                    it->second.accessTokenIdEx = newTokenIdEx;
-                }
-            }
-            info.AddInnerBundleUserInfo(userInfo);
-            dataMgr->UpdateInnerBundleInfo(info);
-            LOG_I(BMS_TAG_DEFAULT,
-                "Updated token: bundle=%{public}s userId=%{public}d appIndex=%{public}d",
-                hapBaseInfo.bundleName.c_str(), hapBaseInfo.userID, hapBaseInfo.instIndex);
-        }
+        UpdateTokenIdForEntry(dataMgr, migratedInfo.hapBaseInfoList[k],
+            result.tokenIdList[k].tokenIdExStruct.tokenID,
+            result.tokenIdList[k].tokenIDEx);
     }
 }
 
@@ -7827,18 +8020,31 @@ void BMSEventHandler::BuildRetryList(
 {
     std::map<std::string, const Security::AccessToken::MigratedInfo*> originalMap;
     for (const auto &m : migratedList) {
-        originalMap[m.bundleName] = &m;
+        std::string key = m.bundleName + std::to_string(
+            static_cast<int32_t>(m.mode));
+        originalMap[key] = &m;
     }
+    auto findOriginalInfo = [&](const std::string &bn, int32_t instIndex)
+        -> const Security::AccessToken::MigratedInfo* {
+        bool isClone = instIndex ==
+            ServiceConstants::DUAL_MODE_CLONE_APP_INDEX;
+        std::string key = bn + std::to_string(isClone
+            ? static_cast<int32_t>(Security::AccessToken::MultipleMode::SUB_MODE)
+            : static_cast<int32_t>(Security::AccessToken::MultipleMode::DEFAULT_OR_MAIN_MODE));
+        auto it = originalMap.find(key);
+        return it == originalMap.end() ? nullptr : it->second;
+    };
     auto findReservedType = [&](const std::string &bn, int32_t userId, int32_t appIndex)
         -> Security::AccessToken::ReservedType {
-        auto it = originalMap.find(bn);
-        if (it == originalMap.end()) {
+        const auto *orig = findOriginalInfo(bn, appIndex);
+        if (orig == nullptr) {
             return Security::AccessToken::ReservedType::NONE;
         }
-        const auto &orig = *it->second;
-        for (size_t k = 0; k < orig.hapBaseInfoList.size() && k < orig.reservedTypeList.size(); ++k) {
-            if (orig.hapBaseInfoList[k].userID == userId && orig.hapBaseInfoList[k].instIndex == appIndex) {
-                return orig.reservedTypeList[k];
+        for (size_t k = 0; k < orig->hapBaseInfoList.size() &&
+            k < orig->reservedTypeList.size(); ++k) {
+            if (orig->hapBaseInfoList[k].userID == userId &&
+                orig->hapBaseInfoList[k].instIndex == appIndex) {
+                return orig->reservedTypeList[k];
             }
         }
         return Security::AccessToken::ReservedType::NONE;
@@ -7848,30 +8054,72 @@ void BMSEventHandler::BuildRetryList(
     for (size_t i = 0; i < failedHapList.size(); ++i) {
         const auto &hapInfo = failedHapList[i];
         int32_t uid = failedUidList[i];
-        auto origIt = originalMap.find(hapInfo.bundleName);
-        auto it = retryMap.find(hapInfo.bundleName);
+        bool isClone = hapInfo.instIndex ==
+            ServiceConstants::DUAL_MODE_CLONE_APP_INDEX;
+        std::string mapKey = hapInfo.bundleName + std::to_string(isClone
+            ? static_cast<int32_t>(Security::AccessToken::MultipleMode::SUB_MODE)
+            : static_cast<int32_t>(Security::AccessToken::MultipleMode::DEFAULT_OR_MAIN_MODE));
+        const auto *orig = findOriginalInfo(hapInfo.bundleName, hapInfo.instIndex);
+        auto it = retryMap.find(mapKey);
         if (it == retryMap.end()) {
             Security::AccessToken::MigratedInfo m;
             m.bundleName = hapInfo.bundleName;
-            if (origIt != originalMap.end()) {
-                m.pathList = origIt->second->pathList;
+            if (orig != nullptr) {
+                m.pathList = orig->pathList;
+                m.mode = orig->mode;
             }
             m.uidList.emplace_back(uid);
             m.hapBaseInfoList.emplace_back(hapInfo);
-            m.reservedTypeList.emplace_back(findReservedType(hapInfo.bundleName, hapInfo.userID, hapInfo.instIndex));
-            retryMap[hapInfo.bundleName] = std::move(m);
+            m.reservedTypeList.emplace_back(findReservedType(
+                hapInfo.bundleName, hapInfo.userID, hapInfo.instIndex));
+            retryMap[mapKey] = std::move(m);
         } else {
             auto &m = it->second;
             m.uidList.emplace_back(uid);
             m.hapBaseInfoList.emplace_back(hapInfo);
-            m.reservedTypeList.emplace_back(findReservedType(hapInfo.bundleName, hapInfo.userID, hapInfo.instIndex));
+            m.reservedTypeList.emplace_back(findReservedType(
+                hapInfo.bundleName, hapInfo.userID, hapInfo.instIndex));
         }
     }
-    for (auto &[bn, m] : retryMap) {
+    for (auto &[k, m] : retryMap) {
         retryList.emplace_back(std::move(m));
     }
     LOG_I(BMS_TAG_DEFAULT, "MigrationRetry: %{public}zu bundles, %{public}zu entries to retry",
         retryList.size(), failedHapList.size());
+}
+
+void ResolveRetryEntry(
+    const Security::AccessToken::MigratedInfo &m,
+    const std::vector<Security::AccessToken::HapBaseInfo> &failedHapList,
+    std::vector<bool> &retryResolved)
+{
+    for (size_t k = 0; k < m.hapBaseInfoList.size() && k < m.uidList.size(); ++k) {
+        size_t foundIdx = 0;
+        if (!FindHapInFailedList(m.hapBaseInfoList[k], failedHapList, foundIdx)) {
+            continue;
+        }
+        retryResolved[foundIdx] = true;
+    }
+}
+
+size_t ProcessRetryResult(
+    const Security::AccessToken::MigratedInfo &m,
+    const Security::AccessToken::BundleMigrateResult &result,
+    const std::vector<Security::AccessToken::HapBaseInfo> &failedHapList,
+    std::vector<bool> &retryResolved)
+{
+    if (result.errcode != 0) {
+        LOG_W(BMS_TAG_DEFAULT,
+            "MigrationRetry: bundle=%{public}s failed errCode=%{public}d "
+            "%{public}zu uid entries",
+            m.bundleName.c_str(), result.errcode, m.uidList.size());
+        return 0;
+    }
+    ResolveRetryEntry(m, failedHapList, retryResolved);
+    LOG_I(BMS_TAG_DEFAULT,
+        "MigrationRetry: bundle=%{public}s succeeded, %{public}zu uid entries",
+        m.bundleName.c_str(), m.uidList.size());
+    return 1;
 }
 
 bool BMSEventHandler::ProcessRetryBatches(const std::shared_ptr<BundleDataMgr> &dataMgr,
@@ -7896,26 +8144,14 @@ bool BMSEventHandler::ProcessRetryBatches(const std::shared_ptr<BundleDataMgr> &
         }
         size_t batchSuccess = 0;
         for (size_t j = 0; j < batch.size() && j < results.size(); ++j) {
-            if (results[j].errcode != 0) {
-                LOG_D(BMS_TAG_DEFAULT, "MigrationRetry: bundle=%{public}s failed errCode=%{public}d",
-                    batch[j].bundleName.c_str(), results[j].errcode);
-                continue;
+            batchSuccess += ProcessRetryResult(batch[j], results[j],
+                failedHapList, retryResolved);
+            if (results[j].errcode == 0) {
+                UpdateTokenIdIfChanged(dataMgr, batch[j], results[j]);
             }
-            ++batchSuccess;
-            const auto &m = batch[j];
-            for (size_t k = 0; k < m.hapBaseInfoList.size() && k < m.uidList.size(); ++k) {
-                for (size_t i = 0; i < failedHapList.size(); ++i) {
-                    if (failedHapList[i].bundleName == m.hapBaseInfoList[k].bundleName &&
-                        failedHapList[i].userID == m.hapBaseInfoList[k].userID &&
-                        failedHapList[i].instIndex == m.hapBaseInfoList[k].instIndex) {
-                        retryResolved[i] = true;
-                        break;
-                    }
-                }
-            }
-            UpdateTokenIdIfChanged(dataMgr, m, results[j]);
         }
-        LOG_I(BMS_TAG_DEFAULT, "MigrationRetry: batch %{public}zu/%{public}zu done, %{public}zu/%{public}zu succeeded",
+        LOG_I(BMS_TAG_DEFAULT, "MigrationRetry: batch %{public}zu/%{public}zu done, "
+            "%{public}zu/%{public}zu succeeded",
             batchNum, totalBatches, batchSuccess, batch.size());
     }
     return hasIpcFailure;
@@ -7986,6 +8222,14 @@ void BMSEventHandler::SplitSystemAndNonSystem(
 }
 
 namespace {
+void ApplyBackoffDelay(int32_t retry)
+{
+    if (retry < MAX_RETRY - 1) {
+        int64_t sleepMs = BACKOFF_INTERVALS_MS[retry];
+        std::this_thread::sleep_for(std::chrono::milliseconds(sleepMs));
+    }
+}
+
 int32_t MigrateBatchWithRetry(const std::vector<Security::AccessToken::MigratedInfo> &batch,
     std::vector<Security::AccessToken::BundleMigrateResult> &results)
 {
@@ -8000,10 +8244,7 @@ int32_t MigrateBatchWithRetry(const std::vector<Security::AccessToken::MigratedI
         LOG_W(BMS_TAG_DEFAULT,
             "Migration batch IPC failed (retry %{public}d/%{public}d) ret=%{public}d",
             retry + 1, MAX_RETRY, ret);
-        if (retry < MAX_RETRY - 1) {
-            int64_t sleepMs = BACKOFF_INTERVALS_MS[retry];
-            std::this_thread::sleep_for(std::chrono::milliseconds(sleepMs));
-        }
+        ApplyBackoffDelay(retry);
         ++retry;
     }
     return ret;
@@ -8048,10 +8289,13 @@ void BMSEventHandler::ProcessMigrationBatch(
             if (successFlags[origIdx]) {
                 ++batchSuccess;
                 UpdateTokenIdIfChanged(dataMgr, batch[j], results[j]);
-                LOG_D(BMS_TAG_DEFAULT, "MigrationBatch: bundle=%{public}s succeeded",
-                    batch[j].bundleName.c_str());
+                LOG_I(BMS_TAG_DEFAULT,
+                    "MigrationBatch: bundle=%{public}s succeeded, "
+                    "%{public}zu uid entries",
+                    batch[j].bundleName.c_str(), batch[j].uidList.size());
             } else {
-                LOG_W(BMS_TAG_DEFAULT, "MigrationBatch: bundle=%{public}s failed errCode=%{public}d",
+                LOG_W(BMS_TAG_DEFAULT,
+                    "MigrationBatch: bundle=%{public}s failed errCode=%{public}d",
                     batch[j].bundleName.c_str(), results[j].errcode);
             }
         }
@@ -8084,8 +8328,11 @@ void BMSEventHandler::CollectFailedFromHandshake(
         failedHapList.emplace_back(it->second);
         failedUidList.emplace_back(uid);
         failedErrCodeList.emplace_back(Security::AccessToken::ERR_MIGRATION_UID_EXISTED);
-        LOG_W(BMS_TAG_DEFAULT, "Migration: unreceived entry bundle=%{public}s userId=%{public}d appIndex=%{public}d",
-            it->second.bundleName.c_str(), it->second.userID, it->second.instIndex);
+        LOG_W(BMS_TAG_DEFAULT,
+            "Migration: unreceived bundle=%{public}s userId=%{public}d "
+            "appIndex=%{public}d uid=%{public}d",
+            it->second.bundleName.c_str(), it->second.userID,
+            it->second.instIndex, uid);
     }
 }
 
@@ -8124,8 +8371,8 @@ void BMSEventHandler::CollectFailedFromBatches(
             failedErrCodeList.emplace_back(errCode);
             LOG_W(BMS_TAG_DEFAULT,
                 "Migration: batch failed bundle=%{public}s userId=%{public}d "
-                "appIndex=%{public}d errCode=%{public}d",
-                hap.bundleName.c_str(), hap.userID, hap.instIndex, errCode);
+                "appIndex=%{public}d uid=%{public}d errCode=%{public}d",
+                hap.bundleName.c_str(), hap.userID, hap.instIndex, uid, errCode);
         }
     }
 }
@@ -8206,23 +8453,19 @@ struct FailedEntryCollector {
     std::vector<int32_t> &errCodeList;
 };
 
-struct UpdatePayload {
-    int32_t resolvedUid;
-    uint32_t existingTokenId;
-    uint64_t existingTokenIdEx;
-    bool uidChanged;
-};
-
 void CollectBundleUserInfosForFallback(const std::string &bundleName,
     const InnerBundleUserInfo &userInfo,
+    int32_t mainInstIndex,
     Security::AccessToken::MigratedInfo &m,
     FailedEntryCollector &failed)
 {
     int32_t userId = userInfo.bundleUserInfo.userId;
     m.uidList.emplace_back(userInfo.uid);
-    m.hapBaseInfoList.emplace_back(Security::AccessToken::HapBaseInfo{userId, bundleName, 0});
+    m.hapBaseInfoList.emplace_back(
+        Security::AccessToken::HapBaseInfo{userId, bundleName, mainInstIndex});
     m.reservedTypeList.emplace_back(Security::AccessToken::ReservedType::NONE);
-    failed.hapList.emplace_back(Security::AccessToken::HapBaseInfo{userId, bundleName, 0});
+    failed.hapList.emplace_back(
+        Security::AccessToken::HapBaseInfo{userId, bundleName, mainInstIndex});
     failed.uidList.emplace_back(userInfo.uid);
     failed.errCodeList.emplace_back(ERR_APPEXECFWK_ACCESS_TOKEN_MIGRATION_FAILED);
     for (const auto &[appIndexStr, cloneInfo] : userInfo.cloneInfos) {
@@ -8237,6 +8480,18 @@ void CollectBundleUserInfosForFallback(const std::string &bundleName,
         failed.hapList.emplace_back(
             Security::AccessToken::HapBaseInfo{cloneInfo.userId, bundleName, appIndex});
         failed.uidList.emplace_back(cloneInfo.uid);
+        failed.errCodeList.emplace_back(ERR_APPEXECFWK_ACCESS_TOKEN_MIGRATION_FAILED);
+    }
+    for (const auto &[key, sandboxInfo] : userInfo.sandboxInfos) {
+        m.uidList.emplace_back(sandboxInfo.uid);
+        m.hapBaseInfoList.emplace_back(
+            Security::AccessToken::HapBaseInfo{
+                sandboxInfo.userId, bundleName, sandboxInfo.appIndex});
+        m.reservedTypeList.emplace_back(Security::AccessToken::ReservedType::NONE);
+        failed.hapList.emplace_back(
+            Security::AccessToken::HapBaseInfo{
+                sandboxInfo.userId, bundleName, sandboxInfo.appIndex});
+        failed.uidList.emplace_back(sandboxInfo.uid);
         failed.errCodeList.emplace_back(ERR_APPEXECFWK_ACCESS_TOKEN_MIGRATION_FAILED);
     }
 }
@@ -8260,20 +8515,34 @@ void CollectSandboxUserInfosForFallback(int32_t sandboxAppIndex,
     }
 }
 
-void GetTokenIdFromUserInfo(const Security::AccessToken::HapBaseInfo &hapInfo,
+void FindTokenInCloneOrSandbox(const Security::AccessToken::HapBaseInfo &hapInfo,
     const InnerBundleUserInfo &userInfo,
     uint32_t &existingTokenId, uint64_t &existingTokenIdEx)
 {
-    if (hapInfo.instIndex == 0) {
-        existingTokenId = userInfo.accessTokenId;
-        existingTokenIdEx = userInfo.accessTokenIdEx;
-        return;
-    }
     auto cloneIt = userInfo.cloneInfos.find(std::to_string(hapInfo.instIndex));
     if (cloneIt != userInfo.cloneInfos.end()) {
         existingTokenId = cloneIt->second.accessTokenId;
         existingTokenIdEx = cloneIt->second.accessTokenIdEx;
+        return;
     }
+    auto sandboxIt = userInfo.sandboxInfos.find(std::to_string(hapInfo.instIndex));
+    if (sandboxIt != userInfo.sandboxInfos.end()) {
+        existingTokenId = sandboxIt->second.accessTokenId;
+        existingTokenIdEx = sandboxIt->second.accessTokenIdEx;
+    }
+}
+
+void GetTokenIdFromUserInfo(const Security::AccessToken::HapBaseInfo &hapInfo,
+    const InnerBundleUserInfo &userInfo,
+    uint32_t &existingTokenId, uint64_t &existingTokenIdEx)
+{
+    if (hapInfo.instIndex == 0 ||
+        hapInfo.instIndex == ServiceConstants::DUAL_MODE_CLONE_APP_INDEX) {
+        existingTokenId = userInfo.accessTokenId;
+        existingTokenIdEx = userInfo.accessTokenIdEx;
+        return;
+    }
+    FindTokenInCloneOrSandbox(hapInfo, userInfo, existingTokenId, existingTokenIdEx);
 }
 
 void FindTokenInSandboxUserInfos(const InnerBundleInfo &sandboxInfo,
@@ -8289,6 +8558,21 @@ void FindTokenInSandboxUserInfos(const InnerBundleInfo &sandboxInfo,
     }
 }
 
+bool IsSandboxKeyMatched(const std::string &key,
+    const InnerBundleInfo &sandboxInfo,
+    const Security::AccessToken::HapBaseInfo &hapInfo)
+{
+    if (sandboxInfo.GetBundleName() != hapInfo.bundleName) {
+        return false;
+    }
+    int32_t sandboxAppIndex = 0;
+    auto pos = key.find(Constants::FILE_UNDERLINE);
+    if (pos != std::string::npos) {
+        OHOS::StrToInt(key.substr(0, pos), sandboxAppIndex);
+    }
+    return sandboxAppIndex == hapInfo.instIndex;
+}
+
 void SearchSandboxForTokenId(const std::shared_ptr<BundleDataMgr> &dataMgr,
     const Security::AccessToken::HapBaseInfo &hapInfo,
     uint32_t &existingTokenId, uint64_t &existingTokenIdEx)
@@ -8299,20 +8583,54 @@ void SearchSandboxForTokenId(const std::shared_ptr<BundleDataMgr> &dataMgr,
     }
     auto sandboxMap = sandboxHelper->GetSandboxAppInfoMap();
     for (const auto &[key, sandboxInfo] : sandboxMap) {
-        if (sandboxInfo.GetBundleName() != hapInfo.bundleName) {
+        if (!IsSandboxKeyMatched(key, sandboxInfo, hapInfo)) {
             continue;
         }
-        int32_t sandboxAppIndex = 0;
-        auto pos = key.find(Constants::FILE_UNDERLINE);
-        if (pos != std::string::npos) {
-            OHOS::StrToInt(key.substr(0, pos), sandboxAppIndex);
-        }
-        if (sandboxAppIndex != hapInfo.instIndex) {
-            continue;
-        }
-        FindTokenInSandboxUserInfos(sandboxInfo, hapInfo, existingTokenId, existingTokenIdEx);
-        break;
+        FindTokenInSandboxUserInfos(sandboxInfo, hapInfo,
+            existingTokenId, existingTokenIdEx);
+        return;
     }
+}
+
+bool FetchSandboxUserInfo(const std::shared_ptr<BundleDataMgr> &dataMgr,
+    const Security::AccessToken::HapBaseInfo &hapBaseInfo,
+    InnerBundleInfo &sandboxInfo, InnerBundleUserInfo &sandboxUserInfo)
+{
+    auto sandboxHelper = dataMgr->GetSandboxAppHelper();
+    if (sandboxHelper == nullptr) {
+        return false;
+    }
+    int32_t sandboxUserId = hapBaseInfo.userID;
+    if (sandboxHelper->GetSandboxAppInfo(
+        hapBaseInfo.bundleName, hapBaseInfo.instIndex,
+        sandboxUserId, sandboxInfo) != ERR_OK) {
+        return false;
+    }
+    return sandboxInfo.GetInnerBundleUserInfo(hapBaseInfo.userID, sandboxUserInfo);
+}
+
+void UpdateSandboxTokenIfChanged(const std::shared_ptr<BundleDataMgr> &dataMgr,
+    const Security::AccessToken::HapBaseInfo &hapBaseInfo,
+    uint32_t newTokenId, uint64_t newTokenIdEx)
+{
+    InnerBundleInfo sandboxInfo;
+    InnerBundleUserInfo sandboxUserInfo;
+    if (!FetchSandboxUserInfo(dataMgr, hapBaseInfo, sandboxInfo, sandboxUserInfo)) {
+        return;
+    }
+    if (sandboxUserInfo.accessTokenId == newTokenId) {
+        return;
+    }
+    sandboxUserInfo.accessTokenId = newTokenId;
+    sandboxUserInfo.accessTokenIdEx = newTokenIdEx;
+    sandboxInfo.AddInnerBundleUserInfo(sandboxUserInfo);
+    auto sandboxHelper = dataMgr->GetSandboxAppHelper();
+    if (sandboxHelper != nullptr) {
+        sandboxHelper->SaveSandboxAppInfo(sandboxInfo, hapBaseInfo.instIndex);
+    }
+    LOG_I(BMS_TAG_DEFAULT,
+        "Updated sandbox token: bundle=%{public}s userId=%{public}d appIndex=%{public}d",
+        hapBaseInfo.bundleName.c_str(), hapBaseInfo.userID, hapBaseInfo.instIndex);
 }
 
 void UpdateMainUserInfo(InnerBundleUserInfo &userInfo, const UpdatePayload &payload)
@@ -8352,6 +8670,28 @@ void UpdateCloneUserInfo(int32_t instIndex,
     cloneIt->second.accessTokenIdEx = payload.existingTokenIdEx;
 }
 
+void UpdateCliSandboxUserInfo(int32_t instIndex,
+    InnerBundleUserInfo &userInfo, const UpdatePayload &payload)
+{
+    auto sandboxIt = userInfo.sandboxInfos.find(std::to_string(instIndex));
+    if (sandboxIt == userInfo.sandboxInfos.end()) {
+        return;
+    }
+    if (payload.uidChanged) {
+        auto oldUid = sandboxIt->second.uid;
+        sandboxIt->second.uid = payload.resolvedUid;
+        auto gidIt = std::find(sandboxIt->second.gids.begin(),
+            sandboxIt->second.gids.end(), oldUid);
+        if (gidIt != sandboxIt->second.gids.end()) {
+            *gidIt = payload.resolvedUid;
+        } else {
+            sandboxIt->second.gids.emplace_back(payload.resolvedUid);
+        }
+    }
+    sandboxIt->second.accessTokenId = payload.existingTokenId;
+    sandboxIt->second.accessTokenIdEx = payload.existingTokenIdEx;
+}
+
 void UpdateSandboxUserInfo(InnerBundleUserInfo &sandboxUserInfo, const UpdatePayload &payload)
 {
     if (payload.uidChanged) {
@@ -8388,14 +8728,25 @@ void TryUpdateSandboxUserInfo(const std::shared_ptr<BundleDataMgr> &dataMgr,
     UpdateSandboxUserInfo(sandboxUserInfo, payload);
     sandboxInfo.AddInnerBundleUserInfo(sandboxUserInfo);
     sandboxHelper->SaveSandboxAppInfo(sandboxInfo, hapInfo.instIndex);
+#ifdef BUNDLE_FRAMEWORK_SANDBOX_APP
+    auto sandboxDataMgr = sandboxHelper->GetSandboxDataMgr();
+    if (sandboxDataMgr != nullptr) {
+        std::string sandboxKey = std::to_string(hapInfo.instIndex) +
+            Constants::FILE_UNDERLINE + hapInfo.bundleName;
+        sandboxDataMgr->SaveSandboxPersistentInfo(sandboxKey, sandboxInfo);
+    }
+#endif
 }
 
 const Security::AccessToken::MigratedInfo* FindMigratedInfo(
     const std::vector<Security::AccessToken::MigratedInfo> &migratedList,
-    const std::string &bundleName)
+    const std::string &bundleName, bool expectClone)
 {
+    auto targetMode = expectClone
+        ? Security::AccessToken::MultipleMode::SUB_MODE
+        : Security::AccessToken::MultipleMode::DEFAULT_OR_MAIN_MODE;
     for (const auto &m : migratedList) {
-        if (m.bundleName == bundleName) {
+        if (m.bundleName == bundleName && m.mode == targetMode) {
             return &m;
         }
     }
@@ -8453,13 +8804,22 @@ void BuildModulePathMap(const Security::AccessToken::MigratedInfo *migratedInfo,
 }
 
 void MarkBundleCheckBySpm(const std::shared_ptr<BundleDataMgr> &dataMgr,
-    const std::string &bundleName)
+    const std::string &bundleName, bool isDualModeClone)
 {
     dataMgr->UpdateUninstallBundleCheckBySpm(bundleName, true);
     InnerBundleInfo updateInfo;
-    if (dataMgr->FetchInnerBundleInfo(bundleName, updateInfo)) {
+    if (dataMgr->FetchInnerBundleInfo(bundleName, updateInfo) &&
+        updateInfo.IsDualModeCloneApp() == isDualModeClone) {
         updateInfo.SetBundleCheckBySpm(true);
-        dataMgr->UpdateInnerBundleInfo(updateInfo);
+        dataMgr->UpdateInnerBundleInfo(updateInfo, true, false);
+        LOG_D(BMS_TAG_DEFAULT, "Fallback: bundle=%{public}s marked checkBySpm=true",
+            bundleName.c_str());
+        return;
+    }
+    if (dataMgr->FetchTempBundleInfo(bundleName, updateInfo) &&
+        updateInfo.IsDualModeCloneApp() == isDualModeClone) {
+        updateInfo.SetBundleCheckBySpm(true);
+        dataMgr->UpdateInnerBundleInfo(updateInfo, true, true);
         LOG_D(BMS_TAG_DEFAULT, "Fallback: bundle=%{public}s marked checkBySpm=true",
             bundleName.c_str());
     }
@@ -8473,17 +8833,41 @@ void GroupFailedByBundle(const std::shared_ptr<BundleDataMgr> &dataMgr,
     for (size_t i = 0; i < failedHapList.size(); ++i) {
         InnerBundleInfo info;
         if (!dataMgr->FetchInnerBundleInfo(failedHapList[i].bundleName, info)) {
-            LOG_W(BMS_TAG_DEFAULT, "Fallback: bundle=%{public}s uninstalled, mark checkBySpm=false",
-                failedHapList[i].bundleName.c_str());
-            dataMgr->UpdateUninstallBundleCheckBySpm(failedHapList[i].bundleName, false);
-            ++uninstalledCount;
-            continue;
+            if (!dataMgr->FetchTempBundleInfo(failedHapList[i].bundleName, info)) {
+                LOG_W(BMS_TAG_DEFAULT, "Fallback: bundle=%{public}s uninstalled, mark checkBySpm=false",
+                    failedHapList[i].bundleName.c_str());
+                dataMgr->UpdateUninstallBundleCheckBySpm(failedHapList[i].bundleName, false);
+                ++uninstalledCount;
+                continue;
+            }
         }
         bundleToIndices[failedHapList[i].bundleName].emplace_back(i);
     }
     LOG_I(BMS_TAG_DEFAULT,
         "Fallback: grouped %{public}zu entries into %{public}zu bundles, %{public}zu uninstalled",
         failedHapList.size(), bundleToIndices.size(), uninstalledCount);
+}
+
+void CollectUnmigratedForBundle(const std::string &bundleName,
+    const InnerBundleInfo &info,
+    FailedEntryCollector &failed,
+    std::map<std::string, Security::AccessToken::MigratedInfo> &failedMigratedMap)
+{
+    std::string mapKey = info.IsDualModeCloneApp()
+        ? DualModeHelper::GetDualModeBundleName(bundleName) : bundleName;
+    int32_t mainInstIndex = info.IsDualModeCloneApp()
+        ? ServiceConstants::DUAL_MODE_CLONE_APP_INDEX : info.GetAppIndex();
+    auto &m = failedMigratedMap[mapKey];
+    m.bundleName = bundleName;
+    m.pathList.hapPaths = info.GetAllHapPaths();
+    m.pathList.isPreInstalled = info.IsPreInstallApp();
+    m.pathList.userIdForEnterpriseSign = info.GetUserId();
+    m.mode = info.IsDualModeCloneApp()
+        ? Security::AccessToken::MultipleMode::SUB_MODE
+        : Security::AccessToken::MultipleMode::DEFAULT_OR_MAIN_MODE;
+    for (const auto &[userIdStr, userInfo] : info.GetInnerBundleUserInfos()) {
+        CollectBundleUserInfosForFallback(bundleName, userInfo, mainInstIndex, m, failed);
+    }
 }
 } // anonymous namespace
 
@@ -8498,7 +8882,7 @@ void BMSEventHandler::CollectUnmigratedMainAndClone(
     size_t entryBefore = failedHapList.size();
     size_t skippedCount = 0;
     FailedEntryCollector failed{failedHapList, failedUidList, failedErrCodeList};
-    LOG_I(BMS_TAG_DEFAULT, "FallbackCheck: collecting main+clone from %{public}zu bundles",
+    LOG_I(BMS_TAG_DEFAULT, "FallbackCheck: collecting from %{public}zu visible bundles",
         bundleNames.size());
     for (const auto &bundleName : bundleNames) {
         InnerBundleInfo info;
@@ -8509,21 +8893,39 @@ void BMSEventHandler::CollectUnmigratedMainAndClone(
             ++skippedCount;
             continue;
         }
-        auto &m = failedMigratedMap[bundleName];
-        m.bundleName = bundleName;
-        m.pathList.hapPaths = info.GetAllHapPaths();
-        m.pathList.isPreInstalled = info.IsPreInstallApp();
-        m.pathList.userIdForEnterpriseSign = info.GetUserId();
-        m.mode = info.IsDualModeCloneApp()
-            ? Security::AccessToken::MultipleMode::SUB_MODE
-            : Security::AccessToken::MultipleMode::DEFAULT_OR_MAIN_MODE;
-        for (const auto &[userIdStr, userInfo] : info.GetInnerBundleUserInfos()) {
-            CollectBundleUserInfosForFallback(bundleName, userInfo, m, failed);
-        }
+        CollectUnmigratedForBundle(bundleName, info, failed, failedMigratedMap);
     }
+    CollectUnmigratedFromTemp(dataMgr, skippedCount, failedHapList, failedUidList,
+        failedErrCodeList, failedMigratedMap);
     LOG_I(BMS_TAG_DEFAULT,
-        "FallbackCheck: main+clone done, %{public}zu entries in %{public}zu bundles, %{public}zu already migrated",
+        "FallbackCheck: done, %{public}zu entries in %{public}zu bundles, "
+        "%{public}zu already migrated",
         failedHapList.size() - entryBefore, failedMigratedMap.size(), skippedCount);
+}
+
+void BMSEventHandler::CollectUnmigratedFromTemp(
+    const std::shared_ptr<BundleDataMgr> &dataMgr,
+    size_t &skippedCount,
+    std::vector<Security::AccessToken::HapBaseInfo> &failedHapList,
+    std::vector<int32_t> &failedUidList,
+    std::vector<int32_t> &failedErrCodeList,
+    std::map<std::string, Security::AccessToken::MigratedInfo> &failedMigratedMap)
+{
+    auto tempBundleNames = dataMgr->GetAllTempBundleName();
+    FailedEntryCollector failed{failedHapList, failedUidList, failedErrCodeList};
+    LOG_D(BMS_TAG_DEFAULT, "FallbackCheck: collecting from %{public}zu temp bundles",
+        tempBundleNames.size());
+    for (const auto &bundleName : tempBundleNames) {
+        InnerBundleInfo info;
+        if (!dataMgr->FetchTempBundleInfo(bundleName, info)) {
+            continue;
+        }
+        if (info.IsBundleCheckBySpm()) {
+            ++skippedCount;
+            continue;
+        }
+        CollectUnmigratedForBundle(bundleName, info, failed, failedMigratedMap);
+    }
 }
 
 void BMSEventHandler::CollectUnmigratedSandbox(
@@ -8545,7 +8947,9 @@ void BMSEventHandler::CollectUnmigratedSandbox(
         sandboxMap.size());
     for (const auto &[key, sandboxInfo] : sandboxMap) {
         std::string bn = sandboxInfo.GetBundleName();
-        auto mapIt = failedMigratedMap.find(bn);
+        std::string mapKey = sandboxInfo.IsDualModeCloneApp()
+            ? DualModeHelper::GetDualModeBundleName(bn) : bn;
+        auto mapIt = failedMigratedMap.find(mapKey);
         if (mapIt == failedMigratedMap.end()) {
             continue;
         }
@@ -8590,7 +8994,14 @@ void BMSEventHandler::CheckAndFallbackUnmigratedBundles()
     std::vector<bool> successFlags(failedMigratedList.size(), false);
     FallbackWithSpmSession(dataMgr, failedHapList, failedUidList, failedErrCodeList,
         successFlags, failedMigratedList);
-    LOG_I(BMS_TAG_DEFAULT, "FallbackCheck: done");
+    size_t fallbackSuccess = 0;
+    for (auto f : successFlags) {
+        if (f) { ++fallbackSuccess; }
+    }
+    LOG_I(BMS_TAG_DEFAULT,
+        "FallbackCheck: done, %{public}zu/%{public}zu bundles resolved, "
+        "%{public}zu still failed",
+        fallbackSuccess, failedMigratedList.size(), failedHapList.size());
 }
 
 // ── SPM fallback ──
@@ -8629,10 +9040,17 @@ void BMSEventHandler::UpdateBundleInfoAfterFallback(
     bool uidChanged)
 {
     InnerBundleInfo info;
-    if (!dataMgr->FetchInnerBundleInfo(bundleName, info)) {
-        LOG_W(BMS_TAG_DEFAULT, "Fallback: bundle=%{public}s update info failed, bundle not found",
-            bundleName.c_str());
-        return;
+    bool fromTemp = false;
+    bool expectClone = hapInfo.instIndex ==
+        ServiceConstants::DUAL_MODE_CLONE_APP_INDEX;
+    if (!dataMgr->FetchInnerBundleInfo(bundleName, info) ||
+        info.IsDualModeCloneApp() != expectClone) {
+        if (!dataMgr->FetchTempBundleInfo(bundleName, info)) {
+            LOG_W(BMS_TAG_DEFAULT, "Fallback: bundle=%{public}s update info failed, bundle not found",
+                bundleName.c_str());
+            return;
+        }
+        fromTemp = true;
     }
     InnerBundleUserInfo userInfo;
     if (!info.GetInnerBundleUserInfo(hapInfo.userID, userInfo)) {
@@ -8641,16 +9059,91 @@ void BMSEventHandler::UpdateBundleInfoAfterFallback(
         return;
     }
     UpdatePayload payload{resolvedUid, existingTokenId, existingTokenIdEx, uidChanged};
-    if (hapInfo.instIndex == 0) {
+    if (hapInfo.instIndex == 0 ||
+        hapInfo.instIndex == ServiceConstants::DUAL_MODE_CLONE_APP_INDEX) {
         UpdateMainUserInfo(userInfo, payload);
     } else {
         UpdateCloneUserInfo(hapInfo.instIndex, userInfo, payload);
+        UpdateCliSandboxUserInfo(hapInfo.instIndex, userInfo, payload);
     }
     info.AddInnerBundleUserInfo(userInfo);
-    dataMgr->UpdateInnerBundleInfo(info);
-    if (hapInfo.instIndex > 0) {
+    dataMgr->UpdateInnerBundleInfo(info, true, fromTemp);
+    if (hapInfo.instIndex > 0 &&
+        hapInfo.instIndex != ServiceConstants::DUAL_MODE_CLONE_APP_INDEX) {
         TryUpdateSandboxUserInfo(dataMgr, hapInfo, payload);
     }
+}
+
+bool BMSEventHandler::PrepareFallbackEntryContext(
+    const std::shared_ptr<BundleDataMgr> &dataMgr,
+    const InnerBundleInfo &info,
+    const Security::AccessToken::HapBaseInfo &hapInfo,
+    InnerBundleInfo &entryInfo,
+    InnerBundleUserInfo &userInfo,
+    uint32_t &existingTokenId,
+    uint64_t &existingTokenIdEx,
+    int32_t &dlpType)
+{
+    bool expectClone = hapInfo.instIndex ==
+        ServiceConstants::DUAL_MODE_CLONE_APP_INDEX;
+    if (info.IsDualModeCloneApp() == expectClone) {
+        entryInfo = info;
+    } else {
+        if (!dataMgr->FetchTempBundleInfo(hapInfo.bundleName, entryInfo)) {
+            LOG_W(BMS_TAG_DEFAULT,
+                "Fallback: bundle=%{public}s userId=%{public}d appIndex=%{public}d "
+                "temp fetch failed, skip",
+                hapInfo.bundleName.c_str(), hapInfo.userID, hapInfo.instIndex);
+            return false;
+        }
+    }
+    if (!entryInfo.GetInnerBundleUserInfo(hapInfo.userID, userInfo)) {
+        LOG_W(BMS_TAG_DEFAULT,
+            "Fallback: bundle=%{public}s userId=%{public}d userInfo not found",
+            hapInfo.bundleName.c_str(), hapInfo.userID);
+        return false;
+    }
+    if (!GetExistingTokenId(dataMgr, entryInfo, hapInfo, userInfo,
+        existingTokenId, existingTokenIdEx, dlpType)) {
+        LOG_W(BMS_TAG_DEFAULT,
+            "Fallback: bundle=%{public}s userId=%{public}d appIndex=%{public}d "
+            "no tokenId found, skip",
+            hapInfo.bundleName.c_str(), hapInfo.userID, hapInfo.instIndex);
+        return false;
+    }
+    return true;
+}
+
+bool BMSEventHandler::ExecuteFallbackPolicyUpdate(
+    const InnerBundleInfo &entryInfo,
+    const Security::AccessToken::HapBaseInfo &hapInfo,
+    int32_t oldUid, int32_t sessionId, int32_t dlpType,
+    uint32_t existingTokenId, uint64_t existingTokenIdEx,
+    size_t idx, FallbackResult &result)
+{
+    Security::AccessToken::BundlePolicy policy = BundleSpmManager::CreateBundlePolicy(
+        entryInfo, dlpType,
+        entryInfo.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG);
+    int32_t resolvedUid = oldUid;
+    Security::AccessToken::AccessTokenIDEx tokenIdEx;
+    tokenIdEx.tokenIDEx = existingTokenIdEx;
+    int32_t policyRet = Security::AccessToken::AccessTokenKit::UpdateHapPolicy(
+        sessionId, tokenIdEx, policy, resolvedUid);
+    if (policyRet != 0) {
+        LOG_E(BMS_TAG_DEFAULT,
+            "Fallback: bundle=%{public}s userId=%{public}d appIndex=%{public}d "
+            "UpdateHapPolicy failed ret=%{public}d",
+            entryInfo.GetBundleName().c_str(), hapInfo.userID, hapInfo.instIndex, policyRet);
+        return false;
+    }
+    bool uidChanged = (resolvedUid != 0 && resolvedUid != oldUid);
+    result = {idx, hapInfo, resolvedUid, existingTokenId, tokenIdEx.tokenIDEx, uidChanged};
+    LOG_I(BMS_TAG_DEFAULT,
+        "Fallback: bundle=%{public}s userId=%{public}d appIndex=%{public}d "
+        "uid old=%{public}d new=%{public}d %{public}s",
+        entryInfo.GetBundleName().c_str(), hapInfo.userID, hapInfo.instIndex,
+        oldUid, resolvedUid, uidChanged ? "changed" : "unchanged");
+    return true;
 }
 
 void BMSEventHandler::CollectFallbackPendingResults(
@@ -8665,42 +9158,20 @@ void BMSEventHandler::CollectFallbackPendingResults(
     for (size_t idx : indices) {
         const auto &hapInfo = failedHapList[idx];
         int32_t oldUid = failedUidList[idx];
+        InnerBundleInfo entryInfo;
         InnerBundleUserInfo userInfo;
-        if (!info.GetInnerBundleUserInfo(hapInfo.userID, userInfo)) {
-            LOG_W(BMS_TAG_DEFAULT, "Fallback: bundle=%{public}s userId=%{public}d not found in InnerBundleUserInfo",
-                info.GetBundleName().c_str(), hapInfo.userID);
-            continue;
-        }
         uint32_t existingTokenId = 0;
         uint64_t existingTokenIdEx = 0;
         int32_t dlpType = 0;
-        if (!GetExistingTokenId(dataMgr, info, hapInfo, userInfo, existingTokenId, existingTokenIdEx, dlpType)) {
-            LOG_W(BMS_TAG_DEFAULT, "Fallback: bundle=%{public}s appIndex=%{public}d no tokenId found, skip",
-                info.GetBundleName().c_str(), hapInfo.instIndex);
+        if (!PrepareFallbackEntryContext(dataMgr, info, hapInfo, entryInfo,
+            userInfo, existingTokenId, existingTokenIdEx, dlpType)) {
             continue;
         }
-        Security::AccessToken::BundlePolicy policy = BundleSpmManager::CreateBundlePolicy(
-            info, dlpType,
-            info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG);
-        int32_t resolvedUid = oldUid;
-        // UpdateHapPolicy takes AccessTokenIDEx as an in/out parameter (AT PR
-        // #5133): the low 32 bits locate the token and the high 32 bits come
-        // back refreshed (same source as the FinishInstall commit value), so the
-        // AT-refreshed tokenAttr is what gets persisted below.
-        Security::AccessToken::AccessTokenIDEx tokenIdEx;
-        tokenIdEx.tokenIDEx = existingTokenIdEx;
-        int32_t policyRet = Security::AccessToken::AccessTokenKit::UpdateHapPolicy(
-            sessionId, tokenIdEx, policy, resolvedUid);
-        if (policyRet != 0) {
-            LOG_E(BMS_TAG_DEFAULT,
-                "Fallback: bundle=%{public}s userId=%{public}d appIndex=%{public}d "
-                "UpdateHapPolicy failed ret=%{public}d",
-                info.GetBundleName().c_str(), hapInfo.userID, hapInfo.instIndex, policyRet);
-            continue;
+        FallbackResult result;
+        if (ExecuteFallbackPolicyUpdate(entryInfo, hapInfo, oldUid, sessionId,
+            dlpType, existingTokenId, existingTokenIdEx, idx, result)) {
+            pendingResults.push_back(result);
         }
-        bool uidChanged = (resolvedUid != 0 && resolvedUid != oldUid);
-        pendingResults.push_back({idx, hapInfo, resolvedUid, existingTokenId,
-            tokenIdEx.tokenIDEx, uidChanged});
     }
 }
 
@@ -8716,7 +9187,8 @@ void BMSEventHandler::ApplySingleFallbackResult(
     if (r.uidChanged) {
         bool isSandbox = false;
         auto sandboxHelper = dataMgr->GetSandboxAppHelper();
-        if (sandboxHelper != nullptr && r.hapInfo.instIndex > 0) {
+        if (sandboxHelper != nullptr && r.hapInfo.instIndex > 0 &&
+            r.hapInfo.instIndex != ServiceConstants::DUAL_MODE_CLONE_APP_INDEX) {
             InnerBundleInfo sandboxInfo;
             int32_t sandboxUserId = r.hapInfo.userID;
             isSandbox = (sandboxHelper->GetSandboxAppInfo(bundleName, r.hapInfo.instIndex,
@@ -8726,17 +9198,21 @@ void BMSEventHandler::ApplySingleFallbackResult(
             dataMgr->UpdateSandboxBundleUid(bundleName, r.hapInfo.userID,
                 r.hapInfo.instIndex, failedUidList[r.idx], r.resolvedUid);
         } else {
+            bool isDualModeClone = r.hapInfo.instIndex ==
+                ServiceConstants::DUAL_MODE_CLONE_APP_INDEX;
             dataMgr->UpdateBundleUid(bundleName, r.hapInfo.userID,
-                r.hapInfo.instIndex, failedUidList[r.idx], r.resolvedUid, info.IsDualModeCloneApp());
+                r.hapInfo.instIndex, failedUidList[r.idx], r.resolvedUid, isDualModeClone);
         }
     }
     UpdateBundleInfoAfterFallback(dataMgr, bundleName, r.hapInfo,
         r.resolvedUid, r.existingTokenId, r.existingTokenIdEx, r.uidChanged);
     LOG_I(BMS_TAG_DEFAULT,
         "Fallback: bundle=%{public}s userId=%{public}d appIndex=%{public}d "
-        "succeeded, uid %{public}s",
+        "succeeded, uid %{public}s old=%{public}d new=%{public}d",
         bundleName.c_str(), r.hapInfo.userID, r.hapInfo.instIndex,
-        r.uidChanged ? "changed" : "unchanged");
+        r.uidChanged ? "changed" : "unchanged",
+        r.uidChanged ? failedUidList[r.idx] : r.resolvedUid,
+        r.resolvedUid);
 }
 
 void BMSEventHandler::CommitFallbackResults(
@@ -8761,9 +9237,14 @@ void BMSEventHandler::CommitFallbackResults(
     }
     LOG_I(BMS_TAG_DEFAULT, "Fallback: bundle=%{public}s FinishInstall succeeded, applying %{public}zu results",
         bundleName.c_str(), pendingResults.size());
+    size_t uidChangedCount = 0;
     for (const auto &r : pendingResults) {
+        if (r.uidChanged) { ++uidChangedCount; }
         ApplySingleFallbackResult(dataMgr, bundleName, info, r, failedUidList, resolved);
     }
+    LOG_I(BMS_TAG_DEFAULT,
+        "Fallback: bundle=%{public}s done, %{public}zu/%{public}zu uid changed",
+        bundleName.c_str(), uidChangedCount, pendingResults.size());
 }
 
 void BMSEventHandler::ProcessBundleFallback(
@@ -8778,11 +9259,19 @@ void BMSEventHandler::ProcessBundleFallback(
     LOG_I(BMS_TAG_DEFAULT, "Fallback: start bundle=%{public}s entries=%{public}zu",
         bundleName.c_str(), indices.size());
     InnerBundleInfo info;
-    if (!dataMgr->FetchInnerBundleInfo(bundleName, info)) {
-        LOG_W(BMS_TAG_DEFAULT, "Fallback: bundle=%{public}s not found, skip", bundleName.c_str());
-        return;
+    bool expectClone = !indices.empty() &&
+        failedHapList[indices[0]].instIndex ==
+            ServiceConstants::DUAL_MODE_CLONE_APP_INDEX;
+    if (!dataMgr->FetchInnerBundleInfo(bundleName, info) ||
+        info.IsDualModeCloneApp() != expectClone) {
+        if (!dataMgr->FetchTempBundleInfo(bundleName, info)) {
+            LOG_W(BMS_TAG_DEFAULT, "Fallback: bundle=%{public}s not found, skip",
+                bundleName.c_str());
+            return;
+        }
     }
-    const Security::AccessToken::MigratedInfo *migratedInfo = FindMigratedInfo(migratedList, bundleName);
+    const Security::AccessToken::MigratedInfo *migratedInfo =
+        FindMigratedInfo(migratedList, bundleName, expectClone);
     int32_t sessionId = 0;
     if (!PrepareSpmFallbackSession(info, migratedInfo, sessionId)) {
         LOG_E(BMS_TAG_DEFAULT, "Fallback: bundle=%{public}s SPM session failed", bundleName.c_str());
@@ -8814,7 +9303,9 @@ void BMSEventHandler::UpdateSuccessFlagsAndCheckBySpm(
             continue;
         }
         successFlags[i] = true;
-        MarkBundleCheckBySpm(dataMgr, migratedList[i].bundleName);
+        MarkBundleCheckBySpm(dataMgr, migratedList[i].bundleName,
+            migratedList[i].mode ==
+                Security::AccessToken::MultipleMode::SUB_MODE);
         ++markedCount;
     }
     LOG_I(BMS_TAG_DEFAULT, "Fallback: marked %{public}zu bundles as checkBySpm", markedCount);
@@ -8837,14 +9328,35 @@ void BMSEventHandler::FallbackWithSpmSession(
     GroupFailedByBundle(dataMgr, failedHapList, bundleToIndices);
     LOG_I(BMS_TAG_DEFAULT, "Fallback: grouped into %{public}zu bundles", bundleToIndices.size());
     for (const auto &[bundleName, indices] : bundleToIndices) {
-        ProcessBundleFallback(dataMgr, bundleName, indices,
-            failedHapList, failedUidList, resolved, migratedList);
+        std::vector<size_t> mainIdx;
+        std::vector<size_t> cloneIdx;
+        for (size_t idx : indices) {
+            if (failedHapList[idx].instIndex ==
+                ServiceConstants::DUAL_MODE_CLONE_APP_INDEX) {
+                cloneIdx.emplace_back(idx);
+            } else {
+                mainIdx.emplace_back(idx);
+            }
+        }
+        if (!mainIdx.empty()) {
+            ProcessBundleFallback(dataMgr, bundleName, mainIdx,
+                failedHapList, failedUidList, resolved, migratedList);
+        }
+        if (!cloneIdx.empty()) {
+            ProcessBundleFallback(dataMgr, bundleName, cloneIdx,
+                failedHapList, failedUidList, resolved, migratedList);
+        }
     }
     UpdateSuccessFlagsAndCheckBySpm(dataMgr, migratedList, successFlags, failedHapList, resolved);
     CompactFailedList(failedHapList, failedUidList, failedErrCodeList, resolved);
+    size_t resolvedCount = 0;
+    for (auto r : resolved) {
+        if (r) { ++resolvedCount; }
+    }
     size_t stillFailed = failedHapList.size();
-    LOG_I(BMS_TAG_DEFAULT, "Fallback: done, %{public}zu resolved, %{public}zu still failed",
-        resolved.size() - stillFailed, stillFailed);
+    LOG_I(BMS_TAG_DEFAULT,
+        "Fallback: done, %{public}zu resolved, %{public}zu still failed",
+        resolvedCount, stillFailed);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
