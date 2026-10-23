@@ -522,4 +522,9 @@
       <option name="push" value="bundle_so/compressNativeLibsFalse01.hap -> /data/test/resource/bms/install_operator/compressNativeLibsFalse01.hap" src="res" />
     </preparer>
   </target>
+  <target name="BmsPreCompressTest">
+    <preparer>
+      <option name="push" value="test_bundle/right.hap -> /data/test/resource/bms/pre_compress/" src="res"/>
+    </preparer>
+  </target>
 </configuration>

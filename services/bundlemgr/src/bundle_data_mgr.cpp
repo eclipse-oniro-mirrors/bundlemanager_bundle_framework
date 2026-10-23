@@ -1065,6 +1065,7 @@ void BundleDataMgr::UpdateBaseBundleInfoIntoOld(const InnerBundleInfo &newInfo, 
     oldInfo.UpdateReleaseType(newInfo);
     oldInfo.SetAppType(newInfo.GetAppType());
     oldInfo.SetAppFeature(newInfo.GetAppFeature());
+    oldInfo.SetCompressedPreload(newInfo.IsCompressedPreload());
 }
 
 bool BundleDataMgr::AddNewModuleInfo(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo)

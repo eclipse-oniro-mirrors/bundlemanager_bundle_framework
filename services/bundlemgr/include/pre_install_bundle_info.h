@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -162,6 +162,22 @@ public:
     void SetRemovable(bool removable)
     {
         removable_ = removable;
+    }
+    /**
+     * @brief Whether the preinstall packages are shipped compressed in the preload image.
+     * @return Returns the compressed.
+     */
+    bool IsCompressed() const
+    {
+        return compressed_;
+    }
+    /**
+     * @brief Set compressed.
+     * @param compressed Indicates the compressed to be set.
+     */
+    void SetCompressed(bool compressed)
+    {
+        compressed_ = compressed;
     }
     /**
      * @brief Is uninstalled or not.
@@ -449,6 +465,7 @@ private:
     bool u1Enable_ = false;
     bool isDualModeCloneApp_ = false;
     DeviceModeDistributionPolicy deviceModeDistributionPolicy_ = DeviceModeDistributionPolicy::UNSPECIFIED;
+    bool compressed_ = false;
     uint32_t versionCode_;
     uint32_t labelId_ = 0;
     uint32_t iconId_ = 0;

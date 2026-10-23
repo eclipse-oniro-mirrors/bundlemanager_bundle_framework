@@ -21,9 +21,13 @@
 #include <string>
 #include <unistd.h>
 
+#include "account_helper.h"
 #include "alternate_icon_info.h"
 #include "application_info.h"
 #include "bms_extension_client.h"
+#include "bms_extension_data_mgr.h"
+#include "bundle_mgr_ext.h"
+#include "bundle_mgr_ext_register.h"
 #include "bundle_info.h"
 #include "bundle_option.h"
 #include "bundle_installer_host.h"
@@ -8035,5 +8039,1345 @@ HWTEST_F(BmsBundleResourceTest, ParserCloneResourceInfo_0030, Function | SmallTe
 
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
     EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+namespace {
+const std::string PRE_COMPRESS_BUNDLE_NAME = "com.example.precompresstest";
+const std::string PRE_COMPRESS_LABEL = "preCompressLabel";
+const std::string PRE_COMPRESS_ICON = "preCompressIcon";
+const std::string PRE_COMPRESS_THEME_ICON = "preCompressThemeIcon";
+const std::string PRE_COMPRESS_LANGUAGE = "zh-Hans";
+const std::vector<uint8_t> PRE_COMPRESS_FOREGROUND = { 1, 2, 3 };
+const std::vector<uint8_t> PRE_COMPRESS_BACKGROUND = { 4, 5, 6 };
+const std::vector<uint8_t> PRE_COMPRESS_THEME_FOREGROUND = { 7, 8, 9 };
+const uint32_t PRE_COMPRESS_VERSION_CODE = 1;
+const int32_t PRE_COMPRESS_NOT_EXIST_USERID = 12345;
+
+bool AddPreCompressBundle(const std::string &bundleName, const bool isCompressed)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    if ((dataMgr == nullptr) || (manager == nullptr)) {
+        return false;
+    }
+    PreInstallBundleInfo preInstallBundleInfo;
+    preInstallBundleInfo.SetBundleName(bundleName);
+    preInstallBundleInfo.SetVersionCode(PRE_COMPRESS_VERSION_CODE);
+    preInstallBundleInfo.SetCompressed(isCompressed);
+    if (!dataMgr->SavePreInstallBundleInfo(bundleName, preInstallBundleInfo)) {
+        return false;
+    }
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = bundleName;
+    resourceInfo.icon_ = PRE_COMPRESS_ICON;
+    resourceInfo.foreground_ = PRE_COMPRESS_FOREGROUND;
+    resourceInfo.background_ = PRE_COMPRESS_BACKGROUND;
+    std::map<std::string, std::string> labelMap = { { PRE_COMPRESS_LANGUAGE, PRE_COMPRESS_LABEL } };
+    return manager->preCompressBundleResourceRdb_->AddPreCompressBundleResource(PRE_COMPRESS_VERSION_CODE,
+        labelMap, resourceInfo);
+}
+
+void DeletePreCompressBundle(const std::string &bundleName)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr != nullptr) {
+        PreInstallBundleInfo preInstallBundleInfo;
+        preInstallBundleInfo.SetBundleName(bundleName);
+        (void)dataMgr->DeletePreInstallBundleInfo(bundleName, preInstallBundleInfo);
+    }
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    if (manager != nullptr) {
+        (void)manager->preCompressBundleResourceRdb_->DeletePreCompressBundleResource(bundleName);
+        (void)manager->preCompressThemeResourceRdb_->DeletePreCompressThemeResource(bundleName);
+    }
+}
+
+const BundleResourceInfo *FindBundleResource(const std::vector<BundleResourceInfo> &bundleResourceInfos,
+    const std::string &bundleName)
+{
+    auto iter = std::find_if(bundleResourceInfos.begin(), bundleResourceInfos.end(),
+        [&bundleName](const BundleResourceInfo &info) { return info.bundleName == bundleName; });
+    return (iter == bundleResourceInfos.end()) ? nullptr : &(*iter);
+}
+} // namespace
+
+/**
+ * @tc.number: GetAllUninstallPreCompressBundleResourceInfo_0010
+ * Function: GetAllUninstallPreCompressBundleResourceInfo
+ * @tc.name: test GetAllUninstallPreCompressBundleResourceInfo
+ * @tc.desc: 1. system running normally
+ *           2. recoverable compressed preinstall bundle is returned once with label and icon
+ */
+HWTEST_F(BmsBundleResourceTest, GetAllUninstallPreCompressBundleResourceInfo_0010, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+    ScopeGuard deleteGuard([] { DeletePreCompressBundle(PRE_COMPRESS_BUNDLE_NAME); });
+    ASSERT_TRUE(AddPreCompressBundle(PRE_COMPRESS_BUNDLE_NAME, true));
+
+    std::vector<BundleResourceInfo> bundleResourceInfos;
+    EXPECT_TRUE(manager->GetAllUninstallPreCompressBundleResourceInfo(USERID,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), bundleResourceInfos));
+    auto count = std::count_if(bundleResourceInfos.begin(), bundleResourceInfos.end(),
+        [](const BundleResourceInfo &info) { return info.bundleName == PRE_COMPRESS_BUNDLE_NAME; });
+    EXPECT_EQ(count, 1);
+    const BundleResourceInfo *info = FindBundleResource(bundleResourceInfos, PRE_COMPRESS_BUNDLE_NAME);
+    ASSERT_NE(info, nullptr);
+    EXPECT_EQ(info->appIndex, Constants::MAIN_APP_INDEX);
+    EXPECT_EQ(info->label, PRE_COMPRESS_LABEL);
+    EXPECT_EQ(info->icon, PRE_COMPRESS_ICON);
+    EXPECT_TRUE(info->foreground.empty());
+}
+
+/**
+ * @tc.number: GetAllUninstallPreCompressBundleResourceInfo_0020
+ * Function: GetAllUninstallPreCompressBundleResourceInfo
+ * @tc.name: test GetAllUninstallPreCompressBundleResourceInfo
+ * @tc.desc: 1. system running normally
+ *           2. preinstall bundle not shipped compressed is not returned even if resource row exists
+ */
+HWTEST_F(BmsBundleResourceTest, GetAllUninstallPreCompressBundleResourceInfo_0020, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+    ScopeGuard deleteGuard([] { DeletePreCompressBundle(PRE_COMPRESS_BUNDLE_NAME); });
+    ASSERT_TRUE(AddPreCompressBundle(PRE_COMPRESS_BUNDLE_NAME, false));
+
+    std::vector<BundleResourceInfo> bundleResourceInfos;
+    EXPECT_TRUE(manager->GetAllUninstallPreCompressBundleResourceInfo(USERID,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), bundleResourceInfos));
+    EXPECT_EQ(FindBundleResource(bundleResourceInfos, PRE_COMPRESS_BUNDLE_NAME), nullptr);
+}
+
+/**
+ * @tc.number: GetAllUninstallPreCompressBundleResourceInfo_0030
+ * Function: GetAllUninstallPreCompressBundleResourceInfo
+ * @tc.name: test GetAllUninstallPreCompressBundleResourceInfo
+ * @tc.desc: 1. system running normally
+ *           2. special or not exist userId returns nothing
+ */
+HWTEST_F(BmsBundleResourceTest, GetAllUninstallPreCompressBundleResourceInfo_0030, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+    ScopeGuard deleteGuard([] { DeletePreCompressBundle(PRE_COMPRESS_BUNDLE_NAME); });
+    ASSERT_TRUE(AddPreCompressBundle(PRE_COMPRESS_BUNDLE_NAME, true));
+
+    std::vector<int32_t> userIds = { Constants::INVALID_USERID, Constants::UNSPECIFIED_USERID,
+        Constants::ALL_USERID, Constants::ANY_USERID, PRE_COMPRESS_NOT_EXIST_USERID };
+    for (const auto userId : userIds) {
+        std::vector<BundleResourceInfo> bundleResourceInfos;
+        EXPECT_TRUE(manager->GetAllUninstallPreCompressBundleResourceInfo(userId,
+            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), bundleResourceInfos));
+        EXPECT_TRUE(bundleResourceInfos.empty());
+    }
+}
+
+/**
+ * @tc.number: GetAllUninstallPreCompressBundleResourceInfo_0040
+ * Function: GetAllUninstallPreCompressBundleResourceInfo
+ * @tc.name: test GetAllUninstallPreCompressBundleResourceInfo
+ * @tc.desc: 1. system running normally
+ *           2. label, icon and drawable descriptor are assigned according to flags
+ */
+HWTEST_F(BmsBundleResourceTest, GetAllUninstallPreCompressBundleResourceInfo_0040, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+    ScopeGuard deleteGuard([] { DeletePreCompressBundle(PRE_COMPRESS_BUNDLE_NAME); });
+    ASSERT_TRUE(AddPreCompressBundle(PRE_COMPRESS_BUNDLE_NAME, true));
+
+    std::vector<BundleResourceInfo> labelInfos;
+    EXPECT_TRUE(manager->GetAllUninstallPreCompressBundleResourceInfo(USERID,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL), labelInfos));
+    const BundleResourceInfo *labelInfo = FindBundleResource(labelInfos, PRE_COMPRESS_BUNDLE_NAME);
+    ASSERT_NE(labelInfo, nullptr);
+    EXPECT_EQ(labelInfo->label, PRE_COMPRESS_LABEL);
+    EXPECT_TRUE(labelInfo->icon.empty());
+    EXPECT_TRUE(labelInfo->foreground.empty());
+
+    std::vector<BundleResourceInfo> iconInfos;
+    EXPECT_TRUE(manager->GetAllUninstallPreCompressBundleResourceInfo(USERID,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON), iconInfos));
+    const BundleResourceInfo *iconInfo = FindBundleResource(iconInfos, PRE_COMPRESS_BUNDLE_NAME);
+    ASSERT_NE(iconInfo, nullptr);
+    EXPECT_TRUE(iconInfo->label.empty());
+    EXPECT_EQ(iconInfo->icon, PRE_COMPRESS_ICON);
+    EXPECT_TRUE(iconInfo->foreground.empty());
+
+    std::vector<BundleResourceInfo> drawableInfos;
+    EXPECT_TRUE(manager->GetAllUninstallPreCompressBundleResourceInfo(USERID,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR), drawableInfos));
+    const BundleResourceInfo *drawableInfo = FindBundleResource(drawableInfos, PRE_COMPRESS_BUNDLE_NAME);
+    ASSERT_NE(drawableInfo, nullptr);
+    EXPECT_TRUE(drawableInfo->label.empty());
+    EXPECT_TRUE(drawableInfo->icon.empty());
+    EXPECT_EQ(drawableInfo->foreground, PRE_COMPRESS_FOREGROUND);
+    EXPECT_EQ(drawableInfo->background, PRE_COMPRESS_BACKGROUND);
+}
+
+/**
+ * @tc.number: GetAllUninstallPreCompressBundleResourceInfo_0050
+ * Function: GetAllUninstallPreCompressBundleResourceInfo
+ * @tc.name: test GetAllUninstallPreCompressBundleResourceInfo
+ * @tc.desc: 1. system running normally
+ *           2. theme icon of the requested user replaces the factory icon
+ */
+HWTEST_F(BmsBundleResourceTest, GetAllUninstallPreCompressBundleResourceInfo_0050, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+    ScopeGuard deleteGuard([] { DeletePreCompressBundle(PRE_COMPRESS_BUNDLE_NAME); });
+    ASSERT_TRUE(AddPreCompressBundle(PRE_COMPRESS_BUNDLE_NAME, true));
+    ResourceInfo themeResourceInfo;
+    themeResourceInfo.bundleName_ = PRE_COMPRESS_BUNDLE_NAME;
+    themeResourceInfo.icon_ = PRE_COMPRESS_THEME_ICON;
+    themeResourceInfo.foreground_ = PRE_COMPRESS_THEME_FOREGROUND;
+    ASSERT_TRUE(manager->preCompressThemeResourceRdb_->AddPreCompressThemeResource(USERID, themeResourceInfo));
+
+    std::vector<BundleResourceInfo> themeInfos;
+    EXPECT_TRUE(manager->GetAllUninstallPreCompressBundleResourceInfo(USERID,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL) |
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR), themeInfos));
+    const BundleResourceInfo *themeInfo = FindBundleResource(themeInfos, PRE_COMPRESS_BUNDLE_NAME);
+    ASSERT_NE(themeInfo, nullptr);
+    EXPECT_EQ(themeInfo->label, PRE_COMPRESS_LABEL);
+    EXPECT_EQ(themeInfo->icon, PRE_COMPRESS_THEME_ICON);
+    EXPECT_EQ(themeInfo->foreground, PRE_COMPRESS_THEME_FOREGROUND);
+
+    std::vector<BundleResourceInfo> labelInfos;
+    EXPECT_TRUE(manager->GetAllUninstallPreCompressBundleResourceInfo(USERID,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL), labelInfos));
+    const BundleResourceInfo *labelInfo = FindBundleResource(labelInfos, PRE_COMPRESS_BUNDLE_NAME);
+    ASSERT_NE(labelInfo, nullptr);
+    EXPECT_EQ(labelInfo->label, PRE_COMPRESS_LABEL);
+    EXPECT_TRUE(labelInfo->icon.empty());
+}
+
+/**
+ * @tc.number: GetAllUninstallPreCompressBundleResourceInfo_0060
+ * Function: GetAllUninstallPreCompressBundleResourceInfo
+ * @tc.name: test GetAllUninstallPreCompressBundleResourceInfo
+ * @tc.desc: 1. system running normally
+ *           2. compressed preinstall bundle installed in the user is not returned
+ */
+HWTEST_F(BmsBundleResourceTest, GetAllUninstallPreCompressBundleResourceInfo_0060, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    ScopeGuard deleteGuard([dataMgr] {
+        dataMgr->bundleInfos_.erase(PRE_COMPRESS_BUNDLE_NAME);
+        DeletePreCompressBundle(PRE_COMPRESS_BUNDLE_NAME);
+    });
+    ASSERT_TRUE(AddPreCompressBundle(PRE_COMPRESS_BUNDLE_NAME, true));
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = USERID;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->bundleName = PRE_COMPRESS_BUNDLE_NAME;
+    innerBundleInfo.AddInnerBundleUserInfo(userInfo);
+    dataMgr->bundleInfos_[PRE_COMPRESS_BUNDLE_NAME] = innerBundleInfo;
+
+    std::vector<BundleResourceInfo> installedInfos;
+    EXPECT_TRUE(manager->GetAllUninstallPreCompressBundleResourceInfo(USERID,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), installedInfos));
+    EXPECT_EQ(FindBundleResource(installedInfos, PRE_COMPRESS_BUNDLE_NAME), nullptr);
+
+    dataMgr->bundleInfos_.erase(PRE_COMPRESS_BUNDLE_NAME);
+    std::vector<BundleResourceInfo> uninstalledInfos;
+    EXPECT_TRUE(manager->GetAllUninstallPreCompressBundleResourceInfo(USERID,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), uninstalledInfos));
+    EXPECT_NE(FindBundleResource(uninstalledInfos, PRE_COMPRESS_BUNDLE_NAME), nullptr);
+}
+
+/**
+ * @tc.number: GetAllUninstallPreCompressBundleResourceInfo_0070
+ * Function: GetPreCompressBundleResources and GetPreCompressThemeResources
+ * @tc.name: test GetPreCompressBundleResources and GetPreCompressThemeResources
+ * @tc.desc: 1. system running normally
+ *           2. empty or not exist bundleNames return true with nothing
+ */
+HWTEST_F(BmsBundleResourceTest, GetAllUninstallPreCompressBundleResourceInfo_0070, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+    uint32_t flags = static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL);
+    std::vector<BundleResourceInfo> bundleResourceInfos;
+    EXPECT_TRUE(manager->preCompressBundleResourceRdb_->GetPreCompressBundleResources({}, flags,
+        bundleResourceInfos));
+    EXPECT_TRUE(manager->preCompressBundleResourceRdb_->GetPreCompressBundleResources({ BUNDLE_NAME_NOT_EXIST },
+        flags, bundleResourceInfos));
+    EXPECT_TRUE(bundleResourceInfos.empty());
+
+    std::map<std::string, BundleResourceInfo> themeResourceInfos;
+    EXPECT_TRUE(manager->preCompressThemeResourceRdb_->GetPreCompressThemeResources(USERID, {}, flags,
+        themeResourceInfos));
+    EXPECT_TRUE(manager->preCompressThemeResourceRdb_->GetPreCompressThemeResources(USERID,
+        { BUNDLE_NAME_NOT_EXIST }, flags, themeResourceInfos));
+    EXPECT_TRUE(themeResourceInfos.empty());
+}
+
+/**
+ * @tc.number: GetAllUninstallBundleResourceInfo_0030
+ * Function: GetAllUninstallBundleResourceInfo
+ * @tc.name: test GetAllUninstallBundleResourceInfo
+ * @tc.desc: 1. system running normally
+ *           2. with GET_RESOURCE_INFO_WITH_PRE_COMPRESS_BUNDLE only pre compress bundles are returned
+ */
+HWTEST_F(BmsBundleResourceTest, GetAllUninstallBundleResourceInfo_0030, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME, true);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+    ScopeGuard deleteGuard([this] {
+        DeletePreCompressBundle(PRE_COMPRESS_BUNDLE_NAME);
+        EXPECT_EQ(UnInstallBundle(BUNDLE_NAME, false), ERR_OK);
+    });
+    ASSERT_TRUE(AddPreCompressBundle(PRE_COMPRESS_BUNDLE_NAME, true));
+
+    std::shared_ptr<BundleResourceHostImpl> bundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
+    std::vector<BundleResourceInfo> uninstallInfos;
+    EXPECT_EQ(bundleResourceHostImpl->GetAllUninstallBundleResourceInfo(USERID,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), uninstallInfos), ERR_OK);
+    EXPECT_NE(FindBundleResource(uninstallInfos, BUNDLE_NAME), nullptr);
+    EXPECT_EQ(FindBundleResource(uninstallInfos, PRE_COMPRESS_BUNDLE_NAME), nullptr);
+
+    uint32_t flags = static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL) |
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL) |
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_PRE_COMPRESS_BUNDLE);
+    std::vector<BundleResourceInfo> preCompressInfos;
+    EXPECT_EQ(bundleResourceHostImpl->GetAllUninstallBundleResourceInfo(USERID, flags, preCompressInfos), ERR_OK);
+    EXPECT_EQ(FindBundleResource(preCompressInfos, BUNDLE_NAME), nullptr);
+    const BundleResourceInfo *info = FindBundleResource(preCompressInfos, PRE_COMPRESS_BUNDLE_NAME);
+    ASSERT_NE(info, nullptr);
+    EXPECT_EQ(info->label, PRE_COMPRESS_LABEL);
+    EXPECT_EQ(info->icon, PRE_COMPRESS_ICON);
+}
+namespace {
+const std::string PRE_COMPRESS_ONE_NAME = "com.example.precompress.one";
+const std::string PRE_COMPRESS_TWO_NAME = "com.example.precompress.two";
+const std::string PRE_COMPRESS_THREE_NAME = "com.example.precompress.three";
+const std::string PRE_COMPRESS_PLAIN_NAME = "com.example.precompress.plain";
+const std::string PRE_COMPRESS_UNSAVED_NAME = "com.example.precompress.unsaved";
+const std::string PRE_COMPRESS_EN_LANGUAGE = "en";
+const std::string PRE_COMPRESS_FR_LANGUAGE = "fr";
+const std::string PRE_COMPRESS_EN_LABEL = "preCompressEnLabel";
+const std::string PRE_COMPRESS_INVALID_UTF8 = "\xff\xfe";
+const std::string PRE_COMPRESS_PRESET_ICON = "preCompressPresetIcon";
+const std::string PRE_COMPRESS_TEST_DB_PATH = "/data/test/";
+const std::string PRE_COMPRESS_TEST_DB_NAME = "bmsPreCompressResourceTest.db";
+const std::string PRE_COMPRESS_THEME_TEST_DB_NAME = "bmsPreCompressThemeTest.db";
+const std::string PRE_COMPRESS_NOT_EXIST_TABLE = "preCompressNotExistTable";
+const std::string PRE_COMPRESS_NOT_EXIST_HAP = "/data/test/resource/bms/accesstoken_bundle/notExistPreCompress.hap";
+const std::string PRE_COMPRESS_NOT_EXIST_ARCHIVE = "/preload/app/com.example.precompress.notexist/entry.hap.zst";
+const std::string PRE_COMPRESS_NOT_EXIST_MODULE = "notExistModule";
+const std::string PRE_COMPRESS_THEME_ICONS_A = "/data/service/el1/public/themes/20000/a/app/icons/";
+const std::string PRE_COMPRESS_THEME_ICONS_B = "/data/service/el1/public/themes/20000/b/app/icons/";
+const std::string PRE_COMPRESS_TEST_EXT_NAME = "preCompressBlackListTestExt";
+const std::vector<uint8_t> PRE_COMPRESS_THEME_BACKGROUND = { 10, 11, 12 };
+const uint32_t PRE_COMPRESS_STALE_VERSION_CODE = 2;
+const int32_t PRE_COMPRESS_DELETE_USERID = 20001;
+const int32_t PRE_COMPRESS_NO_FAILED_COLUMN = -1;
+const int32_t PRE_COMPRESS_NAME_COLUMN = 0;
+const int32_t PRE_COMPRESS_LABEL_COLUMN = 2;
+const int32_t PRE_COMPRESS_ICON_COLUMN = 3;
+const int32_t PRE_COMPRESS_FOREGROUND_COLUMN = 4;
+const int32_t PRE_COMPRESS_BACKGROUND_COLUMN = 5;
+const int32_t PRE_COMPRESS_THEME_ICON_COLUMN = 2;
+const int32_t PRE_COMPRESS_THEME_FOREGROUND_COLUMN = 3;
+const int32_t PRE_COMPRESS_THEME_BACKGROUND_COLUMN = 4;
+const uint32_t PRE_COMPRESS_ALL_FLAG = static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL);
+const uint32_t PRE_COMPRESS_LABEL_FLAG = static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL);
+const uint32_t PRE_COMPRESS_ICON_FLAG = static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON);
+const uint32_t PRE_COMPRESS_DRAWABLE_FLAG =
+    static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR);
+
+struct PreCompressHapIds {
+    std::string moduleName;
+    uint32_t labelId = 0;
+    uint32_t iconId = 0;
+};
+
+// a result set whose getters fail on the given column, the other columns hold values derived from their index
+class PreCompressResultSet : public NativeRdb::AbsSharedResultSet {
+public:
+    explicit PreCompressResultSet(int32_t failedColumn) : failedColumn_(failedColumn) {}
+
+    int GetString(int columnIndex, std::string &value) override
+    {
+        if (columnIndex == failedColumn_) {
+            return NativeRdb::E_ERROR;
+        }
+        value = PRE_COMPRESS_ONE_NAME + std::to_string(columnIndex);
+        return NativeRdb::E_OK;
+    }
+
+    int GetBlob(int columnIndex, std::vector<uint8_t> &blob) override
+    {
+        if (columnIndex == failedColumn_) {
+            return NativeRdb::E_ERROR;
+        }
+        blob = { static_cast<uint8_t>(columnIndex) };
+        return NativeRdb::E_OK;
+    }
+
+private:
+    int32_t failedColumn_ = PRE_COMPRESS_NO_FAILED_COLUMN;
+};
+
+class PreCompressBlackListExt : public BundleMgrExt {
+public:
+    bool CheckApiInfo(const BundleInfo &bundleInfo) override
+    {
+        return true;
+    }
+
+    ErrCode CheckAppBlackList(const std::string &bundleName, const int32_t userId) override
+    {
+        return (bundleName == PRE_COMPRESS_BUNDLE_NAME) ? ERR_BUNDLE_MANAGER_INTERNAL_ERROR : ERR_OK;
+    }
+};
+
+bool GetPreCompressHapIds(const std::string &hapPath, PreCompressHapIds &ids)
+{
+    BundleParser bundleParser;
+    InnerBundleInfo innerBundleInfo;
+    bool isAbcCompressed = false;
+    if (bundleParser.Parse(hapPath, innerBundleInfo, isAbcCompressed) != ERR_OK) {
+        return false;
+    }
+    ids.moduleName = innerBundleInfo.GetCurModuleName();
+    ids.labelId = innerBundleInfo.GetBaseApplicationInfo().labelId;
+    ids.iconId = innerBundleInfo.GetBaseApplicationInfo().iconId;
+    return !ids.moduleName.empty() && (ids.labelId != 0) && (ids.iconId != 0);
+}
+
+PreInstallBundleInfo MakePreCompressPreInstallInfo(const std::string &bundleName, bool isCompressed,
+    const std::vector<std::string> &bundlePaths, const PreCompressHapIds &ids)
+{
+    PreInstallBundleInfo preInstallBundleInfo;
+    preInstallBundleInfo.SetBundleName(bundleName);
+    preInstallBundleInfo.SetVersionCode(PRE_COMPRESS_VERSION_CODE);
+    preInstallBundleInfo.SetCompressed(isCompressed);
+    preInstallBundleInfo.SetModuleName(ids.moduleName);
+    preInstallBundleInfo.SetLabelId(ids.labelId);
+    preInstallBundleInfo.SetIconId(ids.iconId);
+    for (const auto &bundlePath : bundlePaths) {
+        preInstallBundleInfo.AddBundlePath(bundlePath);
+    }
+    return preInstallBundleInfo;
+}
+
+bool SavePreCompressPreInstallInfo(const PreInstallBundleInfo &preInstallBundleInfo)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    return (dataMgr != nullptr) &&
+        dataMgr->SavePreInstallBundleInfo(preInstallBundleInfo.GetBundleName(), preInstallBundleInfo);
+}
+
+bool AddPreCompressResourceRow(const std::string &bundleName, uint32_t versionCode)
+{
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = bundleName;
+    resourceInfo.icon_ = PRE_COMPRESS_ICON;
+    resourceInfo.foreground_ = PRE_COMPRESS_FOREGROUND;
+    std::map<std::string, std::string> labelMap = { { PRE_COMPRESS_LANGUAGE, PRE_COMPRESS_LABEL } };
+    return DelayedSingleton<BundleResourceManager>::GetInstance()->preCompressBundleResourceRdb_->
+        AddPreCompressBundleResource(versionCode, labelMap, resourceInfo);
+}
+
+bool AddPreCompressThemeRow(const std::string &bundleName, int32_t userId)
+{
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = bundleName;
+    resourceInfo.icon_ = PRE_COMPRESS_THEME_ICON;
+    resourceInfo.foreground_ = PRE_COMPRESS_THEME_FOREGROUND;
+    return DelayedSingleton<BundleResourceManager>::GetInstance()->preCompressThemeResourceRdb_->
+        AddPreCompressThemeResource(userId, resourceInfo);
+}
+
+bool HasPreCompressThemeRow(const std::string &bundleName, int32_t userId)
+{
+    std::map<std::string, BundleResourceInfo> themeResourceInfos;
+    return DelayedSingleton<BundleResourceManager>::GetInstance()->preCompressThemeResourceRdb_->
+        GetPreCompressThemeResources(userId, { bundleName }, PRE_COMPRESS_ICON_FLAG, themeResourceInfos) &&
+        (themeResourceInfos.count(bundleName) != 0);
+}
+
+bool GetSavedPreCompressVersion(const std::string &bundleName, uint32_t &versionCode)
+{
+    auto versionCodes = DelayedSingleton<BundleResourceManager>::GetInstance()->preCompressBundleResourceRdb_->
+        GetAllPreCompressBundleResourceVersion();
+    auto iter = versionCodes.find(bundleName);
+    if (iter == versionCodes.end()) {
+        return false;
+    }
+    versionCode = iter->second;
+    return true;
+}
+
+bool AddPreCompressThemeIconRow(const std::string &bundleName)
+{
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = bundleName;
+    resourceInfo.icon_ = PRE_COMPRESS_THEME_ICON;
+    resourceInfo.foreground_ = PRE_COMPRESS_THEME_FOREGROUND;
+    resourceInfo.background_ = PRE_COMPRESS_THEME_BACKGROUND;
+    return DelayedSingleton<BundleResourceManager>::GetInstance()->bundleResourceIconRdb_->AddResourceIconInfos(
+        THEME_TEST_USERID, IconResourceType::THEME_ICON, { resourceInfo });
+}
+
+void CreatePreCompressThemeDir(const std::string &bundleName)
+{
+    // whichever theme slot is in use for the user, the theme of the bundle exists
+    (void)OHOS::ForceCreateDirectory(PRE_COMPRESS_THEME_ICONS_A + bundleName);
+    (void)OHOS::ForceCreateDirectory(PRE_COMPRESS_THEME_ICONS_B + bundleName);
+}
+
+void DeletePreCompressThemeIcons(const std::vector<std::string> &bundleNames)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    for (const auto &bundleName : bundleNames) {
+        (void)manager->bundleResourceIconRdb_->DeleteResourceIconInfos(bundleName, THEME_TEST_USERID,
+            IconResourceType::THEME_ICON);
+        DeletePreCompressBundle(bundleName);
+    }
+    (void)OHOS::ForceRemoveDirectory(THEME_BUNDLE_NAME_PATH);
+}
+
+std::shared_ptr<RdbDataManager> CreatePreCompressTestRdb(const std::string &dbName, const std::string &tableName,
+    const std::string &createTableSql)
+{
+    BmsRdbConfig bmsRdbConfig;
+    bmsRdbConfig.dbPath = PRE_COMPRESS_TEST_DB_PATH;
+    bmsRdbConfig.dbName = dbName;
+    bmsRdbConfig.tableName = tableName;
+    bmsRdbConfig.createTableSql = createTableSql;
+    auto rdbDataManager = std::make_shared<RdbDataManager>(bmsRdbConfig);
+    if (!createTableSql.empty()) {
+        (void)rdbDataManager->CreateTable();
+    }
+    return rdbDataManager;
+}
+
+void DeletePreCompressTestRdb(const std::string &dbName)
+{
+    (void)NativeRdb::RdbHelper::DeleteRdbStore(PRE_COMPRESS_TEST_DB_PATH + dbName);
+}
+
+std::string GetPreCompressBundleTableSql()
+{
+    return std::string("CREATE TABLE IF NOT EXISTS ") + BundleResourceConstants::PRE_COMPRESS_BUNDLE_RESOURCE_RDB +
+        "(NAME TEXT NOT NULL, VERSION_CODE INTEGER, LABEL TEXT, ICON TEXT, FOREGROUND BLOB, BACKGROUND BLOB, " +
+        "PRIMARY KEY (NAME));";
+}
+
+std::string GetPreCompressThemeTableSql()
+{
+    return std::string("CREATE TABLE IF NOT EXISTS ") + BundleResourceConstants::PRE_COMPRESS_THEME_RESOURCE_RDB +
+        "(NAME TEXT NOT NULL, USER_ID INTEGER, ICON TEXT, FOREGROUND BLOB, BACKGROUND BLOB, " +
+        "PRIMARY KEY (NAME, USER_ID));";
+}
+} // namespace
+
+/**
+ * @tc.number: PreCompressBundleResourceRdb_0100
+ * @tc.name: test GetAvailableLabel, FromString and ToString
+ * @tc.desc: 1. the label of the language is used, then the label of the default language, then the bundle name
+ *           2. labels that can not be parsed or dumped give nothing
+ */
+HWTEST_F(BmsBundleResourceTest, PreCompressBundleResourceRdb_0100, Function | SmallTest | Level0)
+{
+    PreCompressBundleResourceRdb rdb;
+    std::string labels = rdb.ToString({ { PRE_COMPRESS_EN_LANGUAGE, PRE_COMPRESS_EN_LABEL },
+        { PRE_COMPRESS_LANGUAGE, PRE_COMPRESS_LABEL } });
+    EXPECT_FALSE(labels.empty());
+    EXPECT_EQ(rdb.GetAvailableLabel(PRE_COMPRESS_ONE_NAME, PRE_COMPRESS_EN_LANGUAGE, labels), PRE_COMPRESS_EN_LABEL);
+    EXPECT_EQ(rdb.GetAvailableLabel(PRE_COMPRESS_ONE_NAME, PRE_COMPRESS_FR_LANGUAGE, labels), PRE_COMPRESS_LABEL);
+    std::string enLabels = rdb.ToString({ { PRE_COMPRESS_EN_LANGUAGE, PRE_COMPRESS_EN_LABEL } });
+    EXPECT_EQ(rdb.GetAvailableLabel(PRE_COMPRESS_ONE_NAME, PRE_COMPRESS_FR_LANGUAGE, enLabels), PRE_COMPRESS_ONE_NAME);
+
+    EXPECT_TRUE(rdb.FromString(PRE_COMPRESS_LABEL).empty());
+    nlohmann::json notMapLabels;
+    notMapLabels[BundleResourceConstants::LABEL] = PRE_COMPRESS_LABEL;
+    EXPECT_TRUE(rdb.FromString(notMapLabels.dump()).empty());
+    EXPECT_TRUE(rdb.ToString({ { PRE_COMPRESS_LANGUAGE, PRE_COMPRESS_INVALID_UTF8 } }).empty());
+}
+
+/**
+ * @tc.number: PreCompressBundleResourceRdb_0200
+ * @tc.name: test ConvertToBundleResourceInfo of PreCompressBundleResourceRdb
+ * @tc.desc: 1. a column that can not be read fails the conversion
+ *           2. only the columns asked by the flags are read
+ */
+HWTEST_F(BmsBundleResourceTest, PreCompressBundleResourceRdb_0200, Function | SmallTest | Level0)
+{
+    PreCompressBundleResourceRdb rdb;
+    BundleResourceInfo failedInfo;
+    EXPECT_FALSE(rdb.ConvertToBundleResourceInfo(std::make_shared<PreCompressResultSet>(PRE_COMPRESS_NAME_COLUMN),
+        PRE_COMPRESS_ALL_FLAG, PRE_COMPRESS_LANGUAGE, failedInfo));
+    EXPECT_FALSE(rdb.ConvertToBundleResourceInfo(std::make_shared<PreCompressResultSet>(PRE_COMPRESS_LABEL_COLUMN),
+        PRE_COMPRESS_LABEL_FLAG, PRE_COMPRESS_LANGUAGE, failedInfo));
+    EXPECT_FALSE(rdb.ConvertToBundleResourceInfo(std::make_shared<PreCompressResultSet>(PRE_COMPRESS_ICON_COLUMN),
+        PRE_COMPRESS_ICON_FLAG, PRE_COMPRESS_LANGUAGE, failedInfo));
+    EXPECT_FALSE(rdb.ConvertToBundleResourceInfo(
+        std::make_shared<PreCompressResultSet>(PRE_COMPRESS_FOREGROUND_COLUMN), PRE_COMPRESS_DRAWABLE_FLAG,
+        PRE_COMPRESS_LANGUAGE, failedInfo));
+    EXPECT_FALSE(rdb.ConvertToBundleResourceInfo(
+        std::make_shared<PreCompressResultSet>(PRE_COMPRESS_BACKGROUND_COLUMN), PRE_COMPRESS_DRAWABLE_FLAG,
+        PRE_COMPRESS_LANGUAGE, failedInfo));
+
+    BundleResourceInfo nameInfo;
+    EXPECT_TRUE(rdb.ConvertToBundleResourceInfo(std::make_shared<PreCompressResultSet>(PRE_COMPRESS_NO_FAILED_COLUMN),
+        0, PRE_COMPRESS_LANGUAGE, nameInfo));
+    EXPECT_EQ(nameInfo.bundleName, PRE_COMPRESS_ONE_NAME + std::to_string(PRE_COMPRESS_NAME_COLUMN));
+    EXPECT_EQ(nameInfo.appIndex, Constants::MAIN_APP_INDEX);
+    EXPECT_TRUE(nameInfo.label.empty());
+    EXPECT_TRUE(nameInfo.icon.empty());
+    EXPECT_TRUE(nameInfo.foreground.empty());
+
+    BundleResourceInfo allInfo;
+    EXPECT_TRUE(rdb.ConvertToBundleResourceInfo(std::make_shared<PreCompressResultSet>(PRE_COMPRESS_NO_FAILED_COLUMN),
+        PRE_COMPRESS_ALL_FLAG | PRE_COMPRESS_DRAWABLE_FLAG, PRE_COMPRESS_LANGUAGE, allInfo));
+    // the label column holds no label map, the bundle name stands for the label
+    EXPECT_EQ(allInfo.label, allInfo.bundleName);
+    EXPECT_EQ(allInfo.icon, PRE_COMPRESS_ONE_NAME + std::to_string(PRE_COMPRESS_ICON_COLUMN));
+    EXPECT_EQ(allInfo.foreground, std::vector<uint8_t> { PRE_COMPRESS_FOREGROUND_COLUMN });
+    EXPECT_EQ(allInfo.background, std::vector<uint8_t> { PRE_COMPRESS_BACKGROUND_COLUMN });
+}
+
+/**
+ * @tc.number: PreCompressBundleResourceRdb_0300
+ * @tc.name: test add, query and delete of PreCompressBundleResourceRdb
+ * @tc.desc: 1. every saved bundle is returned by the query and by the versions
+ *           2. a deleted bundle is gone from the versions
+ */
+HWTEST_F(BmsBundleResourceTest, PreCompressBundleResourceRdb_0300, Function | SmallTest | Level0)
+{
+    auto rdb = DelayedSingleton<BundleResourceManager>::GetInstance()->preCompressBundleResourceRdb_;
+    ASSERT_NE(rdb, nullptr);
+    ScopeGuard deleteGuard([] {
+        DeletePreCompressBundle(PRE_COMPRESS_ONE_NAME);
+        DeletePreCompressBundle(PRE_COMPRESS_TWO_NAME);
+    });
+    ASSERT_TRUE(AddPreCompressResourceRow(PRE_COMPRESS_ONE_NAME, PRE_COMPRESS_VERSION_CODE));
+    ASSERT_TRUE(AddPreCompressResourceRow(PRE_COMPRESS_TWO_NAME, PRE_COMPRESS_STALE_VERSION_CODE));
+
+    std::vector<BundleResourceInfo> bundleResourceInfos;
+    EXPECT_TRUE(rdb->GetPreCompressBundleResources({ PRE_COMPRESS_ONE_NAME, PRE_COMPRESS_TWO_NAME },
+        PRE_COMPRESS_ALL_FLAG, bundleResourceInfos));
+    EXPECT_EQ(bundleResourceInfos.size(), 2U);
+    EXPECT_NE(FindBundleResource(bundleResourceInfos, PRE_COMPRESS_ONE_NAME), nullptr);
+    EXPECT_NE(FindBundleResource(bundleResourceInfos, PRE_COMPRESS_TWO_NAME), nullptr);
+
+    uint32_t versionCode = 0;
+    EXPECT_TRUE(GetSavedPreCompressVersion(PRE_COMPRESS_ONE_NAME, versionCode));
+    EXPECT_EQ(versionCode, PRE_COMPRESS_VERSION_CODE);
+    EXPECT_TRUE(GetSavedPreCompressVersion(PRE_COMPRESS_TWO_NAME, versionCode));
+    EXPECT_EQ(versionCode, PRE_COMPRESS_STALE_VERSION_CODE);
+
+    EXPECT_TRUE(rdb->DeletePreCompressBundleResource(PRE_COMPRESS_ONE_NAME));
+    EXPECT_FALSE(GetSavedPreCompressVersion(PRE_COMPRESS_ONE_NAME, versionCode));
+    EXPECT_TRUE(GetSavedPreCompressVersion(PRE_COMPRESS_TWO_NAME, versionCode));
+}
+
+/**
+ * @tc.number: PreCompressBundleResourceRdb_0400
+ * @tc.name: test PreCompressBundleResourceRdb when the table can not be used
+ * @tc.desc: 1. add, delete and query fail on a table that does not exist
+ *           2. queries fail on a db without the table
+ */
+HWTEST_F(BmsBundleResourceTest, PreCompressBundleResourceRdb_0400, Function | SmallTest | Level0)
+{
+    DeletePreCompressTestRdb(PRE_COMPRESS_TEST_DB_NAME);
+    PreCompressBundleResourceRdb rdb;
+    ScopeGuard rdbGuard([&rdb] {
+        rdb.rdbDataManager_ = nullptr;
+        DeletePreCompressTestRdb(PRE_COMPRESS_TEST_DB_NAME);
+    });
+    rdb.rdbDataManager_ =
+        CreatePreCompressTestRdb(PRE_COMPRESS_TEST_DB_NAME, PRE_COMPRESS_NOT_EXIST_TABLE, "");
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = PRE_COMPRESS_ONE_NAME;
+    EXPECT_FALSE(rdb.AddPreCompressBundleResource(PRE_COMPRESS_VERSION_CODE, {}, resourceInfo));
+    EXPECT_FALSE(rdb.DeletePreCompressBundleResource(PRE_COMPRESS_ONE_NAME));
+    std::vector<BundleResourceInfo> bundleResourceInfos;
+    EXPECT_FALSE(rdb.GetPreCompressBundleResources({ PRE_COMPRESS_ONE_NAME }, PRE_COMPRESS_ALL_FLAG,
+        bundleResourceInfos));
+    EXPECT_TRUE(rdb.GetAllPreCompressBundleResourceVersion().empty());
+
+    rdb.rdbDataManager_ = CreatePreCompressTestRdb(PRE_COMPRESS_TEST_DB_NAME,
+        BundleResourceConstants::PRE_COMPRESS_BUNDLE_RESOURCE_RDB, "");
+    EXPECT_FALSE(rdb.GetPreCompressBundleResources({ PRE_COMPRESS_ONE_NAME }, PRE_COMPRESS_ALL_FLAG,
+        bundleResourceInfos));
+    EXPECT_TRUE(rdb.GetAllPreCompressBundleResourceVersion().empty());
+    EXPECT_TRUE(bundleResourceInfos.empty());
+}
+
+/**
+ * @tc.number: PreCompressBundleResourceRdb_0500
+ * @tc.name: test PreCompressBundleResourceRdb with rows that can not be read
+ * @tc.desc: 1. an empty table gives no version
+ *           2. a row whose name or version code is not readable is skipped by the versions
+ *           3. a row whose label is not readable is skipped by the query
+ */
+HWTEST_F(BmsBundleResourceTest, PreCompressBundleResourceRdb_0500, Function | SmallTest | Level0)
+{
+    DeletePreCompressTestRdb(PRE_COMPRESS_TEST_DB_NAME);
+    PreCompressBundleResourceRdb rdb;
+    auto testRdb = CreatePreCompressTestRdb(PRE_COMPRESS_TEST_DB_NAME,
+        BundleResourceConstants::PRE_COMPRESS_BUNDLE_RESOURCE_RDB, GetPreCompressBundleTableSql());
+    ScopeGuard rdbGuard([&rdb, &testRdb] {
+        rdb.rdbDataManager_ = nullptr;
+        testRdb = nullptr;
+        DeletePreCompressTestRdb(PRE_COMPRESS_TEST_DB_NAME);
+    });
+    rdb.rdbDataManager_ = testRdb;
+    EXPECT_TRUE(rdb.GetAllPreCompressBundleResourceVersion().empty());
+
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = PRE_COMPRESS_ONE_NAME;
+    resourceInfo.icon_ = PRE_COMPRESS_ICON;
+    ASSERT_TRUE(rdb.AddPreCompressBundleResource(PRE_COMPRESS_VERSION_CODE,
+        { { PRE_COMPRESS_LANGUAGE, PRE_COMPRESS_LABEL } }, resourceInfo));
+    NativeRdb::ValuesBucket blobVersionRow;
+    blobVersionRow.PutString(BundleResourceConstants::NAME, PRE_COMPRESS_TWO_NAME);
+    blobVersionRow.PutBlob(BundleResourceConstants::VERSION_CODE, PRE_COMPRESS_FOREGROUND);
+    blobVersionRow.PutBlob(BundleResourceConstants::LABEL, PRE_COMPRESS_FOREGROUND);
+    ASSERT_TRUE(testRdb->InsertData(blobVersionRow));
+    NativeRdb::ValuesBucket blobNameRow;
+    blobNameRow.PutBlob(BundleResourceConstants::NAME, PRE_COMPRESS_BACKGROUND);
+    blobNameRow.PutLong(BundleResourceConstants::VERSION_CODE, PRE_COMPRESS_STALE_VERSION_CODE);
+    ASSERT_TRUE(testRdb->InsertData(blobNameRow));
+
+    auto versionCodes = rdb.GetAllPreCompressBundleResourceVersion();
+    ASSERT_EQ(versionCodes.size(), 1U);
+    EXPECT_EQ(versionCodes[PRE_COMPRESS_ONE_NAME], PRE_COMPRESS_VERSION_CODE);
+
+    std::vector<BundleResourceInfo> bundleResourceInfos;
+    EXPECT_TRUE(rdb.GetPreCompressBundleResources({ PRE_COMPRESS_ONE_NAME, PRE_COMPRESS_TWO_NAME },
+        PRE_COMPRESS_LABEL_FLAG, bundleResourceInfos));
+    ASSERT_EQ(bundleResourceInfos.size(), 1U);
+    EXPECT_EQ(bundleResourceInfos[0].bundleName, PRE_COMPRESS_ONE_NAME);
+    EXPECT_EQ(bundleResourceInfos[0].label, PRE_COMPRESS_LABEL);
+}
+
+/**
+ * @tc.number: PreCompressThemeResourceRdb_0100
+ * @tc.name: test add, query and delete of PreCompressThemeResourceRdb
+ * @tc.desc: 1. every saved theme of the user is returned by the query
+ *           2. the theme is deleted by bundle and user, by user, and by bundle
+ */
+HWTEST_F(BmsBundleResourceTest, PreCompressThemeResourceRdb_0100, Function | SmallTest | Level0)
+{
+    auto themeRdb = DelayedSingleton<BundleResourceManager>::GetInstance()->preCompressThemeResourceRdb_;
+    ASSERT_NE(themeRdb, nullptr);
+    ScopeGuard deleteGuard([] {
+        DeletePreCompressBundle(PRE_COMPRESS_ONE_NAME);
+        DeletePreCompressBundle(PRE_COMPRESS_TWO_NAME);
+    });
+    ASSERT_TRUE(AddPreCompressThemeRow(PRE_COMPRESS_ONE_NAME, THEME_TEST_USERID));
+    ASSERT_TRUE(AddPreCompressThemeRow(PRE_COMPRESS_TWO_NAME, THEME_TEST_USERID));
+    ASSERT_TRUE(AddPreCompressThemeRow(PRE_COMPRESS_ONE_NAME, PRE_COMPRESS_DELETE_USERID));
+
+    std::map<std::string, BundleResourceInfo> themeResourceInfos;
+    EXPECT_TRUE(themeRdb->GetPreCompressThemeResources(THEME_TEST_USERID,
+        { PRE_COMPRESS_ONE_NAME, PRE_COMPRESS_TWO_NAME }, PRE_COMPRESS_ICON_FLAG | PRE_COMPRESS_DRAWABLE_FLAG,
+        themeResourceInfos));
+    ASSERT_EQ(themeResourceInfos.size(), 2U);
+    EXPECT_EQ(themeResourceInfos[PRE_COMPRESS_ONE_NAME].icon, PRE_COMPRESS_THEME_ICON);
+    EXPECT_EQ(themeResourceInfos[PRE_COMPRESS_ONE_NAME].foreground, PRE_COMPRESS_THEME_FOREGROUND);
+    EXPECT_TRUE(themeResourceInfos[PRE_COMPRESS_ONE_NAME].background.empty());
+
+    EXPECT_TRUE(themeRdb->DeletePreCompressThemeResource(PRE_COMPRESS_ONE_NAME, THEME_TEST_USERID));
+    EXPECT_FALSE(HasPreCompressThemeRow(PRE_COMPRESS_ONE_NAME, THEME_TEST_USERID));
+    EXPECT_TRUE(HasPreCompressThemeRow(PRE_COMPRESS_TWO_NAME, THEME_TEST_USERID));
+    EXPECT_TRUE(HasPreCompressThemeRow(PRE_COMPRESS_ONE_NAME, PRE_COMPRESS_DELETE_USERID));
+
+    EXPECT_TRUE(themeRdb->DeletePreCompressThemeResourceForUser(THEME_TEST_USERID));
+    EXPECT_FALSE(HasPreCompressThemeRow(PRE_COMPRESS_TWO_NAME, THEME_TEST_USERID));
+    EXPECT_TRUE(HasPreCompressThemeRow(PRE_COMPRESS_ONE_NAME, PRE_COMPRESS_DELETE_USERID));
+
+    EXPECT_TRUE(themeRdb->DeletePreCompressThemeResource(PRE_COMPRESS_ONE_NAME));
+    EXPECT_FALSE(HasPreCompressThemeRow(PRE_COMPRESS_ONE_NAME, PRE_COMPRESS_DELETE_USERID));
+}
+
+/**
+ * @tc.number: PreCompressThemeResourceRdb_0200
+ * @tc.name: test PreCompressThemeResourceRdb when the table can not be used
+ * @tc.desc: 1. add, delete and query fail on a table that does not exist
+ *           2. the query fails on a db without the table
+ */
+HWTEST_F(BmsBundleResourceTest, PreCompressThemeResourceRdb_0200, Function | SmallTest | Level0)
+{
+    DeletePreCompressTestRdb(PRE_COMPRESS_THEME_TEST_DB_NAME);
+    PreCompressThemeResourceRdb themeRdb;
+    ScopeGuard rdbGuard([&themeRdb] {
+        themeRdb.rdbDataManager_ = nullptr;
+        DeletePreCompressTestRdb(PRE_COMPRESS_THEME_TEST_DB_NAME);
+    });
+    themeRdb.rdbDataManager_ =
+        CreatePreCompressTestRdb(PRE_COMPRESS_THEME_TEST_DB_NAME, PRE_COMPRESS_NOT_EXIST_TABLE, "");
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = PRE_COMPRESS_ONE_NAME;
+    EXPECT_FALSE(themeRdb.AddPreCompressThemeResource(USERID, resourceInfo));
+    EXPECT_FALSE(themeRdb.DeletePreCompressThemeResource(PRE_COMPRESS_ONE_NAME, USERID));
+    EXPECT_FALSE(themeRdb.DeletePreCompressThemeResource(PRE_COMPRESS_ONE_NAME));
+    EXPECT_FALSE(themeRdb.DeletePreCompressThemeResourceForUser(USERID));
+    std::map<std::string, BundleResourceInfo> themeResourceInfos;
+    EXPECT_FALSE(themeRdb.GetPreCompressThemeResources(USERID, { PRE_COMPRESS_ONE_NAME }, PRE_COMPRESS_ICON_FLAG,
+        themeResourceInfos));
+
+    themeRdb.rdbDataManager_ = CreatePreCompressTestRdb(PRE_COMPRESS_THEME_TEST_DB_NAME,
+        BundleResourceConstants::PRE_COMPRESS_THEME_RESOURCE_RDB, "");
+    EXPECT_FALSE(themeRdb.GetPreCompressThemeResources(USERID, { PRE_COMPRESS_ONE_NAME }, PRE_COMPRESS_ICON_FLAG,
+        themeResourceInfos));
+    EXPECT_TRUE(themeResourceInfos.empty());
+}
+
+/**
+ * @tc.number: PreCompressThemeResourceRdb_0300
+ * @tc.name: test PreCompressThemeResourceRdb with rows that can not be read
+ * @tc.desc: 1. a row whose icon is not readable is skipped and the readable rows are returned
+ *           2. a row whose name is not readable is skipped
+ */
+HWTEST_F(BmsBundleResourceTest, PreCompressThemeResourceRdb_0300, Function | SmallTest | Level0)
+{
+    DeletePreCompressTestRdb(PRE_COMPRESS_TEST_DB_NAME);
+    DeletePreCompressTestRdb(PRE_COMPRESS_THEME_TEST_DB_NAME);
+    PreCompressThemeResourceRdb themeRdb;
+    ScopeGuard rdbGuard([&themeRdb] {
+        themeRdb.rdbDataManager_ = nullptr;
+        DeletePreCompressTestRdb(PRE_COMPRESS_TEST_DB_NAME);
+        DeletePreCompressTestRdb(PRE_COMPRESS_THEME_TEST_DB_NAME);
+    });
+    themeRdb.rdbDataManager_ = CreatePreCompressTestRdb(PRE_COMPRESS_TEST_DB_NAME,
+        BundleResourceConstants::PRE_COMPRESS_THEME_RESOURCE_RDB, GetPreCompressThemeTableSql());
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = PRE_COMPRESS_TWO_NAME;
+    resourceInfo.icon_ = PRE_COMPRESS_THEME_ICON;
+    ASSERT_TRUE(themeRdb.AddPreCompressThemeResource(USERID, resourceInfo));
+    NativeRdb::ValuesBucket blobIconRow;
+    blobIconRow.PutString(BundleResourceConstants::NAME, PRE_COMPRESS_ONE_NAME);
+    blobIconRow.PutInt(BundleResourceConstants::USER_ID, USERID);
+    blobIconRow.PutBlob(BundleResourceConstants::ICON, PRE_COMPRESS_THEME_FOREGROUND);
+    ASSERT_TRUE(themeRdb.rdbDataManager_->InsertData(blobIconRow));
+    std::map<std::string, BundleResourceInfo> themeResourceInfos;
+    EXPECT_TRUE(themeRdb.GetPreCompressThemeResources(USERID, { PRE_COMPRESS_ONE_NAME, PRE_COMPRESS_TWO_NAME },
+        PRE_COMPRESS_ICON_FLAG, themeResourceInfos));
+    ASSERT_EQ(themeResourceInfos.size(), 1U);
+    EXPECT_EQ(themeResourceInfos[PRE_COMPRESS_TWO_NAME].icon, PRE_COMPRESS_THEME_ICON);
+
+    // the first column of this table holds a blob, so the name can not be read from it
+    themeRdb.rdbDataManager_ = CreatePreCompressTestRdb(PRE_COMPRESS_THEME_TEST_DB_NAME,
+        BundleResourceConstants::PRE_COMPRESS_THEME_RESOURCE_RDB, std::string("CREATE TABLE IF NOT EXISTS ") +
+        BundleResourceConstants::PRE_COMPRESS_THEME_RESOURCE_RDB + "(FOREGROUND BLOB, NAME TEXT NOT NULL, " +
+        "USER_ID INTEGER, ICON TEXT, BACKGROUND BLOB, PRIMARY KEY (NAME, USER_ID));");
+    NativeRdb::ValuesBucket blobFirstRow;
+    blobFirstRow.PutBlob(BundleResourceConstants::FOREGROUND, PRE_COMPRESS_THEME_FOREGROUND);
+    blobFirstRow.PutString(BundleResourceConstants::NAME, PRE_COMPRESS_ONE_NAME);
+    blobFirstRow.PutInt(BundleResourceConstants::USER_ID, USERID);
+    blobFirstRow.PutString(BundleResourceConstants::ICON, PRE_COMPRESS_THEME_ICON);
+    ASSERT_TRUE(themeRdb.rdbDataManager_->InsertData(blobFirstRow));
+    std::map<std::string, BundleResourceInfo> blobNameInfos;
+    EXPECT_TRUE(themeRdb.GetPreCompressThemeResources(USERID, { PRE_COMPRESS_ONE_NAME }, PRE_COMPRESS_ICON_FLAG,
+        blobNameInfos));
+    EXPECT_TRUE(blobNameInfos.empty());
+}
+
+/**
+ * @tc.number: PreCompressThemeResourceRdb_0400
+ * @tc.name: test ConvertToBundleResourceInfo of PreCompressThemeResourceRdb
+ * @tc.desc: 1. a column that can not be read fails the conversion
+ *           2. the icon is read for the icon flag or the all flag, the drawable only for the drawable flag
+ */
+HWTEST_F(BmsBundleResourceTest, PreCompressThemeResourceRdb_0400, Function | SmallTest | Level0)
+{
+    PreCompressThemeResourceRdb themeRdb;
+    BundleResourceInfo failedInfo;
+    EXPECT_FALSE(themeRdb.ConvertToBundleResourceInfo(
+        std::make_shared<PreCompressResultSet>(PRE_COMPRESS_THEME_ICON_COLUMN), PRE_COMPRESS_ICON_FLAG, failedInfo));
+    EXPECT_FALSE(themeRdb.ConvertToBundleResourceInfo(
+        std::make_shared<PreCompressResultSet>(PRE_COMPRESS_THEME_FOREGROUND_COLUMN), PRE_COMPRESS_DRAWABLE_FLAG,
+        failedInfo));
+    EXPECT_FALSE(themeRdb.ConvertToBundleResourceInfo(
+        std::make_shared<PreCompressResultSet>(PRE_COMPRESS_THEME_BACKGROUND_COLUMN), PRE_COMPRESS_DRAWABLE_FLAG,
+        failedInfo));
+
+    BundleResourceInfo allInfo;
+    EXPECT_TRUE(themeRdb.ConvertToBundleResourceInfo(
+        std::make_shared<PreCompressResultSet>(PRE_COMPRESS_NO_FAILED_COLUMN), PRE_COMPRESS_ALL_FLAG, allInfo));
+    EXPECT_EQ(allInfo.icon, PRE_COMPRESS_ONE_NAME + std::to_string(PRE_COMPRESS_THEME_ICON_COLUMN));
+    EXPECT_TRUE(allInfo.foreground.empty());
+
+    BundleResourceInfo drawableInfo;
+    EXPECT_TRUE(themeRdb.ConvertToBundleResourceInfo(
+        std::make_shared<PreCompressResultSet>(PRE_COMPRESS_NO_FAILED_COLUMN), PRE_COMPRESS_DRAWABLE_FLAG,
+        drawableInfo));
+    EXPECT_TRUE(drawableInfo.icon.empty());
+    EXPECT_EQ(drawableInfo.foreground, std::vector<uint8_t> { PRE_COMPRESS_THEME_FOREGROUND_COLUMN });
+    EXPECT_EQ(drawableInfo.background, std::vector<uint8_t> { PRE_COMPRESS_THEME_BACKGROUND_COLUMN });
+}
+
+/**
+ * @tc.number: AddPreCompressBundleResource_0100
+ * @tc.name: test AddPreCompressBundleResource of BundleResourceManager
+ * @tc.desc: 1. the factory label and icon are parsed from the package under the image and saved with its version
+ *           2. the package under the image is used when the bundle manager data is not available
+ */
+HWTEST_F(BmsBundleResourceTest, AddPreCompressBundleResource_0100, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+    PreCompressHapIds ids;
+    ASSERT_TRUE(GetPreCompressHapIds(HAP_FILE_PATH1, ids));
+    ScopeGuard deleteGuard([] { DeletePreCompressBundle(PRE_COMPRESS_ONE_NAME); });
+    PreInstallBundleInfo preInstallBundleInfo =
+        MakePreCompressPreInstallInfo(PRE_COMPRESS_ONE_NAME, true, { HAP_FILE_PATH1 }, ids);
+
+    EXPECT_TRUE(manager->AddPreCompressBundleResource(preInstallBundleInfo));
+    uint32_t versionCode = 0;
+    EXPECT_TRUE(GetSavedPreCompressVersion(PRE_COMPRESS_ONE_NAME, versionCode));
+    EXPECT_EQ(versionCode, PRE_COMPRESS_VERSION_CODE);
+    std::vector<BundleResourceInfo> bundleResourceInfos;
+    EXPECT_TRUE(manager->preCompressBundleResourceRdb_->GetPreCompressBundleResources({ PRE_COMPRESS_ONE_NAME },
+        PRE_COMPRESS_ALL_FLAG, bundleResourceInfos));
+    const BundleResourceInfo *info = FindBundleResource(bundleResourceInfos, PRE_COMPRESS_ONE_NAME);
+    ASSERT_NE(info, nullptr);
+    EXPECT_FALSE(info->label.empty());
+    EXPECT_FALSE(info->icon.empty());
+
+    ASSERT_TRUE(manager->preCompressBundleResourceRdb_->DeletePreCompressBundleResource(PRE_COMPRESS_ONE_NAME));
+    auto bundleMgrService = DelayedSingleton<BundleMgrService>::GetInstance();
+    auto dataMgr = bundleMgrService->dataMgr_;
+    bundleMgrService->dataMgr_ = nullptr;
+    bool ret = manager->AddPreCompressBundleResource(preInstallBundleInfo);
+    bundleMgrService->dataMgr_ = dataMgr;
+    EXPECT_TRUE(ret);
+    EXPECT_TRUE(GetSavedPreCompressVersion(PRE_COMPRESS_ONE_NAME, versionCode));
+}
+
+/**
+ * @tc.number: AddPreCompressBundleResource_0200
+ * @tc.name: test AddPreCompressBundleResource of BundleResourceManager
+ * @tc.desc: 1. the installed package of the same version is parsed first
+ *           2. the installed package of another version is not used
+ */
+HWTEST_F(BmsBundleResourceTest, AddPreCompressBundleResource_0200, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    PreCompressHapIds ids;
+    ASSERT_TRUE(GetPreCompressHapIds(HAP_FILE_PATH1, ids));
+    ASSERT_EQ(InstallBundle(HAP_FILE_PATH1), ERR_OK);
+    ScopeGuard deleteGuard([this] {
+        DeletePreCompressBundle(BUNDLE_NAME);
+        EXPECT_EQ(UnInstallBundle(BUNDLE_NAME), ERR_OK);
+    });
+    InnerBundleInfo installedInfo;
+    ASSERT_TRUE(dataMgr->FetchInnerBundleInfo(BUNDLE_NAME, installedInfo));
+
+    // the archive under the image does not exist, only the installed package can provide the resource
+    PreInstallBundleInfo preInstallBundleInfo =
+        MakePreCompressPreInstallInfo(BUNDLE_NAME, true, { PRE_COMPRESS_NOT_EXIST_HAP }, ids);
+    preInstallBundleInfo.SetVersionCode(installedInfo.GetVersionCode() + 1);
+    EXPECT_FALSE(manager->AddPreCompressBundleResource(preInstallBundleInfo));
+    uint32_t versionCode = 0;
+    EXPECT_FALSE(GetSavedPreCompressVersion(BUNDLE_NAME, versionCode));
+
+    preInstallBundleInfo.SetVersionCode(installedInfo.GetVersionCode());
+    EXPECT_TRUE(manager->AddPreCompressBundleResource(preInstallBundleInfo));
+    EXPECT_TRUE(GetSavedPreCompressVersion(BUNDLE_NAME, versionCode));
+    EXPECT_EQ(versionCode, installedInfo.GetVersionCode());
+}
+
+/**
+ * @tc.number: AddPreCompressBundleResource_0300
+ * @tc.name: test AddPreCompressBundleResource of BundleResourceManager
+ * @tc.desc: 1. nothing is saved when no package gives the resource of the module: the archive can not be
+ *              decompressed, the package can not be parsed, the module differs or the icon can not be parsed
+ */
+HWTEST_F(BmsBundleResourceTest, AddPreCompressBundleResource_0300, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+    PreCompressHapIds ids;
+    ASSERT_TRUE(GetPreCompressHapIds(HAP_FILE_PATH1, ids));
+    ScopeGuard deleteGuard([] { DeletePreCompressBundle(PRE_COMPRESS_ONE_NAME); });
+
+    EXPECT_FALSE(manager->AddPreCompressBundleResource(MakePreCompressPreInstallInfo(PRE_COMPRESS_ONE_NAME, true,
+        { PRE_COMPRESS_NOT_EXIST_ARCHIVE, PRE_COMPRESS_NOT_EXIST_HAP }, ids)));
+    PreCompressHapIds otherModuleIds = ids;
+    otherModuleIds.moduleName = PRE_COMPRESS_NOT_EXIST_MODULE;
+    EXPECT_FALSE(manager->AddPreCompressBundleResource(
+        MakePreCompressPreInstallInfo(PRE_COMPRESS_ONE_NAME, true, { HAP_FILE_PATH1 }, otherModuleIds)));
+    PreCompressHapIds noIconIds = ids;
+    noIconIds.iconId = 0;
+    EXPECT_FALSE(manager->AddPreCompressBundleResource(
+        MakePreCompressPreInstallInfo(PRE_COMPRESS_ONE_NAME, true, { HAP_FILE_PATH1 }, noIconIds)));
+    uint32_t versionCode = 0;
+    EXPECT_FALSE(GetSavedPreCompressVersion(PRE_COMPRESS_ONE_NAME, versionCode));
+}
+
+/**
+ * @tc.number: RefreshPreCompressBundleResource_0100
+ * @tc.name: test RefreshPreCompressBundleResource of BundleResourceManager
+ * @tc.desc: 1. the resource of a compressed preinstall app is added when missing and kept when up to date
+ *           2. the resource of an app no longer compressed is deleted with its theme
+ *           3. the theme of every user is refreshed only when a resource was added
+ */
+HWTEST_F(BmsBundleResourceTest, RefreshPreCompressBundleResource_0100, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+    PreCompressHapIds ids;
+    ASSERT_TRUE(GetPreCompressHapIds(HAP_FILE_PATH1, ids));
+    ScopeGuard deleteGuard([] {
+        DeletePreCompressBundle(PRE_COMPRESS_ONE_NAME);
+        DeletePreCompressBundle(PRE_COMPRESS_TWO_NAME);
+        DeletePreCompressBundle(PRE_COMPRESS_THREE_NAME);
+        DeletePreCompressBundle(PRE_COMPRESS_PLAIN_NAME);
+    });
+    // ONE has no resource yet, TWO is up to date, THREE is outdated but can not be parsed, PLAIN is not compressed
+    ASSERT_TRUE(SavePreCompressPreInstallInfo(
+        MakePreCompressPreInstallInfo(PRE_COMPRESS_ONE_NAME, true, { HAP_FILE_PATH1 }, ids)));
+    ASSERT_TRUE(SavePreCompressPreInstallInfo(
+        MakePreCompressPreInstallInfo(PRE_COMPRESS_TWO_NAME, true, { HAP_FILE_PATH1 }, ids)));
+    ASSERT_TRUE(AddPreCompressResourceRow(PRE_COMPRESS_TWO_NAME, PRE_COMPRESS_VERSION_CODE));
+    ASSERT_TRUE(SavePreCompressPreInstallInfo(
+        MakePreCompressPreInstallInfo(PRE_COMPRESS_THREE_NAME, true, { PRE_COMPRESS_NOT_EXIST_HAP }, ids)));
+    ASSERT_TRUE(AddPreCompressResourceRow(PRE_COMPRESS_THREE_NAME, PRE_COMPRESS_STALE_VERSION_CODE));
+    ASSERT_TRUE(SavePreCompressPreInstallInfo(
+        MakePreCompressPreInstallInfo(PRE_COMPRESS_PLAIN_NAME, false, { HAP_FILE_PATH1 }, ids)));
+    ASSERT_TRUE(AddPreCompressResourceRow(PRE_COMPRESS_PLAIN_NAME, PRE_COMPRESS_VERSION_CODE));
+    ASSERT_TRUE(AddPreCompressThemeRow(PRE_COMPRESS_PLAIN_NAME, THEME_TEST_USERID));
+    ASSERT_TRUE(AddPreCompressThemeRow(PRE_COMPRESS_TWO_NAME, USERID));
+
+    manager->RefreshPreCompressBundleResource();
+    uint32_t versionCode = 0;
+    EXPECT_TRUE(GetSavedPreCompressVersion(PRE_COMPRESS_ONE_NAME, versionCode));
+    EXPECT_EQ(versionCode, PRE_COMPRESS_VERSION_CODE);
+    std::vector<BundleResourceInfo> twoInfos;
+    EXPECT_TRUE(manager->preCompressBundleResourceRdb_->GetPreCompressBundleResources({ PRE_COMPRESS_TWO_NAME },
+        PRE_COMPRESS_ALL_FLAG, twoInfos));
+    ASSERT_EQ(twoInfos.size(), 1U);
+    EXPECT_EQ(twoInfos[0].icon, PRE_COMPRESS_ICON);
+    EXPECT_TRUE(GetSavedPreCompressVersion(PRE_COMPRESS_THREE_NAME, versionCode));
+    EXPECT_EQ(versionCode, PRE_COMPRESS_STALE_VERSION_CODE);
+    EXPECT_FALSE(GetSavedPreCompressVersion(PRE_COMPRESS_PLAIN_NAME, versionCode));
+    EXPECT_FALSE(HasPreCompressThemeRow(PRE_COMPRESS_PLAIN_NAME, THEME_TEST_USERID));
+    // ONE was added, so the stale theme of TWO without theme dir is removed
+    EXPECT_FALSE(HasPreCompressThemeRow(PRE_COMPRESS_TWO_NAME, USERID));
+
+    ASSERT_TRUE(AddPreCompressThemeRow(PRE_COMPRESS_TWO_NAME, USERID));
+    manager->RefreshPreCompressBundleResource();
+    // nothing was added this time, so the theme is left alone
+    EXPECT_TRUE(HasPreCompressThemeRow(PRE_COMPRESS_TWO_NAME, USERID));
+}
+
+/**
+ * @tc.number: RefreshPreCompressBundleResource_0200
+ * @tc.name: test RefreshPreCompressBundleResource of BundleResourceManager and BundleResourceHelper
+ * @tc.desc: 1. nothing is refreshed without the bundle manager data
+ *           2. BundleResourceHelper refreshes through the manager
+ */
+HWTEST_F(BmsBundleResourceTest, RefreshPreCompressBundleResource_0200, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+    ScopeGuard deleteGuard([] { DeletePreCompressBundle(PRE_COMPRESS_PLAIN_NAME); });
+    // a resource whose bundle is not a compressed preinstall app is deleted by a refresh
+    ASSERT_TRUE(AddPreCompressResourceRow(PRE_COMPRESS_PLAIN_NAME, PRE_COMPRESS_VERSION_CODE));
+
+    auto bundleMgrService = DelayedSingleton<BundleMgrService>::GetInstance();
+    auto dataMgr = bundleMgrService->dataMgr_;
+    bundleMgrService->dataMgr_ = nullptr;
+    manager->RefreshPreCompressBundleResource();
+    bundleMgrService->dataMgr_ = dataMgr;
+    uint32_t versionCode = 0;
+    EXPECT_TRUE(GetSavedPreCompressVersion(PRE_COMPRESS_PLAIN_NAME, versionCode));
+
+    BundleResourceHelper::RefreshPreCompressBundleResource();
+    EXPECT_FALSE(GetSavedPreCompressVersion(PRE_COMPRESS_PLAIN_NAME, versionCode));
+}
+
+/**
+ * @tc.number: GetAllUninstallPreCompressBundleResourceInfo_0080
+ * @tc.name: test GetAllUninstallPreCompressBundleResourceInfo
+ * @tc.desc: 1. the default user stands for the current user
+ */
+HWTEST_F(BmsBundleResourceTest, GetAllUninstallPreCompressBundleResourceInfo_0080, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+    ScopeGuard deleteGuard([] { DeletePreCompressBundle(PRE_COMPRESS_BUNDLE_NAME); });
+    ASSERT_TRUE(AddPreCompressBundle(PRE_COMPRESS_BUNDLE_NAME, true));
+
+    std::vector<BundleResourceInfo> currentUserInfos;
+    EXPECT_TRUE(manager->GetAllUninstallPreCompressBundleResourceInfo(AccountHelper::GetCurrentActiveUserId(),
+        PRE_COMPRESS_ALL_FLAG, currentUserInfos));
+    std::vector<BundleResourceInfo> defaultUserInfos;
+    EXPECT_TRUE(manager->GetAllUninstallPreCompressBundleResourceInfo(Constants::DEFAULT_USERID,
+        PRE_COMPRESS_ALL_FLAG, defaultUserInfos));
+    EXPECT_EQ(defaultUserInfos.size(), currentUserInfos.size());
+    EXPECT_EQ(FindBundleResource(defaultUserInfos, PRE_COMPRESS_BUNDLE_NAME) != nullptr,
+        FindBundleResource(currentUserInfos, PRE_COMPRESS_BUNDLE_NAME) != nullptr);
+}
+
+/**
+ * @tc.number: GetAllUninstallPreCompressBundleResourceInfo_0090
+ * @tc.name: test GetAllUninstallPreCompressBundleResourceInfo
+ * @tc.desc: 1. it fails without the bundle manager data or when the factory resource can not be read
+ *           2. the factory icon is kept when the theme can not be read
+ *           3. the host reports an internal error when the resource can not be got
+ */
+HWTEST_F(BmsBundleResourceTest, GetAllUninstallPreCompressBundleResourceInfo_0090, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+    auto bundleMgrService = DelayedSingleton<BundleMgrService>::GetInstance();
+    auto dataMgr = bundleMgrService->dataMgr_;
+    auto bundleRdbDataManager = manager->preCompressBundleResourceRdb_->rdbDataManager_;
+    auto themeRdbDataManager = manager->preCompressThemeResourceRdb_->rdbDataManager_;
+    ScopeGuard restoreGuard([bundleMgrService, dataMgr, manager, bundleRdbDataManager, themeRdbDataManager] {
+        bundleMgrService->dataMgr_ = dataMgr;
+        manager->preCompressBundleResourceRdb_->rdbDataManager_ = bundleRdbDataManager;
+        manager->preCompressThemeResourceRdb_->rdbDataManager_ = themeRdbDataManager;
+        DeletePreCompressTestRdb(PRE_COMPRESS_TEST_DB_NAME);
+        DeletePreCompressBundle(PRE_COMPRESS_BUNDLE_NAME);
+    });
+    ASSERT_TRUE(AddPreCompressBundle(PRE_COMPRESS_BUNDLE_NAME, true));
+    ASSERT_TRUE(AddPreCompressThemeRow(PRE_COMPRESS_BUNDLE_NAME, USERID));
+    uint32_t flags =
+        PRE_COMPRESS_ALL_FLAG | static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_PRE_COMPRESS_BUNDLE);
+
+    bundleMgrService->dataMgr_ = nullptr;
+    std::vector<BundleResourceInfo> noDataMgrInfos;
+    EXPECT_FALSE(manager->GetAllUninstallPreCompressBundleResourceInfo(USERID, PRE_COMPRESS_ALL_FLAG,
+        noDataMgrInfos));
+    std::shared_ptr<BundleResourceHostImpl> bundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
+    EXPECT_EQ(bundleResourceHostImpl->GetAllUninstallBundleResourceInfo(USERID, flags, noDataMgrInfos),
+        ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    bundleMgrService->dataMgr_ = dataMgr;
+
+    manager->preCompressBundleResourceRdb_->rdbDataManager_ =
+        CreatePreCompressTestRdb(PRE_COMPRESS_TEST_DB_NAME, PRE_COMPRESS_NOT_EXIST_TABLE, "");
+    std::vector<BundleResourceInfo> noFactoryInfos;
+    EXPECT_FALSE(manager->GetAllUninstallPreCompressBundleResourceInfo(USERID, PRE_COMPRESS_ALL_FLAG,
+        noFactoryInfos));
+    manager->preCompressBundleResourceRdb_->rdbDataManager_ = bundleRdbDataManager;
+
+    manager->preCompressThemeResourceRdb_->rdbDataManager_ =
+        CreatePreCompressTestRdb(PRE_COMPRESS_TEST_DB_NAME, PRE_COMPRESS_NOT_EXIST_TABLE, "");
+    std::vector<BundleResourceInfo> factoryInfos;
+    EXPECT_TRUE(manager->GetAllUninstallPreCompressBundleResourceInfo(USERID, PRE_COMPRESS_ALL_FLAG,
+        factoryInfos));
+    const BundleResourceInfo *info = FindBundleResource(factoryInfos, PRE_COMPRESS_BUNDLE_NAME);
+    ASSERT_NE(info, nullptr);
+    EXPECT_EQ(info->icon, PRE_COMPRESS_ICON);
+}
+
+/**
+ * @tc.number: GetAllUninstallPreCompressBundleResourceInfo_0100
+ * @tc.name: test GetAllUninstallPreCompressBundleResourceInfo
+ * @tc.desc: 1. a compressed preinstall app in the black list of the user is not returned
+ */
+HWTEST_F(BmsBundleResourceTest, GetAllUninstallPreCompressBundleResourceInfo_0100, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+    ASSERT_TRUE(AddPreCompressBundle(PRE_COMPRESS_BUNDLE_NAME, true));
+    BmsExtensionBundleMgr originalBundleMgr = BmsExtensionDataMgr::bmsExtension_.bmsExtensionBundleMgr;
+    void *originalHandler = BmsExtensionDataMgr::handler_;
+    int32_t testHandler = 1;
+    BmsExtensionBundleMgr testBundleMgr;
+    testBundleMgr.extensionName = PRE_COMPRESS_TEST_EXT_NAME;
+    BmsExtensionDataMgr::bmsExtension_.bmsExtensionBundleMgr = testBundleMgr;
+    BmsExtensionDataMgr::handler_ = &testHandler;
+    BundleMgrExtRegister::GetInstance().RegisterBundleMgrExt(PRE_COMPRESS_TEST_EXT_NAME,
+        []() -> std::shared_ptr<BundleMgrExt> { return std::make_shared<PreCompressBlackListExt>(); });
+    ScopeGuard restoreGuard([originalBundleMgr, originalHandler] {
+        BmsExtensionDataMgr::bmsExtension_.bmsExtensionBundleMgr = originalBundleMgr;
+        BmsExtensionDataMgr::handler_ = originalHandler;
+        DeletePreCompressBundle(PRE_COMPRESS_BUNDLE_NAME);
+    });
+
+    std::vector<BundleResourceInfo> bundleResourceInfos;
+    EXPECT_TRUE(manager->GetAllUninstallPreCompressBundleResourceInfo(USERID, PRE_COMPRESS_ALL_FLAG,
+        bundleResourceInfos));
+    EXPECT_EQ(FindBundleResource(bundleResourceInfos, PRE_COMPRESS_BUNDLE_NAME), nullptr);
+}
+
+/**
+ * @tc.number: AddPreCompressThemeResource_0100
+ * @tc.name: test AddPreCompressThemeResource of BundleResourceManager
+ * @tc.desc: 1. the theme icon of a compressed preinstall app is saved from the icon db when its theme exists
+ *           2. the theme is removed when the theme does not exist or the theme icon can not be got
+ *           3. apps without saved resource and apps not compressed are skipped
+ */
+HWTEST_F(BmsBundleResourceTest, AddPreCompressThemeResource_0100, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+    PreCompressHapIds ids;
+    ASSERT_TRUE(GetPreCompressHapIds(HAP_FILE_PATH1, ids));
+    std::vector<std::string> bundleNames = { PRE_COMPRESS_ONE_NAME, PRE_COMPRESS_TWO_NAME, PRE_COMPRESS_THREE_NAME,
+        PRE_COMPRESS_UNSAVED_NAME, PRE_COMPRESS_PLAIN_NAME };
+    ScopeGuard deleteGuard([bundleNames] { DeletePreCompressThemeIcons(bundleNames); });
+    for (const auto &bundleName : bundleNames) {
+        bool isCompressed = bundleName != PRE_COMPRESS_PLAIN_NAME;
+        ASSERT_TRUE(SavePreCompressPreInstallInfo(
+            MakePreCompressPreInstallInfo(bundleName, isCompressed, { HAP_FILE_PATH1 }, ids)));
+        if (bundleName != PRE_COMPRESS_UNSAVED_NAME) {
+            ASSERT_TRUE(AddPreCompressResourceRow(bundleName, PRE_COMPRESS_VERSION_CODE));
+        }
+        if (bundleName != PRE_COMPRESS_ONE_NAME) {
+            ASSERT_TRUE(AddPreCompressThemeRow(bundleName, THEME_TEST_USERID));
+        }
+    }
+    // ONE has a theme icon in the icon db, TWO has a theme dir without icon and no icon id, THREE has no theme
+    CreatePreCompressThemeDir(PRE_COMPRESS_ONE_NAME);
+    ASSERT_TRUE(AddPreCompressThemeIconRow(PRE_COMPRESS_ONE_NAME));
+    CreatePreCompressThemeDir(PRE_COMPRESS_TWO_NAME);
+    PreCompressHapIds noIconIds = ids;
+    noIconIds.iconId = 0;
+    ASSERT_TRUE(SavePreCompressPreInstallInfo(
+        MakePreCompressPreInstallInfo(PRE_COMPRESS_TWO_NAME, true, { HAP_FILE_PATH1 }, noIconIds)));
+
+    manager->AddPreCompressThemeResource(THEME_TEST_USERID, manager->currentTaskNum_);
+    std::map<std::string, BundleResourceInfo> themeResourceInfos;
+    EXPECT_TRUE(manager->preCompressThemeResourceRdb_->GetPreCompressThemeResources(THEME_TEST_USERID,
+        { PRE_COMPRESS_ONE_NAME }, PRE_COMPRESS_ICON_FLAG | PRE_COMPRESS_DRAWABLE_FLAG, themeResourceInfos));
+    ASSERT_EQ(themeResourceInfos.count(PRE_COMPRESS_ONE_NAME), 1U);
+    EXPECT_EQ(themeResourceInfos[PRE_COMPRESS_ONE_NAME].icon, PRE_COMPRESS_THEME_ICON);
+    EXPECT_EQ(themeResourceInfos[PRE_COMPRESS_ONE_NAME].background, PRE_COMPRESS_THEME_BACKGROUND);
+    EXPECT_FALSE(HasPreCompressThemeRow(PRE_COMPRESS_TWO_NAME, THEME_TEST_USERID));
+    EXPECT_FALSE(HasPreCompressThemeRow(PRE_COMPRESS_THREE_NAME, THEME_TEST_USERID));
+    EXPECT_TRUE(HasPreCompressThemeRow(PRE_COMPRESS_UNSAVED_NAME, THEME_TEST_USERID));
+    EXPECT_TRUE(HasPreCompressThemeRow(PRE_COMPRESS_PLAIN_NAME, THEME_TEST_USERID));
+}
+
+/**
+ * @tc.number: AddPreCompressThemeResource_0200
+ * @tc.name: test AddPreCompressThemeResource of BundleResourceManager
+ * @tc.desc: 1. nothing is done for a user below the start user, without the bundle manager data or when a newer
+ *              theme change interrupts the task
+ */
+HWTEST_F(BmsBundleResourceTest, AddPreCompressThemeResource_0200, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+    PreCompressHapIds ids;
+    ASSERT_TRUE(GetPreCompressHapIds(HAP_FILE_PATH1, ids));
+    ScopeGuard deleteGuard([] { DeletePreCompressBundle(PRE_COMPRESS_THREE_NAME); });
+    ASSERT_TRUE(SavePreCompressPreInstallInfo(
+        MakePreCompressPreInstallInfo(PRE_COMPRESS_THREE_NAME, true, { HAP_FILE_PATH1 }, ids)));
+    ASSERT_TRUE(AddPreCompressResourceRow(PRE_COMPRESS_THREE_NAME, PRE_COMPRESS_VERSION_CODE));
+    ASSERT_TRUE(AddPreCompressThemeRow(PRE_COMPRESS_THREE_NAME, Constants::U1));
+    ASSERT_TRUE(AddPreCompressThemeRow(PRE_COMPRESS_THREE_NAME, THEME_TEST_USERID));
+
+    manager->AddPreCompressThemeResource(Constants::U1, manager->currentTaskNum_);
+    EXPECT_TRUE(HasPreCompressThemeRow(PRE_COMPRESS_THREE_NAME, Constants::U1));
+
+    auto bundleMgrService = DelayedSingleton<BundleMgrService>::GetInstance();
+    auto dataMgr = bundleMgrService->dataMgr_;
+    bundleMgrService->dataMgr_ = nullptr;
+    manager->AddPreCompressThemeResource(THEME_TEST_USERID, manager->currentTaskNum_);
+    bundleMgrService->dataMgr_ = dataMgr;
+    EXPECT_TRUE(HasPreCompressThemeRow(PRE_COMPRESS_THREE_NAME, THEME_TEST_USERID));
+
+    uint32_t changeType = manager->currentChangeType_;
+    manager->currentChangeType_ = static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_THEME_CHANGE);
+    manager->AddPreCompressThemeResource(THEME_TEST_USERID, manager->currentTaskNum_ + 1);
+    manager->currentChangeType_ = changeType;
+    EXPECT_TRUE(HasPreCompressThemeRow(PRE_COMPRESS_THREE_NAME, THEME_TEST_USERID));
+
+    manager->AddPreCompressThemeResource(THEME_TEST_USERID, manager->currentTaskNum_);
+    EXPECT_FALSE(HasPreCompressThemeRow(PRE_COMPRESS_THREE_NAME, THEME_TEST_USERID));
+}
+
+/**
+ * @tc.number: AddPreCompressThemeResource_0300
+ * @tc.name: test AddPreCompressThemeResource of BundleResourceManager
+ * @tc.desc: 1. nothing is saved when the theme db can not be written
+ */
+HWTEST_F(BmsBundleResourceTest, AddPreCompressThemeResource_0300, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+    PreCompressHapIds ids;
+    ASSERT_TRUE(GetPreCompressHapIds(HAP_FILE_PATH1, ids));
+    auto themeRdbDataManager = manager->preCompressThemeResourceRdb_->rdbDataManager_;
+    ScopeGuard deleteGuard([manager, themeRdbDataManager] {
+        manager->preCompressThemeResourceRdb_->rdbDataManager_ = themeRdbDataManager;
+        DeletePreCompressTestRdb(PRE_COMPRESS_THEME_TEST_DB_NAME);
+        DeletePreCompressThemeIcons({ PRE_COMPRESS_ONE_NAME });
+    });
+    ASSERT_TRUE(SavePreCompressPreInstallInfo(
+        MakePreCompressPreInstallInfo(PRE_COMPRESS_ONE_NAME, true, { HAP_FILE_PATH1 }, ids)));
+    ASSERT_TRUE(AddPreCompressResourceRow(PRE_COMPRESS_ONE_NAME, PRE_COMPRESS_VERSION_CODE));
+    CreatePreCompressThemeDir(PRE_COMPRESS_ONE_NAME);
+    ASSERT_TRUE(AddPreCompressThemeIconRow(PRE_COMPRESS_ONE_NAME));
+
+    manager->preCompressThemeResourceRdb_->rdbDataManager_ =
+        CreatePreCompressTestRdb(PRE_COMPRESS_THEME_TEST_DB_NAME, PRE_COMPRESS_NOT_EXIST_TABLE, "");
+    manager->AddPreCompressThemeResource(THEME_TEST_USERID, manager->currentTaskNum_);
+    manager->preCompressThemeResourceRdb_->rdbDataManager_ = themeRdbDataManager;
+    EXPECT_FALSE(HasPreCompressThemeRow(PRE_COMPRESS_ONE_NAME, THEME_TEST_USERID));
+}
+
+/**
+ * @tc.number: GetThemeIconFromIconRdb_0100
+ * @tc.name: test GetThemeIconFromIconRdb and ParseThemeIconFromThemeDir of BundleResourceManager
+ * @tc.desc: 1. the theme icon is taken from the icon db when it is there
+ *           2. the resource info parsed with the theme is handed back only when the parse succeeds
+ */
+HWTEST_F(BmsBundleResourceTest, GetThemeIconFromIconRdb_0100, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+    ScopeGuard deleteGuard([] { DeletePreCompressThemeIcons({ PRE_COMPRESS_ONE_NAME }); });
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = PRE_COMPRESS_ONE_NAME;
+    EXPECT_FALSE(manager->GetThemeIconFromIconRdb(THEME_TEST_USERID, resourceInfo));
+    EXPECT_TRUE(resourceInfo.icon_.empty());
+    ASSERT_TRUE(AddPreCompressThemeIconRow(PRE_COMPRESS_ONE_NAME));
+    EXPECT_TRUE(manager->GetThemeIconFromIconRdb(THEME_TEST_USERID, resourceInfo));
+    EXPECT_EQ(resourceInfo.icon_, PRE_COMPRESS_THEME_ICON);
+    EXPECT_EQ(resourceInfo.foreground_, PRE_COMPRESS_THEME_FOREGROUND);
+    EXPECT_EQ(resourceInfo.background_, PRE_COMPRESS_THEME_BACKGROUND);
+
+    ResourceInfo noIconInfo;
+    noIconInfo.bundleName_ = PRE_COMPRESS_ONE_NAME;
+    EXPECT_FALSE(manager->ParseThemeIconFromThemeDir(THEME_TEST_USERID, noIconInfo));
+    EXPECT_TRUE(noIconInfo.icon_.empty());
+    ResourceInfo presetIconInfo;
+    presetIconInfo.bundleName_ = PRE_COMPRESS_ONE_NAME;
+    presetIconInfo.icon_ = PRE_COMPRESS_PRESET_ICON;
+    EXPECT_TRUE(manager->ParseThemeIconFromThemeDir(THEME_TEST_USERID, presetIconInfo));
+    EXPECT_EQ(presetIconInfo.icon_, PRE_COMPRESS_PRESET_ICON);
+    EXPECT_EQ(presetIconInfo.bundleName_, PRE_COMPRESS_ONE_NAME);
+}
+
+/**
+ * @tc.number: DeleteUninstallBundleResourceForUser_PreCompress_0100
+ * @tc.name: test DeleteUninstallBundleResourceForUser of BundleResourceManager
+ * @tc.desc: 1. the pre compress themes of the removed user are deleted too
+ */
+HWTEST_F(BmsBundleResourceTest, DeleteUninstallBundleResourceForUser_PreCompress_0100, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+    ScopeGuard deleteGuard([] { DeletePreCompressBundle(PRE_COMPRESS_ONE_NAME); });
+    ASSERT_TRUE(AddPreCompressThemeRow(PRE_COMPRESS_ONE_NAME, PRE_COMPRESS_DELETE_USERID));
+    ASSERT_TRUE(AddPreCompressThemeRow(PRE_COMPRESS_ONE_NAME, THEME_TEST_USERID));
+
+    EXPECT_TRUE(manager->DeleteUninstallBundleResourceForUser(PRE_COMPRESS_DELETE_USERID));
+    EXPECT_FALSE(HasPreCompressThemeRow(PRE_COMPRESS_ONE_NAME, PRE_COMPRESS_DELETE_USERID));
+    EXPECT_TRUE(HasPreCompressThemeRow(PRE_COMPRESS_ONE_NAME, THEME_TEST_USERID));
 }
 } // OHOS

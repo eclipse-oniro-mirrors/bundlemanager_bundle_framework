@@ -18,7 +18,9 @@
 #include "account_helper.h"
 #include "app_log_tag_wrapper.h"
 #include "bms_extension_client.h"
+#include "bms_extension_data_mgr.h"
 #include "bundle_common_event_mgr.h"
+#include "bundle_parser.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_util.h"
 #include "bundle_resource_parser.h"
@@ -30,6 +32,7 @@
 #include "dual_mode_helper.h"
 #include "event_report.h"
 #include "hitrace_meter.h"
+#include "pre_compress_handler.h"
 #include "thread_pool.h"
 
 namespace OHOS {
@@ -63,6 +66,8 @@ BundleResourceManager::BundleResourceManager()
     bundleResourceRdb_ = std::make_shared<BundleResourceRdb>();
     bundleResourceIconRdb_ = std::make_shared<BundleResourceIconRdb>();
     uninstallBundleResourceRdb_ = std::make_shared<UninstallBundleResourceRdb>();
+    preCompressBundleResourceRdb_ = std::make_shared<PreCompressBundleResourceRdb>();
+    preCompressThemeResourceRdb_ = std::make_shared<PreCompressThemeResourceRdb>();
     delayedTaskMgr_ = std::make_shared<SingleDelayedTaskMgr>(TASK_NAME, DELAY_TIME_MILLI_SECONDS);
 }
 
@@ -1067,6 +1072,7 @@ bool BundleResourceManager::AddAllResourceInfo(
             APP_LOGE("add resource failed when theme changed -u %{public}d", userId);
             return false;
         }
+        AddPreCompressThemeResource(userId, tempTaskNum);
     }
     if ((type & static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_LANGUE_CHANGE)) ==
         static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_LANGUE_CHANGE)) {
@@ -1677,6 +1683,7 @@ bool BundleResourceManager::DeleteUninstallBundleResource(const std::string &bun
 bool BundleResourceManager::DeleteUninstallBundleResourceForUser(const int32_t userId)
 {
     APP_LOGI("-u %{public}d delete uinstall bundle resource start", userId);
+    (void)preCompressThemeResourceRdb_->DeletePreCompressThemeResourceForUser(userId);
     return uninstallBundleResourceRdb_->DeleteUninstallBundleResourceForUser(userId);
 }
 
@@ -1779,6 +1786,197 @@ bool BundleResourceManager::MigrateUninstallBundleResource()
     }
 
     APP_LOGI_NOFUNC("MigrateUninstallBundleResource success");
+    return true;
+}
+
+void BundleResourceManager::RefreshPreCompressBundleResource()
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE_NOFUNC("dataMgr is nullptr");
+        return;
+    }
+    auto savedVersionCodes = preCompressBundleResourceRdb_->GetAllPreCompressBundleResourceVersion();
+    int32_t addedCount = 0;
+    for (const auto &preInstallBundleInfo : dataMgr->GetAllPreInstallBundleInfos()) {
+        if (!preInstallBundleInfo.IsCompressed()) {
+            continue;
+        }
+        auto saved = savedVersionCodes.extract(preInstallBundleInfo.GetBundleName());
+        if ((saved.empty() || (saved.mapped() != preInstallBundleInfo.GetVersionCode())) &&
+            AddPreCompressBundleResource(preInstallBundleInfo)) {
+            ++addedCount;
+        }
+    }
+    for (const auto &item : savedVersionCodes) {
+        (void)preCompressBundleResourceRdb_->DeletePreCompressBundleResource(item.first);
+        (void)preCompressThemeResourceRdb_->DeletePreCompressThemeResource(item.first);
+    }
+    if (addedCount > 0) {
+        std::lock_guard<std::mutex> guard(mutex_);
+        for (const auto userId : dataMgr->GetAllUser()) {
+            AddPreCompressThemeResource(userId, currentTaskNum_);
+        }
+    }
+    APP_LOGI_NOFUNC("refresh pre compress resource end, added:%{public}d deleted:%{public}zu",
+        addedCount, savedVersionCodes.size());
+}
+
+bool BundleResourceManager::AddPreCompressBundleResource(const PreInstallBundleInfo &preInstallBundleInfo)
+{
+    const std::string bundleName = preInstallBundleInfo.GetBundleName();
+    std::vector<std::string> hapPaths = preInstallBundleInfo.GetBundlePaths();
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    InnerBundleInfo innerBundleInfo;
+    if ((dataMgr != nullptr) && dataMgr->FetchInnerBundleInfo(bundleName, innerBundleInfo) &&
+        (innerBundleInfo.GetVersionCode() == preInstallBundleInfo.GetVersionCode())) {
+        hapPaths.insert(hapPaths.begin(), innerBundleInfo.GetModuleHapPath(preInstallBundleInfo.GetModuleName()));
+    }
+    BundleParser bundleParser;
+    BundleResourceParser parser;
+    for (const auto &hapPath : hapPaths) {
+        ScopedDecompressedHap scopedHap(hapPath);
+        InnerBundleInfo hapInfo;
+        bool isAbcCompressed = false;
+        if (!scopedHap.IsValid() ||
+            (bundleParser.Parse(scopedHap.GetHapPath(), hapInfo, isAbcCompressed) != ERR_OK) ||
+            (hapInfo.GetCurModuleName() != preInstallBundleInfo.GetModuleName())) {
+            continue;
+        }
+        ResourceInfo resourceInfo;
+        resourceInfo.bundleName_ = bundleName;
+        resourceInfo.labelId_ = preInstallBundleInfo.GetLabelId();
+        resourceInfo.iconId_ = preInstallBundleInfo.GetIconId();
+        resourceInfo.hapPath_ = scopedHap.GetHapPath();
+        std::map<std::string, std::string> labelMap;
+        if (parser.ParseUninstallBundleResource(resourceInfo, labelMap)) {
+            return preCompressBundleResourceRdb_->AddPreCompressBundleResource(
+                preInstallBundleInfo.GetVersionCode(), labelMap, resourceInfo);
+        }
+    }
+    APP_LOGE_NOFUNC("-n %{public}s parse pre compress resource failed", bundleName.c_str());
+    return false;
+}
+
+bool BundleResourceManager::GetAllUninstallPreCompressBundleResourceInfo(const int32_t userId, const uint32_t flags,
+    std::vector<BundleResourceInfo> &bundleResourceInfos)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    int32_t newUserId = userId;
+    if (newUserId == Constants::DEFAULT_USERID) {
+        newUserId = AccountHelper::GetCurrentActiveUserId();
+    }
+    std::vector<std::string> bundleNames;
+    if (!GetRecoverablePreCompressBundleNames(newUserId, bundleNames)) {
+        return false;
+    }
+    if (bundleNames.empty()) {
+        return true;
+    }
+    uint32_t resourceFlags = CheckResourceFlags(flags);
+    size_t startIndex = bundleResourceInfos.size();
+    if (!preCompressBundleResourceRdb_->GetPreCompressBundleResources(bundleNames, resourceFlags,
+        bundleResourceInfos)) {
+        return false;
+    }
+    std::map<std::string, BundleResourceInfo> themeResourceInfos;
+    if (!IsNeedProcessResourceIconInfo(resourceFlags) || !preCompressThemeResourceRdb_->GetPreCompressThemeResources(
+        newUserId, bundleNames, resourceFlags, themeResourceInfos)) {
+        return true;
+    }
+    for (size_t index = startIndex; index < bundleResourceInfos.size(); ++index) {
+        auto iter = themeResourceInfos.find(bundleResourceInfos[index].bundleName);
+        if (iter != themeResourceInfos.end()) {
+            bundleResourceInfos[index].icon = std::move(iter->second.icon);
+            bundleResourceInfos[index].foreground = std::move(iter->second.foreground);
+            bundleResourceInfos[index].background = std::move(iter->second.background);
+        }
+    }
+    return true;
+}
+
+bool BundleResourceManager::GetRecoverablePreCompressBundleNames(const int32_t userId,
+    std::vector<std::string> &bundleNames)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE_NOFUNC("dataMgr is nullptr");
+        return false;
+    }
+    if (!dataMgr->HasUserId(userId)) {
+        APP_LOGW_NOFUNC("-u %{public}d not exist", userId);
+        return true;
+    }
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    for (const auto &preInstallBundleInfo : dataMgr->GetRecoverablePreInstallBundleInfos(userId)) {
+        if (!preInstallBundleInfo.IsCompressed() ||
+            (bmsExtensionDataMgr.CheckAppBlackList(preInstallBundleInfo.GetBundleName(), userId) != ERR_OK)) {
+            continue;
+        }
+        bundleNames.emplace_back(preInstallBundleInfo.GetBundleName());
+    }
+    return true;
+}
+
+void BundleResourceManager::AddPreCompressThemeResource(const int32_t userId, const uint32_t tempTaskNumber)
+{
+    if (userId < Constants::START_USERID) {
+        return;
+    }
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE_NOFUNC("dataMgr is nullptr");
+        return;
+    }
+    auto savedVersionCodes = preCompressBundleResourceRdb_->GetAllPreCompressBundleResourceVersion();
+    int32_t themeCount = 0;
+    for (const auto &preInstallBundleInfo : dataMgr->GetAllPreInstallBundleInfos()) {
+        if (!preInstallBundleInfo.IsCompressed() ||
+            (savedVersionCodes.count(preInstallBundleInfo.GetBundleName()) == 0)) {
+            continue;
+        }
+        if (IsNeedInterrupted(tempTaskNumber, BundleResourceChangeType::SYSTEM_THEME_CHANGE)) {
+            APP_LOGI_NOFUNC("need stop current task, new first");
+            return;
+        }
+        ResourceInfo resourceInfo;
+        resourceInfo.bundleName_ = preInstallBundleInfo.GetBundleName();
+        resourceInfo.iconId_ = preInstallBundleInfo.GetIconId();
+        if (!BundleResourceThemeProcess::IsBundleThemeExist(resourceInfo.bundleName_, userId) ||
+            (!GetThemeIconFromIconRdb(userId, resourceInfo) && !ParseThemeIconFromThemeDir(userId, resourceInfo))) {
+            (void)preCompressThemeResourceRdb_->DeletePreCompressThemeResource(resourceInfo.bundleName_, userId);
+            continue;
+        }
+        if (preCompressThemeResourceRdb_->AddPreCompressThemeResource(userId, resourceInfo)) {
+            ++themeCount;
+        }
+    }
+    APP_LOGI_NOFUNC("add pre compress theme resource end -u %{public}d theme:%{public}d", userId, themeCount);
+}
+
+bool BundleResourceManager::GetThemeIconFromIconRdb(const int32_t userId, ResourceInfo &resourceInfo)
+{
+    std::vector<LauncherAbilityResourceInfo> resourceIconInfos;
+    if (!bundleResourceIconRdb_->GetResourceIconInfos(resourceInfo.bundleName_, userId, Constants::MAIN_APP_INDEX,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON) |
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR),
+        resourceIconInfos, IconResourceType::THEME_ICON)) {
+        return false;
+    }
+    resourceInfo.icon_ = resourceIconInfos[0].icon;
+    resourceInfo.foreground_ = resourceIconInfos[0].foreground;
+    resourceInfo.background_ = resourceIconInfos[0].background;
+    return true;
+}
+
+bool BundleResourceManager::ParseThemeIconFromThemeDir(const int32_t userId, ResourceInfo &resourceInfo)
+{
+    std::vector<ResourceInfo> resourceInfos { resourceInfo };
+    BundleResourceParser parser;
+    if (!parser.ParseIconResourceInfosWithTheme(userId, resourceInfos)) {
+        return false;
+    }
+    resourceInfo = resourceInfos[0];
     return true;
 }
 } // AppExecFwk

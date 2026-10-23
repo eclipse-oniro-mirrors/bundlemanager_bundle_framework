@@ -53,6 +53,7 @@ config("bundlemgr_common_config") {
     "include/verify",
     "include/plugin",
     "include/on_demand_install",
+    "include/pre_compress",
     "../../interfaces/inner_api/appexecfwk_base/include",
     "../../interfaces/inner_api/bundlemgr_extension/include",
   ]

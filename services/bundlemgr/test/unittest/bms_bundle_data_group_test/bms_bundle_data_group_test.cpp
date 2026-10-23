@@ -3471,4 +3471,106 @@ HWTEST_F(BmsBundleDataGroupTest, InnerBundleInfo_0051, Function | MediumTest | L
     EXPECT_EQ(info.sandboxCreatorBundleName, "com.example.creator");
 }
 
+/**
+ * @tc.number: InnerBundleInfo_CompressedPreload_0100
+ * @tc.name: test SetCompressedPreload and IsCompressedPreload
+ * @tc.desc: 1. compressed preload is false by default and kept by SetCompressedPreload
+ *           2. the assignment operator copies it
+ */
+HWTEST_F(BmsBundleDataGroupTest, InnerBundleInfo_CompressedPreload_0100, Function | SmallTest | Level0)
+{
+    InnerBundleInfo innerBundleInfo;
+    EXPECT_FALSE(innerBundleInfo.IsCompressedPreload());
+    innerBundleInfo.SetCompressedPreload(true);
+    EXPECT_TRUE(innerBundleInfo.IsCompressedPreload());
+
+    InnerBundleInfo copiedInfo;
+    copiedInfo = innerBundleInfo;
+    EXPECT_TRUE(copiedInfo.IsCompressedPreload());
+    innerBundleInfo.SetCompressedPreload(false);
+    copiedInfo = innerBundleInfo;
+    EXPECT_FALSE(copiedInfo.IsCompressedPreload());
+}
+
+/**
+ * @tc.number: InnerBundleInfo_CompressedPreload_0200
+ * @tc.name: test ToJson and FromJson of the compressed preload flag
+ * @tc.desc: 1. the flag survives ToJson and FromJson
+ *           2. data saved before the flag existed is read as not compressed
+ */
+HWTEST_F(BmsBundleDataGroupTest, InnerBundleInfo_CompressedPreload_0200, Function | SmallTest | Level0)
+{
+    const std::string compressedPreloadKey = "isCompressedPreload";
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    innerBundleInfo.SetCompressedPreload(true);
+    nlohmann::json jsonObject;
+    innerBundleInfo.ToJson(jsonObject);
+    ASSERT_TRUE(jsonObject.contains(compressedPreloadKey));
+    EXPECT_TRUE(jsonObject.at(compressedPreloadKey).get<bool>());
+
+    InnerBundleInfo parsedInfo;
+    EXPECT_EQ(parsedInfo.FromJson(jsonObject), ERR_OK);
+    EXPECT_TRUE(parsedInfo.IsCompressedPreload());
+    EXPECT_EQ(parsedInfo.GetBundleName(), BUNDLE_NAME);
+
+    jsonObject.erase(compressedPreloadKey);
+    InnerBundleInfo oldInfo;
+    EXPECT_EQ(oldInfo.FromJson(jsonObject), ERR_OK);
+    EXPECT_FALSE(oldInfo.IsCompressedPreload());
+}
+
+/**
+ * @tc.number: InnerBundleInfo_CompressedPreload_0300
+ * @tc.name: test GetPreInstallApplicationFlags of a compressed preload app
+ * @tc.desc: 1. a plain preinstall app running from the data partition is marked as updated
+ *           2. a compressed preinstall app always runs from the data partition and is never marked as updated
+ */
+HWTEST_F(BmsBundleDataGroupTest, InnerBundleInfo_CompressedPreload_0300, Function | SmallTest | Level0)
+{
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseBundleInfo_->isPreInstallApp = true;
+    innerBundleInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.modulePackage = "entry";
+    moduleInfo.hapPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + BUNDLE_NAME +
+        ServiceConstants::PATH_SEPARATOR + "entry.hap";
+    innerBundleInfo.InsertInnerModuleInfo(moduleInfo.modulePackage, moduleInfo);
+    uint32_t preinstalledFlag = static_cast<uint32_t>(ApplicationInfoFlag::FLAG_PREINSTALLED_APP);
+    uint32_t updatedFlag = static_cast<uint32_t>(ApplicationInfoFlag::FLAG_PREINSTALLED_APP_UPDATE);
+
+    ApplicationInfo plainAppInfo;
+    innerBundleInfo.GetPreInstallApplicationFlags(plainAppInfo);
+    EXPECT_EQ(static_cast<uint32_t>(plainAppInfo.applicationFlags) & preinstalledFlag, preinstalledFlag);
+    EXPECT_EQ(static_cast<uint32_t>(plainAppInfo.applicationFlags) & updatedFlag, updatedFlag);
+
+    innerBundleInfo.SetCompressedPreload(true);
+    ApplicationInfo compressedAppInfo;
+    innerBundleInfo.GetPreInstallApplicationFlags(compressedAppInfo);
+    EXPECT_EQ(static_cast<uint32_t>(compressedAppInfo.applicationFlags) & preinstalledFlag, preinstalledFlag);
+    EXPECT_EQ(static_cast<uint32_t>(compressedAppInfo.applicationFlags) & updatedFlag, 0U);
+}
+
+/**
+ * @tc.number: UpdateBaseBundleInfoIntoOld_CompressedPreload_0100
+ * @tc.name: test UpdateBaseBundleInfoIntoOld
+ * @tc.desc: 1. the compressed preload flag of the installed info follows the newly installed package
+ */
+HWTEST_F(BmsBundleDataGroupTest, UpdateBaseBundleInfoIntoOld_CompressedPreload_0100, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo newInfo;
+    newInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    newInfo.SetCompressedPreload(true);
+    InnerBundleInfo oldInfo;
+    oldInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+
+    dataMgr->UpdateBaseBundleInfoIntoOld(newInfo, oldInfo);
+    EXPECT_TRUE(oldInfo.IsCompressedPreload());
+
+    newInfo.SetCompressedPreload(false);
+    dataMgr->UpdateBaseBundleInfoIntoOld(newInfo, oldInfo);
+    EXPECT_FALSE(oldInfo.IsCompressedPreload());
+}
 } // OHOS

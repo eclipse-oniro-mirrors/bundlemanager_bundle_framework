@@ -16,6 +16,7 @@
 #define private public
 #define protected public
 
+#include <algorithm>
 #include <chrono>
 #include <fstream>
 #include <functional>
@@ -5943,5 +5944,133 @@ HWTEST_F(BmsBundleDataMgrTest2, GetCliSandboxCountByCreator_0600, Function | Sma
 
     dataMgr->bundleInfos_.erase(BUNDLE_NAME_TEST);
     ClearDataMgr();
+}
+namespace {
+const nlohmann::json COMPRESSED_INSTALL_LIST = R"(
+{
+    "install_list": [
+        {
+            "app_dir":"/preload/app/com.example.compressed",
+            "removable":true,
+            "compressed":true
+        },
+        {
+            "app_dir":"/preload/app/com.example.plain",
+            "removable":true,
+            "compressed":false
+        },
+        {
+            "app_dir":"/preload/app/com.example.default",
+            "removable":true
+        }
+    ]
+}
+)"_json;
+const nlohmann::json COMPRESSED_ON_DEMAND_INSTALL_LIST = R"(
+{
+    "on_demand_install_list": [
+        {
+            "app_dir":"/preload/app/com.example.demand.compressed",
+            "compressed":true
+        },
+        {
+            "app_dir":"/preload/app/com.example.demand.default"
+        }
+    ]
+}
+)"_json;
+
+const PreScanInfo *FindPreScanInfo(const std::set<PreScanInfo> &scanInfos, const std::string &bundleDir)
+{
+    auto iter = std::find_if(scanInfos.begin(), scanInfos.end(),
+        [&bundleDir](const PreScanInfo &scanInfo) { return scanInfo.bundleDir == bundleDir; });
+    return (iter == scanInfos.end()) ? nullptr : &(*iter);
+}
+} // namespace
+
+/**
+ * @tc.number: PreBundleProfile_Compressed_0100
+ * @tc.name: test TransformTo with the compressed field
+ * @tc.desc: 1. compressed true, false and not declared are parsed as true, false and false
+ */
+HWTEST_F(BmsBundleDataMgrTest2, PreBundleProfile_Compressed_0100, Function | SmallTest | Level1)
+{
+    PreBundleProfile preBundleProfile;
+    std::set<PreScanInfo> scanInfos;
+    EXPECT_EQ(preBundleProfile.TransformTo(COMPRESSED_INSTALL_LIST, scanInfos), ERR_OK);
+    ASSERT_EQ(scanInfos.size(), 3U);
+    const PreScanInfo *compressedInfo = FindPreScanInfo(scanInfos, "/preload/app/com.example.compressed");
+    ASSERT_NE(compressedInfo, nullptr);
+    EXPECT_TRUE(compressedInfo->compressed);
+    EXPECT_TRUE(compressedInfo->removable);
+    const PreScanInfo *plainInfo = FindPreScanInfo(scanInfos, "/preload/app/com.example.plain");
+    ASSERT_NE(plainInfo, nullptr);
+    EXPECT_FALSE(plainInfo->compressed);
+    const PreScanInfo *defaultInfo = FindPreScanInfo(scanInfos, "/preload/app/com.example.default");
+    ASSERT_NE(defaultInfo, nullptr);
+    EXPECT_FALSE(defaultInfo->compressed);
+}
+
+/**
+ * @tc.number: PreBundleProfile_Compressed_0200
+ * @tc.name: test TransformTo with a compressed field of a wrong type
+ * @tc.desc: 1. the entry is skipped and the parse error is returned
+ */
+HWTEST_F(BmsBundleDataMgrTest2, PreBundleProfile_Compressed_0200, Function | SmallTest | Level1)
+{
+    nlohmann::json installList = COMPRESSED_INSTALL_LIST;
+    installList["install_list"][0]["compressed"] = "true";
+    PreBundleProfile preBundleProfile;
+    std::set<PreScanInfo> scanInfos;
+    EXPECT_EQ(preBundleProfile.TransformTo(installList, scanInfos), ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR);
+    EXPECT_EQ(FindPreScanInfo(scanInfos, "/preload/app/com.example.compressed"), nullptr);
+    EXPECT_NE(FindPreScanInfo(scanInfos, "/preload/app/com.example.plain"), nullptr);
+}
+
+/**
+ * @tc.number: PreBundleProfile_Compressed_0300
+ * @tc.name: test TransformToDemandList with the compressed field
+ * @tc.desc: 1. compressed true and not declared are parsed as true and false for on demand entries
+ *           2. a compressed field of a wrong type skips the entry and returns the parse error
+ */
+HWTEST_F(BmsBundleDataMgrTest2, PreBundleProfile_Compressed_0300, Function | SmallTest | Level1)
+{
+    PreBundleProfile preBundleProfile;
+    std::set<PreScanInfo> scanInfos;
+    EXPECT_EQ(preBundleProfile.TransformToDemandList(COMPRESSED_ON_DEMAND_INSTALL_LIST, scanInfos), ERR_OK);
+    const PreScanInfo *compressedInfo = FindPreScanInfo(scanInfos, "/preload/app/com.example.demand.compressed");
+    ASSERT_NE(compressedInfo, nullptr);
+    EXPECT_TRUE(compressedInfo->compressed);
+    EXPECT_TRUE(compressedInfo->onDemandInstall);
+    const PreScanInfo *defaultInfo = FindPreScanInfo(scanInfos, "/preload/app/com.example.demand.default");
+    ASSERT_NE(defaultInfo, nullptr);
+    EXPECT_FALSE(defaultInfo->compressed);
+
+    nlohmann::json wrongTypeList = COMPRESSED_ON_DEMAND_INSTALL_LIST;
+    wrongTypeList["on_demand_install_list"][0]["compressed"] = 1;
+    std::set<PreScanInfo> wrongTypeInfos;
+    EXPECT_EQ(preBundleProfile.TransformToDemandList(wrongTypeList, wrongTypeInfos),
+        ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR);
+    EXPECT_EQ(FindPreScanInfo(wrongTypeInfos, "/preload/app/com.example.demand.compressed"), nullptr);
+}
+
+/**
+ * @tc.number: PreScanInfo_Compressed_0100
+ * @tc.name: test the compressed field of PreScanInfo
+ * @tc.desc: 1. ToString writes the compressed field
+ *           2. Reset clears the compressed field
+ */
+HWTEST_F(BmsBundleDataMgrTest2, PreScanInfo_Compressed_0100, Function | SmallTest | Level1)
+{
+    PreScanInfo preScanInfo;
+    EXPECT_FALSE(preScanInfo.compressed);
+    EXPECT_NE(preScanInfo.ToString().find("compressed = false"), std::string::npos);
+    preScanInfo.bundleDir = "/preload/app/com.example.compressed";
+    preScanInfo.compressed = true;
+    EXPECT_NE(preScanInfo.ToString().find("compressed = true"), std::string::npos);
+
+    preScanInfo.Reset();
+    EXPECT_FALSE(preScanInfo.compressed);
+    EXPECT_TRUE(preScanInfo.bundleDir.empty());
 }
 } // OHOS

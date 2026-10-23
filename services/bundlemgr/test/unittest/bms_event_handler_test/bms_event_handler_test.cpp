@@ -4766,4 +4766,24 @@ HWTEST_F(BmsEventHandlerTest, ProcessMigrateUninstallBundleResource_0200, Functi
     EXPECT_TRUE(flag);
     ResetOtaFlag();
 }
+
+/**
+ * @tc.number: OTAInstallSystemBundleNeedCheckUser_0200
+ * @tc.name: OTAInstallSystemBundleNeedCheckUser
+ * @tc.desc: test OTAInstallSystemBundleNeedCheckUser hands compressed archives as well as plain haps to the
+ *           installer and reports its result
+ */
+HWTEST_F(BmsEventHandlerTest, OTAInstallSystemBundleNeedCheckUser_0200, Function | SmallTest | Level0)
+{
+    // no user exists in the data mgr, so the installer has nothing to install and succeeds
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    SkillDirTestGuard guard(dataMgr);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    std::vector<std::string> archivePaths = { PRELOAD_BUNDLE_PATH + "/entry.hap.zst" };
+    EXPECT_TRUE(handler->OTAInstallSystemBundleNeedCheckUser(archivePaths, BUNDLE_NAME,
+        Constants::AppType::SYSTEM_APP, false));
+    std::vector<std::string> plainPaths = { PRELOAD_BUNDLE_PATH + "/entry.hap" };
+    EXPECT_TRUE(handler->OTAInstallSystemBundleNeedCheckUser(plainPaths, BUNDLE_NAME,
+        Constants::AppType::SYSTEM_APP, false));
+}
 } // OHOS

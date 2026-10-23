@@ -150,6 +150,7 @@ constexpr const char* PLUGIN_BUNDLE_INFOS = "pluginBundleInfos";
 constexpr const char* IS_DELAY_AGING = "isDelayAging";
 constexpr const char* IS_DUAL_MODE_CLONE_APP = "isDualModeCloneApp";
 constexpr const char* CHECK_BY_SPM = "checkBySpm";
+constexpr const char* IS_COMPRESSED_PRELOAD = "isCompressedPreload";
 constexpr int8_t SINGLE_HSP_VERSION = 1;
 const std::map<std::string, IsolationMode> ISOLATION_MODE_MAP = {
     {"isolationOnly", IsolationMode::ISOLATION_ONLY},
@@ -440,6 +441,7 @@ InnerBundleInfo &InnerBundleInfo::operator=(const InnerBundleInfo &info)
     this->appIndex_ = info.appIndex_;
     this->isSandboxApp_ = info.isSandboxApp_;
     this->isDualModeCloneApp_ = info.isDualModeCloneApp_;
+    this->isCompressedPreload_ = info.isCompressedPreload_;
     this->currentPackage_ = info.currentPackage_;
     this->onlyCreateBundleUser_ = info.onlyCreateBundleUser_;
     this->innerModuleInfos_ = info.innerModuleInfos_;
@@ -667,6 +669,7 @@ void InnerBundleInfo::ToJson(nlohmann::json &jsonObject) const
     jsonObject[IS_DELAY_AGING] = isDelayAging_;
     jsonObject[IS_DUAL_MODE_CLONE_APP] = isDualModeCloneApp_;
     jsonObject[CHECK_BY_SPM] = checkBySpm_;
+    jsonObject[IS_COMPRESSED_PRELOAD] = isCompressedPreload_;
 }
 
 void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
@@ -1775,6 +1778,12 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
             jsonObjectEnd,
             CHECK_BY_SPM,
             checkBySpm_,
+            false,
+            parseResult);
+        BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+            jsonObjectEnd,
+            IS_COMPRESSED_PRELOAD,
+            isCompressedPreload_,
             false,
             parseResult);
     if (parseResult != ERR_OK) {
@@ -3052,6 +3061,9 @@ void InnerBundleInfo::GetPreInstallApplicationFlags(ApplicationInfo &appInfo) co
             if (hapPath.find(Constants::BUNDLE_CODE_DIR) != 0) {
                 return;
             }
+        }
+        if (isCompressedPreload_) {
+            return;
         }
         applicationFlags |= static_cast<uint32_t>(ApplicationInfoFlag::FLAG_PREINSTALLED_APP_UPDATE);
         appInfo.applicationFlags = static_cast<int32_t>(applicationFlags);

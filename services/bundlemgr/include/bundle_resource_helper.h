@@ -94,6 +94,8 @@ public:
     static void DeleteUninstallBundleResourceForUser(const int32_t userId);
 
     static bool MigrateUninstallBundleResource();
+
+    static void RefreshPreCompressBundleResource();
 };
 } // AppExecFwk
 } // OHOS

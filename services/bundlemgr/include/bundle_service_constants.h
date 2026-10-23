@@ -118,6 +118,7 @@ constexpr const char* GALLERY_CLONE_PATH = "/app_clone/";
 constexpr const char* UNINSTALLED_PRELOAD_PATH = "/uninstalled_preload/";
 constexpr const char* UNINSTALLED_PRELOAD_FILE = "thirdPartyAppList.json";
 constexpr const char* PRELOAD_APP_DIR = "/preload/app/";
+constexpr const char* AG_CONFIG_FILE = "ag_config.json";
 constexpr const char* UNINSTALL_PRELOAD_LIST = "uninstall_preload_list";
 constexpr int NOT_EXIST_USERID = -5;
 constexpr int PATH_MAX_SIZE = 4096;

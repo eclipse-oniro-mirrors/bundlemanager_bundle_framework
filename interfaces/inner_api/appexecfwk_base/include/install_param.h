@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -71,6 +71,7 @@ struct InstallParam : public Parcelable {
     bool allUser = false;
     bool isPatch = false;
     bool isDataPreloadHap = false;
+    bool compressedPreload = false;
     // device mode distribution policy for dual-mode (2IN1/TABLET), default UNSPECIFIED
     DeviceModeDistributionPolicy deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNSPECIFIED;
     // dual-mode preinstall only: force this install to use the dual-mode clone bundle name

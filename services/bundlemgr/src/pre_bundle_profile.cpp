@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -28,6 +28,7 @@ constexpr const char* EXTENSION_TYPE = "extensionType";
 constexpr const char* RECOVER_LIST = "recover_list";
 constexpr const char* APP_DIR = "app_dir";
 constexpr const char* REMOVABLE = "removable";
+constexpr const char* COMPRESSED = "compressed";
 constexpr const char* APPIDENTIFIER = "appIdentifier";
 constexpr const char* ON_DEMAND_INSTALL = "on_demand_install";
 constexpr const char* BUNDLE_NAME = "bundleName";
@@ -96,6 +97,12 @@ ErrCode PreBundleProfile::TransformTo(
             jsonObjectEnd,
             REMOVABLE,
             preScanInfo.removable,
+            false,
+            parseResult);
+        BMSJsonUtil::GetBoolValueIfFindKey(array,
+            jsonObjectEnd,
+            COMPRESSED,
+            preScanInfo.compressed,
             false,
             parseResult);
         bool isResourcesPath =
@@ -213,6 +220,8 @@ ErrCode PreBundleProfile::TransformToDemandList(const nlohmann::json &jsonBuf,
         const auto &jsonObjectEnd = array.end();
         int32_t parseResult = ERR_OK;
         BMSJsonUtil::GetStrValueIfFindKey(array, jsonObjectEnd, APP_DIR, preScanInfo.bundleDir, true, parseResult);
+        BMSJsonUtil::GetBoolValueIfFindKey(
+            array, jsonObjectEnd, COMPRESSED, preScanInfo.compressed, false, parseResult);
         preScanInfo.priority = COMMON_PRIORITY;
         preScanInfo.onDemandInstall = true;
         if (parseResult == ERR_APPEXECFWK_PARSE_PROFILE_MISSING_PROP) {

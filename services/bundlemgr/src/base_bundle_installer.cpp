@@ -70,6 +70,7 @@
 #include "parameter.h"
 #include "parameters.h"
 #include "perf_profile.h"
+#include "pre_compress_handler.h"
 #include "share_file_helper.h"
 #include "scope_guard.h"
 #include "skills_installer/skills_description_manager.h"
@@ -1173,8 +1174,9 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
         // (MAIN_ONLY/SUB_ONLY/different-package) without re-querying ERMS.
         preInstallBundleInfo.SetDeviceModeDistributionPolicy(GetEffectiveDualModePolicy(installParam));
         for (const auto &item : newInfos) {
-            preInstallBundleInfo.AddBundlePath(item.first);
+            preInstallBundleInfo.AddBundlePath(GetOriginalSourcePath(item.first));
         }
+        preInstallBundleInfo.SetCompressed(installParam.compressedPreload);
 #ifdef USE_PRE_BUNDLE_PROFILE
         preInstallBundleInfo.SetRemovable(installParam.removable);
 #else
@@ -1777,6 +1779,9 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     result = ParseHapPaths(installParam, inBundlePaths, parsedPaths);
     CHECK_RESULT(result, "hap file parse failed %{public}d");
 
+    result = PrepareCompressedPreloadPaths(installParam, parsedPaths);
+    CHECK_RESULT(result, "decompress preload archives failed %{public}d");
+
     std::vector<std::string> bundlePaths;
     // check hap paths
     result = BundleUtil::CheckFilePath(parsedPaths, bundlePaths);
@@ -1991,6 +1996,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     // Record the pre-update appId: it differs from the newly parsed one when the app is
     // re-signed on update, and app_control rows keyed by it need to be migrated afterwards.
     std::string oldAppId = oldInfo.GetAppId();
+    bool oldIsCompressedPreload = oldInfo.IsCompressedPreload();
     // === DUAL_MODE: capture pre-update sandbox/policy for the before-value broadcast (Sync-27) ===
     // On update (app exists) read the prior values so the event can report before vs. current and so the
     // sticky-isolation rule can see whether the app was already isolated. Fresh install leaves defaults.
@@ -2037,7 +2043,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
 
     // Roolback is unavailable below this line
     // copy hap or hsp to real install dir
-    SaveHapPathToRecords(installParam.isPreInstallApp, newInfos);
+    SaveHapPathToRecords(installParam.isPreInstallApp && !copyHapToInstallPath_, newInfos);
     if (installParam.copyHapToInstallPath) {
         LOG_D(BMS_TAG_INSTALLER, "begin to copy hap to install path");
         result = SaveHapToInstallPath(newInfos, oldInfo);
@@ -2165,6 +2171,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     DeleteUninstallBundleInfo(GetEffectiveBundleName());
     codePathGuard.Dismiss();
     ProcessOldCodePath(GetEffectiveBundleName(), isFeatureNeedUninstall_);
+    ProcessAgConfigFile(installParam, oldIsCompressedPreload, cacheInfo.IsCompressedPreload());
     // create data group dir
     CreateDataGroupDirs(hapVerifyResults, oldInfo);
     // process ark startup cache
@@ -3352,7 +3359,8 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
     }
     innerInstallParam.isPreInstallApp = true;
     innerInstallParam.removable = preInstallBundleInfo.IsRemovable();
-    innerInstallParam.copyHapToInstallPath = false;
+    innerInstallParam.compressedPreload = preInstallBundleInfo.IsCompressed();
+    innerInstallParam.copyHapToInstallPath = innerInstallParam.compressedPreload;
     innerInstallParam.isDataPreloadHap = IsDataPreloadHap(pathVec.empty() ? "" : pathVec.front());
     // Dual-mode: carry the stored distribution policy so the nested ProcessBundleInstall can decide
     // cross-mode storage (tempBundleInfos_ vs bundleInfos_) and sandbox without re-querying ERMS.
@@ -5070,7 +5078,7 @@ ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::str
         }
     }
 
-    if (info.IsPreInstallApp()) {
+    if (info.IsPreInstallApp() && !copyHapToInstallPath_) {
         info.SetModuleHapPath(modulePath_);
     } else {
         info.SetModuleHapPath(GetHapPath(info));
@@ -6293,6 +6301,9 @@ ErrCode BaseBundleInstaller::ParseHapFiles(
                 info.second.SetNotarizationCredentialStatus(notarizationCredentialStatus);
             }
         }
+    }
+    for (auto &info : infos) {
+        info.second.SetCompressedPreload(installParam.compressedPreload);
     }
     UpdateExtensionSandboxInfo(infos, hapVerifyRes);
 
@@ -8229,6 +8240,7 @@ void BaseBundleInstaller::ResetInstallProperties()
     isAppExist_ = false;
     hasInstalledInUser_ = false;
     isFeatureNeedUninstall_ = false;
+    decompressedSourceMap_.clear();
     versionCode_ = 0;
     uninstallModuleVec_.clear();
     installedModules_.clear();
@@ -8759,7 +8771,8 @@ ErrCode BaseBundleInstaller::VerifyCodeSignatureForHap(const std::unordered_map<
     codeSignatureParam.isSideloadApp = isSideloadApp_;
     codeSignatureParam.appIdentifier = appIdentifier_;
     codeSignatureParam.isCompileSdkOpenHarmony = (compileSdkType == COMPILE_SDK_TYPE_OPEN_HARMONY);
-    codeSignatureParam.isPreInstalledBundle = IsDataPreloadHap(realHapPath) ? false : info.IsPreInstallApp();
+    codeSignatureParam.isPreInstalledBundle =
+        (copyHapToInstallPath_ || IsDataPreloadHap(realHapPath)) ? false : info.IsPreInstallApp();
     codeSignatureParam.isCompressNativeLibrary = info.IsCompressNativeLibs(info.GetCurModuleName());
     bundleInstallChecker_->ProcessCodeSignatureParam(verifyRes_, codeSignatureParam);
     spmSession_.FillCodeSignatureParam(verifyRes_, codeSignatureParam);
@@ -8898,6 +8911,49 @@ ErrCode BaseBundleInstaller::CopyHapsToSecurityDir(const InstallParam &installPa
     }
     bundlePaths_ = bundlePaths;
     return ERR_OK;
+}
+
+ErrCode BaseBundleInstaller::PrepareCompressedPreloadPaths(const InstallParam &installParam,
+    std::vector<std::string> &parsedPaths)
+{
+    if (!installParam.compressedPreload) {
+        return ERR_OK;
+    }
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    std::vector<std::string> outPaths;
+    ErrCode result = PreCompressHandler::PrepareCompressedPaths(parsedPaths, outPaths,
+        toDeleteTempHapPath_, decompressedSourceMap_);
+    parsedPaths.swap(outPaths);
+    return result;
+}
+
+std::string BaseBundleInstaller::GetOriginalSourcePath(const std::string &path) const
+{
+    auto iter = decompressedSourceMap_.find(path);
+    return (iter == decompressedSourceMap_.end()) ? path : iter->second;
+}
+
+void BaseBundleInstaller::ProcessAgConfigFile(const InstallParam &installParam, bool oldIsCompressedPreload,
+    bool newIsCompressedPreload)
+{
+    if (!oldIsCompressedPreload && !newIsCompressedPreload) {
+        return;
+    }
+    if (newIsCompressedPreload && !installParam.compressedPreload) {
+        return;
+    }
+    std::string stagedPath;
+    if (PreCompressHandler::StageAgConfigFile(decompressedSourceMap_, stagedPath) != ERR_OK) {
+        return;
+    }
+    std::string configPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
+        bundleName_ + ServiceConstants::PATH_SEPARATOR + ServiceConstants::AG_CONFIG_FILE;
+    ErrCode result = stagedPath.empty() ?
+        InstalldClient::GetInstance()->RemoveDir(configPath, BundleDirScene::REMOVE_MODULE_DIR, bundleName_) :
+        InstalldClient::GetInstance()->MoveHapToCodeDir(stagedPath, configPath);
+    if (result != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "process %{public}s failed %{public}d", configPath.c_str(), result);
+    }
 }
 
 ErrCode BaseBundleInstaller::ParseHapPaths(const InstallParam &installParam,
@@ -10617,7 +10673,13 @@ void BaseBundleInstaller::CheckPreBundle(const std::unordered_map<std::string, I
         return;
     }
     // check identifier and appId
-    std::string hapPath = preInstallBundleInfo.GetBundlePaths().front();
+    ScopedDecompressedHap scopedHap(preInstallBundleInfo.GetBundlePaths().front());
+    if (!scopedHap.IsValid()) {
+        LOG_NOFUNC_W(BMS_TAG_INSTALLER, "decompress preset app failed %{public}s",
+            preInstallBundleInfo.GetBundlePaths().front().c_str());
+        return;
+    }
+    const std::string &hapPath = scopedHap.GetHapPath();
     Security::Verify::HapVerifyResult hapVerifyResult;
     ErrCode result = BundleVerifyMgr::HapVerify(hapPath, hapVerifyResult, true);
     if (result != ERR_OK) {
@@ -10664,7 +10726,13 @@ ErrCode BaseBundleInstaller::CheckShellCanInstallPreApp(
         LOG_NOFUNC_W(BMS_TAG_DEFAULT, "pre bundle path empty");
         return ERR_OK;
     }
-    std::string hapPath = preInstallBundleInfo.GetBundlePaths().front();
+    ScopedDecompressedHap scopedHap(preInstallBundleInfo.GetBundlePaths().front());
+    if (!scopedHap.IsValid()) {
+        LOG_NOFUNC_E(BMS_TAG_DEFAULT, "decompress pre bundle failed %{public}s",
+            preInstallBundleInfo.GetBundlePaths().front().c_str());
+        return ERR_APPEXECFWK_INSTALL_DECOMPRESS_APP_FAILED;
+    }
+    const std::string &hapPath = scopedHap.GetHapPath();
     Security::Verify::HapVerifyResult hapVerifyResult;
     ErrCode verifyRes = BundleVerifyMgr::HapVerify(hapPath, hapVerifyResult);
     if (verifyRes != ERR_OK) {
@@ -11215,8 +11283,9 @@ ErrCode BaseBundleInstaller::RecoverOnDemandInstallBundle(const std::string &bun
     innerInstallParam.isPreInstallApp = true;
     innerInstallParam.removable = true;
     innerInstallParam.preinstallSourceFlag = ApplicationInfoFlag::FLAG_PREINSTALLED_APP;
+    innerInstallParam.compressedPreload = preInstallBundleInfo.IsCompressed();
     innerInstallParam.isDataPreloadHap = IsDataPreloadHap(pathVec.empty() ? "" : pathVec.front());
-    innerInstallParam.copyHapToInstallPath = false;
+    innerInstallParam.copyHapToInstallPath = innerInstallParam.compressedPreload;
     ErrCode result = ProcessBundleInstall(pathVec, innerInstallParam, preInstallBundleInfo.GetAppType(), uid, true);
     // No on-demand recovery chain on this entry: wrap the raw AT recovery codes.
     result = BundleSpmManager::WrapRecoverableSpmErrorCode(result);

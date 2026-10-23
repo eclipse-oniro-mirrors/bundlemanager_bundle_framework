@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -2535,6 +2535,29 @@ HWTEST_F(BmsInstalldOperatorTest, IsValidPathByMoveHapToCodeDir_0300, Function |
     targetPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + TEST_STRING;
     ret = InstalldOperator::IsValidPathByMoveHapToCodeDir(originPath, targetPath);
     EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: IsValidPathByMoveHapToCodeDir_0400
+ * @tc.name: test IsValidPathByMoveHapToCodeDir with ag_config.json
+ * @tc.desc: 1. an ag_config.json staged in the security dir can be moved into the bundle code dir
+ *           2. a file name only ending with ag_config.json is rejected as the origin or the target
+ */
+HWTEST_F(BmsInstalldOperatorTest, IsValidPathByMoveHapToCodeDir_0400, Function | SmallTest | Level0)
+{
+    std::string agConfigFile = std::string(ServiceConstants::PATH_SEPARATOR) + ServiceConstants::AG_CONFIG_FILE;
+    std::string originPath = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::PATH_SEPARATOR +
+        ServiceConstants::SECURITY_STREAM_INSTALL_PATH + ServiceConstants::PATH_SEPARATOR + TEST_STRING + agConfigFile;
+    std::string targetPath =
+        std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + TEST_STRING + agConfigFile;
+    EXPECT_TRUE(InstalldOperator::IsValidPathByMoveHapToCodeDir(originPath, targetPath));
+
+    std::string fakeOriginPath = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::PATH_SEPARATOR +
+        TEST_STRING + ServiceConstants::AG_CONFIG_FILE;
+    EXPECT_FALSE(InstalldOperator::IsValidPathByMoveHapToCodeDir(fakeOriginPath, targetPath));
+    std::string fakeTargetPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
+        TEST_STRING + ServiceConstants::AG_CONFIG_FILE;
+    EXPECT_FALSE(InstalldOperator::IsValidPathByMoveHapToCodeDir(originPath, fakeTargetPath));
 }
 
 /**

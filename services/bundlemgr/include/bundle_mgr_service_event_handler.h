@@ -713,6 +713,12 @@ private:
      * @return Returns true if the preInstall is removable; returns false otherwise.
      */
     bool IsPreInstallRemovable(const std::string &path);
+    /**
+     * @brief Judge whether the preInstall packages under a path ship compressed.
+     * @param path Indicates the path.
+     * @return Returns true if the configuration marks the entry as compressed.
+     */
+    static bool IsPreInstallCompressed(const std::string &path);
 
     void AddTasks(const std::map<int32_t, std::vector<PreScanInfo>,
         std::greater<int32_t>> &taskMap, int32_t userId);
@@ -860,6 +866,8 @@ private:
         const std::unordered_map<std::string, std::pair<std::vector<std::string>, bool>> &otaMultiProcessUpgradeMap);
     // Used to add bundle resource Info that does not exist in rdb when OTA.
     void static ProcessBundleResourceInfo();
+    // Used to keep the factory resource of compressed pre install apps in step with the image
+    void static ProcessPreCompressBundleResource();
     // scan all bundle data group info
     void ProcessAllBundleDataGroupInfo();
     // Used to send update failed event
