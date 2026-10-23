@@ -95,6 +95,13 @@ int32_t GetResetDatabaseRecoveryStatusCallCountForTest();
 void SetResetDatabaseRecoveryStatusResultForTest(int32_t ret);
 int32_t GetUpdateHapTokenCallCountForTest();
 void SetUpdateHapTokenResultForTest(int32_t ret);
+// SPM ON-mode hooks: feed the mocked access-token boundary with the sign
+// answer the real AT side would return — the trusted bundle info cached under
+// the session id allocated by CheckHapSignInfo, and the identity allocated
+// for a fresh install.
+void SetSpmTrustedBundleInfosForTest(const std::vector<TrustedBundleInfo>& bundleInfos);
+void SetSpmCheckHapSignInfoSessionIdForTest(int32_t sessionId);
+void SetSpmPrepareIdentityForTest(uint64_t tokenId, int32_t uid);
 } // namespace AccessToken
 } // namespace Security
 } // namespace OHOS

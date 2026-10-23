@@ -217,6 +217,22 @@ void SetUpdateHapTokenResultForTest(int32_t ret)
     g_updateHapTokenRet = ret;
 }
 
+void SetSpmTrustedBundleInfosForTest(const std::vector<TrustedBundleInfo>& bundleInfos)
+{
+    g_spmTrustedBundleInfos = bundleInfos;
+}
+
+void SetSpmCheckHapSignInfoSessionIdForTest(int32_t sessionId)
+{
+    g_spmCheckHapSignInfoSessionId = sessionId;
+}
+
+void SetSpmPrepareIdentityForTest(uint64_t tokenId, int32_t uid)
+{
+    g_spmPrepareIdentityTokenId = tokenId;
+    g_spmPrepareIdentityUid = uid;
+}
+
 AccessTokenIDEx AccessTokenKit::AllocHapToken(const HapInfoParams& info, const HapPolicyParams& policy)
 {
     AccessTokenIDEx token;
@@ -518,6 +534,16 @@ int32_t AccessTokenKit::GetHapSignInfo(const std::string& bundleName, uint32_t f
 int32_t AccessTokenKit::GetCacheSignInfoBySessionId(int32_t sessionId, uint32_t flag,
     std::vector<TrustedBundleInfo>& bundleInfo)
 {
+    // Mirrors the AT-side session cache contract: CheckHapSignInfo caches the
+    // trusted bundle info under the session id it allocated, and a later query
+    // by that id returns the cached entries (the installd provision-dependent
+    // steps of an SPM ON install consume them). An unknown session id or an
+    // empty control vector still yields an empty list, preserving the
+    // fail-closed fallback of the installd provision queries for every other
+    // target that never populates the control variables.
+    if (sessionId != 0 && sessionId == g_spmCheckHapSignInfoSessionId) {
+        bundleInfo = g_spmTrustedBundleInfos;
+    }
     return 0;
 }
 
