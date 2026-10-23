@@ -88,7 +88,6 @@ bool GetData(void *&buffer, size_t size, const void *data)
     }
     if (memcpy_s(buffer, size, data, size) != EOK) {
         free(buffer);
-        buffer = nullptr;
         APP_LOGE("GetData failed due to memcpy_s failed");
         return false;
     }
@@ -7738,7 +7737,6 @@ ErrCode BundleMgrProxy::GetParcelInfoFromAshMem(MessageParcel &reply, void *&dat
     }
     if (memcpy_s(data, ashMemSize, ashDataPtr, ashMemSize) != EOK) {
         free(data);
-        data = nullptr;
         APP_LOGE("failed due to memcpy_s failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }

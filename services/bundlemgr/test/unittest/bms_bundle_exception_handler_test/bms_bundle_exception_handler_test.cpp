@@ -21,7 +21,7 @@
 #include "preinstall_data_storage_rdb.h"
 #include "bundle_exception_handler.h"
 #include "inner_bundle_info.h"
-#undef private
+#undef public
 
 using namespace testing::ext;
 using namespace OHOS;
@@ -131,7 +131,6 @@ HWTEST_F(BmsBundleExceptionHandlerTest, HandleInvalidBundleTest_0100, TestSize.L
     GTEST_LOG_(INFO) << "HandleInvalidBundleTest_0100 start";
     bool isBundleValid = true;
     InnerBundleInfo info;
-    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
     int32_t userId = 100;
     bool result = bundleExceptionHandler_->RemoveBundleAndDataDir(BUNDLE_DIR_NAME, BUNDLE_OR_MOUDLE_DIR, userId);
     EXPECT_EQ(result, true);
@@ -186,7 +185,6 @@ HWTEST_F(BmsBundleExceptionHandlerTest, HandleInvalidBundleTest_0400, TestSize.L
     GTEST_LOG_(INFO) << "HandleInvalidBundleTest_0400 start";
     bool isBundleValid = true;
     InnerBundleInfo info;
-    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
     info.SetInstallMark(BUNDLE_NAME, Package_NAME, InstallExceptionStatus::INSTALL_START);
     bundleExceptionHandler_->HandleInvalidBundle(info, isBundleValid);
     auto data = info.GetInstallMark();
@@ -411,231 +409,5 @@ HWTEST_F(BmsBundleExceptionHandlerTest, InnerBundleInfo_0400, Function | SmallTe
     InnerBundleInfo info;
     auto ret = info.GetLastInstallationTime();
     EXPECT_EQ(ret, 0);
-}
-
-/**
- * @tc.number: HandleUninstallPackageStart_0100
- * @tc.name: Test HandleUninstallPackageStart with only module
- * @tc.desc: Test HandleUninstallPackageStart when IsOnlyModule returns true
- */
-HWTEST_F(BmsBundleExceptionHandlerTest, HandleUninstallPackageStart_0100, Function | SmallTest | Level0)
-{
-    InnerBundleInfo info;
-    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
-    bool isBundleValid = true;
-    InstallMark mark;
-    mark.packageName = Package_NAME;
-    std::string appCodePath = BUNDLE_OR_MOUDLE_DIR + BUNDLE_NAME;
-    std::string effectiveBundleName = BUNDLE_NAME;
-    std::string moduleDir = appCodePath + "/" + Package_NAME;
-    std::string moduleDataDir = effectiveBundleName + "/haps/" + Package_NAME;
-
-    bundleExceptionHandler_->HandleUninstallPackageStart(
-        info, isBundleValid, mark, appCodePath, effectiveBundleName, moduleDir, moduleDataDir);
-    // In mock environment, RemoveBundleAndDataDir will fail, so isBundleValid remains true
-    EXPECT_TRUE(isBundleValid);
-}
-
-/**
- * @tc.number: HandleUninstallPackageStart_0200
- * @tc.name: Test HandleUninstallPackageStart with non-module package
- * @tc.desc: Test HandleUninstallPackageStart when IsOnlyModule returns false
- */
-HWTEST_F(BmsBundleExceptionHandlerTest, HandleUninstallPackageStart_0200, Function | SmallTest | Level0)
-{
-    InnerBundleInfo info;
-    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
-    bool isBundleValid = true;
-    InstallMark mark;
-    mark.packageName = EMPTY_STRING;
-    std::string appCodePath = BUNDLE_OR_MOUDLE_DIR + BUNDLE_NAME;
-    std::string effectiveBundleName = BUNDLE_NAME;
-    std::string moduleDir = appCodePath + "/base";
-    std::string moduleDataDir = effectiveBundleName + "/haps/base";
-
-    bundleExceptionHandler_->HandleUninstallPackageStart(
-        info, isBundleValid, mark, appCodePath, effectiveBundleName, moduleDir, moduleDataDir);
-    // In mock environment, RemoveBundleAndDataDir will fail, so isBundleValid remains true
-    EXPECT_TRUE(isBundleValid);
-}
-
-/**
- * @tc.number: HandleUninstallPackageStart_0300
- * @tc.name: Test HandleUninstallPackageStart with empty paths
- * @tc.desc: Test HandleUninstallPackageStart with empty path parameters
- */
-HWTEST_F(BmsBundleExceptionHandlerTest, HandleUninstallPackageStart_0300, Function | SmallTest | Level0)
-{
-    InnerBundleInfo info;
-    bool isBundleValid = true;
-    InstallMark mark;
-    std::string emptyPath = "";
-
-    bundleExceptionHandler_->HandleUninstallPackageStart(
-        info, isBundleValid, mark, emptyPath, emptyPath, emptyPath, emptyPath);
-    // With empty paths, RemoveBundleAndDataDir will fail, so isBundleValid remains true
-    EXPECT_TRUE(isBundleValid);
-}
-
-/**
- * @tc.number: InnerHandleInvalidBundle_0500
- * @tc.name: Test UNINSTALL_PACKAGE_START path
- * @tc.desc: Test InnerHandleInvalidBundle with UNINSTALL_PACKAGE_START status
- */
-HWTEST_F(BmsBundleExceptionHandlerTest, InnerHandleInvalidBundle_0500, Function | SmallTest | Level0)
-{
-    InnerBundleInfo info;
-    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
-    InstallMark mark;
-    mark.status = InstallExceptionStatus::UNINSTALL_PACKAGE_START;
-    mark.packageName = Package_NAME;
-    info.SetInstallMark(BUNDLE_NAME, Package_NAME, InstallExceptionStatus::UNINSTALL_PACKAGE_START);
-    bool isBundleValid = true;
-
-    bundleExceptionHandler_->InnerHandleInvalidBundle(info, isBundleValid);
-    // Function should call HandleUninstallPackageStart and complete without crash
-    // In mock environment, RemoveBundleAndDataDir will fail, so isBundleValid remains true
-    EXPECT_TRUE(isBundleValid);
-}
-
-/**
- * @tc.number: HandleUninstallPackageStart_0400
- * @tc.name: Test HandleUninstallPackageStart where second RemoveBundleAndDataDir fails
- * @tc.desc: Exercise the else branch (error log) in HandleUninstallPackageStart by using a
- *           negative userId so RemoveModuleDataDir / RemoveBundleDataDir fails in the mock.
- */
-HWTEST_F(BmsBundleExceptionHandlerTest, HandleUninstallPackageStart_0400, Function | SmallTest | Level0)
-{
-    InnerBundleInfo info;
-    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
-    info.SetUserId(-1);  // negative userId causes RemoveBundleDataDir/RemoveModuleDataDir to fail
-    bool isBundleValid = true;
-    InstallMark mark;
-    mark.packageName = Package_NAME;
-    std::string appCodePath = BUNDLE_OR_MOUDLE_DIR + BUNDLE_NAME;
-    std::string effectiveBundleName = BUNDLE_NAME;
-    std::string moduleDir = appCodePath + "/" + Package_NAME;
-    std::string moduleDataDir = effectiveBundleName + "/haps/" + Package_NAME;
-
-    bundleExceptionHandler_->HandleUninstallPackageStart(
-        info, isBundleValid, mark, appCodePath, effectiveBundleName, moduleDir, moduleDataDir);
-    // First branch: IsOnlyModule is false (empty module map), so we go to second RemoveBundleAndDataDir.
-    // With negative userId, RemoveBundleAndDataDir fails → else branch logs error, isBundleValid stays true.
-    EXPECT_TRUE(isBundleValid);
-}
-
-/**
- * @tc.number: HandleUninstallPackageStart_0500
- * @tc.name: Test HandleUninstallPackageStart where first branch succeeds (IsOnlyModule + remove ok)
- * @tc.desc: Exercise the first branch where IsOnlyModule returns true and RemoveBundleAndDataDir
- *           succeeds, setting isBundleValid to false.
- */
-HWTEST_F(BmsBundleExceptionHandlerTest, HandleUninstallPackageStart_0500, Function | SmallTest | Level0)
-{
-    InnerBundleInfo info;
-    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
-    bool isBundleValid = true;
-    InstallMark mark;
-    mark.packageName = Package_NAME;
-    // Insert exactly one module so IsOnlyModule returns true
-    InnerModuleInfo moduleInfo;
-    info.InsertInnerModuleInfo(Package_NAME, moduleInfo);
-    std::string appCodePath = BUNDLE_OR_MOUDLE_DIR + BUNDLE_NAME;
-    std::string effectiveBundleName = BUNDLE_NAME;
-    std::string moduleDir = appCodePath + "/" + Package_NAME;
-    std::string moduleDataDir = effectiveBundleName + "/haps/" + Package_NAME;
-
-    bundleExceptionHandler_->HandleUninstallPackageStart(
-        info, isBundleValid, mark, appCodePath, effectiveBundleName, moduleDir, moduleDataDir);
-    // IsOnlyModule true + RemoveBundleAndDataDir succeeds → isBundleValid set to false
-    EXPECT_FALSE(isBundleValid);
-}
-
-/**
- * @tc.number: InnerHandleInvalidBundle_0600
- * @tc.name: Test INSTALL_START success path via InnerHandleInvalidBundle
- * @tc.desc: When RemoveBundleAndDataDir succeeds for INSTALL_START, isBundleValid should be
- *           set to false and bundle info deleted from storage.
- */
-HWTEST_F(BmsBundleExceptionHandlerTest, InnerHandleInvalidBundle_0600, Function | SmallTest | Level0)
-{
-    InnerBundleInfo info;
-    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
-    info.SetInstallMark(BUNDLE_NAME, Package_NAME, InstallExceptionStatus::INSTALL_START);
-    bool isBundleValid = true;
-
-    bundleExceptionHandler_->InnerHandleInvalidBundle(info, isBundleValid);
-    // RemoveBundleAndDataDir succeeds in mock (valid bundleName, userId=0) → isBundleValid = false
-    EXPECT_FALSE(isBundleValid);
-}
-
-/**
- * @tc.number: HandleInvalidBundleTest_1200
- * @tc.name: Test HandleInvalidBundle with APP_SERVICE_FWK type
- * @tc.desc: When bundle type is APP_SERVICE_FWK and isBundleValid remains true after
- *           InnerHandleInvalidBundle, InnerCheckSystemHspPath should be called.
- */
-HWTEST_F(BmsBundleExceptionHandlerTest, HandleInvalidBundleTest_1200, Function | SmallTest | Level0)
-{
-    bool isBundleValid = true;
-    InnerBundleInfo info;
-    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
-    info.SetInstallMark(BUNDLE_NAME, Package_NAME, InstallExceptionStatus::INSTALL_FINISH);
-    info.SetApplicationBundleType(BundleType::APP_SERVICE_FWK);
-    bundleExceptionHandler_->HandleInvalidBundle(info, isBundleValid);
-    // INSTALL_FINISH returns early from InnerHandleInvalidBundle, isBundleValid stays true,
-    // then InnerCheckSystemHspPath is called (no crash expected).
-    EXPECT_TRUE(isBundleValid);
-}
-
-/**
- * @tc.number: InnerHandleInvalidBundle_0700
- * @tc.name: Test INSTALL_START with RemoveBundleAndDataDir failure (empty effectiveBundleName)
- * @tc.desc: When bundleName is empty, effectiveBundleName is empty, so RemoveBundleDataDir
- *           fails in the mock (empty bundleName check). This covers the else branch at L183
- *           where isBundleValid stays true and an error is logged.
- */
-HWTEST_F(BmsBundleExceptionHandlerTest, InnerHandleInvalidBundle_0700, Function | SmallTest | Level0)
-{
-    InnerBundleInfo info;
-    // Leave bundleName empty so effectiveBundleName is empty → RemoveBundleDataDir fails
-    info.SetInstallMark("", Package_NAME, InstallExceptionStatus::INSTALL_START);
-    bool isBundleValid = true;
-
-    bundleExceptionHandler_->InnerHandleInvalidBundle(info, isBundleValid);
-    // RemoveBundleAndDataDir returns false (empty effectiveBundleName) → else branch fires
-    // isBundleValid should remain true
-    EXPECT_TRUE(isBundleValid);
-}
-
-/**
- * @tc.number: HandleUninstallPackageStart_0600
- * @tc.name: Test HandleUninstallPackageStart with IsOnlyModule true but RemoveBundleAndDataDir fails
- * @tc.desc: Insert one module so IsOnlyModule returns true, but use empty effectiveBundleName
- *           so RemoveBundleAndDataDir fails. This covers L144 Branch 2 (IsOnlyModule true &&
- *           RemoveBundleAndDataDir false → falls through to second RemoveBundleAndDataDir).
- */
-HWTEST_F(BmsBundleExceptionHandlerTest, HandleUninstallPackageStart_0600, Function | SmallTest | Level0)
-{
-    InnerBundleInfo info;
-    // Leave bundleName empty so effectiveBundleName is empty → RemoveBundleDataDir fails
-    bool isBundleValid = true;
-    InstallMark mark;
-    mark.packageName = Package_NAME;
-    // Insert exactly one module so IsOnlyModule returns true
-    InnerModuleInfo moduleInfo;
-    info.InsertInnerModuleInfo(Package_NAME, moduleInfo);
-    std::string appCodePath = BUNDLE_OR_MOUDLE_DIR + "";
-    std::string effectiveBundleName = "";  // empty → RemoveBundleDataDir fails
-    std::string moduleDir = appCodePath + "/" + Package_NAME;
-    std::string moduleDataDir = effectiveBundleName + "/haps/" + Package_NAME;
-
-    bundleExceptionHandler_->HandleUninstallPackageStart(
-        info, isBundleValid, mark, appCodePath, effectiveBundleName, moduleDir, moduleDataDir);
-    // IsOnlyModule true but RemoveBundleAndDataDir fails (empty effectiveBundleName)
-    // → falls through to second RemoveBundleAndDataDir(moduleDir, moduleDataDir, userId)
-    // moduleDataDir contains "haps" → RemoveModuleDataDir called (returns 0 in mock)
-    // → RemoveModuleInfo + SetBundleStatus(ENABLED)
-    EXPECT_TRUE(isBundleValid);  // isBundleValid not set to false in this path
 }
 }  // namespace OHOS

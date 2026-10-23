@@ -93,8 +93,6 @@ NapiValue NapiAsyncWorkPromise::Schedule(string procedureName, NContextCBExec cb
     status = napi_queue_async_work(env_, ctx_->awork_);
     if (status != napi_ok) {
         APP_LOGE("INNER BUG. Failed to queue async work for %{public}d", status);
-        napi_delete_async_work(env_, ctx_->awork_);
-        ctx_->awork_ = nullptr;
         return NapiValue();
     }
 

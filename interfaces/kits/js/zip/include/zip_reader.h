@@ -19,7 +19,6 @@
 #include <stdint.h>
 #include <unistd.h>
 #include <functional>
-#include <limits>
 #include <memory>
 #include <string>
 #include <time.h>
@@ -228,15 +227,7 @@ public:
     // Go to the entry indicated by |filePos| in |zipFile|.
     bool GotoEntry(unzFile &zipFile, unz_file_pos filePos);
 private:
-    static int32_t GetConcurrency()
-    {
-        long n = sysconf(_SC_NPROCESSORS_ONLN);
-        if (n > 0 && n <= std::numeric_limits<int32_t>::max()) {
-            return static_cast<int32_t>(n);
-        }
-        return 1;
-    }
-    const int32_t concurrency_ = GetConcurrency();
+    const int concurrency_ = sysconf(_SC_NPROCESSORS_ONLN);
     std::vector<ffrt::mutex> mtxes_ = std::vector<ffrt::mutex> (concurrency_);
     std::vector<unzFile> zipFiles_;
 

@@ -41,48 +41,35 @@ ErrCode AppClonePreferenceDataMgr::GetAppClonePreference(const std::string &bund
         APP_LOGE_NOFUNC("GetAppClonePreference bundleName is empty");
         return ERR_BUNDLE_MANAGER_BUNDLE_NAME_IS_EMPTY;
     }
-    // Reject special userId values early, before any data lookup — these constants are
-    // meaningless for per-user clone preference queries and must not reach BundleDataMgr.
-    if (userId == Constants::ALL_USERID || userId == Constants::ANY_USERID ||
-        userId == Constants::INVALID_USERID) {
-        APP_LOGE_NOFUNC("GetAppClonePreference invalid userId %{public}d", userId);
-        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
-    }
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         APP_LOGE_NOFUNC("GetAppClonePreference BundleDataMgr is null");
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
-    int32_t resolvedUserId = dataMgr->GetUserId(userId);
-    if (resolvedUserId == Constants::INVALID_USERID) {
-        APP_LOGE_NOFUNC("GetAppClonePreference invalid userId %{public}d, resolved to %{public}d",
-            userId, resolvedUserId);
-        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
-    }
-    if (!dataMgr->HasUserInstallInBundle(bundleName, resolvedUserId)) {
-        APP_LOGE_NOFUNC("GetAppClonePreference bundle %{public}s does not exist in userId %{public}d",
-            bundleName.c_str(), resolvedUserId);
+    if (!dataMgr->HasUserInstallInBundle(bundleName, userId)) {
+        APP_LOGE_NOFUNC("GetAppClonePreference %{public}s not in %{public}d",
+            bundleName.c_str(), userId);
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     if (storage_ == nullptr) {
         APP_LOGE_NOFUNC("GetAppClonePreference storage is null");
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
-    if (!storage_->Query(bundleName, resolvedUserId, preference)) {
+    if (!storage_->Query(bundleName, userId, preference)) {
         APP_LOGE_NOFUNC("GetAppClonePreference no record for bundle %{public}s userId %{public}d",
-            bundleName.c_str(), resolvedUserId);
+            bundleName.c_str(), userId);
         return ERR_BUNDLE_MANAGER_APP_CLONE_PREFERENCE_NOT_EXIST;
     }
     if (preference.mode == AppClonePreferenceMode::CLONE_APP) {
-        auto existingAppIndexes = dataMgr->GetCloneAppIndexes(bundleName, resolvedUserId);
+        auto existingAppIndexes = dataMgr->GetCloneAppIndexes(bundleName, userId);
         if (std::find(existingAppIndexes.begin(), existingAppIndexes.end(),
             preference.appIndex) == existingAppIndexes.end()) {
             APP_LOGW_NOFUNC("GetAppClonePreference preferred clone %{public}d no longer exists, reset to ALWAYS_ASK",
                 preference.appIndex);
             AppClonePreference alwaysAsk;
-            if (!storage_->InsertOrReplace(bundleName, resolvedUserId, alwaysAsk)) {
+            if (!storage_->InsertOrReplace(bundleName, userId, alwaysAsk)) {
                 APP_LOGE_NOFUNC("GetAppClonePreference storage InsertOrReplace failed for bundle %{public}s "
-                    "userId %{public}d", bundleName.c_str(), resolvedUserId);
+                    "userId %{public}d", bundleName.c_str(), userId);
                 return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
             }
             preference = alwaysAsk;

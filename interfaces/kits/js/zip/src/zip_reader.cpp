@@ -15,7 +15,6 @@
 
 #include "zip_reader.h"
 
-#include <limits>
 #include <stdio.h>
 #include <time.h>
 #include <unistd.h>
@@ -139,10 +138,10 @@ bool ZipReader::AdvanceToNextEntry()
         return false;
     }
 
-    const uLong currentEntryIndex = position.num_of_file;
+    const int currentEntryIndex = position.num_of_file;
     // If we are currently at the last entry, then the next position is the
     // end of the zip file, so mark that we reached the end.
-    if (currentEntryIndex + 1 >= static_cast<uLong>(numEntries_)) {
+    if (currentEntryIndex + 1 == numEntries_) {
         reachedEnd_ = true;
     } else {
         if (unzGoToNextFile(zipFile_) != UNZ_OK) {
@@ -263,12 +262,7 @@ bool ZipReader::OpenInternal()
         APP_LOGE("open ZIP internal failed: read global info failed, result=%{public}d", result);
         return false;
     }
-    if (zipInfo.number_entry > static_cast<uLong>(std::numeric_limits<int>::max())) {
-        APP_LOGE("open ZIP internal failed: entry count too large=%{public}lu",
-            static_cast<unsigned long>(zipInfo.number_entry));
-        return false;
-    }
-    numEntries_ = static_cast<int>(zipInfo.number_entry);
+    numEntries_ = zipInfo.number_entry;
     if (numEntries_ < 0) {
         APP_LOGE("open ZIP internal failed: invalid entry count=%{public}d", numEntries_);
         return false;
@@ -319,8 +313,7 @@ bool ZipParallelReader::GotoEntry(unzFile &zipFile, unz_file_pos filePos)
     if (zipFile == nullptr) {
         return false;
     }
-    int numEntries = ZipReader::num_entries();
-    if (numEntries < 0 || filePos.num_of_file >= static_cast<uLong>(numEntries)) {
+    if (static_cast<int>(filePos.num_of_file) >= ZipReader::num_entries()) {
         return false;
     }
 
@@ -334,9 +327,6 @@ bool ZipParallelReader::GotoEntry(unzFile &zipFile, unz_file_pos filePos)
 
 unzFile ZipParallelReader::GetZipHandler(int &resourceId)
 {
-    if (resourceId < 0) {
-        resourceId = 0;
-    }
     resourceId %= concurrency_;
     while (!mtxes_[resourceId].try_lock()) {
         resourceId = (resourceId + 1) % concurrency_;

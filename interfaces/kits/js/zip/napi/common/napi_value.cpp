@@ -190,13 +190,7 @@ std::tuple<bool, std::vector<string>, uint32_t> NapiValue::ToStringArray()
     napi_value result;
     for (uint32_t i = 0; i < size; i++) {
         status = napi_get_element(env_, val_, i, &result);
-        if (status != napi_ok) {
-            return make_tuple(false, stringArray, size);
-        }
         auto [succ, str, ignore] = NapiValue(env_, result).ToUTF8String();
-        if (!succ) {
-            return make_tuple(false, stringArray, size);
-        }
         stringArray.push_back(string(str.get()));
     }
     return make_tuple(status == napi_ok, stringArray, size);
