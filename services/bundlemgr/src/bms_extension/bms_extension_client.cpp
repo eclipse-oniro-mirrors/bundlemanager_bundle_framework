@@ -521,6 +521,24 @@ ErrCode BmsExtensionClient::ClearAllBundleCache(int32_t userId, sptr<IRemoteObje
     return bmsExtensionImpl_->ClearAllBundleCache(userId, callback);
 }
 
+ErrCode BmsExtensionClient::GetShortcutInfos(const std::string &bundleName, int32_t userId,
+    std::vector<ShortcutInfo> &shortcutInfos) const
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    LOG_D(BMS_TAG_QUERY, "start to get shortcut infos from bms extension, bundleName:%{public}s, userId:%{public}d",
+        bundleName.c_str(), userId);
+    if (bmsExtensionImpl_ == nullptr) {
+        LOG_E(BMS_TAG_QUERY, "bmsExtensionImpl_ is null");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    ErrCode ret = bmsExtensionImpl_->GetShortcutInfos(bundleName, userId, shortcutInfos);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_QUERY, "get shortcut infos from bms extension failed, bundleName:%{public}s, code:%{public}d",
+            bundleName.c_str(), ret);
+    }
+    return ret;
+}
+
 const std::shared_ptr<BundleDataMgr> BmsExtensionClient::GetDataMgr() const
 {
     return DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();

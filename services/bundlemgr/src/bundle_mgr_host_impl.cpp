@@ -3967,7 +3967,29 @@ ErrCode BundleMgrHostImpl::GetShortcutInfoV9(const std::string &bundleName,
         APP_LOGE("DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    return dataMgr->GetShortcutInfoV9(bundleName, userId, shortcutInfos);
+    ErrCode ret = dataMgr->GetShortcutInfoV9(bundleName, userId, shortcutInfos);
+    if (ret == ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST && !bundleName.empty() && BundleUtil::IsVmEnabled()) {
+        int32_t resolvedUserId = dataMgr->GetUserId(userId);
+        ret = QueryShortcutInfosFromExtension(bundleName, resolvedUserId, shortcutInfos);
+    }
+    return ret;
+}
+
+ErrCode BundleMgrHostImpl::QueryShortcutInfosFromExtension(const std::string &bundleName, int32_t userId,
+    std::vector<ShortcutInfo> &shortcutInfos)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    std::vector<ShortcutInfo> extShortcutInfos;
+    ErrCode extRet = bmsExtensionDataMgr.GetShortcutInfos(bundleName, userId, extShortcutInfos);
+    if (extRet == ERR_OK) {
+        shortcutInfos = std::move(extShortcutInfos);
+        APP_LOGD("GetShortcutInfos from BMSExt success, bundleName:%{public}s, size:%{public}zu",
+            bundleName.c_str(), shortcutInfos.size());
+    } else {
+        APP_LOGE("GetShortcutInfos from BMSExt failed, bundleName:%{public}s, extRet:%{public}d",
+            bundleName.c_str(), extRet);
+    }
+    return extRet;
 }
 
 ErrCode BundleMgrHostImpl::GetShortcutInfoByAppIndex(const std::string &bundleName, const int32_t appIndex,

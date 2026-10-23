@@ -867,6 +867,8 @@ public:
      */
     virtual ErrCode GetShortcutInfoV9(const std::string &bundleName,
         std::vector<ShortcutInfo> &shortcutInfos, int32_t userId = Constants::UNSPECIFIED_USERID) override;
+    ErrCode QueryShortcutInfosFromExtension(const std::string &bundleName, int32_t userId,
+        std::vector<ShortcutInfo> &shortcutInfos);
     /**
      * @brief Obtains the ShortcutInfo objects provided by a specified application on the device.
      * @param bundleName Indicates the bundle name of the application.

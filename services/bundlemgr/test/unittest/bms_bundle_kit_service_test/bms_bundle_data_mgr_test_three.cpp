@@ -18,6 +18,7 @@
 
 #include <chrono>
 #include <fstream>
+#include <mutex>
 #include <thread>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -57,6 +58,7 @@
 #include "mock_clean_cache.h"
 #include "mock_bundle_status.h"
 #include "nlohmann/json.hpp"
+#include "parameters.h"
 #include "perf_profile.h"
 #include "plugin/plugin_bundle_info.h"
 #include "pre_bundle_profile.h"
@@ -70,6 +72,10 @@ using namespace testing::ext;
 using namespace OHOS;
 using namespace OHOS::AppExecFwk;
 using OHOS::AAFwk::Want;
+
+namespace {
+std::mutex g_paramMutex;
+}
 
 namespace OHOS {
 namespace {
@@ -5338,5 +5344,56 @@ HWTEST_F(BmsBundleDataMgrTest3, RestoreUidAndGid_0300, Function | MediumTest | L
     // Fallback should set cursor to max(map) = baseUid+3
     EXPECT_FALSE(restored);
     EXPECT_EQ(bundleDataMgr->lastAllocatedBundleId_, baseUid + 3);
+}
+
+/**
+ * @tc.number: BmsExtensionClient_GetShortcutInfos_0001
+ * @tc.name: BmsExtensionClient_GetShortcutInfos
+ * @tc.desc: test BmsExtensionClient::GetShortcutInfos with valid parameters,
+ *           broker not available in UT environment so should return error
+ */
+HWTEST_F(BmsBundleDataMgrTest3, BmsExtensionClient_GetShortcutInfos_0001, Function | SmallTest | Level1)
+{
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    ASSERT_NE(bmsExtensionClient, nullptr);
+    std::string bundleName = "com.test.bundle";
+    int32_t userId = USERID;
+    std::vector<ShortcutInfo> shortcutInfos;
+    ErrCode ret = bmsExtensionClient->GetShortcutInfos(bundleName, userId, shortcutInfos);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsExtensionClient_GetShortcutInfos_0002
+ * @tc.name: BmsExtensionClient_GetShortcutInfos with empty bundleName
+ * @tc.desc: test BmsExtensionClient::GetShortcutInfos with empty bundleName,
+ *           should return error
+ */
+HWTEST_F(BmsBundleDataMgrTest3, BmsExtensionClient_GetShortcutInfos_0002, Function | SmallTest | Level1)
+{
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    ASSERT_NE(bmsExtensionClient, nullptr);
+    std::string bundleName = "";
+    int32_t userId = USERID;
+    std::vector<ShortcutInfo> shortcutInfos;
+    ErrCode ret = bmsExtensionClient->GetShortcutInfos(bundleName, userId, shortcutInfos);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsExtensionClient_GetShortcutInfos_0003
+ * @tc.name: BmsExtensionClient_GetShortcutInfos with invalid userId
+ * @tc.desc: test BmsExtensionClient::GetShortcutInfos with invalid userId,
+ *           should return error
+ */
+HWTEST_F(BmsBundleDataMgrTest3, BmsExtensionClient_GetShortcutInfos_0003, Function | SmallTest | Level1)
+{
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    ASSERT_NE(bmsExtensionClient, nullptr);
+    std::string bundleName = "com.test.bundle";
+    int32_t userId = -1;
+    std::vector<ShortcutInfo> shortcutInfos;
+    ErrCode ret = bmsExtensionClient->GetShortcutInfos(bundleName, userId, shortcutInfos);
+    EXPECT_NE(ret, ERR_OK);
 }
 } // OHOS

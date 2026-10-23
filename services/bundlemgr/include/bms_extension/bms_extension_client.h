@@ -81,6 +81,9 @@ public:
     ErrCode GetAllBundleCacheSize(int32_t userId, int64_t &cacheSize);
     ErrCode ClearAllBundleCache(int32_t userId, sptr<IRemoteObject> callback);
 
+    ErrCode GetShortcutInfos(const std::string &bundleName, int32_t userId,
+        std::vector<ShortcutInfo> &shortcutInfos) const;
+
 private:
     void ModifyLauncherAbilityInfo(AbilityInfo &abilityInfo) const;
     const std::shared_ptr<BundleDataMgr> GetDataMgr() const;

@@ -26,6 +26,7 @@
 #include "launcher_ability_resource_info.h"
 #include "interfaces/hap_verify.h"
 #include "parameter.h"
+#include "shortcut_info.h"
 #include "want.h"
 #include "abs_rdb_predicates.h"
 
@@ -233,6 +234,11 @@ public:
         return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
     }
     virtual ErrCode CanOpenLink(const std::string &link, bool &canOpen)
+    {
+        return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
+    }
+    virtual ErrCode GetShortcutInfos(const std::string &bundleName, int32_t userId,
+        std::vector<ShortcutInfo> &shortcutInfos)
     {
         return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
     }

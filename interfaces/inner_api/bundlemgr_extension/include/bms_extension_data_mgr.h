@@ -29,6 +29,7 @@
 #include "code_protect_bundle_info.h"
 #include "bundle_resource/launcher_ability_resource_info.h"
 #include "interfaces/hap_verify.h"
+#include "shortcut_info.h"
 #include "want.h"
 #include "abs_rdb_predicates.h"
 
@@ -101,7 +102,18 @@ public:
     ErrCode ClearAllBundleCache(int32_t userId, sptr<IRemoteObject> callback);
     ErrCode RebuildBundleResourceTable();
     ErrCode CanOpenLink(const std::string &link, bool &canOpen);
+    ErrCode GetShortcutInfos(const std::string &bundleName, int32_t userId,
+        std::vector<ShortcutInfo> &shortcutInfos);
 private:
+    // Error codes from BMSExt service.
+    // Source: BMSExt internal error definitions (not exposed via shared header).
+    // Last synced: 2026-10-20. Contact BMSExt owner before modifying.
+    static constexpr ErrCode ERR_BUNDLE_MANAGER_EXTENSION_INVALID_PARAM = 8585217;
+    static constexpr ErrCode ERR_BUNDLE_MANAGER_EXTENSION_PERMISSION_DENIED = 8585218;
+    static constexpr ErrCode ERR_BUNDLE_MANAGER_EXTENSION_INVALID_USER_ID = 8585605;
+
+    ErrCode ConvertShortcutInfosErrCode(ErrCode ret);
+
     bool OpenHandler();
     static void *handler_;
     static BmsExtension bmsExtension_;

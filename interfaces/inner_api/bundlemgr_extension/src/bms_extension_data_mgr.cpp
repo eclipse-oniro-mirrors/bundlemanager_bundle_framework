@@ -894,5 +894,52 @@ ErrCode BmsExtensionDataMgr::CanOpenLink(const std::string &link, bool &canOpen)
     }
     return ret;
 }
+
+ErrCode BmsExtensionDataMgr::ConvertShortcutInfosErrCode(ErrCode ret)
+{
+    switch (ret) {
+        case ERR_BUNDLE_MANAGER_EXTENSION_INVALID_PARAM:
+            return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+        case ERR_BUNDLE_MANAGER_EXTENSION_PERMISSION_DENIED:
+            return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+        case ERR_BUNDLE_MANAGER_EXTENSION_INVALID_USER_ID:
+            return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+        default:
+            LOG_E(BMS_TAG_EXT, "Unknown extension error code: %{public}d, return extension internal error", ret);
+            return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
+    }
+}
+
+ErrCode BmsExtensionDataMgr::GetShortcutInfos(const std::string &bundleName, int32_t userId,
+    std::vector<ShortcutInfo> &shortcutInfos)
+{
+    if (bundleName.empty()) {
+        LOG_E(BMS_TAG_EXT, "bundleName is empty");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    ErrCode initRet = Init();
+    if (initRet != ERR_OK) {
+        LOG_E(BMS_TAG_EXT, "GetShortcutInfos Init failed, initRet:%{public}d", initRet);
+        return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
+    }
+    if (handler_ == nullptr) {
+        LOG_E(BMS_TAG_EXT, "GetShortcutInfos handler_ is null");
+        return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
+    }
+    auto bundleMgrExtPtr =
+        BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
+    if (bundleMgrExtPtr == nullptr) {
+        LOG_E(BMS_TAG_EXT, "GetBundleMgrExt failed");
+        return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
+    }
+    LOG_I(BMS_TAG_EXT, "EXT GetShortcutInfos -n %{public}s -u %{public}d", bundleName.c_str(), userId);
+    ErrCode ret = bundleMgrExtPtr->GetShortcutInfos(bundleName, userId, shortcutInfos);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_EXT, "GetShortcutInfos from ext failed, bundleName:%{public}s, ret:%{public}d",
+            bundleName.c_str(), ret);
+        ret = ConvertShortcutInfosErrCode(ret);
+    }
+    return ret;
+}
 } // AppExecFwk
 } // OHOS
