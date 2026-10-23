@@ -20,6 +20,7 @@
 #include <sstream>
 #include <string>
 
+#include "accesstoken_kit.h"
 #include "aot/aot_executor.h"
 #include "bundle_info.h"
 #include "bundle_installer_host.h"
@@ -110,6 +111,55 @@ const nlohmann::json DEFAULT_CONFIG = R"(
 const int32_t USER_ID = 100;
 const int32_t INVALID_USER_ID = 200;
 const int32_t WAIT_TIME = 2; // init mocked bms
+
+// --- SPM ON install prerequisite -------------------------------------------
+// Every install in this suite is a single-hap install of BUNDLE_PATH (SetUp),
+// so the mocked CheckHapSignInfo must return exactly one trusted entry (the
+// count must always match the hap count of the install call —
+// CheckSignAndInitSession fails closed on a mismatch).
+constexpr int32_t TEST_SPM_SESSION_ID = 4242;
+constexpr uint64_t TEST_SPM_TOKEN_ID = 101;
+// InitToken rejects a zero tokenId and a uid outside the installing user's uid
+// segment, so the AT-allocated identity must be valid for USER_ID.
+constexpr int32_t TEST_SPM_UID = USER_ID * Constants::BASE_USER_RANGE + 102;
+
+// The suite keeps the SPM switch ON (the device default, see
+// BundleSpmManager::IsEnabled) and solves the hap sign verification
+// positively: the mocked access-token boundary is fed the data the real AT
+// side would return for the installed hap, so every install runs the complete
+// SPM ON chain — CheckSignAndInitSession (entry-count check + provision parse
+// through the real libhapverify) -> CheckEnterpriseResign ->
+// CheckProvisionInfoIsValid -> CheckPermissionInfo -> PrepareHapIdentity
+// (identity and uid adoption) -> FinishInstall (commit). The provision below
+// is a minimal valid debug provision; its bundle-name must stay in sync with
+// BUNDLE_NAME (CheckBundleName cross-checks the provision against the hap's
+// parsed package name).
+void SetUpSpmTrustedSignInfoForTest()
+{
+    Security::AccessToken::TrustedBundleInfo trustedBundleInfo;
+    trustedBundleInfo.profileData.provisionRaw = R"({
+        "version-code": 1,
+        "version-name": "1.0.0",
+        "uuid": "bms-default-app-test",
+        "type": "debug",
+        "bundle-info": {
+            "developer-id": "bms-default-app-test",
+            "development-certificate": "bms-default-app-test-cert",
+            "bundle-name": "com.test.defaultApp",
+            "apl": "normal",
+            "app-feature": "hos_normal_app"
+        }
+    })";
+    // The test hooks are declared in the mocked accesstoken_kit.h (resolved
+    // from mock/include) and defined in test/mock/src/accesstoken_kit.cpp.
+    Security::AccessToken::SetSpmTrustedBundleInfosForTest({trustedBundleInfo});
+    // Mirrors the real AT contract: CheckHapSignInfo allocates the session id
+    // and caches the trusted info for the install session.
+    Security::AccessToken::SetSpmCheckHapSignInfoSessionIdForTest(TEST_SPM_SESSION_ID);
+    // A fresh install carries no desired uid, so the AT side allocates the
+    // identity: provide a valid token id and a USER_ID-segment uid.
+    Security::AccessToken::SetSpmPrepareIdentityForTest(TEST_SPM_TOKEN_ID, TEST_SPM_UID);
+}
 }  // namespace
 
 class BmsBundleDefaultAppTest : public testing::Test {
@@ -154,6 +204,12 @@ BmsBundleDefaultAppTest::~BmsBundleDefaultAppTest()
 
 void BmsBundleDefaultAppTest::SetUpTestCase()
 {
+    // SPM stays ON (its device default): feed the mocked access-token boundary
+    // with the trusted sign answer for the hap installed by SetUp, so the
+    // installs pass the real SPM verification chain instead of bypassing it.
+    // Must run before the first install — nothing in this binary resets the
+    // mock control variables afterwards.
+    SetUpSpmTrustedSignInfoForTest();
     bundleMgrService_->InitDefaultApp();
     bundleMgrService_->InitBundleInstaller();
     bundleMgrService_->InitBundleDataMgr();
