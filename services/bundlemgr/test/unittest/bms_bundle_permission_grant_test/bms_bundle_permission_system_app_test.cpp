@@ -1610,7 +1610,7 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_6900
     ret = bundleInstallerHost_->InstallSandboxApp("", dlpType, USERID, appIndex);
     EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
 
-    dlpType = 5;
+    dlpType = 7;
     ret = bundleInstallerHost_->InstallSandboxApp(BUNDLE_NAME, dlpType, USERID, appIndex);
     EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
 

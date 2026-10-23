@@ -263,6 +263,8 @@ enum class DirType : uint8_t {
 };
 constexpr int32_t READ_ONLY = 1;
 constexpr int32_t CONTENT_EDIT = 2;
+constexpr int32_t NETWORK_WITHOUT_PRINT = 5;
+constexpr int32_t NETWORK_WITH_PRINT = 6;
 constexpr int32_t UNMOUNT_DIS_SHARE_TIMEOUT_MS = 3000;
 constexpr int64_t BLOCK_SIZE = 512;
 #if defined(CODE_SIGNATURE_ENABLE)
@@ -2721,7 +2723,7 @@ unsigned int InstalldHostImpl::GetHapFlags(const bool isPreInstallApp, const boo
     hapFlags = isPreInstallApp ? SELINUX_HAP_RESTORECON_PREINSTALLED_APP : 0;
     hapFlags |= debug ? SELINUX_HAP_DEBUGGABLE : 0;
     if (isDlpSandbox) {
-        if (dlpType == CONTENT_EDIT) {
+        if (dlpType == CONTENT_EDIT || dlpType == NETWORK_WITHOUT_PRINT || dlpType == NETWORK_WITH_PRINT) {
             hapFlags |= SELINUX_HAP_DLP_FULL_CONTROL;
         } else if (dlpType == READ_ONLY) {
             hapFlags |= SELINUX_HAP_DLP_READ_ONLY;

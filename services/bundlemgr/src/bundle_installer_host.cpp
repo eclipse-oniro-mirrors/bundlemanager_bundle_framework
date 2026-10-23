@@ -57,7 +57,7 @@ constexpr const char* BMS_PARA_APP_INDEX = "ohos.bms.param.appIndex";
 constexpr const char* UIEXTENSION_MODAL_TYPE = "ability.want.params.modalType";
 int32_t INVALID_APP_INDEX = 0;
 int32_t LOWER_DLP_TYPE_BOUND = 0;
-int32_t UPPER_DLP_TYPE_BOUND = 5;
+int32_t UPPER_DLP_TYPE_BOUND = 7;
 }  // namespace
 
 BundleInstallerHost::BundleInstallerHost()
