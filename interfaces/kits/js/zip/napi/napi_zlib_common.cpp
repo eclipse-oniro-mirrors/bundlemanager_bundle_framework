@@ -53,7 +53,7 @@ std::string UnwrapStringFromJS(napi_env env, napi_value param, const std::string
     if (memset_s(buf, size + 1, 0, size + 1) != E_OK) {
         delete[] buf;
         buf = nullptr;
-        return defaultValue;
+        return nullptr;
     }
 
     bool rev = napi_get_value_string_utf8(env, param, buf, size + 1, &size) == napi_ok;

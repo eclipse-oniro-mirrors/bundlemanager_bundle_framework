@@ -137,25 +137,6 @@ void BundleExceptionHandler::DeleteBundleInfoFromStorage(const InnerBundleInfo &
     }
 }
 
-void BundleExceptionHandler::HandleUninstallPackageStart(InnerBundleInfo &info, bool &isBundleValid,
-    const InstallMark &mark, const std::string &appCodePath, const std::string &effectiveBundleName,
-    const std::string &moduleDir, const std::string &moduleDataDir)
-{
-    if (info.IsOnlyModule(mark.packageName) &&
-        RemoveBundleAndDataDir(appCodePath, effectiveBundleName, info.GetUserId())) {
-        DeleteBundleInfoFromStorage(info);
-        isBundleValid = false;
-        return;
-    }
-    if (RemoveBundleAndDataDir(moduleDir, moduleDataDir, info.GetUserId())) {
-        info.RemoveModuleInfo(mark.packageName);
-        info.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
-    } else {
-        APP_LOGE("fail to remove module dir for %{public}s/%{public}s, skip cleanup",
-            effectiveBundleName.c_str(), mark.packageName.c_str());
-    }
-}
-
 void BundleExceptionHandler::InnerHandleInvalidBundle(InnerBundleInfo &info, bool &isBundleValid)
 {
     auto mark = info.GetInstallMark();
@@ -176,13 +157,9 @@ void BundleExceptionHandler::InnerHandleInvalidBundle(InnerBundleInfo &info, boo
     // install and update failed before service restart
     if (mark.status == InstallExceptionStatus::INSTALL_START) {
         // unable to distinguish which user failed the installation
-        if (RemoveBundleAndDataDir(appCodePath, effectiveBundleName, info.GetUserId())) {
-            DeleteBundleInfoFromStorage(info);
-            isBundleValid = false;
-        } else {
-            APP_LOGE("fail to remove bundle dir for %{public}s, skip deleting from storage",
-                info.GetBundleName().c_str());
-        }
+        (void)RemoveBundleAndDataDir(appCodePath, effectiveBundleName, info.GetUserId());
+        DeleteBundleInfoFromStorage(info);
+        isBundleValid = false;
     } else if (mark.status == InstallExceptionStatus::UPDATING_EXISTED_START) {
         if (InstalldClient::GetInstance()->RemoveDir(moduleDir + ServiceConstants::TMP_SUFFIX,
             BundleDirScene::REMOVE_MODULE_DIR, effectiveBundleName) == ERR_OK) {
@@ -196,8 +173,16 @@ void BundleExceptionHandler::InnerHandleInvalidBundle(InnerBundleInfo &info, boo
         DeleteBundleInfoFromStorage(info);
         isBundleValid = false;
     } else if (mark.status == InstallExceptionStatus::UNINSTALL_PACKAGE_START) {
-        HandleUninstallPackageStart(info, isBundleValid, mark, appCodePath, effectiveBundleName,
-            moduleDir, moduleDataDir);
+        if (info.IsOnlyModule(mark.packageName) &&
+            RemoveBundleAndDataDir(appCodePath, effectiveBundleName, info.GetUserId())) {
+            DeleteBundleInfoFromStorage(info);
+            isBundleValid = false;
+            return;
+        }
+        if (RemoveBundleAndDataDir(moduleDir, moduleDataDir, info.GetUserId())) {
+            info.RemoveModuleInfo(mark.packageName);
+            info.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
+        }
     } else if (mark.status == InstallExceptionStatus::UPDATING_FINISH) {
         if (InstalldClient::GetInstance()->RenameModuleDir(moduleDir + ServiceConstants::TMP_SUFFIX, moduleDir,
             effectiveBundleName, BundleDirScene::BUNDLE_CODE_DIR) != ERR_OK) {
