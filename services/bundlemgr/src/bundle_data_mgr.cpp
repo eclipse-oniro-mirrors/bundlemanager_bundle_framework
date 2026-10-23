@@ -8357,11 +8357,13 @@ void BundleDataMgr::InsertBundleIdMapEntries(const InnerBundleInfo &info)
 namespace {
 std::string ComputeEffectiveName(const std::string &bundleName, int32_t appIndex, bool isDualModeClone)
 {
-    if (appIndex > 0) {
-        return BundleCloneCommonHelper::GetCloneBundleIdKey(bundleName, appIndex);
-    }
+    // Dual-mode clone (appIndex=10000) must be checked first: it also satisfies
+    // appIndex > 0, but uses a different naming format (DualModeHelper, not CloneBundleIdKey).
     if (isDualModeClone) {
         return DualModeHelper::GetDualModeBundleName(bundleName);
+    }
+    if (appIndex > 0) {
+        return BundleCloneCommonHelper::GetCloneBundleIdKey(bundleName, appIndex);
     }
     return bundleName;
 }
@@ -8415,10 +8417,16 @@ ErrCode BundleDataMgr::UpdateBundleUid(const std::string &bundleName, int32_t us
     int32_t oldBundleId = oldUid - userId * Constants::BASE_USER_RANGE;
     int32_t newBundleId = newUid - userId * Constants::BASE_USER_RANGE;
     if (oldBundleId == newBundleId) {
+        APP_LOGD("UpdateBundleUid: bundle=%{public}s userId=%{public}d appIndex=%{public}d "
+            "oldBundleId==newBundleId=%{public}d, skip",
+            bundleName.c_str(), userId, appIndex, newBundleId);
         return ERR_OK;
     }
 
     std::string effectiveName = ComputeEffectiveName(bundleName, appIndex, isDualModeClone);
+    APP_LOGI("UpdateBundleUid: bundle=%{public}s userId=%{public}d appIndex=%{public}d "
+        "oldUid=%{public}d newUid=%{public}d oldBundleId=%{public}d newBundleId=%{public}d",
+        bundleName.c_str(), userId, appIndex, oldUid, newUid, oldBundleId, newBundleId);
     bool needRemoveOld = false;
     bool needSaveBundleId = false;
     UpdateBundleIdMapForUid(oldBundleId, newBundleId, effectiveName,
@@ -8440,9 +8448,16 @@ ErrCode BundleDataMgr::UpdateSandboxBundleUid(const std::string &bundleName, int
     int32_t oldBundleId = oldUid - userId * Constants::BASE_USER_RANGE;
     int32_t newBundleId = newUid - userId * Constants::BASE_USER_RANGE;
     if (oldBundleId == newBundleId) {
+        APP_LOGD("UpdateSandboxBundleUid: bundle=%{public}s userId=%{public}d appIndex=%{public}d "
+            "oldBundleId==newBundleId=%{public}d, skip",
+            bundleName.c_str(), userId, appIndex, newBundleId);
         return ERR_OK;
     }
-    std::string effectiveName = BundleCloneCommonHelper::GetCloneBundleIdKey(bundleName, appIndex);
+    std::string effectiveName = std::to_string(appIndex) +
+        Constants::FILE_UNDERLINE + bundleName;
+    APP_LOGI("UpdateSandboxBundleUid: bundle=%{public}s userId=%{public}d appIndex=%{public}d "
+        "oldUid=%{public}d newUid=%{public}d oldBundleId=%{public}d newBundleId=%{public}d",
+        bundleName.c_str(), userId, appIndex, oldUid, newUid, oldBundleId, newBundleId);
     bool needRemoveOld = false;
     bool needSaveBundleId = false;
     UpdateBundleIdMapForUid(oldBundleId, newBundleId, effectiveName,

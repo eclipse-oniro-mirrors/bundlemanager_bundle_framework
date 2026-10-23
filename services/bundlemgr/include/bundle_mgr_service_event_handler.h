@@ -1031,6 +1031,8 @@ private:
     void BuildFromInstalledBundles(const std::vector<std::string> &bundleNames,
         const std::shared_ptr<BundleDataMgr> &dataMgr,
         std::map<std::string, Security::AccessToken::MigratedInfo> &migratedMap);
+    void BuildFromTempBundles(const std::shared_ptr<BundleDataMgr> &dataMgr,
+        std::map<std::string, Security::AccessToken::MigratedInfo> &migratedMap);
     void BuildFromSandbox(const std::shared_ptr<BundleDataMgr> &dataMgr,
         std::map<std::string, Security::AccessToken::MigratedInfo> &migratedMap);
     void BuildFromUninstallData(
@@ -1178,6 +1180,21 @@ private:
         std::vector<int32_t> &failedUidList,
         int32_t sessionId,
         std::vector<FallbackResult> &pendingResults);
+    bool PrepareFallbackEntryContext(
+        const std::shared_ptr<BundleDataMgr> &dataMgr,
+        const InnerBundleInfo &info,
+        const Security::AccessToken::HapBaseInfo &hapInfo,
+        InnerBundleInfo &entryInfo,
+        InnerBundleUserInfo &userInfo,
+        uint32_t &existingTokenId,
+        uint64_t &existingTokenIdEx,
+        int32_t &dlpType);
+    bool ExecuteFallbackPolicyUpdate(
+        const InnerBundleInfo &entryInfo,
+        const Security::AccessToken::HapBaseInfo &hapInfo,
+        int32_t oldUid, int32_t sessionId, int32_t dlpType,
+        uint32_t existingTokenId, uint64_t existingTokenIdEx,
+        size_t idx, FallbackResult &result);
     void CommitFallbackResults(
         const std::shared_ptr<BundleDataMgr> &dataMgr,
         const std::string &bundleName,
@@ -1199,6 +1216,13 @@ private:
     void CheckAndFallbackUnmigratedBundles();
     void CollectUnmigratedMainAndClone(
         const std::shared_ptr<BundleDataMgr> &dataMgr,
+        std::vector<Security::AccessToken::HapBaseInfo> &failedHapList,
+        std::vector<int32_t> &failedUidList,
+        std::vector<int32_t> &failedErrCodeList,
+        std::map<std::string, Security::AccessToken::MigratedInfo> &failedMigratedMap);
+    void CollectUnmigratedFromTemp(
+        const std::shared_ptr<BundleDataMgr> &dataMgr,
+        size_t &skippedCount,
         std::vector<Security::AccessToken::HapBaseInfo> &failedHapList,
         std::vector<int32_t> &failedUidList,
         std::vector<int32_t> &failedErrCodeList,
