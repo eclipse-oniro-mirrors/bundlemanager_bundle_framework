@@ -51,7 +51,7 @@ ErrCode QuickFixManagerHostImpl::VerifyDeployQuickFixPermission()
 
 ErrCode QuickFixManagerHostImpl::DeployQuickFix(const std::vector<std::string> &bundleFilePaths,
     const sptr<IQuickFixStatusCallback> &statusCallback, bool isDebug, const std::string &targetPath,
-    bool isReplace, bool isCheckDebugApp)
+    bool isReplace, bool isCheckDebugApp, int32_t callerUid)
 {
     LOG_I(BMS_TAG_DEFAULT, "QuickFixManagerHostImpl::DeployQuickFix start");
     if (bundleFilePaths.empty() || (statusCallback == nullptr)) {
@@ -66,6 +66,10 @@ ErrCode QuickFixManagerHostImpl::DeployQuickFix(const std::vector<std::string> &
             return verifyResult;
         }
         isCheckDebugApp = true;
+    }
+    auto userCheckResult = CheckFilePathsInCallingUser(bundleFilePaths, callerUid);
+    if (userCheckResult != ERR_OK) {
+        return userCheckResult;
     }
 
     std::vector<std::string> securityFilePaths;
@@ -189,7 +193,14 @@ ErrCode QuickFixManagerHostImpl::CreateFd(const std::string &fileName, int32_t &
         LOG_E(BMS_TAG_DEFAULT, "create tmp dir failed");
         return ERR_BUNDLEMANAGER_QUICK_FIX_CREATE_TARGET_DIR_FAILED;
     }
-    path = tmpDir + fileName;
+    int32_t userId = BundleUtil::GetUserIdByCallingUid();
+    std::string userDir = tmpDir + std::to_string(userId) + ServiceConstants::PATH_SEPARATOR;
+    if (!BundleUtil::CreateDir(userDir)) {
+        LOG_E(BMS_TAG_DEFAULT, "create user dir failed");
+        BundleUtil::DeleteDir(tmpDir);
+        return ERR_BUNDLEMANAGER_QUICK_FIX_CREATE_TARGET_DIR_FAILED;
+    }
+    path = userDir + fileName;
     if ((fd = BundleUtil::CreateFileDescriptor(path, 0)) < 0) {
         LOG_E(BMS_TAG_DEFAULT, "create file descriptor failed");
         BundleUtil::DeleteDir(tmpDir);
@@ -207,6 +218,43 @@ bool QuickFixManagerHostImpl::IsFileNameValid(const std::string &fileName) const
         return false;
     }
     return true;
+}
+
+ErrCode QuickFixManagerHostImpl::CheckFilePathsInCallingUser(
+    const std::vector<std::string> &bundleFilePaths, int32_t callerUid) const
+{
+    int32_t userId;
+    if (BundlePermissionMgr::IsNativeTokenType() && callerUid > 0) {
+        // SA relay (e.g. quickfixmgr): the IPC calling uid belongs to the SA process
+        // (userId 0), not the original requester. Use the callerUid passed by the SA
+        // to resolve the original caller's user for the path check.
+        userId = BundleUtil::GetUserIdByUid(callerUid);
+        LOG_D(BMS_TAG_DEFAULT, "SA relay callerUid %{public}d, resolved userId %{public}d", callerUid, userId);
+    } else {
+        // Direct call (bm tool / HAP app): the IPC calling uid is the original caller.
+        userId = BundleUtil::GetUserIdByCallingUid();
+    }
+    std::string userIdStr = std::to_string(userId);
+    for (const auto &path : bundleFilePaths) {
+        // path layout: .../quick_fix/{timestamp}{id}/{userId}/{fileName}
+        auto fileNamePos = path.rfind(ServiceConstants::PATH_SEPARATOR);
+        if (fileNamePos == std::string::npos || fileNamePos == 0) {
+            LOG_E(BMS_TAG_DEFAULT, "hqf path %{public}s is invalid", path.c_str());
+            return ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATH;
+        }
+        auto userDirPos = path.rfind(ServiceConstants::PATH_SEPARATOR, fileNamePos - 1);
+        if (userDirPos == std::string::npos) {
+            LOG_E(BMS_TAG_DEFAULT, "hqf path %{public}s is invalid", path.c_str());
+            return ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATH;
+        }
+        std::string pathUserId = path.substr(userDirPos + 1, fileNamePos - userDirPos - 1);
+        if (pathUserId != userIdStr) {
+            LOG_E(BMS_TAG_DEFAULT, "hqf path %{public}s is not in current user %{public}d dir",
+                path.c_str(), userId);
+            return ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATH;
+        }
+    }
+    return ERR_OK;
 }
 
 ErrCode QuickFixManagerHostImpl::CopyHqfToSecurityDir(const std::vector<std::string> &bundleFilePaths,
@@ -244,9 +292,17 @@ ErrCode QuickFixManagerHostImpl::CopyHqfToSecurityDir(const std::vector<std::str
             LOG_E(BMS_TAG_DEFAULT, "CopyFile failed");
             return ERR_BUNDLEMANAGER_QUICK_FIX_MOVE_PATCH_FILE_FAILED;
         }
+        // the temp dir is unique per CreateFd call, only clean the copied file's source dir
+        // to avoid deleting other users' in-flight files
+        auto fileNamePos = path.rfind(ServiceConstants::PATH_SEPARATOR);
+        if (fileNamePos != std::string::npos && fileNamePos != 0) {
+            auto userDirPos = path.rfind(ServiceConstants::PATH_SEPARATOR, fileNamePos - 1);
+            if (userDirPos != std::string::npos) {
+                BundleUtil::DeleteDir(path.substr(0, userDirPos));
+            }
+        }
         securityFilePaths.emplace_back(securityPath);
     }
-    BundleUtil::DeleteDir(prefixStr);
     return ERR_OK;
 }
 }
