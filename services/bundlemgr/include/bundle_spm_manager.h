@@ -106,7 +106,12 @@ public:
          * @param checker Indicates the install checker owned by the caller installer.
          * @param outErrCode Outputs the raw error code of the underlying verification.
          * @param readFile Indicates whether to read the hap files during verification.
-         * @param skipEnterpriseResign Indicates whether to skip enterprise resign check.
+         * @param skipEnterpriseResign Indicates the caller holds
+         *        PERMISSION_SKIP_ENTERPRISE_RESIGN_VERIFY: exempts the
+         *        BMS-side CheckEnterpriseResign policy gate (the "enterprise
+         *        apps must be re-signed" mandate). The sign verification
+         *        itself always runs with the real userId — this flag must
+         *        never alter the verification inputs (no -1 userId).
          * @return Returns an empty session (session id 0) on failure.
          */
         static InstallSession CheckSignAndInitSession(int32_t userId, const std::vector<std::string> &bundlePaths,

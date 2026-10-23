@@ -228,17 +228,22 @@ BundleSpmManager::InstallSession BundleSpmManager::InstallSession::CheckSignAndI
     Security::AccessToken::BundleHapList hapList;
     hapList.hapPaths = bundlePaths;
     hapList.isPreInstalled = isPreInstallApp;
-    // Normalize an invalid caller userId the same way the OFF checker does
-    // (AccountHelper::GetUserIdByCallerType): the raw -1 must NEVER reach the AT
-    // side unless the caller explicitly holds SKIP_ENTERPRISE_RESIGN_VERIFY —
-    // the cross-process contract interprets userIdForEnterpriseSign == -1 as
-    // "skip the enterprise resign verification", so passing
-    // Constants::INVALID_USERID by accident would silently bypass that check
-    // (fail-open relative to SPM OFF).
-    if (!skipEnterpriseResign && userId < Constants::DEFAULT_USERID) {
+    // The real (normalized) userId must ALWAYS be passed: the AT side locates
+    // the enterprise resign cert dir from it — the SAME path as
+    // BundleUtil::GetEnterpriseReSignatureCert — and verifies every hap
+    // carrying an ENTERPRISE_RE_SIGN_BLOB against that dir. Never encode the
+    // skip permission in this field: the AT side maps
+    // userIdForEnterpriseSign == -1 to an EMPTY cert dir, and an empty dir
+    // does NOT skip the resign block verification — a block-carrying hap then
+    // fails VERIFY_ENTERPRISE_RESIGN_FAIL (8522695) because the block cert
+    // chain has nothing to match against, so a permission holder would be
+    // rejected where a normal caller passes. skipEnterpriseResign never
+    // alters this field: its only effect is the BMS-side policy gate
+    // (CheckEnterpriseResign) below.
+    if (userId < Constants::DEFAULT_USERID) {
         userId = AccountHelper::GetUserIdByCallerType();
     }
-    hapList.userIdForEnterpriseSign = skipEnterpriseResign ? -1 : userId;
+    hapList.userIdForEnterpriseSign = userId;
     std::vector<Security::AccessToken::TrustedBundleInfo> trustedBundleInfos;
     Security::AccessToken::HapVerifyResultInfo resultInfo;
     int32_t ret = Security::AccessToken::AccessTokenKit::CheckHapSignInfo(hapList,
@@ -287,6 +292,11 @@ BundleSpmManager::InstallSession BundleSpmManager::InstallSession::CheckSignAndI
         outErrCode = ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE;
         return session;
     }
+    // The policy gate the skip permission exempts: the BMS-side mandate "an
+    // enterprise app on a cert-configured enterprise device must have been
+    // re-signed". The AT-side crypto gate above always ran with the real
+    // userId regardless of the permission (a matching re-signed hap passed
+    // it and is marked isEnterpriseResigned).
     if (skipEnterpriseResign) {
         LOG_I(BMS_TAG_INSTALLER, "skip enterprise resign check for permission-granted caller");
     } else if (!checker.CheckEnterpriseResign(session.hapVerifyResults_[0].GetProvisionInfo(), userId)) {
