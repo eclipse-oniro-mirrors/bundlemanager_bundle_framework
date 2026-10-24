@@ -457,6 +457,30 @@ HWTEST_F(BmsDualModeInstallTest, IsDiffPackageCategory_0400, Function | SmallTes
     EXPECT_FALSE(DualModeHelper::IsDiffPackageCategory(DeviceModeDistributionPolicy::MAIN_ONLY));
 }
 
+// ====================== DualModeHelper::IsSingleModePolicy ======================
+
+HWTEST_F(BmsDualModeInstallTest, IsSingleModePolicy_0100, Function | SmallTest | Level0)
+{
+    // Single-mode policies: the app belongs to exactly one device mode (MAIN_ONLY/SUB_ONLY).
+    EXPECT_TRUE(DualModeHelper::IsSingleModePolicy(DeviceModeDistributionPolicy::MAIN_ONLY));
+    EXPECT_TRUE(DualModeHelper::IsSingleModePolicy(DeviceModeDistributionPolicy::SUB_ONLY));
+}
+
+HWTEST_F(BmsDualModeInstallTest, IsSingleModePolicy_0200, Function | SmallTest | Level0)
+{
+    // Every non-single-mode policy is rejected: unspecified, universal/compatible identical
+    // package and all different-package categories.
+    EXPECT_FALSE(DualModeHelper::IsSingleModePolicy(DeviceModeDistributionPolicy::UNSPECIFIED));
+    EXPECT_FALSE(DualModeHelper::IsSingleModePolicy(
+        DeviceModeDistributionPolicy::UNIVERSAL_IDENTICAL_PACKAGE));
+    EXPECT_FALSE(DualModeHelper::IsSingleModePolicy(
+        DeviceModeDistributionPolicy::FULL_COMPATIBLE_IDENTICAL_PACKAGE));
+    EXPECT_FALSE(DualModeHelper::IsSingleModePolicy(
+        DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE));
+    EXPECT_FALSE(DualModeHelper::IsSingleModePolicy(
+        DeviceModeDistributionPolicy::FULL_COMPATIBLE_DIFFERENT_PACKAGE));
+}
+
 // ====================== DualModeHelper::NeedDualModeHandle ======================
 
 HWTEST_F(BmsDualModeInstallTest, NeedDualModeHandle_0100, Function | SmallTest | Level0)
@@ -1486,6 +1510,263 @@ HWTEST_F(BmsDualModeInstallTest, CheckDualModeCategoryConsistencyInTemp_0500, Fu
     installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE;
     EXPECT_EQ(installer.CheckDualModeCategoryConsistencyInTemp(installParam),
         OHOS::ERR_APPEXECFWK_INSTALL_DUAL_MODE_CATEGORY_CONFLICT);
+}
+
+// ====================== BaseBundleInstaller::AdoptHiddenSingleModeInfo ======================
+// Same-name update of a hidden single-mode app: when the install is not a cross-mode install and
+// bundleInfos_ has no record (the same-name MAIN_ONLY/SUB_ONLY app is hidden in tempBundleInfos_
+// because the current mode is the one it does not belong to), the hidden record is adopted as the
+// old info and moved to bundleInfos_ so the whole install takes the normal update path. Guards:
+// non-dual-mode device, OTA installs, app already found, temp record missing or not single-mode,
+// same-name occupant in bundleInfos_.
+
+static InnerBundleInfo MakeHiddenSingleModeInfo(DeviceModeDistributionPolicy policy)
+{
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    info.SetDeviceModeDistributionPolicy(policy);
+    return info;
+}
+
+HWTEST_F(BmsDualModeInstallTest, AdoptHiddenSingleModeInfo_NonDualModeDevice_0100,
+    Function | SmallTest | Level0)
+{
+    // not a dual-mode device -> no adoption even though a same-name record sits in tempBundleInfos_;
+    // the record stays where it was (legacy fresh-install behavior).
+    SetDualModeCache(ServiceConstants::DUAL_MODE_VALUE_INVALID, ServiceConstants::DUAL_MODE_VALUE_INVALID);
+    BaseBundleInstaller installer;
+    installer.bundleName_ = BUNDLE_NAME;
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] =
+        MakeHiddenSingleModeInfo(DeviceModeDistributionPolicy::MAIN_ONLY);
+    installer.dataMgr_ = dataMgr;
+    InnerBundleInfo oldInfo;
+    EXPECT_FALSE(installer.AdoptHiddenSingleModeInfo(oldInfo, InstallParam()));
+    EXPECT_EQ(dataMgr->tempBundleInfos_.count(BUNDLE_NAME), 1u);
+    EXPECT_EQ(dataMgr->bundleInfos_.count(BUNDLE_NAME), 0u);
+    EXPECT_FALSE(installer.isAppExist_);
+}
+
+HWTEST_F(BmsDualModeInstallTest, AdoptHiddenSingleModeInfo_OtaExcluded_0200,
+    Function | SmallTest | Level0)
+{
+    // OTA installs re-apply the stored policy themselves; adoption must not interfere -> false
+    // and the hidden record is untouched.
+    EnableSecondaryMode();
+    BaseBundleInstaller installer;
+    installer.bundleName_ = BUNDLE_NAME;
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] =
+        MakeHiddenSingleModeInfo(DeviceModeDistributionPolicy::MAIN_ONLY);
+    installer.dataMgr_ = dataMgr;
+    InstallParam installParam;
+    installParam.isOTA = true;
+    InnerBundleInfo oldInfo;
+    EXPECT_FALSE(installer.AdoptHiddenSingleModeInfo(oldInfo, installParam));
+    EXPECT_EQ(dataMgr->tempBundleInfos_.count(BUNDLE_NAME), 1u);
+}
+
+HWTEST_F(BmsDualModeInstallTest, AdoptHiddenSingleModeInfo_NotSingleModeRecord_0300,
+    Function | SmallTest | Level0)
+{
+    // temp record absent / different-package / universal -> not a hidden single-mode app -> false.
+    EnableSecondaryMode();
+    BaseBundleInstaller installer;
+    installer.bundleName_ = BUNDLE_NAME;
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    installer.dataMgr_ = dataMgr;
+    InnerBundleInfo oldInfo;
+    EXPECT_FALSE(installer.AdoptHiddenSingleModeInfo(oldInfo, InstallParam()));  // nothing in temp
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] = MakeCat7Info(false);  // different-package variant
+    EXPECT_FALSE(installer.AdoptHiddenSingleModeInfo(oldInfo, InstallParam()));
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] =
+        MakeHiddenSingleModeInfo(DeviceModeDistributionPolicy::UNIVERSAL_IDENTICAL_PACKAGE);
+    EXPECT_FALSE(installer.AdoptHiddenSingleModeInfo(oldInfo, InstallParam()));
+    EXPECT_EQ(dataMgr->tempBundleInfos_.count(BUNDLE_NAME), 1u);
+    EXPECT_FALSE(installer.isAppExist_);
+}
+
+HWTEST_F(BmsDualModeInstallTest, AdoptHiddenSingleModeInfo_Adopted_0400,
+    Function | SmallTest | Level0)
+{
+    // dual-mode + secondary mode + same-name MAIN_ONLY record hidden in tempBundleInfos_ ->
+    // adopted: the record moves to bundleInfos_ (update path target), oldInfo is filled with the
+    // hidden content, isAppExist_ is set and tempInfo_ is armed for the later commit/rollback.
+    EnableSecondaryMode();
+    BaseBundleInstaller installer;
+    installer.bundleName_ = BUNDLE_NAME;
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] =
+        MakeHiddenSingleModeInfo(DeviceModeDistributionPolicy::MAIN_ONLY);
+    installer.dataMgr_ = dataMgr;
+    InnerBundleInfo oldInfo;
+    EXPECT_TRUE(installer.AdoptHiddenSingleModeInfo(oldInfo, InstallParam()));
+    EXPECT_EQ(dataMgr->tempBundleInfos_.count(BUNDLE_NAME), 0u);
+    EXPECT_EQ(dataMgr->bundleInfos_.count(BUNDLE_NAME), 1u);
+    EXPECT_EQ(dataMgr->bundleInfos_[BUNDLE_NAME].GetDeviceModeDistributionPolicy(),
+        DeviceModeDistributionPolicy::MAIN_ONLY);
+    EXPECT_TRUE(installer.isAppExist_);
+    EXPECT_FALSE(installer.crossModeFetchTruth_);  // update writes target bundleInfos_
+    EXPECT_EQ(oldInfo.GetDeviceModeDistributionPolicy(), DeviceModeDistributionPolicy::MAIN_ONLY);
+    InnerBundleInfo tempOut;
+    EXPECT_TRUE(installer.GetTempBundleInfo(tempOut));
+    EXPECT_EQ(tempOut.GetBundleName(), BUNDLE_NAME);
+}
+
+HWTEST_F(BmsDualModeInstallTest, AdoptHiddenSingleModeInfo_AlreadyExist_0500,
+    Function | SmallTest | Level0)
+{
+    // the bundle was found in bundleInfos_ by the normal fetch (isAppExist_ already true) ->
+    // nothing to adopt.
+    EnableSecondaryMode();
+    BaseBundleInstaller installer;
+    installer.bundleName_ = BUNDLE_NAME;
+    installer.isAppExist_ = true;
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] =
+        MakeHiddenSingleModeInfo(DeviceModeDistributionPolicy::SUB_ONLY);
+    installer.dataMgr_ = dataMgr;
+    InnerBundleInfo oldInfo;
+    EXPECT_FALSE(installer.AdoptHiddenSingleModeInfo(oldInfo, InstallParam()));
+    EXPECT_EQ(dataMgr->tempBundleInfos_.count(BUNDLE_NAME), 1u);
+}
+
+HWTEST_F(BmsDualModeInstallTest, AdoptHiddenSingleModeInfo_SameNameOccupant_0600,
+    Function | SmallTest | Level0)
+{
+    // a same-name record already occupies bundleInfos_ -> the move is refused and both maps keep
+    // their records (no overwrite of the current-mode variant).
+    EnableSecondaryMode();
+    BaseBundleInstaller installer;
+    installer.bundleName_ = BUNDLE_NAME;
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    dataMgr->bundleInfos_[BUNDLE_NAME] =
+        MakeHiddenSingleModeInfo(DeviceModeDistributionPolicy::SUB_ONLY);
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] =
+        MakeHiddenSingleModeInfo(DeviceModeDistributionPolicy::MAIN_ONLY);
+    installer.dataMgr_ = dataMgr;
+    InnerBundleInfo oldInfo;
+    EXPECT_FALSE(installer.AdoptHiddenSingleModeInfo(oldInfo, InstallParam()));
+    EXPECT_EQ(dataMgr->bundleInfos_.count(BUNDLE_NAME), 1u);
+    EXPECT_EQ(dataMgr->tempBundleInfos_.count(BUNDLE_NAME), 1u);
+    EXPECT_FALSE(installer.isAppExist_);
+}
+
+HWTEST_F(BmsDualModeInstallTest, AdoptHiddenSingleModeInfo_OtaInstallFlagExcluded_0700,
+    Function | SmallTest | Level0)
+{
+    // otaInstall_ member flag alone (installParam.isOTA=false): SystemBundleInstaller OTA
+    // entries (OTAInstallSystemBundle*, app_temp recovery, boot patch install) set the member
+    // without isOTA — adoption must stay excluded so the OTA re-application path stays untouched.
+    EnableSecondaryMode();
+    BaseBundleInstaller installer;
+    installer.bundleName_ = BUNDLE_NAME;
+    installer.otaInstall_ = true;
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] =
+        MakeHiddenSingleModeInfo(DeviceModeDistributionPolicy::MAIN_ONLY);
+    installer.dataMgr_ = dataMgr;
+    InnerBundleInfo oldInfo;
+    EXPECT_FALSE(installer.AdoptHiddenSingleModeInfo(oldInfo, InstallParam()));
+    EXPECT_EQ(dataMgr->tempBundleInfos_.count(BUNDLE_NAME), 1u);
+    EXPECT_EQ(dataMgr->bundleInfos_.count(BUNDLE_NAME), 0u);
+    EXPECT_FALSE(installer.isAppExist_);
+}
+
+HWTEST_F(BmsDualModeInstallTest, AdoptHiddenSingleModeInfo_MarkInstallFinish_0800,
+    Function | SmallTest | Level0)
+{
+    // Adoption -> update commit routing: with the adopted record armed (isAppExist_=true,
+    // crossModeFetchTruth_=false), MarkInstallFinish commits on the CURRENT-mode map
+    // (bundleInfos_) and drains tempBundleInfos_ — the commit-point side of the guard's
+    // Dismiss semantics (past MarkInstallFinish the adopted record stays in bundleInfos_).
+    EnableSecondaryMode();
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    dataMgr->dataStorage_ = std::make_shared<BundleDataStorageSpy>();
+    BaseBundleInstaller installer;
+    installer.dataMgr_ = dataMgr;
+    installer.bundleName_ = BUNDLE_NAME;
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] =
+        MakeHiddenSingleModeInfo(DeviceModeDistributionPolicy::MAIN_ONLY);
+    InnerBundleInfo oldInfo;
+    EXPECT_TRUE(installer.AdoptHiddenSingleModeInfo(oldInfo, InstallParam()));
+    EXPECT_EQ(dataMgr->bundleInfos_.count(BUNDLE_NAME), 1u);
+    EXPECT_TRUE(installer.isAppExist_);
+    EXPECT_FALSE(installer.crossModeFetchTruth_);
+
+    // empty module path map: no SPM session is started in this test, so the session commit is a
+    // no-op returning ERR_OK (same environment as MarkInstallFinish_CrossMode_0100)
+    std::map<std::string, std::string> modulePathMap;
+    EXPECT_EQ(installer.MarkInstallFinish(modulePathMap), ERR_OK);
+    EXPECT_EQ(dataMgr->bundleInfos_.count(BUNDLE_NAME), 1u);
+    EXPECT_EQ(dataMgr->tempBundleInfos_.count(BUNDLE_NAME), 0u);
+    EXPECT_EQ(dataMgr->bundleInfos_[BUNDLE_NAME].GetBundleStatus(),
+        InnerBundleInfo::BundleStatus::ENABLED);
+    EXPECT_EQ(dataMgr->bundleInfos_[BUNDLE_NAME].GetDeviceModeDistributionPolicy(),
+        DeviceModeDistributionPolicy::MAIN_ONLY);
+    // cleanup: InstallTestDataMgr installs this dataMgr into the global service singleton —
+    // remove the committed entry so later cases are not polluted (EXPECT is non-fatal, the
+    // assertions above cannot skip this).
+    dataMgr->bundleInfos_.erase(BUNDLE_NAME);
+}
+
+// ====================== BaseBundleInstaller::RestoreAdoptedHiddenRecord ======================
+// Failure-guard body: moves the adopted record back to tempBundleInfos_ (pre-install placement)
+// and re-enables it there. Branches: happy path (restores ENABLED even from a DISABLED mid-install
+// record), null dataMgr / empty bundleName early return, bundleInfos_ miss (move fails -> no-op).
+
+HWTEST_F(BmsDualModeInstallTest, RestoreAdoptedHiddenRecord_RestoresEnabled_0100,
+    Function | SmallTest | Level0)
+{
+    // Failure-guard body: after a successful adoption, RestoreAdoptedHiddenRecord moves the
+    // record back to tempBundleInfos_ (pre-install placement) and re-enables it there — even
+    // when the mid-install record carried DISABLED, the hidden variant stays usable for the
+    // next mode switch (EnableBundle only addresses bundleInfos_).
+    EnableSecondaryMode();
+    BaseBundleInstaller installer;
+    installer.bundleName_ = BUNDLE_NAME;
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] =
+        MakeHiddenSingleModeInfo(DeviceModeDistributionPolicy::MAIN_ONLY);
+    installer.dataMgr_ = dataMgr;
+    InnerBundleInfo oldInfo;
+    EXPECT_TRUE(installer.AdoptHiddenSingleModeInfo(oldInfo, InstallParam()));
+    // worst case for the failure window: the mid-install record is disabled when the guard fires
+    dataMgr->bundleInfos_[BUNDLE_NAME].SetBundleStatus(InnerBundleInfo::BundleStatus::DISABLED);
+
+    installer.RestoreAdoptedHiddenRecord();
+    EXPECT_EQ(dataMgr->bundleInfos_.count(BUNDLE_NAME), 0u);
+    EXPECT_EQ(dataMgr->tempBundleInfos_.count(BUNDLE_NAME), 1u);
+    EXPECT_EQ(dataMgr->tempBundleInfos_[BUNDLE_NAME].GetDeviceModeDistributionPolicy(),
+        DeviceModeDistributionPolicy::MAIN_ONLY);
+    EXPECT_EQ(dataMgr->tempBundleInfos_[BUNDLE_NAME].GetBundleStatus(),
+        InnerBundleInfo::BundleStatus::ENABLED);
+}
+
+HWTEST_F(BmsDualModeInstallTest, RestoreAdoptedHiddenRecord_NothingToMove_0200,
+    Function | SmallTest | Level0)
+{
+    // Degraded branches of the failure guard: a null dataMgr_, an empty bundleName_ and a
+    // bundleInfos_ miss (the record is not there to move) must degrade gracefully — no crash,
+    // temp map untouched.
+    BaseBundleInstaller installer;
+    installer.bundleName_ = BUNDLE_NAME;
+    installer.dataMgr_ = nullptr;
+    installer.RestoreAdoptedHiddenRecord();  // early return, no crash
+
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] =
+        MakeHiddenSingleModeInfo(DeviceModeDistributionPolicy::MAIN_ONLY);
+    installer.dataMgr_ = dataMgr;
+    installer.bundleName_ = "";
+    installer.RestoreAdoptedHiddenRecord();  // empty name early return, no crash
+    EXPECT_EQ(dataMgr->tempBundleInfos_.count(BUNDLE_NAME), 1u);
+    EXPECT_EQ(dataMgr->bundleInfos_.count(BUNDLE_NAME), 0u);
+
+    installer.bundleName_ = BUNDLE_NAME;
+    installer.RestoreAdoptedHiddenRecord();  // bundleInfos_ miss -> move fails -> no-op
+    EXPECT_EQ(dataMgr->tempBundleInfos_.count(BUNDLE_NAME), 1u);
+    EXPECT_EQ(dataMgr->bundleInfos_.count(BUNDLE_NAME), 0u);
 }
 
 // ====================== BundleInstaller::InitUninstallAndRecoverInfo ======================
@@ -4703,6 +4984,96 @@ HWTEST_F(BmsDualModeInstallTest, FetchTempBundleInfo_FoundAssign_0300, Function 
     EXPECT_TRUE(dataMgr->FetchTempBundleInfo(BUNDLE_NAME, out));
     EXPECT_EQ(out.GetBundleName(), BUNDLE_NAME);
     EXPECT_TRUE(out.IsDualModeCloneApp());
+}
+
+// ====================== BundleDataMgr::MoveTempBundleInfoToCurrent ======================
+// In-memory move of the other-mode record back to the current-mode map, symmetric to
+// MoveBundleInfoToTemp. Branches: empty name (false), absent from temp (false), normal move
+// (true + content preserved + temp entry gone), same-name occupant in bundleInfos_ (false).
+
+HWTEST_F(BmsDualModeInstallTest, MoveTempBundleInfoToCurrent_EmptyName_0100, Function | SmallTest | Level0)
+{
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    EXPECT_FALSE(dataMgr->MoveTempBundleInfoToCurrent(""));
+}
+
+HWTEST_F(BmsDualModeInstallTest, MoveTempBundleInfoToCurrent_NotInTemp_0200, Function | SmallTest | Level0)
+{
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->tempBundleInfos_.clear();
+    EXPECT_FALSE(dataMgr->MoveTempBundleInfoToCurrent(BUNDLE_NAME));
+}
+
+HWTEST_F(BmsDualModeInstallTest, MoveTempBundleInfoToCurrent_Moved_0300, Function | SmallTest | Level0)
+{
+    // normal move: the record leaves tempBundleInfos_ and lands in bundleInfos_ with its
+    // content (policy) preserved; a round trip with MoveBundleInfoToTemp restores the placement.
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo hiddenInfo;
+    hiddenInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    hiddenInfo.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::MAIN_ONLY);
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] = hiddenInfo;
+    EXPECT_TRUE(dataMgr->MoveTempBundleInfoToCurrent(BUNDLE_NAME));
+    EXPECT_EQ(dataMgr->tempBundleInfos_.count(BUNDLE_NAME), 0u);
+    EXPECT_EQ(dataMgr->bundleInfos_.count(BUNDLE_NAME), 1u);
+    EXPECT_EQ(dataMgr->bundleInfos_[BUNDLE_NAME].GetDeviceModeDistributionPolicy(),
+        DeviceModeDistributionPolicy::MAIN_ONLY);
+    // round trip back (the install-failure guard path)
+    EXPECT_TRUE(dataMgr->MoveBundleInfoToTemp(BUNDLE_NAME));
+    EXPECT_EQ(dataMgr->bundleInfos_.count(BUNDLE_NAME), 0u);
+    EXPECT_EQ(dataMgr->tempBundleInfos_.count(BUNDLE_NAME), 1u);
+    EXPECT_EQ(dataMgr->tempBundleInfos_[BUNDLE_NAME].GetDeviceModeDistributionPolicy(),
+        DeviceModeDistributionPolicy::MAIN_ONLY);
+}
+
+HWTEST_F(BmsDualModeInstallTest, MoveTempBundleInfoToCurrent_SameNameOccupant_0400,
+    Function | SmallTest | Level0)
+{
+    // bundleInfos_ already holds a same-name record -> refuse the move, both maps unchanged.
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo currentInfo;
+    currentInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    currentInfo.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::SUB_ONLY);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = currentInfo;
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] = currentInfo;
+    EXPECT_FALSE(dataMgr->MoveTempBundleInfoToCurrent(BUNDLE_NAME));
+    EXPECT_EQ(dataMgr->bundleInfos_.count(BUNDLE_NAME), 1u);
+    EXPECT_EQ(dataMgr->tempBundleInfos_.count(BUNDLE_NAME), 1u);
+}
+
+// ====================== BundleDataMgr::EnableTempBundleInfo ======================
+// Temp-side counterpart of EnableBundle: re-enable a hidden record so a later mode swap brings
+// back a usable variant. Branches: empty name / not in temp (false), DISABLED -> ENABLED (true).
+
+HWTEST_F(BmsDualModeInstallTest, EnableTempBundleInfo_NotInTemp_0100, Function | SmallTest | Level0)
+{
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->tempBundleInfos_.clear();
+    EXPECT_FALSE(dataMgr->EnableTempBundleInfo(""));
+    EXPECT_FALSE(dataMgr->EnableTempBundleInfo(BUNDLE_NAME));
+}
+
+HWTEST_F(BmsDualModeInstallTest, EnableTempBundleInfo_Reenabled_0200, Function | SmallTest | Level0)
+{
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo hiddenInfo;
+    hiddenInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    hiddenInfo.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::MAIN_ONLY);
+    hiddenInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::DISABLED);
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] = hiddenInfo;
+    EXPECT_TRUE(dataMgr->EnableTempBundleInfo(BUNDLE_NAME));
+    EXPECT_EQ(dataMgr->tempBundleInfos_[BUNDLE_NAME].GetBundleStatus(),
+        InnerBundleInfo::BundleStatus::ENABLED);
+    // idempotent on an already-enabled record
+    EXPECT_TRUE(dataMgr->EnableTempBundleInfo(BUNDLE_NAME));
+    EXPECT_EQ(dataMgr->tempBundleInfos_[BUNDLE_NAME].GetBundleStatus(),
+        InnerBundleInfo::BundleStatus::ENABLED);
 }
 
 // ====================== BaseBundleInstaller::SetDualModeAppInfo ======================
