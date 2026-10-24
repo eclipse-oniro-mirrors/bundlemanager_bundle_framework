@@ -63,6 +63,8 @@ extern int32_t g_spmFinishInstallRet;
 extern std::vector<int32_t> g_spmFinishInstallRetSeq;
 extern int32_t g_spmFinishInstallCallCount;
 extern bool g_spmFinishInstallLastPersistent;
+extern unsigned int g_spmGetHapTokenIDRet;
+extern std::string g_lastDeleteIdentityBundleName;
 void ResetSpmKitMockValuesForTest();
 } // namespace AccessToken
 } // namespace Security
@@ -1014,4 +1016,33 @@ HWTEST_F(BmsSpmManagerTest, ConvertHapVerifyResultCode_0400, Function | SmallTes
         ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
 }
 
+/**
+ * @tc.number: BmsSpmManagerTest.CheckNewInstallIdentity_0001
+ * @tc.name: The identity plan is inert under SPM OFF
+ * @tc.desc: Even with an AT-side token visible to the query, the SPM OFF
+ *           contract keeps the plan at zero: no reuse path, no AT touch.
+ */
+HWTEST_F(BmsSpmManagerTest, CheckNewInstallIdentity_0001, Function | MediumTest | Level1)
+{
+    OHOS::Security::AccessToken::g_spmGetHapTokenIDRet = 101;
+    auto plan = BundleSpmManager::CheckNewInstallIdentity(TEST_USERID, BUNDLE_NAME,
+        Constants::INITIAL_APP_INDEX, nullptr);
+    EXPECT_EQ(plan.reuseTokenId, 0);
+    EXPECT_FALSE(plan.keepDataReinstall);
+    OHOS::Security::AccessToken::g_spmGetHapTokenIDRet = 0;
+}
+
+/**
+ * @tc.number: BmsSpmManagerTest.HasAtIdentity_0001
+ * @tc.name: HasAtIdentity is always false under SPM OFF
+ * @tc.desc: The update-flow branch selector must not query the AT side under
+ *           SPM OFF (the legacy UpdateHapToken flow stays untouched).
+ */
+HWTEST_F(BmsSpmManagerTest, HasAtIdentity_0001, Function | MediumTest | Level1)
+{
+    OHOS::Security::AccessToken::g_spmGetHapTokenIDRet = 101;
+    EXPECT_FALSE(BundleSpmManager::HasAtIdentity(TEST_USERID, BUNDLE_NAME,
+        Constants::INITIAL_APP_INDEX));
+    OHOS::Security::AccessToken::g_spmGetHapTokenIDRet = 0;
+}
 } // namespace OHOS

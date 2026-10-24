@@ -84,6 +84,10 @@ namespace OHOS {
 namespace AppExecFwk {
 void ResetProcessBinFilesParamForTest();
 bool GetProcessBinFilesParamForTest(VerifyBinParam &verifyBinParam);
+void ResetMigrateBundleDirsOwnerStateForTest();
+int32_t GetMigrateBundleDirsOwnerCallCountForTest();
+bool GetLastMigrateBundleDirsOwnerParamForTest(CreateDirParam &createDirParam);
+extern int32_t g_migrateBundleDirsOwnerRet;
 }
 namespace Security {
 namespace AccessToken {
@@ -20464,4 +20468,164 @@ HWTEST_F(BmsBundleInstallerTest, MarkDualUpgradeOtaNewInstallUsers_0012, Functio
     dataMgr->bundleInfos_.erase(normalName);
 }
 
+/**
+ * @tc.number: RefreshBundleDirsAfterUidChange_0001
+ * @tc.name: A non-positive new uid skips the installd call
+ * @tc.desc: The uid-refresh dir replay must not reach MigrateBundleDirsOwner
+ *           with an invalid uid (guards before any param assembly).
+ */
+HWTEST_F(BmsBundleInstallerTest, RefreshBundleDirsAfterUidChange_0001, Function | SmallTest | Level0)
+{
+    InnerBundleInfo info;
+    BaseBundleInstaller installer;
+    ResetMigrateBundleDirsOwnerStateForTest();
+    installer.RefreshBundleDirsAfterUidChange(info, USERID, Constants::INITIAL_APP_INDEX, 0);
+    installer.RefreshBundleDirsAfterUidChange(info, USERID, Constants::INITIAL_APP_INDEX, -1);
+    EXPECT_EQ(GetMigrateBundleDirsOwnerCallCountForTest(), 0);
+}
+
+/**
+ * @tc.number: RefreshBundleDirsAfterUidChange_0002
+ * @tc.name: Param assembly for the main identity
+ * @tc.desc: The replay param carries the ORIGINAL bundle name (installd
+ *           decorates clone names itself), the new uid as uid AND gid, the
+ *           apl/debug flags, the sandbox extension dirs and the el5 flag
+ *           derived from the screen-lock data permission of the info.
+ */
+HWTEST_F(BmsBundleInstallerTest, RefreshBundleDirsAfterUidChange_0002, Function | SmallTest | Level0)
+{
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    info.SetBaseBundleInfo(bundleInfo);
+    ApplicationInfo appInfo;
+    // GetBundleName() reads baseApplicationInfo_->bundleName: SetBaseBundleInfo
+    // (BundleInfo) alone leaves it empty and the param assertions below fail.
+    appInfo.bundleName = BUNDLE_NAME;
+    appInfo.appPrivilegeLevel = "system_basic";
+    appInfo.appProvisionType = Constants::APP_PROVISION_TYPE_DEBUG;
+    info.SetBaseApplicationInfo(appInfo);
+    info.SetIsPreInstallApp(true);
+    InnerModuleInfo moduleInfo;
+    RequestPermission screenLock;
+    screenLock.name = ServiceConstants::PERMISSION_PROTECT_SCREEN_LOCK_DATA;
+    moduleInfo.bundlePermissions.AddPermission(screenLock);
+    info.innerModuleInfos_[MODULE_NAME_TEST] = moduleInfo;
+    InnerExtensionInfo extInfo;
+    extInfo.needCreateSandbox = true;
+    extInfo.moduleName = MODULE_NAME_TEST;
+    extInfo.name = "TestAbility";
+    extInfo.bundleName = BUNDLE_NAME;
+    std::map<std::string, InnerExtensionInfo> extInfos;
+    extInfos.emplace("TestAbility", extInfo);
+    info.AddModuleExtensionInfos(extInfos);
+
+    BaseBundleInstaller installer;
+    ResetMigrateBundleDirsOwnerStateForTest();
+    constexpr int32_t newUid = 100 * 200000 + 555;
+    installer.RefreshBundleDirsAfterUidChange(info, USERID, Constants::INITIAL_APP_INDEX, newUid);
+    EXPECT_EQ(GetMigrateBundleDirsOwnerCallCountForTest(), 1);
+    CreateDirParam param;
+    ASSERT_TRUE(GetLastMigrateBundleDirsOwnerParamForTest(param));
+    EXPECT_EQ(param.bundleName, BUNDLE_NAME);
+    EXPECT_EQ(param.userId, USERID);
+    EXPECT_EQ(param.uid, newUid);
+    EXPECT_EQ(param.gid, newUid);
+    EXPECT_EQ(param.appIndex, Constants::INITIAL_APP_INDEX);
+    EXPECT_EQ(param.apl, "system_basic");
+    EXPECT_TRUE(param.debug);
+    EXPECT_TRUE(param.isPreInstallApp);
+    EXPECT_FALSE(param.hasDriverExtension);
+    EXPECT_FALSE(param.extensionDirs.empty());
+    EXPECT_TRUE(param.isContainsEl5Dir);
+    EXPECT_EQ(param.sessionId, 0);
+}
+
+/**
+ * @tc.number: RefreshBundleDirsAfterUidChange_0003
+ * @tc.name: Regular clones pass no extension dirs
+ * @tc.desc: Regular clones never carry extension sandbox dirs (CreateCloneDataDir
+ *           passes none); only the main identity and dual-mode clones do —
+ *           aligned with the unlock refresh.
+ */
+HWTEST_F(BmsBundleInstallerTest, RefreshBundleDirsAfterUidChange_0003, Function | SmallTest | Level0)
+{
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    info.SetBaseBundleInfo(bundleInfo);
+    InnerExtensionInfo extInfo;
+    extInfo.needCreateSandbox = true;
+    extInfo.moduleName = MODULE_NAME_TEST;
+    extInfo.name = "TestAbility";
+    extInfo.bundleName = BUNDLE_NAME;
+    std::map<std::string, InnerExtensionInfo> extInfos;
+    extInfos.emplace("TestAbility", extInfo);
+    info.AddModuleExtensionInfos(extInfos);
+
+    BaseBundleInstaller installer;
+    ResetMigrateBundleDirsOwnerStateForTest();
+    constexpr int32_t cloneAppIndex = 2;
+    constexpr int32_t newUid = 100 * 200000 + 555;
+    installer.RefreshBundleDirsAfterUidChange(info, USERID, cloneAppIndex, newUid);
+    EXPECT_EQ(GetMigrateBundleDirsOwnerCallCountForTest(), 1);
+    CreateDirParam param;
+    ASSERT_TRUE(GetLastMigrateBundleDirsOwnerParamForTest(param));
+    EXPECT_EQ(param.appIndex, cloneAppIndex);
+    EXPECT_TRUE(param.extensionDirs.empty());
+}
+
+/**
+ * @tc.number: RefreshBundleDirsAfterUidChange_0004
+ * @tc.name: Dual-mode clones keep the extension dirs
+ * @tc.desc: The dual-mode clone (appIndex 10000) takes part in the full dir
+ *           recovery, so its replay param keeps the extension dirs.
+ */
+HWTEST_F(BmsBundleInstallerTest, RefreshBundleDirsAfterUidChange_0004, Function | SmallTest | Level0)
+{
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    info.SetBaseBundleInfo(bundleInfo);
+    InnerExtensionInfo extInfo;
+    extInfo.needCreateSandbox = true;
+    extInfo.moduleName = MODULE_NAME_TEST;
+    extInfo.name = "TestAbility";
+    extInfo.bundleName = BUNDLE_NAME;
+    std::map<std::string, InnerExtensionInfo> extInfos;
+    extInfos.emplace("TestAbility", extInfo);
+    info.AddModuleExtensionInfos(extInfos);
+
+    BaseBundleInstaller installer;
+    ResetMigrateBundleDirsOwnerStateForTest();
+    constexpr int32_t newUid = 100 * 200000 + 555;
+    installer.RefreshBundleDirsAfterUidChange(info, USERID,
+        ServiceConstants::DUAL_MODE_CLONE_APP_INDEX, newUid);
+    EXPECT_EQ(GetMigrateBundleDirsOwnerCallCountForTest(), 1);
+    CreateDirParam param;
+    ASSERT_TRUE(GetLastMigrateBundleDirsOwnerParamForTest(param));
+    EXPECT_EQ(param.appIndex, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
+    EXPECT_FALSE(param.extensionDirs.empty());
+}
+
+/**
+ * @tc.number: RefreshBundleDirsAfterUidChange_0005
+ * @tc.name: Best effort on the installd failure
+ * @tc.desc: A MigrateBundleDirsOwner failure is only reported (log + event),
+ *           never propagated: the method returns void and must not throw.
+ */
+HWTEST_F(BmsBundleInstallerTest, RefreshBundleDirsAfterUidChange_0005, Function | SmallTest | Level0)
+{
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    info.SetBaseBundleInfo(bundleInfo);
+    BaseBundleInstaller installer;
+    ResetMigrateBundleDirsOwnerStateForTest();
+    g_migrateBundleDirsOwnerRet = ERR_APPEXECFWK_INSTALLD_MIGRATE_DIR_OWNER_FAILED;
+    constexpr int32_t newUid = 100 * 200000 + 555;
+    installer.RefreshBundleDirsAfterUidChange(info, USERID, Constants::INITIAL_APP_INDEX, newUid);
+    EXPECT_EQ(GetMigrateBundleDirsOwnerCallCountForTest(), 1);
+    g_migrateBundleDirsOwnerRet = 0;
+}
 } // OHOS

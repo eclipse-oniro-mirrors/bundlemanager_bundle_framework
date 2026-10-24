@@ -28,10 +28,15 @@ int32_t g_remainingSuccessfulCalls = 2;
 int32_t g_clearSessionProvisionCacheCount = 0;
 // Failure injection knob for the ClearInstalldProvisionCache error log branch.
 int32_t g_clearSessionProvisionCacheRet = 0;
+// Counting/capture knobs for MigrateBundleDirsOwner (uid-refresh dir replay).
+int32_t g_migrateBundleDirsOwnerCallCount = 0;
+// Failure injection knob for the RefreshBundleDirsAfterUidChange best-effort branch.
+int32_t g_migrateBundleDirsOwnerRet = 0;
 bool g_mockCleanBundleDataDirResult = true;
 namespace {
 bool g_processBinFilesCalled = false;
 VerifyBinParam g_lastVerifyBinParam;
+CreateDirParam g_lastMigrateBundleDirsOwnerParam;
 }
 
 void ResetProcessBinFilesParamForTest()
@@ -49,6 +54,27 @@ void ResetClearSessionProvisionCacheCountForTest()
 int32_t GetClearSessionProvisionCacheCountForTest()
 {
     return g_clearSessionProvisionCacheCount;
+}
+
+void ResetMigrateBundleDirsOwnerStateForTest()
+{
+    g_migrateBundleDirsOwnerCallCount = 0;
+    g_migrateBundleDirsOwnerRet = 0;
+    g_lastMigrateBundleDirsOwnerParam = CreateDirParam();
+}
+
+int32_t GetMigrateBundleDirsOwnerCallCountForTest()
+{
+    return g_migrateBundleDirsOwnerCallCount;
+}
+
+bool GetLastMigrateBundleDirsOwnerParamForTest(CreateDirParam &createDirParam)
+{
+    if (g_migrateBundleDirsOwnerCallCount == 0) {
+        return false;
+    }
+    createDirParam = g_lastMigrateBundleDirsOwnerParam;
+    return true;
 }
 
 bool GetProcessBinFilesParamForTest(VerifyBinParam &verifyBinParam)
@@ -1164,6 +1190,13 @@ ErrCode InstalldClient::ClearSessionProvisionCache(int32_t sessionId)
     // session id 0 before reaching here, so callers assert the count stays 0.
     g_clearSessionProvisionCacheCount++;
     return g_clearSessionProvisionCacheRet;
+}
+
+ErrCode InstalldClient::MigrateBundleDirsOwner(const CreateDirParam &createDirParam)
+{
+    g_migrateBundleDirsOwnerCallCount++;
+    g_lastMigrateBundleDirsOwnerParam = createDirParam;
+    return g_migrateBundleDirsOwnerRet;
 }
 
 void InstalldClient::OnLoadSystemAbilityFail() {}

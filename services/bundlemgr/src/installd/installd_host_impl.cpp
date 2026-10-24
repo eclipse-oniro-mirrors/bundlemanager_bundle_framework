@@ -5658,5 +5658,101 @@ ErrCode InstalldHostImpl::ClearSessionProvisionCache(int32_t sessionId)
     ++sessionProvisionCacheGeneration_;
     return ERR_OK;
 }
+
+ErrCode InstalldHostImpl::MigrateBundleDirsOwner(const CreateDirParam &createDirParam)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    // Defensive parse: callers pass the ORIGINAL bundle name, but a decorated
+    // one (clone prefix) must still validate instead of being rejected.
+    std::string originalBundleName = createDirParam.bundleName;
+    if (createDirParam.bundleName.find(ServiceConstants::CLONE_PREFIX) == 0) {
+        int32_t parsedIndex = 0;
+        BundleCloneCommonHelper::ParseCloneDataDir(createDirParam.bundleName, originalBundleName, parsedIndex);
+    }
+    if (!InstalldOperator::IsValidBundleName(originalBundleName) ||
+        !InstalldOperator::IsValidUserId(createDirParam.userId) || !InstalldOperator::IsValidUid(createDirParam.uid) ||
+        !InstalldOperator::IsValidUid(createDirParam.gid) ||
+        !InstalldOperator::IsValidAppIndex(createDirParam.appIndex)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid params, bundleName: %{public}s, userId: %{public}d, "
+            "appIndex: %{public}d, newUid: %{public}d",
+            originalBundleName.c_str(), createDirParam.userId, createDirParam.appIndex, createDirParam.uid);
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    // Refresh the app-uid-bound dirs to the new uid with the SAME dir set as
+    // the unlock refresh (UpdateAppDataMgr::UpdateAppDataDirSelinuxLabel):
+    // 1) replay CreateBundleDataDir — the known dirs (el1~el4 base/database
+    //    trees plus the sub-dirs, extension, shader, log, sharefiles,
+    //    distributedfile, backup, share, cloud and print dirs) get owner/mode/
+    //    label re-applied with the new uid, the existing trees are recursively
+    //    migrated (CheckPathIsSame -> chmod + ChangeDirOwnerRecursively on
+    //    mismatch) and a missing dir is re-created;
+    // 2) refresh the el5 screen-lock data trees when BMS flags them
+    //    (isContainsEl5Dir, the same permission gate as the unlock refresh),
+    //    including the encryption policy rebind.
+    // Best effort — the owner change cannot be undone, so every step still
+    // runs after a failure and the first failure is returned.
+    // The clone trees live under the decorated name, mirroring the creation
+    // sites (CreateBundleDataDir receives the effective name from BMS; the
+    // print service dir derives the same decoration itself).
+    std::string effectiveBundleName = (createDirParam.appIndex > 0)
+        ? BundleCloneCommonHelper::GetCloneDataDir(originalBundleName, createDirParam.appIndex)
+        : originalBundleName;
+    CreateDirParam replayParam = createDirParam;
+    replayParam.bundleName = effectiveBundleName;
+    // The print service dir derives its own clone decoration from appIndex
+    // (CreatePrintServiceDirInner); with the already-decorated bundleName the
+    // index must be reset, otherwise the dir name is decorated twice.
+    replayParam.appIndex = 0;
+    ErrCode result = CreateBundleDataDir(replayParam);
+    if (result != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "replay bundle data dirs failed, bundleName: %{public}s "
+            "userId: %{public}d newUid: %{public}d ret: %{public}d",
+            originalBundleName.c_str(), createDirParam.userId, createDirParam.uid, result);
+    }
+    if (!createDirParam.isContainsEl5Dir) {
+        return result;
+    }
+    // el5: owner migration only (gid = uid, the app's gid equals its uid); the
+    // SELinux label is name-based and unaffected by the chown, so no label
+    // replay here. A missing user-level el5 parent means no el5 storage — skip.
+    std::string el5Root = std::string(ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH) +
+        ServiceConstants::PATH_SEPARATOR + std::to_string(createDirParam.userId);
+    if (access(el5Root.c_str(), F_OK) != 0) {
+        LOG_W(BMS_TAG_INSTALLD, "el5 user directory %{private}s does not existed", el5Root.c_str());
+        return result;
+    }
+    std::vector<std::pair<std::string, int32_t>> el5Dirs = {
+        {el5Root + ServiceConstants::BASE + effectiveBundleName, S_IRWXU},
+        {el5Root + ServiceConstants::DATABASE + effectiveBundleName, S_IRWXU | S_IRWXG},
+    };
+    for (const auto &el5Dir : el5Dirs) {
+        if (!InstalldOperator::MkOwnerDir(el5Dir.first, el5Dir.second,
+            createDirParam.uid, createDirParam.uid)) {
+            LOG_E(BMS_TAG_INSTALLD, "migrate el5 dir failed, path: %{private}s errno: %{public}d",
+                el5Dir.first.c_str(), errno);
+            if (result == ERR_OK) {
+                result = ERR_APPEXECFWK_INSTALLD_MIGRATE_DIR_OWNER_FAILED;
+            }
+        }
+    }
+    // The el5 key is generated per (uid, bundleName) (GenerateAppKey takes the
+    // uid as input): rebind it to the new uid, otherwise the refreshed identity
+    // cannot decrypt the el5 trees. The keyId is only logged on the BMS side,
+    // so it is dropped here.
+    EncryptionParam encryptionParam(effectiveBundleName, "", createDirParam.uid,
+        createDirParam.userId, EncryptionDirType::APP);
+    std::string keyId;
+    if (!InstalldOperator::GenerateKeyIdAndSetPolicy(encryptionParam, keyId)) {
+        LOG_E(BMS_TAG_INSTALLD, "rebind el5 encryption policy failed, bundleName: %{public}s",
+            effectiveBundleName.c_str());
+        if (result == ERR_OK) {
+            result = ERR_APPEXECFWK_INSTALLD_GENERATE_KEY_FAILED;
+        }
+    }
+    return result;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

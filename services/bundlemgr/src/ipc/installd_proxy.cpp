@@ -2232,5 +2232,19 @@ ErrCode InstalldProxy::ClearSessionProvisionCache(int32_t sessionId)
     MessageOption option;
     return TransactInstalldCmd(InstalldInterfaceCode::CLEAR_SESSION_PROVISION_CACHE, data, reply, option);
 }
+
+ErrCode InstalldProxy::MigrateBundleDirsOwner(const CreateDirParam &createDirParam)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    if (!data.WriteParcelable(&createDirParam)) {
+        LOG_E(BMS_TAG_INSTALLD, "WriteParcelable createDirParam failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    MessageOption option;
+    return TransactInstalldCmd(InstalldInterfaceCode::MIGRATE_BUNDLE_DIRS_OWNER, data, reply, option);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

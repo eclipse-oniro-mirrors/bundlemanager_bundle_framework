@@ -3004,4 +3004,40 @@ HWTEST_F(BmsInstallDaemonTest, InstalldSceneInterfaces_CopyHqfFileFailures_0300,
         BUNDLE_NAME13, "blocked", "scene_test/blocked.hqf", versionCode, patchTarget),
         ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
 }
+
+/**
+ * @tc.number: MigrateBundleDirsOwner_ParamError_0100
+ * @tc.name: invalid params are rejected before any dir replay
+ * @tc.desc: The real host impl validates the CreateDirParam first: an invalid
+ *           bundle name / userId / uid / gid fails fast with PARAM_ERROR
+ *           without touching the file system.
+ */
+HWTEST_F(BmsInstallDaemonTest, MigrateBundleDirsOwner_ParamError_0100, Function | SmallTest | Level0)
+{
+    // start the in-process installd service (same pattern as BundleDataDir_0100)
+    CreateBundleDataDir(BUNDLE_NAME13, USERID, UID, GID, APL);
+
+    CreateDirParam param;
+    param.bundleName = "";  // invalid bundle name
+    param.userId = USERID;
+    param.uid = UID;
+    param.gid = GID;
+    auto ret = InstalldClient::GetInstance()->MigrateBundleDirsOwner(param);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    param.bundleName = BUNDLE_NAME13;
+    param.userId = -1;  // invalid user id
+    ret = InstalldClient::GetInstance()->MigrateBundleDirsOwner(param);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    param.userId = USERID;
+    param.uid = -1;  // invalid uid
+    ret = InstalldClient::GetInstance()->MigrateBundleDirsOwner(param);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    param.uid = UID;
+    param.gid = -1;  // invalid gid
+    ret = InstalldClient::GetInstance()->MigrateBundleDirsOwner(param);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
 } // OHOS

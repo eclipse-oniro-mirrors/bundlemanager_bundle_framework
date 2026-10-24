@@ -526,6 +526,21 @@ public:
 
     ErrCode ClearSessionProvisionCache(int32_t sessionId);
 
+    /**
+     * @brief Migrate the owner of every application-uid-bound directory tree of
+     *        one identity to the new uid (SPM ON: the access token service
+     *        refreshed the token-bound uid and BMS adopts it as the authority).
+     *        Best effort on the installd side; failures are observable through
+     *        the returned code but must not roll the install back (the owner
+     *        change cannot be undone).
+     * @param createDirParam Indicates the replay parameters: bundleName is
+     *        the ORIGINAL (undecorated) name, uid/gid carry the new uid, and
+     *        isContainsEl5Dir gates the el5 supplement (same permission gate
+     *        as the unlock refresh).
+     * @return Returns ERR_OK when every step succeeded.
+     */
+    ErrCode MigrateBundleDirsOwner(const CreateDirParam &createDirParam);
+
 private:
     sptr<IInstalld> GetInstalldProxy();
     bool LoadInstalldService();

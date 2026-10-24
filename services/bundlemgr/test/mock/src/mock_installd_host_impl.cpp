@@ -22,6 +22,23 @@ namespace AppExecFwk {
 namespace {
 bool g_processBinFilesCalled = false;
 VerifyBinParam g_lastVerifyBinParam;
+bool g_migrateBundleDirsOwnerCalled = false;
+CreateDirParam g_lastMigrateBundleDirsOwnerParam;
+}
+
+void ResetMockInstalldMigrateBundleDirsOwnerParam()
+{
+    g_migrateBundleDirsOwnerCalled = false;
+    g_lastMigrateBundleDirsOwnerParam = CreateDirParam();
+}
+
+bool GetMockInstalldMigrateBundleDirsOwnerParam(CreateDirParam &createDirParam)
+{
+    if (!g_migrateBundleDirsOwnerCalled) {
+        return false;
+    }
+    createDirParam = g_lastMigrateBundleDirsOwnerParam;
+    return true;
 }
 
 void ResetMockInstalldProcessBinFilesParam()
@@ -665,6 +682,13 @@ ErrCode InstalldHostImpl::CopyPgoFile(const std::string &bundleName, const std::
 
 ErrCode InstalldHostImpl::ClearSessionProvisionCache(int32_t sessionId)
 {
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::MigrateBundleDirsOwner(const CreateDirParam &createDirParam)
+{
+    g_migrateBundleDirsOwnerCalled = true;
+    g_lastMigrateBundleDirsOwnerParam = createDirParam;
     return ERR_OK;
 }
 

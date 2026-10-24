@@ -2287,4 +2287,26 @@ HWTEST_F(BmsInstallDaemonHostImplTest, RemoveLegacySkillDir_0100, Function | Sma
     EXPECT_EQ(hostImpl->RemoveDir(ServiceConstants::LEGACY_SKILL_BASE_DIR, BundleDirScene::REMOVE_LEGACY_SKILL_DIR),
         ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
+
+/**
+ * @tc.number: MigrateBundleDirsOwner_0100
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling MigrateBundleDirsOwner of hostImpl (SPM ON uid refresh,
+ *           code 107); asserts the foundation-uid gate first, aligned with
+ *           sibling cases
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, MigrateBundleDirsOwner_0100, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+
+    CreateDirParam createDirParam;
+    createDirParam.bundleName = TEST_BUNDLE_NAME;
+    createDirParam.userId = 100;
+    createDirParam.appIndex = 0;
+    createDirParam.uid = 12400;
+    createDirParam.gid = 12400;
+    auto ret = hostImpl->MigrateBundleDirsOwner(createDirParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
 } // OHOS

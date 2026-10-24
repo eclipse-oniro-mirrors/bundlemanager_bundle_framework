@@ -30,6 +30,8 @@ namespace OHOS {
 namespace AppExecFwk {
 void ResetMockInstalldProcessBinFilesParam();
 bool GetMockInstalldProcessBinFilesParam(VerifyBinParam &verifyBinParam);
+void ResetMockInstalldMigrateBundleDirsOwnerParam();
+bool GetMockInstalldMigrateBundleDirsOwnerParam(CreateDirParam &createDirParam);
 }
 namespace {
 constexpr int32_t UID = 100;
@@ -2045,5 +2047,53 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_ExtractSkillsPackage_0100, F
     std::vector<SkillsPackageInfo> skillInfoList;
     auto ret = proxy->ExtractSkillsPackage(param, skillInfoList);
     EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstalldProxyTest_MigrateBundleDirsOwner_0100
+ * @tc.name: test MigrateBundleDirsOwner IPC round-trip with a full param
+ * @tc.desc: 1. call MigrateBundleDirsOwner via the proxy->host loopback with
+ *              every CreateDirParam field filled
+ *           2. the mock host captures the deserialized param
+ *           3. verify no field is lost by the parcel round-trip (especially
+ *              sessionId, which sits at the end of the parcel)
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_MigrateBundleDirsOwner_0100, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    ASSERT_NE(proxy, nullptr);
+    ResetMockInstalldMigrateBundleDirsOwnerParam();
+
+    CreateDirParam param;
+    param.bundleName = TEST_BUNDLE_NAME;
+    param.userId = 100;
+    param.uid = 12400;
+    param.gid = 12400;
+    param.appIndex = 2;
+    param.apl = "system_basic";
+    param.isPreInstallApp = true;
+    param.debug = true;
+    param.hasDriverExtension = true;
+    param.isContainsEl5Dir = true;
+    param.extensionDirs = {"ext/entry_module/TestAbility/+" + TEST_BUNDLE_NAME};
+    param.sessionId = 77;
+    auto ret = proxy->MigrateBundleDirsOwner(param);
+    EXPECT_EQ(ret, ERR_OK);
+
+    CreateDirParam received;
+    ASSERT_TRUE(GetMockInstalldMigrateBundleDirsOwnerParam(received));
+    EXPECT_EQ(received.bundleName, TEST_BUNDLE_NAME);
+    EXPECT_EQ(received.userId, 100);
+    EXPECT_EQ(received.uid, 12400);
+    EXPECT_EQ(received.gid, 12400);
+    EXPECT_EQ(received.appIndex, 2);
+    EXPECT_EQ(received.apl, "system_basic");
+    EXPECT_TRUE(received.isPreInstallApp);
+    EXPECT_TRUE(received.debug);
+    EXPECT_TRUE(received.hasDriverExtension);
+    EXPECT_TRUE(received.isContainsEl5Dir);
+    ASSERT_EQ(received.extensionDirs.size(), static_cast<size_t>(1));
+    EXPECT_EQ(received.extensionDirs[0], param.extensionDirs[0]);
+    EXPECT_EQ(received.sessionId, 77);
 }
 } // OHOS

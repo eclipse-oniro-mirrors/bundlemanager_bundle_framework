@@ -76,6 +76,8 @@ int32_t g_spmCheckHapPermissionInfoCallCount = 0;
 // verifies its permissions against the SUB-mode identity.
 int32_t g_spmCheckHapPermissionInfoLastMode = -100;
 int32_t g_spmPrepareHapIdentityRet = 0;
+// Call counter: tests assert the S2 reuse path never reaches PrepareHapIdentity.
+int32_t g_spmPrepareHapIdentityCallCount = 0;
 uint64_t g_spmPrepareIdentityTokenId = 0;
 int32_t g_spmPrepareIdentityUid = 0;
 // Session-id write-back knob for PrepareHapIdentity: mirrors the real AT
@@ -107,6 +109,11 @@ bool g_spmFinishInstallLastPersistent = false;
 // TryRecoverAlreadyExistError) and the module-uninstall re-sign flow.
 int32_t g_spmMigrateInstalledBundlesRet = 0;
 int32_t g_spmDeleteIdentityRet = 0;
+// Controllable GetHapTokenID result: 0 (default) means "no token on the AT
+// side" (clean state / S3 split state); a non-zero value drives the
+// fresh-install reconciliation (S2 leftover) and the update-branch identity
+// pre-check.
+unsigned int g_spmGetHapTokenIDRet = 0;
 // Recording knobs for MigrateInstalledBundles: the parallel lists must carry
 // the same entry count (alignment contract consumed by the AT side).
 int32_t g_spmLastMigratedBaseInfoCount = 0;
@@ -129,6 +136,7 @@ void ResetSpmKitMockValuesForTest()
     g_spmCheckHapPermissionInfoCallCount = 0;
     g_spmCheckHapPermissionInfoLastMode = -100;
     g_spmPrepareHapIdentityRet = 0;
+    g_spmPrepareHapIdentityCallCount = 0;
     g_spmPrepareIdentityTokenId = 0;
     g_spmPrepareIdentityUid = 0;
     g_spmPrepareIdentitySessionId = 0;
@@ -148,6 +156,7 @@ void ResetSpmKitMockValuesForTest()
     g_lastDeleteIdentityTokenId = 0;
     g_lastDeleteIdentityBundleName.clear();
     g_lastDeleteIdentityType = 0;
+    g_spmGetHapTokenIDRet = 0;
 }
 
 void SetAccessTokenIDForTest(unsigned int value)
@@ -359,7 +368,7 @@ int AccessTokenKit::ClearUserGrantedPermissionState(AccessTokenID tokenID)
 
 AccessTokenID AccessTokenKit::GetHapTokenID(int userID, const std::string& bundleName, int instIndex)
 {
-    return 0;
+    return g_spmGetHapTokenIDRet;
 }
 
 AccessTokenIDEx AccessTokenKit::GetHapTokenIDEx(int userID, const std::string& bundleName, int instIndex)
@@ -480,6 +489,7 @@ int32_t AccessTokenKit::CheckHapPermissionInfo(int32_t sessionId, InstallTypeEnu
 int32_t AccessTokenKit::PrepareHapIdentity(int32_t& sessionId, const HapBaseInfo& info,
     const BundlePolicy& policy, Identity& identity)
 {
+    ++g_spmPrepareHapIdentityCallCount;
     if (sessionId == 0 && g_spmPrepareIdentitySessionId != 0) {
         // Mirrors the real AT contract: a deferred caller (session id 0) makes
         // the AT side allocate the session and write the id back.

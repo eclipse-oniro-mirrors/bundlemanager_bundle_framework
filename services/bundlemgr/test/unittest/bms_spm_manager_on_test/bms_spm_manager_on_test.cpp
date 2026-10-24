@@ -13,10 +13,17 @@
 * limitations under the License.
 */
 
+// UpdateHapToken (and the private helpers under test) live in the private
+// section of BaseBundleInstaller; the sibling bms_bundle_installer_test uses
+// the same access override.
+#define private public
+#define protected public
+
 #include <gtest/gtest.h>
 
 #include "access_token_error.h"
 #include "appexecfwk_errors.h"
+#include "base_bundle_installer.h"
 #include "bundle_data_mgr.h"
 #include "bundle_install_checker.h"
 #include "bundle_spm_manager.h"
@@ -32,6 +39,10 @@ namespace AppExecFwk {
 void ResetClearSessionProvisionCacheCountForTest();
 int32_t GetClearSessionProvisionCacheCountForTest();
 extern int32_t g_clearSessionProvisionCacheRet;
+void ResetMigrateBundleDirsOwnerStateForTest();
+int32_t GetMigrateBundleDirsOwnerCallCountForTest();
+bool GetLastMigrateBundleDirsOwnerParamForTest(CreateDirParam &createDirParam);
+extern int32_t g_migrateBundleDirsOwnerRet;
 } // namespace AppExecFwk
 
 // SPM control variables and resetter defined in test/mock/src/accesstoken_kit.cpp.
@@ -45,6 +56,7 @@ extern int32_t g_spmCheckHapPermissionInfoRet;
 extern int32_t g_spmCheckHapPermissionInfoCallCount;
 extern int32_t g_spmCheckHapPermissionInfoLastMode;
 extern int32_t g_spmPrepareHapIdentityRet;
+extern int32_t g_spmPrepareHapIdentityCallCount;
 extern uint64_t g_spmPrepareIdentityTokenId;
 extern int32_t g_spmPrepareIdentityUid;
 extern int32_t g_spmPrepareIdentitySessionId;
@@ -60,6 +72,7 @@ extern int32_t g_spmDeleteIdentityRet;
 extern uint64_t g_lastDeleteIdentityTokenId;
 extern std::string g_lastDeleteIdentityBundleName;
 extern int32_t g_lastDeleteIdentityType;
+extern unsigned int g_spmGetHapTokenIDRet;
 extern int32_t g_spmFinishInstallRet;
 extern int32_t g_spmFinishInstallCallCount;
 extern bool g_spmFinishInstallLastPersistent;
@@ -144,6 +157,7 @@ public:
         OHOS::ResetSpmFacadeMockValues();
         OHOS::Security::AccessToken::ResetSpmKitMockValuesForTest();
         OHOS::AppExecFwk::ResetClearSessionProvisionCacheCountForTest();
+        OHOS::AppExecFwk::ResetMigrateBundleDirsOwnerStateForTest();
     };
     void TearDown() override {};
 };
@@ -1852,6 +1866,340 @@ HWTEST_F(BmsSpmManagerOnTest, TryRecoverAlreadyExistError_DeleteFailed_0001, Fun
 {
     OHOS::Security::AccessToken::g_spmDeleteIdentityRet = -6;
     EXPECT_FALSE(BundleSpmManager::TryRecoverAlreadyExistError(BUNDLE_NAME));
+}
+
+/**
+ * @tc.number: BmsSpmManagerOnTest.CheckNewInstallIdentity_0001
+ * @tc.name: A clean install plans Prepare
+ * @tc.desc: No AT-side token and no keep-data record: the plan is zero
+ *           (PrepareHapIdentity path) and the AT side is not touched.
+ */
+HWTEST_F(BmsSpmManagerOnTest, CheckNewInstallIdentity_0001, Function | MediumTest | Level1)
+{
+    // g_spmGetHapTokenIDRet stays 0 and dataMgr is null: clean install.
+    auto plan = BundleSpmManager::CheckNewInstallIdentity(TEST_USERID, BUNDLE_NAME,
+        Constants::INITIAL_APP_INDEX, nullptr);
+    EXPECT_EQ(plan.reuseTokenId, 0);
+    EXPECT_FALSE(plan.keepDataReinstall);
+    EXPECT_TRUE(OHOS::Security::AccessToken::g_lastDeleteIdentityBundleName.empty());
+}
+
+/**
+ * @tc.number: BmsSpmManagerOnTest.CheckNewInstallIdentity_0002
+ * @tc.name: The S2 live leftover is planned for reuse
+ * @tc.desc: An AT-side active token without a keep-data record is the S2
+ *           interrupted-install residue: its token id is returned for the
+ *           UpdateToken reuse — and nothing is deleted.
+ */
+HWTEST_F(BmsSpmManagerOnTest, CheckNewInstallIdentity_0002, Function | MediumTest | Level1)
+{
+    OHOS::Security::AccessToken::g_spmGetHapTokenIDRet = 101; // live residue token id
+    auto plan = BundleSpmManager::CheckNewInstallIdentity(TEST_USERID, BUNDLE_NAME,
+        Constants::INITIAL_APP_INDEX, nullptr);
+    EXPECT_EQ(plan.reuseTokenId, 101);
+    EXPECT_FALSE(plan.keepDataReinstall);
+    // Reuse instead of delete: the AT side is never touched here.
+    EXPECT_TRUE(OHOS::Security::AccessToken::g_lastDeleteIdentityBundleName.empty());
+}
+
+/**
+ * @tc.number: BmsSpmManagerOnTest.InitToken_S2Reuse_0001
+ * @tc.name: InitToken reuses the S2 leftover token instead of re-preparing
+ * @tc.desc: With a live AT-side token and no keep-data record, InitToken takes
+ *           the UpdateToken branch: the leftover token id is handed back, the
+ *           reused uid is adopted into the user info, and PrepareHapIdentity
+ *           is never called (the session stays identity-free; Commit persists
+ *           the policy through the updated-token map).
+ */
+HWTEST_F(BmsSpmManagerOnTest, InitToken_S2Reuse_0001, Function | MediumTest | Level1)
+{
+    OHOS::Security::AccessToken::g_spmGetHapTokenIDRet = 101; // leftover token id
+    OHOS::Security::AccessToken::g_spmUpdateHapPolicyUidOut = TEST_IDENTITY_UID;
+    // g_spmUpdateHapPolicyRet stays 0 (update succeeds).
+    auto session = BundleSpmManager::InstallSession::CreateDeferred();
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    info.SetBaseBundleInfo(bundleInfo);
+    // GetBundleName() reads baseApplicationInfo_->bundleName: SetBaseBundleInfo
+    // (BundleInfo) alone leaves it EMPTY and CheckNewInstallIdentity short-
+    // circuits on the empty name, so the S2 leftover can never be reused.
+    ApplicationInfo appInfo;
+    appInfo.bundleName = BUNDLE_NAME;
+    info.SetBaseApplicationInfo(appInfo);
+    Security::AccessToken::AccessTokenIDEx tokenIdEx = {0};
+    Security::AccessToken::HapInfoCheckResult checkResult;
+    int32_t identityUid = 0;
+    EXPECT_EQ(session.InitToken(info, TEST_USERID, 0, tokenIdEx, checkResult, "", nullptr, false,
+        &identityUid), ERR_OK);
+    EXPECT_EQ(tokenIdEx.tokenIdExStruct.tokenID, 101);
+    EXPECT_EQ(identityUid, TEST_IDENTITY_UID);
+    EXPECT_EQ(OHOS::Security::AccessToken::g_spmPrepareHapIdentityCallCount, 0);
+    InnerBundleUserInfo userInfo;
+    ASSERT_TRUE(info.GetInnerBundleUserInfo(TEST_USERID, userInfo));
+    EXPECT_EQ(userInfo.uid, TEST_IDENTITY_UID);
+}
+
+/**
+ * @tc.number: BmsSpmManagerOnTest.InitToken_S2Reuse_0002
+ * @tc.name: A failed reuse falls through with the raw AT code
+ * @tc.desc: When the policy refresh on the leftover token fails, InitToken
+ *           returns the raw code for the entry-level recovery chain.
+ */
+HWTEST_F(BmsSpmManagerOnTest, InitToken_S2Reuse_0002, Function | MediumTest | Level1)
+{
+    OHOS::Security::AccessToken::g_spmGetHapTokenIDRet = 101;
+    OHOS::Security::AccessToken::g_spmUpdateHapPolicyRet = -6;
+    auto session = BundleSpmManager::InstallSession::CreateDeferred();
+    InnerBundleInfo info;
+    // Same as S2Reuse_0001: without the application-level bundleName the
+    // reuse plan short-circuits and the Prepare path fails instead.
+    ApplicationInfo appInfo;
+    appInfo.bundleName = BUNDLE_NAME;
+    info.SetBaseApplicationInfo(appInfo);
+    Security::AccessToken::AccessTokenIDEx tokenIdEx = {0};
+    Security::AccessToken::HapInfoCheckResult checkResult;
+    EXPECT_EQ(session.InitToken(info, TEST_USERID, 0, tokenIdEx, checkResult, "", nullptr, false), -6);
+    EXPECT_EQ(OHOS::Security::AccessToken::g_spmPrepareHapIdentityCallCount, 0);
+}
+
+/**
+ * @tc.number: BmsSpmManagerOnTest.InitToken_CleanInstall_0001
+ * @tc.name: A clean install still goes through Prepare
+ * @tc.desc: Without an AT-side token the reuse branch is skipped and the
+ *           identity is prepared as usual.
+ */
+HWTEST_F(BmsSpmManagerOnTest, InitToken_CleanInstall_0001, Function | MediumTest | Level1)
+{
+    // g_spmGetHapTokenIDRet stays 0 (clean).
+    OHOS::Security::AccessToken::g_spmPrepareIdentityTokenId = TEST_IDENTITY_TOKENID;
+    OHOS::Security::AccessToken::g_spmPrepareIdentityUid = TEST_IDENTITY_UID;
+    auto session = BundleSpmManager::InstallSession::CreateDeferred();
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    info.SetBaseBundleInfo(bundleInfo);
+    Security::AccessToken::AccessTokenIDEx tokenIdEx = {0};
+    Security::AccessToken::HapInfoCheckResult checkResult;
+    EXPECT_EQ(session.InitToken(info, TEST_USERID, 0, tokenIdEx, checkResult, "", nullptr, false),
+        ERR_OK);
+    EXPECT_EQ(tokenIdEx.tokenIDEx, TEST_IDENTITY_TOKENID);
+    EXPECT_EQ(OHOS::Security::AccessToken::g_spmPrepareHapIdentityCallCount, 1);
+}
+
+/**
+ * @tc.number: BmsSpmManagerOnTest.HasAtIdentity_0001
+ * @tc.name: HasAtIdentity reflects the AT-side token presence
+ * @tc.desc: The update-flow branch selector: non-zero query result means the
+ *           identity exists (S1 keeps the legacy refresh), zero means missing
+ *           (S3 re-prepares).
+ */
+HWTEST_F(BmsSpmManagerOnTest, HasAtIdentity_0001, Function | MediumTest | Level1)
+{
+    OHOS::Security::AccessToken::g_spmGetHapTokenIDRet = 101;
+    EXPECT_TRUE(BundleSpmManager::HasAtIdentity(TEST_USERID, BUNDLE_NAME,
+        Constants::INITIAL_APP_INDEX));
+    OHOS::Security::AccessToken::g_spmGetHapTokenIDRet = 0;
+    EXPECT_FALSE(BundleSpmManager::HasAtIdentity(TEST_USERID, BUNDLE_NAME,
+        Constants::INITIAL_APP_INDEX));
+    // An empty bundle name never queries the AT side.
+    EXPECT_FALSE(BundleSpmManager::HasAtIdentity(TEST_USERID, "", Constants::INITIAL_APP_INDEX));
+}
+
+/**
+ * @tc.number: BmsSpmManagerOnTest.DeleteToken_TokenGone_0001
+ * @tc.name: DeleteToken passes the raw AT code through
+ * @tc.desc: Split state after an interrupted uninstall (BMS data already
+ *           removed, token already gone): DeleteToken does NOT map the
+ *           AT-side "token not exist" to success — the raw code is handed
+ *           back unchanged (mapping it would be a production-side decision).
+ */
+HWTEST_F(BmsSpmManagerOnTest, DeleteToken_TokenGone_0001, Function | MediumTest | Level1)
+{
+    OHOS::Security::AccessToken::g_spmDeleteIdentityRet =
+        Security::AccessToken::AccessTokenError::ERR_TOKENID_NOT_EXIST;
+    EXPECT_EQ(BundleSpmManager::DeleteToken(101, BUNDLE_NAME,
+        BundleSpmManager::TokenDeleteType::NONE),
+        Security::AccessToken::AccessTokenError::ERR_TOKENID_NOT_EXIST);
+}
+
+/**
+ * @tc.number: BmsSpmManagerOnTest.UpdateHapToken_RefreshDirs_MainIdentity_0001
+ * @tc.name: A refreshed main uid replays the bundle dirs
+ * @tc.desc: UpdateHapToken adopts the AT-refreshed uid as the authority and
+ *           refreshes the dir owner through exactly one MigrateBundleDirsOwner
+ *           call whose uid/gid carry the refreshed uid (the original bundle
+ *           name is passed; installd decorates clone dirs itself).
+ */
+HWTEST_F(BmsSpmManagerOnTest, UpdateHapToken_RefreshDirs_MainIdentity_0001, Function | MediumTest | Level1)
+{
+    InnerBundleInfo newInfo;
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    newInfo.SetBaseBundleInfo(bundleInfo);
+    // GetBundleName() reads baseApplicationInfo_->bundleName: SetBaseBundleInfo
+    // (BundleInfo) alone leaves it empty (same trap as InitToken_S2Reuse).
+    ApplicationInfo appInfo;
+    appInfo.bundleName = BUNDLE_NAME;
+    newInfo.SetBaseApplicationInfo(appInfo);
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = TEST_USERID;
+    userInfo.bundleName = BUNDLE_NAME;
+    userInfo.accessTokenId = TEST_IDENTITY_TOKENID;
+    // UpdateHapToken builds the token from the accessTokenIdEx field (uint64),
+    // not from accessTokenId.
+    userInfo.accessTokenIdEx = TEST_IDENTITY_TOKENID;
+    userInfo.uid = TEST_IDENTITY_UID;
+    newInfo.AddInnerBundleUserInfo(userInfo);
+
+    constexpr int32_t REFRESHED_UID = 100 * 200000 + 555;  // same user segment, different uid
+    OHOS::Security::AccessToken::g_spmUpdateHapPolicyUidOut = REFRESHED_UID;
+    BaseBundleInstaller installer;
+    // The mock BundleMgrService::GetDataMgr returns nullptr in this target:
+    // inject the data manager directly so InitDataMgr succeeds (same pattern
+    // as bms_bundle_installer_test).
+    installer.dataMgr_ = std::make_shared<BundleDataMgr>();
+    int32_t ret = installer.UpdateHapToken(false, newInfo);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(GetMigrateBundleDirsOwnerCallCountForTest(), 1);
+    CreateDirParam param;
+    ASSERT_TRUE(GetLastMigrateBundleDirsOwnerParamForTest(param));
+    EXPECT_EQ(param.bundleName, BUNDLE_NAME);
+    EXPECT_EQ(param.userId, TEST_USERID);
+    EXPECT_EQ(param.uid, REFRESHED_UID);
+    EXPECT_EQ(param.gid, REFRESHED_UID);
+    EXPECT_EQ(param.appIndex, 0);
+}
+
+/**
+ * @tc.number: BmsSpmManagerOnTest.UpdateHapToken_RefreshDirs_UidUnchanged_0001
+ * @tc.name: An unchanged uid does not replay the dirs
+ * @tc.desc: The AT side reports the SAME uid the user info already carries:
+ *           no MigrateBundleDirsOwner call (regression guard against replaying
+ *           the dirs on every policy refresh).
+ */
+HWTEST_F(BmsSpmManagerOnTest, UpdateHapToken_RefreshDirs_UidUnchanged_0001, Function | MediumTest | Level1)
+{
+    InnerBundleInfo newInfo;
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    newInfo.SetBaseBundleInfo(bundleInfo);
+    // GetBundleName() reads baseApplicationInfo_->bundleName: SetBaseBundleInfo
+    // (BundleInfo) alone leaves it empty (same trap as InitToken_S2Reuse).
+    ApplicationInfo appInfo;
+    appInfo.bundleName = BUNDLE_NAME;
+    newInfo.SetBaseApplicationInfo(appInfo);
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = TEST_USERID;
+    userInfo.bundleName = BUNDLE_NAME;
+    userInfo.accessTokenId = TEST_IDENTITY_TOKENID;
+    // UpdateHapToken builds the token from the accessTokenIdEx field (uint64),
+    // not from accessTokenId.
+    userInfo.accessTokenIdEx = TEST_IDENTITY_TOKENID;
+    userInfo.uid = TEST_IDENTITY_UID;
+    newInfo.AddInnerBundleUserInfo(userInfo);
+
+    OHOS::Security::AccessToken::g_spmUpdateHapPolicyUidOut = TEST_IDENTITY_UID;
+    BaseBundleInstaller installer;
+    // The mock BundleMgrService::GetDataMgr returns nullptr in this target:
+    // inject the data manager directly so InitDataMgr succeeds (same pattern
+    // as bms_bundle_installer_test).
+    installer.dataMgr_ = std::make_shared<BundleDataMgr>();
+    int32_t ret = installer.UpdateHapToken(false, newInfo);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(GetMigrateBundleDirsOwnerCallCountForTest(), 0);
+}
+
+/**
+ * @tc.number: BmsSpmManagerOnTest.UpdateHapToken_RefreshDirs_RegularClone_0001
+ * @tc.name: A refreshed clone uid replays only the clone dir set
+ * @tc.desc: The main identity already carries the refreshed uid (no replay)
+ *           while the clone identity (appIndex 2) does not: exactly one
+ *           MigrateBundleDirsOwner call runs with the clone appIndex.
+ */
+HWTEST_F(BmsSpmManagerOnTest, UpdateHapToken_RefreshDirs_RegularClone_0001, Function | MediumTest | Level1)
+{
+    InnerBundleInfo newInfo;
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    newInfo.SetBaseBundleInfo(bundleInfo);
+    // GetBundleName() reads baseApplicationInfo_->bundleName: SetBaseBundleInfo
+    // (BundleInfo) alone leaves it empty (same trap as InitToken_S2Reuse).
+    ApplicationInfo appInfo;
+    appInfo.bundleName = BUNDLE_NAME;
+    newInfo.SetBaseApplicationInfo(appInfo);
+    constexpr int32_t REFRESHED_UID = 100 * 200000 + 555;  // same user segment, different uid
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = TEST_USERID;
+    userInfo.bundleName = BUNDLE_NAME;
+    userInfo.accessTokenId = TEST_IDENTITY_TOKENID;
+    userInfo.accessTokenIdEx = TEST_IDENTITY_TOKENID;
+    userInfo.uid = REFRESHED_UID;  // main identity already at the refreshed uid
+    InnerBundleCloneInfo cloneInfo;
+    cloneInfo.appIndex = 2;
+    cloneInfo.uid = TEST_IDENTITY_UID;  // clone still at the old uid
+    cloneInfo.accessTokenIdEx = TEST_IDENTITY_TOKENID;
+    userInfo.cloneInfos.emplace(std::to_string(2), cloneInfo);
+    newInfo.AddInnerBundleUserInfo(userInfo);
+
+    OHOS::Security::AccessToken::g_spmUpdateHapPolicyUidOut = REFRESHED_UID;
+    BaseBundleInstaller installer;
+    // The mock BundleMgrService::GetDataMgr returns nullptr in this target:
+    // inject the data manager directly so InitDataMgr succeeds (same pattern
+    // as bms_bundle_installer_test).
+    installer.dataMgr_ = std::make_shared<BundleDataMgr>();
+    int32_t ret = installer.UpdateHapToken(false, newInfo);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(GetMigrateBundleDirsOwnerCallCountForTest(), 1);
+    CreateDirParam param;
+    ASSERT_TRUE(GetLastMigrateBundleDirsOwnerParamForTest(param));
+    EXPECT_EQ(param.bundleName, BUNDLE_NAME);
+    EXPECT_EQ(param.userId, TEST_USERID);
+    EXPECT_EQ(param.uid, REFRESHED_UID);
+    EXPECT_EQ(param.appIndex, 2);
+    EXPECT_TRUE(param.extensionDirs.empty());
+}
+
+/**
+ * @tc.number: BmsSpmManagerOnTest.UpdateHapToken_RefreshDirs_FailureBestEffort_0001
+ * @tc.name: A dir replay failure does not fail the token refresh
+ * @tc.desc: MigrateBundleDirsOwner is best effort: a failure is reported
+ *           (log + event) but UpdateHapToken still returns ERR_OK — the uid is
+ *           already the authoritative value and cannot be rolled back.
+ */
+HWTEST_F(BmsSpmManagerOnTest, UpdateHapToken_RefreshDirs_FailureBestEffort_0001, Function | MediumTest | Level1)
+{
+    InnerBundleInfo newInfo;
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    newInfo.SetBaseBundleInfo(bundleInfo);
+    // GetBundleName() reads baseApplicationInfo_->bundleName: SetBaseBundleInfo
+    // (BundleInfo) alone leaves it empty (same trap as InitToken_S2Reuse).
+    ApplicationInfo appInfo;
+    appInfo.bundleName = BUNDLE_NAME;
+    newInfo.SetBaseApplicationInfo(appInfo);
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = TEST_USERID;
+    userInfo.bundleName = BUNDLE_NAME;
+    userInfo.accessTokenId = TEST_IDENTITY_TOKENID;
+    // UpdateHapToken builds the token from the accessTokenIdEx field (uint64),
+    // not from accessTokenId.
+    userInfo.accessTokenIdEx = TEST_IDENTITY_TOKENID;
+    userInfo.uid = TEST_IDENTITY_UID;
+    newInfo.AddInnerBundleUserInfo(userInfo);
+
+    constexpr int32_t REFRESHED_UID = 100 * 200000 + 555;
+    OHOS::Security::AccessToken::g_spmUpdateHapPolicyUidOut = REFRESHED_UID;
+    g_migrateBundleDirsOwnerRet = ERR_APPEXECFWK_INSTALLD_MIGRATE_DIR_OWNER_FAILED;
+    BaseBundleInstaller installer;
+    // The mock BundleMgrService::GetDataMgr returns nullptr in this target:
+    // inject the data manager directly so InitDataMgr succeeds (same pattern
+    // as bms_bundle_installer_test).
+    installer.dataMgr_ = std::make_shared<BundleDataMgr>();
+    int32_t ret = installer.UpdateHapToken(false, newInfo);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(GetMigrateBundleDirsOwnerCallCountForTest(), 1);
+    g_migrateBundleDirsOwnerRet = 0;
 }
 
 } // namespace OHOS

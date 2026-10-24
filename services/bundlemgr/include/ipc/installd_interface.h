@@ -1004,6 +1004,32 @@ public:
     {
         return ERR_OK;
     }
+
+    /**
+     * @brief Migrate the owner of every application-uid-bound directory tree of
+     *        one identity to the new uid (SPM ON: the access token service
+     *        refreshed the token-bound uid and BMS adopts it as the authority).
+     *        Refreshes the SAME directory set as the unlock refresh
+     *        (UpdateAppDataMgr::UpdateAppDataDirSelinuxLabel) by replaying
+     *        CreateBundleDataDir with the new uid — el1~el4 base/database
+     *        trees (recursively migrated, missing dirs re-created, owner/
+     *        mode/label re-applied) plus the el5 screen-lock data trees when
+     *        BMS flags them (isContainsEl5Dir, the same permission gate as
+     *        the unlock refresh), including the el5 encryption policy rebind.
+     *        Best effort: failures are logged and the remaining steps still
+     *        run (the owner change cannot be undone).
+     * @param createDirParam Indicates the replay parameters: bundleName is
+     *        the ORIGINAL (undecorated) name, appIndex decorates the clone
+     *        dirs inside, uid/gid carry the new uid, apl/isPreInstallApp/
+     *        debug/extensionDirs/hasDriverExtension drive the replay, and
+     *        isContainsEl5Dir gates the el5 supplement.
+     * @return Returns ERR_OK when every step succeeded; returns the first
+     *         failure otherwise (all steps are still tried).
+     */
+    virtual ErrCode MigrateBundleDirsOwner(const CreateDirParam &createDirParam)
+    {
+        return ERR_OK;
+    }
 };
 
 #define INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(parcel, token)                        \
