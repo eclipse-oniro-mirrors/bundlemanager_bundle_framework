@@ -1131,6 +1131,7 @@ bool InstalldOperator::ProcessBundleInstallNative(const InstallHnpParam &param)
     }
     hapInfo.count = static_cast<int32_t>(count);
     hapInfo.independentSignHnpPaths = independentSignHnps.data();
+    hapInfo.isSideloadApp = param.isSideloadApp;
 
     int ret = NativeInstallHnp(param.userId.c_str(), param.hnpRootPath.c_str(), &hapInfo, 1, param.sessionId);
     LOG_I(BMS_TAG_INSTALLD, "NativeInstallHnp ret: %{public}d", ret);

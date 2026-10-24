@@ -36,6 +36,7 @@ struct InstallHnpParam : public Parcelable {
     std::vector<std::string> hnpPaths;
     // SPM session id allocated by access token service; 0 means legacy mode (SPM OFF)
     int32_t sessionId = 0;
+    bool isSideloadApp = false;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

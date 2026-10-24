@@ -36,6 +36,7 @@ bool InstallHnpParam::ReadFromParcel(Parcel &parcel)
         hnpPaths.emplace_back(hnpPath);
     }
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, sessionId);
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isSideloadApp);
     return true;
 }
 
@@ -52,6 +53,7 @@ bool InstallHnpParam::Marshalling(Parcel &parcel) const
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(item));
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, sessionId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isSideloadApp);
     return true;
 }
 

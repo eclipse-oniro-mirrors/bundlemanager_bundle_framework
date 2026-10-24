@@ -40,6 +40,7 @@ inline void GenerateInstallHnpParam(FuzzedDataProvider& fdp, InstallHnpParam& p)
     p.packageName = GenAttackAwareString(fdp, ATTACK_PATH_TRAVERSAL);
     p.appIdentifier = GenAttackAwareString(fdp, ATTACK_CERT_BYPASS);
     p.hnpPaths = GenerateStringArray(fdp);
+    p.isSideloadApp = fdp.ConsumeBool();
 }
 
 // CreateDirParam: full field coverage with attack vector injection
