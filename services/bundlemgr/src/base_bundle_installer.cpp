@@ -3474,6 +3474,8 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallNative(const InnerBundleInfo &i
             }
         }
         spmSession_.FillInstallHnpParam(installHnpParam);
+        installHnpParam.isSideloadApp = info.GetApplicationBundleType() == BundleType::APP &&
+            info.GetAppDistributionType() == Constants::APP_DISTRIBUTION_TYPE_DEVELOPER;
         ErrCode ret = InstalldClient::GetInstance()->ProcessBundleInstallNative(installHnpParam);
         isHnpInstalled_ = true;
         if (ret != ERR_OK) {
@@ -6285,7 +6287,7 @@ ErrCode BaseBundleInstaller::ParseHapFiles(
             return ERR_APPEXECFWK_INSTALL_DEVELOPER_ID_BUNDLE_NOT_ALLOWED;
         }
         if (infos.empty()) {
-            LOG_E(BMS_TAG_INSTALLER, "infos emtry");
+            LOG_E(BMS_TAG_INSTALLER, "infos empty");
             return ERR_APPEXECFWK_INSTALL_DEVELOPER_ID_BUNDLE_NOT_ALLOWED;
         }
         auto appApiVersion = infos.begin()->second.GetBaseApplicationInfo()

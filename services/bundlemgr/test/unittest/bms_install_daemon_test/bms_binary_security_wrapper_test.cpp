@@ -444,7 +444,7 @@ HWTEST_F(BmsBinarySecurityWrapperTest, BmsBinarySecurityWrapperTest_030, Functio
     BinarySecurityWrapper::CheckAppSideLoadingAsyncFunc originalFunc =
         instance.checkAppSideLoadingAsyncFunc_;
 
-    auto stubFunc = [](int32_t) -> int32_t { return 1; };
+    auto stubFunc = [](int32_t) -> bool { return true; };
     instance.handle_ = dlopen(nullptr, RTLD_LAZY);
     ASSERT_NE(instance.handle_, nullptr);
     instance.checkAppSideLoadingAsyncFunc_ = stubFunc;

@@ -576,21 +576,25 @@ HWTEST_F(BmsSpmManagerTest, ParcelRoundTrip_InstallHnpParam_0001, Function | Med
     param.hapPath = "/data/local/tmp/test.hap";
     param.hnpPaths = {"typeA/pkgA"};
     EXPECT_EQ(param.sessionId, 0);
+    EXPECT_FALSE(param.isSideloadApp);
     Parcel parcel;
     ASSERT_TRUE(param.Marshalling(parcel));
     InstallHnpParam out;
     ASSERT_TRUE(out.ReadFromParcel(parcel));
     EXPECT_EQ(out.sessionId, 0);
+    EXPECT_FALSE(out.isSideloadApp);
     EXPECT_EQ(out.hapPath, "/data/local/tmp/test.hap");
     ASSERT_EQ(out.hnpPaths.size(), 1);
     EXPECT_EQ(out.hnpPaths[0], "typeA/pkgA");
 
     param.sessionId = TEST_SESSION_ID;
+    param.isSideloadApp = true;
     Parcel parcel2;
     ASSERT_TRUE(param.Marshalling(parcel2));
     InstallHnpParam out2;
     ASSERT_TRUE(out2.ReadFromParcel(parcel2));
     EXPECT_EQ(out2.sessionId, TEST_SESSION_ID);
+    EXPECT_TRUE(out2.isSideloadApp);
 }
 
 HWTEST_F(BmsSpmManagerTest, ParcelRoundTrip_VerifyBinParam_0001, Function | MediumTest | Level1)

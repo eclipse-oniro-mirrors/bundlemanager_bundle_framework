@@ -267,7 +267,7 @@ bool __attribute__((no_sanitize("cfi"))) BinarySecurityWrapper::CheckAppSideLoad
     {
         std::shared_lock<std::shared_mutex> readLock(mutex_);
         if (handle_ != nullptr && checkAppSideLoadingAsyncFunc_ != nullptr) {
-            int32_t result = checkAppSideLoadingAsyncFunc_(userId);
+            bool result = checkAppSideLoadingAsyncFunc_(userId);
             if (!result) {
                 LOG_E(BMS_TAG_INSTALLD, "CheckAppSideLoadingAsync failed %{public}d", result);
             }

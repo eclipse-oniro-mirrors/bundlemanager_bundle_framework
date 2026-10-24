@@ -69,7 +69,7 @@ private:
         int32_t, int32_t, int32_t, const std::vector<BinFileInfo>&);
     using RequestIndependentBinarySwitchAsyncFunc = int32_t(*)(int32_t &);
     using CheckHspPluginCertValidityFunc = int32_t(*)(Security::Verify::HspPlugin &);
-    using CheckAppSideLoadingAsyncFunc = int32_t(*)(int32_t);
+    using CheckAppSideLoadingAsyncFunc = bool(*)(int32_t);
 
     mutable std::shared_mutex mutex_;
     void* handle_ = nullptr;
