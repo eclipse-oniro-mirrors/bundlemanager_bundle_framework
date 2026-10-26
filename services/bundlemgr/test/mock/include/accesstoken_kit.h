@@ -102,6 +102,25 @@ void SetUpdateHapTokenResultForTest(int32_t ret);
 void SetSpmTrustedBundleInfosForTest(const std::vector<TrustedBundleInfo>& bundleInfos);
 void SetSpmCheckHapSignInfoSessionIdForTest(int32_t sessionId);
 void SetSpmPrepareIdentityForTest(uint64_t tokenId, int32_t uid);
+// Per-hap-file provision registry: for suites that install several bundles,
+// or install a whole directory (whose hap enumeration order is not
+// deterministic), tests register each hap file's provision by file name.
+// CheckHapSignInfo then answers with exactly one entry per hap path of the
+// current install, in the install's hap order — the shape the real AT side
+// guarantees. An install containing an unregistered hap fails closed.
+void SetSpmTrustedProvisionForHapFileForTest(const std::string& hapFileName,
+    const std::string& provisionRaw);
+// Minimal valid provisions mirroring what the real AT side verifies for the
+// haps' profiles: a debug profile, or a release profile with the given
+// app-distribution-type ("crowdtesting" / "os_integration" / "app_gallery").
+// allowAppShareLibrary adds the "AllowAppShareLibrary" privilege, required by
+// BundleInstallChecker::ProcessBundleInfoByPrivilegeCapability when installing
+// a bundle whose bundleType is SHARED (cross-app shared libraries / HSPs).
+std::string MakeSpmDebugProvisionRawForTest(const std::string& bundleName,
+    bool allowAppShareLibrary = false);
+std::string MakeSpmReleaseProvisionRawForTest(const std::string& bundleName,
+    const std::string& appDistributionType, bool allowAppShareLibrary = false,
+    const std::string& appFeature = "hos_normal_app");
 } // namespace AccessToken
 } // namespace Security
 } // namespace OHOS

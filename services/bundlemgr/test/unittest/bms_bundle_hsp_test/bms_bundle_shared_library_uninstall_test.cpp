@@ -21,6 +21,8 @@
 #include <sstream>
 #include <string>
 
+#include "accesstoken_kit.h"
+#include "bundle_constants.h"
 #include "bundle_info.h"
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
@@ -48,6 +50,47 @@ const std::string BUNDLE_NAME = "com.example.host";
 const std::string SHARED_BUNDLE_NAME = "com.example.liba";
 const int32_t USERID = 100;
 const int32_t WAIT_TIME = 2; // init mocked bms
+
+// --- SPM ON install prerequisite -------------------------------------------
+// The suite keeps the SPM switch ON (the device default, see
+// BundleSpmManager::IsEnabled) and solves the hap sign verification
+// positively: the mocked access-token boundary is fed the per-hap data the
+// real AT side would return for the installed haps, so every install runs
+// the complete SPM ON chain. An install bundles the host hap with the liba
+// hsp files (two different packages), so the per-hap-file registry answers
+// with one entry per hap path of each install, matched per file and in that
+// install's order. Each provision's bundle-name must stay in sync with the
+// hap's package name (CheckBundleName cross-checks them).
+constexpr int32_t TEST_SPM_SESSION_ID = 4242;
+constexpr uint64_t TEST_SPM_TOKEN_ID = 101;
+// InitToken rejects a uid outside the installing user's uid segment, so the
+// AT-allocated identity must be valid for USERID.
+constexpr int32_t TEST_SPM_UID = USERID * Constants::BASE_USER_RANGE + 102;
+
+void SetUpSpmTrustedSignInfoForTest()
+{
+    // The provisions mirror the profiles the haps are actually signed with
+    // (host: sceneProject/signature/com.example.host.p7b, libA:
+    // bundle_share_library/libA_v1000x/signature/com.example.liba.p7b):
+    // both are "type": "release" + "app-distribution-type": "os_integration".
+    // A release/os_integration provision skips the debug/enterprise branch of
+    // InnerSharedBundleInstaller::DeliveryProfileToCodeSign (which requires
+    // the AT-side signed profile block), exactly like the SPM OFF installs.
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(HOST_HAP,
+        Security::AccessToken::MakeSpmReleaseProvisionRawForTest(BUNDLE_NAME, "os_integration"));
+    // libA hsp files are cross-app shared bundles (bundleType SHARED); their
+    // provision must carry the AllowAppShareLibrary privilege (the real liba
+    // p7b has it top-level), otherwise ProcessBundleInfoByPrivilegeCapability
+    // rejects with 8519731.
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(LIBA_V10001,
+        Security::AccessToken::MakeSpmReleaseProvisionRawForTest(SHARED_BUNDLE_NAME,
+            "os_integration", true));
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(LIBA_V10002,
+        Security::AccessToken::MakeSpmReleaseProvisionRawForTest(SHARED_BUNDLE_NAME,
+            "os_integration", true));
+    Security::AccessToken::SetSpmCheckHapSignInfoSessionIdForTest(TEST_SPM_SESSION_ID);
+    Security::AccessToken::SetSpmPrepareIdentityForTest(TEST_SPM_TOKEN_ID, TEST_SPM_UID);
+}
 
 class BmsBundleSharedLibraryUninstallTest : public testing::Test {
 public:
@@ -85,6 +128,7 @@ BmsBundleSharedLibraryUninstallTest::~BmsBundleSharedLibraryUninstallTest()
 
 void BmsBundleSharedLibraryUninstallTest::SetUpTestCase()
 {
+    SetUpSpmTrustedSignInfoForTest();
     bundleMgrService_->InitBundleInstaller();
     bundleMgrService_->InitBundleDataMgr();
     bundleMgrService_->GetDataMgr()->AddUserId(USERID);

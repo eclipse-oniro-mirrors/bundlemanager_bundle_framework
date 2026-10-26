@@ -24,7 +24,9 @@
 
 #include "app_provision_info.h"
 #include "app_provision_info_manager.h"
+#include "accesstoken_kit.h"
 #include "base_bundle_installer.h"
+#include "bundle_constants.h"
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
 #include "bundle_mgr_service_event_handler.h"
@@ -62,6 +64,39 @@ const std::string EXIST_PATH = "/data/test/resource/bms/quickfix";
 const std::string EXIST_PATH2 = "/data/test/resource/bms/accesstoken_bundle";
 const int32_t USERID = 100;
 const int32_t WAIT_TIME = 2; // init mocked bms
+
+// --- SPM ON install prerequisite -------------------------------------------
+// The suite keeps the SPM switch ON (the device default, see
+// BundleSpmManager::IsEnabled) and solves the hap sign verification
+// positively: the mocked access-token boundary is fed the per-hap data the
+// real AT side would return for the installed haps, so every install runs
+// the complete SPM ON chain. The provisions must be release profiles: the
+// suite asserts the queried appProvisionType back (GetAppProvisionInfo*
+// expect "release") and reads a non-empty certificate out of the provision
+// (ProcessCertificate_0001). Each provision's bundle-name must stay in sync
+// with the hap's package name (CheckBundleName cross-checks them).
+constexpr int32_t TEST_SPM_SESSION_ID = 4242;
+constexpr uint64_t TEST_SPM_TOKEN_ID = 101;
+// InitToken rejects a uid outside the installing user's uid segment, so the
+// AT-allocated identity must be valid for USERID.
+constexpr int32_t TEST_SPM_UID = USERID * Constants::BASE_USER_RANGE + 102;
+
+void SetUpSpmTrustedSignInfoForTest()
+{
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest("bmsAccessTokentest1.hap",
+        Security::AccessToken::MakeSpmReleaseProvisionRawForTest(BUNDLE_NAME, "app_gallery"));
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest("bmsAccessTokentest2.hap",
+        Security::AccessToken::MakeSpmReleaseProvisionRawForTest(BUNDLE_NAME, "app_gallery"));
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest("libA_v10000.hsp",
+        // Mirrors sceneProject/signature/com.example.liba.p7b: release /
+        // os_integration with the top-level AllowAppShareLibrary privilege —
+        // the hsp is a cross-app shared bundle, the privilege is what lets it
+        // install (otherwise 8519731 SHARE_APP_LIBRARY_NOT_ALLOWED).
+        Security::AccessToken::MakeSpmReleaseProvisionRawForTest(HSP_BUNDLE_NAME,
+            "os_integration", true));
+    Security::AccessToken::SetSpmCheckHapSignInfoSessionIdForTest(TEST_SPM_SESSION_ID);
+    Security::AccessToken::SetSpmPrepareIdentityForTest(TEST_SPM_TOKEN_ID, TEST_SPM_UID);
+}
 }  // namespace
 
 class BmsBundleAppProvisionInfoTest : public testing::Test {
@@ -99,6 +134,7 @@ BmsBundleAppProvisionInfoTest::~BmsBundleAppProvisionInfoTest()
 
 void BmsBundleAppProvisionInfoTest::SetUpTestCase()
 {
+    SetUpSpmTrustedSignInfoForTest();
     bundleMgrService_->InitBundleInstaller();
     bundleMgrService_->InitBundleDataMgr();
     bundleMgrService_->GetDataMgr()->AddUserId(USERID);

@@ -32,7 +32,7 @@ ohos_unittest("BmsBundleUpdaterTest") {
   }
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = []
+  include_dirs = [ "../../mock/include/parameter" ]
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/bms_param.cpp" ]
@@ -51,6 +51,8 @@ ohos_unittest("BmsBundleUpdaterTest") {
     "${services_path}/bundlemgr/test/mock/src/bundle_mgr_service_event_handler.cpp",
     "${services_path}/bundlemgr/test/mock/src/installd_permission_mgr.cpp",
     "${services_path}/bundlemgr/test/mock/src/mock_status_receiver.cpp",
+    "${services_path}/bundlemgr/test/mock/src/parameter/parameter.cpp",
+    "${services_path}/bundlemgr/test/mock/src/parameter/parameters.cpp",
     "${services_path}/bundlemgr/test/mock/src/system_ability_helper.cpp",
     "${services_path}/test/moduletest/utils/src/common_tool.cpp",
   ]
@@ -220,7 +222,7 @@ ohos_unittest("BmsBundleDowngradeTest") {
   }
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = []
+  include_dirs = [ "../../mock/include/parameter" ]
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/bms_param.cpp" ]
@@ -239,6 +241,8 @@ ohos_unittest("BmsBundleDowngradeTest") {
     "${services_path}/bundlemgr/test/mock/src/bundle_mgr_service_event_handler.cpp",
     "${services_path}/bundlemgr/test/mock/src/installd_permission_mgr.cpp",
     "${services_path}/bundlemgr/test/mock/src/mock_status_receiver.cpp",
+    "${services_path}/bundlemgr/test/mock/src/parameter/parameter.cpp",
+    "${services_path}/bundlemgr/test/mock/src/parameter/parameters.cpp",
     "${services_path}/bundlemgr/test/mock/src/system_ability_helper.cpp",
     "${services_path}/test/moduletest/utils/src/common_tool.cpp",
   ]

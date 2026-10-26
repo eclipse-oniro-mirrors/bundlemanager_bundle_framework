@@ -27,6 +27,8 @@
 #include <unistd.h>
 
 #include "app_service_fwk/app_service_fwk_installer.h"
+#include "accesstoken_kit.h"
+#include "bundle_constants.h"
 #include "bundle_mgr_service.h"
 #include "directory_ex.h"
 #include "install_param.h"
@@ -72,6 +74,41 @@ const std::string BUNDLE_LIBRARY_PATH_DIR = "/data/app/el1/bundle/public/com.exa
 const std::string TEST_CREATE_FILE_PATH = "/data/test/resource/bms/app_service_test/test_create_dir/test.hap";
 const std::string BUILD_HASH = "8670157ae28ac2dc08075c4a9364e320898b4aaf4c1ab691df6afdb854a6811b";
 const std::string SHARED_MODULE_TYPE = "shared";
+
+// --- SPM ON install prerequisite -------------------------------------------
+// The suite keeps the SPM switch ON (the device default, see
+// BundleSpmManager::IsEnabled) and solves the hsp sign verification
+// positively: the mocked access-token boundary is fed the per-hap data the
+// real AT side would return for the installed hsps, so every install runs
+// the complete SPM ON chain. The provisions are minimal valid debug
+// provisions; their bundle-name must stay in sync with BUNDLE_NAME
+// (CheckBundleName cross-checks the provision against the hsp's package
+// name).
+constexpr int32_t TEST_SPM_SESSION_ID = 4242;
+constexpr uint64_t TEST_SPM_TOKEN_ID = 101;
+constexpr int32_t TEST_SPM_UID = 100 * Constants::BASE_USER_RANGE + 102;
+
+void SetUpSpmTrustedSignInfoForTest()
+{
+    // The hsp files' real package name is "com.example.appservice" (all
+    // lowercase, see the sceneProject bundle_app_service AppScope/app.json5).
+    // BundleInstallChecker::CheckBundleName compares the provision's
+    // bundle-name with the hap's parsed package name case-sensitively, so the
+    // provision must use the hap's real name — not this suite's BUNDLE_NAME
+    // constant, which only differs in case ("com.example.appService").
+    // The provision type mirrors the profile the hsps are actually signed
+    // with (signature/com.example.appservice.p7b: "type": "release",
+    // "app-distribution-type": "os_integration"): a release/os_integration
+    // provision skips AppServiceFwkInstaller::DeliveryProfileToCodeSign's
+    // debug/enterprise branch, which would otherwise require the AT-side
+    // signed profile block, exactly like the SPM OFF installs of these hsps.
+    const std::string provision = Security::AccessToken::MakeSpmReleaseProvisionRawForTest(
+        "com.example.appservice", "os_integration");
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest("appService_v1_library1.hsp", provision);
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest("appService_v1_library2.hsp", provision);
+    Security::AccessToken::SetSpmCheckHapSignInfoSessionIdForTest(TEST_SPM_SESSION_ID);
+    Security::AccessToken::SetSpmPrepareIdentityForTest(TEST_SPM_TOKEN_ID, TEST_SPM_UID);
+}
 }  // namespace
 
 class BmsBundleAppServiceFwkInstallerTest : public testing::Test {
@@ -174,6 +211,7 @@ ErrCode BmsBundleAppServiceFwkInstallerTest::UnInstallBundle(const std::string &
 
 void BmsBundleAppServiceFwkInstallerTest::SetUpTestCase()
 {
+    SetUpSpmTrustedSignInfoForTest();
     bundleMgrService_->InitBundleInstaller();
     bundleMgrService_->InitBundleDataMgr();
     bundleMgrService_->GetDataMgr()->AddUserId(USERID);
