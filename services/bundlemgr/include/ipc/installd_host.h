@@ -393,6 +393,8 @@ private:
     bool HandleBundleInstallFinished(MessageParcel &data, MessageParcel &reply);
 
     bool HandleClearSessionProvisionCache(MessageParcel &data, MessageParcel &reply);
+
+    bool HandleMigrateBundleDirsOwner(MessageParcel &data, MessageParcel &reply);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

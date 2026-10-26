@@ -15,6 +15,7 @@
 
 #include "app_service_fwk_installer.h"
 
+#include "access_token_error.h"
 #include "app_provision_info_manager.h"
 #include "bundle_mgr_service.h"
 #include "bundle_util.h"
@@ -337,11 +338,18 @@ ErrCode AppServiceFwkInstaller::ProcessInstall(
         newInfos.begin()->second.GetVersionCode(), AppPatchType::SERVICE_FWK, installParam.isPatch);
     // SPM ON: permission pre-check (REPLACE for updates, INSTALL otherwise) before
     // the session commits with the install.
+    Security::AccessToken::InstallTypeEnum checkType = isAppExist_
+        ? Security::AccessToken::InstallTypeEnum::TYPE_REPLACE
+        : Security::AccessToken::InstallTypeEnum::TYPE_INSTALL;
     Security::AccessToken::HapInfoCheckResult spmCheckResult;
-    int32_t spmRet = spmSession_.CheckPermissionInfo(
-        isAppExist_ ? Security::AccessToken::InstallTypeEnum::TYPE_REPLACE
-            : Security::AccessToken::InstallTypeEnum::TYPE_INSTALL,
-        spmCheckResult);
+    int32_t spmRet = spmSession_.CheckPermissionInfo(checkType, spmCheckResult);
+    if (spmRet == Security::AccessToken::AccessTokenError::ERR_BUNDLE_ALREADY_EXIST &&
+        checkType == Security::AccessToken::InstallTypeEnum::TYPE_INSTALL) {
+        APP_LOGW("TYPE_INSTALL rejected with ALREADY_EXIST, retry TYPE_REPLACE, bundleName:%{public}s",
+            bundleName_.c_str());
+        checkType = Security::AccessToken::InstallTypeEnum::TYPE_REPLACE;
+        spmRet = spmSession_.CheckPermissionInfo(checkType, spmCheckResult);
+    }
     if (spmRet != ERR_OK) {
         APP_LOGE("spm check permission failed %{public}d", spmRet);
         RollBack();

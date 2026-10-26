@@ -266,6 +266,52 @@ public:
     static ErrCode WrapRecoverableSpmErrorCode(ErrCode errCode);
 
     /**
+     * @brief Identity plan of a FRESH INSTALL under SPM ON. A non-zero
+     *        reuseTokenId means the install REUSES an existing identity
+     *        through UpdateToken (the AT-side data stays, the policy is
+     *        refreshed to the new version) instead of PrepareHapIdentity:
+     *        - S2 live leftover (interrupted install, no keep-data record):
+     *          the AT-side active token found by GetHapTokenID — the token id
+     *          and uid stay stable, so data directories possibly created
+     *          before the interruption keep their owner;
+     *        - keep-data reinstall whose AT-side ACTIVE data is absent (a
+     *          reserved token is not in the AT active map): the token id
+     *          recorded in the BMS uninstall info — the AT side restores the
+     *          reserved identity through the update interface (AT-side
+     *          support for reserved tokens on UpdateHapPolicy is required and
+     *          tracked separately; until it lands, keep-data reinstalls fail
+     *          on this path with the raw AT code).
+     *        A zero reuseTokenId means a clean install — PrepareHapIdentity.
+     */
+    struct FreshInstallIdentityPlan {
+        Security::AccessToken::AccessTokenID reuseTokenId = 0;
+        bool keepDataReinstall = false;
+    };
+
+    /**
+     * @brief Decide the identity plan of a fresh install (see
+     *        FreshInstallIdentityPlan). A keep-data record of ANOTHER user
+     *        does not affect this identity (the userInfos lookup is
+     *        user-scoped). Inert (zero plan) under SPM OFF.
+     * @param userId Indicates the user id of the installing identity.
+     * @param bundleName Indicates the original (undecorated) bundle name.
+     * @param appIndex Indicates the app index of the installing identity (0
+     *        for the main identity; the query uses the caller's own app index
+     *        so a clone install never picks up the main identity's token).
+     * @param dataMgr Indicates the bundle data manager (keep-data source).
+     */
+    static FreshInstallIdentityPlan CheckNewInstallIdentity(int32_t userId,
+        const std::string &bundleName, int32_t appIndex, BundleDataMgr *dataMgr);
+
+    /**
+     * @brief Whether the AT side still holds the token of this identity
+     *        (SPM ON only). Used by the update flow to pick the branch:
+     *        existing identity (S1 normal update) keeps the legacy policy
+     *        refresh; missing identity (S3 split state) re-prepares it.
+     */
+    static bool HasAtIdentity(int32_t userId, const std::string &bundleName, int32_t appIndex);
+
+    /**
      * @brief Normalize the provision profile block from the AT-side profile data:
      *        the block vector is the single source of truth for both the length
      *        and the content (the separate claimed length comes from another

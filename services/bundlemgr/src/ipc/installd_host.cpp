@@ -462,6 +462,9 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::CLEAR_SESSION_PROVISION_CACHE):
             result = HandleClearSessionProvisionCache(data, reply);
             break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::MIGRATE_BUNDLE_DIRS_OWNER):
+            result = HandleMigrateBundleDirsOwner(data, reply);
+            break;
         case static_cast<uint32_t>(InstalldInterfaceCode::GET_CACHE_DISK_USAGE_FROM_PATH):
             result = HandleGetCacheDiskUsageFromPath(data, reply);
             break;
@@ -2181,6 +2184,18 @@ bool InstalldHost::HandleClearSessionProvisionCache(MessageParcel &data, Message
 {
     int32_t sessionId = data.ReadInt32();
     ErrCode result = ClearSessionProvisionCache(sessionId);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleMigrateBundleDirsOwner(MessageParcel &data, MessageParcel &reply)
+{
+    std::unique_ptr<CreateDirParam> info(data.ReadParcelable<CreateDirParam>());
+    if (info == nullptr) {
+        LOG_E(BMS_TAG_INSTALLD, "readParcelableInfo failed");
+        return false;
+    }
+    ErrCode result = MigrateBundleDirsOwner(*info);
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

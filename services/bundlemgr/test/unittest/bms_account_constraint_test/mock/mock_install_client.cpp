@@ -710,5 +710,10 @@ ErrCode InstalldClient::ClearSessionProvisionCache(int32_t sessionId)
 {
     return ERR_OK;
 }
+
+ErrCode InstalldClient::MigrateBundleDirsOwner(const CreateDirParam &createDirParam)
+{
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -1343,7 +1343,7 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
             int32_t tokenRet = ERR_OK;
             if (!tokenRecovered
                 && (tokenRet = spmSession_.InitToken(oldInfo, userId_, 0, accessTokenIdEx, checkResult,
-                verifyRes_.GetProvisionInfo().appServiceCapabilities, nullptr, false)) != ERR_OK) {
+                verifyRes_.GetProvisionInfo().appServiceCapabilities, dataMgr_.get(), false)) != ERR_OK) {
                 LOG_E(BMS_TAG_INSTALLER, "bundleName:%{public}s InitHapToken failed", bundleName_.c_str());
                 SetVerifyPermissionResult(checkResult);
                 if (BundleSpmManager::IsRecoverableSpmError(tokenRet)) {
@@ -1366,6 +1366,70 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
 
             userGuard.Dismiss();
         }
+         if (hasInstalledInUser_ && BundleSpmManager::IsEnabled() &&
+             !BundleSpmManager::HasAtIdentity(userId_, GetEffectiveBundleName(),
+                 Constants::INITIAL_APP_INDEX)) {
+            // SPM ON split state S3 (interrupted install/update): the BMS side has
+            // the user data but the AT side lost this user's identity. Re-prepare
+            // it here (fresh allocation adopts the desired uid — the BMS-recorded
+            // uid of this user — so the data directories stay consistent); the
+            // UpdateHapToken loop below then skips this fresh identity via the
+            // accessTokenId_ match and the session Commit persists its policy.
+            Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
+            accessTokenIdEx.tokenIDEx = 0; // force fresh allocation
+            Security::AccessToken::HapInfoCheckResult checkResult;
+            int32_t identityUid = 0;
+            int32_t tokenRet = spmSession_.InitToken(oldInfo, userId_, 0, accessTokenIdEx,
+                checkResult, verifyRes_.GetProvisionInfo().appServiceCapabilities, dataMgr_.get(),
+                false, &identityUid);
+            if (tokenRet != ERR_OK) {
+                LOG_E(BMS_TAG_INSTALLER, "spm re-prepare missing identity failed, "
+                    "bundleName:%{public}s userId:%{public}d", bundleName_.c_str(), userId_);
+                SetVerifyPermissionResult(checkResult);
+                if (BundleSpmManager::IsRecoverableSpmError(tokenRet)) {
+                    // Bubble the raw AT code up so InstallBundle can run the
+                    // on-demand recovery and retry.
+                    return tokenRet;
+                }
+                return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
+            }
+            accessTokenId_ = accessTokenIdEx.tokenIdExStruct.tokenID;
+            oldInfo.SetAccessTokenIdEx(accessTokenIdEx, userId_);
+            // Sync the fresh token id into the temp info: the UpdateHapToken
+            // loop below skips this identity via the accessTokenId_ match —
+            // the temp info still carries the DEAD pre-prepare id, so without
+            // this sync the skip never matches and UpdateToken fails with
+            // ERR_TOKENID_NOT_EXIST (every sibling path syncs the same way:
+            // the new-user flow through CreateBundleUserData, the fresh
+            // install through ProcessBundleInstallStatus).
+            InnerBundleInfo tempBundleInfo;
+            if (GetTempBundleInfo(tempBundleInfo)) {
+                tempBundleInfo.SetAccessTokenIdEx(accessTokenIdEx, userId_);
+                if (!tempInfo_.SetTempBundleInfo(tempBundleInfo)) {
+                    LOG_E(BMS_TAG_INSTALLER, "save re-prepared token id failed, bundleName:%{public}s "
+                        "userId:%{public}d", bundleName_.c_str(), userId_);
+                    return ERR_APPEXECFWK_SET_INSTALL_TEMP_BUNDLE_ERROR;
+                }
+            }
+            // InitToken already handled the uid mismatch internally (AT uid is
+            // authoritative; the user info uid is adopted there and the fs config
+            // + reverse-lookup are staged); the only caller-side concern is the
+            // data directories: if AT returned a DIFFERENT uid, migrate the tree.
+            if (identityUid > 0) {
+                InnerBundleUserInfo existingUserInfo;
+                if (oldInfo.GetInnerBundleUserInfo(userId_, existingUserInfo) &&
+                    existingUserInfo.uid != identityUid) {
+                    LOG_W(BMS_TAG_INSTALLER,
+                        "spm re-prepare uid changed, refreshing dirs, bundleName:%{public}s "
+                        "userId:%{public}d oldUid:%{public}d newUid:%{public}d",
+                        bundleName_.c_str(), userId_, existingUserInfo.uid, identityUid);
+                    RefreshBundleDirsAfterUidChange(oldInfo, userId_,
+                        Constants::INITIAL_APP_INDEX, identityUid);
+                }
+            }
+            LOG_I(BMS_TAG_INSTALLER, "spm re-prepared missing identity, bundleName:%{public}s "
+                "userId:%{public}d tokenId:%{public}u", bundleName_.c_str(), userId_, accessTokenId_);
+         }
         ErrCode res = CleanShaderCache(oldInfo, bundleName_, userId_);
         if (res != ERR_OK) {
             LOG_NOFUNC_I(BMS_TAG_INSTALLER, "%{public}s clean shader fail %{public}d", bundleName_.c_str(), res);
@@ -3213,7 +3277,7 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
             // side auto-create the session.
             if (!tokenRecovered
                 && spmSession_.InitToken(oldInfo, userId_, 0, accessTokenIdEx, checkResult,
-                    verifyRes_.GetProvisionInfo().appServiceCapabilities, nullptr, false) != ERR_OK) {
+                    verifyRes_.GetProvisionInfo().appServiceCapabilities, dataMgr_.get(), false) != ERR_OK) {
                 LOG_E(BMS_TAG_INSTALLER, "bundleName:%{public}s InitHapToken failed", bundleName_.c_str());
                 SetVerifyPermissionResult(checkResult);
                 return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
@@ -3565,6 +3629,23 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallStatus(InnerBundleInfo &info, i
         dataMgr_->UpdateBundleInstallState(GetEffectiveBundleName(), InstallState::INSTALL_FAIL);
     });
 
+    // SPM ON: an interrupted install (crash on either side) can leave an
+    // AT-side live token without BMS data (S2 split state), and a keep-data
+    // reinstall reaches here with the AT-side active data absent as well.
+    // Both shapes REUSE the existing identity (InitToken takes the UpdateToken
+    // branch internally: policy refreshed, token id and uid carried over —
+    // the keep-data shape relies on the AT side restoring the reserved
+    // identity on the update interface, tracked separately). Reuse has
+    // "update" semantics, so the permission pre-check must NOT use
+    // TYPE_INSTALL — the AT-side CheckInstallType rejects an install over
+    // existing installed paths. TYPE_REPLACE is the matching install type.
+    BundleSpmManager::FreshInstallIdentityPlan identityPlan =
+        BundleSpmManager::CheckNewInstallIdentity(userId_, GetEffectiveBundleName(),
+            Constants::INITIAL_APP_INDEX, dataMgr_.get());
+    Security::AccessToken::InstallTypeEnum checkType = (identityPlan.reuseTokenId != 0)
+        ? Security::AccessToken::InstallTypeEnum::TYPE_REPLACE
+        : Security::AccessToken::InstallTypeEnum::TYPE_INSTALL;
+
     Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
     Security::AccessToken::HapInfoCheckResult checkResult;
     isKeepTokenId_ = info.HasKeepTokenIdMetadata();
@@ -3588,7 +3669,19 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallStatus(InnerBundleInfo &info, i
         : Security::AccessToken::MultipleMode::SUB_MODE;
     Security::AccessToken::HapInfoCheckResult spmCheckResult;
     int32_t spmRet = spmSession_.CheckPermissionInfo(
-        Security::AccessToken::InstallTypeEnum::TYPE_INSTALL, spmCheckResult, spmMode);
+        checkType, spmCheckResult, spmMode);
+    if (spmRet == Security::AccessToken::AccessTokenError::ERR_BUNDLE_ALREADY_EXIST
+        && checkType == Security::AccessToken::InstallTypeEnum::TYPE_INSTALL) {
+        // The plan said TYPE_INSTALL but the AT side holds a leftover identity
+        // (S2 residue or keep-data reservation not visible to the plan): degrade
+        // to TYPE_REPLACE and retry — the subsequent token stage (Prepare or
+        // Update) handles the identity shape.
+        LOG_W(BMS_TAG_INSTALLER,
+            "TYPE_INSTALL rejected with ALREADY_EXIST, retry TYPE_REPLACE, bundleName:%{public}s",
+            bundleName_.c_str());
+        checkType = Security::AccessToken::InstallTypeEnum::TYPE_REPLACE;
+        spmRet = spmSession_.CheckPermissionInfo(checkType, spmCheckResult);
+    }
     if (spmRet != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "spm check permission failed, bundleName:%{public}s errCode:%{public}d",
             bundleName_.c_str(), spmRet);
@@ -3599,7 +3692,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallStatus(InnerBundleInfo &info, i
     int32_t tokenRet = ERR_OK;
     if (!tokenRecovered
         && (tokenRet = spmSession_.InitToken(info, userId_, 0, accessTokenIdEx, checkResult,
-            verifyRes_.GetProvisionInfo().appServiceCapabilities, nullptr, isDebugGrant)) != ERR_OK) {
+            verifyRes_.GetProvisionInfo().appServiceCapabilities, dataMgr_.get(), isDebugGrant)) != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "bundleName:%{public}s InitHapToken failed", bundleName_.c_str());
         SetVerifyPermissionResult(checkResult);
         if (BundleSpmManager::IsRecoverableSpmError(tokenRet)) {
@@ -4572,6 +4665,47 @@ ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
     info.SetAppDataBaseDir(dataBaseDir);
     info.AddInnerBundleUserInfo(newInnerBundleUserInfo);
     return ERR_OK;
+}
+
+void BaseBundleInstaller::RefreshBundleDirsAfterUidChange(const InnerBundleInfo &info,
+    int32_t userId, int32_t appIndex, int32_t newUid) const
+{
+    if (newUid <= 0) {
+        LOG_E(BMS_TAG_INSTALLER, "invalid newUid %{public}d, bundleName:%{public}s",
+            newUid, info.GetBundleName().c_str());
+        return;
+    }
+    // SPM uid refresh: ONE installd call replays the bundle data dirs with the
+    // new uid through CreateBundleDataDir and refreshes the el5 screen-lock
+    // trees (isContainsEl5Dir, same permission gate as the unlock refresh) —
+    // the same dir set as UpdateAppDataMgr::UpdateAppDataDirSelinuxLabel.
+    CreateDirParam createDirParam;
+    // The installd side derives the clone (decorated) dir names from appIndex
+    // itself, so the ORIGINAL bundle name is passed here.
+    createDirParam.bundleName = info.GetBundleName();
+    createDirParam.userId = userId;
+    createDirParam.uid = newUid;
+    createDirParam.gid = newUid;
+    createDirParam.appIndex = appIndex;
+    createDirParam.apl = info.GetAppPrivilegeLevel();
+    createDirParam.isPreInstallApp = info.IsPreInstallApp();
+    createDirParam.debug = info.GetBaseApplicationInfo().appProvisionType ==
+        Constants::APP_PROVISION_TYPE_DEBUG;
+    createDirParam.hasDriverExtension = info.HasDriverExtension();
+    // Regular clones never carry extension sandbox dirs (CreateCloneDataDir
+    // passes none); only the main identity and dual-mode clones do, aligned
+    // with the unlock refresh.
+    if (appIndex <= 0 || appIndex == ServiceConstants::DUAL_MODE_CLONE_APP_INDEX) {
+        createDirParam.extensionDirs = info.GetAllExtensionDirs();
+    }
+    createDirParam.isContainsEl5Dir = info.NeedCreateEl5Dir();
+    spmSession_.FillCreateDirParam(createDirParam);
+    ErrCode ret = InstalldClient::GetInstance()->MigrateBundleDirsOwner(createDirParam);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "refresh bundle dirs with new uid failed, bundleName:%{public}s "
+            "userId:%{public}d appIndex:%{public}d newUid:%{public}d ret:%{public}d",
+            info.GetBundleName().c_str(), userId, appIndex, newUid, ret);
+    }
 }
 
 ErrCode BaseBundleInstaller::CreateDataGroupDirs(
@@ -9725,8 +9859,7 @@ ErrCode BaseBundleInstaller::UpdateHapToken(bool needUpdate, InnerBundleInfo &ne
         }
         if (refreshedUid > 0) {
             // The AT side refreshed the token-bound uid: persist it into the
-            // main user info so the later temp-info save keeps the DB in sync
-            // with the cache (uid and gids[0] stay paired).
+            // main user info (uid and gids[0] stay paired).
             InnerBundleUserInfo updatedUserInfo;
             if (newInfo.GetInnerBundleUserInfo(userId, updatedUserInfo) &&
                 updatedUserInfo.uid != refreshedUid) {
@@ -9737,6 +9870,25 @@ ErrCode BaseBundleInstaller::UpdateHapToken(bool needUpdate, InnerBundleInfo &ne
                 LOG_NOFUNC_I(BMS_TAG_INSTALLER,
                     "UpdateHapToken persisted refreshed uid, bundle:%{public}s uid:%{public}d",
                     bundleName_.c_str(), refreshedUid);
+                // The caller holds a LOCAL copy and needUpdate (a type change)
+                // is false for normal updates, so the tail save does not run:
+                // persist the refreshed uid into the temp info HERE, otherwise
+                // MarkInstallFinish writes the OLD uid to the memory cache and
+                // the DB while the directory owners move to the refreshed one
+                // (AT/DB/fs drift). Saved before the (irreversible) chown so a
+                // save failure fails the update with the file system untouched.
+                if (!tempInfo_.SetTempBundleInfo(newInfo)) {
+                    LOG_NOFUNC_E(BMS_TAG_INSTALLER, "save refreshed uid failed %{public}s",
+                        bundleName_.c_str());
+                    return ERR_APPEXECFWK_SET_INSTALL_TEMP_BUNDLE_ERROR;
+                }
+                // The uid is the authoritative value now (the AT side already
+                // rebound the token and the temp info above persists it):
+                // refresh every application-uid-bound directory tree to the
+                // new uid. Best effort — the owner change cannot be undone, so
+                // a failure is reported instead of rolling the update back.
+                RefreshBundleDirsAfterUidChange(newInfo, userId,
+                    Constants::INITIAL_APP_INDEX, refreshedUid);
             }
         }
 
@@ -9762,14 +9914,23 @@ ErrCode BaseBundleInstaller::UpdateHapToken(bool needUpdate, InnerBundleInfo &ne
                     uerInfo.second.bundleUserInfo.userId, cloneInfoPair.second.appIndex);
             }
             if (cloneRefreshedUid > 0 && cloneRefreshedUid != cloneInfoPair.second.uid) {
-                // Persist the AT-refreshed clone uid so the later temp-info
-                // save keeps the DB in sync with the cache entry written by
-                // UpdateToken (same pattern as the main identity above).
+                // Persist the AT-refreshed clone uid (same pattern as the main
+                // identity above): the temp-info save happens HERE because the
+                // caller's local copy would otherwise be dropped.
                 newInfo.UpdateCloneUid(uerInfo.second.bundleUserInfo.userId,
                     cloneInfoPair.second.appIndex, cloneRefreshedUid);
                 LOG_NOFUNC_I(BMS_TAG_INSTALLER,
                     "UpdateHapToken persisted refreshed clone uid, bundle:%{public}s appIndex:%{public}d "
                     "uid:%{public}d", bundleName_.c_str(), cloneInfoPair.second.appIndex, cloneRefreshedUid);
+                if (!tempInfo_.SetTempBundleInfo(newInfo)) {
+                    LOG_NOFUNC_E(BMS_TAG_INSTALLER, "save refreshed clone uid failed %{public}s",
+                        bundleName_.c_str());
+                    return ERR_APPEXECFWK_SET_INSTALL_TEMP_BUNDLE_ERROR;
+                }
+                // Refresh the clone directory trees to the refreshed uid
+                // (best effort, same reasoning as the main identity above).
+                RefreshBundleDirsAfterUidChange(newInfo, uerInfo.second.bundleUserInfo.userId,
+                    cloneInfoPair.second.appIndex, cloneRefreshedUid);
             }
         }
     }

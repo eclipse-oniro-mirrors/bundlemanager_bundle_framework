@@ -449,6 +449,8 @@ public:
 
     virtual ErrCode ClearSessionProvisionCache(int32_t sessionId) override;
 
+    virtual ErrCode MigrateBundleDirsOwner(const CreateDirParam &createDirParam) override;
+
 private:
     ErrCode TransactInstalldCmd(InstalldInterfaceCode code, MessageParcel &data, MessageParcel &reply,
         MessageOption &option);

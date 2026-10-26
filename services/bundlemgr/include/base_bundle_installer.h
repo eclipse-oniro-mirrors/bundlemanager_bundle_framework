@@ -632,6 +632,8 @@ private:
 
     ErrCode CreateBundleCodeDir(InnerBundleInfo &info) const;
     ErrCode CreateBundleDataDir(InnerBundleInfo &info) const;
+    void RefreshBundleDirsAfterUidChange(const InnerBundleInfo &info,
+        int32_t userId, int32_t appIndex, int32_t newUid) const;
     void CreatePrintServiceDirForUpdate(const InnerBundleInfo &info) const;
     ErrCode RemoveBundleCodeDir(const InnerBundleInfo &info, bool async) const;
     ErrCode RemoveBundleDataDir(

@@ -16,7 +16,9 @@
 #include "bundle_spm_manager.h"
 
 #include <algorithm>
+#include <chrono>
 #include <cinttypes>
+#include <thread>
 
 #include "access_token_error.h"
 #include "account_helper.h"
@@ -38,6 +40,16 @@ namespace AppExecFwk {
 namespace {
 // SPM switch: default off; read once per process, changes take effect after restart.
 constexpr const char* BMS_SPM_ENABLE_PARAM = "persist.bms.spm.enable";
+
+// Retry policy for transient AT IPC failures: retry once after a short interval.
+constexpr int32_t ATM_TRANSIENT_RETRY_COUNT = 1;
+constexpr int32_t ATM_TRANSIENT_RETRY_INTERVAL_MS = 100;
+
+bool IsTransientAtmError(int32_t errCode)
+{
+    return errCode == Security::AccessToken::AccessTokenError::ERR_SERVICE_ABNORMAL ||
+        errCode == Security::AccessToken::AccessTokenError::ERR_WRITE_PARCEL_FAILED;
+}
 
 // Extracts the provision info from the trusted bundle info cached by the access
 // token service: 1) parse the provision JSON, 2) overwrite with the extra fields
@@ -424,6 +436,68 @@ int32_t BundleSpmManager::InstallSession::InitToken(InnerBundleInfo &info, int32
         }
         return ERR_OK;
     }
+    // Identity reuse for a fresh install (SPM ON): the plan covers two shapes —
+    // the S2 live leftover of an interrupted install and the keep-data
+    // reinstall whose AT-side ACTIVE data is absent. Both reuse the existing
+    // identity through UpdateToken (the policy is refreshed to the new
+    // version; the S2 shape keeps the token id and uid stable so data
+    // directories possibly created before the interruption keep their owner;
+    // the keep-data shape relies on the AT side restoring the reserved
+    // identity on the update interface — AT-side support, tracked separately).
+    // The session carries no prepared identity in this case: Commit persists
+    // the policy through the updated-token map, which is the regular shape of
+    // an update-only session.
+    FreshInstallIdentityPlan identityPlan = CheckNewInstallIdentity(userId,
+        info.GetBundleName(), info.GetAppIndex(), dataMgr);
+    if (identityPlan.reuseTokenId != 0) {
+        LOG_NOFUNC_I(BMS_TAG_INSTALLER,
+            "reuse existing identity for install, bundleName:%{public}s userId:%{public}d "
+            "tokenId:%{public}u keepData:%{public}d",
+            info.GetBundleName().c_str(), userId, identityPlan.reuseTokenId,
+            static_cast<int32_t>(identityPlan.keepDataReinstall));
+        Security::AccessToken::AccessTokenIDEx reusedIdEx;
+        reusedIdEx.tokenIdExStruct.tokenID = identityPlan.reuseTokenId;
+        int32_t refreshedUid = 0;
+        // Propagate dlpType and appIndex so the replayed policy keeps the DLP
+        // classification and the fs-config key lands on the identity's OWN
+        // composite name (a hardcoded 0 here would refresh a DLP sandbox token
+        // with a non-DLP policy and clobber the MAIN app's fs config with a
+        // derived identity's bundleId).
+        int32_t updateRet = UpdateToken(reusedIdEx, info, userId, checkResult, caps,
+            false, isDebugGrant, dlpType, info.GetAppIndex(), &refreshedUid);
+        if (updateRet != ERR_OK) {
+            return updateRet;
+        }
+        tokenIdEx.tokenIDEx = reusedIdEx.tokenIDEx;
+        if (identityUid != nullptr) {
+            *identityUid = refreshedUid;
+        }
+        // Clone/sandbox identity: the caller owns the uid handling (it builds
+        // the derived info from the identity uid out-param); the user info of
+        // `info` belongs to the main app and must not be touched — same guard
+        // as the Prepare path below. The dual-mode clone keeps the main-app
+        // handling (its uid lives in the MAIN user info).
+        bool cloneInstall = info.GetAppIndex() != 0 &&
+            info.GetAppIndex() != ServiceConstants::DUAL_MODE_CLONE_APP_INDEX;
+        if (cloneInstall) {
+            return ERR_OK;
+        }
+        if (refreshedUid > 0) {
+            // Adopt the reused token's uid into the user info (fresh install:
+            // no local uid yet — the AT value is the authority; UpdateToken
+            // already staged the fs config and the reverse-lookup entry).
+            InnerBundleUserInfo bundleUserInfo;
+            if (!info.GetInnerBundleUserInfo(userId, bundleUserInfo)) {
+                bundleUserInfo.bundleUserInfo.userId = userId;
+                bundleUserInfo.bundleName = info.GetBundleName();
+            }
+            bundleUserInfo.uid = refreshedUid;
+            bundleUserInfo.gids.clear();
+            bundleUserInfo.gids.emplace_back(refreshedUid);
+            info.AddInnerBundleUserInfo(bundleUserInfo);
+        }
+        return ERR_OK;
+    }
     // SPM ON: prepare the hap identity (token id and uid) in the access token service.
     // Kept-data recovery is carried by the reserved identity on the AT side, which makes
     // PrepareHapIdentity return the original uid and token id for a re-install.
@@ -458,6 +532,17 @@ int32_t BundleSpmManager::InstallSession::InitToken(InnerBundleInfo &info, int32
     }
     int32_t ret = Security::AccessToken::AccessTokenKit::PrepareHapIdentity(sessionId_, hapBaseInfo,
         policy, identity);
+    if (IsTransientAtmError(ret)) {
+        // Transient AT IPC failure (service restarting / parcel corruption):
+        // retry once after a short interval; the identity out params are
+        // re-populated by a successful retry.
+        LOG_NOFUNC_W(BMS_TAG_INSTALLER,
+            "PrepareHapIdentity transient failure, retrying, bundleName:%{public}s errCode:%{public}d",
+            info.GetBundleName().c_str(), ret);
+        std::this_thread::sleep_for(std::chrono::milliseconds(ATM_TRANSIENT_RETRY_INTERVAL_MS));
+        ret = Security::AccessToken::AccessTokenKit::PrepareHapIdentity(sessionId_, hapBaseInfo,
+            policy, identity);
+    }
     if (ret != Security::AccessToken::AccessTokenKitRet::RET_SUCCESS) {
         LOG_NOFUNC_E(BMS_TAG_INSTALLER, "PrepareHapIdentity failed, bundleName:%{public}s errCode:%{public}d",
             info.GetBundleName().c_str(), ret);
@@ -578,6 +663,15 @@ int32_t BundleSpmManager::InstallSession::UpdateToken(
     // input untouched (AT-side contract).
     int32_t ret = Security::AccessToken::AccessTokenKit::UpdateHapPolicy(sessionId_,
         tokenIdEx, policy, uidOut);
+    if (IsTransientAtmError(ret)) {
+        // Transient AT IPC failure: retry once after a short interval.
+        LOG_NOFUNC_W(BMS_TAG_INSTALLER,
+            "UpdateHapPolicy transient failure, retrying, bundleName:%{public}s userId:%{public}d "
+            "errCode:%{public}d", info.GetBundleName().c_str(), userId, ret);
+        std::this_thread::sleep_for(std::chrono::milliseconds(ATM_TRANSIENT_RETRY_INTERVAL_MS));
+        ret = Security::AccessToken::AccessTokenKit::UpdateHapPolicy(sessionId_,
+            tokenIdEx, policy, uidOut);
+    }
     if (ret != Security::AccessToken::AccessTokenKitRet::RET_SUCCESS) {
         LOG_NOFUNC_E(BMS_TAG_INSTALLER,
             "UpdateHapPolicy failed, bundleName:%{public}s userId:%{public}d sessionId:%{public}d "
@@ -994,6 +1088,61 @@ int32_t BundleSpmManager::DeleteToken(Security::AccessToken::AccessTokenID token
     // query cross-check and dropped at the next boot restore.
     return Security::AccessToken::AccessTokenKit::DeleteIdentity(tokenId, bundleName,
         static_cast<Security::AccessToken::ReservedType>(type));
+}
+
+BundleSpmManager::FreshInstallIdentityPlan BundleSpmManager::CheckNewInstallIdentity(
+    int32_t userId, const std::string &bundleName, int32_t appIndex, BundleDataMgr *dataMgr)
+{
+    FreshInstallIdentityPlan plan;
+    if (!IsEnabled() || bundleName.empty()) {
+        return plan;
+    }
+    UninstallBundleInfo uninstallBundleInfo;
+    bool hasKeepData = dataMgr != nullptr &&
+        dataMgr->GetUninstallBundleInfo(bundleName, uninstallBundleInfo);
+    Security::AccessToken::AccessTokenID atTokenId =
+        Security::AccessToken::AccessTokenKit::GetHapTokenID(userId, bundleName, appIndex);
+    if (hasKeepData) {
+        // Keep-data reinstall: the identity plan is decided by One signals —
+        // 1) checkBySpm: whether the OTA migration successfully migrated this
+        //    bundle's uid/identity to the AT side. false = migration did not
+        //    cover this bundle (the abnormal shape).
+        // Normal keep-data reinstall (checkBySpm=true): the AT side kept the
+        // reserved identity — PrepareHapIdentity recognizes the reservation and
+        // returns the same token id and uid (Prepare flow, empty plan).
+        // Abnormal keep-data reinstall (checkBySpm=false AND AT side has no
+        // identity): the reuse goes through the update interface with the
+        // BMS-recorded token id — the AT side restores the reserved identity there.
+        // A record of ANOTHER user does not affect this identity.
+        if (!uninstallBundleInfo.checkBySpm) {
+            auto it = uninstallBundleInfo.userInfos.find(std::to_string(userId));
+            if (it != uninstallBundleInfo.userInfos.end() && it->second.accessTokenId != 0) {
+                plan.reuseTokenId = it->second.accessTokenId;
+                plan.keepDataReinstall = true;
+                return plan;
+            }
+        }
+        // checkBySpm=true (normal), checkBySpm=false but AT has the identity,
+        // or no record of this user: fall through — a clean install for this
+        // identity goes through Prepare.
+        return plan;
+    }
+    if (atTokenId != 0) {
+        // S2 split state: BMS has no data and no keep-data reservation, while
+        // the AT side holds a live token of this identity — the residue of an
+        // interrupted install. Reuse it through the update interface.
+        plan.reuseTokenId = atTokenId;
+    }
+    return plan;
+}
+
+bool BundleSpmManager::HasAtIdentity(int32_t userId, const std::string &bundleName, int32_t appIndex)
+{
+    if (!IsEnabled() || bundleName.empty()) {
+        return false;
+    }
+    return Security::AccessToken::AccessTokenKit::GetHapTokenID(userId, bundleName,
+        appIndex) != 0;
 }
 } // namespace AppExecFwk
 } // namespace OHOS

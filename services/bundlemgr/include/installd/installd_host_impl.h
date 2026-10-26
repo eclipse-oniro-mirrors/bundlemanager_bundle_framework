@@ -497,6 +497,9 @@ public:
 
     virtual ErrCode ClearSessionProvisionCache(int32_t sessionId) override;
 
+    virtual ErrCode MigrateBundleDirsOwner(const CreateDirParam &createDirParam) override;
+
+private:
     /**
      * @brief Query the provision info of an SPM session from the access token service.
      *        sessionId == 0 keeps the legacy behaviour (info untouched, ERR_OK). Results

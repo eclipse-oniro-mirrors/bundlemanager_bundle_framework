@@ -1185,5 +1185,10 @@ ErrCode InstalldClient::ClearSessionProvisionCache(int32_t sessionId)
 {
     return CallService(&IInstalld::ClearSessionProvisionCache, sessionId);
 }
+
+ErrCode InstalldClient::MigrateBundleDirsOwner(const CreateDirParam &createDirParam)
+{
+    return CallService(&IInstalld::MigrateBundleDirsOwner, createDirParam);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

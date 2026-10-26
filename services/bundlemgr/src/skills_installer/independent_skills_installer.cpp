@@ -15,6 +15,7 @@
 
 #include "independent_skills_installer.h"
 
+#include "access_token_error.h"
 #include "app_log_wrapper.h"
 #include "app_log_tag_wrapper.h"
 #include "app_provision_info_manager.h"
@@ -163,11 +164,19 @@ ErrCode IndependentSkillsInstaller::ProcessInstall(
     // SPM ON: the permission pre-check must run first — the AT session requires
     // CheckHapPermissionInfo before PrepareHapIdentity/UpdateHapPolicy/FinishInstall
     // (REPLACE for updates, INSTALL otherwise).
-    Security::AccessToken::HapInfoCheckResult spmCheckResult;
-    int32_t spmRet = spmSession_.CheckPermissionInfo(
+    Security::AccessToken::InstallTypeEnum checkType =
         (versionUpgrade_ || moduleUpdate_) ? Security::AccessToken::InstallTypeEnum::TYPE_REPLACE
-            : Security::AccessToken::InstallTypeEnum::TYPE_INSTALL,
-        spmCheckResult);
+            : Security::AccessToken::InstallTypeEnum::TYPE_INSTALL;
+    Security::AccessToken::HapInfoCheckResult spmCheckResult;
+    int32_t spmRet = spmSession_.CheckPermissionInfo(checkType, spmCheckResult);
+    if (spmRet == Security::AccessToken::AccessTokenError::ERR_BUNDLE_ALREADY_EXIST &&
+        checkType == Security::AccessToken::InstallTypeEnum::TYPE_INSTALL) {
+        LOG_W(BMS_TAG_INSTALLER,
+            "TYPE_INSTALL rejected with ALREADY_EXIST, retry TYPE_REPLACE, skills:%{public}s",
+            bundleName_.c_str());
+        checkType = Security::AccessToken::InstallTypeEnum::TYPE_REPLACE;
+        spmRet = spmSession_.CheckPermissionInfo(checkType, spmCheckResult);
+    }
     if (spmRet != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "spm check permission failed %{public}d", spmRet);
         // Raw AT code: map to the registered BMS code, no unregistered code leaks.
