@@ -22,6 +22,8 @@
 #include <string>
 #include <unistd.h>
 
+#include "accesstoken_kit.h"
+#include "bundle_constants.h"
 #include "bundle_info.h"
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
@@ -48,6 +50,35 @@ const int32_t USERID = 100;
 const int32_t CROWDTEST_DEADLINE = 100000000;
 const int32_t CROWDTEST_DEADLINE2 = 200000000;
 const int32_t WAIT_TIME = 2; // init mocked bms
+
+// --- SPM ON install prerequisite -------------------------------------------
+// The suite keeps the SPM switch ON (the device default, see
+// BundleSpmManager::IsEnabled) and solves the hap sign verification
+// positively: the mocked access-token boundary is fed the per-hap data the
+// real AT side would return for the installed haps, so every install runs
+// the complete SPM ON chain. The provisions must carry the profiles the
+// suite's assertions read back: a release crowdtesting profile for the
+// dependenciestest haps (appDistributionType CROWDTESTING gates the
+// crowdtestDeadline storage) and a release os_integration profile for the
+// l3jsdemo hap. Each provision's bundle-name must stay in sync with the
+// hap's package name (CheckBundleName cross-checks them).
+constexpr int32_t TEST_SPM_SESSION_ID = 4242;
+constexpr uint64_t TEST_SPM_TOKEN_ID = 101;
+// InitToken rejects a uid outside the installing user's uid segment, so the
+// AT-allocated identity must be valid for USERID.
+constexpr int32_t TEST_SPM_UID = USERID * Constants::BASE_USER_RANGE + 102;
+
+void SetUpSpmTrustedSignInfoForTest()
+{
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(HAP_NAME_ENTRY_B,
+        Security::AccessToken::MakeSpmReleaseProvisionRawForTest(BUNDLE_NAME, "crowdtesting"));
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(HAP_NAME_ENTRY_C,
+        Security::AccessToken::MakeSpmReleaseProvisionRawForTest(BUNDLE_NAME, "crowdtesting"));
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(HAP_NAME_FIRST_RIGHT,
+        Security::AccessToken::MakeSpmReleaseProvisionRawForTest(BUNDLE_NAME_2, "os_integration"));
+    Security::AccessToken::SetSpmCheckHapSignInfoSessionIdForTest(TEST_SPM_SESSION_ID);
+    Security::AccessToken::SetSpmPrepareIdentityForTest(TEST_SPM_TOKEN_ID, TEST_SPM_UID);
+}
 }  // namespace
 
 class BmsBundleCrowdtestingTest : public testing::Test {
@@ -89,6 +120,7 @@ BmsBundleCrowdtestingTest::~BmsBundleCrowdtestingTest()
 
 void BmsBundleCrowdtestingTest::SetUpTestCase()
 {
+    SetUpSpmTrustedSignInfoForTest();
     bundleMgrService_->InitBundleInstaller();
     bundleMgrService_->InitBundleDataMgr();
     bundleMgrService_->GetDataMgr()->AddUserId(USERID);

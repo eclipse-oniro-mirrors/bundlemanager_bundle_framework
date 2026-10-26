@@ -24,6 +24,8 @@
 #include <unistd.h>
 
 #include "appexecfwk_errors.h"
+#include "accesstoken_kit.h"
+#include "bundle_constants.h"
 #include "bundle_info.h"
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
@@ -58,6 +60,34 @@ const uint32_t VERSION_2 = 2;
 const uint32_t VERSION_3 = 3;
 const int32_t MAX_TRY_TIMES = 1000;
 const int32_t WAIT_TIME = 2; // init mocked bms
+
+// --- SPM ON install prerequisite -------------------------------------------
+// The suite keeps the SPM switch ON (the device default, see
+// BundleSpmManager::IsEnabled) and solves the hap sign verification
+// positively: the mocked access-token boundary is fed the per-hap data the
+// real AT side would return for the installed haps, so every install runs
+// the complete SPM ON chain (CheckSignAndInitSession -> provision parse ->
+// CheckProvisionInfoIsValid -> CheckPermissionInfo -> PrepareHapIdentity ->
+// installd provision query -> FinishInstall). The provisions are minimal
+// valid debug provisions; their bundle-name must stay in sync with
+// BUNDLE_NAME (CheckBundleName cross-checks the provision against the hap's
+// package name).
+constexpr int32_t TEST_SPM_SESSION_ID = 4242;
+constexpr uint64_t TEST_SPM_TOKEN_ID = 101;
+// InitToken rejects a uid outside the installing user's uid segment, so the
+// AT-allocated identity must be valid for USERID.
+constexpr int32_t TEST_SPM_UID = USERID * Constants::BASE_USER_RANGE + 102;
+
+void SetUpSpmTrustedSignInfoForTest()
+{
+    const std::string provision =
+        Security::AccessToken::MakeSpmDebugProvisionRawForTest(BUNDLE_NAME);
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(V1_BUNDLE, provision);
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(V2_BUNDLE, provision);
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(V3_BUNDLE, provision);
+    Security::AccessToken::SetSpmCheckHapSignInfoSessionIdForTest(TEST_SPM_SESSION_ID);
+    Security::AccessToken::SetSpmPrepareIdentityForTest(TEST_SPM_TOKEN_ID, TEST_SPM_UID);
+}
 }  // namespace
 
 class BmsBundleUpdaterTest : public testing::Test {
@@ -94,6 +124,7 @@ std::shared_ptr<InstalldService> BmsBundleUpdaterTest::installdService_ =
 
 void BmsBundleUpdaterTest::SetUpTestCase()
 {
+    SetUpSpmTrustedSignInfoForTest();
     bundleMgrService_->InitBundleInstaller();
     bundleMgrService_->InitBundleDataMgr();
     bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();

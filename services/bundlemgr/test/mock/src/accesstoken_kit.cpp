@@ -15,6 +15,7 @@
 
 #include "accesstoken_kit.h"
 
+#include <map>
 #include <set>
 #include <unordered_map>
 
@@ -67,6 +68,17 @@ int32_t g_spmCheckHapSignInfoSessionId = 0;
 // (userId == -1).
 int32_t g_spmCheckHapSignInfoLastUserId = 0;
 std::vector<TrustedBundleInfo> g_spmTrustedBundleInfos;
+// Per-hap-file provision registry (SetSpmTrustedProvisionForHapFileForTest):
+// file name -> provision raw. When the fixed vector above is empty but this
+// registry is not, CheckHapSignInfo builds one trusted entry per hap path of
+// the current install from it, so multi-bundle and directory installs (whose
+// hap enumeration order is not deterministic) always get a count- and
+// order-matching answer.
+std::map<std::string, std::string> g_spmTrustedProvisionsByHapFile;
+// Session-cache mirror: the entries the last CheckHapSignInfo answered with,
+// standing in for what the real AT side caches under the session id it
+// allocated. GetCacheSignInfoBySessionId serves them for a matching session.
+std::vector<TrustedBundleInfo> g_spmLastCheckHapSignInfoEntries;
 int32_t g_spmCheckHapPermissionInfoRet = 0;
 int32_t g_spmCheckHapPermissionInfoCallCount = 0;
 // Records the MultipleMode of the last CheckHapPermissionInfo call (sentinel
@@ -132,6 +144,8 @@ void ResetSpmKitMockValuesForTest()
     g_spmCheckHapSignInfoSessionId = 0;
     g_spmCheckHapSignInfoLastUserId = 0;
     g_spmTrustedBundleInfos.clear();
+    g_spmTrustedProvisionsByHapFile.clear();
+    g_spmLastCheckHapSignInfoEntries.clear();
     g_spmCheckHapPermissionInfoRet = 0;
     g_spmCheckHapPermissionInfoCallCount = 0;
     g_spmCheckHapPermissionInfoLastMode = -100;
@@ -240,6 +254,70 @@ void SetSpmPrepareIdentityForTest(uint64_t tokenId, int32_t uid)
 {
     g_spmPrepareIdentityTokenId = tokenId;
     g_spmPrepareIdentityUid = uid;
+}
+
+void SetSpmTrustedProvisionForHapFileForTest(const std::string& hapFileName,
+    const std::string& provisionRaw)
+{
+    g_spmTrustedProvisionsByHapFile[hapFileName] = provisionRaw;
+}
+
+namespace {
+// Top-level provision field parsed by appverify into ProvisionInfo::
+// appPrivilegeCapabilities; "AllowAppShareLibrary" is the privilege
+// BundleInstallChecker requires for installing SHARED-type bundles.
+const char* const SPM_APP_PRIVILEGE_CAPABILITIES_FIELD =
+    R"(, "app-privilege-capabilities": ["AllowAppShareLibrary"])";
+}
+
+std::string MakeSpmDebugProvisionRawForTest(const std::string& bundleName,
+    bool allowAppShareLibrary)
+{
+    // Build the optional field BEFORE the literal concatenation: splicing a
+    // conditional expression into the raw-string chain would swallow the code
+    // text into the literal (the closing delimiter )" is only found at the
+    // very end), corrupting the JSON.
+    std::string privileges;
+    if (allowAppShareLibrary) {
+        privileges = SPM_APP_PRIVILEGE_CAPABILITIES_FIELD;
+    }
+    return R"({
+        "version-code": 1,
+        "version-name": "1.0.0",
+        "uuid": "bms-spm-test",
+        "type": "debug",
+        "bundle-info": {
+            "developer-id": "bms-spm-test",
+            "development-certificate": "bms-spm-test-cert",
+            "bundle-name": ")" + bundleName + R"(",
+            "apl": "normal",
+            "app-feature": "hos_normal_app"
+        })" + privileges + R"(
+    })";
+}
+
+std::string MakeSpmReleaseProvisionRawForTest(const std::string& bundleName,
+    const std::string& appDistributionType, bool allowAppShareLibrary, const std::string& appFeature)
+{
+    std::string privileges;
+    if (allowAppShareLibrary) {
+        privileges = SPM_APP_PRIVILEGE_CAPABILITIES_FIELD;
+    }
+    return R"({
+        "version-code": 1,
+        "version-name": "1.0.0",
+        "uuid": "bms-spm-test",
+        "type": "release",
+        "app-distribution-type": ")" + appDistributionType + R"(",
+        "bundle-info": {
+            "developer-id": "bms-spm-test",
+            "distribution-certificate": "bms-spm-test-cert",
+            "bundle-name": ")" + bundleName + R"(",
+            "apl": "normal",
+            "app-identifier": "test-app-identifier",
+            "app-feature": ")" + appFeature + R"("
+        })" + privileges + R"(
+    })";
 }
 
 AccessTokenIDEx AccessTokenKit::AllocHapToken(const HapInfoParams& info, const HapPolicyParams& policy)
@@ -474,7 +552,34 @@ int32_t AccessTokenKit::CheckHapSignInfo(const BundleHapList& list, uint32_t fla
 {
     g_spmCheckHapSignInfoLastUserId = list.userIdForEnterpriseSign;
     sessionId = g_spmCheckHapSignInfoSessionId;
-    bundleInfo = g_spmTrustedBundleInfos;
+    if (!g_spmTrustedBundleInfos.empty()) {
+        bundleInfo = g_spmTrustedBundleInfos;
+    } else if (!g_spmTrustedProvisionsByHapFile.empty()) {
+        // Serve the per-hap-file registry: exactly one entry per hap path of
+        // this install, in this install's hap order (the count/shape contract
+        // of the real AT side; directory installs enumerate in no guaranteed
+        // order, so entries are matched per file, not by a fixed sequence).
+        // A hap missing from the registry yields an empty answer so the
+        // install fails closed, like an AT refusing to verify it.
+        std::vector<TrustedBundleInfo> entries;
+        for (const auto& hapPath : list.hapPaths) {
+            auto separatorPos = hapPath.find_last_of('/');
+            std::string hapFileName = (separatorPos == std::string::npos)
+                ? hapPath : hapPath.substr(separatorPos + 1);
+            auto it = g_spmTrustedProvisionsByHapFile.find(hapFileName);
+            if (it == g_spmTrustedProvisionsByHapFile.end()) {
+                entries.clear();
+                break;
+            }
+            TrustedBundleInfo entry;
+            entry.profileData.provisionRaw = it->second;
+            entries.emplace_back(entry);
+        }
+        bundleInfo = entries;
+    }
+    // Mirror the AT-side session cache: the entries answered above are what
+    // the AT caches under the session id it allocated.
+    g_spmLastCheckHapSignInfoEntries = bundleInfo;
     return g_spmCheckHapSignInfoRet;
 }
 
@@ -548,11 +653,11 @@ int32_t AccessTokenKit::GetCacheSignInfoBySessionId(int32_t sessionId, uint32_t 
     // trusted bundle info under the session id it allocated, and a later query
     // by that id returns the cached entries (the installd provision-dependent
     // steps of an SPM ON install consume them). An unknown session id or an
-    // empty control vector still yields an empty list, preserving the
+    // empty cached answer still yields an empty list, preserving the
     // fail-closed fallback of the installd provision queries for every other
     // target that never populates the control variables.
     if (sessionId != 0 && sessionId == g_spmCheckHapSignInfoSessionId) {
-        bundleInfo = g_spmTrustedBundleInfos;
+        bundleInfo = g_spmLastCheckHapSignInfoEntries;
     }
     return 0;
 }

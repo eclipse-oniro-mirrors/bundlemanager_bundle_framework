@@ -21,6 +21,8 @@
 #include <sstream>
 #include <string>
 
+#include "accesstoken_kit.h"
+#include "bundle_constants.h"
 #include "bundle_info.h"
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
@@ -44,6 +46,36 @@ const std::string BUNDLE_NAME = "com.example.bmsgrantpermission";
 const std::string HAP_FILE_PATH = "/data/test/resource/bms/permission_bundle/";
 const int32_t USERID = 100;
 const int32_t WAIT_TIME = 2; // init mocked bms
+
+// --- SPM ON install prerequisite -------------------------------------------
+// The suite keeps the SPM switch ON (the device default, see
+// BundleSpmManager::IsEnabled) and solves the hap sign verification
+// positively: the mocked access-token boundary is fed the per-hap data the
+// real AT side would return for the installed haps, so every install runs
+// the complete SPM ON chain. The provisions are minimal valid release
+// profiles — release skips the developer-mode gate of CheckDeveloperMode
+// that a debug provision would have to pass, keeping the suite independent
+// of the developer-mode parameter state. Each provision's bundle-name must
+// stay in sync with BUNDLE_NAME (CheckBundleName cross-checks the provision
+// against the hap's package name).
+constexpr int32_t TEST_SPM_SESSION_ID = 4242;
+constexpr uint64_t TEST_SPM_TOKEN_ID = 101;
+// InitToken rejects a uid outside the installing user's uid segment, so the
+// AT-allocated identity must be valid for USERID.
+constexpr int32_t TEST_SPM_UID = USERID * Constants::BASE_USER_RANGE + 102;
+
+void SetUpSpmTrustedSignInfoForTest()
+{
+    const std::string provision =
+        Security::AccessToken::MakeSpmReleaseProvisionRawForTest(BUNDLE_NAME, "app_gallery");
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest("bmsGrantPermission1.hap", provision);
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest("bmsGrantPermission3.hap", provision);
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest("bmsGrantPermission4.hap", provision);
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest("bmsGrantPermission6.hap", provision);
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest("bmsGrantPermission7.hap", provision);
+    Security::AccessToken::SetSpmCheckHapSignInfoSessionIdForTest(TEST_SPM_SESSION_ID);
+    Security::AccessToken::SetSpmPrepareIdentityForTest(TEST_SPM_TOKEN_ID, TEST_SPM_UID);
+}
 }  // namespace
 
 class BmsBundlePermissionGrantTest : public testing::Test {
@@ -78,6 +110,7 @@ BmsBundlePermissionGrantTest::~BmsBundlePermissionGrantTest()
 
 void BmsBundlePermissionGrantTest::SetUpTestCase()
 {
+    SetUpSpmTrustedSignInfoForTest();
     bundleMgrService_->InitBundleInstaller();
     bundleMgrService_->InitBundleDataMgr();
     bundleMgrService_->GetDataMgr()->AddUserId(USERID);
