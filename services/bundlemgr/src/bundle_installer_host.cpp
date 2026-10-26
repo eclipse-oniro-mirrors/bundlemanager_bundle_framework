@@ -1934,7 +1934,8 @@ ErrCode BundleInstallerHost::GetEnterpriseReSignatureCertInfo(
         info.certAlias = alias;
         ErrCode certRet = InstalldClient::GetInstance()->GetEnterpriseCertInfo(certPath, info);
         if (certRet != ERR_OK) {
-            LOG_W(BMS_TAG_INSTALLER, "parse cert %{public}s failed, skip", alias.c_str());
+            LOG_W(BMS_TAG_INSTALLER, "parse cert %{public}s failed, errCode: %{public}d, skip",
+                alias.c_str(), certRet);
             continue;
         }
         certInfos.emplace_back(info);

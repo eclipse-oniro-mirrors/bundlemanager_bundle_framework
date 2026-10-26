@@ -4191,7 +4191,10 @@ ErrCode InstalldHostImpl::GetEnterpriseCertInfo(const std::string &certPath, Ent
         LOG_E(BMS_TAG_INSTALLD, "read cert file failed: %{private}s", certPath.c_str());
         return ERR_APPEXECFWK_ENTERPRISE_CERT_READ_CERT_FAILED;
     }
-#if defined(CODE_SIGNATURE_ENABLE)
+    // X.509 parsing itself does not depend on the code signature feature: on
+    // builds without it ReadCert returns empty data and the parse below fails,
+    // so the caller skips the cert and the query degrades to an empty list
+    // (RC-3). Do not gate this block with CODE_SIGNATURE_ENABLE.
     std::string subjectOrg;
     int64_t notAfter = 0;
     ErrCode parseRet = InstalldOperator::ParseEnterpriseCertInfo(certData, subjectOrg, notAfter);
@@ -4201,9 +4204,6 @@ ErrCode InstalldHostImpl::GetEnterpriseCertInfo(const std::string &certPath, Ent
     }
     certInfo.enterpriseName = subjectOrg;
     certInfo.notAfter = notAfter;
-#else
-    LOG_W(BMS_TAG_INSTALLD, "code signature feature is not supported, cert info incomplete");
-#endif
     LOG_I(BMS_TAG_INSTALLD, "end");
     return ERR_OK;
 }

@@ -25,7 +25,7 @@ namespace AppExecFwk {
 struct EnterpriseCertInfo : public Parcelable {
     std::string certAlias;
     std::string enterpriseName;
-    int64_t notAfter = 0;
+    int64_t notAfter = 0; // expiry time, milliseconds since the Unix epoch
 
     bool ReadFromParcel(Parcel &parcel);
     bool Marshalling(Parcel &parcel) const override;

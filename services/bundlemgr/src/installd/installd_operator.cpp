@@ -4336,22 +4336,44 @@ ErrCode InstalldOperator::ParseEnterpriseCertInfo(
     }
 
     X509_NAME *subject = X509_get_subject_name(cert);
-    if (subject != nullptr) {
-        char orgBuf[256] = {0};
-        X509_NAME_get_text_by_NID(subject, NID_organizationName, orgBuf, sizeof(orgBuf));
+    if (subject == nullptr) {
+        X509_free(cert);
+        LOG_E(BMS_TAG_INSTALLD, "get subject name failed");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_READ_CERT_FAILED;
+    }
+    char orgBuf[256] = {0};
+    int orgLen = X509_NAME_get_text_by_NID(subject, NID_organizationName, orgBuf, sizeof(orgBuf));
+    if (orgLen > 0) {
         subjectOrg = orgBuf;
+    } else {
+        // BR-2: the enterprise name falls back to CommonName when Organization is absent.
+        char cnBuf[256] = {0};
+        int cnLen = X509_NAME_get_text_by_NID(subject, NID_commonName, cnBuf, sizeof(cnBuf));
+        if (cnLen <= 0) {
+            X509_free(cert);
+            LOG_E(BMS_TAG_INSTALLD, "get organization and common name failed");
+            return ERR_APPEXECFWK_ENTERPRISE_CERT_READ_CERT_FAILED;
+        }
+        subjectOrg = cnBuf;
     }
 
     const ASN1_TIME *notAfterTime = X509_get0_notAfter(cert);
-    if (notAfterTime != nullptr) {
-        struct tm tmVal = {0};
-        if (ASN1_TIME_to_tm(notAfterTime, &tmVal) == 1) {
-            notAfter = static_cast<int64_t>(timegm(&tmVal));
-        }
+    if (notAfterTime == nullptr) {
+        X509_free(cert);
+        LOG_E(BMS_TAG_INSTALLD, "get notAfter failed");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_READ_CERT_FAILED;
     }
+    struct tm tmVal = {0};
+    if (ASN1_TIME_to_tm(notAfterTime, &tmVal) != 1) {
+        X509_free(cert);
+        LOG_E(BMS_TAG_INSTALLD, "convert notAfter failed");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_READ_CERT_FAILED;
+    }
+    // BR-3: notAfter is a millisecond Unix timestamp.
+    notAfter = static_cast<int64_t>(timegm(&tmVal)) * 1000;
 
     X509_free(cert);
-    LOG_I(BMS_TAG_INSTALLD, "parse enterprise cert info success, org: %{public}s", subjectOrg.c_str());
+    LOG_I(BMS_TAG_INSTALLD, "parse enterprise cert info success");
     return ERR_OK;
 }
 

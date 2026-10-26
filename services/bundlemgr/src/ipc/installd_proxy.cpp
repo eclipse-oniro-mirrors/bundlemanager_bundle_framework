@@ -15,6 +15,8 @@
 
 #include "ipc/installd_proxy.h"
 
+#include <memory>
+
 #include "app_log_tag_wrapper.h"
 #include "ashmem.h"
 #include "bundle_service_constants.h"
@@ -1681,18 +1683,16 @@ ErrCode InstalldProxy::GetEnterpriseCertInfo(const std::string &certPath, Enterp
         LOG_E(BMS_TAG_INSTALLD, "TransactInstalldCmd failed");
         return ret;
     }
-    ErrCode result = reply.ReadInt32();
-    if (result != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLD, "GetEnterpriseCertInfo failed: %{public}d", result);
-        return result;
-    }
-    auto infoPtr = reply.ReadParcelable<EnterpriseCertInfo>();
+    // TransactInstalldCmd has already consumed the errcode written by the host;
+    // the rest of the reply is the parcelable payload itself — do NOT read
+    // another Int32 here (it would consume the first bytes of the payload and
+    // make every successful parse look like a failure).
+    std::unique_ptr<EnterpriseCertInfo> infoPtr(reply.ReadParcelable<EnterpriseCertInfo>());
     if (infoPtr == nullptr) {
         LOG_E(BMS_TAG_INSTALLD, "read cert info failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     certInfo = *infoPtr;
-    delete infoPtr;
     return ERR_OK;
 }
 
