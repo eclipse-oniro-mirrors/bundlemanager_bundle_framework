@@ -109,18 +109,22 @@ void SetSpmPrepareIdentityForTest(uint64_t tokenId, int32_t uid);
 // current install, in the install's hap order — the shape the real AT side
 // guarantees. An install containing an unregistered hap fails closed.
 void SetSpmTrustedProvisionForHapFileForTest(const std::string& hapFileName,
-    const std::string& provisionRaw);
+    const std::string& provisionRaw, const std::string& appId = "");
 // Minimal valid provisions mirroring what the real AT side verifies for the
 // haps' profiles: a debug profile, or a release profile with the given
 // app-distribution-type ("crowdtesting" / "os_integration" / "app_gallery").
 // allowAppShareLibrary adds the "AllowAppShareLibrary" privilege, required by
 // BundleInstallChecker::ProcessBundleInfoByPrivilegeCapability when installing
 // a bundle whose bundleType is SHARED (cross-app shared libraries / HSPs).
+// apl/appIdentifier mirror the bundle-info fields of the real profile an
+// haps is signed with (an empty appIdentifier omits the field, like the
+// legacy OpenHarmony profiles that predate app-identifiers).
 std::string MakeSpmDebugProvisionRawForTest(const std::string& bundleName,
     bool allowAppShareLibrary = false);
 std::string MakeSpmReleaseProvisionRawForTest(const std::string& bundleName,
     const std::string& appDistributionType, bool allowAppShareLibrary = false,
-    const std::string& appFeature = "hos_normal_app");
+    const std::string& appFeature = "hos_normal_app", const std::string& apl = "normal",
+    const std::string& appIdentifier = "test-app-identifier");
 } // namespace AccessToken
 } // namespace Security
 } // namespace OHOS

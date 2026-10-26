@@ -26,6 +26,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "accesstoken_kit.h"
+#include "bundle_constants.h"
 #include "bundle_info.h"
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
@@ -34,6 +36,7 @@
 #include "installd/installd_service.h"
 #include "installd_client.h"
 #include "mock_status_receiver.h"
+#include "parameters.h"
 #include "system_bundle_installer.h"
 
 using namespace testing::ext;
@@ -101,6 +104,125 @@ const std::vector<std::string> BUNDLE_DATA_DIR_PAGENAME = {
     "preferences",
     "haps",
 };
+
+// --- SPM ON install prerequisite -------------------------------------------
+// The suite keeps the SPM switch ON (the device default, see
+// BundleSpmManager::IsEnabled) and solves the hap sign verification
+// positively: the mocked access-token boundary is fed the per-hap data the
+// real AT side would return for the installed haps, so every install runs
+// the complete SPM ON chain (CheckSignAndInitSession -> provision parse ->
+// CheckProvisionInfoIsValid -> CheckPermissionInfo -> PrepareHapIdentity ->
+// installd provision query -> FinishInstall). This suite installs many
+// single haps, multi-hap arrays and whole directories (whose hap enumeration
+// order is not deterministic), and covers three bundles — so every hap file
+// is registered by file name with a provision matching its package name
+// (CheckBundleName cross-checks the provision against the hap's parsed
+// package name).
+// The provisions mirror the fields of the REAL profiles the haps are signed
+// with (sceneProject/signature/*.p7b): the l3jsdemo family (first_right and
+// siblings, right, third_right's heihei profile) is signed with the legacy
+// OpenHarmony system profile — release / os_integration / apl system_core /
+// hos_system_app / NO app-identifier — so the parsed ProvisionInfo carries
+// the same SYSTEM_APP identity and the same empty appIdentifier as under
+// SPM OFF (a fabricated appIdentifier would surface in the keep-data
+// CheckAppIdentifier comparison). testhapdemo's real profile
+// (com.example.bmstest.demo.p7b) is release / app_gallery / normal /
+// hos_normal_app with its real app-identifier. seventh_right.hap keeps the
+// semantics of its real signature (com.example.l3jsdemoerror.p7b — the same
+// profile JSON but a DIFFERENT signing certificate): the mock cannot
+// reproduce a signature-block-derived app id from the provision raw alone,
+// so its entry carries an explicit odd profileData.appId, which makes
+// MultipleHapsInstall_2600 still fail the cross-hap appId consistency check
+// (CheckProvisionInfoIsValid) exactly like under SPM OFF.
+constexpr int32_t TEST_SPM_SESSION_ID = 4242;
+constexpr uint64_t TEST_SPM_TOKEN_ID = 101;
+// InitToken rejects a uid outside the installing user's uid segment, so the
+// AT-allocated identity must be valid for USERID.
+constexpr int32_t TEST_SPM_UID = USERID * Constants::BASE_USER_RANGE + 102;
+const std::string BUNDLE_NAME_THIRD = "com.example.heiheiApplication";
+// The signature-block-derived app id handed back for seventh_right.hap: any
+// value different from the JSON-derived app id of the other l3jsdemo haps
+// triggers the odd-one-out branch of CheckProvisionInfoIsValid.
+const std::string ODD_SPM_APP_ID = "bms-spm-test-odd-app-id";
+
+void SetUpSpmTrustedSignInfoForTest()
+{
+    // Mirrors the legacy OpenHarmony system profile of com.example.l3jsdemo.p7b
+    // (and third_right's com.example.heiheiApplication.p7b): no app-identifier
+    // field, apl system_core, hos_system_app.
+    const std::string provision = Security::AccessToken::MakeSpmReleaseProvisionRawForTest(
+        BUNDLE_NAME, "os_integration", false, "hos_system_app", "system_core", "");
+    const std::string provisionThird = Security::AccessToken::MakeSpmReleaseProvisionRawForTest(
+        BUNDLE_NAME_THIRD, "os_integration", false, "hos_system_app", "system_core", "");
+    // Mirrors com.example.bmstest.demo.p7b: app_gallery with its real
+    // app-identifier.
+    const std::string provisionDemo = Security::AccessToken::MakeSpmReleaseProvisionRawForTest(
+        BUNDLE_NAME_2, "app_gallery", false, "hos_normal_app", "normal", "5765880207856214783");
+    for (const auto &hapName : std::vector<std::string> {
+        RIGHT_BUNDLE_FIRST, RIGHT_BUNDLE_SECOND, RIGHT_BUNDLE, RIGHT_BUNDLE_FOURTH,
+        RIGHT_BUNDLE_FIFTH, RIGHT_BUNDLE_SIXTH, RIGHT_BUNDLE_EIGHTH, RIGHT_BUNDLE_NINTH,
+        RIGHT_BUNDLE_TENTH, RIGHT_BUNDLE_ELEVENTH, RIGHT_BUNDLE_TWELFTH, RIGHT_BUNDLE_THIRTEENTH,
+        RIGHT_BUNDLE_FOURTEENTH, RIGHT_BUNDLE_FIFTEENTH, RIGHT_BUNDLE_SIXTEENTH,
+        RIGHT_BUNDLE_SECOND_BACKUP, RIGHT_DIFFERENT_RELEASE_TYPE, RIGHT_COMPATIBLE_VERSION_CODE,
+        RIGHT_DIFFERENT_COMPATIBLE_VERSION_CODE, RIGHT_DIFFERENT_MODULE_TYPE,
+        "version1.hap", "version2.hap", "version3.hap", "right1.hap",
+    }) {
+        Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(hapName, provision);
+    }
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(RIGHT_BUNDLE_THIRD, provisionThird);
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(RIGHT_BUNDLE_SEVENTH,
+        provision, ODD_SPM_APP_ID);
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(TEST_HAP_DEMO, provisionDemo);
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(TEST_HAP_DEMO_2, provisionDemo);
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(TEST_HAP_DEMO_3, provisionDemo);
+    Security::AccessToken::SetSpmCheckHapSignInfoSessionIdForTest(TEST_SPM_SESSION_ID);
+    Security::AccessToken::SetSpmPrepareIdentityForTest(TEST_SPM_TOKEN_ID, TEST_SPM_UID);
+    // The mock parameter map makes const.bms.supportAppTypes read empty (on a
+    // real device it is a non-empty device-type list): testhapdemo.hap is an
+    // old-toolchain product without rpcid.sc and with deviceTypes that miss
+    // the "default" entry, so CheckSysCap fails with PARSE_RPCID_FAILED and
+    // the install drops into CheckDeviceType, where only the non-empty
+    // supportAppTypes fast path (the device behavior this suite has always
+    // relied on) lets it through. Mirror a full device-type list so every
+    // non-empty hap deviceTypes vector intersects it.
+    OHOS::system::SetParameter("const.bms.supportAppTypes", "default,phone,tablet,2in1");
+}
+
+void ClearSpmLeftoverUninstallRecordsForTest()
+{
+    // Leftover persistent state of this suite's bundles must be wiped before
+    // the first install, or the fresh installs are rejected with
+    // INCONSISTENT_SIGNATURE (8519755) through two paths:
+    // - a leftover keep-data uninstall record (from earlier runs or sibling
+    //   suites on a shared device) stores the app id the REAL signature
+    //   derived; the mocked provision derives a different one, so
+    //   CheckInstallOnKeepData fails the comparison;
+    // - a leftover installed bundle-info record (e.g. persisted by an
+    //   earlier run of a PREVIOUS mock-provision revision, whose
+    //   app-identifier/provision id differ from the current one) makes the
+    //   first install run the update branch, where CheckAppIdentifier
+    //   compares the stored values against the freshly derived ones and
+    //   fails on the cross-revision mismatch. Run the full
+    //   INSTALL_START -> UNINSTALL_START -> UNINSTALL_SUCCESS chain (the
+    //   plain UNINSTALL_START of ClearBundleInfo cannot transfer without a
+    //   state entry, which a cold-reloaded record has) so DeleteBundleInfo
+    //   wipes BOTH the in-memory info and the RDB row.
+    // The installs of this suite never keep data, so a clean state is the
+    // only behavior the suite has ever asserted.
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        return;
+    }
+    for (const auto &bundleName : {BUNDLE_NAME, BUNDLE_NAME_THIRD, BUNDLE_NAME_2}) {
+        InnerBundleInfo leftoverInfo;
+        if (dataMgr->FetchInnerBundleInfo(bundleName, leftoverInfo)) {
+            dataMgr->UpdateBundleInstallState(bundleName, InstallState::INSTALL_START);
+            dataMgr->UpdateBundleInstallState(bundleName, InstallState::UNINSTALL_START);
+            dataMgr->UpdateBundleInstallState(bundleName, InstallState::UNINSTALL_SUCCESS);
+        }
+        dataMgr->DeleteUninstallBundleInfo(bundleName, USERID);
+    }
+}
 }  // namespace
 
 class BmsMultipleInstallerTest : public testing::Test {
@@ -228,10 +350,25 @@ ErrCode BmsMultipleInstallerTest::UpdateThirdPartyBundle(const std::string &file
 
 void BmsMultipleInstallerTest::SetUpTestCase()
 {
+    // SPM stays ON (its device default): feed the mocked access-token
+    // boundary with the per-hap trusted sign answer for every hap of this
+    // suite, so the installs pass the real SPM verification chain instead of
+    // failing closed on the empty default mock. Must run before the first
+    // install — nothing in this binary resets the mock control variables
+    // afterwards.
+    SetUpSpmTrustedSignInfoForTest();
     bundleMgrService_->InitBundleInstaller();
     bundleMgrService_->InitBundleDataMgr();
     bundleMgrService_->GetDataMgr()->AddUserId(USERID);
     bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();
+    // Drop leftover keep-data uninstall records of this suite's bundles (a
+    // shared device accumulates them from earlier runs or sibling suites):
+    // they store the app id the real signature derived, and the mocked
+    // provision derives a different one, so CheckInstallOnKeepData would
+    // reject the fresh installs with INCONSISTENT_SIGNATURE (8519755). The
+    // installs of this suite never keep data, so a clean state is the only
+    // behavior the suite has ever asserted.
+    ClearSpmLeftoverUninstallRecordsForTest();
 }
 
 void BmsMultipleInstallerTest::TearDownTestCase()
@@ -243,6 +380,17 @@ void BmsMultipleInstallerTest::SetUp()
 {
     if (!installdService_->IsServiceReady()) {
         installdService_->Start();
+    }
+    // The mocked InstalldClient::ClearSessionProvisionCache is a counting
+    // stub, so the real session provision cache inside the process-wide
+    // InstalldHostImpl keeps the entry of the PREVIOUS test case's install
+    // under the same shared session id. The next install of a DIFFERENT
+    // bundle would then hit that stale entry in GetResolvedApl and fail the
+    // apl cross-check with INSTALLD_PARAM_ERROR (e.g. a leftover
+    // system_core entry vs a normal-profile install). Drop the cache entry
+    // before every case so each install starts from a clean provision state.
+    if (installdService_->hostImpl_ != nullptr) {
+        installdService_->hostImpl_->ClearSessionProvisionCache(TEST_SPM_SESSION_ID);
     }
 }
 
