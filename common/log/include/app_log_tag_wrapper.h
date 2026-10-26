@@ -80,6 +80,10 @@
 #define BMS_FDSAN_EXT_TAG ((0xD001100ULL << 32) | 0x8)
 #endif
 
+#ifndef BMS_FDSAN_RDB_RECOVER_TAG
+#define BMS_FDSAN_RDB_RECOVER_TAG ((0xD001100ULL << 32) | 0x9)
+#endif
+
 #ifndef APPEXECFWK_FUNC_FMT
 #define APPEXECFWK_FUNC_FMT "%{public}s:%{public}s:%{public}d "
 #endif

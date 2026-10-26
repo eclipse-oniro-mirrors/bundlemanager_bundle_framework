@@ -36,6 +36,7 @@
 #include "bundle_service_constants.h"
 #include "rdb_recover_manager.h"
 
+#include "app_log_tag_wrapper.h"
 #include "app_log_wrapper.h"
 #include "event_report.h"
 #include "hitrace_meter.h"
@@ -161,7 +162,8 @@ bool RemoveDirEntrySafely(int dirFd, const std::string &name, int32_t depth)
     }
     DIR *childPtr = fdopendir(childFd);
     if (childPtr == nullptr) {
-        close(childFd);
+        fdsan_exchange_owner_tag(childFd, 0, BMS_FDSAN_RDB_RECOVER_TAG);
+        fdsan_close_with_tag(childFd, BMS_FDSAN_RDB_RECOVER_TAG);
         return false;
     }
     ScopeGuard childGuard([&] { closedir(childPtr); });
@@ -198,8 +200,9 @@ bool RemoveDirSafely(const std::string &path, int32_t depth)
     if (parentFd < 0) {
         return false;
     }
+    fdsan_exchange_owner_tag(parentFd, 0, BMS_FDSAN_RDB_RECOVER_TAG);
     bool removed = RemoveDirEntrySafely(parentFd, name, depth);
-    close(parentFd);
+    fdsan_close_with_tag(parentFd, BMS_FDSAN_RDB_RECOVER_TAG);
     return removed;
 }
 
@@ -370,8 +373,9 @@ void SyncParentDir(const std::string &filePath)
     if (fd < 0) {
         return;
     }
+    fdsan_exchange_owner_tag(fd, 0, BMS_FDSAN_RDB_RECOVER_TAG);
     fsync(fd);
-    close(fd);
+    fdsan_close_with_tag(fd, BMS_FDSAN_RDB_RECOVER_TAG);
 }
 
 bool IsTableExists(const std::shared_ptr<NativeRdb::RdbStore> &store, const std::string &tableName)
@@ -611,7 +615,8 @@ bool RdbRecoverManager::WriteSnapshotFile(const BmsRdbConfig &bmsRdbConfig,
     FILE *file = fdopen(fd, "w");
     if (file == nullptr) {
         APP_LOGE("fdopen snapshot tmp file failed, errno:%{public}d", errno);
-        close(fd);
+        fdsan_exchange_owner_tag(fd, 0, BMS_FDSAN_RDB_RECOVER_TAG);
+        fdsan_close_with_tag(fd, BMS_FDSAN_RDB_RECOVER_TAG);
         return false;
     }
     int32_t tableCount = 0;
