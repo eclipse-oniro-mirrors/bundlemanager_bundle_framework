@@ -222,13 +222,19 @@ public:
         return false;
     }
 
-    bool LoadPreInstallBundleInfo(const std::string &bundleName, PreInstallBundleInfo &) override
+    bool LoadPreInstallBundleInfo(const std::string &bundleName, PreInstallBundleInfo &preInstallBundleInfo) override
     {
         queriedBundleNames.emplace_back(bundleName);
-        return false;
+        auto it = injectedInfos.find(bundleName);
+        if (it == injectedInfos.end()) {
+            return false;
+        }
+        preInstallBundleInfo = it->second;
+        return true;
     }
 
     std::vector<std::string> queriedBundleNames;
+    std::unordered_map<std::string, PreInstallBundleInfo> injectedInfos;
 };
 
 static std::shared_ptr<PreInstallStorageSpy> InstallPreInstallStorageSpy(const std::shared_ptr<BundleDataMgr> &dataMgr)
@@ -1116,6 +1122,7 @@ HWTEST_F(BmsDualModeInstallTest, SetDualModeAppInfo_0300, Function | SmallTest |
     systemInfo.SetBaseApplicationInfo(appInfo);
     infos[BUNDLE_NAME] = systemInfo;
     InstallParam installParam;
+    installParam.isOTA = true;
     installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE;
     EXPECT_EQ(installer.SetDualModeAppInfo(installParam, infos), OHOS::ERR_OK);
     EXPECT_TRUE(infos[BUNDLE_NAME].IsDualModeCloneApp());
@@ -1143,7 +1150,8 @@ HWTEST_F(BmsDualModeInstallTest, SetDualModeAppInfo_0400, Function | SmallTest |
 
 HWTEST_F(BmsDualModeInstallTest, SetDualModeAppInfo_0500, Function | SmallTest | Level0)
 {
-    // dual-mode device + different-package (clone) + non-system app -> rejected with NOT_SYSTEM_APP, no mutation
+    // dual-mode device + different-package (clone) + non-system app -> rejected with
+    // ERR_APPEXECFWK_INSTALL_DUAL_MODE_CATEGORY_CONFLICT, no mutation
     EnableSecondaryMode();
     BaseBundleInstaller installer;
     std::unordered_map<std::string, InnerBundleInfo> infos;
@@ -1153,7 +1161,7 @@ HWTEST_F(BmsDualModeInstallTest, SetDualModeAppInfo_0500, Function | SmallTest |
     InstallParam installParam;
     installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE;
     EXPECT_EQ(installer.SetDualModeAppInfo(installParam, infos),
-        OHOS::ERR_APPEXECFWK_INSTALL_DUAL_MODE_NOT_SYSTEM_APP);
+        OHOS::ERR_APPEXECFWK_INSTALL_DUAL_MODE_CATEGORY_CONFLICT);
     // rejected before the set-loop: clone flag stays false, deviceModeDistributionPolicy unchanged
     EXPECT_FALSE(infos[BUNDLE_NAME].IsDualModeCloneApp());
     EXPECT_EQ(infos[BUNDLE_NAME].GetDeviceModeDistributionPolicy(), DeviceModeDistributionPolicy::UNSPECIFIED);
@@ -1176,7 +1184,7 @@ HWTEST_F(BmsDualModeInstallTest, SetDualModeAppInfo_0600, Function | SmallTest |
     InstallParam installParam;
     installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE;
     EXPECT_EQ(installer.SetDualModeAppInfo(installParam, infos),
-        OHOS::ERR_APPEXECFWK_INSTALL_DUAL_MODE_NOT_SYSTEM_APP);
+        OHOS::ERR_APPEXECFWK_INSTALL_DUAL_MODE_CATEGORY_CONFLICT);
     // rejected before the set-loop regardless of iteration order: neither info mutated
     EXPECT_FALSE(infos["com.system.app"].IsDualModeCloneApp());
     EXPECT_FALSE(infos["com.normal.app"].IsDualModeCloneApp());
@@ -1205,8 +1213,7 @@ HWTEST_F(BmsDualModeInstallTest, SetDualModeAppInfo_0700, Function | SmallTest |
 
 HWTEST_F(BmsDualModeInstallTest, SetDualModeAppInfo_0800, Function | SmallTest | Level0)
 {
-    // primary mode + different-package + non-system app -> rejected with NOT_SYSTEM_APP. The system-app
-    // check applies to different-package in both modes, not only the secondary-mode clone path.
+    // primary mode + different-package + non-system app -> not rejected.
     EnablePrimaryMode();
     BaseBundleInstaller installer;
     std::unordered_map<std::string, InnerBundleInfo> infos;
@@ -1215,10 +1222,10 @@ HWTEST_F(BmsDualModeInstallTest, SetDualModeAppInfo_0800, Function | SmallTest |
     infos[BUNDLE_NAME] = normalInfo;
     InstallParam installParam;
     installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE;
-    EXPECT_EQ(installer.SetDualModeAppInfo(installParam, infos),
-        OHOS::ERR_APPEXECFWK_INSTALL_DUAL_MODE_NOT_SYSTEM_APP);
+    EXPECT_EQ(installer.SetDualModeAppInfo(installParam, infos), OHOS::ERR_OK);
     EXPECT_FALSE(infos[BUNDLE_NAME].IsDualModeCloneApp());
-    EXPECT_EQ(infos[BUNDLE_NAME].GetDeviceModeDistributionPolicy(), DeviceModeDistributionPolicy::UNSPECIFIED);
+    EXPECT_EQ(infos[BUNDLE_NAME].GetDeviceModeDistributionPolicy(),
+        DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE);
 }
 
 HWTEST_F(BmsDualModeInstallTest, SetDualModeAppInfo_0900, Function | SmallTest | Level0)
@@ -1234,6 +1241,7 @@ HWTEST_F(BmsDualModeInstallTest, SetDualModeAppInfo_0900, Function | SmallTest |
     systemInfo.SetBaseApplicationInfo(appInfo);
     infos[BUNDLE_NAME] = systemInfo;
     InstallParam installParam;
+    installParam.isOTA = true;
     installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE;
     EXPECT_EQ(installer.SetDualModeAppInfo(installParam, infos), OHOS::ERR_OK);
     EXPECT_EQ(infos[BUNDLE_NAME].GetAppSandboxPolicy(), AppSandboxPolicy::ISOLATED_SANDBOX);
@@ -1433,6 +1441,54 @@ HWTEST_F(BmsDualModeInstallTest, CheckDualModeCategoryConsistency_0500, Function
     EXPECT_EQ(installer.CheckDualModeCategoryConsistency(oldInfo, installParam), OHOS::ERR_OK);
 }
 
+// IsPreInstallDiffPackage branch: a preinstalled different-package app (stored under the clone-prefixed
+// name) cannot be downgraded to a same-package policy on update. Covers the new branch added alongside
+// IsPreInstallDiffPackage/IsSingleModePolicy (base_bundle_installer.cpp:6675-6682). Conditions: non-OTA,
+// neither old nor new policy is single-mode (MAIN_ONLY/SUB_ONLY), IsPreInstallDiffPackage=true, and the
+// new policy is non-different-package -> ERR_APPEXECFWK_INSTALL_DUAL_MODE_CATEGORY_CONFLICT.
+HWTEST_F(BmsDualModeInstallTest, CheckDualModeCategoryConsistency_0600, Function | SmallTest | Level0)
+{
+    // dual-mode + non-OTA + old/new both non-single-mode + preinstalled diff-package + new non-diff
+    // -> IsPreInstallDiffPackage branch rejects the diff->same downgrade.
+    EnableSecondaryMode();
+    BaseBundleInstaller installer;
+    installer.isAppExist_ = true;
+    installer.bundleName_ = BUNDLE_NAME;
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    auto spy = InstallPreInstallStorageSpy(dataMgr);
+    installer.dataMgr_ = dataMgr;
+    // Inject a PreInstallBundleInfo keyed by the clone-prefixed name with a different-package policy,
+    // mirroring how the secondary fan-out pass persists (GetEffectiveBundleName -> clone prefix).
+    PreInstallBundleInfo preInstallInfo;
+    preInstallInfo.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE);
+    spy->injectedInfos[DualModeHelper::GetDualModeBundleName(BUNDLE_NAME)] = preInstallInfo;
+    // old/new both UNIVERSAL_IDENTICAL_PACKAGE (non-single-mode, non-diff-package): enters the new branch.
+    InnerBundleInfo oldInfo;
+    oldInfo.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::UNIVERSAL_IDENTICAL_PACKAGE);
+    InstallParam installParam;
+    installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNIVERSAL_IDENTICAL_PACKAGE;
+    EXPECT_EQ(installer.CheckDualModeCategoryConsistency(oldInfo, installParam),
+        OHOS::ERR_APPEXECFWK_INSTALL_DUAL_MODE_CATEGORY_CONFLICT);
+}
+ 
+// IsPreInstallDiffPackage=false counterpart: same shape as 0600 but no preinstalled diff-package entry
+// -> the new branch falls through to return ERR_OK (no downgrade to reject).
+HWTEST_F(BmsDualModeInstallTest, CheckDualModeCategoryConsistency_0700, Function | Smal
+{
+    EnableSecondaryMode();
+    BaseBundleInstaller installer;
+    installer.isAppExist_ = true;
+    installer.bundleName_ = BUNDLE_NAME;
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    InstallPreInstallStorageSpy(dataMgr); // spy with empty injectedInfos -> IsPreInstse
+    installer.dataMgr_ = dataMgr;
+    InnerBundleInfo oldInfo;
+    oldInfo.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::UNIVERSAL_IDE
+    InstallParam installParam;
+    installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNIVERSAL;
+    EXPECT_EQ(installer.CheckDualModeCategoryConsistency(oldInfo, installParam), OHOS::ERR_OK);
+}
+
 // ====================== BaseBundleInstaller::CheckDualModeCategoryConsistencyInTemp ======================
 // Cross-map (tempBundleInfos_) different-package consistency — the other-mode variant of the same bundleName.
 // dataMgr_ + bundleName_ + tempBundleInfos_ entry drive FetchTempBundleInfo; different-package-ness mismatch
@@ -1510,6 +1566,27 @@ HWTEST_F(BmsDualModeInstallTest, CheckDualModeCategoryConsistencyInTemp_0500, Fu
     installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE;
     EXPECT_EQ(installer.CheckDualModeCategoryConsistencyInTemp(installParam),
         OHOS::ERR_APPEXECFWK_INSTALL_DUAL_MODE_CATEGORY_CONFLICT);
+}
+
+// isAppExist_ short-circuit: when the app already exists in the current-mode bundleInfos_, the cross-map
+// (tempBundleInfos_) consistency check is skipped — CheckDualModeCategoryConsistency already covers the
+// current-mode entry, so a mismatched temp variant must NOT trigger CONFLICT here. Covers the new
+// || isAppExist_ guard added in base_bundle_installer.cpp:6694.
+HWTEST_F(BmsDualModeInstallTest, CheckDualModeCategoryConsistencyInTemp_0600, Function | SmallTest | Level0)
+{
+    // dual-mode + isAppExist_=true + temp variant mismatched (would CONFLICT without the guard)
+    // -> short-circuit returns ERR_OK, tempBundleInfos_ not consulted.
+    EnableSecondaryMode();
+    BaseBundleInstaller installer;
+    installer.bundleName_ = BUNDLE_NAME;
+    installer.isAppExist_ = true; // short-circuit guard
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    // temp variant is diff-package while new install is non-diff-package: a normally mismatched pair.
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] = MakeCat7Info(false);
+    installer.dataMgr_ = dataMgr;
+    InstallParam installParam;
+    installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::MAIN_ONLY; // non-diff-package
+    EXPECT_EQ(installer.CheckDualModeCategoryConsistencyInTemp(installParam), OHOS::ERR_OK);
 }
 
 // ====================== BaseBundleInstaller::AdoptHiddenSingleModeInfo ======================
@@ -5124,7 +5201,7 @@ HWTEST_F(BmsDualModeInstallTest, SetDualModeAppInfo_NonSystemApp_DiffPackage_Rej
     Function | SmallTest | Level0)
 {
     // different-package is a system-level capability: a non-system app is rejected with
-    // ERR_APPEXECFWK_INSTALL_DUAL_MODE_NOT_SYSTEM_APP before the clone flag is set, and the check runs
+    // ERR_APPEXECFWK_INSTALL_DUAL_MODE_CATEGORY_CONFLICT before the clone flag is set, and the check runs
     // before isCloneApp so a failed non-system app leaves no isDualModeCloneApp=true side effect.
     EnableSecondaryMode();
     BaseBundleInstaller installer;
@@ -5133,7 +5210,7 @@ HWTEST_F(BmsDualModeInstallTest, SetDualModeAppInfo_NonSystemApp_DiffPackage_Rej
     std::unordered_map<std::string, InnerBundleInfo> infos;
     infos[BUNDLE_NAME] = MakeDualModeInstallInfo(false);  // non-system app
     EXPECT_EQ(installer.SetDualModeAppInfo(installParam, infos),
-        ERR_APPEXECFWK_INSTALL_DUAL_MODE_NOT_SYSTEM_APP);
+        ERR_APPEXECFWK_INSTALL_DUAL_MODE_CATEGORY_CONFLICT);
     EXPECT_FALSE(infos[BUNDLE_NAME].IsDualModeCloneApp());  // no side effect on failure
 }
 
@@ -5146,6 +5223,7 @@ HWTEST_F(BmsDualModeInstallTest, SetDualModeAppInfo_Secondary_DiffPackage_CloneF
     BaseBundleInstaller installer;
     installer.beforeAppSandboxPolicy_ = AppSandboxPolicy::SHARED_SANDBOX;  // fresh-install default
     InstallParam installParam;
+    installParam.isOTA = true;
     installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE;
     std::unordered_map<std::string, InnerBundleInfo> infos;
     infos[BUNDLE_NAME] = MakeDualModeInstallInfo(true);

@@ -6712,19 +6712,18 @@ ErrCode BaseBundleInstaller::SetDualModeAppInfo(const InstallParam &installParam
         return ERR_APPEXECFWK_INSTALL_DUAL_MODE_POLICY_NOT_SUPPORTED;
     }
 
-    // Dual-mode different-package is a system-level capability: any different-package app (primary or
-    // secondary mode) must be a system app; reject non-system apps. isCloneApp (secondary mode) only
-    // additionally sets the clone flag below.
-    bool isDiffPackage = DualModeHelper::IsDiffPackageCategory(effectivePolicy);
-    if (isDiffPackage) {
-        for (const auto &infoPair : infos) {
-            if (!infoPair.second.IsSystemApp()) {
-                APP_LOGE("Dual mode: different-package is only allowed for system apps, "
-                    "bundle=%{public}s", infoPair.second.GetBundleName().c_str());
-                return ERR_APPEXECFWK_INSTALL_DUAL_MODE_NOT_SYSTEM_APP;
-            }
-        }
+    bool isPreDiffPackage = false;
+    std::string bundleName = (infos.begin()->second).GetBundleName();
+    if (IsPreInstallDiffPackage(bundleName)) {
+        isPreDiffPackage = true;
     }
+    if (!installParam.isOTA && isSecondary && DualModeHelper::IsDiffPackageCategory(effectivePolicy) &&
+        !isPreDiffPackage) {
+        APP_LOGE("Dual mode: policy %{public}d is mode-exclusive and not supported second mode "
+            "(isSecondary=%{public}d), bundle:%{public}s", effectivePolicy, isSecondary, bundleName.c_str());
+        return ERR_APPEXECFWK_INSTALL_DUAL_MODE_CATEGORY_CONFLICT;
+    }
+
     // OTA/pre-install retry with forceDualModeCloneInstall: ResolveDualModePolicy is skipped for
     // OTA (isOTA gates its call), and InitDualModeBundleName runs after ParseHapFiles. Set the
     // role here so ShouldUseDualModeCloneName returns true and IsDualModeCloneApp is set on the
@@ -6887,6 +6886,20 @@ ErrCode BaseBundleInstaller::CheckDualModeCategoryConsistency(const InnerBundleI
     if (installParam.isOTA && !oldIsDiffPackage) {
         return ERR_OK;
     }
+
+    if (!installParam.isOTA && !DualModeHelper::IsSingleModePolicy(oldInfo.GetDeviceModeDistributionPolicy()) &&
+        !DualModeHelper::IsSingleModePolicy(GetEffectiveDualModePolicy(installParam))) {
+        if (IsPreInstallDiffPackage(bundleName_) && !newIsDiffPackage) {
+            APP_LOGE("Dual mode: cannot change different-package to same-package apps "
+                "(bundle=%{public}s, oldPolicy=%{public}d, newPolicy=%{public}d)",
+                bundleName_.c_str(),
+                static_cast<int32_t>(oldInfo.GetDeviceModeDistributionPolicy()),
+                static_cast<int32_t>(GetEffectiveDualModePolicy(installParam)));
+            return ERR_APPEXECFWK_INSTALL_DUAL_MODE_CATEGORY_CONFLICT;
+        }
+        return ERR_OK;
+    }
+
     // Different-package <-> non-different-package transitions are not allowed
     if (oldIsDiffPackage != newIsDiffPackage) {
         APP_LOGE("Dual mode: cannot change between different-package and non-different-package apps");
@@ -6897,7 +6910,7 @@ ErrCode BaseBundleInstaller::CheckDualModeCategoryConsistency(const InnerBundleI
 
 ErrCode BaseBundleInstaller::CheckDualModeCategoryConsistencyInTemp(const InstallParam &installParam)
 {
-    if (!DualModeHelper::IsDualModeDevice()) {
+    if (!DualModeHelper::IsDualModeDevice() || isAppExist_) {
         return ERR_OK;
     }
     // Cross-mode consistency: tempBundleInfos_ holds the other-mode variant of the same bundleName
@@ -11778,6 +11791,18 @@ std::string BaseBundleInstaller::GetEffectiveBundleName(const InnerBundleInfo &b
     return bundleInfo.IsDualModeCloneApp()
         ? DualModeHelper::GetDualModeBundleName(bundleInfo.GetBundleName())
         : bundleInfo.GetBundleName();
+}
+
+bool BaseBundleInstaller::IsPreInstallDiffPackage(const std::string &bundleName)
+{
+    if (dataMgr_ == nullptr) {
+        return false;
+    }
+    PreInstallBundleInfo preInstallBundleInfo;
+    if (!dataMgr_->GetPreInstallBundleInfo(DualModeHelper::GetDualModeBundleName(bundleName), preInstallBundleInfo)) {
+        return false;
+    }
+    return DualModeHelper::IsDiffPackageCategory(preInstallBundleInfo.GetDeviceModeDistributionPolicy());
 }
 
 }  // namespace AppExecFwk
