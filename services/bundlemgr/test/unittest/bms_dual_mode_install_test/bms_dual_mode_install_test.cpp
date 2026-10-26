@@ -1473,7 +1473,7 @@ HWTEST_F(BmsDualModeInstallTest, CheckDualModeCategoryConsistency_0600, Function
  
 // IsPreInstallDiffPackage=false counterpart: same shape as 0600 but no preinstalled diff-package entry
 // -> the new branch falls through to return ERR_OK (no downgrade to reject).
-HWTEST_F(BmsDualModeInstallTest, CheckDualModeCategoryConsistency_0700, Function | Smal
+HWTEST_F(BmsDualModeInstallTest, CheckDualModeCategoryConsistency_0700, Function | SmallTest | Level0)
 {
     EnableSecondaryMode();
     BaseBundleInstaller installer;
