@@ -21,6 +21,7 @@
 #include <string>
 #include <unistd.h>
 
+#include "accesstoken_kit.h"
 #include "account_helper.h"
 #include "alternate_icon_info.h"
 #include "application_info.h"
@@ -130,6 +131,64 @@ const int32_t U1 = 1;
 const int32_t INVALID_INDEX = 6;
 const std::string INVALID_ABILITY_NAME = "com.example.bmsaccesstoken.Ability";
 constexpr const char* CONTACTS_BUNDLE_NAME = "com.ohos.contacts";
+
+// --- SPM ON install prerequisite -------------------------------------------
+// The SPM switch stays ON (its default when persist.bms.spm.enable is unset),
+// so every install of this suite runs the complete SPM ON chain against the
+// mocked access-token boundary: CheckSignAndInitSession -> CheckPermissionInfo
+// -> PrepareHapIdentity (identity and uid adoption) -> FinishInstall (commit).
+// The mocked CheckHapSignInfo must return exactly one trusted entry (the
+// count must always match the hap count of the install call — every install
+// of this suite is single-hap and CheckSignAndInitSession fails closed on a
+// mismatch), and the provision bundle-name must match the hap's parsed
+// package name (CheckBundleName cross-checks both). InitToken rejects a zero
+// tokenId and a uid outside the installing user's uid segment.
+constexpr int32_t TEST_SPM_SESSION_ID = 4242;
+constexpr uint64_t TEST_SPM_TOKEN_ID = 101;
+constexpr int32_t TEST_SPM_UID = USERID * Constants::BASE_USER_RANGE + 102;
+
+// Feeds the mocked access-token boundary with the trusted sign answer the
+// real AT side would return for a hap of bundleName: the provision mirrors
+// the release profile (test/sceneProject/signature/*.p7b) the haps of this
+// suite are actually signed with — release type, os_integration
+// distribution, system_core apl, hos_system_app feature — so the
+// post-install classification (system app, distribution type) stays the same
+// as before the SPM adaptation.
+void SetUpSpmTrustedSignInfoForTest(const std::string &bundleName)
+{
+    Security::AccessToken::TrustedBundleInfo trustedBundleInfo;
+    trustedBundleInfo.profileData.provisionRaw = R"({
+        "version-code": 2,
+        "version-name": "2.0.0",
+        "app-distribution-type": "os_integration",
+        "uuid": "bms-bundle-resource-test",
+        "type": "release",
+        "bundle-info": {
+            "developer-id": "OpenHarmony",
+            "distribution-certificate": "bms-bundle-resource-test-cert",
+            "bundle-name": ")" + bundleName + R"(",
+            "apl": "system_core",
+            "app-feature": "hos_system_app"
+        }
+    })";
+    Security::AccessToken::SetSpmTrustedBundleInfosForTest({trustedBundleInfo});
+    // Mirrors the real AT contract: CheckHapSignInfo allocates the session id
+    // and caches the trusted info for the install session.
+    Security::AccessToken::SetSpmCheckHapSignInfoSessionIdForTest(TEST_SPM_SESSION_ID);
+    // A fresh install carries no desired uid, so the AT side allocates the
+    // identity: provide a valid token id and a USERID-segment uid.
+    Security::AccessToken::SetSpmPrepareIdentityForTest(TEST_SPM_TOKEN_ID, TEST_SPM_UID);
+}
+
+// The provision fed to the mocked AT boundary must carry the package name
+// parsed from the hap being installed, so resolve it from the install path.
+std::string GetBundleNameForSpmPath(const std::string &bundlePath)
+{
+    if (bundlePath == LAYERED_IMAGE_HAP_PATH) {
+        return BUNDLE_NAME_LAYERED_IMAGE;
+    }
+    return BUNDLE_NAME;
+}
 }  // namespace
 
 class BmsBundleResourceTest : public testing::Test {
@@ -190,6 +249,9 @@ void BmsBundleResourceTest::TearDown()
 
 ErrCode BmsBundleResourceTest::InstallBundle(const std::string &bundlePath) const
 {
+    // The trusted sign answer must match THIS install's hap (count and
+    // provision bundle-name), so it is staged per install call.
+    SetUpSpmTrustedSignInfoForTest(GetBundleNameForSpmPath(bundlePath));
     if (!bundleMgrService_) {
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
@@ -214,6 +276,7 @@ ErrCode BmsBundleResourceTest::InstallBundle(const std::string &bundlePath) cons
 
 ErrCode BmsBundleResourceTest::UpdateBundle(const std::string &bundlePath) const
 {
+    SetUpSpmTrustedSignInfoForTest(GetBundleNameForSpmPath(bundlePath));
     if (!bundleMgrService_) {
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }

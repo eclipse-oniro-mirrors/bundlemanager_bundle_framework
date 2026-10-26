@@ -23,6 +23,7 @@
 #include <string>
 #include <unistd.h>
 
+#include "accesstoken_kit.h"
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
 #include "bundle_resource_manager.h"
@@ -54,6 +55,54 @@ const uint32_t DENSITY_240_STR = 240; // ldpi
 const uint32_t DENSITY_320_STR = 320; // xldpi
 const uint32_t DENSITY_480_STR = 480; // xxldpi
 const uint32_t DENSITY_640_STR = 640; // xxxldpi
+
+// --- SPM ON install prerequisite -------------------------------------------
+// The SPM switch stays ON (its default when persist.bms.spm.enable is unset),
+// so every install of this suite (SetUp installs BUNDLE_PATH for every case)
+// runs the complete SPM ON chain against the mocked access-token boundary:
+// CheckSignAndInitSession -> CheckPermissionInfo -> PrepareHapIdentity
+// (identity and uid adoption) -> FinishInstall (commit). The mocked
+// CheckHapSignInfo must return exactly one trusted entry (the count must
+// always match the hap count of the install call — CheckSignAndInitSession
+// fails closed on a mismatch), and the provision bundle-name must match the
+// hap's parsed package name (CheckBundleName cross-checks both). InitToken
+// rejects a zero tokenId and a uid outside the installing user's uid segment.
+constexpr int32_t TEST_SPM_SESSION_ID = 4243;
+constexpr uint64_t TEST_SPM_TOKEN_ID = 101;
+constexpr int32_t TEST_SPM_UID = USER_ID * Constants::BASE_USER_RANGE + 102;
+
+// Feeds the mocked access-token boundary with the trusted sign answer the
+// real AT side would return for the hap installed by SetUp: the provision
+// mirrors the release profile (test/sceneProject/signature/
+// com.ohos.resourcedemo.p7b) the hap is actually signed with — release type,
+// os_integration distribution, system_core apl, hos_system_app feature — so
+// the post-install classification (system app, distribution type) stays the
+// same as before the SPM adaptation.
+void SetUpSpmTrustedSignInfoForTest()
+{
+    Security::AccessToken::TrustedBundleInfo trustedBundleInfo;
+    trustedBundleInfo.profileData.provisionRaw = R"({
+        "version-code": 2,
+        "version-name": "2.0.0",
+        "app-distribution-type": "os_integration",
+        "uuid": "bms-bundle-resource-manager-test",
+        "type": "release",
+        "bundle-info": {
+            "developer-id": "OpenHarmony",
+            "distribution-certificate": "bms-bundle-resource-manager-test-cert",
+            "bundle-name": ")" + BUNDLE_NAME + R"(",
+            "apl": "system_core",
+            "app-feature": "hos_system_app"
+        }
+    })";
+    Security::AccessToken::SetSpmTrustedBundleInfosForTest({trustedBundleInfo});
+    // Mirrors the real AT contract: CheckHapSignInfo allocates the session id
+    // and caches the trusted info for the install session.
+    Security::AccessToken::SetSpmCheckHapSignInfoSessionIdForTest(TEST_SPM_SESSION_ID);
+    // A fresh install carries no desired uid, so the AT side allocates the
+    // identity: provide a valid token id and a USER_ID-segment uid.
+    Security::AccessToken::SetSpmPrepareIdentityForTest(TEST_SPM_TOKEN_ID, TEST_SPM_UID);
+}
 
 class BmsBundleResourceManagerTest : public testing::Test {
 public:
@@ -88,6 +137,12 @@ BmsBundleResourceManagerTest::~BmsBundleResourceManagerTest()
 
 void BmsBundleResourceManagerTest::SetUpTestCase()
 {
+    // SPM stays ON (its device default): feed the mocked access-token boundary
+    // with the trusted sign answer for the hap installed by SetUp, so the
+    // installs run the real SPM verification chain instead of failing it.
+    // Must run before the first install — nothing in this binary resets the
+    // mock control variables afterwards.
+    SetUpSpmTrustedSignInfoForTest();
     bundleMgrService_->InitBundleInstaller();
     bundleMgrService_->InitBundleDataMgr();
     bundleMgrService_->GetDataMgr()->AddUserId(USER_ID);
