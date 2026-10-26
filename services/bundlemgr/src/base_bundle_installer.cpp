@@ -1379,6 +1379,16 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
             accessTokenIdEx.tokenIDEx = 0; // force fresh allocation
             Security::AccessToken::HapInfoCheckResult checkResult;
             int32_t identityUid = 0;
+            // Snapshot the pre-prepare uid BEFORE InitToken: its Prepare path
+            // unconditionally adopts the (possibly AT-reallocated) identity
+            // uid into oldInfo's user info before returning, so a post-call
+            // read of oldInfo always equals identityUid — without this
+            // snapshot the dir-migration check below would be dead code.
+            int32_t uidBeforeInit = Constants::INVALID_UID;
+            InnerBundleUserInfo userInfoBeforeInit;
+            if (oldInfo.GetInnerBundleUserInfo(userId_, userInfoBeforeInit)) {
+                uidBeforeInit = userInfoBeforeInit.uid;
+            }
             int32_t tokenRet = spmSession_.InitToken(oldInfo, userId_, 0, accessTokenIdEx,
                 checkResult, verifyRes_.GetProvisionInfo().appServiceCapabilities, dataMgr_.get(),
                 false, &identityUid);
@@ -1405,6 +1415,15 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
             InnerBundleInfo tempBundleInfo;
             if (GetTempBundleInfo(tempBundleInfo)) {
                 tempBundleInfo.SetAccessTokenIdEx(accessTokenIdEx, userId_);
+                // Carry the adopted user info into the temp info as well: the
+                // module loop below rebuilds the user infos from the TEMP info,
+                // so a uid left behind here (the AT side reallocated one) means
+                // MarkInstallFinish persists the OLD uid while the AT token and
+                // the fs config already carry the reallocated one.
+                InnerBundleUserInfo refreshedUserInfo;
+                if (oldInfo.GetInnerBundleUserInfo(userId_, refreshedUserInfo)) {
+                    tempBundleInfo.AddInnerBundleUserInfo(refreshedUserInfo);
+                }
                 if (!tempInfo_.SetTempBundleInfo(tempBundleInfo)) {
                     LOG_E(BMS_TAG_INSTALLER, "save re-prepared token id failed, bundleName:%{public}s "
                         "userId:%{public}d", bundleName_.c_str(), userId_);
@@ -1413,19 +1432,20 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
             }
             // InitToken already handled the uid mismatch internally (AT uid is
             // authoritative; the user info uid is adopted there and the fs config
-            // + reverse-lookup are staged); the only caller-side concern is the
-            // data directories: if AT returned a DIFFERENT uid, migrate the tree.
-            if (identityUid > 0) {
-                InnerBundleUserInfo existingUserInfo;
-                if (oldInfo.GetInnerBundleUserInfo(userId_, existingUserInfo) &&
-                    existingUserInfo.uid != identityUid) {
-                    LOG_W(BMS_TAG_INSTALLER,
-                        "spm re-prepare uid changed, refreshing dirs, bundleName:%{public}s "
-                        "userId:%{public}d oldUid:%{public}d newUid:%{public}d",
-                        bundleName_.c_str(), userId_, existingUserInfo.uid, identityUid);
-                    RefreshBundleDirsAfterUidChange(oldInfo, userId_,
-                        Constants::INITIAL_APP_INDEX, identityUid);
-                }
+            // + reverse-lookup are staged); the caller-side concerns are the temp
+            // info (synced above — the module loop rebuilds the user infos from
+            // it) and the data directories: when AT reallocated a DIFFERENT uid
+            // (uidBeforeInit != identityUid), migrate the tree. The snapshot
+            // comparison is required because InitToken already overwrote
+            // oldInfo's uid with the identity uid before returning.
+            if (identityUid > 0 && uidBeforeInit != Constants::INVALID_UID &&
+                uidBeforeInit != identityUid) {
+                LOG_W(BMS_TAG_INSTALLER,
+                    "spm re-prepare uid changed, refreshing dirs, bundleName:%{public}s "
+                    "userId:%{public}d oldUid:%{public}d newUid:%{public}d",
+                    bundleName_.c_str(), userId_, uidBeforeInit, identityUid);
+                RefreshBundleDirsAfterUidChange(oldInfo, userId_,
+                    Constants::INITIAL_APP_INDEX, identityUid);
             }
             LOG_I(BMS_TAG_INSTALLER, "spm re-prepared missing identity, bundleName:%{public}s "
                 "userId:%{public}d tokenId:%{public}u", bundleName_.c_str(), userId_, accessTokenId_);

@@ -2069,6 +2069,14 @@ HWTEST_F(BmsSpmManagerOnTest, UpdateHapToken_RefreshDirs_MainIdentity_0001, Func
     EXPECT_EQ(param.uid, REFRESHED_UID);
     EXPECT_EQ(param.gid, REFRESHED_UID);
     EXPECT_EQ(param.appIndex, 0);
+    // The write-back effect: the refreshed uid must have landed in the temp
+    // info (the module loop and MarkInstallFinish consume it — without this
+    // assertion a removed write-back line would keep every test above green).
+    InnerBundleInfo saved;
+    ASSERT_TRUE(installer.GetTempBundleInfo(saved));
+    InnerBundleUserInfo savedUserInfo;
+    ASSERT_TRUE(saved.GetInnerBundleUserInfo(TEST_USERID, savedUserInfo));
+    EXPECT_EQ(savedUserInfo.uid, REFRESHED_UID);
 }
 
 /**
@@ -2200,6 +2208,88 @@ HWTEST_F(BmsSpmManagerOnTest, UpdateHapToken_RefreshDirs_FailureBestEffort_0001,
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_EQ(GetMigrateBundleDirsOwnerCallCountForTest(), 1);
     g_migrateBundleDirsOwnerRet = 0;
+}
+
+/**
+ * @tc.number: BmsSpmManagerOnTest.UpdateHapToken_RefreshDirs_SaveTempFailed_0001
+ * @tc.name: A temp-info save failure fails before the irreversible chown
+ * @tc.desc: The uid write-back into the temp info happens BEFORE the directory
+ *           migration: with an unpersistable temp info (empty bundle name,
+ *           SetTempBundleInfo rejects it) the update fails fast and the file
+ *           system is never touched (regression guard for the save-before-
+ *           chown ordering).
+ */
+HWTEST_F(BmsSpmManagerOnTest, UpdateHapToken_RefreshDirs_SaveTempFailed_0001, Function | MediumTest | Level1)
+{
+    InnerBundleInfo newInfo;
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    newInfo.SetBaseBundleInfo(bundleInfo);
+    // Deliberately NO ApplicationInfo: GetBundleName() stays empty, so the
+    // SetTempBundleInfo inside the uid branch fails deterministically.
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = TEST_USERID;
+    userInfo.bundleName = BUNDLE_NAME;
+    userInfo.accessTokenId = TEST_IDENTITY_TOKENID;
+    userInfo.accessTokenIdEx = TEST_IDENTITY_TOKENID;
+    userInfo.uid = TEST_IDENTITY_UID;
+    newInfo.AddInnerBundleUserInfo(userInfo);
+
+    constexpr int32_t refreshUid = 100 * 200000 + 555;  // same user segment, different uid
+    OHOS::Security::AccessToken::g_spmUpdateHapPolicyUidOut = refreshUid;
+    BaseBundleInstaller installer;
+    installer.dataMgr_ = std::make_shared<BundleDataMgr>();
+    int32_t ret = installer.UpdateHapToken(false, newInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SET_INSTALL_TEMP_BUNDLE_ERROR);
+    // The chown never ran: the failure precedes the irreversible migration.
+    EXPECT_EQ(GetMigrateBundleDirsOwnerCallCountForTest(), 0);
+}
+
+/**
+ * @tc.number: BmsSpmManagerOnTest.InitToken_S2Reuse_CloneInstall_0001
+ * @tc.name: A clone S2 reuse never touches the main user info
+ * @tc.desc: With a leftover AT token of the CLONE identity (appIndex 2), the
+ *           reuse branch hands the clone uid back through the out param and
+ *           the cloneInstall guard keeps the MAIN user info untouched (the
+ *           caller owns the derived identity's uid handling — same guard as
+ *           the Prepare path).
+ */
+HWTEST_F(BmsSpmManagerOnTest, InitToken_S2Reuse_CloneInstall_0001, Function | MediumTest | Level1)
+{
+    constexpr int32_t cloneAppIndex = 2;
+    constexpr int32_t testCloneUid = 100 * 200000 + 202;  // same user segment
+    OHOS::Security::AccessToken::g_spmGetHapTokenIDRet = 101;  // clone identity leftover token
+    OHOS::Security::AccessToken::g_spmUpdateHapPolicyUidOut = testCloneUid;
+    auto session = BundleSpmManager::InstallSession::CreateDeferred();
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    info.SetBaseBundleInfo(bundleInfo);
+    ApplicationInfo appInfo;
+    appInfo.bundleName = BUNDLE_NAME;
+    info.SetBaseApplicationInfo(appInfo);
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = TEST_USERID;
+    userInfo.bundleName = BUNDLE_NAME;
+    userInfo.accessTokenId = TEST_IDENTITY_TOKENID;
+    userInfo.uid = TEST_IDENTITY_UID;
+    info.AddInnerBundleUserInfo(userInfo);
+    info.SetAppIndex(cloneAppIndex);
+
+    Security::AccessToken::AccessTokenIDEx tokenIdEx = {0};
+    Security::AccessToken::HapInfoCheckResult checkResult;
+    int32_t identityUid = 0;
+    EXPECT_EQ(session.InitToken(info, TEST_USERID, 0, tokenIdEx, checkResult, "", nullptr, false,
+        &identityUid), ERR_OK);
+    // The leftover token is reused (never re-prepared).
+    EXPECT_EQ(tokenIdEx.tokenIdExStruct.tokenID, 101);
+    EXPECT_EQ(OHOS::Security::AccessToken::g_spmPrepareHapIdentityCallCount, 0);
+    // The clone uid is handed to the caller through the out param.
+    EXPECT_EQ(identityUid, testCloneUid);
+    // The guard: the MAIN user info keeps its own uid (no clone-uid adoption).
+    InnerBundleUserInfo mainUserInfo;
+    ASSERT_TRUE(info.GetInnerBundleUserInfo(TEST_USERID, mainUserInfo));
+    EXPECT_EQ(mainUserInfo.uid, TEST_IDENTITY_UID);
 }
 
 } // namespace OHOS
