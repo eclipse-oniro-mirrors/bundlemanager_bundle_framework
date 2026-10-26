@@ -3789,6 +3789,34 @@ HWTEST_F(BmsInstalldOperatorTest, IsValidPathByDeleteUninstallTmpDirs_0300, Func
 }
 
 /**
+ * @tc.number: IsValidPathByDeleteUninstallTmpDirs_0400
+ * @tc.name: test IsValidPathByDeleteUninstallTmpDirs
+ * @tc.desc: test IsValidPathByDeleteUninstallTmpDirs of InstalldOperator
+ */
+HWTEST_F(BmsInstalldOperatorTest, IsValidPathByDeleteUninstallTmpDirs_0400, Function | SmallTest | Level0)
+{
+    std::string dir = SERVICE_EL2_PATH + "100/hmdfs/account/data";
+    auto ret = InstalldOperator::IsValidPathByDeleteUninstallTmpDirs(dir);
+    EXPECT_TRUE(ret);
+
+    dir = SERVICE_EL2_PATH + "100/hmdfs/account/data/";
+    ret = InstalldOperator::IsValidPathByDeleteUninstallTmpDirs(dir);
+    EXPECT_TRUE(ret);
+
+    dir = SERVICE_EL2_PATH + "100/hmdfs/non_account/data";
+    ret = InstalldOperator::IsValidPathByDeleteUninstallTmpDirs(dir);
+    EXPECT_FALSE(ret);
+
+    dir = SERVICE_EL2_PATH + "100/hmdfs/account";
+    ret = InstalldOperator::IsValidPathByDeleteUninstallTmpDirs(dir);
+    EXPECT_FALSE(ret);
+
+    dir = SERVICE_EL2_PATH + "100/share";
+    ret = InstalldOperator::IsValidPathByDeleteUninstallTmpDirs(dir);
+    EXPECT_FALSE(ret);
+}
+
+/**
  * @tc.number: IsFileNameValid_0100
  * @tc.name: test IsFileNameValid with empty string
  * @tc.desc: test IsFileNameValid of InstalldOperator with empty returns false.

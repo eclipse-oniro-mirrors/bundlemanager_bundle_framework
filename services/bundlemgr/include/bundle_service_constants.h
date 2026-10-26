@@ -293,6 +293,7 @@ constexpr const char* EXT_RESOURCE_FILE_PATH = "ext_resource";
 // hmdfs and sharefs config
 constexpr const char* HMDFS_CONFIG_PATH = "/config/hmdfs/";
 constexpr const char* SHAREFS_CONFIG_PATH = "/config/sharefs/";
+constexpr const char* HMDFS_ACCOUNT_DATA_PATH = "/data/service/el2/%/hmdfs/account/data/";
 constexpr const char* SYSTEM_SERVICE_DIR = "/data/service/el1/public";
 constexpr const char* SYSTEM_UI_BUNDLE_NAME = "com.ohos.systemui";
 constexpr const char* LAUNCHER_BUNDLE_NAME = "com.ohos.launcher";

@@ -93,7 +93,6 @@ constexpr const char* BUNDLE_BACKUP_HOME_PATH_EL1 = "/data/service/el1/%/backup/
 constexpr const char* BUNDLE_BACKUP_HOME_PATH_EL2 = "/data/service/el2/%/backup/bundles/";
 constexpr const char* BUNDLE_BACKUP_HOME_PATH_EL1_NEW = "/data/app/el1/%/base/";
 constexpr const char* BUNDLE_BACKUP_HOME_PATH_EL2_NEW = "/data/app/el2/%/base/";
-constexpr const char* DISTRIBUTED_FILE = "/data/service/el2/%/hmdfs/account/data/";
 constexpr const char* DISTRIBUTED_FILE_NON_ACCOUNT = "/data/service/el2/%/hmdfs/non_account/data/";
 constexpr const char* SHAREFILES_DATA_PATH_EL2 = "/data/app/el2/%/sharefiles/";
 constexpr const char* PRINT_SERVICE_DATA_PATH = "/data/service/el1/%/print_service/data/";
@@ -1565,7 +1564,7 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
         }
         AclSetExtensionDirs(createDirParam.debug, databaseParentDir, createDirParam.extensionDirs, false, true);
     }
-    std::string distributedfile = DISTRIBUTED_FILE;
+    std::string distributedfile = ServiceConstants::HMDFS_ACCOUNT_DATA_PATH;
     distributedfile = distributedfile.replace(distributedfile.find("%"), 1, std::to_string(createDirParam.userId));
     if (!InstalldOperator::MkOwnerDir(distributedfile + createDirParam.bundleName,
         S_IRWXU | S_IRWXG | S_ISGID, createDirParam.uid, ServiceConstants::DFS_GID)) {
@@ -1769,7 +1768,7 @@ ErrCode InstalldHostImpl::CreateEl2DataDir(const CreateDirParam &createDirParam)
     CreateSharefilesDataDirEl2(createDirParam);
 
     // /data/service/el2/${userId}/hmdfs/account/data/${bundleName}
-    std::string distributedfile = DISTRIBUTED_FILE;
+    std::string distributedfile = ServiceConstants::HMDFS_ACCOUNT_DATA_PATH;
     distributedfile = distributedfile.replace(distributedfile.find("%"), 1, std::to_string(createDirParam.userId));
     if (!InstalldOperator::MkOwnerDir(distributedfile + createDirParam.bundleName,
         S_IRWXU | S_IRWXG | S_ISGID, createDirParam.uid, ServiceConstants::DFS_GID)) {
@@ -1925,7 +1924,7 @@ static void CleanNewBackupExtHomeDir(const std::string &bundleName, const int us
     }
 }
 
-static ErrCode RemoveDistributedDir(const std::string &bundleName, const int userid)
+static ErrCode RemoveDistributedDir(const std::string &bundleName, const int32_t userid, const bool async)
 {
     std::future<int32_t> unMountFuture = std::async(std::launch::async,
     [&bundleName, userid]() {
@@ -1940,9 +1939,9 @@ static ErrCode RemoveDistributedDir(const std::string &bundleName, const int use
         LOG_I(BMS_TAG_INSTALLD, "unmount remote_share result %{public}d for %{public}s",
             unMountRet, bundleName.c_str());
     }
-    std::string distributedFile = DISTRIBUTED_FILE + bundleName;
+    std::string distributedFile = ServiceConstants::HMDFS_ACCOUNT_DATA_PATH + bundleName;
     distributedFile = distributedFile.replace(distributedFile.find("%"), 1, std::to_string(userid));
-    if (!InstalldOperator::DeleteDir(distributedFile)) {
+    if (!InstalldOperator::DeleteDirFlexible(distributedFile, async)) {
         LOG_E(BMS_TAG_INSTALLD, "remove dir %{public}s failed, errno is %{public}d", distributedFile.c_str(), errno);
         return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
     }
@@ -4641,7 +4640,7 @@ ErrCode InstalldHostImpl::InnerRemoveBundleDataDir(
         LOG_E(BMS_TAG_INSTALLD, "failed to remove new backup ext home dir");
         return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
     }
-    if (RemoveDistributedDir(bundleName, userId) != ERR_OK) {
+    if (RemoveDistributedDir(bundleName, userId, async) != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLD, "failed to remove distributed file dir");
         return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
     }

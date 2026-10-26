@@ -121,6 +121,7 @@ constexpr const char* ARK_PROFILE_PATH = "aot_compiler/ark_profile";
 constexpr const char* SYSTEM_OPTIMIZE_DIR = "/system_optimize/";
 constexpr const char* SERVICE_EL2_PATH = "/data/service/el2/";
 constexpr const char* HMDFS_CLOUD_DATA_PATH = "/hmdfs/cloud/data/";
+constexpr const char* HMDFS_ACCOUNT_DATA_DIR = "/hmdfs/account/data";
 constexpr const char* PGO_DIR_PATH = "/data/local/pgo/";
 constexpr const char* PGO_FILE_PATH = "pgo_files";
 constexpr const char* LIBS_TMP_DIR = "libs+tmp";
@@ -6375,6 +6376,8 @@ bool InstalldOperator::IsValidPathByDeleteUninstallTmpDirs(const std::string &di
                IsContainsPathPart(dir, BASE_DIR) || IsContainsPathPart(dir, DATABASE_DIR);
     } else if (StartsWith(dir, APP_EL2_PATH) || StartsWith(dir, APP_EL3_PATH) || StartsWith(dir, APP_EL4_PATH)) {
         return IsContainsPathPart(dir, BASE_DIR) || IsContainsPathPart(dir, DATABASE_DIR);
+    } else if (StartsWith(dir, SERVICE_EL2_PATH) && IsContainsPathPart(dir, HMDFS_ACCOUNT_DATA_DIR)) {
+        return true;
     } else {
         return false;
     }
