@@ -95,6 +95,7 @@ constexpr const char* ACTION_VIEW_DATA = "ohos.want.action.viewData";
 const std::string FILE_URI = "file";
 const int32_t INVALID_USERID = -1;
 constexpr const char* DEFAULT_START_WINDOW_BACKGROUND_IMAGE_FIT_VALUE = "Cover";
+constexpr const char *TEST_DUAL_MODE_PARAM = "persist.bms.test_dual_mode";
 }  // namespace
 
 class BmsBundleManagerTest : public testing::Test {
@@ -4585,6 +4586,7 @@ HWTEST_F(BmsBundleManagerTest, SetBundleFirstLaunch_0002, Function | MediumTest 
     dataMgr->AddUserId(userId);
     // Set uid to foundation uid
     setuid(Constants::FOUNDATION_UID);
+    OHOS::system::SetParameter(TEST_DUAL_MODE_PARAM, "false");
     ErrCode ret = hostImpl->SetBundleFirstLaunch(bundleName, userId, appIndex, isBundleFirstLaunched);
     setuid(Constants::ROOT_UID);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
@@ -4607,6 +4609,7 @@ HWTEST_F(BmsBundleManagerTest, SetBundleFirstLaunch_0003, Function | MediumTest 
 
     // Set uid to foundation uid
     setuid(Constants::FOUNDATION_UID);
+    OHOS::system::SetParameter(TEST_DUAL_MODE_PARAM, "false");
     ErrCode ret = hostImpl->SetBundleFirstLaunch(bundleName, userId, appIndex, isBundleFirstLaunched);
     setuid(Constants::ROOT_UID);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
