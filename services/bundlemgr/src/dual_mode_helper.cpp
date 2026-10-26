@@ -301,6 +301,12 @@ bool DualModeHelper::IsDiffPackageCategory(DeviceModeDistributionPolicy policy)
         policy == DeviceModeDistributionPolicy::FULL_COMPATIBLE_DIFFERENT_PACKAGE;
 }
 
+bool DualModeHelper::IsSingleModePolicy(DeviceModeDistributionPolicy policy)
+{
+    return policy == DeviceModeDistributionPolicy::MAIN_ONLY ||
+        policy == DeviceModeDistributionPolicy::SUB_ONLY;
+}
+
 bool DualModeHelper::IsValidPolicySet(const std::set<DeviceModeDistributionPolicy> &policies)
 {
     if (policies.empty()) {

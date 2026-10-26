@@ -979,6 +979,29 @@ private:
     // device mode (primary-mode package installed while in secondary mode, or vice-versa). Such a
     // package is stored in tempBundleInfos_ (hidden) under the original bundle name, not bundleInfos_.
     bool IsCrossModeInstall() const;
+    // Dual-mode: adopt the same-name MAIN_ONLY/SUB_ONLY record hidden in tempBundleInfos_ as the
+    // old info of this install. Triggered when a non-cross-mode install (e.g. the app market
+    // updating the app to a universal identical-package version usable in both modes) does not
+    // find the bundle in bundleInfos_ because the installed app belongs to the other mode. The
+    // record is moved to bundleInfos_ so the whole update path (version/signature checks, in-place
+    // commit, resource/data-group updates) runs exactly like a normal same-mode update instead of
+    // a fresh install (which would skip the checks and duplicate the same-name records across the
+    // two maps). OTA installs are excluded: they re-apply the stored policy themselves. On success
+    // sets oldInfo/isAppExist_/tempInfo_; on a failed install the caller must call
+    // RestoreAdoptedHiddenRecord() to put the record back (the ProcessBundleInstall failure guard
+    // does this). The obligation ends at the commit point (MarkInstallFinish): past it the
+    // updated record (new policy, visible in both modes) stays in bundleInfos_.
+    bool AdoptHiddenSingleModeInfo(InnerBundleInfo &oldInfo, const InstallParam &installParam);
+    // Dual-mode: failure-path companion of AdoptHiddenSingleModeInfo. Moves the adopted record
+    // back to tempBundleInfos_ (its pre-install placement) and re-enables it there (EnableBundle
+    // only addresses bundleInfos_); invoked by the ProcessBundleInstall failure guard.
+    // Concurrency contract: must run on the install task's thread with the per-bundle mutex
+    // (GetBundleMutex) held — the guard destructs inside ProcessBundleInstall and satisfies this
+    // naturally. MoveBundleInfoToTemp and EnableTempBundleInfo each take bundleInfoMutex_ in
+    // separate critical sections; the move+re-enable pair stays atomic against all other writers
+    // only through the caller's mutex (the mode switch is excluded by dualModeSwitchMutex_, and
+    // same-name install/uninstall tasks serialize on the same per-bundle mutex).
+    void RestoreAdoptedHiddenRecord();
     // Pure variant-to-map predicate kept as a truth-table documentation and test anchor ONLY.
     // Production routing must use crossModeFetchTruth_ (captured at fetch): re-deriving the route
     // from the current mode params mid-task can disagree with the map the variant was actually

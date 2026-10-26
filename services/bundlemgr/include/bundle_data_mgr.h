@@ -1607,6 +1607,14 @@ public:
         std::vector<SkillInfo> &skillInfos);
     void ProcessEmptyOdid();
     bool MoveBundleInfoToTemp(const std::string &bundleName);
+    // Dual-mode: move the other-mode (tempBundleInfos_) record of the given bundle name to
+    // the current-mode map (bundleInfos_) in memory. Fails when the name is absent from
+    // tempBundleInfos_ or already present in bundleInfos_ (same-name occupant). No DB write.
+    bool MoveTempBundleInfoToCurrent(const std::string &bundleName);
+    // Dual-mode: set the hidden (tempBundleInfos_) record's bundle status to ENABLED — the
+    // temp-side counterpart of EnableBundle (which only addresses bundleInfos_). Memory-only,
+    // no DB write, mirroring EnableBundle.
+    bool EnableTempBundleInfo(const std::string &bundleName);
     bool UpdateBundleInfoPolicy(const std::string &bundleName,
         DeviceModeDistributionPolicy deviceModeDistributionPolicy, AppSandboxPolicy appSandboxPolicy);
     ErrCode GetDualModeBundleInfo(const std::string &bundleName, int32_t userId,

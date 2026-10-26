@@ -80,6 +80,10 @@ public:
     // FULL_COMPATIBLE_DIFFERENT_PACKAGE).
     static bool IsDiffPackageCategory(DeviceModeDistributionPolicy policy);
 
+    // Whether the policy is a single-mode policy (MAIN_ONLY / SUB_ONLY): the app belongs to
+    // exactly one device mode and is hidden in the other mode (stored in tempBundleInfos_).
+    static bool IsSingleModePolicy(DeviceModeDistributionPolicy policy);
+
     // Whether a device-mode distribution policy set is valid (single validation source for the
     // runtime switch input and the persisted value). Rules: non-empty; every value a legal
     // DeviceModeDistributionPolicy (0~8); all different-package policies (4/6/8) present —

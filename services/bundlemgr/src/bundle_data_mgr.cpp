@@ -860,6 +860,48 @@ bool BundleDataMgr::MoveBundleInfoToTemp(const std::string &bundleName)
     return true;
 }
 
+bool BundleDataMgr::MoveTempBundleInfoToCurrent(const std::string &bundleName)
+{
+    if (bundleName.empty()) {
+        return false;
+    }
+    // Dual-mode: in-memory move of the other-mode (tempBundleInfos_) record back to the
+    // current-mode map (bundleInfos_), symmetric to MoveBundleInfoToTemp. No DB write here:
+    // a non-clone record is stored under the original bundleName key on both sides, so the
+    // later update commit (UpdateInnerBundleInfo with storage save) overwrites the same row.
+    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto it = tempBundleInfos_.find(bundleName);
+    if (it == tempBundleInfos_.end()) {
+        return false;
+    }
+    auto item = bundleInfos_.find(bundleName);
+    if (item != bundleInfos_.end()) {
+        return false;
+    }
+    bundleInfos_[bundleName] = std::move(it->second);
+    tempBundleInfos_.erase(it);
+    return true;
+}
+
+bool BundleDataMgr::EnableTempBundleInfo(const std::string &bundleName)
+{
+    // Dual-mode: temp-side counterpart of EnableBundle (bundleInfos_). Keeps a record moved back
+    // to tempBundleInfos_ (e.g. by the install-failure rollback) usable when a later mode switch
+    // swaps it into view. Memory-only, no DB write, mirroring EnableBundle.
+    if (bundleName.empty()) {
+        APP_LOGW("EnableTempBundleInfo bundleName is empty");
+        return false;
+    }
+    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto infoItem = tempBundleInfos_.find(bundleName);
+    if (infoItem == tempBundleInfos_.end()) {
+        APP_LOGW("can not find bundle %{public}s in tempBundleInfos_", bundleName.c_str());
+        return false;
+    }
+    infoItem->second.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
+    return true;
+}
+
 bool BundleDataMgr::UpdateBundleInfoPolicy(const std::string &bundleName,
     DeviceModeDistributionPolicy deviceModeDistributionPolicy,
     AppSandboxPolicy appSandboxPolicy)

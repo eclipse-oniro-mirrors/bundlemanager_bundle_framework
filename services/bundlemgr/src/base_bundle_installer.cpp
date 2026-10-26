@@ -2043,9 +2043,16 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     UpdateInstallerState(InstallerState::INSTALL_REMOVE_SANDBOX_APP);              // ---- 50%
 
     // this state should always be set when return
+    // DUAL_MODE: adoptedHiddenSingleModeInfo is hoisted above this guard on purpose — on an
+    // adopted failure exit the adoption guard (declared later, destructed FIRST) has already
+    // moved the record back to tempBundleInfos_, so EnableBundle would only miss in
+    // bundleInfos_ and log noise; the adopted record is re-enabled on the temp side instead.
+    bool adoptedHiddenSingleModeInfo = false;
     ScopeGuard stateGuard([&] {
         dataMgr_->UpdateBundleInstallState(GetEffectiveBundleName(), InstallState::INSTALL_SUCCESS);
-        dataMgr_->EnableBundle(bundleName_);
+        if (!adoptedHiddenSingleModeInfo) {
+            dataMgr_->EnableBundle(bundleName_);
+        }
     });
 
     InnerBundleInfo oldInfo;
@@ -2057,6 +2064,23 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     if (!InitTempBundleFromCache(oldInfo, isAppExist_)) {
         return ERR_APPEXECFWK_INIT_INSTALL_TEMP_BUNDLE_ERROR;
     }
+    // === DUAL_MODE: same-name update of a hidden single-mode app ===
+    // The same-name MAIN_ONLY/SUB_ONLY app is not in bundleInfos_ when the current mode is the
+    // one it does not belong to (it lives hidden in tempBundleInfos_). Adopt it as the old info
+    // so this install takes the normal update path (e.g. the app market updating the app to a
+    // universal identical-package version usable in both modes); without the adoption the install
+    // would fall into the fresh-install path, skipping the version/signature checks against the
+    // installed app and duplicating the same-name records across bundleInfos_/tempBundleInfos_
+    // (a later mode switch would then swap the stale old record back into view).
+    adoptedHiddenSingleModeInfo = AdoptHiddenSingleModeInfo(oldInfo, installParam);
+    // A failed install must leave the hidden record where it was (tempBundleInfos_). The commit
+    // point is MarkInstallFinish: past it the guard is dismissed and the updated record (with the
+    // new policy, visible in both modes) stays in bundleInfos_.
+    ScopeGuard adoptedHiddenSingleModeGuard([&] {
+        if (adoptedHiddenSingleModeInfo) {
+            RestoreAdoptedHiddenRecord();
+        }
+    });
     // Record the pre-update appId: it differs from the newly parsed one when the app is
     // re-signed on update, and app_control rows keyed by it need to be migrated afterwards.
     std::string oldAppId = oldInfo.GetAppId();
@@ -2227,6 +2251,8 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
         PatchDataMgr::GetInstance().DeleteInnerPatchInfo(bundleName_);
     }
     CHECK_RESULT_WITH_ROLLBACK(result, "mark install finish failed %{public}d", newInfos, oldInfo);
+    // DUAL_MODE: the update is durably committed; the adopted record stays in bundleInfos_.
+    adoptedHiddenSingleModeGuard.Dismiss();
     // appId may change when the app is updated and re-signed; migrate app_control rows
     // keyed by the old appId after the update is durably committed.
     UpdateAppControlAppIdWhenBundleUpdate(oldInfo, oldAppId, (newInfos.begin()->second).GetAppId());
@@ -6533,6 +6559,60 @@ bool BaseBundleInstaller::IsCrossModeInstall() const
         return !DualModeHelper::IsSecondaryMode(); // target secondary, current main → cross
     }
     return false;
+}
+
+bool BaseBundleInstaller::AdoptHiddenSingleModeInfo(InnerBundleInfo &oldInfo,
+    const InstallParam &installParam)
+{
+    // OTA installs re-apply the stored policy themselves after install (UpdateBundleInfoPolicy)
+    // and carry their own cross-mode handling (forceCrossModeOTAInstall); keep them untouched.
+    if (installParam.isOTA || otaInstall_) {
+        return false;
+    }
+    // Only for a dual-mode device, when the bundle was not found in the current-mode map and this
+    // pass is not itself a cross-mode install (crossModeFetchTruth_ captured at fetch).
+    if (!DualModeHelper::IsDualModeDevice() || isAppExist_ || crossModeFetchTruth_ ||
+        dataMgr_ == nullptr || bundleName_.empty()) {
+        return false;
+    }
+    InnerBundleInfo hiddenInfo;
+    if (!dataMgr_->FetchTempBundleInfo(bundleName_, hiddenInfo) ||
+        !DualModeHelper::IsSingleModePolicy(hiddenInfo.GetDeviceModeDistributionPolicy())) {
+        return false;
+    }
+    // Move the hidden record to bundleInfos_ first: the whole update path (MarkInstallFinish
+    // commit, resource/data-group updates, rollback restores) addresses bundleInfos_ with
+    // crossModeFetchTruth_ == false, exactly like a normal same-mode update. A non-clone record
+    // shares the same DB key on both sides, so the commit overwrites the old row in place.
+    if (!dataMgr_->MoveTempBundleInfoToCurrent(bundleName_)) {
+        LOG_NOFUNC_E(BMS_TAG_INSTALLER, "Dual mode: move hidden record of %{public}s to current map failed",
+            bundleName_.c_str());
+        return false;
+    }
+    oldInfo = hiddenInfo;
+    isAppExist_ = true;
+    tempInfo_.SetTempBundleInfo(oldInfo);
+    LOG_I(BMS_TAG_INSTALLER, "Dual mode: adopt hidden single-mode record (policy %{public}d) of "
+        "%{public}s as old info for same-name install",
+        static_cast<int32_t>(hiddenInfo.GetDeviceModeDistributionPolicy()), bundleName_.c_str());
+    return true;
+}
+
+void BaseBundleInstaller::RestoreAdoptedHiddenRecord()
+{
+    // Failure-path companion of AdoptHiddenSingleModeInfo: put the adopted record back to its
+    // pre-install placement (tempBundleInfos_) and keep it ENABLED while hidden — EnableBundle
+    // only addresses bundleInfos_, and stateGuard (destructs after this guard) skips its
+    // EnableBundle call for the adopted case.
+    if (dataMgr_ == nullptr || bundleName_.empty()) {
+        return;
+    }
+    if (!dataMgr_->MoveBundleInfoToTemp(bundleName_)) {
+        LOG_W(BMS_TAG_INSTALLER, "Dual mode: move %{public}s back to tempBundleInfos_ failed on "
+            "install rollback", bundleName_.c_str());
+        return;
+    }
+    dataMgr_->EnableTempBundleInfo(bundleName_);
 }
 
 bool BaseBundleInstaller::ComputeToTempBundle(const InnerBundleInfo &oldInfo)
