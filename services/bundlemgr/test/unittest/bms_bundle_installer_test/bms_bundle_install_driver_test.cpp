@@ -24,6 +24,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "accesstoken_kit.h"
+#include "bundle_constants.h"
 #include "bundle_info.h"
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
@@ -99,6 +101,46 @@ const std::vector<std::string> BUNDLE_DATA_DIR_PAGENAME = {
     "preferences",
     "haps",
 };
+
+// SPM ON prerequisite: feed the mocked access-token boundary the trusted
+// per-hap sign info; all haps share one release/os_integration provision.
+constexpr int32_t TEST_SPM_SESSION_ID = 4242;
+constexpr uint64_t TEST_SPM_TOKEN_ID = 101;
+// The AT-allocated uid must fall inside USERID's uid segment.
+constexpr int32_t TEST_SPM_UID = USERID * Constants::BASE_USER_RANGE + 102;
+
+void SetUpSpmTrustedSignInfoForTest()
+{
+    const std::string provision =
+        Security::AccessToken::MakeSpmReleaseProvisionRawForTest(BUNDLE_NAME, "os_integration");
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(NON_DRIVER_ENTRY_BUNDLE, provision);
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(NON_DRIVER_ENTRY1_BUNDLE, provision);
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(DRIVER_FEATURE_BUNDLE, provision);
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(DRIVER_FEATURE1_BUNDLE, provision);
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(DRIVER_FEATURE2_BUNDLE, provision);
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(DRIVER_FEATURE3_BUNDLE, provision);
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(DRIVER_FEATURE4_BUNDLE, provision);
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(DRIVER_FEATURE5_BUNDLE, provision);
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(DRIVER_FEATURE6_BUNDLE, provision);
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(DRIVER_FEATURE7_BUNDLE, provision);
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(DRIVER_FEATURE8_BUNDLE, provision);
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(DRIVER_FEATURE9_BUNDLE, provision);
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(DRIVER_FEATURE10_BUNDLE, provision);
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(DRIVER_FEATURE15_BUNDLE, provision);
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(DRIVER_FEATURE16_BUNDLE, provision);
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(DRIVER_FEATURE17_BUNDLE, provision);
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(DRIVER_FEATURE18_BUNDLE, provision);
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(HIGHER_VERSION_NON_DRIVER_FEATURE11_BUNDLE,
+        provision);
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(LOWER_VERSION_NON_DRIVER_FEATURE12_BUNDLE,
+        provision);
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(HIGHER_VERSION_DRIVER_FEATURE13_BUNDLE,
+        provision);
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(LOWER_VERSION_DRIVER_FEATURE14_BUNDLE,
+        provision);
+    Security::AccessToken::SetSpmCheckHapSignInfoSessionIdForTest(TEST_SPM_SESSION_ID);
+    Security::AccessToken::SetSpmPrepareIdentityForTest(TEST_SPM_TOKEN_ID, TEST_SPM_UID);
+}
 }  // namespace
 
 extern char *g_testDeviceType;
@@ -192,6 +234,7 @@ ErrCode BmsDriverInstallerTest::UninstallBundle(const std::string &bundleName) c
 
 void BmsDriverInstallerTest::SetUpTestCase()
 {
+    SetUpSpmTrustedSignInfoForTest();
     if (!installdService_->IsServiceReady()) {
         installdService_->Start();
     }
