@@ -1172,14 +1172,6 @@ private:
         uint64_t existingTokenIdEx;
         bool uidChanged;
     };
-    void CollectFallbackPendingResults(
-        const std::shared_ptr<BundleDataMgr> &dataMgr,
-        const InnerBundleInfo &info,
-        const std::vector<size_t> &indices,
-        std::vector<Security::AccessToken::HapBaseInfo> &failedHapList,
-        std::vector<int32_t> &failedUidList,
-        int32_t sessionId,
-        std::vector<FallbackResult> &pendingResults);
     bool PrepareFallbackEntryContext(
         const std::shared_ptr<BundleDataMgr> &dataMgr,
         const InnerBundleInfo &info,
@@ -1195,19 +1187,37 @@ private:
         int32_t oldUid, int32_t sessionId, int32_t dlpType,
         uint32_t existingTokenId, uint64_t existingTokenIdEx,
         size_t idx, FallbackResult &result);
-    void CommitFallbackResults(
+    bool FetchFallbackInfo(
         const std::shared_ptr<BundleDataMgr> &dataMgr,
         const std::string &bundleName,
-        InnerBundleInfo &info,
+        const std::vector<size_t> &indices,
+        const std::vector<Security::AccessToken::HapBaseInfo> &failedHapList,
+        InnerBundleInfo &info, bool &expectClone);
+    bool PrepareAndExecuteFallback(
+        const std::shared_ptr<BundleDataMgr> &dataMgr,
+        const InnerBundleInfo &info,
+        const Security::AccessToken::HapBaseInfo &hapInfo,
+        int32_t oldUid, size_t idx, int32_t sessionId,
+        FallbackResult &result);
+    bool CommitSingleFallbackEntry(
         const Security::AccessToken::MigratedInfo *migratedInfo,
-        int32_t sessionId,
-        std::vector<FallbackResult> &pendingResults,
+        int32_t sessionId, const FallbackResult &result,
+        const std::shared_ptr<BundleDataMgr> &dataMgr,
+        const std::string &bundleName,
         std::vector<int32_t> &failedUidList,
         std::vector<bool> &resolved);
+    bool ProcessSingleFallbackEntry(
+        const std::shared_ptr<BundleDataMgr> &dataMgr,
+        const InnerBundleInfo &info,
+        const Security::AccessToken::MigratedInfo *migratedInfo,
+        const Security::AccessToken::HapBaseInfo &hapInfo,
+        int32_t oldUid, size_t idx,
+        std::vector<int32_t> &failedUidList,
+        std::vector<bool> &resolved,
+        const std::string &bundleName);
     void ApplySingleFallbackResult(
         const std::shared_ptr<BundleDataMgr> &dataMgr,
         const std::string &bundleName,
-        InnerBundleInfo &info,
         const FallbackResult &r,
         std::vector<int32_t> &failedUidList,
         std::vector<bool> &resolved);

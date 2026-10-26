@@ -9196,39 +9196,46 @@ bool BMSEventHandler::ExecuteFallbackPolicyUpdate(
     return true;
 }
 
-void BMSEventHandler::CollectFallbackPendingResults(
+bool BMSEventHandler::FetchFallbackInfo(
+    const std::shared_ptr<BundleDataMgr> &dataMgr,
+    const std::string &bundleName,
+    const std::vector<size_t> &indices,
+    const std::vector<Security::AccessToken::HapBaseInfo> &failedHapList,
+    InnerBundleInfo &info, bool &expectClone)
+{
+    expectClone = !indices.empty() &&
+        failedHapList[indices[0]].instIndex ==
+            ServiceConstants::DUAL_MODE_CLONE_APP_INDEX;
+    if (!dataMgr->FetchInnerBundleInfo(bundleName, info) ||
+        info.IsDualModeCloneApp() != expectClone) {
+        return dataMgr->FetchTempBundleInfo(bundleName, info);
+    }
+    return true;
+}
+
+bool BMSEventHandler::PrepareAndExecuteFallback(
     const std::shared_ptr<BundleDataMgr> &dataMgr,
     const InnerBundleInfo &info,
-    const std::vector<size_t> &indices,
-    std::vector<Security::AccessToken::HapBaseInfo> &failedHapList,
-    std::vector<int32_t> &failedUidList,
-    int32_t sessionId,
-    std::vector<FallbackResult> &pendingResults)
+    const Security::AccessToken::HapBaseInfo &hapInfo,
+    int32_t oldUid, size_t idx, int32_t sessionId,
+    FallbackResult &result)
 {
-    for (size_t idx : indices) {
-        const auto &hapInfo = failedHapList[idx];
-        int32_t oldUid = failedUidList[idx];
-        InnerBundleInfo entryInfo;
-        InnerBundleUserInfo userInfo;
-        uint32_t existingTokenId = 0;
-        uint64_t existingTokenIdEx = 0;
-        int32_t dlpType = 0;
-        if (!PrepareFallbackEntryContext(dataMgr, info, hapInfo, entryInfo,
-            userInfo, existingTokenId, existingTokenIdEx, dlpType)) {
-            continue;
-        }
-        FallbackResult result;
-        if (ExecuteFallbackPolicyUpdate(entryInfo, hapInfo, oldUid, sessionId,
-            dlpType, existingTokenId, existingTokenIdEx, idx, result)) {
-            pendingResults.push_back(result);
-        }
+    InnerBundleInfo entryInfo;
+    InnerBundleUserInfo userInfo;
+    uint32_t existingTokenId = 0;
+    uint64_t existingTokenIdEx = 0;
+    int32_t dlpType = 0;
+    if (!PrepareFallbackEntryContext(dataMgr, info, hapInfo, entryInfo,
+        userInfo, existingTokenId, existingTokenIdEx, dlpType)) {
+        return false;
     }
+    return ExecuteFallbackPolicyUpdate(entryInfo, hapInfo, oldUid, sessionId,
+        dlpType, existingTokenId, existingTokenIdEx, idx, result);
 }
 
 void BMSEventHandler::ApplySingleFallbackResult(
     const std::shared_ptr<BundleDataMgr> &dataMgr,
     const std::string &bundleName,
-    InnerBundleInfo &info,
     const FallbackResult &r,
     std::vector<int32_t> &failedUidList,
     std::vector<bool> &resolved)
@@ -9265,13 +9272,11 @@ void BMSEventHandler::ApplySingleFallbackResult(
         r.resolvedUid);
 }
 
-void BMSEventHandler::CommitFallbackResults(
+bool BMSEventHandler::CommitSingleFallbackEntry(
+    const Security::AccessToken::MigratedInfo *migratedInfo,
+    int32_t sessionId, const FallbackResult &result,
     const std::shared_ptr<BundleDataMgr> &dataMgr,
     const std::string &bundleName,
-    InnerBundleInfo &info,
-    const Security::AccessToken::MigratedInfo *migratedInfo,
-    int32_t sessionId,
-    std::vector<FallbackResult> &pendingResults,
     std::vector<int32_t> &failedUidList,
     std::vector<bool> &resolved)
 {
@@ -9280,21 +9285,41 @@ void BMSEventHandler::CommitFallbackResults(
     int32_t finishRet = Security::AccessToken::AccessTokenKit::FinishInstall(
         sessionId, true, modulePathMap);
     if (finishRet != 0) {
-        LOG_E(BMS_TAG_DEFAULT, "Fallback: bundle=%{public}s FinishInstall failed ret=%{public}d, rollback session",
+        LOG_E(BMS_TAG_DEFAULT,
+            "Fallback: bundle=%{public}s FinishInstall failed ret=%{public}d",
             bundleName.c_str(), finishRet);
         Security::AccessToken::AccessTokenKit::FinishInstall(sessionId, false, {});
-        return;
+        return false;
     }
-    LOG_I(BMS_TAG_DEFAULT, "Fallback: bundle=%{public}s FinishInstall succeeded, applying %{public}zu results",
-        bundleName.c_str(), pendingResults.size());
-    size_t uidChangedCount = 0;
-    for (const auto &r : pendingResults) {
-        if (r.uidChanged) { ++uidChangedCount; }
-        ApplySingleFallbackResult(dataMgr, bundleName, info, r, failedUidList, resolved);
+    ApplySingleFallbackResult(dataMgr, bundleName,
+        result, failedUidList, resolved);
+    return true;
+}
+
+bool BMSEventHandler::ProcessSingleFallbackEntry(
+    const std::shared_ptr<BundleDataMgr> &dataMgr,
+    const InnerBundleInfo &info,
+    const Security::AccessToken::MigratedInfo *migratedInfo,
+    const Security::AccessToken::HapBaseInfo &hapInfo,
+    int32_t oldUid, size_t idx,
+    std::vector<int32_t> &failedUidList,
+    std::vector<bool> &resolved,
+    const std::string &bundleName)
+{
+    int32_t sessionId = 0;
+    if (!PrepareSpmFallbackSession(info, migratedInfo, sessionId)) {
+        LOG_E(BMS_TAG_DEFAULT, "Fallback: bundle=%{public}s session failed",
+            bundleName.c_str());
+        return false;
     }
-    LOG_I(BMS_TAG_DEFAULT,
-        "Fallback: bundle=%{public}s done, %{public}zu/%{public}zu uid changed",
-        bundleName.c_str(), uidChangedCount, pendingResults.size());
+    FallbackResult result;
+    if (!PrepareAndExecuteFallback(dataMgr, info, hapInfo,
+        oldUid, idx, sessionId, result)) {
+        Security::AccessToken::AccessTokenKit::FinishInstall(sessionId, false, {});
+        return false;
+    }
+    return CommitSingleFallbackEntry(migratedInfo, sessionId, result,
+        dataMgr, bundleName, failedUidList, resolved);
 }
 
 void BMSEventHandler::ProcessBundleFallback(
@@ -9309,32 +9334,26 @@ void BMSEventHandler::ProcessBundleFallback(
     LOG_I(BMS_TAG_DEFAULT, "Fallback: start bundle=%{public}s entries=%{public}zu",
         bundleName.c_str(), indices.size());
     InnerBundleInfo info;
-    bool expectClone = !indices.empty() &&
-        failedHapList[indices[0]].instIndex ==
-            ServiceConstants::DUAL_MODE_CLONE_APP_INDEX;
-    if (!dataMgr->FetchInnerBundleInfo(bundleName, info) ||
-        info.IsDualModeCloneApp() != expectClone) {
-        if (!dataMgr->FetchTempBundleInfo(bundleName, info)) {
-            LOG_W(BMS_TAG_DEFAULT, "Fallback: bundle=%{public}s not found, skip",
-                bundleName.c_str());
-            return;
-        }
+    bool expectClone = false;
+    if (!FetchFallbackInfo(dataMgr, bundleName, indices,
+        failedHapList, info, expectClone)) {
+        LOG_W(BMS_TAG_DEFAULT, "Fallback: bundle=%{public}s not found, skip",
+            bundleName.c_str());
+        return;
     }
     const Security::AccessToken::MigratedInfo *migratedInfo =
         FindMigratedInfo(migratedList, bundleName, expectClone);
-    int32_t sessionId = 0;
-    if (!PrepareSpmFallbackSession(info, migratedInfo, sessionId)) {
-        LOG_E(BMS_TAG_DEFAULT, "Fallback: bundle=%{public}s SPM session failed", bundleName.c_str());
-        return;
+    size_t successCount = 0;
+    for (size_t idx : indices) {
+        if (ProcessSingleFallbackEntry(dataMgr, info, migratedInfo,
+            failedHapList[idx], failedUidList[idx], idx,
+            failedUidList, resolved, bundleName)) {
+            ++successCount;
+        }
     }
-    LOG_I(BMS_TAG_DEFAULT, "Fallback: bundle=%{public}s sessionId=%{public}d", bundleName.c_str(), sessionId);
-    std::vector<FallbackResult> pendingResults;
-    CollectFallbackPendingResults(dataMgr, info, indices,
-        failedHapList, failedUidList, sessionId, pendingResults);
-    LOG_I(BMS_TAG_DEFAULT, "Fallback: bundle=%{public}s collected %{public}zu pending results",
-        bundleName.c_str(), pendingResults.size());
-    CommitFallbackResults(dataMgr, bundleName, info, migratedInfo,
-        sessionId, pendingResults, failedUidList, resolved);
+    LOG_I(BMS_TAG_DEFAULT,
+        "Fallback: bundle=%{public}s done, %{public}zu/%{public}zu succeeded",
+        bundleName.c_str(), successCount, indices.size());
 }
 
 void BMSEventHandler::UpdateSuccessFlagsAndCheckBySpm(
