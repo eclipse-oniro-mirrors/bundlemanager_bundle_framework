@@ -1483,9 +1483,9 @@ HWTEST_F(BmsDualModeInstallTest, CheckDualModeCategoryConsistency_0700, Function
     InstallPreInstallStorageSpy(dataMgr); // spy with empty injectedInfos -> IsPreInstse
     installer.dataMgr_ = dataMgr;
     InnerBundleInfo oldInfo;
-    oldInfo.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::UNIVERSAL_IDE
+    oldInfo.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::UNIVERSAL_IDENTICAL_PACKAGE);
     InstallParam installParam;
-    installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNIVERSAL;
+    installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNIVERSAL_IDENTICAL_PACKAGE;
     EXPECT_EQ(installer.CheckDualModeCategoryConsistency(oldInfo, installParam), OHOS::ERR_OK);
 }
 
