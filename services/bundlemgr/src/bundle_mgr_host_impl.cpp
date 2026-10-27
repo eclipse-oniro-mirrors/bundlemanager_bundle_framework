@@ -9466,8 +9466,6 @@ ErrCode BundleMgrHostImpl::ParseAndExtractResourceInfo(
     const std::string &filePath, const uint32_t flags,
     int32_t userId, BundleResourceInfo &bundleResourceInfo)
 {
-    APP_LOGD("start ParseAndExtractResourceInfo, filePath : %{private}s, flags : %{public}u",
-        filePath.c_str(), flags);
     InnerBundleInfo innerBundleInfo;
     std::string realHapPath;
     std::string tempDir;
@@ -9482,10 +9480,26 @@ ErrCode BundleMgrHostImpl::ParseAndExtractResourceInfo(
     });
     ResourceInfo resourceInfo;
     PrepareResourceInfoForArchive(innerBundleInfo, realHapPath, flags, resourceInfo);
+    bool hasAll = (flags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL)) != 0;
+    bool hasLabel = (flags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL)) != 0;
+    bool hasIcon = (flags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON)) != 0;
+    bool hasDrawable = (flags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR)) != 0;
+    bool hasOnlyMain = (flags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ONLY_WITH_MAIN_ABILITY)) != 0;
+    if (!hasAll && !hasLabel && !hasIcon && !hasDrawable && !hasOnlyMain) {
+        hasAll = true;
+    }
+    auto fillResult = [&]() {
+        bundleResourceInfo.bundleName = resourceInfo.bundleName_;
+        if (hasAll || hasLabel) { bundleResourceInfo.label = resourceInfo.label_; }
+        if (hasAll || hasIcon) { bundleResourceInfo.icon = resourceInfo.icon_; }
+        if (hasDrawable) {
+            bundleResourceInfo.foreground = resourceInfo.foreground_;
+            bundleResourceInfo.background = resourceInfo.background_;
+        }
+    };
     if (resourceInfo.labelId_ == 0 && resourceInfo.iconId_ == 0) {
         resourceInfo.label_ = innerBundleInfo.GetBundleName();
-        bundleResourceInfo.bundleName = resourceInfo.bundleName_;
-        bundleResourceInfo.label = resourceInfo.label_;
+        fillResult();
         return ERR_OK;
     }
     BundleResourceParser parser;
@@ -9494,16 +9508,10 @@ ErrCode BundleMgrHostImpl::ParseAndExtractResourceInfo(
             filePath.c_str(), resourceInfo.labelId_, resourceInfo.iconId_);
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    if (resourceInfo.label_.empty()) {
+    if (resourceInfo.label_.empty() && resourceInfo.labelNeedParse_) {
         resourceInfo.label_ = innerBundleInfo.GetBundleName();
     }
-    bundleResourceInfo.bundleName = resourceInfo.bundleName_;
-    bundleResourceInfo.label = resourceInfo.label_;
-    bundleResourceInfo.icon = resourceInfo.icon_;
-    bundleResourceInfo.foreground = resourceInfo.foreground_;
-    bundleResourceInfo.background = resourceInfo.background_;
-    APP_LOGD("end ParseAndExtractResourceInfo, bundleName : %{public}s",
-        bundleResourceInfo.bundleName.c_str());
+    fillResult();
     return ERR_OK;
 }
 #endif
