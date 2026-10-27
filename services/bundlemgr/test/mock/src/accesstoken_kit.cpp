@@ -75,6 +75,14 @@ std::vector<TrustedBundleInfo> g_spmTrustedBundleInfos;
 // hap enumeration order is not deterministic) always get a count- and
 // order-matching answer.
 std::map<std::string, std::string> g_spmTrustedProvisionsByHapFile;
+// Optional per-hap-file app-id overrides (the third parameter of
+// SetSpmTrustedProvisionForHapFileForTest): the app id the real AT side
+// would derive from the hap's SIGNATURE BLOCK (which a provision-raw-only
+// mock cannot reproduce — two haps can share the same profile JSON but
+// carry different signing certificates). Mirrors the AT-side value handed
+// over through TrustedBundleInfo::profileData.appId, which
+// ParseTrustedBundleInfo copies over the JSON-derived one.
+std::map<std::string, std::string> g_spmTrustedAppIdsByHapFile;
 // Session-cache mirror: the entries the last CheckHapSignInfo answered with,
 // standing in for what the real AT side caches under the session id it
 // allocated. GetCacheSignInfoBySessionId serves them for a matching session.
@@ -145,6 +153,7 @@ void ResetSpmKitMockValuesForTest()
     g_spmCheckHapSignInfoLastUserId = 0;
     g_spmTrustedBundleInfos.clear();
     g_spmTrustedProvisionsByHapFile.clear();
+    g_spmTrustedAppIdsByHapFile.clear();
     g_spmLastCheckHapSignInfoEntries.clear();
     g_spmCheckHapPermissionInfoRet = 0;
     g_spmCheckHapPermissionInfoCallCount = 0;
@@ -257,9 +266,12 @@ void SetSpmPrepareIdentityForTest(uint64_t tokenId, int32_t uid)
 }
 
 void SetSpmTrustedProvisionForHapFileForTest(const std::string& hapFileName,
-    const std::string& provisionRaw)
+    const std::string& provisionRaw, const std::string& appId)
 {
     g_spmTrustedProvisionsByHapFile[hapFileName] = provisionRaw;
+    if (!appId.empty()) {
+        g_spmTrustedAppIdsByHapFile[hapFileName] = appId;
+    }
 }
 
 namespace {
@@ -297,11 +309,20 @@ std::string MakeSpmDebugProvisionRawForTest(const std::string& bundleName,
 }
 
 std::string MakeSpmReleaseProvisionRawForTest(const std::string& bundleName,
-    const std::string& appDistributionType, bool allowAppShareLibrary, const std::string& appFeature)
+    const std::string& appDistributionType, bool allowAppShareLibrary, const std::string& appFeature,
+    const std::string& apl, const std::string& appIdentifier)
 {
     std::string privileges;
     if (allowAppShareLibrary) {
         privileges = SPM_APP_PRIVILEGE_CAPABILITIES_FIELD;
+    }
+    // The legacy OpenHarmony profiles predate app-identifiers: an empty
+    // appIdentifier omits the field so the parsed ProvisionInfo matches the
+    // real profile (a fabricated value would surface in CheckAppIdentifier's
+    // keep-data/appIdentifier comparisons).
+    std::string identifierField;
+    if (!appIdentifier.empty()) {
+        identifierField = "\n            \"app-identifier\": \"" + appIdentifier + "\",";
     }
     return R"({
         "version-code": 1,
@@ -313,8 +334,7 @@ std::string MakeSpmReleaseProvisionRawForTest(const std::string& bundleName,
             "developer-id": "bms-spm-test",
             "distribution-certificate": "bms-spm-test-cert",
             "bundle-name": ")" + bundleName + R"(",
-            "apl": "normal",
-            "app-identifier": "test-app-identifier",
+            "apl": ")" + apl + R"(",)" + identifierField + R"(
             "app-feature": ")" + appFeature + R"("
         })" + privileges + R"(
     })";
@@ -573,6 +593,10 @@ int32_t AccessTokenKit::CheckHapSignInfo(const BundleHapList& list, uint32_t fla
             }
             TrustedBundleInfo entry;
             entry.profileData.provisionRaw = it->second;
+            auto appIdIt = g_spmTrustedAppIdsByHapFile.find(hapFileName);
+            if (appIdIt != g_spmTrustedAppIdsByHapFile.end()) {
+                entry.profileData.appId = appIdIt->second;
+            }
             entries.emplace_back(entry);
         }
         bundleInfo = entries;
