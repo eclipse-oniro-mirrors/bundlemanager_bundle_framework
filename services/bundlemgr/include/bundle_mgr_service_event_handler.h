@@ -1019,6 +1019,7 @@ private:
     void ProcessAccessTokenMigration();
     bool InnerProcessAccessTokenMigration();
     void FinishAccessTokenMigration();
+    bool IsAccessTokenMigrationFinished();
     void CleanDirtyUninstallData();
     bool IsSystemAppMigration(const Security::AccessToken::MigratedInfo &migratedInfo,
         const std::shared_ptr<BundleDataMgr> &dataMgr);
@@ -1042,7 +1043,7 @@ private:
         std::set<int32_t> &allUidSet,
         std::unordered_map<int32_t, Security::AccessToken::HapBaseInfo> &allUidToHapInfo);
 
-    bool ExecuteMigrationWithRetry(const std::shared_ptr<BundleDataMgr> &dataMgr,
+    void ExecuteMigrationWithRetry(const std::shared_ptr<BundleDataMgr> &dataMgr,
         std::vector<Security::AccessToken::MigratedInfo> &migratedList,
         std::vector<bool> &successFlags,
         const std::set<int32_t> &allUidSet,
@@ -1079,7 +1080,7 @@ private:
         const std::vector<Security::AccessToken::HapBaseInfo> &failedHapList);
 
     // Retry
-    bool RetryMigrationForFailedEntries(
+    void RetryMigrationForFailedEntries(
         const std::shared_ptr<BundleDataMgr> &dataMgr,
         std::vector<Security::AccessToken::HapBaseInfo> &failedHapList,
         std::vector<int32_t> &failedUidList,
@@ -1091,7 +1092,7 @@ private:
         const std::vector<int32_t> &failedUidList,
         const std::vector<Security::AccessToken::MigratedInfo> &migratedList,
         std::vector<Security::AccessToken::MigratedInfo> &retryList);
-    bool ProcessRetryBatches(const std::shared_ptr<BundleDataMgr> &dataMgr,
+    void ProcessRetryBatches(const std::shared_ptr<BundleDataMgr> &dataMgr,
         const std::vector<Security::AccessToken::MigratedInfo> &retryList,
         const std::vector<Security::AccessToken::HapBaseInfo> &failedHapList,
         std::vector<bool> &retryResolved);

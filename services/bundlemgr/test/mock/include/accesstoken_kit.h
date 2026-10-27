@@ -61,6 +61,7 @@ public:
     static int32_t MigrateInstalledBundles(const std::vector<MigratedInfo>& migratedInfoList,
         std::vector<BundleMigrateResult>& results);
     static int32_t FinishMigration();
+    static int32_t IsMigrationDone(bool& isDone);
     static int32_t CheckMigratedUidSet(
         const std::set<int32_t, std::less<int32_t>, std::allocator<int32_t>>& totalUids,
         std::set<int32_t, std::less<int32_t>, std::allocator<int32_t>>& unreceivedUids);
