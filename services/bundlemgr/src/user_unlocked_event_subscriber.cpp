@@ -223,7 +223,10 @@ void ProcessDlpSandboxEntry(const std::string &key,
     int32_t appIndex = 0;
     auto pos = key.find(Constants::FILE_UNDERLINE);
     if (pos != std::string::npos) {
-        OHOS::StrToInt(key.substr(0, pos), appIndex);
+        if (!OHOS::StrToInt(key.substr(0, pos), appIndex)) {
+            APP_LOGW("DlpSandbox: key=%{public}s appIndex parse failed, skip", key.c_str());
+            return;
+        }
     }
     std::string dirName = std::to_string(appIndex) +
         Constants::FILE_UNDERLINE + bn;

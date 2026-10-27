@@ -7522,7 +7522,11 @@ void BMSEventHandler::CleanDirtyUninstallData()
                 if (!OHOS::StrToInt(userIdStr.substr(0, underscorePos), userId)) {
                     continue;
                 }
-                OHOS::StrToInt(userIdStr.substr(underscorePos + 1), appIndex);
+                if (!OHOS::StrToInt(userIdStr.substr(underscorePos + 1), appIndex)) {
+                    LOG_E(BMS_TAG_DEFAULT, "CleanDirtyUninstallData appIndex parse failed, key=%{public}s skip",
+                        userIdStr.c_str());
+                    continue;
+                }
             } else {
                 if (!OHOS::StrToInt(userIdStr, userId)) {
                     continue;
@@ -7710,7 +7714,11 @@ void ProcessSandboxEntry(const std::string &key,
     int32_t sandboxAppIndex = 0;
     auto pos = key.find(Constants::FILE_UNDERLINE);
     if (pos != std::string::npos) {
-        OHOS::StrToInt(key.substr(0, pos), sandboxAppIndex);
+        if (!OHOS::StrToInt(key.substr(0, pos), sandboxAppIndex)) {
+            LOG_E(BMS_TAG_DEFAULT, "Migration: sandbox key=%{public}s appIndex parse failed, skip",
+                key.c_str());
+            return;
+        }
     }
     std::string mapKey = sandboxInfo.IsDualModeCloneApp()
         ? DualModeHelper::GetDualModeBundleName(bn) : bn;
@@ -7750,7 +7758,9 @@ bool ParseUninstallUserIdStr(const std::string &userIdStr,
     if (!OHOS::StrToInt(userIdStr.substr(0, underscorePos), userId)) {
         return false;
     }
-    OHOS::StrToInt(userIdStr.substr(underscorePos + 1), appIndex);
+    if (!OHOS::StrToInt(userIdStr.substr(underscorePos + 1), appIndex)) {
+        return false;
+    }
     return true;
 }
 
@@ -7849,8 +7859,8 @@ void BMSEventHandler::ReportMigrationEvent(
 
 void BMSEventHandler::FinishAccessTokenMigration()
 {
-    constexpr int32_t MAX_RETRY = 2;
-    for (int32_t i = 0; i < MAX_RETRY; ++i) {
+    constexpr int32_t FINISH_MAX_RETRY = 2;
+    for (int32_t i = 0; i < FINISH_MAX_RETRY; ++i) {
         int32_t ret = Security::AccessToken::AccessTokenKit::FinishMigration();
         if (ret == 0 || ret == Security::AccessToken::AccessTokenError::ERR_MIGRATION_COMPLETED) {
             LOG_I(BMS_TAG_DEFAULT, "FinishMigration succeeded, ret=%{public}d", ret);
@@ -8618,7 +8628,9 @@ bool IsSandboxKeyMatched(const std::string &key,
     int32_t sandboxAppIndex = 0;
     auto pos = key.find(Constants::FILE_UNDERLINE);
     if (pos != std::string::npos) {
-        OHOS::StrToInt(key.substr(0, pos), sandboxAppIndex);
+        if (!OHOS::StrToInt(key.substr(0, pos), sandboxAppIndex)) {
+            return false;
+        }
     }
     return sandboxAppIndex == hapInfo.instIndex;
 }
@@ -8849,7 +8861,7 @@ void BuildModulePathMap(const Security::AccessToken::MigratedInfo *migratedInfo,
         return;
     }
     for (size_t k = 0; k < migratedInfo->pathList.hapPaths.size(); ++k) {
-        modulePathMap[migratedInfo->pathList.hapPaths[k]] = "";
+        modulePathMap[migratedInfo->pathList.hapPaths[k]] = migratedInfo->pathList.hapPaths[k];
     }
 }
 
@@ -9001,12 +9013,18 @@ void BMSEventHandler::CollectUnmigratedSandbox(
             ? DualModeHelper::GetDualModeBundleName(bn) : bn;
         auto mapIt = failedMigratedMap.find(mapKey);
         if (mapIt == failedMigratedMap.end()) {
+            LOG_W(BMS_TAG_DEFAULT, "FallbackCheck: orphan sandbox key=%{public}s bundle=%{public}s "
+                "has no main entry in failedMigratedMap, skip", key.c_str(), bn.c_str());
             continue;
         }
         int32_t sandboxAppIndex = 0;
         auto pos = key.find(Constants::FILE_UNDERLINE);
         if (pos != std::string::npos) {
-            OHOS::StrToInt(key.substr(0, pos), sandboxAppIndex);
+            if (!OHOS::StrToInt(key.substr(0, pos), sandboxAppIndex)) {
+                LOG_E(BMS_TAG_DEFAULT, "FallbackCheck: sandbox key=%{public}s appIndex parse failed, skip",
+                    key.c_str());
+                continue;
+            }
         }
         CollectSandboxUserInfosForFallback(sandboxAppIndex, sandboxInfo,
             mapIt->second, failed);
