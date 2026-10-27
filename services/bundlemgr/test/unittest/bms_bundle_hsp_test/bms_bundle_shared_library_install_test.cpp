@@ -19,7 +19,9 @@
 #include <sstream>
 #include <string>
 
+#include "accesstoken_kit.h"
 #include "app_provision_info_manager.h"
+#include "bundle_constants.h"
 #include "bundle_info.h"
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
@@ -55,6 +57,47 @@ const std::string SHARED_BUNDLE_NAME_B = "com.example.libb";
 const std::string MOUDLE_PACK_AGE = "modulePackage";
 const int32_t USERID = 100;
 const int32_t WAIT_TIME = 2; // init mocked bms
+
+// SPM ON prerequisite: feed the mocked access-token boundary the trusted
+// per-hap sign info; provisions mirror the real release/os_integration p7bs.
+constexpr int32_t TEST_SPM_SESSION_ID = 4242;
+constexpr uint64_t TEST_SPM_TOKEN_ID = 101;
+// The AT-allocated uid must fall inside USERID's uid segment.
+constexpr int32_t TEST_SPM_UID = USERID * Constants::BASE_USER_RANGE + 102;
+
+void SetUpSpmTrustedSignInfoForTest()
+{
+    // Host haps are normal applications; no share-library privilege needed.
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(HOST_HAP,
+        Security::AccessToken::MakeSpmReleaseProvisionRawForTest(BUNDLE_NAME_1, "os_integration"));
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(HOST2_HAP,
+        Security::AccessToken::MakeSpmReleaseProvisionRawForTest(BUNDLE_NAME_2, "os_integration"));
+    // SHARED bundles need the AllowAppShareLibrary privilege, or the install
+    // is rejected with 8519731.
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(LIBA_V10000,
+        Security::AccessToken::MakeSpmReleaseProvisionRawForTest(SHARED_BUNDLE_NAME_A,
+            "os_integration", true));
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(LIBA_V10001,
+        Security::AccessToken::MakeSpmReleaseProvisionRawForTest(SHARED_BUNDLE_NAME_A,
+            "os_integration", true));
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(LIBA_V10002,
+        Security::AccessToken::MakeSpmReleaseProvisionRawForTest(SHARED_BUNDLE_NAME_A,
+            "os_integration", true));
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(LIBB_V10001,
+        Security::AccessToken::MakeSpmReleaseProvisionRawForTest(SHARED_BUNDLE_NAME_B,
+            "os_integration", true));
+    // libA_normal_hap.hap is an APP-type hap, so no share-library privilege.
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(LIBA_NORMAL_HAP,
+        Security::AccessToken::MakeSpmReleaseProvisionRawForTest(SHARED_BUNDLE_NAME_A,
+            "os_integration"));
+    // libA_without_provision.hsp is registered without the privilege on
+    // purpose, so it is still rejected with 8519731 (Priviledge_0200).
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(LIBA_WITHOUT_PROVISION,
+        Security::AccessToken::MakeSpmReleaseProvisionRawForTest(SHARED_BUNDLE_NAME_A,
+            "os_integration"));
+    Security::AccessToken::SetSpmCheckHapSignInfoSessionIdForTest(TEST_SPM_SESSION_ID);
+    Security::AccessToken::SetSpmPrepareIdentityForTest(TEST_SPM_TOKEN_ID, TEST_SPM_UID);
+}
 
 class BmsBundleSharedLibraryInstallTest : public testing::Test {
 public:
@@ -95,6 +138,7 @@ BmsBundleSharedLibraryInstallTest::~BmsBundleSharedLibraryInstallTest()
 
 void BmsBundleSharedLibraryInstallTest::SetUpTestCase()
 {
+    SetUpSpmTrustedSignInfoForTest();
     bundleMgrService_->InitBundleInstaller();
     bundleMgrService_->InitBundleDataMgr();
     bundleMgrService_->GetDataMgr()->AddUserId(USERID);
