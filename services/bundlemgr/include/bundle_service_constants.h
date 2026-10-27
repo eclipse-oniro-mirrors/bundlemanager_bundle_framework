@@ -225,6 +225,8 @@ constexpr const char* APP_PROVISION_INFO_TABLE = "app_provision_info";
 // checked by BMSEventHandler::IsRebuildInterrupted to force a rebuild from install dirs
 constexpr const char* DB_REBUILD_MARK = "dbRebuildMark";
 constexpr const char* DB_REBUILD_MARK_DOING = "doing";
+constexpr const char* ACCESS_TOKEN_MIGRATION_DONE_MARK = "accessTokenMigrationDone";
+constexpr const char* ACCESS_TOKEN_MIGRATION_DONE_VALUE = "true";
 // column names of the generic KEY/VALUE tables created when no createTableSql
 // is configured; shared by the RdbDataManager data operations, the salvage
 // recovery mark and both fallback table creations
