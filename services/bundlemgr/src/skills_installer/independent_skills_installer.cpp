@@ -179,8 +179,7 @@ ErrCode IndependentSkillsInstaller::ProcessInstall(
     }
     if (spmRet != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "spm check permission failed %{public}d", spmRet);
-        // Raw AT code: map to the registered BMS code, no unregistered code leaks.
-        return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
+        return spmRet;
     }
 
     if (versionUpgrade_ || moduleUpdate_) {
