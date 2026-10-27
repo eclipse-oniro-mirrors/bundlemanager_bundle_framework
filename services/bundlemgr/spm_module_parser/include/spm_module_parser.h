@@ -64,6 +64,8 @@ struct InnerModuleInfoForSpm {
     int32_t apiTargetVersion = 0;
     std::vector<DefinePermission> definePermission;
     std::vector<RequestPermission> requestPermission;
+    bool allowAutoControlIntent = false;
+    std::string moduleType;
 };
 
 /**

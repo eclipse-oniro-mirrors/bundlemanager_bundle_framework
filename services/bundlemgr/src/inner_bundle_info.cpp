@@ -2305,6 +2305,7 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const InnerBundleInfo &newInfo)
     }
     baseApplicationInfo_->appSignType = applicationInfo.appSignType;
     baseApplicationInfo_->profileable = applicationInfo.profileable;
+    baseApplicationInfo_->allowAutoControlIntent = applicationInfo.allowAutoControlIntent;
     baseApplicationInfo_->allowListenBundleChangedEvent =
         applicationInfo.allowListenBundleChangedEvent;
 }
@@ -2327,6 +2328,7 @@ void InnerBundleInfo::UpdatePartialInnerBundleInfo(const InnerBundleInfo &info)
         baseApplicationInfo_->alternateIcons = info.baseApplicationInfo_->alternateIcons;
         baseApplicationInfo_->curAlternateIconModuleName = info.baseApplicationInfo_->iconResource.moduleName;
         baseApplicationInfo_->profileable = info.baseApplicationInfo_->profileable;
+        baseApplicationInfo_->allowAutoControlIntent = info.baseApplicationInfo_->allowAutoControlIntent;
         baseApplicationInfo_->compatibleMinorVersion = info.baseApplicationInfo_->compatibleMinorVersion;
         baseApplicationInfo_->compatiblePatchVersion = info.baseApplicationInfo_->compatiblePatchVersion;
     }

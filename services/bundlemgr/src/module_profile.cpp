@@ -295,6 +295,7 @@ struct App {
     bool cloudFileSyncEnabled = false;
     bool cloudStructuredDataSyncEnabled = false;
     bool profileable = false;
+    bool allowAutoControlIntent = false;
     uint32_t iconId = 0;
     uint32_t labelId = 0;
     uint32_t descriptionId = 0;
@@ -1585,6 +1586,12 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         app.profileable,
         false,
         g_parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        APP_ALLOW_AUTO_CONTROL_INTENT,
+        app.allowAutoControlIntent,
+        false,
+        g_parseResult);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,
         jsonObjectEnd,
         APP_ALLOW_LISTEN_BUNDLE_CHANGED_EVENT,
@@ -2543,6 +2550,7 @@ bool ToApplicationInfo(
     applicationInfo.vendor = app.vendor;
     applicationInfo.asanEnabled = app.asanEnabled;
     applicationInfo.profileable = app.profileable;
+    applicationInfo.allowAutoControlIntent = app.allowAutoControlIntent;
     if (app.bundleType == Profile::BUNDLE_TYPE_ATOMIC_SERVICE) {
         applicationInfo.bundleType = BundleType::ATOMIC_SERVICE;
     }
