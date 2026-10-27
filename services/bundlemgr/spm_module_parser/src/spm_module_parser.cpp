@@ -23,6 +23,8 @@ namespace AppExecFwk {
 namespace Spm {
 
 namespace {
+constexpr const char* SANDBOX_CLONE_PREFIX = "+clone-";
+
 // JSON key constants matching module.json schema
 constexpr const char* KEY_APP = "app";
 constexpr const char* KEY_MODULE = "module";
@@ -318,6 +320,14 @@ bool ParseSpmModule(const std::string &moduleJson, InnerModuleInfoForSpm &module
     }
 
     return true;
+}
+
+std::string GetSandboxDataDirName(const std::string &bundleName, int32_t appIndex)
+{
+    if (appIndex <= 0) {
+        return bundleName;
+    }
+    return std::string(SANDBOX_CLONE_PREFIX) + std::to_string(appIndex) + "+" + bundleName;
 }
 
 }  // namespace Spm
