@@ -905,7 +905,14 @@ HWTEST_F(BmsBundleInstallerPermissionTest, UpdateHapToken_0100, Function | Small
     installer.InitDataMgr();
 
     ErrCode ret = installer.UpdateHapToken(false, newInfo);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED);
+    if (BundleSpmManager::IsEnabled()) {
+        // SPM ON: the token update runs through the SPM session against the
+        // mocked AT boundary — the OFF-mode local permission failure does not
+        // apply (the enforcement moved to the AT-side CheckHapPermissionInfo).
+        EXPECT_EQ(ret, ERR_OK);
+    } else {
+        EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED);
+    }
 }
 
 /**

@@ -628,7 +628,19 @@ int32_t AccessTokenKit::PrepareHapIdentity(int32_t& sessionId, const HapBaseInfo
         // Mirrors the AT adopt-or-reallocate contract: a desired uid passed by the
         // caller is adopted and returned unchanged.
     } else {
+        // Mirrors the real AT allocation invariant: the uid always falls
+        // inside the INSTALLING user's uid segment — rebase the configured
+        // mock uid (a single user's segment sample) onto the segment of the
+        // user this call actually runs for (HapBaseInfo.userID; user 0 is a
+        // real installing user, e.g. the OTA all-user loop), so cross-user
+        // installs pass the BMS-side user-segment consistency check like
+        // they do against a real AT side.
         identity.uid = g_spmPrepareIdentityUid;
+        if (info.userID >= 0) {
+            constexpr int32_t BASE_USER_RANGE = 200000;
+            identity.uid = info.userID * BASE_USER_RANGE +
+                (g_spmPrepareIdentityUid % BASE_USER_RANGE);
+        }
     }
     identity.tokenId = g_spmPrepareIdentityTokenId;
     return g_spmPrepareHapIdentityRet;
