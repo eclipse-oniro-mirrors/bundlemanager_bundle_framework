@@ -46,6 +46,7 @@
 #include "mock_ipc_skeleton.h"
 #include "parameters.h"
 #include "parcel.h"
+#include "scope_guard.h"
 #include "shortcut_data_storage_rdb.h"
 #include "shortcut_visible_data_storage_rdb.h"
 #include "uninstall_data_mgr_storage_rdb.h"
@@ -10167,6 +10168,7 @@ HWTEST_F(BmsDataMgrTest, SetBundleFirstLaunch_0001, Function | MediumTest | Leve
     bool isBundleFirstLaunched = true;
 
     bundleDataMgr.AddUserId(userId);
+    OHOS::system::SetParameter(TEST_DUAL_MODE_PARAM, "false");
     ErrCode ret = bundleDataMgr.SetBundleFirstLaunch(bundleName, userId, appIndex, isBundleFirstLaunched);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
@@ -10189,6 +10191,7 @@ HWTEST_F(BmsDataMgrTest, SetBundleFirstLaunch_0002, Function | MediumTest | Leve
     innerBundleInfo.baseBundleInfo_->name = bundleName;
     bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
 
+    OHOS::system::SetParameter(TEST_DUAL_MODE_PARAM, "false");
     ErrCode ret = bundleDataMgr.SetBundleFirstLaunch(bundleName, userId, appIndex, isBundleFirstLaunched);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
@@ -10207,6 +10210,9 @@ HWTEST_F(BmsDataMgrTest, SetBundleFirstLaunch_0003, Function | MediumTest | Leve
     ApplicationInfo appInfo;
 
     OHOS::system::SetParameter(TEST_DUAL_MODE_PARAM, "true");
+    ScopeGuard dualModeGuard([&] {
+        OHOS::system::SetParameter(TEST_DUAL_MODE_PARAM, "false");
+    });
     OHOS::system::SetParameter(TEST_ISPCMODE_PARAM, "1");
     for (int i = 0; i < 2; i++) {
         bundleDataMgr.bundleInfos_.clear();
