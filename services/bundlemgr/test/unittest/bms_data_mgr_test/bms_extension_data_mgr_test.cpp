@@ -2630,13 +2630,13 @@ HWTEST_F(BmsExtensionDataMgrTest, ConvertShortcutInfosErrCode_0003, Function | S
  * @tc.number: ConvertShortcutInfosErrCode_0004
  * @tc.name: ConvertShortcutInfosErrCode with unknown error code
  * @tc.desc: test ConvertShortcutInfosErrCode with unknown error code,
- *           should return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR
+ *           should return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST
  */
 HWTEST_F(BmsExtensionDataMgrTest, ConvertShortcutInfosErrCode_0004, Function | SmallTest | Level1)
 {
     BmsExtensionDataMgr bmsExtensionDataMgr;
     ErrCode ret = bmsExtensionDataMgr.ConvertShortcutInfosErrCode(9999999);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
 /**
@@ -2644,6 +2644,7 @@ HWTEST_F(BmsExtensionDataMgrTest, ConvertShortcutInfosErrCode_0004, Function | S
  * @tc.name: GetShortcutInfos with Init failed
  * @tc.desc: test GetShortcutInfos when Init failed,
  *           should return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR or ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR
+ *           or ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST (if extension returns unknown error)
  */
 HWTEST_F(BmsExtensionDataMgrTest, GetShortcutInfos_0001, Function | SmallTest | Level1)
 {
@@ -2656,9 +2657,12 @@ HWTEST_F(BmsExtensionDataMgrTest, GetShortcutInfos_0001, Function | SmallTest | 
 #ifdef USE_EXTENSION_DATA
     EXPECT_THAT(ret, testing::AnyOf(
         ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR,
-        ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR));
+        ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR,
+        ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST));
 #else
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    EXPECT_THAT(ret, testing::AnyOf(
+        ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR,
+        ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST));
 #endif
 }
 
@@ -2789,9 +2793,9 @@ HWTEST_F(BmsExtensionDataMgrTest, GetShortcutInfos_0003, Function | SmallTest | 
 
 /**
  * @tc.number: GetShortcutInfos_ConvertErrCode_0005
- * @tc.name: GetShortcutInfos converts unknown error code to ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR
+ * @tc.name: GetShortcutInfos converts unknown error code to ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST
  * @tc.desc: test GetShortcutInfos when bundleMgrExtPtr->GetShortcutInfos returns unknown error code,
- *           should convert to ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR (default branch)
+ *           should convert to ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST (default branch)
  */
 HWTEST_F(BmsExtensionDataMgrTest, GetShortcutInfos_ConvertErrCode_0005, Function | SmallTest | Level1)
 {
@@ -2819,7 +2823,7 @@ HWTEST_F(BmsExtensionDataMgrTest, GetShortcutInfos_ConvertErrCode_0005, Function
     int32_t userId = USERID;
     std::vector<ShortcutInfo> shortcutInfos;
     ErrCode ret = bmsExtensionDataMgr.GetShortcutInfos(bundleName, userId, shortcutInfos);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
 /**
