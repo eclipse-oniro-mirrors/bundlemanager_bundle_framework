@@ -1304,9 +1304,7 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
             LOG_E(BMS_TAG_INSTALLER, "spm check permission failed, bundleName:%{public}s errCode:%{public}d",
                 bundleName_.c_str(), spmRet);
             SetVerifyPermissionResult(spmCheckResult);
-            // The session pre-check returns raw AT codes: map to the registered
-            // BMS code so no unregistered code leaks to the callers.
-            return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
+            return spmRet;
         }
         hasInstalledInUser_ = oldInfo.HasInnerBundleUserInfo(userId_);
         if (!hasInstalledInUser_) {
@@ -3732,8 +3730,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallStatus(InnerBundleInfo &info, i
         LOG_E(BMS_TAG_INSTALLER, "spm check permission failed, bundleName:%{public}s errCode:%{public}d",
             bundleName_.c_str(), spmRet);
         SetVerifyPermissionResult(spmCheckResult);
-        // Raw AT code: map to the registered BMS code.
-        return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
+        return spmRet;
     }
     int32_t tokenRet = ERR_OK;
     if (!tokenRecovered

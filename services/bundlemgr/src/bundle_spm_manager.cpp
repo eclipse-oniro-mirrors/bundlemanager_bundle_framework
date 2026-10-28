@@ -746,8 +746,30 @@ int32_t BundleSpmManager::InstallSession::CheckPermissionInfo(
     // caller decides it HERE because the effective dual-mode policy is only
     // resolved on the parsed bundle info by now (never at the sign-check session
     // creation, where a preinstall first pass is still UNSPECIFIED).
-    return Security::AccessToken::AccessTokenKit::CheckHapPermissionInfo(sessionId_,
+    int32_t ret = Security::AccessToken::AccessTokenKit::CheckHapPermissionInfo(sessionId_,
         installType, mode, checkResult);
+    if (ret == Security::AccessToken::AccessTokenKitRet::RET_SUCCESS) {
+        return ERR_OK;
+    }
+    LOG_NOFUNC_E(BMS_TAG_INSTALLER, "CheckPermissionInfo failed, sessionId:%{public}d ret:%{public}d",
+        sessionId_, ret);
+    // Map the AT code to a registered BMS install code (pre-SPM error contract):
+    // a cross-hap consistency mismatch surfaces as the bundle/app-type code the
+    // OFF path returns; everything else folds into the generic grant-request
+    // failure so no unregistered AT code leaks through the facade boundary.
+    switch (ret) {
+        case Security::AccessToken::AccessTokenError::ERR_CHECK_MULTIPLE_HAP_BUNDLE_NAME_MISMATCH:
+            return ERR_APPEXECFWK_INSTALL_BUNDLENAME_NOT_SAME;
+        case Security::AccessToken::AccessTokenError::ERR_CHECK_MULTIPLE_HAP_APP_FEATURE_MISMATCH:
+            return ERR_APPEXECFWK_INSTALL_APPTYPE_NOT_SAME;
+        case Security::AccessToken::AccessTokenError::ERR_BUNDLE_ALREADY_EXIST:
+            // The callers' TYPE_INSTALL→TYPE_REPLACE degrade retry keys on this
+            // raw code — keep it un-wrapped so the leftover-identity recovery
+            // still triggers.
+            return ret;
+        default:
+            return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
+    }
 }
 
 int32_t BundleSpmManager::InstallSession::VerifyPermission(const std::string &bundleName,
