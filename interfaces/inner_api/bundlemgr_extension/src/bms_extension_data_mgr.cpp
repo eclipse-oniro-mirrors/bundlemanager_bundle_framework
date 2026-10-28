@@ -905,8 +905,8 @@ ErrCode BmsExtensionDataMgr::ConvertShortcutInfosErrCode(ErrCode ret)
         case ERR_BUNDLE_MANAGER_EXTENSION_INVALID_USER_ID:
             return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
         default:
-            LOG_E(BMS_TAG_EXT, "Unknown extension error code: %{public}d, return extension internal error", ret);
-            return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
+            LOG_E(BMS_TAG_EXT, "Unknown extension error code: %{public}d, return bundle not exist", ret);
+            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
 }
 
