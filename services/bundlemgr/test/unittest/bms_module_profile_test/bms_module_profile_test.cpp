@@ -17,6 +17,7 @@
 #define protected public
 
 #include <gtest/gtest.h>
+#include <sstream>
 #include <string>
 #include <vector>
 #include <map>
@@ -274,5 +275,58 @@ HWTEST_F(BmsModuleProfileTest, ProcessLibrarySupportDirectory_010, Function | Sm
     EXPECT_TRUE(innerBundleInfo.innerModuleInfos_.at(MODULE_PACKAGE).librarySupportDirectory.empty());
 }
 
+/**
+ * @tc.name: AllowAutoControlIntent_Parse
+ * @tc.desc: Parse explicit and absent application declarations from a Stage profile.
+ */
+HWTEST_F(BmsModuleProfileTest, AllowAutoControlIntent_Parse, Function | SmallTest | Level1)
+{
+    const nlohmann::json profile = {
+        {"app", {{"bundleName", "com.example.automation"}, {"icon", "$media:app_icon"},
+            {"label", "$string:app_name"}, {"versionCode", 1},
+            {"versionName", "1.0"}, {"minAPIVersion", 26}, {"targetAPIVersion", 26}}},
+        {"module", {{"name", "entry"}, {"type", "entry"}, {"deviceTypes", {"default"}},
+            {"deliveryWithInstall", true}, {"installationFree", false}}}
+    };
+    for (int i = 0; i < 3; ++i) {
+        auto input = profile;
+        if (i < 2) {
+            input["app"]["allowAutoControlIntent"] = (i == 0);
+        }
+        std::ostringstream stream;
+        stream << input.dump();
+        InnerBundleInfo info;
+        BundleExtractor extractor("");
+        ASSERT_EQ(ModuleProfile().TransformTo(stream, extractor, info), ERR_OK);
+        EXPECT_EQ(info.GetBaseApplicationInfo().allowAutoControlIntent, i == 0);
+    }
+}
+
+/**
+ * @tc.name: AllowAutoControlIntent_InvalidType
+ * @tc.desc: Reject non-boolean declarations without coercing them into permission to control.
+ */
+HWTEST_F(BmsModuleProfileTest, AllowAutoControlIntent_InvalidType, Function | SmallTest | Level1)
+{
+    const std::vector<nlohmann::json> invalidValues = {
+        "true", 1, nullptr, nlohmann::json::array(), nlohmann::json::object()
+    };
+    for (const auto &value : invalidValues) {
+        nlohmann::json input = {
+            {"app", {{"bundleName", "com.example.automation"}, {"icon", "$media:app_icon"},
+                {"label", "$string:app_name"}, {"versionCode", 1},
+                {"versionName", "1.0"}, {"minAPIVersion", 26}, {"targetAPIVersion", 26},
+                {"allowAutoControlIntent", value}}},
+            {"module", {{"name", "entry"}, {"type", "entry"}, {"deviceTypes", {"default"}},
+                {"deliveryWithInstall", true}, {"installationFree", false}}}
+        };
+        std::ostringstream stream;
+        stream << input.dump();
+        InnerBundleInfo info;
+        BundleExtractor extractor("");
+        EXPECT_EQ(ModuleProfile().TransformTo(stream, extractor, info),
+            ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR) << value.dump();
+    }
+}
 }  // namespace
 }  // namespace OHOS

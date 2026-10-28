@@ -114,7 +114,13 @@ ErrCode BundleVerifyMgr::ConvertHapVerifyResultCode(int32_t verifyResultCode, in
     switch (ret) {
         case AccessTokenError::ERR_PARAM_INVALID:
             return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
+        case AccessTokenError::ERR_CHECK_MULTIPLE_HAP_BUNDLE_NAME_MISMATCH:
+            return ERR_APPEXECFWK_INSTALL_BUNDLENAME_NOT_SAME;
+        case AccessTokenError::ERR_CHECK_MULTIPLE_HAP_APP_FEATURE_MISMATCH:
+            return ERR_APPEXECFWK_INSTALL_APPTYPE_NOT_SAME;
         case AccessTokenError::ERR_CHECK_MULTIPLE_HAP_FAILED:
+        case AccessTokenError::ERR_CHECK_MULTIPLE_HAP_DISTRIBUTION_TYPE_MISMATCH:
+        case AccessTokenError::ERR_CHECK_MULTIPLE_HAP_PROVISION_TYPE_MISMATCH:
             return ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE;
         case AccessTokenError::ERR_BUNDLE_ALREADY_EXIST:
             // Leftover identity of a crashed session: pass the raw code through

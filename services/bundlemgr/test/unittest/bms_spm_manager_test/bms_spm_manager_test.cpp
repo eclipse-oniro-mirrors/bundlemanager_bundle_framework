@@ -1021,6 +1021,36 @@ HWTEST_F(BmsSpmManagerTest, ConvertHapVerifyResultCode_0400, Function | SmallTes
 }
 
 /**
+ * @tc.number: ConvertHapVerifyResultCode_0500
+ * @tc.name: Multiple-hap consistency mismatch ret maps to pre-SPM BMS codes
+ * @tc.desc: errorCode == 0 and ret is a cross-hap consistency mismatch code
+ *           from CheckMultipleHaps — BUNDLE_NAME_MISMATCH→BUNDLENAME_NOT_SAME,
+ *           APP_FEATURE_MISMATCH→APPTYPE_NOT_SAME, DISTRIBUTION_TYPE/
+ *           PROVISION_TYPE_MISMATCH→INCOMPATIBLE_SIGNATURE, matching the
+ *           non-SPM CheckAllInstallInfo error contract.
+ */
+HWTEST_F(BmsSpmManagerTest, ConvertHapVerifyResultCode_0500, Function | SmallTest | Level1)
+{
+    using ATE = Security::AccessToken::AccessTokenError;
+    EXPECT_EQ(BundleVerifyMgr::ConvertHapVerifyResultCode(
+        Security::Verify::HapVerifyResultCode::VERIFY_SUCCESS,
+        ATE::ERR_CHECK_MULTIPLE_HAP_BUNDLE_NAME_MISMATCH),
+        ERR_APPEXECFWK_INSTALL_BUNDLENAME_NOT_SAME);
+    EXPECT_EQ(BundleVerifyMgr::ConvertHapVerifyResultCode(
+        Security::Verify::HapVerifyResultCode::VERIFY_SUCCESS,
+        ATE::ERR_CHECK_MULTIPLE_HAP_APP_FEATURE_MISMATCH),
+        ERR_APPEXECFWK_INSTALL_APPTYPE_NOT_SAME);
+    EXPECT_EQ(BundleVerifyMgr::ConvertHapVerifyResultCode(
+        Security::Verify::HapVerifyResultCode::VERIFY_SUCCESS,
+        ATE::ERR_CHECK_MULTIPLE_HAP_DISTRIBUTION_TYPE_MISMATCH),
+        ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE);
+    EXPECT_EQ(BundleVerifyMgr::ConvertHapVerifyResultCode(
+        Security::Verify::HapVerifyResultCode::VERIFY_SUCCESS,
+        ATE::ERR_CHECK_MULTIPLE_HAP_PROVISION_TYPE_MISMATCH),
+        ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE);
+}
+
+/**
  * @tc.number: BmsSpmManagerTest.CheckNewInstallIdentity_0001
  * @tc.name: The identity plan is inert under SPM OFF
  * @tc.desc: Even with an AT-side token visible to the query, the SPM OFF

@@ -1624,6 +1624,74 @@ HWTEST_F(BmsBundleDataMgrTest, GetBundleInfoV9_0100, Function | SmallTest | Leve
 }
 
 /**
+ * @tc.name: AllowAutoControlIntent_Query
+ * @tc.desc: Return the declaration only when application information is requested.
+ */
+HWTEST_F(BmsBundleDataMgrTest, AllowAutoControlIntent_Query, Function | SmallTest | Level1)
+{
+    auto originalDataMgr = GetBundleDataMgr();
+    ScopeGuard restore([originalDataMgr] { bundleMgrService_->dataMgr_ = originalDataMgr; });
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    bundleMgrService_->dataMgr_ = dataMgr;
+    dataMgr->AddUserId(USERID);
+    const std::string bundleName = "com.example.automation";
+    auto info = CreateTestBundleInfo(bundleName, BundleType::APP, false, USERID);
+    info.baseBundleInfo_->name = bundleName;
+    dataMgr->bundleInfos_.emplace(bundleName, info);
+    const int32_t flags = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION);
+    for (bool allowed : {false, true}) {
+        SCOPED_TRACE(allowed);
+        dataMgr->bundleInfos_.at(bundleName).baseApplicationInfo_->allowAutoControlIntent = allowed;
+        BundleInfo result;
+        ASSERT_EQ(bundleMgrHostImpl_->GetBundleInfoV9(bundleName, flags, result, USERID), ERR_OK);
+        EXPECT_EQ(result.name, bundleName);
+        EXPECT_EQ(result.applicationInfo.bundleName, bundleName);
+        EXPECT_EQ(result.applicationInfo.allowAutoControlIntent, allowed);
+
+        BundleInfo basic;
+        ASSERT_EQ(bundleMgrHostImpl_->GetBundleInfoV9(bundleName, 0, basic, USERID), ERR_OK);
+        EXPECT_EQ(basic.name, bundleName);
+        EXPECT_TRUE(basic.applicationInfo.bundleName.empty());
+        EXPECT_FALSE(basic.applicationInfo.allowAutoControlIntent);
+    }
+}
+
+/**
+ * @tc.name: AllowAutoControlIntent_QueryErrors
+ * @tc.desc: The declaration does not bypass bundle, user or enabled-state checks.
+ */
+HWTEST_F(BmsBundleDataMgrTest, AllowAutoControlIntent_QueryErrors, Function | SmallTest | Level1)
+{
+    auto originalDataMgr = GetBundleDataMgr();
+    ScopeGuard restore([originalDataMgr] { bundleMgrService_->dataMgr_ = originalDataMgr; });
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    bundleMgrService_->dataMgr_ = dataMgr;
+    dataMgr->AddUserId(USERID);
+    dataMgr->AddUserId(USERID + 1);
+    const std::string bundleName = "com.example.automation";
+    auto info = CreateTestBundleInfo(bundleName, BundleType::APP, false, USERID);
+    info.baseBundleInfo_->name = bundleName;
+    info.baseApplicationInfo_->allowAutoControlIntent = true;
+    dataMgr->bundleInfos_.emplace(bundleName, info);
+    const int32_t flags = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION);
+    BundleInfo valid;
+    ASSERT_EQ(bundleMgrHostImpl_->GetBundleInfoV9(bundleName, flags, valid, USERID), ERR_OK);
+    ASSERT_TRUE(valid.applicationInfo.allowAutoControlIntent);
+    auto expectError = [this](const std::string &name, int32_t userId, ErrCode expected) {
+        BundleInfo result;
+        EXPECT_EQ(bundleMgrHostImpl_->GetBundleInfoV9(name, flags, result, userId), expected);
+        EXPECT_TRUE(result.name.empty());
+        EXPECT_TRUE(result.applicationInfo.bundleName.empty());
+    };
+    expectError(bundleName + ".missing", USERID, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    expectError(bundleName, USERID + 1, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    expectError(bundleName, Constants::INVALID_USERID, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    expectError(bundleName, USERID + 2, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    ASSERT_EQ(dataMgr->bundleInfos_.at(bundleName).SetApplicationEnabled(false, "", USERID), ERR_OK);
+    expectError(bundleName, USERID, ERR_BUNDLE_MANAGER_APPLICATION_DISABLED);
+}
+
+/**
  * @tc.number: GetBundleInfoV9_0200
  * @tc.name: test GetBundleInfoV9
  * @tc.desc: 1.system run normally

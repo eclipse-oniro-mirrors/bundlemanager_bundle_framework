@@ -353,8 +353,7 @@ ErrCode AppServiceFwkInstaller::ProcessInstall(
     if (spmRet != ERR_OK) {
         APP_LOGE("spm check permission failed %{public}d", spmRet);
         RollBack();
-        // Raw AT code: map to the registered BMS code, no unregistered code leaks.
-        return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
+        return spmRet;
     }
     // SPM ON: commit the session BEFORE the bundle info is persisted (agreed
     // ordering: AT first, BMS follows). On a commit failure the business

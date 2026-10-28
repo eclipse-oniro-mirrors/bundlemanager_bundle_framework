@@ -16,6 +16,8 @@
 
 #include <gtest/gtest.h>
 
+#include "accesstoken_kit.h"
+#include "bundle_constants.h"
 #include "bundle_info.h"
 #include "bundle_installer_host.h"
 #include "bundle_sandbox_installer.h"
@@ -36,6 +38,14 @@ using namespace OHOS;
 using OHOS::DelayedSingleton;
 
 namespace OHOS {
+namespace Security {
+namespace AccessToken {
+// Mock knob without a setter in the mocked accesstoken_kit.h: the sandbox
+// installer engages its SPM session through the deferred InitToken path, so
+// PrepareHapIdentity must allocate (write back) the session id.
+extern int32_t g_spmPrepareIdentitySessionId;
+} // namespace AccessToken
+} // namespace Security
 namespace {
 const std::string BUNDLE_NAME = "com.example.l3jsdemo";
 const std::string BUNDLE_NAME_INVALID = "";
@@ -68,6 +78,84 @@ const std::string TEST_HAP_PATH = "/data/test/resource/test.hap";
 const std::string TEST_SHARE_FILES_JSON = R"({"shareFiles":[{"path":"/test/path","mode":"read"}]})";
 const int32_t TEST_USER_ID = 100;
 const uint32_t TEST_TOKEN_ID = 123456;
+
+// --- SPM ON install prerequisite -------------------------------------------
+// The suite keeps the SPM switch ON (the device default, see
+// BundleSpmManager::IsEnabled) and solves the hap sign verification
+// positively: the mocked access-token boundary is fed the per-hap data the
+// real AT side would return for the installed haps, so every install runs
+// the complete SPM ON chain. Two flows need feeding:
+// - the base-app installs (first_right.hap / sandboxTest.hap) go through
+//   CheckSignAndInitSession, so each hap file is registered by file name with
+//   a provision matching its package name (CheckBundleName cross-checks the
+//   provision against the hap's parsed package name). The provisions mirror
+//   the REAL profiles the haps are signed with (the legacy OpenHarmony
+//   system profile: release / os_integration / apl system_core /
+//   hos_system_app / NO app-identifier), so the parsed ProvisionInfo carries
+//   the same SYSTEM_APP identity and the same empty appIdentifier as under
+//   SPM OFF (a fabricated appIdentifier would surface in the keep-data
+//   CheckAppIdentifier comparison);
+// - InstallSandboxApp engages its SPM session through the deferred InitToken
+//   path (no sign verification), so PrepareHapIdentity must allocate the
+//   session id and hand back a valid identity: a non-zero token id and a
+//   USERID-segment uid (InitToken rejects anything else), which the sandbox
+//   installer then adopts as the sandbox uid.
+constexpr int32_t TEST_SPM_SESSION_ID = 4242;
+constexpr uint64_t TEST_SPM_TOKEN_ID = 101;
+constexpr int32_t TEST_SPM_UID = USERID * Constants::BASE_USER_RANGE + 102;
+
+void SetUpSpmTrustedSignInfoForTest()
+{
+    // Mirrors the legacy OpenHarmony system profile the base-app haps are
+    // signed with (com.example.l3jsdemo.p7b / com.example.ohosproject.
+    // hmservice.p7b): no app-identifier field, apl system_core,
+    // hos_system_app.
+    const std::string provision = Security::AccessToken::MakeSpmReleaseProvisionRawForTest(
+        BUNDLE_NAME, "os_integration", false, "hos_system_app", "system_core", "");
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(RIGHT_BUNDLE_FIRST, provision);
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(SANDBOX_TEST,
+        Security::AccessToken::MakeSpmReleaseProvisionRawForTest(OTHER_BUNDLE_NAME,
+            "os_integration", false, "hos_system_app", "system_core", ""));
+    Security::AccessToken::SetSpmCheckHapSignInfoSessionIdForTest(TEST_SPM_SESSION_ID);
+    Security::AccessToken::SetSpmPrepareIdentityForTest(TEST_SPM_TOKEN_ID, TEST_SPM_UID);
+    Security::AccessToken::g_spmPrepareIdentitySessionId = TEST_SPM_SESSION_ID;
+}
+
+void ClearSpmLeftoverUninstallRecordsForTest()
+{
+    // Leftover persistent state of this suite's bundles must be wiped before
+    // the first install, or the fresh installs are rejected with
+    // INCONSISTENT_SIGNATURE (8519755) through two paths:
+    // - a leftover keep-data uninstall record (from earlier runs or sibling
+    //   suites on a shared device) stores the app id the REAL signature
+    //   derived; the mocked provision derives a different one, so
+    //   CheckInstallOnKeepData fails the comparison;
+    // - a leftover installed bundle-info record (e.g. persisted by an
+    //   earlier run of a PREVIOUS mock-provision revision, whose
+    //   app-identifier/provision id differ from the current one) makes the
+    //   first install run the update branch, where CheckAppIdentifier
+    //   compares the stored values against the freshly derived ones and
+    //   fails on the cross-revision mismatch. Run the full
+    //   INSTALL_START -> UNINSTALL_START -> UNINSTALL_SUCCESS chain (the
+    //   plain UNINSTALL_START of ClearBundleInfo cannot transfer without a
+    //   state entry, which a cold-reloaded record has) so DeleteBundleInfo
+    //   wipes BOTH the in-memory info and the RDB row.
+    // The installs of this suite never keep data, so a clean state is the
+    // only behavior the suite has ever asserted.
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        return;
+    }
+    for (const auto &bundleName : {BUNDLE_NAME, OTHER_BUNDLE_NAME}) {
+        InnerBundleInfo leftoverInfo;
+        if (dataMgr->FetchInnerBundleInfo(bundleName, leftoverInfo)) {
+            dataMgr->UpdateBundleInstallState(bundleName, InstallState::INSTALL_START);
+            dataMgr->UpdateBundleInstallState(bundleName, InstallState::UNINSTALL_START);
+            dataMgr->UpdateBundleInstallState(bundleName, InstallState::UNINSTALL_SUCCESS);
+        }
+        dataMgr->DeleteUninstallBundleInfo(bundleName, USERID);
+    }
+}
 } // namespace
 
 class BmsSandboxAppTest : public testing::Test {
@@ -130,9 +218,20 @@ void BmsSandboxAppTest::SetUpTestCase()
     if (!installdService_->IsServiceReady()) {
         installdService_->Start();
     }
+    // SPM stays ON (its device default): feed the mocked access-token
+    // boundary with the trusted sign answer for the base-app haps and with
+    // the deferred-session identity for InstallSandboxApp, so both flows run
+    // the real SPM ON chain instead of failing closed on the empty default
+    // mock. Must run before the first install — nothing in this binary
+    // resets the mock control variables afterwards.
+    SetUpSpmTrustedSignInfoForTest();
     bundleMgrService_->InitBundleInstaller();
     bundleMgrService_->InitBundleDataMgr();
     bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();
+    // Drop leftover keep-data uninstall records of this suite's bundles so
+    // CheckInstallOnKeepData never compares the mocked provision's app id
+    // against a record left by an earlier run (8519755 otherwise).
+    ClearSpmLeftoverUninstallRecordsForTest();
 }
 
 void BmsSandboxAppTest::TearDownTestCase()
@@ -142,6 +241,19 @@ void BmsSandboxAppTest::TearDownTestCase()
 
 void BmsSandboxAppTest::SetUp()
 {
+    if (!installdService_->IsServiceReady()) {
+        installdService_->Start();
+    }
+    // The mocked InstalldClient::ClearSessionProvisionCache is a counting
+    // stub, so the real session provision cache inside the process-wide
+    // InstalldHostImpl keeps the entry of the PREVIOUS test case's install
+    // under the same shared session id. The next install of a DIFFERENT
+    // bundle would then hit that stale entry in GetResolvedApl and fail the
+    // apl cross-check with INSTALLD_PARAM_ERROR. Drop the cache entry
+    // before every case so each install starts from a clean provision state.
+    if (installdService_->hostImpl_ != nullptr) {
+        installdService_->hostImpl_->ClearSessionProvisionCache(TEST_SPM_SESSION_ID);
+    }
 }
 
 void BmsSandboxAppTest::TearDown()

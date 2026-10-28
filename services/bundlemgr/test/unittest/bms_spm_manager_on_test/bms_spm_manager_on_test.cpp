@@ -425,7 +425,9 @@ HWTEST_F(BmsSpmManagerOnTest, CheckPermissionInfo_DeferredSession_0001, Function
 /**
  * @tc.number: BmsSpmManagerOnTest.CheckPermissionInfo_ActiveSession_0001
  * @tc.name: CheckPermissionInfo with an active session
- * @tc.desc: The session pre-check result is passed through.
+ * @tc.desc: An unknown AT ret is folded into the registered generic
+ *           grant-request failure code — no raw AT code leaks through the
+ *           facade boundary.
  */
 HWTEST_F(BmsSpmManagerOnTest, CheckPermissionInfo_ActiveSession_0001, Function | MediumTest | Level1)
 {
@@ -435,8 +437,48 @@ HWTEST_F(BmsSpmManagerOnTest, CheckPermissionInfo_ActiveSession_0001, Function |
 
     Security::AccessToken::HapInfoCheckResult checkResult;
     EXPECT_EQ(session.CheckPermissionInfo(Security::AccessToken::InstallTypeEnum::TYPE_REPLACE,
-        checkResult), -7);
+        checkResult), ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED);
     EXPECT_EQ(OHOS::Security::AccessToken::g_spmCheckHapPermissionInfoCallCount, 1);
+}
+
+/**
+ * @tc.number: BmsSpmManagerOnTest.CheckPermissionInfo_ErrorCodeMapping_0001
+ * @tc.name: CheckPermissionInfo maps AT rets to the pre-SPM BMS codes
+ * @tc.desc: The cross-hap consistency mismatch codes surface as the
+ *           bundle/app-type codes the OFF path returns (BUNDLE_NAME_MISMATCH→
+ *           BUNDLENAME_NOT_SAME, APP_FEATURE_MISMATCH→APPTYPE_NOT_SAME);
+ *           ERR_BUNDLE_ALREADY_EXIST rides through raw — the callers'
+ *           TYPE_INSTALL→TYPE_REPLACE degrade retry keys on it; every other
+ *           failure folds into the generic grant-request failure.
+ */
+HWTEST_F(BmsSpmManagerOnTest, CheckPermissionInfo_ErrorCodeMapping_0001, Function | MediumTest | Level1)
+{
+    using ATE = Security::AccessToken::AccessTokenError;
+    auto session = MakeActiveSession();
+    ASSERT_TRUE(session.IsActive());
+    Security::AccessToken::HapInfoCheckResult checkResult;
+
+    OHOS::Security::AccessToken::g_spmCheckHapPermissionInfoRet =
+        static_cast<int32_t>(ATE::ERR_CHECK_MULTIPLE_HAP_BUNDLE_NAME_MISMATCH);
+    EXPECT_EQ(session.CheckPermissionInfo(Security::AccessToken::InstallTypeEnum::TYPE_MERGE,
+        checkResult), ERR_APPEXECFWK_INSTALL_BUNDLENAME_NOT_SAME);
+
+    OHOS::Security::AccessToken::g_spmCheckHapPermissionInfoRet =
+        static_cast<int32_t>(ATE::ERR_CHECK_MULTIPLE_HAP_APP_FEATURE_MISMATCH);
+    EXPECT_EQ(session.CheckPermissionInfo(Security::AccessToken::InstallTypeEnum::TYPE_MERGE,
+        checkResult), ERR_APPEXECFWK_INSTALL_APPTYPE_NOT_SAME);
+
+    OHOS::Security::AccessToken::g_spmCheckHapPermissionInfoRet =
+        static_cast<int32_t>(ATE::ERR_CHECK_MULTIPLE_HAP_DISTRIBUTION_TYPE_MISMATCH);
+    EXPECT_EQ(session.CheckPermissionInfo(Security::AccessToken::InstallTypeEnum::TYPE_MERGE,
+        checkResult), ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED);
+
+    OHOS::Security::AccessToken::g_spmCheckHapPermissionInfoRet =
+        static_cast<int32_t>(ATE::ERR_BUNDLE_ALREADY_EXIST);
+    EXPECT_EQ(session.CheckPermissionInfo(Security::AccessToken::InstallTypeEnum::TYPE_INSTALL,
+        checkResult), static_cast<int32_t>(ATE::ERR_BUNDLE_ALREADY_EXIST));
+
+    EXPECT_EQ(OHOS::Security::AccessToken::g_spmCheckHapPermissionInfoCallCount, 4);
 }
 
 /**

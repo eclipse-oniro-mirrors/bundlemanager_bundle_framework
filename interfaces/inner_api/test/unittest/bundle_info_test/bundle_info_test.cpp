@@ -14,6 +14,7 @@
  */
 
 #include <gtest/gtest.h>
+#include <memory>
 
 #include "bundle_info.h"
 
@@ -852,5 +853,65 @@ HWTEST_F(BundleInfoTest, DualModeBundleInfo_0100, Function | SmallTest | Level0)
     EXPECT_EQ(dualModeBundleInfo2.deviceModeDistributionPolicy, DeviceModeDistributionPolicy::UNSPECIFIED);
     EXPECT_EQ(dualModeBundleInfo2.appSandboxPolicy, AppSandboxPolicy::SHARED_SANDBOX);
 }
+
+/**
+ * @tc.name: AllowAutoControlIntent_Json
+ * @tc.desc: Preserve boolean values and default missing persisted fields to false.
+ */
+HWTEST_F(BundleInfoTest, AllowAutoControlIntent_Json, Function | SmallTest | Level1)
+{
+    for (bool allowed : {false, true}) {
+        ApplicationInfo source;
+        source.bundleName = "com.example.automation";
+        source.allowAutoControlIntent = allowed;
+        nlohmann::json json = source;
+        ASSERT_TRUE(json.at("allowAutoControlIntent").is_boolean());
+        EXPECT_EQ(json.at("allowAutoControlIntent").get<bool>(), allowed);
+        ApplicationInfo restored = json.get<ApplicationInfo>();
+        EXPECT_EQ(restored.bundleName, source.bundleName);
+        EXPECT_EQ(restored.allowAutoControlIntent, allowed);
+
+        json.erase("allowAutoControlIntent");
+        restored = json.get<ApplicationInfo>();
+        EXPECT_EQ(restored.bundleName, source.bundleName);
+        EXPECT_FALSE(restored.allowAutoControlIntent);
+    }
+}
+
+/**
+ * @tc.name: AllowAutoControlIntent_Parcel
+ * @tc.desc: Nested application data and consecutive bundle objects remain aligned.
+ */
+HWTEST_F(BundleInfoTest, AllowAutoControlIntent_Parcel, Function | SmallTest | Level1)
+{
+    Parcel parcel;
+    for (bool allowed : {true, false}) {
+        BundleInfo source;
+        source.name = allowed ? "com.example.allowed" : "com.example.denied";
+        source.versionCode = 26;
+        source.applicationInfo.bundleName = source.name;
+        source.applicationInfo.allowAutoControlIntent = allowed;
+        source.applicationInfo.profileable = !allowed;
+        source.applicationInfo.allowEnableNotification = !allowed;
+        source.applicationInfo.vendor = "automation-test";
+        source.reqPermissions = {"ohos.permission.INTERNET"};
+        ASSERT_TRUE(parcel.WriteParcelable(&source));
+    }
+    for (bool allowed : {true, false}) {
+        std::unique_ptr<BundleInfo> restored(parcel.ReadParcelable<BundleInfo>());
+        ASSERT_NE(restored, nullptr);
+        EXPECT_EQ(restored->name, allowed ? "com.example.allowed" : "com.example.denied");
+        EXPECT_EQ(restored->versionCode, 26U);
+        EXPECT_EQ(restored->applicationInfo.bundleName, restored->name);
+        EXPECT_EQ(restored->applicationInfo.allowAutoControlIntent, allowed);
+        EXPECT_EQ(restored->applicationInfo.profileable, !allowed);
+        EXPECT_EQ(restored->applicationInfo.allowEnableNotification, !allowed);
+        EXPECT_EQ(restored->applicationInfo.vendor, "automation-test");
+        ASSERT_EQ(restored->reqPermissions.size(), 1U);
+        EXPECT_EQ(restored->reqPermissions[0], "ohos.permission.INTERNET");
+    }
+    EXPECT_EQ(parcel.GetReadableBytes(), 0U);
+}
+
 } // AppExecFwk
 } // OHOS

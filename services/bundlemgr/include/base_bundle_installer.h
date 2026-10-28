@@ -1171,7 +1171,7 @@ private:
     void ProcessUpdateShortcut();
     void NotifyBundleCallback(const NotifyType &type, int32_t uid);
     void ChangeFileStatByParsedPaths(const std::vector<std::string> &parsedPaths);
-
+    bool IsPreInstallDiffPackage(const std::string &bundleName);
     bool isAppExist_ = false;
     bool isContainEntry_ = false;
     bool isAppService_ = false;
