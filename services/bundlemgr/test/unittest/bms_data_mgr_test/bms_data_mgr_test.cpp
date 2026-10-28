@@ -36,6 +36,7 @@
 #include "bundle_mgr_host_impl.h"
 #include "bundle_mgr_service.h"
 #include "bundle_service_constants.h"
+#include "bundle_spm_manager.h"
 #include "dual_mode_helper.h"
 #include "first_install_data_mgr/first_install_bundle_info.h"
 #include "get_largest_items_callback_host.h"
@@ -126,6 +127,22 @@ const std::string TOKEN_BUNDLE = "tokenBundle";
 constexpr const char *TEST_DUAL_MODE_PARAM = "persist.bms.test_dual_mode";
 constexpr const char *TEST_ISPCMODE_PARAM = "persist.bms.ispcmode";
 constexpr const char *TEST_MAINMODE_PARAM = "persist.bms.mainmode";
+
+// SPM ON: the uid reverse lookup (BundleDataMgr::GetBundleNameAndIndex)
+// cross-checks the bundleIdMap_ hit against the persisted user info — an
+// InnerBundleInfo without a user info owning the mock caller's uid (20000001,
+// userId 100, bundleId 1) fails the cross-check and the AT fallback, so every
+// "ForSelf" API returns INVALID_UID instead of resolving the map entry.
+// Stamp the user info onto the test bundle before inserting it (the OFF
+// path trusts the map alone and is unaffected).
+void AddSelfUidUserInfo(InnerBundleInfo &info, const std::string &bundleName)
+{
+    InnerBundleUserInfo selfUserInfo;
+    selfUserInfo.bundleUserInfo.userId = 100;
+    selfUserInfo.bundleName = bundleName;
+    selfUserInfo.uid = 20000001;
+    info.AddInnerBundleUserInfo(selfUserInfo);
+}
 }  // namespace
 
 namespace Security {
@@ -961,7 +978,14 @@ HWTEST_F(BmsDataMgrTest, GenerateUidAndGid_0100, Function | SmallTest | Level0)
     ErrCode ret3 = dataMgr->GenerateUidAndGid(innerBundleUserInfo);
     EXPECT_TRUE(ret1);
     EXPECT_TRUE(ret2);
-    EXPECT_EQ(ret3, ERR_OK);
+    if (BundleSpmManager::IsEnabled()) {
+        // SPM ON: GenerateUidAndGid no longer allocates locally — an identity
+        // without an AT-allocated uid fails fast instead (the allocation
+        // authority moved to the access token service).
+        EXPECT_EQ(ret3, ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED);
+    } else {
+        EXPECT_EQ(ret3, ERR_OK);
+    }
 
     dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_START);
 }
@@ -995,7 +1019,14 @@ HWTEST_F(BmsDataMgrTest, GenerateUidAndGid_0200, Function | SmallTest | Level0)
     ErrCode ret3 = dataMgr->GenerateUidAndGid(innerBundleUserInfo);
     EXPECT_TRUE(ret1);
     EXPECT_TRUE(ret2);
-    EXPECT_EQ(ret3, ERR_OK);
+    if (BundleSpmManager::IsEnabled()) {
+        // SPM ON: GenerateUidAndGid no longer allocates locally — an identity
+        // without an AT-allocated uid fails fast instead (the allocation
+        // authority moved to the access token service).
+        EXPECT_EQ(ret3, ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED);
+    } else {
+        EXPECT_EQ(ret3, ERR_OK);
+    }
 
     dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_START);
 }
@@ -1031,7 +1062,14 @@ HWTEST_F(BmsDataMgrTest, GenerateUidAndGid_0300, Function | SmallTest | Level0)
     ErrCode ret3 = dataMgr->GenerateUidAndGid(innerBundleUserInfo);
     EXPECT_TRUE(ret1);
     EXPECT_TRUE(ret2);
-    EXPECT_EQ(ret3, ERR_OK);
+    if (BundleSpmManager::IsEnabled()) {
+        // SPM ON: GenerateUidAndGid no longer allocates locally — an identity
+        // without an AT-allocated uid fails fast instead (the allocation
+        // authority moved to the access token service).
+        EXPECT_EQ(ret3, ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED);
+    } else {
+        EXPECT_EQ(ret3, ERR_OK);
+    }
     dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_START);
 }
 
@@ -6619,6 +6657,7 @@ HWTEST_F(BmsDataMgrTest, SetShortcutVisibleForSelf_0003, Function | MediumTest |
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.InsertShortcutInfos(shortcutId, shortcutInfo);
     innerBundleInfo.SetIsNewVersion(false);
+    AddSelfUidUserInfo(innerBundleInfo, bundleName);
     bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
     bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
     auto result = bundleDataMgr.SetShortcutVisibleForSelf(shortcutId, visible);
@@ -6644,10 +6683,18 @@ HWTEST_F(BmsDataMgrTest, SetShortcutVisibleForSelf_0004, Function | MediumTest |
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.InsertShortcutInfos(shortcutId, shortcutInfo);
     innerBundleInfo.SetIsNewVersion(false);
+    AddSelfUidUserInfo(innerBundleInfo, bundleName);
     bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
     bundleDataMgr.bundleInfos_.emplace(bundleName2, innerBundleInfo);
     auto result = bundleDataMgr.SetShortcutVisibleForSelf(shortcutId, visible);
-    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    if (BundleSpmManager::IsEnabled()) {
+        // SPM ON: same contract as GetAllShortcutInfoForSelf_0020 — the map
+        // hit fails the user-info cross-check (the resolved bundle is absent
+        // from bundleInfos_) and the AT fallback fails fast with INVALID_UID.
+        EXPECT_EQ(result, ERR_BUNDLE_MANAGER_INVALID_UID);
+    } else {
+        EXPECT_EQ(result, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    }
 }
 
 /**
@@ -6665,6 +6712,7 @@ HWTEST_F(BmsDataMgrTest, SetShortcutVisibleForSelf_0005, Function | MediumTest |
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.InsertShortcutInfos(shortcutId, shortcutInfo);
     innerBundleInfo.SetIsNewVersion(false);
+    AddSelfUidUserInfo(innerBundleInfo, bundleName);
     bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
     bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
     auto result = bundleDataMgr.SetShortcutVisibleForSelf(shortcutId, visible);
@@ -6688,6 +6736,7 @@ HWTEST_F(BmsDataMgrTest, SetShortcutVisibleForSelf_0006, Function | MediumTest |
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.InsertShortcutInfos(shortcutId, shortcutInfo);
     innerBundleInfo.SetIsNewVersion(false);
+    AddSelfUidUserInfo(innerBundleInfo, bundleName);
     bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
     bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
     bundleDataMgr.shortcutVisibleStorage_->
@@ -6715,6 +6764,7 @@ HWTEST_F(BmsDataMgrTest, SetShortcutVisibleForSelf_0007, Function | MediumTest |
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.InsertShortcutInfos(shortcutId, shortcutInfo);
     innerBundleInfo.SetIsNewVersion(false);
+    AddSelfUidUserInfo(innerBundleInfo, bundleName);
     bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
     bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
     bundleDataMgr.shortcutVisibleStorage_->
@@ -6799,6 +6849,7 @@ HWTEST_F(BmsDataMgrTest, SetShortcutsEnabled_0002, Function | MediumTest | Level
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.InsertShortcutInfos(shortcutId, shortcutInfo);
     innerBundleInfo.SetIsNewVersion(false);
+    AddSelfUidUserInfo(innerBundleInfo, bundleName);
     bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
     bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
     auto result = bundleDataMgr.SetShortcutsEnabled(shortcutInfos, isEnabled);
@@ -6823,6 +6874,7 @@ HWTEST_F(BmsDataMgrTest, SetShortcutsEnabled_0003, Function | MediumTest | Level
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.InsertShortcutInfos(shortcutId, shortcutInfo);
     innerBundleInfo.SetIsNewVersion(false);
+    AddSelfUidUserInfo(innerBundleInfo, bundleName);
     bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
     bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
     std::vector<ShortcutInfo> shortcutInfos;
@@ -7210,6 +7262,7 @@ HWTEST_F(BmsDataMgrTest, GetTargetShortcutInfo_0001, Function | MediumTest | Lev
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.InsertShortcutInfos(shortcutId, shortcutInfo);
     innerBundleInfo.SetIsNewVersion(false);
+    AddSelfUidUserInfo(innerBundleInfo, bundleName);
     bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
     bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
     ShortcutInfo targetShortcutInfo;
@@ -7535,7 +7588,15 @@ HWTEST_F(BmsDataMgrTest, GetAllShortcutInfoForSelf_0020, Function | MediumTest |
     BundleDataMgr bundleDataMgr;
     bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
     auto ret = bundleDataMgr.GetAllShortcutInfoForSelf(shortcutInfos);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    if (BundleSpmManager::IsEnabled()) {
+        // SPM ON: a map hit that fails the user-info cross-check (the bundle
+        // has no persisted user info owning the caller's uid) is treated as
+        // unresolvable — the AT fallback fails fast with INVALID_UID instead
+        // of degrading to a bundle lookup.
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_UID);
+    } else {
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    }
 }
 
 /**
@@ -7556,7 +7617,14 @@ HWTEST_F(BmsDataMgrTest, GetAllShortcutInfoForSelf_0030, Function | MediumTest |
     bundleDataMgr.bundleInfos_.emplace("fake_bundle", innerBundleInfo);
     bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
     auto ret = bundleDataMgr.GetAllShortcutInfoForSelf(shortcutInfos);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    if (BundleSpmManager::IsEnabled()) {
+        // SPM ON: same contract as GetAllShortcutInfoForSelf_0020 — the map
+        // hit fails the user-info cross-check and the AT fallback fails fast
+        // with INVALID_UID.
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_UID);
+    } else {
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    }
 }
 
 /**
@@ -7574,6 +7642,10 @@ HWTEST_F(BmsDataMgrTest, GetAllShortcutInfoForSelf_0040, Function | MediumTest |
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.InsertShortcutInfos(shortcutId, shortcutInfo);
     innerBundleInfo.SetIsNewVersion(false);
+    // SPM ON: the uid reverse lookup cross-checks the map hit against this
+    // user info — without it the call fails fast with INVALID_UID and leaves
+    // shortcutInfos empty (the shortcutInfos[0] access below would crash).
+    AddSelfUidUserInfo(innerBundleInfo, bundleName);
     bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
     bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
     auto ret = bundleDataMgr.GetAllShortcutInfoForSelf(shortcutInfos);
@@ -8141,6 +8213,7 @@ HWTEST_F(BmsDataMgrTest, UpdateShortcutInfos_0003, Function | MediumTest | Level
     bundleDataMgr.UpdateShortcutInfos(bundleName);
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.SetIsNewVersion(false);
+    AddSelfUidUserInfo(innerBundleInfo, bundleName);
     bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
     bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
     std::shared_ptr<ShortcutEnabledDataStorageRdb> shortcutEnabledStorageRdb =
@@ -10737,6 +10810,11 @@ HWTEST_F(BmsDataMgrTest, GetAlternateIcons_0030, Function | MediumTest | Level1)
     icon.iconId = 100;
     appInfo.alternateIcons.push_back(icon);
     innerBundleInfo.SetBaseApplicationInfo(appInfo);
+    // SPM ON: the uid reverse lookup cross-checks the map hit against this
+    // user info — without it GetAlternateIcons fails fast with
+    // ERR_EXT_RESOURCE_MANAGER_GET_ALTERNATE_ICONS_FAILED and leaves
+    // alternateIcons empty (the alternateIcons[0] accesses below would crash).
+    AddSelfUidUserInfo(innerBundleInfo, bundleName);
     bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
     bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
     auto ret = bundleDataMgr.GetAlternateIcons(alternateIcons);

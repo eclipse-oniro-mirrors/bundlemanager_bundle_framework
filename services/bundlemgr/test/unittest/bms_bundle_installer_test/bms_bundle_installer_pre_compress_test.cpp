@@ -23,7 +23,9 @@
 #include "iremote_proxy.h"
 #define private public
 #define protected public
+#include "accesstoken_kit.h"
 #include "base_bundle_installer.h"
+#include "bundle_constants.h"
 #include "bundle_mgr_service.h"
 #include "bundle_service_constants.h"
 #include "bundle_util.h"
@@ -63,6 +65,39 @@ const std::string TEST_CPU_ABI = "arm64";
 const std::string AG_CONFIG_CONTENT = "{\"agConfig\":\"test\"}";
 const std::string DATA_PRELOAD_HAP_PATH = "/data/preload/app/com.example.precompress/entry.hap";
 const int32_t USERID = 100;
+
+// SPM ON prerequisite: this fixture runs BEFORE the sibling installer suite
+// registers the full per-hap registry, so right.hap (the only hap whose
+// recovery / preload installs go through the SPM verification chain here)
+// must be registered already. The provision mirrors the real profile the
+// hap is signed with (com.example.l3jsdemo.p7b — release / os_integration /
+// apl system_core / hos_system_app / no app-identifier).
+constexpr int32_t TEST_SPM_SESSION_ID = 4242;
+constexpr uint64_t TEST_SPM_TOKEN_ID = 101;
+// The AT-allocated uid must fall inside USERID's uid segment.
+constexpr int32_t TEST_SPM_UID = USERID * Constants::BASE_USER_RANGE + 102;
+
+void SetUpSpmTrustedSignInfoForTest()
+{
+    // Capture the REAL appId/appIdentifier from right.hap itself (same local
+    // verify the preinstall/keep-data cross-checks use): records persisted by
+    // runs of the sibling installer suite carry the same values (its
+    // registration self-calibrates identically), and a mock-derived
+    // sample-cert value would fail those appId comparisons with
+    // INCONSISTENT_SIGNATURE.
+    Security::Verify::HapVerifyResult rightVerifyResult;
+    std::string rightAppId;
+    std::string rightAppIdentifier;
+    if (BundleVerifyMgr::HapVerify(RIGHT_HAP_PATH, rightVerifyResult, true) == ERR_OK) {
+        rightAppId = rightVerifyResult.GetProvisionInfo().appId;
+        rightAppIdentifier = rightVerifyResult.GetProvisionInfo().bundleInfo.appIdentifier;
+    }
+    const std::string provision = Security::AccessToken::MakeSpmReleaseProvisionRawForTest(
+        RIGHT_BUNDLE_NAME, "os_integration", false, "hos_system_app", "system_core", rightAppIdentifier);
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(RIGHT_BUNDLE, provision, rightAppId);
+    Security::AccessToken::SetSpmCheckHapSignInfoSessionIdForTest(TEST_SPM_SESSION_ID);
+    Security::AccessToken::SetSpmPrepareIdentityForTest(TEST_SPM_TOKEN_ID, TEST_SPM_UID);
+}
 
 class PreCompressInstallerInstalldProxy : public IRemoteProxy<IInstalld> {
 public:
@@ -206,7 +241,12 @@ BmsBundleInstallerPreCompressTest::~BmsBundleInstallerPreCompressTest()
 {}
 
 void BmsBundleInstallerPreCompressTest::SetUpTestCase()
-{}
+{
+    // SPM stays ON (its device default): the recovery and preload installs of
+    // this suite pass the real SPM verification chain instead of failing
+    // closed on the empty default mock.
+    SetUpSpmTrustedSignInfoForTest();
+}
 
 void BmsBundleInstallerPreCompressTest::TearDownTestCase()
 {}
@@ -219,6 +259,23 @@ void BmsBundleInstallerPreCompressTest::SetUp()
     bundleMgrService_->InitBundleInstaller();
     bundleMgrService_->InitBundleDataMgr();
     bundleMgrService_->GetDataMgr()->AddUserId(USERID);
+    // Drop the leftover keep-data uninstall record / stale installed row of
+    // right.hap's bundle before every case (GetUninstallBundleInfo reads the
+    // RDB directly, so a record persisted by an earlier pre-SPM run is
+    // visible even in this fresh data mgr): the record stores the app id the
+    // REAL signature derived, and the mocked provision derives a different
+    // one, so CheckInstallOnKeepData would reject the recovery / preload
+    // installs with INCONSISTENT_SIGNATURE (8519755).
+    auto dataMgr = GetBundleDataMgr();
+    if (dataMgr != nullptr) {
+        InnerBundleInfo leftoverInfo;
+        if (dataMgr->FetchInnerBundleInfo(RIGHT_BUNDLE_NAME, leftoverInfo)) {
+            dataMgr->UpdateBundleInstallState(RIGHT_BUNDLE_NAME, InstallState::INSTALL_START);
+            dataMgr->UpdateBundleInstallState(RIGHT_BUNDLE_NAME, InstallState::UNINSTALL_START);
+            dataMgr->UpdateBundleInstallState(RIGHT_BUNDLE_NAME, InstallState::UNINSTALL_SUCCESS);
+        }
+        dataMgr->DeleteUninstallBundleInfo(RIGHT_BUNDLE_NAME, USERID);
+    }
     (void)OHOS::ForceRemoveDirectory(TEST_DIR);
     ASSERT_TRUE(OHOS::ForceCreateDirectory(TEST_DIR));
 }

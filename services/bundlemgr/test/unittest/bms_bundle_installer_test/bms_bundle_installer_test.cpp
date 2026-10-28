@@ -38,13 +38,16 @@
 #include "app_domain_verify_mgr_client.h"
 #endif
 #include "account_helper.h"
+#include "accesstoken_kit.h"
 #include "app_service_fwk/app_service_fwk_installer.h"
+#include "bundle_constants.h"
 #include "bundle_info.h"
 #include "bundle_installer.h"
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
 #include "bundle_multiuser_installer.h"
 #include "bundle_permission_mgr.h"
+#include "bundle_verify_mgr.h"
 #include "bundle_resource_helper.h"
 #include "bundle_resource_manager.h"
 #include "common_event_data.h"
@@ -185,6 +188,14 @@ const std::string UNINSTALL_PREINSTALL_BUNDLE_NAME = "com.ohos.telephonydataabil
 const std::string GLOBAL_RESOURCE_BUNDLE_NAME = "ohos.global.systemres";
 const std::string TEST_HSP_PATH = "/data/test/resource/bms/install_bundle/hsp_A.hsp";
 const std::string TEST_HSP_PATH2 = "/data/test/resource/bms/install_bundle/hsp_B.hsp";
+
+// SPM ON prerequisite: the mocked access-token boundary is fed the trusted
+// per-hap sign info by SetUpSpmTrustedSignInfoForTest below.
+constexpr int32_t TEST_SPM_SESSION_ID = 4242;
+constexpr uint64_t TEST_SPM_TOKEN_ID = 101;
+// The AT-allocated uid must fall inside USERID's uid segment.
+constexpr int32_t TEST_SPM_UID = USERID * Constants::BASE_USER_RANGE + 102;
+const std::string TEST_HSP_BUNDLE_NAME = "com.example.hsptest";
 const std::string APP_SERVICES_CAPABILITIES1 = R"(
     {
         "ohos.permission.kernel.SUPPORT_PLUGIN":{
@@ -209,6 +220,119 @@ const std::string NORMAL_BUNDLE_NAME = "bundleName";
 const std::string FIRST_RIGHT_HAP = "first_right.hap";
 #endif
 const std::string BUNDLE_LIBRARY_PATH_DIR = "/data/app/el1/bundle/public/com.example.l3jsdemo/libs/arm";
+
+// Feeds the mocked access-token boundary the trusted per-hap sign info for
+// every hap the suite installs. Each provision mirrors the REAL profile the
+// hap is signed with (sceneProject/signature/*.p7b), so an install under
+// SPM ON derives the same identity (bundle name, distribution type, apl,
+// app feature, app id) as under SPM OFF. All profiles of this suite are
+// legacy OpenHarmony ones: os_integration, no app-identifier.
+void SetUpSpmTrustedSignInfoForTest()
+{
+    // The shell/preinstall cross-check (CheckShellCanInstallPreApp) verifies
+    // the preinstall record's hap LOCALLY and compares the REAL
+    // appId/appIdentifier with the SPM-derived identity of the new install —
+    // a provision whose values derive from the mock's sample certificate
+    // fails that comparison with 8519765. Capture the real values from the
+    // hap itself (same local verify the check uses) and mirror them into the
+    // registration: the app-identifier rides in the profile JSON, the appId
+    // through the per-hap override (ParseTrustedBundleInfo copies it over
+    // the JSON-derived one).
+    Security::Verify::HapVerifyResult l3jsdemoVerifyResult;
+    std::string l3jsdemoAppId;
+    std::string l3jsdemoAppIdentifier;
+    if (BundleVerifyMgr::HapVerify(RESOURCE_ROOT_PATH + RIGHT_BUNDLE, l3jsdemoVerifyResult, true) ==
+        ERR_OK) {
+        l3jsdemoAppId = l3jsdemoVerifyResult.GetProvisionInfo().appId;
+        l3jsdemoAppIdentifier = l3jsdemoVerifyResult.GetProvisionInfo().bundleInfo.appIdentifier;
+    }
+    const std::string provisionL3jsdemo = Security::AccessToken::MakeSpmReleaseProvisionRawForTest(
+        BUNDLE_NAME, "os_integration", false, "hos_system_app", "system_core", l3jsdemoAppIdentifier);
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(RIGHT_BUNDLE, provisionL3jsdemo,
+        l3jsdemoAppId);
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest("first_right.hap", provisionL3jsdemo,
+        l3jsdemoAppId);
+
+    const std::string provisionVersionTest = Security::AccessToken::MakeSpmReleaseProvisionRawForTest(
+        VERSION_UPDATE_BUNDLE_NAME, "os_integration", false, "hos_system_app", "system_core", "");
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(APP_ENTRY_V1_HAP, provisionVersionTest);
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(APP_ENTRY_V2_HAP, provisionVersionTest);
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(APP_FEATURE_V1_HAP, provisionVersionTest);
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(APP_FEATURE_V2_HAP, provisionVersionTest);
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(ATOMIC_ENTRY_V1_HAP, provisionVersionTest);
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(ATOMIC_FEATURE_V1_HAP, provisionVersionTest);
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(ATOMIC_FEATURE_V2_HAP, provisionVersionTest);
+
+    const std::string provisionBackup = Security::AccessToken::MakeSpmReleaseProvisionRawForTest(
+        BUNDLE_BACKUP_NAME, "os_integration", false, "hos_system_app", "system_core", "");
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(BUNDLE_BACKUP_TEST, provisionBackup);
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest("signatureTest.hap", provisionBackup);
+
+    const std::string provisionModuleJson = Security::AccessToken::MakeSpmReleaseProvisionRawForTest(
+        BUNDLE_MODULEJSON_NAME, "os_integration", false, "hos_normal_app", "normal", "");
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(BUNDLE_MODULEJSON_TEST, provisionModuleJson);
+
+    const std::string provisionPreview = Security::AccessToken::MakeSpmReleaseProvisionRawForTest(
+        BUNDLE_PREVIEW_NAME, "os_integration", false, "hos_system_app", "system_core", "");
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(BUNDLE_PREVIEW_TEST, provisionPreview);
+
+    const std::string provisionThumbnail = Security::AccessToken::MakeSpmReleaseProvisionRawForTest(
+        BUNDLE_THUMBNAIL_NAME, "os_integration", false, "hos_system_app", "system_core", "");
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(BUNDLE_THUMBNAIL_TEST, provisionThumbnail);
+
+    const std::string provisionSystemModule = Security::AccessToken::MakeSpmReleaseProvisionRawForTest(
+        SYSTEMFIEID_NAME, "os_integration", false, "hos_system_app", "system_core", "");
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(SYSTEMFIEID_BUNDLE, provisionSystemModule);
+
+    // The device's preinstalled system resources bundle: InnerProcessInstallByPreInstallInfo
+    // installs it from the preinstall record's real /system/app path, so the
+    // mocked sign answer must cover the device hap file name too (its profile
+    // is the standard legacy OpenHarmony system one).
+    const std::string provisionSystemRes = Security::AccessToken::MakeSpmReleaseProvisionRawForTest(
+        GLOBAL_RESOURCE_BUNDLE_NAME, "os_integration", false, "hos_system_app", "system_core", "");
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest("ohos.global.systemres.hap",
+        provisionSystemRes);
+
+    const std::string provisionHsp = Security::AccessToken::MakeSpmReleaseProvisionRawForTest(
+        TEST_HSP_BUNDLE_NAME, "os_integration", false, "hos_system_app", "system_core", "");
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest("hsp_A.hsp", provisionHsp);
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest("hsp_B.hsp", provisionHsp);
+
+    Security::AccessToken::SetSpmCheckHapSignInfoSessionIdForTest(TEST_SPM_SESSION_ID);
+    Security::AccessToken::SetSpmPrepareIdentityForTest(TEST_SPM_TOKEN_ID, TEST_SPM_UID);
+}
+
+// Leftover persistent state of this suite's bundles must be wiped before the
+// first install, or the fresh installs are rejected through two paths:
+// - a leftover keep-data uninstall record (from earlier runs or sibling
+//   suites on a shared device) stores the app id the REAL signature
+//   derived; the mocked provision derives a different one, so
+//   CheckInstallOnKeepData fails the comparison;
+// - a leftover installed bundle-info record (e.g. persisted by an earlier
+//   run of a PREVIOUS mock-provision revision) makes the first install run
+//   the update branch, where CheckAppIdentifier fails on the cross-revision
+//   mismatch. Run the full INSTALL_START -> UNINSTALL_START ->
+//   UNINSTALL_SUCCESS chain so DeleteBundleInfo wipes BOTH the in-memory
+//   info and the RDB row. The installs of this suite never keep data, so a
+//   clean state is the only behavior the suite has ever asserted.
+void ClearSpmLeftoverUninstallRecordsForTest()
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        return;
+    }
+    for (const auto &bundleName : std::vector<std::string> {BUNDLE_NAME, BUNDLE_BACKUP_NAME,
+        BUNDLE_MODULEJSON_NAME, BUNDLE_PREVIEW_NAME, BUNDLE_THUMBNAIL_NAME, VERSION_UPDATE_BUNDLE_NAME,
+        SYSTEMFIEID_NAME, GLOBAL_RESOURCE_BUNDLE_NAME, TEST_HSP_BUNDLE_NAME}) {
+        InnerBundleInfo leftoverInfo;
+        if (dataMgr->FetchInnerBundleInfo(bundleName, leftoverInfo)) {
+            dataMgr->UpdateBundleInstallState(bundleName, InstallState::INSTALL_START);
+            dataMgr->UpdateBundleInstallState(bundleName, InstallState::UNINSTALL_START);
+            dataMgr->UpdateBundleInstallState(bundleName, InstallState::UNINSTALL_SUCCESS);
+        }
+        dataMgr->DeleteUninstallBundleInfo(bundleName, USERID);
+    }
+}
 const std::string BUNDLE_NAME_TEST = "bundleNameTest";
 const std::string BUNDLE_NAME_TEST1 = "bundleNameTest1";
 const std::string DEVICE_ID = "PHONE-001";
@@ -475,8 +599,13 @@ bool BmsBundleInstallerTest::InstallSystemBundle(const std::string &filePath) co
     installParam.needSendEvent = false;
     installParam.needSavePreInstallInfo = true;
     installParam.copyHapToInstallPath = false;
-    return installer->InstallSystemBundle(
-        filePath, installParam, Constants::AppType::SYSTEM_APP) == ERR_OK;
+    ErrCode installRet = installer->InstallSystemBundle(
+        filePath, installParam, Constants::AppType::SYSTEM_APP);
+    if (installRet != ERR_OK) {
+        std::cout << "InstallSystemBundle failed, file:" << filePath
+            << " errCode:" << installRet << std::endl;
+    }
+    return installRet == ERR_OK;
 }
 
 bool BmsBundleInstallerTest::OTAInstallSystemBundle(const std::string &filePath) const
@@ -494,8 +623,13 @@ bool BmsBundleInstallerTest::OTAInstallSystemBundle(const std::string &filePath)
     installParam.needSendEvent = false;
     installParam.needSavePreInstallInfo = true;
     installParam.copyHapToInstallPath = false;
-    return installer->OTAInstallSystemBundle(
-        filePaths, installParam, Constants::AppType::SYSTEM_APP) == ERR_OK;
+    ErrCode otaRet = installer->OTAInstallSystemBundle(
+        filePaths, installParam, Constants::AppType::SYSTEM_APP);
+    if (otaRet != ERR_OK) {
+        std::cout << "OTAInstallSystemBundle failed, file:" << filePath
+            << " errCode:" << otaRet << std::endl;
+    }
+    return otaRet == ERR_OK;
 }
 
 bool BmsBundleInstallerTest::InstallSystemBundle(const std::string &filePath,
@@ -638,6 +772,12 @@ ErrCode BmsBundleInstallerTest::MockForceUnInstallBundle(const std::string &bund
 
 void BmsBundleInstallerTest::SetUpTestCase()
 {
+    // SPM stays ON (its device default): feed the mocked access-token
+    // boundary with the trusted sign answer for every hap the suite
+    // installs, so the installs pass the real SPM verification chain instead
+    // of failing closed on the empty default mock. Nothing in this binary
+    // resets the mock control variables afterwards.
+    SetUpSpmTrustedSignInfoForTest();
 }
 
 void BmsBundleInstallerTest::TearDownTestCase()
@@ -655,6 +795,53 @@ void BmsBundleInstallerTest::SetUp()
         bundleMgrService_->OnStart();
         bundleMgrService_->GetDataMgr()->AddUserId(USERID);
         std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
+    }
+    // The services (and the persisted data) are only up after the first
+    // OnStart: drop the leftover keep-data uninstall records / stale
+    // installed rows of this suite's bundles exactly once, before the
+    // first install (see ClearSpmLeftoverUninstallRecordsForTest).
+    static bool firstSetUpDone = false;
+    if (!firstSetUpDone) {
+        ClearSpmLeftoverUninstallRecordsForTest();
+        // Register the mocked sign answer for the device's preinstalled
+        // system resources bundle: the preinstall record (loaded with the
+        // persisted data) names the hap file its recovery flow installs, and
+        // the local cross-checks compare its REAL appId — capture both from
+        // the record's hap itself instead of guessing the device file name.
+        auto dataMgr = GetBundleDataMgr();
+        PreInstallBundleInfo systemResPreInfo;
+        if (dataMgr != nullptr &&
+            dataMgr->GetPreInstallBundleInfo(GLOBAL_RESOURCE_BUNDLE_NAME, systemResPreInfo) &&
+            !systemResPreInfo.GetBundlePaths().empty()) {
+            const std::string &systemResHapPath = systemResPreInfo.GetBundlePaths().front();
+            auto separatorPos = systemResHapPath.find_last_of('/');
+            std::string systemResHapName = (separatorPos == std::string::npos)
+                ? systemResHapPath : systemResHapPath.substr(separatorPos + 1);
+            Security::Verify::HapVerifyResult systemResVerifyResult;
+            std::string systemResAppId;
+            std::string systemResAppIdentifier;
+            if (BundleVerifyMgr::HapVerify(systemResHapPath, systemResVerifyResult, true) == ERR_OK) {
+                systemResAppId = systemResVerifyResult.GetProvisionInfo().appId;
+                systemResAppIdentifier = systemResVerifyResult.GetProvisionInfo().bundleInfo.appIdentifier;
+            }
+            const std::string provisionSystemRes =
+                Security::AccessToken::MakeSpmReleaseProvisionRawForTest(GLOBAL_RESOURCE_BUNDLE_NAME,
+                    "os_integration", false, "hos_system_app", "system_core", systemResAppIdentifier);
+            Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(systemResHapName,
+                provisionSystemRes, systemResAppId);
+        }
+        firstSetUpDone = true;
+    }
+    // The mocked InstalldClient::ClearSessionProvisionCache is a counting
+    // stub, so the real session provision cache inside the process-wide
+    // InstalldHostImpl keeps the entry of the PREVIOUS test case's install
+    // under the same shared session id. The next install of a DIFFERENT
+    // bundle would then hit that stale entry in GetResolvedApl and fail the
+    // apl cross-check (e.g. a system_core entry vs a normal-profile
+    // install). Drop the cache entry before every case so each install
+    // starts from a clean provision state.
+    if (installdService_->hostImpl_ != nullptr) {
+        installdService_->hostImpl_->ClearSessionProvisionCache(TEST_SPM_SESSION_ID);
     }
 }
 
@@ -5884,6 +6071,11 @@ HWTEST_F(BmsBundleInstallerTest, CreateBundleDataDir_0020, Function | SmallTest 
     InnerBundleUserInfo innerBundleUserInfo;
     innerBundleUserInfo.bundleUserInfo.userId = 0;
     innerBundleUserInfo.bundleName = BUNDLE_NAME_TEST;
+    // SPM ON: GenerateUidAndGid no longer allocates locally — it only
+    // completes the gids of an already AT-allocated uid (the allocation
+    // authority moved to the access token service). Hand it a sample
+    // allocated uid so the call succeeds like under the OFF-mode allocator.
+    innerBundleUserInfo.uid = USERID * Constants::BASE_USER_RANGE + 102;
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     ASSERT_NE(dataMgr, nullptr);
     dataMgr->installStates_.clear();
@@ -9787,7 +9979,14 @@ HWTEST_F(BmsBundleInstallerTest, RecoverHapToken_0200, Function | SmallTest | Le
     InnerBundleInfo info;
     installer.InitDataMgr();
     ret = installer.RecoverHapToken(BUNDLE_NAME, USERID, accessTokenIdEx, info);
-    ASSERT_TRUE(ret);
+    if (BundleSpmManager::IsEnabled()) {
+        // SPM ON: the uninstall-record recovery path is closed by design — the
+        // reserved AT identity is re-adopted through InitToken instead, so the
+        // recovery from the BMS record never reports success.
+        EXPECT_FALSE(ret);
+    } else {
+        ASSERT_TRUE(ret);
+    }
     dataMgr->DeleteUninstallBundleInfo(BUNDLE_NAME, USERID);
 }
 
@@ -10037,6 +10236,17 @@ HWTEST_F(BmsBundleInstallerTest, GetInstallSource_0410, Function | SmallTest | L
     // Setup calling bundle name for UID
     InnerBundleInfo callingBundleInfo;
     callingBundleInfo.baseApplicationInfo_->bundleName = "com.example.caller";
+    // SPM ON: GetBundleNameAndIndex cross-checks the bundleIdMap_ hit against
+    // the persisted user info before trusting it, and falls back to the AT
+    // service on a mismatch — give the calling bundle a user info that owns
+    // the FULL calling uid 20011111 (the comparison is against the whole uid,
+    // not the per-user bundleId) so the reverse lookup resolves like on a
+    // real device (the OFF path trusts the map alone and is unaffected).
+    InnerBundleUserInfo callingUserInfo;
+    callingUserInfo.bundleUserInfo.userId = USERID;
+    callingUserInfo.bundleName = "com.example.caller";
+    callingUserInfo.uid = 20011111;
+    callingBundleInfo.AddInnerBundleUserInfo(callingUserInfo);
     dataMgr->bundleInfos_["com.example.caller"] = callingBundleInfo;
     ScopeGuard callingBundleInfoGuard([&] { dataMgr->bundleInfos_.erase("com.example.caller"); });
 
@@ -10054,7 +10264,7 @@ HWTEST_F(BmsBundleInstallerTest, GetInstallSource_0410, Function | SmallTest | L
 
     std::string installSource = installer.GetInstallSource(installParam);
     // Should return clone install source format or calling bundle name
-    EXPECT_TRUE(installSource == "+installSource:com.example.caller+com.example.original");
+    EXPECT_TRUE(installSource == "+installSource:com.example.caller+com.example.original") << installSource;
 }
 
 /**
@@ -18125,14 +18335,24 @@ HWTEST_F(BmsBundleInstallerTest, ExtractNPAPIPluginFiles_0030, Function | SmallT
  */
 HWTEST_F(BmsBundleInstallerTest, RemoveNPAPIPluginDir_0010, Function | SmallTest | Level0)
 {
+    // Clean the device-side leftovers of the sibling NPAPI tests first:
+    // RemoveNPAPIPluginDir_0030's MkOwnerDir creates the whole path INCLUDING
+    // the shared .../plugins/ parent, so an earlier run leaves it behind and
+    // breaks this test's "directory not exist" premise.
+    std::string pluginBasePath = ServiceConstants::NPAPI_PLUGIN_TARGET_BASE_PATH + std::to_string(USERID) +
+        ServiceConstants::NPAPI_PLUGIN_TARGET_DIR;
+    if (!pluginBasePath.empty() && pluginBasePath.back() == '/') {
+        pluginBasePath.pop_back();
+    }
+    (void)OHOS::ForceRemoveDirectory(pluginBasePath);
     BaseBundleInstaller installer;
     installer.bundleName_ = "com.example.test";
     installer.userId_ = USERID;
-    
+
     // scenario 1: directory not exist, status should be STATUS_NOT_APPLICABLE
     installer.RemoveNPAPIPluginDir();
     EXPECT_EQ(installer.npapiPluginStatus_, BaseBundleInstaller::NpapiPluginStatus::STATUS_NOT_APPLICABLE);
-    
+
     // scenario 2: IsExistDir check fails, status should be STATUS_REMOVE_FAILED
     // when InstalldClient::IsExistDir returns error
     installer.npapiPluginStatus_ = BaseBundleInstaller::NpapiPluginStatus::STATUS_NOT_APPLICABLE;
@@ -18140,7 +18360,7 @@ HWTEST_F(BmsBundleInstallerTest, RemoveNPAPIPluginDir_0010, Function | SmallTest
     installer.RemoveNPAPIPluginDir();
     // with empty bundleName, targetPath construction may lead to failure
     EXPECT_EQ(installer.npapiPluginStatus_, BaseBundleInstaller::NpapiPluginStatus::STATUS_NOT_APPLICABLE);
-    
+
     // scenario 3: directory exists and RemoveDir succeeds
     // requires creating test directory and proper setup
     // in unit test environment, this scenario needs special test resources
@@ -18184,11 +18404,14 @@ HWTEST_F(BmsBundleInstallerTest, RemoveNPAPIPluginDir_0030, Function | SmallTest
     BaseBundleInstaller installer;
     installer.bundleName_ = "com.example.test.npapi.remove";
     installer.userId_ = USERID;
-    
+
     // Create a test directory that simulates NPAPI plugin directory
     std::string targetPath = ServiceConstants::NPAPI_PLUGIN_TARGET_BASE_PATH + std::to_string(USERID) +
         ServiceConstants::NPAPI_PLUGIN_TARGET_DIR + installer.bundleName_;
-    
+    // Drop a leftover directory of an earlier (possibly interrupted) run so
+    // the "remove non-existent directory" premise below holds.
+    (void)OHOS::ForceRemoveDirectory(targetPath);
+
     // Try to remove non-existent directory
     installer.RemoveNPAPIPluginDir();
     EXPECT_EQ(installer.npapiPluginStatus_, BaseBundleInstaller::NpapiPluginStatus::STATUS_NOT_APPLICABLE);
