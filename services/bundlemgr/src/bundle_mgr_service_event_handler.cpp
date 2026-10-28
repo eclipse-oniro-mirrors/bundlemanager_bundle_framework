@@ -563,6 +563,10 @@ void BMSEventHandler::MarkRebuildFinish(const std::string &failedSnapshotPath)
 
 void BMSEventHandler::BundleBootStartEvent()
 {
+    if (BundleSpmManager::IsEnabled() && !IsAccessTokenMigrationFinished()) {
+        LOG_I(BMS_TAG_DEFAULT, "First boot: ensure atm migration finished before install");
+        FinishAccessTokenMigration();
+    }
     EventReport::SendCpuSceneEvent(FOUNDATION_PROCESS_NAME, SCENE_ID_OTA_INSTALL);
     OnBundleBootStart(Constants::DEFAULT_USERID);
     InstalldClient::GetInstance()->ResetBmsDBSecurity();
@@ -615,6 +619,10 @@ void BMSEventHandler::BundleRebootStartEvent()
         ProcessDeleteResourceSlaveDb();
         ProcessMigrateUninstallBundleResource();
     } else {
+        if (BundleSpmManager::IsEnabled() && !IsAccessTokenMigrationFinished()) {
+            LOG_I(BMS_TAG_DEFAULT, "Non-OTA reboot: ensure atm migration finished before SPM operations");
+            FinishAccessTokenMigration();
+        }
         HandlePreInstallException();
         ProcessRebootQuickFixBundleInstall(QUICK_FIX_APP_PATH, false);
         ProcessRebootQuickFixUnInstallAndRecover(QUICK_FIX_APP_RECOVER_FILE);
@@ -1046,6 +1054,10 @@ bool BMSEventHandler::AnalyzeCloneUserData(
 
 ResultCode BMSEventHandler::ReInstallAllInstallDirApps()
 {
+    if (BundleSpmManager::IsEnabled() && !IsAccessTokenMigrationFinished()) {
+        LOG_I(BMS_TAG_DEFAULT, "ReInstallAllInstallDirApps: ensure atm migration finished before reinstall");
+        FinishAccessTokenMigration();
+    }
     ReInstallSystemHspAndSharedBundles();
     // First, reinstall all preInstall app from preInstall dir
     std::vector<std::string> preInstallDirs;
@@ -7418,6 +7430,14 @@ void BMSEventHandler::ProcessAccessTokenMigration()
         CheckAndFallbackUnmigratedBundles();
         return;
     }
+    bool isAtmMigrationDone = false;
+    int32_t doneRet = Security::AccessToken::AccessTokenKit::IsMigrationDone(isAtmMigrationDone);
+    if (doneRet == 0 && isAtmMigrationDone) {
+        LOG_I(BMS_TAG_DEFAULT, "AccessTokenMigration: atm already marked done, set flag and fallback");
+        UpdateOtaFlag(OTAFlag::MIGRATE_UID_TO_ATM);
+        CheckAndFallbackUnmigratedBundles();
+        return;
+    }
     if (!InnerProcessAccessTokenMigration()) {
         LOG_E(BMS_TAG_DEFAULT, "AccessTokenMigration: failed");
         return;
@@ -7449,13 +7469,8 @@ bool BMSEventHandler::InnerProcessAccessTokenMigration()
     std::vector<Security::AccessToken::HapBaseInfo> failedHapList;
     std::vector<int32_t> failedUidList;
     std::vector<int32_t> failedErrCodeList;
-    bool noIpcFailure = ExecuteMigrationWithRetry(dataMgr, migratedList, successFlags,
+    ExecuteMigrationWithRetry(dataMgr, migratedList, successFlags,
         allUidSet, allUidToHapInfo, failedHapList, failedUidList, failedErrCodeList);
-    if (!noIpcFailure) {
-        LOG_E(BMS_TAG_DEFAULT, "Migration: aborted, ATM service unavailable, %{public}zu entries unresolved",
-            failedHapList.size());
-        return false;
-    }
 
     size_t successCount = 0;
     size_t failedCount = 0;
@@ -7859,16 +7874,35 @@ void BMSEventHandler::ReportMigrationEvent(
 
 void BMSEventHandler::FinishAccessTokenMigration()
 {
-    constexpr int32_t FINISH_MAX_RETRY = 2;
-    for (int32_t i = 0; i < FINISH_MAX_RETRY; ++i) {
+    for (int32_t i = 0; i < MAX_RETRY; ++i) {
         int32_t ret = Security::AccessToken::AccessTokenKit::FinishMigration();
         if (ret == 0 || ret == Security::AccessToken::AccessTokenError::ERR_MIGRATION_COMPLETED) {
             LOG_I(BMS_TAG_DEFAULT, "FinishMigration succeeded, ret=%{public}d", ret);
+            auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+            if (bmsPara != nullptr) {
+                bmsPara->SaveBmsParam(ServiceConstants::ACCESS_TOKEN_MIGRATION_DONE_MARK,
+                    ServiceConstants::ACCESS_TOKEN_MIGRATION_DONE_VALUE);
+            }
             return;
         }
-        LOG_W(BMS_TAG_DEFAULT, "FinishMigration failed, retrying (%{public}d/%{public}d)", i + 1, MAX_RETRY);
+        LOG_W(BMS_TAG_DEFAULT, "FinishMigration failed, retrying (%{public}d/%{public}d) ret=%{public}d",
+            i + 1, MAX_RETRY, ret);
+        if (i < MAX_RETRY - 1) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(BACKOFF_INTERVALS_MS[i]));
+        }
     }
     LOG_E(BMS_TAG_DEFAULT, "FinishMigration all retries failed");
+}
+
+bool BMSEventHandler::IsAccessTokenMigrationFinished()
+{
+    auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    if (bmsPara == nullptr) {
+        return false;
+    }
+    std::string mark;
+    return bmsPara->GetBmsParam(ServiceConstants::ACCESS_TOKEN_MIGRATION_DONE_MARK, mark) &&
+        mark == ServiceConstants::ACCESS_TOKEN_MIGRATION_DONE_VALUE;
 }
 
 bool BMSEventHandler::IsSystemAppMigration(const Security::AccessToken::MigratedInfo &migratedInfo,
@@ -8182,12 +8216,11 @@ size_t ProcessRetryResult(
     return 1;
 }
 
-bool BMSEventHandler::ProcessRetryBatches(const std::shared_ptr<BundleDataMgr> &dataMgr,
+void BMSEventHandler::ProcessRetryBatches(const std::shared_ptr<BundleDataMgr> &dataMgr,
     const std::vector<Security::AccessToken::MigratedInfo> &retryList,
     const std::vector<Security::AccessToken::HapBaseInfo> &failedHapList,
     std::vector<bool> &retryResolved)
 {
-    bool hasIpcFailure = false;
     size_t totalBatches = (retryList.size() + MIGRATION_BATCH_SIZE - 1) / MIGRATION_BATCH_SIZE;
     for (size_t batchStart = 0; batchStart < retryList.size(); batchStart += MIGRATION_BATCH_SIZE) {
         size_t batchEnd = std::min(batchStart + MIGRATION_BATCH_SIZE, retryList.size());
@@ -8198,8 +8231,7 @@ bool BMSEventHandler::ProcessRetryBatches(const std::shared_ptr<BundleDataMgr> &
         std::vector<Security::AccessToken::BundleMigrateResult> results;
         int32_t ret = Security::AccessToken::AccessTokenKit::MigrateInstalledBundles(batch, results);
         if (ret != 0) {
-            LOG_W(BMS_TAG_DEFAULT, "MigrationRetry: IPC failed ret=%{public}d, aborting retry", ret);
-            hasIpcFailure = true;
+            LOG_W(BMS_TAG_DEFAULT, "MigrationRetry: IPC failed ret=%{public}d, skip remaining batches", ret);
             break;
         }
         size_t batchSuccess = 0;
@@ -8214,7 +8246,6 @@ bool BMSEventHandler::ProcessRetryBatches(const std::shared_ptr<BundleDataMgr> &
             "%{public}zu/%{public}zu succeeded",
             batchNum, totalBatches, batchSuccess, batch.size());
     }
-    return hasIpcFailure;
 }
 
 void BMSEventHandler::UpdateRetrySuccessFlags(
@@ -8233,7 +8264,7 @@ void BMSEventHandler::UpdateRetrySuccessFlags(
     }
 }
 
-bool BMSEventHandler::RetryMigrationForFailedEntries(
+void BMSEventHandler::RetryMigrationForFailedEntries(
     const std::shared_ptr<BundleDataMgr> &dataMgr,
     std::vector<Security::AccessToken::HapBaseInfo> &failedHapList,
     std::vector<int32_t> &failedUidList,
@@ -8242,13 +8273,13 @@ bool BMSEventHandler::RetryMigrationForFailedEntries(
     const std::vector<Security::AccessToken::MigratedInfo> &migratedList)
 {
     if (failedHapList.empty()) {
-        return false;
+        return;
     }
     std::vector<Security::AccessToken::MigratedInfo> retryList;
     BuildRetryList(failedHapList, failedUidList, migratedList, retryList);
 
     std::vector<bool> retryResolved(failedHapList.size(), false);
-    bool hasIpcFailure = ProcessRetryBatches(dataMgr, retryList, failedHapList, retryResolved);
+    ProcessRetryBatches(dataMgr, retryList, failedHapList, retryResolved);
 
     UpdateRetrySuccessFlags(migratedList, successFlags, failedHapList, retryResolved);
     CompactFailedList(failedHapList, failedUidList, failedErrCodeList, retryResolved);
@@ -8259,7 +8290,6 @@ bool BMSEventHandler::RetryMigrationForFailedEntries(
     } else {
         LOG_I(BMS_TAG_DEFAULT, "MigrationRetry: all entries resolved");
     }
-    return hasIpcFailure;
 }
 
 void BMSEventHandler::SplitSystemAndNonSystem(
@@ -8453,7 +8483,7 @@ void BMSEventHandler::RecheckSuccessFlags(
         successCount, migratedList.size());
 }
 
-bool BMSEventHandler::ExecuteMigrationWithRetry(
+void BMSEventHandler::ExecuteMigrationWithRetry(
     const std::shared_ptr<BundleDataMgr> &dataMgr,
     std::vector<Security::AccessToken::MigratedInfo> &migratedList,
     std::vector<bool> &successFlags,
@@ -8489,21 +8519,14 @@ bool BMSEventHandler::ExecuteMigrationWithRetry(
 
     RecheckSuccessFlags(migratedList, successFlags, failedHapList);
 
-    bool hasIpcFailure = RetryMigrationForFailedEntries(dataMgr, failedHapList, failedUidList,
+    RetryMigrationForFailedEntries(dataMgr, failedHapList, failedUidList,
         failedErrCodeList, successFlags, migratedList);
-    if (hasIpcFailure) {
-        LOG_E(BMS_TAG_DEFAULT, "Migration: aborted after retry, %{public}zu entries unresolved",
-            failedHapList.size());
-        ReportMigrationEvent(failedHapList, failedUidList, failedErrCodeList,
-            ERR_APPEXECFWK_ACCESS_TOKEN_MIGRATION_FAILED);
-        return false;
-    }
+
     LOG_I(BMS_TAG_DEFAULT, "Migration: retry complete, %{public}zu entries still failed",
         failedHapList.size());
 
     ReportMigrationEvent(failedHapList, failedUidList, failedErrCodeList,
         ERR_APPEXECFWK_ACCESS_TOKEN_MIGRATION_FAILED);
-    return true;
 }
 
 namespace {

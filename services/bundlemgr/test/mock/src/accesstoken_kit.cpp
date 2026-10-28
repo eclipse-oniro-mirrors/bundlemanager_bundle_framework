@@ -723,6 +723,12 @@ int32_t AccessTokenKit::FinishMigration()
     return 0;
 }
 
+int32_t AccessTokenKit::IsMigrationDone(bool& isDone)
+{
+    isDone = false;
+    return 0;
+}
+
 int32_t AccessTokenKit::CheckMigratedUidSet(
     const std::set<int32_t, std::less<int32_t>, std::allocator<int32_t>>& totalUids,
     std::set<int32_t, std::less<int32_t>, std::allocator<int32_t>>& unreceivedUids)
