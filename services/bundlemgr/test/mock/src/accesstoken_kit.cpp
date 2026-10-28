@@ -128,6 +128,10 @@ bool g_spmFinishInstallLastPersistent = false;
 // Return-value knobs for the recovery paths (TryRecoverUidError /
 // TryRecoverAlreadyExistError) and the module-uninstall re-sign flow.
 int32_t g_spmMigrateInstalledBundlesRet = 0;
+bool g_spmMigratePopulateResults = false;
+int32_t g_spmFinishMigrationRet = 0;
+int32_t g_spmIsMigrationDoneRet = 0;
+bool g_spmIsMigrationDoneValue = false;
 int32_t g_spmDeleteIdentityRet = 0;
 // Controllable GetHapTokenID result: 0 (default) means "no token on the AT
 // side" (clean state / S3 split state); a non-zero value drives the
@@ -173,6 +177,10 @@ void ResetSpmKitMockValuesForTest()
     g_spmFinishInstallCallCount = 0;
     g_spmFinishInstallLastPersistent = false;
     g_spmMigrateInstalledBundlesRet = 0;
+    g_spmMigratePopulateResults = false;
+    g_spmFinishMigrationRet = 0;
+    g_spmIsMigrationDoneRet = 0;
+    g_spmIsMigrationDoneValue = false;
     g_spmLastMigratedBaseInfoCount = 0;
     g_spmLastMigratedUidCount = 0;
     g_spmDeleteIdentityRet = 0;
@@ -715,18 +723,26 @@ int32_t AccessTokenKit::MigrateInstalledBundles(const std::vector<MigratedInfo>&
         g_spmLastMigratedBaseInfoCount = 0;
         g_spmLastMigratedUidCount = 0;
     }
+    if (g_spmMigratePopulateResults) {
+        results.clear();
+        for (size_t i = 0; i < migratedInfoList.size(); ++i) {
+            BundleMigrateResult r;
+            r.errcode = (g_spmMigrateInstalledBundlesRet == 0) ? 0 : g_spmMigrateInstalledBundlesRet;
+            results.push_back(r);
+        }
+    }
     return g_spmMigrateInstalledBundlesRet;
 }
 
 int32_t AccessTokenKit::FinishMigration()
 {
-    return 0;
+    return g_spmFinishMigrationRet;
 }
 
 int32_t AccessTokenKit::IsMigrationDone(bool& isDone)
 {
-    isDone = false;
-    return 0;
+    isDone = g_spmIsMigrationDoneValue;
+    return g_spmIsMigrationDoneRet;
 }
 
 int32_t AccessTokenKit::CheckMigratedUidSet(

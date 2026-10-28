@@ -45,6 +45,7 @@
 #include "patch_data_mgr.h"
 #include "want.h"
 #include "user_unlocked_event_subscriber.h"
+#include "access_token_error.h"
 #undef private
 
 using namespace testing::ext;
@@ -59,9 +60,19 @@ namespace OHOS {
 namespace Security {
 namespace AccessToken {
     void SetAccessTokenIDForTest(unsigned int value);
+    extern int32_t g_spmFinishMigrationRet;
+    extern int32_t g_spmIsMigrationDoneRet;
+    extern bool g_spmIsMigrationDoneValue;
+    extern int32_t g_spmMigrateInstalledBundlesRet;
+    extern bool g_spmMigratePopulateResults;
 }
 }
 }
+using OHOS::Security::AccessToken::g_spmFinishMigrationRet;
+using OHOS::Security::AccessToken::g_spmIsMigrationDoneRet;
+using OHOS::Security::AccessToken::g_spmIsMigrationDoneValue;
+using OHOS::Security::AccessToken::g_spmMigrateInstalledBundlesRet;
+using OHOS::Security::AccessToken::g_spmMigratePopulateResults;
 
 namespace OHOS {
 namespace {
@@ -416,6 +427,7 @@ void BmsEventHandlerTest::CleanupBmsParamTestState()
         bmsParam->DeleteBmsParam("otaFlag");
         bmsParam->DeleteBmsParam("fingerprint");
         bmsParam->DeleteBmsParam(DB_REBUILD_MARK_TEST);
+        bmsParam->DeleteBmsParam(ServiceConstants::ACCESS_TOKEN_MIGRATION_DONE_MARK);
     }
 }
 
@@ -4785,5 +4797,312 @@ HWTEST_F(BmsEventHandlerTest, OTAInstallSystemBundleNeedCheckUser_0200, Function
     std::vector<std::string> plainPaths = { PRELOAD_BUNDLE_PATH + "/entry.hap" };
     EXPECT_TRUE(handler->OTAInstallSystemBundleNeedCheckUser(plainPaths, BUNDLE_NAME,
         Constants::AppType::SYSTEM_APP, false));
+}
+
+/**
+ * @tc.number: IsAccessTokenMigrationFinished_0100
+ * @tc.name: IsAccessTokenMigrationFinished
+ * @tc.desc: mark not set -> false
+ */
+HWTEST_F(BmsEventHandlerTest, IsAccessTokenMigrationFinished_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    auto bmsParam = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    ASSERT_NE(bmsParam, nullptr);
+    bmsParam->DeleteBmsParam(ServiceConstants::ACCESS_TOKEN_MIGRATION_DONE_MARK);
+    EXPECT_FALSE(handler->IsAccessTokenMigrationFinished());
+}
+
+/**
+ * @tc.number: IsAccessTokenMigrationFinished_0200
+ * @tc.name: IsAccessTokenMigrationFinished
+ * @tc.desc: mark set to true -> true
+ */
+HWTEST_F(BmsEventHandlerTest, IsAccessTokenMigrationFinished_0200, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    auto bmsParam = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    ASSERT_NE(bmsParam, nullptr);
+    EXPECT_TRUE(bmsParam->SaveBmsParam(ServiceConstants::ACCESS_TOKEN_MIGRATION_DONE_MARK,
+        ServiceConstants::ACCESS_TOKEN_MIGRATION_DONE_VALUE));
+    EXPECT_TRUE(handler->IsAccessTokenMigrationFinished());
+}
+
+/**
+ * @tc.number: IsAccessTokenMigrationFinished_0300
+ * @tc.name: IsAccessTokenMigrationFinished
+ * @tc.desc: mark set to wrong value -> false
+ */
+HWTEST_F(BmsEventHandlerTest, IsAccessTokenMigrationFinished_0300, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    auto bmsParam = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    ASSERT_NE(bmsParam, nullptr);
+    EXPECT_TRUE(bmsParam->SaveBmsParam(ServiceConstants::ACCESS_TOKEN_MIGRATION_DONE_MARK, "false"));
+    EXPECT_FALSE(handler->IsAccessTokenMigrationFinished());
+}
+
+/**
+ * @tc.number: FinishAccessTokenMigration_0100
+ * @tc.name: FinishAccessTokenMigration
+ * @tc.desc: FinishMigration returns 0 -> SaveBmsParam sets mark
+ */
+HWTEST_F(BmsEventHandlerTest, FinishAccessTokenMigration_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    auto bmsParam = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    ASSERT_NE(bmsParam, nullptr);
+    bmsParam->DeleteBmsParam(ServiceConstants::ACCESS_TOKEN_MIGRATION_DONE_MARK);
+    g_spmFinishMigrationRet = 0;
+    handler->FinishAccessTokenMigration();
+    EXPECT_TRUE(handler->IsAccessTokenMigrationFinished());
+}
+
+/**
+ * @tc.number: FinishAccessTokenMigration_0200
+ * @tc.name: FinishAccessTokenMigration
+ * @tc.desc: FinishMigration returns ERR_MIGRATION_COMPLETED -> SaveBmsParam sets mark
+ */
+HWTEST_F(BmsEventHandlerTest, FinishAccessTokenMigration_0200, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    auto bmsParam = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    ASSERT_NE(bmsParam, nullptr);
+    bmsParam->DeleteBmsParam(ServiceConstants::ACCESS_TOKEN_MIGRATION_DONE_MARK);
+    g_spmFinishMigrationRet = Security::AccessToken::AccessTokenError::ERR_MIGRATION_COMPLETED;
+    handler->FinishAccessTokenMigration();
+    EXPECT_TRUE(handler->IsAccessTokenMigrationFinished());
+    g_spmFinishMigrationRet = 0;
+}
+
+/**
+ * @tc.number: ProcessAccessTokenMigration_0100
+ * @tc.name: ProcessAccessTokenMigration
+ * @tc.desc: BMS OTA flag already set -> shortcut FinishAccessTokenMigration + CheckAndFallback
+ */
+HWTEST_F(BmsEventHandlerTest, ProcessAccessTokenMigration_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    auto bmsParam = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    ASSERT_NE(bmsParam, nullptr);
+    bmsParam->DeleteBmsParam(ServiceConstants::ACCESS_TOKEN_MIGRATION_DONE_MARK);
+    g_spmFinishMigrationRet = 0;
+    g_spmIsMigrationDoneRet = 0;
+    g_spmIsMigrationDoneValue = false;
+    handler->UpdateOtaFlag(OTAFlag::MIGRATE_UID_TO_ATM);
+    handler->ProcessAccessTokenMigration();
+    EXPECT_TRUE(handler->IsAccessTokenMigrationFinished());
+}
+
+/**
+ * @tc.number: ProcessAccessTokenMigration_0200
+ * @tc.name: ProcessAccessTokenMigration
+ * @tc.desc: BMS flag not set but atm IsMigrationDone=true -> set flag + fallback, skip InnerProcess
+ */
+HWTEST_F(BmsEventHandlerTest, ProcessAccessTokenMigration_0200, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    auto bmsParam = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    ASSERT_NE(bmsParam, nullptr);
+    bmsParam->DeleteBmsParam(ServiceConstants::ACCESS_TOKEN_MIGRATION_DONE_MARK);
+    g_spmFinishMigrationRet = 0;
+    g_spmIsMigrationDoneRet = 0;
+    g_spmIsMigrationDoneValue = true;
+    handler->ProcessAccessTokenMigration();
+    bool flag = false;
+    handler->CheckOtaFlag(OTAFlag::MIGRATE_UID_TO_ATM, flag);
+    EXPECT_TRUE(flag);
+    EXPECT_FALSE(handler->IsAccessTokenMigrationFinished());
+}
+
+/**
+ * @tc.number: ProcessAccessTokenMigration_0300
+ * @tc.name: ProcessAccessTokenMigration
+ * @tc.desc: IsMigrationDone=false, no bundles -> InnerProcess empty path, mark set, flag set
+ */
+HWTEST_F(BmsEventHandlerTest, ProcessAccessTokenMigration_0300, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    auto bmsParam = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    ASSERT_NE(bmsParam, nullptr);
+    bmsParam->DeleteBmsParam(ServiceConstants::ACCESS_TOKEN_MIGRATION_DONE_MARK);
+    g_spmFinishMigrationRet = 0;
+    g_spmIsMigrationDoneRet = 0;
+    g_spmIsMigrationDoneValue = false;
+    g_spmMigrateInstalledBundlesRet = 0;
+    g_spmMigratePopulateResults = false;
+    EXPECT_TRUE(handler->InnerProcessAccessTokenMigration());
+    bool flag = false;
+    handler->CheckOtaFlag(OTAFlag::MIGRATE_UID_TO_ATM, flag);
+    EXPECT_TRUE(flag);
+    EXPECT_TRUE(handler->IsAccessTokenMigrationFinished());
+}
+
+/**
+ * @tc.number: ProcessAccessTokenMigration_0400
+ * @tc.name: ProcessAccessTokenMigration
+ * @tc.desc: one bundle, MigrateInstalledBundles succeeds -> bundle marked checkBySpm, mark set
+ */
+HWTEST_F(BmsEventHandlerTest, ProcessAccessTokenMigration_0400, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = BUNDLE_NAME;
+    userInfo.bundleUserInfo.userId = 100;
+    userInfo.uid = 20000100;
+    userInfo.accessTokenId = 0x12345678;
+    info.innerBundleUserInfos_[BUNDLE_NAME + Constants::FILE_UNDERLINE + std::to_string(100)] = userInfo;
+    dataMgr->bundleInfos_[BUNDLE_NAME] = info;
+    auto bmsParam = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    ASSERT_NE(bmsParam, nullptr);
+    bmsParam->DeleteBmsParam(ServiceConstants::ACCESS_TOKEN_MIGRATION_DONE_MARK);
+    g_spmFinishMigrationRet = 0;
+    g_spmIsMigrationDoneRet = 0;
+    g_spmIsMigrationDoneValue = false;
+    g_spmMigrateInstalledBundlesRet = 0;
+    g_spmMigratePopulateResults = true;
+    EXPECT_TRUE(handler->InnerProcessAccessTokenMigration());
+    InnerBundleInfo after;
+    EXPECT_TRUE(dataMgr->FetchInnerBundleInfo(BUNDLE_NAME, after));
+    EXPECT_TRUE(after.IsBundleCheckBySpm());
+    EXPECT_TRUE(handler->IsAccessTokenMigrationFinished());
+    g_spmMigratePopulateResults = false;
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: ProcessAccessTokenMigration_0500
+ * @tc.name: ProcessAccessTokenMigration
+ * @tc.desc: migration returns ERR_MIGRATION_COMPLETED -> batch skipped, retry fails, fallback resolves via SPM
+ */
+HWTEST_F(BmsEventHandlerTest, ProcessAccessTokenMigration_0500, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = BUNDLE_NAME;
+    userInfo.bundleUserInfo.userId = 100;
+    userInfo.uid = 20000100;
+    userInfo.accessTokenId = 0x12345678;
+    userInfo.accessTokenIdEx = 0x12345678;
+    info.innerBundleUserInfos_[BUNDLE_NAME + Constants::FILE_UNDERLINE + std::to_string(100)] = userInfo;
+    dataMgr->bundleInfos_[BUNDLE_NAME] = info;
+    auto bmsParam = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    ASSERT_NE(bmsParam, nullptr);
+    bmsParam->DeleteBmsParam(ServiceConstants::ACCESS_TOKEN_MIGRATION_DONE_MARK);
+    g_spmFinishMigrationRet = 0;
+    g_spmIsMigrationDoneRet = 0;
+    g_spmIsMigrationDoneValue = false;
+    g_spmMigrateInstalledBundlesRet = Security::AccessToken::AccessTokenError::ERR_MIGRATION_COMPLETED;
+    g_spmMigratePopulateResults = true;
+    EXPECT_TRUE(handler->InnerProcessAccessTokenMigration());
+    EXPECT_TRUE(handler->IsAccessTokenMigrationFinished());
+    g_spmMigratePopulateResults = false;
+    g_spmMigrateInstalledBundlesRet = 0;
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: ProcessAccessTokenMigration_0600
+ * @tc.name: ProcessAccessTokenMigration
+ * @tc.desc: bundle with clone + cli sandbox user infos -> collected, migration succeeds, checkBySpm set
+ */
+HWTEST_F(BmsEventHandlerTest, ProcessAccessTokenMigration_0600, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = BUNDLE_NAME;
+    userInfo.bundleUserInfo.userId = 100;
+    userInfo.uid = 20000100;
+    userInfo.accessTokenId = 0x12345678;
+    InnerBundleCloneInfo cloneInfo;
+    cloneInfo.userId = 100;
+    cloneInfo.appIndex = 1;
+    cloneInfo.uid = 20000101;
+    cloneInfo.accessTokenId = 0x11111111;
+    userInfo.cloneInfos["1"] = cloneInfo;
+    InnerCliSandboxInfo sandboxInfo;
+    sandboxInfo.userId = 100;
+    sandboxInfo.appIndex = 2001;
+    sandboxInfo.uid = 20001201;
+    sandboxInfo.accessTokenId = 0x22222222;
+    userInfo.sandboxInfos["2001"] = sandboxInfo;
+    info.innerBundleUserInfos_[BUNDLE_NAME + Constants::FILE_UNDERLINE + std::to_string(100)] = userInfo;
+    dataMgr->bundleInfos_[BUNDLE_NAME] = info;
+    auto bmsParam = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    ASSERT_NE(bmsParam, nullptr);
+    bmsParam->DeleteBmsParam(ServiceConstants::ACCESS_TOKEN_MIGRATION_DONE_MARK);
+    g_spmFinishMigrationRet = 0;
+    g_spmIsMigrationDoneRet = 0;
+    g_spmIsMigrationDoneValue = false;
+    g_spmMigrateInstalledBundlesRet = 0;
+    g_spmMigratePopulateResults = true;
+    EXPECT_TRUE(handler->InnerProcessAccessTokenMigration());
+    InnerBundleInfo after;
+    EXPECT_TRUE(dataMgr->FetchInnerBundleInfo(BUNDLE_NAME, after));
+    EXPECT_TRUE(after.IsBundleCheckBySpm());
+    EXPECT_TRUE(handler->IsAccessTokenMigrationFinished());
+    g_spmMigratePopulateResults = false;
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: ProcessAccessTokenMigration_0700
+ * @tc.name: ProcessAccessTokenMigration
+ * @tc.desc: CheckAndFallbackUnmigratedBundles with a non-checkBySpm bundle -> collect + fallback resolves it
+ */
+HWTEST_F(BmsEventHandlerTest, ProcessAccessTokenMigration_0700, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = BUNDLE_NAME;
+    userInfo.bundleUserInfo.userId = 100;
+    userInfo.uid = 20000100;
+    userInfo.accessTokenId = 0x12345678;
+    userInfo.accessTokenIdEx = 0x12345678;
+    info.innerBundleUserInfos_[BUNDLE_NAME + Constants::FILE_UNDERLINE + std::to_string(100)] = userInfo;
+    dataMgr->bundleInfos_[BUNDLE_NAME] = info;
+    g_spmFinishMigrationRet = 0;
+    g_spmIsMigrationDoneRet = 0;
+    g_spmIsMigrationDoneValue = false;
+    handler->CheckAndFallbackUnmigratedBundles();
+    InnerBundleInfo after;
+    EXPECT_TRUE(dataMgr->FetchInnerBundleInfo(BUNDLE_NAME, after));
+    EXPECT_TRUE(after.IsBundleCheckBySpm());
+    dataMgr->bundleInfos_.clear();
 }
 } // OHOS
