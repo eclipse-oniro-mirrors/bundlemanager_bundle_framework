@@ -288,16 +288,10 @@ napi_value GetBundleResourceArchiveInfo(napi_env env, napi_callback_info info)
     int32_t flags = 0;
     if (args.GetMaxArgc() >= ARGS_SIZE_TWO) {
         if (!CommonFunc::ParseInt(env, args[ARGS_POS_ONE], flags)) {
-            APP_LOGE("parse flags failed");
-            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, RESOURCE_FLAGS, TYPE_NUMBER);
-            return nullptr;
+            APP_LOGW("parse flags failed");
         }
-        if (flags <= 0) {
-            APP_LOGE("invalid flags: %{public}d", flags);
-            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, RESOURCE_FLAGS, TYPE_NUMBER);
-            return nullptr;
-        }
-    } else {
+    }
+    if (flags <= 0) {
         flags = static_cast<int32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL);
     }
     asyncCallbackInfo->flags = static_cast<uint32_t>(flags);
