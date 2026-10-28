@@ -21,6 +21,7 @@
 #include <string>
 #include <unistd.h>
 
+#include "accesstoken_kit.h"
 #include "application_info.h"
 #include "accesstoken_kit.h"
 #include "bundle_info.h"
@@ -92,6 +93,13 @@ void ResetTestValues();
 void SetPermissionResultForTest(const std::string &permissionName, bool granted);
 
 namespace OHOS {
+namespace Security {
+namespace AccessToken {
+// Restores the SPM mock control variables defined in
+// test/mock/src/accesstoken_kit.cpp to their defaults.
+void ResetSpmKitMockValuesForTest();
+} // namespace AccessToken
+} // namespace Security
 namespace {
 const int32_t USERID = 100;
 const int32_t WAIT_TIME = 2; // init mocked bms
@@ -200,6 +208,12 @@ void BmsBundleResourceHelperTest::TearDownTestCase()
 {
     bundleMgrService_->OnStop();
     sleep(1);
+    // Restore the SPM mock defaults: the trusted sign answer staged by the
+    // install helper persists through the whole binary (nothing resets it
+    // between the cases), and a suite added to this target later must not
+    // inherit it — gtest runs the suites of one binary sequentially, so a
+    // reset here precedes any later suite's SetUpTestCase.
+    Security::AccessToken::ResetSpmKitMockValuesForTest();
 }
 
 void BmsBundleResourceHelperTest::SetUp()
@@ -220,6 +234,9 @@ void BmsBundleResourceHelperTest::TearDown()
 
 ErrCode BmsBundleResourceHelperTest::InstallBundle(const std::string &bundlePath) const
 {
+    // The trusted sign answer must match THIS install's hap (count and
+    // provision bundle-name), so it is staged per install call.
+    SetUpSpmTrustedSignInfoForTest();
     if (!bundleMgrService_) {
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }

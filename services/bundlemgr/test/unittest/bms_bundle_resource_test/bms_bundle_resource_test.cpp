@@ -83,6 +83,13 @@ using namespace OHOS::AppExecFwk;
 using namespace OHOS::Security;
 
 namespace OHOS {
+namespace Security {
+namespace AccessToken {
+// Restores the SPM mock control variables defined in
+// test/mock/src/accesstoken_kit.cpp to their defaults.
+void ResetSpmKitMockValuesForTest();
+} // namespace AccessToken
+} // namespace Security
 namespace {
 const int32_t USERID = 100;
 const int32_t WAIT_TIME = 2; // init mocked bms
@@ -150,27 +157,17 @@ constexpr int32_t TEST_SPM_UID = USERID * Constants::BASE_USER_RANGE + 102;
 // Feeds the mocked access-token boundary with the trusted sign answer the
 // real AT side would return for a hap of bundleName: the provision mirrors
 // the release profile (test/sceneProject/signature/*.p7b) the haps of this
-// suite are actually signed with — release type, os_integration
-// distribution, system_core apl, hos_system_app feature — so the
+// suite are actually signed with — os_integration distribution, system_core
+// apl, hos_system_app feature, and the legacy profile shape without an
+// app-identifier (an empty appIdentifier omits the field) — so the
 // post-install classification (system app, distribution type) stays the same
 // as before the SPM adaptation.
 void SetUpSpmTrustedSignInfoForTest(const std::string &bundleName)
 {
     Security::AccessToken::TrustedBundleInfo trustedBundleInfo;
-    trustedBundleInfo.profileData.provisionRaw = R"({
-        "version-code": 2,
-        "version-name": "2.0.0",
-        "app-distribution-type": "os_integration",
-        "uuid": "bms-bundle-resource-test",
-        "type": "release",
-        "bundle-info": {
-            "developer-id": "OpenHarmony",
-            "distribution-certificate": "bms-bundle-resource-test-cert",
-            "bundle-name": ")" + bundleName + R"(",
-            "apl": "system_core",
-            "app-feature": "hos_system_app"
-        }
-    })";
+    trustedBundleInfo.profileData.provisionRaw =
+        Security::AccessToken::MakeSpmReleaseProvisionRawForTest(bundleName, "os_integration", false,
+            "hos_system_app", "system_core", "");
     Security::AccessToken::SetSpmTrustedBundleInfosForTest({trustedBundleInfo});
     // Mirrors the real AT contract: CheckHapSignInfo allocates the session id
     // and caches the trusted info for the install session.
@@ -237,6 +234,12 @@ void BmsBundleResourceTest::TearDownTestCase()
 {
     bundleMgrService_->OnStop();
     sleep(1);
+    // Restore the SPM mock defaults: the trusted sign answer staged by the
+    // install helpers persists through the whole binary (nothing resets it
+    // between the cases), and a suite added to this target later must not
+    // inherit it — gtest runs the suites of one binary sequentially, so a
+    // reset here precedes any later suite's SetUpTestCase.
+    Security::AccessToken::ResetSpmKitMockValuesForTest();
 }
 
 void BmsBundleResourceTest::SetUp()
@@ -8781,10 +8784,15 @@ HWTEST_F(BmsBundleResourceTest, PreCompressBundleResourceRdb_0400, Function | Sm
 
 /**
  * @tc.number: PreCompressBundleResourceRdb_0500
- * @tc.name: test PreCompressBundleResourceRdb with rows that can not be read
+ * @tc.name: test PreCompressBundleResourceRdb on an isolated test rdb
  * @tc.desc: 1. an empty table gives no version
- *           2. a row whose name or version code is not readable is skipped by the versions
- *           3. a row whose label is not readable is skipped by the query
+ *           2. the version of a saved row is returned by the versions and by the query,
+ *              a requested name without a row is not
+ * @tc.note: rows with unreadable columns can not be produced through the public
+ *           ValuesBucket API (a blob cell is read back as an empty string / zero
+ *           with E_OK by relational_store, not as an error), so the skip branch of
+ *           the query loops is covered by PreCompressBundleResourceRdb_0200 with
+ *           the PreCompressResultSet stub instead.
  */
 HWTEST_F(BmsBundleResourceTest, PreCompressBundleResourceRdb_0500, Function | SmallTest | Level0)
 {
@@ -8805,15 +8813,6 @@ HWTEST_F(BmsBundleResourceTest, PreCompressBundleResourceRdb_0500, Function | Sm
     resourceInfo.icon_ = PRE_COMPRESS_ICON;
     ASSERT_TRUE(rdb.AddPreCompressBundleResource(PRE_COMPRESS_VERSION_CODE,
         { { PRE_COMPRESS_LANGUAGE, PRE_COMPRESS_LABEL } }, resourceInfo));
-    NativeRdb::ValuesBucket blobVersionRow;
-    blobVersionRow.PutString(BundleResourceConstants::NAME, PRE_COMPRESS_TWO_NAME);
-    blobVersionRow.PutBlob(BundleResourceConstants::VERSION_CODE, PRE_COMPRESS_FOREGROUND);
-    blobVersionRow.PutBlob(BundleResourceConstants::LABEL, PRE_COMPRESS_FOREGROUND);
-    ASSERT_TRUE(testRdb->InsertData(blobVersionRow));
-    NativeRdb::ValuesBucket blobNameRow;
-    blobNameRow.PutBlob(BundleResourceConstants::NAME, PRE_COMPRESS_BACKGROUND);
-    blobNameRow.PutLong(BundleResourceConstants::VERSION_CODE, PRE_COMPRESS_STALE_VERSION_CODE);
-    ASSERT_TRUE(testRdb->InsertData(blobNameRow));
 
     auto versionCodes = rdb.GetAllPreCompressBundleResourceVersion();
     ASSERT_EQ(versionCodes.size(), 1U);
@@ -8902,19 +8901,22 @@ HWTEST_F(BmsBundleResourceTest, PreCompressThemeResourceRdb_0200, Function | Sma
 
 /**
  * @tc.number: PreCompressThemeResourceRdb_0300
- * @tc.name: test PreCompressThemeResourceRdb with rows that can not be read
- * @tc.desc: 1. a row whose icon is not readable is skipped and the readable rows are returned
- *           2. a row whose name is not readable is skipped
+ * @tc.name: test PreCompressThemeResourceRdb on an isolated test rdb
+ * @tc.desc: 1. a saved theme row of the user is returned by the query, a requested
+ *              name without a row is not
+ * @tc.note: rows with unreadable columns can not be produced through the public
+ *           ValuesBucket API (a blob cell is read back as an empty string with
+ *           E_OK by relational_store, not as an error), so the skip branch of the
+ *           query loop is covered by PreCompressThemeResourceRdb_0400 with the
+ *           PreCompressResultSet stub instead.
  */
 HWTEST_F(BmsBundleResourceTest, PreCompressThemeResourceRdb_0300, Function | SmallTest | Level0)
 {
     DeletePreCompressTestRdb(PRE_COMPRESS_TEST_DB_NAME);
-    DeletePreCompressTestRdb(PRE_COMPRESS_THEME_TEST_DB_NAME);
     PreCompressThemeResourceRdb themeRdb;
     ScopeGuard rdbGuard([&themeRdb] {
         themeRdb.rdbDataManager_ = nullptr;
         DeletePreCompressTestRdb(PRE_COMPRESS_TEST_DB_NAME);
-        DeletePreCompressTestRdb(PRE_COMPRESS_THEME_TEST_DB_NAME);
     });
     themeRdb.rdbDataManager_ = CreatePreCompressTestRdb(PRE_COMPRESS_TEST_DB_NAME,
         BundleResourceConstants::PRE_COMPRESS_THEME_RESOURCE_RDB, GetPreCompressThemeTableSql());
@@ -8922,32 +8924,11 @@ HWTEST_F(BmsBundleResourceTest, PreCompressThemeResourceRdb_0300, Function | Sma
     resourceInfo.bundleName_ = PRE_COMPRESS_TWO_NAME;
     resourceInfo.icon_ = PRE_COMPRESS_THEME_ICON;
     ASSERT_TRUE(themeRdb.AddPreCompressThemeResource(USERID, resourceInfo));
-    NativeRdb::ValuesBucket blobIconRow;
-    blobIconRow.PutString(BundleResourceConstants::NAME, PRE_COMPRESS_ONE_NAME);
-    blobIconRow.PutInt(BundleResourceConstants::USER_ID, USERID);
-    blobIconRow.PutBlob(BundleResourceConstants::ICON, PRE_COMPRESS_THEME_FOREGROUND);
-    ASSERT_TRUE(themeRdb.rdbDataManager_->InsertData(blobIconRow));
     std::map<std::string, BundleResourceInfo> themeResourceInfos;
     EXPECT_TRUE(themeRdb.GetPreCompressThemeResources(USERID, { PRE_COMPRESS_ONE_NAME, PRE_COMPRESS_TWO_NAME },
         PRE_COMPRESS_ICON_FLAG, themeResourceInfos));
     ASSERT_EQ(themeResourceInfos.size(), 1U);
     EXPECT_EQ(themeResourceInfos[PRE_COMPRESS_TWO_NAME].icon, PRE_COMPRESS_THEME_ICON);
-
-    // the first column of this table holds a blob, so the name can not be read from it
-    themeRdb.rdbDataManager_ = CreatePreCompressTestRdb(PRE_COMPRESS_THEME_TEST_DB_NAME,
-        BundleResourceConstants::PRE_COMPRESS_THEME_RESOURCE_RDB, std::string("CREATE TABLE IF NOT EXISTS ") +
-        BundleResourceConstants::PRE_COMPRESS_THEME_RESOURCE_RDB + "(FOREGROUND BLOB, NAME TEXT NOT NULL, " +
-        "USER_ID INTEGER, ICON TEXT, BACKGROUND BLOB, PRIMARY KEY (NAME, USER_ID));");
-    NativeRdb::ValuesBucket blobFirstRow;
-    blobFirstRow.PutBlob(BundleResourceConstants::FOREGROUND, PRE_COMPRESS_THEME_FOREGROUND);
-    blobFirstRow.PutString(BundleResourceConstants::NAME, PRE_COMPRESS_ONE_NAME);
-    blobFirstRow.PutInt(BundleResourceConstants::USER_ID, USERID);
-    blobFirstRow.PutString(BundleResourceConstants::ICON, PRE_COMPRESS_THEME_ICON);
-    ASSERT_TRUE(themeRdb.rdbDataManager_->InsertData(blobFirstRow));
-    std::map<std::string, BundleResourceInfo> blobNameInfos;
-    EXPECT_TRUE(themeRdb.GetPreCompressThemeResources(USERID, { PRE_COMPRESS_ONE_NAME }, PRE_COMPRESS_ICON_FLAG,
-        blobNameInfos));
-    EXPECT_TRUE(blobNameInfos.empty());
 }
 
 /**

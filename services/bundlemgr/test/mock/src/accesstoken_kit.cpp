@@ -100,6 +100,10 @@ int32_t g_spmPrepareHapIdentityRet = 0;
 int32_t g_spmPrepareHapIdentityCallCount = 0;
 uint64_t g_spmPrepareIdentityTokenId = 0;
 int32_t g_spmPrepareIdentityUid = 0;
+// Follow-user identity mode (see SetSpmPrepareIdentityUidFollowUserForTest):
+// a fresh uid is allocated inside the requesting user's uid segment instead
+// of the single staged uid.
+bool g_spmPrepareIdentityUidFollowUser = false;
 // Session-id write-back knob for PrepareHapIdentity: mirrors the real AT
 // contract where a deferred caller (session id 0) makes the AT side allocate
 // the session and write the id back. CheckSignAndInitSession rejects an empty
@@ -162,6 +166,7 @@ void ResetSpmKitMockValuesForTest()
     g_spmPrepareHapIdentityCallCount = 0;
     g_spmPrepareIdentityTokenId = 0;
     g_spmPrepareIdentityUid = 0;
+    g_spmPrepareIdentityUidFollowUser = false;
     g_spmPrepareIdentitySessionId = 0;
     g_spmPrepareIdentityForceReallocate = false;
     g_spmUpdateHapPolicyRet = 0;
@@ -263,6 +268,11 @@ void SetSpmPrepareIdentityForTest(uint64_t tokenId, int32_t uid)
 {
     g_spmPrepareIdentityTokenId = tokenId;
     g_spmPrepareIdentityUid = uid;
+}
+
+void SetSpmPrepareIdentityUidFollowUserForTest(bool followUser)
+{
+    g_spmPrepareIdentityUidFollowUser = followUser;
 }
 
 void SetSpmTrustedProvisionForHapFileForTest(const std::string& hapFileName,
@@ -627,6 +637,17 @@ int32_t AccessTokenKit::PrepareHapIdentity(int32_t& sessionId, const HapBaseInfo
     if (identity.uid != 0 && !g_spmPrepareIdentityForceReallocate) {
         // Mirrors the AT adopt-or-reallocate contract: a desired uid passed by the
         // caller is adopted and returned unchanged.
+    } else if (g_spmPrepareIdentityUidFollowUser && g_spmPrepareIdentityUid > 0) {
+        // Mirrors the real AT contract: a fresh uid is allocated INSIDE the
+        // uid segment of the user the identity is prepared for (HapBaseInfo.
+        // userID), keeping the bundle-id offset of the staged uid — a single
+        // fixed uid cannot satisfy the per-user uid segment consistency
+        // check when one install fans out to several users. The range value
+        // mirrors Constants::BASE_USER_RANGE (the AT side does not know BMS
+        // constants).
+        constexpr int32_t MOCK_BASE_USER_RANGE = 200000;
+        identity.uid = info.userID * MOCK_BASE_USER_RANGE +
+            g_spmPrepareIdentityUid % MOCK_BASE_USER_RANGE;
     } else {
         // Mirrors the real AT allocation invariant: the uid always falls
         // inside the INSTALLING user's uid segment — rebase the configured
