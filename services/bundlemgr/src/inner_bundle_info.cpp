@@ -2245,6 +2245,8 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const InnerBundleInfo &newInfo)
     baseApplicationInfo_->apiTargetVersion = applicationInfo.apiTargetVersion;
     baseApplicationInfo_->targetMinorApiVersion = applicationInfo.targetMinorApiVersion;
     baseApplicationInfo_->targetPatchApiVersion = applicationInfo.targetPatchApiVersion;
+    baseApplicationInfo_->compileSdkVersion = applicationInfo.compileSdkVersion;
+    baseApplicationInfo_->compileSdkType = applicationInfo.compileSdkType;
 
     baseApplicationInfo_->iconPath = applicationInfo.iconPath;
     baseApplicationInfo_->iconId = applicationInfo.iconId;
