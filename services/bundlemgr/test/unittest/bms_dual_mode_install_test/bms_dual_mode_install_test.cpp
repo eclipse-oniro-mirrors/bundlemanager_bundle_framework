@@ -30,6 +30,7 @@
 
 #include "appexecfwk_errors.h"
 #include "application_info.h"
+#include "accesstoken_kit.h"
 #include "bundle_info.h"
 #include "preinstall_data_storage_interface.h"
 #include "base_bundle_installer.h"
@@ -73,6 +74,14 @@ const std::string DUAL_MODE_DATA_GROUP_UUID = "3105e98a-12ae-4a4f-8ed1-fc32e5f45
 constexpr int32_t DUAL_MODE_SEED_GROUP_UID =
     Constants::DEFAULT_USERID * Constants::BASE_USER_RANGE + 1 + 100000;
 const int32_t TEST_USERID = 100;
+// SPM ON: the isAppExist_ flows of these cases run InitToken, whose
+// PrepareHapIdentity takes the identity from the mocked AT boundary —
+// without the knobs the mock returns uid 0 and InitToken fails fast with
+// ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED.
+constexpr int32_t TEST_SPM_SESSION_ID = 4242;
+constexpr uint64_t TEST_SPM_TOKEN_ID = 101;
+// The AT-allocated uid must fall inside TEST_USERID's uid segment.
+constexpr int32_t TEST_SPM_UID = TEST_USERID * Constants::BASE_USER_RANGE + 102;
 constexpr const char *TEST_DUAL_MODE_PARAM = "persist.bms.test_dual_mode";
 constexpr const char *TEST_ISPCMODE_PARAM = "persist.bms.ispcmode";
 constexpr const char *TEST_MAINMODE_PARAM = "persist.bms.mainmode";
@@ -95,6 +104,11 @@ void BmsDualModeInstallTest::SetUp()
         std::to_string(ServiceConstants::DUAL_MODE_VALUE_INVALID));
     OHOS::system::SetParameter(TEST_MAINMODE_PARAM,
         std::to_string(ServiceConstants::DUAL_MODE_VALUE_INVALID));
+    // Feed the mocked AT boundary the identity knobs before every case (some
+    // flows call CheckSignAndInitSession too, and the shared session id keeps
+    // them on the same session).
+    Security::AccessToken::SetSpmCheckHapSignInfoSessionIdForTest(TEST_SPM_SESSION_ID);
+    Security::AccessToken::SetSpmPrepareIdentityForTest(TEST_SPM_TOKEN_ID, TEST_SPM_UID);
 }
 
 // Drive DualModeHelper mode judgment by setting test-injection system parameters.

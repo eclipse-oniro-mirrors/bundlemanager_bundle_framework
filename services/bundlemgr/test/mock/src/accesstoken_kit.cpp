@@ -634,12 +634,15 @@ int32_t AccessTokenKit::PrepareHapIdentity(int32_t& sessionId, const HapBaseInfo
         // user this call actually runs for (HapBaseInfo.userID; user 0 is a
         // real installing user, e.g. the OTA all-user loop), so cross-user
         // installs pass the BMS-side user-segment consistency check like
-        // they do against a real AT side.
+        // they do against a real AT side. A non-positive configured uid (the
+        // "AT did not allocate" error injection) is passed through as-is:
+        // rebasing it would fabricate a valid uid and mask the fail-fast
+        // contract the callers test against.
         identity.uid = g_spmPrepareIdentityUid;
-        if (info.userID >= 0) {
+        if (info.userID >= 0 && identity.uid > 0) {
             constexpr int32_t BASE_USER_RANGE = 200000;
             identity.uid = info.userID * BASE_USER_RANGE +
-                (g_spmPrepareIdentityUid % BASE_USER_RANGE);
+                (identity.uid % BASE_USER_RANGE);
         }
     }
     identity.tokenId = g_spmPrepareIdentityTokenId;
