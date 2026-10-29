@@ -96,8 +96,8 @@ ohos_prebuilt_etc("skill_manager_etc") {
 generate_static_abc("skill_info") {
   base_url = "./ets"
   files = [
-    "./ets/skillManager/SkillInfo.ets",
-    "./ets/skillManager/SkillInfoInner.ets",
+    "./ets/bundleManager/SkillInfo.ets",
+    "./ets/bundleManager/SkillInfoInner.ets",
   ]
   is_boot_abc = "True"
   device_dst_file = "/system/framework/skill_info.abc"

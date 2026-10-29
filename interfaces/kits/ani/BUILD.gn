@@ -62,6 +62,9 @@ group("ani_bms_packages") {
     "shortcut_manager:ani_shortcut_manager",
     "shortcut_manager:shortcut_info_etc",
     "shortcut_manager:shortcut_manager_etc",
+    "skill_manager:ani_skill_manager",
+    "skill_manager:skill_info_etc",
+    "skill_manager:skill_manager_etc",
     "zlib:ani_zlib",
     "zlib:zlib_etc",
   ]
