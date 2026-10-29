@@ -260,6 +260,18 @@ HWTEST_F(BmsDualModeQueryTest, GetBundleNameAndIndex_DualModeCloneKey_0100, Func
     ASSERT_NE(dataMgr, nullptr);
     int32_t bundleId = 10001;
     dataMgr->bundleIdMap_.emplace(bundleId, PREFIXED_NAME);
+    // SPM ON: GetBundleNameAndIndex cross-checks the map hit against the
+    // persisted user info — seed the dual-mode clone record owning the uid
+    // (10001 lives in user 0's segment) so the hit resolves like on a real
+    // device (the OFF path trusts the map alone and is unaffected).
+    InnerBundleInfo info;
+    info.SetDualModeCloneApp(true);
+    info.SetAppIndex(ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    InnerBundleUserInfo userInfo = MakeUserInfo(BUNDLE_NAME, 0, true);
+    userInfo.uid = bundleId;
+    info.innerBundleUserInfos_.try_emplace(BUNDLE_NAME + "_" + std::to_string(0), userInfo);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = info;
     std::string bundleName;
     int32_t appIndex = 0;
     auto ret = dataMgr->GetBundleNameAndIndex(bundleId, bundleName, appIndex);

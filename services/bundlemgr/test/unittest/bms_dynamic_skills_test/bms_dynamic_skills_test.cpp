@@ -15,13 +15,17 @@
 
 #define private public
 #include <chrono>
+#include <iostream>
 #include <gtest/gtest.h>
 #include <string>
 #include <thread>
 
+#include "accesstoken_kit.h"
 #include "base_bundle_installer.h"
+#include "bundle_constants.h"
 #include "bundle_mgr_host.h"
 #include "bundle_mgr_service.h"
+#include "bundle_verify_mgr.h"
 #include "inner_bundle_info.h"
 #include "installd/installd_service.h"
 #include "mock_status_receiver.h"
@@ -44,6 +48,53 @@ const std::string URI = "file://dir/test.png";
 const std::string INVALID_FILE_TYPE = "\xC4\xE3\xBA\xCA";
 const int32_t USER_ID = 100;
 const int32_t WAIT_TIME_SECONDS = 5;
+
+// SPM ON prerequisite: the mocked access-token boundary is fed the trusted
+// sign info for the hap every test installs. The provision mirrors the REAL
+// profile the hap is signed with (com.test.defaultApp.p7b — release /
+// os_integration / system_core / hos_system_app / no app-identifier); the
+// appId and appIdentifier are captured from the hap itself (the same local
+// verify the preinstall/keep-data cross-checks use), so the SPM-derived
+// identity matches the locally verified one by construction.
+constexpr int32_t TEST_SPM_SESSION_ID = 4242;
+constexpr uint64_t TEST_SPM_TOKEN_ID = 101;
+// The AT-allocated uid must fall inside USER_ID's uid segment.
+constexpr int32_t TEST_SPM_UID = USER_ID * Constants::BASE_USER_RANGE + 102;
+
+void SetUpSpmTrustedSignInfoForTest()
+{
+    Security::Verify::HapVerifyResult verifyResult;
+    std::string appId;
+    std::string appIdentifier;
+    if (BundleVerifyMgr::HapVerify(BUNDLE_PATH, verifyResult, true) == ERR_OK) {
+        appId = verifyResult.GetProvisionInfo().appId;
+        appIdentifier = verifyResult.GetProvisionInfo().bundleInfo.appIdentifier;
+    }
+    const std::string provision = Security::AccessToken::MakeSpmReleaseProvisionRawForTest(
+        BUNDLE_NAME, "os_integration", false, "hos_system_app", "system_core", appIdentifier);
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest("defaultAppTest.hap", provision, appId);
+    Security::AccessToken::SetSpmCheckHapSignInfoSessionIdForTest(TEST_SPM_SESSION_ID);
+    Security::AccessToken::SetSpmPrepareIdentityForTest(TEST_SPM_TOKEN_ID, TEST_SPM_UID);
+}
+
+// Leftover persistent state of this suite's bundle must be wiped before the
+// first install (records persisted by earlier runs store the app id the REAL
+// signature derived — a mocked provision deriving a different one fails the
+// keep-data / app-identifier comparisons with INCONSISTENT_SIGNATURE).
+void ClearSpmLeftoverUninstallRecordsForTest()
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        return;
+    }
+    InnerBundleInfo leftoverInfo;
+    if (dataMgr->FetchInnerBundleInfo(BUNDLE_NAME, leftoverInfo)) {
+        dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::INSTALL_START);
+        dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_START);
+        dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_SUCCESS);
+    }
+    dataMgr->DeleteUninstallBundleInfo(BUNDLE_NAME, USER_ID);
+}
 }  // namespace
 
 class BmsDynamicSkillsTest : public testing::Test {
@@ -78,10 +129,19 @@ BmsDynamicSkillsTest::~BmsDynamicSkillsTest()
 
 void BmsDynamicSkillsTest::SetUpTestCase()
 {
+    // SPM stays ON (its device default): feed the mocked access-token boundary
+    // with the trusted sign answer for the hap every test installs, so the
+    // per-test installs pass the real SPM verification chain instead of
+    // failing closed on the empty default mock.
+    SetUpSpmTrustedSignInfoForTest();
     bundleMgrService_->InitBundleInstaller();
     bundleMgrService_->InitBundleDataMgr();
     bundleMgrService_->GetDataMgr()->AddUserId(USER_ID);
     bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();
+    // Drop the leftover keep-data uninstall record / stale installed row of
+    // this suite's bundle before the first install (the persisted data is
+    // loaded above).
+    ClearSpmLeftoverUninstallRecordsForTest();
     StartInstalldService();
 }
 
@@ -91,7 +151,16 @@ void BmsDynamicSkillsTest::TearDownTestCase()
 }
 
 void BmsDynamicSkillsTest::SetUp()
-{}
+{
+    // The mocked InstalldClient::ClearSessionProvisionCache is a counting
+    // stub, so the real session provision cache inside the process-wide
+    // InstalldHostImpl keeps the entry of the PREVIOUS test case's install
+    // under the same shared session id — drop it before every install so each
+    // one starts from a clean provision state.
+    if (installdService_->hostImpl_ != nullptr) {
+        installdService_->hostImpl_->ClearSessionProvisionCache(TEST_SPM_SESSION_ID);
+    }
+}
 
 void BmsDynamicSkillsTest::TearDown()
 {}
@@ -134,7 +203,10 @@ void BmsDynamicSkillsTest::InstallBundle(const std::string &bundlePath)
     installParam.withCopyHaps = true;
     bool result = installer->Install(bundlePath, installParam, receiver);
     EXPECT_TRUE(result);
-    receiver->GetResultCode();
+    int32_t installRet = receiver->GetResultCode();
+    if (installRet != ERR_OK) {
+        std::cout << "DynamicSkills InstallBundle failed, ret:" << installRet << std::endl;
+    }
 }
 
 void BmsDynamicSkillsTest::UnInstallBundle(const std::string &bundleName)

@@ -629,7 +629,19 @@ HWTEST_F(BmsBundleDefaultAppMgrTest, IsDefaultApplication_0070, Function | Small
 
     int32_t uid = 20000001;
     int32_t bundleId = uid - 100 * Constants::BASE_USER_RANGE;
-    dataMgr->bundleIdMap_.emplace(bundleId, BUNDLE_NAME);
+    // SPM ON: GetBundleNameAndIndexForUid cross-checks the bundleIdMap_ hit
+    // against the persisted user info (the stored uid must equal the calling
+    // uid) before trusting it. Make the case self-contained instead of
+    // relying on the previous case's leftover: clear any leftover install
+    // state (the suite helper's insert requires a clean INSTALL_START), seed
+    // the full record (abilities + the uid-bearing user info) through the
+    // same helper the sibling cases use, and force the map entry (operator[]
+    // overwrite — emplace would keep a leftover name).
+    if (dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_START)) {
+        dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_SUCCESS);
+    }
+    AddInnerBundleInfo(BUNDLE_NAME, 0);
+    dataMgr->bundleIdMap_[bundleId] = BUNDLE_NAME;
 
     auto ret = DefaultAppMgr::GetInstance().IsDefaultApplication(userId, type, isDefaultApp);
     EXPECT_EQ(ret, ERR_OK);
