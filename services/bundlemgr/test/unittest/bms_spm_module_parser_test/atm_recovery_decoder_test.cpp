@@ -32,7 +32,7 @@ Json Record(const std::string &name = BUNDLE_NAME)
         {"baseBundleInfo", {{"name", name}, {"isPreInstallApp", false}}},
         {"innerModuleInfos", {{"entry", {{"hapPath", "/data/app/entry.hap"}}}}},
         {"innerBundleUserInfos", {{name + "_0", {
-            {"uid", 10000}, {"accessTokenId", 0},
+            {"uid", 10000}, {"accessTokenId", 0}, {"accessTokenIdEx", 1},
             {"bundleUserInfo", {{"userId", Constants::DEFAULT_USERID}}}
         }}}}
     };
@@ -60,9 +60,9 @@ HWTEST_F(AtmRecoveryDecoderTest, AllUsersAndClonesKeepTheirOwnIdentity, Function
     auto record = Record();
     auto &first = record["innerBundleUserInfos"]["com.example.app_0"];
     first["cloneInfos"] = {{"1", {{"userId", Constants::DEFAULT_USERID}, {"appIndex", 1},
-        {"uid", 10001}, {"accessTokenId", 2147483648U}}}};
+        {"uid", 10001}, {"accessTokenId", 2147483648U}, {"accessTokenIdEx", 2147483648U}}}};
     record["innerBundleUserInfos"]["com.example.app_100"] = {
-        {"uid", 20010000}, {"accessTokenId", 4294967295U},
+        {"uid", 20010000}, {"accessTokenId", 4294967295U}, {"accessTokenIdEx", 4294967295U},
         {"bundleUserInfo", {{"userId", Constants::START_USERID}}}};
     record["innerModuleInfos"]["feature"] = {{"hapPath", "/data/app/feature.hap"}};
     record["baseBundleInfo"]["isPreInstallApp"] = true;
@@ -92,9 +92,9 @@ HWTEST_F(AtmRecoveryDecoderTest, SandboxInstancesAreExcluded, Function | SmallTe
     auto record = Record();
     auto &user = record["innerBundleUserInfos"]["com.example.app_0"];
     user["cloneInfos"] = {{"1", {{"userId", Constants::DEFAULT_USERID}, {"appIndex", 1},
-        {"uid", 10001}, {"accessTokenId", 73}}}};
+        {"uid", 10001}, {"accessTokenId", 73}, {"accessTokenIdEx", 73}}}};
     const Json sandbox = {{"2000", {{"userId", Constants::DEFAULT_USERID}, {"appIndex", 2000},
-        {"uid", 10002}, {"accessTokenId", 74}}}};
+        {"uid", 10002}, {"accessTokenId", 74}, {"accessTokenIdEx", 74}}}};
     for (const Json &value : std::vector<Json>{sandbox, {{"2000", nullptr}}, nullptr, Json::array(), "invalid"}) {
         SCOPED_TRACE(value.dump());
         user["sandboxInfos"] = value;

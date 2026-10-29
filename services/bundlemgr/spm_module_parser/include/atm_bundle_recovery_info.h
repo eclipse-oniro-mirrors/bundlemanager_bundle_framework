@@ -26,11 +26,13 @@ struct AtmBundleRecoveryInfo {
     int32_t userId = -1;
     int32_t appIndex = 0;
     uint32_t accessTokenId = 0;
+    uint64_t accessTokenIdEx = 0;
     int32_t uid = -1;
     std::vector<std::string> hapPaths;
     // Same-name different-package status: -1 = not applicable, 0 = primary, 1 = secondary.
     int32_t mode = -1;
     bool isPreInstallApp = false;
+    bool isUninstalled = false;
 };
 
 struct AtmBundleRecoveryResult {

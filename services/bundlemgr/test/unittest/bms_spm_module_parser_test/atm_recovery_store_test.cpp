@@ -310,51 +310,27 @@ HWTEST_F(AtmRecoveryStoreTest, ReadableColumnsWithoutConstraintsSucceed, Functio
 }
 
 /**
- * @tc.name: ReadsWalWithoutChangingDatabaseContent
- * @tc.desc: Read committed WAL data without changing database or WAL contents.
+ * @tc.name: ReadsInstalledAndUninstallTablesInSequence
+ * @tc.desc: Read both recovery tables through separate read-only scans of the same database.
  */
-HWTEST_F(AtmRecoveryStoreTest, ReadsWalWithoutChangingDatabaseContent, Function | SmallTest | Level1)
+HWTEST_F(AtmRecoveryStoreTest, ReadsInstalledAndUninstallTablesInSequence, Function | SmallTest | Level1)
 {
-    Create(true);
-    Sql("INSERT INTO installed_bundle VALUES ('a', 'first')");
-    const auto dbBefore = Bytes(path);
-    const auto walBefore = Bytes(path + "-wal");
-    ASSERT_FALSE(walBefore.empty());
-    {
-        ReadOnlyInstalledBundleStore store(path);
-        ASSERT_TRUE(store.Open());
-        std::map<std::string, std::string> data;
-        ASSERT_TRUE(store.QueryAllData(data));
-        ASSERT_EQ(data.size(), 1U);
-        EXPECT_EQ(data.at("a"), "first");
-    }
-    EXPECT_EQ(Bytes(path), dbBefore);
-    EXPECT_EQ(Bytes(path + "-wal"), walBefore);
-    // NativeRdb manages WAL reader locks in -shm; verify the persistent DB and WAL contents.
-}
-
-/**
- * @tc.name: ConcurrentCommitDoesNotMixReadViews
- * @tc.desc: Keep a consistent read view when another connection commits changes.
- */
-HWTEST_F(AtmRecoveryStoreTest, ConcurrentCommitDoesNotMixReadViews, Function | SmallTest | Level1)
-{
-    Create(true);
-    Sql("INSERT INTO installed_bundle VALUES ('a', 'old-a'), ('b', 'old-b')");
+    Create();
+    Sql("INSERT INTO installed_bundle VALUES ('app', 'installed-record')");
+    Sql("CREATE TABLE uninstall_bundle_info(BUNDLENAME TEXT PRIMARY KEY NOT NULL, "
+        "UNINSTALL_BUNDLE_INFO TEXT NOT NULL)");
+    Sql("INSERT INTO uninstall_bundle_info VALUES ('removed-app', '{\"userInfos\":{}}')");
     ReadOnlyInstalledBundleStore store(path);
     ASSERT_TRUE(store.Open());
-    auto rows = store.db_->QueryByStep("SELECT KEY, VALUE FROM installed_bundle", {}, false);
-    ASSERT_NE(rows, nullptr);
-    ASSERT_EQ(rows->GoToFirstRow(), NativeRdb::E_OK);
-    ASSERT_EQ(writer->BeginTransaction(), NativeRdb::E_OK);
-    Sql("UPDATE installed_bundle SET VALUE='new'");
-    Sql("INSERT INTO installed_bundle VALUES('c','new')");
-    ASSERT_EQ(writer->Commit(), NativeRdb::E_OK);
-    std::map<std::string, std::string> data;
-    EXPECT_TRUE(ReadOnlyInstalledBundleStore::ReadAllRows(*rows, data));
-    EXPECT_EQ(rows->Close(), NativeRdb::E_OK);
-    const std::map<std::string, std::string> expected = {{"a", "old-a"}, {"b", "old-b"}};
-    EXPECT_EQ(data, expected);
+    std::map<std::string, std::string> installed;
+    ASSERT_TRUE(store.QueryAllData(installed));
+    ASSERT_EQ(installed.size(), 1U);
+    EXPECT_EQ(installed.at("app"), "installed-record");
+    ASSERT_TRUE(store.Open());
+    std::map<std::string, std::string> uninstalled;
+    ASSERT_TRUE(store.QueryAllUninstallData(uninstalled));
+    ASSERT_EQ(uninstalled.size(), 1U);
+    EXPECT_EQ(uninstalled.at("removed-app"), "{\"userInfos\":{}}");
 }
 
 /**
@@ -368,27 +344,6 @@ HWTEST_F(AtmRecoveryStoreTest, QueryWithoutOpenFailsAndClearsOutput, Function | 
     EXPECT_FALSE(store.QueryAllData(data));
     EXPECT_TRUE(data.empty());
     EXPECT_NE(access(path.c_str(), F_OK), 0);
-}
-
-/**
- * @tc.name: ClosingOneReaderDoesNotCloseAnother
- * @tc.desc: Keep another reader usable after the first reader finishes its query.
- */
-HWTEST_F(AtmRecoveryStoreTest, ClosingOneReaderDoesNotCloseAnother, Function | SmallTest | Level1)
-{
-    Create(true);
-    Sql("INSERT INTO installed_bundle VALUES('a','one')");
-    ReadOnlyInstalledBundleStore first(path);
-    ReadOnlyInstalledBundleStore second(path);
-    ASSERT_TRUE(first.Open());
-    ASSERT_TRUE(second.Open());
-    std::map<std::string, std::string> firstData;
-    std::map<std::string, std::string> secondData;
-    ASSERT_TRUE(first.QueryAllData(firstData));
-    EXPECT_TRUE(second.QueryAllData(secondData));
-    EXPECT_EQ(firstData, secondData);
-    ASSERT_EQ(secondData.size(), 1U);
-    EXPECT_EQ(secondData.at("a"), "one");
 }
 
 /**

@@ -37,6 +37,7 @@ public:
     ReadOnlyInstalledBundleStore &operator=(const ReadOnlyInstalledBundleStore &) = delete;
     bool Open();
     bool QueryAllData(std::map<std::string, std::string> &data);
+    bool QueryAllUninstallData(std::map<std::string, std::string> &data);
 private:
     static bool ReadAllRows(NativeRdb::ResultSet &rows, std::map<std::string, std::string> &data);
     std::string path_;

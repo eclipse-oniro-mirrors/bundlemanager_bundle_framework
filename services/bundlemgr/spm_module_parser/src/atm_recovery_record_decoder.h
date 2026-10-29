@@ -22,5 +22,8 @@ namespace OHOS::AppExecFwk::AtmRecovery {
 // Parse one installed_bundle record. Invalid data returns false with an empty output.
 __attribute__((visibility("hidden"))) bool ParseAtmRecoveryRecord(const std::string &key,
     const std::string &value, std::vector<AtmBundleRecoveryInfo> &infos);
+// Parse one uninstall_bundle_info record. Invalid data returns false with an empty output.
+__attribute__((visibility("hidden"))) bool ParseUninstallRecord(const std::string &bundleName,
+    const std::string &value, std::vector<AtmBundleRecoveryInfo> &infos);
 } // namespace OHOS::AppExecFwk::AtmRecovery
 #endif

@@ -22,6 +22,7 @@
 #include "app_log_tag_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "atm_recovery_record_decoder.h"
+#include "bundle_constants.h"
 #include "read_only_installed_bundle_store.h"
 #include "token_setproc.h"
 
@@ -50,13 +51,28 @@ AtmBundleRecoveryResult ReadRecoveryInfo()
             std::make_move_iterator(infos.end()));
         ++normalRecordCount;
     }
-    if (!records.empty() && normalRecordCount == 0) {
+    std::map<std::string, std::string> uninstallRecords;
+    if (!store.Open() || !store.QueryAllUninstallData(uninstallRecords)) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "ATM recovery: cannot read uninstall records");
+        return {ERR_APPEXECFWK_DB_GET_DATA_ERROR, {}};
+    }
+    size_t uninstallRecordCount = 0;
+    for (const auto &[bundleName, value] : uninstallRecords) {
+        std::vector<AtmBundleRecoveryInfo> infos;
+        if (!ParseUninstallRecord(bundleName, value, infos)) {
+            continue;
+        }
+        result.infos.insert(result.infos.end(), std::make_move_iterator(infos.begin()),
+            std::make_move_iterator(infos.end()));
+        ++uninstallRecordCount;
+    }
+    if ((!records.empty() && normalRecordCount == 0) || (result.infos.empty() && !uninstallRecords.empty())) {
         LOG_NOFUNC_E(BMS_TAG_QUERY, "ATM recovery: no complete result");
         return {ERR_APPEXECFWK_DB_GET_DATA_ERROR, {}};
     }
-    if (normalRecordCount < records.size()) {
+    if ((normalRecordCount < records.size()) || (uninstallRecordCount < uninstallRecords.size())) {
         LOG_NOFUNC_W(BMS_TAG_QUERY, "ATM recovery: skipped %{public}zu invalid records",
-            records.size() - normalRecordCount);
+            records.size() - normalRecordCount + uninstallRecords.size() - uninstallRecordCount);
     }
     return result;
 }
@@ -66,7 +82,7 @@ AtmBundleRecoveryResult QueryAtmBundleRecoveryInfo()
 {
     const auto tokenId = static_cast<AccessToken::AccessTokenID>(GetSelfTokenID());
     if (tokenId == 0 || AccessToken::AccessTokenKit::VerifyAccessToken(tokenId,
-        "ohos.permission.GET_BUNDLE_INFO_PRIVILEGED") != AccessToken::PermissionState::PERMISSION_GRANTED) {
+        Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) != AccessToken::PermissionState::PERMISSION_GRANTED) {
         LOG_NOFUNC_W(BMS_TAG_QUERY, "ATM recovery: permission unavailable or denied");
         return {ERR_APPEXECFWK_PERMISSION_DENIED, {}};
     }

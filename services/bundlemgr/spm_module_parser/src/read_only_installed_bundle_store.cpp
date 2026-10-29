@@ -92,6 +92,27 @@ bool ReadOnlyInstalledBundleStore::QueryAllData(std::map<std::string, std::strin
     return true;
 }
 
+bool ReadOnlyInstalledBundleStore::QueryAllUninstallData(std::map<std::string, std::string> &data)
+{
+    data.clear();
+    if (db_ == nullptr || rows_ != nullptr) {
+        return false;
+    }
+    rows_ = db_->QueryByStep("SELECT BUNDLENAME, UNINSTALL_BUNDLE_INFO FROM uninstall_bundle_info", {}, false);
+    if (rows_ == nullptr) {
+        return false;
+    }
+    bool valid = ReadAllRows(*rows_, data);
+    int result = rows_->Close();
+    rows_.reset();
+    db_.reset();
+    if (!valid || result != NativeRdb::E_OK) {
+        data.clear();
+        return false;
+    }
+    return true;
+}
+
 bool ReadOnlyInstalledBundleStore::ReadAllRows(NativeRdb::ResultSet &rows,
     std::map<std::string, std::string> &data)
 {

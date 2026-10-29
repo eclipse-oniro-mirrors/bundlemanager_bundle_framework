@@ -31,6 +31,7 @@ constexpr int32_t PRIMARY_MODE = 0;
 constexpr int32_t SECONDARY_MODE = 1;
 constexpr const char* UID = "uid";
 constexpr const char* ACCESS_TOKEN_ID = "accessTokenId";
+constexpr const char* ACCESS_TOKEN_ID_EX = "accessTokenIdEx";
 constexpr const char* INNER_MODULE_INFO = "innerModuleInfos";
 constexpr const char* MODULE_HAP_PATH = "hapPath";
 constexpr const char* USER_ID = "userId";
@@ -44,8 +45,27 @@ constexpr const char* NAME = "name";
 constexpr const char* IS_PREINSTALL_APP = "isPreInstallApp";
 constexpr const char* IS_DUAL_MODE_CLONE_APP = "isDualModeCloneApp";
 constexpr const char* DEVICE_MODE_DISTRIBUTION_POLICY = "deviceModeDistributionPolicy";
+constexpr const char* USER_INFOS = "userInfos";
 const std::string SECONDARY_PREFIX = std::string(ServiceConstants::CLONE_PREFIX) +
     std::to_string(Constants::DUAL_MODE_CLONE_APP_INDEX) + "+";
+
+bool ParseUninstallUserKey(const std::string &key, int32_t &userId, int32_t &appIndex)
+{
+    auto underLinePos = key.find(Constants::FILE_UNDERLINE);
+    if (underLinePos != std::string::npos) {
+        if (!OHOS::StrToInt(key.substr(0, underLinePos), userId)) {
+            return false;
+        }
+        if (!OHOS::StrToInt(key.substr(underLinePos + 1), appIndex)) {
+            return false;
+        }
+    } else {
+        if (!OHOS::StrToInt(key, userId)) {
+            return false;
+        }
+    }
+    return true;
+}
 
 template<typename T>
 bool ReadInteger(const Json &object, const char *key, T &number, bool required = true)
@@ -66,7 +86,8 @@ bool ReadInteger(const Json &object, const char *key, T &number, bool required =
 bool ReadIdentity(const Json &object, AtmBundleRecoveryInfo &info)
 {
     return object.is_object() && ReadInteger(object, UID, info.uid) &&
-        ReadInteger(object, ACCESS_TOKEN_ID, info.accessTokenId);
+        ReadInteger(object, ACCESS_TOKEN_ID, info.accessTokenId) &&
+        ReadInteger(object, ACCESS_TOKEN_ID_EX, info.accessTokenIdEx);
 }
 
 bool ParseModulePaths(const Json &root, std::vector<std::string> &paths)
@@ -133,7 +154,7 @@ bool ParseUsers(const Json &root, const AtmBundleRecoveryInfo &base, std::vector
         if (!ReadIdentity(value, info) || userInfo == value.end() || !userInfo->is_object() ||
             !ReadInteger(*userInfo, USER_ID, info.userId) ||
             info.userId < Constants::DEFAULT_USERID ||
-            user.key() != base.bundleName + "_" + std::to_string(info.userId) ||
+            user.key() != base.bundleName + Constants::FILE_UNDERLINE + std::to_string(info.userId) ||
             !identities.emplace(info.userId, info.appIndex).second) {
             return false;
         }
@@ -191,7 +212,7 @@ Json ParseRecordJson(const std::string &value)
     // Reject duplicate fields instead of silently accepting the last identity value.
     bool duplicateKey = false;
     std::vector<std::set<std::string>> objectKeys;
-    auto callback = [&](int, Json::parse_event_t event, Json &parsed) {
+    auto callback = [&duplicateKey, &objectKeys](int, Json::parse_event_t event, Json &parsed) {
         if (event == Json::parse_event_t::object_start) {
             objectKeys.emplace_back();
         } else if (event == Json::parse_event_t::object_end) {
@@ -221,5 +242,45 @@ bool ParseAtmRecoveryRecord(const std::string &key, const std::string &value,
     }
     infos.clear();
     return false;
+}
+
+bool ParseUninstallRecord(const std::string &bundleName, const std::string &value,
+    std::vector<AtmBundleRecoveryInfo> &infos)
+{
+    infos.clear();
+    auto record = nlohmann::json::parse(value, nullptr, false);
+    if (bundleName.empty() || !record.is_object()) {
+        return false;
+    }
+    const auto users = record.find(USER_INFOS);
+    if (users == record.end() || !users->is_object() || users->empty()) {
+        return false;
+    }
+    for (const auto &[key, user] : users->items()) {
+        AtmBundleRecoveryInfo info;
+        info.isUninstalled = true;
+        info.bundleName = bundleName;
+        if (!ParseUninstallUserKey(key, info.userId, info.appIndex) || !user.is_object()) {
+            infos.clear();
+            return false;
+        }
+        auto token = user.find(ACCESS_TOKEN_ID);
+        auto uid = user.find(UID);
+        if (token == user.end() || uid == user.end() || !token->is_number_integer() ||
+            (!token->is_number_unsigned() && token->get<int64_t>() < 0) ||
+            token->get<uint64_t>() > std::numeric_limits<uint32_t>::max() || !uid->is_number_integer() ||
+            (!uid->is_number_unsigned() && uid->get<int64_t>() < 0) ||
+            uid->get<uint64_t>() > std::numeric_limits<int32_t>::max()) {
+            infos.clear();
+            return false;
+        }
+        info.accessTokenId = token->get<uint32_t>();
+        info.uid = uid->get<int32_t>();
+        if (!ReadInteger(user, ACCESS_TOKEN_ID_EX, info.accessTokenIdEx, false)) {
+            return false;
+        }
+        infos.push_back(std::move(info));
+    }
+    return true;
 }
 } // namespace OHOS::AppExecFwk::AtmRecovery
