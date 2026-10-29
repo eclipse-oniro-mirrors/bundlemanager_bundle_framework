@@ -14,6 +14,7 @@
  */
 
 #include "app_log_wrapper.h"
+#include "bundle_constants.h"
 #include "skill.h"
 #include <regex>
 #include <unistd.h>
@@ -617,6 +618,9 @@ bool Skill::ReadFromParcel(Parcel &parcel)
 {
     int32_t actionsSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, actionsSize);
+    if (actionsSize < 0 || actionsSize > Constants::MAX_JSON_ARRAY_LENGTH) {
+        return false;
+    }
     CONTAINER_SECURITY_VERIFY(parcel, actionsSize, &actions);
     for (auto i = 0; i < actionsSize; i++) {
         actions.emplace_back(Str16ToStr8(parcel.ReadString16()));
@@ -624,6 +628,9 @@ bool Skill::ReadFromParcel(Parcel &parcel)
 
     int32_t entitiesSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, entitiesSize);
+    if (entitiesSize < 0 || entitiesSize > Constants::MAX_JSON_ARRAY_LENGTH) {
+        return false;
+    }
     CONTAINER_SECURITY_VERIFY(parcel, entitiesSize, &entities);
     for (auto i = 0; i < entitiesSize; i++) {
         entities.emplace_back(Str16ToStr8(parcel.ReadString16()));
@@ -631,6 +638,9 @@ bool Skill::ReadFromParcel(Parcel &parcel)
 
     int32_t urisSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, urisSize);
+    if (urisSize < 0 || urisSize > Constants::MAX_JSON_ARRAY_LENGTH) {
+        return false;
+    }
     CONTAINER_SECURITY_VERIFY(parcel, urisSize, &uris);
     for (auto i = 0; i < urisSize; i++) {
         SkillUri uri;
@@ -649,6 +659,9 @@ bool Skill::ReadFromParcel(Parcel &parcel)
 
     int32_t permissionsSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, permissionsSize);
+    if (permissionsSize < 0 || permissionsSize > Constants::MAX_JSON_ARRAY_LENGTH) {
+        return false;
+    }
     CONTAINER_SECURITY_VERIFY(parcel, permissionsSize, &permissions);
     for (auto i = 0; i < permissionsSize; i++) {
         permissions.emplace_back(Str16ToStr8(parcel.ReadString16()));

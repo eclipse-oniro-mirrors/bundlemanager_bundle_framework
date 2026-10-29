@@ -1609,6 +1609,11 @@ bool InstalldHost::HandExtractDriverSoFiles(MessageParcel &data, MessageParcel &
 {
     std::string srcPath = Str16ToStr8(data.ReadString16());
     int32_t size = data.ReadInt32();
+    if (size < 0 || size > Constants::MAX_JSON_ARRAY_LENGTH) {
+        LOG_E(BMS_TAG_INSTALLD, "HandExtractDriverSoFiles invalid size: %{public}d", size);
+        WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+        return false;
+    }
     std::unordered_multimap<std::string, std::string> dirMap;
     CONTAINER_SECURITY_VERIFY(data, size, &dirMap);
     for (int32_t index = 0; index < size; ++index) {
@@ -1630,6 +1635,11 @@ bool InstalldHost::HandleExtractDriverKoFiles(MessageParcel &data, MessageParcel
         return false;
     }
     int32_t size = data.ReadInt32();
+    if (size < 0 || size > Constants::MAX_JSON_ARRAY_LENGTH) {
+        LOG_E(BMS_TAG_INSTALLD, "HandleExtractDriverKoFiles invalid size: %{public}d", size);
+        WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+        return false;
+    }
     std::unordered_multimap<std::string, std::string> dirMap;
     CONTAINER_SECURITY_VERIFY(data, size, &dirMap);
     for (int32_t index = 0; index < size; ++index) {
@@ -1914,6 +1924,11 @@ bool InstalldHost::HandleDeleteDataGroupDirs(MessageParcel &data, MessageParcel 
 bool InstalldHost::HandleMigrateData(MessageParcel &data, MessageParcel &reply)
 {
     int32_t size = data.ReadInt32();
+    if (size < 0 || size > Constants::MAX_JSON_ARRAY_LENGTH) {
+        LOG_E(BMS_TAG_INSTALLD, "HandleMigrateData invalid size: %{public}d", size);
+        WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+        return false;
+    }
     std::vector<std::string> sourcePaths;
     CONTAINER_SECURITY_VERIFY(data, size, &sourcePaths);
     for (int32_t index = 0; index < size; ++index) {
@@ -1966,6 +1981,11 @@ bool InstalldHost::HandleHashSoFile(MessageParcel &data, MessageParcel &reply)
 bool InstalldHost::HandleHashFiles(MessageParcel &data, MessageParcel &reply)
 {
     int32_t size = data.ReadInt32();
+    if (size < 0 || size > Constants::MAX_JSON_ARRAY_LENGTH) {
+        LOG_E(BMS_TAG_INSTALLD, "HandleHashFiles invalid size: %{public}d", size);
+        WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+        return false;
+    }
     std::vector<std::string> files;
     CONTAINER_SECURITY_VERIFY(data, size, &files);
     for (int32_t index = 0; index < size; ++index) {

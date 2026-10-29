@@ -14,6 +14,7 @@
  */
 
 #include "module_info.h"
+#include "bundle_constants.h"
 
 #include "nlohmann/json.hpp"
 #include "string_ex.h"
@@ -73,6 +74,9 @@ bool ModuleInfo::ReadFromParcel(Parcel &parcel)
     moduleSourceDir = Str16ToStr8(parcel.ReadString16());
     int32_t preloadsSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, preloadsSize);
+    if (preloadsSize < 0 || preloadsSize > Constants::MAX_JSON_ARRAY_LENGTH) {
+        return false;
+    }
     CONTAINER_SECURITY_VERIFY(parcel, preloadsSize, &preloads);
     for (auto i = 0; i < preloadsSize; i++) {
         preloads.emplace_back(Str16ToStr8(parcel.ReadString16()));

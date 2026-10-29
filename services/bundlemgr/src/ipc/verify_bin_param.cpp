@@ -16,6 +16,7 @@
 #include "ipc/verify_bin_param.h"
 
 #include "app_log_wrapper.h"
+#include "bundle_constants.h"
 #include "parcel_macro.h"
 #include "string_ex.h"
 
@@ -28,6 +29,9 @@ bool VerifyBinParam::ReadFromParcel(Parcel &parcel)
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, userId);
     int32_t binFilePathsSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, binFilePathsSize);
+    if (binFilePathsSize < 0 || binFilePathsSize > Constants::MAX_JSON_ARRAY_LENGTH) {
+        return false;
+    }
     CONTAINER_SECURITY_VERIFY(parcel, binFilePathsSize, &binFilePaths);
     for (int32_t i = 0; i < binFilePathsSize; ++i) {
         std::string binFilePath = Str16ToStr8(parcel.ReadString16());

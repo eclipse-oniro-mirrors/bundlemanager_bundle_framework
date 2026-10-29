@@ -249,6 +249,9 @@ bool FormInfo::ReadFromParcel(Parcel &parcel)
 
     int32_t supportDimensionSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, supportDimensionSize);
+    if (supportDimensionSize < 0 || supportDimensionSize > Constants::MAX_JSON_ARRAY_LENGTH) {
+        return false;
+    }
     CONTAINER_SECURITY_VERIFY(parcel, supportDimensionSize, &supportDimensions);
     for (int32_t i = 0; i < supportDimensionSize; i++) {
         supportDimensions.emplace_back(parcel.ReadInt32());

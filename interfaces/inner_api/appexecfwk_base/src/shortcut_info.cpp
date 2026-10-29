@@ -77,6 +77,9 @@ bool ShortcutInfo::ReadFromParcel(Parcel &parcel)
     visible = parcel.ReadBool();
     int32_t intentsSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, intentsSize);
+    if (intentsSize < 0 || intentsSize > Constants::MAX_JSON_ARRAY_LENGTH) {
+        return false;
+    }
     CONTAINER_SECURITY_VERIFY(parcel, intentsSize, &intents);
     for (auto i = 0; i < intentsSize; i++) {
         ShortcutIntent shortcutIntent;
@@ -85,6 +88,9 @@ bool ShortcutInfo::ReadFromParcel(Parcel &parcel)
         shortcutIntent.targetClass = Str16ToStr8(parcel.ReadString16()); // target class name
         int32_t parametersSize;
         READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, parametersSize);
+        if (parametersSize < 0 || parametersSize > Constants::MAX_JSON_ARRAY_LENGTH) {
+            return false;
+        }
         CONTAINER_SECURITY_VERIFY(parcel, parametersSize, &shortcutIntent.parameters);
         for (int32_t i = 0; i < parametersSize; ++i) {
             std::string key = Str16ToStr8(parcel.ReadString16());

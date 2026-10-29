@@ -14,6 +14,7 @@
  */
 
 #include "ipc/install_hnp_param.h"
+#include "bundle_constants.h"
 
 #include "parcel_macro.h"
 #include "string_ex.h"
@@ -30,6 +31,9 @@ bool InstallHnpParam::ReadFromParcel(Parcel &parcel)
     appIdentifier = Str16ToStr8(parcel.ReadString16());
     int32_t hnpPathsSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, hnpPathsSize);
+    if (hnpPathsSize < 0 || hnpPathsSize > Constants::MAX_JSON_ARRAY_LENGTH) {
+        return false;
+    }
     CONTAINER_SECURITY_VERIFY(parcel, hnpPathsSize, &hnpPaths);
     for (int32_t i = 0; i < hnpPathsSize; ++i) {
         std::string hnpPath = Str16ToStr8(parcel.ReadString16());

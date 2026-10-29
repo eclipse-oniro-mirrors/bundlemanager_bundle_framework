@@ -146,6 +146,9 @@ bool ReadSkillInfoFromParcel(Parcel &parcel, std::vector<SkillUriForAbilityAndEx
 {
     int32_t skillUriSize = 0;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, skillUriSize);
+    if (skillUriSize < 0 || skillUriSize > Constants::MAX_JSON_ARRAY_LENGTH) {
+        return false;
+    }
     CONTAINER_SECURITY_VERIFY(parcel, skillUriSize, &skillUri);
     for (auto i = 0; i < skillUriSize; i++) {
         SkillUriForAbilityAndExtension stctUri;
