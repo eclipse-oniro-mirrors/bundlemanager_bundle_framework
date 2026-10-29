@@ -428,6 +428,22 @@ ohos_unittest("BmsBundleResourceHelperTest") {
       ]
     }
     sources += bundle_resource
+    sources += [
+      "${kits_path}/js/bundle_resource/bundle_resource.cpp",
+      "${kits_path}/js/bundle_resource/resource_helper.cpp",
+      "${kits_path}/js/bundle_resource/bundle_resource_drawable_utils.cpp",
+      "${kits_path}/js/common/base_cb_info.cpp",
+      "${kits_path}/js/common/common_func.cpp",
+      "${kits_path}/js/common/business_error.cpp",
+      "${kits_path}/js/common/business_error_map.cpp",
+      "${kits_path}/js/common/napi_arg.cpp",
+      "${services_path}/bundlemgr/test/mock/src/mock_ipc_skeleton.cpp",
+    ]
+    include_dirs += [
+      "${kits_path}/js/bundle_resource",
+      "${kits_path}/js/common",
+    ]
+    external_deps += [ "napi:ace_napi" ]
   }
 
   if (bundle_framework_overlay_install) {
