@@ -934,5 +934,41 @@ HWTEST_F(BundleMgrProxyTest, Bundle_Mgr_Proxy_Test_4400, Function | SmallTest | 
         killProcess, needSendEvent);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_IPC_TRANSACTION);
 }
+
+/**
+ * @tc.number: Bundle_Mgr_Proxy_Test_4500
+ * @tc.name: test GetBundleResourceArchiveInfo with empty filePath
+ * @tc.desc: 1. filePath is empty
+ *           2. verify returns ERR_BUNDLE_MANAGER_INVALID_HAP_PATH
+ */
+HWTEST_F(BundleMgrProxyTest, Bundle_Mgr_Proxy_Test_4500, Function | SmallTest | Level0)
+{
+    sptr<IRemoteObject> impl = nullptr;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::string filePath;
+    uint32_t flags = static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL);
+    BundleResourceInfo resourceInfo;
+    auto ret = bundleMgrProxy.GetBundleResourceArchiveInfo(filePath, flags, resourceInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_HAP_PATH);
+}
+
+/**
+ * @tc.number: Bundle_Mgr_Proxy_Test_4600
+ * @tc.name: test GetBundleResourceArchiveInfo with valid filePath but null remote
+ * @tc.desc: 1. filePath is valid, remote object is null
+ *           2. WriteInterfaceToken, WriteString, WriteUint32 succeed
+ *           3. GetParcelInfoIntelligent fails due to null remote
+ *           4. verify returns ERR_APPEXECFWK_NULL_PTR
+ */
+HWTEST_F(BundleMgrProxyTest, Bundle_Mgr_Proxy_Test_4600, Function | SmallTest | Level0)
+{
+    sptr<IRemoteObject> impl = nullptr;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::string filePath = "/data/test.hap";
+    uint32_t flags = static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL);
+    BundleResourceInfo resourceInfo;
+    auto ret = bundleMgrProxy.GetBundleResourceArchiveInfo(filePath, flags, resourceInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+}
 } // AppExecFwk
 } // OHOS
