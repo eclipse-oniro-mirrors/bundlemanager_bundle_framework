@@ -1578,6 +1578,7 @@ private:
         std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos);
     void SetAtomicServiceRemovable(const ShortcutInfo &shortcutInfo, bool isEnable, int32_t userId);
     bool CheckAcrossUserPermission(const int32_t userId);
+    bool VerifyGetBundleStatsPermission(const std::string &bundleName, int32_t userId);
 
     ErrCode CheckAppDisableForbidden(const std::string &bundleName, int32_t userId, int32_t appIndex, bool isEnabled);
 

@@ -4827,25 +4827,32 @@ bool BundleMgrHostImpl::ObtainCallingBundleName(std::string &bundleName)
     return ret;
 }
 
+bool BundleMgrHostImpl::VerifyGetBundleStatsPermission(const std::string &bundleName, int32_t userId)
+{
+    if (BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        return true;
+    }
+    if (BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO) &&
+        BundlePermissionMgr::IsSystemApp()) {
+        return true;
+    }
+    if (BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
+        if (!CheckAcrossUserPermission(userId)) {
+            APP_LOGE_NOFUNC("GetBundleStats across-user denied %{public}d, userId: %{public}d",
+                IPCSkeleton::GetCallingUid(), userId);
+            return false;
+        }
+        return true;
+    }
+    APP_LOGE_NOFUNC("GetBundleStats permission denied %{public}d %{public}d",
+        IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
+    return false;
+}
+
 bool BundleMgrHostImpl::GetBundleStats(const std::string &bundleName, int32_t userId,
     std::vector<int64_t> &bundleStats, int32_t appIndex, uint32_t statFlag)
 {
-    bool permissionVerify = [bundleName]() {
-        if (BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
-            return true;
-        }
-        if (BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO) &&
-            BundlePermissionMgr::IsSystemApp()) {
-            return true;
-        }
-        if (BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
-            return true;
-        }
-        return false;
-    }();
-    if (!permissionVerify) {
-        APP_LOGE_NOFUNC("GetBundleStats permission denied %{public}d %{public}d",
-            IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
+    if (!VerifyGetBundleStatsPermission(bundleName, userId)) {
         return false;
     }
     int32_t activeUserId = AccountHelper::GetUserIdByCallerType();
