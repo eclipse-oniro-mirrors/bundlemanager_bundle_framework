@@ -29,6 +29,7 @@ namespace {
 const std::string TEST_BUNDLE_NAME = "com.ohos.test";
 const std::string TEST_APP_IDENTIFIER = "test.app.identifier";
 const int32_t TEST_USER_ID = 100;
+const int32_t TEST_APP_INDEX = 0;
 const std::string TEST_BIN_FILE_PATH = "/data/app/el1/bundle/public/com.ohos.test/bin/test.so";
 }
 
@@ -187,16 +188,175 @@ HWTEST_F(BmsBinarySecurityWrapperTest, BmsBinarySecurityWrapperTest_006, Functio
  */
 HWTEST_F(BmsBinarySecurityWrapperTest, BmsBinarySecurityWrapperTest_009, Function | SmallTest | Level0)
 {
+    constexpr int32_t inheritParentProcess = 1;
+    constexpr int32_t independent = 0;
     BinFileInfo info1;
     info1.path = TEST_BIN_FILE_PATH;
+    info1.permissionControlMode = inheritParentProcess;
     EXPECT_EQ(info1.path, TEST_BIN_FILE_PATH);
+    EXPECT_EQ(info1.permissionControlMode, inheritParentProcess);
 
     BinFileInfo info2;
     info2 = info1;
     EXPECT_EQ(info2.path, TEST_BIN_FILE_PATH);
+    EXPECT_EQ(info2.permissionControlMode, inheritParentProcess);
 
     BinFileInfo info3 = info1;
     EXPECT_EQ(info3.path, TEST_BIN_FILE_PATH);
+    EXPECT_EQ(info3.permissionControlMode, inheritParentProcess);
+    EXPECT_EQ(BinFileInfo().permissionControlMode, independent);
+}
+
+/**
+ * @tc.number: BmsBinarySecurityWrapperTest_031
+ * @tc.name: test ResolveProcessHapBinUninstallNoLock with null handle
+ * @tc.desc: 1. ResolveProcessHapBinUninstallNoLock returns false when handle_ is null
+ */
+HWTEST_F(BmsBinarySecurityWrapperTest, BmsBinarySecurityWrapperTest_031, Function | SmallTest | Level0)
+{
+    BinarySecurityWrapper& instance = BinarySecurityWrapper::GetInstance();
+
+    void* originalHandle = instance.handle_;
+    instance.handle_ = nullptr;
+    instance.processHapBinUninstallFunc_ = nullptr;
+
+    bool ret = instance.ResolveProcessHapBinUninstallNoLock();
+    EXPECT_FALSE(ret);
+
+    instance.handle_ = originalHandle;
+}
+
+/**
+ * @tc.number: BmsBinarySecurityWrapperTest_032
+ * @tc.name: test ProcessHapBinUninstall without library
+ * @tc.desc: 1. ProcessHapBinUninstall returns permission error when library unavailable
+ */
+HWTEST_F(BmsBinarySecurityWrapperTest, BmsBinarySecurityWrapperTest_032, Function | SmallTest | Level0)
+{
+    BinarySecurityWrapper& instance = BinarySecurityWrapper::GetInstance();
+
+    void* originalHandle = instance.handle_;
+    instance.handle_ = nullptr;
+    instance.processHapBinUninstallFunc_ = nullptr;
+
+    ErrCode ret = instance.ProcessHapBinUninstall(
+        TEST_BUNDLE_NAME, TEST_APP_IDENTIFIER, TEST_USER_ID, TEST_APP_INDEX);
+    if (ret == ERR_OK) {
+        EXPECT_NE(instance.handle_, nullptr);
+    } else {
+        EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_VERIFY_BIN_PERMISSION);
+    }
+
+    instance.handle_ = originalHandle;
+}
+
+/**
+ * @tc.number: BmsBinarySecurityWrapperTest_033
+ * @tc.name: test ProcessHapBinUninstall with handle and func ready
+ * @tc.desc: 1. ProcessHapBinUninstall takes read-lock fast path when handle_ and func are valid
+ */
+HWTEST_F(BmsBinarySecurityWrapperTest, BmsBinarySecurityWrapperTest_033, Function | SmallTest | Level0)
+{
+    BinarySecurityWrapper& instance = BinarySecurityWrapper::GetInstance();
+
+    void* originalHandle = instance.handle_;
+    BinarySecurityWrapper::ProcessHapBinUninstallFunc originalFunc =
+        instance.processHapBinUninstallFunc_;
+
+    auto stubFunc = [](const std::string&, const std::string&, int32_t, int32_t) -> int32_t {
+        return ERR_OK;
+    };
+    instance.handle_ = dlopen(nullptr, RTLD_LAZY);
+    ASSERT_NE(instance.handle_, nullptr);
+    instance.processHapBinUninstallFunc_ = stubFunc;
+
+    ErrCode ret = instance.ProcessHapBinUninstall(
+        TEST_BUNDLE_NAME, TEST_APP_IDENTIFIER, TEST_USER_ID, TEST_APP_INDEX);
+    EXPECT_EQ(ret, ERR_OK);
+
+    instance.UnloadLibrary();
+    instance.processHapBinUninstallFunc_ = originalFunc;
+    instance.handle_ = originalHandle;
+}
+
+/**
+ * @tc.number: BmsBinarySecurityWrapperTest_034
+ * @tc.name: test ProcessHapBinUninstall fast path when func returns error
+ * @tc.desc: 1. ProcessHapBinUninstall propagates non-OK result from func
+ */
+HWTEST_F(BmsBinarySecurityWrapperTest, BmsBinarySecurityWrapperTest_034, Function | SmallTest | Level0)
+{
+    BinarySecurityWrapper& instance = BinarySecurityWrapper::GetInstance();
+
+    void* originalHandle = instance.handle_;
+    BinarySecurityWrapper::ProcessHapBinUninstallFunc originalFunc =
+        instance.processHapBinUninstallFunc_;
+
+    auto stubFunc = [](const std::string&, const std::string&, int32_t, int32_t) -> int32_t {
+        return ERR_APPEXECFWK_INSTALL_FAILED_VERIFY_BIN_PERMISSION;
+    };
+    instance.handle_ = dlopen(nullptr, RTLD_LAZY);
+    ASSERT_NE(instance.handle_, nullptr);
+    instance.processHapBinUninstallFunc_ = stubFunc;
+
+    ErrCode ret = instance.ProcessHapBinUninstall(
+        TEST_BUNDLE_NAME, TEST_APP_IDENTIFIER, TEST_USER_ID, TEST_APP_INDEX);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_VERIFY_BIN_PERMISSION);
+
+    instance.UnloadLibrary();
+    instance.processHapBinUninstallFunc_ = originalFunc;
+    instance.handle_ = originalHandle;
+}
+
+/**
+ * @tc.number: BmsBinarySecurityWrapperTest_035
+ * @tc.name: test HasNoResolvedSymbolsNoLock when processHapBinUninstallFunc_ is set
+ * @tc.desc: 1. HasNoResolvedSymbolsNoLock returns false when processHapBinUninstallFunc_ is non-null
+ */
+HWTEST_F(BmsBinarySecurityWrapperTest, BmsBinarySecurityWrapperTest_035, Function | SmallTest | Level0)
+{
+    BinarySecurityWrapper& instance = BinarySecurityWrapper::GetInstance();
+
+    void* originalHandle = instance.handle_;
+    BinarySecurityWrapper::ProcessHapBinUninstallFunc originalFunc =
+        instance.processHapBinUninstallFunc_;
+    instance.handle_ = nullptr;
+    instance.processHapBinInstallFunc_ = nullptr;
+    instance.requestIndependentBinarySwitchAsyncFunc_ = nullptr;
+    instance.checkHspPluginCertValidityFunc_ = nullptr;
+    instance.checkAppSideLoadingAsyncFunc_ = nullptr;
+    instance.processHapBinUninstallFunc_ =
+        reinterpret_cast<BinarySecurityWrapper::ProcessHapBinUninstallFunc>(0x1);
+
+    EXPECT_FALSE(instance.HasNoResolvedSymbolsNoLock());
+
+    instance.processHapBinUninstallFunc_ = originalFunc;
+    instance.handle_ = originalHandle;
+}
+
+/**
+ * @tc.number: BmsBinarySecurityWrapperTest_036
+ * @tc.name: test UnloadLibraryNoLock resets processHapBinUninstallFunc_
+ * @tc.desc: 1. UnloadLibraryNoLock resets processHapBinUninstallFunc_ to nullptr
+ */
+HWTEST_F(BmsBinarySecurityWrapperTest, BmsBinarySecurityWrapperTest_036, Function | SmallTest | Level0)
+{
+    BinarySecurityWrapper& instance = BinarySecurityWrapper::GetInstance();
+
+    void* originalHandle = instance.handle_;
+    BinarySecurityWrapper::ProcessHapBinUninstallFunc originalFunc =
+        instance.processHapBinUninstallFunc_;
+    instance.handle_ = dlopen(nullptr, RTLD_LAZY);
+    ASSERT_NE(instance.handle_, nullptr);
+    instance.processHapBinUninstallFunc_ =
+        reinterpret_cast<BinarySecurityWrapper::ProcessHapBinUninstallFunc>(0x1);
+
+    instance.UnloadLibraryNoLock();
+    EXPECT_EQ(instance.handle_, nullptr);
+    EXPECT_EQ(instance.processHapBinUninstallFunc_, nullptr);
+
+    instance.handle_ = originalHandle;
+    instance.processHapBinUninstallFunc_ = originalFunc;
 }
 
 /**

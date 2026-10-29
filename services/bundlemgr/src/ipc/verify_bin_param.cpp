@@ -33,8 +33,17 @@ bool VerifyBinParam::ReadFromParcel(Parcel &parcel)
         std::string binFilePath = Str16ToStr8(parcel.ReadString16());
         binFilePaths.emplace_back(binFilePath);
     }
+    int32_t permissionControlModesSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, permissionControlModesSize);
+    CONTAINER_SECURITY_VERIFY(parcel, permissionControlModesSize, &permissionControlModes);
+    for (int32_t i = 0; i < permissionControlModesSize; ++i) {
+        int32_t permissionControlModeValue = 0;
+        READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, permissionControlModeValue);
+        permissionControlModes.emplace_back(permissionControlModeValue);
+    }
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isDebug);
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, sessionId);
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isUninstall);
     return true;
 }
 
@@ -47,8 +56,13 @@ bool VerifyBinParam::Marshalling(Parcel &parcel) const
     for (auto &item : binFilePaths) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(item));
     }
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, permissionControlModes.size());
+    for (auto &item : permissionControlModes) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, item);
+    }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isDebug);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, sessionId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isUninstall);
     return true;
 }
 
