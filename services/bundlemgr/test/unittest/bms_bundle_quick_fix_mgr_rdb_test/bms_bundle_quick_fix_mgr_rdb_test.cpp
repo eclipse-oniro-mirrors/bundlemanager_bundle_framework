@@ -19,11 +19,15 @@
 #include <gtest/gtest.h>
 #include <sstream>
 #include <string>
+#include <unistd.h>
 
 #include "appexecfwk_errors.h"
+#include "accesstoken_kit.h"
 #include "appqf_info.h"
 #include "bundle_info.h"
+#include "bundle_constants.h"
 #include "bundle_mgr_service.h"
+#include "bundle_verify_mgr.h"
 #include "directory_ex.h"
 #include "file_ex.h"
 #include "inner_app_quick_fix.h"
@@ -67,6 +71,53 @@ const std::string QUICK_FIX_VERSION_NAME = "1.0";
 const uint32_t BUNDLE_VERSION_CODE = 1;
 const std::string BUNDLE_VERSION_NAME = "1.0";
 const std::string PATCH_PATH = "/data/app/el1/bundle/public/com.example.l3jsdemo/patch_1000001";
+
+// SPM ON prerequisite: the mocked access-token boundary is fed the trusted
+// sign info for the hap the suite installs. The provision mirrors the REAL
+// profile the hap is signed with (com.example.l3jsdemo.p7b — release /
+// os_integration / system_core / hos_system_app); the appId and appIdentifier
+// are captured from the hap itself (the same local verify the
+// preinstall/keep-data cross-checks use), so the SPM-derived identity
+// matches the locally verified one by construction.
+constexpr int32_t TEST_SPM_SESSION_ID = 4242;
+constexpr uint64_t TEST_SPM_TOKEN_ID = 101;
+// The AT-allocated uid must fall inside USERID's uid segment.
+constexpr int32_t TEST_SPM_UID = USERID * Constants::BASE_USER_RANGE + 102;
+
+void SetUpSpmTrustedSignInfoForTest()
+{
+    Security::Verify::HapVerifyResult verifyResult;
+    std::string appId;
+    std::string appIdentifier;
+    if (BundleVerifyMgr::HapVerify(BUNDLE_PATH, verifyResult, true) == ERR_OK) {
+        appId = verifyResult.GetProvisionInfo().appId;
+        appIdentifier = verifyResult.GetProvisionInfo().bundleInfo.appIdentifier;
+    }
+    const std::string provision = Security::AccessToken::MakeSpmReleaseProvisionRawForTest(
+        BUNDLE_NAME, "os_integration", false, "hos_system_app", "system_core", appIdentifier);
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest("first_right.hap", provision, appId);
+    Security::AccessToken::SetSpmCheckHapSignInfoSessionIdForTest(TEST_SPM_SESSION_ID);
+    Security::AccessToken::SetSpmPrepareIdentityForTest(TEST_SPM_TOKEN_ID, TEST_SPM_UID);
+}
+
+// Leftover persistent state of this suite's bundle must be wiped before the
+// first install (records persisted by earlier runs store the app id the REAL
+// signature derived — a mocked provision deriving a different one fails the
+// keep-data / app-identifier comparisons with INCONSISTENT_SIGNATURE).
+void ClearSpmLeftoverUninstallRecordsForTest()
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        return;
+    }
+    InnerBundleInfo leftoverInfo;
+    if (dataMgr->FetchInnerBundleInfo(BUNDLE_NAME, leftoverInfo)) {
+        dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::INSTALL_START);
+        dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_START);
+        dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_SUCCESS);
+    }
+    dataMgr->DeleteUninstallBundleInfo(BUNDLE_NAME, USERID);
+}
 } // namespace
 
 class BmsBundleQuickFixMgrRdbTest : public testing::Test {
@@ -213,22 +264,60 @@ void BmsBundleQuickFixMgrRdbTest::StartService()
 
 void BmsBundleQuickFixMgrRdbTest::SetUpTestCase()
 {
+    // SPM stays ON (its device default): feed the mocked access-token boundary
+    // with the trusted sign answer for the hap the suite installs, so the
+    // installs pass the real SPM verification chain instead of failing closed
+    // on the empty default mock.
+    SetUpSpmTrustedSignInfoForTest();
     bundleMgrService_->InitQuickFixManager();
     bundleMgrService_->InitBundleInstaller();
     bundleMgrService_->InitBundleDataMgr();
     bundleMgrService_->GetDataMgr()->AddUserId(USERID);
     bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();
+    // Drop the leftover keep-data uninstall record / stale installed row of
+    // this suite's bundle before the first install (the persisted data is
+    // loaded above).
+    ClearSpmLeftoverUninstallRecordsForTest();
+    // The quick fix RDB is a device-persisted, cross-suite file: rows written
+    // by earlier runs of THIS suite (installs now succeed, so _0012/_0004
+    // write rows) or by the sibling quick fix suites linger and break the
+    // empty-table premises of the QueryAllInnerAppQuickFix cases. Clear the
+    // WHOLE table (any bundle name) once before the first case.
+    {
+        auto quickFixRdb = std::make_shared<QuickFixManagerRdb>();
+        if (quickFixRdb != nullptr && quickFixRdb->rdbDataManager_ != nullptr) {
+            std::map<std::string, InnerAppQuickFix> leftovers;
+            if (quickFixRdb->QueryAllInnerAppQuickFix(leftovers)) {
+                for (const auto &item : leftovers) {
+                    (void)quickFixRdb->DeleteInnerAppQuickFix(item.first);
+                }
+            }
+        }
+    }
 }
 
 void BmsBundleQuickFixMgrRdbTest::TearDownTestCase()
 {
     bundleMgrService_->OnStop();
+    // Match the sibling installer suites: OnStop leaves async teardown work
+    // (event handler threads, deferred deletions) running — without this wait
+    // the process proceeds into static destruction while the service's
+    // background work is still alive and crashes at exit.
+    sleep(1);
 }
 
 void BmsBundleQuickFixMgrRdbTest::SetUp()
 {
     if (installdService_ != nullptr && !installdService_->IsServiceReady()) {
         installdService_->Start();
+    }
+    // The mocked InstalldClient::ClearSessionProvisionCache is a counting
+    // stub, so the real session provision cache inside the process-wide
+    // InstalldHostImpl keeps the entry of the PREVIOUS test case's install
+    // under the same shared session id — drop it before every case so each
+    // install starts from a clean provision state.
+    if (installdService_ != nullptr && installdService_->hostImpl_ != nullptr) {
+        installdService_->hostImpl_->ClearSessionProvisionCache(TEST_SPM_SESSION_ID);
     }
     auto dataMgr = GetBundleDataMgr();
     if (dataMgr != nullptr) {

@@ -21,10 +21,12 @@
 #include <unistd.h>
 
 #include "account_helper.h"
+#include "accesstoken_kit.h"
 #include "app_provision_info_manager.h"
 #include "base_bundle_installer.h"
 #include "bundle_cache_mgr.h"
 #include "bundle_clone_installer.h"
+#include "bundle_constants.h"
 #include "bundle_data_mgr.h"
 #include "bundle_mgr_service.h"
 #include "bundle_multiuser_installer.h"
@@ -48,6 +50,15 @@ namespace {
 const int32_t WAIT_TIME = 2;
 constexpr int32_t USER_ID = 100;
 constexpr int32_t DEFAULT_USERID = 0;
+// SPM ON mock knobs for the mocked AT boundary (see SetUp): without them
+// PrepareHapIdentity returns uid 0 and InitToken fails fast with
+// ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED, preempting the
+// installd / data-mgr failures the InnerProcessBundleInstall cases intend
+// to exercise.
+constexpr int32_t TEST_SPM_SESSION_ID = 4242;
+constexpr uint64_t TEST_SPM_TOKEN_ID = 101;
+// The AT-allocated uid must fall inside USER_ID's uid segment.
+constexpr int32_t TEST_SPM_UID = USER_ID * Constants::BASE_USER_RANGE + 102;
 constexpr int32_t TEST_FOREGROUND_USER_ID = 100;
 constexpr int32_t TEST_BACKGROUND_USER_ID = 200;
 }  // namespace
@@ -94,6 +105,13 @@ void BmsAccountConstraintTest::TearDownTestCase()
 
 void BmsAccountConstraintTest::SetUp()
 {
+    // Feed the mocked AT boundary the identity knobs before every case: the
+    // InnerProcessBundleInstall flows run InitToken, whose PrepareHapIdentity
+    // takes the identity from the mock — without the knobs the returned uid 0
+    // fails InitToken's fail-fast BEFORE the installd / data-mgr steps the
+    // cases intend to exercise.
+    Security::AccessToken::SetSpmCheckHapSignInfoSessionIdForTest(TEST_SPM_SESSION_ID);
+    Security::AccessToken::SetSpmPrepareIdentityForTest(TEST_SPM_TOKEN_ID, TEST_SPM_UID);
 }
 
 void BmsAccountConstraintTest::TearDown()
@@ -256,7 +274,15 @@ HWTEST_F(BmsAccountConstraintTest, InnerProcessBundleInstall_0001, Function | Me
     installer.InitDataMgr();
     installer.dataMgr_->bundleInfos_.emplace(bundleName, oldInfo);
     auto res = installer.InnerProcessBundleInstall(newInfos, oldInfo, installParam, uid);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_CLEAN_DIR_FAILED);
+    if (BundleSpmManager::IsEnabled()) {
+        // SPM ON: InitToken's user-segment consistency check legitimately
+        // fails for the synthetic invalid userId (-3): the AT-allocated uid
+        // always falls inside the INSTALLING user's segment, so the flow
+        // fail-fasts with 8519711 before the stage this case pins.
+        EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED);
+    } else {
+        EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_CLEAN_DIR_FAILED);
+    }
 }
 
 /**
@@ -285,7 +311,14 @@ HWTEST_F(BmsAccountConstraintTest, InnerProcessBundleInstall_0002, Function | Me
     installer.InitDataMgr();
     installer.dataMgr_->bundleInfos_.emplace(bundleName, oldInfo);
     auto res = installer.InnerProcessBundleInstall(newInfos, oldInfo, installParam, uid);
-    EXPECT_EQ(res, ERR_APPEXECFWK_GET_INSTALL_TEMP_BUNDLE_ERROR);
+    if (BundleSpmManager::IsEnabled()) {
+        // SPM ON: same contract as InnerProcessBundleInstall_0001 — the
+        // user-segment check on the AT-allocated uid fail-fasts with 8519711
+        // for the synthetic invalid userId before the temp-bundle stage.
+        EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED);
+    } else {
+        EXPECT_EQ(res, ERR_APPEXECFWK_GET_INSTALL_TEMP_BUNDLE_ERROR);
+    }
 }
 
 /**
