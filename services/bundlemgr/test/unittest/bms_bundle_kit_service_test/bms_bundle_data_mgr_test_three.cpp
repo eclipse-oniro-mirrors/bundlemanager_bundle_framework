@@ -344,6 +344,35 @@ const std::string ENTRY = "entry";
 const std::string FEATURE = "feature";
 constexpr const char* OVERLAY_STATE = "overlayState";
 const std::string CALLER_NAME_UT = "ut";
+
+// SPM ON: the uid reverse lookup (BundleDataMgr::GetBundleNameAndIndex)
+// cross-checks a bundleIdMap_ hit against the persisted user info before
+// trusting it; a miss degrades to the access-token fallback which the empty
+// default mock does not answer, so the lookup would return INVALID_UID.
+// Register a bundle info whose user info owns the uid (appIndex 0: the main
+// uid; otherwise the clone/sandbox identity of that index — GetUid resolves
+// either through cloneInfos first), mirroring what the ON install flow
+// persists. The OFF path trusts the map alone and is unaffected.
+void RegisterUidOwningBundleInfo(
+    BundleDataMgr& bundleDataMgr, const std::string& bundleName, int32_t uid, int32_t appIndex)
+{
+    InnerBundleInfo info;
+    ApplicationInfo appInfo;
+    appInfo.bundleName = bundleName;
+    info.SetBaseApplicationInfo(appInfo);
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = bundleName;
+    userInfo.bundleUserInfo.userId = USERID;
+    userInfo.uid = uid;
+    if (appIndex != 0) {
+        InnerBundleCloneInfo cloneInfo;
+        cloneInfo.appIndex = appIndex;
+        cloneInfo.uid = uid;
+        userInfo.cloneInfos.emplace(std::to_string(appIndex), cloneInfo);
+    }
+    info.AddInnerBundleUserInfo(userInfo);
+    bundleDataMgr.bundleInfos_.emplace(bundleName, info);
+}
 }  // namespace
 
 struct Param {
@@ -4680,6 +4709,13 @@ HWTEST_F(BmsBundleDataMgrTest3, GenerateUidAndGid_0200, Function | MediumTest | 
     innerBundleUserInfo.bundleUserInfo.userId = USERID;
 
     auto ret = bundleDataMgr->GenerateUidAndGid(innerBundleUserInfo);
+    if (BundleSpmManager::IsEnabled()) {
+        // SPM ON: GenerateUidAndGid no longer allocates locally — an
+        // identity without an AT-allocated uid fails fast instead (the
+        // allocation authority moved to the access token service).
+        EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED);
+        return;
+    }
     EXPECT_EQ(ret, ERR_OK);
 
     int32_t expectedUid = USERID * Constants::BASE_USER_RANGE + bundleDataMgr->baseAppUid_;
@@ -4711,6 +4747,13 @@ HWTEST_F(BmsBundleDataMgrTest3, GenerateUidAndGid_0300, Function | MediumTest | 
     innerBundleUserInfo.bundleUserInfo.userId = USERID;
 
     auto ret = bundleDataMgr->GenerateUidAndGid(innerBundleUserInfo);
+    if (BundleSpmManager::IsEnabled()) {
+        // SPM ON: the bundleId counter is not consulted — the map-full
+        // branch is unreachable; an identity without an AT-allocated uid
+        // fails fast.
+        EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED);
+        return;
+    }
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_BUNDLEID_EXCEED_MAX_NUMBER);
 }
 
@@ -4979,6 +5022,11 @@ HWTEST_F(BmsBundleDataMgrTest3, GetBundleNameAndIndex_0300, Function | MediumTes
     int32_t bundleId = TEST_UID - USERID * Constants::BASE_USER_RANGE;
     // Populate with a plain bundleName (no sandbox/clone prefix)
     bundleDataMgr->bundleIdMap_.emplace(bundleId, BUNDLE_TEST1);
+    // SPM ON: a bundleIdMap_ hit is cross-checked against the persisted user
+    // info before it is trusted — register the uid-owning bundle info so the
+    // cross-check passes (the OFF path trusts the map alone).
+    RegisterUidOwningBundleInfo(*bundleDataMgr, BUNDLE_TEST1, TEST_UID, 0);
+    ScopeGuard bundleInfoGuard([&] { bundleDataMgr->bundleInfos_.erase(BUNDLE_TEST1); });
 
     std::string bundleName;
     int32_t appIndex = -1;
@@ -5134,6 +5182,13 @@ HWTEST_F(BmsBundleDataMgrTest3, GenerateUidAndGid_0400, Function | MediumTest | 
     userInfo1.bundleName = BUNDLE_TEST1;
     userInfo1.bundleUserInfo.userId = USERID;
     auto ret = bundleDataMgr->GenerateUidAndGid(userInfo1);
+    if (BundleSpmManager::IsEnabled()) {
+        // SPM ON: GenerateUidAndGid no longer allocates locally — without an
+        // AT-allocated uid both calls fail fast (the reuse contract moved
+        // to the access token service).
+        EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED);
+        return;
+    }
     EXPECT_EQ(ret, ERR_OK);
     int32_t firstUid = userInfo1.uid;
 
@@ -5163,6 +5218,12 @@ HWTEST_F(BmsBundleDataMgrTest3, GetBundleNameAndIndex_0400, Function | MediumTes
     // Sandbox key format: "123_sandboxBundleName"
     std::string sandboxKey = "123_sandboxBundle";
     bundleDataMgr->bundleIdMap_.emplace(bundleId, sandboxKey);
+    // SPM ON: a bundleIdMap_ hit is cross-checked against the persisted user
+    // info before it is trusted — register the uid-owning bundle info (the
+    // appIndex-123 identity) so the cross-check passes (the OFF path trusts
+    // the map alone).
+    RegisterUidOwningBundleInfo(*bundleDataMgr, "sandboxBundle", sandboxUid, 123);
+    ScopeGuard bundleInfoGuard([&] { bundleDataMgr->bundleInfos_.erase("sandboxBundle"); });
 
     std::string bundleName;
     int32_t appIndex = -1;
@@ -5189,6 +5250,12 @@ HWTEST_F(BmsBundleDataMgrTest3, GetBundleNameAndIndex_0500, Function | MediumTes
     // Clone key format: "\d+clone_\w+" (CLONE_BUNDLE_PREFIX = "clone_")
     std::string cloneKey = "99clone_cloneBundle";
     bundleDataMgr->bundleIdMap_.emplace(bundleId, cloneKey);
+    // SPM ON: a bundleIdMap_ hit is cross-checked against the persisted user
+    // info before it is trusted — register the uid-owning bundle info (the
+    // appIndex-99 clone identity) so the cross-check passes (the OFF path
+    // trusts the map alone).
+    RegisterUidOwningBundleInfo(*bundleDataMgr, "cloneBundle", cloneUid, 99);
+    ScopeGuard bundleInfoGuard([&] { bundleDataMgr->bundleInfos_.erase("cloneBundle"); });
 
     std::string bundleName;
     int32_t appIndex = -1;
