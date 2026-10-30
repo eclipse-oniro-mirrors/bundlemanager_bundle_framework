@@ -23,9 +23,12 @@
 #include <unistd.h>
 
 #include "appexecfwk_errors.h"
+#include "accesstoken_kit.h"
+#include "bundle_constants.h"
 #include "bundle_info.h"
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
+#include "bundle_verify_mgr.h"
 #include "directory_ex.h"
 #include "installd/installd_service.h"
 #include "installd_client.h"
@@ -60,6 +63,69 @@ const std::chrono::seconds SLEEP_TIME {2};
 const int32_t USERID = 100;
 const uint32_t VERSION_1 = 1000001;
 const uint32_t VERSION_2 = 1000002;
+
+// SPM ON prerequisite: the mocked access-token boundary is fed the trusted
+// sign info for the haps the suite installs. All twelve hap variants share
+// one profile (com.test.debug.update.p7b — release / app_gallery / normal /
+// hos_normal_app WITH an app-identifier); the appId and appIdentifier are
+// captured from the hap itself (the same local verify the
+// preinstall/keep-data cross-checks use), so the SPM-derived identity
+// matches the locally verified one by construction.
+constexpr int32_t TEST_SPM_SESSION_ID = 4242;
+constexpr uint64_t TEST_SPM_TOKEN_ID = 101;
+// The AT-allocated uid must fall inside USERID's uid segment.
+constexpr int32_t TEST_SPM_UID = USERID * Constants::BASE_USER_RANGE + 102;
+
+void RegisterSpmTrustedProvision(const std::string &hapFileName)
+{
+    Security::Verify::HapVerifyResult verifyResult;
+    std::string appId;
+    std::string appIdentifier;
+    if (BundleVerifyMgr::HapVerify(BUNDLE_FILE_DIR + hapFileName, verifyResult, true) == ERR_OK) {
+        appId = verifyResult.GetProvisionInfo().appId;
+        appIdentifier = verifyResult.GetProvisionInfo().bundleInfo.appIdentifier;
+    }
+    const std::string provision = Security::AccessToken::MakeSpmReleaseProvisionRawForTest(
+        BUNDLE_NAME, "app_gallery", false, "hos_normal_app", "normal", appIdentifier);
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(hapFileName, provision, appId);
+}
+
+void SetUpSpmTrustedSignInfoForTest()
+{
+    RegisterSpmTrustedProvision(ENTRY_V1_DEBUG_BUNDLE);
+    RegisterSpmTrustedProvision(ENTRY_V1_RELEASE_BUNDLE);
+    RegisterSpmTrustedProvision(ENTRY_V2_DEBUG_BUNDLE);
+    RegisterSpmTrustedProvision(ENTRY_V2_RELEASE_BUNDLE);
+    RegisterSpmTrustedProvision(FEATURE_V1_DEBUG_BUNDLE);
+    RegisterSpmTrustedProvision(FEATURE_V1_RELEASE_BUNDLE);
+    RegisterSpmTrustedProvision(FEATURE_V2_DEBUG_BUNDLE);
+    RegisterSpmTrustedProvision(FEATURE_V2_RELEASE_BUNDLE);
+    RegisterSpmTrustedProvision(LIBRARY_V1_DEBUG_BUNDLE);
+    RegisterSpmTrustedProvision(LIBRARY_V1_RELEASE_BUNDLE);
+    RegisterSpmTrustedProvision(LIBRARY_V2_DEBUG_BUNDLE);
+    RegisterSpmTrustedProvision(LIBRARY_V2_RELEASE_BUNDLE);
+    Security::AccessToken::SetSpmCheckHapSignInfoSessionIdForTest(TEST_SPM_SESSION_ID);
+    Security::AccessToken::SetSpmPrepareIdentityForTest(TEST_SPM_TOKEN_ID, TEST_SPM_UID);
+}
+
+// Leftover persistent state of this suite's bundle must be wiped before the
+// first install (records persisted by earlier runs store the app id the REAL
+// signature derived — a mocked provision deriving a different one fails the
+// keep-data / app-identifier comparisons with INCONSISTENT_SIGNATURE).
+void ClearSpmLeftoverUninstallRecordsForTest()
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        return;
+    }
+    InnerBundleInfo leftoverInfo;
+    if (dataMgr->FetchInnerBundleInfo(BUNDLE_NAME, leftoverInfo)) {
+        dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::INSTALL_START);
+        dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_START);
+        dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_SUCCESS);
+    }
+    dataMgr->DeleteUninstallBundleInfo(BUNDLE_NAME, USERID);
+}
 const int32_t MAX_TRY_TIMES = 1000;
 const int32_t WAIT_TIME = 2; // init mocked bms
 }  // namespace
@@ -97,20 +163,42 @@ std::shared_ptr<InstalldService> BmsBundleUpdateDebugTest::installdService_ =
 
 void BmsBundleUpdateDebugTest::SetUpTestCase()
 {
+    // SPM stays ON (its device default): feed the mocked access-token boundary
+    // with the trusted sign answer for the hap variants the suite installs,
+    // so the installs pass the real SPM verification chain instead of failing
+    // closed on the empty default mock.
+    SetUpSpmTrustedSignInfoForTest();
     bundleMgrService_->InitBundleInstaller();
     bundleMgrService_->InitBundleDataMgr();
     bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();
+    // Drop the leftover keep-data uninstall record / stale installed row of
+    // this suite's bundle before the first install (the persisted data is
+    // loaded above).
+    ClearSpmLeftoverUninstallRecordsForTest();
 }
 
 void BmsBundleUpdateDebugTest::TearDownTestCase()
 {
     bundleMgrService_->OnStop();
+    // Match the sibling installer suites: OnStop leaves async teardown work
+    // (event handler threads, deferred deletions) running — without this wait
+    // the process proceeds into static destruction while the service's
+    // background work is still alive and crashes at exit.
+    sleep(1);
 }
 
 void BmsBundleUpdateDebugTest::SetUp()
 {
     if (!installdService_->IsServiceReady()) {
         installdService_->Start();
+    }
+    // The mocked InstalldClient::ClearSessionProvisionCache is a counting
+    // stub, so the real session provision cache inside the process-wide
+    // InstalldHostImpl keeps the entry of the PREVIOUS test case's install
+    // under the same shared session id — drop it before every case so each
+    // install starts from a clean provision state.
+    if (installdService_->hostImpl_ != nullptr) {
+        installdService_->hostImpl_->ClearSessionProvisionCache(TEST_SPM_SESSION_ID);
     }
 }
 

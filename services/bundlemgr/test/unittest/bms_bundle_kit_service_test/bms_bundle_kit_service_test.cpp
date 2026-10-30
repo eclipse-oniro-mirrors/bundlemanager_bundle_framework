@@ -3937,7 +3937,15 @@ HWTEST_F(BmsBundleKitServiceTest, GetBundleNameForUid_0100, Function | SmallTest
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
     std::string testResult;
     bool testRet = GetBundleDataMgr()->GetBundleNameForUid(TEST_UID, testResult);
-    EXPECT_FALSE(testRet);
+    if (BundleSpmManager::IsEnabled()) {
+        // SPM ON: AddInnerBundleInfo seeds the uid reverse-lookup map from the
+        // inserted user infos (the DB-persistence hook is ON-only), so the
+        // mock-installed record's TEST_UID user info legitimately resolves —
+        // the case's name documents exactly this success path.
+        EXPECT_TRUE(testRet);
+    } else {
+        EXPECT_FALSE(testRet);
+    }
 
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }
@@ -5334,7 +5342,15 @@ HWTEST_F(BmsBundleKitServiceTest, GetBundlesForUid_0400, Function | SmallTest | 
     testResult.emplace_back(BUNDLE_NAME_DEMO);
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     bool testRet = hostImpl->GetBundlesForUid(TEST_UID, testResult);
-    EXPECT_FALSE(testRet);
+    if (BundleSpmManager::IsEnabled()) {
+        // SPM ON: AddInnerBundleInfo refreshes the uid reverse-lookup map
+        // from the inserted user infos (the DB-persistence hook is ON-only),
+        // so the mock-installed record's TEST_UID user info legitimately
+        // resolves — the lookup succeeds.
+        EXPECT_TRUE(testRet);
+    } else {
+        EXPECT_FALSE(testRet);
+    }
     MockUninstallBundle(BUNDLE_NAME_DEMO);
 }
 
