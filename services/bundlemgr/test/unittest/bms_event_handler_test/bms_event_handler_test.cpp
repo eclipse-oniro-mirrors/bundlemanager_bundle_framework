@@ -46,6 +46,7 @@
 #include "want.h"
 #include "user_unlocked_event_subscriber.h"
 #include "access_token_error.h"
+#include "dual_mode_helper.h"
 #undef private
 
 using namespace testing::ext;
@@ -65,6 +66,7 @@ namespace AccessToken {
     extern bool g_spmIsMigrationDoneValue;
     extern int32_t g_spmMigrateInstalledBundlesRet;
     extern bool g_spmMigratePopulateResults;
+    void ResetSpmKitMockValuesForTest();
 }
 }
 }
@@ -408,7 +410,9 @@ void BmsEventHandlerTest::TearDownTestCase()
 }
 
 void BmsEventHandlerTest::SetUp()
-{}
+{
+    OHOS::Security::AccessToken::ResetSpmKitMockValuesForTest();
+}
 
 void BmsEventHandlerTest::InitBundleMgrServiceForTest()
 {
@@ -437,6 +441,7 @@ void BmsEventHandlerTest::TearDown()
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr != nullptr) {
         dataMgr->bundleInfos_.clear();
+        dataMgr->tempBundleInfos_.clear();
     }
 }
 
@@ -5103,6 +5108,123 @@ HWTEST_F(BmsEventHandlerTest, ProcessAccessTokenMigration_0700, Function | Small
     InnerBundleInfo after;
     EXPECT_TRUE(dataMgr->FetchInnerBundleInfo(BUNDLE_NAME, after));
     EXPECT_TRUE(after.IsBundleCheckBySpm());
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: ProcessAccessTokenMigration_0800
+ * @tc.name: ProcessAccessTokenMigration
+ * @tc.desc: temp bundle -> BuildFromTempBundles collects, migration succeeds, checkBySpm set on temp
+ */
+HWTEST_F(BmsEventHandlerTest, ProcessAccessTokenMigration_0800, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    dataMgr->tempBundleInfos_.clear();
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = BUNDLE_NAME;
+    userInfo.bundleUserInfo.userId = 100;
+    userInfo.uid = 20000100;
+    userInfo.accessTokenId = 0x12345678;
+    info.innerBundleUserInfos_[BUNDLE_NAME + Constants::FILE_UNDERLINE + std::to_string(100)] = userInfo;
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] = info;
+    auto bmsParam = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    ASSERT_NE(bmsParam, nullptr);
+    bmsParam->DeleteBmsParam(ServiceConstants::ACCESS_TOKEN_MIGRATION_DONE_MARK);
+    g_spmFinishMigrationRet = 0;
+    g_spmIsMigrationDoneRet = 0;
+    g_spmIsMigrationDoneValue = false;
+    g_spmMigrateInstalledBundlesRet = 0;
+    g_spmMigratePopulateResults = true;
+    EXPECT_TRUE(handler->InnerProcessAccessTokenMigration());
+    InnerBundleInfo after;
+    EXPECT_TRUE(dataMgr->FetchTempBundleInfo(BUNDLE_NAME, after));
+    EXPECT_TRUE(after.IsBundleCheckBySpm());
+    EXPECT_TRUE(handler->IsAccessTokenMigrationFinished());
+    g_spmMigratePopulateResults = false;
+    dataMgr->tempBundleInfos_.clear();
+}
+
+/**
+ * @tc.number: ProcessAccessTokenMigration_0900
+ * @tc.name: ProcessAccessTokenMigration
+ * @tc.desc: system app -> SplitSystemAndNonSystem routes to systemApps batch, migration succeeds
+ */
+HWTEST_F(BmsEventHandlerTest, ProcessAccessTokenMigration_0900, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    info.baseApplicationInfo_->isSystemApp = true;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = BUNDLE_NAME;
+    userInfo.bundleUserInfo.userId = 100;
+    userInfo.uid = 20000100;
+    userInfo.accessTokenId = 0x12345678;
+    info.innerBundleUserInfos_[BUNDLE_NAME + Constants::FILE_UNDERLINE + std::to_string(100)] = userInfo;
+    dataMgr->bundleInfos_[BUNDLE_NAME] = info;
+    auto bmsParam = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    ASSERT_NE(bmsParam, nullptr);
+    bmsParam->DeleteBmsParam(ServiceConstants::ACCESS_TOKEN_MIGRATION_DONE_MARK);
+    g_spmFinishMigrationRet = 0;
+    g_spmIsMigrationDoneRet = 0;
+    g_spmIsMigrationDoneValue = false;
+    g_spmMigrateInstalledBundlesRet = 0;
+    g_spmMigratePopulateResults = true;
+    EXPECT_TRUE(handler->InnerProcessAccessTokenMigration());
+    InnerBundleInfo after;
+    EXPECT_TRUE(dataMgr->FetchInnerBundleInfo(BUNDLE_NAME, after));
+    EXPECT_TRUE(after.IsBundleCheckBySpm());
+    EXPECT_TRUE(handler->IsAccessTokenMigrationFinished());
+    g_spmMigratePopulateResults = false;
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: ProcessAccessTokenMigration_1000
+ * @tc.name: ProcessAccessTokenMigration
+ * @tc.desc: dual-mode clone -> SUB_MODE, mainInstIndex=DUAL_MODE_CLONE_APP_INDEX, migration succeeds
+ */
+HWTEST_F(BmsEventHandlerTest, ProcessAccessTokenMigration_1000, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    info.isDualModeCloneApp_ = true;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = BUNDLE_NAME;
+    userInfo.bundleUserInfo.userId = 100;
+    userInfo.uid = 20000100;
+    userInfo.accessTokenId = 0x12345678;
+    info.innerBundleUserInfos_[BUNDLE_NAME + Constants::FILE_UNDERLINE + std::to_string(100)] = userInfo;
+    dataMgr->bundleInfos_[BUNDLE_NAME] = info;
+    auto bmsParam = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    ASSERT_NE(bmsParam, nullptr);
+    bmsParam->DeleteBmsParam(ServiceConstants::ACCESS_TOKEN_MIGRATION_DONE_MARK);
+    g_spmFinishMigrationRet = 0;
+    g_spmIsMigrationDoneRet = 0;
+    g_spmIsMigrationDoneValue = false;
+    g_spmMigrateInstalledBundlesRet = 0;
+    g_spmMigratePopulateResults = true;
+    EXPECT_TRUE(handler->InnerProcessAccessTokenMigration());
+    InnerBundleInfo after;
+    EXPECT_TRUE(dataMgr->FetchInnerBundleInfo(BUNDLE_NAME, after));
+    EXPECT_TRUE(after.IsBundleCheckBySpm());
+    EXPECT_TRUE(handler->IsAccessTokenMigrationFinished());
+    g_spmMigratePopulateResults = false;
     dataMgr->bundleInfos_.clear();
 }
 } // OHOS
