@@ -23,7 +23,9 @@
 #include <thread>
 #include <unistd.h>
 
+#include "accesstoken_kit.h"
 #include "appexecfwk_errors.h"
+#include "bundle_constants.h"
 #include "bundle_info.h"
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
@@ -57,7 +59,49 @@ const std::string RESOURCE_TEST_PATH = "/data/test/resource/bms/install_bundle/t
 const std::string DB_FILE_PATH = "/data/bundlemgr";
 const int32_t INVALID_USERID = 0;
 const int32_t USERID = 100;
-const int32_t WAIT_TIME = 2; // init mocked bms
+const int32_t WAIT_TIME = 2;  // init mocked bms
+
+// SPM ON prerequisite: the mocked access-token boundary is fed the trusted
+// per-hap sign answer for the haps this suite installs, so the installs pass
+// the real SPM verification chain (CheckSignAndInitSession) instead of
+// failing closed on the empty default mock (0 entries -> 8519752). The
+// provision mirrors the REAL profile the haps are signed with
+// (com.example.l3jsdemo.p7b — release / os_integration / system_core /
+// hos_system_app / no app-identifier), like bms_multiple_installer_test.
+constexpr int32_t TEST_SPM_SESSION_ID = 4242;
+constexpr uint64_t TEST_SPM_TOKEN_ID = 101;
+// InitToken rejects a uid outside the installing user's uid segment, so the
+// AT-allocated identity must be valid for USERID.
+constexpr int32_t TEST_SPM_UID = USERID * Constants::BASE_USER_RANGE + 102;
+
+void SetUpSpmTrustedSignInfoForTest()
+{
+    const std::string provision = Security::AccessToken::MakeSpmReleaseProvisionRawForTest(
+        BUNDLE_NAME, "os_integration", false, "hos_system_app", "system_core", "");
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest("first_right.hap", provision);
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest("second_right.hap", provision);
+    Security::AccessToken::SetSpmCheckHapSignInfoSessionIdForTest(TEST_SPM_SESSION_ID);
+    Security::AccessToken::SetSpmPrepareIdentityForTest(TEST_SPM_TOKEN_ID, TEST_SPM_UID);
+}
+
+// Leftover persistent state of this suite's bundle must be wiped before the
+// first install (records persisted by earlier runs store the app id the REAL
+// signature derived — a mocked provision deriving a different one fails the
+// keep-data / app-identifier comparisons with INCONSISTENT_SIGNATURE).
+void ClearSpmLeftoverUninstallRecordsForTest()
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        return;
+    }
+    InnerBundleInfo leftoverInfo;
+    if (dataMgr->FetchInnerBundleInfo(BUNDLE_NAME, leftoverInfo)) {
+        dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::INSTALL_START);
+        dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_START);
+        dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_SUCCESS);
+    }
+    dataMgr->DeleteUninstallBundleInfo(BUNDLE_NAME, USERID);
+}
 }  // namespace
 
 class BmsBundleUninstallerTest : public testing::Test {
@@ -105,10 +149,21 @@ BmsBundleUninstallerTest::~BmsBundleUninstallerTest()
 
 void BmsBundleUninstallerTest::SetUpTestCase()
 {
+    // SPM stays ON (its device default): feed the mocked access-token
+    // boundary with the trusted sign answer for the haps this suite
+    // installs, so the installs pass the real SPM verification chain
+    // instead of failing closed on the empty default mock. Must run before
+    // the first install — nothing in this binary resets the mock control
+    // variables afterwards.
+    SetUpSpmTrustedSignInfoForTest();
     bundleMgrService_->InitBundleInstaller();
     bundleMgrService_->InitBundleDataMgr();
     bundleMgrService_->GetDataMgr()->AddUserId(USERID);
     bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();
+    // Drop the leftover keep-data uninstall record / stale installed row of
+    // this suite's bundle before the first install (the persisted data is
+    // loaded above).
+    ClearSpmLeftoverUninstallRecordsForTest();
 }
 
 void BmsBundleUninstallerTest::TearDownTestCase()
