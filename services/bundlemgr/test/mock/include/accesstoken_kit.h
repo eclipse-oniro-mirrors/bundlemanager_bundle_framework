@@ -103,6 +103,15 @@ void SetUpdateHapTokenResultForTest(int32_t ret);
 void SetSpmTrustedBundleInfosForTest(const std::vector<TrustedBundleInfo>& bundleInfos);
 void SetSpmCheckHapSignInfoSessionIdForTest(int32_t sessionId);
 void SetSpmPrepareIdentityForTest(uint64_t tokenId, int32_t uid);
+// Follow-user identity mode: when enabled, PrepareHapIdentity allocates the
+// fresh uid INSIDE the uid segment of the user the identity is prepared for
+// (HapBaseInfo.userID), keeping the bundle-id offset of the uid staged via
+// SetSpmPrepareIdentityForTest — mirrors the real AT contract for suites
+// whose installs fan out one bundle to several users (the OTA system-bundle
+// install), where a single fixed uid can not satisfy the per-user uid
+// segment consistency check of InitToken. Off by default: every other suite
+// keeps the fixed staged uid.
+void SetSpmPrepareIdentityUidFollowUserForTest(bool followUser);
 // Per-hap-file provision registry: for suites that install several bundles,
 // or install a whole directory (whose hap enumeration order is not
 // deterministic), tests register each hap file's provision by file name.
