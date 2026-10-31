@@ -32,6 +32,7 @@
 #include "installd/installd_service.h"
 #include "installd_client.h"
 #include "mock_status_receiver.h"
+#include "parameters.h"
 
 using namespace testing::ext;
 using namespace std::chrono_literals;
@@ -90,6 +91,14 @@ void SetUpSpmTrustedSignInfoForTest()
             "os_integration", true));
     Security::AccessToken::SetSpmCheckHapSignInfoSessionIdForTest(TEST_SPM_SESSION_ID);
     Security::AccessToken::SetSpmPrepareIdentityForTest(TEST_SPM_TOKEN_ID, TEST_SPM_UID);
+    // The mock parameter map makes const.bms.supportAppTypes read empty (on a
+    // real device it is a non-empty device-type list): these sharelibrary
+    // haps are old-toolchain products whose deviceTypes miss the running
+    // device's entry, so CheckSysCap fails and the install drops into
+    // CheckDeviceType, where only the non-empty supportAppTypes fast path
+    // (the device behavior) lets them through — mirror a full device-type
+    // list so every non-empty hap deviceTypes vector intersects it.
+    OHOS::system::SetParameter("const.bms.supportAppTypes", "default,phone,tablet,2in1");
 }
 
 class BmsBundleSharedLibraryUninstallTest : public testing::Test {
