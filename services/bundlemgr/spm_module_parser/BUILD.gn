@@ -34,18 +34,29 @@ ohos_shared_library("spm_module_parser") {
 
   include_dirs = [
     "include",
+    "${services_path}/bundlemgr/include",
+    "${base_path}/include",
     "${common_path}/log/include",
   ]
 
   sources = [
+    "src/atm_bundle_recovery_reader.cpp",
+    "src/atm_recovery_record_decoder.cpp",
+    "src/read_only_installed_bundle_store.cpp",
     "src/spm_module_parser.cpp",
   ]
 
   public_configs = [ ":bms_spm_module_parser_config" ]
 
+  deps = [ "${base_path}:appexecfwk_base" ]
+
   external_deps = [
+    "access_token:libaccesstoken_sdk",
+    "access_token:libtokensetproc_shared",
+    "c_utils:utils",
     "hilog:libhilog",
     "json:nlohmann_json_static",
+    "relational_store:native_rdb",
   ]
 
   part_name = "bundle_framework"
