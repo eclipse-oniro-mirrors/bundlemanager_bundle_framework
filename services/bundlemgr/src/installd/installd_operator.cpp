@@ -16,9 +16,9 @@
 #include "installd/installd_operator.h"
 
 #include <algorithm>
-#include <openssl/x509.h>
-#include <openssl/pem.h>
 #include <openssl/asn1.h>
+#include <openssl/pem.h>
+#include <openssl/x509.h>
 #if defined(CODE_SIGNATURE_ENABLE)
 #include "code_sign_utils.h"
 #endif
@@ -4270,7 +4270,7 @@ bool InstalldOperator::ReadCert(const std::string &path, std::vector<unsigned ch
 #if defined(CODE_SIGNATURE_ENABLE)
     FILE *file = fopen(path.c_str(), "r");
     if (file == nullptr) {
-        LOG_E(BMS_TAG_INSTALLD, "open file failed path:%{public}s errno: %{public}d", path.c_str(), errno);
+        LOG_E(BMS_TAG_INSTALLD, "open file failed path:%{private}s errno: %{public}d", path.c_str(), errno);
         return false;
     }
     int32_t fd = fileno(file);
