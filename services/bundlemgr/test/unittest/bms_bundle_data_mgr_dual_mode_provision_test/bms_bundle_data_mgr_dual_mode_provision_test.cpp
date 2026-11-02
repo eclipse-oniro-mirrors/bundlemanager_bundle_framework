@@ -89,7 +89,7 @@ std::shared_ptr<BundleDataMgr> BmsBundleDataMgrDualModeProvisionTest::GetBundleD
     return bundleMgrService_->GetDataMgr();
 }
 
-void SetDaulModeCache(int32_t ispcmode, int32_t mainmode)
+void SetDualModeCache(int32_t ispcmode, int32_t mainmode)
 {
     OHOS::system::SetParameter("persist.bms.test_dual_mode", "true");
     OHOS::system::SetParameter("persist.bms.ispcmode", std::to_string(ispcmode));
@@ -863,7 +863,7 @@ HWTEST_F(BmsBundleDataMgrDualModeProvisionTest, SetAdditionalInfoByIndex_0500, F
  *           2. appIndex is DEFAULT_APP_INDEX, SetAdditionalInfo succeeds 
  *           3. return ERR_OK
  */
-HWTEST_F(BmsBundleDataMgrDualModeProvisionTest, SetAdditionalInfoByIndex_0500, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataMgrDualModeProvisionTest, SetAdditionalInfoByIndex_0600, Function | SmallTest | Level1)
 {
     SetDualModeCache(ServiceConstants::DUAL_MODE_VALUE_2IN1, ServiceConstants::DUAL_MODE_VALUE_TABLET);
     GetBundleDataMgr()->multiUserIdsSet_.insert(Constants::ANY_USERID);

@@ -187,7 +187,7 @@ HWTEST_F(BmsBundleMgrHostImplProvisionTest, GetAllAppProvisionInfoInDevice_HostI
 HWTEST_F(BmsBundleMgrHostImplProvisionTest, SetAditionalInfoByIndex_HostImpl_0001,
     Function | SmallTest | Level1)
 {
-    SetSystemAppForTest(FALSE);
+    SetSystemAppForTest(false);
 
     std::string additionalInfo = "additionalInfo";
     ErrCode ret = bundleMgrHostImpl_->SetAdditionalInfoByIndex(
@@ -277,7 +277,7 @@ HWTEST_F(BmsBundleMgrHostImplProvisionTest, GetAllAppProvisionInfoInDevice_HostI
     SetVerifyCallingPermissionForTest(false);
 
     std::vector<AppProvisionInfo> appProvisionInfos;
-    ErrCode ret = bundleMgrHostImpl_->GetAppProvisionInfoInDevice(OTHER_USER_ID, appProvisionInfos);
+    ErrCode ret = bundleMgrHostImpl_->GetAllAppProvisionInfoInDevice(OTHER_USER_ID, appProvisionInfos);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 
