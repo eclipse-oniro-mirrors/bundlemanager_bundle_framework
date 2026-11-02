@@ -7871,7 +7871,7 @@ ErrCode BundleDataMgr::SetBundleFirstLaunch(const std::string &bundleName, int32
     bool isValidAppIndex = (isSecondaryMode && isSecondaryAppIndex) || (!isSecondaryMode && !isSecondaryAppIndex);
     if (!isValidAppIndex) {
         APP_LOGW("Request appIndex %{public}d is invalid", appIndex);
-        return ERR_BUNDLE_MANAGER_INVALID_APP_INDEX;
+        return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
     }
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
