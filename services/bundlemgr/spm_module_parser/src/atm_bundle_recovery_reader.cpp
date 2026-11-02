@@ -34,9 +34,9 @@ using namespace AtmRecovery;
 
 AtmBundleRecoveryResult ReadRecoveryInfo()
 {
-    ReadOnlyInstalledBundleStore store;
+    ReadOnlyInstalledBundleStore installedStore;
     std::map<std::string, std::string> records;
-    if (!store.Open() || !store.QueryAllData(records)) {
+    if (!installedStore.Open() || !installedStore.QueryAllData(records)) {
         LOG_NOFUNC_E(BMS_TAG_QUERY, "ATM recovery: cannot read installed records");
         return {ERR_APPEXECFWK_DB_GET_DATA_ERROR, {}};
     }
@@ -51,8 +51,9 @@ AtmBundleRecoveryResult ReadRecoveryInfo()
             std::make_move_iterator(infos.end()));
         ++normalRecordCount;
     }
+    ReadOnlyInstalledBundleStore uninstallStore;
     std::map<std::string, std::string> uninstallRecords;
-    if (!store.Open() || !store.QueryAllUninstallData(uninstallRecords)) {
+    if (!uninstallStore.Open() || !uninstallStore.QueryAllUninstallData(uninstallRecords)) {
         LOG_NOFUNC_E(BMS_TAG_QUERY, "ATM recovery: cannot read uninstall records");
         return {ERR_APPEXECFWK_DB_GET_DATA_ERROR, {}};
     }

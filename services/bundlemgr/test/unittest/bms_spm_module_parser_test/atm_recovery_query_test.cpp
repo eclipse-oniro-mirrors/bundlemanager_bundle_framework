@@ -34,7 +34,10 @@ int g_verifyCalls;
 bool g_openOk;
 bool g_readOk;
 int g_openCalls;
+int g_failOpenCall;
 size_t g_cursor;
+bool g_uninstallReadOk;
+std::map<const void *, int> g_storeOpenCalls;
 std::vector<std::pair<std::string, std::string>> records;
 std::vector<std::pair<std::string, std::string>> uninstallRecords;
 const char *GOOD = R"({"baseBundleInfo":{"name":"app"},
@@ -54,12 +57,16 @@ int AccessTokenKit::VerifyAccessToken(AccessTokenID token, const std::string &pe
 } // namespace OHOS::Security::AccessToken
 
 namespace OHOS::AppExecFwk::AtmRecovery {
-ReadOnlyInstalledBundleStore::ReadOnlyInstalledBundleStore(const std::string &path) : path_(path) {}
+ReadOnlyInstalledBundleStore::ReadOnlyInstalledBundleStore(const std::string &path) : path_(path)
+{
+    g_storeOpenCalls[this] = 0;
+}
 ReadOnlyInstalledBundleStore::~ReadOnlyInstalledBundleStore() = default;
 bool ReadOnlyInstalledBundleStore::Open()
 {
     ++g_openCalls;
-    return g_openOk;
+    ++g_storeOpenCalls[this];
+    return g_openOk && g_openCalls != g_failOpenCall;
 }
 bool ReadOnlyInstalledBundleStore::QueryAllData(std::map<std::string, std::string> &data)
 {
@@ -76,7 +83,7 @@ bool ReadOnlyInstalledBundleStore::QueryAllUninstallData(std::map<std::string, s
     for (const auto &record : uninstallRecords) {
         data.insert(record);
     }
-    return g_readOk;
+    return g_uninstallReadOk;
 }
 }
 namespace OHOS::AppExecFwk {
@@ -91,7 +98,10 @@ class AtmRecoveryQueryTest : public testing::Test {
         g_verifyCalls = 0;
         g_openOk = g_readOk = true;
         g_openCalls = 0;
+        g_failOpenCall = 0;
         g_cursor = 0;
+        g_uninstallReadOk = true;
+        g_storeOpenCalls.clear();
         records.clear();
         uninstallRecords.clear();
     }
@@ -211,6 +221,11 @@ HWTEST_F(AtmRecoveryQueryTest, ReturnsEveryUninstalledUserAndAppIndex, Function 
     uninstallRecords = {{"com.ohos.target.directboot", uninstall.dump()}};
     const auto result = QueryAtmBundleRecoveryInfo();
     ASSERT_EQ(result.code, ERR_OK);
+    EXPECT_EQ(g_openCalls, 2);
+    ASSERT_EQ(g_storeOpenCalls.size(), 2U);
+    for (const auto &storeOpenCall : g_storeOpenCalls) {
+        EXPECT_EQ(storeOpenCall.second, 1);
+    }
     ASSERT_EQ(result.infos.size(), 4U);
     EXPECT_FALSE(result.infos[0].isUninstalled);
     for (size_t index = 1; index < result.infos.size(); ++index) {
@@ -229,6 +244,30 @@ HWTEST_F(AtmRecoveryQueryTest, ReturnsEveryUninstalledUserAndAppIndex, Function 
     EXPECT_EQ(result.infos[2].uid, 20010046);
     EXPECT_EQ(result.infos[3].userId, 101);
     EXPECT_EQ(result.infos[3].appIndex, 0);
+}
+
+/**
+ * @tc.name: UninstallStageFailureDiscardsInstalledResults
+ * @tc.desc: Return a database error without partial results when opening or reading uninstall data fails.
+ */
+HWTEST_F(AtmRecoveryQueryTest, UninstallStageFailureDiscardsInstalledResults, Function | SmallTest | Level1)
+{
+    records = {{"app", GOOD}};
+    uninstallRecords = {{"com.ohos.target.directboot", "{}"}};
+
+    g_failOpenCall = 2;
+    auto openResult = QueryAtmBundleRecoveryInfo();
+    EXPECT_EQ(openResult.code, ERR_APPEXECFWK_DB_GET_DATA_ERROR);
+    EXPECT_TRUE(openResult.infos.empty());
+    EXPECT_EQ(g_openCalls, 2);
+
+    g_openCalls = 0;
+    g_failOpenCall = 0;
+    g_uninstallReadOk = false;
+    auto readResult = QueryAtmBundleRecoveryInfo();
+    EXPECT_EQ(readResult.code, ERR_APPEXECFWK_DB_GET_DATA_ERROR);
+    EXPECT_TRUE(readResult.infos.empty());
+    EXPECT_EQ(g_openCalls, 2);
 }
 
 /**
