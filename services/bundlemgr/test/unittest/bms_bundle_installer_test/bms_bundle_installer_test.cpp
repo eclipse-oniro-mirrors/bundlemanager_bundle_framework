@@ -96,6 +96,10 @@ namespace Security {
 namespace AccessToken {
 void SetVerifyAccessTokenResultForTest(const std::string& permissionName, int result);
 void ResetVerifyAccessTokenResultsForTest();
+// Session-policy knob (see SetUpSpmTrustedSignInfoForTest): the granted list
+// InstallSession::VerifyPermission matches the mid-install permission gates
+// against.
+extern std::vector<std::string> g_spmCachePolicyReqPermissions;
 void SetTokenTypeFlagForTest(ATokenTypeEnum tokenType);
 }
 }
@@ -300,6 +304,18 @@ void SetUpSpmTrustedSignInfoForTest()
 
     Security::AccessToken::SetSpmCheckHapSignInfoSessionIdForTest(TEST_SPM_SESSION_ID);
     Security::AccessToken::SetSpmPrepareIdentityForTest(TEST_SPM_TOKEN_ID, TEST_SPM_UID);
+    // Grant the mid-install permission gates' permissions in the session
+    // policy: the legacy mock's VerifyAccessToken grants unknown permissions
+    // by default (the #else default-grant branch), so the gates passed before
+    // the session-policy switch — mirror that grant for the deferred sessions
+    // of the direct-call cases (an empty policy would flip them to the deny
+    // path, e.g. ExtractNPAPIPluginFiles NOT_APPLICABLE instead of
+    // EXTRACT_FAILED).
+    Security::AccessToken::g_spmCachePolicyReqPermissions = {
+        "ohos.permission.atomicService.MANAGE_AGING",
+        "ohos.permission.atomicService.MANAGE_STORAGE",
+        "ohos.permission.SUPPORT_NP_PLUGIN_FOR_WEB",
+    };
 }
 
 // Leftover persistent state of this suite's bundles must be wiped before the
