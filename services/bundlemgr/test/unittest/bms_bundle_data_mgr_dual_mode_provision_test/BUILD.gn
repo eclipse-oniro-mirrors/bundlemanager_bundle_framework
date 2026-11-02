@@ -32,7 +32,7 @@ ohos_unittest("BmsBundleDataMgrDualModeProvisionTest") {
   include_dirs = [
     "mock/include",
     "../../mock/include/parameter",
-    "${kit_path}/js/bundle_manager",
+    "${kits_path}/js/bundle_manager",
   ]
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
