@@ -25,7 +25,7 @@ ohos_unittest("BmsBundleMgrHostImplProvisionTest") {
   use_exceptions = true
   module_out_path = module_output_path
   sources = bundle_mgr_source
-  sources += bundle_install_source
+  sources += bundle_install_sources
 
   sources -= [ "${services_path}/bundlemgr/src/bundle_permission_mgr.cpp" ]
   sources +=
