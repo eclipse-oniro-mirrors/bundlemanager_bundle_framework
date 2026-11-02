@@ -1589,7 +1589,11 @@ void BaseBundleInstaller::VerifyDelayedAging(InnerBundleInfo &bundleInfo, int32_
 {
     LOG_D(BMS_TAG_INSTALLER, "Start verifying if there is a delay in aging");
     bool isDelayedAging = false;
-    if (BundlePermissionMgr::VerifyPermission(bundleInfo.GetBundleName(), ServiceConstants::PERMISSION_MANAGE_AGING,
+    // SPM ON: verify against the session's cached policy — the mid-install
+    // legacy lookup (GetHapTokenID + VerifyAccessToken) sees no committed
+    // token for a fresh install and denies what the session actually grants.
+    if (spmSession_.VerifyPermission(bundleInfo.GetBundleName(),
+        ServiceConstants::PERMISSION_MANAGE_AGING,
         uid / Constants::BASE_USER_RANGE) != Security::AccessToken::PermissionState::PERMISSION_GRANTED) {
         APP_LOGD("no permission to delay aging %{public}s", bundleInfo.GetBundleName().c_str());
         bundleInfo.SetDelayedAging(isDelayedAging);
@@ -4604,7 +4608,9 @@ void BaseBundleInstaller::ParseSizeFromProvision(
         if (item.first != ServiceConstants::PERMISSION_MANAGE_STORAGE) {
             continue;
         }
-        if (BundlePermissionMgr::VerifyPermission(bundleName, ServiceConstants::PERMISSION_MANAGE_STORAGE,
+        // SPM ON: verify against the session's cached policy — same mid-install
+        // reasoning as VerifyDelayedAging above.
+        if (spmSession_.VerifyPermission(bundleName, ServiceConstants::PERMISSION_MANAGE_STORAGE,
             uid / Constants::BASE_USER_RANGE) != Security::AccessToken::PermissionState::PERMISSION_GRANTED) {
             APP_LOGW("no manage storage permission for %{public}s", bundleName.c_str());
             return;
@@ -5505,7 +5511,9 @@ void BaseBundleInstaller::ExtractResourceFiles(const InnerBundleInfo &info, bool
 void BaseBundleInstaller::ExtractNPAPIPluginFiles(const std::string &modulePath)
 {
     LOG_D(BMS_TAG_INSTALLER, "ExtractNPAPIPluginFiles begin");
-    if (BundlePermissionMgr::VerifyPermission(bundleName_,
+    // SPM ON: verify against the session's cached policy — same mid-install
+    // reasoning as VerifyDelayedAging above.
+    if (spmSession_.VerifyPermission(bundleName_,
         ServiceConstants::PERMISSION_SUPPORT_NP_PLUGIN_FOR_WEB, userId_) !=
         Security::AccessToken::PermissionState::PERMISSION_GRANTED) {
         LOG_D(BMS_TAG_INSTALLER, "no permission to extract npapi plugin files");

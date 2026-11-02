@@ -55,6 +55,7 @@ extern std::vector<TrustedBundleInfo> g_spmTrustedBundleInfos;
 extern int32_t g_spmCheckHapPermissionInfoRet;
 extern int32_t g_spmCheckHapPermissionInfoCallCount;
 extern int32_t g_spmCheckHapPermissionInfoLastMode;
+extern std::vector<std::string> g_spmCachePolicyReqPermissions;
 extern int32_t g_spmPrepareHapIdentityRet;
 extern int32_t g_spmPrepareHapIdentityCallCount;
 extern uint64_t g_spmPrepareIdentityTokenId;
@@ -493,6 +494,119 @@ HWTEST_F(BmsSpmManagerOnTest, VerifyPermission_DeferredSession_0001, Function | 
     auto session = BundleSpmManager::InstallSession::CreateDeferred();
     EXPECT_EQ(session.VerifyPermission(BUNDLE_NAME, PERMISSION_NAME, TEST_USERID),
         ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: BmsSpmManagerOnTest.VerifyPermission_ActiveSession_PolicyGrant_0001
+ * @tc.name: VerifyPermission grants a permission listed in the session policy
+ * @tc.desc: The mid-install permission gates (VerifyDelayedAging /
+ *           ParseSizeFromProvision / ExtractNPAPIPluginFiles) verify against
+ *           the session's cached policy: a permission present in the mocked
+ *           policy resolves as granted (ERR_OK).
+ */
+HWTEST_F(BmsSpmManagerOnTest, VerifyPermission_ActiveSession_PolicyGrant_0001, Function | MediumTest | Level1)
+{
+    auto session = MakeActiveSession();
+    OHOS::Security::AccessToken::g_spmCachePolicyReqPermissions = {PERMISSION_NAME};
+    EXPECT_EQ(session.VerifyPermission(BUNDLE_NAME, PERMISSION_NAME, TEST_USERID), ERR_OK);
+    OHOS::Security::AccessToken::g_spmCachePolicyReqPermissions.clear();
+}
+
+/**
+ * @tc.number: BmsSpmManagerOnTest.VerifyPermission_ActiveSession_PolicyMiss_0002
+ * @tc.name: VerifyPermission denies a permission absent from the session policy
+ * @tc.desc: An active session whose policy does not list the permission is
+ *           denied with the registered ERR_BUNDLE_MANAGER_PERMISSION_DENIED
+ *           code — the gate the call sites deny with.
+ */
+HWTEST_F(BmsSpmManagerOnTest, VerifyPermission_ActiveSession_PolicyMiss_0002, Function | MediumTest | Level1)
+{
+    auto session = MakeActiveSession();
+    OHOS::Security::AccessToken::g_spmCachePolicyReqPermissions = {"ohos.permission.OTHER"};
+    EXPECT_EQ(session.VerifyPermission(BUNDLE_NAME, PERMISSION_NAME, TEST_USERID),
+        ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    OHOS::Security::AccessToken::g_spmCachePolicyReqPermissions.clear();
+}
+
+/**
+ * @tc.number: BmsSpmManagerOnTest.VerifyDelayedAging_SessionPolicy_0001
+ * @tc.name: VerifyDelayedAging follows the session policy under SPM ON
+ * @tc.desc: The aging gate verifies against the session's cached policy (the
+ *           mid-install legacy token lookup sees no committed token for a
+ *           fresh install): the aging permission granted -> delayed aging
+ *           set; absent -> cleared.
+ */
+HWTEST_F(BmsSpmManagerOnTest, VerifyDelayedAging_SessionPolicy_0001, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    installer.spmSession_ = MakeActiveSession();
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    info.SetBaseBundleInfo(bundleInfo);
+    OHOS::Security::AccessToken::g_spmCachePolicyReqPermissions =
+        {"ohos.permission.atomicService.MANAGE_AGING"};
+    installer.VerifyDelayedAging(info, TEST_IDENTITY_UID);
+    EXPECT_TRUE(info.GetDelayedAging());
+
+    OHOS::Security::AccessToken::g_spmCachePolicyReqPermissions.clear();
+    installer.spmSession_ = MakeActiveSession();
+    installer.VerifyDelayedAging(info, TEST_IDENTITY_UID);
+    EXPECT_FALSE(info.GetDelayedAging());
+}
+
+/**
+ * @tc.number: BmsSpmManagerOnTest.ExtractNPAPIPluginFiles_SessionPolicy_0001
+ * @tc.name: ExtractNPAPIPluginFiles gate follows the session policy
+ * @tc.desc: The NPAPI extraction gate verifies against the session's cached
+ *           policy: the permission granted -> the gate passes and the status
+ *           reflects the installd outcome (never the NOT_APPLICABLE gate);
+ *           absent -> STATUS_NOT_APPLICABLE.
+ */
+HWTEST_F(BmsSpmManagerOnTest, ExtractNPAPIPluginFiles_SessionPolicy_0001, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    installer.spmSession_ = MakeActiveSession();
+    installer.bundleName_ = BUNDLE_NAME;
+    installer.modulePackage_ = "entry";
+    installer.userId_ = TEST_USERID;
+    OHOS::Security::AccessToken::g_spmCachePolicyReqPermissions =
+        {"ohos.permission.SUPPORT_NP_PLUGIN_FOR_WEB"};
+    installer.ExtractNPAPIPluginFiles("/data/test/entry.hap");
+    EXPECT_NE(installer.npapiPluginStatus_, BaseBundleInstaller::NpapiPluginStatus::STATUS_NOT_APPLICABLE);
+
+    OHOS::Security::AccessToken::g_spmCachePolicyReqPermissions.clear();
+    installer.ExtractNPAPIPluginFiles("/data/test/entry.hap");
+    EXPECT_EQ(installer.npapiPluginStatus_, BaseBundleInstaller::NpapiPluginStatus::STATUS_NOT_APPLICABLE);
+}
+
+/**
+ * @tc.number: BmsSpmManagerOnTest.ParseSizeFromProvision_SessionPolicy_0001
+ * @tc.name: ParseSizeFromProvision gate follows the session policy
+ * @tc.desc: The storage quota gate verifies against the session's cached
+ *           policy: the storage permission granted -> the provisioned
+ *           storageSize applies; absent -> the quota stays at the caller's
+ *           value.
+ */
+HWTEST_F(BmsSpmManagerOnTest, ParseSizeFromProvision_SessionPolicy_0001, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    installer.spmSession_ = MakeActiveSession();
+    installer.bundleName_ = BUNDLE_NAME;
+    Security::Verify::ProvisionInfo provisionInfo;
+    provisionInfo.appServiceCapabilities = R"({"ohos.permission.atomicService.MANAGE_STORAGE":
+        "{\"storageSize\":\"500\"}"})";
+    installer.verifyRes_.SetProvisionInfo(provisionInfo);
+    int32_t sizeMb = 100;
+    OHOS::Security::AccessToken::g_spmCachePolicyReqPermissions =
+        {"ohos.permission.atomicService.MANAGE_STORAGE"};
+    installer.ParseSizeFromProvision(BUNDLE_NAME, TEST_IDENTITY_UID, sizeMb);
+    EXPECT_EQ(sizeMb, 500);
+
+    OHOS::Security::AccessToken::g_spmCachePolicyReqPermissions.clear();
+    sizeMb = 100;
+    installer.ParseSizeFromProvision(BUNDLE_NAME, TEST_IDENTITY_UID, sizeMb);
+    EXPECT_EQ(sizeMb, 100);
 }
 
 /**

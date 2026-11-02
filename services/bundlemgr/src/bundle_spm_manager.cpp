@@ -773,7 +773,7 @@ int32_t BundleSpmManager::InstallSession::CheckPermissionInfo(
 }
 
 int32_t BundleSpmManager::InstallSession::VerifyPermission(const std::string &bundleName,
-    const std::string &permission, int32_t userId)
+    const std::string &permission, int32_t userId) const
 {
     (void)userId;
     if (!IsEnabled()) {
