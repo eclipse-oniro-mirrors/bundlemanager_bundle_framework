@@ -908,6 +908,8 @@ private:
 
     ErrCode HandleQueryDataGroupInfos(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleQueryIpcGroupInfos(MessageParcel &data, MessageParcel &reply);
+
     ErrCode HandleGetPreferenceDirByGroupId(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleQueryAppGalleryBundleName(MessageParcel &data, MessageParcel &reply);

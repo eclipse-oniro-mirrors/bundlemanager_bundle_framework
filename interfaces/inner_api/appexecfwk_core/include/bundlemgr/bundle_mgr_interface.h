@@ -43,6 +43,7 @@
 #include "common_event_info.h"
 #include "get_largest_items_callback_interface.h"
 #include "data_group_info.h"
+#include "ipc_group_info.h"
 #include "app_control_interface.h"
 #include "bundle_resource_interface.h"
 #include "bundle_skill/skill_manager_interface.h"
@@ -1793,6 +1794,12 @@ public:
     virtual bool QueryDataGroupInfos(const std::string &bundleName, int32_t userId, std::vector<DataGroupInfo> &infos)
     {
         return false;
+    }
+
+    virtual ErrCode QueryIpcGroupInfos(const std::string &bundleName, int32_t userId,
+        std::vector<IpcGroupInfo> &infos)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
     virtual bool GetGroupDir(const std::string &dataGroupId, std::string &dir)

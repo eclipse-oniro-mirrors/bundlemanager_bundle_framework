@@ -254,6 +254,10 @@ void ResetTestValues()
 }
 namespace OHOS {
 int32_t g_testVerifyPermission = 0;
+void SetVerifyPermissionForTest(int32_t value)
+{
+    g_testVerifyPermission = value;
+}
 // Test knobs for BundleSpmManager::CreateBundlePolicy branch coverage.
 bool g_defaultPermissionRet = true;
 AppExecFwk::DefaultPermission g_mockDefaultPermission;
@@ -368,7 +372,7 @@ int32_t BundlePermissionMgr::DeleteAccessTokenId(const AccessTokenID tokenId, bo
     g_deleteAccessTokenIdReserved = isTokenReserved;
     return -1;
 }
-bool BundlePermissionMgr::VerifyAcrossUserPermission(int userId)
+bool BundlePermissionMgr::VerifyAcrossUserPermission(const int32_t userId)
 {
     return false;
 }
@@ -458,9 +462,9 @@ bool BundlePermissionMgr::IsBundleSelfCalling(const std::string &bundleName, con
 {
     return true;
 }
-bool BundlePermissionMgr::VerifyAcrossUserPermission(int userId)
+bool BundlePermissionMgr::VerifyAcrossUserPermission(const int32_t userId)
 {
-    return true;
+    return g_verifyPermission;
 }
 #endif
 

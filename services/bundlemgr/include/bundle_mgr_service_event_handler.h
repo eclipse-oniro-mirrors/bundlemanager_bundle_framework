@@ -870,6 +870,7 @@ private:
     void static ProcessPreCompressBundleResource();
     // scan all bundle data group info
     void ProcessAllBundleDataGroupInfo();
+    void ProcessAllBundleIpcGroupInfo();
     // Used to send update failed event
     void SendBundleUpdateFailedEvent(const BundleInfo &bundleInfo);
     void SendBundleUpdateFailedEvent(const BundleInfo &bundleInfo, const int32_t errorCode);

@@ -5212,6 +5212,26 @@ bool BundleMgrProxy::QueryDataGroupInfos(const std::string &bundleName,
     return true;
 }
 
+ErrCode BundleMgrProxy::QueryIpcGroupInfos(const std::string &bundleName, int32_t userId,
+    std::vector<IpcGroupInfo> &infos)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to QueryIpcGroupInfos due to write InterfaceToken failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to QueryIpcGroupInfos due to write bundleName failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to QueryIpcGroupInfos due to write userId failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetParcelableInfosWithErrCode<IpcGroupInfo>(BundleMgrInterfaceCode::QUERY_IPC_GROUP_INFOS, data, infos);
+}
+
 bool BundleMgrProxy::GetGroupDir(const std::string &dataGroupId, std::string &dir)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);

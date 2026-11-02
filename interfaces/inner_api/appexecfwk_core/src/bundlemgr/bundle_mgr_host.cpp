@@ -573,6 +573,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_DATA_GROUP_INFOS):
             errCode = this->HandleQueryDataGroupInfos(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_IPC_GROUP_INFOS):
+            errCode = this->HandleQueryIpcGroupInfos(data, reply);
+            break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_PREFERENCE_DIR_BY_GROUP_ID):
             errCode = this->HandleGetPreferenceDirByGroupId(data, reply);
             break;
@@ -4367,6 +4370,28 @@ ErrCode BundleMgrHost::HandleQueryDataGroupInfos(MessageParcel &data, MessagePar
     }
     if (ret && !WriteParcelableVector(infos, reply)) {
         APP_LOGE("write dataGroupInfo failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleQueryIpcGroupInfos(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    std::string bundleName = data.ReadString();
+    int32_t userId = data.ReadInt32();
+
+    std::vector<IpcGroupInfo> infos;
+    ErrCode ret = QueryIpcGroupInfos(bundleName, userId, infos);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret != ERR_OK) {
+        return ERR_OK;
+    }
+    if (!WriteParcelableVector(infos, reply)) {
+        APP_LOGE("write ipcGroupInfo failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;

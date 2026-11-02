@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,6 +20,8 @@
 
 #include "bundle_profile.h"
 #include "bundle_service_constants.h"
+#include "bundle_util.h"
+#include "string_ex.h"
 #include "default_permission_profile.h"
 #include "module_profile.h"
 #include "parameter.h"
@@ -360,6 +362,99 @@ std::map<std::string, std::string> BundleParser::ParseAclExtendedMap(const std::
         aclExtendedMap[key] = value.is_string() ? value.get<std::string>() : value.dump();
     }
     return aclExtendedMap;
+}
+
+namespace {
+const nlohmann::json *GetIpcCapabilityRoot(const nlohmann::json &jsonBuf)
+{
+    // ProvisionInfo.appServiceCapabilities is normally the flat map {permission: {...}};
+    // tolerate the profile wrapper {app-services-capabilities: {permission: {...}}} as well.
+    auto wrapperIter = jsonBuf.find(ServiceConstants::APP_SERVICES_CAPABILITIES);
+    if (wrapperIter != jsonBuf.end() && wrapperIter->is_object()) {
+        return &(*wrapperIter);
+    }
+    return &jsonBuf;
+}
+
+bool GetIpcPermissionConfig(const nlohmann::json &capabilityRoot, nlohmann::json &permissionConfig)
+{
+    auto permissionIter = capabilityRoot.find(ServiceConstants::PERMISSION_ALLOW_CROSS_APP_IPC);
+    if (permissionIter == capabilityRoot.end()) {
+        APP_LOGD("ALLOW_CROSS_APP_IPC not declared");
+        return false;
+    }
+    if (permissionIter->is_object()) {
+        permissionConfig = *permissionIter;
+    } else if (permissionIter->is_string()) {
+        permissionConfig = nlohmann::json::parse(permissionIter->get<std::string>(), nullptr, false, true);
+    } else {
+        APP_LOGD("ALLOW_CROSS_APP_IPC config is not supported");
+        return false;
+    }
+    if (permissionConfig.is_discarded() || !permissionConfig.is_object()) {
+        APP_LOGD("ALLOW_CROSS_APP_IPC config is invalid");
+        return false;
+    }
+    return true;
+}
+
+bool GetDeclaredIpcGroupIds(const nlohmann::json &permissionConfig, std::vector<std::string> &declaredIds)
+{
+    auto idsIter = permissionConfig.find(ServiceConstants::IPC_GROUP_IDS_KEY);
+    if (idsIter == permissionConfig.end()) {
+        APP_LOGD("ipcGroupIds not declared");
+        return false;
+    }
+    if (idsIter->is_array()) {
+        for (const auto &item : *idsIter) {
+            if (item.is_string()) {
+                declaredIds.emplace_back(item.get<std::string>());
+            }
+        }
+        return true;
+    }
+    if (idsIter->is_string()) {
+        // Tolerate the comma-separated form ("id1,id2") used by other capabilities.
+        OHOS::SplitStr(idsIter->get<std::string>(), ",", declaredIds);
+        return true;
+    }
+    APP_LOGD("ipcGroupIds type is not supported");
+    return false;
+}
+}  // namespace
+
+std::vector<std::string> BundleParser::ParseIpcGroupIds(const std::string &appServiceCapabilities)
+{
+    std::vector<std::string> ipcGroupIds;
+    if (appServiceCapabilities.empty()) {
+        APP_LOGD("appServiceCapabilities is empty");
+        return ipcGroupIds;
+    }
+    nlohmann::json jsonBuf = nlohmann::json::parse(appServiceCapabilities, nullptr, false, true);
+    if (jsonBuf.is_discarded() || !jsonBuf.is_object()) {
+        APP_LOGE("appServiceCapabilities is not a valid json object");
+        return ipcGroupIds;
+    }
+    nlohmann::json permissionConfig;
+    if (!GetIpcPermissionConfig(*GetIpcCapabilityRoot(jsonBuf), permissionConfig)) {
+        return ipcGroupIds;
+    }
+    std::vector<std::string> declaredIds;
+    if (!GetDeclaredIpcGroupIds(permissionConfig, declaredIds)) {
+        return ipcGroupIds;
+    }
+    std::unordered_set<std::string> seenIds;
+    for (const std::string &ipcGroupId : declaredIds) {
+        if (seenIds.size() >= ServiceConstants::MAX_IPC_GROUP_IDS_COUNT) {
+            APP_LOGD("ipcGroupIds exceed max count, stop parsing");
+            break;
+        }
+        if (BundleUtil::TryAddIpcGroupId(seenIds, ipcGroupId)) {
+            ipcGroupIds.emplace_back(ipcGroupId);
+        }
+    }
+    APP_LOGD("parse ipcGroupIds success, count:%{public}zu", ipcGroupIds.size());
+    return ipcGroupIds;
 }
 
 ErrCode BundleParser::ParseExtTypeConfig(
