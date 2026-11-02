@@ -95,6 +95,10 @@ int32_t g_spmCheckHapPermissionInfoCallCount = 0;
 // tests pin the dual-mode install contract here — a different-package install
 // verifies its permissions against the SUB-mode identity.
 int32_t g_spmCheckHapPermissionInfoLastMode = -100;
+// Session-policy knob for GetCachePolicyBySessionId (InstallSession::
+// VerifyPermission): the granted-request permission list the session policy
+// serves; default empty = the session grants nothing.
+std::vector<std::string> g_spmCachePolicyReqPermissions;
 int32_t g_spmPrepareHapIdentityRet = 0;
 // Call counter: tests assert the S2 reuse path never reaches PrepareHapIdentity.
 int32_t g_spmPrepareHapIdentityCallCount = 0;
@@ -162,6 +166,7 @@ void ResetSpmKitMockValuesForTest()
     g_spmCheckHapPermissionInfoRet = 0;
     g_spmCheckHapPermissionInfoCallCount = 0;
     g_spmCheckHapPermissionInfoLastMode = -100;
+    g_spmCachePolicyReqPermissions.clear();
     g_spmPrepareHapIdentityRet = 0;
     g_spmPrepareHapIdentityCallCount = 0;
     g_spmPrepareIdentityTokenId = 0;
@@ -725,6 +730,10 @@ int32_t AccessTokenKit::GetCacheSignInfoBySessionId(int32_t sessionId, uint32_t 
 int32_t AccessTokenKit::GetCachePolicyBySessionId(int32_t sessionId, const std::string& bundleName,
     BundlePolicyInfo& bundlePolicyInfo)
 {
+    // Serves the mocked session policy: the granted-request permission list
+    // InstallSession::VerifyPermission matches against. Default empty = the
+    // session grants nothing (the deny path), matching the pre-knob stub.
+    bundlePolicyInfo.reqPermissions = g_spmCachePolicyReqPermissions;
     return 0;
 }
 

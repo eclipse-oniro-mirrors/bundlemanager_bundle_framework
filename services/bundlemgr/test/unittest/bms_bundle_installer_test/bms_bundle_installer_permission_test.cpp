@@ -16,6 +16,8 @@
 #define private public
 #define protected public
 #include <gtest/gtest.h>
+#include <string>
+#include <vector>
 
 #include <chrono>
 #include <cstdio>
@@ -61,6 +63,17 @@ using OHOS::DelayedSingleton;
 
 void SetSystemAppForTest(bool value);
 void SetVerifyCallingPermissionForTestFalse(bool value);
+
+// Session-policy knob defined in test/mock/src/accesstoken_kit.cpp (see
+// SetUpTestCase): the granted list InstallSession::VerifyPermission matches
+// the mid-install permission gates against.
+namespace OHOS {
+namespace Security {
+namespace AccessToken {
+extern std::vector<std::string> g_spmCachePolicyReqPermissions;
+}
+}
+}
 
 namespace OHOS {
 namespace {
@@ -225,6 +238,17 @@ void BmsBundleInstallerPermissionTest::SetUpTestCase()
     bundleMgrService_->InitBundleDataMgr();
     bundleMgrService_->GetDataMgr()->AddUserId(USERID);
     bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();
+    // SPM ON: grant the mid-install permission gates' permissions in the
+    // session policy — the legacy mock's VerifyAccessToken grants unknown
+    // permissions by default, so the gates passed before the session-policy
+    // switch; an empty policy would flip them to the deny path (e.g.
+    // ParseSizeFromProvision keeps the caller's quota instead of applying
+    // the provisioned storageSize).
+    OHOS::Security::AccessToken::g_spmCachePolicyReqPermissions = {
+        "ohos.permission.atomicService.MANAGE_AGING",
+        "ohos.permission.atomicService.MANAGE_STORAGE",
+        "ohos.permission.SUPPORT_NP_PLUGIN_FOR_WEB",
+    };
 }
 
 void BmsBundleInstallerPermissionTest::TearDownTestCase()
@@ -1316,7 +1340,13 @@ HWTEST_F(BmsBundleInstallerPermissionTest, VerifyDelayedAging_0200, Function | S
     int32_t testNum1 = 1;
     int32_t testNum2 = 0;
     g_testVerifyPermission = testNum1;
+    // SPM ON: the gate reads the session policy, not the legacy verify knob —
+    // locally override the suite-level grant with an empty policy so the deny
+    // path is exercised in both modes; restore the suite seed afterwards.
+    auto savedPolicy = OHOS::Security::AccessToken::g_spmCachePolicyReqPermissions;
+    OHOS::Security::AccessToken::g_spmCachePolicyReqPermissions.clear();
     installer.VerifyDelayedAging(bundleInfo, testUid);
+    OHOS::Security::AccessToken::g_spmCachePolicyReqPermissions = savedPolicy;
     g_testVerifyPermission = testNum2;
     EXPECT_EQ(bundleInfo.GetDelayedAging(), false);
 }
