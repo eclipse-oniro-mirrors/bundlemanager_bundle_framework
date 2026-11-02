@@ -8105,6 +8105,148 @@ HWTEST_F(BmsDataMgrTest, GetAllAppProvisionInfoInDevice_0002, TestSize.Level1)
 }
 
 /**
+ * @tc.number: GetAdditionalInfo_0001
+ * @tc.name: test GetAdditionalInfo with SHARED app but no provision record
+ * @tc.desc: 1. SHARED app exists in bundleInfos_
+ *           2. no provision record in AppProvisionInfoManager
+ *           3. returns ERR_BUNDLE_MANAGER_INTERNAL_ERRPR
+ */
+HWTEST_F(BmsDataMgrTest, GetAdditionalInfo_0001, TestSize.Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::string bundleName = "com.test.std.nopro";
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = bundleName;
+    info.SetApplicationBundleType(BundleType::SHARED);
+    dataMgr->bundleInfos_[bundleName] = info;
+    DelayedSingleton<AppProvisionInfoManager>::GetInstance()->DeleteAppProvisionInfo(bundleName);
+
+    std::string result;
+    ErrCode ret = dataMgr->GetAdditionalInfo(bundleName, result);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    dataMgr->bundleInfos_.erase(bundleName);
+}
+
+/**
+ * @tc.number: GetSpecifiedDistributionType_0001
+ * @tc.name: test GetSpecifiedDistributionType with SHARED app but no provision record
+ * @tc.desc: 1. SHARED app exists in bundleInfos_
+ *           2. no provision record in AppProvisionInfoManager
+ *           3. returns ERR_BUNDLE_MANAGER_INTERNAL_ERRPR
+ */
+HWTEST_F(BmsDataMgrTest, GetSpecifiedDistributionType_0001, TestSize.Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::string bundleName = "com.test.std.nopro";
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = bundleName;
+    info.SetApplicationBundleType(BundleType::SHARED);
+    dataMgr->bundleInfos_[bundleName] = info;
+    DelayedSingleton<AppProvisionInfoManager>::GetInstance()->DeleteAppProvisionInfo(bundleName);
+
+    std::string result;
+    ErrCode ret = dataMgr->GetSpecifiedDistributionType(bundleName, result);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    dataMgr->bundleInfos_.erase(bundleName);
+}
+
+/**
+ * @tc.number: GetAdditionalInfoForAllUser_0001
+ * @tc.name: test GetAdditionalInfoForAllUser with bundle not exist
+ * @tc.desc: 1. bundle not in bundleInfos_
+ *           2. returns ERR_BUNDLE_MANAGER_INTERNAL_ERRPR
+ */
+HWTEST_F(BmsDataMgrTest, GetAdditionalInfoForAllUser_0001, TestSize.Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::string result;
+    ErrCode ret = dataMgr->GetAdditionalInfoForAllUser("com.test.notexist", result);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetAdditionalInfoForAllUser_0002
+ * @tc.name: test GetAdditionalInfoForAllUser with SHARED app but no provision record
+ * @tc.desc: 1. SHARED app exists in bundleInfos_
+ *           2. no provision record in AppProvisionInfoManager
+ *           3. returns ERR_BUNDLE_MANAGER_INTERNAL_ERROR
+ */
+HWTEST_F(BmsDataMgrTest, GetAdditionalInfoForAllUser_0002, TestSize.Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::string bundleName = "com.test.alluser.noprov";
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = bundleName;
+    info.SetApplicationBundleType(BundleType::SHARED);
+    dataMgr->bundleInfos_[bundleName] = info;
+    DelayedSingleton<AppProvisionInfoManager>::GetInstance()->DeleteAppProvisionInfo(bundleName);
+
+    std::string result;
+    ErrCode ret = dataMgr->GetAdditionalInfoForAllUser(bundleName, result);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    dataMgr->bundleInfos_.erase(bundleName);
+}
+
+/**
+ * @tc.number: SetAdditionalInfo_0002
+ * @tc.name: test SetAdditionalInfo with SHARED app success
+ * @tc.desc: 1. SHARED app exists in bundleInfos_
+ *           2. provision record added, SetAdditionalInfo success
+ *           3. returns ERR_OK and GetAdditionalInfo returns the set value
+ */
+HWTEST_F(BmsDataMgrTest, SetAdditionalInfo_0002, TestSize.Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::string bundleName = "com.test.setadd.shared";
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = bundleName;
+    info.SetApplicationBundleType(BundleType::SHARED);
+    dataMgr->bundleInfos_[bundleName] = info;
+    DelayedSingleton<AppProvisionInfoManager>::GetInstance()->AddAppProvisionInfo(bundleName, AppProvisionInfo {});
+
+    std::string additionalInfo = "shardAdditional";
+    ErrCode ret = dataMgr->SetAdditionalInfo(bundleName, additionalInfo);
+    EXPECT_EQ(ret, ERR_OK);
+
+    std::string result;
+    DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAdditionalInfo(bundleName, result);
+    EXPECT_EQ(result, additionalInfo);
+
+    dataMgr->bundleInfos_.erase(bundleName);
+    DelayedSingleton<AppProvisionInfoManager>::GetInstance()->DeleteAppProvisionInfo(bundleName);
+}
+
+/**
+ * @tc.number: SetAdditionalInfo_0003
+ * @tc.name: test SetAdditionalInfo with SHARED app but no provision record
+ * @tc.desc: 1. SHARED app exists in bundleInfos_
+ *           2. no provision record in AppProvisionInfoManager
+ *           3. returns ERR_BUNDLE_MANAGER_INTERNAL_ERROR
+ */
+HWTEST_F(BmsDataMgrTest, SetAdditionalInfo_0003, TestSize.Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::string bundleName = "com.test.setadd.noprov";
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = bundleName;
+    info.SetApplicationBundleType(BundleType::SHARED);
+    dataMgr->bundleInfos_[bundleName] = info;
+    DelayedSingleton<AppProvisionInfoManager>::GetInstance()->DeleteAppProvisionInfo(bundleName);
+
+    std::string additionalInfo = "additionalInfo";
+    ErrCode ret = dataMgr->SetAdditionalInfo(bundleName, additionalInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+
+    dataMgr->bundleInfos_.erase(bundleName);
+}
+
+/**
  * @tc.number: GenerateUuid_0001
  * @tc.name: GenerateUuid
  * @tc.desc: test GenerateUuid
