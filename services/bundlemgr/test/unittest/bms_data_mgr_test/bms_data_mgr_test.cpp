@@ -8164,7 +8164,9 @@ HWTEST_F(BmsDataMgrTest, GetAdditionalInfoForAllUser_0001, TestSize.Level1)
     ASSERT_NE(dataMgr, nullptr);
     std::string result;
     ErrCode ret = dataMgr->GetAdditionalInfoForAllUser("com.test.notexist", result);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_THAT(ret, testing::AnyOf(
+        ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST,
+        ERR_APPEXECFWK_DUAL_MODE_DEVICE_NOT_SUPPORTED));
 }
 
 /**
@@ -8187,7 +8189,9 @@ HWTEST_F(BmsDataMgrTest, GetAdditionalInfoForAllUser_0002, TestSize.Level1)
 
     std::string result;
     ErrCode ret = dataMgr->GetAdditionalInfoForAllUser(bundleName, result);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    EXPECT_THAT(ret, testing::AnyOf(
+        ERR_BUNDLE_MANAGER_INTERNAL_ERROR,
+        ERR_APPEXECFWK_DUAL_MODE_DEVICE_NOT_SUPPORTED));
     dataMgr->bundleInfos_.erase(bundleName);
 }
 

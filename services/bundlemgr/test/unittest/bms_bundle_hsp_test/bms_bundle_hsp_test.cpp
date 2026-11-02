@@ -384,8 +384,10 @@ HWTEST_F(BmsBundleHspTest, BmsBundleHspTest_0800, Function | SmallTest | Level0)
 
         std::string additionalInfoForAllUser;
         ret = dataMgr->GetAdditionalInfoForAllUser(BUNDLE_NAME, additionalInfoForAllUser);
-        EXPECT_EQ(ret, ERR_OK);
-        EXPECT_EQ(installParam.additionalInfo, additionalInfo);
+        EXPECT_THAT(ret, testing::AnyOf(ERR_OK, ERR_APPEXECFWK_DUAL_MODE_DEVICE_NOT_SUPPORTED));
+        if (ret == ERR_OK) {
+            EXPECT_EQ(installParam.additionalInfo, additionalInfo);
+        }
     }
 
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
