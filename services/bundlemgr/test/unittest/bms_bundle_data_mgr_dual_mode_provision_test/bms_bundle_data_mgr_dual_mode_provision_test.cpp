@@ -860,7 +860,7 @@ HWTEST_F(BmsBundleDataMgrDualModeProvisionTest, SetAdditionalInfoByIndex_0500, F
  * @tc.number: SetAdditionalInfoByIndex_0600
  * @tc.name: test SetAdditionalInfoByIndex with DEFAULT_APP_INDEX non-clone app success
  * @tc.desc: 1. dual mode device, SHARED app non-clone in bundleInfos_
- *           2. appIndex is DEFAULT_APP_INDEX, SetAdditionalInfo succeeds 
+ *           2. appIndex is DEFAULT_APP_INDEX, SetAdditionalInfo succeeds
  *           3. return ERR_OK
  */
 HWTEST_F(BmsBundleDataMgrDualModeProvisionTest, SetAdditionalInfoByIndex_0600, Function | SmallTest | Level1)
