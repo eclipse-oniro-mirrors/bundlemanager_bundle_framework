@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -420,6 +420,8 @@ void BundleMultiUserInstaller::CreateDataGroupDir(const std::string &bundleName,
     // expand the new user's data group infos on both sides. A missing entry is a no-op.
     dataMgr_->GenerateNewUserDataGroupInfos(bundleName, userId, false);
     dataMgr_->GenerateNewUserDataGroupInfos(bundleName, userId, true);
+    dataMgr_->GenerateNewUserIpcGroupInfos(bundleName, userId, false);
+    dataMgr_->GenerateNewUserIpcGroupInfos(bundleName, userId, true);
 }
 
 void BundleMultiUserInstaller::CreateEl5Dir(InnerBundleInfo &info, const int32_t userId, const int32_t &uid)

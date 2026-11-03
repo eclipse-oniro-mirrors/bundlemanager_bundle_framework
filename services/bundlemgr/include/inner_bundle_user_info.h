@@ -19,6 +19,7 @@
 #include "bundle_user_info.h"
 #include "inner_bundle_clone_info.h"
 #include "inner_cli_sandbox_info.h"
+#include "ipc_group_info.h"
 #include "json_util.h"
 #include "plugin/plugin_bundle_info.h"
 
@@ -62,6 +63,10 @@ struct InnerBundleUserInfo {
 
     // use to record plugin that exist in current user
     std::unordered_set<std::string> installedPluginSet;
+
+    // ipcGroupId -> group identity (uid/gid) allocated for this user
+    std::unordered_map<std::string, IpcGroupInfo> ipcGroupInfos;
+
     BundleUserInfo bundleUserInfo;
 
     bool operator() (const InnerBundleUserInfo& info) const

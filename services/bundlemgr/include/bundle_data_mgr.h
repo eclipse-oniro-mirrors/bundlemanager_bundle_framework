@@ -1314,9 +1314,17 @@ public:
         bool toTempBundle = false);
     void DeleteUserDataGroupInfos(const std::string &bundleName, int32_t userId, bool keepData,
         bool toTempBundle = false);
+    void GenerateNewUserIpcGroupInfos(const std::string &bundleName, int32_t userId,
+        bool toTempBundle = false);
     bool IsDataGroupIdExistNoLock(const std::string &dataGroupId, int32_t userId) const;
     void ProcessAllUserDataGroupInfosWhenBundleUpdate(InnerBundleInfo &innerBundleInfo);
     void DeleteGroupDirsForException(const InnerBundleInfo &oldInfo, int32_t userId) const;
+    ErrCode QueryIpcGroupInfos(const std::string &bundleName, int32_t userId, std::vector<IpcGroupInfo> &infos) const;
+    ErrCode GenerateIpcGroupInfos(const std::string &bundleName,
+        const std::unordered_set<std::string> &ipcGroupIdList, int32_t userId,
+        bool needSaveStorage = false, bool toTempBundle = false);
+    void AllocateIpcGroupInfos(InnerBundleInfo &innerBundleInfo);
+    ErrCode ScanAllBundleIpcGroupInfo();
     ErrCode GetJsonProfile(ProfileType profileType, const std::string &bundleName, const std::string &moduleName,
         std::string &profile, int32_t userId) const;
     ErrCode GetShareFilesJsonFromHap(const std::string &hapPath, const InnerModuleInfo &moduleInfo,
@@ -1640,6 +1648,8 @@ public:
         std::vector<ModuleMetadata> &metadataInfos, int32_t userId) const;
 
 private:
+    // Caller must hold bundleInfoMutex_. Gives every declared ipc group id the same index for all users.
+    void SyncIpcGroupInfos(InnerBundleInfo &info, const std::unordered_set<std::string> &validIds);
     /**
      * @brief Init transferStates.
      * @return

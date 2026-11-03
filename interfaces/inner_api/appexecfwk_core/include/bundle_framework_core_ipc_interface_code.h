@@ -284,6 +284,7 @@ enum class BundleMgrInterfaceCode : uint32_t {
     QUERY_EXTENSION_ABILITY_INFO_OPTIMAL = 258,
     GET_SANDBOX_EXT_ABILITY_INFO_OPTIMAL = 259,
     GET_BUNDLE_RESOURCE_ARCHIVE_INFO = 260,
+    QUERY_IPC_GROUP_INFOS = 261,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */

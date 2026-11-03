@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,6 +27,7 @@
 #include "form_info.h"
 #include "distributed_manager/rpc_id_result.h"
 #include "free_install/dispatch_info.h"
+#include "ipc_group_info.h"
 #include "free_install/install_result.h"
 #include "free_install/target_ability_info.h"
 #include "nlohmann/json.hpp"
@@ -156,6 +157,8 @@ void to_json(nlohmann::json &jsonObject, const ProxyData &proxyData);
 void from_json(const nlohmann::json &jsonObject, ProxyData &proxyData);
 void to_json(nlohmann::json &jsonObject, const DataGroupInfo &dataGroupInfo);
 void from_json(const nlohmann::json &jsonObject, DataGroupInfo &dataGroupInfo);
+void to_json(nlohmann::json &jsonObject, const IpcGroupInfo &ipcGroupInfo);
+void from_json(const nlohmann::json &jsonObject, IpcGroupInfo &ipcGroupInfo);
 void to_json(nlohmann::json &jsonObject, const RouterItem &routerItem);
 void from_json(const nlohmann::json &jsonObject, RouterItem &routerItem);
 void to_json(nlohmann::json &jsonObject, const AppEnvironment &appEnvironment);

@@ -6071,6 +6071,30 @@ bool BundleMgrHostImpl::QueryDataGroupInfos(const std::string &bundleName, int32
     return dataMgr->QueryDataGroupInfos(bundleName, userId, infos);
 }
 
+ErrCode BundleMgrHostImpl::QueryIpcGroupInfos(const std::string &bundleName, int32_t userId,
+    std::vector<IpcGroupInfo> &infos)
+{
+    APP_LOGD("QueryIpcGroupInfos bundleName: %{public}s, userId: %{public}d", bundleName.c_str(), userId);
+    // The only consumer runs in the foundation process: verify the caller UID instead of
+    // asking for an extra permission code.
+    int32_t uid = IPCSkeleton::GetCallingUid();
+    if (uid != Constants::FOUNDATION_UID) {
+        APP_LOGE_NOFUNC("QueryIpcGroupInfos caller is not foundation, uid:%{public}d", uid);
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    // Cross-user check: reading another user's group identity requires the across-user permission.
+    if (!BundlePermissionMgr::VerifyAcrossUserPermission(userId)) {
+        APP_LOGE_NOFUNC("QueryIpcGroupInfos cross user denied, userId:%{public}d", userId);
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->QueryIpcGroupInfos(bundleName, userId, infos);
+}
+
 bool BundleMgrHostImpl::GetGroupDir(const std::string &dataGroupId, std::string &dir)
 {
     APP_LOGD("GetGroupDir dataGroupId: %{public}s", dataGroupId.c_str());

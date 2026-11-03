@@ -1921,6 +1921,7 @@ void BMSEventHandler::ProcessRebootBundle()
     XCollieHelper::ResumeFoundationWatchdog();
     ProcessBundleResourceInfo();
     ProcessAllBundleDataGroupInfo();
+    ProcessAllBundleIpcGroupInfo();
 #ifdef CHECK_ELDIR_ENABLED
     ProcessCheckAppDataDir();
 #endif
@@ -5848,6 +5849,21 @@ void BMSEventHandler::ProcessAllBundleDataGroupInfo()
         return;
     }
     dataMgr->ScanAllBundleGroupInfo();
+    LOG_I(BMS_TAG_DEFAULT, "end");
+}
+
+void BMSEventHandler::ProcessAllBundleIpcGroupInfo()
+{
+    LOG_I(BMS_TAG_DEFAULT, "start");
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "dataMgr is nullptr");
+        return;
+    }
+    ErrCode ret = dataMgr->ScanAllBundleIpcGroupInfo();
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "scan ipc group infos failed, ret:%{public}d", ret);
+    }
     LOG_I(BMS_TAG_DEFAULT, "end");
 }
 

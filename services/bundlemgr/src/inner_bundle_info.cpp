@@ -474,6 +474,7 @@ InnerBundleInfo &InnerBundleInfo::operator=(const InnerBundleInfo &info)
     this->applyQuickFixFrequency_ = info.applyQuickFixFrequency_;
     this->provisionMetadatas_ = info.provisionMetadatas_;
     this->dataGroupInfos_ = info.dataGroupInfos_;
+    this->ipcGroupsPrepared_ = info.ipcGroupsPrepared_;
     this->developerId_ = info.developerId_;
     this->odid_ = info.odid_;
     this->uninstallState_ = info.uninstallState_;

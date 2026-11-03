@@ -39,6 +39,7 @@
 #include "bundle_common_event_mgr.h"
 #include "bundle_data_storage_rdb.h"
 #include "bundle_service_constants.h"
+#include "bundle_util.h"
 #include "dual_mode_helper.h"
 #include "preinstall_data_storage_rdb.h"
 #include "hap_token_info.h"
@@ -100,6 +101,8 @@ namespace AppExecFwk {
 namespace {
 constexpr int MAX_EVENT_CALL_BACK_SIZE = 100;
 constexpr int8_t DATA_GROUP_INDEX_START = 1;
+constexpr int8_t IPC_GROUP_INDEX_START = 1;
+constexpr int32_t IPC_GROUP_INDEX_MAX = 50000;
 constexpr int8_t PROFILE_PREFIX_LENGTH = 9;
 constexpr int32_t MAX_PLUGIN_CALLBACK_SIZE = 256;
 constexpr uint16_t UUID_LENGTH_MAX = 512;
@@ -165,6 +168,7 @@ constexpr const char* URI_SEPARATOR = "://";
 constexpr uint8_t PARAM_URI_SEPARATOR_LEN = 4;
 constexpr int8_t INVALID_BUNDLEID = -1;
 constexpr int32_t DATA_GROUP_UID_OFFSET = 100000;
+constexpr int32_t IPC_GROUP_UID_OFFSET = 150000;
 constexpr int8_t ONLY_ONE_USER = 1;
 constexpr const char* LAST_ALLOCATED_BUNDLE_ID_KEY = "lastAllocatedBundleId";
 constexpr unsigned int OTA_CODE_ENCRYPTION_TIMEOUT = 4 * 60;
@@ -1003,6 +1007,9 @@ bool BundleDataMgr::AddInnerBundleInfo(const std::string &bundleName, InnerBundl
         APP_LOGW("bundleName: %{public}s : bundle info already exist", bundleName.c_str());
         return false;
     }
+    // ipc groups were prepared on the temp copy without uid; allocate them while still holding the lock
+    // so the uid index stays globally unique and the commit below stays atomic.
+    AllocateIpcGroupInfos(info);
 
     std::lock_guard<std::mutex> stateLock(stateMutex_);
     std::string stateKey = info.IsDualModeCloneApp()
@@ -1602,6 +1609,15 @@ bool BundleDataMgr::UpdateInnerBundleInfo(InnerBundleInfo &newInfo, InnerBundleI
     oldInfo.SetAppPrivilegeLevel(newInfo.GetAppPrivilegeLevel());
     oldInfo.UpdateAppDetailAbilityAttrs();
     oldInfo.UpdateDataGroupInfos(newInfo.GetDataGroupInfos());
+    for (const auto &userItem : newInfo.GetInnerBundleUserInfos()) {
+        int32_t userId = userItem.second.bundleUserInfo.userId;
+        if (newInfo.IsIpcGroupsPrepared()) {
+            // The install path resolved the full declaration, so an empty map really means "none".
+            oldInfo.SetIpcGroupInfos(userId, userItem.second.ipcGroupInfos);
+        } else {
+            oldInfo.UpdateIpcGroupInfos(userId, userItem.second.ipcGroupInfos);
+        }
+    }
     if (oldInfo.GetBaseApplicationInfo().needAppDetail) {
         AddAppDetailAbilityInfo(oldInfo);
     }
@@ -11544,6 +11560,10 @@ bool BundleDataMgr::UpdateInnerBundleInfo(InnerBundleInfo &innerBundleInfo, bool
             firstInstallDataMgr_->AddFirstInstallBundleInfo(bundleName, Constants::ALL_USERID, lastOdidInfo);
         }
     }
+    {
+        std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        AllocateIpcGroupInfos(innerBundleInfo);
+    }
     if (needSaveStorage && !dataStorage_->SaveStorageBundleInfo(innerBundleInfo)) {
         APP_LOGE("to update InnerBundleInfo:%{public}s failed", bundleName.c_str());
         return false;
@@ -12418,6 +12438,151 @@ bool BundleDataMgr::CreateAppGroupDir(
     return CreateGroupDirs(dataGroupInfos, userId, needCreateEl5Dir, dirEl, hasInputMethodExtension) == ERR_OK;
 }
 
+ErrCode BundleDataMgr::QueryIpcGroupInfos(const std::string &bundleName, int32_t userId,
+    std::vector<IpcGroupInfo> &infos) const
+{
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGW_NOFUNC("QueryIpcGroupInfos %{public}s is not existed", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    infos.clear();
+    std::unordered_map<std::string, IpcGroupInfo> ipcGroupInfos;
+    if (!infoItem->second.GetIpcGroupInfos(userId, ipcGroupInfos)) {
+        APP_LOGD("QueryIpcGroupInfos no user info, bundleName:%{public}s userId:%{public}d",
+            bundleName.c_str(), userId);
+        return ERR_OK;
+    }
+    for (const auto &item : ipcGroupInfos) {
+        infos.push_back(item.second);
+    }
+    return ERR_OK;
+}
+
+void BundleDataMgr::SyncIpcGroupInfos(InnerBundleInfo &info, const std::unordered_set<std::string> &validIds)
+{
+    // A group id has one index for every bundle, user and variant. Collect the indexes already in use
+    // (the target's own records first), then give every declared id the same index for every user.
+    std::map<std::string, int32_t> indexMap;
+    std::set<int32_t> usedIndexes;
+    // If an id already has an index, keep the first one collected: the target being committed first,
+    // then installed bundles, then hidden variants.
+    std::vector<const InnerBundleInfo *> sources { &info };
+    for (const auto &item : bundleInfos_) {
+        sources.push_back(&item.second);
+    }
+    for (const auto &item : tempBundleInfos_) {
+        sources.push_back(&item.second);
+    }
+    for (const InnerBundleInfo *source : sources) {
+        for (int32_t userId : source->GetUsers()) {
+            std::unordered_map<std::string, IpcGroupInfo> userInfos;
+            if (!source->GetIpcGroupInfos(userId, userInfos)) {
+                continue;
+            }
+            for (const auto &item : userInfos) {
+                int32_t index = item.second.uid - userId * Constants::BASE_USER_RANGE - IPC_GROUP_UID_OFFSET;
+                if (index >= IPC_GROUP_INDEX_START && index < IPC_GROUP_INDEX_MAX) {
+                    indexMap.emplace(item.first, index);
+                    usedIndexes.insert(index);
+                }
+            }
+        }
+    }
+    for (int32_t userId : info.GetUsers()) {
+        std::unordered_map<std::string, IpcGroupInfo> userInfos;
+        for (const std::string &groupId : validIds) {
+            auto iter = indexMap.find(groupId);
+            if (iter == indexMap.end()) {
+                int32_t index = IPC_GROUP_INDEX_START;
+                while (index < IPC_GROUP_INDEX_MAX && usedIndexes.find(index) != usedIndexes.end()) {
+                    index++;
+                }
+                if (index >= IPC_GROUP_INDEX_MAX) {
+                    APP_LOGW("skip ipcGroupId %{private}s: uniqueId pool exhausted", groupId.c_str());
+                    continue;
+                }
+                iter = indexMap.emplace(groupId, index).first;
+                usedIndexes.insert(index);
+            }
+            IpcGroupInfo ipcGroupInfo;
+            ipcGroupInfo.ipcGroupId = groupId;
+            ipcGroupInfo.uid = iter->second + userId * Constants::BASE_USER_RANGE + IPC_GROUP_UID_OFFSET;
+            ipcGroupInfo.gid = ipcGroupInfo.uid;
+            userInfos[groupId] = ipcGroupInfo;
+            APP_LOGD("SyncIpcGroupInfos bundleName:%{public}s userId:%{public}d groupId:%{private}s "
+                "index:%{public}d uid:%{public}d gid:%{public}d",
+                info.GetBundleName().c_str(), userId, groupId.c_str(), iter->second, ipcGroupInfo.uid,
+                ipcGroupInfo.gid);
+        }
+        info.SetIpcGroupInfos(userId, userInfos);
+    }
+}
+
+ErrCode BundleDataMgr::GenerateIpcGroupInfos(const std::string &bundleName,
+    const std::unordered_set<std::string> &ipcGroupIdList, int32_t userId, bool needSaveStorage,
+    bool toTempBundle)
+{
+    APP_LOGD("called for user: %{public}d", userId);
+    // Callers check ALLOW_CROSS_APP_IPC before parsing the declaration; only the format/count filter is left.
+    std::unordered_set<std::string> validIds;
+    for (const std::string &groupId : ipcGroupIdList) {
+        BundleUtil::TryAddIpcGroupId(validIds, groupId);
+    }
+    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::map<std::string, InnerBundleInfo> &targetMap = toTempBundle ? tempBundleInfos_ : bundleInfos_;
+    auto bundleInfoItem = targetMap.find(bundleName);
+    if (bundleInfoItem == targetMap.end()) {
+        APP_LOGW("%{public}s not found in %{public}s", bundleName.c_str(),
+            toTempBundle ? "tempBundleInfos_" : "bundleInfos_");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    if (validIds.empty()) {
+        // Nothing declared or granted: only clear when there is something to clear, so apps without
+        // ipc groups do not cost a persist on every boot.
+        bool hasRecords = false;
+        for (int32_t userId : bundleInfoItem->second.GetUsers()) {
+            std::unordered_map<std::string, IpcGroupInfo> userInfos;
+            if (bundleInfoItem->second.GetIpcGroupInfos(userId, userInfos) && !userInfos.empty()) {
+                hasRecords = true;
+                break;
+            }
+        }
+        if (!hasRecords) {
+            return ERR_OK;
+        }
+    }
+    // Copy -> sync -> save -> swap: a failed persist leaves both memory and DB unchanged.
+    InnerBundleInfo info = bundleInfoItem->second;
+    SyncIpcGroupInfos(info, validIds);
+    if (needSaveStorage && !dataStorage_->SaveStorageBundleInfo(info)) {
+        APP_LOGW("update storage failed bundle:%{public}s", bundleName.c_str());
+        return ERR_APPEXECFWK_ADD_BUNDLE_ERROR;
+    }
+    bundleInfoItem->second = info;
+    return ERR_OK;
+}
+
+void BundleDataMgr::AllocateIpcGroupInfos(InnerBundleInfo &innerBundleInfo)
+{
+    // Called at commit time with the lock held. The recorded ids are the declaration (install prepare
+    // already dropped undeclared ids), so syncing them only assigns the missing uids.
+    std::unordered_set<std::string> declaredIds;
+    for (int32_t userId : innerBundleInfo.GetUsers()) {
+        std::unordered_map<std::string, IpcGroupInfo> userInfos;
+        if (!innerBundleInfo.GetIpcGroupInfos(userId, userInfos)) {
+            continue;
+        }
+        for (const auto &item : userInfos) {
+            declaredIds.insert(item.first);
+        }
+    }
+    if (!declaredIds.empty()) {
+        SyncIpcGroupInfos(innerBundleInfo, declaredIds);
+    }
+}
+
 bool BundleDataMgr::CreateAppGroupDir(const std::string &bundleName, int32_t userId)
 {
     std::unordered_map<std::string, std::vector<DataGroupInfo>> dataGroupInfoMap;
@@ -13287,6 +13452,106 @@ void BundleDataMgr::DeleteUserDataGroupInfos(const std::string &bundleName, int3
     if (result != ERR_OK) {
         APP_LOGE("delete group dir failed, err %{public}d", result);
     }
+}
+
+void BundleDataMgr::GenerateNewUserIpcGroupInfos(const std::string &bundleName, int32_t userId,
+    bool toTempBundle)
+{
+    APP_LOGD("called for -b %{public}s, -u %{public}d", bundleName.c_str(), userId);
+    auto permissionResult = BundlePermissionMgr::VerifyPermission(bundleName,
+        ServiceConstants::PERMISSION_ALLOW_CROSS_APP_IPC, userId);
+    APP_LOGI("GenerateNewUserIpcGroupInfos bundleName:%{public}s userId:%{public}d "
+        "ALLOW_CROSS_APP_IPC permissionResult:%{public}d",
+        bundleName.c_str(), userId, permissionResult);
+    if (permissionResult != Security::AccessToken::PermissionState::PERMISSION_GRANTED) {
+        APP_LOGW("GenerateNewUserIpcGroupInfos bundleName:%{public}s userId:%{public}d "
+            "ALLOW_CROSS_APP_IPC not granted, skip", bundleName.c_str(), userId);
+        return ;
+    }
+    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::map<std::string, InnerBundleInfo> &targetMap = toTempBundle ? tempBundleInfos_ : bundleInfos_;
+    auto bundleInfoItem = targetMap.find(bundleName);
+    if (bundleInfoItem == targetMap.end()) {
+        APP_LOGD("%{public}s not found in %{public}s", bundleName.c_str(),
+            toTempBundle ? "tempBundleInfos_" : "bundleInfos_");
+        return;
+    }
+    InnerBundleInfo info = bundleInfoItem->second;
+    // Every existing user already holds the declared ids, so syncing them for all users adds the new one.
+    std::unordered_set<std::string> declaredIds;
+    for (int32_t existingUserId : info.GetUsers()) {
+        std::unordered_map<std::string, IpcGroupInfo> userInfos;
+        if (!info.GetIpcGroupInfos(existingUserId, userInfos)) {
+            continue;
+        }
+        for (const auto &item : userInfos) {
+            declaredIds.insert(item.first);
+        }
+    }
+    if (declaredIds.empty()) {
+        APP_LOGD("no ipc group to inherit for new user, bundleName:%{public}s", bundleName.c_str());
+        return;
+    }
+    SyncIpcGroupInfos(info, declaredIds);
+    if (!dataStorage_->SaveStorageBundleInfo(info)) {
+        APP_LOGW("update storage failed bundle:%{public}s", bundleName.c_str());
+        return;
+    }
+    bundleInfoItem->second = info;
+}
+
+ErrCode BundleDataMgr::ScanAllBundleIpcGroupInfo()
+{
+    APP_LOGI("ScanAllBundleIpcGroupInfo start");
+    struct ScanTarget {
+        std::string bundleName;
+        int32_t userId;
+        bool toTempBundle;
+    };
+    std::vector<ScanTarget> targets;
+    {
+        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        for (const auto &item : bundleInfos_) {
+            auto userIds = item.second.GetUsers();
+            if (!userIds.empty()) {
+                targets.push_back({item.first, *userIds.begin(), false});
+            }
+        }
+        for (const auto &item : tempBundleInfos_) {
+            auto userIds = item.second.GetUsers();
+            if (!userIds.empty()) {
+                targets.push_back({item.first, *userIds.begin(), true});
+            }
+        }
+    }
+    // The declaration is app level, so one installed user's provision info is enough.
+    ErrCode result = ERR_OK;
+    for (const ScanTarget &target : targets) {
+        // Without the permission the declared set is empty, so stale records are cleared.
+        std::unordered_set<std::string> ipcGroupIds;
+        auto permissionResult = BundlePermissionMgr::VerifyPermission(target.bundleName,
+            ServiceConstants::PERMISSION_ALLOW_CROSS_APP_IPC, target.userId);
+        APP_LOGI("ScanAllBundleIpcGroupInfo bundleName:%{public}s userId:%{public}d "
+            "ALLOW_CROSS_APP_IPC permissionResult:%{public}d",
+            target.bundleName.c_str(), target.userId, permissionResult);
+        if (permissionResult == Security::AccessToken::PermissionState::PERMISSION_GRANTED) {
+            AppProvisionInfo appProvisionInfo;
+            if (GetAppProvisionInfo(target.bundleName, target.userId, appProvisionInfo) != ERR_OK) {
+                APP_LOGD("get app provision info failed, bundleName:%{public}s", target.bundleName.c_str());
+                continue;
+            }
+            std::vector<std::string> parsedIds =
+                BundleParser::ParseIpcGroupIds(appProvisionInfo.appServiceCapabilities);
+            ipcGroupIds.insert(parsedIds.begin(), parsedIds.end());
+        }
+        ErrCode ret = GenerateIpcGroupInfos(target.bundleName, ipcGroupIds, target.userId, true,
+            target.toTempBundle);
+        if (ret != ERR_OK && result == ERR_OK) {
+            result = ret;
+        }
+    }
+    APP_LOGI("ScanAllBundleIpcGroupInfo end, ret:%{public}d", result);
+    return result;
 }
 
 void BundleDataMgr::GetDataGroupIndexMap(

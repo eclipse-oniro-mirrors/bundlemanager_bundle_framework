@@ -15,6 +15,7 @@
 
 #include "bundle_util.h"
 
+#include <cctype>
 #include <cinttypes>
 #include <dirent.h>
 #include <dlfcn.h>
@@ -1307,6 +1308,37 @@ std::string BundleUtil::ExtractGroupIdByDevelopId(const std::string &developerId
     }
     // If '.' If it is not the first place, there is a groupId, and the groupId is returned
     return developerId.substr(0, dot_position);
+}
+
+bool BundleUtil::IsValidIpcGroupId(const std::string &ipcGroupId)
+{
+    // Same convention as dataGroupId: non-empty teamId + exactly 4 decimal digits, total <= 1024.
+    if (ipcGroupId.size() <= ServiceConstants::IPC_GROUP_ID_DIGIT_SUFFIX_LEN ||
+        ipcGroupId.size() > ServiceConstants::IPC_GROUP_ID_MAX_LEN) {
+        return false;
+    }
+    for (size_t i = ipcGroupId.size() - ServiceConstants::IPC_GROUP_ID_DIGIT_SUFFIX_LEN;
+        i < ipcGroupId.size(); ++i) {
+        if (!isdigit(static_cast<unsigned char>(ipcGroupId[i]))) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool BundleUtil::TryAddIpcGroupId(std::unordered_set<std::string> &groupIds, const std::string &ipcGroupId)
+{
+    if (!IsValidIpcGroupId(ipcGroupId)) {
+        APP_LOGW("invalid ipcGroupId format %{private}s", ipcGroupId.c_str());
+        return false;
+    }
+    if (groupIds.size() >= ServiceConstants::MAX_IPC_GROUP_IDS_COUNT &&
+        groupIds.find(ipcGroupId) == groupIds.end()) {
+        APP_LOGW("ipcGroupIds exceed max %{public}u", ServiceConstants::MAX_IPC_GROUP_IDS_COUNT);
+        return false;
+    }
+    groupIds.insert(ipcGroupId);
+    return true;
 }
 
 std::string BundleUtil::ToString(const std::vector<std::string> &vector)

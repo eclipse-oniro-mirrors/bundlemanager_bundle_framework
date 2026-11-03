@@ -29,6 +29,7 @@
 #include "common_event_info.h"
 #include "common_profile.h"
 #include "data_group_info.h"
+#include "ipc_group_info.h"
 #include "data/inner_ability_info.h"
 #include "data/inner_extension_info.h"
 #include "distributed_bundle_info.h"
@@ -2212,6 +2213,66 @@ public:
         }
     }
 
+    // Merge one user's ipc group infos (module-update path). An empty map means "no change":
+    // the new info restored from old info only carries AppCodePath, so wiping here would lose data.
+    void UpdateIpcGroupInfos(int32_t userId, const std::unordered_map<std::string, IpcGroupInfo> &ipcGroupInfos)
+    {
+        if (ipcGroupInfos.empty()) {
+            return;
+        }
+        InnerBundleUserInfo userInfo;
+        if (!GetInnerBundleUserInfo(userId, userInfo)) {
+            return;
+        }
+        userInfo.ipcGroupInfos = ipcGroupInfos;
+        AddInnerBundleUserInfo(userInfo);
+    }
+
+    bool GetIpcGroupInfos(int32_t userId, std::unordered_map<std::string, IpcGroupInfo> &ipcGroupInfos) const
+    {
+        InnerBundleUserInfo userInfo;
+        if (!GetInnerBundleUserInfo(userId, userInfo)) {
+            return false;
+        }
+        ipcGroupInfos = userInfo.ipcGroupInfos;
+        return true;
+    }
+
+    // Replace one user's ipc group infos; an empty map clears them (install/update declaration change).
+    bool SetIpcGroupInfos(int32_t userId, const std::unordered_map<std::string, IpcGroupInfo> &ipcGroupInfos)
+    {
+        InnerBundleUserInfo userInfo;
+        if (!GetInnerBundleUserInfo(userId, userInfo)) {
+            return false;
+        }
+        userInfo.ipcGroupInfos = ipcGroupInfos;
+        AddInnerBundleUserInfo(userInfo);
+        return true;
+    }
+
+    bool AddIpcGroupInfo(int32_t userId, const std::string &ipcGroupId, const IpcGroupInfo &info)
+    {
+        InnerBundleUserInfo userInfo;
+        if (!GetInnerBundleUserInfo(userId, userInfo)) {
+            return false;
+        }
+        userInfo.ipcGroupInfos[ipcGroupId] = info;
+        AddInnerBundleUserInfo(userInfo);
+        return true;
+    }
+
+    // Marks that the ipc group map was produced by the install path (declaration fully resolved), so
+    // the update merge may replace it even when it is empty. Not persisted.
+    void SetIpcGroupsPrepared(bool prepared)
+    {
+        ipcGroupsPrepared_ = prepared;
+    }
+
+    bool IsIpcGroupsPrepared() const
+    {
+        return ipcGroupsPrepared_;
+    }
+
     void SetApplicationReservedFlag(uint32_t flag)
     {
         baseApplicationInfo_->applicationReservedFlag |= flag;
@@ -2690,6 +2751,8 @@ private:
     // pluginBundleName -> pluginBundleInfo
     std::unordered_map<std::string, PluginBundleInfo> pluginBundleInfos_;
     bool checkBySpm_ = false;
+    // Transient (not persisted): the ipc group map came from the install-time declaration.
+    bool ipcGroupsPrepared_ = false;
 };
 
 void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info);

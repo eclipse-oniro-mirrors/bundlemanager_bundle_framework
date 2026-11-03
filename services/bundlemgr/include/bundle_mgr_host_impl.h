@@ -1188,6 +1188,8 @@ public:
         const std::string &abilityName, const std::string &extName, const std::string &mimeType) override;
     virtual bool QueryDataGroupInfos(const std::string &bundleName, int32_t userId,
         std::vector<DataGroupInfo> &infos) override;
+    virtual ErrCode QueryIpcGroupInfos(const std::string &bundleName, int32_t userId,
+        std::vector<IpcGroupInfo> &infos) override;
     virtual bool GetGroupDir(const std::string &dataGroupId, std::string &dir) override;
     virtual bool QueryAppGalleryBundleName(std::string &bundleName) override;
     virtual ErrCode ResetAOTCompileStatus(const std::string &bundleName, const std::string &moduleName,
