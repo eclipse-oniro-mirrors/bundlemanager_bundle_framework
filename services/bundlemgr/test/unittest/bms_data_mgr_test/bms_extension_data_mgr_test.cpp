@@ -128,6 +128,9 @@ public:
     bool BmsIsTargetAppTest(const std::string& bundleName, const std::string& appIdentifier);
     ErrCode GetShortcutInfos(const std::string &bundleName, int32_t userId,
         std::vector<ShortcutInfo> &shortcutInfos) override;
+    ErrCode GetAllDesktopShortcutInfos(int32_t userId, std::vector<ShortcutInfo> &shortcutInfos) override;
+    ErrCode AddDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId) override;
+    ErrCode DeleteDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId) override;
 };
 
 std::shared_ptr<BundleMgrService> BmsExtensionDataMgrTest::bundleMgrService_ =
@@ -252,6 +255,39 @@ ErrCode BundleMgrExtTest::GetShortcutInfos(const std::string &bundleName, int32_
     ShortcutInfo info;
     info.bundleName = bundleName;
     shortcutInfos.emplace_back(info);
+    return ERR_OK;
+}
+
+ErrCode BundleMgrExtTest::GetAllDesktopShortcutInfos(int32_t userId, std::vector<ShortcutInfo> &shortcutInfos)
+{
+    if (userId < 0 || userId > MAX_USERID_LIMIT) {
+        return ERR_BUNDLE_MANAGER_EXTENSION_INVALID_USER_ID;
+    }
+    ShortcutInfo info;
+    info.bundleName = "test.bundle";
+    shortcutInfos.emplace_back(info);
+    return ERR_OK;
+}
+
+ErrCode BundleMgrExtTest::AddDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId)
+{
+    if (shortcutInfo.bundleName.empty()) {
+        return ERR_BUNDLE_MANAGER_EXTENSION_INVALID_PARAM;
+    }
+    if (userId < 0 || userId > MAX_USERID_LIMIT) {
+        return ERR_BUNDLE_MANAGER_EXTENSION_INVALID_USER_ID;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrExtTest::DeleteDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId)
+{
+    if (shortcutInfo.bundleName.empty()) {
+        return ERR_BUNDLE_MANAGER_EXTENSION_INVALID_PARAM;
+    }
+    if (userId < 0 || userId > MAX_USERID_LIMIT) {
+        return ERR_BUNDLE_MANAGER_EXTENSION_INVALID_USER_ID;
+    }
     return ERR_OK;
 }
 
@@ -2825,6 +2861,158 @@ HWTEST_F(BmsExtensionDataMgrTest, GetShortcutInfos_ConvertErrCode_0005, Function
     std::vector<ShortcutInfo> shortcutInfos;
     ErrCode ret = bmsExtensionDataMgr.GetShortcutInfos(bundleName, userId, shortcutInfos);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: AddDesktopShortcutInfo_0001
+ * @tc.name: AddDesktopShortcutInfo with empty bundleName
+ * @tc.desc: test AddDesktopShortcutInfo when bundleName is empty,
+ *           should return ERR_BUNDLE_MANAGER_PARAM_ERROR
+ */
+HWTEST_F(BmsExtensionDataMgrTest, AddDesktopShortcutInfo_0001, Function | SmallTest | Level1)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    ShortcutInfo shortcutInfo;
+    shortcutInfo.bundleName = "";
+    int32_t userId = USERID;
+    ErrCode ret = bmsExtensionDataMgr.AddDesktopShortcutInfo(shortcutInfo, userId);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: AddDesktopShortcutInfo_0002
+ * @tc.name: AddDesktopShortcutInfo with bundleMgrExtPtr nullptr
+ * @tc.desc: test AddDesktopShortcutInfo when bundleMgrExtPtr is nullptr,
+ *           should return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR
+ */
+HWTEST_F(BmsExtensionDataMgrTest, AddDesktopShortcutInfo_0002, Function | SmallTest | Level1)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    int16_t handleTest = 1;
+    bmsExtensionDataMgr.handler_ = &handleTest;
+    bmsExtensionDataMgr.bmsExtension_.bmsExtensionBundleMgr.extensionName = "nonexistent";
+    ShortcutInfo shortcutInfo;
+    shortcutInfo.bundleName = "test.bundle";
+    int32_t userId = USERID;
+    ErrCode ret = bmsExtensionDataMgr.AddDesktopShortcutInfo(shortcutInfo, userId);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+}
+
+/**
+ * @tc.number: AddDesktopShortcutInfo_0003
+ * @tc.name: AddDesktopShortcutInfo with valid parameters
+ * @tc.desc: test AddDesktopShortcutInfo with valid parameters,
+ *           should return ERR_OK
+ */
+HWTEST_F(BmsExtensionDataMgrTest, AddDesktopShortcutInfo_0003, Function | SmallTest | Level1)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    int16_t handleTest = 1;
+    bmsExtensionDataMgr.handler_ = &handleTest;
+    bmsExtensionDataMgr.bmsExtension_.bmsExtensionBundleMgr.extensionName = "BundleMgrExtTest";
+    BundleMgrExtRegister::GetInstance().RegisterBundleMgrExt("BundleMgrExtTest",
+        []() -> std::shared_ptr<BundleMgrExt> { return std::make_shared<BundleMgrExtTest>(); });
+    ShortcutInfo shortcutInfo;
+    shortcutInfo.bundleName = "test.bundle";
+    int32_t userId = USERID;
+    ErrCode ret = bmsExtensionDataMgr.AddDesktopShortcutInfo(shortcutInfo, userId);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: DeleteDesktopShortcutInfo_0001
+ * @tc.name: DeleteDesktopShortcutInfo with empty bundleName
+ * @tc.desc: test DeleteDesktopShortcutInfo when bundleName is empty,
+ *           should return ERR_BUNDLE_MANAGER_PARAM_ERROR
+ */
+HWTEST_F(BmsExtensionDataMgrTest, DeleteDesktopShortcutInfo_0001, Function | SmallTest | Level1)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    ShortcutInfo shortcutInfo;
+    shortcutInfo.bundleName = "";
+    int32_t userId = USERID;
+    ErrCode ret = bmsExtensionDataMgr.DeleteDesktopShortcutInfo(shortcutInfo, userId);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: DeleteDesktopShortcutInfo_0002
+ * @tc.name: DeleteDesktopShortcutInfo with bundleMgrExtPtr nullptr
+ * @tc.desc: test DeleteDesktopShortcutInfo when bundleMgrExtPtr is nullptr,
+ *           should return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR
+ */
+HWTEST_F(BmsExtensionDataMgrTest, DeleteDesktopShortcutInfo_0002, Function | SmallTest | Level1)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    int16_t handleTest = 1;
+    bmsExtensionDataMgr.handler_ = &handleTest;
+    bmsExtensionDataMgr.bmsExtension_.bmsExtensionBundleMgr.extensionName = "nonexistent";
+    ShortcutInfo shortcutInfo;
+    shortcutInfo.bundleName = "test.bundle";
+    int32_t userId = USERID;
+    ErrCode ret = bmsExtensionDataMgr.DeleteDesktopShortcutInfo(shortcutInfo, userId);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+}
+
+/**
+ * @tc.number: DeleteDesktopShortcutInfo_0003
+ * @tc.name: DeleteDesktopShortcutInfo with valid parameters
+ * @tc.desc: test DeleteDesktopShortcutInfo with valid parameters,
+ *           should return ERR_OK
+ */
+HWTEST_F(BmsExtensionDataMgrTest, DeleteDesktopShortcutInfo_0003, Function | SmallTest | Level1)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    int16_t handleTest = 1;
+    bmsExtensionDataMgr.handler_ = &handleTest;
+    bmsExtensionDataMgr.bmsExtension_.bmsExtensionBundleMgr.extensionName = "BundleMgrExtTest";
+    BundleMgrExtRegister::GetInstance().RegisterBundleMgrExt("BundleMgrExtTest",
+        []() -> std::shared_ptr<BundleMgrExt> { return std::make_shared<BundleMgrExtTest>(); });
+    ShortcutInfo shortcutInfo;
+    shortcutInfo.bundleName = "test.bundle";
+    int32_t userId = USERID;
+    ErrCode ret = bmsExtensionDataMgr.DeleteDesktopShortcutInfo(shortcutInfo, userId);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetAllDesktopShortcutInfos_0002
+ * @tc.name: GetAllDesktopShortcutInfos with bundleMgrExtPtr nullptr
+ * @tc.desc: test GetAllDesktopShortcutInfos when bundleMgrExtPtr is nullptr,
+ *           should return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR
+ */
+HWTEST_F(BmsExtensionDataMgrTest, GetAllDesktopShortcutInfos_0002, Function | SmallTest | Level1)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    int16_t handleTest = 1;
+    bmsExtensionDataMgr.handler_ = &handleTest;
+    bmsExtensionDataMgr.bmsExtension_.bmsExtensionBundleMgr.extensionName = "nonexistent";
+    int32_t userId = USERID;
+    std::vector<ShortcutInfo> shortcutInfos;
+    ErrCode ret = bmsExtensionDataMgr.GetAllDesktopShortcutInfos(userId, shortcutInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+}
+
+/**
+ * @tc.number: GetAllDesktopShortcutInfos_0003
+ * @tc.name: GetAllDesktopShortcutInfos with valid parameters
+ * @tc.desc: test GetAllDesktopShortcutInfos with valid parameters,
+ *           should return ERR_OK and populate shortcutInfos with extension data
+ */
+HWTEST_F(BmsExtensionDataMgrTest, GetAllDesktopShortcutInfos_0003, Function | SmallTest | Level1)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    int16_t handleTest = 1;
+    bmsExtensionDataMgr.handler_ = &handleTest;
+    bmsExtensionDataMgr.bmsExtension_.bmsExtensionBundleMgr.extensionName = "BundleMgrExtTest";
+    BundleMgrExtRegister::GetInstance().RegisterBundleMgrExt("BundleMgrExtTest",
+        []() -> std::shared_ptr<BundleMgrExt> { return std::make_shared<BundleMgrExtTest>(); });
+    int32_t userId = USERID;
+    std::vector<ShortcutInfo> shortcutInfos;
+    ErrCode ret = bmsExtensionDataMgr.GetAllDesktopShortcutInfos(userId, shortcutInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    ASSERT_EQ(shortcutInfos.size(), 1u);
+    EXPECT_EQ(shortcutInfos[0].bundleName, "test.bundle");
 }
 
 /**

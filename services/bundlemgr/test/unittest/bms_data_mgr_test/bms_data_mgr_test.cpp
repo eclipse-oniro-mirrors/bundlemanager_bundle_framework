@@ -27,12 +27,14 @@
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "app_provision_info_manager.h"
+#include "bms_extension_data_mgr.h"
 #include "bundle_backup_mgr.h"
 #include "bundle_backup_service.h"
 #include "bundle_data_storage_interface.h"
 #include "bundle_data_mgr.h"
 #include "bundle_mgr_client.h"
 #include "bundle_mgr_client_impl.h"
+#include "bundle_mgr_ext_register.h"
 #include "bundle_mgr_host_impl.h"
 #include "bundle_mgr_service.h"
 #include "bundle_service_constants.h"
@@ -14367,5 +14369,79 @@ HWTEST_F(BmsDataMgrTest, GetShortcutInfoV9_HostImpl_0003, Function | SmallTest |
     std::vector<ShortcutInfo> shortcutInfos;
     ErrCode ret = hostImpl.GetShortcutInfoV9(bundleName, shortcutInfos, userId);
     EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: AddDesktopShortcutInfoFromExtension_0002
+ * @tc.name: AddDesktopShortcutInfoFromExtension with extension success
+ * @tc.desc: test BundleMgrHostImpl::AddDesktopShortcutInfoFromExtension when BMSExt returns success,
+ *           should return ERR_OK
+ */
+HWTEST_F(BmsDataMgrTest, AddDesktopShortcutInfoFromExtension_0002, Function | SmallTest | Level1)
+{
+    class MockBundleMgrExtForAddShortcut : public AppExecFwk::BundleMgrExt {
+    public:
+        bool CheckApiInfo(const BundleInfo& bundleInfo) override
+        {
+            return true;
+        }
+
+        ErrCode AddDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId) override
+        {
+            return ERR_OK;
+        }
+    };
+
+    int16_t handleTest = 1;
+    BmsExtensionDataMgr::handler_ = &handleTest;
+    BmsExtensionDataMgr::bmsExtension_.bmsExtensionBundleMgr.extensionName = "MockAddShortcutExt";
+    BundleMgrExtRegister::GetInstance().RegisterBundleMgrExt("MockAddShortcutExt",
+        []() -> std::shared_ptr<BundleMgrExt> { return std::make_shared<MockBundleMgrExtForAddShortcut>(); });
+
+    BundleMgrHostImpl hostImpl;
+    ShortcutInfo shortcutInfo;
+    shortcutInfo.bundleName = "test.bundle";
+    int32_t userId = USERID;
+    ErrCode ret = hostImpl.AddDesktopShortcutInfoFromExtension(shortcutInfo, userId);
+    EXPECT_EQ(ret, ERR_OK);
+
+    BmsExtensionDataMgr::handler_ = nullptr;
+}
+
+/**
+ * @tc.number: DeleteDesktopShortcutInfoFromExtension_0002
+ * @tc.name: DeleteDesktopShortcutInfoFromExtension with extension success
+ * @tc.desc: test BundleMgrHostImpl::DeleteDesktopShortcutInfoFromExtension when BMSExt returns success,
+ *           should return ERR_OK
+ */
+HWTEST_F(BmsDataMgrTest, DeleteDesktopShortcutInfoFromExtension_0002, Function | SmallTest | Level1)
+{
+    class MockBundleMgrExtForDeleteShortcut : public AppExecFwk::BundleMgrExt {
+    public:
+        bool CheckApiInfo(const BundleInfo& bundleInfo) override
+        {
+            return true;
+        }
+
+        ErrCode DeleteDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId) override
+        {
+            return ERR_OK;
+        }
+    };
+
+    int16_t handleTest = 1;
+    BmsExtensionDataMgr::handler_ = &handleTest;
+    BmsExtensionDataMgr::bmsExtension_.bmsExtensionBundleMgr.extensionName = "MockDeleteShortcutExt";
+    BundleMgrExtRegister::GetInstance().RegisterBundleMgrExt("MockDeleteShortcutExt",
+        []() -> std::shared_ptr<BundleMgrExt> { return std::make_shared<MockBundleMgrExtForDeleteShortcut>(); });
+
+    BundleMgrHostImpl hostImpl;
+    ShortcutInfo shortcutInfo;
+    shortcutInfo.bundleName = "test.bundle";
+    int32_t userId = USERID;
+    ErrCode ret = hostImpl.DeleteDesktopShortcutInfoFromExtension(shortcutInfo, userId);
+    EXPECT_EQ(ret, ERR_OK);
+
+    BmsExtensionDataMgr::handler_ = nullptr;
 }
 } // OHOS
