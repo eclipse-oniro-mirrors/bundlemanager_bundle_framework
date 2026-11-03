@@ -435,7 +435,7 @@ HWTEST_F(BmsBundleDataMgrDualModeProvisionTest, GetAllAppProvisionInfoInDevice_0
  * @tc.number: GetAllAppProvisionInfoForDualMode_0100
  * @tc.name: test GetAllAppProvisionInfoForDualMode with invalid userId
  * @tc.desc: 1. dual mode device, userId not in multiUserIdsSet_
- *           2. return ERR_BUNDLE_MANAGER_INALID_USER_ID
+ *           2. return ERR_BUNDLE_MANAGER_INVALID_USER_ID
  */
 HWTEST_F(BmsBundleDataMgrDualModeProvisionTest, GetAllAppProvisionInfoForDualMode_0100, Function | SmallTest | Level1)
 {
@@ -443,7 +443,7 @@ HWTEST_F(BmsBundleDataMgrDualModeProvisionTest, GetAllAppProvisionInfoForDualMod
     GetBundleDataMgr()->multiUserIdsSet_.clear();
     std::vector<AppProvisionInfo> appProvisionInfos;
     ErrCode ret = GetBundleDataMgr()->GetAllAppProvisionInfo(Constants::START_USERID, appProvisionInfos);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INALID_USER_ID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
 }
 
 /**
