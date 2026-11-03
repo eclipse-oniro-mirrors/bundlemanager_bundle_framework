@@ -53,6 +53,7 @@ const int32_t TEST_SIZE_ONE = 1;
 const int32_t TEST_SIZE_TWO = 2;
 const StartMode START_MODE = StartMode::RECENT_TASK;
 const std::vector<std::string> ASSET_ACCESS_GROUPS = {"group1", "group2"};
+const std::vector<std::string> NATIVE_CHILD_PROCESS_PRELOAD_SO_LIST = {"libfoo.so", "libbar.so"};
 const AppPreloadPhase APP_PRELOAD_PHASE = AppPreloadPhase::ABILITY_STAGE_CREATED;
 const bool CLOUD_STRUCTURED_DATA_SYNC_ENABLED = true;
 const std::map<std::string, std::vector<std::string>> REQUIRED_DEVICE_FEATURES = {
@@ -173,6 +174,7 @@ HWTEST_F(BmsModuleJsonUpdaterTest, UpdateModuleJsonAsync_0100, Function | SmallT
     BmsModuleJsonUpdaterTest::UpdateOtaFlag(OTAFlag::UPDATE_ALTERNATE_ICONS);
     BmsModuleJsonUpdaterTest::UpdateOtaFlag(OTAFlag::UPDATE_MODULE_JSON_EXTEND_FIELDS);
     BmsModuleJsonUpdaterTest::UpdateOtaFlag(OTAFlag::UPDATE_KEEP_DATA_ON_UNINSTALL);
+    BmsModuleJsonUpdaterTest::UpdateOtaFlag(OTAFlag::UPDATE_NATIVE_CHILD_PROCESS_PRELOAD_SO_LIST);
     ModuleJsonUpdater::UpdateModuleJsonAsync();
     std::set<std::string> ignoredBundles = ModuleJsonUpdater::GetIgnoreBundleNames();
     EXPECT_TRUE(ignoredBundles.empty());
@@ -557,6 +559,7 @@ HWTEST_F(BmsModuleJsonUpdaterTest, UpdatePartialInnerBundleInfo_0200, Function |
     jsonInfo.baseApplicationInfo_->profileable = PROFILEABLE;
     jsonInfo.baseApplicationInfo_->compatibleMinorVersion = COMPATIBLE_MINOR_VERSION;
     jsonInfo.baseApplicationInfo_->compatiblePatchVersion = COMPATIBLE_PATCH_VERSION;
+    jsonInfo.baseApplicationInfo_->nativeChildProcessPreloadSoList = NATIVE_CHILD_PROCESS_PRELOAD_SO_LIST;
     jsonInfo.baseBundleInfo_->buildVersion = TEST_BUILD_VERSION;
     InnerBundleInfo infoA;
     infoA.UpdatePartialInnerBundleInfo(jsonInfo);
@@ -588,6 +591,8 @@ HWTEST_F(BmsModuleJsonUpdaterTest, UpdatePartialInnerBundleInfo_0200, Function |
     EXPECT_EQ(infoB.baseApplicationInfo_->appPreloadPhase, APP_PRELOAD_PHASE);
     EXPECT_EQ(infoB.baseApplicationInfo_->cloudStructuredDataSyncEnabled, CLOUD_STRUCTURED_DATA_SYNC_ENABLED);
     EXPECT_TRUE(infoB.baseApplicationInfo_->keepDataOnUninstall);
+    EXPECT_EQ(infoB.baseApplicationInfo_->nativeChildProcessPreloadSoList,
+        NATIVE_CHILD_PROCESS_PRELOAD_SO_LIST);
 }
 
 /**

@@ -2402,6 +2402,7 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const InnerBundleInfo &newInfo)
     baseApplicationInfo_->sharedUID = applicationInfo.sharedUID;
     baseApplicationInfo_->allowListenBundleChangedEvent =
         applicationInfo.allowListenBundleChangedEvent;
+    baseApplicationInfo_->nativeChildProcessPreloadSoList = applicationInfo.nativeChildProcessPreloadSoList;
 }
 
 void InnerBundleInfo::UpdatePartialInnerBundleInfo(const InnerBundleInfo &info)
@@ -2416,6 +2417,8 @@ void InnerBundleInfo::UpdatePartialInnerBundleInfo(const InnerBundleInfo &info)
             baseApplicationInfo_->appPreloadPhase = info.baseApplicationInfo_->appPreloadPhase;
             baseApplicationInfo_->allowListenBundleChangedEvent =
                 info.baseApplicationInfo_->allowListenBundleChangedEvent;
+            baseApplicationInfo_->nativeChildProcessPreloadSoList =
+                info.baseApplicationInfo_->nativeChildProcessPreloadSoList;
         }
         baseApplicationInfo_->cloudStructuredDataSyncEnabled =
             info.baseApplicationInfo_->cloudStructuredDataSyncEnabled;

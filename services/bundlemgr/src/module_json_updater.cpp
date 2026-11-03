@@ -42,7 +42,11 @@ void ModuleJsonUpdater::UpdateModuleJsonAsync()
     (void)BMSEventHandler::CheckOtaFlag(OTAFlag::UPDATE_MODULE_JSON_EXTEND_FIELDS, isExtendFieldsHandled);
     bool isKeepDataOnUninstallHandled = false;
     (void)BMSEventHandler::CheckOtaFlag(OTAFlag::UPDATE_KEEP_DATA_ON_UNINSTALL, isKeepDataOnUninstallHandled);
-    if (isHandled && isAlternateIconsHandled && isExtendFieldsHandled && isKeepDataOnUninstallHandled) {
+    bool isPreloadSoListHandled = false;
+    (void)BMSEventHandler::CheckOtaFlag(OTAFlag::UPDATE_NATIVE_CHILD_PROCESS_PRELOAD_SO_LIST,
+        isPreloadSoListHandled);
+    if (isHandled && isAlternateIconsHandled && isExtendFieldsHandled &&
+        isKeepDataOnUninstallHandled && isPreloadSoListHandled) {
         ClearIgnoreBundleNames();
         return;
     }
@@ -52,6 +56,7 @@ void ModuleJsonUpdater::UpdateModuleJsonAsync()
         (void)BMSEventHandler::UpdateOtaFlag(OTAFlag::UPDATE_ALTERNATE_ICONS);
         (void)BMSEventHandler::UpdateOtaFlag(OTAFlag::UPDATE_MODULE_JSON_EXTEND_FIELDS);
         (void)BMSEventHandler::UpdateOtaFlag(OTAFlag::UPDATE_KEEP_DATA_ON_UNINSTALL);
+        (void)BMSEventHandler::UpdateOtaFlag(OTAFlag::UPDATE_NATIVE_CHILD_PROCESS_PRELOAD_SO_LIST);
     }).detach();
 }
 

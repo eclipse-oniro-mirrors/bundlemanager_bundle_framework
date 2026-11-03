@@ -350,6 +350,7 @@ struct App {
     std::vector<std::string> assetAccessGroups;
     std::string startMode = Profile::START_MODE_MAIN_TASK;
     std::vector<std::string> allowListenBundleChangedEvent;
+    std::vector<std::string> nativeChildProcessPreloadSoList;
 };
 
 struct Module {
@@ -1214,6 +1215,47 @@ void from_json(const nlohmann::json &jsonObject, MultiAppMode &multiAppMode)
         ArrayType::NOT_ARRAY);
 }
 
+void CheckNativeChildProcessPreloadSoListSize(const nlohmann::json &jsonObject,
+    const nlohmann::detail::iter_impl<const nlohmann::json> &jsonObjectEnd)
+{
+    if (g_parseResult != ERR_OK) {
+        return;
+    }
+    auto iter = jsonObject.find(APP_NATIVE_CHILD_PROCESS_PRELOAD_SO_LIST);
+    if (iter == jsonObjectEnd || !iter->is_array()) {
+        return;
+    }
+    if (iter->empty() || iter->size() > MAX_NATIVE_CHILD_PROCESS_PRELOAD_SO_COUNT) {
+        APP_LOGE_NOFUNC("nativeChildProcessPreloadSoList count %{public}zu is invalid", iter->size());
+        g_parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_SIZE_CHECK_ERROR;
+        return;
+    }
+    std::unordered_set<std::string> preloadSoNames;
+    for (const auto &soName : *iter) {
+        if (!soName.is_string()) {
+            APP_LOGE_NOFUNC("nativeChildProcessPreloadSoList name type is invalid");
+            g_parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
+            return;
+        }
+        const std::string &name = soName.get<std::string>();
+        if (name.size() > MAX_NATIVE_CHILD_PROCESS_PRELOAD_SO_NAME_LENGTH) {
+            APP_LOGE_NOFUNC("nativeChildProcessPreloadSoList name length is invalid");
+            g_parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_SIZE_CHECK_ERROR;
+            return;
+        }
+        if (name.find(ServiceConstants::RELATIVE_PATH) != std::string::npos) {
+            APP_LOGE_NOFUNC("nativeChildProcessPreloadSoList name is invalid due to path traversal");
+            g_parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR;
+            return;
+        }
+        if (!preloadSoNames.insert(name).second) {
+            APP_LOGE_NOFUNC("nativeChildProcessPreloadSoList name is duplicated");
+            g_parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR;
+            return;
+        }
+    }
+}
+
 void from_json(const nlohmann::json &jsonObject, App &app)
 {
     APP_LOGD("read app tag from module.json");
@@ -1679,6 +1721,15 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         false,
         g_parseResult,
         ArrayType::STRING);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        APP_NATIVE_CHILD_PROCESS_PRELOAD_SO_LIST,
+        app.nativeChildProcessPreloadSoList,
+        JsonType::ARRAY,
+        false,
+        g_parseResult,
+        ArrayType::STRING);
+    CheckNativeChildProcessPreloadSoListSize(jsonObject, jsonObjectEnd);
 }
 
 void from_json(const nlohmann::json &jsonObject, Module &module)
@@ -2755,6 +2806,7 @@ bool ToApplicationInfo(
     applicationInfo.cloudStructuredDataSyncEnabled = app.cloudStructuredDataSyncEnabled;
     applicationInfo.keepDataOnUninstall = app.keepDataOnUninstall;
     applicationInfo.allowListenBundleChangedEvent = app.allowListenBundleChangedEvent;
+    applicationInfo.nativeChildProcessPreloadSoList = app.nativeChildProcessPreloadSoList;
     return true;
 }
 
