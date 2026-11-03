@@ -126,9 +126,9 @@ HWTEST_F(BmsBundleMgrHostImplProvisionTest, GetAppProvisionInfoInDevice_HostImpl
     std::vector<AppProvisionInfo> appProvisionInfos;
     ErrCode ret = bundleMgrHostImpl_->GetAppProvisionInfoInDevice(
         TEST_BUNDLE_NAME, Constants::UNSPECIFIED_USERID, appProvisionInfos);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+    ASSERT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
 
-    //Restore dataMgr
+    // Restore dataMgr
     bundleMgrService_->dataMgr_ = originalDataMgr;
 }
 
@@ -172,9 +172,9 @@ HWTEST_F(BmsBundleMgrHostImplProvisionTest, GetAllAppProvisionInfoInDevice_HostI
 
     std::vector<AppProvisionInfo> appProvisionInfos;
     ErrCode ret = bundleMgrHostImpl_->GetAllAppProvisionInfoInDevice(OTHER_USER_ID, appProvisionInfos);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+    ASSERT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
 
-    //Restore dataMgr
+    // Restore dataMgr
     bundleMgrService_->dataMgr_ = originalDataMgr;
 }
 
@@ -304,7 +304,7 @@ HWTEST_F(BmsBundleMgrHostImplProvisionTest, SetAdditionalInfoByIndex_HostImpl_00
 /**
  * @tc.number: SetAdditionalInfoByIndex_HostImpl_0004
  * @tc.name: test SetAdditionalInfoByIndex not app gallery call
- * @tc.desc: 1. system app with permission, valied appIndex
+ * @tc.desc: 1. system app with permission, valid appIndex
  *           2. calling bundle is not app gallery
  *           3. returns ERR_BUNDLE_MANAGER_NOT_APP_GALLERY_CALL
  */

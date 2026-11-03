@@ -8110,7 +8110,7 @@ HWTEST_F(BmsDataMgrTest, GetAllAppProvisionInfoInDevice_0002, TestSize.Level1)
  * @tc.name: test GetAdditionalInfo with SHARED app but no provision record
  * @tc.desc: 1. SHARED app exists in bundleInfos_
  *           2. no provision record in AppProvisionInfoManager
- *           3. returns ERR_BUNDLE_MANAGER_INTERNAL_ERRPR
+ *           3. returns ERR_BUNDLE_MANAGER_INTERNAL_ERROR
  */
 HWTEST_F(BmsDataMgrTest, GetAdditionalInfo_0001, TestSize.Level1)
 {
@@ -8134,7 +8134,7 @@ HWTEST_F(BmsDataMgrTest, GetAdditionalInfo_0001, TestSize.Level1)
  * @tc.name: test GetSpecifiedDistributionType with SHARED app but no provision record
  * @tc.desc: 1. SHARED app exists in bundleInfos_
  *           2. no provision record in AppProvisionInfoManager
- *           3. returns ERR_BUNDLE_MANAGER_INTERNAL_ERRPR
+ *           3. returns ERR_BUNDLE_MANAGER_INTERNAL_ERROR
  */
 HWTEST_F(BmsDataMgrTest, GetSpecifiedDistributionType_0001, TestSize.Level1)
 {
@@ -8157,7 +8157,7 @@ HWTEST_F(BmsDataMgrTest, GetSpecifiedDistributionType_0001, TestSize.Level1)
  * @tc.number: GetAdditionalInfoForAllUser_0001
  * @tc.name: test GetAdditionalInfoForAllUser with bundle not exist
  * @tc.desc: 1. bundle not in bundleInfos_
- *           2. returns ERR_BUNDLE_MANAGER_INTERNAL_ERRPR
+ *           2. returns ERR_BUNDLE_MANAGER_INTERNAL_ERROR
  */
 HWTEST_F(BmsDataMgrTest, GetAdditionalInfoForAllUser_0001, TestSize.Level1)
 {
@@ -8214,7 +8214,7 @@ HWTEST_F(BmsDataMgrTest, SetAdditionalInfo_0002, TestSize.Level1)
     dataMgr->bundleInfos_[bundleName] = info;
     DelayedSingleton<AppProvisionInfoManager>::GetInstance()->AddAppProvisionInfo(bundleName, AppProvisionInfo {});
 
-    std::string additionalInfo = "shardAdditional";
+    std::string additionalInfo = "sharedAdditional";
     ErrCode ret = dataMgr->SetAdditionalInfo(bundleName, additionalInfo);
     EXPECT_EQ(ret, ERR_OK);
 

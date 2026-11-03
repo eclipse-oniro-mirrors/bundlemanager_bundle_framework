@@ -313,7 +313,7 @@ HWTEST_F(BmsBundleDataMgrDualModeProvisionTest, SetAdditionalInfo_0300, Function
 /**
  * @tc.number: GetAllAppProvisionInfo_1001
  * @tc.name: test GetAllAppProvisionInfo
- * @tc.desc: 1.Test the GetAllAppProvisionInfo by BundleMgrProxy  failed due to invalid userid
+ * @tc.desc: 1.Test the GetAllAppProvisionInfoto invalid userid
  */
 HWTEST_F(BmsBundleDataMgrDualModeProvisionTest, GetAllAppProvisionInfo_1001, Function | SmallTest | Level1)
 {
@@ -342,7 +342,7 @@ HWTEST_F(BmsBundleDataMgrDualModeProvisionTest, GetAllAppProvisionInfo_1001, Fun
 /**
  * @tc.number: GetAppProvisionInfoInDevice_0100
  * @tc.name: test GetAppProvisionInfoInDevice normal path with dual mode clone app
- * @tc.desc: 1. dual mode device, installed clone app in bundleInfos_ and tempBundleInfos_
+ * @tc.desc: 1. dual mode device, installed clone app in bundleInfos_
  *           2. GetAppProvisionInfo succeeds, appIndex is DUAL_MODE_CLONE_APP_INDEX
  */
 HWTEST_F(BmsBundleDataMgrDualModeProvisionTest, GetAppProvisionInfoInDevice_0100, Function | SmallTest | Level1)
@@ -838,8 +838,8 @@ HWTEST_F(BmsBundleDataMgrDualModeProvisionTest, SetAdditionalInfoByIndex_0500, F
     GetBundleDataMgr()->bundleInfos_.clear();
     GetBundleDataMgr()->tempBundleInfos_.clear();
     std::string bundleName = "com.test.setaddidx.tempclone";
-    GetBundleDataMgr()->bundleInfos_[bundleName] = CreateTestBundleInfo(
-        bundleName, BundleType::SHARED, false, Constants::START_USERID);
+    GetBundleDataMgr()->tempBundleInfos_[bundleName] = CreateTestBundleInfo(
+        bundleName, BundleType::SHARED, true, Constants::START_USERID);
     std::string effectiveBundleName = DualModeHelper::GetDualModeBundleName(bundleName);
     DelayedSingleton<AppProvisionInfoManager>::GetInstance()->AddAppProvisionInfo(
         effectiveBundleName, AppProvisionInfo{});
@@ -853,7 +853,7 @@ HWTEST_F(BmsBundleDataMgrDualModeProvisionTest, SetAdditionalInfoByIndex_0500, F
     DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAdditionalInfo(effectiveBundleName, result);
     EXPECT_EQ(result, additionalInfo);
 
-    GetBundleDataMgr()->bundleInfos_.clear();
+    GetBundleDataMgr()->tempBundleInfos_.clear();
     DelayedSingleton<AppProvisionInfoManager>::GetInstance()->DeleteAppProvisionInfo(effectiveBundleName);
 }
 
@@ -876,7 +876,7 @@ HWTEST_F(BmsBundleDataMgrDualModeProvisionTest, SetAdditionalInfoByIndex_0600, F
 
     std::string additionalInfo = "defaultAdditional";
     ErrCode ret = GetBundleDataMgr()->SetAdditionalInfoByIndex(
-        bundleName, additionalInfo, Constants::DUAL_MODE_CLONE_APP_INDEX);
+        bundleName, additionalInfo, Constants::DEFAULT_APP_INDEX);
     EXPECT_EQ(ret, ERR_OK);
 
     std::string result;
