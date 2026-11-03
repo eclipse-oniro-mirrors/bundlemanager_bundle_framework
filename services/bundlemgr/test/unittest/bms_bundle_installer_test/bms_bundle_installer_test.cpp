@@ -16,6 +16,7 @@
 #define private public
 #define protected public
 #include <gtest/gtest.h>
+#include <iostream>
 
 #include <algorithm>
 #include <chrono>
@@ -826,26 +827,41 @@ void BmsBundleInstallerTest::SetUp()
         // the record's hap itself instead of guessing the device file name.
         auto dataMgr = GetBundleDataMgr();
         PreInstallBundleInfo systemResPreInfo;
-        if (dataMgr != nullptr &&
+        bool systemResRecordHit = dataMgr != nullptr &&
             dataMgr->GetPreInstallBundleInfo(GLOBAL_RESOURCE_BUNDLE_NAME, systemResPreInfo) &&
-            !systemResPreInfo.GetBundlePaths().empty()) {
-            const std::string &systemResHapPath = systemResPreInfo.GetBundlePaths().front();
-            auto separatorPos = systemResHapPath.find_last_of('/');
-            std::string systemResHapName = (separatorPos == std::string::npos)
-                ? systemResHapPath : systemResHapPath.substr(separatorPos + 1);
-            Security::Verify::HapVerifyResult systemResVerifyResult;
-            std::string systemResAppId;
-            std::string systemResAppIdentifier;
-            if (BundleVerifyMgr::HapVerify(systemResHapPath, systemResVerifyResult, true) == ERR_OK) {
-                systemResAppId = systemResVerifyResult.GetProvisionInfo().appId;
-                systemResAppIdentifier = systemResVerifyResult.GetProvisionInfo().bundleInfo.appIdentifier;
+            !systemResPreInfo.GetBundlePaths().empty();
+        // Diagnostic: environments without the systemres preinstall record
+        // (fresh RDB / unscanned image) or with an unreadable system hap
+        // silently skip the registration and fail BaseBundleInstaller_7200
+        // downstream — print the seeding state to disambiguate.
+        std::cout << "SystemRes seed: recordHit:" << systemResRecordHit;
+        if (systemResRecordHit) {
+            // Register EVERY hap of the record: environments differ in how
+            // many haps the systemres scan recorded (single vs multi-hap),
+            // and the mock's per-path lookup fails closed on any unregistered
+            // name (entries cleared -> 1:N count mismatch -> 8519752).
+            for (const std::string &systemResHapPath : systemResPreInfo.GetBundlePaths()) {
+                auto separatorPos = systemResHapPath.find_last_of('/');
+                std::string systemResHapName = (separatorPos == std::string::npos)
+                    ? systemResHapPath : systemResHapPath.substr(separatorPos + 1);
+                Security::Verify::HapVerifyResult systemResVerifyResult;
+                std::string systemResAppId;
+                std::string systemResAppIdentifier;
+                bool verifyOk = BundleVerifyMgr::HapVerify(systemResHapPath, systemResVerifyResult, true)
+                    == ERR_OK;
+                if (verifyOk) {
+                    systemResAppId = systemResVerifyResult.GetProvisionInfo().appId;
+                    systemResAppIdentifier = systemResVerifyResult.GetProvisionInfo().bundleInfo.appIdentifier;
+                }
+                const std::string provisionSystemRes =
+                    Security::AccessToken::MakeSpmReleaseProvisionRawForTest(GLOBAL_RESOURCE_BUNDLE_NAME,
+                        "os_integration", false, "hos_system_app", "system_core", systemResAppIdentifier);
+                Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(systemResHapName,
+                    provisionSystemRes, systemResAppId);
+                std::cout << " path:" << systemResHapPath << " verifyOk:" << verifyOk;
             }
-            const std::string provisionSystemRes =
-                Security::AccessToken::MakeSpmReleaseProvisionRawForTest(GLOBAL_RESOURCE_BUNDLE_NAME,
-                    "os_integration", false, "hos_system_app", "system_core", systemResAppIdentifier);
-            Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(systemResHapName,
-                provisionSystemRes, systemResAppId);
         }
+        std::cout << std::endl;
         firstSetUpDone = true;
     }
     // The mocked InstalldClient::ClearSessionProvisionCache is a counting
