@@ -17,6 +17,7 @@
 
 #include <fstream>
 #include <mutex>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <nlohmann/json.hpp>
 #include <unistd.h>

@@ -18,6 +18,7 @@
 #include <fcntl.h>
 #include <fstream>
 #include <future>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include "accesstoken_kit.h"

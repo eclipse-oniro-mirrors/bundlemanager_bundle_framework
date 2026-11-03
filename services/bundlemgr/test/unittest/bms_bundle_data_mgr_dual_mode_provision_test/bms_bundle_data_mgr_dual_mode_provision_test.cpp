@@ -765,7 +765,7 @@ HWTEST_F(BmsBundleDataMgrDualModeProvisionTest, SetAdditionalInfo_0700, Function
     std::string additionalInfo = "nonCloneAdditional";
     ErrCode ret = GetBundleDataMgr()->SetAdditionalInfo(bundleName, additionalInfo);
     EXPECT_EQ(ret, ERR_OK);
-    
+
     std::string result;
     DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAdditionalInfo(bundleName, result);
     EXPECT_EQ(result, additionalInfo);
@@ -794,7 +794,7 @@ HWTEST_F(BmsBundleDataMgrDualModeProvisionTest, SetAdditionalInfoByIndex_0400, F
     ErrCode ret = GetBundleDataMgr()->SetAdditionalInfoByIndex(
         bundleName, additionalInfo, Constants::DEFAULT_APP_INDEX);
     EXPECT_EQ(ret, ERR_OK);
-    
+
     std::string result;
     DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAdditionalInfo(bundleName, result);
     EXPECT_EQ(result, additionalInfo);
@@ -847,7 +847,7 @@ HWTEST_F(BmsBundleDataMgrDualModeProvisionTest, SetAdditionalInfoByIndex_0500, F
     ErrCode ret = GetBundleDataMgr()->SetAdditionalInfoByIndex(
         bundleName, additionalInfo, Constants::DUAL_MODE_CLONE_APP_INDEX);
     EXPECT_EQ(ret, ERR_OK);
-    
+
     std::string result;
     DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAdditionalInfo(effectiveBundleName, result);
     EXPECT_EQ(result, additionalInfo);
@@ -877,7 +877,7 @@ HWTEST_F(BmsBundleDataMgrDualModeProvisionTest, SetAdditionalInfoByIndex_0600, F
     ErrCode ret = GetBundleDataMgr()->SetAdditionalInfoByIndex(
         bundleName, additionalInfo, Constants::DUAL_MODE_CLONE_APP_INDEX);
     EXPECT_EQ(ret, ERR_OK);
-    
+
     std::string result;
     DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAdditionalInfo(bundleName, result);
     EXPECT_EQ(result, additionalInfo);

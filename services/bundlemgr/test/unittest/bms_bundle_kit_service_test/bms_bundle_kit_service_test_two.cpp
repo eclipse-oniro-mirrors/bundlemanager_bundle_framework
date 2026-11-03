@@ -22,6 +22,7 @@
 #include <fstream>
 #include <mutex>
 #include <thread>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include "accesstoken_kit.h"
 #include "ability_manager_client.h"
