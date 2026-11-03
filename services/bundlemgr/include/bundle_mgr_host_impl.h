@@ -870,6 +870,27 @@ public:
     ErrCode QueryShortcutInfosFromExtension(const std::string &bundleName, int32_t userId,
         std::vector<ShortcutInfo> &shortcutInfos);
     /**
+     * @brief Obtains all desktop shortcut infos from the BMS extension.
+     * @param userId Indicates the user ID.
+     * @param shortcutInfos List of ShortcutInfo objects if obtained.
+     * @return Returns errCode of result.
+     */
+    ErrCode GetAllDesktopShortcutInfoFromExtension(int32_t userId, std::vector<ShortcutInfo> &shortcutInfos);
+    /**
+     * @brief Adds a desktop shortcut info through the BMS extension.
+     * @param shortcutInfo Indicates the shortcut info to be added.
+     * @param userId Indicates the user ID.
+     * @return Returns errCode of result.
+     */
+    ErrCode AddDesktopShortcutInfoFromExtension(const ShortcutInfo &shortcutInfo, int32_t userId);
+    /**
+     * @brief Deletes a desktop shortcut info through the BMS extension.
+     * @param shortcutInfo Indicates the shortcut info to be deleted.
+     * @param userId Indicates the user ID.
+     * @return Returns errCode of result.
+     */
+    ErrCode DeleteDesktopShortcutInfoFromExtension(const ShortcutInfo &shortcutInfo, int32_t userId);
+    /**
      * @brief Obtains the ShortcutInfo objects provided by a specified application on the device.
      * @param bundleName Indicates the bundle name of the application.
      * @param shortcutInfos List of ShortcutInfo objects if obtained.

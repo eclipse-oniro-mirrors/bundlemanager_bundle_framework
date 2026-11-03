@@ -104,6 +104,9 @@ public:
     ErrCode CanOpenLink(const std::string &link, bool &canOpen);
     ErrCode GetShortcutInfos(const std::string &bundleName, int32_t userId,
         std::vector<ShortcutInfo> &shortcutInfos);
+    ErrCode GetAllDesktopShortcutInfos(int32_t userId, std::vector<ShortcutInfo> &shortcutInfos);
+    ErrCode AddDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId);
+    ErrCode DeleteDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId);
 private:
     // Error codes from BMSExt service.
     // Source: BMSExt internal error definitions (not exposed via shared header).
