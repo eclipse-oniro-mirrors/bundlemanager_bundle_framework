@@ -33,6 +33,25 @@ int32_t g_migrateBundleDirsOwnerCallCount = 0;
 // Failure injection knob for the RefreshBundleDirsAfterUidChange best-effort branch.
 int32_t g_migrateBundleDirsOwnerRet = 0;
 bool g_mockCleanBundleDataDirResult = true;
+
+namespace {
+// Capture knob for every IsExistDir query of the current test (pass-coverage
+// assertions, e.g. proving the dedicated other-mode rebuild pass queried a
+// variant's dir). Test cases reset it before driving the flow under test.
+std::vector<std::string> g_isExistDirPaths;
+}
+
+// Test-only helpers for the IsExistDir query captures; declare them in test files.
+void ResetIsExistDirPathsForTest()
+{
+    g_isExistDirPaths.clear();
+}
+
+std::vector<std::string> GetIsExistDirPathsForTest()
+{
+    return g_isExistDirPaths;
+}
+
 namespace {
 bool g_processBinFilesCalled = false;
 VerifyBinParam g_lastVerifyBinParam;
@@ -99,6 +118,7 @@ void SetCleanBundleDataDirResult(bool cleanResult)
 namespace {
 int32_t g_setEncryptionPolicyCallCount = 0;
 std::string g_lastSetEncryptionPolicyBundleName;
+std::string g_firstSetEncryptionPolicyBundleName;
 }
 
 // Test-only helpers for SetEncryptionPolicy; declare them extern in test files.
@@ -106,6 +126,7 @@ void ResetSetEncryptionPolicyState()
 {
     g_setEncryptionPolicyCallCount = 0;
     g_lastSetEncryptionPolicyBundleName.clear();
+    g_firstSetEncryptionPolicyBundleName.clear();
 }
 
 int32_t GetSetEncryptionPolicyCallCount()
@@ -116,6 +137,11 @@ int32_t GetSetEncryptionPolicyCallCount()
 std::string GetLastSetEncryptionPolicyBundleName()
 {
     return g_lastSetEncryptionPolicyBundleName;
+}
+
+std::string GetFirstSetEncryptionPolicyBundleName()
+{
+    return g_firstSetEncryptionPolicyBundleName;
 }
 
 ErrCode InstalldClient::CreateBundleDir(
@@ -727,6 +753,7 @@ ErrCode InstalldClient::ApplyDiffPatch(const std::string &oldSoPath, const std::
 
 ErrCode InstalldClient::IsExistDir(const std::string &dir, bool &isExist)
 {
+    g_isExistDirPaths.emplace_back(dir);
     return CallService(&IInstalld::IsExistDir, dir, isExist);
 }
 
@@ -888,6 +915,9 @@ ErrCode InstalldClient::SetEncryptionPolicy(const EncryptionParam &encryptionPar
     }
     g_setEncryptionPolicyCallCount++;
     if (encryptionParam.encryptionDirType == EncryptionDirType::APP) {
+        if (g_firstSetEncryptionPolicyBundleName.empty()) {
+            g_firstSetEncryptionPolicyBundleName = encryptionParam.bundleName;
+        }
         g_lastSetEncryptionPolicyBundleName = encryptionParam.bundleName;
     }
     keyId = "mockedKeyId";

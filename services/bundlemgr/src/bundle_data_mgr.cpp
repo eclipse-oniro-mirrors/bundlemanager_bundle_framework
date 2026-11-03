@@ -5320,8 +5320,31 @@ bool BundleDataMgr::GetBundleInfos(
         return false;
     }
 
+    return InnerGetBundleInfos(bundleInfos_, flags, requestUserId, bundleInfos);
+}
+
+bool BundleDataMgr::GetTempBundleInfos(
+    int32_t flags, std::vector<BundleInfo> &bundleInfos, int32_t userId) const
+{
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        return false;
+    }
+
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    if (tempBundleInfos_.empty()) {
+        // Non-dual-mode devices never populate tempBundleInfos_: an empty result is a
+        // normal "nothing to rebuild", not an error.
+        return false;
+    }
+    return InnerGetBundleInfos(tempBundleInfos_, flags, requestUserId, bundleInfos);
+}
+
+bool BundleDataMgr::InnerGetBundleInfos(const std::map<std::string, InnerBundleInfo> &infos,
+    int32_t flags, int32_t requestUserId, std::vector<BundleInfo> &bundleInfos) const
+{
     bool find = false;
-    for (const auto &item : bundleInfos_) {
+    for (const auto &item : infos) {
         const InnerBundleInfo &innerBundleInfo = item.second;
         auto bundleType = innerBundleInfo.GetApplicationBundleType();
         if (bundleType == BundleType::SHARED || bundleType == BundleType::SKILL) {
@@ -5354,7 +5377,7 @@ bool BundleDataMgr::GetBundleInfos(
         GetCloneBundleInfos(innerBundleInfo, flags, responseUserId, bundleInfos);
     }
 
-    LOG_D(BMS_TAG_QUERY, "get bundleInfos result(%{public}d) in user(%{public}d)", find, userId);
+    LOG_D(BMS_TAG_QUERY, "get bundleInfos result(%{public}d) in user(%{public}d)", find, requestUserId);
     return find;
 }
 
@@ -12386,15 +12409,19 @@ std::vector<int32_t> BundleDataMgr::GetUserIds(const std::string &bundleName) co
     return userIds;
 }
 
-void BundleDataMgr::CreateAppEl5GroupDir(const std::string &bundleName, int32_t userId)
+void BundleDataMgr::CreateAppEl5GroupDir(const std::string &bundleName, int32_t userId, bool toTempBundle)
 {
     std::unordered_map<std::string, std::vector<DataGroupInfo>> dataGroupInfoMap;
     bool hasInputMethodExtension = false;
     {
         std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
-        auto bundleInfoItem = bundleInfos_.find(bundleName);
-        if (bundleInfoItem == bundleInfos_.end()) {
-            APP_LOGW("%{public}s not found", bundleName.c_str());
+        // dual-mode: toTempBundle targets the hidden (other-mode) variant's record —
+        // cross-mode installs persist their data group infos on tempBundleInfos_.
+        const auto &targetMap = toTempBundle ? tempBundleInfos_ : bundleInfos_;
+        auto bundleInfoItem = targetMap.find(bundleName);
+        if (bundleInfoItem == targetMap.end()) {
+            APP_LOGW("CreateAppEl5GroupDir: %{public}s not found in %{public}s map",
+                bundleName.c_str(), toTempBundle ? "tempBundleInfos_" : "bundleInfos_");
             return;
         }
         bool needCreateEl5Dir = bundleInfoItem->second.NeedCreateEl5Dir();
@@ -12583,16 +12610,20 @@ void BundleDataMgr::AllocateIpcGroupInfos(InnerBundleInfo &innerBundleInfo)
     }
 }
 
-bool BundleDataMgr::CreateAppGroupDir(const std::string &bundleName, int32_t userId)
+bool BundleDataMgr::CreateAppGroupDir(const std::string &bundleName, int32_t userId, bool toTempBundle)
 {
     std::unordered_map<std::string, std::vector<DataGroupInfo>> dataGroupInfoMap;
     bool needCreateEl5Dir = false;
     bool hasInputMethodExtension = false;
     {
         std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
-        auto bundleInfoItem = bundleInfos_.find(bundleName);
-        if (bundleInfoItem == bundleInfos_.end()) {
-            APP_LOGW("%{public}s not found", bundleName.c_str());
+        // dual-mode: toTempBundle targets the hidden (other-mode) variant's record —
+        // cross-mode installs persist their data group infos on tempBundleInfos_.
+        const auto &targetMap = toTempBundle ? tempBundleInfos_ : bundleInfos_;
+        auto bundleInfoItem = targetMap.find(bundleName);
+        if (bundleInfoItem == targetMap.end()) {
+            APP_LOGW("CreateAppGroupDir: %{public}s not found in %{public}s map",
+                bundleName.c_str(), toTempBundle ? "tempBundleInfos_" : "bundleInfos_");
             return false;
         }
         dataGroupInfoMap = bundleInfoItem->second.GetDataGroupInfos();
@@ -14368,13 +14399,14 @@ ErrCode BundleDataMgr::CreateBundleDataDirWithEl(int32_t userId, DataDirEl dirEl
     return res;
 }
 
-void BundleDataMgr::CreateEl5Dir(const std::vector<CreateDirParam> &el5Params, bool needSaveStorage)
+void BundleDataMgr::CreateEl5Dir(const std::vector<CreateDirParam> &el5Params,
+    bool needSaveStorage, bool toTempBundle)
 {
     for (const auto &el5Param : el5Params) {
         APP_LOGI("-n %{public}s -u %{public}d -i %{public}d",
             el5Param.bundleName.c_str(), el5Param.userId, el5Param.appIndex);
         InnerCreateEl5Dir(el5Param);
-        SetEl5DirPolicy(el5Param, needSaveStorage);
+        SetEl5DirPolicy(el5Param, needSaveStorage, toTempBundle);
     }
 }
 
@@ -14462,7 +14494,7 @@ void BundleDataMgr::InnerCreateEl5Dir(const CreateDirParam &el5Param)
     }
 }
 
-void BundleDataMgr::SetEl5DirPolicy(const CreateDirParam &el5Param, bool needSaveStorage)
+void BundleDataMgr::SetEl5DirPolicy(const CreateDirParam &el5Param, bool needSaveStorage, bool toTempBundle)
 {
     InnerBundleInfo info;
     // dual-mode: el5Param.bundleName may be the effective (prefixed) name; fetch by the original name.
@@ -14472,8 +14504,13 @@ void BundleDataMgr::SetEl5DirPolicy(const CreateDirParam &el5Param, bool needSav
     if (BundleCloneCommonHelper::ParseCloneDataDir(fetchName, originalName, parsedAppIndex)) {
         fetchName = originalName;
     }
-    if (!FetchInnerBundleInfo(fetchName, info)) {
-        LOG_E(BMS_TAG_INSTALLER, "get bundle %{public}s failed", fetchName.c_str());
+    // dual-mode: toTempBundle resolves the record from tempBundleInfos_ (the other-mode
+    // variant's own record), so the hidden variants' el5 dirs get the encryption policy too.
+    bool fetched = toTempBundle ? FetchTempBundleInfo(fetchName, info)
+        : FetchInnerBundleInfo(fetchName, info);
+    if (!fetched) {
+        LOG_E(BMS_TAG_INSTALLER, "get bundle %{public}s failed in %{public}s map",
+            fetchName.c_str(), toTempBundle ? "tempBundleInfos_" : "bundleInfos_");
         return;
     }
     std::string keyId = "";

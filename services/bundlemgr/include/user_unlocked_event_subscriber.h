@@ -40,10 +40,21 @@ private:
 class UpdateAppDataMgr {
 public:
     static void UpdateAppDataDirSelinuxLabel(int32_t userId);
+    // dual-mode: dedicated unlock rebuild pass that ONLY processes the other-mode (hidden)
+    // variants recorded in tempBundleInfos_. Their OTA-time data dir creation failed the same
+    // way on locked encrypted dirs, and the mode switch only swaps records between the two
+    // maps (never creates dirs), so without this pass those apps would come up with missing
+    // data dirs after a later mode switch. Runs the same dir set as the current-mode passes
+    // inside UpdateAppDataDirSelinuxLabel; no-op on non-dual-mode devices (tempBundleInfos_
+    // is never populated there). taskNum is the shared task number of the unlock rebuild so
+    // every pass still honors the task cancellation (ReturnIfNewTask).
+    static void UpdateTempModeAppDataDirs(int32_t userId, uint32_t taskNum);
     static void ProcessUpdateAppDataDir(
         int32_t userId, const std::vector<BundleInfo> &bundleInfos, const std::string &elDir);
-    static void ProcessUpdateCloneDataDir(int32_t userId, const std::shared_ptr<BundleDataMgr> &dataMgr);
-    static void ProcessCloneBundleDirs(int32_t userId, const std::shared_ptr<BundleDataMgr> &dataMgr);
+    static void ProcessUpdateCloneDataDir(int32_t userId, const std::shared_ptr<BundleDataMgr> &dataMgr,
+        bool toTempBundle = false);
+    static void ProcessCloneBundleDirs(int32_t userId, const std::shared_ptr<BundleDataMgr> &dataMgr,
+        bool toTempBundle = false);
     static void ProcessUpdateAppLogDir(const std::vector<BundleInfo> &bundleInfos, int32_t userId);
     static void ProcessFileManagerDir(const std::vector<BundleInfo> &bundleInfos, int32_t userId);
     static void ProcessExtensionDir(const BundleInfo &bundleInfo, std::vector<std::string> &dirs);
@@ -52,15 +63,26 @@ public:
     static void CreateShareFilesSubDataDirs(const std::vector<BundleInfo> &bundleInfos, int32_t userId);
     static void DeleteUninstallTmpDirs(const std::set<int32_t>& userIds);
 private:
+    // Shared dir-pass implementations. toTempBundle routes the per-variant record fetches
+    // (data groups, el5 clone/sandbox extras, U1 flag) to tempBundleInfos_ — the other-mode
+    // variant's own record. Defaults to false (current-mode variants, the pre-dual-mode
+    // behavior, so pre-existing callers/tests need no change); UpdateTempModeAppDataDirs
+    // passes true (other-mode variants).
+    static void ProcessUpdateAppDataDirInternal(
+        int32_t userId, const std::vector<BundleInfo> &bundleInfos, const std::string &elDir,
+        bool toTempBundle = false);
+    static void ProcessUpdateAppLogDirInternal(const std::vector<BundleInfo> &bundleInfos, int32_t userId,
+        bool toTempBundle = false);
     static void CheckPathAttribute(const std::string &path, const BundleInfo &bundleInfo, bool &isExist);
     static void CreateNewBackupDir(const BundleInfo &bundleInfo, int32_t userId);
-    static bool CreateBundleDataDir(const BundleInfo &bundleInfo, int32_t userId, const std::string &elDir);
+    static bool CreateBundleDataDir(const BundleInfo &bundleInfo, int32_t userId, const std::string &elDir,
+        bool toTempBundle = false);
     static bool CreateBundleLogDir(const BundleInfo &bundleInfo, int32_t userId);
     static bool CreateBundleCloudDir(const BundleInfo &bundleInfo, int32_t userId);
-    static void CreateDataGroupDir(const BundleInfo &bundleInfo, int32_t userId);
-    static bool CreateEl5Dir(const CreateDirParam &createDirParam);
+    static void CreateDataGroupDir(const BundleInfo &bundleInfo, int32_t userId, bool toTempBundle = false);
+    static bool CreateEl5Dir(const CreateDirParam &createDirParam, bool toTempBundle = false);
     static std::vector<std::string> GetBundleDataDirs(const int32_t userId);
-    static bool CheckU1EnableProcess(const BundleInfo &bundleInfo);
+    static bool CheckU1EnableProcess(const BundleInfo &bundleInfo, bool toTempBundle = false);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
