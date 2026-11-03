@@ -179,12 +179,12 @@ HWTEST_F(BmsBundleMgrHostImplProvisionTest, GetAllAppProvisionInfoInDevice_HostI
 }
 
 /**
- * @tc.number: SetAditionalInfoByIndex_HostImpl_0001
- * @tc.name: test SetAditionalInfoByIndex_HostImpl non-system app
+ * @tc.number: SetAdditionalInfoByIndex_HostImpl_0001
+ * @tc.name: test SetAdditionalInfoByIndex non-system app
  * @tc.desc: 1. non-system app calling
  *           2. returns ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED
  */
-HWTEST_F(BmsBundleMgrHostImplProvisionTest, SetAditionalInfoByIndex_HostImpl_0001,
+HWTEST_F(BmsBundleMgrHostImplProvisionTest, SetAdditionalInfoByIndex_HostImpl_0001,
     Function | SmallTest | Level1)
 {
     SetSystemAppForTest(false);
@@ -196,12 +196,12 @@ HWTEST_F(BmsBundleMgrHostImplProvisionTest, SetAditionalInfoByIndex_HostImpl_000
 }
 
 /**
- * @tc.number: SetAditionalInfoByIndex_HostImpl_0002
- * @tc.name: test SetAditionalInfoByIndex_HostImpl permission denied
+ * @tc.number: SetAdditionalInfoByIndex_HostImpl_0002
+ * @tc.name: test SetAdditionalInfoByIndex permission denied
  * @tc.desc: 1. system app but without GET_BUNDLE_INFO_PRIVILEGED permission
- *           2. returns ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED
+ *           2. returns ERR_BUNDLE_MANAGER_PERMISSION_DENIED
  */
-HWTEST_F(BmsBundleMgrHostImplProvisionTest, SetAditionalInfoByIndex_HostImpl_0002,
+HWTEST_F(BmsBundleMgrHostImplProvisionTest, SetAdditionalInfoByIndex_HostImpl_0002,
     Function | SmallTest | Level1)
 {
     SetSystemAppForTest(true);
@@ -210,7 +210,7 @@ HWTEST_F(BmsBundleMgrHostImplProvisionTest, SetAditionalInfoByIndex_HostImpl_000
     std::string additionalInfo = "additionalInfo";
     ErrCode ret = bundleMgrHostImpl_->SetAdditionalInfoByIndex(
         TEST_BUNDLE_NAME, additionalInfo, Constants::DEFAULT_APP_INDEX);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 
 /**

@@ -336,6 +336,7 @@ HWTEST_F(BmsBundleDataMgrDualModeProvisionTest, GetAllAppProvisionInfo_1001, Fun
     EXPECT_EQ(appProvisionInfos.size(), 1u);
     EXPECT_EQ(appProvisionInfos[0].bundleName, bundleName0);
     GetBundleDataMgr()->bundleInfos_.clear();
+    DelayedSingleton<AppProvisionInfoManager>::GetInstance()->DeleteAppProvisionInfo(bundleName0);
 }
 
 /**
