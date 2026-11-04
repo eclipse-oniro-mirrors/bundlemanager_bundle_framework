@@ -168,6 +168,9 @@ constexpr const char* URI_SEPARATOR = "://";
 constexpr uint8_t PARAM_URI_SEPARATOR_LEN = 4;
 constexpr int8_t INVALID_BUNDLEID = -1;
 constexpr int32_t DATA_GROUP_UID_OFFSET = 100000;
+// Data group indexes use [1, 50000) so their uids land in [100001, 149999], splitting the per-user
+// uid space evenly with ipc groups (IPC_GROUP_UID_OFFSET 150000, index [1, 50000)) and avoiding overlap.
+constexpr int32_t DATA_GROUP_INDEX_MAX = 50000;
 constexpr int32_t IPC_GROUP_UID_OFFSET = 150000;
 constexpr int8_t ONLY_ONE_USER = 1;
 constexpr const char* LAST_ALLOCATED_BUNDLE_ID_KEY = "lastAllocatedBundleId";
@@ -13287,7 +13290,7 @@ void BundleDataMgr::GenerateDataGroupUuidAndUid(DataGroupInfo &dataGroupInfo, in
     std::unordered_set<int32_t> &uniqueIdSet) const
 {
     int32_t uniqueId = DATA_GROUP_INDEX_START;
-    for (int32_t i = DATA_GROUP_INDEX_START; i < DATA_GROUP_UID_OFFSET; i++) {
+    for (int32_t i = DATA_GROUP_INDEX_START; i < DATA_GROUP_INDEX_MAX; i++) {
         if (uniqueIdSet.find(i) == uniqueIdSet.end()) {
             uniqueId = i;
             break;
@@ -13781,7 +13784,8 @@ void BundleDataMgr::ScanAllBundleGroupInfo()
                 }
                 int32_t groupUidIndex = dataGroupItem.second[0].uid -
                     dataGroupItem.second[0].userId * Constants::BASE_USER_RANGE - DATA_GROUP_UID_OFFSET;
-                if (indexMap.find(groupUidIndex) == indexMap.end() &&
+                if (groupUidIndex >= DATA_GROUP_INDEX_START && groupUidIndex < DATA_GROUP_INDEX_MAX &&
+                    indexMap.find(groupUidIndex) == indexMap.end() &&
                     groupIdMap.find(dataGroupId) == groupIdMap.end()) {
                     indexMap[groupUidIndex] = dataGroupId;
                     groupIdMap[dataGroupId] = groupUidIndex;
@@ -13829,7 +13833,7 @@ void BundleDataMgr::HandleGroupIdAndIndex(
             continue;
         }
         int32_t groupIndex = DATA_GROUP_INDEX_START;
-        for (int32_t index = DATA_GROUP_INDEX_START; index < DATA_GROUP_UID_OFFSET; ++index) {
+        for (int32_t index = DATA_GROUP_INDEX_START; index < DATA_GROUP_INDEX_MAX; ++index) {
             if (indexMap.find(index) == indexMap.end()) {
                 groupIndex = index;
                 break;
