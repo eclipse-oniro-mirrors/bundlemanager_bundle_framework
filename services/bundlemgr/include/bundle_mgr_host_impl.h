@@ -1177,6 +1177,11 @@ public:
         std::vector<BaseSharedBundleInfo> &baseSharedBundleInfos,
         GetDependentBundleInfoFlag flag = GetDependentBundleInfoFlag::GET_APP_CROSS_HSP_BUNDLE_INFO) override;
     virtual ErrCode GetAllSharedBundleInfo(std::vector<SharedBundleInfo> &sharedBundles) override;
+    ErrCode SetAlternateModuleEnabled(const std::string &bundleName, const std::string &moduleName,
+        int64_t versionCode, bool isEnabled) override;
+    ErrCode GetAlternateModuleState(const std::string &bundleName, const std::string &moduleName,
+        int64_t versionCode, bool &enabled) override;
+
     virtual ErrCode GetSharedBundleInfo(const std::string &bundleName, const std::string &moduleName,
         std::vector<SharedBundleInfo> &sharedBundles) override;
     virtual ErrCode GetSharedBundleInfoBySelf(const std::string &bundleName,

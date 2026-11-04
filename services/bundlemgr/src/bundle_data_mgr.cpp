@@ -5003,16 +5003,40 @@ void BundleDataMgr::GetRouterInfoForSharedBundle(const InnerBundleInfo &innerBun
         }
     }
 
-    std::vector<RouterItem> tempInfos;
     for (auto &info : baseSharedBundleInfos) {
-        if (!routerStorage_->GetRouterInfo(info.bundleName, info.moduleName,
+        std::vector<RouterItem> tempInfos;
+        auto provider = bundleInfos_.find(info.bundleName);
+        if (provider == bundleInfos_.end()) {
+            continue;
+        }
+        const auto *escape = provider->second.FindSharedModule(info.moduleName, info.versionCode, true);
+        if (escape != nullptr && escape->hapPath == info.hapPath) {
+            // The shared router table has no role key. Read the selected escape HSP instead.
+            auto pos = escape->routerMap.find(PROFILE_PREFIX);
+            if (pos == std::string::npos) {
+                continue;
+            }
+            std::string profilePath = PROFILE_PATH +
+                escape->routerMap.substr(pos + PROFILE_PREFIX_LENGTH) + JSON_SUFFIX;
+            std::string profile;
+            if (GetJsonProfileByExtractor(info.hapPath, profilePath, profile) != ERR_OK) {
+                continue;
+            }
+            BundleParser parser;
+            ErrCode result = parser.ParseRouterArray(profile, tempInfos);
+            if (result != ERR_OK) {
+                APP_LOGE("parse alternate module router failed, bundleName: %{private}s, moduleName: %{private}s, "
+                    "versionCode: %{public}u, errCode: %{public}d",
+                    info.bundleName.c_str(), info.moduleName.c_str(), info.versionCode, result);
+                continue;
+            }
+        } else if (!routerStorage_->GetRouterInfo(info.bundleName, info.moduleName,
             info.versionCode, tempInfos) || tempInfos.empty()) {
             continue;
         }
         routerInfos.insert(routerInfos.end(),
             std::make_move_iterator(tempInfos.begin()),
             std::make_move_iterator(tempInfos.end()));
-        tempInfos.clear();
     }
 }
 
@@ -9060,6 +9084,65 @@ void BundleDataMgr::SaveLastAllocatedBundleId()
     if (bmsPara != nullptr) {
         bmsPara->SaveBmsParam(LAST_ALLOCATED_BUNDLE_ID_KEY, std::to_string(lastAllocatedBundleId_));
     }
+}
+
+ErrCode BundleDataMgr::SetAlternateModuleState(const std::string &bundleName,
+    const std::string &moduleName, int64_t versionCode, bool enabled)
+{
+    if (bundleName.empty()) {
+        APP_LOGW("bundleName is empty");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    auto &mutex = GetBundleMutex(bundleName);
+    std::lock_guard bundleLock {mutex};
+    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto it = bundleInfos_.find(bundleName);
+    if (it == bundleInfos_.end() || it->second.GetApplicationBundleType() != BundleType::SHARED) {
+        APP_LOGW("shared bundle %{private}s not found", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    InnerBundleInfo updated = it->second;
+    ErrCode result = updated.SetAlternateModuleState(moduleName, versionCode, enabled);
+    if (result != ERR_OK) {
+        APP_LOGE("set alternate module state failed, bundleName: %{private}s, moduleName: %{private}s, "
+            "versionCode: %{public}lld, errCode: %{public}d",
+            bundleName.c_str(), moduleName.c_str(), static_cast<long long>(versionCode), result);
+        return result;
+    }
+    bool currentEnabled = false;
+    if (it->second.GetAlternateModuleState(moduleName, versionCode, currentEnabled) == ERR_OK &&
+        currentEnabled == enabled) {
+        return ERR_OK;
+    }
+    if (dataStorage_ == nullptr || !dataStorage_->SaveStorageBundleInfo(updated)) {
+        APP_LOGE("persist alternate module state failed");
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    it->second = updated;
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::GetAlternateModuleState(const std::string &bundleName,
+    const std::string &moduleName, int64_t versionCode, bool &enabled) const
+{
+    enabled = false;
+    if (bundleName.empty()) {
+        APP_LOGW("bundleName is empty");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto it = bundleInfos_.find(bundleName);
+    if (it == bundleInfos_.end() || it->second.GetApplicationBundleType() != BundleType::SHARED) {
+        APP_LOGW("shared bundle %{private}s not found", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    ErrCode result = it->second.GetAlternateModuleState(moduleName, versionCode, enabled);
+    if (result != ERR_OK) {
+        APP_LOGE("get alternate module state failed, bundleName: %{private}s, moduleName: %{private}s, "
+            "versionCode: %{public}lld, errCode: %{public}d",
+            bundleName.c_str(), moduleName.c_str(), static_cast<long long>(versionCode), result);
+    }
+    return result;
 }
 
 ErrCode BundleDataMgr::SetModuleUpgradeFlag(const std::string &bundleName,

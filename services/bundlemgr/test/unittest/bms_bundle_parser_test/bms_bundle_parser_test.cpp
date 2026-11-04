@@ -8036,4 +8036,47 @@ HWTEST_F(BmsBundleParserTest, TransformTo_launchServices_0800, Function | SmallT
     EXPECT_EQ(hapModule->launchServices[1].name, "svc-keep-two");
 }
 
+HWTEST_F(BmsBundleParserTest, AlternateModuleProfile_0001, Function | SmallTest | Level1)
+{
+    for (const auto &value : {nlohmann::json(false), nlohmann::json(true), nlohmann::json("true"),
+        nlohmann::json(1), nlohmann::json(nullptr)}) {
+        auto profile = MODULE_JSON;
+        profile["app"]["bundleType"] = "shared";
+        profile["module"]["type"] = "shared";
+        profile["module"]["alternateModule"] = value;
+        std::ostringstream source;
+        source << profile.dump();
+        ModuleProfile parser;
+        BundleExtractor extractor(EMPTY_NAME);
+        InnerBundleInfo info;
+        auto result = parser.TransformTo(source, extractor, info);
+        if (!value.is_boolean()) {
+            EXPECT_EQ(result, ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR);
+        } else {
+            ASSERT_EQ(result, ERR_OK);
+            ASSERT_FALSE(info.GetInnerModuleInfos().empty());
+            EXPECT_EQ(info.GetInnerModuleInfos().begin()->second.alternateModule, value.get<bool>());
+        }
+    }
+}
+
+HWTEST_F(BmsBundleParserTest, AlternateModuleProfile_0002, Function | SmallTest | Level1)
+{
+    auto profile = MODULE_JSON;
+    profile["module"]["alternateModule"] = true;
+    std::ostringstream source;
+    source << profile.dump();
+    ModuleProfile parser;
+    BundleExtractor extractor(EMPTY_NAME);
+    InnerBundleInfo info;
+    EXPECT_EQ(parser.TransformTo(source, extractor, info), ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR);
+    source.str("");
+    source.clear();
+    profile["module"].erase("alternateModule");
+    source << profile.dump();
+    InnerBundleInfo defaultInfo;
+    ASSERT_EQ(parser.TransformTo(source, extractor, defaultInfo), ERR_OK);
+    ASSERT_EQ(defaultInfo.GetInnerModuleInfos().size(), 1U);
+    EXPECT_FALSE(defaultInfo.GetInnerModuleInfos().begin()->second.alternateModule);
+}
 } // OHOS

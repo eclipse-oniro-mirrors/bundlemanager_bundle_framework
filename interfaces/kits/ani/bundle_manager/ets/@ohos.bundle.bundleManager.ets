@@ -263,6 +263,31 @@ namespace bundleManager {
     SHARED_SANDBOX = 0,
     ISOLATED_SANDBOX = 1,
   }
+  native function setAlternateModuleEnabledNative(bundleName: string, moduleName: string,
+    versionCode: long, isEnabled: boolean): void;
+  native function isAlternateModuleEnabledNative(bundleName: string, moduleName: string, versionCode: long): boolean;
+
+  function setAlternateModuleEnabled(bundleName: string, moduleName: string,
+    versionCode: long, isEnabled: boolean): Promise<void> {
+    return new Promise<void>((resolve: (value: PromiseLike<void>) => void, reject: (error: BusinessError) => void): void => {
+      let execFun = (): void => {
+        setAlternateModuleEnabledNative(bundleName, moduleName, versionCode, isEnabled);
+      };
+      let task = taskpool.execute(execFun);
+      task.then((): void => resolve(Promise.resolve()), (error: Error): void => reject(error as BusinessError));
+    });
+  }
+
+  function isAlternateModuleEnabled(bundleName: string, moduleName: string, versionCode: long): Promise<boolean> {
+    return new Promise<boolean>((resolve: (value: boolean) => void, reject: (error: BusinessError) => void): void => {
+      let execFun = (): boolean => {
+        return isAlternateModuleEnabledNative(bundleName, moduleName, versionCode);
+      };
+      let task = taskpool.execute(execFun);
+      task.then((value: Any): void => resolve(value as boolean), (error: Error): void => reject(error as BusinessError));
+    });
+  }
+
   native function getBundleInfoForSelfNative(bundleFlags: int, isSync: boolean): BundleInfo;
 
   native function getBundleInfoNative(bundleName: string, bundleFlags: int, userId: int, isSync: boolean) : BundleInfo;

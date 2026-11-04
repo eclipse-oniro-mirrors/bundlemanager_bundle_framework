@@ -1317,4 +1317,17 @@ HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleMgrHostImpl_0062, TestSize.Leve
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
     EXPECT_TRUE(info.bundleName.empty());
 }
+
+HWTEST_F(BmsSystemAppPermissionDeniedTest, AlternateModuleDenied_0001, TestSize.Level1)
+{
+    BundleMgrHostImpl host;
+    EXPECT_EQ(host.SetAlternateModuleEnabled("com.example.escape", "library", 1, true),
+        ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+    EXPECT_EQ(host.SetAlternateModuleEnabled("com.example.escape", "library", 1, false),
+        ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+    bool enabled = true;
+    EXPECT_EQ(host.GetAlternateModuleState("com.example.escape", "library", 1, enabled),
+        ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+    EXPECT_FALSE(enabled);
+}
 }  // namespace OHOS

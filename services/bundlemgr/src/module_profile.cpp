@@ -356,6 +356,7 @@ struct Module {
     bool deliveryWithInstall = false;
     bool installationFree = false;
     bool isLibIsolated = false;
+    bool alternateModule = false;
     bool compressNativeLibs = true;
     bool isSoStoredCompressed = false;
     bool extractNativeLibs = true;
@@ -1877,6 +1878,8 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         module.compileMode,
         false,
         g_parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd,
+        MODULE_ALTERNATE_MODULE, module.alternateModule, false, g_parseResult);
     BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_IS_LIB_ISOLATED,
@@ -3059,6 +3062,7 @@ bool ToInnerModuleInfo(
     innerModuleInfo.isModuleJson = true;
     innerModuleInfo.isStageBasedModel = true;
     innerModuleInfo.isLibIsolated = moduleJson.module.isLibIsolated;
+    innerModuleInfo.alternateModule = moduleJson.module.alternateModule;
     innerModuleInfo.targetModuleName = moduleJson.module.targetModule;
     if (overlayMsg.type != NON_OVERLAY_TYPE && !overlayMsg.isModulePriorityExisted) {
         innerModuleInfo.targetPriority = ServiceConstants::OVERLAY_MINIMUM_PRIORITY;
@@ -3444,6 +3448,11 @@ ErrCode ModuleProfile::TransformTo(
     }
     if (!ToInnerBundleInfo(
         moduleJson, bundleExtractor, overlayMsg, innerBundleInfo)) {
+        return ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR;
+    }
+    if (moduleJson.module.alternateModule && (innerBundleInfo.GetApplicationBundleType() != BundleType::SHARED ||
+        moduleJson.module.type != Profile::MODULE_TYPE_SHARED)) {
+        APP_LOGE("alternateModule is only supported by cross-app shared bundles");
         return ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR;
     }
     if (!ParserAtomicConfig(jsonObject, innerBundleInfo)) {

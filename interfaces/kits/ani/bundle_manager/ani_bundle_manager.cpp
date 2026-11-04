@@ -14,10 +14,8 @@
  */
 
 #include <chrono>
-#include <cmath>
 #include <cstring>
 #include <iostream>
-#include <limits>
 #include <mutex>
 #include <set>
 #include <shared_mutex>
@@ -959,6 +957,61 @@ static void SetAbilityEnabledNative(ani_env* env,
             env, ret, isSync ? SET_ABILITY_ENABLED_SYNC : SET_ABILITY_ENABLED,
             Constants::PERMISSION_CHANGE_ABILITY_ENABLED_STATE);
     }
+}
+
+static bool ParseAlternateModuleParameters(ani_env *env, ani_string aniBundleName, ani_string aniModuleName,
+    std::string &bundleName, std::string &moduleName)
+{
+    if (!CommonFunAni::ParseString(env, aniBundleName, bundleName) ||
+        !CommonFunAni::ParseString(env, aniModuleName, moduleName)) {
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, "bundleName/moduleName", TYPE_STRING);
+        return false;
+    }
+    return true;
+}
+
+static void SetAlternateModuleEnabledNative(ani_env *env, ani_string aniBundleName,
+    ani_string aniModuleName, ani_long versionCode, ani_boolean enabled)
+{
+    std::string bundleName;
+    std::string moduleName;
+    if (!ParseAlternateModuleParameters(env, aniBundleName, aniModuleName, bundleName, moduleName)) {
+        return;
+    }
+    auto proxy = CommonFunc::GetBundleMgr();
+    if (proxy == nullptr) {
+        BusinessErrorAni::ThrowCommonError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, "setAlternateModuleEnabled", "");
+        return;
+    }
+    ErrCode ret = proxy->SetAlternateModuleEnabled(bundleName, moduleName,
+        versionCode, CommonFunAni::AniBooleanToBool(enabled));
+    if (ret != ERR_OK) {
+        BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret), "setAlternateModuleEnabled",
+            Constants::PERMISSION_INSTALL_BUNDLE);
+    }
+}
+
+static ani_boolean IsAlternateModuleEnabledNative(ani_env *env, ani_string aniBundleName,
+    ani_string aniModuleName, ani_long versionCode)
+{
+    std::string bundleName;
+    std::string moduleName;
+    if (!ParseAlternateModuleParameters(env, aniBundleName, aniModuleName, bundleName, moduleName)) {
+        return ANI_FALSE;
+    }
+    auto proxy = CommonFunc::GetBundleMgr();
+    if (proxy == nullptr) {
+        BusinessErrorAni::ThrowCommonError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, "isAlternateModuleEnabled", "");
+        return ANI_FALSE;
+    }
+    bool enabled = false;
+    ErrCode ret = proxy->GetAlternateModuleState(bundleName, moduleName, versionCode, enabled);
+    if (ret != ERR_OK) {
+        BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret), "isAlternateModuleEnabled",
+            Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+        return ANI_FALSE;
+    }
+    return enabled ? ANI_TRUE : ANI_FALSE;
 }
 
 static void SetApplicationEnabledNative(ani_env* env, ani_string aniBundleName, ani_boolean aniIsEnable,
@@ -2778,6 +2831,10 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
     RETURN_ANI_STATUS_IF_NOT_OK(res, "Not found nameSpace L@ohos/bundle/bundleManager/bundleManager;");
 
     std::array methods = {
+        ani_native_function { "setAlternateModuleEnabledNative", nullptr,
+            reinterpret_cast<void*>(SetAlternateModuleEnabledNative) },
+        ani_native_function { "isAlternateModuleEnabledNative", nullptr,
+            reinterpret_cast<void*>(IsAlternateModuleEnabledNative) },
         ani_native_function { "isApplicationEnabledNative", nullptr,
             reinterpret_cast<void*>(IsApplicationEnabledNative) },
         ani_native_function { "getBundleInfoForSelfNative", nullptr,

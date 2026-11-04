@@ -286,6 +286,8 @@ enum class BundleMgrInterfaceCode : uint32_t {
     QUERY_IPC_GROUP_INFOS = 261,
     GET_LAUNCH_SERVICES = 262,
     CHECK_BUNDLE_EXIST_BY_DEVELOPER_ID_AND_ASSET_GROUP = 263,
+    SET_ALTERNATE_MODULE_ENABLED = 264,
+    GET_ALTERNATE_MODULE_STATE = 265,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */
