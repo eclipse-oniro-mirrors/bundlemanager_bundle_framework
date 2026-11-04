@@ -7508,4 +7508,114 @@ HWTEST_F(BmsBundleParserTest, TransformTo_launchServices_0600, Function | SmallT
     EXPECT_TRUE(emptyArrayIter->second.launchServices.empty());
 }
 
+/**
+ * @tc.number: TransformTo_launchServices_0700
+ * @tc.name: launchServices with multiple entries
+ * @tc.desc: three valid entries are parsed in configuration order with per-entry field
+ *           variation (runAtLoad/keepAlive/provideIpcService) kept as configured
+ */
+HWTEST_F(BmsBundleParserTest, TransformTo_launchServices_0700, Function | SmallTest | Level1)
+{
+    nlohmann::json profileJson = MODULE_JSON;
+    profileJson["module"]["launchServices"] = R"(
+        [
+            {
+                "name": "svc-one",
+                "binaryPath": "/bin/one",
+                "runAtLoad": true,
+                "keepAlive": true,
+                "type": "daemon"
+            },
+            {
+                "name": "svc-two",
+                "binaryPath": "/bin/two",
+                "provideIpcService": true,
+                "type": "daemon"
+            },
+            {
+                "name": "svc-three",
+                "binaryPath": "/bin/three",
+                "type": "daemon"
+            }
+        ]
+    )"_json;
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+    profileFileBuffer << profileJson.dump();
+    BundleExtractor bundleExtractor(EMPTY_NAME);
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
+
+    auto iter = innerBundleInfo.innerModuleInfos_.find("entry");
+    ASSERT_NE(iter, innerBundleInfo.innerModuleInfos_.end());
+    ASSERT_EQ(iter->second.launchServices.size(), 3);
+    EXPECT_EQ(iter->second.launchServices[0].name, "svc-one");
+    EXPECT_EQ(iter->second.launchServices[0].runAtLoad, true);
+    EXPECT_EQ(iter->second.launchServices[0].keepAlive, true);
+    EXPECT_EQ(iter->second.launchServices[1].name, "svc-two");
+    EXPECT_EQ(iter->second.launchServices[1].provideIpcService, true);
+    EXPECT_EQ(iter->second.launchServices[2].name, "svc-three");
+    EXPECT_EQ(iter->second.launchServices[2].runAtLoad, false);
+    EXPECT_EQ(iter->second.launchServices[2].type, LaunchServiceType::DAEMON);
+
+    auto hapModule = innerBundleInfo.FindHapModuleInfo("entry");
+    ASSERT_NE(hapModule, std::nullopt);
+    ASSERT_EQ(hapModule->launchServices.size(), 3);
+    EXPECT_EQ(hapModule->launchServices[0].name, "svc-one");
+    EXPECT_EQ(hapModule->launchServices[1].name, "svc-two");
+    EXPECT_EQ(hapModule->launchServices[2].name, "svc-three");
+}
+
+/**
+ * @tc.number: TransformTo_launchServices_0800
+ * @tc.name: launchServices with mixed valid and invalid type entries
+ * @tc.desc: entries with an unknown type are skipped with a log, valid entries are kept
+ *           in configuration order and parsing still succeeds
+ */
+HWTEST_F(BmsBundleParserTest, TransformTo_launchServices_0800, Function | SmallTest | Level1)
+{
+    nlohmann::json profileJson = MODULE_JSON;
+    profileJson["module"]["launchServices"] = R"(
+        [
+            {
+                "name": "svc-keep-one",
+                "binaryPath": "/bin/keep-one",
+                "type": "daemon"
+            },
+            {
+                "name": "svc-drop",
+                "binaryPath": "/bin/drop",
+                "type": "notADaemon"
+            },
+            {
+                "name": "svc-keep-two",
+                "binaryPath": "/bin/keep-two",
+                "type": "daemon"
+            }
+        ]
+    )"_json;
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+    profileFileBuffer << profileJson.dump();
+    BundleExtractor bundleExtractor(EMPTY_NAME);
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
+
+    auto iter = innerBundleInfo.innerModuleInfos_.find("entry");
+    ASSERT_NE(iter, innerBundleInfo.innerModuleInfos_.end());
+    ASSERT_EQ(iter->second.launchServices.size(), 2);
+    EXPECT_EQ(iter->second.launchServices[0].name, "svc-keep-one");
+    EXPECT_EQ(iter->second.launchServices[1].name, "svc-keep-two");
+
+    auto hapModule = innerBundleInfo.FindHapModuleInfo("entry");
+    ASSERT_NE(hapModule, std::nullopt);
+    ASSERT_EQ(hapModule->launchServices.size(), 2);
+    EXPECT_EQ(hapModule->launchServices[0].name, "svc-keep-one");
+    EXPECT_EQ(hapModule->launchServices[1].name, "svc-keep-two");
+}
+
 } // OHOS
