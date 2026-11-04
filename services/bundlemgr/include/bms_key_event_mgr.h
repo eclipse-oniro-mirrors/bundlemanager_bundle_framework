@@ -26,6 +26,11 @@ class BmsKeyEventMgr {
 public:
     static void ProcessMainBundleStatusFinally();
 
+    // Send bootevent.bms.register.ready in cleanup mode (BMS is ready and can receive the SA clean callback).
+    // Distinct from ProcessMainBundleStatusFinally's main.bundles.ready: cleanup mode does not load bundles, it only
+    // sends register.ready so the SA clean framework can dispatch OnClean based on it.
+    static void ProcessRegisterReady();
+
     static void ProcessMainBundleInstallFailed(const std::string &bundleName, int32_t errCode);
 
 private:

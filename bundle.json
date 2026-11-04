@@ -70,6 +70,7 @@
                 "hisysevent",
                 "hitrace",
                 "hilog",
+                "hiview",
                 "i18n",
                 "init",
                 "ipc",

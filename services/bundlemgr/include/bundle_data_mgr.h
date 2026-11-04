@@ -127,6 +127,10 @@ public:
 
     bool IsBopdModeEnabled();
 
+    // Cleanup-mode predicate (ohos.boot.cleanup.mode == "true"). When set by the SA clean framework, OnBmsStarting
+    // uses this to skip the install/rebuild paths (see BMSEventHandler::OnBmsStarting).
+    bool IsCleanupModeEnabled();
+
     /**
      * @brief Classify dual-mode apps into queryable and non-queryable based on current mode.
      * This function should be called after RestoreUidAndGid() to ensure proper classification.
