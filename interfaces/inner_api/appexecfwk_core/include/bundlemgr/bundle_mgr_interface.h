@@ -1890,28 +1890,6 @@ public:
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
-    /**
-     * @brief Obtain launch services of all bundles, grouped by bundle, module and application instance.
-     * Only the foundation process is allowed to call this interface.
-     * Each entry identifies one operable application instance (main app or clone app) with its userId
-     * and appIndex. Modules without configured launch services are not included.
-     * Entries are ordered by bundle name in lexicographic order; within a bundle, by module name in
-     * lexicographic order; within a module, the main application instance comes first, followed by
-     * clone app instances in the cloneInfos map iteration order, i.e. the lexicographic order of the
-     * string form of appIndex (e.g. index 10 precedes 2).
-     * @param userId Indicates the user ID, which has no default value. UNSPECIFIED_USERID is resolved
-     *        to the calling user; ALL_USERID is a bundle manager internal definition and is not
-     *        supported, it returns ERR_BUNDLE_MANAGER_INVALID_USER_ID; ANY_USERID is resolved to the
-     *        first user each bundle is installed for; other values must be registered user IDs,
-     *        otherwise ERR_BUNDLE_MANAGER_INVALID_USER_ID is returned.
-     * @param launchServiceInfos Output param, launch services of all bundles.
-     * @return Returns ERR_OK on success, error code otherwise.
-     */
-    virtual ErrCode GetAllLaunchServices(int32_t userId, std::vector<LaunchServiceInfo> &launchServiceInfos)
-    {
-        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
-    }
-
     virtual sptr<IBundleResource> GetBundleResourceProxy()
     {
         return nullptr;

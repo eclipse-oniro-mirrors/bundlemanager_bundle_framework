@@ -1344,7 +1344,6 @@ public:
         std::string &profile, int32_t userId) const;
     ErrCode GetLaunchServices(const std::string &bundleName, const std::string &moduleName, int32_t userId,
         LaunchServicesResult &result) const;
-    ErrCode GetAllLaunchServices(int32_t userId, std::vector<LaunchServiceInfo> &launchServiceInfos) const;
     ErrCode GetShareFilesJsonFromHap(const std::string &hapPath, const InnerModuleInfo &moduleInfo,
         std::string &jsonContent) const;
     ErrCode GetJsonProfileByExtractor(const std::string &hapPath, const std::string &profilePath,
@@ -1531,9 +1530,6 @@ public:
         std::string &dataDir);
     std::vector<int32_t> GetCloneAppIndexesByInnerBundleInfo(const InnerBundleInfo &innerBundleInfo,
         int32_t userId) const;
-    void GetLaunchServiceInfosByInnerBundleInfo(const InnerBundleInfo &innerBundleInfo,
-        const std::string &bundleName, int32_t requestUserId,
-        std::vector<LaunchServiceInfo> &launchServiceInfos) const;
     std::vector<int32_t> GetCliSandboxAppIndexesByInnerBundleInfo(const InnerBundleInfo &innerBundleInfo,
         int32_t userId) const;
     ErrCode GetBundleDir(int32_t userId, BundleType type, AccountSA::OhosAccountInfo &accountInfo,

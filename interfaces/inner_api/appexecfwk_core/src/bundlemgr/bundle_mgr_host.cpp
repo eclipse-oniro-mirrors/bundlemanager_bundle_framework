@@ -600,9 +600,6 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_LAUNCH_SERVICES):
             errCode = this->HandleGetLaunchServices(data, reply);
             break;
-        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_LAUNCH_SERVICES):
-            errCode = this->HandleGetAllLaunchServices(data, reply);
-            break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_RESOURCE_PROXY):
             errCode = this->HandleGetBundleResourceProxy(data, reply);
             break;
@@ -4562,26 +4559,6 @@ ErrCode BundleMgrHost::HandleGetLaunchServices(MessageParcel &data, MessageParce
     if (!reply.WriteParcelable(&result)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    return ERR_OK;
-}
-
-ErrCode BundleMgrHost::HandleGetAllLaunchServices(MessageParcel &data, MessageParcel &reply)
-{
-    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
-    int32_t userId = data.ReadInt32();
-    APP_LOGD("userId : %{public}d", userId);
-    std::vector<LaunchServiceInfo> launchServiceInfos;
-    ErrCode ret = GetAllLaunchServices(userId, launchServiceInfos);
-    if (!reply.WriteInt32(ret)) {
-        APP_LOGE("write failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    if (ret == ERR_OK) {
-        if (!WriteVectorToParcelIntelligent(launchServiceInfos, reply)) {
-            APP_LOGE("write failed");
-            return ERR_APPEXECFWK_PARCEL_ERROR;
-        }
     }
     return ERR_OK;
 }

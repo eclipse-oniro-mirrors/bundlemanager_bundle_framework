@@ -315,50 +315,6 @@ LaunchService *LaunchService::Unmarshalling(Parcel &parcel)
     return info;
 }
 
-bool LaunchServiceInfo::ReadFromParcel(Parcel &parcel)
-{
-    bundleName = Str16ToStr8(parcel.ReadString16());
-    moduleName = Str16ToStr8(parcel.ReadString16());
-    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, userId);
-    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appIndex);
-    int32_t launchServicesSize;
-    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, launchServicesSize);
-    CONTAINER_SECURITY_VERIFY(parcel, launchServicesSize, &launchServices);
-    for (int32_t i = 0; i < launchServicesSize; ++i) {
-        std::unique_ptr<LaunchService> launchService(parcel.ReadParcelable<LaunchService>());
-        if (!launchService) {
-            APP_LOGE("ReadParcelable<LaunchService> failed");
-            return false;
-        }
-        launchServices.emplace_back(*launchService);
-    }
-    return true;
-}
-
-bool LaunchServiceInfo::Marshalling(Parcel &parcel) const
-{
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(bundleName));
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(moduleName));
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, userId);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appIndex);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, launchServices.size());
-    for (auto &launchService : launchServices) {
-        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &launchService);
-    }
-    return true;
-}
-
-LaunchServiceInfo *LaunchServiceInfo::Unmarshalling(Parcel &parcel)
-{
-    LaunchServiceInfo *info = new (std::nothrow) LaunchServiceInfo();
-    if (info && !info->ReadFromParcel(parcel)) {
-        APP_LOGW("read from parcel failed");
-        delete info;
-        info = nullptr;
-    }
-    return info;
-}
-
 bool LaunchServicesResult::ReadFromParcel(Parcel &parcel)
 {
     int32_t launchServicesSize;

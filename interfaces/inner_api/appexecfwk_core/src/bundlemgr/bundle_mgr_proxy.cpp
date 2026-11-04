@@ -5484,25 +5484,6 @@ ErrCode BundleMgrProxy::GetLaunchServices(const std::string &bundleName, const s
     return ERR_OK;
 }
 
-ErrCode BundleMgrProxy::GetAllLaunchServices(int32_t userId, std::vector<LaunchServiceInfo> &launchServiceInfos)
-{
-    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
-    APP_LOGD("begin to GetAllLaunchServices");
-
-    MessageParcel data;
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to GetAllLaunchServices due to write InterfaceToken fail");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    if (!data.WriteInt32(userId)) {
-        APP_LOGE("fail to GetAllLaunchServices due to write userId fail");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-
-    return GetVectorFromParcelIntelligentWithErrCode<LaunchServiceInfo>(
-        BundleMgrInterfaceCode::GET_ALL_LAUNCH_SERVICES, data, launchServiceInfos);
-}
-
 sptr<IBundleResource> BundleMgrProxy::GetBundleResourceProxy()
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);

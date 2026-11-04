@@ -981,48 +981,6 @@ HWTEST_F(BmsHapModuleInfoTest, LaunchService_Unmarshalling_001, Function | Small
 }
 
 /**
- * @tc.number: LaunchServiceInfo_Unmarshalling_001
- * @tc.name: test Unmarshalling round-trip in LaunchServiceInfo.
- * @tc.desc: 1. marshal LaunchServiceInfo
- *           2. verify unmarshalling context and service fields match
- */
-HWTEST_F(BmsHapModuleInfoTest, LaunchServiceInfo_Unmarshalling_001, Function | SmallTest | Level0)
-{
-    LaunchServiceInfo original;
-    original.bundleName = "com.example.test";
-    original.moduleName = LAUNCH_SERVICE_NAME;
-    original.userId = 100;
-    original.appIndex = 2;
-    LaunchService launchService;
-    launchService.name = LAUNCH_SERVICE_NAME;
-    launchService.binaryPath = LAUNCH_SERVICE_BINARY_PATH;
-    launchService.runAtLoad = true;
-    launchService.keepAlive = false;
-    launchService.provideIpcService = true;
-    launchService.type = LaunchServiceType::DAEMON;
-    original.launchServices.emplace_back(launchService);
-
-    Parcel parcel;
-    ASSERT_TRUE(original.Marshalling(parcel));
-    parcel.RewindRead(0);
-
-    LaunchServiceInfo *unmarshalled = LaunchServiceInfo::Unmarshalling(parcel);
-    ASSERT_NE(unmarshalled, nullptr);
-    EXPECT_EQ(unmarshalled->bundleName, original.bundleName);
-    EXPECT_EQ(unmarshalled->moduleName, original.moduleName);
-    EXPECT_EQ(unmarshalled->userId, original.userId);
-    EXPECT_EQ(unmarshalled->appIndex, original.appIndex);
-    ASSERT_EQ(unmarshalled->launchServices.size(), original.launchServices.size());
-    EXPECT_EQ(unmarshalled->launchServices[0].name, launchService.name);
-    EXPECT_EQ(unmarshalled->launchServices[0].binaryPath, launchService.binaryPath);
-    EXPECT_EQ(unmarshalled->launchServices[0].runAtLoad, launchService.runAtLoad);
-    EXPECT_EQ(unmarshalled->launchServices[0].keepAlive, launchService.keepAlive);
-    EXPECT_EQ(unmarshalled->launchServices[0].provideIpcService, launchService.provideIpcService);
-    EXPECT_EQ(unmarshalled->launchServices[0].type, launchService.type);
-    delete unmarshalled;
-}
-
-/**
  * @tc.number: LaunchService_to_json_001
  * @tc.name: test to_json/from_json round-trip in LaunchService.
  * @tc.desc: 1. create LaunchService with data

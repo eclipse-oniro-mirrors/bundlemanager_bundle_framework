@@ -58,20 +58,6 @@ struct LaunchService : public Parcelable {
     static LaunchService *Unmarshalling(Parcel &parcel);
 };
 
-struct LaunchServiceInfo : public Parcelable {
-    std::string bundleName;
-    std::string moduleName;
-    // userId and appIndex identify the application instance (main app or clone app) that the
-    // launch services belong to; each instance emits one LaunchServiceInfo entry.
-    int32_t userId = 0;
-    int32_t appIndex = 0;
-    std::vector<LaunchService> launchServices;
-
-    bool ReadFromParcel(Parcel &parcel);
-    bool Marshalling(Parcel &parcel) const override;
-    static LaunchServiceInfo *Unmarshalling(Parcel &parcel);
-};
-
 struct LaunchServicesResult : public Parcelable {
     std::vector<LaunchService> launchServices;
     std::string developerId;

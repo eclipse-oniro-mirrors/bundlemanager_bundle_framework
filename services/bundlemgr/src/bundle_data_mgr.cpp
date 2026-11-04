@@ -13095,58 +13095,6 @@ ErrCode BundleDataMgr::GetLaunchServices(const std::string &bundleName, const st
     return ERR_OK;
 }
 
-void BundleDataMgr::GetLaunchServiceInfosByInnerBundleInfo(const InnerBundleInfo &bundleInfo,
-    const std::string &bundleName, int32_t requestUserId,
-    std::vector<LaunchServiceInfo> &launchServiceInfos) const
-{
-    int32_t responseUserId = bundleInfo.GetResponseUserId(requestUserId);
-    if (responseUserId == Constants::INVALID_USERID) {
-        return;
-    }
-    // Clone apps share the same HAP with the main app, so they have the same launch services.
-    // Clone indexes come from cloneInfos map iteration (lexicographic string keys, so e.g. 10
-    // precedes 2); output order is the main index first, then clones in that iteration order.
-    std::vector<int32_t> allAppIndexes = { bundleInfo.GetAppIndex() };
-    std::vector<int32_t> cloneAppIndexes = GetCloneAppIndexesByInnerBundleInfo(bundleInfo, responseUserId);
-    allAppIndexes.insert(allAppIndexes.end(), cloneAppIndexes.begin(), cloneAppIndexes.end());
-    const auto &moduleInfos = bundleInfo.GetInnerModuleInfos();
-    for (const auto &moduleInfo : moduleInfos) {
-        if (moduleInfo.second.launchServices.empty()) {
-            continue;
-        }
-        for (int32_t appIndex : allAppIndexes) {
-            LaunchServiceInfo launchServiceInfo;
-            launchServiceInfo.bundleName = bundleName;
-            launchServiceInfo.moduleName = moduleInfo.second.moduleName;
-            launchServiceInfo.userId = responseUserId;
-            launchServiceInfo.appIndex = appIndex;
-            launchServiceInfo.launchServices = moduleInfo.second.launchServices;
-            launchServiceInfos.emplace_back(std::move(launchServiceInfo));
-        }
-    }
-}
-
-ErrCode BundleDataMgr::GetAllLaunchServices(int32_t userId, std::vector<LaunchServiceInfo> &launchServiceInfos) const
-{
-    APP_LOGD("GetAllLaunchServices userId: %{public}d", userId);
-    // ALL_USERID is a bundle manager internal definition and is not a valid input here.
-    if (userId == Constants::ALL_USERID) {
-        APP_LOGE("GetAllLaunchServices does not support ALL_USERID");
-        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
-    }
-    int32_t requestUserId = GetUserId(userId);
-    if (requestUserId == Constants::INVALID_USERID) {
-        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
-    }
-    launchServiceInfos.clear();
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
-    for (const auto &bundleItem : bundleInfos_) {
-        GetLaunchServiceInfosByInnerBundleInfo(bundleItem.second, bundleItem.first, requestUserId,
-            launchServiceInfos);
-    }
-    return ERR_OK;
-}
-
 ErrCode BundleDataMgr::GetJsonProfile(ProfileType profileType, const std::string &bundleName,
     const std::string &moduleName, std::string &profile, int32_t userId) const
 {
