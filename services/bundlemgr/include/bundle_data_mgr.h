@@ -445,6 +445,20 @@ public:
     bool GetBundleInfos(int32_t flags,
         std::vector<BundleInfo> &bundleInfos, int32_t userId = Constants::UNSPECIFIED_USERID) const;
     /**
+     * @brief dual-mode: counterpart of GetBundleInfos over tempBundleInfos_ (the other-mode
+     *        hidden variants), with the same flags/enabled/clone-expansion semantics so the
+     *        other mode stays symmetric with the current mode. Used by the unlock rebuild pass
+     *        (UpdateAppDataMgr::UpdateTempModeAppDataDirs) to recreate the data dirs whose
+     *        OTA-time creation failed on locked encrypted dirs.
+     * @param flags Indicates the flag used to specify information contained in the BundleInfo that will be returned.
+     * @param bundleInfos Indicates all of the obtained BundleInfo objects of the other-mode variants.
+     * @param userId Indicates a concrete user ID (ALL_USERID/ANY_USERID are not supported).
+     * @return Returns true if at least one variant is obtained; returns false with an empty
+     *         output on non-dual-mode devices (tempBundleInfos_ never populated there).
+     */
+    bool GetTempBundleInfos(int32_t flags,
+        std::vector<BundleInfo> &bundleInfos, int32_t userId = Constants::UNSPECIFIED_USERID) const;
+    /**
      * @brief Obtains BundleInfo of all bundles available in the system.
      * @param flags Indicates the flag used to specify information contained in the BundleInfo that will be returned.
      * @param bundleInfos Indicates all of the obtained BundleInfo objects.
@@ -1303,10 +1317,10 @@ public:
     void GenerateDataGroupInfos(const std::string &bundleName,
         const std::unordered_set<std::string> &dataGroupIdList, int32_t userId,
         bool needSaveStorage = false, bool toTempBundle = false);
-    bool CreateAppGroupDir(const std::string &bundleName, int32_t userId);
+    bool CreateAppGroupDir(const std::string &bundleName, int32_t userId, bool toTempBundle = false);
     bool CreateAppGroupDir(const std::unordered_map<std::string, std::vector<DataGroupInfo>> &dataGroupInfoMap,
         int32_t userId, bool needCreateEl5Dir, DataDirEl dirEl, bool hasInputMethodExtension = false);
-    void CreateAppEl5GroupDir(const std::string &bundleName, int32_t userId);
+    void CreateAppEl5GroupDir(const std::string &bundleName, int32_t userId, bool toTempBundle = false);
     void GetDataGroupIndexMap(std::map<std::string, std::pair<int32_t, std::string>> &dataGroupIndexMap,
         std::unordered_set<int32_t> &uniqueIdSet) const;
     bool IsShareDataGroupIdNoLock(const std::string &dataGroupId, int32_t userId) const;
@@ -1493,7 +1507,8 @@ public:
     bool GetAllAppAndAtomicServiceInUser(int32_t userId, std::vector<std::string> &bundleList) const;
 
     ErrCode IsBundleInstalled(const std::string &bundleName, int32_t userId, int32_t appIndex, bool &isInstalled);
-    void CreateEl5Dir(const std::vector<CreateDirParam> &el5Params, bool needSaveStorage = false);
+    void CreateEl5Dir(const std::vector<CreateDirParam> &el5Params, bool needSaveStorage = false,
+        bool toTempBundle = false);
     void CreateEl5DirNoCache(const std::vector<CreateDirParam> &el5Params, InnerBundleInfo &info);
     int32_t GetUidByBundleName(const std::string &bundleName, int32_t userId, int32_t appIndex) const;
     ErrCode GetBundleNameByAppId(const std::string &appId, std::string &bundleName);
@@ -1820,7 +1835,8 @@ private:
 
     void FilterAbilityInfosByModuleName(const std::string &moduleName, std::vector<AbilityInfo> &abilityInfos) const;
     void InnerCreateEl5Dir(const CreateDirParam &el5Param);
-    void SetEl5DirPolicy(const CreateDirParam &el5Param, bool needSaveStorage);
+    void SetEl5DirPolicy(const CreateDirParam &el5Param, bool needSaveStorage,
+        bool toTempBundle = false);
     void SetEl5DirPolicy(const CreateDirParam &el5Param, InnerBundleInfo &info, std::string &keyId);
 
     void FilterExtensionAbilityInfosByModuleName(const std::string &moduleName,
@@ -1861,6 +1877,11 @@ private:
     void ModifyBundleInfoByCloneInfo(const InnerBundleCloneInfo &cloneInfo, BundleInfo &bundleInfo) const;
     void GetCloneBundleInfos(const InnerBundleInfo &info, int32_t flags, int32_t userId,
         std::vector<BundleInfo> &bundleInfos) const;
+    // Shared loop core of GetBundleInfos/GetTempBundleInfos: converts the variants of the
+    // given map (bundleInfos_ or tempBundleInfos_) into BundleInfo for requestUserId with the
+    // same type/enabled filters and clone expansion. Caller must hold bundleInfoMutex_ (shared).
+    bool InnerGetBundleInfos(const std::map<std::string, InnerBundleInfo> &infos,
+        int32_t flags, int32_t requestUserId, std::vector<BundleInfo> &bundleInfos) const;
     bool AddBundleInfoIfEnabled(const InnerBundleInfo &info, const std::string &bundleName, uint32_t flags,
         int32_t userId, std::vector<BundleInfo> &bundleInfos, bool withDisable,
         int32_t appIndex, int32_t responseUserId) const;

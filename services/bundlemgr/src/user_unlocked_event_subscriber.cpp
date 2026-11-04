@@ -59,17 +59,18 @@ inline void ReturnIfNewTask(Func func, uint32_t tempTask, Args&&... args)
     func(std::forward<Args>(args)...);
 }
 
-// dual-mode: effective (prefixed) name for clone apps (else original), matching install-time isolation.
+// dual-mode: effective (prefixed) name for dual-mode clone variants (appIndex 10000), matching
+// install-time isolation. Resolved from the record's own appIndex, NOT by re-fetching the
+// current-mode record from bundleInfos_: the same-name variant living there belongs to the other
+// mode, so its clone flag would resolve the wrong variant's dir name.
+// Regular clones (appIndex 1..N) always keep the original name — their dir layout
+// (+clone-N+name) is mode-independent, so the dual-mode prefix belongs to the
+// dual-mode clone variant (appIndex 10000) only.
 std::string GetDirBundleName(const BundleInfo &bundleInfo)
 {
-    std::string dirBundleName = bundleInfo.name;
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    InnerBundleInfo innerInfo;
-    if ((dataMgr != nullptr) && dataMgr->FetchInnerBundleInfo(bundleInfo.name, innerInfo) &&
-        innerInfo.IsDualModeCloneApp()) {
-        dirBundleName = DualModeHelper::GetDualModeBundleName(bundleInfo.name);
-    }
-    return dirBundleName;
+    return bundleInfo.appIndex == ServiceConstants::DUAL_MODE_CLONE_APP_INDEX
+        ? DualModeHelper::GetDualModeBundleName(bundleInfo.name)
+        : bundleInfo.name;
 }
 
 bool IsCloneDirUidMatched(const std::string &bundleName,
@@ -355,7 +356,7 @@ void UpdateAppDataMgr::CheckPathAttribute(const std::string &path, const BundleI
 }
 
 bool UpdateAppDataMgr::CreateBundleDataDir(
-    const BundleInfo &bundleInfo, int32_t userId, const std::string &elDir)
+    const BundleInfo &bundleInfo, int32_t userId, const std::string &elDir, bool toTempBundle)
 {
     std::string dirBundleName = GetDirBundleName(bundleInfo);
     std::string baseBundleDataDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + elDir +
@@ -393,7 +394,7 @@ bool UpdateAppDataMgr::CreateBundleDataDir(
             createDirParam.createDirFlag = CreateDirFlag::CREATE_DIR_UNLOCKED;
         }
         if (elDir == ServiceConstants::DIR_EL5) {
-            return CreateEl5Dir(createDirParam);
+            return CreateEl5Dir(createDirParam, toTempBundle);
         }
         ProcessExtensionDir(bundleInfo, createDirParam.extensionDirs);
         ProcessPrintSericeDir(bundleInfo, createDirParam.hasDriverExtension);
@@ -402,12 +403,12 @@ bool UpdateAppDataMgr::CreateBundleDataDir(
         }
     }
     if (elDir == ServiceConstants::BUNDLE_EL[1]) {
-        CreateDataGroupDir(bundleInfo, userId);
+        CreateDataGroupDir(bundleInfo, userId, toTempBundle);
     }
     return true;
 }
 
-bool UpdateAppDataMgr::CreateEl5Dir(const CreateDirParam &createDirParam)
+bool UpdateAppDataMgr::CreateEl5Dir(const CreateDirParam &createDirParam, bool toTempBundle)
 {
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
@@ -417,11 +418,29 @@ bool UpdateAppDataMgr::CreateEl5Dir(const CreateDirParam &createDirParam)
     std::vector<CreateDirParam> params;
     params.emplace_back(createDirParam);
     InnerBundleInfo info;
-    if (dataMgr->FetchInnerBundleInfo(createDirParam.bundleName, info)) {
+    // dual-mode: createDirParam.bundleName may be the effective (prefixed) name of a
+    // dual-mode clone variant, while both maps are keyed by the original bundle name —
+    // resolve records by the original name and keep the prefixed name for dir creation only.
+    std::string fetchName = createDirParam.bundleName;
+    std::string originalName;
+    int32_t parsedAppIndex = 0;
+    if (BundleCloneCommonHelper::ParseCloneDataDir(fetchName, originalName, parsedAppIndex)) {
+        fetchName = originalName;
+    }
+    // dual-mode: the clone/sandbox extras must come from the same variant being processed —
+    // toTempBundle selects tempBundleInfos_ (the other-mode variant's own record).
+    bool fetched = toTempBundle ? dataMgr->FetchTempBundleInfo(fetchName, info)
+        : dataMgr->FetchInnerBundleInfo(fetchName, info);
+    if (fetched) {
         InnerBundleUserInfo userInfo;
         if (info.GetInnerBundleUserInfo(createDirParam.userId, userInfo)) {
+            // dual-mode: clone/sandbox extras use the ORIGINAL name as the base — the
+            // install-time layout (+clone-N+name, see BundleCloneInstaller::CreateEl5Dir /
+            // BundleCliSandboxInstaller::CreateEl5Dir) never stacks the dual-mode prefix,
+            // and the cleanup (RemoveEl5Dir) walks that layout as well.
             for (const auto &cloneInfo : userInfo.cloneInfos) {
                 CreateDirParam cloneParam = createDirParam;
+                cloneParam.bundleName = fetchName;
                 cloneParam.uid = cloneInfo.second.uid;
                 cloneParam.gid = cloneInfo.second.uid;
                 cloneParam.appIndex = cloneInfo.second.appIndex;
@@ -429,6 +448,7 @@ bool UpdateAppDataMgr::CreateEl5Dir(const CreateDirParam &createDirParam)
             }
             for (const auto &cliSandboxInfo : userInfo.sandboxInfos) {
                 CreateDirParam cliParam = createDirParam;
+                cliParam.bundleName = fetchName;
                 cliParam.uid = cliSandboxInfo.second.uid;
                 cliParam.gid = cliSandboxInfo.second.uid;
                 cliParam.appIndex = cliSandboxInfo.second.appIndex;
@@ -436,8 +456,10 @@ bool UpdateAppDataMgr::CreateEl5Dir(const CreateDirParam &createDirParam)
             }
         }
     }
-    dataMgr->CreateEl5Dir(params, true);
-    dataMgr->CreateAppEl5GroupDir(createDirParam.bundleName, createDirParam.userId);
+    // dual-mode: pass toTempBundle so the el5 dir policy is also resolved from the same
+    // variant's record, and resolve the el5 group dirs by the original name (map key).
+    dataMgr->CreateEl5Dir(params, true, toTempBundle);
+    dataMgr->CreateAppEl5GroupDir(fetchName, createDirParam.userId, toTempBundle);
     return true;
 }
 
@@ -476,17 +498,55 @@ std::vector<std::string> UpdateAppDataMgr::GetBundleDataDirs(const int32_t userI
     return dirs;
 }
 
-void UpdateAppDataMgr::CreateDataGroupDir(const BundleInfo &bundleInfo, int32_t userId)
+void UpdateAppDataMgr::CreateDataGroupDir(const BundleInfo &bundleInfo, int32_t userId, bool toTempBundle)
 {
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         APP_LOGE("CreateDataGroupDir failed for DataMgr is nullptr");
         return;
     }
-    if (!dataMgr->CreateAppGroupDir(bundleInfo.name, userId)) {
+    if (!dataMgr->CreateAppGroupDir(bundleInfo.name, userId, toTempBundle)) {
         APP_LOGE("CreateAppGroupDir %{public}s in %{public}d failed", bundleInfo.name.c_str(), userId);
         return;
     }
+}
+
+void UpdateAppDataMgr::UpdateTempModeAppDataDirs(int32_t userId, uint32_t taskNum)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("UpdateTempModeAppDataDirs failed for DataMgr is nullptr");
+        return;
+    }
+    // tempBundleInfos_ is only populated on dual-mode devices; empty means nothing to rebuild.
+    std::vector<BundleInfo> tempBundleInfos;
+    (void)dataMgr->GetTempBundleInfos(BundleFlag::GET_BUNDLE_WITH_EXTENSION_INFO |
+        BundleFlag::GET_BUNDLE_WITH_REQUESTED_PERMISSION_NO_DETAILED, tempBundleInfos, userId);
+    if (tempBundleInfos.empty()) {
+        return;
+    }
+    // Same dir set as the current-mode passes in UpdateAppDataDirSelinuxLabel; the internal
+    // toTempBundle=true passes route the per-variant record fetches (data groups, el5
+    // clone/sandbox extras, U1 flag) to tempBundleInfos_ — the other-mode variant's own record.
+    APP_LOGI("UpdateTempModeAppDataDirs userId:%{public}d start", userId);
+    ReturnIfNewTask(ProcessUpdateAppDataDirInternal, taskNum, userId, tempBundleInfos,
+        ServiceConstants::BUNDLE_EL[1], true);
+#ifdef CHECK_ELDIR_ENABLED
+    ReturnIfNewTask(ProcessUpdateAppDataDirInternal, taskNum, userId, tempBundleInfos,
+        ServiceConstants::DIR_EL3, true);
+    ReturnIfNewTask(ProcessUpdateAppDataDirInternal, taskNum, userId, tempBundleInfos,
+        ServiceConstants::DIR_EL4, true);
+#endif
+    ReturnIfNewTask(ProcessUpdateAppDataDirInternal, taskNum, userId, tempBundleInfos,
+        ServiceConstants::DIR_EL5, true);
+    // dual-mode: rebuild the other-mode variants' regular clone data dirs as well — the
+    // current-mode clone pass only walks bundleInfos_ records.
+    ReturnIfNewTask(ProcessUpdateCloneDataDir, taskNum, userId, dataMgr, true);
+    ReturnIfNewTask(ProcessUpdateAppLogDirInternal, taskNum, tempBundleInfos, userId, true);
+    ReturnIfNewTask(ProcessFileManagerDir, taskNum, tempBundleInfos, userId);
+    ReturnIfNewTask(ProcessNewBackupDir, taskNum, tempBundleInfos, userId);
+    ReturnIfNewTask(CreateShareFilesSubDataDirs, taskNum, tempBundleInfos, userId);
+    APP_LOGI("UpdateTempModeAppDataDirs userId:%{public}d end", userId);
 }
 
 void UpdateAppDataMgr::UpdateAppDataDirSelinuxLabel(int32_t userId)
@@ -524,11 +584,16 @@ void UpdateAppDataMgr::UpdateAppDataDirSelinuxLabel(int32_t userId)
     ReturnIfNewTask(ProcessUpdateAppDataDir, tempTaskNum, userId, bundleInfos, ServiceConstants::DIR_EL4);
 #endif
     ReturnIfNewTask(ProcessUpdateAppDataDir, tempTaskNum, userId, bundleInfos, ServiceConstants::DIR_EL5);
-    ReturnIfNewTask(ProcessUpdateCloneDataDir, tempTaskNum, userId, dataMgr);
+    // Default args do not apply through the ReturnIfNewTask forwarding; pass false explicitly.
+    ReturnIfNewTask(ProcessUpdateCloneDataDir, tempTaskNum, userId, dataMgr, false);
     ReturnIfNewTask(ProcessUpdateAppLogDir, tempTaskNum, bundleInfos, userId);
     ReturnIfNewTask(ProcessFileManagerDir, tempTaskNum, bundleInfos, userId);
     ReturnIfNewTask(ProcessNewBackupDir, tempTaskNum, bundleInfos, userId);
     ReturnIfNewTask(CreateShareFilesSubDataDirs, tempTaskNum, bundleInfos, userId);
+    // dual-mode: rebuild the other-mode (hidden) variants' dirs in one dedicated pass.
+    if (DualModeHelper::IsDualModeDevice()) {
+        UpdateTempModeAppDataDirs(userId, tempTaskNum);
+    }
     if (newBundleDirMgr != nullptr) {
         (void)newBundleDirMgr->DeleteUserId(userId);
     }
@@ -537,6 +602,12 @@ void UpdateAppDataMgr::UpdateAppDataDirSelinuxLabel(int32_t userId)
 
 void UpdateAppDataMgr::ProcessUpdateAppDataDir(
     int32_t userId, const std::vector<BundleInfo> &bundleInfos, const std::string &elDir)
+{
+    ProcessUpdateAppDataDirInternal(userId, bundleInfos, elDir);
+}
+
+void UpdateAppDataMgr::ProcessUpdateAppDataDirInternal(
+    int32_t userId, const std::vector<BundleInfo> &bundleInfos, const std::string &elDir, bool toTempBundle)
 {
     std::string baseBundleDataDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + elDir +
         ServiceConstants::PATH_SEPARATOR + std::to_string(userId);
@@ -558,10 +629,10 @@ void UpdateAppDataMgr::ProcessUpdateAppDataDir(
             }
         }
         if ((userId != Constants::DEFAULT_USERID && bundleInfo.singleton) ||
-            (userId != Constants::U1 && CheckU1EnableProcess(bundleInfo))) {
+            (userId != Constants::U1 && CheckU1EnableProcess(bundleInfo, toTempBundle))) {
             continue;
         }
-        if (!CreateBundleDataDir(bundleInfo, userId, elDir)) {
+        if (!CreateBundleDataDir(bundleInfo, userId, elDir, toTempBundle)) {
             continue;
         }
         // dual-mode: path uses effective name; SetDirApl label (2nd arg) stays original bundleName.
@@ -585,14 +656,16 @@ void UpdateAppDataMgr::ProcessUpdateAppDataDir(
 }
 
 void UpdateAppDataMgr::ProcessUpdateCloneDataDir(int32_t userId,
-    const std::shared_ptr<BundleDataMgr> &dataMgr)
+    const std::shared_ptr<BundleDataMgr> &dataMgr, bool toTempBundle)
 {
     bool migrateDone = false;
     BMSEventHandler::CheckOtaFlag(OTAFlag::MIGRATE_UID_TO_ATM, migrateDone);
     if (migrateDone && dataMgr != nullptr) {
-        APP_LOGI("ProcessUpdateCloneDataDir userId=%{public}d start", userId);
-        ProcessCloneBundleDirs(userId, dataMgr);
-        APP_LOGI("ProcessUpdateCloneDataDir userId=%{public}d done", userId);
+        APP_LOGI("ProcessUpdateCloneDataDir userId=%{public}d toTempBundle=%{public}d start",
+            userId, toTempBundle);
+        ProcessCloneBundleDirs(userId, dataMgr, toTempBundle);
+        APP_LOGI("ProcessUpdateCloneDataDir userId=%{public}d toTempBundle=%{public}d done",
+            userId, toTempBundle);
     } else {
         APP_LOGD("ProcessUpdateCloneDataDir skip: migrateDone=%{public}d dataMgr=%{public}s",
             static_cast<int32_t>(migrateDone), dataMgr != nullptr ? "ok" : "null");
@@ -600,14 +673,18 @@ void UpdateAppDataMgr::ProcessUpdateCloneDataDir(int32_t userId,
 }
 
 void UpdateAppDataMgr::ProcessCloneBundleDirs(int32_t userId,
-    const std::shared_ptr<BundleDataMgr> &dataMgr)
+    const std::shared_ptr<BundleDataMgr> &dataMgr, bool toTempBundle)
 {
-    auto bundleNames = dataMgr->GetAllBundleName();
+    // dual-mode: toTempBundle walks the other-mode (hidden) variants recorded in
+    // tempBundleInfos_, so their regular clones' data dirs are rebuilt as well.
+    auto bundleNames = toTempBundle ? dataMgr->GetAllTempBundleName() : dataMgr->GetAllBundleName();
     APP_LOGI("ProcessCloneBundleDirs userId=%{public}d %{public}zu bundles",
         userId, bundleNames.size());
     for (const auto &bundleName : bundleNames) {
         InnerBundleInfo info;
-        if (!dataMgr->FetchInnerBundleInfo(bundleName, info)) {
+        bool fetched = toTempBundle ? dataMgr->FetchTempBundleInfo(bundleName, info)
+            : dataMgr->FetchInnerBundleInfo(bundleName, info);
+        if (!fetched) {
             continue;
         }
         InnerBundleUserInfo userInfo;
@@ -616,7 +693,12 @@ void UpdateAppDataMgr::ProcessCloneBundleDirs(int32_t userId,
             ProcessCliSandboxDirsForBundle(bundleName, userId, info, userInfo);
         }
     }
-    ProcessDlpSandboxDirs(dataMgr, userId);
+    // DLP sandbox apps are runtime records shared by both modes — only the current-mode
+    // pass needs to rebuild them; the other-mode pass would just repeat the same
+    // idempotent scan.
+    if (!toTempBundle) {
+        ProcessDlpSandboxDirs(dataMgr, userId);
+    }
 }
 
 void UpdateAppDataMgr::ProcessExtensionDir(const BundleInfo &bundleInfo, std::vector<std::string> &dirs)
@@ -644,11 +726,17 @@ void UpdateAppDataMgr::ProcessPrintSericeDir(const BundleInfo &bundleInfo, bool 
 
 void UpdateAppDataMgr::ProcessUpdateAppLogDir(const std::vector<BundleInfo> &bundleInfos, int32_t userId)
 {
+    ProcessUpdateAppLogDirInternal(bundleInfos, userId);
+}
+
+void UpdateAppDataMgr::ProcessUpdateAppLogDirInternal(
+    const std::vector<BundleInfo> &bundleInfos, int32_t userId, bool toTempBundle)
+{
     for (const auto &bundleInfo : bundleInfos) {
         if (userId != Constants::DEFAULT_USERID && bundleInfo.singleton) {
             continue;
         }
-        if (userId != Constants::U1 && CheckU1EnableProcess(bundleInfo)) {
+        if (userId != Constants::U1 && CheckU1EnableProcess(bundleInfo, toTempBundle)) {
             continue;
         }
         if (!CreateBundleLogDir(bundleInfo, userId)) {
@@ -846,7 +934,7 @@ void UpdateAppDataMgr::CreateShareFilesSubDataDirs(const std::vector<BundleInfo>
     APP_LOGD("end for userid: [%{public}d]", userId);
 }
 
-bool UpdateAppDataMgr::CheckU1EnableProcess(const BundleInfo &bundleInfo)
+bool UpdateAppDataMgr::CheckU1EnableProcess(const BundleInfo &bundleInfo, bool toTempBundle)
 {
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
@@ -856,7 +944,13 @@ bool UpdateAppDataMgr::CheckU1EnableProcess(const BundleInfo &bundleInfo)
     bool singleton = bundleInfo.singleton;
     bool u1Enable = false;
     InnerBundleInfo info;
-    dataMgr->FetchInnerBundleInfo(bundleInfo.name, info);
+    // dual-mode: the U1 flag must come from the same variant being processed
+    // (toTempBundle -> tempBundleInfos_).
+    if (toTempBundle) {
+        dataMgr->FetchTempBundleInfo(bundleInfo.name, info);
+    } else {
+        dataMgr->FetchInnerBundleInfo(bundleInfo.name, info);
+    }
     u1Enable = info.IsU1Enable();
     if (u1Enable && !singleton) {
         return true;
