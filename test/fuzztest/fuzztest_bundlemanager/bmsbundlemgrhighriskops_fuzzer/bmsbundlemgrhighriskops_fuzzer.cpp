@@ -908,12 +908,13 @@ void FuzzCleanBundleCacheFilesForSelf(BundleMgrHost& host, FuzzedDataProvider& f
     host.HandleCleanBundleCacheFilesForSelf(data, reply);
 }
 
-// 65. HandleRegisterBundleEventCallback: ReadRemoteObject(object)
+// 65. HandleRegisterBundleEventCallback: ReadBool(notifyAllUsers), ReadRemoteObject(object)
 void FuzzRegisterBundleEventCallback(BundleMgrHost& host, FuzzedDataProvider& fdp)
 {
     MessageParcel data;
     PrepareParcel<BundleMgrHost>(data);
     MessageParcel reply;
+    WriteBoolField(data, fdp);  // notifyAllUsers
     WriteRemoteObject(data);  // object
     FinishParcel(data);
     host.HandleRegisterBundleEventCallback(data, reply);

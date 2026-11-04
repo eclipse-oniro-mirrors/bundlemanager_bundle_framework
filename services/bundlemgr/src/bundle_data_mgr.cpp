@@ -40,6 +40,7 @@
 #include "bundle_data_storage_rdb.h"
 #include "bundle_service_constants.h"
 #include "bundle_util.h"
+#include "common_event_support.h"
 #include "dual_mode_helper.h"
 #include "preinstall_data_storage_rdb.h"
 #include "hap_token_info.h"
@@ -132,6 +133,9 @@ constexpr const char* JSON_SUFFIX = ".json";
 constexpr const char* SCHEME_HTTPS = "https";
 constexpr const char* META_DATA_SHORTCUTS_NAME = "ohos.ability.shortcuts";
 constexpr const char* BMS_EVENT_ADDITIONAL_INFO_CHANGED = "bms.event.ADDITIONAL_INFO_CHANGED";
+constexpr const char* ACCESS_TOKEN_ID = "accessTokenId";
+constexpr const char* IS_INSTALL_BY_BUNDLE_NAME = "isInstallByBundleName";
+constexpr const char* IS_RECOVER = "isRecover";
 constexpr const char* CLONE_BUNDLE_PREFIX = "clone_";
 constexpr const char* RESOURCE_STRING_PREFIX = "$string:";
 constexpr const char* EMPTY_STRING = "";
@@ -8244,13 +8248,97 @@ void BundleDataMgr::NotifyBundleEventCallback(const EventFwk::CommonEventData &e
         std::lock_guard lock(eventCallbackMutex_);
         eventCallbackListCopy = eventCallbackList_;
     }
+    bool needEventsForOtherUsers = false;
+    for (const auto &callback : eventCallbackListCopy) {
+        if (callback != nullptr && callback->IsNotifyAllUsers()) {
+            needEventsForOtherUsers = true;
+            break;
+        }
+    }
+    std::vector<EventFwk::CommonEventData> otherUserEvents;
+    if (needEventsForOtherUsers) {
+        otherUserEvents = GetEventsForOtherUsers(eventData);
+    }
     for (const auto &callback : eventCallbackListCopy) {
         if (callback == nullptr) {
             continue;
         }
         callback->OnReceiveEvent(eventData);
+        if (!callback->IsNotifyAllUsers()) {
+            continue;
+        }
+        for (const auto &otherUserEvent : otherUserEvents) {
+            callback->OnReceiveEvent(otherUserEvent);
+        }
     }
     APP_LOGD("finish to NotifyBundleEventCallback");
+}
+
+std::vector<EventFwk::CommonEventData> BundleDataMgr::GetEventsForOtherUsers(
+    const EventFwk::CommonEventData &eventData) const
+{
+    std::vector<EventFwk::CommonEventData> otherUserEvents;
+    const auto &want = eventData.GetWant();
+    const std::string &action = want.GetAction();
+    if ((action != EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_ADDED) &&
+        (action != EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED)) {
+        return otherUserEvents;
+    }
+    std::string bundleName = want.GetElement().GetBundleName();
+    if (bundleName.empty()) {
+        bundleName = want.GetStringParam(Constants::BUNDLE_NAME);
+    }
+    if (bundleName.empty()) {
+        LOG_NOFUNC_W(BMS_TAG_DEFAULT, "bundleName is empty when notify event callback for other users");
+        return otherUserEvents;
+    }
+    auto userIds = GetUserIds(bundleName);
+    if (userIds.size() <= 1) {
+        return otherUserEvents;
+    }
+    int32_t eventUserId = want.GetIntParam(Constants::USER_ID, Constants::INVALID_USERID);
+    if (eventUserId == Constants::INVALID_USERID) {
+        LOG_NOFUNC_W(BMS_TAG_DEFAULT,
+            "invalid event userId when notify event callback for other users, bundleName:%{public}s",
+            bundleName.c_str());
+        return otherUserEvents;
+    }
+    // skip clone/sandbox events (appIndex != 0), aligned with the exclusion of
+    // ProcessBundleChangedEventForOtherUsers in common event flow
+    if (want.GetIntParam(Constants::APP_INDEX, 0) != 0) {
+        return otherUserEvents;
+    }
+    // skip install-by-bundle-name events (e.g. installs triggered by new user
+    // creation) and recover installs, so that other users are not notified as
+    // changed in those cases
+    if (want.GetBoolParam(IS_INSTALL_BY_BUNDLE_NAME, false) || want.GetBoolParam(IS_RECOVER, false)) {
+        return otherUserEvents;
+    }
+    for (const auto &userId : userIds) {
+        if (userId == eventUserId) {
+            continue;
+        }
+        AAFwk::Want newWant = want;
+        if (action == EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_ADDED) {
+            newWant.SetAction(EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED);
+        }
+        ApplicationInfo appInfo;
+        if (GetApplicationInfoV9(bundleName,
+            static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE), userId, appInfo) != ERR_OK) {
+            LOG_NOFUNC_D(BMS_TAG_DEFAULT,
+                "get appInfo failed when notify event callback for other users, bundleName:%{public}s, "
+                "userId:%{public}d", bundleName.c_str(), userId);
+            continue;
+        }
+        newWant.SetParam(Constants::UID, appInfo.uid);
+        newWant.SetParam(Constants::USER_ID, userId);
+        newWant.SetParam(ACCESS_TOKEN_ID, static_cast<int32_t>(appInfo.accessTokenId));
+        EventFwk::CommonEventData newCommonData { newWant };
+        otherUserEvents.emplace_back(newCommonData);
+    }
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "GetEventsForOtherUsers bundleName:%{public}s, otherUserEvents size:%{public}zu",
+        bundleName.c_str(), otherUserEvents.size());
+    return otherUserEvents;
 }
 
 bool BundleDataMgr::ClearBundleStatusCallback(const sptr<IBundleStatusCallback> &bundleStatusCallback)
@@ -14181,6 +14269,7 @@ ErrCode BundleDataMgr::SetAdditionalInfo(const std::string& bundleName,
         APP_LOGE("effectiveBundleName: %{public}s set additional info failed", effectiveBundleName.c_str());
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
+    lock.unlock();
 
     ElementName element;
     element.SetBundleName(bundleName);
@@ -14240,6 +14329,7 @@ ErrCode BundleDataMgr::SetAdditionalInfoByIndex(const std::string& bundleName,
         APP_LOGE("effectiveBundleName: %{public}s set additional info failed", effectiveBundleName.c_str());
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
+    lock.unlock();
 
     ElementName element;
     element.SetBundleName(bundleName);

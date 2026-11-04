@@ -2036,6 +2036,9 @@ private:
         PUBLIC_ONLY,
     };
 
+    std::vector<EventFwk::CommonEventData> GetEventsForOtherUsers(
+        const EventFwk::CommonEventData &eventData) const;
+
     ErrCode FindSkillInfoFromAllBundles(const std::string &skillName, uint32_t flags,
         int32_t requestUserId, const std::string &callingBundleName, bool isPrivilegedCaller,
         SkillInfo &skillInfo);
