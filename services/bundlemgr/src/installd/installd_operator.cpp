@@ -1768,6 +1768,13 @@ std::string InstalldOperator::GetPathDir(const std::string &path)
 
 bool InstalldOperator::ChangeDirOwnerRecursively(const std::string &path, const int uid, const int gid)
 {
+    struct stat pathStat = {};
+    if (lstat(path.c_str(), &pathStat) == 0 && S_ISLNK(pathStat.st_mode)) {
+        // a symlink at the root is skipped: chown through it would take over
+        // the ownership of whatever the link points to
+        LOG_NOFUNC_W(BMS_TAG_INSTALLD, "skip link path %{public}s", path.c_str());
+        return true;
+    }
     std::string subPath;
     bool ret = true;
     DIR *dir = opendir(path.c_str());
@@ -1788,6 +1795,12 @@ bool InstalldOperator::ChangeDirOwnerRecursively(const std::string &path, const 
         }
 
         subPath = OHOS::IncludeTrailingPathDelimiter(path) + std::string(ptr->d_name);
+        struct stat entryStat = {};
+        if (lstat(subPath.c_str(), &entryStat) == 0 && S_ISLNK(entryStat.st_mode)) {
+            // never chown through a symlink: the link itself is left untouched
+            LOG_NOFUNC_W(BMS_TAG_INSTALLD, "skip link file %{public}s", subPath.c_str());
+            continue;
+        }
         if (ptr->d_type == DT_DIR) {
             ret = ChangeDirOwnerRecursively(subPath, uid, gid);
             continue;
