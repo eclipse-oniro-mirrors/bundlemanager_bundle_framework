@@ -912,7 +912,7 @@ HWTEST_F(BundleInstallCheckerTest, BundleInstallCheckerTest_0036, TestSize.Level
     auto ret = bundleInstallChecker.CheckAppDistributionType(distributionType);
     EXPECT_EQ(ret, ERR_OK);
 
-    bool clearRes = param.SaveBmsParam(Constants::APP_DISTRIBUTION_TYPE_WHITE_LIST, "");
+    bool clearRes = param.DeleteBmsParam(Constants::APP_DISTRIBUTION_TYPE_WHITE_LIST);
     EXPECT_TRUE(clearRes);
 }
 

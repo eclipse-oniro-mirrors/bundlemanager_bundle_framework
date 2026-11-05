@@ -309,6 +309,13 @@ bool BundleDataMgr::IsBopdModeEnabled()
     return !bopdMode.empty() && bopdModeSet.find(bopdMode) != bopdModeSet.end();
 }
 
+bool BundleDataMgr::IsCleanupModeEnabled()
+{
+    // The SA clean framework sets ohos.boot.cleanup.mode="true" to mark the cleanup window.
+    std::string cleanMode = OHOS::system::GetParameter("ohos.boot.cleanup.mode", "");
+    return cleanMode == "true";
+}
+
 void BundleDataMgr::CompatibleOldBundleStateInKvDb()
 {
     for (const auto& bundleInfoItem : bundleInfos_) {

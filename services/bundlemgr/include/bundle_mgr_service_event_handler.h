@@ -781,6 +781,15 @@ private:
     static std::string GetOldSystemFingerprint();
     bool GetSystemParameter(const std::string &key, std::string &value);
     void SaveSystemFingerprint();
+    // BOPD cleanup recovery flag (bms_param.bmsCleanRecovery, written by OnClean). The OTA block reads it into
+    // cleanupRecoveryFlagSet_; the same-version branch uses it to force updateBundle for pre-install apps. The flag
+    // row and the member are reset after OnBundleRebootStart completes.
+    bool IsCleanupRecoveryFlagSet();
+    void ClearCleanupRecoveryFlag();
+    // Resets the in-memory member and clears the DB row when the flag was set, so a later real OTA
+    // does not re-trigger the same-version reinstall.
+    void ClearCleanupRecoveryIfNeeded();
+    bool cleanupRecoveryFlagSet_ = false;
     void HandlePreInstallException(bool needDeleteRecord = true);
     static bool IsHapPathExist(const BundleInfo &bundleInfo);
     static bool IsHspPathExist(const InnerBundleInfo &innerBundleInfo);
