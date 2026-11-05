@@ -5227,4 +5227,464 @@ HWTEST_F(BmsEventHandlerTest, ProcessAccessTokenMigration_1000, Function | Small
     g_spmMigratePopulateResults = false;
     dataMgr->bundleInfos_.clear();
 }
+
+/**
+ * @tc.number: DualModeCloneUninstallMigration_0100
+ * @tc.name: DualModeCloneUninstallMigration
+ * @tc.desc: dual-mode clone with uninstall-retained data, migration succeeds ->
+ *           both installed info and uninstall record marked checkBySpm=true
+ */
+HWTEST_F(BmsEventHandlerTest, DualModeCloneUninstallMigration_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    const std::string cloneKey = DualModeHelper::GetDualModeBundleName(BUNDLE_NAME);
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    info.isDualModeCloneApp_ = true;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = BUNDLE_NAME;
+    userInfo.bundleUserInfo.userId = 100;
+    userInfo.uid = 20000100;
+    userInfo.accessTokenId = 0x12345678;
+    info.innerBundleUserInfos_[BUNDLE_NAME + Constants::FILE_UNDERLINE + std::to_string(100)] = userInfo;
+    dataMgr->bundleInfos_[BUNDLE_NAME] = info;
+    UninstallBundleInfo uninstInfo;
+    uninstInfo.checkBySpm = false;
+    UninstallDataUserInfo dui;
+    dui.uid = 20000101;
+    dui.accessTokenId = 0x12345678;
+    uninstInfo.userInfos["101"] = dui;
+    ASSERT_TRUE(dataMgr->UpdateUninstallBundleInfo(cloneKey, uninstInfo));
+    auto bmsParam = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    ASSERT_NE(bmsParam, nullptr);
+    bmsParam->DeleteBmsParam(ServiceConstants::ACCESS_TOKEN_MIGRATION_DONE_MARK);
+    g_spmFinishMigrationRet = 0;
+    g_spmIsMigrationDoneRet = 0;
+    g_spmIsMigrationDoneValue = false;
+    g_spmMigrateInstalledBundlesRet = 0;
+    g_spmMigratePopulateResults = true;
+    EXPECT_TRUE(handler->InnerProcessAccessTokenMigration());
+    InnerBundleInfo after;
+    EXPECT_TRUE(dataMgr->FetchInnerBundleInfo(BUNDLE_NAME, after));
+    EXPECT_TRUE(after.IsBundleCheckBySpm());
+    UninstallBundleInfo uninstAfter;
+    EXPECT_TRUE(dataMgr->GetUninstallBundleInfo(cloneKey, uninstAfter));
+    EXPECT_TRUE(uninstAfter.checkBySpm);
+    g_spmMigratePopulateResults = false;
+    dataMgr->bundleInfos_.clear();
+    dataMgr->DeleteUninstallBundleInfo(cloneKey, 101);
+}
+
+/**
+ * @tc.number: DualModeCloneUninstallFallback_0100
+ * @tc.name: DualModeCloneUninstallFallback
+ * @tc.desc: fallback with unmigrated clone uninstall-retained data ->
+ *           HasUnmigratedUninstallData blocks marking, clone stays checkBySpm=false
+ */
+HWTEST_F(BmsEventHandlerTest, DualModeCloneUninstallFallback_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    const std::string cloneKey = DualModeHelper::GetDualModeBundleName(BUNDLE_NAME);
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    info.isDualModeCloneApp_ = true;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = BUNDLE_NAME;
+    userInfo.bundleUserInfo.userId = 100;
+    userInfo.uid = 20000100;
+    userInfo.accessTokenId = 0x12345678;
+    userInfo.accessTokenIdEx = 0x12345678;
+    info.innerBundleUserInfos_[BUNDLE_NAME + Constants::FILE_UNDERLINE + std::to_string(100)] = userInfo;
+    dataMgr->bundleInfos_[BUNDLE_NAME] = info;
+    UninstallBundleInfo uninstInfo;
+    uninstInfo.checkBySpm = false;
+    UninstallDataUserInfo dui;
+    dui.uid = 20000101;
+    dui.accessTokenId = 0x12345678;
+    uninstInfo.userInfos["101"] = dui;
+    ASSERT_TRUE(dataMgr->UpdateUninstallBundleInfo(cloneKey, uninstInfo));
+    g_spmFinishMigrationRet = 0;
+    g_spmIsMigrationDoneRet = 0;
+    g_spmIsMigrationDoneValue = false;
+    handler->CheckAndFallbackUnmigratedBundles();
+    InnerBundleInfo after;
+    EXPECT_TRUE(dataMgr->FetchInnerBundleInfo(BUNDLE_NAME, after));
+    EXPECT_FALSE(after.IsBundleCheckBySpm());
+    dataMgr->bundleInfos_.clear();
+    dataMgr->DeleteUninstallBundleInfo(cloneKey, 101);
+}
+
+/**
+ * @tc.number: DualModeCloneCleanDirtyUninstall_0100
+ * @tc.name: DualModeCloneCleanDirtyUninstall
+ * @tc.desc: clone reinstalled for user 100, uninstall record has user 100 ->
+ *           CleanDirtyUninstallData deletes the stale entry, clone then marked
+ */
+HWTEST_F(BmsEventHandlerTest, DualModeCloneCleanDirtyUninstall_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    const std::string cloneKey = DualModeHelper::GetDualModeBundleName(BUNDLE_NAME);
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    info.isDualModeCloneApp_ = true;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = BUNDLE_NAME;
+    userInfo.bundleUserInfo.userId = 100;
+    userInfo.uid = 20000100;
+    userInfo.accessTokenId = 0x12345678;
+    userInfo.accessTokenIdEx = 0x12345678;
+    info.innerBundleUserInfos_[BUNDLE_NAME + Constants::FILE_UNDERLINE + std::to_string(100)] = userInfo;
+    dataMgr->bundleInfos_[BUNDLE_NAME] = info;
+    UninstallBundleInfo uninstInfo;
+    uninstInfo.checkBySpm = false;
+    UninstallDataUserInfo dui;
+    dui.uid = 20000100;
+    dui.accessTokenId = 0x12345678;
+    uninstInfo.userInfos["100"] = dui;
+    ASSERT_TRUE(dataMgr->UpdateUninstallBundleInfo(cloneKey, uninstInfo));
+    g_spmFinishMigrationRet = 0;
+    g_spmIsMigrationDoneRet = 0;
+    g_spmIsMigrationDoneValue = false;
+    handler->CheckAndFallbackUnmigratedBundles();
+    UninstallBundleInfo uninstAfter;
+    EXPECT_FALSE(dataMgr->GetUninstallBundleInfo(cloneKey, uninstAfter) &&
+        uninstAfter.userInfos.find("100") != uninstAfter.userInfos.end());
+    InnerBundleInfo after;
+    EXPECT_TRUE(dataMgr->FetchInnerBundleInfo(BUNDLE_NAME, after));
+    EXPECT_TRUE(after.IsBundleCheckBySpm());
+    dataMgr->bundleInfos_.clear();
+    if (dataMgr->GetUninstallBundleInfo(cloneKey, uninstAfter)) {
+        dataMgr->DeleteUninstallBundleInfo(cloneKey, 100);
+    }
+}
+
+/**
+ * @tc.number: CleanDirtyUninstallData_NotInstalled_0100
+ * @tc.name: CleanDirtyUninstallData_NotInstalled
+ * @tc.desc: uninstall record exists but bundle not in bundleInfos_/tempBundleInfos_ ->
+ *           FetchVariantInfo fails, record preserved
+ */
+HWTEST_F(BmsEventHandlerTest, CleanDirtyUninstallData_NotInstalled_0100, Function | SmallTest | Level0)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    dataMgr->tempBundleInfos_.clear();
+    UninstallBundleInfo uninstInfo;
+    uninstInfo.checkBySpm = false;
+    UninstallDataUserInfo dui;
+    dui.uid = 20000100;
+    uninstInfo.userInfos["100"] = dui;
+    ASSERT_TRUE(dataMgr->UpdateUninstallBundleInfo(BUNDLE_NAME, uninstInfo));
+    auto handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    handler->CleanDirtyUninstallData();
+    UninstallBundleInfo uninstAfter;
+    EXPECT_TRUE(dataMgr->GetUninstallBundleInfo(BUNDLE_NAME, uninstAfter));
+    EXPECT_TRUE(uninstAfter.userInfos.find("100") != uninstAfter.userInfos.end());
+    dataMgr->DeleteUninstallBundleInfo(BUNDLE_NAME, 100);
+}
+
+/**
+ * @tc.number: CleanDirtyUninstallData_NormalBundle_0100
+ * @tc.name: CleanDirtyUninstallData_NormalBundle
+ * @tc.desc: non-clone bundle reinstalled for user 100, uninstall record has user 100 ->
+ *           CleanDirtyUninstallData deletes the stale entry
+ */
+HWTEST_F(BmsEventHandlerTest, CleanDirtyUninstallData_NormalBundle_0100, Function | SmallTest | Level0)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = BUNDLE_NAME;
+    userInfo.bundleUserInfo.userId = 100;
+    userInfo.uid = 20000100;
+    userInfo.accessTokenId = 0x12345678;
+    info.innerBundleUserInfos_[BUNDLE_NAME + Constants::FILE_UNDERLINE + std::to_string(100)] = userInfo;
+    dataMgr->bundleInfos_[BUNDLE_NAME] = info;
+    UninstallBundleInfo uninstInfo;
+    uninstInfo.checkBySpm = false;
+    UninstallDataUserInfo dui;
+    dui.uid = 20000100;
+    uninstInfo.userInfos["100"] = dui;
+    ASSERT_TRUE(dataMgr->UpdateUninstallBundleInfo(BUNDLE_NAME, uninstInfo));
+    auto handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    handler->CleanDirtyUninstallData();
+    UninstallBundleInfo uninstAfter;
+    EXPECT_FALSE(dataMgr->GetUninstallBundleInfo(BUNDLE_NAME, uninstAfter) &&
+        uninstAfter.userInfos.find("100") != uninstAfter.userInfos.end());
+    dataMgr->bundleInfos_.clear();
+    if (dataMgr->GetUninstallBundleInfo(BUNDLE_NAME, uninstAfter)) {
+        dataMgr->DeleteUninstallBundleInfo(BUNDLE_NAME, 100);
+    }
+}
+
+/**
+ * @tc.number: CleanDirtyUninstallData_CloneFlagMismatch_0100
+ * @tc.name: CleanDirtyUninstallData_CloneFlagMismatch
+ * @tc.desc: clone uninstall record (prefixed key) exists, primary in bundleInfos_ ->
+ *           FetchVariantInfo finds primary but clone-flag mismatch, temp empty ->
+ *           record preserved
+ */
+HWTEST_F(BmsEventHandlerTest, CleanDirtyUninstallData_CloneFlagMismatch_0100, Function | SmallTest | Level0)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    dataMgr->tempBundleInfos_.clear();
+    const std::string cloneKey = DualModeHelper::GetDualModeBundleName(BUNDLE_NAME);
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    info.isDualModeCloneApp_ = false;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = BUNDLE_NAME;
+    userInfo.bundleUserInfo.userId = 100;
+    userInfo.uid = 20000100;
+    userInfo.accessTokenId = 0x12345678;
+    info.innerBundleUserInfos_[BUNDLE_NAME + Constants::FILE_UNDERLINE + std::to_string(100)] = userInfo;
+    dataMgr->bundleInfos_[BUNDLE_NAME] = info;
+    UninstallBundleInfo uninstInfo;
+    uninstInfo.checkBySpm = false;
+    UninstallDataUserInfo dui;
+    dui.uid = 20000100;
+    uninstInfo.userInfos["100"] = dui;
+    ASSERT_TRUE(dataMgr->UpdateUninstallBundleInfo(cloneKey, uninstInfo));
+    auto handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    handler->CleanDirtyUninstallData();
+    UninstallBundleInfo uninstAfter;
+    EXPECT_TRUE(dataMgr->GetUninstallBundleInfo(cloneKey, uninstAfter));
+    EXPECT_TRUE(uninstAfter.userInfos.find("100") != uninstAfter.userInfos.end());
+    dataMgr->bundleInfos_.clear();
+    dataMgr->DeleteUninstallBundleInfo(cloneKey, 100);
+}
+
+/**
+ * @tc.number: CleanDirtyUninstallData_TempFallback_0100
+ * @tc.name: CleanDirtyUninstallData_TempFallback
+ * @tc.desc: clone uninstall record (prefixed key), primary in bundleInfos_ (non-clone),
+ *           clone in tempBundleInfos_ -> FetchVariantInfo temp fallback matches clone ->
+ *           stale entry cleaned
+ */
+HWTEST_F(BmsEventHandlerTest, CleanDirtyUninstallData_TempFallback_0100, Function | SmallTest | Level0)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    dataMgr->tempBundleInfos_.clear();
+    const std::string cloneKey = DualModeHelper::GetDualModeBundleName(BUNDLE_NAME);
+    InnerBundleInfo primaryInfo;
+    primaryInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    primaryInfo.isDualModeCloneApp_ = false;
+    dataMgr->bundleInfos_[BUNDLE_NAME] = primaryInfo;
+    InnerBundleInfo cloneInfo;
+    cloneInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    cloneInfo.isDualModeCloneApp_ = true;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = BUNDLE_NAME;
+    userInfo.bundleUserInfo.userId = 100;
+    userInfo.uid = 20000100;
+    userInfo.accessTokenId = 0x12345678;
+    cloneInfo.innerBundleUserInfos_[BUNDLE_NAME + Constants::FILE_UNDERLINE + std::to_string(100)] = userInfo;
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] = cloneInfo;
+    UninstallBundleInfo uninstInfo;
+    uninstInfo.checkBySpm = false;
+    UninstallDataUserInfo dui;
+    dui.uid = 20000100;
+    uninstInfo.userInfos["100"] = dui;
+    ASSERT_TRUE(dataMgr->UpdateUninstallBundleInfo(cloneKey, uninstInfo));
+    auto handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    handler->CleanDirtyUninstallData();
+    UninstallBundleInfo uninstAfter;
+    EXPECT_FALSE(dataMgr->GetUninstallBundleInfo(cloneKey, uninstAfter) &&
+        uninstAfter.userInfos.find("100") != uninstAfter.userInfos.end());
+    dataMgr->bundleInfos_.clear();
+    dataMgr->tempBundleInfos_.clear();
+    if (dataMgr->GetUninstallBundleInfo(cloneKey, uninstAfter)) {
+        dataMgr->DeleteUninstallBundleInfo(cloneKey, 100);
+    }
+}
+
+/**
+ * @tc.number: CleanDirtyUninstallData_NormalCloneAppIndex_0100
+ * @tc.name: CleanDirtyUninstallData_NormalCloneAppIndex
+ * @tc.desc: normal clone (appIndex=1) reinstalled in cloneInfos, uninstall record "100_1" ->
+ *           GetUid(100,1) finds clone -> DeleteUninstallCloneBundleInfo branch hit
+ */
+HWTEST_F(BmsEventHandlerTest, CleanDirtyUninstallData_NormalCloneAppIndex_0100, Function | SmallTest | Level0)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = BUNDLE_NAME;
+    userInfo.bundleUserInfo.userId = 100;
+    userInfo.uid = 20000100;
+    userInfo.accessTokenId = 0x12345678;
+    InnerBundleCloneInfo cloneInfo;
+    cloneInfo.userId = 100;
+    cloneInfo.uid = 20010100;
+    userInfo.cloneInfos[std::to_string(1)] = cloneInfo;
+    info.innerBundleUserInfos_[BUNDLE_NAME + Constants::FILE_UNDERLINE + std::to_string(100)] = userInfo;
+    dataMgr->bundleInfos_[BUNDLE_NAME] = info;
+    UninstallBundleInfo uninstInfo;
+    uninstInfo.checkBySpm = false;
+    UninstallDataUserInfo dui;
+    dui.uid = 20010100;
+    uninstInfo.userInfos["100_1"] = dui;
+    ASSERT_TRUE(dataMgr->UpdateUninstallBundleInfo(BUNDLE_NAME, uninstInfo));
+    auto handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    handler->CleanDirtyUninstallData();
+    UninstallBundleInfo uninstAfter;
+    EXPECT_FALSE(dataMgr->GetUninstallBundleInfo(BUNDLE_NAME, uninstAfter) &&
+        uninstAfter.userInfos.find("100_1") != uninstAfter.userInfos.end());
+    dataMgr->bundleInfos_.clear();
+    if (dataMgr->GetUninstallBundleInfo(BUNDLE_NAME, uninstAfter)) {
+        dataMgr->DeleteUninstallBundleInfo(BUNDLE_NAME, 100);
+    }
+}
+
+/**
+ * @tc.number: CleanDirtyUninstallData_PartialCloneReinstalled_0100
+ * @tc.name: CleanDirtyUninstallData_PartialCloneReinstalled
+ * @tc.desc: uninstall table has 100, 100_1, 100_2; install has user 100 + cloneInfos[1] only ->
+ *           100 and 100_1 deleted, 100_2 preserved (GetUid returns INVALID_UID for appIndex=2)
+ */
+HWTEST_F(BmsEventHandlerTest, CleanDirtyUninstallData_PartialCloneReinstalled_0100, Function | SmallTest | Level0)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = BUNDLE_NAME;
+    userInfo.bundleUserInfo.userId = 100;
+    userInfo.uid = 20000100;
+    userInfo.accessTokenId = 0x12345678;
+    InnerBundleCloneInfo clone1;
+    clone1.userId = 100;
+    clone1.uid = 20010100;
+    userInfo.cloneInfos[std::to_string(1)] = clone1;
+    info.innerBundleUserInfos_[BUNDLE_NAME + Constants::FILE_UNDERLINE + std::to_string(100)] = userInfo;
+    dataMgr->bundleInfos_[BUNDLE_NAME] = info;
+    UninstallBundleInfo uninstInfo;
+    uninstInfo.checkBySpm = false;
+    UninstallDataUserInfo dui0;
+    dui0.uid = 20000100;
+    uninstInfo.userInfos["100"] = dui0;
+    UninstallDataUserInfo dui1;
+    dui1.uid = 20010100;
+    uninstInfo.userInfos["100_1"] = dui1;
+    UninstallDataUserInfo dui2;
+    dui2.uid = 20020100;
+    uninstInfo.userInfos["100_2"] = dui2;
+    ASSERT_TRUE(dataMgr->UpdateUninstallBundleInfo(BUNDLE_NAME, uninstInfo));
+    auto handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    handler->CleanDirtyUninstallData();
+    UninstallBundleInfo uninstAfter;
+    EXPECT_TRUE(dataMgr->GetUninstallBundleInfo(BUNDLE_NAME, uninstAfter));
+    EXPECT_FALSE(uninstAfter.userInfos.find("100") != uninstAfter.userInfos.end());
+    EXPECT_FALSE(uninstAfter.userInfos.find("100_1") != uninstAfter.userInfos.end());
+    EXPECT_TRUE(uninstAfter.userInfos.find("100_2") != uninstAfter.userInfos.end());
+    dataMgr->bundleInfos_.clear();
+    dataMgr->DeleteUninstallBundleInfo(BUNDLE_NAME, 100);
+}
+
+/**
+ * @tc.number: CleanDirtyUninstallData_ParseFailure_0100
+ * @tc.name: CleanDirtyUninstallData_ParseFailure
+ * @tc.desc: uninstall record with malformed userIdStr -> parse fails, entry kept
+ */
+HWTEST_F(BmsEventHandlerTest, CleanDirtyUninstallData_ParseFailure_0100, Function | SmallTest | Level0)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = BUNDLE_NAME;
+    userInfo.bundleUserInfo.userId = 100;
+    userInfo.uid = 20000100;
+    info.innerBundleUserInfos_[BUNDLE_NAME + Constants::FILE_UNDERLINE + std::to_string(100)] = userInfo;
+    dataMgr->bundleInfos_[BUNDLE_NAME] = info;
+    UninstallBundleInfo uninstInfo;
+    uninstInfo.checkBySpm = false;
+    UninstallDataUserInfo dui;
+    dui.uid = 20000100;
+    uninstInfo.userInfos["invalid"] = dui;
+    ASSERT_TRUE(dataMgr->UpdateUninstallBundleInfo(BUNDLE_NAME, uninstInfo));
+    auto handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    handler->CleanDirtyUninstallData();
+    UninstallBundleInfo uninstAfter;
+    EXPECT_TRUE(dataMgr->GetUninstallBundleInfo(BUNDLE_NAME, uninstAfter));
+    EXPECT_TRUE(uninstAfter.userInfos.find("invalid") != uninstAfter.userInfos.end());
+    dataMgr->bundleInfos_.clear();
+    dataMgr->DeleteUninstallBundleInfo(BUNDLE_NAME, 100);
+}
+
+/**
+ * @tc.number: HasUnmigratedUninstallData_AlreadyMigrated_0100
+ * @tc.name: HasUnmigratedUninstallData_AlreadyMigrated
+ * @tc.desc: clone uninstall record exists with checkBySpm=true ->
+ *           HasUnmigratedUninstallData returns false -> fallback marks clone checkBySpm=true
+ */
+HWTEST_F(BmsEventHandlerTest, HasUnmigratedUninstallData_AlreadyMigrated_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    const std::string cloneKey = DualModeHelper::GetDualModeBundleName(BUNDLE_NAME);
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    info.isDualModeCloneApp_ = true;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = BUNDLE_NAME;
+    userInfo.bundleUserInfo.userId = 100;
+    userInfo.uid = 20000100;
+    userInfo.accessTokenId = 0x12345678;
+    userInfo.accessTokenIdEx = 0x12345678;
+    info.innerBundleUserInfos_[BUNDLE_NAME + Constants::FILE_UNDERLINE + std::to_string(100)] = userInfo;
+    dataMgr->bundleInfos_[BUNDLE_NAME] = info;
+    UninstallBundleInfo uninstInfo;
+    uninstInfo.checkBySpm = true;
+    UninstallDataUserInfo dui;
+    dui.uid = 20000101;
+    uninstInfo.userInfos["101"] = dui;
+    ASSERT_TRUE(dataMgr->UpdateUninstallBundleInfo(cloneKey, uninstInfo));
+    g_spmFinishMigrationRet = 0;
+    g_spmIsMigrationDoneRet = 0;
+    g_spmIsMigrationDoneValue = false;
+    handler->CheckAndFallbackUnmigratedBundles();
+    InnerBundleInfo after;
+    EXPECT_TRUE(dataMgr->FetchInnerBundleInfo(BUNDLE_NAME, after));
+    EXPECT_TRUE(after.IsBundleCheckBySpm());
+    dataMgr->bundleInfos_.clear();
+    dataMgr->DeleteUninstallBundleInfo(cloneKey, 101);
+}
 } // OHOS
