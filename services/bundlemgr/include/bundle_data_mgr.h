@@ -1200,6 +1200,8 @@ public:
 
     bool UpdateQuickFixInnerBundleInfo(const std::string &bundleName, const InnerBundleInfo &innerBundleInfo);
 
+    // Note: must not be called while holding bundleInfoMutex_; the fan-out path
+    // (GetEventsForOtherUsers) acquires it via GetUserIds/GetApplicationInfoV9
     void NotifyBundleEventCallback(const EventFwk::CommonEventData &eventData) const;
 
     const std::map<std::string, InnerBundleInfo> GetAllInnerBundleInfos() const

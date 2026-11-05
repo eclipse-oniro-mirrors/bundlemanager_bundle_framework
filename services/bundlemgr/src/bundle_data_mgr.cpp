@@ -136,6 +136,8 @@ constexpr const char* BMS_EVENT_ADDITIONAL_INFO_CHANGED = "bms.event.ADDITIONAL_
 constexpr const char* ACCESS_TOKEN_ID = "accessTokenId";
 constexpr const char* IS_INSTALL_BY_BUNDLE_NAME = "isInstallByBundleName";
 constexpr const char* IS_RECOVER = "isRecover";
+constexpr const char* TYPE = "type";
+constexpr const char* RESULT_CODE = "resultCode";
 constexpr const char* CLONE_BUNDLE_PREFIX = "clone_";
 constexpr const char* RESOURCE_STRING_PREFIX = "$string:";
 constexpr const char* EMPTY_STRING = "";
@@ -8284,6 +8286,20 @@ std::vector<EventFwk::CommonEventData> BundleDataMgr::GetEventsForOtherUsers(
         (action != EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED)) {
         return otherUserEvents;
     }
+    // only successful operations are fanned out to other users, aligned with the
+    // resultCode gate of NotifyBundleStatus in common event flow
+    if (want.GetIntParam(RESULT_CODE, ERR_OK) != ERR_OK) {
+        return otherUserEvents;
+    }
+    // only INSTALL and UPDATE events are fanned out to other users, aligned with
+    // the NotifyType filter of ProcessBundleChangedEventForOtherUsers in common
+    // event flow; other CHANGED-mapped types (enable/disable/uninstall-state) are
+    // single-user state changes and must not be notified to other users
+    int32_t notifyType = want.GetIntParam(TYPE, static_cast<int32_t>(NotifyType::INSTALL));
+    if ((notifyType != static_cast<int32_t>(NotifyType::INSTALL)) &&
+        (notifyType != static_cast<int32_t>(NotifyType::UPDATE))) {
+        return otherUserEvents;
+    }
     std::string bundleName = want.GetElement().GetBundleName();
     if (bundleName.empty()) {
         bundleName = want.GetStringParam(Constants::BUNDLE_NAME);
@@ -8303,15 +8319,14 @@ std::vector<EventFwk::CommonEventData> BundleDataMgr::GetEventsForOtherUsers(
             bundleName.c_str());
         return otherUserEvents;
     }
-    // skip clone/sandbox events (appIndex != 0), aligned with the exclusion of
-    // ProcessBundleChangedEventForOtherUsers in common event flow
-    if (want.GetIntParam(Constants::APP_INDEX, 0) != 0) {
-        return otherUserEvents;
-    }
     // skip install-by-bundle-name events (e.g. installs triggered by new user
-    // creation) and recover installs, so that other users are not notified as
-    // changed in those cases
-    if (want.GetBoolParam(IS_INSTALL_BY_BUNDLE_NAME, false) || want.GetBoolParam(IS_RECOVER, false)) {
+    // creation), recover installs and clone/sandbox events (appIndex != 0) for
+    // install-type events only, aligned with the scope of the exclusions of
+    // ProcessBundleChangedEventForOtherUsers in common event flow (update-type
+    // clone events are still fanned out)
+    if (notifyType == static_cast<int32_t>(NotifyType::INSTALL) &&
+        (want.GetBoolParam(IS_INSTALL_BY_BUNDLE_NAME, false) || want.GetBoolParam(IS_RECOVER, false) ||
+        want.GetIntParam(Constants::APP_INDEX, 0) != 0)) {
         return otherUserEvents;
     }
     for (const auto &userId : userIds) {

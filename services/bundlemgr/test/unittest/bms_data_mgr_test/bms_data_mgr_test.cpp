@@ -32,6 +32,7 @@
 #include "bundle_backup_service.h"
 #include "bundle_data_storage_interface.h"
 #include "bundle_data_mgr.h"
+#include "bundle_common_event_mgr.h"
 #include "bundle_mgr_client.h"
 #include "bundle_mgr_client_impl.h"
 #include "bundle_mgr_ext_register.h"
@@ -160,6 +161,8 @@ constexpr uint32_t USER_C_TOKEN_ID = 1765346;
 constexpr const char* WANT_PARAM_ACCESS_TOKEN_ID = "accessTokenId";
 constexpr const char* WANT_PARAM_IS_INSTALL_BY_BUNDLE_NAME = "isInstallByBundleName";
 constexpr const char* WANT_PARAM_IS_RECOVER = "isRecover";
+constexpr const char* WANT_PARAM_TYPE = "type";
+constexpr const char* WANT_PARAM_RESULT_CODE = "resultCode";
 
 class BundleEventCallbackCountMock : public IBundleEventCallback {
 public:
@@ -240,7 +243,8 @@ InnerBundleInfo BuildMultiUserInnerBundleInfo(const std::string &bundleName,
 }
 
 EventFwk::CommonEventData BuildMultiUserEventData(const std::string &action, bool withUserId,
-    int32_t appIndex = 0, bool isInstallByBundleName = false, bool isRecover = false)
+    int32_t appIndex = 0, bool isInstallByBundleName = false, bool isRecover = false,
+    int32_t notifyType = static_cast<int32_t>(NotifyType::INSTALL), ErrCode resultCode = ERR_OK)
 {
     Want want;
     want.SetAction(action);
@@ -251,6 +255,8 @@ EventFwk::CommonEventData BuildMultiUserEventData(const std::string &action, boo
     want.SetParam(Constants::APP_INDEX, appIndex);
     want.SetParam(WANT_PARAM_IS_INSTALL_BY_BUNDLE_NAME, isInstallByBundleName);
     want.SetParam(WANT_PARAM_IS_RECOVER, isRecover);
+    want.SetParam(WANT_PARAM_TYPE, notifyType);
+    want.SetParam(WANT_PARAM_RESULT_CODE, resultCode);
     if (withUserId) {
         want.SetParam(Constants::USER_ID, EVENT_USER_ID);
     }
@@ -11495,6 +11501,105 @@ HWTEST_F(BmsDataMgrTest, NotifyBundleEventCallbackForAllUsers_1000, Function | S
     EXPECT_EQ(callback->GetReceiveCount(), 1);
     EXPECT_EQ(callback->GetReceivedActions()[0],
         EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_ADDED);
+    dataMgr->eventCallbackList_.clear();
+    dataMgr->bundleInfos_.erase(MULTI_USER_EVENT_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: NotifyBundleEventCallbackForAllUsers_1100
+ * @tc.name: NotifyBundleEventCallbackForAllUsers
+ * @tc.desc: 1. event with failed resultCode (failed update) does not trigger
+ *              multi-user traversal
+ */
+HWTEST_F(BmsDataMgrTest, NotifyBundleEventCallbackForAllUsers_1100, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(EVENT_USER_ID);
+    dataMgr->AddUserId(OTHER_USER_ID_B);
+    dataMgr->AddUserId(OTHER_USER_ID_C);
+    dataMgr->bundleInfos_[MULTI_USER_EVENT_BUNDLE_NAME] = BuildMultiUserInnerBundleInfo(
+        MULTI_USER_EVENT_BUNDLE_NAME, { EVENT_USER_ID, OTHER_USER_ID_B, OTHER_USER_ID_C });
+    sptr<BundleEventCallbackCountMock> callback = new (std::nothrow) BundleEventCallbackCountMock();
+    ASSERT_NE(callback, nullptr);
+    callback->SetNotifyAllUsers(true);
+    dataMgr->eventCallbackList_.emplace_back(callback);
+    auto eventData = BuildMultiUserEventData(
+        EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED, true, 0, false, false,
+        static_cast<int32_t>(NotifyType::UPDATE), ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR);
+    dataMgr->NotifyBundleEventCallback(eventData);
+    EXPECT_EQ(callback->GetReceiveCount(), 1);
+    EXPECT_EQ(callback->GetReceivedActions()[0],
+        EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED);
+    dataMgr->eventCallbackList_.clear();
+    dataMgr->bundleInfos_.erase(MULTI_USER_EVENT_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: NotifyBundleEventCallbackForAllUsers_1200
+ * @tc.name: NotifyBundleEventCallbackForAllUsers
+ * @tc.desc: 1. APPLICATION_ENABLE event (CHANGED-mapped, single-user state change)
+ *              does not trigger multi-user traversal
+ */
+HWTEST_F(BmsDataMgrTest, NotifyBundleEventCallbackForAllUsers_1200, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(EVENT_USER_ID);
+    dataMgr->AddUserId(OTHER_USER_ID_B);
+    dataMgr->AddUserId(OTHER_USER_ID_C);
+    dataMgr->bundleInfos_[MULTI_USER_EVENT_BUNDLE_NAME] = BuildMultiUserInnerBundleInfo(
+        MULTI_USER_EVENT_BUNDLE_NAME, { EVENT_USER_ID, OTHER_USER_ID_B, OTHER_USER_ID_C });
+    sptr<BundleEventCallbackCountMock> callback = new (std::nothrow) BundleEventCallbackCountMock();
+    ASSERT_NE(callback, nullptr);
+    callback->SetNotifyAllUsers(true);
+    dataMgr->eventCallbackList_.emplace_back(callback);
+    auto eventData = BuildMultiUserEventData(
+        EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED, true, 0, false, false,
+        static_cast<int32_t>(NotifyType::APPLICATION_ENABLE));
+    dataMgr->NotifyBundleEventCallback(eventData);
+    EXPECT_EQ(callback->GetReceiveCount(), 1);
+    EXPECT_EQ(callback->GetReceivedActions()[0],
+        EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED);
+    dataMgr->eventCallbackList_.clear();
+    dataMgr->bundleInfos_.erase(MULTI_USER_EVENT_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: NotifyBundleEventCallbackForAllUsers_1300
+ * @tc.name: NotifyBundleEventCallbackForAllUsers
+ * @tc.desc: 1. UPDATE event with non-zero appIndex (clone update) still triggers
+ *              multi-user traversal, aligned with ProcessBundleChangedEventForOtherUsers
+ */
+HWTEST_F(BmsDataMgrTest, NotifyBundleEventCallbackForAllUsers_1300, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(EVENT_USER_ID);
+    dataMgr->AddUserId(OTHER_USER_ID_B);
+    dataMgr->AddUserId(OTHER_USER_ID_C);
+    dataMgr->bundleInfos_[MULTI_USER_EVENT_BUNDLE_NAME] = BuildMultiUserInnerBundleInfo(
+        MULTI_USER_EVENT_BUNDLE_NAME, { EVENT_USER_ID, OTHER_USER_ID_B, OTHER_USER_ID_C });
+    sptr<BundleEventCallbackCountMock> callback = new (std::nothrow) BundleEventCallbackCountMock();
+    ASSERT_NE(callback, nullptr);
+    callback->SetNotifyAllUsers(true);
+    dataMgr->eventCallbackList_.emplace_back(callback);
+    auto eventData = BuildMultiUserEventData(
+        EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED, true, 10000, false, false,
+        static_cast<int32_t>(NotifyType::UPDATE));
+    dataMgr->NotifyBundleEventCallback(eventData);
+    // original event + one CHANGED event for each other installed user
+    EXPECT_EQ(callback->GetReceiveCount(), 3);
+    EXPECT_EQ(callback->GetReceivedActions().size(), static_cast<size_t>(3));
+    for (const auto &action : callback->GetReceivedActions()) {
+        EXPECT_EQ(action, EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED);
+    }
+    EXPECT_EQ(callback->GetReceivedUserIds()[1], OTHER_USER_ID_B);
+    EXPECT_EQ(callback->GetReceivedUserIds()[2], OTHER_USER_ID_C);
+    EXPECT_EQ(callback->GetReceivedUids()[1], USER_B_UID);
+    EXPECT_EQ(callback->GetReceivedUids()[2], USER_C_UID);
+    EXPECT_EQ(callback->GetReceivedTokenIds()[1], static_cast<int32_t>(USER_B_TOKEN_ID));
+    EXPECT_EQ(callback->GetReceivedTokenIds()[2], static_cast<int32_t>(USER_C_TOKEN_ID));
     dataMgr->eventCallbackList_.clear();
     dataMgr->bundleInfos_.erase(MULTI_USER_EVENT_BUNDLE_NAME);
 }
