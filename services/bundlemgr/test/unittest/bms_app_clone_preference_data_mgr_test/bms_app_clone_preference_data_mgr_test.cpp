@@ -22,9 +22,12 @@
 #define private public
 #include "app_clone_preference_data_mgr.h"
 #include "app_clone_preference_storage.h"
+#include "bundle_data_mgr.h"
+#include "bundle_mgr_service.h"
 #undef private
 
-#include "bundle_mgr_service.h"
+#include "inner_bundle_info.h"
+#include "inner_bundle_user_info.h"
 
 using namespace OHOS;
 using namespace OHOS::AppExecFwk;
@@ -531,7 +534,7 @@ HWTEST_F(BmsAppClonePreferenceDataMgrTest, GetAppClonePreference_NegativeUserId_
     ASSERT_NE(dataMgr, nullptr);
     AppClonePreference preference;
     EXPECT_EQ(dataMgr->GetAppClonePreference(TEST_BUNDLE, -1, preference),
-        ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
+        ERR_BUNDLE_MANAGER_INVALID_USER_ID);
     EXPECT_EQ(dataMgr->GetAppClonePreference(TEST_BUNDLE, -100, preference),
         ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
     EXPECT_EQ(dataMgr->GetAppClonePreference(TEST_BUNDLE, INT32_MIN, preference),
@@ -880,4 +883,289 @@ HWTEST_F(BmsAppClonePreferenceDataMgrTest, SetAppClonePreference_MainApp_Negativ
     preference.appIndex = -100;
     auto ret = dataMgr->SetAppClonePreference(TEST_BUNDLE, TEST_USER_ID, preference);
     EXPECT_EQ(ret, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
+}
+
+// GetAppClonePreference with ALL_USERID (-3) — the new userId validation rejects special
+// userId values before any data lookup.
+HWTEST_F(BmsAppClonePreferenceDataMgrTest, GetAppClonePreference_AllUserId_001, TestSize.Level1)
+{
+    auto dataMgr = std::make_shared<AppClonePreferenceDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    AppClonePreference preference;
+    // ALL_USERID = -3, should be rejected by userId validation
+    EXPECT_EQ(dataMgr->GetAppClonePreference(TEST_BUNDLE, Constants::ALL_USERID, preference),
+        ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+// GetAppClonePreference with ANY_USERID (-4) — should be rejected by userId validation.
+HWTEST_F(BmsAppClonePreferenceDataMgrTest, GetAppClonePreference_AnyUserId_001, TestSize.Level1)
+{
+    auto dataMgr = std::make_shared<AppClonePreferenceDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    AppClonePreference preference;
+    // ANY_USERID = -4, should be rejected by userId validation
+    EXPECT_EQ(dataMgr->GetAppClonePreference(TEST_BUNDLE, Constants::ANY_USERID, preference),
+        ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+// GetAppClonePreference with INVALID_USERID (-1) — should be rejected by userId validation.
+HWTEST_F(BmsAppClonePreferenceDataMgrTest, GetAppClonePreference_InvalidUserId_001, TestSize.Level1)
+{
+    auto dataMgr = std::make_shared<AppClonePreferenceDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    AppClonePreference preference;
+    // INVALID_USERID = -1, should be rejected by userId validation
+    EXPECT_EQ(dataMgr->GetAppClonePreference(TEST_BUNDLE, Constants::INVALID_USERID, preference),
+        ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+// GetAppClonePreference with valid positive userId — should pass userId validation
+// and proceed to dataMgr lookup (which returns nullptr in mock env).
+HWTEST_F(BmsAppClonePreferenceDataMgrTest, GetAppClonePreference_ValidUserId_001, TestSize.Level1)
+{
+    auto dataMgr = std::make_shared<AppClonePreferenceDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    AppClonePreference preference;
+    // Valid userId should pass validation; in mock env dataMgr is nullptr
+    // so we expect SERVICE_INTERNAL_ERROR after passing userId check
+    auto ret = dataMgr->GetAppClonePreference(TEST_BUNDLE, 100, preference);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
+}
+
+// GetAppClonePreference with userId 0 (DEFAULT_USERID) — should pass userId validation.
+HWTEST_F(BmsAppClonePreferenceDataMgrTest, GetAppClonePreference_DefaultUserId_001, TestSize.Level1)
+{
+    auto dataMgr = std::make_shared<AppClonePreferenceDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    AppClonePreference preference;
+    // userId 0 is DEFAULT_USERID, should pass validation
+    auto ret = dataMgr->GetAppClonePreference(TEST_BUNDLE, 0, preference);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
+}
+
+// GetAppClonePreference with UNSPECIFIED_USERID (-2) — passes the early special-userId check
+// (only -1/-3/-4 are rejected) and reaches the dataMgr-null branch in mock env.
+HWTEST_F(BmsAppClonePreferenceDataMgrTest, GetAppClonePreference_UnspecifiedUserId_001, TestSize.Level1)
+{
+    auto dataMgr = std::make_shared<AppClonePreferenceDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    AppClonePreference preference;
+    auto ret = dataMgr->GetAppClonePreference(TEST_BUNDLE, Constants::UNSPECIFIED_USERID, preference);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
+}
+
+// GetAppClonePreference — early userId validation rejects all three special constants in one test,
+// covering the three branches of the early-check OR expression.
+HWTEST_F(BmsAppClonePreferenceDataMgrTest, GetAppClonePreference_AllSpecialUserIds_001, TestSize.Level1)
+{
+    auto dataMgr = std::make_shared<AppClonePreferenceDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    AppClonePreference preference;
+    EXPECT_EQ(dataMgr->GetAppClonePreference(TEST_BUNDLE, Constants::INVALID_USERID, preference),
+        ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    EXPECT_EQ(dataMgr->GetAppClonePreference(TEST_BUNDLE, Constants::ALL_USERID, preference),
+        ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    EXPECT_EQ(dataMgr->GetAppClonePreference(TEST_BUNDLE, Constants::ANY_USERID, preference),
+        ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+// SetAppClonePreference with special userId values — the early userId validation is only in Get,
+// not Set. Set goes through the dataMgr-null branch in mock env for any non-empty bundleName.
+HWTEST_F(BmsAppClonePreferenceDataMgrTest, SetAppClonePreference_SpecialUserId_DataMgrNull_001, TestSize.Level1)
+{
+    auto dataMgr = std::make_shared<AppClonePreferenceDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    AppClonePreference preference;
+    preference.mode = AppClonePreferenceMode::MAIN_APP;
+    // In mock env, dataMgr is null so we get SERVICE_INTERNAL_ERROR regardless of userId
+    EXPECT_EQ(dataMgr->SetAppClonePreference(TEST_BUNDLE, Constants::INVALID_USERID, preference),
+        ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
+    EXPECT_EQ(dataMgr->SetAppClonePreference(TEST_BUNDLE, Constants::ALL_USERID, preference),
+        ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
+}
+
+// -------------------- GetAppClonePreference with initialized BundleDataMgr --------------------
+// The following tests initialise BundleMgrService's dataMgr_ via InitBundleDataMgr() so the
+// resolvedUserId / HasUserInstallInBundle / storage-Query paths become reachable.
+// InitBundleDataMgr() creates a real BundleDataMgr and registers DEFAULT_USERID (0).
+
+// GetAppClonePreference with a positive userId that is NOT registered in multiUserIdsSet_.
+// dataMgr->GetUserId(100) returns INVALID_USERID because HasUserId(100) is false.
+// This covers the resolvedUserId == INVALID_USERID branch (lines 56-60).
+HWTEST_F(BmsAppClonePreferenceDataMgrTest, GetAppClonePreference_ResolvedInvalidUserId_001, TestSize.Level1)
+{
+    auto service = DelayedSingleton<BundleMgrService>::GetInstance();
+    ASSERT_NE(service, nullptr);
+    service->InitBundleDataMgr();
+    auto bdMgr = service->GetDataMgr();
+    ASSERT_NE(bdMgr, nullptr);
+
+    auto dataMgr = std::make_shared<AppClonePreferenceDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    AppClonePreference preference;
+    // userId 100 is not registered → GetUserId returns INVALID_USERID
+    EXPECT_EQ(dataMgr->GetAppClonePreference(TEST_BUNDLE, 100, preference),
+        ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+// GetAppClonePreference with userId 0 (DEFAULT_USERID) — registered by InitBundleDataMgr.
+// The bundle does not exist in bundleInfos_, so HasUserInstallInBundle returns false.
+// This covers the BUNDLE_NOT_EXIST branch (lines 62-64).
+HWTEST_F(BmsAppClonePreferenceDataMgrTest, GetAppClonePreference_BundleNotExist_001, TestSize.Level1)
+{
+    auto service = DelayedSingleton<BundleMgrService>::GetInstance();
+    ASSERT_NE(service, nullptr);
+    service->InitBundleDataMgr();
+    auto bdMgr = service->GetDataMgr();
+    ASSERT_NE(bdMgr, nullptr);
+
+    auto dataMgr = std::make_shared<AppClonePreferenceDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    AppClonePreference preference;
+    // userId 0 is registered, but TEST_BUNDLE is not installed → BUNDLE_NOT_EXIST
+    EXPECT_EQ(dataMgr->GetAppClonePreference(TEST_BUNDLE, 0, preference),
+        ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+// GetAppClonePreference with a registered userId and a bundle that HAS user install info.
+// We inject a bundle with InnerBundleUserInfo for userId 0 so HasUserInstallInBundle returns true.
+// storage_->Query returns false (no preference record) → APP_CLONE_PREFERENCE_NOT_EXIST.
+// This covers the storage-Query-false branch (lines 70-73).
+HWTEST_F(BmsAppClonePreferenceDataMgrTest, GetAppClonePreference_NoPreferenceRecord_001, TestSize.Level1)
+{
+    auto service = DelayedSingleton<BundleMgrService>::GetInstance();
+    ASSERT_NE(service, nullptr);
+    service->InitBundleDataMgr();
+    auto bdMgr = service->GetDataMgr();
+    ASSERT_NE(bdMgr, nullptr);
+
+    // Inject a bundle so HasUserInstallInBundle returns true for userId 0.
+    const std::string testBundle = "com.example.clone_pref_no_record";
+    InnerBundleInfo bundleInfo;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = 0;
+    bundleInfo.AddInnerBundleUserInfo(userInfo);
+    bdMgr->AddUserId(0);
+    bdMgr->UpdateBundleInstallState(testBundle, InstallState::INSTALL_START);
+    bdMgr->AddInnerBundleInfo(testBundle, bundleInfo, false);
+
+    auto dataMgr = std::make_shared<AppClonePreferenceDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    AppClonePreference preference;
+    // HasUserInstallInBundle true, but storage has no record → PREFERENCE_NOT_EXIST
+    EXPECT_EQ(dataMgr->GetAppClonePreference(testBundle, 0, preference),
+        ERR_BUNDLE_MANAGER_APP_CLONE_PREFERENCE_NOT_EXIST);
+
+    // Cleanup
+    bdMgr->bundleInfos_.erase(testBundle);
+    if (dataMgr->storage_ != nullptr) {
+        dataMgr->storage_->Delete(testBundle, 0);
+    }
+}
+
+// GetAppClonePreference — insert a preference record, then query it. The default preference
+// mode is ALWAYS_ASK, which bypasses the CLONE_APP branch, so the function returns ERR_OK.
+// This covers the happy path through storage_->Query returning true (line 70 true branch).
+HWTEST_F(BmsAppClonePreferenceDataMgrTest, GetAppClonePreference_AlwaysAsk_HappyPath_001, TestSize.Level1)
+{
+    auto service = DelayedSingleton<BundleMgrService>::GetInstance();
+    ASSERT_NE(service, nullptr);
+    service->InitBundleDataMgr();
+    auto bdMgr = service->GetDataMgr();
+    ASSERT_NE(bdMgr, nullptr);
+
+    const std::string testBundle = "com.example.clone_pref_always_ask";
+    InnerBundleInfo bundleInfo;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = 0;
+    bundleInfo.AddInnerBundleUserInfo(userInfo);
+    bdMgr->AddUserId(0);
+    bdMgr->UpdateBundleInstallState(testBundle, InstallState::INSTALL_START);
+    bdMgr->AddInnerBundleInfo(testBundle, bundleInfo, false);
+
+    auto dataMgr = std::make_shared<AppClonePreferenceDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    // Seed an ALWAYS_ASK preference
+    AppClonePreference seedPref;
+    seedPref.mode = AppClonePreferenceMode::ALWAYS_ASK;
+    ASSERT_TRUE(dataMgr->storage_->InsertOrReplace(testBundle, 0, seedPref));
+
+    AppClonePreference preference;
+    EXPECT_EQ(dataMgr->GetAppClonePreference(testBundle, 0, preference), ERR_OK);
+    EXPECT_EQ(preference.mode, AppClonePreferenceMode::ALWAYS_ASK);
+
+    // Cleanup
+    bdMgr->bundleInfos_.erase(testBundle);
+    dataMgr->storage_->Delete(testBundle, 0);
+}
+
+// GetAppClonePreference with CLONE_APP mode — the preferred appIndex no longer exists in
+// GetCloneAppIndexes, so the preference is reset to ALWAYS_ASK via InsertOrReplace.
+// This covers the CLONE_APP branch (lines 75-88) including the reset-to-ALWAYS_ASK path.
+HWTEST_F(BmsAppClonePreferenceDataMgrTest, GetAppClonePreference_CloneApp_ResetToAlwaysAsk_001, TestSize.Level1)
+{
+    auto service = DelayedSingleton<BundleMgrService>::GetInstance();
+    ASSERT_NE(service, nullptr);
+    service->InitBundleDataMgr();
+    auto bdMgr = service->GetDataMgr();
+    ASSERT_NE(bdMgr, nullptr);
+
+    const std::string testBundle = "com.example.clone_pref_reset";
+    InnerBundleInfo bundleInfo;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = 0;
+    bundleInfo.AddInnerBundleUserInfo(userInfo);
+    bdMgr->AddUserId(0);
+    bdMgr->UpdateBundleInstallState(testBundle, InstallState::INSTALL_START);
+    bdMgr->AddInnerBundleInfo(testBundle, bundleInfo, false);
+
+    auto dataMgr = std::make_shared<AppClonePreferenceDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    // Seed a CLONE_APP preference with appIndex 1 (no clone indexes exist → reset)
+    AppClonePreference seedPref;
+    seedPref.mode = AppClonePreferenceMode::CLONE_APP;
+    seedPref.appIndex = 1;
+    ASSERT_TRUE(dataMgr->storage_->InsertOrReplace(testBundle, 0, seedPref));
+
+    AppClonePreference preference;
+    EXPECT_EQ(dataMgr->GetAppClonePreference(testBundle, 0, preference), ERR_OK);
+    // Should be reset to ALWAYS_ASK because appIndex 1 is not in GetCloneAppIndexes (empty)
+    EXPECT_EQ(preference.mode, AppClonePreferenceMode::ALWAYS_ASK);
+
+    // Cleanup
+    bdMgr->bundleInfos_.erase(testBundle);
+    dataMgr->storage_->Delete(testBundle, 0);
+}
+
+// GetAppClonePreference with storage_ set to nullptr — covers the storage-null branch (lines 66-68).
+// Requires dataMgr non-null and HasUserInstallInBundle true.
+HWTEST_F(BmsAppClonePreferenceDataMgrTest, GetAppClonePreference_StorageNull_AfterDataMgr_001, TestSize.Level1)
+{
+    auto service = DelayedSingleton<BundleMgrService>::GetInstance();
+    ASSERT_NE(service, nullptr);
+    service->InitBundleDataMgr();
+    auto bdMgr = service->GetDataMgr();
+    ASSERT_NE(bdMgr, nullptr);
+
+    const std::string testBundle = "com.example.clone_pref_storage_null";
+    InnerBundleInfo bundleInfo;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = 0;
+    bundleInfo.AddInnerBundleUserInfo(userInfo);
+    bdMgr->AddUserId(0);
+    bdMgr->UpdateBundleInstallState(testBundle, InstallState::INSTALL_START);
+    bdMgr->AddInnerBundleInfo(testBundle, bundleInfo, false);
+
+    auto dataMgr = std::make_shared<AppClonePreferenceDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    auto savedStorage = std::move(dataMgr->storage_);
+    dataMgr->storage_ = nullptr;
+
+    AppClonePreference preference;
+    EXPECT_EQ(dataMgr->GetAppClonePreference(testBundle, 0, preference),
+        ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
+
+    // Cleanup
+    dataMgr->storage_ = std::move(savedStorage);
+    bdMgr->bundleInfos_.erase(testBundle);
 }
