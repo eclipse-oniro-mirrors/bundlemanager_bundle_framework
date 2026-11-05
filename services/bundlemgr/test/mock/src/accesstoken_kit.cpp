@@ -385,6 +385,21 @@ int AccessTokenKit::GetDefPermissions(AccessTokenID tokenID, std::vector<Permiss
 
 
 #ifdef BUNDLE_PERMISSION_DEF_LIST
+int AccessTokenKit::GetReqPermissions(
+    AccessTokenID tokenID, std::vector<PermissionStateFull>& reqPermList, PermissionGrantType filter)
+{
+    #ifdef BUNDLE_PERMISSION_DEF_TRUE
+    PermissionStateFull permissionStateFull;
+    permissionStateFull.permissionName = "testName";
+    permissionStateFull.resDeviceID.push_back("100");
+    permissionStateFull.grantStatus.push_back(GRANT_STATUS);
+    reqPermList.push_back(permissionStateFull);
+    return 0;
+    #else
+    return -1;
+    #endif
+}
+
 int AccessTokenKit::GetReqPermissions(AccessTokenID tokenID, std::vector<PermissionStateFull>& reqPermList,
     bool isSystemGrant)
 {
@@ -432,6 +447,12 @@ ATokenTypeEnum AccessTokenKit::GetTokenTypeFlag(AccessTokenID tokenID)
     return g_tokenTypeFlag;
 }
 #else
+int AccessTokenKit::GetReqPermissions(
+    AccessTokenID tokenID, std::vector<PermissionStateFull>& reqPermList, PermissionGrantType filter)
+{
+    return 0;
+}
+
 int AccessTokenKit::GetReqPermissions(AccessTokenID tokenID, std::vector<PermissionStateFull>& reqPermList,
     bool isSystemGrant)
 {
