@@ -95,6 +95,10 @@ ohos_unittest("BmsBundleAppControlTest") {
   ]
   external_deps += bundle_install_external_deps
   defines = []
+  if (ability_runtime_enable) {
+    external_deps += [ "ability_runtime:ability_manager" ]
+    defines += [ "ABILITY_RUNTIME_ENABLE" ]
+  }
   if (code_signature_enable) {
     sources += [
       "${services_path}/bundlemgr/src/aot/aot_sign_data_cache_mgr.cpp",

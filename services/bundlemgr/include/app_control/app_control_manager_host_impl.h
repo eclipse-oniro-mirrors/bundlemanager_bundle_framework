@@ -113,12 +113,19 @@ public:
     virtual ErrCode DeleteUninstallDisposedRule(const std::string &appIdentifier, int32_t appIndex,
         int32_t userId) override;
 
+    virtual ErrCode SetRecoverDisposedRule(const RecoverDisposedRule &rule, int32_t userId) override;
+
+    virtual ErrCode GetRecoverDisposedRule(int32_t userId, RecoverDisposedRule &rule) override;
+
+    virtual ErrCode DeleteRecoverDisposedRule(int32_t userId) override;
+
 private:
     int32_t GetCallingUserId();
     std::string GetCallingName();
     std::string GetControlRuleType(const AppInstallControlRuleType controlRuleType);
     void UpdateAppControlledInfo(int32_t userId, const std::vector<std::string> &modifyAppIds) const;
     void GetCallerByUid(const int32_t uid, std::string &callerName);
+    bool CheckAcrossUserPermission(const int32_t userId);
     void SendAppControlEvent(ControlActionType actionType, ControlOperationType operationType,
         const std::string &callingName, int32_t userId, int32_t appIndex, const std::vector<std::string> &appIds,
         const std::string &rule);

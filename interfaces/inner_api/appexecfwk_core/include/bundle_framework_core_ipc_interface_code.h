@@ -320,6 +320,9 @@ enum class AppControlManagerInterfaceCode : uint8_t {
     DELETE_DISPOSED_RULES = 28,
     GET_DISPOSED_RULES = 29,
     GET_ALL_DISPOSED_RULES_BY_SETTER = 30,
+    SET_RECOVER_DISPOSED_RULE = 31,
+    GET_RECOVER_DISPOSED_RULE = 32,
+    DELETE_RECOVER_DISPOSED_RULE = 33,
 };
 
 /* SAID: 401-96 Interface No.96 subservice also provides the following interfaces */

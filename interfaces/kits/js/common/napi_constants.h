@@ -213,6 +213,7 @@ constexpr uint32_t MAX_POLICY_ARRAY_SIZE = 1000;
 
 inline const std::set<int32_t> SUPPORTED_PROFILE_LIST = { 1, 8 };
 inline const std::set<int32_t> UNINSTALL_COMPONENT_TYPE_LIST = { 1, 2 };
+inline const std::set<int32_t> RECOVER_COMPONENT_TYPE_LIST = { 1, 2 };
 
 inline std::map<int32_t, std::string> APP_DISTRIBUTION_TYPE_MAP = {
     { ENUM_ONE, Constants::APP_DISTRIBUTION_TYPE_APP_GALLERY },
@@ -361,6 +362,17 @@ constexpr const char* UNINSTALL_DISPOSED_RULE_TYPE = "UninstallDisposedRule";
 constexpr const char* SET_UNINSTALL_DISPOSED_RULE = "SetUninstallDisposedRule";
 constexpr const char* DELETE_UNINSTALL_DISPOSED_RULE = "DeleteUninstallDisposedRule";
 constexpr const char* GET_UNINSTALL_DISPOSED_RULE = "GetUninstallDisposedRule";
+constexpr const char* RECOVER_DISPOSED_RULE = "recoverDisposedRule";
+constexpr const char* RECOVER_DISPOSED_RULE_TYPE = "RecoverDisposedRule";
+constexpr const char* ERR_MSG_RECOVER_DISPOSED_RULE_SERVICE_EXCEPTION =
+    "BusinessError 17700101: Bundle manager service exception.";
+constexpr const char* SET_RECOVER_DISPOSED_RULE = "SetRecoverDisposedRule";
+constexpr const char* DELETE_RECOVER_DISPOSED_RULE = "DeleteRecoverDisposedRule";
+constexpr const char* GET_RECOVER_DISPOSED_RULE = "GetRecoverDisposedRule";
+constexpr const char* RECOVER_WANT_TYPE = "Want";
+constexpr const char* RECOVER_COMPONENT_TYPE = "recoverComponentType";
+constexpr const char* RECOVER_COMPONENT_TYPE_TYPE = "RecoverComponentType";
+constexpr const char* PRIORITY = "priority";
 constexpr const char* SET_DISPOSED_RULE = "SetDisposedRule";
 constexpr const char* SET_DISPOSED_RULES = "SetDisposedRules";
 

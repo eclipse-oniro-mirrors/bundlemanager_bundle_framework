@@ -100,6 +100,9 @@ public:
         int32_t userId, UninstallDisposedRule &rule) override;
     virtual ErrCode DeleteUninstallDisposedRule(const std::string &appIdentifier,
         int32_t appIndex, int32_t userId) override;
+    virtual ErrCode SetRecoverDisposedRule(const RecoverDisposedRule &rule, int32_t userId) override;
+    virtual ErrCode GetRecoverDisposedRule(int32_t userId, RecoverDisposedRule &rule) override;
+    virtual ErrCode DeleteRecoverDisposedRule(int32_t userId) override;
 
 private:
     bool WriteParcelableVector(const std::vector<std::string> &stringVector, MessageParcel &data);

@@ -1041,6 +1041,49 @@ ErrCode AppControlManager::DeleteUninstallDisposedRule(
     return ERR_OK;
 }
 
+ErrCode AppControlManager::SetRecoverDisposedRule(const std::string &callerName,
+    const RecoverDisposedRule& rule, int32_t userId)
+{
+    auto ret = appControlManagerDb_->SetRecoverDisposedRule(callerName, rule, userId);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "set to rdb failed");
+        return ret;
+    }
+    return ERR_OK;
+}
+
+ErrCode AppControlManager::GetRecoverDisposedRule(const std::string &callingName, int32_t userId,
+    RecoverDisposedRule& rule)
+{
+    auto ret = appControlManagerDb_->GetRecoverDisposedRule(callingName, userId, rule);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "get from rdb failed");
+        return ret;
+    }
+    return ERR_OK;
+}
+
+ErrCode AppControlManager::GetRecoverDisposedRuleByUserId(int32_t userId, RecoverDisposedRule& rule,
+    std::string& callerName, int64_t& timeStamp)
+{
+    auto ret = appControlManagerDb_->GetRecoverDisposedRuleByUserId(userId, rule, callerName, timeStamp);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "get from rdb failed");
+        return ret;
+    }
+    return ERR_OK;
+}
+
+ErrCode AppControlManager::DeleteRecoverDisposedRule(const std::string &callingName, int32_t userId)
+{
+    auto ret = appControlManagerDb_->DeleteRecoverDisposedRule(callingName, userId);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "delete from rdb failed");
+        return ret;
+    }
+    return ERR_OK;
+}
+
 void AppControlManager::PrintDisposedRuleInfo(const std::vector<DisposedRule> &disposedRules, const std::string &key)
 {
     if (key.find(ATOMIC_SERVICE) != std::string::npos) {

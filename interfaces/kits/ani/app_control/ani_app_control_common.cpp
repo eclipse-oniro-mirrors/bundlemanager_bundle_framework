@@ -17,6 +17,8 @@
 
 #include "ani_app_control_common.h"
 #include "ani_common_want.h"
+#include "bundle_errors.h"
+#include "business_error_ani.h"
 #include "common_fun_ani.h"
 
 namespace OHOS {
@@ -29,7 +31,14 @@ constexpr const char* CLASSNAME_DISPOSED_RULE_CONFIGURATION_INNER =
     "@ohos.bundle.appControl.appControl.DisposedRuleConfigurationInner";
 constexpr const char* CLASSNAME_DISPOSED_UNINSTALL_RULE_INNER =
     "@ohos.bundle.appControl.appControl.UninstallDisposedRuleInner";
+constexpr const char* CLASSNAME_DISPOSED_RECOVER_RULE_INNER =
+    "@ohos.bundle.appControl.appControl.RecoverDisposedRuleInner";
 constexpr const char* CLASSNAME_WANT = "@ohos.app.ability.Want.Want";
+constexpr const char* RECOVER_RULE_NAME = "recoverDisposedRule";
+constexpr const char* RECOVER_RULE_TYPE = "RecoverDisposedRule";
+constexpr const char* WANT_TYPE = "Want";
+constexpr const char* RECOVER_COMPONENT_TYPE_TYPE = "RecoverComponentType";
+constexpr const char* NUMBER_TYPE = "number";
 constexpr const char* PROPERTYNAME_WANT = "want";
 constexpr const char* PROPERTYNAME_COMPONENT_TYPE = "componentType";
 constexpr const char* PROPERTYNAME_DISPOSED_TYPE = "disposedType";
@@ -38,6 +47,7 @@ constexpr const char* PROPERTYNAME_PAGE_JUMP = "pageJump";
 constexpr const char* PROPERTYNAME_ELEMENT_LIST = "elementList";
 constexpr const char* PROPERTYNAME_PRIORITY = "priority";
 constexpr const char* PROPERTYNAME_UNINSTALL_COMPONENT_TYPE = "uninstallComponentType";
+constexpr const char* PROPERTYNAME_RECOVER_COMPONENT_TYPE = "recoverComponentType";
 constexpr const char* PROPERTYNAME_BUNDLE_NAME = "bundleName";
 constexpr const char* PROPERTYNAME_ABILITY_NAME = "abilityName";
 constexpr const char* PROPERTYNAME_DEVICEID = "deviceId";
@@ -157,6 +167,39 @@ ani_object AniAppControlCommon::ConvertUninstallDisposedRule(ani_env* env,
             .BuildSignatureDescriptor();
     return CommonFunAni::CreateNewObjectByClassV2(env, CLASSNAME_DISPOSED_UNINSTALL_RULE_INNER,
         uninstallDisposedRule.want == nullptr ? ctorSig : ctorSigWithWant, args);
+}
+
+ani_object AniAppControlCommon::ConvertRecoverDisposedRule(ani_env* env,
+    const RecoverDisposedRule& recoverDisposedRule)
+{
+    RETURN_NULL_IF_NULL(env);
+
+    // want: Want
+    ani_object want = nullptr;
+    if (recoverDisposedRule.want != nullptr) {
+        want = CreateAniWant(env, *recoverDisposedRule.want);
+        RETURN_NULL_IF_NULL(want);
+    }
+
+    ani_value args[] = {
+        { .r = EnumUtils::EnumNativeToETS_AppControl_RecoverComponentType(
+            env, static_cast<int32_t>(recoverDisposedRule.recoverComponentType)) },
+        { .i = recoverDisposedRule.priority },
+        { .r = want },
+    };
+    static const std::string ctorSig =
+        arkts::ani_signature::SignatureBuilder()
+            .AddClass(CommonFunAniNS::CLASSNAME_APPCONTROL_RECOVER_COMPONENT_TYPE) // recoverComponentType
+            .AddInt()                                                               // priority: int
+            .BuildSignatureDescriptor();
+    static const std::string ctorSigWithWant =
+        arkts::ani_signature::SignatureBuilder()
+            .AddClass(CommonFunAniNS::CLASSNAME_APPCONTROL_RECOVER_COMPONENT_TYPE) // recoverComponentType
+            .AddInt()                                                               // priority: int
+            .AddClass(CLASSNAME_WANT)                                               // want: Want
+            .BuildSignatureDescriptor();
+    return CommonFunAni::CreateNewObjectByClassV2(env, CLASSNAME_DISPOSED_RECOVER_RULE_INNER,
+        recoverDisposedRule.want == nullptr ? ctorSig : ctorSigWithWant, args);
 }
 
 bool AniAppControlCommon::ParseWantWithoutVerification(ani_env* env, ani_object object, Want& want)
@@ -310,6 +353,66 @@ bool AniAppControlCommon::ParseUninstallDisposedRule(ani_env* env,
     // priority: int
     RETURN_FALSE_IF_FALSE(CommonFunAni::CallGetter(env, object, PROPERTYNAME_PRIORITY, &intValue));
     uninstallDisposedRule.priority = intValue;
+
+    return true;
+}
+
+bool AniAppControlCommon::ParseRecoverDisposedRule(ani_env* env,
+    ani_object object, RecoverDisposedRule& recoverDisposedRule)
+{
+    if (env == nullptr || object == nullptr) {
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, RECOVER_RULE_NAME, RECOVER_RULE_TYPE);
+        return false;
+    }
+    bool isArray = false;
+    if (!CommonFunAni::IsArray(env, object, isArray) || isArray) {
+        APP_LOGE("check array failed or object is array type");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, RECOVER_RULE_NAME, RECOVER_RULE_TYPE);
+        return false;
+    }
+
+    ani_object objectValue = nullptr;
+    ani_enum_item enumItem = nullptr;
+    ani_int intValue = 0;
+
+    // want: Want
+    Want want;
+    if (!CommonFunAni::CallGetter(env, object, PROPERTYNAME_WANT, &objectValue)) {
+        APP_LOGE("get want failed");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PROPERTYNAME_WANT, WANT_TYPE);
+        return false;
+    }
+    if (!UnwrapWant(env, objectValue, want)) {
+        APP_LOGE("parse want failed");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PROPERTYNAME_WANT, WANT_TYPE);
+        return false;
+    }
+    recoverDisposedRule.want = std::make_shared<Want>(want);
+
+    // recoverComponentType: RecoverComponentType
+    if (!CommonFunAni::CallGetter(env, object, PROPERTYNAME_RECOVER_COMPONENT_TYPE, &enumItem)) {
+        APP_LOGE("get recoverComponentType failed");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR,
+            PROPERTYNAME_RECOVER_COMPONENT_TYPE, RECOVER_COMPONENT_TYPE_TYPE);
+        return false;
+    }
+    if (!EnumUtils::EnumETSToNative(env, enumItem, recoverDisposedRule.recoverComponentType) ||
+        (recoverDisposedRule.recoverComponentType != RecoverComponentType::EXTENSION &&
+        recoverDisposedRule.recoverComponentType != RecoverComponentType::UI_EXTENSION)) {
+        APP_LOGE("recoverComponentType is invalid");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR,
+            PROPERTYNAME_RECOVER_COMPONENT_TYPE, RECOVER_COMPONENT_TYPE_TYPE);
+        return false;
+    }
+
+    // priority: int
+    if (!CommonFunAni::CallGetter(env, object, PROPERTYNAME_PRIORITY, &intValue)) {
+        APP_LOGE("get priority failed");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR,
+            PROPERTYNAME_PRIORITY, NUMBER_TYPE);
+        return false;
+    }
+    recoverDisposedRule.priority = intValue;
 
     return true;
 }

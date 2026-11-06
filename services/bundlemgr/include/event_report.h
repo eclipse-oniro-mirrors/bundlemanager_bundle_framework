@@ -108,6 +108,7 @@ enum class ControlActionType : uint8_t {
     DISPOSE_STATUS = 3,
     DISPOSE_RULE = 4,
     UNINSTALL_DISPOSE_RULE = 5,
+    RECOVER_DISPOSE_RULE = 6,
 };
 
 enum class ControlOperationType : uint8_t {
