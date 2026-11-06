@@ -67,7 +67,8 @@ BundleMultiUserInstaller::~BundleMultiUserInstaller()
     APP_LOGD("~");
 }
 
-ErrCode BundleMultiUserInstaller::InstallExistedApp(const std::string &bundleName, const int32_t userId)
+ErrCode BundleMultiUserInstaller::InstallExistedApp(const std::string &bundleName, const int32_t userId,
+    bool isEdmCalling, bool hasInstallBundle)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGI("-n %{public}s -u %{public}d begin", bundleName.c_str(), userId);
@@ -85,7 +86,7 @@ ErrCode BundleMultiUserInstaller::InstallExistedApp(const std::string &bundleNam
 
     PerfProfile::GetInstance().SetBundleInstallStartTime(GetTickCount());
     startTime_ = BundleUtil::GetCurrentTimeMs();
-    result = ProcessBundleInstall(bundleName, userId);
+    result = ProcessBundleInstall(bundleName, userId, isEdmCalling, hasInstallBundle);
     NotifyBundleEvents installRes = {
         .type = NotifyType::INSTALL,
         .resultCode = result,
@@ -118,7 +119,8 @@ ErrCode BundleMultiUserInstaller::InstallExistedApp(const std::string &bundleNam
     return result;
 }
 
-ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundleName, const int32_t userId)
+ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundleName, const int32_t userId,
+    bool isEdmCalling, bool hasInstallBundle)
 {
     if (bundleName.empty()) {
         APP_LOGE("bundleName empty");
@@ -182,15 +184,24 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
     }
 
     appDistributionType_ = info.GetAppDistributionType();
-    if (appDistributionType_ == Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE
-        || appDistributionType_ == Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_NORMAL
-        || appDistributionType_ == Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_MDM) {
-        APP_LOGE("the origin application is enterprise, not allow to install here");
-        return ERR_APPEXECFWK_INSTALL_EXISTED_ENTERPRISE_BUNDLE_NOT_ALLOWED;
-    }
     if (appDistributionType_ == Constants::APP_DISTRIBUTION_TYPE_INTERNALTESTING) {
         APP_LOGE("the origin application is inrternaltesting, not allow to install here");
         return ERR_APPEXECFWK_INSTALL_FAILED_CONTROLLED;
+    }
+    const bool isEnterpriseType = appDistributionType_ == Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE ||
+                                  appDistributionType_ == Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_NORMAL ||
+                                  appDistributionType_ == Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_MDM;
+    if (isEnterpriseType) {
+        if (!isEdmCalling) {
+            APP_LOGE("the origin application is enterprise, not allow to install here");
+            return ERR_APPEXECFWK_INSTALL_EXISTED_ENTERPRISE_BUNDLE_NOT_ALLOWED;
+        }
+    } else {
+        if (isEdmCalling && !hasInstallBundle) {
+            APP_LOGE("edm calling only allow enterprise distribution type, bundle: %{public}s type: %{public}s",
+                bundleName.c_str(), appDistributionType_.c_str());
+            return ERR_APPEXECFWK_PERMISSION_DENIED;
+        }
     }
 
     if (!BundleInstallChecker::CheckSpaceIsolation(userId, info)) {

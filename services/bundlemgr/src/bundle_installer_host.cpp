@@ -1453,16 +1453,25 @@ ErrCode BundleInstallerHost::InstallExisted(const std::string &bundleName, int32
         LOG_E(BMS_TAG_INSTALLER, "non-system app calling system api bundleName: %{public}s", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_BUNDLE)) {
-        LOG_E(BMS_TAG_INSTALLER, "InstallExisted permission denied");
-        return ERR_APPEXECFWK_PERMISSION_DENIED;
+    const bool hasInstallBundle =
+        BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_BUNDLE);
+    const bool isEdmCalling = IPCSkeleton::GetCallingUid() == Constants::EDM_UID;
+    if (!hasInstallBundle) {
+        if (isEdmCalling &&
+            BundlePermissionMgr::VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_MANAGE_EDM_POLICY)) {
+            LOG_I(BMS_TAG_INSTALLER, "InstallExisted edm calling with manage edm policy, bundle: %{public}s",
+                bundleName.c_str());
+        } else {
+            LOG_E(BMS_TAG_INSTALLER, "InstallExisted permission denied");
+            return ERR_APPEXECFWK_PERMISSION_DENIED;
+        }
     }
     DualModeSwitchGuard dualModeGuard;
     if (dualModeGuard.IsRejected()) {
         return ERR_APPEXECFWK_DUAL_MODE_SWITCH_BUSY;  // r13: switch in flight, fail fast
     }
     std::shared_ptr<BundleMultiUserInstaller> installer = std::make_shared<BundleMultiUserInstaller>();
-    return installer->InstallExistedApp(bundleName, userId);
+    return installer->InstallExistedApp(bundleName, userId, isEdmCalling, hasInstallBundle);
 }
 
 void BundleInstallerHost::HandleInstallExisted(MessageParcel &data, MessageParcel &reply)

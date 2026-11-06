@@ -100,9 +100,11 @@ void SetUpdateHapTokenResultForTest(int32_t ret);
 // answer the real AT side would return — the trusted bundle info cached under
 // the session id allocated by CheckHapSignInfo, and the identity allocated
 // for a fresh install.
+void ResetSpmKitMockValuesForTest();
 void SetSpmTrustedBundleInfosForTest(const std::vector<TrustedBundleInfo>& bundleInfos);
 void SetSpmCheckHapSignInfoSessionIdForTest(int32_t sessionId);
 void SetSpmPrepareIdentityForTest(uint64_t tokenId, int32_t uid);
+void SetSpmPrepareIdentityResultForTest(int32_t ret);
 // Follow-user identity mode: when enabled, PrepareHapIdentity allocates the
 // fresh uid INSIDE the uid segment of the user the identity is prepared for
 // (HapBaseInfo.userID), keeping the bundle-id offset of the uid staged via
@@ -135,6 +137,7 @@ std::string MakeSpmReleaseProvisionRawForTest(const std::string& bundleName,
     const std::string& appDistributionType, bool allowAppShareLibrary = false,
     const std::string& appFeature = "hos_normal_app", const std::string& apl = "normal",
     const std::string& appIdentifier = "test-app-identifier");
+void SetPermissionDeniedForTest(const std::string& permissionName, bool denied);
 } // namespace AccessToken
 } // namespace Security
 } // namespace OHOS
