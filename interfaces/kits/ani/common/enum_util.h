@@ -70,6 +70,8 @@ constexpr const char* CLASSNAME_BUNDLEMANAGER_DEVICE_MODE_DISTRIBUTION_POLICY =
     "@ohos.bundle.bundleManager.bundleManager.DeviceModeDistributionPolicy";
 constexpr const char* CLASSNAME_BUNDLEMANAGER_APP_SANDBOX_POLICY =
     "@ohos.bundle.bundleManager.bundleManager.AppSandboxPolicy";
+constexpr const char* CLASSNAME_SKILLMANAGER_SKILL_TYPE =
+    "bundleManager.SkillInfo.SkillType";
 } // namespace CommonFunAniNS
 class EnumUtils {
 private:
@@ -656,6 +658,11 @@ public:
     static inline ani_enum_item EnumNativeToETS_BundleManager_AppSandboxPolicy(ani_env* env, const int32_t value)
     {
         return EnumNativeToETSByOffset(env, CommonFunAniNS::CLASSNAME_BUNDLEMANAGER_APP_SANDBOX_POLICY, value, 0);
+    }
+
+    static inline ani_enum_item EnumNativeToETS_SkillManager_SkillType(ani_env* env, const int32_t value)
+    {
+        return EnumNativeToETSByOffset(env, CommonFunAniNS::CLASSNAME_SKILLMANAGER_SKILL_TYPE, value, 0);
     }
 };
 } // namespace AppExecFwk

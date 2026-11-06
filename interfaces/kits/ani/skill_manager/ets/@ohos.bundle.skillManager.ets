@@ -13,10 +13,15 @@
  * limitations under the License.
  */
 
-import { SkillInfo } from 'skillManager.SkillInfo'
-import { SkillInfoInner } from './skillManager/SkillInfoInner'
+import { SkillInfo as _SkillInfo, SkillType as _SkillType } from 'bundleManager.SkillInfo';
+import { BusinessError } from '@ohos.base';
 
 namespace skillManager {
+  loadLibraryWithPermissionCheck("ani_skill_manager.z", "@ohos.bundle.skillManager");
+
+  // Keep in sync with EMPTY_USER_ID (-500) in interfaces/kits/js/common/napi_constants.h
+  const EMPTY_VALUE: int = -500;
+
   export enum SkillInfoFlag {
     GET_SKILL_INFO_DEFAULT = 0x00000000,
     GET_SKILL_INFO_WITH_DESCRIPTION = 0x00000001,
@@ -25,12 +30,10 @@ namespace skillManager {
     GET_SKILL_INFO_WITH_REQUEST_PERMISSIONS = 0x00000008,
   }
 
-  export type SkillInfo = SkillInfo;
-
   native function getSkillInfoForSelfNative(moduleName: string, skillName: string,
-    flags: int, userId: int): SkillInfo;
+    flags: int): SkillInfo;
 
-  native function getSkillInfosForSelfNative(flags: int, userId: int): Array<SkillInfo>;
+  native function getSkillInfosForSelfNative(flags: int): Array<SkillInfo>;
 
   native function getSkillInfoNative(bundleName: string, moduleName: string,
     skillName: string, flags: int, userId: int): SkillInfo;
@@ -40,64 +43,96 @@ namespace skillManager {
   native function getAllSkillInfosNative(flags: int, userId: int): Array<SkillInfo>;
 
   function getSkillInfoForSelf(moduleName: string, skillName: string,
-    flags: int, userId?: int): Promise<SkillInfo> {
-    let defaultUserId = userId === undefined ? 0 : userId;
-    return new Promise((resolve, reject) => {
-      try {
-        let result = getSkillInfoForSelfNative(moduleName, skillName, flags, defaultUserId);
+    flags: int): Promise<SkillInfo> {
+    let p = new Promise<SkillInfo>((resolve: (skillInfo: SkillInfo) => void,
+      reject: (error: BusinessError) => void) => {
+      let execFun = (): SkillInfo => {
+        return getSkillInfoForSelfNative(moduleName, skillName, flags);
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((e: Any) => {
+        let result: SkillInfo = e as SkillInfo;
         resolve(result);
-      } catch (err) {
-        reject(err);
-      }
+      }, (err: Error): void => {
+        reject(err as BusinessError);
+      });
     });
+    return p;
   }
 
-  function getSkillInfosForSelf(flags: int, userId?: int): Promise<Array<SkillInfo>> {
-    let defaultUserId = userId === undefined ? 0 : userId;
-    return new Promise((resolve, reject) => {
-      try {
-        let result = getSkillInfosForSelfNative(flags, defaultUserId);
+  function getSkillInfosForSelf(flags: int): Promise<Array<SkillInfo>> {
+    let p = new Promise<Array<SkillInfo>>((resolve: (skillInfos: Array<SkillInfo>) => void,
+      reject: (error: BusinessError) => void) => {
+      let execFun = (): Array<SkillInfo> => {
+        return getSkillInfosForSelfNative(flags);
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((e: Any) => {
+        let result: Array<SkillInfo> = e as Array<SkillInfo>;
         resolve(result);
-      } catch (err) {
-        reject(err);
-      }
+      }, (err: Error): void => {
+        reject(err as BusinessError);
+      });
     });
+    return p;
   }
 
   function getSkillInfo(bundleName: string, moduleName: string, skillName: string,
     flags: int, userId?: int): Promise<SkillInfo> {
-    let defaultUserId = userId === undefined ? 0 : userId;
-    return new Promise((resolve, reject) => {
-      try {
-        let result = getSkillInfoNative(bundleName, moduleName, skillName, flags, defaultUserId);
+    let userIdInfo: int = userId ?? EMPTY_VALUE;
+    let p = new Promise<SkillInfo>((resolve: (skillInfo: SkillInfo) => void,
+      reject: (error: BusinessError) => void) => {
+      let execFun = (): SkillInfo => {
+        return getSkillInfoNative(bundleName, moduleName, skillName, flags, userIdInfo);
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((e: Any) => {
+        let result: SkillInfo = e as SkillInfo;
         resolve(result);
-      } catch (err) {
-        reject(err);
-      }
+      }, (err: Error): void => {
+        reject(err as BusinessError);
+      });
     });
+    return p;
   }
 
   function getSkillInfos(bundleName: string, flags: int, userId?: int): Promise<Array<SkillInfo>> {
-    let defaultUserId = userId === undefined ? 0 : userId;
-    return new Promise((resolve, reject) => {
-      try {
-        let result = getSkillInfosNative(bundleName, flags, defaultUserId);
+    let userIdInfo: int = userId ?? EMPTY_VALUE;
+    let p = new Promise<Array<SkillInfo>>((resolve: (skillInfos: Array<SkillInfo>) => void,
+      reject: (error: BusinessError) => void) => {
+      let execFun = (): Array<SkillInfo> => {
+        return getSkillInfosNative(bundleName, flags, userIdInfo);
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((e: Any) => {
+        let result: Array<SkillInfo> = e as Array<SkillInfo>;
         resolve(result);
-      } catch (err) {
-        reject(err);
-      }
+      }, (err: Error): void => {
+        reject(err as BusinessError);
+      });
     });
+    return p;
   }
 
   function getAllSkillInfos(flags: int, userId?: int): Promise<Array<SkillInfo>> {
-    let defaultUserId = userId === undefined ? 0 : userId;
-    return new Promise((resolve, reject) => {
-      try {
-        let result = getAllSkillInfosNative(flags, defaultUserId);
+    let userIdInfo: int = userId ?? EMPTY_VALUE;
+    let p = new Promise<Array<SkillInfo>>((resolve: (skillInfos: Array<SkillInfo>) => void,
+      reject: (error: BusinessError) => void) => {
+      let execFun = (): Array<SkillInfo> => {
+        return getAllSkillInfosNative(flags, userIdInfo);
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((e: Any) => {
+        let result: Array<SkillInfo> = e as Array<SkillInfo>;
         resolve(result);
-      } catch (err) {
-        reject(err);
-      }
+      }, (err: Error): void => {
+        reject(err as BusinessError);
+      });
     });
+    return p;
   }
+
+  export type SkillInfo = _SkillInfo;
+
+  export type SkillType = _SkillType;
 }
