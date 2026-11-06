@@ -943,6 +943,81 @@ HWTEST_F(SpmModuleParserTest, ParseSpmModule_5100, Function | SmallTest | Level1
 }
 
 /**
+ * @tc.name: ParseSpmModule_5200
+ * @tc.desc: FA model module (with distro) reads permissions from reqPermissions.
+ */
+HWTEST_F(SpmModuleParserTest, ParseSpmModule_5200, Function | SmallTest | Level1)
+{
+    InnerModuleInfoForSpm info;
+    EXPECT_TRUE(ParseSpmModule(
+        R"({ "app": { "bundleName": "com.test" },
+            "module": {
+              "package": "com.test.entry",
+              "distro": { "moduleName": "entry", "moduleType": "entry" },
+              "reqPermissions": [ { "name": "faPerm" } ]
+            } })",
+        info));
+    ASSERT_EQ(info.requestPermission.size(), 1u);
+    EXPECT_EQ(info.requestPermission[0].name, "faPerm");
+}
+
+/**
+ * @tc.name: ParseSpmModule_5300
+ * @tc.desc: FA model module (with distro) ignores a mistaken requestPermissions field.
+ */
+HWTEST_F(SpmModuleParserTest, ParseSpmModule_5300, Function | SmallTest | Level1)
+{
+    InnerModuleInfoForSpm info;
+    EXPECT_TRUE(ParseSpmModule(
+        R"({ "app": { "bundleName": "com.test" },
+            "module": {
+              "package": "com.test.entry",
+              "distro": { "moduleName": "entry", "moduleType": "entry" },
+              "requestPermissions": [ { "name": "stagePerm" } ],
+              "reqPermissions": [ { "name": "faPerm" } ]
+            } })",
+        info));
+    ASSERT_EQ(info.requestPermission.size(), 1u);
+    EXPECT_EQ(info.requestPermission[0].name, "faPerm");
+}
+
+/**
+ * @tc.name: ParseSpmModule_5400
+ * @tc.desc: Stage model module (without distro) reads requestPermissions even when reqPermissions exists.
+ */
+HWTEST_F(SpmModuleParserTest, ParseSpmModule_5400, Function | SmallTest | Level1)
+{
+    InnerModuleInfoForSpm info;
+    EXPECT_TRUE(ParseSpmModule(
+        R"({ "app": { "bundleName": "com.test" },
+            "module": {
+              "name": "m",
+              "requestPermissions": [ { "name": "stagePerm" } ],
+              "reqPermissions": [ { "name": "faPerm" } ]
+            } })",
+        info));
+    ASSERT_EQ(info.requestPermission.size(), 1u);
+    EXPECT_EQ(info.requestPermission[0].name, "stagePerm");
+}
+
+/**
+ * @tc.name: ParseSpmModule_5500
+ * @tc.desc: FA model module (with distro) without reqPermissions succeeds with empty permissions.
+ */
+HWTEST_F(SpmModuleParserTest, ParseSpmModule_5500, Function | SmallTest | Level1)
+{
+    InnerModuleInfoForSpm info;
+    EXPECT_TRUE(ParseSpmModule(
+        R"({ "app": { "bundleName": "com.test" },
+            "module": {
+              "package": "com.test.entry",
+              "distro": { "moduleName": "entry", "moduleType": "entry" }
+            } })",
+        info));
+    EXPECT_TRUE(info.requestPermission.empty());
+}
+
+/**
  * @tc.name: GetSandboxDataDirName_0100
  * @tc.desc: Ordinary instances preserve the original bundle name.
  */
