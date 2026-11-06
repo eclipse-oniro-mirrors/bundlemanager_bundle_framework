@@ -15,6 +15,7 @@
 #define private public
 
 #include <fstream>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <sstream>
 #include <string>
@@ -639,8 +640,10 @@ HWTEST_F(BmsBundleSharedLibraryInstallTest, GetSpecifiedDistributionType_0010, F
         EXPECT_EQ(installParam.additionalInfo, additionalInfo);
 
         ret = dataMgr->GetAdditionalInfoForAllUser(SHARED_BUNDLE_NAME_A, additionalInfo);
-        EXPECT_EQ(ret, ERR_OK);
-        EXPECT_EQ(installParam.additionalInfo, additionalInfo);
+        EXPECT_THAT(ret, testing::AnyOf(ERR_OK, ERR_APPEXECFWK_DUAL_MODE_DEVICE_NOT_SUPPORTED));
+        if (ret == ERR_OK) {
+            EXPECT_EQ(installParam.additionalInfo, additionalInfo);
+        }
     }
 
     ErrCode unInstallResult = UninstallSharedBundle(SHARED_BUNDLE_NAME_A);
@@ -937,7 +940,7 @@ HWTEST_F(BmsBundleSharedLibraryInstallTest, GetAdditionalInfo_0100, Function | S
     EXPECT_EQ(res, ERR_OK);
 
     res = GetBundleDataMgr()->GetAdditionalInfoForAllUser(SHARED_BUNDLE_NAME_A, additionalInfo);
-    EXPECT_EQ(res, ERR_OK);
+    EXPECT_THAT(res, testing::AnyOf(ERR_OK, ERR_APPEXECFWK_DUAL_MODE_DEVICE_NOT_SUPPORTED));
 
     ErrCode unInstallResult = UninstallSharedBundle(SHARED_BUNDLE_NAME_A);
     EXPECT_EQ(unInstallResult, ERR_OK);

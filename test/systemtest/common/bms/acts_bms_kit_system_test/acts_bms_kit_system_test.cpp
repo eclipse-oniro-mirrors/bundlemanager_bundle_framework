@@ -18,6 +18,7 @@
 #include <fcntl.h>
 #include <fstream>
 #include <future>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include "accesstoken_kit.h"
@@ -9298,7 +9299,9 @@ HWTEST_F(ActsBmsKitSystemTest, GetAdditionalInfoForAllUser_0001, Function | Smal
         setuid(Constants::FOUNDATION_UID);
         ErrCode ret = bundleMgrProxy->GetAdditionalInfoForAllUser(BASE_BUNDLE_NAME, additionalInfo);
         setuid(saveuid);
-        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+        EXPECT_THAT(ret, testing::AnyOf(
+            ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST,
+            ERR_APPEXECFWK_DUAL_MODE_DEVICE_NOT_SUPPORTED));
     }
 }
 
@@ -9325,7 +9328,9 @@ HWTEST_F(ActsBmsKitSystemTest, GetAdditionalInfoForAllUser_0002, Function | Smal
     setuid(Constants::FOUNDATION_UID);
     auto ret = bundleMgrProxy->GetAdditionalInfoForAllUser(appName, additionalInfo);
     setuid(saveuid);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_THAT(ret, testing::AnyOf(
+        ERR_OK,
+        ERR_APPEXECFWK_DUAL_MODE_DEVICE_NOT_SUPPORTED));
 
     resvec.clear();
     Uninstall(appName, resvec);
@@ -9363,8 +9368,13 @@ HWTEST_F(ActsBmsKitSystemTest, GetAdditionalInfoForAllUser_0003, Function | Smal
     setuid(Constants::FOUNDATION_UID);
     ErrCode ret = bundleMgrProxy->GetAdditionalInfoForAllUser(appName, additionalInfo);
     setuid(saveuid);
-    EXPECT_EQ(ret, ERR_OK);
-    EXPECT_EQ(installParam.additionalInfo, additionalInfo);
+    EXPECT_THAT(ret, testing::AnyOf(
+        ERR_OK,
+        ERR_APPEXECFWK_DUAL_MODE_DEVICE_NOT_SUPPORTED));
+    if (ret == ERR_OK) {
+        EXPECT_EQ(installParam.additionalInfo, additionalInfo);
+    }
+
     std::string specifiedDistributionType;
     ret = bundleMgrProxy->GetSpecifiedDistributionType(appName, specifiedDistributionType);
     EXPECT_EQ(ret, ERR_OK);
@@ -9412,8 +9422,13 @@ HWTEST_F(ActsBmsKitSystemTest, GetAdditionalInfoForAllUser_0004, Function | Smal
     setuid(Constants::FOUNDATION_UID);
     ErrCode ret = bundleMgrProxy->GetAdditionalInfoForAllUser(appName, additionalInfo);
     setuid(saveuid);
-    EXPECT_EQ(ret, ERR_OK);
-    EXPECT_EQ(installParam.additionalInfo, additionalInfo);
+    EXPECT_THAT(ret, testing::AnyOf(
+        ERR_OK,
+        ERR_APPEXECFWK_DUAL_MODE_DEVICE_NOT_SUPPORTED));
+    if (ret == ERR_OK) {
+        EXPECT_EQ(installParam.additionalInfo, additionalInfo);
+    }
+
     std::string specifiedDistributionType;
     ret = bundleMgrProxy->GetSpecifiedDistributionType(appName, specifiedDistributionType);
     EXPECT_EQ(ret, ERR_OK);

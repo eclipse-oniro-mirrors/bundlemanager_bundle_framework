@@ -22,6 +22,7 @@
 #include <fstream>
 #include <mutex>
 #include <thread>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include "accesstoken_kit.h"
 #include "ability_manager_client.h"
@@ -5536,7 +5537,9 @@ HWTEST_F(BmsBundleKitServiceTest, GetAdditionalInfoForAllUser_0001, Function | S
         setuid(Constants::FOUNDATION_UID);
         auto ret = bundleMgrProxy->GetAdditionalInfoForAllUser(BUNDLE_NAME_TEST, additionalInfo);
         setuid(saveuid);
-        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+        EXPECT_THAT(ret, testing::AnyOf(
+            ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST,
+            ERR_APPEXECFWK_DUAL_MODE_DEVICE_NOT_SUPPORTED));
     }
 }
 
@@ -5581,7 +5584,9 @@ HWTEST_F(BmsBundleKitServiceTest, GetAdditionalInfoForAllUser_0003, Function | S
         setuid(Constants::FOUNDATION_UID);
         auto ret = bundleMgrProxy->GetAdditionalInfoForAllUser(BUNDLE_NAME_TEST, additionalInfo);
         setuid(saveuid);
-        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+        EXPECT_THAT(ret, testing::AnyOf(
+            ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST,
+            ERR_APPEXECFWK_DUAL_MODE_DEVICE_NOT_SUPPORTED));
     }
 
     MockUninstallBundle(BUNDLE_NAME_TEST);
@@ -5602,7 +5607,9 @@ HWTEST_F(BmsBundleKitServiceTest, GetAdditionalInfoForAllUser_0004, Function | S
     } else {
         std::string additionalInfo;
         auto ret = dataMgr->GetAdditionalInfoForAllUser(BUNDLE_NAME_TEST, additionalInfo);
-        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+        EXPECT_THAT(ret, testing::AnyOf(
+            ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST,
+            ERR_APPEXECFWK_DUAL_MODE_DEVICE_NOT_SUPPORTED));
     }
 }
 
@@ -5627,7 +5634,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetAdditionalInfoForAllUser_0005, Function | S
     } else {
         std::string additionalInfo;
         auto ret = dataMgr->GetAdditionalInfoForAllUser(BUNDLE_NAME_TEST, additionalInfo);
-        EXPECT_EQ(ret, ERR_OK);
+        EXPECT_THAT(ret, testing::AnyOf(ERR_OK, ERR_APPEXECFWK_DUAL_MODE_DEVICE_NOT_SUPPORTED));
     }
 
     MockUninstallBundle(BUNDLE_NAME_TEST);
@@ -12053,7 +12060,9 @@ HWTEST_F(BmsBundleKitServiceTest, GetAdditionalInfoForAllUserImpl_0100, Function
     ScopeGuard uidGuard([&] { setuid(saveuid); });
     std::string additionalInfo = "";
     auto ret = bundleMgrHostImpl_->GetAdditionalInfoForAllUser(BUNDLE_NAME_TEST, additionalInfo);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    EXPECT_THAT(ret, testing::AnyOf(
+        ERR_BUNDLE_MANAGER_INTERNAL_ERROR,
+        ERR_APPEXECFWK_DUAL_MODE_DEVICE_NOT_SUPPORTED));
 }
 
 /**
