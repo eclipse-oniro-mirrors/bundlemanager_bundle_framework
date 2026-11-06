@@ -44,12 +44,12 @@ ErrCode BundleCleanMgr::OnClean()
     APP_LOGI("BundleCleanMgr OnClean start");
     ErrCode ret = CleanFingerprint();
     if (ret != ERR_OK) {
-        APP_LOGE("BOPD clean: clean fingerprint failed, err is %{public}d.", ret);
+        APP_LOGE("clean fingerprint failed, err is %{public}d.", ret);
         return ret;
     }
     ret = SetCleanupRecoveryFlag();
     if (ret != ERR_OK) {
-        APP_LOGE("BOPD clean: set cleanup recovery flag failed, err is %{public}d.", ret);
+        APP_LOGE("set cleanup recovery flag failed, err is %{public}d.", ret);
         return ret;
     }
     APP_LOGI("BundleCleanMgr OnClean end");
@@ -60,16 +60,15 @@ ErrCode BundleCleanMgr::CleanFingerprint()
 {
     auto rdbDataManager = CreateMirrorRdbDataManager(BMS_PARAM_TABLE_NAME);
     if (rdbDataManager == nullptr) {
-        APP_LOGE("BOPD clean: create mirror rdb data manager failed");
+        APP_LOGE("create mirror rdb data manager failed");
         return ERR_APPEXECFWK_NULL_PTR;
     }
     // DeleteData is idempotent: a missing row returns true (no-op).
-    // Delete the row only; do not write an empty value, drop the table, delete the db file, or touch other rows.
     if (!rdbDataManager->DeleteData(FINGERPRINT_KEY)) {
-        APP_LOGE("BOPD clean: delete fingerprint row failed");
+        APP_LOGE("delete fingerprint row failed");
         return ERR_APPEXECFWK_DB_SQL_GENERIC_ERROR;
     }
-    APP_LOGI("BOPD clean: fingerprint row deleted on mirror bmsdb");
+    APP_LOGI("fingerprint row deleted on mirror bmsdb");
     return ERR_OK;
 }
 
@@ -77,31 +76,25 @@ ErrCode BundleCleanMgr::SetCleanupRecoveryFlag()
 {
     auto rdbDataManager = CreateMirrorRdbDataManager(BMS_PARAM_TABLE_NAME);
     if (rdbDataManager == nullptr) {
-        APP_LOGE("BOPD clean: create mirror rdb data manager failed");
+        APP_LOGE("create mirror rdb data manager failed");
         return ERR_APPEXECFWK_NULL_PTR;
     }
     // Write the flag; read by event_handler on normal boot to force pre-install same-version reinstall.
-    // InsertData matches SaveBmsParam semantics and is idempotent for an existing key.
     if (!rdbDataManager->InsertData(CLEANUP_RECOVERY_FLAG_KEY, CLEANUP_RECOVERY_FLAG_VALUE)) {
-        APP_LOGE("BOPD clean: set cleanup recovery flag failed");
+        APP_LOGE("set cleanup recovery flag failed");
         return ERR_APPEXECFWK_DB_SQL_GENERIC_ERROR;
     }
-    APP_LOGI("BOPD clean: cleanup recovery flag set on mirror bmsdb");
+    APP_LOGI("cleanup recovery flag set on mirror bmsdb");
     return ERR_OK;
 }
 
 std::shared_ptr<RdbDataManager> BundleCleanMgr::CreateMirrorRdbDataManager(const std::string &tableName)
 {
-    // Use an isolated RdbDataManager with the mirror dbPath, separate from the BmsParam/BundleDataStorageRdb
-    // singletons used on the normal boot path. Derive the mirror path via BootDetectorReplaceDataPrefix
-    // and never fall back to a hardcoded path.
+    // Use an isolated RdbDataManager with the mirror dbPath.
     const std::string &srcPath = ServiceConstants::BUNDLE_MANAGER_SERVICE_PATH;
-    // BootDetectorReplaceDataPrefix replaces the /data prefix with the mirror prefix; on failure it
-    // returns the original path unchanged, so treat an unchanged result as failure (return nullptr,
-    // let the framework retry; do not fall back to a hardcoded path).
     std::string mirrorPath = OHOS::HiviewDFX::BootDetectorReplaceDataPrefix(srcPath);
     if (mirrorPath == srcPath) {
-        APP_LOGE("BOPD clean: BootDetectorReplaceDataPrefix returned unchanged path=%{public}s",
+        APP_LOGE("mirror path is unchanged, source path=%{public}s",
             srcPath.c_str());
         return nullptr;
     }
@@ -111,7 +104,7 @@ std::shared_ptr<RdbDataManager> BundleCleanMgr::CreateMirrorRdbDataManager(const
     config.tableName = tableName;  // bms_param
     auto rdbDataManager = std::make_shared<RdbDataManager>(config);
     if (rdbDataManager == nullptr) {
-        APP_LOGE("BOPD clean: make shared RdbDataManager failed");
+        APP_LOGE("make shared RdbDataManager failed");
         return nullptr;
     }
     // CreateTable is idempotent (CREATE TABLE IF NOT EXISTS); ensures the target table exists for operation.
