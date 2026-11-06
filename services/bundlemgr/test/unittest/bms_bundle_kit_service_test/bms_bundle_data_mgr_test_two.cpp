@@ -30,6 +30,7 @@
 #include "bms_extension_client.h"
 #include "bms_extension_profile.h"
 #include "bundle_data_mgr.h"
+#include "bundle_event_callback_host.h"
 #include "bundle_info.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_mgr_ext.h"
@@ -962,6 +963,13 @@ sptr<IRemoteObject> IBundleEventCallbackTest::AsObject()
 {
     return nullptr;
 }
+
+class MockBundleEventCallbackHost : public BundleEventCallbackHost {
+public:
+    MockBundleEventCallbackHost() = default;
+    ~MockBundleEventCallbackHost() = default;
+    void OnReceiveEvent(const EventFwk::CommonEventData eventData) override {}
+};
 
 class ICleanCacheCallbackTest : public ICleanCacheCallback {
 public:
@@ -2081,6 +2089,88 @@ HWTEST_F(BmsBundleDataMgrTest2, RegisterBundleEventCallback_0005, Function | Med
     bool ret = bundleMgrHostImpl_->RegisterBundleEventCallback(bundleEventCallback);
     setuid(saveuid);
     EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: HandleRegisterBundleEventCallbackAllUsers_0100
+ * @tc.name: test HandleRegisterBundleEventCallback with notifyAllUsers flag
+ * @tc.desc: 1. parcel contains bool=true before remote object
+ *           2. registered callback on service side has notifyAllUsers=true
+ */
+HWTEST_F(BmsBundleDataMgrTest2, HandleRegisterBundleEventCallbackAllUsers_0100, Function | MediumTest | Level1)
+{
+    ASSERT_NE(bundleMgrHostImpl_, nullptr);
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->eventCallbackList_.clear();
+    sptr<MockBundleEventCallbackHost> bundleEventCallback = new (std::nothrow) MockBundleEventCallbackHost();
+    ASSERT_NE(bundleEventCallback, nullptr);
+    bundleEventCallback->SetNotifyAllUsers(true);
+    MessageParcel data;
+    MessageParcel reply;
+    EXPECT_TRUE(data.WriteBool(bundleEventCallback->IsNotifyAllUsers()));
+    EXPECT_TRUE(data.WriteRemoteObject(bundleEventCallback->AsObject()));
+    auto saveuid = getuid();
+    setuid(Constants::FOUNDATION_UID);
+    ErrCode res = bundleMgrHostImpl_->HandleRegisterBundleEventCallback(data, reply);
+    setuid(saveuid);
+    EXPECT_EQ(res, ERR_OK);
+    EXPECT_TRUE(reply.ReadBool());
+    EXPECT_EQ(dataMgr->eventCallbackList_.size(), static_cast<size_t>(1));
+    EXPECT_TRUE(dataMgr->eventCallbackList_[0]->IsNotifyAllUsers());
+    dataMgr->eventCallbackList_.clear();
+}
+
+/**
+ * @tc.number: HandleRegisterBundleEventCallbackAllUsers_0200
+ * @tc.name: test HandleRegisterBundleEventCallback without notifyAllUsers flag
+ * @tc.desc: 1. parcel contains bool=false before remote object
+ *           2. registered callback on service side has notifyAllUsers=false
+ */
+HWTEST_F(BmsBundleDataMgrTest2, HandleRegisterBundleEventCallbackAllUsers_0200, Function | MediumTest | Level1)
+{
+    ASSERT_NE(bundleMgrHostImpl_, nullptr);
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->eventCallbackList_.clear();
+    sptr<MockBundleEventCallbackHost> bundleEventCallback = new (std::nothrow) MockBundleEventCallbackHost();
+    ASSERT_NE(bundleEventCallback, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    EXPECT_TRUE(data.WriteBool(bundleEventCallback->IsNotifyAllUsers()));
+    EXPECT_TRUE(data.WriteRemoteObject(bundleEventCallback->AsObject()));
+    auto saveuid = getuid();
+    setuid(Constants::FOUNDATION_UID);
+    ErrCode res = bundleMgrHostImpl_->HandleRegisterBundleEventCallback(data, reply);
+    setuid(saveuid);
+    EXPECT_EQ(res, ERR_OK);
+    EXPECT_TRUE(reply.ReadBool());
+    EXPECT_EQ(dataMgr->eventCallbackList_.size(), static_cast<size_t>(1));
+    EXPECT_FALSE(dataMgr->eventCallbackList_[0]->IsNotifyAllUsers());
+    dataMgr->eventCallbackList_.clear();
+}
+
+/**
+ * @tc.number: HandleRegisterBundleEventCallbackAllUsers_0300
+ * @tc.name: test HandleRegisterBundleEventCallback with parcel without remote object
+ * @tc.desc: 1. parcel contains bool only, without remote object
+ *           2. registration fails and callback list keeps empty
+ */
+HWTEST_F(BmsBundleDataMgrTest2, HandleRegisterBundleEventCallbackAllUsers_0300, Function | MediumTest | Level1)
+{
+    ASSERT_NE(bundleMgrHostImpl_, nullptr);
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->eventCallbackList_.clear();
+    MessageParcel data;
+    MessageParcel reply;
+    EXPECT_TRUE(data.WriteBool(true));
+    auto saveuid = getuid();
+    setuid(Constants::FOUNDATION_UID);
+    ErrCode res = bundleMgrHostImpl_->HandleRegisterBundleEventCallback(data, reply);
+    setuid(saveuid);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
+    EXPECT_TRUE(dataMgr->eventCallbackList_.empty());
 }
 
 /**

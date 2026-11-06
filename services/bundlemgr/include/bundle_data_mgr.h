@@ -1200,6 +1200,8 @@ public:
 
     bool UpdateQuickFixInnerBundleInfo(const std::string &bundleName, const InnerBundleInfo &innerBundleInfo);
 
+    // Note: must not be called while holding bundleInfoMutex_; the fan-out path
+    // (GetEventsForOtherUsers) acquires it via GetUserIds/GetApplicationInfoV9
     void NotifyBundleEventCallback(const EventFwk::CommonEventData &eventData) const;
 
     const std::map<std::string, InnerBundleInfo> GetAllInnerBundleInfos() const
@@ -2035,6 +2037,9 @@ private:
         SYSTEM_AND_PUBLIC,
         PUBLIC_ONLY,
     };
+
+    std::vector<EventFwk::CommonEventData> GetEventsForOtherUsers(
+        const EventFwk::CommonEventData &eventData) const;
 
     ErrCode FindSkillInfoFromAllBundles(const std::string &skillName, uint32_t flags,
         int32_t requestUserId, const std::string &callingBundleName, bool isPrivilegedCaller,

@@ -17,6 +17,7 @@
 #include <future>
 #include <gtest/gtest.h>
 
+#include "bundle_event_callback_host.h"
 #include "bundle_mgr_proxy.h"
 #include "bundle_stats_callback_interface.h"
 #include "get_largest_items_callback_interface.h"
@@ -153,6 +154,13 @@ sptr<IRemoteObject> IBundleEventCallbackTest::AsObject()
     return nullptr;
 }
 
+class MockBundleEventCallbackHost : public BundleEventCallbackHost {
+public:
+    MockBundleEventCallbackHost() = default;
+    ~MockBundleEventCallbackHost() = default;
+    void OnReceiveEvent(const EventFwk::CommonEventData eventData) override {}
+};
+
 // stub whose OnRemoteRequest writes a prepared errCode (and optional info) for the
 // optimal-query codes, to cover the remote reply branches of the proxy
 class MockOptimalQueryStub : public IRemoteStub<IBundleMgr> {
@@ -177,6 +185,52 @@ public:
         }
         return 0;
     }
+};
+
+// remote object which records the parcel fields written by the proxy for
+// RegisterBundleEventCallback, to verify the notifyAllUsers flag is sent
+class MockEventCallbackRegisterRemoteObject : public IRemoteObject {
+public:
+    explicit MockEventCallbackRegisterRemoteObject(const std::u16string& descriptor = u"MockDescriptor")
+        : IRemoteObject(descriptor) {}
+    ~MockEventCallbackRegisterRemoteObject() = default;
+
+    int32_t GetObjectRefCount()
+    {
+        return ERR_OK;
+    }
+
+    int32_t SendRequest(uint32_t code, MessageParcel& data, MessageParcel& reply, MessageOption& option)
+    {
+        if (code != static_cast<uint32_t>(BundleMgrInterfaceCode::REGISTER_BUNDLE_EVENT_CALLBACK)) {
+            return ERR_OK;
+        }
+        isRegisterEventCallbackCode_ = true;
+        (void)data.ReadInterfaceToken();
+        receivedNotifyAllUsers_ = data.ReadBool();
+        remoteObjectRead_ = data.ReadRemoteObject();
+        reply.WriteBool(true);
+        return ERR_OK;
+    }
+
+    bool AddDeathRecipient(const sptr<DeathRecipient>& recipient)
+    {
+        return true;
+    }
+
+    bool RemoveDeathRecipient(const sptr<DeathRecipient>& recipient)
+    {
+        return true;
+    }
+
+    int Dump(int fd, const std::vector<std::u16string>& args)
+    {
+        return ERR_OK;
+    }
+
+    sptr<IRemoteObject> remoteObjectRead_;
+    bool receivedNotifyAllUsers_ = false;
+    bool isRegisterEventCallbackCode_ = false;
 };
 
 class BmsBundleMgrProxyTest : public testing::Test {
@@ -1274,6 +1328,45 @@ HWTEST_F(BmsBundleMgrProxyTest, RegisterBundleEventCallback_0100, Function | Med
     bundleEventCallback = new (std::nothrow) IBundleEventCallbackTest();
     res = bundleMgrProxy.RegisterBundleEventCallback(bundleEventCallback);
     EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: RegisterBundleEventCallback_0200
+ * @tc.name: test the RegisterBundleEventCallback
+ * @tc.desc: 1. system running normally
+ *           2. proxy writes notifyAllUsers flag true before remote object
+ */
+HWTEST_F(BmsBundleMgrProxyTest, RegisterBundleEventCallback_0200, Function | MediumTest | Level1)
+{
+    sptr<MockEventCallbackRegisterRemoteObject> remote = new MockEventCallbackRegisterRemoteObject();
+    BundleMgrProxy bundleMgrProxy(remote);
+    sptr<MockBundleEventCallbackHost> bundleEventCallback = new (std::nothrow) MockBundleEventCallbackHost();
+    ASSERT_NE(bundleEventCallback, nullptr);
+    bundleEventCallback->SetNotifyAllUsers(true);
+    auto res = bundleMgrProxy.RegisterBundleEventCallback(bundleEventCallback);
+    EXPECT_TRUE(res);
+    EXPECT_TRUE(remote->isRegisterEventCallbackCode_);
+    EXPECT_NE(remote->remoteObjectRead_, nullptr);
+    EXPECT_TRUE(remote->receivedNotifyAllUsers_);
+}
+
+/**
+ * @tc.number: RegisterBundleEventCallback_0300
+ * @tc.name: test the RegisterBundleEventCallback
+ * @tc.desc: 1. system running normally
+ *           2. proxy writes default notifyAllUsers flag false before remote object
+ */
+HWTEST_F(BmsBundleMgrProxyTest, RegisterBundleEventCallback_0300, Function | MediumTest | Level1)
+{
+    sptr<MockEventCallbackRegisterRemoteObject> remote = new MockEventCallbackRegisterRemoteObject();
+    BundleMgrProxy bundleMgrProxy(remote);
+    sptr<MockBundleEventCallbackHost> bundleEventCallback = new (std::nothrow) MockBundleEventCallbackHost();
+    ASSERT_NE(bundleEventCallback, nullptr);
+    auto res = bundleMgrProxy.RegisterBundleEventCallback(bundleEventCallback);
+    EXPECT_TRUE(res);
+    EXPECT_TRUE(remote->isRegisterEventCallbackCode_);
+    EXPECT_NE(remote->remoteObjectRead_, nullptr);
+    EXPECT_FALSE(remote->receivedNotifyAllUsers_);
 }
 
 /**

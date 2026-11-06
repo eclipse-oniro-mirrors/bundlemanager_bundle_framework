@@ -2275,6 +2275,10 @@ bool BundleMgrProxy::RegisterBundleEventCallback(const sptr<IBundleEventCallback
         APP_LOGE("fail to RegisterBundleEventCallback due to write InterfaceToken fail");
         return false;
     }
+    if (!data.WriteBool(bundleEventCallback->IsNotifyAllUsers())) {
+        APP_LOGE("write notifyAllUsers of BundleEventCallback failed");
+        return false;
+    }
     if (!data.WriteRemoteObject(bundleEventCallback->AsObject())) {
         APP_LOGE("write BundleEventCallback failed");
         return false;

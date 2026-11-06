@@ -2260,6 +2260,9 @@ ErrCode BundleMgrHost::HandleRegisterBundleStatusCallback(MessageParcel &data, M
 ErrCode BundleMgrHost::HandleRegisterBundleEventCallback(MessageParcel &data, MessageParcel &reply)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    // bool is transferred before remote object, proxy and host are deployed
+    // and upgraded together in the same system image
+    bool notifyAllUsers = data.ReadBool();
     sptr<IRemoteObject> object = data.ReadRemoteObject();
     if (object == nullptr) {
         APP_LOGE("read IRemoteObject failed");
@@ -2270,6 +2273,7 @@ ErrCode BundleMgrHost::HandleRegisterBundleEventCallback(MessageParcel &data, Me
         APP_LOGE("Get bundleEventCallback failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
+    bundleEventCallback->SetNotifyAllUsers(notifyAllUsers);
     bool ret = RegisterBundleEventCallback(bundleEventCallback);
     if (!reply.WriteBool(ret)) {
         APP_LOGE("write ret failed");
