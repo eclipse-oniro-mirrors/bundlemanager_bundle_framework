@@ -2120,6 +2120,42 @@ HWTEST_F(BmsSpmManagerOnTest, InitToken_S2Reuse_0002, Function | MediumTest | Le
 }
 
 /**
+ * @tc.number: BmsSpmManagerOnTest.InitToken_S2Reuse_0003
+ * @tc.name: A gone reuse target degrades to the prepare flow
+ * @tc.desc: ERR_TOKENID_NOT_EXIST is the ONE update failure the AT side
+ *           answers without erasing the session; InitToken degrades to the
+ *           prepare flow in the SAME session instead of failing the install:
+ *           the prepared identity is handed back and adopted into the user
+ *           info (the reused-token handling is skipped).
+ */
+HWTEST_F(BmsSpmManagerOnTest, InitToken_S2Reuse_0003, Function | MediumTest | Level1)
+{
+    OHOS::Security::AccessToken::g_spmGetHapTokenIDRet = 101; // leftover token id
+    OHOS::Security::AccessToken::g_spmUpdateHapPolicyRet =
+        Security::AccessToken::AccessTokenError::ERR_TOKENID_NOT_EXIST;
+    OHOS::Security::AccessToken::g_spmPrepareIdentityTokenId = TEST_IDENTITY_TOKENID;
+    OHOS::Security::AccessToken::g_spmPrepareIdentityUid = TEST_IDENTITY_UID;
+    auto session = BundleSpmManager::InstallSession::CreateDeferred();
+    InnerBundleInfo info;
+    // Same as S2Reuse_0001: the application-level bundleName is what the
+    // reuse plan (and the degraded prepare flow below) keys on.
+    ApplicationInfo appInfo;
+    appInfo.bundleName = BUNDLE_NAME;
+    info.SetBaseApplicationInfo(appInfo);
+    Security::AccessToken::AccessTokenIDEx tokenIdEx = {0};
+    Security::AccessToken::HapInfoCheckResult checkResult;
+    int32_t identityUid = 0;
+    EXPECT_EQ(session.InitToken(info, TEST_USERID, 0, tokenIdEx, checkResult, "", nullptr, false,
+        &identityUid), ERR_OK);
+    EXPECT_EQ(tokenIdEx.tokenIdEx, TEST_IDENTITY_TOKENID);
+    EXPECT_EQ(identityUid, TEST_IDENTITY_UID);
+    EXPECT_EQ(OHOS::Security::AccessToken::g_spmPrepareHapIdentityCallCount, 1);
+    InnerBundleUserInfo userInfo;
+    ASSERT_TRUE(info.GetInnerBundleUserInfo(TEST_USERID, userInfo));
+    EXPECT_EQ(userInfo.uid, TEST_IDENTITY_UID);
+}
+
+/**
  * @tc.number: BmsSpmManagerOnTest.InitToken_CleanInstall_0001
  * @tc.name: A clean install still goes through Prepare
  * @tc.desc: Without an AT-side token the reuse branch is skipped and the

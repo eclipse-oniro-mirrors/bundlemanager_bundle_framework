@@ -446,7 +446,10 @@ int32_t BundleSpmManager::InstallSession::InitToken(InnerBundleInfo &info, int32
     // identity on the update interface — AT-side support, tracked separately).
     // The session carries no prepared identity in this case: Commit persists
     // the policy through the updated-token map, which is the regular shape of
-    // an update-only session.
+    // an update-only session. Exception: when the AT side answers the update
+    // with ERR_TOKENID_NOT_EXIST (the reuse target is gone), the flow degrades
+    // to the prepare flow below in the same session instead of failing the
+    // install — the in-branch comment documents the AT-side contract.
     FreshInstallIdentityPlan identityPlan = CheckNewInstallIdentity(userId,
         info.GetBundleName(), info.GetAppIndex(), dataMgr);
     if (identityPlan.reuseTokenId != 0) {
@@ -466,37 +469,44 @@ int32_t BundleSpmManager::InstallSession::InitToken(InnerBundleInfo &info, int32
         int32_t updateRet = UpdateToken(reusedIdEx, info, userId, checkResult, caps,
             false, isDebugGrant, dlpType, info.GetAppIndex(), &refreshedUid);
         if (updateRet != ERR_OK) {
-            return updateRet;
-        }
-        tokenIdEx.tokenIDEx = reusedIdEx.tokenIDEx;
-        if (identityUid != nullptr) {
-            *identityUid = refreshedUid;
-        }
-        // Clone/sandbox identity: the caller owns the uid handling (it builds
-        // the derived info from the identity uid out-param); the user info of
-        // `info` belongs to the main app and must not be touched — same guard
-        // as the Prepare path below. The dual-mode clone keeps the main-app
-        // handling (its uid lives in the MAIN user info).
-        bool cloneInstall = info.GetAppIndex() != 0 &&
-            info.GetAppIndex() != ServiceConstants::DUAL_MODE_CLONE_APP_INDEX;
-        if (cloneInstall) {
+            LOG_NOFUNC_W(BMS_TAG_INSTALLER,
+                "reuse token missing on AT side, degrade to prepare, bundleName:%{public}s "
+                "userId:%{public}d tokenId:%{public}u",
+                info.GetBundleName().c_str(), userId, identityPlan.reuseTokenId);
+            // Fall through to the prepare flow below (fresh identity; a
+            // keep-data reservation still present in the AT-side DB is adopted
+            // there together with its original uid).
+        } else {
+            tokenIdEx.tokenIDEx = reusedIdEx.tokenIDEx;
+            if (identityUid != nullptr) {
+                *identityUid = refreshedUid;
+            }
+            // Clone/sandbox identity: the caller owns the uid handling (it builds
+            // the derived info from the identity uid out-param); the user info of
+            // `info` belongs to the main app and must not be touched — same guard
+            // as the Prepare path below. The dual-mode clone keeps the main-app
+            // handling (its uid lives in the MAIN user info).
+            bool cloneInstall = info.GetAppIndex() != 0 &&
+                info.GetAppIndex() != ServiceConstants::DUAL_MODE_CLONE_APP_INDEX;
+            if (cloneInstall) {
+                return ERR_OK;
+            }
+            if (refreshedUid > 0) {
+                // Adopt the reused token's uid into the user info (fresh install:
+                // no local uid yet — the AT value is the authority; UpdateToken
+                // already staged the fs config and the reverse-lookup entry).
+                InnerBundleUserInfo bundleUserInfo;
+                if (!info.GetInnerBundleUserInfo(userId, bundleUserInfo)) {
+                    bundleUserInfo.bundleUserInfo.userId = userId;
+                    bundleUserInfo.bundleName = info.GetBundleName();
+                }
+                bundleUserInfo.uid = refreshedUid;
+                bundleUserInfo.gids.clear();
+                bundleUserInfo.gids.emplace_back(refreshedUid);
+                info.AddInnerBundleUserInfo(bundleUserInfo);
+            }
             return ERR_OK;
         }
-        if (refreshedUid > 0) {
-            // Adopt the reused token's uid into the user info (fresh install:
-            // no local uid yet — the AT value is the authority; UpdateToken
-            // already staged the fs config and the reverse-lookup entry).
-            InnerBundleUserInfo bundleUserInfo;
-            if (!info.GetInnerBundleUserInfo(userId, bundleUserInfo)) {
-                bundleUserInfo.bundleUserInfo.userId = userId;
-                bundleUserInfo.bundleName = info.GetBundleName();
-            }
-            bundleUserInfo.uid = refreshedUid;
-            bundleUserInfo.gids.clear();
-            bundleUserInfo.gids.emplace_back(refreshedUid);
-            info.AddInnerBundleUserInfo(bundleUserInfo);
-        }
-        return ERR_OK;
     }
     // SPM ON: prepare the hap identity (token id and uid) in the access token service.
     // Kept-data recovery is carried by the reserved identity on the AT side, which makes
@@ -1136,7 +1146,7 @@ BundleSpmManager::FreshInstallIdentityPlan BundleSpmManager::CheckNewInstallIden
         // identity): the reuse goes through the update interface with the
         // BMS-recorded token id — the AT side restores the reserved identity there.
         // A record of ANOTHER user does not affect this identity.
-        if (!uninstallBundleInfo.checkBySpm) {
+        if (!uninstallBundleInfo.checkBySpm && atTokenId != 0) {
             auto it = uninstallBundleInfo.userInfos.find(std::to_string(userId));
             if (it != uninstallBundleInfo.userInfos.end() && it->second.accessTokenId != 0) {
                 plan.reuseTokenId = it->second.accessTokenId;
