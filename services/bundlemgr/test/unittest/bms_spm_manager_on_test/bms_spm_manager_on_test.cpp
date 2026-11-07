@@ -2147,7 +2147,7 @@ HWTEST_F(BmsSpmManagerOnTest, InitToken_S2Reuse_0003, Function | MediumTest | Le
     int32_t identityUid = 0;
     EXPECT_EQ(session.InitToken(info, TEST_USERID, 0, tokenIdEx, checkResult, "", nullptr, false,
         &identityUid), ERR_OK);
-    EXPECT_EQ(tokenIdEx.tokenIdEx, TEST_IDENTITY_TOKENID);
+    EXPECT_EQ(tokenIdEx.tokenIDEx, TEST_IDENTITY_TOKENID);
     EXPECT_EQ(identityUid, TEST_IDENTITY_UID);
     EXPECT_EQ(OHOS::Security::AccessToken::g_spmPrepareHapIdentityCallCount, 1);
     InnerBundleUserInfo userInfo;
