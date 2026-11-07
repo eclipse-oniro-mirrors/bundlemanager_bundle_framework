@@ -5592,7 +5592,7 @@ HWTEST_F(BmsDataMgrTest, HandleGroupIdAndIndex_0001, Function | MediumTest | Lev
 {
     BundleDataMgr bundleDataMgr;
     constexpr int8_t DATA_GROUP_INDEX_START = 1;
-    constexpr int32_t DATA_GROUP_UID_OFFSET = 100000;
+    constexpr int32_t DATA_GROUP_INDEX_MAX = 50000;
     std::set<std::string> errorGroupIds = {"group1", "group2"};
     std::map<int32_t, std::string> indexMap = {{100, "existing_group"}};
     std::map<std::string, int32_t> groupIdMap = {{"existing_group", 100}};
@@ -5603,7 +5603,7 @@ HWTEST_F(BmsDataMgrTest, HandleGroupIdAndIndex_0001, Function | MediumTest | Lev
     EXPECT_NE(groupIdMap.find("group1"), groupIdMap.end());
     EXPECT_NE(groupIdMap.find("group2"), groupIdMap.end());
 
-    for (int i = DATA_GROUP_INDEX_START; i < DATA_GROUP_UID_OFFSET; ++i) {
+    for (int i = DATA_GROUP_INDEX_START; i < DATA_GROUP_INDEX_MAX; ++i) {
         indexMap[i] = "dummy_group";
     }
     bundleDataMgr.HandleGroupIdAndIndex(errorGroupIds, indexMap, groupIdMap);

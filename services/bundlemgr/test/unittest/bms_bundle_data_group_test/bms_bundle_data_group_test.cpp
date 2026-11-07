@@ -59,6 +59,7 @@ constexpr int32_t TEST_GROUP_INDEX_FORE = 4;
 const int32_t WAIT_TIME = 2;
 constexpr int32_t DATA_GROUP_INDEX_START = 1;
 constexpr int32_t DATA_GROUP_UID_OFFSET = 100000;
+constexpr int32_t DATA_GROUP_INDEX_MAX = 50000;
 // Legal data group uid encoding for userId=100, uniqueId=1:
 // userId * BASE_USER_RANGE(200000) + uniqueId + DATA_GROUP_UID_OFFSET.
 constexpr int32_t TEST_GROUP_UID = 20100001;
@@ -693,8 +694,8 @@ HWTEST_F(BmsBundleDataGroupTest, GenerateDataGroupUuidAndUid_0020, Function | Sm
         dataGroupInfo.gid = 0;
         dataGroupInfo.uuid = "";
         std::unordered_set<int32_t> uniqueIdSet;
-        // Fill all available IDs (from DATA_GROUP_INDEX_START to DATA_GROUP_UID_OFFSET - 1)
-        for (int32_t i = DATA_GROUP_INDEX_START; i < DATA_GROUP_UID_OFFSET; i++) {
+        // Fill all available IDs (from DATA_GROUP_INDEX_START to DATA_GROUP_INDEX_MAX - 1)
+        for (int32_t i = DATA_GROUP_INDEX_START; i < DATA_GROUP_INDEX_MAX; i++) {
             uniqueIdSet.insert(i);
         }
         dataMgr->GenerateDataGroupUuidAndUid(dataGroupInfo, USERID, uniqueIdSet);
