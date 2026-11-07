@@ -53,6 +53,7 @@ struct ExtensionFormInfo {
     FormStandby standby;
     bool isColorModeRefreshEnabled = false;
     bool enableTint = false;
+    bool enableProxyNotificationRefresh = false;
 
     std::vector<int32_t> supportDimensions {};
     std::vector<int32_t> conditionUpdate {};

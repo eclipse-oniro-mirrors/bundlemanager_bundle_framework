@@ -79,6 +79,7 @@ struct FormInfo : public Parcelable {
     FormStandby standby;
     bool isColorModeRefreshEnabled = false;
     bool enableTint = false;
+    bool enableProxyNotificationRefresh = false;
 
     FormInfo() = default;
     explicit FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormInfo &formInfo);

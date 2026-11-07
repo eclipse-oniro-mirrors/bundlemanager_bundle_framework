@@ -208,6 +208,7 @@ struct ExtensionFormProfileInfo {
     Standby standby;
     bool isColorModeRefreshEnabled = false;
     bool enableTint = false;
+    bool enableProxyNotificationRefresh = false;
 };
 
 struct ExtensionFormProfileInfoStruct {
@@ -575,6 +576,12 @@ void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfo &exten
         extensionFormProfileInfo.enableTint,
         false,
         g_parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        ExtensionFormProfileReader::ENABLE_PROXY_NOTIFICATION_REFRESH,
+        extensionFormProfileInfo.enableProxyNotificationRefresh,
+        false,
+        g_parseResult);
 }
 
 void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfoStruct &profileInfo)
@@ -833,6 +840,7 @@ void TransformToFormInfoExt(const ExtensionFormProfileInfo &form, ExtensionFormI
     info.standby.isAdapted = form.standby.isAdapted;
     info.standby.isPrivacySensitive = form.standby.isPrivacySensitive;
     info.isColorModeRefreshEnabled = form.isColorModeRefreshEnabled;
+    info.enableProxyNotificationRefresh = form.enableProxyNotificationRefresh;
 }
 
 bool TransformToExtensionFormInfo(const ExtensionFormProfileInfo &form, ExtensionFormInfo &info)
