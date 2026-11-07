@@ -61,6 +61,10 @@ ohos_systemtest("BmsLauncherServiceSystemTest") {
     "selinux_adapter:librestorecon",
     "thermal_manager:thermalsrv_client",
   ]
+
+  if (configpolicy_enable) {
+    external_deps += [ "config_policy:configpolicy_util" ]
+  }
 }
 
 group("systemtest") {
