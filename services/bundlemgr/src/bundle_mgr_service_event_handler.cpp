@@ -7598,6 +7598,118 @@ bool BMSEventHandler::InnerProcessAccessTokenMigration()
     return true;
 }
 
+bool ParseUninstallUserIdStr(const std::string &userIdStr,
+    int32_t &userId, int32_t &appIndex)
+{
+    auto underscorePos = userIdStr.find(Constants::FILE_UNDERLINE);
+    if (underscorePos == std::string::npos) {
+        return OHOS::StrToInt(userIdStr, userId) &&
+            userId != Constants::UNSPECIFIED_USERID;
+    }
+    if (!OHOS::StrToInt(userIdStr.substr(0, underscorePos), userId)) {
+        return false;
+    }
+    if (!OHOS::StrToInt(userIdStr.substr(underscorePos + 1), appIndex)) {
+        return false;
+    }
+    return true;
+}
+
+bool IsHapBaseInfoDuplicate(
+    const std::vector<Security::AccessToken::HapBaseInfo> &hapBaseInfoList,
+    const std::string &bn, int32_t userId, int32_t appIndex)
+{
+    return std::any_of(hapBaseInfoList.begin(), hapBaseInfoList.end(),
+        [&bn, userId, appIndex](const auto &hapInfo) {
+            return hapInfo.bundleName == bn && hapInfo.userID == userId &&
+                hapInfo.instIndex == appIndex;
+        });
+}
+
+// Resolve an uninstall DB key into the names needed by the migration/fallback
+// collectors. A dual-mode clone record is keyed by the prefixed name
+// "+clone-10000+{original}"; the in-memory bundleInfos_/tempBundleInfos_ and
+// the token identity (HapBaseInfo) use the ORIGINAL name, while the migratedMap
+// key uses the prefixed name (to match what the installed path produces via
+// GetDualModeBundleName). Non-clone records use the plain name everywhere.
+struct UninstallKeyInfo {
+    std::string lookupName;      // original name, for FetchInnerBundleInfo/FetchTempBundleInfo
+    std::string mapKey;          // prefixed name for migratedMap (= lookupName for non-clone)
+    bool isDualModeClone;        // whether the key is a dual-mode clone prefixed key
+};
+
+UninstallKeyInfo ResolveUninstallKey(const std::string &dbKey)
+{
+    UninstallKeyInfo info;
+    if (DualModeHelper::IsDualModeCloneKey(dbKey)) {
+        std::string originalName;
+        DualModeHelper::ParseDualModeBundleName(dbKey, originalName);
+        info.lookupName = originalName;
+        info.mapKey = dbKey;  // already the prefixed name == GetDualModeBundleName(original)
+        info.isDualModeClone = true;
+    } else {
+        info.lookupName = dbKey;
+        info.mapKey = dbKey;
+        info.isDualModeClone = false;
+    }
+    return info;
+}
+
+// Fetch the installed info for the variant identified by (lookupName, isDualModeClone).
+// In secondary mode bundleInfos_ holds the clone and tempBundleInfos_ holds the
+// primary (vice-versa in primary mode), so the clone flag must be verified to
+// avoid matching the wrong variant. Falls back to tempBundleInfos_ for variants
+// hidden in the current mode. Sets fromTemp so callers can write back correctly.
+bool FetchVariantInfo(const std::shared_ptr<BundleDataMgr> &dataMgr,
+    const std::string &lookupName, bool isDualModeClone,
+    InnerBundleInfo &innerBundleInfo, bool &fromTemp)
+{
+    fromTemp = false;
+    if (dataMgr->FetchInnerBundleInfo(lookupName, innerBundleInfo) &&
+        innerBundleInfo.IsDualModeCloneApp() == isDualModeClone) {
+        return true;
+    }
+    fromTemp = true;
+    return dataMgr->FetchTempBundleInfo(lookupName, innerBundleInfo) &&
+        innerBundleInfo.IsDualModeCloneApp() == isDualModeClone;
+}
+
+bool CleanSingleUninstallUserEntry(const std::shared_ptr<BundleDataMgr> &dataMgr,
+    const std::string &bundleName, const InnerBundleInfo &innerBundleInfo,
+    const std::string &userIdStr)
+{
+    int32_t userId = 0;
+    int32_t appIndex = 0;
+    if (!ParseUninstallUserIdStr(userIdStr, userId, appIndex)) {
+        LOG_D(BMS_TAG_DEFAULT,
+            "CleanDirtyUninstallData: bundle=%{public}s userIdStr=%{public}s parse failed, skip",
+            bundleName.c_str(), userIdStr.c_str());
+        return false;
+    }
+    // Check the specific (userId, appIndex) identity, not just userId:
+    // HasInnerBundleUserInfo only checks the main user exists, but clone entries
+    // (appIndex > 0) need to verify cloneInfos has that specific appIndex.
+    // GetUid returns INVALID_UID when the exact (userId, appIndex) is not installed.
+    if (innerBundleInfo.GetUid(userId, appIndex) == Constants::INVALID_UID) {
+        LOG_D(BMS_TAG_DEFAULT,
+            "CleanDirtyUninstallData: bundle=%{public}s userId=%{public}d appIndex=%{public}d "
+            "still uninstalled, keep",
+            bundleName.c_str(), userId, appIndex);
+        return false;
+    }
+    LOG_I(BMS_TAG_DEFAULT,
+        "CleanDirtyUninstallData: bundle=%{public}s userId=%{public}d appIndex=%{public}d "
+        "reinstalled, delete dirty uninstall data",
+        bundleName.c_str(), userId, appIndex);
+    if (appIndex == 0) {
+        dataMgr->DeleteUninstallBundleInfo(bundleName, userId);
+    } else {
+        dataMgr->DeleteUninstallCloneBundleInfo(bundleName, userId, appIndex);
+    }
+    BundleResourceHelper::DeleteUninstallBundleResource(bundleName, userId, appIndex);
+    return true;
+}
+
 void BMSEventHandler::CleanDirtyUninstallData()
 {
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
@@ -7606,44 +7718,30 @@ void BMSEventHandler::CleanDirtyUninstallData()
     }
     std::map<std::string, UninstallBundleInfo> uninstallBundleInfos;
     dataMgr->GetAllUninstallBundleInfo(uninstallBundleInfos);
-    int32_t cleanCount = 0;
+    int32_t bundleCount = 0;
+    int32_t deletedUidCount = 0;
     for (const auto &[bundleName, info] : uninstallBundleInfos) {
+        UninstallKeyInfo keyInfo = ResolveUninstallKey(bundleName);
         InnerBundleInfo innerBundleInfo;
-        if (!dataMgr->FetchInnerBundleInfo(bundleName, innerBundleInfo)) {
+        bool fromTemp = false;
+        if (!FetchVariantInfo(dataMgr, keyInfo.lookupName, keyInfo.isDualModeClone,
+            innerBundleInfo, fromTemp)) {
+            LOG_D(BMS_TAG_DEFAULT, "CleanDirtyUninstallData: bundle=%{public}s not installed, skip",
+                bundleName.c_str());
             continue;
         }
         LOG_I(BMS_TAG_DEFAULT, "Clean dirty uninstall data for installed bundle: %{public}s",
             bundleName.c_str());
         for (const auto &[userIdStr, dui] : info.userInfos) {
-            int32_t userId = 0;
-            int32_t appIndex = 0;
-            auto underscorePos = userIdStr.find(Constants::FILE_UNDERLINE);
-            if (underscorePos != std::string::npos) {
-                if (!OHOS::StrToInt(userIdStr.substr(0, underscorePos), userId)) {
-                    continue;
-                }
-                if (!OHOS::StrToInt(userIdStr.substr(underscorePos + 1), appIndex)) {
-                    LOG_E(BMS_TAG_DEFAULT, "CleanDirtyUninstallData appIndex parse failed, key=%{public}s skip",
-                        userIdStr.c_str());
-                    continue;
-                }
-            } else {
-                if (!OHOS::StrToInt(userIdStr, userId)) {
-                    continue;
-                }
+            if (CleanSingleUninstallUserEntry(dataMgr, bundleName, innerBundleInfo, userIdStr)) {
+                ++deletedUidCount;
             }
-            if (appIndex == 0) {
-                dataMgr->DeleteUninstallBundleInfo(bundleName, userId);
-            } else {
-                dataMgr->DeleteUninstallCloneBundleInfo(bundleName, userId, appIndex);
-            }
-            BundleResourceHelper::DeleteUninstallBundleResource(bundleName, userId, appIndex);
         }
-        ++cleanCount;
+        ++bundleCount;
     }
-    if (cleanCount > 0) {
-        LOG_I(BMS_TAG_DEFAULT, "CleanDirtyUninstallData cleaned %{public}d dirty records", cleanCount);
-    }
+    LOG_I(BMS_TAG_DEFAULT,
+        "CleanDirtyUninstallData cleaned %{public}d dirty records, scanned=%{public}zu deletedUid=%{public}d",
+        bundleCount, uninstallBundleInfos.size(), deletedUidCount);
 }
 
 void BMSEventHandler::BuildMigrationData(
@@ -7847,62 +7945,42 @@ void BMSEventHandler::BuildFromSandbox(const std::shared_ptr<BundleDataMgr> &dat
     LOG_D(BMS_TAG_DEFAULT, "Migration: built from sandbox, added %{public}zu uid entries", addedCount);
 }
 
-bool ParseUninstallUserIdStr(const std::string &userIdStr,
-    int32_t &userId, int32_t &appIndex)
-{
-    auto underscorePos = userIdStr.find(Constants::FILE_UNDERLINE);
-    if (underscorePos == std::string::npos) {
-        return OHOS::StrToInt(userIdStr, userId) &&
-            userId != Constants::UNSPECIFIED_USERID;
-    }
-    if (!OHOS::StrToInt(userIdStr.substr(0, underscorePos), userId)) {
-        return false;
-    }
-    if (!OHOS::StrToInt(userIdStr.substr(underscorePos + 1), appIndex)) {
-        return false;
-    }
-    return true;
-}
-
-bool IsHapBaseInfoDuplicate(
-    const std::vector<Security::AccessToken::HapBaseInfo> &hapBaseInfoList,
-    const std::string &bn, int32_t userId, int32_t appIndex)
-{
-    return std::any_of(hapBaseInfoList.begin(), hapBaseInfoList.end(),
-        [&bn, userId, appIndex](const auto &hapInfo) {
-            return hapInfo.bundleName == bn && hapInfo.userID == userId &&
-                hapInfo.instIndex == appIndex;
-        });
-}
-
 void AppendUninstallUidEntries(const std::string &bn,
     const UninstallBundleInfo &uninstInfo,
     std::map<std::string, Security::AccessToken::MigratedInfo> &migratedMap)
 {
+    // A dual-mode clone record is keyed by the prefixed name "+clone-10000+...";
+    // detect it from the DB key (not the userInfo appIndex, which is 0 for
+    // dual-mode clone records) and resolve the original name / mapKey once.
+    UninstallKeyInfo keyInfo = ResolveUninstallKey(bn);
     for (const auto &[userIdStr, dui] : uninstInfo.userInfos) {
         int32_t userId = 0;
         int32_t appIndex = 0;
         if (!ParseUninstallUserIdStr(userIdStr, userId, appIndex)) {
             continue;
         }
-        bool isClone = appIndex ==
-            ServiceConstants::DUAL_MODE_CLONE_APP_INDEX;
-        std::string mapKey = isClone
-            ? DualModeHelper::GetDualModeBundleName(bn) : bn;
-        auto &m = migratedMap[mapKey];
+        // For a dual-mode clone record the token identity uses the original
+        // bundle name and appIndex DUAL_MODE_CLONE_APP_INDEX, regardless of
+        // the appIndex (0) carried in the plain userIdStr. Non-clone records
+        // keep the parsed appIndex (0 for main, 1~10 for normal clones).
+        const std::string &hapBundleName = keyInfo.lookupName;
+        int32_t hapAppIndex = keyInfo.isDualModeClone
+            ? ServiceConstants::DUAL_MODE_CLONE_APP_INDEX : appIndex;
+        bool isClone = (hapAppIndex == ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
+        auto &m = migratedMap[keyInfo.mapKey];
         if (m.bundleName.empty()) {
-            m.bundleName = bn;
+            m.bundleName = hapBundleName;
             m.pathList.userIdForEnterpriseSign = Constants::DEFAULT_USERID;
             m.mode = isClone
                 ? Security::AccessToken::MultipleMode::SUB_MODE
                 : Security::AccessToken::MultipleMode::DEFAULT_OR_MAIN_MODE;
         }
-        if (IsHapBaseInfoDuplicate(m.hapBaseInfoList, bn, userId, appIndex)) {
+        if (IsHapBaseInfoDuplicate(m.hapBaseInfoList, hapBundleName, userId, hapAppIndex)) {
             continue;
         }
         m.uidList.emplace_back(dui.uid);
         m.hapBaseInfoList.emplace_back(
-            Security::AccessToken::HapBaseInfo{userId, bn, appIndex});
+            Security::AccessToken::HapBaseInfo{userId, hapBundleName, hapAppIndex});
         m.reservedTypeList.emplace_back(
             Security::AccessToken::ReservedType::RESERVED_DATA);
     }
@@ -8081,7 +8159,11 @@ void MarkSingleBundleCheckBySpm(
     const std::shared_ptr<BundleDataMgr> &dataMgr,
     const std::string &bundleName, bool isDualModeClone)
 {
-    dataMgr->UpdateUninstallBundleCheckBySpm(bundleName, true);
+    // bundleName is the original name (from MigratedInfo.bundleName); the
+    // uninstall record for a dual-mode clone is keyed by the prefixed name.
+    std::string dbKey = isDualModeClone
+        ? DualModeHelper::GetDualModeBundleName(bundleName) : bundleName;
+    dataMgr->UpdateUninstallBundleCheckBySpm(dbKey, true);
     InnerBundleInfo info;
     if (dataMgr->FetchInnerBundleInfo(bundleName, info) &&
         info.IsDualModeCloneApp() == isDualModeClone) {
@@ -8973,10 +9055,35 @@ void BuildModulePathMap(const Security::AccessToken::MigratedInfo *migratedInfo,
     }
 }
 
+// Check whether the variant identified by (bundleName, isDualModeClone) has
+// uninstall-retained data whose checkBySpm is still false (not yet migrated).
+// The primary variant's record is keyed by the plain bundleName; the dual-mode
+// clone variant's record is keyed by the prefixed name. The two variants are
+// independent — each has its own checkBySpm — so only the matching key is probed.
+bool HasUnmigratedUninstallData(const std::shared_ptr<BundleDataMgr> &dataMgr,
+    const std::string &bundleName, bool isDualModeClone)
+{
+    std::string dbKey = isDualModeClone
+        ? DualModeHelper::GetDualModeBundleName(bundleName) : bundleName;
+    UninstallBundleInfo uninstInfo;
+    return dataMgr->GetUninstallBundleInfo(dbKey, uninstInfo) && !uninstInfo.checkBySpm;
+}
+
 void MarkBundleCheckBySpm(const std::shared_ptr<BundleDataMgr> &dataMgr,
     const std::string &bundleName, bool isDualModeClone)
 {
-    dataMgr->UpdateUninstallBundleCheckBySpm(bundleName, true);
+    // The uninstall-retained data for this variant can't be resolved in the
+    // fallback (no UpdateHapPolicy for uninstalled entries). If it is still
+    // unmigrated (checkBySpm=false on the variant's own uninstall record),
+    // keep checkBySpm=false to protect the retained data from being cleaned
+    // during reinstall. Each variant is checked independently.
+    if (HasUnmigratedUninstallData(dataMgr, bundleName, isDualModeClone)) {
+        LOG_I(BMS_TAG_DEFAULT,
+            "Fallback: bundle=%{public}s isDualModeClone=%{public}d has unmigrated "
+            "uninstall-retained data, keep checkBySpm=false",
+            bundleName.c_str(), isDualModeClone);
+        return;
+    }
     InnerBundleInfo updateInfo;
     if (dataMgr->FetchInnerBundleInfo(bundleName, updateInfo) &&
         updateInfo.IsDualModeCloneApp() == isDualModeClone) {
@@ -9004,9 +9111,13 @@ void GroupFailedByBundle(const std::shared_ptr<BundleDataMgr> &dataMgr,
         InnerBundleInfo info;
         if (!dataMgr->FetchInnerBundleInfo(failedHapList[i].bundleName, info)) {
             if (!dataMgr->FetchTempBundleInfo(failedHapList[i].bundleName, info)) {
-                LOG_W(BMS_TAG_DEFAULT, "Fallback: bundle=%{public}s uninstalled, mark checkBySpm=false",
+                LOG_W(BMS_TAG_DEFAULT, "Fallback: bundle=%{public}s uninstalled, skip",
                     failedHapList[i].bundleName.c_str());
-                dataMgr->UpdateUninstallBundleCheckBySpm(failedHapList[i].bundleName, false);
+                // The uninstall record's checkBySpm is managed solely by the
+                // migration path (MarkSingleBundleCheckBySpm). The fallback
+                // never writes it — HasUnmigratedUninstallData in
+                // MarkBundleCheckBySpm is the guard that prevents premature
+                // marking while retained data is still unmigrated.
                 ++uninstalledCount;
                 continue;
             }
@@ -9154,6 +9265,7 @@ void BMSEventHandler::CheckAndFallbackUnmigratedBundles()
     std::vector<int32_t> failedErrCodeList;
     std::map<std::string, Security::AccessToken::MigratedInfo> failedMigratedMap;
 
+    CleanDirtyUninstallData();
     CollectUnmigratedMainAndClone(dataMgr, failedHapList, failedUidList, failedErrCodeList, failedMigratedMap);
     CollectUnmigratedSandbox(dataMgr, failedHapList, failedUidList, failedErrCodeList, failedMigratedMap);
 
