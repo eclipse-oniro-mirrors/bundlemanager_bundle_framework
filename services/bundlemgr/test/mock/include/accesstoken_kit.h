@@ -71,6 +71,8 @@ public:
     static int GetDefPermission(const std::string& permissionName, PermissionDef& permissionDefResult);
     static int GetDefPermissions(AccessTokenID tokenID, std::vector<PermissionDef>& permList);
     static int GetReqPermissions(
+        AccessTokenID tokenID, std::vector<PermissionStateFull>& reqPermList, PermissionGrantType filter);
+    static int GetReqPermissions(
         AccessTokenID tokenID, std::vector<PermissionStateFull>& reqPermList, bool isSystemGrant);
     static int GrantPermission(AccessTokenID tokenID, const std::string& permissionName, uint32_t flag);
     static int ClearUserGrantedPermissionState(AccessTokenID tokenID);
