@@ -5540,14 +5540,14 @@ HWTEST_F(BmsBundleParserTest, FormInfo_0300, Function | MediumTest | Level1)
     jsonObject["resizable"] = true;
     jsonObject["isColorModeRefreshEnabled"] = true;
     jsonObject["enableTint"] = true;
-    jsonObject["enableProxyNotificationRefresh"] = true;
+    jsonObject["enableReminderAgentRefresh"] = true;
     FormInfo formInfo;
     from_json(jsonObject, formInfo);
     EXPECT_EQ(formInfo.name, "testName");
     EXPECT_TRUE(formInfo.resizable);
     EXPECT_TRUE(formInfo.isColorModeRefreshEnabled);
     EXPECT_TRUE(formInfo.enableTint);
-    EXPECT_TRUE(formInfo.enableProxyNotificationRefresh);
+    EXPECT_TRUE(formInfo.enableReminderAgentRefresh);
 }
 
 /**
@@ -5563,13 +5563,13 @@ HWTEST_F(BmsBundleParserTest, FormInfo_0400, Function | MediumTest | Level1)
     formInfo.resizable = true;
     formInfo.isColorModeRefreshEnabled = true;
     formInfo.enableTint = true;
-    formInfo.enableProxyNotificationRefresh = true;
+    formInfo.enableReminderAgentRefresh = true;
     to_json(jsonObject, formInfo);
     EXPECT_TRUE(jsonObject["resizable"]);
     EXPECT_EQ(jsonObject["name"], "testName");
     EXPECT_TRUE(jsonObject["isColorModeRefreshEnabled"]);
     EXPECT_TRUE(jsonObject["enableTint"]);
-    EXPECT_TRUE(jsonObject["enableProxyNotificationRefresh"]);
+    EXPECT_TRUE(jsonObject["enableReminderAgentRefresh"]);
 }
 
 /**
