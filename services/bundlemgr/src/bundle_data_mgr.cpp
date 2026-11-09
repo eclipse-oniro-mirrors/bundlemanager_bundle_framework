@@ -13170,6 +13170,44 @@ std::string BundleDataMgr::GetProfilePath(ProfileType profileType, const InnerMo
     return profileFilePath;
 }
 
+ErrCode BundleDataMgr::GetLaunchServices(const std::string &bundleName, const std::string &moduleName,
+    int32_t userId, LaunchServicesResult &result) const
+{
+    APP_LOGD("GetLaunchServices bundleName: %{public}s, moduleName: %{public}s",
+        bundleName.c_str(), moduleName.c_str());
+    // ALL_USERID is a bundle manager internal definition and is not a valid input here.
+    if (userId == Constants::ALL_USERID) {
+        APP_LOGE("GetLaunchServices does not support ALL_USERID");
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    const auto &item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        APP_LOGE("bundleName: %{public}s is not found", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    const InnerBundleInfo &bundleInfo = item->second;
+    int32_t responseUserId = bundleInfo.GetResponseUserId(requestUserId);
+    APP_LOGD("GetLaunchServices responseUserId: %{public}d", responseUserId);
+    if (responseUserId == Constants::INVALID_USERID) {
+        APP_LOGE("bundleName: %{public}s is not installed for the user", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    auto moduleInfo = bundleInfo.GetInnerModuleInfoByModuleName(moduleName);
+    if (!moduleInfo) {
+        APP_LOGE("moduleName: %{public}s is not found", moduleName.c_str());
+        return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
+    }
+    result.launchServices = moduleInfo->launchServices;
+    result.developerId = bundleInfo.GetDeveloperId();
+    result.appIdentifier = bundleInfo.GetAppIdentifier();
+    return ERR_OK;
+}
+
 ErrCode BundleDataMgr::GetJsonProfile(ProfileType profileType, const std::string &bundleName,
     const std::string &moduleName, std::string &profile, int32_t userId) const
 {

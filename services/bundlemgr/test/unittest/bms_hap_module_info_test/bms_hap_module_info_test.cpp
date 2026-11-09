@@ -92,6 +92,8 @@ const char* DEVICE_ID = "deviceId";
 const char* APP_ID = "appId";
 constexpr uint32_t APP_INDEX = 0;
 const char* DISPOSED_RULE = "disposedRule";
+const std::string LAUNCH_SERVICE_NAME = "testLaunchService";
+const std::string LAUNCH_SERVICE_BINARY_PATH = "/data/app/el1/bundle/public/com.example.app/libs/daemon.bin";
 
 void to_json(nlohmann::json &jsonObject, const PreloadItem &preloadItem);
 void from_json(const nlohmann::json &jsonObject, PreloadItem &preloadItem);
@@ -119,6 +121,9 @@ void to_json(nlohmann::json &jsonObject, const DisposedRuleConfiguration &dispos
 void from_json(const nlohmann::json &jsonObject, DisposedRuleConfiguration &disposedRuleConfiguration);
 void to_json(nlohmann::json &jsonObject, const ExecutableBinaryPath &executableBinaryPath);
 void from_json(const nlohmann::json &jsonObject, ExecutableBinaryPath &executableBinaryPath);
+void to_json(nlohmann::json &jsonObject, const LaunchService &launchService);
+void from_json(const nlohmann::json &jsonObject, LaunchService &launchService);
+void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo);
 
 class BmsHapModuleInfoTest : public testing::Test {
 public:
@@ -942,6 +947,378 @@ HWTEST_F(BmsHapModuleInfoTest, ExecutableBinaryPath_from_json_001, Function | Sm
     ExecutableBinaryPath result;
     from_json(jsonObject, result);
     EXPECT_EQ(result.path, "/data/app/libs/test.bin");
+}
+
+/**
+ * @tc.number: LaunchService_Unmarshalling_001
+ * @tc.name: test Unmarshalling round-trip in LaunchService.
+ * @tc.desc: 1. marshal LaunchService
+ *           2. verify unmarshalling data matches
+ */
+HWTEST_F(BmsHapModuleInfoTest, LaunchService_Unmarshalling_001, Function | SmallTest | Level0)
+{
+    LaunchService original;
+    original.name = LAUNCH_SERVICE_NAME;
+    original.binaryPath = LAUNCH_SERVICE_BINARY_PATH;
+    original.runAtLoad = true;
+    original.keepAlive = false;
+    original.provideIpcService = true;
+    original.type = LaunchServiceType::DAEMON;
+
+    Parcel parcel;
+    ASSERT_TRUE(original.Marshalling(parcel));
+    parcel.RewindRead(0);
+
+    LaunchService *unmarshalled = LaunchService::Unmarshalling(parcel);
+    ASSERT_NE(unmarshalled, nullptr);
+    EXPECT_EQ(unmarshalled->name, original.name);
+    EXPECT_EQ(unmarshalled->binaryPath, original.binaryPath);
+    EXPECT_EQ(unmarshalled->runAtLoad, original.runAtLoad);
+    EXPECT_EQ(unmarshalled->keepAlive, original.keepAlive);
+    EXPECT_EQ(unmarshalled->provideIpcService, original.provideIpcService);
+    EXPECT_EQ(unmarshalled->type, original.type);
+    delete unmarshalled;
+}
+
+/**
+ * @tc.number: LaunchService_to_json_001
+ * @tc.name: test to_json/from_json round-trip in LaunchService.
+ * @tc.desc: 1. create LaunchService with data
+ *           2. verify json round-trip keeps values
+ */
+HWTEST_F(BmsHapModuleInfoTest, LaunchService_to_json_001, Function | SmallTest | Level0)
+{
+    LaunchService original;
+    original.name = LAUNCH_SERVICE_NAME;
+    original.binaryPath = LAUNCH_SERVICE_BINARY_PATH;
+    original.runAtLoad = true;
+    original.keepAlive = true;
+    original.provideIpcService = false;
+    original.type = LaunchServiceType::DAEMON;
+
+    nlohmann::json jsonObject;
+    to_json(jsonObject, original);
+
+    LaunchService result;
+    from_json(jsonObject, result);
+    EXPECT_EQ(result.name, original.name);
+    EXPECT_EQ(result.binaryPath, original.binaryPath);
+    EXPECT_EQ(result.runAtLoad, original.runAtLoad);
+    EXPECT_EQ(result.keepAlive, original.keepAlive);
+    EXPECT_EQ(result.provideIpcService, original.provideIpcService);
+    EXPECT_EQ(result.type, original.type);
+}
+
+/**
+ * @tc.number: LaunchService_from_json_002
+ * @tc.name: test from_json default compatibility in LaunchService.
+ * @tc.desc: 1. create json with missing optional keys
+ *           2. verify defaults are preserved
+ */
+HWTEST_F(BmsHapModuleInfoTest, LaunchService_from_json_002, Function | SmallTest | Level0)
+{
+    nlohmann::json jsonObject;
+    jsonObject["name"] = LAUNCH_SERVICE_NAME;
+    jsonObject["binaryPath"] = LAUNCH_SERVICE_BINARY_PATH;
+
+    LaunchService result;
+    from_json(jsonObject, result);
+    EXPECT_EQ(result.name, LAUNCH_SERVICE_NAME);
+    EXPECT_EQ(result.binaryPath, LAUNCH_SERVICE_BINARY_PATH);
+    EXPECT_EQ(result.runAtLoad, false);
+    EXPECT_EQ(result.keepAlive, false);
+    EXPECT_EQ(result.provideIpcService, false);
+    EXPECT_EQ(result.type, LaunchServiceType::DAEMON);
+}
+
+/**
+ * @tc.number: HapModuleInfo_LaunchServices_Marshalling_001
+ * @tc.name: test HapModuleInfo marshalling with launchServices.
+ * @tc.desc: 1. create HapModuleInfo with launchServices
+ *           2. verify parcel round-trip keeps values
+ */
+HWTEST_F(BmsHapModuleInfoTest, HapModuleInfo_LaunchServices_Marshalling_001, Function | SmallTest | Level1)
+{
+    LaunchService launchService;
+    launchService.name = LAUNCH_SERVICE_NAME;
+    launchService.binaryPath = LAUNCH_SERVICE_BINARY_PATH;
+    launchService.runAtLoad = true;
+    launchService.type = LaunchServiceType::DAEMON;
+
+    HapModuleInfo original;
+    original.moduleName = MODULE_NAME2;
+    original.launchServices.emplace_back(launchService);
+
+    Parcel parcel;
+    ASSERT_TRUE(original.Marshalling(parcel));
+    parcel.RewindRead(0);
+
+    HapModuleInfo *unmarshalled = HapModuleInfo::Unmarshalling(parcel);
+    ASSERT_NE(unmarshalled, nullptr);
+    ASSERT_EQ(unmarshalled->launchServices.size(), 1);
+    EXPECT_EQ(unmarshalled->launchServices[0].name, launchService.name);
+    EXPECT_EQ(unmarshalled->launchServices[0].binaryPath, launchService.binaryPath);
+    EXPECT_EQ(unmarshalled->launchServices[0].runAtLoad, true);
+    EXPECT_EQ(unmarshalled->launchServices[0].type, LaunchServiceType::DAEMON);
+    delete unmarshalled;
+}
+
+/**
+ * @tc.number: HapModuleInfo_LaunchServices_to_json_001
+ * @tc.name: test HapModuleInfo json round-trip with launchServices.
+ * @tc.desc: 1. create HapModuleInfo with launchServices
+ *           2. verify json round-trip keeps values
+ */
+HWTEST_F(BmsHapModuleInfoTest, HapModuleInfo_LaunchServices_to_json_001, Function | SmallTest | Level1)
+{
+    LaunchService launchService;
+    launchService.name = LAUNCH_SERVICE_NAME;
+    launchService.binaryPath = LAUNCH_SERVICE_BINARY_PATH;
+    launchService.provideIpcService = true;
+
+    HapModuleInfo original;
+    original.moduleName = MODULE_NAME2;
+    original.launchServices.emplace_back(launchService);
+
+    nlohmann::json jsonObject;
+    to_json(jsonObject, original);
+
+    HapModuleInfo result;
+    from_json(jsonObject, result);
+    ASSERT_EQ(result.launchServices.size(), 1);
+    EXPECT_EQ(result.launchServices[0].name, launchService.name);
+    EXPECT_EQ(result.launchServices[0].binaryPath, launchService.binaryPath);
+    EXPECT_EQ(result.launchServices[0].provideIpcService, true);
+}
+
+/**
+ * @tc.number: HapModuleInfo_LaunchServices_Compatible_001
+ * @tc.name: test HapModuleInfo json compatibility without launchServices.
+ * @tc.desc: 1. create json without launchServices key
+ *           2. verify from_json keeps empty container
+ */
+HWTEST_F(BmsHapModuleInfoTest, HapModuleInfo_LaunchServices_Compatible_001, Function | SmallTest | Level1)
+{
+    nlohmann::json jsonObject;
+    jsonObject["name"] = MODULE_NAME2;
+
+    HapModuleInfo result;
+    from_json(jsonObject, result);
+    EXPECT_TRUE(result.launchServices.empty());
+}
+
+/**
+ * @tc.number: LaunchService_Unmarshalling_002
+ * @tc.name: test LaunchService unmarshalling with an invalid type value.
+ * @tc.desc: 1. write a launch service parcel whose type is not DAEMON
+ *           2. strict parcel validation rejects it and Unmarshalling returns nullptr
+ */
+HWTEST_F(BmsHapModuleInfoTest, LaunchService_Unmarshalling_002, Function | SmallTest | Level0)
+{
+    Parcel parcel;
+    parcel.WriteString16(Str8ToStr16(LAUNCH_SERVICE_NAME));
+    parcel.WriteString16(Str8ToStr16(LAUNCH_SERVICE_BINARY_PATH));
+    parcel.WriteBool(true);
+    parcel.WriteBool(false);
+    parcel.WriteBool(true);
+    parcel.WriteInt32(99);
+
+    LaunchService *unmarshalled = LaunchService::Unmarshalling(parcel);
+    EXPECT_EQ(unmarshalled, nullptr);
+}
+
+/**
+ * @tc.number: LaunchService_Unmarshalling_003
+ * @tc.name: test LaunchService unmarshalling from an empty parcel.
+ * @tc.desc: 1. call Unmarshalling with an empty parcel
+ *           2. the Int32 read fails and Unmarshalling returns nullptr
+ */
+HWTEST_F(BmsHapModuleInfoTest, LaunchService_Unmarshalling_003, Function | SmallTest | Level0)
+{
+    Parcel parcel;
+    LaunchService *unmarshalled = LaunchService::Unmarshalling(parcel);
+    EXPECT_EQ(unmarshalled, nullptr);
+}
+
+/**
+ * @tc.number: LaunchServicesResult_Unmarshalling_001
+ * @tc.name: test LaunchServicesResult parcel round-trip.
+ * @tc.desc: 1. create LaunchServicesResult with two launch services and meta fields
+ *           2. verify unmarshalling keeps the list order and developerId/appIdentifier
+ */
+HWTEST_F(BmsHapModuleInfoTest, LaunchServicesResult_Unmarshalling_001, Function | SmallTest | Level0)
+{
+    LaunchService first;
+    first.name = "svc-first";
+    first.binaryPath = "/bin/first";
+    first.runAtLoad = true;
+    first.type = LaunchServiceType::DAEMON;
+    LaunchService second;
+    second.name = "svc-second";
+    second.binaryPath = "/bin/second";
+    second.provideIpcService = true;
+
+    LaunchServicesResult original;
+    original.launchServices = {first, second};
+    original.developerId = "developer-001";
+    original.appIdentifier = "appIdentifier-001";
+
+    Parcel parcel;
+    ASSERT_TRUE(original.Marshalling(parcel));
+    parcel.RewindRead(0);
+
+    LaunchServicesResult *unmarshalled = LaunchServicesResult::Unmarshalling(parcel);
+    ASSERT_NE(unmarshalled, nullptr);
+    ASSERT_EQ(unmarshalled->launchServices.size(), 2);
+    EXPECT_EQ(unmarshalled->launchServices[0].name, "svc-first");
+    EXPECT_EQ(unmarshalled->launchServices[0].binaryPath, "/bin/first");
+    EXPECT_EQ(unmarshalled->launchServices[0].runAtLoad, true);
+    EXPECT_EQ(unmarshalled->launchServices[1].name, "svc-second");
+    EXPECT_EQ(unmarshalled->launchServices[1].provideIpcService, true);
+    EXPECT_EQ(unmarshalled->developerId, "developer-001");
+    EXPECT_EQ(unmarshalled->appIdentifier, "appIdentifier-001");
+    delete unmarshalled;
+}
+
+/**
+ * @tc.number: LaunchServicesResult_Unmarshalling_002
+ * @tc.name: test LaunchServicesResult unmarshalling from an empty parcel.
+ * @tc.desc: 1. call Unmarshalling with an empty parcel
+ *           2. the size read fails and Unmarshalling returns nullptr
+ */
+HWTEST_F(BmsHapModuleInfoTest, LaunchServicesResult_Unmarshalling_002, Function | SmallTest | Level0)
+{
+    Parcel parcel;
+    LaunchServicesResult *unmarshalled = LaunchServicesResult::Unmarshalling(parcel);
+    EXPECT_EQ(unmarshalled, nullptr);
+}
+
+/**
+ * @tc.number: HapModuleInfo_LaunchServices_Marshalling_002
+ * @tc.name: test HapModuleInfo marshalling with multiple launchServices.
+ * @tc.desc: 1. create HapModuleInfo with three launch services
+ *           2. verify parcel round-trip keeps the whole list in order
+ */
+HWTEST_F(BmsHapModuleInfoTest, HapModuleInfo_LaunchServices_Marshalling_002, Function | SmallTest | Level1)
+{
+    HapModuleInfo original;
+    original.moduleName = MODULE_NAME2;
+    for (const char *name : {"svc-one", "svc-two", "svc-three"}) {
+        LaunchService launchService;
+        launchService.name = name;
+        launchService.binaryPath = std::string("/bin/") + name;
+        launchService.type = LaunchServiceType::DAEMON;
+        original.launchServices.emplace_back(launchService);
+    }
+
+    Parcel parcel;
+    ASSERT_TRUE(original.Marshalling(parcel));
+    parcel.RewindRead(0);
+
+    HapModuleInfo *unmarshalled = HapModuleInfo::Unmarshalling(parcel);
+    ASSERT_NE(unmarshalled, nullptr);
+    ASSERT_EQ(unmarshalled->launchServices.size(), 3);
+    EXPECT_EQ(unmarshalled->launchServices[0].name, "svc-one");
+    EXPECT_EQ(unmarshalled->launchServices[1].name, "svc-two");
+    EXPECT_EQ(unmarshalled->launchServices[2].name, "svc-three");
+    EXPECT_EQ(unmarshalled->launchServices[2].binaryPath, "/bin/svc-three");
+    delete unmarshalled;
+}
+
+/**
+ * @tc.number: LaunchService_to_json_002
+ * @tc.name: test LaunchService to_json key set.
+ * @tc.desc: 1. serialize a LaunchService with all fields set
+ *           2. verify the json object carries exactly the six documented keys
+ */
+HWTEST_F(BmsHapModuleInfoTest, LaunchService_to_json_002, Function | SmallTest | Level0)
+{
+    LaunchService original;
+    original.name = LAUNCH_SERVICE_NAME;
+    original.binaryPath = LAUNCH_SERVICE_BINARY_PATH;
+    original.runAtLoad = true;
+    original.keepAlive = true;
+    original.provideIpcService = true;
+    original.type = LaunchServiceType::DAEMON;
+
+    nlohmann::json jsonObject;
+    to_json(jsonObject, original);
+    EXPECT_EQ(jsonObject.size(), 6);
+    EXPECT_TRUE(jsonObject.contains("name"));
+    EXPECT_TRUE(jsonObject.contains("binaryPath"));
+    EXPECT_TRUE(jsonObject.contains("runAtLoad"));
+    EXPECT_TRUE(jsonObject.contains("keepAlive"));
+    EXPECT_TRUE(jsonObject.contains("provideIpcService"));
+    EXPECT_TRUE(jsonObject.contains("type"));
+    EXPECT_EQ(jsonObject["type"], "daemon");
+}
+
+/**
+ * @tc.number: LaunchService_from_json_003
+ * @tc.name: test LaunchService from_json with an unknown type string.
+ * @tc.desc: 1. build json with an unsupported type value
+ *           2. the json round-trip path is lenient: the entry is kept with the default
+ *              DAEMON type (strict validation only happens for module.json parsing)
+ */
+HWTEST_F(BmsHapModuleInfoTest, LaunchService_from_json_003, Function | SmallTest | Level0)
+{
+    nlohmann::json jsonObject;
+    jsonObject["name"] = LAUNCH_SERVICE_NAME;
+    jsonObject["binaryPath"] = LAUNCH_SERVICE_BINARY_PATH;
+    jsonObject["type"] = "unknownStr";
+
+    LaunchService result;
+    from_json(jsonObject, result);
+    EXPECT_EQ(result.name, LAUNCH_SERVICE_NAME);
+    EXPECT_EQ(result.binaryPath, LAUNCH_SERVICE_BINARY_PATH);
+    EXPECT_EQ(result.type, LaunchServiceType::DAEMON);
+}
+
+/**
+ * @tc.number: LaunchService_Marshalling_001
+ * @tc.name: test LaunchService marshalling with empty fields.
+ * @tc.desc: 1. marshal a LaunchService with default empty name/binaryPath
+ *           2. verify unmarshalling keeps the empty values and defaults
+ */
+HWTEST_F(BmsHapModuleInfoTest, LaunchService_Marshalling_001, Function | SmallTest | Level0)
+{
+    LaunchService original;
+
+    Parcel parcel;
+    ASSERT_TRUE(original.Marshalling(parcel));
+    parcel.RewindRead(0);
+
+    LaunchService *unmarshalled = LaunchService::Unmarshalling(parcel);
+    ASSERT_NE(unmarshalled, nullptr);
+    EXPECT_TRUE(unmarshalled->name.empty());
+    EXPECT_TRUE(unmarshalled->binaryPath.empty());
+    EXPECT_EQ(unmarshalled->runAtLoad, false);
+    EXPECT_EQ(unmarshalled->keepAlive, false);
+    EXPECT_EQ(unmarshalled->provideIpcService, false);
+    EXPECT_EQ(unmarshalled->type, LaunchServiceType::DAEMON);
+    delete unmarshalled;
+}
+
+/**
+ * @tc.number: LaunchServicesResult_Unmarshalling_003
+ * @tc.name: test LaunchServicesResult parcel round-trip with an empty result.
+ * @tc.desc: 1. marshal a LaunchServicesResult without launch services or meta fields
+ *           2. verify unmarshalling keeps the empty list and empty strings
+ */
+HWTEST_F(BmsHapModuleInfoTest, LaunchServicesResult_Unmarshalling_003, Function | SmallTest | Level0)
+{
+    LaunchServicesResult original;
+
+    Parcel parcel;
+    ASSERT_TRUE(original.Marshalling(parcel));
+    parcel.RewindRead(0);
+
+    LaunchServicesResult *unmarshalled = LaunchServicesResult::Unmarshalling(parcel);
+    ASSERT_NE(unmarshalled, nullptr);
+    EXPECT_TRUE(unmarshalled->launchServices.empty());
+    EXPECT_TRUE(unmarshalled->developerId.empty());
+    EXPECT_TRUE(unmarshalled->appIdentifier.empty());
+    delete unmarshalled;
 }
 
 /**

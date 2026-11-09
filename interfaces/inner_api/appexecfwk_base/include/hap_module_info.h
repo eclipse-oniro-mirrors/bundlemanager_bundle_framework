@@ -20,6 +20,7 @@
 
 #include "ability_info.h"
 #include "extension_ability_info.h"
+#include "launch_service.h"
 #include "overlay/overlay_module_info.h"
 #include "parcel.h"
 #include "quick_fix/hqf_info.h"
@@ -207,6 +208,7 @@ struct HapModuleInfo : public Parcelable {
     std::map<std::string, bool> isRemovable;
     std::set<std::string> isRemovableSet;
     std::vector<ExecutableBinaryPath> executableBinaryPaths;
+    std::vector<LaunchService> launchServices;
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
     static HapModuleInfo *Unmarshalling(Parcel &parcel);

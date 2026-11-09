@@ -67,6 +67,7 @@ constexpr const char* MODULE_IS_ENTRY = "isEntry";
 constexpr const char* MODULE_METADATA = "metaData";
 constexpr const char* MODULE_HNP_PACKAGE = "hnpPackage";
 constexpr const char* MODULE_EXECUTABLE_BINARY_PATHS = "executableBinaryPaths";
+constexpr const char* MODULE_LAUNCH_SERVICES = "launchServices";
 constexpr const char* MODULE_SKILL_PROFILES = "skillProfiles";
 constexpr const char* MODULE_COLOR_MODE = "colorMode";
 constexpr const char* MODULE_DISTRO = "distro";
@@ -174,6 +175,12 @@ constexpr const char* MODULE_DEBUG = "debug";
 constexpr const char* MODULE_CROS_APP_SHARED_CONFIG = "crossAppSharedConfig";
 constexpr const char* MODULE_ABILITY_SRC_ENTRY_DELEGATOR = "abilitySrcEntryDelegator";
 constexpr const char* EXECUTABLE_BINARY_PATH = "path";
+constexpr const char* LAUNCH_SERVICE_NAME = "name";
+constexpr const char* LAUNCH_SERVICE_BINARY_PATH = "binaryPath";
+constexpr const char* LAUNCH_SERVICE_RUN_AT_LOAD = "runAtLoad";
+constexpr const char* LAUNCH_SERVICE_KEEP_ALIVE = "keepAlive";
+constexpr const char* LAUNCH_SERVICE_PROVIDE_IPC_SERVICE = "provideIpcService";
+constexpr const char* LAUNCH_SERVICE_TYPE = "type";
 // SkillsAgent field constants
 constexpr const char* SKILL_PROFILE_NAME = "name";
 constexpr const char* SKILL_PROFILE_ABILITY_NAME = "abilityName";
@@ -278,6 +285,67 @@ void to_json(nlohmann::json &jsonObject, const ExecutableBinaryPath &executableB
 {
     jsonObject = nlohmann::json {
         {EXECUTABLE_BINARY_PATH, executableBinaryPath.path}
+    };
+}
+
+void from_json(const nlohmann::json &jsonObject, LaunchService &launchService)
+{
+    const auto &jsonObjectEnd = jsonObject.end();
+    int32_t parseResult = ERR_OK;
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        LAUNCH_SERVICE_NAME,
+        launchService.name,
+        false,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        LAUNCH_SERVICE_BINARY_PATH,
+        launchService.binaryPath,
+        false,
+        parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        LAUNCH_SERVICE_RUN_AT_LOAD,
+        launchService.runAtLoad,
+        false,
+        parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        LAUNCH_SERVICE_KEEP_ALIVE,
+        launchService.keepAlive,
+        false,
+        parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        LAUNCH_SERVICE_PROVIDE_IPC_SERVICE,
+        launchService.provideIpcService,
+        false,
+        parseResult);
+    std::string typeStr;
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        LAUNCH_SERVICE_TYPE,
+        typeStr,
+        false,
+        parseResult);
+    if (!typeStr.empty() && !LaunchServiceTypeFromString(typeStr, launchService.type)) {
+        parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
+    }
+    if (parseResult != ERR_OK) {
+        APP_LOGE("read LaunchService from json error, error code : %{public}d", parseResult);
+    }
+}
+
+void to_json(nlohmann::json &jsonObject, const LaunchService &launchService)
+{
+    jsonObject = nlohmann::json {
+        {LAUNCH_SERVICE_NAME, launchService.name},
+        {LAUNCH_SERVICE_BINARY_PATH, launchService.binaryPath},
+        {LAUNCH_SERVICE_RUN_AT_LOAD, launchService.runAtLoad},
+        {LAUNCH_SERVICE_KEEP_ALIVE, launchService.keepAlive},
+        {LAUNCH_SERVICE_PROVIDE_IPC_SERVICE, launchService.provideIpcService},
+        {LAUNCH_SERVICE_TYPE, LaunchServiceTypeToString(launchService.type)}
     };
 }
 
@@ -571,6 +639,7 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_SKILL_PROFILES, info.skillProfiles},
         {MODULE_HNP_PACKAGE, info.hnpPackages},
         {MODULE_EXECUTABLE_BINARY_PATHS, info.executableBinaryPaths},
+        {MODULE_LAUNCH_SERVICES, info.launchServices},
         // moduleName left empty to match the legacy on-disk format
         {MODULE_REQUEST_PERMISSIONS, ToRequestPermissions(info.bundlePermissions)},
         {MODULE_DEFINE_PERMISSIONS, info.definePermissions},
@@ -974,6 +1043,14 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         jsonObjectEnd,
         MODULE_EXECUTABLE_BINARY_PATHS,
         info.executableBinaryPaths,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::OBJECT);
+    GetValueIfFindKey<std::vector<LaunchService>>(jsonObject,
+        jsonObjectEnd,
+        MODULE_LAUNCH_SERVICES,
+        info.launchServices,
         JsonType::ARRAY,
         false,
         parseResult,
@@ -1929,6 +2006,7 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(
         hapInfo.proxyDatas.emplace_back(std::move(proxyData));
     }
     hapInfo.executableBinaryPaths = it->second.executableBinaryPaths;
+    hapInfo.launchServices = it->second.launchServices;
     hapInfo.buildHash = it->second.buildHash;
     hapInfo.isolationMode = GetIsolationMode(it->second.isolationMode);
     hapInfo.compressNativeLibs = it->second.compressNativeLibs;

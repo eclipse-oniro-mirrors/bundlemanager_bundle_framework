@@ -59,6 +59,7 @@
 #include "inner_bundle_user_info.h"
 #include "bundle_skill/skill_info.h"
 #include "ipc/create_dir_param.h"
+#include "launch_service.h"
 #include "uninstall_data_mgr_storage_rdb.h"
 #include "module_info.h"
 #include "module_test_runner.h"
@@ -1347,6 +1348,8 @@ public:
     ErrCode ScanAllBundleIpcGroupInfo();
     ErrCode GetJsonProfile(ProfileType profileType, const std::string &bundleName, const std::string &moduleName,
         std::string &profile, int32_t userId) const;
+    ErrCode GetLaunchServices(const std::string &bundleName, const std::string &moduleName, int32_t userId,
+        LaunchServicesResult &result) const;
     ErrCode GetShareFilesJsonFromHap(const std::string &hapPath, const InnerModuleInfo &moduleInfo,
         std::string &jsonContent) const;
     ErrCode GetJsonProfileByExtractor(const std::string &hapPath, const std::string &profilePath,

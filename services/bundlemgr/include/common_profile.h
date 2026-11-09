@@ -470,6 +470,13 @@ constexpr const char* HNP_TYPE = "type";
 constexpr const char* HNP_INDEPENDENT_SIGN = "independentSign";
 // executableBinaryPath
 constexpr const char* EXECUTABLE_BINARY_PATH = "path";
+// launchService
+constexpr const char* LAUNCH_SERVICE_NAME = "name";
+constexpr const char* LAUNCH_SERVICE_BINARY_PATH = "binaryPath";
+constexpr const char* LAUNCH_SERVICE_RUN_AT_LOAD = "runAtLoad";
+constexpr const char* LAUNCH_SERVICE_KEEP_ALIVE = "keepAlive";
+constexpr const char* LAUNCH_SERVICE_PROVIDE_IPC_SERVICE = "provideIpcService";
+constexpr const char* LAUNCH_SERVICE_TYPE = "type";
 // metadata reserved
 constexpr const char* META_DATA_FORM = "ohos.extension.form";
 constexpr const char* META_DATA_SHORTCUTS = "ohos.ability.shortcuts";
@@ -593,6 +600,9 @@ constexpr const char* MODULE_ROUTER_MAP = "routerMap";
 
 // module executableBinaryPaths
 constexpr const char* MODULE_EXECUTABLE_BINARY_PATHS = "executableBinaryPaths";
+
+// module launchServices
+constexpr const char* MODULE_LAUNCH_SERVICES = "launchServices";
 
 //module appEnvironment
 constexpr const char* MODULE_APP_ENVIRONMENTS = "appEnvironments";
