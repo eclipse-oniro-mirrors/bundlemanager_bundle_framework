@@ -94,7 +94,7 @@ const char* JSON_KEY_STANDBY_IS_PRIVACY_SENSITIVE = "isPrivacySensitive";
 const char* JSON_KEY_TRIGGER_TYPES = "triggerTypes";
 const char* JSON_KEY_IS_COLOR_MODE_REFRESH_ENABLED = "isColorModeRefreshEnabled";
 const char* JSON_KEY_TINTING_SUPPORTED = "enableTint";
-const char* JSON_KEY_ENABLE_REMINDER_AGENT_REFRESH = "enableProxyNotificationRefresh";
+const char* JSON_KEY_ENABLE_REMINDER_AGENT_REFRESH = "enableReminderAgentRefresh";
 }  // namespace
 
 FormInfo::FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormInfo &formInfo)
