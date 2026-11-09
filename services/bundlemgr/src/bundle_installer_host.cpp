@@ -1872,12 +1872,12 @@ ErrCode BundleInstallerHost::HandleGetEnterpriseReSignatureCert(MessageParcel &d
 
 ErrCode BundleInstallerHost::HandleGetEnterpriseReSignatureCertInfo(MessageParcel &data, MessageParcel &reply)
 {
-    LOG_D(BMS_TAG_INSTALLER, "handle get ReSignature Certificate Info");
+    LOG_D(BMS_TAG_INSTALLER, "handle get re sign cert info");
     int32_t userId = data.ReadInt32();
     std::vector<EnterpriseCertInfo> certInfos;
     auto ret = GetEnterpriseReSignatureCertInfo(userId, certInfos);
     if (!reply.WriteInt32(ret)) {
-        LOG_E(BMS_TAG_INSTALLER, "get ReSignature Certificate Info write failed");
+        LOG_E(BMS_TAG_INSTALLER, "get re sign cert info write failed");
         return ERR_APPEXECFWK_ENTERPRISE_CERT_WRITE_PARCEL_ERROR;
     }
     if (ret == ERR_OK) {
