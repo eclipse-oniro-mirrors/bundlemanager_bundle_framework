@@ -1200,7 +1200,7 @@ ErrCode BundleInstallerProxy::GetEnterpriseReSignatureCertInfo(
     auto ret = SendInstallRequestWithErrCode(
         BundleInstallerInterfaceCode::GET_ENTERPRISE_RE_SIGNATURE_CERT_INFO, data, reply, option);
     if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLER, "get sign cert info failed due to send request fail");
+        LOG_E(BMS_TAG_INSTALLER, "get ReSignature Certificate Info failed due to send request fail");
         return ERR_APPEXECFWK_ENTERPRISE_CERT_SEND_REQUEST_ERROR;
     }
     ErrCode result = reply.ReadInt32();
@@ -1216,7 +1216,7 @@ ErrCode BundleInstallerProxy::GetEnterpriseReSignatureCertInfo(
             delete ptr;
         }
     }
-    LOG_I(BMS_TAG_INSTALLER, "get sign cert info size: %{public}zu", certInfos.size());
+    LOG_I(BMS_TAG_INSTALLER, "get ReSignature Certificate Info size: %{public}zu", certInfos.size());
     return ERR_OK;
 }
 
