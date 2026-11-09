@@ -145,6 +145,7 @@ static const char CODE_CRYPTO_FUNCTION_NAME[] = "_ZN4OHOS8Security10CodeCrypto15
 #endif
 
 constexpr int64_t BUFFER_SIZE = 8192;
+constexpr int64_t MILLISECOND_PER_SECOND = 1000;
 static constexpr int32_t PERMISSION_DENIED = 13;
 static constexpr int32_t RESULT_OK = 0;
 static constexpr int32_t CMDLINE_MAX_BUF_LEN = 4096;
@@ -614,6 +615,47 @@ static uint64_t CalculateDirectorySizeWithCache(const std::string &dirPath,
     LOG_D(BMS_TAG_INSTALLD, "CalculateDirectorySizeWithCache: calculated %{public}s, size: %{public}" PRIu64,
         dirPath.c_str(), totalSize);
     return totalSize;
+}
+
+static ErrCode GetEnterpriseCertSubjectOrg(X509 *cert, std::string &subjectOrg)
+{
+    X509_NAME *subject = X509_get_subject_name(cert);
+    if (subject == nullptr) {
+        LOG_E(BMS_TAG_INSTALLD, "get subject name failed");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_READ_CERT_FAILED;
+    }
+    char orgBuf[256] = {0};
+    int orgLen = X509_NAME_get_text_by_NID(subject, NID_organizationName, orgBuf, sizeof(orgBuf));
+    if (orgLen > 0) {
+        subjectOrg = orgBuf;
+        return ERR_OK;
+    }
+    // BR-2: the enterprise name falls back to CommonName when Organization is absent.
+    char cnBuf[256] = {0};
+    int cnLen = X509_NAME_get_text_by_NID(subject, NID_commonName, cnBuf, sizeof(cnBuf));
+    if (cnLen <= 0) {
+        LOG_E(BMS_TAG_INSTALLD, "get organization and common name failed");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_READ_CERT_FAILED;
+    }
+    subjectOrg = cnBuf;
+    return ERR_OK;
+}
+
+static ErrCode GetEnterpriseCertNotAfter(X509 *cert, int64_t &notAfter)
+{
+    const ASN1_TIME *notAfterTime = X509_get0_notAfter(cert);
+    if (notAfterTime == nullptr) {
+        LOG_E(BMS_TAG_INSTALLD, "get notAfter failed");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_READ_CERT_FAILED;
+    }
+    struct tm tmVal = {0};
+    if (ASN1_TIME_to_tm(notAfterTime, &tmVal) != 1) {
+        LOG_E(BMS_TAG_INSTALLD, "convert notAfter failed");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_READ_CERT_FAILED;
+    }
+    // BR-3: notAfter is a millisecond Unix timestamp.
+    notAfter = static_cast<int64_t>(timegm(&tmVal)) * MILLISECOND_PER_SECOND;
+    return ERR_OK;
 }
 
 } // namespace
@@ -4335,44 +4377,14 @@ ErrCode InstalldOperator::ParseEnterpriseCertInfo(
         }
     }
 
-    X509_NAME *subject = X509_get_subject_name(cert);
-    if (subject == nullptr) {
-        X509_free(cert);
-        LOG_E(BMS_TAG_INSTALLD, "get subject name failed");
-        return ERR_APPEXECFWK_ENTERPRISE_CERT_READ_CERT_FAILED;
+    ErrCode ret = GetEnterpriseCertSubjectOrg(cert, subjectOrg);
+    if (ret == ERR_OK) {
+        ret = GetEnterpriseCertNotAfter(cert, notAfter);
     }
-    char orgBuf[256] = {0};
-    int orgLen = X509_NAME_get_text_by_NID(subject, NID_organizationName, orgBuf, sizeof(orgBuf));
-    if (orgLen > 0) {
-        subjectOrg = orgBuf;
-    } else {
-        // BR-2: the enterprise name falls back to CommonName when Organization is absent.
-        char cnBuf[256] = {0};
-        int cnLen = X509_NAME_get_text_by_NID(subject, NID_commonName, cnBuf, sizeof(cnBuf));
-        if (cnLen <= 0) {
-            X509_free(cert);
-            LOG_E(BMS_TAG_INSTALLD, "get organization and common name failed");
-            return ERR_APPEXECFWK_ENTERPRISE_CERT_READ_CERT_FAILED;
-        }
-        subjectOrg = cnBuf;
-    }
-
-    const ASN1_TIME *notAfterTime = X509_get0_notAfter(cert);
-    if (notAfterTime == nullptr) {
-        X509_free(cert);
-        LOG_E(BMS_TAG_INSTALLD, "get notAfter failed");
-        return ERR_APPEXECFWK_ENTERPRISE_CERT_READ_CERT_FAILED;
-    }
-    struct tm tmVal = {0};
-    if (ASN1_TIME_to_tm(notAfterTime, &tmVal) != 1) {
-        X509_free(cert);
-        LOG_E(BMS_TAG_INSTALLD, "convert notAfter failed");
-        return ERR_APPEXECFWK_ENTERPRISE_CERT_READ_CERT_FAILED;
-    }
-    // BR-3: notAfter is a millisecond Unix timestamp.
-    notAfter = static_cast<int64_t>(timegm(&tmVal)) * 1000;
-
     X509_free(cert);
+    if (ret != ERR_OK) {
+        return ret;
+    }
     LOG_I(BMS_TAG_INSTALLD, "parse enterprise cert info success");
     return ERR_OK;
 }
