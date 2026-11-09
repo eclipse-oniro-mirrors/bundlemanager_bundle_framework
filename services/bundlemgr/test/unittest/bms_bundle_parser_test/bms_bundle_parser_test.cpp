@@ -1950,6 +1950,57 @@ const nlohmann::json MODULE_JSON_17 = R"(
     }
 })"_json;
 
+const nlohmann::json MODULE_JSON_18 = R"({
+        "app": {
+            "bundleName": "com.example.permissioncontrolmode",
+            "debug": true,
+            "icon": "$media:app_icon",
+            "iconId": 16777220,
+            "label": "$string:app_name",
+            "labelId": 16777216,
+            "minAPIVersion": 9,
+            "minMinorAPIVersion": 0,
+            "minPatchAPIVersion": 0,
+            "targetAPIVersion": 9,
+            "vendor": "example",
+            "versionCode": 1000000,
+            "versionName": "1.0.0"
+        },
+        "module": {
+            "deliveryWithInstall": true,
+            "description": "$string:entry_desc",
+            "descriptionId": 16777219,
+            "deviceTypes": [ "default" ],
+            "abilities": [
+                {
+                    "description": "$string:MainAbility_desc",
+                    "descriptionId": 16777217,
+                    "icon": "$media:icon",
+                    "iconId": 16777221,
+                    "label": "$string:MainAbility_label",
+                    "labelId": 16777218,
+                    "name": "MainAbility",
+                    "launchType": "standard",
+                    "orientation": "unspecified",
+                    "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                    "visible": true
+                }
+            ],
+            "name": "entry",
+            "installationFree": false,
+            "mainElement": "MainAbility",
+            "pages": "$profile:main_pages",
+            "srcEntrance": "./ets/Application/AbilityStage.ts",
+            "type": "entry",
+            "virtualMachine": "ark0.0.0.3",
+            "executableBinaryPaths": [
+                {
+                    "path": "libs/arm64-v8a/policy.bin"
+                }
+            ]
+        }
+})"_json;
+
 InnerBundleInfo CreateInnerBundleInfoForTest(const std::string &bundleName,
     const std::string &modulePackage, const std::string &moduleName, int32_t userId, int32_t uid)
 {
@@ -3099,6 +3150,159 @@ HWTEST_F(BmsBundleParserTest, TestParse_3300, Function | SmallTest | Level1)
     ErrCode result = moduleProfile.TransformTo(
         profileFileBuffer, bundleExtractor, innerBundleInfo);
     EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
+}
+
+/**
+ * @tc.number: PermissionControlMode_Transform_001
+ * @tc.name: test module.json permissionControlMode=inheritParentProcess
+ * @tc.desc: 1. permissionControlMode is inheritParentProcess
+ *           2. verify TransformTo keeps inheritParentProcess
+ */
+HWTEST_F(BmsBundleParserTest, PermissionControlMode_Transform_001, Function | SmallTest | Level0)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+    nlohmann::json profileJson = MODULE_JSON_18;
+    profileJson["module"]["executableBinaryPaths"][0]["permissionControlMode"] = "inheritParentProcess";
+    profileFileBuffer << profileJson.dump();
+    BundleExtractor bundleExtractor(EMPTY_NAME);
+    ErrCode ret = moduleProfile.TransformTo(profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(ret, ERR_OK);
+    ASSERT_FALSE(innerBundleInfo.innerModuleInfos_.empty());
+    const auto &bins = innerBundleInfo.innerModuleInfos_.begin()->second.executableBinaryPaths;
+    ASSERT_EQ(bins.size(), 1u);
+    EXPECT_EQ(bins[0].permissionControlMode, PermissionControlMode::INHERIT_PARENT_PROCESS);
+}
+
+/**
+ * @tc.number: PermissionControlMode_Transform_002
+ * @tc.name: test module.json without permissionControlMode
+ * @tc.desc: 1. permissionControlMode field is missing
+ *           2. verify default value is independent
+ */
+HWTEST_F(BmsBundleParserTest, PermissionControlMode_Transform_002, Function | SmallTest | Level0)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+    nlohmann::json profileJson = MODULE_JSON_18;
+    profileFileBuffer << profileJson.dump();
+    BundleExtractor bundleExtractor(EMPTY_NAME);
+    ErrCode ret = moduleProfile.TransformTo(profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(ret, ERR_OK);
+    ASSERT_FALSE(innerBundleInfo.innerModuleInfos_.empty());
+    const auto &bins = innerBundleInfo.innerModuleInfos_.begin()->second.executableBinaryPaths;
+    ASSERT_EQ(bins.size(), 1u);
+    EXPECT_EQ(bins[0].permissionControlMode, PermissionControlMode::INDEPENDENT);
+}
+
+/**
+ * @tc.number: PermissionControlMode_Transform_003
+ * @tc.name: test module.json unknown permissionControlMode string
+ * @tc.desc: 1. permissionControlMode is unknown string
+ *           2. verify falls back to independent
+ */
+HWTEST_F(BmsBundleParserTest, PermissionControlMode_Transform_003, Function | SmallTest | Level0)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+    nlohmann::json profileJson = MODULE_JSON_18;
+    profileJson["module"]["executableBinaryPaths"][0]["permissionControlMode"] = "notAValidMode";
+    profileFileBuffer << profileJson.dump();
+    BundleExtractor bundleExtractor(EMPTY_NAME);
+    ErrCode ret = moduleProfile.TransformTo(profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(ret, ERR_OK);
+    ASSERT_FALSE(innerBundleInfo.innerModuleInfos_.empty());
+    const auto &bins = innerBundleInfo.innerModuleInfos_.begin()->second.executableBinaryPaths;
+    ASSERT_EQ(bins.size(), 1u);
+    EXPECT_EQ(bins[0].permissionControlMode, PermissionControlMode::INDEPENDENT);
+    EXPECT_NE(bins[0].permissionControlMode, PermissionControlMode::INHERIT_PARENT_PROCESS);
+}
+
+/**
+ * @tc.number: PermissionControlMode_Transform_004
+ * @tc.name: test module.json permissionControlMode non-string type
+ * @tc.desc: 1. permissionControlMode is bool
+ *           2. verify return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR
+ */
+HWTEST_F(BmsBundleParserTest, PermissionControlMode_Transform_004, Function | SmallTest | Level0)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+    nlohmann::json profileJson = MODULE_JSON_18;
+    profileJson["module"]["executableBinaryPaths"][0]["permissionControlMode"] = true;
+    profileFileBuffer << profileJson.dump();
+    BundleExtractor bundleExtractor(EMPTY_NAME);
+    ErrCode ret = moduleProfile.TransformTo(profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR);
+}
+
+/**
+ * @tc.number: PermissionControlMode_Transform_005
+ * @tc.name: test module.json permissionControlMode numeric type
+ * @tc.desc: 1. permissionControlMode is number
+ *           2. verify return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR
+ */
+HWTEST_F(BmsBundleParserTest, PermissionControlMode_Transform_005, Function | SmallTest | Level0)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+    nlohmann::json profileJson = MODULE_JSON_18;
+    profileJson["module"]["executableBinaryPaths"][0]["permissionControlMode"] = 1;
+    profileFileBuffer << profileJson.dump();
+    BundleExtractor bundleExtractor(EMPTY_NAME);
+    ErrCode ret = moduleProfile.TransformTo(profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR);
+}
+
+/**
+ * @tc.number: PermissionControlMode_Transform_006
+ * @tc.name: test module.json permissionControlMode=independent
+ * @tc.desc: 1. permissionControlMode is independent
+ *           2. verify TransformTo keeps independent
+ */
+HWTEST_F(BmsBundleParserTest, PermissionControlMode_Transform_006, Function | SmallTest | Level0)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+    nlohmann::json profileJson = MODULE_JSON_18;
+    profileJson["module"]["executableBinaryPaths"][0]["permissionControlMode"] = "independent";
+    profileFileBuffer << profileJson.dump();
+    BundleExtractor bundleExtractor(EMPTY_NAME);
+    ErrCode ret = moduleProfile.TransformTo(profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(ret, ERR_OK);
+    ASSERT_FALSE(innerBundleInfo.innerModuleInfos_.empty());
+    const auto &bins = innerBundleInfo.innerModuleInfos_.begin()->second.executableBinaryPaths;
+    ASSERT_EQ(bins.size(), 1u);
+    EXPECT_EQ(bins[0].permissionControlMode, PermissionControlMode::INDEPENDENT);
+}
+
+/**
+ * @tc.number: PermissionControlMode_Transform_007
+ * @tc.name: test module.json permissionControlMode empty string
+ * @tc.desc: 1. permissionControlMode is empty string
+ *           2. verify falls back to independent
+ */
+HWTEST_F(BmsBundleParserTest, PermissionControlMode_Transform_007, Function | SmallTest | Level0)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+    nlohmann::json profileJson = MODULE_JSON_18;
+    profileJson["module"]["executableBinaryPaths"][0]["permissionControlMode"] = "";
+    profileFileBuffer << profileJson.dump();
+    BundleExtractor bundleExtractor(EMPTY_NAME);
+    ErrCode ret = moduleProfile.TransformTo(profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(ret, ERR_OK);
+    ASSERT_FALSE(innerBundleInfo.innerModuleInfos_.empty());
+    const auto &bins = innerBundleInfo.innerModuleInfos_.begin()->second.executableBinaryPaths;
+    ASSERT_EQ(bins.size(), 1u);
+    EXPECT_EQ(bins[0].permissionControlMode, PermissionControlMode::INDEPENDENT);
 }
 
 /**

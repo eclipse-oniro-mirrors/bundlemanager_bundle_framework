@@ -1645,6 +1645,7 @@ HWTEST_F(BmsInstallDaemonIpcTest, ProcessBinFilesTest_001, Function | SmallTest 
     verifyBinParam.appIdentifier = "test";
     verifyBinParam.userId = 100;
     verifyBinParam.binFilePaths = {"/data/app/el1/bundle/public/com.ohos.test/bin/test"};
+    verifyBinParam.permissionControlModes = {1};
     verifyBinParam.isDebug = true;
     ResetMockInstalldProcessBinFilesParam();
     auto ret = proxy->ProcessBinFiles(verifyBinParam);
@@ -1652,7 +1653,166 @@ HWTEST_F(BmsInstallDaemonIpcTest, ProcessBinFilesTest_001, Function | SmallTest 
     VerifyBinParam receivedParam;
     ASSERT_TRUE(GetMockInstalldProcessBinFilesParam(receivedParam));
     EXPECT_TRUE(receivedParam.isDebug);
+    EXPECT_EQ(receivedParam.userId, verifyBinParam.userId);
     EXPECT_EQ(receivedParam.binFilePaths, verifyBinParam.binFilePaths);
+    EXPECT_EQ(receivedParam.permissionControlModes, verifyBinParam.permissionControlModes);
+}
+
+/**
+ * @tc.number: ProcessBinFilesTest_002
+ * @tc.name: test ProcessBinFiles with userId and mixed modes
+ * @tc.desc: 1. calling ProcessBinFiles of proxy
+ *           2. verify userId and permissionControlModes
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, ProcessBinFilesTest_002, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    EXPECT_NE(proxy, nullptr);
+
+    VerifyBinParam verifyBinParam;
+    verifyBinParam.bundleName = "com.ohos.test";
+    verifyBinParam.appIdentifier = "testAppId";
+    verifyBinParam.userId = 100;
+    verifyBinParam.binFilePaths = {
+        "/data/app/el1/bundle/public/com.ohos.test/bin/a",
+        "/data/app/el1/bundle/public/com.ohos.test/bin/b"};
+    verifyBinParam.permissionControlModes = {0, 1};
+    verifyBinParam.isDebug = false;
+    ResetMockInstalldProcessBinFilesParam();
+    auto ret = proxy->ProcessBinFiles(verifyBinParam);
+    EXPECT_EQ(ret, ERR_OK);
+    VerifyBinParam receivedParam;
+    ASSERT_TRUE(GetMockInstalldProcessBinFilesParam(receivedParam));
+    EXPECT_EQ(receivedParam.userId, verifyBinParam.userId);
+    EXPECT_EQ(receivedParam.appIdentifier, verifyBinParam.appIdentifier);
+    EXPECT_EQ(receivedParam.binFilePaths, verifyBinParam.binFilePaths);
+    EXPECT_EQ(receivedParam.permissionControlModes, verifyBinParam.permissionControlModes);
+    EXPECT_FALSE(receivedParam.isDebug);
+}
+
+/**
+ * @tc.number: VerifyBinParam_ReadFromParcel_ModeRange_001
+ * @tc.name: test VerifyBinParam with permissionControlMode=0
+ * @tc.desc: 1. permissionControlModes contains 0
+ *           2. verify Unmarshalling success
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, VerifyBinParam_ReadFromParcel_ModeRange_001, Function | SmallTest | Level0)
+{
+    Parcel parcel;
+    VerifyBinParam validParam;
+    validParam.bundleName = "com.ohos.test";
+    validParam.appIdentifier = "test";
+    validParam.userId = 100;
+    validParam.binFilePaths = {"/data/app/el1/bundle/public/com.ohos.test/bin/test"};
+    validParam.permissionControlModes = {0};
+    validParam.isDebug = false;
+    ASSERT_TRUE(validParam.Marshalling(parcel));
+    auto *roundTrip = VerifyBinParam::Unmarshalling(parcel);
+    ASSERT_NE(roundTrip, nullptr);
+    EXPECT_EQ(roundTrip->permissionControlModes.size(), 1);
+    EXPECT_EQ(roundTrip->permissionControlModes[0], 0);
+    EXPECT_FALSE(roundTrip->isUninstall);
+    delete roundTrip;
+}
+
+/**
+ * @tc.number: VerifyBinParam_ReadFromParcel_ModeRange_002
+ * @tc.name: test VerifyBinParam with permissionControlMode=1
+ * @tc.desc: 1. permissionControlModes contains 1
+ *           2. verify Unmarshalling success
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, VerifyBinParam_ReadFromParcel_ModeRange_002, Function | SmallTest | Level0)
+{
+    Parcel parcel;
+    VerifyBinParam validParam;
+    validParam.bundleName = "com.ohos.test";
+    validParam.appIdentifier = "test";
+    validParam.userId = 100;
+    validParam.binFilePaths = {"/data/app/el1/bundle/public/com.ohos.test/bin/test"};
+    validParam.permissionControlModes = {1};
+    validParam.isDebug = true;
+    validParam.isUninstall = true;
+    ASSERT_TRUE(validParam.Marshalling(parcel));
+    auto *roundTrip = VerifyBinParam::Unmarshalling(parcel);
+    ASSERT_NE(roundTrip, nullptr);
+    EXPECT_EQ(roundTrip->userId, 100);
+    ASSERT_EQ(roundTrip->permissionControlModes.size(), 1);
+    EXPECT_EQ(roundTrip->permissionControlModes[0], 1);
+    EXPECT_TRUE(roundTrip->isDebug);
+    EXPECT_TRUE(roundTrip->isUninstall);
+    delete roundTrip;
+}
+
+/**
+ * @tc.number: VerifyBinParam_ReadFromParcel_ModeRange_003
+ * @tc.name: test VerifyBinParam with permissionControlMode=2
+ * @tc.desc: 1. permissionControlModes contains 2
+ *           2. verify Unmarshalling passes value through as-is (range validated at profile parsing)
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, VerifyBinParam_ReadFromParcel_ModeRange_003, Function | SmallTest | Level0)
+{
+    Parcel parcel;
+    VerifyBinParam badParam;
+    badParam.bundleName = "com.ohos.test";
+    badParam.appIdentifier = "test";
+    badParam.userId = 100;
+    badParam.binFilePaths = {"/data/app/el1/bundle/public/com.ohos.test/bin/test"};
+    badParam.permissionControlModes = {2};
+    badParam.isDebug = false;
+    ASSERT_TRUE(badParam.Marshalling(parcel));
+    auto *result = VerifyBinParam::Unmarshalling(parcel);
+    ASSERT_NE(result, nullptr);
+    ASSERT_EQ(result->permissionControlModes.size(), 1);
+    EXPECT_EQ(result->permissionControlModes[0], 2);
+    delete result;
+}
+
+/**
+ * @tc.number: VerifyBinParam_ReadFromParcel_ModeRange_004
+ * @tc.name: test VerifyBinParam with permissionControlMode=-1
+ * @tc.desc: 1. permissionControlModes contains -1
+ *           2. verify Unmarshalling passes value through as-is (range validated at profile parsing)
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, VerifyBinParam_ReadFromParcel_ModeRange_004, Function | SmallTest | Level0)
+{
+    Parcel parcel;
+    VerifyBinParam badParam;
+    badParam.bundleName = "com.ohos.test";
+    badParam.appIdentifier = "test";
+    badParam.userId = 100;
+    badParam.binFilePaths = {"/data/app/el1/bundle/public/com.ohos.test/bin/test"};
+    badParam.permissionControlModes = {-1};
+    badParam.isDebug = false;
+    ASSERT_TRUE(badParam.Marshalling(parcel));
+    auto *result = VerifyBinParam::Unmarshalling(parcel);
+    ASSERT_NE(result, nullptr);
+    ASSERT_EQ(result->permissionControlModes.size(), 1);
+    EXPECT_EQ(result->permissionControlModes[0], -1);
+    delete result;
+}
+
+/**
+ * @tc.number: VerifyBinParam_ReadFromParcel_ModeRange_005
+ * @tc.name: test VerifyBinParam with empty permissionControlModes
+ * @tc.desc: 1. permissionControlModes is empty
+ *           2. verify Unmarshalling success
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, VerifyBinParam_ReadFromParcel_ModeRange_005, Function | SmallTest | Level0)
+{
+    Parcel parcel;
+    VerifyBinParam emptyModesParam;
+    emptyModesParam.bundleName = "com.ohos.test";
+    emptyModesParam.appIdentifier = "test";
+    emptyModesParam.userId = 100;
+    emptyModesParam.binFilePaths = {"/data/app/el1/bundle/public/com.ohos.test/bin/test"};
+    emptyModesParam.permissionControlModes.clear();
+    emptyModesParam.isDebug = false;
+    ASSERT_TRUE(emptyModesParam.Marshalling(parcel));
+    auto *emptyModes = VerifyBinParam::Unmarshalling(parcel);
+    ASSERT_NE(emptyModes, nullptr);
+    EXPECT_TRUE(emptyModes->permissionControlModes.empty());
+    EXPECT_EQ(emptyModes->binFilePaths.size(), 1);
+    delete emptyModes;
 }
 
 /**
