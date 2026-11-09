@@ -562,6 +562,7 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
         uninstallBundleInfo.appIdentifier = appIdentifier_;
         uninstallBundleInfo.appProvisionType = info.GetAppProvisionType();
         uninstallBundleInfo.bundleType = info.GetApplicationBundleType();
+        uninstallBundleInfo.checkBySpm = info.IsBundleCheckBySpm();
         uninstallBundleInfo.deviceModeDistributionPolicy = info.GetDeviceModeDistributionPolicy();
         info.GetModuleNames(uninstallBundleInfo.moduleNames);
         std::string key = std::to_string(userId) + "_" + std::to_string(appIndex);
