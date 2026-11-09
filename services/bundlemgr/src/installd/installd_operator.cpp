@@ -617,47 +617,6 @@ static uint64_t CalculateDirectorySizeWithCache(const std::string &dirPath,
     return totalSize;
 }
 
-static ErrCode GetEnterpriseCertSubjectOrg(X509 *cert, std::string &subjectOrg)
-{
-    X509_NAME *subject = X509_get_subject_name(cert);
-    if (subject == nullptr) {
-        LOG_E(BMS_TAG_INSTALLD, "get subject name failed");
-        return ERR_APPEXECFWK_ENTERPRISE_CERT_READ_CERT_FAILED;
-    }
-    char orgBuf[256] = {0};
-    int orgLen = X509_NAME_get_text_by_NID(subject, NID_organizationName, orgBuf, sizeof(orgBuf));
-    if (orgLen > 0) {
-        subjectOrg = orgBuf;
-        return ERR_OK;
-    }
-    // BR-2: the enterprise name falls back to CommonName when Organization is absent.
-    char cnBuf[256] = {0};
-    int cnLen = X509_NAME_get_text_by_NID(subject, NID_commonName, cnBuf, sizeof(cnBuf));
-    if (cnLen <= 0) {
-        LOG_E(BMS_TAG_INSTALLD, "get organization and common name failed");
-        return ERR_APPEXECFWK_ENTERPRISE_CERT_READ_CERT_FAILED;
-    }
-    subjectOrg = cnBuf;
-    return ERR_OK;
-}
-
-static ErrCode GetEnterpriseCertNotAfter(X509 *cert, int64_t &notAfter)
-{
-    const ASN1_TIME *notAfterTime = X509_get0_notAfter(cert);
-    if (notAfterTime == nullptr) {
-        LOG_E(BMS_TAG_INSTALLD, "get notAfter failed");
-        return ERR_APPEXECFWK_ENTERPRISE_CERT_READ_CERT_FAILED;
-    }
-    struct tm tmVal = {0};
-    if (ASN1_TIME_to_tm(notAfterTime, &tmVal) != 1) {
-        LOG_E(BMS_TAG_INSTALLD, "convert notAfter failed");
-        return ERR_APPEXECFWK_ENTERPRISE_CERT_READ_CERT_FAILED;
-    }
-    // BR-3: notAfter is a millisecond Unix timestamp.
-    notAfter = static_cast<int64_t>(timegm(&tmVal)) * MILLISECOND_PER_SECOND;
-    return ERR_OK;
-}
-
 } // namespace
 
 #define FSCRYPT_KEY_DESCRIPTOR_SIZE 8
@@ -4352,6 +4311,47 @@ bool InstalldOperator::ReadCert(const std::string &path, std::vector<unsigned ch
     LOG_W(BMS_TAG_INSTALLD, "code signature feature is not supported");
 #endif
     return true;
+}
+
+static ErrCode GetEnterpriseCertSubjectOrg(X509 *cert, std::string &subjectOrg)
+{
+    X509_NAME *subject = X509_get_subject_name(cert);
+    if (subject == nullptr) {
+        LOG_E(BMS_TAG_INSTALLD, "get subject name failed");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_READ_CERT_FAILED;
+    }
+    char orgBuf[256] = {0};
+    int orgLen = X509_NAME_get_text_by_NID(subject, NID_organizationName, orgBuf, sizeof(orgBuf));
+    if (orgLen > 0) {
+        subjectOrg = orgBuf;
+        return ERR_OK;
+    }
+    // BR-2: the enterprise name falls back to CommonName when Organization is absent.
+    char cnBuf[256] = {0};
+    int cnLen = X509_NAME_get_text_by_NID(subject, NID_commonName, cnBuf, sizeof(cnBuf));
+    if (cnLen <= 0) {
+        LOG_E(BMS_TAG_INSTALLD, "get organization and common name failed");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_READ_CERT_FAILED;
+    }
+    subjectOrg = cnBuf;
+    return ERR_OK;
+}
+
+static ErrCode GetEnterpriseCertNotAfter(X509 *cert, int64_t &notAfter)
+{
+    const ASN1_TIME *notAfterTime = X509_get0_notAfter(cert);
+    if (notAfterTime == nullptr) {
+        LOG_E(BMS_TAG_INSTALLD, "get notAfter failed");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_READ_CERT_FAILED;
+    }
+    struct tm tmVal = {0};
+    if (ASN1_TIME_to_tm(notAfterTime, &tmVal) != 1) {
+        LOG_E(BMS_TAG_INSTALLD, "convert notAfter failed");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_READ_CERT_FAILED;
+    }
+    // BR-3: notAfter is a millisecond Unix timestamp.
+    notAfter = static_cast<int64_t>(timegm(&tmVal)) * MILLISECOND_PER_SECOND;
+    return ERR_OK;
 }
 
 ErrCode InstalldOperator::ParseEnterpriseCertInfo(
