@@ -1178,7 +1178,7 @@ ErrCode BundleInstallerProxy::GetEnterpriseReSignatureCert(int32_t userId, std::
 ErrCode BundleInstallerProxy::GetEnterpriseReSignatureCertInfo(
     int32_t userId, std::vector<EnterpriseCertInfo> &certInfos)
 {
-    LOG_I(BMS_TAG_INSTALLER, "get re sign cert info -u:%{public}d", userId);
+    LOG_I(BMS_TAG_INSTALLER, "get ReSignature Certificate Info -u:%{public}d", userId);
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     MessageParcel reply;
