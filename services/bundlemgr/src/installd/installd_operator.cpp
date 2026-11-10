@@ -4271,7 +4271,7 @@ bool InstalldOperator::ReadCert(const std::string &path, std::vector<unsigned ch
 #if defined(CODE_SIGNATURE_ENABLE)
     FILE *file = fopen(path.c_str(), "r");
     if (file == nullptr) {
-        LOG_E(BMS_TAG_INSTALLD, "open file failed path:%{private}s errno: %{public}d", path.c_str(), errno);
+        LOG_E(BMS_TAG_INSTALLD, "open file failed path:%{public}s errno: %{public}d", path.c_str(), errno);
         return false;
     }
     int32_t fd = fileno(file);
@@ -4311,6 +4311,20 @@ bool InstalldOperator::ReadCert(const std::string &path, std::vector<unsigned ch
     LOG_W(BMS_TAG_INSTALLD, "code signature feature is not supported");
 #endif
     return true;
+}
+
+ErrCode InstalldOperator::ParseEnterpriseCertFile(const std::string &certPath,
+    std::string &subjectOrg, int64_t &notAfter)
+{
+    std::vector<unsigned char> certData;
+    if (!ReadCert(certPath, certData)) {
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_READ_CERT_FAILED;
+    }
+    // X.509 parsing itself does not depend on the code signature feature: on
+    // builds without it ReadCert returns empty data and the parse below fails,
+    // so the caller skips the cert and the query degrades to an empty list
+    // (RC-3). Do not gate this block with CODE_SIGNATURE_ENABLE.
+    return ParseEnterpriseCertInfo(certData, subjectOrg, notAfter);
 }
 
 static ErrCode GetEnterpriseCertSubjectOrg(X509 *cert, std::string &subjectOrg)
@@ -4382,11 +4396,7 @@ ErrCode InstalldOperator::ParseEnterpriseCertInfo(
         ret = GetEnterpriseCertNotAfter(cert, notAfter);
     }
     X509_free(cert);
-    if (ret != ERR_OK) {
-        return ret;
-    }
-    LOG_I(BMS_TAG_INSTALLD, "parse enterprise cert info success");
-    return ERR_OK;
+    return ret;
 }
 
 bool InstalldOperator::IsValidModuleName(const std::string &moduleName)

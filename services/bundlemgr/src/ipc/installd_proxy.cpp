@@ -1669,7 +1669,7 @@ ErrCode InstalldProxy::AddCertAndEnableKey(const std::string &certPath, const st
 ErrCode InstalldProxy::GetEnterpriseCertInfo(const std::string &certPath, EnterpriseCertInfo &certInfo)
 {
     if (certPath.empty() || certPath.size() > Constants::BMS_MAX_PATH_LENGTH) {
-        LOG_E(BMS_TAG_INSTALLD, "invalid cert path");
+        LOG_E(BMS_TAG_INSTALLD, "cert path is empty or too long, size: %{public}zu", certPath.size());
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     MessageParcel data;

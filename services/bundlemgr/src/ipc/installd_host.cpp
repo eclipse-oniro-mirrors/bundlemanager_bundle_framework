@@ -1735,12 +1735,15 @@ bool InstalldHost::HandleGetEnterpriseCertInfo(MessageParcel &data, MessageParce
 {
     std::string certPath = Str16ToStr8(data.ReadString16());
     if (certPath.empty() || certPath.size() > Constants::BMS_MAX_PATH_LENGTH) {
-        LOG_E(BMS_TAG_INSTALLD, "invalid cert path");
+        LOG_E(BMS_TAG_INSTALLD, "cert path is empty or too long, size: %{public}zu", certPath.size());
         WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
         return false;
     }
     EnterpriseCertInfo certInfo;
     ErrCode result = GetEnterpriseCertInfo(certPath, certInfo);
+    if (result != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "get enterprise cert info failed, err: %{public}d", result);
+    }
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     if (result == ERR_OK && !reply.WriteParcelable(&certInfo)) {
         LOG_E(BMS_TAG_INSTALLD, "write cert info failed");
