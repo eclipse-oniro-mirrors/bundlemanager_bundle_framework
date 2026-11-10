@@ -5401,6 +5401,93 @@ HWTEST_F(BmsBundleParserTest, ParseAppPreloadPhase_0300, Function | SmallTest | 
 }
 
 /**
+ * @tc.number: ApplicationInfo_KeepDataOnUninstall_0100
+ * @tc.name: parse keepDataOnUninstall
+ * @tc.desc: 1. system running normally
+ *           2. test parsing success when keepDataOnUninstall is true
+ */
+HWTEST_F(BmsBundleParserTest, ApplicationInfo_KeepDataOnUninstall_0100, Function | SmallTest | Level1)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json profileJson = MODULE_JSON_10;
+    profileJson["app"]["keepDataOnUninstall"] = true;
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor(EMPTY_NAME);
+    ErrCode result = moduleProfile.TransformTo(profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK);
+    EXPECT_TRUE(innerBundleInfo.GetBaseApplicationInfo().keepDataOnUninstall);
+}
+
+/**
+ * @tc.number: ApplicationInfo_KeepDataOnUninstall_0200
+ * @tc.name: parse keepDataOnUninstall
+ * @tc.desc: 1. system running normally
+ *           2. test default value is false when keepDataOnUninstall is not configured
+ */
+HWTEST_F(BmsBundleParserTest, ApplicationInfo_KeepDataOnUninstall_0200, Function | SmallTest | Level1)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json profileJson = MODULE_JSON_11;
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor(EMPTY_NAME);
+    ErrCode result = moduleProfile.TransformTo(profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK);
+    EXPECT_FALSE(innerBundleInfo.GetBaseApplicationInfo().keepDataOnUninstall);
+}
+
+/**
+ * @tc.number: ApplicationInfo_KeepDataOnUninstall_0300
+ * @tc.name: parcel keepDataOnUninstall
+ * @tc.desc: 1. system running normally
+ *           2. test keepDataOnUninstall survives ApplicationInfo parcel roundtrip
+ */
+HWTEST_F(BmsBundleParserTest, ApplicationInfo_KeepDataOnUninstall_0300, Function | SmallTest | Level1)
+{
+    ApplicationInfo appInfo;
+    appInfo.name = "com.ohos.test";
+    appInfo.bundleName = "com.ohos.test";
+    appInfo.keepDataOnUninstall = true;
+
+    Parcel parcel;
+    ASSERT_TRUE(appInfo.Marshalling(parcel));
+
+    ApplicationInfo *restoredInfo = ApplicationInfo::Unmarshalling(parcel);
+    ASSERT_NE(restoredInfo, nullptr);
+    EXPECT_TRUE(restoredInfo->keepDataOnUninstall);
+    delete restoredInfo;
+}
+
+/**
+ * @tc.number: ApplicationInfo_KeepDataOnUninstall_0400
+ * @tc.name: update keepDataOnUninstall
+ * @tc.desc: 1. system running normally
+ *           2. test keepDataOnUninstall is synchronized when base application info is updated
+ */
+HWTEST_F(BmsBundleParserTest, ApplicationInfo_KeepDataOnUninstall_0400, Function | SmallTest | Level1)
+{
+    ApplicationInfo oldApplicationInfo;
+    oldApplicationInfo.keepDataOnUninstall = false;
+    InnerBundleInfo oldInnerBundleInfo;
+    oldInnerBundleInfo.SetBaseApplicationInfo(oldApplicationInfo);
+
+    ApplicationInfo newApplicationInfo;
+    newApplicationInfo.keepDataOnUninstall = true;
+    InnerBundleInfo newInnerBundleInfo;
+    newInnerBundleInfo.SetBaseApplicationInfo(newApplicationInfo);
+
+    oldInnerBundleInfo.UpdateBaseApplicationInfo(newInnerBundleInfo);
+    EXPECT_TRUE(oldInnerBundleInfo.GetBaseApplicationInfo().keepDataOnUninstall);
+}
+
+/**
  * @tc.number: ParseBuildVersion_0100
  * @tc.name: parse buildVersion
  * @tc.desc: 1. system running normally

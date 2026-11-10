@@ -9962,8 +9962,12 @@ HWTEST_F(BmsBundleInstallerTest, Init_0100, Function | SmallTest | Level0)
 {
     UninstallBundleInfo info;
     info.extensionDirs.push_back(BUNDLE_NAME);
+    info.developerId = "developerId";
+    info.assetAccessGroups.push_back("assetGroup");
     info.Init();
     EXPECT_TRUE(info.extensionDirs.empty());
+    EXPECT_TRUE(info.developerId.empty());
+    EXPECT_TRUE(info.assetAccessGroups.empty());
 }
 
 /**
@@ -14586,8 +14590,15 @@ HWTEST_F(BmsBundleInstallerTest, GetUninstallBundleInfo_0010, Function | SmallTe
     installer.GetUninstallBundleInfo(false, Constants::START_USERID, oldInfo, uninstallBundleInfo);
     EXPECT_TRUE(uninstallBundleInfo.userInfos.empty());
 
+    oldInfo.UpdateDeveloperId("developerId");
+    ApplicationInfo applicationInfo;
+    applicationInfo.assetAccessGroups.push_back("assetGroup");
+    oldInfo.SetBaseApplicationInfo(applicationInfo);
     installer.GetUninstallBundleInfo(true, Constants::START_USERID, oldInfo, uninstallBundleInfo);
     EXPECT_FALSE(uninstallBundleInfo.userInfos.empty());
+    EXPECT_EQ(uninstallBundleInfo.developerId, "developerId");
+    ASSERT_EQ(uninstallBundleInfo.assetAccessGroups.size(), 1);
+    EXPECT_EQ(uninstallBundleInfo.assetAccessGroups[0], "assetGroup");
 }
 
 /**
@@ -19937,12 +19948,54 @@ HWTEST_F(BmsBundleInstallerTest, UninstallBundleInfo_FromJson_0100, TestSize.Lev
     UninstallBundleInfo info;
     info.appId = "com.test.uninstall.appId";
     info.bundleType = BundleType::APP;
+    info.developerId = "developerId";
+    info.assetAccessGroups.push_back("assetGroup");
     nlohmann::json jsonObject;
     to_json(jsonObject, info);
     UninstallBundleInfo parsedInfo;
     from_json(jsonObject, parsedInfo);
     EXPECT_EQ(parsedInfo.appId, info.appId);
     EXPECT_EQ(parsedInfo.bundleType, info.bundleType);
+    EXPECT_EQ(parsedInfo.developerId, info.developerId);
+    ASSERT_EQ(parsedInfo.assetAccessGroups.size(), 1);
+    EXPECT_EQ(parsedInfo.assetAccessGroups[0], "assetGroup");
+}
+
+/**
+ * @tc.number: UninstallBundleInfo_RejectDuplicateUser_0100
+ * @tc.name: test duplicate uninstall user rejection
+ * @tc.desc: a duplicate user record is rejected and the original identity is preserved
+ */
+HWTEST_F(BmsBundleInstallerTest, UninstallBundleInfo_RejectDuplicateUser_0100, TestSize.Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    ASSERT_NE(dataMgr->uninstallDataMgr_, nullptr);
+    const std::string bundleName = "com.example.uninstall.duplicateuser";
+    dataMgr->uninstallDataMgr_->DeleteUninstallBundleInfo(bundleName);
+    ScopeGuard cleanup([&] {
+        dataMgr->uninstallDataMgr_->DeleteUninstallBundleInfo(bundleName);
+    });
+
+    std::string key = std::to_string(USERID);
+    UninstallBundleInfo firstInfo;
+    firstInfo.developerId = "oldDeveloper";
+    firstInfo.assetAccessGroups.push_back("oldGroup");
+    firstInfo.userInfos[key] = UninstallDataUserInfo();
+    EXPECT_TRUE(dataMgr->UpdateUninstallBundleInfo(bundleName, firstInfo));
+
+    UninstallBundleInfo secondInfo;
+    secondInfo.developerId = "newDeveloper";
+    secondInfo.assetAccessGroups.push_back("newGroup");
+    secondInfo.userInfos[key] = UninstallDataUserInfo();
+    EXPECT_FALSE(dataMgr->UpdateUninstallBundleInfo(bundleName, secondInfo));
+
+    UninstallBundleInfo storedInfo;
+    EXPECT_TRUE(dataMgr->GetUninstallBundleInfo(bundleName, storedInfo));
+    EXPECT_EQ(storedInfo.developerId, firstInfo.developerId);
+    EXPECT_EQ(storedInfo.assetAccessGroups, firstInfo.assetAccessGroups);
+    EXPECT_EQ(storedInfo.userInfos.size(), 1U);
+    EXPECT_EQ(storedInfo.userInfos.count(key), 1U);
 }
 
 /**

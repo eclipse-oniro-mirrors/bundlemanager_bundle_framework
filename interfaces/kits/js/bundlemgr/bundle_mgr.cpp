@@ -262,6 +262,11 @@ static void ConvertResource(napi_env env, napi_value objResource, const Resource
 
 static void ConvertApplicationInfo(napi_env env, napi_value objAppInfo, const ApplicationInfo &appInfo)
 {
+    napi_value nKeepDataOnUninstall;
+    NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, appInfo.keepDataOnUninstall, &nKeepDataOnUninstall));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "keepDataOnUninstall",
+        nKeepDataOnUninstall));
+
     napi_value nName;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, appInfo.name.c_str(), NAPI_AUTO_LENGTH, &nName));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "name", nName));

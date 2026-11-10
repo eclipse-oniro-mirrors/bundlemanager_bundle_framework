@@ -1837,6 +1837,17 @@ HWTEST_F(BmsBundleNavigationTest, UninstallDataMgrStorageRdb_0005, Function | Sm
     EXPECT_FALSE(ret);
 }
 
+HWTEST_F(BmsBundleNavigationTest, QueryAllUninstallBundleInfo_NullDataMgr, Function | SmallTest | Level1)
+{
+    auto storage = std::make_shared<UninstallDataMgrStorageRdb>();
+    ASSERT_NE(storage, nullptr);
+    storage->rdbDataManager_ = nullptr;
+    std::map<std::string, UninstallBundleInfo> infos;
+    infos["stale"] = UninstallBundleInfo();
+    EXPECT_FALSE(storage->QueryAllUninstallBundleInfo(infos));
+    EXPECT_TRUE(infos.empty());
+}
+
 /**
  * @tc.number: UninstallDataMgrStorageRdb_0006
  * @tc.name: test function for UninstallDataMgrStorageRdb

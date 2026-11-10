@@ -681,6 +681,30 @@ HWTEST_F(BmsBundleCloneInstallerTest, RecoverHapToken_0400, Function | SmallTest
 }
 
 /**
+ * @tc.number: UninstallBundleInfo_CloneIdentity_0100
+ * @tc.name: test clone uninstall identity storage
+ * @tc.desc: clone key record keeps developerId and assetAccessGroups
+*/
+HWTEST_F(BmsBundleCloneInstallerTest, UninstallBundleInfo_CloneIdentity_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::string key = std::to_string(userId_) + "_" + std::to_string(1);
+    UninstallBundleInfo uninstallBundleInfo;
+    uninstallBundleInfo.developerId = "cloneDeveloper";
+    uninstallBundleInfo.assetAccessGroups.push_back("cloneGroup");
+    uninstallBundleInfo.userInfos[key] = UninstallDataUserInfo();
+    EXPECT_TRUE(dataMgr->UpdateUninstallBundleInfo(BUNDLE_NAME, uninstallBundleInfo));
+
+    UninstallBundleInfo storedInfo;
+    ASSERT_TRUE(dataMgr->GetUninstallBundleInfo(BUNDLE_NAME, storedInfo));
+    EXPECT_EQ(storedInfo.developerId, "cloneDeveloper");
+    ASSERT_EQ(storedInfo.assetAccessGroups.size(), 1);
+    EXPECT_EQ(storedInfo.assetAccessGroups[0], "cloneGroup");
+    EXPECT_TRUE(dataMgr->DeleteUninstallCloneBundleInfo(BUNDLE_NAME, userId_, 1));
+}
+
+/**
  * @tc.number: DeleteUninstallCloneBundleInfo_0100
  * @tc.name: test DeleteUninstallCloneBundleInfo
  * @tc.desc: test DeleteUninstallCloneBundleInfo of BundleCloneInstaller

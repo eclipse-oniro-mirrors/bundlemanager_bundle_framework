@@ -703,6 +703,8 @@ void BundleCommonEventMgr::NotifyUninstalledBundleCleared(const NotifyBundleEven
     want.SetParam(RESULT_CODE, installResult.resultCode);
     want.SetParam(ACCESS_TOKEN_ID, static_cast<int32_t>(installResult.accessTokenId));
     want.SetParam(Constants::UID, installResult.uid);
+    want.SetParam(DEVELOPERID, installResult.developerId);
+    want.SetParam(ASSET_ACCESS_GROUPS, installResult.assetAccessGroups);
     want.SetParam(BUNDLE_TYPE, installResult.bundleType);
     want.SetParam(APP_ID, installResult.appId);
     want.SetParam(APP_IDENTIFIER, installResult.appIdentifier);

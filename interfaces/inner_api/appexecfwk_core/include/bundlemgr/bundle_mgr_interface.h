@@ -2427,6 +2427,19 @@ public:
     {
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
+    /**
+     * @brief Checks whether an application exists by developerId, assetAccessGroup and userId.
+     * @param developerId Indicates the developer id.
+     * @param assetAccessGroup Indicates the asset access group.
+     * @param userId Indicates the user id.
+     * @param isExist Indicates whether a matching application or retained data exists.
+     * @return Returns ERR_OK if this function is successfully called; returns errCode otherwise.
+     */
+    virtual ErrCode CheckBundleExistByDeveloperIdAndAssetGroup(const std::string &developerId,
+        const std::string &assetAccessGroup, int32_t userId, bool &isExist)
+    {
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
 };
 
 #define WRITE_PARCEL(func)                                             \

@@ -233,6 +233,26 @@ public:
     bool isRegisterEventCallbackCode_ = false;
 };
 
+class MockCheckBundleExistStub : public IRemoteStub<IBundleMgr> {
+public:
+    MockCheckBundleExistStub() = default;
+    ~MockCheckBundleExistStub() override = default;
+
+    ErrCode ret = ERR_OK;
+    bool isExist = false;
+
+    int OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override
+    {
+        EXPECT_EQ(code, static_cast<uint32_t>(
+            BundleMgrInterfaceCode::CHECK_BUNDLE_EXIST_BY_DEVELOPER_ID_AND_ASSET_GROUP));
+        reply.WriteInt32(ret);
+        if (ret == ERR_OK) {
+            reply.WriteBool(isExist);
+        }
+        return 0;
+    }
+};
+
 class BmsBundleMgrProxyTest : public testing::Test {
 public:
     static void SetUpTestCase();
@@ -2785,6 +2805,46 @@ HWTEST_F(BmsBundleMgrProxyTest, GetSandboxExtAbilityInfoOptimal_0400, Function |
     ErrCode ret = bundleMgrProxy.GetSandboxExtAbilityInfoOptimal(want, appIndex, 0, 100, info);
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_EQ(info.bundleName, "com.example.sandbox.optimal");
+}
+
+HWTEST_F(BmsBundleMgrProxyTest, CheckBundleExistByDeveloperIdAndAssetGroup_0100,
+    Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    bool isExist = true;
+    EXPECT_EQ(ERR_BUNDLE_MANAGER_PARAM_ERROR, bundleMgrProxy.CheckBundleExistByDeveloperIdAndAssetGroup(
+        "", "assetGroup", 100, isExist));
+    EXPECT_FALSE(isExist);
+    isExist = true;
+    EXPECT_EQ(ERR_BUNDLE_MANAGER_PARAM_ERROR, bundleMgrProxy.CheckBundleExistByDeveloperIdAndAssetGroup(
+        "developerId", "", 100, isExist));
+    EXPECT_FALSE(isExist);
+    isExist = true;
+    EXPECT_EQ(ERR_BUNDLE_MANAGER_IPC_TRANSACTION, bundleMgrProxy.CheckBundleExistByDeveloperIdAndAssetGroup(
+        "developerId", "assetGroup", 100, isExist));
+    EXPECT_FALSE(isExist);
+}
+
+HWTEST_F(BmsBundleMgrProxyTest, CheckBundleExistByDeveloperIdAndAssetGroup_0200,
+    Function | MediumTest | Level1)
+{
+    sptr<MockCheckBundleExistStub> stub = new MockCheckBundleExistStub();
+    stub->ret = ERR_OK;
+    stub->isExist = true;
+    BundleMgrProxy bundleMgrProxy(stub->AsObject());
+    bool isExist = false;
+    ErrCode ret = bundleMgrProxy.CheckBundleExistByDeveloperIdAndAssetGroup(
+        "developerId", "assetGroup", 100, isExist);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_TRUE(isExist);
+
+    stub->ret = ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    isExist = true;
+    ret = bundleMgrProxy.CheckBundleExistByDeveloperIdAndAssetGroup(
+        "developerId", "assetGroup", 100, isExist);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    EXPECT_FALSE(isExist);
 }
 }
 }

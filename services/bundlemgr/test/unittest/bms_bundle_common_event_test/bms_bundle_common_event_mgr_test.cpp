@@ -16,6 +16,9 @@
 
 #include <gtest/gtest.h>
 #include <chrono>
+#include <condition_variable>
+#include <future>
+#include <mutex>
 #include <thread>
 #include <vector>
 #include <atomic>
@@ -24,6 +27,11 @@
 #include "bundle_common_event_mgr.h"
 #include "app_log_wrapper.h"
 #include "bundle_common_event.h"
+#include "common_event_manager.h"
+#include "common_event_subscribe_info.h"
+#include "common_event_subscriber.h"
+#include "matching_skills.h"
+#include "scope_guard.h"
 
 using namespace testing::ext;
 using namespace std::chrono_literals;
@@ -42,7 +50,28 @@ const int32_t TEST_APP_INDEX = 0;
 const int32_t TEST_APP_INDEX_2 = 1;
 const int32_t WAIT_TIME_MS = 100;
 const int32_t LONGER_WAIT_TIME_MS = 500;
+constexpr const char* UNINSTALLED_DATA_CLEARED_ACTION = "usual.event.PACKAGE_UNINSTALLED_DATA_CLEARED";
+
+thread_local bool g_captureUninstalledPublish = false;
+thread_local EventFwk::CommonEventData g_publishedUninstalledEvent;
+thread_local EventFwk::CommonEventPublishInfo g_publishedUninstalledInfo;
+thread_local int32_t g_uninstalledPublishCount = 0;
 }  // namespace
+
+// Preserve the original publish path unless a new test explicitly enables capture.
+namespace EventFwk {
+bool CommonEventManager::PublishCommonEvent(const CommonEventData &data,
+    const CommonEventPublishInfo &publishInfo)
+{
+    if (!g_captureUninstalledPublish || data.GetWant().GetAction() != UNINSTALLED_DATA_CLEARED_ACTION) {
+        return NewPublishCommonEvent(data, publishInfo) == ERR_OK;
+    }
+    g_publishedUninstalledEvent = data;
+    g_publishedUninstalledInfo = publishInfo;
+    ++g_uninstalledPublishCount;
+    return true;
+}
+} // namespace EventFwk
 
 class BmsBundleCommonEventMgrTest : public testing::Test {
 public:
@@ -680,6 +709,73 @@ HWTEST_F(BmsBundleCommonEventMgrTest, StressTest_001, TestSize.Level1)
 
     EXPECT_EQ(executionCount.load(), threadCount * eventsPerThread);
     APP_LOGI("StressTest_001 end");
+}
+
+HWTEST_F(BmsBundleCommonEventMgrTest, NotifyUninstalledBundleCleared_KeepData_001, TestSize.Level1)
+{
+    g_captureUninstalledPublish = true;
+    ScopeGuard restorePublish([] { g_captureUninstalledPublish = false; });
+    g_uninstalledPublishCount = 0;
+
+    NotifyBundleEvents installResult;
+    installResult.bundleName = "com.test.keepdata";
+    installResult.uid = 20000001;
+    installResult.accessTokenId = 12345;
+    installResult.appId = "com.test.keepdata_appId";
+    installResult.appIdentifier = "com.test.keepdata_appIdentifier";
+    installResult.bundleType = static_cast<int32_t>(BundleType::APP);
+    installResult.keepData = false;
+    installResult.appIndex = 0;
+    installResult.developerId = "developerId";
+    installResult.SetAssetAccessGroups({"group1", "group2"});
+    eventMgr_->NotifyUninstalledBundleCleared(installResult);
+
+    EXPECT_EQ(g_uninstalledPublishCount, 1);
+    auto want = g_publishedUninstalledEvent.GetWant();
+    EXPECT_EQ(g_publishedUninstalledInfo.GetSubscriberPermissions(),
+        std::vector<std::string>({Constants::LISTEN_BUNDLE_CHANGE}));
+    EXPECT_EQ(g_publishedUninstalledInfo.GetSubscriberType(),
+        static_cast<int32_t>(EventFwk::SubscriberType::SYSTEM_SUBSCRIBER_TYPE));
+    EXPECT_FALSE(want.GetBoolParam("keepData", true));
+    EXPECT_EQ(want.GetAction(), UNINSTALLED_DATA_CLEARED_ACTION);
+    EXPECT_EQ(want.GetIntParam(Constants::UID, -1), installResult.uid);
+    EXPECT_EQ(want.GetIntParam("userId", -1), -1);
+    EXPECT_EQ(want.GetStringParam("developerId"), "developerId");
+    EXPECT_EQ(want.GetStringParam("assetAccessGroups"), "group1,group2");
+    EXPECT_EQ(want.GetStringParam("appId"), installResult.appId);
+    EXPECT_EQ(want.GetIntParam("resultCode", -1), installResult.resultCode);
+    EXPECT_EQ(want.GetIntParam("accessTokenId", -1), static_cast<int32_t>(installResult.accessTokenId));
+    EXPECT_EQ(want.GetIntParam("bundleType", -1), installResult.bundleType);
+    EXPECT_EQ(want.GetStringParam("appIdentifier"), installResult.appIdentifier);
+    EXPECT_EQ(want.GetIntParam("appIndex", -1), installResult.appIndex);
+}
+
+HWTEST_F(BmsBundleCommonEventMgrTest, NotifyUninstalledBundleCleared_OldRecord_002, TestSize.Level1)
+{
+    g_captureUninstalledPublish = true;
+    ScopeGuard restorePublish([] { g_captureUninstalledPublish = false; });
+    g_uninstalledPublishCount = 0;
+
+    NotifyBundleEvents installResult;
+    installResult.bundleName = "com.test.keepdata.oldrecord";
+    installResult.uid = 20000002;
+    installResult.appId = "com.test.keepdata.oldrecord_appId";
+    installResult.bundleType = static_cast<int32_t>(BundleType::APP);
+    installResult.keepData = false;
+    eventMgr_->NotifyUninstalledBundleCleared(installResult);
+
+    EXPECT_EQ(g_uninstalledPublishCount, 1);
+    auto want = g_publishedUninstalledEvent.GetWant();
+    EXPECT_EQ(g_publishedUninstalledInfo.GetSubscriberPermissions(),
+        std::vector<std::string>({Constants::LISTEN_BUNDLE_CHANGE}));
+    EXPECT_EQ(g_publishedUninstalledInfo.GetSubscriberType(),
+        static_cast<int32_t>(EventFwk::SubscriberType::SYSTEM_SUBSCRIBER_TYPE));
+    EXPECT_FALSE(want.GetBoolParam("keepData", true));
+    EXPECT_EQ(want.GetAction(), UNINSTALLED_DATA_CLEARED_ACTION);
+    EXPECT_EQ(want.GetStringParam("developerId"), "");
+    EXPECT_EQ(want.GetStringParam("assetAccessGroups"), "");
+    EXPECT_EQ(want.GetStringParam("appId"), installResult.appId);
+    EXPECT_EQ(want.GetIntParam("userId", -1), -1);
 }
 
 } // namespace OHOS

@@ -30,6 +30,7 @@
 #include "bundle_dir.h"
 #include "bundle_info.h"
 #include "base_bundle_installer.h"
+#include "bms_param.h"
 #include "bundle_data_mgr.h"
 #include "bundle_data_storage_rdb.h"
 #include "bundle_mgr_service.h"
@@ -43,6 +44,7 @@
 #include "nlohmann/json.hpp"
 #include "parameters.h"
 #include "shortcut_info.h"
+#include "scope_guard.h"
 #include "bundle_resource/bundle_resource_host_impl.h"
 #include "bundle_resource/bundle_resource_manager.h"
 
@@ -119,6 +121,19 @@ static InnerBundleUserInfo MakeUserInfo(const std::string &name, int32_t userId,
     userInfo.bundleUserInfo.userId = userId;
     userInfo.bundleUserInfo.enabled = enabled;
     return userInfo;
+}
+
+static InnerBundleInfo MakeIdentityBundleInfo(const std::string &bundleName, int32_t userId,
+    const std::string &developerId, const std::string &assetAccessGroup)
+{
+    ApplicationInfo appInfo;
+    appInfo.bundleName = bundleName;
+    appInfo.assetAccessGroups.push_back(assetAccessGroup);
+    InnerBundleInfo info;
+    info.SetBaseApplicationInfo(appInfo);
+    info.UpdateDeveloperId(developerId);
+    info.AddInnerBundleUserInfo(MakeUserInfo(bundleName, userId, true));
+    return info;
 }
 
 HWTEST_F(BmsDualModeQueryTest, GetApplicationEnabledV9_DualModeClone_0100, Function | SmallTest | Level0)
@@ -314,6 +329,227 @@ HWTEST_F(BmsDualModeQueryTest, CheckBundleExist_NonCloneAppIndex10000_0200, Func
     auto ret = dataMgr->CheckBundleExist(BUNDLE_NAME, TEST_USERID,
         ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_APPINDEX_NOT_EXIST);
+}
+
+HWTEST_F(BmsDualModeQueryTest, CheckBundleExistByDeveloperIdAndAssetGroup_Hidden_0100,
+    Function | SmallTest | Level0)
+{
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->multiUserIdsSet_.insert(TEST_USERID);
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] = MakeIdentityBundleInfo(
+        BUNDLE_NAME, TEST_USERID, "hiddenDeveloper", "hiddenGroup");
+
+    // Keep the uninstall query independent of an empty database and unrelated installed identities.
+    const std::string keptBundle = "com.example.check.hidden.kept";
+    ASSERT_NE(dataMgr->uninstallDataMgr_, nullptr);
+    ScopeGuard cleanup([&] { dataMgr->uninstallDataMgr_->DeleteUninstallBundleInfo(keptBundle); });
+    UninstallBundleInfo keptInfo;
+    keptInfo.developerId = "unrelatedDeveloper";
+    keptInfo.assetAccessGroups = {"unrelatedGroup"};
+    keptInfo.userInfos[std::to_string(TEST_USERID)] = UninstallDataUserInfo();
+    EXPECT_TRUE(dataMgr->UpdateUninstallBundleInfo(keptBundle, keptInfo));
+
+    bool isExist = true;
+    auto ret = dataMgr->CheckBundleExistByDeveloperIdAndAssetGroup(
+        "hiddenDeveloper", "hiddenGroup", TEST_USERID, isExist);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_FALSE(isExist);
+}
+
+HWTEST_F(BmsDualModeQueryTest, CheckBundleExistByDeveloperIdAndAssetGroup_CurrentModeOnly_0200,
+    Function | SmallTest | Level0)
+{
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->multiUserIdsSet_.insert(TEST_USERID);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = MakeIdentityBundleInfo(
+        BUNDLE_NAME, TEST_USERID, "currentDeveloper", "currentGroup");
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] = MakeIdentityBundleInfo(
+        BUNDLE_NAME, TEST_USERID, "hiddenDeveloper", "hiddenGroup");
+
+    // Keep the uninstall query independent of an empty database and unrelated installed identities.
+    const std::string keptBundle = "com.example.check.currentmode.kept";
+    ASSERT_NE(dataMgr->uninstallDataMgr_, nullptr);
+    ScopeGuard cleanup([&] { dataMgr->uninstallDataMgr_->DeleteUninstallBundleInfo(keptBundle); });
+    UninstallBundleInfo keptInfo;
+    keptInfo.developerId = "unrelatedDeveloper";
+    keptInfo.assetAccessGroups = {"unrelatedGroup"};
+    keptInfo.userInfos[std::to_string(TEST_USERID)] = UninstallDataUserInfo();
+    EXPECT_TRUE(dataMgr->UpdateUninstallBundleInfo(keptBundle, keptInfo));
+
+    bool isExist = false;
+    EXPECT_EQ(ERR_OK, dataMgr->CheckBundleExistByDeveloperIdAndAssetGroup(
+        "currentDeveloper", "currentGroup", TEST_USERID, isExist));
+    EXPECT_TRUE(isExist);
+    isExist = true;
+    EXPECT_EQ(ERR_OK, dataMgr->CheckBundleExistByDeveloperIdAndAssetGroup(
+        "hiddenDeveloper", "hiddenGroup", TEST_USERID, isExist));
+    EXPECT_FALSE(isExist);
+}
+
+class BmsUninstallIdentityQueryTest : public BmsDualModeQueryTest {
+public:
+    void SetUp() override
+    {
+        oldTestMode_ = OHOS::system::GetParameter(TEST_DUAL_MODE_PARAM, "false");
+        oldCurrentMode_ = OHOS::system::GetParameter(TEST_ISPCMODE_PARAM, "-1");
+        oldMainMode_ = OHOS::system::GetParameter(TEST_MAINMODE_PARAM, "-1");
+        BmsDualModeQueryTest::SetUp();
+        auto service = DelayedSingleton<BundleMgrService>::GetInstance();
+        oldBmsParam_ = service->bmsParam_;
+        bmsParam_ = std::make_shared<BmsParam>();
+        ASSERT_NE(bmsParam_, nullptr);
+        hadPolicies_ = bmsParam_->GetBmsParam(
+            ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICIES_KEY, oldPolicies_);
+        EXPECT_TRUE(bmsParam_->DeleteBmsParam(
+            ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICIES_KEY));
+        service->bmsParam_ = bmsParam_;
+        dataMgr_ = std::make_shared<BundleDataMgr>();
+        ASSERT_NE(dataMgr_, nullptr);
+    }
+
+    void TearDown() override
+    {
+        if (bmsParam_ != nullptr) {
+            if (hadPolicies_) {
+                EXPECT_TRUE(bmsParam_->SaveBmsParam(
+                    ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICIES_KEY, oldPolicies_));
+            } else {
+                EXPECT_TRUE(bmsParam_->DeleteBmsParam(
+                    ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICIES_KEY));
+            }
+        }
+        DelayedSingleton<BundleMgrService>::GetInstance()->bmsParam_ = oldBmsParam_;
+        EXPECT_TRUE(OHOS::system::SetParameter(TEST_DUAL_MODE_PARAM, oldTestMode_));
+        EXPECT_TRUE(OHOS::system::SetParameter(TEST_ISPCMODE_PARAM, oldCurrentMode_));
+        EXPECT_TRUE(OHOS::system::SetParameter(TEST_MAINMODE_PARAM, oldMainMode_));
+    }
+
+    void SavePolicies(const std::string &policies)
+    {
+        EXPECT_TRUE(bmsParam_->SaveBmsParam(
+            ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICIES_KEY, policies));
+    }
+
+    bool MatchesPolicy(DeviceModeDistributionPolicy policy, const std::string &bundleKey = BUNDLE_NAME)
+    {
+        UninstallBundleInfo info;
+        info.deviceModeDistributionPolicy = policy;
+        info.developerId = "retainedDeveloper";
+        info.assetAccessGroups = {"retainedGroup"};
+        info.userInfos[std::to_string(TEST_USERID)] = UninstallDataUserInfo();
+        return dataMgr_->MatchUninstallBundleInfo({{bundleKey, info}},
+            info.developerId, info.assetAccessGroups.front(), TEST_USERID);
+    }
+
+protected:
+    std::shared_ptr<BundleDataMgr> dataMgr_;
+    std::shared_ptr<BmsParam> bmsParam_;
+    std::shared_ptr<BmsParam> oldBmsParam_;
+    bool hadPolicies_ = false;
+    std::string oldPolicies_;
+    std::string oldTestMode_;
+    std::string oldCurrentMode_;
+    std::string oldMainMode_;
+};
+
+HWTEST_F(BmsUninstallIdentityQueryTest, MatchUninstallBundleInfo_NonDualMode_0100,
+    Function | SmallTest | Level0)
+{
+    // A saved policy set must not filter ordinary records on a non-dual-mode device.
+    SavePolicies("4,6,8");
+    EXPECT_FALSE(DualModeHelper::IsDualModeDevice());
+    for (auto policy : {DeviceModeDistributionPolicy::UNSPECIFIED, DeviceModeDistributionPolicy::MAIN_ONLY,
+        DeviceModeDistributionPolicy::SUB_ONLY, DeviceModeDistributionPolicy::UNIVERSAL_IDENTICAL_PACKAGE,
+        DeviceModeDistributionPolicy::PARTIAL_COMPATIBLE_IDENTICAL_PACKAGE,
+        DeviceModeDistributionPolicy::FULL_COMPATIBLE_IDENTICAL_PACKAGE,
+        DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE}) {
+        EXPECT_TRUE(MatchesPolicy(policy)) << static_cast<int32_t>(policy);
+    }
+    EXPECT_FALSE(MatchesPolicy(DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE, PREFIXED_NAME));
+}
+
+HWTEST_F(BmsUninstallIdentityQueryTest, MatchUninstallBundleInfo_DefaultModePolicy_0200,
+    Function | SmallTest | Level0)
+{
+    for (bool secondary : {false, true}) {
+        if (secondary) {
+            EnableSecondaryMode();
+        } else {
+            EnablePrimaryMode();
+        }
+        EXPECT_TRUE(DualModeHelper::IsDualModeDevice());
+        EXPECT_EQ(MatchesPolicy(DeviceModeDistributionPolicy::MAIN_ONLY), !secondary);
+        EXPECT_EQ(MatchesPolicy(DeviceModeDistributionPolicy::SUB_ONLY), secondary);
+        for (auto policy : {DeviceModeDistributionPolicy::UNSPECIFIED,
+            DeviceModeDistributionPolicy::UNIVERSAL_IDENTICAL_PACKAGE,
+            DeviceModeDistributionPolicy::PARTIAL_COMPATIBLE_IDENTICAL_PACKAGE,
+            DeviceModeDistributionPolicy::FULL_COMPATIBLE_IDENTICAL_PACKAGE}) {
+            EXPECT_TRUE(MatchesPolicy(policy)) << static_cast<int32_t>(policy);
+        }
+    }
+}
+
+HWTEST_F(BmsUninstallIdentityQueryTest, MatchUninstallBundleInfo_DifferentPackage_0300,
+    Function | SmallTest | Level0)
+{
+    SavePolicies("2,4,6,8");
+    for (auto policy : {DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE,
+        DeviceModeDistributionPolicy::PARTIAL_COMPATIBLE_DIFFERENT_PACKAGE,
+        DeviceModeDistributionPolicy::FULL_COMPATIBLE_DIFFERENT_PACKAGE}) {
+        EnablePrimaryMode();
+        EXPECT_TRUE(MatchesPolicy(policy));
+        EXPECT_FALSE(MatchesPolicy(policy, PREFIXED_NAME));
+        EnableSecondaryMode();
+        EXPECT_FALSE(MatchesPolicy(policy));
+        EXPECT_TRUE(MatchesPolicy(policy, PREFIXED_NAME));
+    }
+    // Old prefixed records without a persisted policy still belong to secondary mode.
+    EnablePrimaryMode();
+    EXPECT_FALSE(MatchesPolicy(DeviceModeDistributionPolicy::UNSPECIFIED, PREFIXED_NAME));
+    EnableSecondaryMode();
+    EXPECT_TRUE(MatchesPolicy(DeviceModeDistributionPolicy::UNSPECIFIED, PREFIXED_NAME));
+}
+
+HWTEST_F(BmsUninstallIdentityQueryTest, MatchUninstallBundleInfo_CurrentPolicySet_0400,
+    Function | SmallTest | Level0)
+{
+    for (bool secondary : {false, true}) {
+        if (secondary) {
+            EnableSecondaryMode();
+        } else {
+            EnablePrimaryMode();
+        }
+        // A valid set takes precedence over MAIN_ONLY/SUB_ONLY mode defaults.
+        SavePolicies("2,4,5,6,8");
+        EXPECT_TRUE(MatchesPolicy(DeviceModeDistributionPolicy::UNSPECIFIED));
+        EXPECT_FALSE(MatchesPolicy(DeviceModeDistributionPolicy::MAIN_ONLY));
+        EXPECT_TRUE(MatchesPolicy(DeviceModeDistributionPolicy::SUB_ONLY));
+        EXPECT_FALSE(MatchesPolicy(DeviceModeDistributionPolicy::UNIVERSAL_IDENTICAL_PACKAGE));
+        EXPECT_TRUE(MatchesPolicy(DeviceModeDistributionPolicy::PARTIAL_COMPATIBLE_IDENTICAL_PACKAGE));
+        EXPECT_FALSE(MatchesPolicy(DeviceModeDistributionPolicy::FULL_COMPATIBLE_IDENTICAL_PACKAGE));
+
+        // The next query must use the updated policy set rather than a cached result.
+        SavePolicies("1,3,4,6,7,8");
+        EXPECT_TRUE(MatchesPolicy(DeviceModeDistributionPolicy::MAIN_ONLY));
+        EXPECT_FALSE(MatchesPolicy(DeviceModeDistributionPolicy::SUB_ONLY));
+        EXPECT_TRUE(MatchesPolicy(DeviceModeDistributionPolicy::UNIVERSAL_IDENTICAL_PACKAGE));
+        EXPECT_FALSE(MatchesPolicy(DeviceModeDistributionPolicy::PARTIAL_COMPATIBLE_IDENTICAL_PACKAGE));
+        EXPECT_TRUE(MatchesPolicy(DeviceModeDistributionPolicy::FULL_COMPATIBLE_IDENTICAL_PACKAGE));
+    }
+}
+
+HWTEST_F(BmsUninstallIdentityQueryTest, MatchUninstallBundleInfo_NullBmsParam_0600,
+    Function | SmallTest | Level0)
+{
+    DelayedSingleton<BundleMgrService>::GetInstance()->bmsParam_ = nullptr;
+    EnablePrimaryMode();
+    EXPECT_TRUE(MatchesPolicy(DeviceModeDistributionPolicy::MAIN_ONLY));
+    EXPECT_FALSE(MatchesPolicy(DeviceModeDistributionPolicy::SUB_ONLY));
+    EnableSecondaryMode();
+    EXPECT_FALSE(MatchesPolicy(DeviceModeDistributionPolicy::MAIN_ONLY));
+    EXPECT_TRUE(MatchesPolicy(DeviceModeDistributionPolicy::SUB_ONLY));
 }
 
 // ====================== BundleDataMgr::IsBundleInstalled dual-mode ======================

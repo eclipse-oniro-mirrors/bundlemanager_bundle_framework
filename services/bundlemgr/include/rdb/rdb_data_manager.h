@@ -42,6 +42,7 @@ public:
     bool DeleteData(const std::string &key);
     bool QueryData(const std::string &key, std::string &value);
     bool QueryAllData(std::map<std::string, std::string> &datas);
+    bool QueryAllData(std::map<std::string, std::string> &datas, bool allowEmpty);
 
     bool BatchInsert(int64_t &outInsertNum, const std::vector<NativeRdb::ValuesBucket> &valuesBuckets);
     bool UpdateData(const NativeRdb::ValuesBucket &valuesBucket,
@@ -77,6 +78,8 @@ public:
     void CheckDbError();
 
 private:
+    bool ReadAllDataFromResultSet(const std::shared_ptr<NativeRdb::ResultSet> &resultSet,
+        std::map<std::string, std::string> &datas, bool allowEmpty);
     std::shared_ptr<NativeRdb::RdbStore> GetRdbStore(ErrCode &result);
     ErrCode GetRdbStoreFromNative();
     int32_t InsertWithRetry(std::shared_ptr<NativeRdb::RdbStore> rdbStore, int64_t &rowId,

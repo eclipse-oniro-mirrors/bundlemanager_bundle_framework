@@ -109,6 +109,17 @@ struct NotifyBundleEvents {
     AppSandboxPolicy beforeAppSandboxPolicy = AppSandboxPolicy::SHARED_SANDBOX;  // Pre-update app sandbox policy
     // === DUAL_MODE END ===
 
+    void SetAssetAccessGroups(const std::vector<std::string> &groups)
+    {
+        assetAccessGroups.clear();
+        for (const auto &group : groups) {
+            if (!assetAccessGroups.empty()) {
+                assetAccessGroups += ",";
+            }
+            assetAccessGroups += group;
+        }
+    }
+
     void SetMetadataConfigInfos(const std::map<std::string, std::string>& configs)
     {
         if (configs.size() <= MAX_METADATA_CONFIG_SIZE) {

@@ -4947,6 +4947,8 @@ void BaseBundleInstaller::GetUninstallBundleInfo(bool isKeepData, int32_t userId
     LOG_I(BMS_TAG_INSTALLER, "propagate checkBySpm=%{public}d to uninstall info bundle:%{public}s",
         oldInfo.IsBundleCheckBySpm(), oldInfo.GetBundleName().c_str());
     uninstallBundleInfo.deviceModeDistributionPolicy = oldInfo.GetDeviceModeDistributionPolicy();
+    uninstallBundleInfo.developerId = oldInfo.GetDeveloperId();
+    uninstallBundleInfo.assetAccessGroups = oldInfo.GetAssetAccessGroups();
     oldInfo.GetModuleNames(uninstallBundleInfo.moduleNames);
 }
 
@@ -5063,6 +5065,8 @@ bool BaseBundleInstaller::DeleteUninstallBundleInfoFromDb(const std::string &bun
     };
     installRes.SetMetadataConfigInfos(tokenIdMetadataInfos);
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
+    installRes.developerId = uninstallBundleInfo.developerId;
+    installRes.SetAssetAccessGroups(uninstallBundleInfo.assetAccessGroups);
     commonEventMgr->NotifyUninstalledBundleCleared(installRes);
     return true;
 }

@@ -611,6 +611,7 @@ void BMSEventHandler::BundleBootStartEvent()
     UpdateOtaFlag(OTAFlag::ADD_IDLE_INFO);
     UpdateOtaFlag(OTAFlag::UPDATE_ALTERNATE_ICONS);
     UpdateOtaFlag(OTAFlag::UPDATE_MODULE_JSON_EXTEND_FIELDS);
+    UpdateOtaFlag(OTAFlag::UPDATE_KEEP_DATA_ON_UNINSTALL);
     UpdateOtaFlag(OTAFlag::DELETE_RESOURCE_SLAVE_DB);
     UpdateOtaFlag(OTAFlag::MIGRATE_UNINSTALL_BUNDLE_RESOURCE);
     UpdateOtaFlag(OTAFlag::MIGRATE_SKILL_DIR);
