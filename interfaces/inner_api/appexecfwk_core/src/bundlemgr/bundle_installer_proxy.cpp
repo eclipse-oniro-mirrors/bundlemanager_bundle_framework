@@ -17,6 +17,7 @@
 
 #include <cerrno>
 #include <fcntl.h>
+#include <memory>
 #include <sys/sendfile.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -1210,13 +1211,12 @@ ErrCode BundleInstallerProxy::GetEnterpriseReSignatureCertInfo(
     }
     int32_t certInfoSize = reply.ReadInt32();
     for (int32_t i = 0; i < certInfoSize; i++) {
-        auto ptr = reply.ReadParcelable<EnterpriseCertInfo>();
-        if (ptr != nullptr) {
-            certInfos.emplace_back(*ptr);
-            delete ptr;
+        std::unique_ptr<EnterpriseCertInfo> certInfo(reply.ReadParcelable<EnterpriseCertInfo>());
+        if (certInfo != nullptr) {
+            certInfos.emplace_back(*certInfo);
         }
     }
-    LOG_I(BMS_TAG_INSTALLER, "get sign cert info size: %{public}zu", certInfos.size());
+    LOG_I(BMS_TAG_INSTALLER, "get ReSignature Certificate Info size: %{public}zu", certInfos.size());
     return ERR_OK;
 }
 
