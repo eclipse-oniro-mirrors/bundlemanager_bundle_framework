@@ -2391,6 +2391,112 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0039
 }
 
 /**
+ * @tc.number: BmsBundleSyetemAppFalseTest_9910
+ * @tc.name: test GetEnterpriseReSignatureCertInfo of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. GetEnterpriseReSignatureCertInfo false by no permission
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_9910, Function | SmallTest | Level0)
+{
+    std::vector<EnterpriseCertInfo> certInfos;
+    bundleInstallerHost_->Init();
+    SetVerifyCallingPermissionForTest(false);
+    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "true");
+    std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(USERID);
+    ErrCode ret = bundleInstallerHost_->GetEnterpriseReSignatureCertInfo(USERID, certInfos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_ENTERPRISE_CERT_PERMISSION_DENIED);
+    ResetTestValues();
+    OHOS::system::RemoveParameter(ServiceConstants::IS_ENTERPRISE_DEVICE);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_9920
+ * @tc.name: test GetEnterpriseReSignatureCertInfo of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. GetEnterpriseReSignatureCertInfo false by not enterprise device
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_9920, Function | SmallTest | Level0)
+{
+    std::vector<EnterpriseCertInfo> certInfos;
+    bundleInstallerHost_->Init();
+    SetVerifyCallingPermissionForTest(true);
+    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "false");
+    std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(USERID);
+    ErrCode ret = bundleInstallerHost_->GetEnterpriseReSignatureCertInfo(USERID, certInfos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_ENTERPRISE_CERT_DEVICE_ERROR);
+    ResetTestValues();
+    OHOS::system::RemoveParameter(ServiceConstants::IS_ENTERPRISE_DEVICE);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_9930
+ * @tc.name: test GetEnterpriseReSignatureCertInfo of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. GetEnterpriseReSignatureCertInfo false by param error
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_9930, Function | SmallTest | Level0)
+{
+    std::vector<EnterpriseCertInfo> certInfos;
+    bundleInstallerHost_->Init();
+    SetVerifyCallingPermissionForTest(true);
+    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "true");
+    std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(USERID);
+    ErrCode ret = bundleInstallerHost_->GetEnterpriseReSignatureCertInfo(USERID - 1, certInfos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_ENTERPRISE_CERT_PARAM_ERROR);
+    ResetTestValues();
+    OHOS::system::RemoveParameter(ServiceConstants::IS_ENTERPRISE_DEVICE);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_9940
+ * @tc.name: test GetEnterpriseReSignatureCertInfo of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. GetEnterpriseReSignatureCertInfo false by param error
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_9940, Function | SmallTest | Level0)
+{
+    std::vector<EnterpriseCertInfo> certInfos;
+    bundleInstallerHost_->Init();
+    SetVerifyCallingPermissionForTest(true);
+    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "true");
+    std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->RemoveUserId(USERID);
+    ErrCode ret = bundleInstallerHost_->GetEnterpriseReSignatureCertInfo(USERID, certInfos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_ENTERPRISE_CERT_PARAM_ERROR);
+    ResetTestValues();
+    OHOS::system::RemoveParameter(ServiceConstants::IS_ENTERPRISE_DEVICE);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_9950
+ * @tc.name: test GetEnterpriseReSignatureCertInfo of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. GetEnterpriseReSignatureCertInfo success with no cert
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_9950, Function | SmallTest | Level0)
+{
+    std::vector<EnterpriseCertInfo> certInfos;
+    bundleInstallerHost_->Init();
+    SetVerifyCallingPermissionForTest(true);
+    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "true");
+    std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(USERID);
+    ErrCode ret = bundleInstallerHost_->GetEnterpriseReSignatureCertInfo(USERID, certInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(certInfos.size(), 0);
+    ResetTestValues();
+    OHOS::system::RemoveParameter(ServiceConstants::IS_ENTERPRISE_DEVICE);
+}
+
+/**
  * @tc.number: BmsBundleSyetemAppFalseTest_0040
  * @tc.name: test DeleteReSignCert of BundleInstallerHost
  * @tc.desc: 1. system running normally

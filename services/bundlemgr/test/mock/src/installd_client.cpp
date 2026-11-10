@@ -909,8 +909,8 @@ ErrCode InstalldClient::AddCertAndEnableKey(const std::string &certPath, const s
 
 ErrCode InstalldClient::GetEnterpriseCertInfo(const std::string &certPath, EnterpriseCertInfo &certInfo)
 {
-    if (certPath.empty()) {
-        APP_LOGE("certPath is empty");
+    if (certPath.empty() || certPath.size() > Constants::BMS_MAX_PATH_LENGTH) {
+        APP_LOGE("cert path is empty or too long, size: %{public}zu", certPath.size());
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     return CallService(&IInstalld::GetEnterpriseCertInfo, certPath, std::ref(certInfo));

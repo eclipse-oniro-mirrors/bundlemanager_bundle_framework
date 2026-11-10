@@ -27,6 +27,7 @@
 #include "ipc/extract_module_files_param.h"
 #include "ipc/skills_package_param.h"
 #include "skills_installer/skills_package_info.h"
+#include "enterprise_cert_info.h"
 
 using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
@@ -2308,5 +2309,21 @@ HWTEST_F(BmsInstallDaemonHostImplTest, MigrateBundleDirsOwner_0100, Function | S
     createDirParam.gid = 12400;
     auto ret = hostImpl->MigrateBundleDirsOwner(createDirParam);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_9510
+ * @tc.name: test GetEnterpriseCertInfo of hostImpl
+ * @tc.desc: 1. calling GetEnterpriseCertInfo without foundation uid
+ */
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_9510, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    EnterpriseCertInfo certInfo;
+    ErrCode res = hostImpl->GetEnterpriseCertInfo(
+        "/data/service/el1/public/bms/bundle_manager_service/certificates/enterprise/100/not_exist.cer",
+        certInfo);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 } // OHOS

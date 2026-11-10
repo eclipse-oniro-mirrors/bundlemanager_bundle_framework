@@ -30,6 +30,8 @@
 #define private public
 #include "installd/installd_host_impl.h"
 #include "installd/installd_operator.h"
+#include "bundle_service_constants.h"
+#include "string_ex.h"
 #undef private
 #include <filesystem>
 #include <fstream>
@@ -42,6 +44,75 @@ using namespace OHOS::AppExecFwk;
 
 namespace OHOS {
 namespace {
+// Self-signed EC P-256 certificate in DER format, subject: O=TestEnterpriseOrg, CN=testorg.cer.
+const unsigned char TEST_CERT_DER[] = {
+    0x30, 0x82, 0x01, 0xb9, 0x30, 0x82, 0x01, 0x5f, 0xa0, 0x03, 0x02, 0x01,
+    0x02, 0x02, 0x14, 0x59, 0x46, 0x0a, 0xd7, 0x63, 0x64, 0x79, 0x35, 0x27,
+    0x47, 0xb5, 0xbd, 0x15, 0x9d, 0x09, 0xa9, 0xd5, 0xc1, 0x21, 0x33, 0x30,
+    0x0a, 0x06, 0x08, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x04, 0x03, 0x02, 0x30,
+    0x32, 0x31, 0x1a, 0x30, 0x18, 0x06, 0x03, 0x55, 0x04, 0x0a, 0x0c, 0x11,
+    0x54, 0x65, 0x73, 0x74, 0x45, 0x6e, 0x74, 0x65, 0x72, 0x70, 0x72, 0x69,
+    0x73, 0x65, 0x4f, 0x72, 0x67, 0x31, 0x14, 0x30, 0x12, 0x06, 0x03, 0x55,
+    0x04, 0x03, 0x0c, 0x0b, 0x74, 0x65, 0x73, 0x74, 0x6f, 0x72, 0x67, 0x2e,
+    0x63, 0x65, 0x72, 0x30, 0x1e, 0x17, 0x0d, 0x32, 0x36, 0x31, 0x31, 0x31,
+    0x30, 0x30, 0x38, 0x35, 0x39, 0x32, 0x34, 0x5a, 0x17, 0x0d, 0x32, 0x37,
+    0x31, 0x31, 0x31, 0x30, 0x30, 0x38, 0x35, 0x39, 0x32, 0x34, 0x5a, 0x30,
+    0x32, 0x31, 0x1a, 0x30, 0x18, 0x06, 0x03, 0x55, 0x04, 0x0a, 0x0c, 0x11,
+    0x54, 0x65, 0x73, 0x74, 0x45, 0x6e, 0x74, 0x65, 0x72, 0x70, 0x72, 0x69,
+    0x73, 0x65, 0x4f, 0x72, 0x67, 0x31, 0x14, 0x30, 0x12, 0x06, 0x03, 0x55,
+    0x04, 0x03, 0x0c, 0x0b, 0x74, 0x65, 0x73, 0x74, 0x6f, 0x72, 0x67, 0x2e,
+    0x63, 0x65, 0x72, 0x30, 0x59, 0x30, 0x13, 0x06, 0x07, 0x2a, 0x86, 0x48,
+    0xce, 0x3d, 0x02, 0x01, 0x06, 0x08, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x03,
+    0x01, 0x07, 0x03, 0x42, 0x00, 0x04, 0x75, 0xb7, 0xe2, 0x8b, 0x70, 0xc1,
+    0x8a, 0x3b, 0x67, 0x92, 0x47, 0x45, 0xef, 0xda, 0xbc, 0x3d, 0x65, 0x3c,
+    0xe1, 0xe6, 0xec, 0x4e, 0x66, 0x9e, 0xf3, 0x66, 0x4c, 0x34, 0x9a, 0xe2,
+    0x7e, 0x14, 0x62, 0x70, 0xeb, 0x80, 0x1c, 0x9f, 0x1a, 0xc5, 0x20, 0x6b,
+    0xe6, 0x81, 0x3c, 0x2e, 0xd3, 0xb4, 0xda, 0xbf, 0x9e, 0xe9, 0x2a, 0x2c,
+    0x9c, 0x83, 0xf9, 0x18, 0x5a, 0x6e, 0x41, 0xd8, 0x2d, 0xae, 0xa3, 0x53,
+    0x30, 0x51, 0x30, 0x1d, 0x06, 0x03, 0x55, 0x1d, 0x0e, 0x04, 0x16, 0x04,
+    0x14, 0xfa, 0xbd, 0x96, 0x2e, 0x0a, 0x08, 0xe4, 0xed, 0x81, 0xd8, 0xa7,
+    0x0c, 0xf5, 0x8c, 0x47, 0x5d, 0x03, 0x57, 0xa9, 0x5f, 0x30, 0x1f, 0x06,
+    0x03, 0x55, 0x1d, 0x23, 0x04, 0x18, 0x30, 0x16, 0x80, 0x14, 0xfa, 0xbd,
+    0x96, 0x2e, 0x0a, 0x08, 0xe4, 0xed, 0x81, 0xd8, 0xa7, 0x0c, 0xf5, 0x8c,
+    0x47, 0x5d, 0x03, 0x57, 0xa9, 0x5f, 0x30, 0x0f, 0x06, 0x03, 0x55, 0x1d,
+    0x13, 0x01, 0x01, 0xff, 0x04, 0x05, 0x30, 0x03, 0x01, 0x01, 0xff, 0x30,
+    0x0a, 0x06, 0x08, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x04, 0x03, 0x02, 0x03,
+    0x48, 0x00, 0x30, 0x45, 0x02, 0x21, 0x00, 0xd6, 0x19, 0x75, 0xaf, 0x21,
+    0x00, 0x12, 0x99, 0x6a, 0x5a, 0x90, 0x05, 0x4c, 0xbc, 0xc7, 0x7d, 0x80,
+    0xe0, 0x87, 0x46, 0xbc, 0xdf, 0x72, 0x7e, 0x1c, 0x86, 0x8f, 0xd3, 0x6b,
+    0xfb, 0x56, 0x91, 0x02, 0x20, 0x7d, 0x61, 0x81, 0x44, 0xd7, 0x8e, 0x37,
+    0x37, 0x6a, 0xb0, 0x8a, 0x00, 0x96, 0xb9, 0x7d, 0xb6, 0xe1, 0x04, 0x90,
+    0x63, 0xc5, 0xb6, 0x89, 0xfe, 0x0a, 0xb1, 0x19, 0x4f, 0x76, 0xfd, 0x79,
+    0xc2
+};
+// Self-signed EC P-256 certificate in PEM format, subject has no Organization, CN=TestCommonName.
+const char *TEST_CERT_PEM_NO_ORG =
+    "-----BEGIN CERTIFICATE-----
+"
+    "MIIBhzCCAS2gAwIBAgIUL9mq1HyhsrHOcS5zY48o5uPfwcAwCgYIKoZIzj0EAwIw
+"
+    "GTEXMBUGA1UEAwwOVGVzdENvbW1vbk5hbWUwHhcNMjYxMTEwMDg1OTI1WhcNMjcx
+"
+    "MTEwMDg1OTI1WjAZMRcwFQYDVQQDDA5UZXN0Q29tbW9uTmFtZTBZMBMGByqGSM49
+"
+    "AgEGCCqGSM49AwEHA0IABOO15VjxE7FHIs4oGBf80htfXTOMrBPnuH4C9mKpM0EG
+"
+    "S7sz317ng1garLdkpQ2Tyy8n+VQrGDi0FEiFTWg48SijUzBRMB0GA1UdDgQWBBRo
+"
+    "amNZz3mYqr/g+nOaPFLXyLGIPjAfBgNVHSMEGDAWgBRoamNZz3mYqr/g+nOaPFLX
+"
+    "yLGIPjAPBgNVHRMBAf8EBTADAQH/MAoGCCqGSM49BAMCA0gAMEUCIQDCYBYYbYDq
+"
+    "MbO5v4QaCfNaGX71CrVnb8ace2HdnLykjgIgWPVhF47HUpGambd9I4o0J8/N8ffY
+"
+    "rF9QF5jZ2q3Z0Rg=
+"
+    "-----END CERTIFICATE-----
+";
+// TEST_CERT_DER notAfter: 2027-11-10 08:59:24 UTC, in milliseconds.
+const int64_t TEST_CERT_DER_NOT_AFTER_MS = 1825837164000LL;
+// TEST_CERT_PEM_NO_ORG notAfter: 2027-11-10 08:59:25 UTC, in milliseconds.
+const int64_t TEST_CERT_PEM_NOT_AFTER_MS = 1825837165000LL;
 }  // namespace
 
 class BmsInstalldHostTest : public testing::Test {
@@ -1936,6 +2007,110 @@ HWTEST_F(BmsInstalldHostTest, InstalldOperator_IsValidBundleName_0100,
     EXPECT_FALSE(InstalldOperator::IsValidBundleName("12345"));
     // a stripped remainder that is not a legal name (starts with a digit)
     EXPECT_FALSE(InstalldOperator::IsValidBundleName("+clone-1+123_app"));
+}
+
+/**
+ * @tc.number: HandleGetEnterpriseCertInfo_0100
+ * @tc.name: test HandleGetEnterpriseCertInfo
+ * @tc.desc: 1.HandleGetEnterpriseCertInfo test with invalid cert path
+ */
+HWTEST_F(BmsInstalldHostTest, HandleGetEnterpriseCertInfo_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    bool res = installdHost.HandleGetEnterpriseCertInfo(data, reply);
+    EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: HandleGetEnterpriseCertInfo_0200
+ * @tc.name: test HandleGetEnterpriseCertInfo
+ * @tc.desc: 1.HandleGetEnterpriseCertInfo test with valid path but cert file not exist
+ */
+HWTEST_F(BmsInstalldHostTest, HandleGetEnterpriseCertInfo_0200, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    std::string certPath = std::string(ServiceConstants::HAP_COPY_PATH) +
+        ServiceConstants::ENTERPRISE_CERT_PATH + "100/not_exist.cer";
+    ASSERT_TRUE(data.WriteString16(Str8ToStr16(certPath)));
+    bool res = installdHost.HandleGetEnterpriseCertInfo(data, reply);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: InstalldOperator_ParseEnterpriseCertInfo_Failure_0100
+ * @tc.name: ParseEnterpriseCertInfo returns failed for invalid cert data
+ * @tc.desc: 1. empty cert data
+ *           2. garbage cert data
+ */
+HWTEST_F(BmsInstalldHostTest, InstalldOperator_ParseEnterpriseCertInfo_Failure_0100,
+    Function | SmallTest | Level1)
+{
+    std::string subjectOrg;
+    int64_t notAfter = 0;
+    std::vector<unsigned char> emptyData;
+    EXPECT_EQ(InstalldOperator::ParseEnterpriseCertInfo(emptyData, subjectOrg, notAfter),
+        ERR_APPEXECFWK_ENTERPRISE_CERT_READ_CERT_FAILED);
+
+    std::vector<unsigned char> garbageData = {'n', 'o', 't', ' ', 'a', ' ', 'c', 'e', 'r', 't'};
+    EXPECT_EQ(InstalldOperator::ParseEnterpriseCertInfo(garbageData, subjectOrg, notAfter),
+        ERR_APPEXECFWK_ENTERPRISE_CERT_READ_CERT_FAILED);
+}
+
+/**
+ * @tc.number: InstalldOperator_ParseEnterpriseCertInfo_Success_0100
+ * @tc.name: ParseEnterpriseCertInfo parses DER cert with Organization
+ * @tc.desc: 1. DER cert data parsed
+ *           2. subjectOrg is Organization and notAfter is millisecond timestamp
+ */
+HWTEST_F(BmsInstalldHostTest, InstalldOperator_ParseEnterpriseCertInfo_Success_0100,
+    Function | SmallTest | Level1)
+{
+    std::vector<unsigned char> certData(TEST_CERT_DER, TEST_CERT_DER + sizeof(TEST_CERT_DER));
+    std::string subjectOrg;
+    int64_t notAfter = 0;
+    ErrCode ret = InstalldOperator::ParseEnterpriseCertInfo(certData, subjectOrg, notAfter);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(subjectOrg, "TestEnterpriseOrg");
+    EXPECT_EQ(notAfter, TEST_CERT_DER_NOT_AFTER_MS);
+}
+
+/**
+ * @tc.number: InstalldOperator_ParseEnterpriseCertInfo_Success_0200
+ * @tc.name: ParseEnterpriseCertInfo falls back to CommonName when Organization is absent
+ * @tc.desc: 1. PEM cert data without Organization parsed
+ *           2. subjectOrg falls back to CommonName
+ */
+HWTEST_F(BmsInstalldHostTest, InstalldOperator_ParseEnterpriseCertInfo_Success_0200,
+    Function | SmallTest | Level1)
+{
+    std::string pemStr(TEST_CERT_PEM_NO_ORG);
+    std::vector<unsigned char> certData(pemStr.begin(), pemStr.end());
+    std::string subjectOrg;
+    int64_t notAfter = 0;
+    ErrCode ret = InstalldOperator::ParseEnterpriseCertInfo(certData, subjectOrg, notAfter);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(subjectOrg, "TestCommonName");
+    EXPECT_EQ(notAfter, TEST_CERT_PEM_NOT_AFTER_MS);
+}
+
+/**
+ * @tc.number: InstalldOperator_ParseEnterpriseCertFile_Failure_0100
+ * @tc.name: ParseEnterpriseCertFile returns failed when cert file does not exist
+ * @tc.desc: 1. cert file does not exist
+ */
+HWTEST_F(BmsInstalldHostTest, InstalldOperator_ParseEnterpriseCertFile_Failure_0100,
+    Function | SmallTest | Level1)
+{
+    std::string certPath = std::string(ServiceConstants::HAP_COPY_PATH) +
+        ServiceConstants::ENTERPRISE_CERT_PATH + "100/not_exist.cer";
+    std::string subjectOrg;
+    int64_t notAfter = 0;
+    EXPECT_EQ(InstalldOperator::ParseEnterpriseCertFile(certPath, subjectOrg, notAfter),
+        ERR_APPEXECFWK_ENTERPRISE_CERT_READ_CERT_FAILED);
 }
 
 } // OHOS

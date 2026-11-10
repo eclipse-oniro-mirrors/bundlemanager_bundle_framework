@@ -1181,6 +1181,38 @@ HWTEST_F(BmsBundleInstallerProxyTest, GetEnterpriseReSignatureCert_0200, Functio
 }
 
 /**
+ * @tc.number: GetEnterpriseReSignatureCertInfo_0100
+ * @tc.name: test the GetEnterpriseReSignatureCertInfo
+ * @tc.desc: 1. userId error
+ *           2. test GetEnterpriseReSignatureCertInfo
+ */
+HWTEST_F(BmsBundleInstallerProxyTest, GetEnterpriseReSignatureCertInfo_0100, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> object;
+    BundleInstallerProxy bundleInstallerProxy(object);
+    int32_t userId = 0;
+    std::vector<EnterpriseCertInfo> certInfos;
+    auto res = bundleInstallerProxy.GetEnterpriseReSignatureCertInfo(userId, certInfos);
+    EXPECT_EQ(res, ERR_APPEXECFWK_ENTERPRISE_CERT_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: GetEnterpriseReSignatureCertInfo_0200
+ * @tc.name: test the GetEnterpriseReSignatureCertInfo
+ * @tc.desc: 1. send request failed
+ *           2. test GetEnterpriseReSignatureCertInfo
+ */
+HWTEST_F(BmsBundleInstallerProxyTest, GetEnterpriseReSignatureCertInfo_0200, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> object;
+    BundleInstallerProxy bundleInstallerProxy(object);
+    int32_t userId = 100;
+    std::vector<EnterpriseCertInfo> certInfos;
+    auto res = bundleInstallerProxy.GetEnterpriseReSignatureCertInfo(userId, certInfos);
+    EXPECT_EQ(res, ERR_APPEXECFWK_ENTERPRISE_CERT_SEND_REQUEST_ERROR);
+}
+
+/**
  * @tc.number: UninstallNewPreinstalledApps_0100
  * @tc.name: test the UninstallNewPreinstalledApps
  * @tc.desc: 1. bundleNames size exceeds the maximum limit
