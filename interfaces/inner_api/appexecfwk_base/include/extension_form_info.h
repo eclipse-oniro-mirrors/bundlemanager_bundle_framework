@@ -52,7 +52,7 @@ struct ExtensionFormInfo {
     std::string groupId;
     FormStandby standby;
     bool isColorModeRefreshEnabled = false;
-    bool enableTint = false;
+    BoolEnum enableTint = BoolEnum::BOOL_UNSPECIFIED;
     bool enableReminderAgentRefresh = false;
 
     std::vector<int32_t> supportDimensions {};

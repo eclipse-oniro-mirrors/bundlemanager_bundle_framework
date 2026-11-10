@@ -207,7 +207,7 @@ struct ExtensionFormProfileInfo {
     std::string groupId;
     Standby standby;
     bool isColorModeRefreshEnabled = false;
-    bool enableTint = false;
+    BoolEnum enableTint = BoolEnum::BOOL_UNSPECIFIED;
     bool enableReminderAgentRefresh = false;
 };
 
@@ -570,7 +570,7 @@ void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfo &exten
         extensionFormProfileInfo.isColorModeRefreshEnabled,
         false,
         g_parseResult);
-    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+    BMSJsonUtil::GetBoolEnumValueIfFindKey(jsonObject,
         jsonObjectEnd,
         ExtensionFormProfileReader::TINTING_SUPPORTED,
         extensionFormProfileInfo.enableTint,
