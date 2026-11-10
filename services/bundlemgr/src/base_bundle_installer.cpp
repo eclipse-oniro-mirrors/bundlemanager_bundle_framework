@@ -10043,8 +10043,17 @@ ErrCode BaseBundleInstaller::UpdateHapToken(bool needUpdate, InnerBundleInfo &ne
             }
             return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
         }
-        if (needUpdate) {
+        // A drift repair inside UpdateToken may have re-targeted the policy
+        // update at the identity's live token (ERR_TOKENID_NOT_EXIST on the
+        // BMS-recorded id);
+        uint32_t recordedTokenId = static_cast<uint32_t>(uerInfo.second.accessTokenIdEx);
+        if (needUpdate || accessTokenIdEx.tokenIdExStruct.tokenID != recordedTokenId) {
             newInfo.SetAccessTokenIdEx(accessTokenIdEx, uerInfo.second.bundleUserInfo.userId);
+            if (!needUpdate && !tempInfo_.SetTempBundleInfo(newInfo)) {
+                LOG_NOFUNC_E(BMS_TAG_INSTALLER, "save repaired token id failed %{public}s",
+                    bundleName_.c_str());
+                return ERR_APPEXECFWK_SET_INSTALL_TEMP_BUNDLE_ERROR;
+            }
         }
         if (refreshedUid > 0) {
             // The AT side refreshed the token-bound uid: persist it into the
@@ -10098,9 +10107,19 @@ ErrCode BaseBundleInstaller::UpdateHapToken(bool needUpdate, InnerBundleInfo &ne
                 }
                 return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
             }
-            if (needUpdate) {
+            // Same drift-repair persist as the main identity above (the clone
+            // record keeps its per-appIndex entry; same accessTokenIdEx-based
+            // comparison — the token is built from that field).
+            uint32_t recordedCloneTokenId = static_cast<uint32_t>(cloneInfoPair.second.accessTokenIdEx);
+            if (needUpdate ||
+                cloneAccessTokenIdEx.tokenIdExStruct.tokenID != recordedCloneTokenId) {
                 newInfo.SetAccessTokenIdExWithAppIndex(cloneAccessTokenIdEx,
                     uerInfo.second.bundleUserInfo.userId, cloneInfoPair.second.appIndex);
+                if (!needUpdate && !tempInfo_.SetTempBundleInfo(newInfo)) {
+                    LOG_NOFUNC_E(BMS_TAG_INSTALLER, "save repaired clone token id failed %{public}s",
+                        bundleName_.c_str());
+                    return ERR_APPEXECFWK_SET_INSTALL_TEMP_BUNDLE_ERROR;
+                }
             }
             if (cloneRefreshedUid > 0 && cloneRefreshedUid != cloneInfoPair.second.uid) {
                 // Persist the AT-refreshed clone uid (same pattern as the main

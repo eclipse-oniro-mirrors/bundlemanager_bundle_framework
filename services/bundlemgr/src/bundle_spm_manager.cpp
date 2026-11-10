@@ -342,7 +342,8 @@ BundleSpmManager::InstallSession BundleSpmManager::InstallSession::CreateDeferre
 BundleSpmManager::InstallSession::InstallSession(InstallSession &&other) noexcept
     : sessionId_(other.sessionId_), committed_(other.committed_),
       identityPrepared_(other.identityPrepared_),
-      hapVerifyResults_(std::move(other.hapVerifyResults_))
+      hapVerifyResults_(std::move(other.hapVerifyResults_)),
+      createdHapPathMap_(std::move(other.createdHapPathMap_))
 {
     other.sessionId_ = 0;
     other.committed_ = false;
@@ -361,6 +362,7 @@ BundleSpmManager::InstallSession &BundleSpmManager::InstallSession::operator=(
         committed_ = other.committed_;
         identityPrepared_ = other.identityPrepared_;
         hapVerifyResults_ = std::move(other.hapVerifyResults_);
+        createdHapPathMap_ = std::move(other.createdHapPathMap_);
         other.sessionId_ = 0;
         other.committed_ = false;
         other.identityPrepared_ = false;
@@ -682,6 +684,29 @@ int32_t BundleSpmManager::InstallSession::UpdateToken(
         ret = Security::AccessToken::AccessTokenKit::UpdateHapPolicy(sessionId_,
             tokenIdEx, policy, uidOut);
     }
+    if (ret == Security::AccessToken::AccessTokenError::ERR_TOKENID_NOT_EXIST) {
+        // Drift repair: the caller-recorded token id is gone on the AT side;
+        // Query the identity's LIVE token and re-target the policy update at it;
+        Security::AccessToken::AccessTokenID liveTokenId =
+            Security::AccessToken::AccessTokenKit::GetHapTokenID(userId,
+                info.GetBundleName(), appIndex);
+        if (liveTokenId != 0 && liveTokenId != tokenIdEx.tokenIdExStruct.tokenID) {
+            LOG_NOFUNC_W(BMS_TAG_INSTALLER,
+                "update target drifted, retry with the live token, bundleName:%{public}s "
+                "userId:%{public}d appIndex:%{public}d recorded tokenId:%{public}u "
+                "live tokenId:%{public}u",
+                info.GetBundleName().c_str(), userId, appIndex,
+                tokenIdEx.tokenIdExStruct.tokenID, liveTokenId);
+            Security::AccessToken::AccessTokenIDEx liveIdEx;
+            liveIdEx.tokenIdExStruct.tokenID = liveTokenId;
+            uidOut = Constants::INVALID_UID;
+            ret = Security::AccessToken::AccessTokenKit::UpdateHapPolicy(sessionId_,
+                liveIdEx, policy, uidOut);
+            if (ret == Security::AccessToken::AccessTokenKitRet::RET_SUCCESS) {
+                tokenIdEx.tokenIDEx = liveIdEx.tokenIDEx;
+            }
+        }
+    }
     if (ret != Security::AccessToken::AccessTokenKitRet::RET_SUCCESS) {
         LOG_NOFUNC_E(BMS_TAG_INSTALLER,
             "UpdateHapPolicy failed, bundleName:%{public}s userId:%{public}d sessionId:%{public}d "
@@ -782,6 +807,53 @@ int32_t BundleSpmManager::InstallSession::CheckPermissionInfo(
     }
 }
 
+int32_t BundleSpmManager::InstallSession::CreateSessionByInstalledBundle(
+    const InnerBundleInfo &info, int32_t userId)
+{
+    if (!IsEnabled()) {
+        return ERR_OK;
+    }
+    if (sessionId_ != 0) {
+        return ERR_OK;
+    }
+    // A flow without new haps (clone install) never ran CheckSignAndInitSession,
+    // so its session is still deferred (id 0) — but the identity-reuse path of
+    // InitToken runs UpdateToken BEFORE any PrepareHapIdentity, and
+    // UpdateHapPolicy needs an ENGAGED session with hasPermChecked.
+    Security::AccessToken::BundleHapList hapList;
+    hapList.hapPaths = info.GetAllHapPaths();
+    hapList.isPreInstalled = info.IsPreInstallApp();
+    hapList.userIdForEnterpriseSign = userId;
+    if (hapList.hapPaths.empty()) {
+        LOG_NOFUNC_E(BMS_TAG_INSTALLER,
+            "engage session with empty hap paths, bundleName:%{public}s",
+            info.GetBundleName().c_str());
+        return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
+    }
+    std::vector<Security::AccessToken::TrustedBundleInfo> trustedBundleInfos;
+    Security::AccessToken::HapVerifyResultInfo resultInfo;
+    int32_t ret = Security::AccessToken::AccessTokenKit::CheckHapSignInfo(hapList,
+        Security::AccessToken::SignInfoQueryFlag::QUERY_PROFILE, sessionId_,
+        trustedBundleInfos, resultInfo);
+    if (ret != Security::AccessToken::AccessTokenKitRet::RET_SUCCESS) {
+        LOG_NOFUNC_E(BMS_TAG_INSTALLER,
+            "create session failed, bundleName:%{public}s ret:%{public}d errorCode:%{public}d",
+            info.GetBundleName().c_str(), ret, resultInfo.errorCode);
+        sessionId_ = 0;
+        return BundleVerifyMgr::ConvertHapVerifyResultCode(resultInfo.errorCode, ret);
+    }
+    // Remember the hap-path map: the AT side validates the FinishInstall
+    // module-path map against the session's verified paths (ResolveModulePaths
+    // rejects a missing session path), and the clone flow commits with an empty
+    // map — Commit falls back to this one.
+    for (const auto &hapPath : hapList.hapPaths) {
+        createdHapPathMap_[hapPath] = hapPath;
+    }
+    Security::AccessToken::HapInfoCheckResult checkResult;
+    return CheckPermissionInfo(Security::AccessToken::InstallTypeEnum::TYPE_REPLACE,
+        checkResult, Security::AccessToken::MultipleMode::DEFAULT_OR_MAIN_MODE);
+}
+
 int32_t BundleSpmManager::InstallSession::VerifyPermission(const std::string &bundleName,
     const std::string &permission, int32_t userId) const
 {
@@ -819,7 +891,13 @@ int32_t BundleSpmManager::InstallSession::Commit(const std::map<std::string, std
     if (!IsEnabled()) {
         return ERR_OK;
     }
-    int32_t ret = BundleSpmManager::FinishHapInstall(sessionId_, true, modulePathMap);
+    // A session created by CreateSessionByInstalledBundle carries its own
+    // verified hap-path map (the AT side validates the FinishInstall map
+    // against the session paths): callers passing an empty map (the clone
+    // flow) fall back to it.
+    const std::map<std::string, std::string> &pathMap =
+        (modulePathMap.empty() && !createdHapPathMap_.empty()) ? createdHapPathMap_ : modulePathMap;
+    int32_t ret = BundleSpmManager::FinishHapInstall(sessionId_, true, pathMap);
     if (ret == ERR_OK) {
         committed_ = true;
         // FinishHapInstall already cleared the installd provision cache on its
@@ -1135,28 +1213,32 @@ BundleSpmManager::FreshInstallIdentityPlan BundleSpmManager::CheckNewInstallIden
     Security::AccessToken::AccessTokenID atTokenId =
         Security::AccessToken::AccessTokenKit::GetHapTokenID(userId, bundleName, appIndex);
     if (hasKeepData) {
-        // Keep-data reinstall: the identity plan is decided by One signals —
-        // 1) checkBySpm: whether the OTA migration successfully migrated this
-        //    bundle's uid/identity to the AT side. false = migration did not
-        //    cover this bundle (the abnormal shape).
-        // Normal keep-data reinstall (checkBySpm=true): the AT side kept the
-        // reserved identity — PrepareHapIdentity recognizes the reservation and
-        // returns the same token id and uid (Prepare flow, empty plan).
-        // Abnormal keep-data reinstall (checkBySpm=false AND AT side has no
-        // identity): the reuse goes through the update interface with the
-        // BMS-recorded token id — the AT side restores the reserved identity there.
-        // A record of ANOTHER user does not affect this identity.
-        if (!uninstallBundleInfo.checkBySpm && atTokenId != 0) {
-            auto it = uninstallBundleInfo.userInfos.find(std::to_string(userId));
+        // Abnormal keep-data reinstall (checkBySpm=false): the reuse goes
+        // through the update interface with the BMS-recorded token id — the AT
+        // side restores the reserved identity there (AT-side support, tracked
+        // separately); until then a failed reuse degrades to the Prepare flow
+        // inside InitToken. A record of ANOTHER identity does not affect this
+        // one.
+        if (atTokenId != 0) {
+            // The record entry of THIS identity: the main identity is keyed by
+            // the plain userId, a clone identity by "userId_appIndex" (the
+            // clone uninstall writes the composite key). A clone flow reaches
+            // this reuse with a DEFERRED session — ProcessCloneBundleInstall
+            // creates it first (CreateSessionByInstalledBundle), because a
+            // no-hap flow never ran CheckSignAndInitSession and
+            // UpdateHapPolicy needs a live session.
+            std::string recordKey = (appIndex > 0)
+                ? std::to_string(userId) + Constants::FILE_UNDERLINE + std::to_string(appIndex)
+                : std::to_string(userId);
+            auto it = uninstallBundleInfo.userInfos.find(recordKey);
             if (it != uninstallBundleInfo.userInfos.end() && it->second.accessTokenId != 0) {
                 plan.reuseTokenId = it->second.accessTokenId;
                 plan.keepDataReinstall = true;
                 return plan;
             }
         }
-        // checkBySpm=true (normal), checkBySpm=false but AT has the identity,
-        // or no record of this user: fall through — a clean install for this
-        // identity goes through Prepare.
+        // checkBySpm=true (normal) or no record of this identity: fall
+        // through — a clean install for this identity goes through Prepare.
         return plan;
     }
     if (atTokenId != 0) {

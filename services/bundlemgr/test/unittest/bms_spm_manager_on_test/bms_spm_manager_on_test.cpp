@@ -63,6 +63,8 @@ extern int32_t g_spmPrepareIdentityUid;
 extern int32_t g_spmPrepareIdentitySessionId;
 extern bool g_spmPrepareIdentityForceReallocate;
 extern int32_t g_spmUpdateHapPolicyRet;
+extern int32_t g_spmUpdateHapPolicyCallCount;
+extern std::vector<int32_t> g_spmUpdateHapPolicyRetSeq;
 extern int32_t g_spmUpdateHapPolicyUidOut;
 extern int32_t g_spmGetHapBaseInfoByUidRet;
 extern Security::AccessToken::HapBaseInfo g_spmGetHapBaseInfo;
@@ -77,6 +79,7 @@ extern unsigned int g_spmGetHapTokenIDRet;
 extern int32_t g_spmFinishInstallRet;
 extern int32_t g_spmFinishInstallCallCount;
 extern bool g_spmFinishInstallLastPersistent;
+extern int32_t g_spmFinishInstallLastModulePathCount;
 void ResetSpmKitMockValuesForTest();
 } // namespace AccessToken
 } // namespace Security
@@ -2098,13 +2101,18 @@ HWTEST_F(BmsSpmManagerOnTest, InitToken_S2Reuse_0001, Function | MediumTest | Le
 
 /**
  * @tc.number: BmsSpmManagerOnTest.InitToken_S2Reuse_0002
- * @tc.name: A failed reuse falls through with the raw AT code
- * @tc.desc: When the policy refresh on the leftover token fails, InitToken
- *           returns the raw code for the entry-level recovery chain.
+ * @tc.name: A failed reuse degrades to the prepare flow
+ * @tc.desc: ANY update failure on the leftover token — not only
+ *           ERR_TOKENID_NOT_EXIST — degrades to the prepare flow in the same
+ *           session: the raw AT code is no longer surfaced for the
+ *           entry-level recovery chain, PrepareHapIdentity runs exactly once,
+ *           and the outcome comes from the prepare path (the mock's default
+ *           empty identity fails fast with the grant-request code).
  */
 HWTEST_F(BmsSpmManagerOnTest, InitToken_S2Reuse_0002, Function | MediumTest | Level1)
 {
     OHOS::Security::AccessToken::g_spmGetHapTokenIDRet = 101;
+    // Any non-OK update failure (not a token-gone shape) still degrades.
     OHOS::Security::AccessToken::g_spmUpdateHapPolicyRet = -6;
     auto session = BundleSpmManager::InstallSession::CreateDeferred();
     InnerBundleInfo info;
@@ -2115,8 +2123,9 @@ HWTEST_F(BmsSpmManagerOnTest, InitToken_S2Reuse_0002, Function | MediumTest | Le
     info.SetBaseApplicationInfo(appInfo);
     Security::AccessToken::AccessTokenIDEx tokenIdEx = {0};
     Security::AccessToken::HapInfoCheckResult checkResult;
-    EXPECT_EQ(session.InitToken(info, TEST_USERID, 0, tokenIdEx, checkResult, "", nullptr, false), -6);
-    EXPECT_EQ(OHOS::Security::AccessToken::g_spmPrepareHapIdentityCallCount, 0);
+    EXPECT_EQ(session.InitToken(info, TEST_USERID, 0, tokenIdEx, checkResult, "", nullptr, false),
+        ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED);
+    EXPECT_EQ(OHOS::Security::AccessToken::g_spmPrepareHapIdentityCallCount, 1);
 }
 
 /**
@@ -2311,6 +2320,104 @@ HWTEST_F(BmsSpmManagerOnTest, UpdateHapToken_RefreshDirs_UidUnchanged_0001, Func
 }
 
 /**
+ * @tc.number: BmsSpmManagerOnTest.UpdateHapToken_DriftRepair_MainIdentity_0001
+ * @tc.name: A drifted recorded token id is repaired with the live one
+ * @tc.desc: When the policy update on the BMS-recorded token id answers
+ *           ERR_TOKENID_NOT_EXIST but the identity has a LIVE token, the
+ *           update is retried against it (exactly two UpdateHapPolicy calls)
+ *           and the adopted id is persisted into the temp info even on a
+ *           normal update (needUpdate false): the DB record is re-bound to
+ *           the token the AT side actually holds.
+ */
+HWTEST_F(BmsSpmManagerOnTest, UpdateHapToken_DriftRepair_MainIdentity_0001, Function | MediumTest | Level1)
+{
+    InnerBundleInfo newInfo;
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    newInfo.SetBaseBundleInfo(bundleInfo);
+    // GetBundleName() reads baseApplicationInfo_->bundleName: SetBaseBundleInfo
+    // (BundleInfo) alone leaves it empty (same trap as InitToken_S2Reuse).
+    ApplicationInfo appInfo;
+    appInfo.bundleName = BUNDLE_NAME;
+    newInfo.SetBaseApplicationInfo(appInfo);
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = TEST_USERID;
+    userInfo.bundleName = BUNDLE_NAME;
+    userInfo.accessTokenId = TEST_IDENTITY_TOKENID; // the BMS-recorded (drifted) id
+    // UpdateHapToken builds the token from the accessTokenIdEx field (uint64),
+    // not from accessTokenId.
+    userInfo.accessTokenIdEx = TEST_IDENTITY_TOKENID;
+    userInfo.uid = TEST_IDENTITY_UID;
+    newInfo.AddInnerBundleUserInfo(userInfo);
+
+    constexpr uint32_t LIVE_TOKEN_ID = 202;
+    OHOS::Security::AccessToken::g_spmGetHapTokenIDRet = LIVE_TOKEN_ID;
+    // First UpdateHapPolicy call (recorded id) fails with NOT_EXIST; the retry
+    // falls back to the scalar knob (0 = RET_SUCCESS).
+    OHOS::Security::AccessToken::g_spmUpdateHapPolicyRetSeq = {
+        Security::AccessToken::AccessTokenError::ERR_TOKENID_NOT_EXIST};
+    // Same uid: isolate the token-id repair from the uid-refresh branch.
+    OHOS::Security::AccessToken::g_spmUpdateHapPolicyUidOut = TEST_IDENTITY_UID;
+    BaseBundleInstaller installer;
+    // The mock BundleMgrService::GetDataMgr returns nullptr in this target:
+    // inject the data manager directly so InitDataMgr succeeds (same pattern
+    // as bms_bundle_installer_test).
+    installer.dataMgr_ = std::make_shared<BundleDataMgr>();
+    int32_t ret = installer.UpdateHapToken(false, newInfo);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(OHOS::Security::AccessToken::g_spmUpdateHapPolicyCallCount, 2);
+    // The write-back effect: the adopted id must have landed in the temp info
+    // (MarkInstallFinish persists it — otherwise the DB keeps the dead id and
+    // every later update drifts again).
+    InnerBundleInfo saved;
+    ASSERT_TRUE(installer.GetTempBundleInfo(saved));
+    InnerBundleUserInfo savedUserInfo;
+    ASSERT_TRUE(saved.GetInnerBundleUserInfo(TEST_USERID, savedUserInfo));
+    EXPECT_EQ(savedUserInfo.accessTokenId, LIVE_TOKEN_ID);
+    EXPECT_EQ(savedUserInfo.accessTokenIdEx, static_cast<uint64_t>(LIVE_TOKEN_ID));
+}
+
+/**
+ * @tc.number: BmsSpmManagerOnTest.UpdateHapToken_DriftRepair_NotFound_0001
+ * @tc.name: No live token keeps the update failing
+ * @tc.desc: When the identity has NO live token either (the recorded id is
+ *           gone AND the identity query returns 0), the raw drift error
+ *           surfaces: exactly one UpdateHapPolicy call (no retry) and the
+ *           update fails with the generic grant-request code.
+ */
+HWTEST_F(BmsSpmManagerOnTest, UpdateHapToken_DriftRepair_NotFound_0001, Function | MediumTest | Level1)
+{
+    InnerBundleInfo newInfo;
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    newInfo.SetBaseBundleInfo(bundleInfo);
+    // GetBundleName() reads baseApplicationInfo_->bundleName: SetBaseBundleInfo
+    // (BundleInfo) alone leaves it empty (same trap as InitToken_S2Reuse).
+    ApplicationInfo appInfo;
+    appInfo.bundleName = BUNDLE_NAME;
+    newInfo.SetBaseApplicationInfo(appInfo);
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = TEST_USERID;
+    userInfo.bundleName = BUNDLE_NAME;
+    userInfo.accessTokenId = TEST_IDENTITY_TOKENID;
+    userInfo.accessTokenIdEx = TEST_IDENTITY_TOKENID;
+    userInfo.uid = TEST_IDENTITY_UID;
+    newInfo.AddInnerBundleUserInfo(userInfo);
+
+    OHOS::Security::AccessToken::g_spmGetHapTokenIDRet = 0; // no live token
+    OHOS::Security::AccessToken::g_spmUpdateHapPolicyRetSeq = {
+        Security::AccessToken::AccessTokenError::ERR_TOKENID_NOT_EXIST};
+    BaseBundleInstaller installer;
+    // The mock BundleMgrService::GetDataMgr returns nullptr in this target:
+    // inject the data manager directly so InitDataMgr succeeds (same pattern
+    // as bms_bundle_installer_test).
+    installer.dataMgr_ = std::make_shared<BundleDataMgr>();
+    int32_t ret = installer.UpdateHapToken(false, newInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED);
+    EXPECT_EQ(OHOS::Security::AccessToken::g_spmUpdateHapPolicyCallCount, 1);
+}
+
+/**
  * @tc.number: BmsSpmManagerOnTest.UpdateHapToken_RefreshDirs_RegularClone_0001
  * @tc.name: A refreshed clone uid replays only the clone dir set
  * @tc.desc: The main identity already carries the refreshed uid (no replay)
@@ -2482,6 +2589,136 @@ HWTEST_F(BmsSpmManagerOnTest, InitToken_S2Reuse_CloneInstall_0001, Function | Me
     InnerBundleUserInfo mainUserInfo;
     ASSERT_TRUE(info.GetInnerBundleUserInfo(TEST_USERID, mainUserInfo));
     EXPECT_EQ(mainUserInfo.uid, TEST_IDENTITY_UID);
+}
+
+/**
+ * @tc.number: BmsSpmManagerOnTest.CreateSessionByInstalledBundle_0001
+ * @tc.name: The AT-side session is created from the installed haps
+ * @tc.desc: CreateSessionByInstalledBundle allocates the session id through
+ *           CheckHapSignInfo (installed hap paths, no new haps) and satisfies
+ *           the hasPermChecked requirement with TYPE_REPLACE in the
+ *           default/main mode; a second call is idempotent (no extra
+ *           permission pre-check).
+ */
+HWTEST_F(BmsSpmManagerOnTest, CreateSessionByInstalledBundle_0001, Function | MediumTest | Level1)
+{
+    OHOS::Security::AccessToken::g_spmCheckHapSignInfoSessionId = TEST_SESSION_ID;
+    auto session = BundleSpmManager::InstallSession::CreateDeferred();
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    info.SetBaseBundleInfo(bundleInfo);
+    ApplicationInfo appInfo;
+    appInfo.bundleName = BUNDLE_NAME;
+    info.SetBaseApplicationInfo(appInfo);
+    std::map<std::string, InnerModuleInfo> moduleInfos;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = "entry";
+    moduleInfo.hapPath = "/data/app/entry.hap";
+    moduleInfos.emplace("entry", moduleInfo);
+    info.AddInnerModuleInfo(moduleInfos);
+
+    EXPECT_EQ(session.CreateSessionByInstalledBundle(info, TEST_USERID), ERR_OK);
+    EXPECT_TRUE(session.IsActive());
+    EXPECT_EQ(session.GetSessionId(), TEST_SESSION_ID);
+    // The installed-userId rode along for the enterprise-sign lookup.
+    EXPECT_EQ(OHOS::Security::AccessToken::g_spmCheckHapSignInfoLastUserId, TEST_USERID);
+    // TYPE_REPLACE in the default/main mode satisfies hasPermChecked.
+    EXPECT_EQ(OHOS::Security::AccessToken::g_spmCheckHapPermissionInfoCallCount, 1);
+    EXPECT_EQ(OHOS::Security::AccessToken::g_spmCheckHapPermissionInfoLastMode,
+        static_cast<int32_t>(Security::AccessToken::MultipleMode::DEFAULT_OR_MAIN_MODE));
+    // Idempotent: an already-created session does not re-verify.
+    EXPECT_EQ(session.CreateSessionByInstalledBundle(info, TEST_USERID), ERR_OK);
+    EXPECT_EQ(OHOS::Security::AccessToken::g_spmCheckHapPermissionInfoCallCount, 1);
+}
+
+/**
+ * @tc.number: BmsSpmManagerOnTest.CreateSessionByInstalledBundle_0002
+ * @tc.name: An empty hap list fails closed before any AT call
+ * @tc.desc: Without installed hap paths the creation returns the param
+ *           error and the session stays deferred — the AT side is never
+ *           touched (no enterprise-sign userId recorded).
+ */
+HWTEST_F(BmsSpmManagerOnTest, CreateSessionByInstalledBundle_0002, Function | MediumTest | Level1)
+{
+    auto session = BundleSpmManager::InstallSession::CreateDeferred();
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    info.SetBaseBundleInfo(bundleInfo);
+    // No modules: GetAllHapPaths is empty.
+
+    EXPECT_EQ(session.CreateSessionByInstalledBundle(info, TEST_USERID),
+        ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
+    EXPECT_FALSE(session.IsActive());
+    EXPECT_EQ(OHOS::Security::AccessToken::g_spmCheckHapSignInfoLastUserId, 0);
+}
+
+/**
+ * @tc.number: BmsSpmManagerOnTest.CreateSessionByInstalledBundle_0003
+ * @tc.name: A failed verification keeps the session deferred
+ * @tc.desc: When CheckHapSignInfo fails, the creation returns the converted
+ *           verify code and the session id is defensively reset (the AT-side
+ *           contract leaves the inout id untouched on error): a later
+ *           PrepareHapIdentity still allocates a fresh session.
+ */
+HWTEST_F(BmsSpmManagerOnTest, CreateSessionByInstalledBundle_0003, Function | MediumTest | Level1)
+{
+    OHOS::Security::AccessToken::g_spmCheckHapSignInfoSessionId = TEST_SESSION_ID;
+    OHOS::Security::AccessToken::g_spmCheckHapSignInfoRet = -6;
+    auto session = BundleSpmManager::InstallSession::CreateDeferred();
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    info.SetBaseBundleInfo(bundleInfo);
+    ApplicationInfo appInfo;
+    appInfo.bundleName = BUNDLE_NAME;
+    info.SetBaseApplicationInfo(appInfo);
+    std::map<std::string, InnerModuleInfo> moduleInfos;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = "entry";
+    moduleInfo.hapPath = "/data/app/entry.hap";
+    moduleInfos.emplace("entry", moduleInfo);
+    info.AddInnerModuleInfo(moduleInfos);
+
+    EXPECT_NE(session.CreateSessionByInstalledBundle(info, TEST_USERID), ERR_OK);
+    EXPECT_FALSE(session.IsActive());
+}
+
+/**
+ * @tc.number: BmsSpmManagerOnTest.CreateSessionByInstalledBundle_CommitFallback_0001
+ * @tc.name: Commit falls back to the created session's hap-path map
+ * @tc.desc: A session created by CreateSessionByInstalledBundle carries its verified hap-path map (the AT side
+ *           validates the FinishInstall map against the session paths —
+ *           ResolveModulePaths rejects a missing session path): an empty-map
+ *           Commit hands the created session's map to FinishInstall instead of an empty
+ *           one.
+ */
+HWTEST_F(BmsSpmManagerOnTest, CreateSessionByInstalledBundle_CommitFallback_0001, Function | MediumTest | Level1)
+{
+    OHOS::Security::AccessToken::g_spmCheckHapSignInfoSessionId = TEST_SESSION_ID;
+    auto session = BundleSpmManager::InstallSession::CreateDeferred();
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    info.SetBaseBundleInfo(bundleInfo);
+    ApplicationInfo appInfo;
+    appInfo.bundleName = BUNDLE_NAME;
+    info.SetBaseApplicationInfo(appInfo);
+    std::map<std::string, InnerModuleInfo> moduleInfos;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = "entry";
+    moduleInfo.hapPath = "/data/app/entry.hap";
+    moduleInfos.emplace("entry", moduleInfo);
+    info.AddInnerModuleInfo(moduleInfos);
+
+    ASSERT_EQ(session.CreateSessionByInstalledBundle(info, TEST_USERID), ERR_OK);
+    EXPECT_EQ(session.Commit({}), ERR_OK);
+    EXPECT_EQ(OHOS::Security::AccessToken::g_spmFinishInstallCallCount, 1);
+    EXPECT_TRUE(OHOS::Security::AccessToken::g_spmFinishInstallLastPersistent);
+    // The fallback: the created session's map (one entry) reached FinishInstall — an
+    // empty map without the fallback would leave this at 0.
+    EXPECT_EQ(OHOS::Security::AccessToken::g_spmFinishInstallLastModulePathCount, 1);
 }
 
 } // namespace OHOS
