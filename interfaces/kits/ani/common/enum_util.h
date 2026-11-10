@@ -62,6 +62,8 @@ constexpr const char* CLASSNAME_APPCONTROL_CONTROL_TYPE = "@ohos.bundle.appContr
 constexpr const char* CLASSNAME_APPCONTROL_PAGE_JUMP_MODE = "@ohos.bundle.appControl.appControl.PageJumpMode";
 constexpr const char* CLASSNAME_APPCONTROL_UNINSTALL_COMPONENT_TYPE =
     "@ohos.bundle.appControl.appControl.UninstallComponentType";
+constexpr const char* CLASSNAME_APPCONTROL_RECOVER_COMPONENT_TYPE =
+    "@ohos.bundle.appControl.appControl.RecoverComponentType";
 constexpr const char* CLASSNAME_BUNDLEMANAGER_BUNDLE_INSTALL_STATUS =
     "@ohos.bundle.bundleManager.bundleManager.BundleInstallStatus";
 constexpr const char* CLASSNAME_BUNDLEMANAGER_APPLICATIONRESERVEDFLAG =
@@ -605,6 +607,16 @@ public:
     static inline ani_enum_item EnumNativeToETS_AppControl_UninstallComponentType(ani_env* env, const int32_t value)
     {
         return EnumNativeToETSByOffset(env, CommonFunAniNS::CLASSNAME_APPCONTROL_UNINSTALL_COMPONENT_TYPE, value, 1);
+    }
+
+    /* appControl.RecoverComponentType
+    enum RecoverComponentType {
+        EXTENSION = 1,
+        UI_EXTENSION = 2
+    } */
+    static inline ani_enum_item EnumNativeToETS_AppControl_RecoverComponentType(ani_env* env, const int32_t value)
+    {
+        return EnumNativeToETSByOffset(env, CommonFunAniNS::CLASSNAME_APPCONTROL_RECOVER_COMPONENT_TYPE, value, 1);
     }
 
     /* zlib.PathSeparatorStrategy

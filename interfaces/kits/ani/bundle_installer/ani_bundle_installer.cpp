@@ -141,7 +141,7 @@ static void ProcessResult(ani_env* env, InstallResult& result, const InstallOpti
                     RESOURCE_NAME_OF_INSTALL, INSTALL_PERMISSION);
                 break;
             case InstallOption::RECOVER:
-                BusinessErrorAni::ThrowCommonError(env, result.resultCode,
+                BusinessErrorAni::ThrowInstallError(env, result.resultCode, result.innerCode,
                     RESOURCE_NAME_OF_RECOVER, RECOVER_PERMISSION);
                 break;
             case InstallOption::UNINSTALL:
@@ -176,6 +176,7 @@ static void UninstallOrRecoverExecuter(std::string& bundleName, InstallParam& in
     }
     if (option == InstallOption::RECOVER) {
         iBundleInstaller->Recover(bundleName, installParam, callback);
+        installResult.innerCode = callback->GetInnerCode();
     } else if (option == InstallOption::UNINSTALL) {
         iBundleInstaller->Uninstall(bundleName, installParam, callback);
     } else if (option == InstallOption::UNINSTALL_AND_RECOVER) {

@@ -5224,4 +5224,74 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, StreamInstall_CliToolFinalJump_0
     EXPECT_TRUE(ret);
     ResetTestValues();
 }
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_10000
+ * @tc.name: test SetRecoverDisposedRule by AppControlManagerHostImpl
+ * @tc.desc: 1.system run normally
+ *           2.SetRecoverDisposedRule denied for non-system app
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_10000, Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    RecoverDisposedRule rule;
+    rule.recoverComponentType = RecoverComponentType::EXTENSION;
+    rule.priority = 1;
+    ErrCode res = impl->SetRecoverDisposedRule(rule, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_10100
+ * @tc.name: test GetRecoverDisposedRule by AppControlManagerHostImpl
+ * @tc.desc: 1.system run normally
+ *           2.GetRecoverDisposedRule denied for non-system app
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_10100, Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    RecoverDisposedRule rule;
+    ErrCode res = impl->GetRecoverDisposedRule(USERID, rule);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_10200
+ * @tc.name: test DeleteRecoverDisposedRule by AppControlManagerHostImpl
+ * @tc.desc: 1.system run normally
+ *           2.DeleteRecoverDisposedRule denied for non-system app
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_10200, Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ErrCode res = impl->DeleteRecoverDisposedRule(USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_10300
+ * @tc.name: test SetRecoverDisposedRule across users by AppControlManagerHostImpl
+ * @tc.desc: 1.system app with a non-native token operates on another user
+ *           2.INTERACT_ACROSS_LOCAL_ACCOUNTS is denied
+ *           3.SetRecoverDisposedRule returns ERR_BUNDLE_MANAGER_PERMISSION_DENIED
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_10300, Function | SmallTest | Level1)
+{
+    SetSystemAppFalseForTest(true);
+    SetNativeTokenTypeForTest(false);
+    // the calling uid 21000001 belongs to user 105, user 100 is across from the calling user
+    SetGetCallingUid(NON_ADMIN_CALLING_UID);
+    SetPermissionResultForTest(
+        Constants::PERMISSION_BMS_INTERACT_ACROSS_LOCAL_ACCOUNTS, false);
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    RecoverDisposedRule rule;
+    rule.recoverComponentType = RecoverComponentType::EXTENSION;
+    rule.priority = 1;
+    rule.want = std::make_shared<AAFwk::Want>();
+    rule.want->SetBundle(BUNDLE_NAME);
+    ErrCode res = impl->SetRecoverDisposedRule(rule, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    ResetCallingUid();
+    ResetTestValues();
+}
 } // OHOS

@@ -35,6 +35,11 @@ enum class UninstallComponentType {
     UI_EXTENSION = 2,
 };
 
+enum class RecoverComponentType {
+    EXTENSION = 1,
+    UI_EXTENSION = 2,
+};
+
 enum class DisposedType {
     BLOCK_APPLICATION = 1,
     BLOCK_ABILITY = 2,
@@ -85,6 +90,20 @@ public:
     static UninstallDisposedRule *Unmarshalling(Parcel &parcel);
 
     static bool FromString(const std::string &ruleString, UninstallDisposedRule &rule);
+    std::string ToString() const;
+};
+
+struct RecoverDisposedRule : public Parcelable {
+public:
+    std::shared_ptr<AAFwk::Want> want = nullptr;
+    RecoverComponentType recoverComponentType = RecoverComponentType::EXTENSION;
+    int32_t priority = 0;
+
+    bool ReadFromParcel(Parcel &parcel);
+    virtual bool Marshalling(Parcel &parcel) const override;
+    static RecoverDisposedRule *Unmarshalling(Parcel &parcel);
+
+    static bool FromString(const std::string &ruleString, RecoverDisposedRule &rule);
     std::string ToString() const;
 };
 

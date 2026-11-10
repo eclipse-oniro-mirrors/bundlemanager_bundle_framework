@@ -72,6 +72,10 @@ private:
     ErrCode HandleSetUninstallDisposedRule(MessageParcel& data, MessageParcel& reply);
     ErrCode HandleDeleteUninstallDisposedRule(MessageParcel& data, MessageParcel& reply);
 
+    ErrCode HandleSetRecoverDisposedRule(MessageParcel& data, MessageParcel& reply);
+    ErrCode HandleGetRecoverDisposedRule(MessageParcel& data, MessageParcel& reply);
+    ErrCode HandleDeleteRecoverDisposedRule(MessageParcel& data, MessageParcel& reply);
+
     DISALLOW_COPY_AND_MOVE(AppControlHost);
     template<typename T>
     ErrCode GetVectorParcelInfo(MessageParcel &data, std::vector<T> &parcelInfos);

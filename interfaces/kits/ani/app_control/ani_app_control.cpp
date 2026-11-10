@@ -397,6 +397,85 @@ static void AniDeleteUninstallDisposedRule(ani_env* env, ani_string aniAppIdenti
     }
 }
 
+static void ThrowRecoverDisposedRuleError(ani_env* env, ErrCode err,
+    const std::string &functionName, const std::string &permissionName)
+{
+    if (err == ERROR_BUNDLE_SERVICE_EXCEPTION) {
+        BusinessErrorAni::ThrowError(env, err, ERR_MSG_RECOVER_DISPOSED_RULE_SERVICE_EXCEPTION);
+        return;
+    }
+    BusinessErrorAni::ThrowCommonNewError(env, err, functionName, permissionName);
+}
+
+static void AniSetRecoverDisposedRule(ani_env* env, ani_object aniRule)
+{
+    APP_LOGD("ani SetRecoverDisposedRule called");
+    RecoverDisposedRule rule;
+    if (!AniAppControlCommon::ParseRecoverDisposedRule(env, aniRule, rule)) {
+        APP_LOGE("rule invalid!");
+        return;
+    }
+    int32_t userId = OHOS::IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+
+    auto appControlProxy = CommonFunc::GetAppControlProxy();
+    if (appControlProxy == nullptr) {
+        APP_LOGE("appControlProxy is null");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, SET_RECOVER_DISPOSED_RULE, "");
+        return;
+    }
+
+    ErrCode ret = appControlProxy->SetRecoverDisposedRule(rule, userId);
+    if (ret != ERR_OK) {
+        APP_LOGE("SetRecoverDisposedRule failed ret: %{public}d", ret);
+        ThrowRecoverDisposedRuleError(env, CommonFunc::ConvertErrCode(ret),
+            SET_RECOVER_DISPOSED_RULE, PERMISSION_DISPOSED_STATUS);
+    }
+}
+
+static ani_object AniGetRecoverDisposedRule(ani_env* env)
+{
+    APP_LOGD("ani GetRecoverDisposedRule called");
+    int32_t userId = OHOS::IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+
+    auto appControlProxy = CommonFunc::GetAppControlProxy();
+    if (appControlProxy == nullptr) {
+        APP_LOGE("appControlProxy is null");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, GET_RECOVER_DISPOSED_RULE, "");
+        return nullptr;
+    }
+
+    RecoverDisposedRule recoverDisposedRule;
+    ErrCode ret = appControlProxy->GetRecoverDisposedRule(userId, recoverDisposedRule);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetRecoverDisposedRule failed ret: %{public}d", ret);
+        ThrowRecoverDisposedRuleError(env, CommonFunc::ConvertErrCode(ret),
+            GET_RECOVER_DISPOSED_RULE, PERMISSION_DISPOSED_APP_STATUS);
+        return nullptr;
+    }
+
+    return AniAppControlCommon::ConvertRecoverDisposedRule(env, recoverDisposedRule);
+}
+
+static void AniDeleteRecoverDisposedRule(ani_env* env)
+{
+    APP_LOGD("ani DeleteRecoverDisposedRule called");
+    int32_t userId = OHOS::IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+
+    auto appControlProxy = CommonFunc::GetAppControlProxy();
+    if (appControlProxy == nullptr) {
+        APP_LOGE("appControlProxy is null");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, DELETE_RECOVER_DISPOSED_RULE, "");
+        return;
+    }
+
+    ErrCode ret = appControlProxy->DeleteRecoverDisposedRule(userId);
+    if (ret != ERR_OK) {
+        APP_LOGE("DeleteRecoverDisposedRule failed ret: %{public}d", ret);
+        ThrowRecoverDisposedRuleError(env, CommonFunc::ConvertErrCode(ret),
+            DELETE_RECOVER_DISPOSED_RULE, PERMISSION_DISPOSED_STATUS);
+    }
+}
+
 static bool ParseDisposedRuleConfiguration(
     ani_env* env, ani_object object, DisposedRuleConfiguration& disposedRuleConfiguration)
 {
@@ -508,6 +587,12 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
             reinterpret_cast<void*>(AniGetUninstallDisposedRule) },
         ani_native_function { "deleteUninstallDisposedRuleNative", nullptr,
             reinterpret_cast<void*>(AniDeleteUninstallDisposedRule) },
+        ani_native_function { "setRecoverDisposedRuleNative", nullptr,
+            reinterpret_cast<void*>(AniSetRecoverDisposedRule) },
+        ani_native_function { "getRecoverDisposedRuleNative", nullptr,
+            reinterpret_cast<void*>(AniGetRecoverDisposedRule) },
+        ani_native_function { "deleteRecoverDisposedRuleNative", nullptr,
+            reinterpret_cast<void*>(AniDeleteRecoverDisposedRule) },
         ani_native_function { "setDisposedRules", nullptr, reinterpret_cast<void*>(SetDisposedRules) },
     };
 

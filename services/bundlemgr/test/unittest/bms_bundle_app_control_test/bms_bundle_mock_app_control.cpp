@@ -26,8 +26,10 @@
 #include "app_control_manager_rdb.h"
 #include "app_control_manager_host_impl.h"
 #include "app_jump_interceptor_manager_rdb.h"
+#include "bundle_constants.h"
 #include "bundle_info.h"
 #include "bundle_mgr_service.h"
+#include "ipc_skeleton.h"
 #include "scope_guard.h"
 
 using namespace testing::ext;
@@ -866,5 +868,136 @@ HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerRdb_0260, Function | Smal
     EXPECT_EQ(res, ERR_APPEXECFWK_DB_UPDATE_ERROR);
     EXPECT_EQ(changedRows, 0);
     rdb.rdbDataManager_ = dataManager;
+}
+
+/**
+ * @tc.number: AppControlManagerRdb_0280
+ * @tc.name: Test GetRecoverDisposedRule by AppControlManagerRdb
+ * @tc.desc: 1.get fails with get data error when rdb store is unavailable
+ */
+HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerRdb_0280, Function | SmallTest | Level1)
+{
+    AppControlManagerRdb rdb;
+    RecoverDisposedRule rule;
+    auto res = rdb.GetRecoverDisposedRule(CALLER_BUNDLE_NAME, USERID, rule);
+    EXPECT_EQ(res, ERR_APPEXECFWK_DB_GET_DATA_ERROR);
+}
+
+/**
+ * @tc.number: AppControlManagerRdb_0290
+ * @tc.name: Test DeleteRecoverDisposedRule by AppControlManagerRdb
+ * @tc.desc: 1.delete fails with db delete error when rdb store is unavailable
+ */
+HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerRdb_0290, Function | SmallTest | Level1)
+{
+    AppControlManagerRdb rdb;
+    auto res = rdb.DeleteRecoverDisposedRule(CALLER_BUNDLE_NAME, USERID);
+    EXPECT_EQ(res, ERR_APPEXECFWK_DB_DELETE_ERROR);
+}
+
+/**
+ * @tc.number: AppControlManagerRdb_0300
+ * @tc.name: Test GetRecoverDisposedRuleByUserId by AppControlManagerRdb
+ * @tc.desc: 1.get by user fails with get data error when rdb store is unavailable
+ */
+HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerRdb_0300, Function | SmallTest | Level1)
+{
+    AppControlManagerRdb rdb;
+    RecoverDisposedRule rule;
+    std::string callerName;
+    int64_t timeStamp = 0;
+    auto res = rdb.GetRecoverDisposedRuleByUserId(USERID, rule, callerName, timeStamp);
+    EXPECT_EQ(res, ERR_APPEXECFWK_DB_GET_DATA_ERROR);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_0150
+ * @tc.name: test SetRecoverDisposedRule with null want by AppControlManagerHostImpl
+ * @tc.desc: 1.SetRecoverDisposedRule test
+ */
+HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerHostImpl_0150, Function | SmallTest | Level1)
+{
+    AppControlManagerHostImpl impl;
+    RecoverDisposedRule rule;
+    auto res = impl.SetRecoverDisposedRule(rule, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_RECOVER_RULE);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_0160
+ * @tc.name: test GetRecoverDisposedRule by AppControlManagerHostImpl
+ * @tc.desc: 1.GetRecoverDisposedRule test
+ */
+HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerHostImpl_0160, Function | SmallTest | Level1)
+{
+    AppControlManagerHostImpl impl;
+    RecoverDisposedRule rule;
+    auto res = impl.GetRecoverDisposedRule(USERID, rule);
+    EXPECT_EQ(res, ERR_APPEXECFWK_DB_GET_DATA_ERROR);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_0170
+ * @tc.name: test DeleteRecoverDisposedRule by AppControlManagerHostImpl
+ * @tc.desc: 1.delete fails with db delete error when rdb store is unavailable
+ *           2.host propagates the underlying database error
+ */
+HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerHostImpl_0170, Function | SmallTest | Level1)
+{
+    AppControlManagerHostImpl impl;
+    auto res = impl.DeleteRecoverDisposedRule(USERID);
+    EXPECT_EQ(res, ERR_APPEXECFWK_DB_DELETE_ERROR);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_0180
+ * @tc.name: test SetRecoverDisposedRule with mismatched bundleName by AppControlManagerHostImpl
+ * @tc.desc: 1.SetRecoverDisposedRule test
+ */
+HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerHostImpl_0180, Function | SmallTest | Level1)
+{
+    AppControlManagerHostImpl impl;
+    RecoverDisposedRule rule;
+    rule.recoverComponentType = RecoverComponentType::EXTENSION;
+    rule.priority = 1;
+    rule.want = std::make_shared<Want>();
+    rule.want->SetBundle(TARGET_BUNDLE_NAME);
+    auto res = impl.SetRecoverDisposedRule(rule, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_RECOVER_RULE);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_0190
+ * @tc.name: test SetRecoverDisposedRule success path by AppControlManagerHostImpl
+ * @tc.desc: 1.caller name falls back to the uid string when neither the calling name map
+ *           nor the data mgr resolves the calling uid
+ *           2.SetRecoverDisposedRule returns ERR_OK when the mocked database write succeeds
+ */
+HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerHostImpl_0190, Function | SmallTest | Level1)
+{
+    // keep away from the EDM uid preloaded in the calling name map
+    setuid(AppControlConstants::FOUNDATION_UID);
+    AppControlManagerHostImpl impl;
+    RecoverDisposedRule rule;
+    rule.recoverComponentType = RecoverComponentType::EXTENSION;
+    rule.priority = 1;
+    rule.want = std::make_shared<Want>();
+    rule.want->SetBundle(std::to_string(IPCSkeleton::GetCallingUid()));
+    auto res = impl.SetRecoverDisposedRule(rule, Constants::UNSPECIFIED_USERID);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_0200
+ * @tc.name: test DeleteRecoverDisposedRule with unspecified userId by AppControlManagerHostImpl
+ * @tc.desc: 1.unspecified userId passes the across-user check
+ *           2.DeleteRecoverDisposedRule propagates the underlying database delete error
+ */
+HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerHostImpl_0200, Function | SmallTest | Level1)
+{
+    setuid(AppControlConstants::FOUNDATION_UID);
+    AppControlManagerHostImpl impl;
+    auto res = impl.DeleteRecoverDisposedRule(Constants::UNSPECIFIED_USERID);
+    EXPECT_EQ(res, ERR_APPEXECFWK_DB_DELETE_ERROR);
 }
 } // OHOS

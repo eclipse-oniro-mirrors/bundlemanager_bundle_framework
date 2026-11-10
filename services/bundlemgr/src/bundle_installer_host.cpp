@@ -621,6 +621,11 @@ bool BundleInstallerHost::Recover(
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
         return false;
     }
+    if (installParam.IsVerifyRecoverRule() && CheckRecoverDisposedRule(bundleName, installParam.userId)) {
+        LOG_W(BMS_TAG_INSTALLER, "CheckRecoverDisposedRule failed");
+        statusReceiver->OnFinished(ERR_APPEXECFWK_RECOVER_DISPOSED_RULE_FAILED, "");
+        return false;
+    }
     manager_->CreateRecoverTask(bundleName, CheckInstallParam(installParam), statusReceiver);
     return true;
 }
@@ -1593,6 +1598,61 @@ bool BundleInstallerHost::CheckUninstallDisposedRule(
         }
     } else {
         LOG_E(BMS_TAG_INSTALLER, "uninstallComponentType wrong type:%{public}d", rule.uninstallComponentType);
+    }
+
+    return true;
+#else
+    LOG_I(BMS_TAG_INSTALLER, "BUNDLE_FRAMEWORK_APP_CONTROL or ABILITY_RUNTIME_ENABLE is false");
+    return false;
+#endif
+}
+
+bool BundleInstallerHost::CheckRecoverDisposedRule(const std::string &bundleName, int32_t userId)
+{
+#if defined (BUNDLE_FRAMEWORK_APP_CONTROL) && defined (ABILITY_RUNTIME_ENABLE)
+    if (userId == Constants::UNSPECIFIED_USERID) {
+        userId = BundleUtil::GetUserIdByCallingUid();
+    }
+
+    RecoverDisposedRule rule;
+    std::string callerName;
+    int64_t timeStamp = 0;
+    auto ret = DelayedSingleton<AppControlManager>::GetInstance()
+                   ->GetRecoverDisposedRuleByUserId(userId, rule, callerName, timeStamp);
+    if (ret != ERR_OK) {
+        LOG_D(BMS_TAG_INSTALLER, "GetRecoverDisposedRule failed code:%{public}d", ret);
+        return false;
+    }
+    LOG_I(BMS_TAG_INSTALLER, "recover disposed rule set by caller:%{public}s, set time:%{public}lld",
+        callerName.c_str(), static_cast<long long>(timeStamp));
+    if (rule.want == nullptr) {
+        LOG_E(BMS_TAG_INSTALLER, "null rule.want");
+        return false;
+    }
+    rule.want->SetParam(BMS_PARA_BUNDLE_NAME, bundleName);
+    rule.want->SetParam(BMS_PARA_USER_ID, userId);
+
+    if (rule.recoverComponentType == RecoverComponentType::EXTENSION) {
+        std::string identity = IPCSkeleton::ResetCallingIdentity();
+        LOG_I(BMS_TAG_INSTALLER, "recover disposed rule: call StartExtensionAbility");
+        ErrCode err = AAFwk::AbilityManagerClient::GetInstance()->StartExtensionAbility(
+            *rule.want, nullptr, userId, AppExecFwk::ExtensionAbilityType::SERVICE);
+        IPCSkeleton::SetCallingIdentity(identity);
+        if (err != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLER, "start extension ability failed code:%{public}d", err);
+        }
+    } else if (rule.recoverComponentType == RecoverComponentType::UI_EXTENSION) {
+        rule.want->SetParam(UIEXTENSION_MODAL_TYPE, 1);
+        auto connection = std::make_shared<Rosen::ModalSystemUiExtension>();
+        std::string identity = IPCSkeleton::ResetCallingIdentity();
+        LOG_I(BMS_TAG_INSTALLER, "recover disposed rule: call CreateModalUIExtension");
+        bool err = connection->CreateModalUIExtension(*rule.want);
+        IPCSkeleton::SetCallingIdentity(identity);
+        if (!err) {
+            LOG_E(BMS_TAG_INSTALLER, "request modal UI extension failed");
+        }
+    } else {
+        LOG_E(BMS_TAG_INSTALLER, "recoverComponentType wrong type:%{public}d", rule.recoverComponentType);
     }
 
     return true;

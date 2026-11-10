@@ -25,6 +25,7 @@
 #include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_service_constants.h"
+#include "bundle_util.h"
 #include "dual_mode_helper.h"
 #include "ipc_skeleton.h"
 
@@ -1089,6 +1090,130 @@ ErrCode AppControlManagerHostImpl::DeleteUninstallDisposedRule(const std::string
     SendAppControlEvent(ControlActionType::UNINSTALL_DISPOSE_RULE, ControlOperationType::REMOVE_RULE,
         callerName, userId, appIndex, { appIdentifier }, Constants::EMPTY_STRING);
     return ret;
+}
+
+ErrCode AppControlManagerHostImpl::SetRecoverDisposedRule(const RecoverDisposedRule &rule, int32_t userId)
+{
+    LOG_D(BMS_TAG_DEFAULT, "begin");
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        LOG_E(BMS_TAG_DEFAULT, "non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(PERMISSION_DISPOSED_STATUS)) {
+        LOG_E(BMS_TAG_DEFAULT, "verify permission ohos.permission.MANAGE_DISPOSED_APP_STATUS failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (!CheckAcrossUserPermission(userId)) {
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    int32_t uid = OHOS::IPCSkeleton::GetCallingUid();
+    std::string callerName;
+    GetCallerByUid(uid, callerName);
+    if (rule.want == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "null want");
+        return ERR_BUNDLE_MANAGER_INVALID_RECOVER_RULE;
+    }
+    if (callerName != rule.want->GetBundle()) {
+        LOG_E(BMS_TAG_DEFAULT, "callerName is not equal to bundleName in want");
+        return ERR_BUNDLE_MANAGER_INVALID_RECOVER_RULE;
+    }
+    if (!appControlManager_) {
+        LOG_E(BMS_TAG_DEFAULT, "null appControlManager_");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    LOG_I(BMS_TAG_DEFAULT, "set recover disposed rule, caller:%{public}s, userId:%{public}d",
+        callerName.c_str(), userId);
+    auto ret = appControlManager_->SetRecoverDisposedRule(callerName, rule, userId);
+    if (ret == ERR_OK) {
+        SendAppControlEvent(ControlActionType::RECOVER_DISPOSE_RULE, ControlOperationType::ADD_RULE,
+            callerName, userId, Constants::MAIN_APP_INDEX, {}, rule.ToString());
+    } else {
+        LOG_E(BMS_TAG_DEFAULT, "set recover disposed rule failed, caller:%{public}s, userId:%{public}d,"
+            " error:%{public}d", callerName.c_str(), userId, ret);
+    }
+    return ret;
+}
+
+ErrCode AppControlManagerHostImpl::GetRecoverDisposedRule(int32_t userId, RecoverDisposedRule &rule)
+{
+    LOG_D(BMS_TAG_DEFAULT, "begin");
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        LOG_E(BMS_TAG_DEFAULT, "non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({PERMISSION_DISPOSED_STATUS,
+        PERMISSION_GET_DISPOSED_STATUS})) {
+        LOG_E(BMS_TAG_DEFAULT, "verify get recover disposed rule permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (!CheckAcrossUserPermission(userId)) {
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (!appControlManager_) {
+        LOG_E(BMS_TAG_DEFAULT, "null appControlManager_");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    int32_t uid = OHOS::IPCSkeleton::GetCallingUid();
+    std::string callerName;
+    GetCallerByUid(uid, callerName);
+    auto ret = appControlManager_->GetRecoverDisposedRule(callerName, userId, rule);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "get recover disposed rule failed, error:%{public}d", ret);
+    }
+    return ret;
+}
+
+ErrCode AppControlManagerHostImpl::DeleteRecoverDisposedRule(int32_t userId)
+{
+    LOG_D(BMS_TAG_DEFAULT, "begin");
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        LOG_E(BMS_TAG_DEFAULT, "non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(PERMISSION_DISPOSED_STATUS)) {
+        LOG_E(BMS_TAG_DEFAULT, "verify permission ohos.permission.MANAGE_DISPOSED_APP_STATUS failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (!CheckAcrossUserPermission(userId)) {
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (!appControlManager_) {
+        LOG_E(BMS_TAG_DEFAULT, "null appControlManager_");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    int32_t uid = OHOS::IPCSkeleton::GetCallingUid();
+    std::string callerName;
+    GetCallerByUid(uid, callerName);
+    LOG_I(BMS_TAG_DEFAULT, "delete recover disposed rule, caller:%{public}s, userId:%{public}d",
+        callerName.c_str(), userId);
+    auto ret = appControlManager_->DeleteRecoverDisposedRule(callerName, userId);
+    if (ret == ERR_OK) {
+        SendAppControlEvent(ControlActionType::RECOVER_DISPOSE_RULE, ControlOperationType::REMOVE_RULE,
+            callerName, userId, Constants::MAIN_APP_INDEX, {}, Constants::EMPTY_STRING);
+    } else {
+        LOG_E(BMS_TAG_DEFAULT, "delete recover disposed rule failed, caller:%{public}s, userId:%{public}d,"
+            " error:%{public}d", callerName.c_str(), userId, ret);
+    }
+    return ret;
+}
+
+bool AppControlManagerHostImpl::CheckAcrossUserPermission(const int32_t userId)
+{
+    if (userId == Constants::UNSPECIFIED_USERID) {
+        return true;
+    }
+    // sa no need to check across user permission
+    if (BundlePermissionMgr::IsNativeTokenType()) {
+        return true;
+    }
+    if (userId == BundleUtil::GetUserIdByCallingUid()) {
+        return true;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_BMS_INTERACT_ACROSS_LOCAL_ACCOUNTS)) {
+        LOG_E(BMS_TAG_DEFAULT, "verify permission across local account failed");
+        return false;
+    }
+    return true;
 }
 
 void AppControlManagerHostImpl::SendAppControlEvent(ControlActionType actionType, ControlOperationType operationType,

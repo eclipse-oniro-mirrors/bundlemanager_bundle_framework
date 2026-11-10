@@ -173,6 +173,7 @@ public:
     static ani_object ConvertAppCloneIdentity(ani_env* env, const std::string& bundleName, const int32_t appIndex);
     static ani_object ConvertAppClonePreference(ani_env* env, const AppClonePreference& preference);
     static bool ParseAppClonePreference(ani_env* env, ani_object object, AppClonePreference& preference);
+    static bool IsArray(ani_env* env, ani_object object, bool& isArray);
     static ani_object ConvertPermissionDef(ani_env* env, const PermissionDef& permissionDef);
     static ani_object ConvertSharedBundleInfo(ani_env* env, const SharedBundleInfo& sharedBundleInfo);
     static ani_object ConvertSharedModuleInfo(ani_env* env, const SharedModuleInfo& sharedModuleInfo);

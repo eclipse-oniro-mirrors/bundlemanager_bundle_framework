@@ -257,6 +257,8 @@ constexpr int32_t CLI_SANDBOX_APP_INDEX_MAX = 3000;
 //param key-value
 constexpr const char* VERIFY_UNINSTALL_RULE_KEY = "ohos.bms.param.verifyUninstallRule";
 constexpr const char* VERIFY_UNINSTALL_RULE_VALUE = "true";
+constexpr const char* VERIFY_RECOVER_RULE_KEY = "ohos.bms.param.verifyRecoverRule";
+constexpr const char* VERIFY_RECOVER_RULE_VALUE = "true";
 
 constexpr const char* DISABLE_INSTALL_EVENT_REPORT_KEY = "ohos.bms.param.disableInstallEventReport";
 constexpr const char* BUNDLE_ENABLE_STATE_KEY = "ohos.bms.param.bundleEnableState";

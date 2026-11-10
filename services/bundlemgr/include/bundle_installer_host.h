@@ -294,6 +294,7 @@ private:
      * @return Returns true if the operation crosses users; returns false otherwise.
      */
     bool IsAcrossUser(int32_t userId);
+    bool CheckRecoverDisposedRule(const std::string &bundleName, int32_t userId);
     ErrCode InnerAddEnterpriseResignCert(
         const std::string &certAlias, const std::string &certContent, int32_t userId);
     ErrCode VerifyInstallPermission();

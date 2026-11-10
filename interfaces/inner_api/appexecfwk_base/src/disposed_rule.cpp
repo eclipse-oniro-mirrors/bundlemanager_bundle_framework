@@ -27,6 +27,7 @@ namespace {
 const char* WANT = "want";
 const char* COMPONENT_TYPE = "componentType";
 const char* UNINSTALL_COMPONENT_TYPE = "uninstallComponentType";
+const char* RECOVER_COMPONENT_TYPE = "recoverComponentType";
 const char* DISPOSED_TYPE = "disposedType";
 const char* CONTROL_TYPE = "controlType";
 const char* PAGE_JUMP = "pageJump";
@@ -333,6 +334,99 @@ std::string UninstallDisposedRule::ToString() const
 }
 
 bool UninstallDisposedRule::FromString(const std::string &ruleString, UninstallDisposedRule &rule)
+{
+    APP_LOGD("FromString %{public}s", ruleString.c_str());
+    nlohmann::json jsonObject = nlohmann::json::parse(ruleString, nullptr, false, true);
+    if (jsonObject.is_discarded()) {
+        APP_LOGE("failed parse ruleString: %{public}s", ruleString.c_str());
+        return false;
+    }
+    from_json(jsonObject, rule);
+    return true;
+}
+
+bool RecoverDisposedRule::ReadFromParcel(Parcel &parcel)
+{
+    want.reset(parcel.ReadParcelable<AAFwk::Want>());
+    recoverComponentType = static_cast<RecoverComponentType>(parcel.ReadInt32());
+    priority = parcel.ReadInt32();
+    return true;
+}
+
+bool RecoverDisposedRule::Marshalling(Parcel &parcel) const
+{
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, want.get());
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(recoverComponentType));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, priority);
+
+    return true;
+}
+
+RecoverDisposedRule *RecoverDisposedRule::Unmarshalling(Parcel &parcel)
+{
+    RecoverDisposedRule *info = new (std::nothrow) RecoverDisposedRule();
+    if (info && !info->ReadFromParcel(parcel)) {
+        APP_LOGW("read from parcel failed");
+        delete info;
+        info = nullptr;
+    }
+    return info;
+}
+
+void to_json(nlohmann::json &jsonObject, const RecoverDisposedRule &recoverDisposedRule)
+{
+    std::string wantString = "";
+    if (recoverDisposedRule.want != nullptr) {
+        wantString = recoverDisposedRule.want->ToString();
+    }
+    jsonObject = nlohmann::json {
+        {WANT, wantString},
+        {RECOVER_COMPONENT_TYPE, recoverDisposedRule.recoverComponentType},
+        {PRIORITY, recoverDisposedRule.priority},
+    };
+}
+
+void from_json(const nlohmann::json &jsonObject, RecoverDisposedRule &recoverDisposedRule)
+{
+    const auto &jsonObjectEnd = jsonObject.end();
+    int32_t parseResult = ERR_OK;
+    std::string wantString;
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        WANT,
+        wantString,
+        false,
+        parseResult);
+    recoverDisposedRule.want.reset(AAFwk::Want::FromString(wantString));
+    GetValueIfFindKey<RecoverComponentType>(jsonObject,
+        jsonObjectEnd,
+        RECOVER_COMPONENT_TYPE,
+        recoverDisposedRule.recoverComponentType,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        PRIORITY,
+        recoverDisposedRule.priority,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    if (parseResult != ERR_OK) {
+        APP_LOGE("read recoverDisposedRule error : %{public}d", parseResult);
+    }
+}
+
+std::string RecoverDisposedRule::ToString() const
+{
+    nlohmann::json jsonObject;
+    to_json(jsonObject, *this);
+    return jsonObject.dump();
+}
+
+bool RecoverDisposedRule::FromString(const std::string &ruleString, RecoverDisposedRule &rule)
 {
     APP_LOGD("FromString %{public}s", ruleString.c_str());
     nlohmann::json jsonObject = nlohmann::json::parse(ruleString, nullptr, false, true);

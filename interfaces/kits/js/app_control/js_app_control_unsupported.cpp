@@ -150,12 +150,44 @@ napi_value DeleteUninstallDisposedRule(napi_env env, napi_callback_info info)
     return nullptr;
 }
 
+napi_value GetRecoverDisposedRule(napi_env env, napi_callback_info info)
+{
+    APP_LOGE("AppControl not supported");
+    napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
+        "GetRecoverDisposedRule");
+    napi_throw(env, error);
+    return nullptr;
+}
+
+napi_value SetRecoverDisposedRule(napi_env env, napi_callback_info info)
+{
+    APP_LOGE("AppControl not supported");
+    napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
+        "SetRecoverDisposedRule");
+    napi_throw(env, error);
+    return nullptr;
+}
+
+napi_value DeleteRecoverDisposedRule(napi_env env, napi_callback_info info)
+{
+    APP_LOGE("AppControl not supported");
+    napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
+        "DeleteRecoverDisposedRule");
+    napi_throw(env, error);
+    return nullptr;
+}
+
 void CreateComponentType(napi_env env, napi_value value)
 {
     NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &value));
 }
 
 void CreateUninstallComponentType(napi_env env, napi_value value)
+{
+    NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &value));
+}
+
+void CreateRecoverComponentType(napi_env env, napi_value value)
 {
     NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &value));
 }

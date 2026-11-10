@@ -191,6 +191,12 @@ public:
             parameters.at(Constants::VERIFY_UNINSTALL_RULE_KEY) == Constants::VERIFY_UNINSTALL_RULE_VALUE;
     }
 
+    bool IsVerifyRecoverRule() const
+    {
+        return parameters.find(Constants::VERIFY_RECOVER_RULE_KEY) != parameters.end() &&
+            parameters.at(Constants::VERIFY_RECOVER_RULE_KEY) == Constants::VERIFY_RECOVER_RULE_VALUE;
+    }
+
     // Refresh deviceModeDistributionPolicy from the parameters map entry keyed by
     // Constants::DEVICE_MODE_DISTRIBUTION_POLICY_KEY, whose value is the decimal string of the
     // DeviceModeDistributionPolicy enum value (0~8). Returns true when the key is absent (field

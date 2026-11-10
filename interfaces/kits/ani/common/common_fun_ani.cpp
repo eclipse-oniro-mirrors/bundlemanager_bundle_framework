@@ -1804,6 +1804,28 @@ ani_object CommonFunAni::ConvertAppClonePreference(ani_env* env, const AppCloneP
     return CreateNewObjectByClassV2(env, CLASSNAME_APP_CLONE_PREFERENCE_INNER, ctorSig, args);
 }
 
+bool CommonFunAni::IsArray(ani_env* env, ani_object object, bool& isArray)
+{
+    isArray = false;
+    RETURN_FALSE_IF_NULL(env);
+    if (object == nullptr) {
+        APP_LOGE_NOFUNC("object is null");
+        return false;
+    }
+    ani_class arrayCls = nullptr;
+    if (env->FindClass(CommonFunAniNS::CLASSNAME_ARRAY, &arrayCls) != ANI_OK || arrayCls == nullptr) {
+        APP_LOGE_NOFUNC("find array class failed");
+        return false;
+    }
+    ani_boolean isInstance = ANI_FALSE;
+    if (env->Object_InstanceOf(object, arrayCls, &isInstance) != ANI_OK) {
+        APP_LOGE_NOFUNC("check array instance failed");
+        return false;
+    }
+    isArray = isInstance == ANI_TRUE;
+    return true;
+}
+
 bool CommonFunAni::ParseAppClonePreference(ani_env* env, ani_object object, AppClonePreference& preference)
 {
     RETURN_FALSE_IF_NULL(env);

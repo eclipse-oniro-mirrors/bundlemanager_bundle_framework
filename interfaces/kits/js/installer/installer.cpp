@@ -803,8 +803,8 @@ void OperationCompleted(napi_env env, napi_status status, void *data)
                     callbackPtr->installResult.innerCode, RESOURCE_NAME_OF_INSTALL, INSTALL_PERMISSION);
                 break;
             case InstallOption::RECOVER:
-                result[FIRST_PARAM] = BusinessError::CreateCommonError(env, callbackPtr->installResult.resultCode,
-                    RESOURCE_NAME_OF_RECOVER, RECOVER_PERMISSION);
+                result[FIRST_PARAM] = BusinessError::CreateInstallError(env, callbackPtr->installResult.resultCode,
+                    callbackPtr->installResult.innerCode, RESOURCE_NAME_OF_RECOVER, RECOVER_PERMISSION);
                 break;
             case InstallOption::UNINSTALL:
                 result[FIRST_PARAM] = BusinessError::CreateCommonError(env, callbackPtr->installResult.resultCode,
@@ -928,6 +928,7 @@ void UninstallOrRecoverExecuter(napi_env env, void *data)
     iBundleInstaller->AsObject()->AddDeathRecipient(recipient);
     if (asyncCallbackInfo->option == InstallOption::RECOVER) {
         iBundleInstaller->Recover(bundleName, asyncCallbackInfo->installParam, callback);
+        installResult.innerCode = callback->GetInnerCode();
     } else if (asyncCallbackInfo->option == InstallOption::UNINSTALL) {
         iBundleInstaller->Uninstall(bundleName, asyncCallbackInfo->installParam, callback);
     } else {
