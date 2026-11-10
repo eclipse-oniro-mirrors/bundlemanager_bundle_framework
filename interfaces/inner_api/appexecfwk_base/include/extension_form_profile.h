@@ -75,6 +75,7 @@ constexpr const char* STANDBY_IS_PRIVACY_SENSITIVE = "isPrivacySensitive";
 constexpr const char* TRIGGER_TYPES = "triggerTypes";
 constexpr const char* IS_COLOR_MODE_REFRESH_ENABLED = "isColorModeRefreshEnabled";
 constexpr const char* TINTING_SUPPORTED = "enableTint";
+constexpr const char* ENABLE_REMINDER_AGENT_REFRESH = "enableReminderAgentRefresh";
 }
 
 class ExtensionFormProfile {
