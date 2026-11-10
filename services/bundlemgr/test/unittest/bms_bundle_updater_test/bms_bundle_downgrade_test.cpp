@@ -34,6 +34,7 @@
 #include "installd/installd_service.h"
 #include "installd_client.h"
 #include "mock_status_receiver.h"
+#include "parameters.h"
 
 using namespace testing::ext;
 using namespace OHOS;
@@ -125,6 +126,8 @@ std::shared_ptr<InstalldService> BmsBundleDowngradeTest::installdService_ =
 
 void BmsBundleDowngradeTest::SetUpTestCase()
 {
+    // Match the test HAP/HSP deviceTypes when SysCap validation falls back.
+    OHOS::system::SetParameter("const.bms.supportAppTypes", "default,phone,tablet,2in1");
     SetUpSpmTrustedSignInfoForTest();
     bundleMgrService_->InitBundleInstaller();
     bundleMgrService_->InitBundleDataMgr();
@@ -135,6 +138,7 @@ void BmsBundleDowngradeTest::TearDownTestCase()
 {
     bundleMgrService_->OnStop();
     sleep(1);
+    OHOS::system::RemoveParameter("const.bms.supportAppTypes");
 }
 
 void BmsBundleDowngradeTest::SetUp()

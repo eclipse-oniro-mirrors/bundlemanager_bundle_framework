@@ -52,6 +52,7 @@ struct ExtensionFormInfo {
     std::string groupId;
     FormStandby standby;
     bool isColorModeRefreshEnabled = false;
+    bool enableTint = false;
 
     std::vector<int32_t> supportDimensions {};
     std::vector<int32_t> conditionUpdate {};

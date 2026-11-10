@@ -261,20 +261,12 @@ std::vector<AccessToken::PermissionStateFull> BundlePermissionMgr::GetPermission
 bool BundlePermissionMgr::GetAllReqPermissionStateFull(AccessToken::AccessTokenID tokenId,
     std::vector<AccessToken::PermissionStateFull> &newPermissionState)
 {
-    std::vector<AccessToken::PermissionStateFull> userGrantReqPermList;
-    int32_t ret = AccessToken::AccessTokenKit::GetReqPermissions(tokenId, userGrantReqPermList, false);
+    int32_t ret = AccessToken::AccessTokenKit::GetReqPermissions(tokenId, newPermissionState,
+        Security::AccessToken::PermissionGrantType::ALL);
     if (ret != AccessToken::AccessTokenKitRet::RET_SUCCESS) {
-        LOG_E(BMS_TAG_DEFAULT, "GetAllReqPermissionStateFull get user grant failed errcode: %{public}d", ret);
+        LOG_E(BMS_TAG_DEFAULT, "GetAllReqPermissionStateFull get user&system grant failed errcode: %{public}d", ret);
         return false;
     }
-    std::vector<AccessToken::PermissionStateFull> systemGrantReqPermList;
-    ret = AccessToken::AccessTokenKit::GetReqPermissions(tokenId, systemGrantReqPermList, true);
-    if (ret != AccessToken::AccessTokenKitRet::RET_SUCCESS) {
-        LOG_E(BMS_TAG_DEFAULT, "GetAllReqPermissionStateFull get system grant failed errcode: %{public}d", ret);
-        return false;
-    }
-    newPermissionState = userGrantReqPermList;
-    std::copy(systemGrantReqPermList.begin(), systemGrantReqPermList.end(), std::back_inserter(newPermissionState));
     return true;
 }
 

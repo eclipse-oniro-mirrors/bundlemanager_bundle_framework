@@ -1589,7 +1589,11 @@ void BaseBundleInstaller::VerifyDelayedAging(InnerBundleInfo &bundleInfo, int32_
 {
     LOG_D(BMS_TAG_INSTALLER, "Start verifying if there is a delay in aging");
     bool isDelayedAging = false;
-    if (BundlePermissionMgr::VerifyPermission(bundleInfo.GetBundleName(), ServiceConstants::PERMISSION_MANAGE_AGING,
+    // SPM ON: verify against the session's cached policy — the mid-install
+    // legacy lookup (GetHapTokenID + VerifyAccessToken) sees no committed
+    // token for a fresh install and denies what the session actually grants.
+    if (spmSession_.VerifyPermission(bundleInfo.GetBundleName(),
+        ServiceConstants::PERMISSION_MANAGE_AGING,
         uid / Constants::BASE_USER_RANGE) != Security::AccessToken::PermissionState::PERMISSION_GRANTED) {
         APP_LOGD("no permission to delay aging %{public}s", bundleInfo.GetBundleName().c_str());
         bundleInfo.SetDelayedAging(isDelayedAging);
@@ -2263,6 +2267,13 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     for (const auto &infoItem : newInfos) {
         modulePathMap[infoItem.first] =
             infoItem.second.GetModuleHapPath(infoItem.second.GetCurrentModulePackage());
+    }
+    // ipc groups are prepared on the install temp copy (no DB write and no uid yet); MarkInstallFinish
+    // commits them together with the bundle info, where BundleDataMgr allocates the uid atomically.
+    ErrCode ipcGroupRet = PrepareIpcGroupInfos(hapVerifyResults);
+    if (ipcGroupRet != ERR_OK) {
+        // Soft failure: a broken ipc group must not fail the install itself.
+        LOG_W(BMS_TAG_INSTALLER, "prepare ipc group infos failed, ret:%{public}d", ipcGroupRet);
     }
     result = MarkInstallFinish(modulePathMap);
     if (result != ERR_OK) {
@@ -4604,7 +4615,9 @@ void BaseBundleInstaller::ParseSizeFromProvision(
         if (item.first != ServiceConstants::PERMISSION_MANAGE_STORAGE) {
             continue;
         }
-        if (BundlePermissionMgr::VerifyPermission(bundleName, ServiceConstants::PERMISSION_MANAGE_STORAGE,
+        // SPM ON: verify against the session's cached policy — same mid-install
+        // reasoning as VerifyDelayedAging above.
+        if (spmSession_.VerifyPermission(bundleName, ServiceConstants::PERMISSION_MANAGE_STORAGE,
             uid / Constants::BASE_USER_RANGE) != Security::AccessToken::PermissionState::PERMISSION_GRANTED) {
             APP_LOGW("no manage storage permission for %{public}s", bundleName.c_str());
             return;
@@ -4768,6 +4781,70 @@ ErrCode BaseBundleInstaller::CreateDataGroupDirs(
     // the data group infos are generated on the variant just installed (hidden cross-mode
     // variants live in tempBundleInfos_), never diverging from the bundle-info commit.
     dataMgr_->GenerateDataGroupInfos(bundleName_, groupIds, userId_, true, crossModeFetchTruth_);
+    return ERR_OK;
+}
+
+void BaseBundleInstaller::GetIpcGroupIds(const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes,
+    std::unordered_set<std::string> &ipcGroupIds)
+{
+    for (uint32_t i = 0; i < hapVerifyRes.size(); ++i) {
+        Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes[i].GetProvisionInfo();
+        std::vector<std::string> parsedIds = BundleParser::ParseIpcGroupIds(provisionInfo.appServiceCapabilities);
+        for (const std::string &id : parsedIds) {
+            ipcGroupIds.insert(id);
+        }
+    }
+}
+
+ErrCode BaseBundleInstaller::PrepareIpcGroupInfos(
+    const std::vector<Security::Verify::HapVerifyResult> &hapVerifyResults)
+{
+    if (dataMgr_ == nullptr) {
+        LOG_W(BMS_TAG_INSTALLER, "dataMgr_ null");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    // Permission first: without ALLOW_CROSS_APP_IPC the provision declarations are not parsed at all.
+    // During install the token is not yet persisted in ATM, so go through the SPM session facade
+    // (it queries the cached session policy when SPM is on, and falls back to BundlePermissionMgr
+    // otherwise).
+    auto permissionResult = spmSession_.VerifyPermission(bundleName_,
+        ServiceConstants::PERMISSION_ALLOW_CROSS_APP_IPC, userId_);
+    LOG_I(BMS_TAG_INSTALLER, "PrepareIpcGroupInfos bundleName:%{public}s userId:%{public}d "
+        "ALLOW_CROSS_APP_IPC permissionResult:%{public}d",
+        bundleName_.c_str(), userId_, permissionResult);
+    std::unordered_set<std::string> validIds;
+    if (permissionResult == ERR_OK) {
+        std::unordered_set<std::string> declaredIds;
+        GetIpcGroupIds(hapVerifyResults, declaredIds);
+        for (const std::string &groupId : declaredIds) {
+            BundleUtil::TryAddIpcGroupId(validIds, groupId);
+        }
+    } else {
+        LOG_W(BMS_TAG_INSTALLER, "PrepareIpcGroupInfos bundleName:%{public}s userId:%{public}d "
+            "ALLOW_CROSS_APP_IPC not granted, ipcGroupIds not parsed",
+            bundleName_.c_str(), userId_);
+    }
+    InnerBundleInfo tempInfo;
+    if (!GetTempBundleInfo(tempInfo)) {
+        LOG_W(BMS_TAG_INSTALLER, "get temp bundle info failed");
+        return ERR_APPEXECFWK_GET_INSTALL_TEMP_BUNDLE_ERROR;
+    }
+    // The declaration is app level: every installed user gets exactly the declared ids with uid 0.
+    // BundleDataMgr assigns the uids at commit, reusing the index already allocated to each id.
+    std::unordered_map<std::string, IpcGroupInfo> userInfos;
+    for (const std::string &groupId : validIds) {
+        IpcGroupInfo ipcGroupInfo;
+        ipcGroupInfo.ipcGroupId = groupId;
+        userInfos[groupId] = ipcGroupInfo;
+    }
+    for (int32_t userId : tempInfo.GetUsers()) {
+        tempInfo.SetIpcGroupInfos(userId, userInfos);
+    }
+    tempInfo.SetIpcGroupsPrepared(true);
+    if (!tempInfo_.SetTempBundleInfo(tempInfo)) {
+        LOG_W(BMS_TAG_INSTALLER, "save temp bundle info failed");
+        return ERR_APPEXECFWK_SET_INSTALL_TEMP_BUNDLE_ERROR;
+    }
     return ERR_OK;
 }
 
@@ -5505,7 +5582,9 @@ void BaseBundleInstaller::ExtractResourceFiles(const InnerBundleInfo &info, bool
 void BaseBundleInstaller::ExtractNPAPIPluginFiles(const std::string &modulePath)
 {
     LOG_D(BMS_TAG_INSTALLER, "ExtractNPAPIPluginFiles begin");
-    if (BundlePermissionMgr::VerifyPermission(bundleName_,
+    // SPM ON: verify against the session's cached policy — same mid-install
+    // reasoning as VerifyDelayedAging above.
+    if (spmSession_.VerifyPermission(bundleName_,
         ServiceConstants::PERMISSION_SUPPORT_NP_PLUGIN_FOR_WEB, userId_) !=
         Security::AccessToken::PermissionState::PERMISSION_GRANTED) {
         LOG_D(BMS_TAG_INSTALLER, "no permission to extract npapi plugin files");

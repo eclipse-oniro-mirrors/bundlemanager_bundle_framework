@@ -90,6 +90,7 @@ ohos_shared_library("appexecfwk_base") {
     "src/free_install/target_ability_info.cpp",
     "src/hap_module_info.cpp",
     "src/install_param.cpp",
+    "src/ipc_group_info.cpp",
     "src/mime_type_mgr.cpp",
     "src/module_info.cpp",
     "src/module_test_runner.cpp",

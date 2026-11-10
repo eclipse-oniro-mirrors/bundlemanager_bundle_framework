@@ -20,6 +20,7 @@
 #include "bundle_clone_installer.h"
 
 #include "appexecfwk_errors.h"
+#include "accesstoken_kit.h"
 #include "bundle_data_storage_rdb.h"
 #include "bundle_installer.h"
 #include "bundle_constants.h"
@@ -41,6 +42,13 @@ const std::int32_t installer = 1;
 const std::int32_t userId_ = 9989;
 const std::int32_t uid_ = 1;
 constexpr int32_t  CLONE_NUM = 4;
+
+// SPM ON mock knobs for the mocked AT boundary (see SetUp). The sample uid
+// lives in user 100's segment; the mock rebases it into each install's
+// actual user segment (user 1, user 9989, ...).
+constexpr int32_t TEST_SPM_SESSION_ID = 4242;
+constexpr uint64_t TEST_SPM_TOKEN_ID = 101;
+constexpr int32_t TEST_SPM_UID = 100 * Constants::BASE_USER_RANGE + 102;
 }
 
 namespace OHOS {
@@ -187,6 +195,14 @@ void BmsBundleCloneInstallerTest::DeleteBundle(const std::string &bundleName)
 void BmsBundleCloneInstallerTest::SetUp()
 {
     bundleCloneInstall_ = std::make_shared<AppExecFwk::BundleCloneInstaller>();
+    // SPM ON: the clone install flows run InitToken, whose PrepareHapIdentity
+    // takes the identity from the mocked AT boundary — without the knobs the
+    // mock returns uid 0 and InitToken fails fast with
+    // ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED BEFORE the
+    // installd step the cases intend to exercise (the mock rebases the uid
+    // into each install's actual user segment).
+    Security::AccessToken::SetSpmCheckHapSignInfoSessionIdForTest(TEST_SPM_SESSION_ID);
+    Security::AccessToken::SetSpmPrepareIdentityForTest(TEST_SPM_TOKEN_ID, TEST_SPM_UID);
 }
 
 void BmsBundleCloneInstallerTest::TearDown()
@@ -196,6 +212,13 @@ void BmsBundleCloneInstallerTest::SetBundleDataMgr()
 {
     DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = std::make_shared<AppExecFwk::BundleDataMgr>();
     EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ != nullptr);
+    // SPM ON: InitToken succeeds, so the deep path reaches CreateCloneDataDir
+    // and its failure guards dereference the installer's dataMgr_ member (the
+    // install flow itself only uses a local dataMgr reference) — refresh the
+    // member from the singleton here, after the fresh instance exists (a null
+    // dataMgr_ in the createCloneDataDirGuard lambda would crash at the
+    // expected installd failure return).
+    bundleCloneInstall_->GetDataMgr();
 }
 
 void BmsBundleCloneInstallerTest::UnsetBundleDataMgr()
@@ -646,7 +669,14 @@ HWTEST_F(BmsBundleCloneInstallerTest, RecoverHapToken_0400, Function | SmallTest
     applicationInfo.bundleName = BUNDLE_NAME;
     info.SetBaseApplicationInfo(applicationInfo);
     auto res = bundleCloneInstall_->RecoverHapToken(userId_, 1, accessTokenIdEx, info, "");
-    EXPECT_TRUE(res);
+    if (BundleSpmManager::IsEnabled()) {
+        // SPM ON: the uninstall-record recovery path is closed by design —
+        // the reserved AT identity is re-adopted through InitToken instead,
+        // so the record-based recovery never reports success.
+        EXPECT_FALSE(res);
+    } else {
+        EXPECT_TRUE(res);
+    }
     EXPECT_TRUE(dataMgr->DeleteUninstallCloneBundleInfo(BUNDLE_NAME, userId_, 1));
 }
 

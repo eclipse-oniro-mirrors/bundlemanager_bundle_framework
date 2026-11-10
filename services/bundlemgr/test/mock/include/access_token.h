@@ -34,6 +34,18 @@ enum AccessTokenKitRet {
     RET_SUCCESS = 0,
 };
 
+/**
+ * @brief Permission type filter for querying requested permissions.
+ */
+enum class PermissionGrantType : int32_t {
+    /** get only system grant permissions */
+    SYSTEM_GRANT = 0,
+    /** get non-system-grant permissions */
+    NON_SYSTEM_GRANT = 1,
+    /** get all requested permissions regardless of grant mode */
+    ALL = 2,
+};
+
 typedef struct {
     unsigned int tokenUniqueID : 24;
     unsigned int res : 3;

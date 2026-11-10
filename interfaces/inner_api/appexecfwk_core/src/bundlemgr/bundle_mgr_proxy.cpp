@@ -17,6 +17,7 @@
 
 #include <chrono>
 #include <cinttypes>
+#include <memory>
 #include <numeric>
 #include <mutex>
 #include <set>
@@ -88,6 +89,7 @@ bool GetData(void *&buffer, size_t size, const void *data)
     }
     if (memcpy_s(buffer, size, data, size) != EOK) {
         free(buffer);
+        buffer = nullptr;
         APP_LOGE("GetData failed due to memcpy_s failed");
         return false;
     }
@@ -2272,6 +2274,10 @@ bool BundleMgrProxy::RegisterBundleEventCallback(const sptr<IBundleEventCallback
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to RegisterBundleEventCallback due to write InterfaceToken fail");
+        return false;
+    }
+    if (!data.WriteBool(bundleEventCallback->IsNotifyAllUsers())) {
+        APP_LOGE("write notifyAllUsers of BundleEventCallback failed");
         return false;
     }
     if (!data.WriteRemoteObject(bundleEventCallback->AsObject())) {
@@ -5212,6 +5218,26 @@ bool BundleMgrProxy::QueryDataGroupInfos(const std::string &bundleName,
     return true;
 }
 
+ErrCode BundleMgrProxy::QueryIpcGroupInfos(const std::string &bundleName, int32_t userId,
+    std::vector<IpcGroupInfo> &infos)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to QueryIpcGroupInfos due to write InterfaceToken failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to QueryIpcGroupInfos due to write bundleName failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to QueryIpcGroupInfos due to write userId failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetParcelableInfosWithErrCode<IpcGroupInfo>(BundleMgrInterfaceCode::QUERY_IPC_GROUP_INFOS, data, infos);
+}
+
 bool BundleMgrProxy::GetGroupDir(const std::string &dataGroupId, std::string &dir)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
@@ -5414,6 +5440,53 @@ ErrCode BundleMgrProxy::GetJsonProfileForSelf(ProfileType profileType, const std
     }
     MessageOption option(MessageOption::TF_SYNC | MessageOption::TF_IMAGE);
     return GetBigString(BundleMgrInterfaceCode::GET_JSON_PROFILE_FOR_SELF, data, profile, option);
+}
+
+ErrCode BundleMgrProxy::GetLaunchServices(const std::string &bundleName, const std::string &moduleName,
+    int32_t userId, LaunchServicesResult &result)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    APP_LOGD("begin to GetLaunchServices, bundleName: %{public}s, moduleName: %{public}s",
+        bundleName.c_str(), moduleName.c_str());
+    if (bundleName.empty() || moduleName.empty()) {
+        APP_LOGE("bundleName or moduleName is empty");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetLaunchServices due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to GetLaunchServices due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(moduleName)) {
+        APP_LOGE("fail to GetLaunchServices due to write moduleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to GetLaunchServices due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_LAUNCH_SERVICES, data, reply)) {
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    ErrCode ret = static_cast<ErrCode>(reply.ReadInt32());
+    if (ret != ERR_OK) {
+        APP_LOGD("host reply err %{public}d", ret);
+        return ret;
+    }
+    std::unique_ptr<LaunchServicesResult> launchServicesResult(reply.ReadParcelable<LaunchServicesResult>());
+    if (!launchServicesResult) {
+        APP_LOGE("ReadParcelable<LaunchServicesResult> failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    result = *launchServicesResult;
+    return ERR_OK;
 }
 
 sptr<IBundleResource> BundleMgrProxy::GetBundleResourceProxy()
@@ -7737,6 +7810,7 @@ ErrCode BundleMgrProxy::GetParcelInfoFromAshMem(MessageParcel &reply, void *&dat
     }
     if (memcpy_s(data, ashMemSize, ashDataPtr, ashMemSize) != EOK) {
         free(data);
+        data = nullptr;
         APP_LOGE("failed due to memcpy_s failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }

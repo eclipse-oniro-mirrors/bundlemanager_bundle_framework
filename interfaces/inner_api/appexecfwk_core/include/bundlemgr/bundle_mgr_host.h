@@ -908,6 +908,8 @@ private:
 
     ErrCode HandleQueryDataGroupInfos(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleQueryIpcGroupInfos(MessageParcel &data, MessageParcel &reply);
+
     ErrCode HandleGetPreferenceDirByGroupId(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleQueryAppGalleryBundleName(MessageParcel &data, MessageParcel &reply);
@@ -932,6 +934,8 @@ private:
     ErrCode HandleGetJsonProfile(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetJsonProfileForSelf(MessageParcel &data, MessageParcel &reply);
+
+    ErrCode HandleGetLaunchServices(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetBundleResourceProxy(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleGetSkillManagerProxy(MessageParcel &data, MessageParcel &reply);

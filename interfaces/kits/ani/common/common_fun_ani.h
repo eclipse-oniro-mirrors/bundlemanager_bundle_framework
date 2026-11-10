@@ -26,6 +26,7 @@
 #include "app_log_wrapper.h"
 #include "bundle_mgr_interface.h"
 #include "bundle_resource_info.h"
+#include "bundle_skill/skill_info.h"
 #include "clone_param.h"
 #include "enum_util.h"
 #include "install_param.h"
@@ -187,6 +188,9 @@ public:
     static ani_object ConvertShortcutInfo(ani_env* env, const ShortcutInfo& shortcutInfo);
     static ani_object ConvertShortcutIntent(ani_env* env, const ShortcutIntent& shortcutIntent);
     static ani_object ConvertShortcutIntentParameter(ani_env* env, const std::pair<std::string, std::string>& item);
+
+    static ani_object ConvertSkillInfo(ani_env* env, const SkillInfo& skillInfo, uint32_t flags);
+    static ani_object ConvertSkillInfos(ani_env* env, const std::vector<SkillInfo>& skillInfos, uint32_t flags);
 
     static ani_object ConvertLauncherAbilityInfo(ani_env* env, const LauncherAbilityInfo& launcherAbility);
 

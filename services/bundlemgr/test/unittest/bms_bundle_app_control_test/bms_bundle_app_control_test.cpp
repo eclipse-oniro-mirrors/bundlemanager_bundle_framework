@@ -21,6 +21,7 @@
 #include <unistd.h>
 
 #include "ability_info.h"
+#include "accesstoken_kit.h"
 #include "app_control_constants.h"
 #include "app_control_manager_rdb.h"
 #include "app_control_manager_host_impl.h"
@@ -29,6 +30,7 @@
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
+#include "bundle_verify_mgr.h"
 #include "dual_mode_helper.h"
 #include "if_system_ability_manager.h"
 #include "inner_bundle_info.h"
@@ -74,6 +76,73 @@ const int32_t MAIN_APP_INDEX = -1;
 const int32_t CLONE_APP_INDEX_MAX = 6;
 const int32_t APP_INDEX = 1;
 const int32_t UNSPECIFIED_USERID = -2;
+// DUAL_MODE test parameters
+const char *TEST_DUAL_MODE_PARAM = "persist.bms.test_dual_mode";
+const char *TEST_ISPCMODE_PARAM = "persist.bms.ispcmode";
+const char *TEST_MAINMODE_PARAM = "persist.bms.mainmode";
+const char *TEST_MODE_VALUE_INVALID = "-1";
+const char *TEST_MODE_VALUE_TABLET = "0";
+const char *TEST_MODE_VALUE_2IN1 = "1";
+const char *TEST_DUAL_MODE_ON = "true";
+const char *TEST_DUAL_MODE_OFF = "false";
+
+// SPM ON prerequisite: the mocked access-token boundary is fed the trusted
+// per-hap sign answer for the hap this suite installs, so the installs pass
+// the real SPM verification chain (CheckSignAndInitSession) instead of
+// failing closed on the empty default mock (0 entries -> 8519752). The
+// provision mirrors the REAL profile the hap is signed with
+// (com.third.hiworld.example1.p7b — release / os_integration / system_core /
+// hos_system_app / no app-identifier); the appId and appIdentifier are
+// captured from the hap itself (the same local verify the keep-data
+// cross-check uses), so the SPM-derived identity matches the locally
+// verified one by construction.
+constexpr int32_t TEST_SPM_SESSION_ID = 4242;
+constexpr uint64_t TEST_SPM_TOKEN_ID = 101;
+// The AT-allocated uid must fall inside USERID's uid segment.
+constexpr int32_t TEST_SPM_UID = USERID * Constants::BASE_USER_RANGE + 102;
+
+void SetUpSpmTrustedSignInfoForTest()
+{
+    Security::Verify::HapVerifyResult verifyResult;
+    std::string appId;
+    std::string appIdentifier;
+    if (BundleVerifyMgr::HapVerify(INSTALL_PATH, verifyResult, true) == ERR_OK) {
+        appId = verifyResult.GetProvisionInfo().appId;
+        appIdentifier = verifyResult.GetProvisionInfo().bundleInfo.appIdentifier;
+    }
+    const std::string provision = Security::AccessToken::MakeSpmReleaseProvisionRawForTest(
+        BUNDLE_NAME, "os_integration", false, "hos_system_app", "system_core", appIdentifier);
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest("bmsThirdBundle1.hap", provision, appId);
+    Security::AccessToken::SetSpmCheckHapSignInfoSessionIdForTest(TEST_SPM_SESSION_ID);
+    Security::AccessToken::SetSpmPrepareIdentityForTest(TEST_SPM_TOKEN_ID, TEST_SPM_UID);
+}
+
+// Leftover persistent state of this suite's bundle must be wiped before the
+// first install (records persisted by earlier runs store the app id the REAL
+// signature derived — a mocked provision deriving a different one fails the
+// keep-data / app-identifier comparisons with INCONSISTENT_SIGNATURE).
+void ClearSpmLeftoverUninstallRecordsForTest()
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        return;
+    }
+    InnerBundleInfo leftoverInfo;
+    if (dataMgr->FetchInnerBundleInfo(BUNDLE_NAME, leftoverInfo)) {
+        dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::INSTALL_START);
+        dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_START);
+        dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_SUCCESS);
+    }
+    dataMgr->DeleteUninstallBundleInfo(BUNDLE_NAME, USERID);
+}
+
+// DUAL_MODE test parameters setting
+void SetDualModeTestParams(const std::string &ispcmode, const std::string &mainmode)
+{
+    OHOS::system::SetParameter(TEST_DUAL_MODE_PARAM, TEST_DUAL_MODE_ON);
+    OHOS::system::SetParameter(TEST_ISPCMODE_PARAM, ispcmode);
+    OHOS::system::SetParameter(TEST_MAINMODE_PARAM, mainmode);
+}
 }  // namespace
 
 class MockAppControlHost : public AppControlHost {
@@ -229,10 +298,20 @@ BmsBundleAppControlTest::~BmsBundleAppControlTest()
 
 void BmsBundleAppControlTest::SetUpTestCase()
 {
+    // SPM stays ON (its device default): feed the mocked access-token boundary
+    // with the trusted sign answer for the hap this suite installs, so the
+    // installs pass the real SPM verification chain instead of failing closed
+    // on the empty default mock. Must run before the first install — nothing
+    // in this binary resets the mock control variables afterwards.
+    SetUpSpmTrustedSignInfoForTest();
     bundleMgrService_->InitBundleInstaller();
     bundleMgrService_->InitBundleDataMgr();
     bundleMgrService_->GetDataMgr()->AddUserId(USERID);
     bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();
+    // Drop the leftover keep-data uninstall record / stale installed row of
+    // this suite's bundle before the first install (the persisted data is
+    // loaded above).
+    ClearSpmLeftoverUninstallRecordsForTest();
 }
 
 void BmsBundleAppControlTest::TearDownTestCase()
@@ -5641,6 +5720,11 @@ HWTEST_F(BmsBundleAppControlTest, GetCallerByUid_0100, Function | SmallTest | Le
     InnerBundleUserInfo userInfo;
     userInfo.bundleUserInfo = bundleUserInfo;
     userInfo.bundleName = BUNDLE_NAME;
+    // SPM ON: the uid allocation authority is the access token service — an
+    // identity without an AT-allocated uid fails fast and the reverse lookup
+    // below cannot resolve it. Stamp the AT-allocated uid the ON install
+    // flow adopts; the OFF counter ignores it and allocates locally.
+    userInfo.uid = TEST_SPM_UID;
     impl->dataMgr_->GenerateUidAndGid(userInfo);
 
     InnerBundleInfo innerBundleInfo;
@@ -5650,6 +5734,10 @@ HWTEST_F(BmsBundleAppControlTest, GetCallerByUid_0100, Function | SmallTest | Le
 
     impl->dataMgr_->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
     ScopeGuard bundleInfoGuard([&] { impl->dataMgr_->bundleInfos_.erase(BUNDLE_NAME); });
+    // SPM ON: seed the bundleIdMap_ reverse entry of the AT-allocated
+    // identity (the OFF counter registered its own inside GenerateUidAndGid);
+    // InsertBundleIdMapEntries is an ON-only refresh, a no-op under OFF.
+    impl->dataMgr_->InsertBundleIdMapEntries(innerBundleInfo);
 
     impl->GetCallerByUid(userInfo.uid, callerName);
     EXPECT_EQ(callerName, BUNDLE_NAME);
@@ -5673,6 +5761,13 @@ HWTEST_F(BmsBundleAppControlTest, GetCallerByUid_0200, Function | SmallTest | Le
     InnerBundleUserInfo userInfo;
     userInfo.bundleUserInfo = bundleUserInfo;
     userInfo.bundleName = cloneBundleName;
+    // SPM ON: the uid allocation authority is the access token service — an
+    // identity without an AT-allocated uid fails fast and the reverse lookup
+    // below cannot resolve it. Stamp the AT-allocated uid the ON install
+    // flow adopts (a distinct one from GetCallerByUid_0100, per the globally
+    // unique bundleId contract); the OFF counter ignores it and allocates
+    // locally.
+    userInfo.uid = TEST_SPM_UID + 1;
     impl->dataMgr_->GenerateUidAndGid(userInfo);
 
     InnerBundleCloneInfo cloneInfo;
@@ -5687,6 +5782,10 @@ HWTEST_F(BmsBundleAppControlTest, GetCallerByUid_0200, Function | SmallTest | Le
 
     impl->dataMgr_->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
     ScopeGuard bundleInfoGuard([&] { impl->dataMgr_->bundleInfos_.erase(BUNDLE_NAME); });
+    // SPM ON: seed the bundleIdMap_ reverse entry of the AT-allocated
+    // identity (the OFF counter registered its own inside GenerateUidAndGid);
+    // InsertBundleIdMapEntries is an ON-only refresh, a no-op under OFF.
+    impl->dataMgr_->InsertBundleIdMapEntries(innerBundleInfo);
 
     std::string callerName;
     impl->GetCallerByUid(userInfo.uid, callerName);
@@ -6111,6 +6210,10 @@ HWTEST_F(BmsBundleAppControlTest, GetDisposedRulesBySetter_0100, Function | Smal
 HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_GetDisposedRuleForCloneApp_DualMode_0100,
     Function | SmallTest | Level1)
 {
+    SetDualModeTestParams(TEST_MODE_VALUE_INVALID, TEST_MODE_VALUE_INVALID);
+    ScopeGuard dualModeGuard([&] {
+        OHOS::system::SetParameter(TEST_DUAL_MODE_PARAM, TEST_DUAL_MODE_OFF);
+    });
     auto impl = std::make_shared<AppControlManagerHostImpl>();
     ASSERT_NE(impl, nullptr);
     DisposedRule rule;
@@ -6126,15 +6229,10 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_GetDisposedRuleForCl
 HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_GetDisposedRuleForCloneApp_DualMode_0200,
     Function | SmallTest | Level1)
 {
-    OHOS::system::SetParameter("persist.bms.test_dual_mode", "true");
-    OHOS::system::SetParameter("persist.bms.ispcmode", "1");
-    OHOS::system::SetParameter("persist.bms.mainmode", "0");
+    SetDualModeTestParams(TEST_MODE_VALUE_2IN1, TEST_MODE_VALUE_TABLET);
     ScopeGuard dualModeGuard([&] {
-        OHOS::system::RemoveParameter("persist.bms.test_dual_mode");
-        OHOS::system::RemoveParameter("persist.bms.ispcmode");
-        OHOS::system::RemoveParameter("persist.bms.mainmode");
+        OHOS::system::SetParameter(TEST_DUAL_MODE_PARAM, TEST_DUAL_MODE_OFF);
     });
-
     auto impl = std::make_shared<AppControlManagerHostImpl>();
     ASSERT_NE(impl, nullptr);
     impl->appControlManager_ = nullptr;
@@ -6182,6 +6280,10 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_GetDisposedRuleForCl
 HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_SetDisposedRuleForCloneApp_DualMode_0100,
     Function | SmallTest | Level1)
 {
+    SetDualModeTestParams(TEST_MODE_VALUE_INVALID, TEST_MODE_VALUE_INVALID);
+    ScopeGuard dualModeGuard([&] {
+        OHOS::system::SetParameter(TEST_DUAL_MODE_PARAM, TEST_DUAL_MODE_OFF);
+    });
     auto impl = std::make_shared<AppControlManagerHostImpl>();
     ASSERT_NE(impl, nullptr);
     DisposedRule rule;
@@ -6197,15 +6299,10 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_SetDisposedRuleForCl
 HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_SetDisposedRuleForCloneApp_DualMode_0200,
     Function | SmallTest | Level1)
 {
-    OHOS::system::SetParameter("persist.bms.test_dual_mode", "true");
-    OHOS::system::SetParameter("persist.bms.ispcmode", "1");
-    OHOS::system::SetParameter("persist.bms.mainmode", "0");
+    SetDualModeTestParams(TEST_MODE_VALUE_2IN1, TEST_MODE_VALUE_TABLET);
     ScopeGuard dualModeGuard([&] {
-        OHOS::system::RemoveParameter("persist.bms.test_dual_mode");
-        OHOS::system::RemoveParameter("persist.bms.ispcmode");
-        OHOS::system::RemoveParameter("persist.bms.mainmode");
+        OHOS::system::SetParameter(TEST_DUAL_MODE_PARAM, TEST_DUAL_MODE_OFF);
     });
-
     auto impl = std::make_shared<AppControlManagerHostImpl>();
     ASSERT_NE(impl, nullptr);
     impl->appControlManager_ = nullptr;
@@ -6253,6 +6350,10 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_SetDisposedRuleForCl
 HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_DeleteDisposedRuleForCloneApp_DualMode_0100,
     Function | SmallTest | Level1)
 {
+    SetDualModeTestParams(TEST_MODE_VALUE_INVALID, TEST_MODE_VALUE_INVALID);
+    ScopeGuard dualModeGuard([&] {
+        OHOS::system::SetParameter(TEST_DUAL_MODE_PARAM, TEST_DUAL_MODE_OFF);
+    });
     auto impl = std::make_shared<AppControlManagerHostImpl>();
     ASSERT_NE(impl, nullptr);
     auto ret = impl->DeleteDisposedRuleForCloneApp(APPID, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX, USERID);
@@ -6267,15 +6368,10 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_DeleteDisposedRuleFo
 HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_DeleteDisposedRuleForCloneApp_DualMode_0200,
     Function | SmallTest | Level1)
 {
-    OHOS::system::SetParameter("persist.bms.test_dual_mode", "true");
-    OHOS::system::SetParameter("persist.bms.ispcmode", "1");
-    OHOS::system::SetParameter("persist.bms.mainmode", "0");
+    SetDualModeTestParams(TEST_MODE_VALUE_2IN1, TEST_MODE_VALUE_TABLET);
     ScopeGuard dualModeGuard([&] {
-        OHOS::system::RemoveParameter("persist.bms.test_dual_mode");
-        OHOS::system::RemoveParameter("persist.bms.ispcmode");
-        OHOS::system::RemoveParameter("persist.bms.mainmode");
+        OHOS::system::SetParameter(TEST_DUAL_MODE_PARAM, TEST_DUAL_MODE_OFF);
     });
-
     auto impl = std::make_shared<AppControlManagerHostImpl>();
     ASSERT_NE(impl, nullptr);
     impl->appControlManager_ = nullptr;
@@ -6320,6 +6416,10 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_DeleteDisposedRuleFo
 HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_SetDisposedRules_DualMode_0100,
     Function | SmallTest | Level1)
 {
+    SetDualModeTestParams(TEST_MODE_VALUE_INVALID, TEST_MODE_VALUE_INVALID);
+    ScopeGuard dualModeGuard([&] {
+        OHOS::system::SetParameter(TEST_DUAL_MODE_PARAM, TEST_DUAL_MODE_OFF);
+    });
     auto impl = std::make_shared<AppControlManagerHostImpl>();
     ASSERT_NE(impl, nullptr);
     impl->appControlManager_ = DelayedSingleton<AppControlManager>::GetInstance();
@@ -6371,13 +6471,9 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_SetDisposedRules_Dua
 HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_ResolveDualModeDefaultAppIndex_0100,
     Function | SmallTest | Level1)
 {
-    OHOS::system::SetParameter("persist.bms.test_dual_mode", "true");
-    OHOS::system::SetParameter("persist.bms.ispcmode", "1");
-    OHOS::system::SetParameter("persist.bms.mainmode", "0");
+    SetDualModeTestParams(TEST_MODE_VALUE_2IN1, TEST_MODE_VALUE_TABLET);
     ScopeGuard dualModeGuard([&] {
-        OHOS::system::RemoveParameter("persist.bms.test_dual_mode");
-        OHOS::system::RemoveParameter("persist.bms.ispcmode");
-        OHOS::system::RemoveParameter("persist.bms.mainmode");
+        OHOS::system::SetParameter(TEST_DUAL_MODE_PARAM, TEST_DUAL_MODE_OFF);
     });
 
     auto impl = std::make_shared<AppControlManagerHostImpl>();
@@ -6409,13 +6505,9 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_ResolveDualModeDefau
 HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_ResolveDualModeDefaultAppIndex_0200,
     Function | SmallTest | Level1)
 {
-    OHOS::system::SetParameter("persist.bms.test_dual_mode", "true");
-    OHOS::system::SetParameter("persist.bms.ispcmode", "1");
-    OHOS::system::SetParameter("persist.bms.mainmode", "0");
+    SetDualModeTestParams(TEST_MODE_VALUE_2IN1, TEST_MODE_VALUE_TABLET);
     ScopeGuard dualModeGuard([&] {
-        OHOS::system::RemoveParameter("persist.bms.test_dual_mode");
-        OHOS::system::RemoveParameter("persist.bms.ispcmode");
-        OHOS::system::RemoveParameter("persist.bms.mainmode");
+        OHOS::system::SetParameter(TEST_DUAL_MODE_PARAM, TEST_DUAL_MODE_OFF);
     });
 
     auto impl = std::make_shared<AppControlManagerHostImpl>();
@@ -6440,13 +6532,9 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_ResolveDualModeDefau
 HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_ResolveDualModeDefaultAppIndex_0300,
     Function | SmallTest | Level1)
 {
-    OHOS::system::SetParameter("persist.bms.test_dual_mode", "true");
-    OHOS::system::SetParameter("persist.bms.ispcmode", "0");
-    OHOS::system::SetParameter("persist.bms.mainmode", "0");
+    SetDualModeTestParams(TEST_MODE_VALUE_TABLET, TEST_MODE_VALUE_TABLET);
     ScopeGuard dualModeGuard([&] {
-        OHOS::system::RemoveParameter("persist.bms.test_dual_mode");
-        OHOS::system::RemoveParameter("persist.bms.ispcmode");
-        OHOS::system::RemoveParameter("persist.bms.mainmode");
+        OHOS::system::SetParameter(TEST_DUAL_MODE_PARAM, TEST_DUAL_MODE_OFF);
     });
 
     auto impl = std::make_shared<AppControlManagerHostImpl>();
@@ -6473,20 +6561,18 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_ResolveDualModeDefau
 HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_ResolveDualModeDefaultAppIndex_0400,
     Function | SmallTest | Level1)
 {
+    SetDualModeTestParams(TEST_MODE_VALUE_INVALID, TEST_MODE_VALUE_INVALID);
+    ScopeGuard dualModeGuard([&] {
+        OHOS::system::SetParameter(TEST_DUAL_MODE_PARAM, TEST_DUAL_MODE_OFF);
+    });
+
     auto impl = std::make_shared<AppControlManagerHostImpl>();
     ASSERT_NE(impl, nullptr);
     int32_t appIndex = Constants::MAIN_APP_INDEX;
     impl->ResolveDualModeDefaultAppIndex(APPID, false, appIndex);
     EXPECT_EQ(appIndex, Constants::MAIN_APP_INDEX);
 
-    OHOS::system::SetParameter("persist.bms.test_dual_mode", "true");
-    OHOS::system::SetParameter("persist.bms.ispcmode", "1");
-    OHOS::system::SetParameter("persist.bms.mainmode", "0");
-    ScopeGuard dualModeGuard([&] {
-        OHOS::system::RemoveParameter("persist.bms.test_dual_mode");
-        OHOS::system::RemoveParameter("persist.bms.ispcmode");
-        OHOS::system::RemoveParameter("persist.bms.mainmode");
-    });
+    SetDualModeTestParams(TEST_MODE_VALUE_2IN1, TEST_MODE_VALUE_TABLET);
 
     // no app with the appId in dataMgr -> keep 0
     appIndex = Constants::MAIN_APP_INDEX;
@@ -6509,13 +6595,9 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_ResolveDualModeDefau
 HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_ResolveDualModeDefaultAppIndex_0500,
     Function | SmallTest | Level1)
 {
-    OHOS::system::SetParameter("persist.bms.test_dual_mode", "true");
-    OHOS::system::SetParameter("persist.bms.ispcmode", "1");
-    OHOS::system::SetParameter("persist.bms.mainmode", "0");
+    SetDualModeTestParams(TEST_MODE_VALUE_2IN1, TEST_MODE_VALUE_TABLET);
     ScopeGuard dualModeGuard([&] {
-        OHOS::system::RemoveParameter("persist.bms.test_dual_mode");
-        OHOS::system::RemoveParameter("persist.bms.ispcmode");
-        OHOS::system::RemoveParameter("persist.bms.mainmode");
+        OHOS::system::SetParameter(TEST_DUAL_MODE_PARAM, TEST_DUAL_MODE_OFF);
     });
 
     auto impl = std::make_shared<AppControlManagerHostImpl>();
@@ -6549,13 +6631,9 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_ResolveDualModeDefau
 HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_DisposedRuleForCloneApp_DualModeDefaultIndex_0100,
     Function | SmallTest | Level1)
 {
-    OHOS::system::SetParameter("persist.bms.test_dual_mode", "true");
-    OHOS::system::SetParameter("persist.bms.ispcmode", "1");
-    OHOS::system::SetParameter("persist.bms.mainmode", "0");
+    SetDualModeTestParams(TEST_MODE_VALUE_2IN1, TEST_MODE_VALUE_TABLET);
     ScopeGuard dualModeGuard([&] {
-        OHOS::system::RemoveParameter("persist.bms.test_dual_mode");
-        OHOS::system::RemoveParameter("persist.bms.ispcmode");
-        OHOS::system::RemoveParameter("persist.bms.mainmode");
+        OHOS::system::SetParameter(TEST_DUAL_MODE_PARAM, TEST_DUAL_MODE_OFF);
     });
 
     auto impl = std::make_shared<AppControlManagerHostImpl>();

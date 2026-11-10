@@ -13,39 +13,38 @@
  * limitations under the License.
  */
 
-import { SkillInfo, SkillType } from 'skillManager.SkillInfo'
+import { SkillInfo, SkillType } from 'bundleManager.SkillInfo'
 
 export class SkillInfoInner implements SkillInfo {
-    readonly bundleName: string = '';
-    readonly moduleName: string = '';
-    readonly skillName: string = '';
-    readonly skillType: SkillType;
-    readonly hapPath: string = '';
-    readonly skillPath: string = '';
-    readonly versionCode: long;
-    readonly version: string = '';
-    readonly visibility: string = '';
-    readonly abilityName: string = '';
-    readonly description: string = '';
-    readonly srcEntries: Array<string> = new Array<string>;
-    readonly permissions: Array<string> = new Array<string>;
-    readonly requestPermissions: Array<string> = new Array<string>;
+    public readonly bundleName: string = '';
+    public readonly moduleName: string = '';
+    public readonly skillName: string = '';
+    public readonly skillType: SkillType = SkillType.APP_SKILL;
+    public readonly skillPath: string = '';
+    public readonly abilityName: string = '';
+    public readonly versionCode: long;
+    public readonly version?: string;
+    public readonly visibility?: string;
+    public readonly description?: string;
+    public readonly srcEntries?: Array<string>;
+    public readonly permissions?: Array<string>;
+    public readonly requestPermissions?: Array<string>;
 
     constructor() { }
     constructor(bundleName: string, moduleName: string, skillName: string, skillType: SkillType,
-        hapPath: string, skillPath: string, versionCode: long, version: string, visibility: string,
-        abilityName: string, description: string, srcEntries: Array<string>, permissions: Array<string>,
-        requestPermissions: Array<string>) {
+        skillPath: string, abilityName: string, versionCode: long, version?: string,
+        visibility?: string, description?: string,
+        srcEntries?: Array<string>, permissions?: Array<string>,
+        requestPermissions?: Array<string>) {
         this.bundleName = bundleName;
         this.moduleName = moduleName;
         this.skillName = skillName;
         this.skillType = skillType;
-        this.hapPath = hapPath;
         this.skillPath = skillPath;
+        this.abilityName = abilityName;
         this.versionCode = versionCode;
         this.version = version;
         this.visibility = visibility;
-        this.abilityName = abilityName;
         this.description = description;
         this.srcEntries = srcEntries;
         this.permissions = permissions;

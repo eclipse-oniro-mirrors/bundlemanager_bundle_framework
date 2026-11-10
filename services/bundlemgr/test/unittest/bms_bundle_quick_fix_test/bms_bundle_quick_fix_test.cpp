@@ -22,7 +22,9 @@
 #include <string>
 #include <unistd.h>
 
+#include "accesstoken_kit.h"
 #include "appexecfwk_errors.h"
+#include "bundle_constants.h"
 #include "bundle_info.h"
 #include "bundle_mgr_service.h"
 #include "bundle_util.h"
@@ -63,6 +65,8 @@ const std::string BUNDLE_NAME = "com.example.bmsaccesstoken1";
 const std::string BUNDLE_NAME_DEMO = "com.example.demo.bmsaccesstoken1";
 const std::string HAP_FILE_PATH1 = "/data/test/resource/bms/quick_fix/bmsAccessTokentest1.hap";
 const std::string HAP_FILE_PATH2 = "/data/test/resource/bms/quick_fix/bmsAccessTokentest3.hap";
+const std::string HAP_FILE_NAME1 = "bmsAccessTokentest1.hap";
+const std::string HAP_FILE_NAME2 = "bmsAccessTokentest3.hap";
 const std::string HQF_FILE_PATH1 = "/data/test/resource/bms/quick_fix/bmsAccessTokentest1.hqf";
 const std::string HAP_PATH_TEST_RAW_FILE = "/data/test/resource/bms/quick_fix/driver_feature_hap.hap";
 const int32_t USERID = 100;
@@ -89,6 +93,25 @@ const std::string VALID_FILE_PATH_4 = "../";
 const std::string INVALID_FILE_NAME = "..hello.hqf";
 const std::string VALID_FILE_NAME = "hello.hqf";
 const int32_t ERR_CODE = 8388613;
+
+// SPM ON prerequisite: feed the mocked access-token boundary the trusted
+// per-hap sign info; provisions mirror the real release/os_integration p7bs.
+constexpr int32_t TEST_SPM_SESSION_ID = 4242;
+constexpr uint64_t TEST_SPM_TOKEN_ID = 101;
+// The AT-allocated uid must fall inside USERID's uid segment.
+constexpr int32_t TEST_SPM_UID = USERID * Constants::BASE_USER_RANGE + 102;
+
+void SetUpSpmTrustedSignInfoForTest()
+{
+    // Both haps belong to com.example.bmsaccesstoken1; normal application
+    // haps, no share-library privilege needed.
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(HAP_FILE_NAME1,
+        Security::AccessToken::MakeSpmReleaseProvisionRawForTest(BUNDLE_NAME, "os_integration"));
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(HAP_FILE_NAME2,
+        Security::AccessToken::MakeSpmReleaseProvisionRawForTest(BUNDLE_NAME, "os_integration"));
+    Security::AccessToken::SetSpmCheckHapSignInfoSessionIdForTest(TEST_SPM_SESSION_ID);
+    Security::AccessToken::SetSpmPrepareIdentityForTest(TEST_SPM_TOKEN_ID, TEST_SPM_UID);
+}
 }  // namespace
 
 class BmsBundleQuickFixTest : public testing::Test {
@@ -145,6 +168,7 @@ BmsBundleQuickFixTest::~BmsBundleQuickFixTest()
 
 void BmsBundleQuickFixTest::SetUpTestCase()
 {
+    SetUpSpmTrustedSignInfoForTest();
     bundleMgrService_->InitBundleInstaller();
     bundleMgrService_->InitQuickFixManager();
     bundleMgrService_->InitBundleDataMgr();

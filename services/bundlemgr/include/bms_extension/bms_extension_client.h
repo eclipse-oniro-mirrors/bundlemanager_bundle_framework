@@ -83,6 +83,9 @@ public:
 
     ErrCode GetShortcutInfos(const std::string &bundleName, int32_t userId,
         std::vector<ShortcutInfo> &shortcutInfos) const;
+    ErrCode GetAllDesktopShortcutInfos(int32_t userId, std::vector<ShortcutInfo> &shortcutInfos) const;
+    ErrCode AddDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId) const;
+    ErrCode DeleteDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId) const;
 
 private:
     void ModifyLauncherAbilityInfo(AbilityInfo &abilityInfo) const;

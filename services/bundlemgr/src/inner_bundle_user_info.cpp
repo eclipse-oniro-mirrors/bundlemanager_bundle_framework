@@ -35,6 +35,7 @@ constexpr const char* INNER_BUNDLE_USER_INFO_SANDBOX_INFOS = "sandboxInfos";
 constexpr const char* INNER_BUNDLE_USER_INFO_INSTALLED_PLUGIN_SET = "installedPluginSet";
 constexpr const char* INNER_BUNDLE_USER_INFO_CUR_DYNAMIC_ICON_MODULE = "curDynamicIconModule";
 constexpr const char* INNER_BUNDLE_USER_INFO_CUR_ALTERNATE_ICON_NAME = "curAlternateIconName";
+constexpr const char* INNER_BUNDLE_USER_INFO_IPC_GROUP_INFOS = "ipcGroupInfos";
 } // namespace
 
 void to_json(nlohmann::json& jsonObject, const InnerBundleUserInfo& innerBundleUserInfo)
@@ -57,6 +58,7 @@ void to_json(nlohmann::json& jsonObject, const InnerBundleUserInfo& innerBundleU
         {INNER_BUNDLE_USER_INFO_INSTALLED_PLUGIN_SET, innerBundleUserInfo.installedPluginSet},
         {INNER_BUNDLE_USER_INFO_CUR_DYNAMIC_ICON_MODULE, innerBundleUserInfo.curDynamicIconModule},
         {INNER_BUNDLE_USER_INFO_CUR_ALTERNATE_ICON_NAME, innerBundleUserInfo.curAlternateIconName},
+        {INNER_BUNDLE_USER_INFO_IPC_GROUP_INFOS, innerBundleUserInfo.ipcGroupInfos},
     };
 }
 
@@ -113,6 +115,16 @@ void from_json(const nlohmann::json& jsonObject, InnerBundleUserInfo& innerBundl
         innerBundleUserInfo.curDynamicIconModule, false, parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, INNER_BUNDLE_USER_INFO_CUR_ALTERNATE_ICON_NAME,
         innerBundleUserInfo.curAlternateIconName, false, parseResult);
+    {
+        const nlohmann::json *mapPtr = nullptr;
+        BMSJsonUtil::GetMapObject(jsonObject, jsonObjectEnd,
+            INNER_BUNDLE_USER_INFO_IPC_GROUP_INFOS, mapPtr,
+            JsonType::OBJECT, ArrayType::NOT_ARRAY, false, parseResult);
+        if (mapPtr != nullptr) {
+            innerBundleUserInfo.ipcGroupInfos =
+                mapPtr->get<std::unordered_map<std::string, IpcGroupInfo>>();
+        }
+    }
 }
 } // namespace AppExecFwk
 } // namespace OHOS

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -26,6 +26,19 @@ public:
     DECLARE_INTERFACE_DESCRIPTOR(u"ohos.appexecfwk.BundleEventCallback");
 
     virtual void OnReceiveEvent(const EventFwk::CommonEventData eventData) = 0;
+
+    bool IsNotifyAllUsers()
+    {
+        return notifyAllUsers_;
+    }
+
+    void SetNotifyAllUsers(bool notifyAllUsers)
+    {
+        notifyAllUsers_ = notifyAllUsers;
+    }
+
+private:
+    bool notifyAllUsers_ = false;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

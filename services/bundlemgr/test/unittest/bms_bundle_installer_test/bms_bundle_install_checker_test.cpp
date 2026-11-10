@@ -584,7 +584,7 @@ HWTEST_F(BmsBundleInstallCheckerTest, BundleInstallCheckerTest_0035, TestSize.Le
     auto ret = bundleInstallChecker.CheckAppDistributionType(distributionType);
     EXPECT_EQ(ret, ERR_OK);
 
-    bool clearRes = param.SaveBmsParam(Constants::APP_DISTRIBUTION_TYPE_WHITE_LIST, "");
+    bool clearRes = param.DeleteBmsParam(Constants::APP_DISTRIBUTION_TYPE_WHITE_LIST);
     EXPECT_TRUE(clearRes);
 }
 
@@ -605,7 +605,7 @@ HWTEST_F(BmsBundleInstallCheckerTest, BundleInstallCheckerTest_0036, TestSize.Le
     auto ret = bundleInstallChecker.CheckAppDistributionType(Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE);
     EXPECT_EQ(ret, ERR_APP_DISTRIBUTION_TYPE_NOT_ALLOW_INSTALL);
 
-    EXPECT_TRUE(bmsParam->SaveBmsParam(Constants::APP_DISTRIBUTION_TYPE_WHITE_LIST, ""));
+    EXPECT_TRUE(bmsParam->DeleteBmsParam(Constants::APP_DISTRIBUTION_TYPE_WHITE_LIST));
 }
 
 /**

@@ -78,6 +78,7 @@ struct FormInfo : public Parcelable {
     std::string groupId;
     FormStandby standby;
     bool isColorModeRefreshEnabled = false;
+    bool enableTint = false;
 
     FormInfo() = default;
     explicit FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormInfo &formInfo);

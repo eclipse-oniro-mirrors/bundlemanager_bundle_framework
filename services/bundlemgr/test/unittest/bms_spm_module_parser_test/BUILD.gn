@@ -55,7 +55,77 @@ ohos_unittest("SpmModuleParserTest") {
   ]
 }
 
+ohos_unittest("AtmRecoveryDecoderTest") {
+  module_out_path = module_output_path
+  sources = [
+    "${services_path}/bundlemgr/spm_module_parser/src/atm_recovery_record_decoder.cpp",
+    "atm_recovery_decoder_test.cpp",
+  ]
+  include_dirs = [
+    "${services_path}/bundlemgr/include",
+    "${services_path}/bundlemgr/spm_module_parser/include",
+    "${services_path}/bundlemgr/spm_module_parser/src",
+    "${base_path}/include",
+  ]
+  deps = [ "${base_path}:appexecfwk_base" ]
+  external_deps = [
+    "c_utils:utils",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "json:nlohmann_json_static",
+  ]
+}
+
+ohos_unittest("AtmRecoveryStoreTest") {
+  module_out_path = module_output_path
+  sources = [
+    "${services_path}/bundlemgr/spm_module_parser/src/read_only_installed_bundle_store.cpp",
+    "atm_recovery_store_test.cpp",
+  ]
+  include_dirs = [
+    "${services_path}/bundlemgr/include",
+    "${services_path}/bundlemgr/spm_module_parser/src",
+    "${base_path}/include",
+  ]
+  external_deps = [
+    "c_utils:utils",
+    "googletest:gmock",
+    "googletest:gtest_main",
+    "relational_store:native_rdb",
+  ]
+}
+
+ohos_unittest("AtmRecoveryQueryTest") {
+  module_out_path = module_output_path
+  sources = [
+    "${services_path}/bundlemgr/spm_module_parser/src/atm_bundle_recovery_reader.cpp",
+    "${services_path}/bundlemgr/spm_module_parser/src/atm_recovery_record_decoder.cpp",
+    "atm_recovery_query_test.cpp",
+  ]
+  include_dirs = [
+    "${services_path}/bundlemgr/include",
+    "${services_path}/bundlemgr/spm_module_parser/include",
+    "${services_path}/bundlemgr/spm_module_parser/src",
+    "${base_path}/include",
+    "${common_path}/log/include",
+  ]
+  deps = [ "${base_path}:appexecfwk_base" ]
+  external_deps = [
+    "access_token:libaccesstoken_sdk",
+    "access_token:libtokensetproc_shared",
+    "c_utils:utils",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "json:nlohmann_json_static",
+  ]
+}
+
 group("unittest") {
   testonly = true
-  deps = [ ":SpmModuleParserTest" ]
+  deps = [
+    ":AtmRecoveryDecoderTest",
+    ":AtmRecoveryQueryTest",
+    ":AtmRecoveryStoreTest",
+    ":SpmModuleParserTest",
+  ]
 }

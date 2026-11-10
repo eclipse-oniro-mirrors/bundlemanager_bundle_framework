@@ -870,6 +870,27 @@ public:
     ErrCode QueryShortcutInfosFromExtension(const std::string &bundleName, int32_t userId,
         std::vector<ShortcutInfo> &shortcutInfos);
     /**
+     * @brief Obtains all desktop shortcut infos from the BMS extension.
+     * @param userId Indicates the user ID.
+     * @param shortcutInfos List of ShortcutInfo objects if obtained.
+     * @return Returns errCode of result.
+     */
+    ErrCode GetAllDesktopShortcutInfoFromExtension(int32_t userId, std::vector<ShortcutInfo> &shortcutInfos);
+    /**
+     * @brief Adds a desktop shortcut info through the BMS extension.
+     * @param shortcutInfo Indicates the shortcut info to be added.
+     * @param userId Indicates the user ID.
+     * @return Returns errCode of result.
+     */
+    ErrCode AddDesktopShortcutInfoFromExtension(const ShortcutInfo &shortcutInfo, int32_t userId);
+    /**
+     * @brief Deletes a desktop shortcut info through the BMS extension.
+     * @param shortcutInfo Indicates the shortcut info to be deleted.
+     * @param userId Indicates the user ID.
+     * @return Returns errCode of result.
+     */
+    ErrCode DeleteDesktopShortcutInfoFromExtension(const ShortcutInfo &shortcutInfo, int32_t userId);
+    /**
      * @brief Obtains the ShortcutInfo objects provided by a specified application on the device.
      * @param bundleName Indicates the bundle name of the application.
      * @param shortcutInfos List of ShortcutInfo objects if obtained.
@@ -1188,6 +1209,8 @@ public:
         const std::string &abilityName, const std::string &extName, const std::string &mimeType) override;
     virtual bool QueryDataGroupInfos(const std::string &bundleName, int32_t userId,
         std::vector<DataGroupInfo> &infos) override;
+    virtual ErrCode QueryIpcGroupInfos(const std::string &bundleName, int32_t userId,
+        std::vector<IpcGroupInfo> &infos) override;
     virtual bool GetGroupDir(const std::string &dataGroupId, std::string &dir) override;
     virtual bool QueryAppGalleryBundleName(std::string &bundleName) override;
     virtual ErrCode ResetAOTCompileStatus(const std::string &bundleName, const std::string &moduleName,
@@ -1221,6 +1244,9 @@ public:
 
     virtual ErrCode GetJsonProfileForSelf(ProfileType profileType, const std::string &moduleName,
         std::string &profile) override;
+
+    virtual ErrCode GetLaunchServices(const std::string &bundleName, const std::string &moduleName,
+        int32_t userId, LaunchServicesResult &result) override;
 
     virtual sptr<IBundleResource> GetBundleResourceProxy() override;
 
@@ -1578,6 +1604,7 @@ private:
         std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos);
     void SetAtomicServiceRemovable(const ShortcutInfo &shortcutInfo, bool isEnable, int32_t userId);
     bool CheckAcrossUserPermission(const int32_t userId);
+    bool VerifyGetBundleStatsPermission(const std::string &bundleName, int32_t userId);
 
     ErrCode CheckAppDisableForbidden(const std::string &bundleName, int32_t userId, int32_t appIndex, bool isEnabled);
 

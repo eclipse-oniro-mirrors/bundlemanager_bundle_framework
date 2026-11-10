@@ -68,6 +68,7 @@ constexpr const char* MANAGE_SHORTCUTS = "ohos.permission.MANAGE_SHORTCUTS";
 constexpr const char* IS_BUNDLE_EXIST = "isBundleExist";
 constexpr const char* CROSS_APP_SHARED_CONFIG = "crossAppSharedConfig";
 constexpr const char* IS_RECOVER = "isRecover";
+constexpr const char* IS_INSTALL_BY_BUNDLE_NAME = "isInstallByBundleName";
 constexpr const char* IS_ENABLED = "isEnabled";
 constexpr const char* APP_ENABLED = "enable";
 constexpr const char* PACKAGE_UNINSTALLED_DATA_CLEARED = "usual.event.PACKAGE_UNINSTALLED_DATA_CLEARED";
@@ -342,6 +343,7 @@ void BundleCommonEventMgr::SetNotifyWant(OHOS::AAFwk::Want& want, const NotifyBu
     want.SetParam(IS_BUNDLE_EXIST, installResult.isBundleExist);
     want.SetParam(CROSS_APP_SHARED_CONFIG, installResult.crossAppSharedConfig);
     want.SetParam(IS_RECOVER, installResult.isRecover);
+    want.SetParam(IS_INSTALL_BY_BUNDLE_NAME, installResult.isInstallByBundleName);
     want.SetParam(CHANGE_TYPE, static_cast<int32_t>(installResult.changeType));
     want.SetParam(DEVICE_MODE_DISTRIBUTION_POLICY, static_cast<int32_t>(installResult.deviceModeDistributionPolicy));
     want.SetParam(CURRENT_MODE, installResult.currentMode);

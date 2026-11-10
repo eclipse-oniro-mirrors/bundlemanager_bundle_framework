@@ -128,6 +128,7 @@ ErrCode RdbDataManager::GetRdbStoreFromNative()
     auto &mutex = GetRdbRestoreMutex(bmsRdbConfig_.dbName);
     std::lock_guard<std::mutex> restoreLock(mutex);
     NativeRdb::RdbStoreConfig rdbStoreConfig(bmsRdbConfig_.dbPath + bmsRdbConfig_.dbName);
+    rdbStoreConfig.SetAuditEnabled(true);
     rdbStoreConfig.SetSecurityLevel(NativeRdb::SecurityLevel::S1);
     rdbStoreConfig.SetWriteTime(WRITE_TIMEOUT);
     if (bmsRdbConfig_.dbName == ServiceConstants::BUNDLE_RDB_NAME) {
@@ -822,6 +823,7 @@ void RdbDataManager::CheckDbError()
 {
     APP_LOGI_NOFUNC("CheckDbError start");
     NativeRdb::RdbStoreConfig rdbStoreConfig(bmsRdbConfig_.dbPath + bmsRdbConfig_.dbName);
+    rdbStoreConfig.SetAuditEnabled(true);
     int32_t errCode = NativeRdb::E_OK;
     BmsRdbOpenCallback bmsRdbOpenCallback(bmsRdbConfig_);
     BmsExtensionDataMgr bmsExtensionDataMgr;

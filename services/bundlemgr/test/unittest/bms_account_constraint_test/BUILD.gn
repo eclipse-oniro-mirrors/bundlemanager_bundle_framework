@@ -38,6 +38,7 @@ ohos_unittest("BmsAccountConstraintTest") {
     "${services_path}/bundlemgr/src/installd_client.cpp"
   ]
   sources += [
+    "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp",
     "${services_path}/bundlemgr/test/mock/src/xml_util.cpp",
     "${services_path}/bundlemgr/test/mock/src/mock_account_helper_constraint.cpp",
     "${services_path}/bundlemgr/test/unittest/bms_account_constraint_test/mock/mock_install_client.cpp",

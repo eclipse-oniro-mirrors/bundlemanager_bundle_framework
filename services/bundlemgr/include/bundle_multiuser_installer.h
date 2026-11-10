@@ -33,11 +33,15 @@ public:
      * @brief The main function for existed app installing.
      * @param bundleName Indicates the bundleName of the application to install.
      * @param userId Indicates the app will be installed under which user id.
+     * @param isEdmCalling Indicates whether the caller is EDM.
+     * @param hasInstallBundle Indicates whether the caller has INSTALL_BUNDLE permission.
      * @return Returns ERR_OK if the app install successfully; returns error code otherwise.
      */
-    ErrCode InstallExistedApp(const std::string &bundleName, const int32_t userId);
+    ErrCode InstallExistedApp(const std::string &bundleName, const int32_t userId,
+        bool isEdmCalling = false, bool hasInstallBundle = false);
 
-    ErrCode ProcessBundleInstall(const std::string &bundleName, const int32_t userId);
+    ErrCode ProcessBundleInstall(const std::string &bundleName, const int32_t userId,
+        bool isEdmCalling = false, bool hasInstallBundle = false);
 
     void ResetInstallProperties();
 private:

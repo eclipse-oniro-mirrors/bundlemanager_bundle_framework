@@ -56,6 +56,10 @@ public:
 private:
     void InnerHandleInvalidBundle(InnerBundleInfo &info, bool &isBundleValid);
 
+    void HandleUninstallPackageStart(InnerBundleInfo &info, bool &isBundleValid,
+        const InstallMark &mark, const std::string &appCodePath, const std::string &effectiveBundleName,
+        const std::string &moduleDir, const std::string &moduleDataDir);
+
     void InnerCheckSystemHspPath(const InnerBundleInfo &info);
 
     void CheckSharedAndRmvInvalidModule(InnerBundleInfo &info, bool &isBundleValid);

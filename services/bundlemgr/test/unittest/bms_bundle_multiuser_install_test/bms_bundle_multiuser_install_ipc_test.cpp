@@ -17,11 +17,13 @@
 #define private public
 #include "system_ability_definition.h"
 #include "system_ability.h"
+#include "accesstoken_kit.h"
 #include "bundle_mgr_interface.h"
 #include "bundle_installer_proxy.h"
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
 #include "bundle_multiuser_installer.h"
+#include "bundle_constants.h"
 #include "data_group_info.h"
 #include "inner_bundle_info.h"
 #include "scope_guard.h"
@@ -43,6 +45,13 @@ constexpr int32_t TEST_INSTALLER_UID = 100;
 constexpr int32_t INVAILD_ID = -1;
 
 constexpr const char* ILLEGAL_PATH_FIELD = "../";
+
+// SPM ON mock knobs for the mocked AT boundary (see SetUp).
+constexpr int32_t TEST_SPM_SESSION_ID = 4242;
+constexpr uint64_t TEST_SPM_TOKEN_ID = 101;
+// The AT-allocated uid must fall inside user 100's uid segment (the
+// multiuser installs of these cases run for user 100 / TEST_INSTALLER_UID).
+constexpr int32_t TEST_SPM_UID = 100 * Constants::BASE_USER_RANGE + 102;
 }; // namespace
 class BmsBundleMultiuserInstallIPCTest : public testing::Test {
 public:
@@ -75,7 +84,15 @@ void BmsBundleMultiuserInstallIPCTest::TearDownTestCase()
 {
 }
 void BmsBundleMultiuserInstallIPCTest::SetUp()
-{}
+{
+    // SPM ON: the ProcessBundleInstall flows of these cases run InitToken,
+    // whose PrepareHapIdentity takes the identity from the mocked AT
+    // boundary — without the knobs the mock returns uid 0 and InitToken
+    // fails fast with ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED
+    // BEFORE the installd step the case intends to exercise.
+    Security::AccessToken::SetSpmCheckHapSignInfoSessionIdForTest(TEST_SPM_SESSION_ID);
+    Security::AccessToken::SetSpmPrepareIdentityForTest(TEST_SPM_TOKEN_ID, TEST_SPM_UID);
+}
 
 void BmsBundleMultiuserInstallIPCTest::TearDown()
 {}
@@ -333,7 +350,14 @@ HWTEST_F(BmsBundleMultiuserInstallIPCTest, RecoverHapToken_0100, Function | Smal
     Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
     InnerBundleInfo innerBundleInfo;
     auto res = installer.RecoverHapToken("test", 100, accessTokenIdEx, innerBundleInfo);
-    EXPECT_EQ(res, true);
+    if (BundleSpmManager::IsEnabled()) {
+        // SPM ON: the uninstall-record recovery path is closed by design —
+        // the reserved AT identity is re-adopted through InitToken instead,
+        // so the record-based recovery never reports success.
+        EXPECT_FALSE(res);
+    } else {
+        EXPECT_EQ(res, true);
+    }
     installer.dataMgr_->DeleteUninstallBundleInfo("test", 100);
 }
 

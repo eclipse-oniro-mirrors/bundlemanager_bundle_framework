@@ -7511,6 +7511,28 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, AllowAutoControlIntent_Update, Functi
 }
 
 /**
+ * @tc.name: CompileSdkVersion_Update
+ * @tc.desc: Updating an app replaces the stored compileSdkVersion and compileSdkType
+ *           with the incoming ones.
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, CompileSdkVersion_Update, Function | SmallTest | Level1)
+{
+    InnerBundleInfo installed;
+    installed.baseApplicationInfo_->compileSdkVersion = "5.0.5.300";
+    InnerBundleInfo incoming;
+    incoming.baseApplicationInfo_->compileSdkVersion = "5.1.0.46";
+    incoming.baseApplicationInfo_->compileSdkType = "OpenHarmony1";
+    installed.UpdateBaseApplicationInfo(incoming);
+    EXPECT_EQ(installed.GetBaseApplicationInfo().compileSdkVersion, "5.1.0.46");
+    EXPECT_EQ(installed.GetBaseApplicationInfo().compileSdkType, "OpenHarmony1");
+    incoming.baseApplicationInfo_->compileSdkVersion = "";
+    incoming.baseApplicationInfo_->compileSdkType = DEFAULT_COMPILE_SDK_TYPE;
+    installed.UpdateBaseApplicationInfo(incoming);
+    EXPECT_TRUE(installed.GetBaseApplicationInfo().compileSdkVersion.empty());
+    EXPECT_EQ(installed.GetBaseApplicationInfo().compileSdkType, "OpenHarmony");
+}
+
+/**
  * @tc.name: AllowAutoControlIntent_PartialUpdate
  * @tc.desc: Partial refresh copies the selected application declaration, including the default false.
  */

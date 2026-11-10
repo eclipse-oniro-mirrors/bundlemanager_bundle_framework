@@ -35,6 +35,13 @@ using namespace testing::ext;
 using namespace OHOS;
 using namespace OHOS::AppExecFwk;
 namespace OHOS {
+namespace Security {
+namespace AccessToken {
+// Restores the SPM mock control variables defined in
+// test/mock/src/accesstoken_kit.cpp to their defaults.
+void ResetSpmKitMockValuesForTest();
+} // namespace AccessToken
+} // namespace Security
 namespace {
 const std::string BUNDLE_PATH = "/data/test/resource/bms/resource_manager/resourceManagerTest.hap";
 const std::string BUNDLE_NAME = "com.ohos.resourcedemo";
@@ -74,27 +81,17 @@ constexpr int32_t TEST_SPM_UID = USER_ID * Constants::BASE_USER_RANGE + 102;
 // Feeds the mocked access-token boundary with the trusted sign answer the
 // real AT side would return for the hap installed by SetUp: the provision
 // mirrors the release profile (test/sceneProject/signature/
-// com.ohos.resourcedemo.p7b) the hap is actually signed with — release type,
-// os_integration distribution, system_core apl, hos_system_app feature — so
-// the post-install classification (system app, distribution type) stays the
-// same as before the SPM adaptation.
+// com.ohos.resourcedemo.p7b) the hap is actually signed with —
+// os_integration distribution, system_core apl, hos_system_app feature, and
+// the legacy profile shape without an app-identifier (an empty appIdentifier
+// omits the field) — so the post-install classification (system app,
+// distribution type) stays the same as before the SPM adaptation.
 void SetUpSpmTrustedSignInfoForTest()
 {
     Security::AccessToken::TrustedBundleInfo trustedBundleInfo;
-    trustedBundleInfo.profileData.provisionRaw = R"({
-        "version-code": 2,
-        "version-name": "2.0.0",
-        "app-distribution-type": "os_integration",
-        "uuid": "bms-bundle-resource-manager-test",
-        "type": "release",
-        "bundle-info": {
-            "developer-id": "OpenHarmony",
-            "distribution-certificate": "bms-bundle-resource-manager-test-cert",
-            "bundle-name": ")" + BUNDLE_NAME + R"(",
-            "apl": "system_core",
-            "app-feature": "hos_system_app"
-        }
-    })";
+    trustedBundleInfo.profileData.provisionRaw =
+        Security::AccessToken::MakeSpmReleaseProvisionRawForTest(BUNDLE_NAME, "os_integration", false,
+            "hos_system_app", "system_core", "");
     Security::AccessToken::SetSpmTrustedBundleInfosForTest({trustedBundleInfo});
     // Mirrors the real AT contract: CheckHapSignInfo allocates the session id
     // and caches the trusted info for the install session.
@@ -153,6 +150,12 @@ void BmsBundleResourceManagerTest::TearDownTestCase()
 {
     bundleMgrService_->OnStop();
     sleep(1);
+    // Restore the SPM mock defaults: the trusted sign answer staged by
+    // SetUpTestCase persists through the whole binary (nothing resets it
+    // between the cases), and a suite added to this target later must not
+    // inherit it — gtest runs the suites of one binary sequentially, so a
+    // reset here precedes any later suite's SetUpTestCase.
+    Security::AccessToken::ResetSpmKitMockValuesForTest();
 }
 
 void BmsBundleResourceManagerTest::SetUp()

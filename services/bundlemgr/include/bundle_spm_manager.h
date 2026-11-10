@@ -200,7 +200,7 @@ public:
                 = Security::AccessToken::MultipleMode::DEFAULT_OR_MAIN_MODE);
 
         int32_t VerifyPermission(const std::string &bundleName, const std::string &permission,
-            int32_t userId);
+            int32_t userId) const;
 
         /**
          * @brief Commit the session after bundle data is persisted. Always returns

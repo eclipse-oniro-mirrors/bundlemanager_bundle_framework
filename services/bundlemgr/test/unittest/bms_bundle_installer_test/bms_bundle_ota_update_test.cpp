@@ -30,6 +30,7 @@
 #include "app_control_manager_host_impl.h"
 #include "app_control_constants.h"
 #endif
+#include "accesstoken_kit.h"
 #include "bundle_info.h"
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
@@ -50,6 +51,13 @@ using namespace OHOS::AppExecFwk;
 using OHOS::DelayedSingleton;
 
 namespace OHOS {
+namespace Security {
+namespace AccessToken {
+// Restores the SPM mock control variables defined in
+// test/mock/src/accesstoken_kit.cpp to their defaults.
+void ResetSpmKitMockValuesForTest();
+} // namespace AccessToken
+} // namespace Security
 namespace {
 const std::string RESOURCE_ROOT_PATH = "/data/test/resource/bms/install_bundle/";
 const std::string OTAUPDATETESTBASIS_BUNDLE = "otaUpdateTestBasis.hap";
@@ -82,6 +90,60 @@ const std::string MODULE_NAME1 = "entry1";
 const std::string MODULE_NAME2 = "entry2";
 const std::string PROCESS_BASIS = "basis";
 const std::string PROCESS_MODULEFIELD = "modulefield";
+
+// --- SPM ON install prerequisite -------------------------------------------
+// The SPM switch stays ON (its default when persist.bms.spm.enable is unset),
+// so every install and OTA update of this suite runs the complete SPM ON
+// chain against the mocked access-token boundary: CheckSignAndInitSession ->
+// CheckPermissionInfo -> PrepareHapIdentity (identity and uid adoption) ->
+// FinishInstall (commit). The trusted sign answer is registered per hap file
+// name: the mocked CheckHapSignInfo answers with exactly one entry per hap
+// path of each install call (also covering the installer calls that bypass
+// the fixture helpers and the multi-hap OTA updates), and every provision
+// bundle-name must match the haps' parsed package name (CheckBundleName
+// cross-checks them positionally). InitToken rejects a zero tokenId and a uid
+// outside the installing user's uid segment.
+constexpr int32_t TEST_SPM_SESSION_ID = 4245;
+constexpr uint64_t TEST_SPM_TOKEN_ID = 101;
+constexpr int32_t TEST_SPM_UID = USERID * Constants::BASE_USER_RANGE + 102;
+
+// The provision of each hap mirrors its release profile (test/sceneProject/
+// signature/com.example.otaupdatetest*.p7b): os_integration distribution,
+// hos_system_app feature, the common bundle name and the legacy profile
+// shape without an app-identifier (an empty appIdentifier omits the field);
+// the apl follows the hap's own profile (system_basic for the basis/field/so
+// variants, system_core for AplUp, normal for AplDown) so the post-update apl
+// assertions keep their pre-SPM meaning.
+std::string MakeOtaProvisionRawForTest(const std::string &apl)
+{
+    return Security::AccessToken::MakeSpmReleaseProvisionRawForTest(BUNDLE_OTAUPDATETEST_NAME,
+        "os_integration", false, "hos_system_app", apl, "");
+}
+
+// Feeds the mocked access-token boundary with the trusted sign answer for
+// every hap file this suite installs, plus the session id and the
+// AT-allocated identity.
+void SetUpSpmTrustedSignInfoForTest()
+{
+    const std::string basicProvision = MakeOtaProvisionRawForTest(APL_BASIC);
+    const std::string coreProvision = MakeOtaProvisionRawForTest(APL_CORE);
+    const std::string normalProvision = MakeOtaProvisionRawForTest(APL_NORMAL);
+    for (const auto &hapFile : { OTAUPDATETESTBASIS_BUNDLE, OTAUPDATETESTBASISFEATURE1_BUNDLE,
+        OTAUPDATETESTBASISFEATURE2_BUNDLE, OTAUPDATETESTBASIS2_BUNDLE, OTAUPDATETESTBASISUBSAN_BUNDLE,
+        OTAUPDATETESTAPPFIELD_BUNDLE, OTAUPDATETESTAPPFIELD2_BUNDLE, OTAUPDATETESTAPPFIELDUBSAN_BUNDLE,
+        OTAUPDATETESTMODULEFIELD_BUNDLE, OTAUPDATETESTSIGNAICON_BUNDLE, OTAUPDATETESTSOCHANGED_BUNDLE,
+        OTAUPDATETESTSOCHANGEDFEATURE1_BUNDLE, OTAUPDATETESTSOCHANGEDFEATURE2_BUNDLE }) {
+        Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(hapFile, basicProvision);
+    }
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(OTAUPDATETEAPLUP_BUNDLE, coreProvision);
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(OTAUPDATETEAPLDOWN_BUNDLE, normalProvision);
+    // Mirrors the real AT contract: CheckHapSignInfo allocates the session id
+    // and caches the trusted info for the install session.
+    Security::AccessToken::SetSpmCheckHapSignInfoSessionIdForTest(TEST_SPM_SESSION_ID);
+    // A fresh install carries no desired uid, so the AT side allocates the
+    // identity: provide a valid token id and a USERID-segment uid.
+    Security::AccessToken::SetSpmPrepareIdentityForTest(TEST_SPM_TOKEN_ID, TEST_SPM_UID);
+}
 }  // namespace
 
 class BmsBundleOtaUpdateTest : public testing::Test {
@@ -167,6 +229,20 @@ bool BmsBundleOtaUpdateTest::OTAInstallSystemBundle(const std::string &filePath)
 
 void BmsBundleOtaUpdateTest::SetUpTestCase()
 {
+    // SPM stays ON (its device default): feed the mocked access-token boundary
+    // with the trusted sign answer for every hap file of this suite (the
+    // per-hap-file registry also covers the installer calls that bypass the
+    // fixture helpers), so every install and OTA update runs the real SPM
+    // verification chain instead of failing it. Must run before the first
+    // install — nothing resets the mock control variables between the cases
+    // of this suite (TearDownTestCase restores the defaults for any suite
+    // added to this binary later).
+    SetUpSpmTrustedSignInfoForTest();
+    // The OTA fan-out installs the same bundle for several users at once, so
+    // a fresh SPM identity must be allocated INSIDE the requesting user's uid
+    // segment (for the single-user installs of USERID this yields exactly
+    // TEST_SPM_UID).
+    Security::AccessToken::SetSpmPrepareIdentityUidFollowUserForTest(true);
     bundleMgrService_->InitBundleDataMgr();
     bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();
 }
@@ -175,6 +251,12 @@ void BmsBundleOtaUpdateTest::TearDownTestCase()
 {
     bundleMgrService_->OnStop();
     sleep(1);
+    // Restore the SPM mock defaults (the follow-user identity mode in
+    // particular): nothing resets the control variables between the cases of
+    // this suite, but a suite added to this target later must not inherit the
+    // flipped mode — gtest runs the suites of one binary sequentially, so a
+    // reset here precedes any later suite's SetUpTestCase.
+    Security::AccessToken::ResetSpmKitMockValuesForTest();
 }
 
 void BmsBundleOtaUpdateTest::SetUp()

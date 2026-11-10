@@ -4895,5 +4895,62 @@ HWTEST_F(BmsBundleMgrHostUnitTest, HandleGetSandboxExtAbilityInfoOptimal_0300, F
     ASSERT_NE(info, nullptr);
     EXPECT_EQ(info->bundleName, TEST_BUNDLE_NAME);
 }
+
+/**
+ * @tc.number: OnRemoteRequest_2280
+ * @tc.name: test OnRemoteRequest with GET_BUNDLE_RESOURCE_ARCHIVE_INFO
+ * @tc.desc: 1. code = GET_BUNDLE_RESOURCE_ARCHIVE_INFO (260)
+ *           2. verify dispatch to HandleGetBundleResourceArchiveInfo
+ */
+HWTEST_F(BmsBundleMgrHostUnitTest, OnRemoteRequest_2280, Function | SmallTest | Level0)
+{
+    BundleMgrHost bundleMgrHost;
+    uint32_t code = static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_RESOURCE_ARCHIVE_INFO);
+    MessageParcel data;
+    std::u16string descriptor = BundleMgrHost::GetDescriptor();
+    data.WriteInterfaceToken(descriptor);
+    data.WriteString("test.hap");
+    data.WriteUint32(1);
+    MessageParcel reply;
+    MessageOption option;
+    ErrCode res = bundleMgrHost.OnRemoteRequest(code, data, reply, option);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleGetBundleResourceArchiveInfo_0100
+ * @tc.name: test HandleGetBundleResourceArchiveInfo with valid parcel
+ * @tc.desc: 1. write filePath and flags to parcel
+ *           2. base class GetBundleResourceArchiveInfo returns ERR_BUNDLE_MANAGER_INTERNAL_ERROR
+ *           3. verify ret is written to reply, function returns ERR_OK
+ */
+HWTEST_F(BmsBundleMgrHostUnitTest, HandleGetBundleResourceArchiveInfo_0100, Function | SmallTest | Level0)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteString("/data/test.hap");
+    data.WriteUint32(static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL));
+    ErrCode res = bundleMgrHost.HandleGetBundleResourceArchiveInfo(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+    EXPECT_EQ(reply.ReadInt32(), ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: HandleGetBundleResourceArchiveInfo_0200
+ * @tc.name: test HandleGetBundleResourceArchiveInfo with empty parcel
+ * @tc.desc: 1. empty parcel data (no filePath, no flags)
+ *           2. reads empty filePath and 0 flags
+ *           3. base class returns ERR_BUNDLE_MANAGER_INTERNAL_ERROR, written to reply
+ */
+HWTEST_F(BmsBundleMgrHostUnitTest, HandleGetBundleResourceArchiveInfo_0200, Function | SmallTest | Level0)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleGetBundleResourceArchiveInfo(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+    EXPECT_EQ(reply.ReadInt32(), ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
 } // namespace AppExecFwk
 } // namespace OHOS

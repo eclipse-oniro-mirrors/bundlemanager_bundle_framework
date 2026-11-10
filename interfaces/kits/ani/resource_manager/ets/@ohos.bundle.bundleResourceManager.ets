@@ -46,6 +46,7 @@ export default namespace bundleResourceManager {
   native function getLauncherAbilityResourceInfoListNative(optionsList: Array<BundleOptions>, resourceFlags: int): Array<LauncherAbilityResourceInfo>;
   native function getExtensionAbilityResourceInfoNative(bundleName: string, extensionAbilityType: bundleManager.ExtensionAbilityType, resourceFlags: int, appIndex: int): Array<LauncherAbilityResourceInfo>;
   native function getAllUninstalledBundleResourceInfoNative(resourceFlags: int): Array<BundleResourceInfo>;
+  native function getBundleResourceArchiveInfoNative(filePath: string, resourceFlags: int): BundleResourceInfo;
 
   function getBundleResourceInfo(bundleName: string, resourceFlags?: int, appIndex?: int): BundleResourceInfo
   {
@@ -104,6 +105,36 @@ export default namespace bundleResourceManager {
       p1.then((e: Any) => {
         let resultArray: Array<BundleResourceInfo> = e as Array<BundleResourceInfo>;
         resolve(resultArray);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
+      });
+    });
+    return p;
+  }
+
+  function getBundleResourceArchiveInfo(filePath: string, resourceFlags: int, callback: AsyncCallback<BundleResourceInfo>): void {
+    let cb = (): BundleResourceInfo => {
+      return getBundleResourceArchiveInfoNative(filePath, resourceFlags);
+    };
+    let p1 = taskpool.execute(cb);
+    p1.then((e: Any) => {
+      let result: BundleResourceInfo = e as BundleResourceInfo;
+      callback(null, result);
+    }, (err: Error): void => {
+      callback(err as BusinessError, undefined);
+    });
+  }
+
+  function getBundleResourceArchiveInfo(filePath: string, resourceFlags?: int): Promise<BundleResourceInfo> {
+    let resFlag = resourceFlags ?? INVALID_VALUE;
+    let p = new Promise<BundleResourceInfo>((resolve: (bundleResourceInfo: BundleResourceInfo) => void, reject: (error: BusinessError) => void) => {
+      let cb = (): BundleResourceInfo => {
+        return getBundleResourceArchiveInfoNative(filePath, resFlag);
+      };
+      let p1 = taskpool.execute(cb);
+      p1.then((e: Any) => {
+        let result: BundleResourceInfo = e as BundleResourceInfo;
+        resolve(result);
       }, (err: Error): void => {
         reject(err as BusinessError);
       });

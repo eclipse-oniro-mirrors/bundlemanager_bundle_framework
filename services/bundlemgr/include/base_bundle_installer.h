@@ -796,6 +796,9 @@ private:
     void DeleteGroupDirsForException(const InnerBundleInfo &oldInfo) const;
     ErrCode CreateDataGroupDirs(
         const std::vector<Security::Verify::HapVerifyResult> &hapVerifyResults, const InnerBundleInfo &oldInfo);
+    void GetIpcGroupIds(const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes,
+        std::unordered_set<std::string> &ipcGroupIds);
+    ErrCode PrepareIpcGroupInfos(const std::vector<Security::Verify::HapVerifyResult> &hapVerifyResults);
     bool NeedDeleteOldNativeLib(
         const std::unordered_map<std::string, InnerBundleInfo> &newInfos,
         const InnerBundleInfo &oldInfo);

@@ -258,6 +258,10 @@ public:
     static void RestoreHaps(const std::string &sourcePath, const std::string &bundleName, const std::string &userId);
     static void DeleteTempDirs(const std::vector<std::string> &tempDirs);
     static std::string ExtractGroupIdByDevelopId(const std::string &developerId);
+    // ipcGroupId format matches dataGroupId: non-empty teamId + exactly 4 decimal digits, <= 1024.
+    static bool IsValidIpcGroupId(const std::string &ipcGroupId);
+    // Insert when format-valid and under MAX_IPC_GROUP_IDS_COUNT; duplicates are allowed no-ops.
+    static bool TryAddIpcGroupId(std::unordered_set<std::string> &groupIds, const std::string &ipcGroupId);
     static std::string ToString(const std::vector<std::string> &vector);
     static std::string GetNoDisablingConfigPath();
     static uint32_t ExtractNumberFromString(nlohmann::json &jsonObject, const std::string &key);

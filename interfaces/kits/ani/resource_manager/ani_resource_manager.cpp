@@ -264,6 +264,33 @@ static ani_object GetExtensionAbilityResourceInfoNative(ani_env* env, ani_string
     return launcherAbilityResourceInfosObject;
 }
 
+static ani_object AniGetBundleResourceArchiveInfo(ani_env* env, ani_string aniFilePath, ani_int aniResFlag)
+{
+    APP_LOGD("ani GetBundleResourceArchiveInfo called");
+    std::string filePath;
+    if (!CommonFunAni::ParseString(env, aniFilePath, filePath)) {
+        APP_LOGE("parse filePath %{private}s failed", filePath.c_str());
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, HAP_FILE_PATH, TYPE_STRING);
+        return nullptr;
+    }
+    int32_t flags = static_cast<int32_t>(aniResFlag);
+    if (flags <= 0) {
+        flags = static_cast<int32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL);
+    }
+
+    BundleResourceInfo bundleResInfo;
+    int32_t ret = ResourceHelper::InnerGetBundleResourceArchiveInfo(
+        filePath, static_cast<uint32_t>(flags), bundleResInfo);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetBundleResourceArchiveInfo failed ret: %{public}d", ret);
+        BusinessErrorAni::ThrowCommonError(
+            env, ret, GET_BUNDLE_RESOURCE_ARCHIVE_INFO, PERMISSION_GET_BUNDLE_RESOURCES);
+        return nullptr;
+    }
+
+    return AniResourceManagerCommon::ConvertBundleResourceInfo(env, bundleResInfo);
+}
+
 extern "C" {
 ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
 {
@@ -295,6 +322,8 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
             reinterpret_cast<void*>(GetExtensionAbilityResourceInfoNative) },
         ani_native_function { "getAllUninstalledBundleResourceInfoNative", nullptr,
             reinterpret_cast<void*>(AniGetAllUninstalledBundleResourceInfo) },
+        ani_native_function { "getBundleResourceArchiveInfoNative", nullptr,
+            reinterpret_cast<void*>(AniGetBundleResourceArchiveInfo) },
     };
 
     status = env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size());

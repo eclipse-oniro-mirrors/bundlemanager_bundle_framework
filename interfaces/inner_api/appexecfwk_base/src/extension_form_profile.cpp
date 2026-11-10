@@ -207,6 +207,7 @@ struct ExtensionFormProfileInfo {
     std::string groupId;
     Standby standby;
     bool isColorModeRefreshEnabled = false;
+    bool enableTint = false;
 };
 
 struct ExtensionFormProfileInfoStruct {
@@ -568,6 +569,12 @@ void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfo &exten
         extensionFormProfileInfo.isColorModeRefreshEnabled,
         false,
         g_parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        ExtensionFormProfileReader::TINTING_SUPPORTED,
+        extensionFormProfileInfo.enableTint,
+        false,
+        g_parseResult);
 }
 
 void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfoStruct &profileInfo)
@@ -906,6 +913,7 @@ bool TransformToExtensionFormInfo(const ExtensionFormProfileInfo &form, Extensio
     info.enableBlurBackground = form.enableBlurBackground;
     LOG_NOFUNC_I(BMS_TAG_COMMON, "form name: %{public}s enableBlurBackground: %{public}d",
         info.name.c_str(), info.enableBlurBackground);
+    info.enableTint = form.enableTint;
     return true;
 }
 

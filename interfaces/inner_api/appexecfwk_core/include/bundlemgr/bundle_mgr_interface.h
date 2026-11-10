@@ -43,12 +43,14 @@
 #include "common_event_info.h"
 #include "get_largest_items_callback_interface.h"
 #include "data_group_info.h"
+#include "ipc_group_info.h"
 #include "app_control_interface.h"
 #include "bundle_resource_interface.h"
 #include "bundle_skill/skill_manager_interface.h"
 #include "default_app_interface.h"
 #include "extend_resource_manager_interface.h"
 #include "ibundle_mgr_ext.h"
+#include "launch_service.h"
 #include "module_test_runner.h"
 #include "local_plugin_installer_interface.h"
 #include "overlay_manager_interface.h"
@@ -1795,6 +1797,12 @@ public:
         return false;
     }
 
+    virtual ErrCode QueryIpcGroupInfos(const std::string &bundleName, int32_t userId,
+        std::vector<IpcGroupInfo> &infos)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
     virtual bool GetGroupDir(const std::string &dataGroupId, std::string &dir)
     {
         return false;
@@ -1857,6 +1865,27 @@ public:
      */
     virtual ErrCode GetJsonProfileForSelf(ProfileType profileType, const std::string &moduleName,
         std::string &profile)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    /**
+     * @brief Obtain all launch services of a module, together with identity info of the target application.
+     * Only the foundation process is allowed to call this interface.
+     * @param bundleName Indicates the bundle name.
+     * @param moduleName Indicates the module name.
+     * @param userId Indicates the user ID, which has no default value. UNSPECIFIED_USERID is resolved
+     *        to the calling user; ANY_USERID is resolved to the first user the bundle is installed for;
+     *        ALL_USERID is a bundle manager internal definition and is not supported, it returns
+     *        ERR_BUNDLE_MANAGER_INVALID_USER_ID; other values must be registered user IDs, otherwise
+     *        ERR_BUNDLE_MANAGER_INVALID_USER_ID is returned. The returned launch services and identity
+     *        info are user-independent.
+     * @param result Output param, the launch services of the module in configuration order, and the developerId
+     *        and appIdentifier of the target application.
+     * @return Returns ERR_OK on success, error code otherwise.
+     */
+    virtual ErrCode GetLaunchServices(const std::string &bundleName, const std::string &moduleName,
+        int32_t userId, LaunchServicesResult &result)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }

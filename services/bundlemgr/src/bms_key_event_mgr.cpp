@@ -25,6 +25,7 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 const std::string BOOTEVENT_BMS_MAIN_BUNDLES_READY = "bootevent.bms.main.bundles.ready";
+const std::string BOOTEVENT_BMS_REGISTER_READY = "bootevent.bms.register.ready";
 const std::string MAIN_BUNDLE_NAME_SCENE_BOARD = "com.ohos.sceneboard";
 const std::string MAIN_BUNDLE_NAME_SCENE_BOARD_PATH = "/system/app/SceneBoard";
 const std::set<std::string> MAIN_BUNDLES_SET = {
@@ -50,6 +51,16 @@ void BmsKeyEventMgr::ProcessMainBundleStatusFinally()
         LOG_E(BMS_TAG_DEFAULT, "ProcessMainBundleStatus main bundle not ready");
     }
     LOG_I(BMS_TAG_DEFAULT, "ProcessMainBundleStatus end");
+}
+
+void BmsKeyEventMgr::ProcessRegisterReady()
+{
+    LOG_I(BMS_TAG_DEFAULT, "ProcessRegisterReady start");
+    std::lock_guard<std::mutex> lock(paramMutex_);
+    if (!system::SetParameter(BOOTEVENT_BMS_REGISTER_READY, BMS_PARAM_TRUE)) {
+        LOG_E(BMS_TAG_DEFAULT, "set bms register ready failed");
+    }
+    LOG_I(BMS_TAG_DEFAULT, "ProcessRegisterReady end");
 }
 
 void BmsKeyEventMgr::ProcessMainBundleInstallFailed(const std::string &bundleName, int32_t errCode)

@@ -38,6 +38,7 @@ constexpr const char* KEY_APP_ALLOW_AUTO_CONTROL_INTENT = "allowAutoControlInten
 constexpr const char* KEY_MODULE_NAME = "name";
 constexpr const char* KEY_MODULE_TYPE = "type";
 constexpr const char* KEY_MODULE_PACKAGE = "package";
+constexpr const char* KEY_MODULE_DISTRO = "distro";
 constexpr const char* KEY_MODULE_SKILL_PROFILES = "skillProfiles";
 constexpr const char* KEY_MODULE_REQUEST_PERMISSIONS = "requestPermissions";
 constexpr const char* KEY_MODULE_REQ_PERMISSIONS = "reqPermissions";
@@ -165,12 +166,13 @@ bool ParseDefinePermissions(const nlohmann::json &moduleObj, std::vector<DefineP
 
 bool ParseRequestPermissions(const nlohmann::json &moduleObj, std::vector<RequestPermission> &outPermissions)
 {
-    auto it = moduleObj.find(KEY_MODULE_REQUEST_PERMISSIONS);
+    const char *permKey = KEY_MODULE_REQUEST_PERMISSIONS;
+    if (moduleObj.find(KEY_MODULE_DISTRO) != moduleObj.end()) {
+        permKey = KEY_MODULE_REQ_PERMISSIONS;
+    }
+    auto it = moduleObj.find(permKey);
     if (it == moduleObj.end()) {
-        it = moduleObj.find(KEY_MODULE_REQ_PERMISSIONS);
-        if (it == moduleObj.end()) {
-            return true; // optional field
-        }
+        return true; // optional field
     }
     if (!it->is_array()) {
         return false;

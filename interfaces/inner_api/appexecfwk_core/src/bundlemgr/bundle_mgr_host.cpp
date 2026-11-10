@@ -573,6 +573,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_DATA_GROUP_INFOS):
             errCode = this->HandleQueryDataGroupInfos(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_IPC_GROUP_INFOS):
+            errCode = this->HandleQueryIpcGroupInfos(data, reply);
+            break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_PREFERENCE_DIR_BY_GROUP_ID):
             errCode = this->HandleGetPreferenceDirByGroupId(data, reply);
             break;
@@ -593,6 +596,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
             break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_JSON_PROFILE_FOR_SELF):
             errCode = this->HandleGetJsonProfileForSelf(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_LAUNCH_SERVICES):
+            errCode = this->HandleGetLaunchServices(data, reply);
             break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_RESOURCE_PROXY):
             errCode = this->HandleGetBundleResourceProxy(data, reply);
@@ -2257,6 +2263,9 @@ ErrCode BundleMgrHost::HandleRegisterBundleStatusCallback(MessageParcel &data, M
 ErrCode BundleMgrHost::HandleRegisterBundleEventCallback(MessageParcel &data, MessageParcel &reply)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    // bool is transferred before remote object, proxy and host are deployed
+    // and upgraded together in the same system image
+    bool notifyAllUsers = data.ReadBool();
     sptr<IRemoteObject> object = data.ReadRemoteObject();
     if (object == nullptr) {
         APP_LOGE("read IRemoteObject failed");
@@ -2267,6 +2276,7 @@ ErrCode BundleMgrHost::HandleRegisterBundleEventCallback(MessageParcel &data, Me
         APP_LOGE("Get bundleEventCallback failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
+    bundleEventCallback->SetNotifyAllUsers(notifyAllUsers);
     bool ret = RegisterBundleEventCallback(bundleEventCallback);
     if (!reply.WriteBool(ret)) {
         APP_LOGE("write ret failed");
@@ -4372,6 +4382,28 @@ ErrCode BundleMgrHost::HandleQueryDataGroupInfos(MessageParcel &data, MessagePar
     return ERR_OK;
 }
 
+ErrCode BundleMgrHost::HandleQueryIpcGroupInfos(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    std::string bundleName = data.ReadString();
+    int32_t userId = data.ReadInt32();
+
+    std::vector<IpcGroupInfo> infos;
+    ErrCode ret = QueryIpcGroupInfos(bundleName, userId, infos);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret != ERR_OK) {
+        return ERR_OK;
+    }
+    if (!WriteParcelableVector(infos, reply)) {
+        APP_LOGE("write ipcGroupInfo failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
 ErrCode BundleMgrHost::HandleGetPreferenceDirByGroupId(MessageParcel &data, MessageParcel &reply)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
@@ -4505,6 +4537,30 @@ ErrCode BundleMgrHost::HandleGetJsonProfileForSelf(MessageParcel &data, MessageP
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret == ERR_OK && WriteBigString(profile, reply) != ERR_OK) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetLaunchServices(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    std::string bundleName = data.ReadString();
+    std::string moduleName = data.ReadString();
+    int32_t userId = data.ReadInt32();
+    APP_LOGD("bundleName : %{public}s, moduleName : %{public}s",
+        bundleName.c_str(), moduleName.c_str());
+    LaunchServicesResult result;
+    ErrCode ret = GetLaunchServices(bundleName, moduleName, userId, result);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret != ERR_OK) {
+        return ERR_OK;
+    }
+    if (!reply.WriteParcelable(&result)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }

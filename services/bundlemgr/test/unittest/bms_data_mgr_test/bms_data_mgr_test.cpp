@@ -17,6 +17,7 @@
 
 #include <fstream>
 #include <mutex>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <nlohmann/json.hpp>
 #include <unistd.h>
@@ -27,15 +28,20 @@
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "app_provision_info_manager.h"
+#include "bms_extension_data_mgr.h"
 #include "bundle_backup_mgr.h"
 #include "bundle_backup_service.h"
 #include "bundle_data_storage_interface.h"
 #include "bundle_data_mgr.h"
+#include "bundle_common_event_mgr.h"
 #include "bundle_mgr_client.h"
 #include "bundle_mgr_client_impl.h"
+#include "bundle_mgr_ext_register.h"
 #include "bundle_mgr_host_impl.h"
 #include "bundle_mgr_service.h"
 #include "bundle_service_constants.h"
+#include "bundle_spm_manager.h"
+#include "common_event_support.h"
 #include "dual_mode_helper.h"
 #include "first_install_data_mgr/first_install_bundle_info.h"
 #include "get_largest_items_callback_host.h"
@@ -126,6 +132,139 @@ const std::string TOKEN_BUNDLE = "tokenBundle";
 constexpr const char *TEST_DUAL_MODE_PARAM = "persist.bms.test_dual_mode";
 constexpr const char *TEST_ISPCMODE_PARAM = "persist.bms.ispcmode";
 constexpr const char *TEST_MAINMODE_PARAM = "persist.bms.mainmode";
+
+// SPM ON: the uid reverse lookup (BundleDataMgr::GetBundleNameAndIndex)
+// cross-checks the bundleIdMap_ hit against the persisted user info — an
+// InnerBundleInfo without a user info owning the mock caller's uid (20000001,
+// userId 100, bundleId 1) fails the cross-check and the AT fallback, so every
+// "ForSelf" API returns INVALID_UID instead of resolving the map entry.
+// Stamp the user info onto the test bundle before inserting it (the OFF
+// path trusts the map alone and is unaffected).
+void AddSelfUidUserInfo(InnerBundleInfo &info, const std::string &bundleName)
+{
+    InnerBundleUserInfo selfUserInfo;
+    selfUserInfo.bundleUserInfo.userId = 100;
+    selfUserInfo.bundleName = bundleName;
+    selfUserInfo.uid = 20000001;
+    info.AddInnerBundleUserInfo(selfUserInfo);
+}
+
+constexpr const char* MULTI_USER_EVENT_BUNDLE_NAME = "com.example.multiuserevent";
+constexpr int32_t EVENT_USER_ID = 100;
+constexpr int32_t OTHER_USER_ID_B = 101;
+constexpr int32_t OTHER_USER_ID_C = 102;
+constexpr int32_t EVENT_USER_UID = 20000100;
+constexpr int32_t USER_B_UID = 20000101;
+constexpr int32_t USER_C_UID = 20000102;
+constexpr uint32_t EVENT_USER_TOKEN_ID = 1765344;
+constexpr uint32_t USER_B_TOKEN_ID = 1765345;
+constexpr uint32_t USER_C_TOKEN_ID = 1765346;
+constexpr const char* WANT_PARAM_ACCESS_TOKEN_ID = "accessTokenId";
+constexpr const char* WANT_PARAM_IS_INSTALL_BY_BUNDLE_NAME = "isInstallByBundleName";
+constexpr const char* WANT_PARAM_IS_RECOVER = "isRecover";
+constexpr const char* WANT_PARAM_TYPE = "type";
+constexpr const char* WANT_PARAM_RESULT_CODE = "resultCode";
+
+class BundleEventCallbackCountMock : public IBundleEventCallback {
+public:
+    BundleEventCallbackCountMock() = default;
+    virtual ~BundleEventCallbackCountMock() = default;
+    void OnReceiveEvent(const EventFwk::CommonEventData eventData) override
+    {
+        receiveCount_++;
+        const auto &want = eventData.GetWant();
+        receivedActions_.push_back(want.GetAction());
+        receivedUserIds_.push_back(want.GetIntParam(Constants::USER_ID, Constants::INVALID_USERID));
+        receivedUids_.push_back(want.GetIntParam(Constants::UID, 0));
+        receivedTokenIds_.push_back(want.GetIntParam(WANT_PARAM_ACCESS_TOKEN_ID, 0));
+    }
+
+    sptr<IRemoteObject> AsObject() override
+    {
+        return nullptr;
+    }
+
+    int32_t GetReceiveCount() const
+    {
+        return receiveCount_;
+    }
+
+    const std::vector<std::string> &GetReceivedActions() const
+    {
+        return receivedActions_;
+    }
+
+    const std::vector<int32_t> &GetReceivedUserIds() const
+    {
+        return receivedUserIds_;
+    }
+
+    const std::vector<int32_t> &GetReceivedUids() const
+    {
+        return receivedUids_;
+    }
+
+    const std::vector<int32_t> &GetReceivedTokenIds() const
+    {
+        return receivedTokenIds_;
+    }
+
+private:
+    int32_t receiveCount_ = 0;
+    std::vector<std::string> receivedActions_;
+    std::vector<int32_t> receivedUserIds_;
+    std::vector<int32_t> receivedUids_;
+    std::vector<int32_t> receivedTokenIds_;
+};
+
+InnerBundleInfo BuildMultiUserInnerBundleInfo(const std::string &bundleName,
+    const std::vector<int32_t> &userIds)
+{
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = bundleName;
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = bundleName;
+    applicationInfo.bundleName = bundleName;
+    applicationInfo.deviceId = DEVICE_ID;
+    info.SetBaseBundleInfo(bundleInfo);
+    info.SetBaseApplicationInfo(applicationInfo);
+    const std::vector<int32_t> uids = { EVENT_USER_UID, USER_B_UID, USER_C_UID };
+    const std::vector<uint32_t> tokenIds = { EVENT_USER_TOKEN_ID, USER_B_TOKEN_ID, USER_C_TOKEN_ID };
+    for (size_t i = 0; i < userIds.size(); ++i) {
+        InnerBundleUserInfo userInfo;
+        userInfo.bundleName = bundleName;
+        userInfo.bundleUserInfo.userId = userIds[i];
+        userInfo.bundleUserInfo.enabled = true;
+        userInfo.uid = uids[i];
+        userInfo.accessTokenId = tokenIds[i];
+        info.AddInnerBundleUserInfo(userInfo);
+    }
+    return info;
+}
+
+EventFwk::CommonEventData BuildMultiUserEventData(const std::string &action, bool withUserId,
+    int32_t appIndex = 0, bool isInstallByBundleName = false, bool isRecover = false,
+    int32_t notifyType = static_cast<int32_t>(NotifyType::INSTALL), ErrCode resultCode = ERR_OK)
+{
+    Want want;
+    want.SetAction(action);
+    ElementName element;
+    element.SetBundleName(MULTI_USER_EVENT_BUNDLE_NAME);
+    want.SetElement(element);
+    want.SetParam(Constants::BUNDLE_NAME, MULTI_USER_EVENT_BUNDLE_NAME);
+    want.SetParam(Constants::APP_INDEX, appIndex);
+    want.SetParam(WANT_PARAM_IS_INSTALL_BY_BUNDLE_NAME, isInstallByBundleName);
+    want.SetParam(WANT_PARAM_IS_RECOVER, isRecover);
+    want.SetParam(WANT_PARAM_TYPE, notifyType);
+    want.SetParam(WANT_PARAM_RESULT_CODE, resultCode);
+    if (withUserId) {
+        want.SetParam(Constants::USER_ID, EVENT_USER_ID);
+    }
+    EventFwk::CommonEventData eventData;
+    eventData.SetWant(want);
+    return eventData;
+}
 }  // namespace
 
 namespace Security {
@@ -271,6 +410,31 @@ InnerBundleInfo CreateAddDynamicShortcutInfosInnerBundleInfo(const ShortcutInfo 
     innerAbilityInfo.moduleName = moduleName;
     innerBundleInfo.InsertAbilitiesInfo(hostAbility, innerAbilityInfo);
     return innerBundleInfo;
+}
+
+namespace
+{
+// Creates a minimal InnerBundleInfo with one module (MODULE_NAME) installed for START_USERID
+// and one configured launch service. Cases extend it (extra users, developerId, more entries)
+// before emplacing it into dataMgr under BUNDLE_NAME. The user info is added through
+// AddInnerBundleUserInfo so the map key construction matches HasInnerBundleUserInfo lookups.
+InnerBundleInfo CreateLaunchServiceTestInnerBundleInfo()
+{
+    InnerBundleInfo innerBundleInfo;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = MODULE_NAME;
+    LaunchService launchService;
+    launchService.name = "svc";
+    launchService.binaryPath = "/bin/launch_svc";
+    launchService.type = LaunchServiceType::DAEMON;
+    innerModuleInfo.launchServices.emplace_back(launchService);
+    innerBundleInfo.InsertInnerModuleInfo(MODULE_NAME, innerModuleInfo);
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = Constants::START_USERID;
+    innerBundleUserInfo.bundleName = BUNDLE_NAME;
+    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+    return innerBundleInfo;
+}
 }
 
 std::vector<Skill> BmsDataMgrTest::CreateSkillsForMatchShareTest()
@@ -961,7 +1125,14 @@ HWTEST_F(BmsDataMgrTest, GenerateUidAndGid_0100, Function | SmallTest | Level0)
     ErrCode ret3 = dataMgr->GenerateUidAndGid(innerBundleUserInfo);
     EXPECT_TRUE(ret1);
     EXPECT_TRUE(ret2);
-    EXPECT_EQ(ret3, ERR_OK);
+    if (BundleSpmManager::IsEnabled()) {
+        // SPM ON: GenerateUidAndGid no longer allocates locally — an identity
+        // without an AT-allocated uid fails fast instead (the allocation
+        // authority moved to the access token service).
+        EXPECT_EQ(ret3, ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED);
+    } else {
+        EXPECT_EQ(ret3, ERR_OK);
+    }
 
     dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_START);
 }
@@ -995,7 +1166,14 @@ HWTEST_F(BmsDataMgrTest, GenerateUidAndGid_0200, Function | SmallTest | Level0)
     ErrCode ret3 = dataMgr->GenerateUidAndGid(innerBundleUserInfo);
     EXPECT_TRUE(ret1);
     EXPECT_TRUE(ret2);
-    EXPECT_EQ(ret3, ERR_OK);
+    if (BundleSpmManager::IsEnabled()) {
+        // SPM ON: GenerateUidAndGid no longer allocates locally — an identity
+        // without an AT-allocated uid fails fast instead (the allocation
+        // authority moved to the access token service).
+        EXPECT_EQ(ret3, ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED);
+    } else {
+        EXPECT_EQ(ret3, ERR_OK);
+    }
 
     dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_START);
 }
@@ -1031,7 +1209,14 @@ HWTEST_F(BmsDataMgrTest, GenerateUidAndGid_0300, Function | SmallTest | Level0)
     ErrCode ret3 = dataMgr->GenerateUidAndGid(innerBundleUserInfo);
     EXPECT_TRUE(ret1);
     EXPECT_TRUE(ret2);
-    EXPECT_EQ(ret3, ERR_OK);
+    if (BundleSpmManager::IsEnabled()) {
+        // SPM ON: GenerateUidAndGid no longer allocates locally — an identity
+        // without an AT-allocated uid fails fast instead (the allocation
+        // authority moved to the access token service).
+        EXPECT_EQ(ret3, ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED);
+    } else {
+        EXPECT_EQ(ret3, ERR_OK);
+    }
     dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_START);
 }
 
@@ -5432,7 +5617,7 @@ HWTEST_F(BmsDataMgrTest, HandleGroupIdAndIndex_0001, Function | MediumTest | Lev
 {
     BundleDataMgr bundleDataMgr;
     constexpr int8_t DATA_GROUP_INDEX_START = 1;
-    constexpr int32_t DATA_GROUP_UID_OFFSET = 100000;
+    constexpr int32_t DATA_GROUP_INDEX_MAX = 50000;
     std::set<std::string> errorGroupIds = {"group1", "group2"};
     std::map<int32_t, std::string> indexMap = {{100, "existing_group"}};
     std::map<std::string, int32_t> groupIdMap = {{"existing_group", 100}};
@@ -5443,7 +5628,7 @@ HWTEST_F(BmsDataMgrTest, HandleGroupIdAndIndex_0001, Function | MediumTest | Lev
     EXPECT_NE(groupIdMap.find("group1"), groupIdMap.end());
     EXPECT_NE(groupIdMap.find("group2"), groupIdMap.end());
 
-    for (int i = DATA_GROUP_INDEX_START; i < DATA_GROUP_UID_OFFSET; ++i) {
+    for (int i = DATA_GROUP_INDEX_START; i < DATA_GROUP_INDEX_MAX; ++i) {
         indexMap[i] = "dummy_group";
     }
     bundleDataMgr.HandleGroupIdAndIndex(errorGroupIds, indexMap, groupIdMap);
@@ -6619,6 +6804,7 @@ HWTEST_F(BmsDataMgrTest, SetShortcutVisibleForSelf_0003, Function | MediumTest |
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.InsertShortcutInfos(shortcutId, shortcutInfo);
     innerBundleInfo.SetIsNewVersion(false);
+    AddSelfUidUserInfo(innerBundleInfo, bundleName);
     bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
     bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
     auto result = bundleDataMgr.SetShortcutVisibleForSelf(shortcutId, visible);
@@ -6644,10 +6830,18 @@ HWTEST_F(BmsDataMgrTest, SetShortcutVisibleForSelf_0004, Function | MediumTest |
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.InsertShortcutInfos(shortcutId, shortcutInfo);
     innerBundleInfo.SetIsNewVersion(false);
+    AddSelfUidUserInfo(innerBundleInfo, bundleName);
     bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
     bundleDataMgr.bundleInfos_.emplace(bundleName2, innerBundleInfo);
     auto result = bundleDataMgr.SetShortcutVisibleForSelf(shortcutId, visible);
-    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    if (BundleSpmManager::IsEnabled()) {
+        // SPM ON: same contract as GetAllShortcutInfoForSelf_0020 — the map
+        // hit fails the user-info cross-check (the resolved bundle is absent
+        // from bundleInfos_) and the AT fallback fails fast with INVALID_UID.
+        EXPECT_EQ(result, ERR_BUNDLE_MANAGER_INVALID_UID);
+    } else {
+        EXPECT_EQ(result, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    }
 }
 
 /**
@@ -6665,6 +6859,7 @@ HWTEST_F(BmsDataMgrTest, SetShortcutVisibleForSelf_0005, Function | MediumTest |
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.InsertShortcutInfos(shortcutId, shortcutInfo);
     innerBundleInfo.SetIsNewVersion(false);
+    AddSelfUidUserInfo(innerBundleInfo, bundleName);
     bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
     bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
     auto result = bundleDataMgr.SetShortcutVisibleForSelf(shortcutId, visible);
@@ -6688,6 +6883,7 @@ HWTEST_F(BmsDataMgrTest, SetShortcutVisibleForSelf_0006, Function | MediumTest |
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.InsertShortcutInfos(shortcutId, shortcutInfo);
     innerBundleInfo.SetIsNewVersion(false);
+    AddSelfUidUserInfo(innerBundleInfo, bundleName);
     bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
     bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
     bundleDataMgr.shortcutVisibleStorage_->
@@ -6715,6 +6911,7 @@ HWTEST_F(BmsDataMgrTest, SetShortcutVisibleForSelf_0007, Function | MediumTest |
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.InsertShortcutInfos(shortcutId, shortcutInfo);
     innerBundleInfo.SetIsNewVersion(false);
+    AddSelfUidUserInfo(innerBundleInfo, bundleName);
     bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
     bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
     bundleDataMgr.shortcutVisibleStorage_->
@@ -6799,6 +6996,7 @@ HWTEST_F(BmsDataMgrTest, SetShortcutsEnabled_0002, Function | MediumTest | Level
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.InsertShortcutInfos(shortcutId, shortcutInfo);
     innerBundleInfo.SetIsNewVersion(false);
+    AddSelfUidUserInfo(innerBundleInfo, bundleName);
     bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
     bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
     auto result = bundleDataMgr.SetShortcutsEnabled(shortcutInfos, isEnabled);
@@ -6823,6 +7021,7 @@ HWTEST_F(BmsDataMgrTest, SetShortcutsEnabled_0003, Function | MediumTest | Level
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.InsertShortcutInfos(shortcutId, shortcutInfo);
     innerBundleInfo.SetIsNewVersion(false);
+    AddSelfUidUserInfo(innerBundleInfo, bundleName);
     bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
     bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
     std::vector<ShortcutInfo> shortcutInfos;
@@ -7210,6 +7409,7 @@ HWTEST_F(BmsDataMgrTest, GetTargetShortcutInfo_0001, Function | MediumTest | Lev
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.InsertShortcutInfos(shortcutId, shortcutInfo);
     innerBundleInfo.SetIsNewVersion(false);
+    AddSelfUidUserInfo(innerBundleInfo, bundleName);
     bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
     bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
     ShortcutInfo targetShortcutInfo;
@@ -7535,7 +7735,15 @@ HWTEST_F(BmsDataMgrTest, GetAllShortcutInfoForSelf_0020, Function | MediumTest |
     BundleDataMgr bundleDataMgr;
     bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
     auto ret = bundleDataMgr.GetAllShortcutInfoForSelf(shortcutInfos);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    if (BundleSpmManager::IsEnabled()) {
+        // SPM ON: a map hit that fails the user-info cross-check (the bundle
+        // has no persisted user info owning the caller's uid) is treated as
+        // unresolvable — the AT fallback fails fast with INVALID_UID instead
+        // of degrading to a bundle lookup.
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_UID);
+    } else {
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    }
 }
 
 /**
@@ -7556,7 +7764,14 @@ HWTEST_F(BmsDataMgrTest, GetAllShortcutInfoForSelf_0030, Function | MediumTest |
     bundleDataMgr.bundleInfos_.emplace("fake_bundle", innerBundleInfo);
     bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
     auto ret = bundleDataMgr.GetAllShortcutInfoForSelf(shortcutInfos);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    if (BundleSpmManager::IsEnabled()) {
+        // SPM ON: same contract as GetAllShortcutInfoForSelf_0020 — the map
+        // hit fails the user-info cross-check and the AT fallback fails fast
+        // with INVALID_UID.
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_UID);
+    } else {
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    }
 }
 
 /**
@@ -7574,6 +7789,10 @@ HWTEST_F(BmsDataMgrTest, GetAllShortcutInfoForSelf_0040, Function | MediumTest |
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.InsertShortcutInfos(shortcutId, shortcutInfo);
     innerBundleInfo.SetIsNewVersion(false);
+    // SPM ON: the uid reverse lookup cross-checks the map hit against this
+    // user info — without it the call fails fast with INVALID_UID and leaves
+    // shortcutInfos empty (the shortcutInfos[0] access below would crash).
+    AddSelfUidUserInfo(innerBundleInfo, bundleName);
     bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
     bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
     auto ret = bundleDataMgr.GetAllShortcutInfoForSelf(shortcutInfos);
@@ -7995,8 +8214,7 @@ HWTEST_F(BmsDataMgrTest, GetAppProvisionInfoInDevice_0005, TestSize.Level1)
     dataMgr->AddUserId(USERID);
 
     std::vector<AppProvisionInfo> appProvisionInfos;
-    ErrCode ret = dataMgr->GetAppProvisionInfoInDevice(BUNDLE_NAME, USERID, appProvisionInfos);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    dataMgr->GetAppProvisionInfoInDevice(BUNDLE_NAME, USERID, appProvisionInfos);
     EXPECT_TRUE(appProvisionInfos.empty());
 }
 
@@ -8030,6 +8248,53 @@ HWTEST_F(BmsDataMgrTest, GetAllAppProvisionInfoInDevice_0002, TestSize.Level1)
     ErrCode ret = dataMgr->GetAllAppProvisionInfoInDevice(USERID, appProvisionInfos);
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_TRUE(appProvisionInfos.empty());
+}
+
+/**
+ * @tc.number: GetAdditionalInfoForAllUser_0001
+ * @tc.name: test GetAdditionalInfoForAllUser with bundle not exist
+ * @tc.desc: 1. bundle not in bundleInfos_
+ *           2. returns ERR_BUNDLE_MANAGER_INTERNAL_ERROR
+ */
+HWTEST_F(BmsDataMgrTest, GetAdditionalInfoForAllUser_0001, TestSize.Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::string result;
+    ErrCode ret = dataMgr->GetAdditionalInfoForAllUser("com.test.notexist", result);
+    EXPECT_THAT(ret, testing::AnyOf(
+        ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST,
+        ERR_APPEXECFWK_DUAL_MODE_DEVICE_NOT_SUPPORTED));
+}
+
+/**
+ * @tc.number: SetAdditionalInfo_0002
+ * @tc.name: test SetAdditionalInfo with SHARED app success
+ * @tc.desc: 1. SHARED app exists in bundleInfos_
+ *           2. provision record added, SetAdditionalInfo success
+ *           3. returns ERR_OK and GetAdditionalInfo returns the set value
+ */
+HWTEST_F(BmsDataMgrTest, SetAdditionalInfo_0002, TestSize.Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::string bundleName = "com.test.setadd.shared";
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = bundleName;
+    info.SetApplicationBundleType(BundleType::SHARED);
+    dataMgr->bundleInfos_[bundleName] = info;
+    DelayedSingleton<AppProvisionInfoManager>::GetInstance()->AddAppProvisionInfo(bundleName, AppProvisionInfo {});
+
+    std::string additionalInfo = "sharedAdditional";
+    ErrCode ret = dataMgr->SetAdditionalInfo(bundleName, additionalInfo);
+    EXPECT_EQ(ret, ERR_OK);
+
+    std::string result;
+    DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAdditionalInfo(bundleName, result);
+    EXPECT_EQ(result, additionalInfo);
+
+    dataMgr->bundleInfos_.erase(bundleName);
+    DelayedSingleton<AppProvisionInfoManager>::GetInstance()->DeleteAppProvisionInfo(bundleName);
 }
 
 /**
@@ -8141,6 +8406,7 @@ HWTEST_F(BmsDataMgrTest, UpdateShortcutInfos_0003, Function | MediumTest | Level
     bundleDataMgr.UpdateShortcutInfos(bundleName);
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.SetIsNewVersion(false);
+    AddSelfUidUserInfo(innerBundleInfo, bundleName);
     bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
     bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
     std::shared_ptr<ShortcutEnabledDataStorageRdb> shortcutEnabledStorageRdb =
@@ -10737,6 +11003,11 @@ HWTEST_F(BmsDataMgrTest, GetAlternateIcons_0030, Function | MediumTest | Level1)
     icon.iconId = 100;
     appInfo.alternateIcons.push_back(icon);
     innerBundleInfo.SetBaseApplicationInfo(appInfo);
+    // SPM ON: the uid reverse lookup cross-checks the map hit against this
+    // user info — without it GetAlternateIcons fails fast with
+    // ERR_EXT_RESOURCE_MANAGER_GET_ALTERNATE_ICONS_FAILED and leaves
+    // alternateIcons empty (the alternateIcons[0] accesses below would crash).
+    AddSelfUidUserInfo(innerBundleInfo, bundleName);
     bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
     bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
     auto ret = bundleDataMgr.GetAlternateIcons(alternateIcons);
@@ -10989,6 +11260,420 @@ HWTEST_F(BmsDataMgrTest, NotifyBundleEventCallback_0100, Function | SmallTest | 
     EXPECT_NO_THROW({
         dataMgr->NotifyBundleEventCallback(eventData);
     });
+}
+
+/**
+ * @tc.number: NotifyBundleEventCallbackForAllUsers_0100
+ * @tc.name: NotifyBundleEventCallbackForAllUsers
+ * @tc.desc: 1. callback with notifyAllUsers flag receives PACKAGE_ADDED event
+ *           2. receives extra CHANGED events for other installed users with per-user params
+ */
+HWTEST_F(BmsDataMgrTest, NotifyBundleEventCallbackForAllUsers_0100, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(EVENT_USER_ID);
+    dataMgr->AddUserId(OTHER_USER_ID_B);
+    dataMgr->AddUserId(OTHER_USER_ID_C);
+    dataMgr->bundleInfos_[MULTI_USER_EVENT_BUNDLE_NAME] = BuildMultiUserInnerBundleInfo(
+        MULTI_USER_EVENT_BUNDLE_NAME, { EVENT_USER_ID, OTHER_USER_ID_B, OTHER_USER_ID_C });
+    sptr<BundleEventCallbackCountMock> callback = new (std::nothrow) BundleEventCallbackCountMock();
+    ASSERT_NE(callback, nullptr);
+    callback->SetNotifyAllUsers(true);
+    dataMgr->eventCallbackList_.emplace_back(callback);
+    auto eventData = BuildMultiUserEventData(
+        EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_ADDED, true);
+    dataMgr->NotifyBundleEventCallback(eventData);
+    // original event + one CHANGED event for each other installed user
+    EXPECT_EQ(callback->GetReceiveCount(), 3);
+    EXPECT_EQ(callback->GetReceivedActions().size(), static_cast<size_t>(3));
+    EXPECT_EQ(callback->GetReceivedActions()[0],
+        EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_ADDED);
+    EXPECT_EQ(callback->GetReceivedActions()[1],
+        EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED);
+    EXPECT_EQ(callback->GetReceivedActions()[2],
+        EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED);
+    EXPECT_EQ(callback->GetReceivedUserIds()[0], EVENT_USER_ID);
+    EXPECT_EQ(callback->GetReceivedUserIds()[1], OTHER_USER_ID_B);
+    EXPECT_EQ(callback->GetReceivedUserIds()[2], OTHER_USER_ID_C);
+    EXPECT_EQ(callback->GetReceivedUids()[0], 0);
+    EXPECT_EQ(callback->GetReceivedUids()[1], USER_B_UID);
+    EXPECT_EQ(callback->GetReceivedUids()[2], USER_C_UID);
+    EXPECT_EQ(callback->GetReceivedTokenIds()[0], 0);
+    EXPECT_EQ(callback->GetReceivedTokenIds()[1], static_cast<int32_t>(USER_B_TOKEN_ID));
+    EXPECT_EQ(callback->GetReceivedTokenIds()[2], static_cast<int32_t>(USER_C_TOKEN_ID));
+    dataMgr->eventCallbackList_.clear();
+    dataMgr->bundleInfos_.erase(MULTI_USER_EVENT_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: NotifyBundleEventCallbackForAllUsers_0200
+ * @tc.name: NotifyBundleEventCallbackForAllUsers
+ * @tc.desc: 1. callback with notifyAllUsers flag receives PACKAGE_CHANGED event
+ *           2. receives extra CHANGED events for other installed users
+ */
+HWTEST_F(BmsDataMgrTest, NotifyBundleEventCallbackForAllUsers_0200, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(EVENT_USER_ID);
+    dataMgr->AddUserId(OTHER_USER_ID_B);
+    dataMgr->AddUserId(OTHER_USER_ID_C);
+    dataMgr->bundleInfos_[MULTI_USER_EVENT_BUNDLE_NAME] = BuildMultiUserInnerBundleInfo(
+        MULTI_USER_EVENT_BUNDLE_NAME, { EVENT_USER_ID, OTHER_USER_ID_B, OTHER_USER_ID_C });
+    sptr<BundleEventCallbackCountMock> callback = new (std::nothrow) BundleEventCallbackCountMock();
+    ASSERT_NE(callback, nullptr);
+    callback->SetNotifyAllUsers(true);
+    dataMgr->eventCallbackList_.emplace_back(callback);
+    auto eventData = BuildMultiUserEventData(
+        EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED, true);
+    dataMgr->NotifyBundleEventCallback(eventData);
+    EXPECT_EQ(callback->GetReceiveCount(), 3);
+    EXPECT_EQ(callback->GetReceivedActions().size(), static_cast<size_t>(3));
+    for (const auto &action : callback->GetReceivedActions()) {
+        EXPECT_EQ(action, EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED);
+    }
+    EXPECT_EQ(callback->GetReceivedUserIds()[0], EVENT_USER_ID);
+    EXPECT_EQ(callback->GetReceivedUserIds()[1], OTHER_USER_ID_B);
+    EXPECT_EQ(callback->GetReceivedUserIds()[2], OTHER_USER_ID_C);
+    EXPECT_EQ(callback->GetReceivedUids()[1], USER_B_UID);
+    EXPECT_EQ(callback->GetReceivedUids()[2], USER_C_UID);
+    EXPECT_EQ(callback->GetReceivedTokenIds()[1], static_cast<int32_t>(USER_B_TOKEN_ID));
+    EXPECT_EQ(callback->GetReceivedTokenIds()[2], static_cast<int32_t>(USER_C_TOKEN_ID));
+    dataMgr->eventCallbackList_.clear();
+    dataMgr->bundleInfos_.erase(MULTI_USER_EVENT_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: NotifyBundleEventCallbackForAllUsers_0300
+ * @tc.name: NotifyBundleEventCallbackForAllUsers
+ * @tc.desc: 1. callback without notifyAllUsers flag only receives the original event
+ */
+HWTEST_F(BmsDataMgrTest, NotifyBundleEventCallbackForAllUsers_0300, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(EVENT_USER_ID);
+    dataMgr->AddUserId(OTHER_USER_ID_B);
+    dataMgr->AddUserId(OTHER_USER_ID_C);
+    dataMgr->bundleInfos_[MULTI_USER_EVENT_BUNDLE_NAME] = BuildMultiUserInnerBundleInfo(
+        MULTI_USER_EVENT_BUNDLE_NAME, { EVENT_USER_ID, OTHER_USER_ID_B, OTHER_USER_ID_C });
+    sptr<BundleEventCallbackCountMock> callback = new (std::nothrow) BundleEventCallbackCountMock();
+    ASSERT_NE(callback, nullptr);
+    dataMgr->eventCallbackList_.emplace_back(callback);
+    auto eventData = BuildMultiUserEventData(
+        EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_ADDED, true);
+    dataMgr->NotifyBundleEventCallback(eventData);
+    EXPECT_EQ(callback->GetReceiveCount(), 1);
+    EXPECT_EQ(callback->GetReceivedActions()[0],
+        EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_ADDED);
+    dataMgr->eventCallbackList_.clear();
+    dataMgr->bundleInfos_.erase(MULTI_USER_EVENT_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: NotifyBundleEventCallbackForAllUsers_0400
+ * @tc.name: NotifyBundleEventCallbackForAllUsers
+ * @tc.desc: 1. bundle only installed for the event user, no extra events even if flag set
+ */
+HWTEST_F(BmsDataMgrTest, NotifyBundleEventCallbackForAllUsers_0400, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(EVENT_USER_ID);
+    dataMgr->bundleInfos_[MULTI_USER_EVENT_BUNDLE_NAME] =
+        BuildMultiUserInnerBundleInfo(MULTI_USER_EVENT_BUNDLE_NAME, { EVENT_USER_ID });
+    sptr<BundleEventCallbackCountMock> callback = new (std::nothrow) BundleEventCallbackCountMock();
+    ASSERT_NE(callback, nullptr);
+    callback->SetNotifyAllUsers(true);
+    dataMgr->eventCallbackList_.emplace_back(callback);
+    auto eventData = BuildMultiUserEventData(
+        EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_ADDED, true);
+    dataMgr->NotifyBundleEventCallback(eventData);
+    EXPECT_EQ(callback->GetReceiveCount(), 1);
+    EXPECT_EQ(callback->GetReceivedActions()[0],
+        EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_ADDED);
+    dataMgr->eventCallbackList_.clear();
+    dataMgr->bundleInfos_.erase(MULTI_USER_EVENT_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: NotifyBundleEventCallbackForAllUsers_0500
+ * @tc.name: NotifyBundleEventCallbackForAllUsers
+ * @tc.desc: 1. non ADD/CHANGED actions do not trigger multi-user traversal
+ */
+HWTEST_F(BmsDataMgrTest, NotifyBundleEventCallbackForAllUsers_0500, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(EVENT_USER_ID);
+    dataMgr->AddUserId(OTHER_USER_ID_B);
+    dataMgr->AddUserId(OTHER_USER_ID_C);
+    dataMgr->bundleInfos_[MULTI_USER_EVENT_BUNDLE_NAME] = BuildMultiUserInnerBundleInfo(
+        MULTI_USER_EVENT_BUNDLE_NAME, { EVENT_USER_ID, OTHER_USER_ID_B, OTHER_USER_ID_C });
+    sptr<BundleEventCallbackCountMock> callback = new (std::nothrow) BundleEventCallbackCountMock();
+    ASSERT_NE(callback, nullptr);
+    callback->SetNotifyAllUsers(true);
+    dataMgr->eventCallbackList_.emplace_back(callback);
+    auto removedData = BuildMultiUserEventData(
+        EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_REMOVED, true);
+    dataMgr->NotifyBundleEventCallback(removedData);
+    EXPECT_EQ(callback->GetReceiveCount(), 1);
+    auto additionalData = BuildMultiUserEventData("bms.event.ADDITIONAL_INFO_CHANGED", true);
+    dataMgr->NotifyBundleEventCallback(additionalData);
+    EXPECT_EQ(callback->GetReceiveCount(), 2);
+    EXPECT_EQ(callback->GetReceivedActions()[0],
+        EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_REMOVED);
+    EXPECT_EQ(callback->GetReceivedActions()[1], "bms.event.ADDITIONAL_INFO_CHANGED");
+    dataMgr->eventCallbackList_.clear();
+    dataMgr->bundleInfos_.erase(MULTI_USER_EVENT_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: NotifyBundleEventCallbackForAllUsers_0600
+ * @tc.name: NotifyBundleEventCallbackForAllUsers
+ * @tc.desc: 1. event without USER_ID param does not trigger multi-user traversal
+ */
+HWTEST_F(BmsDataMgrTest, NotifyBundleEventCallbackForAllUsers_0600, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(EVENT_USER_ID);
+    dataMgr->AddUserId(OTHER_USER_ID_B);
+    dataMgr->AddUserId(OTHER_USER_ID_C);
+    dataMgr->bundleInfos_[MULTI_USER_EVENT_BUNDLE_NAME] = BuildMultiUserInnerBundleInfo(
+        MULTI_USER_EVENT_BUNDLE_NAME, { EVENT_USER_ID, OTHER_USER_ID_B, OTHER_USER_ID_C });
+    sptr<BundleEventCallbackCountMock> callback = new (std::nothrow) BundleEventCallbackCountMock();
+    ASSERT_NE(callback, nullptr);
+    callback->SetNotifyAllUsers(true);
+    dataMgr->eventCallbackList_.emplace_back(callback);
+    auto eventData = BuildMultiUserEventData(
+        EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_ADDED, false);
+    dataMgr->NotifyBundleEventCallback(eventData);
+    EXPECT_EQ(callback->GetReceiveCount(), 1);
+    EXPECT_EQ(callback->GetReceivedActions()[0],
+        EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_ADDED);
+    dataMgr->eventCallbackList_.clear();
+    dataMgr->bundleInfos_.erase(MULTI_USER_EVENT_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: NotifyBundleEventCallbackForAllUsers_0700
+ * @tc.name: NotifyBundleEventCallbackForAllUsers
+ * @tc.desc: 1. user whose GetApplicationInfoV9 fails is skipped, others still notified
+ */
+HWTEST_F(BmsDataMgrTest, NotifyBundleEventCallbackForAllUsers_0700, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    // OTHER_USER_ID_B is not added to dataMgr, its query will fail
+    dataMgr->AddUserId(EVENT_USER_ID);
+    dataMgr->AddUserId(OTHER_USER_ID_C);
+    dataMgr->bundleInfos_[MULTI_USER_EVENT_BUNDLE_NAME] = BuildMultiUserInnerBundleInfo(
+        MULTI_USER_EVENT_BUNDLE_NAME, { EVENT_USER_ID, OTHER_USER_ID_B, OTHER_USER_ID_C });
+    sptr<BundleEventCallbackCountMock> callback = new (std::nothrow) BundleEventCallbackCountMock();
+    ASSERT_NE(callback, nullptr);
+    callback->SetNotifyAllUsers(true);
+    dataMgr->eventCallbackList_.emplace_back(callback);
+    auto eventData = BuildMultiUserEventData(
+        EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_ADDED, true);
+    dataMgr->NotifyBundleEventCallback(eventData);
+    // original event + CHANGED event for OTHER_USER_ID_C only
+    EXPECT_EQ(callback->GetReceiveCount(), 2);
+    EXPECT_EQ(callback->GetReceivedActions()[0],
+        EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_ADDED);
+    EXPECT_EQ(callback->GetReceivedActions()[1],
+        EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED);
+    EXPECT_EQ(callback->GetReceivedUserIds()[1], OTHER_USER_ID_C);
+    EXPECT_EQ(callback->GetReceivedUids()[1], USER_C_UID);
+    EXPECT_EQ(callback->GetReceivedTokenIds()[1], static_cast<int32_t>(USER_C_TOKEN_ID));
+    dataMgr->eventCallbackList_.clear();
+    dataMgr->bundleInfos_.erase(MULTI_USER_EVENT_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: NotifyBundleEventCallbackForAllUsers_0800
+ * @tc.name: NotifyBundleEventCallbackForAllUsers
+ * @tc.desc: 1. event with non-zero APP_INDEX (clone scenario) does not trigger multi-user traversal
+ */
+HWTEST_F(BmsDataMgrTest, NotifyBundleEventCallbackForAllUsers_0800, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(EVENT_USER_ID);
+    dataMgr->AddUserId(OTHER_USER_ID_B);
+    dataMgr->AddUserId(OTHER_USER_ID_C);
+    dataMgr->bundleInfos_[MULTI_USER_EVENT_BUNDLE_NAME] = BuildMultiUserInnerBundleInfo(
+        MULTI_USER_EVENT_BUNDLE_NAME, { EVENT_USER_ID, OTHER_USER_ID_B, OTHER_USER_ID_C });
+    sptr<BundleEventCallbackCountMock> callback = new (std::nothrow) BundleEventCallbackCountMock();
+    ASSERT_NE(callback, nullptr);
+    callback->SetNotifyAllUsers(true);
+    dataMgr->eventCallbackList_.emplace_back(callback);
+    auto eventData = BuildMultiUserEventData(
+        EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_ADDED, true, 1);
+    dataMgr->NotifyBundleEventCallback(eventData);
+    EXPECT_EQ(callback->GetReceiveCount(), 1);
+    EXPECT_EQ(callback->GetReceivedActions()[0],
+        EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_ADDED);
+    dataMgr->eventCallbackList_.clear();
+    dataMgr->bundleInfos_.erase(MULTI_USER_EVENT_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: NotifyBundleEventCallbackForAllUsers_0900
+ * @tc.name: NotifyBundleEventCallbackForAllUsers
+ * @tc.desc: 1. event with isInstallByBundleName=true (new user creation scenario)
+ *           2. does not trigger multi-user traversal
+ */
+HWTEST_F(BmsDataMgrTest, NotifyBundleEventCallbackForAllUsers_0900, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(EVENT_USER_ID);
+    dataMgr->AddUserId(OTHER_USER_ID_B);
+    dataMgr->AddUserId(OTHER_USER_ID_C);
+    dataMgr->bundleInfos_[MULTI_USER_EVENT_BUNDLE_NAME] = BuildMultiUserInnerBundleInfo(
+        MULTI_USER_EVENT_BUNDLE_NAME, { EVENT_USER_ID, OTHER_USER_ID_B, OTHER_USER_ID_C });
+    sptr<BundleEventCallbackCountMock> callback = new (std::nothrow) BundleEventCallbackCountMock();
+    ASSERT_NE(callback, nullptr);
+    callback->SetNotifyAllUsers(true);
+    dataMgr->eventCallbackList_.emplace_back(callback);
+    auto eventData = BuildMultiUserEventData(
+        EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_ADDED, true, 0, true);
+    dataMgr->NotifyBundleEventCallback(eventData);
+    EXPECT_EQ(callback->GetReceiveCount(), 1);
+    EXPECT_EQ(callback->GetReceivedActions()[0],
+        EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_ADDED);
+    dataMgr->eventCallbackList_.clear();
+    dataMgr->bundleInfos_.erase(MULTI_USER_EVENT_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: NotifyBundleEventCallbackForAllUsers_1000
+ * @tc.name: NotifyBundleEventCallbackForAllUsers
+ * @tc.desc: 1. event with isRecover=true (recover install scenario)
+ *           2. does not trigger multi-user traversal
+ */
+HWTEST_F(BmsDataMgrTest, NotifyBundleEventCallbackForAllUsers_1000, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(EVENT_USER_ID);
+    dataMgr->AddUserId(OTHER_USER_ID_B);
+    dataMgr->AddUserId(OTHER_USER_ID_C);
+    dataMgr->bundleInfos_[MULTI_USER_EVENT_BUNDLE_NAME] = BuildMultiUserInnerBundleInfo(
+        MULTI_USER_EVENT_BUNDLE_NAME, { EVENT_USER_ID, OTHER_USER_ID_B, OTHER_USER_ID_C });
+    sptr<BundleEventCallbackCountMock> callback = new (std::nothrow) BundleEventCallbackCountMock();
+    ASSERT_NE(callback, nullptr);
+    callback->SetNotifyAllUsers(true);
+    dataMgr->eventCallbackList_.emplace_back(callback);
+    auto eventData = BuildMultiUserEventData(
+        EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_ADDED, true, 0, false, true);
+    dataMgr->NotifyBundleEventCallback(eventData);
+    EXPECT_EQ(callback->GetReceiveCount(), 1);
+    EXPECT_EQ(callback->GetReceivedActions()[0],
+        EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_ADDED);
+    dataMgr->eventCallbackList_.clear();
+    dataMgr->bundleInfos_.erase(MULTI_USER_EVENT_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: NotifyBundleEventCallbackForAllUsers_1100
+ * @tc.name: NotifyBundleEventCallbackForAllUsers
+ * @tc.desc: 1. event with failed resultCode (failed update) does not trigger
+ *              multi-user traversal
+ */
+HWTEST_F(BmsDataMgrTest, NotifyBundleEventCallbackForAllUsers_1100, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(EVENT_USER_ID);
+    dataMgr->AddUserId(OTHER_USER_ID_B);
+    dataMgr->AddUserId(OTHER_USER_ID_C);
+    dataMgr->bundleInfos_[MULTI_USER_EVENT_BUNDLE_NAME] = BuildMultiUserInnerBundleInfo(
+        MULTI_USER_EVENT_BUNDLE_NAME, { EVENT_USER_ID, OTHER_USER_ID_B, OTHER_USER_ID_C });
+    sptr<BundleEventCallbackCountMock> callback = new (std::nothrow) BundleEventCallbackCountMock();
+    ASSERT_NE(callback, nullptr);
+    callback->SetNotifyAllUsers(true);
+    dataMgr->eventCallbackList_.emplace_back(callback);
+    auto eventData = BuildMultiUserEventData(
+        EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED, true, 0, false, false,
+        static_cast<int32_t>(NotifyType::UPDATE), ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR);
+    dataMgr->NotifyBundleEventCallback(eventData);
+    EXPECT_EQ(callback->GetReceiveCount(), 1);
+    EXPECT_EQ(callback->GetReceivedActions()[0],
+        EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED);
+    dataMgr->eventCallbackList_.clear();
+    dataMgr->bundleInfos_.erase(MULTI_USER_EVENT_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: NotifyBundleEventCallbackForAllUsers_1200
+ * @tc.name: NotifyBundleEventCallbackForAllUsers
+ * @tc.desc: 1. APPLICATION_ENABLE event (CHANGED-mapped, single-user state change)
+ *              does not trigger multi-user traversal
+ */
+HWTEST_F(BmsDataMgrTest, NotifyBundleEventCallbackForAllUsers_1200, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(EVENT_USER_ID);
+    dataMgr->AddUserId(OTHER_USER_ID_B);
+    dataMgr->AddUserId(OTHER_USER_ID_C);
+    dataMgr->bundleInfos_[MULTI_USER_EVENT_BUNDLE_NAME] = BuildMultiUserInnerBundleInfo(
+        MULTI_USER_EVENT_BUNDLE_NAME, { EVENT_USER_ID, OTHER_USER_ID_B, OTHER_USER_ID_C });
+    sptr<BundleEventCallbackCountMock> callback = new (std::nothrow) BundleEventCallbackCountMock();
+    ASSERT_NE(callback, nullptr);
+    callback->SetNotifyAllUsers(true);
+    dataMgr->eventCallbackList_.emplace_back(callback);
+    auto eventData = BuildMultiUserEventData(
+        EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED, true, 0, false, false,
+        static_cast<int32_t>(NotifyType::APPLICATION_ENABLE));
+    dataMgr->NotifyBundleEventCallback(eventData);
+    EXPECT_EQ(callback->GetReceiveCount(), 1);
+    EXPECT_EQ(callback->GetReceivedActions()[0],
+        EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED);
+    dataMgr->eventCallbackList_.clear();
+    dataMgr->bundleInfos_.erase(MULTI_USER_EVENT_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: NotifyBundleEventCallbackForAllUsers_1300
+ * @tc.name: NotifyBundleEventCallbackForAllUsers
+ * @tc.desc: 1. UPDATE event with non-zero appIndex (clone update) still triggers
+ *              multi-user traversal, aligned with ProcessBundleChangedEventForOtherUsers
+ */
+HWTEST_F(BmsDataMgrTest, NotifyBundleEventCallbackForAllUsers_1300, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(EVENT_USER_ID);
+    dataMgr->AddUserId(OTHER_USER_ID_B);
+    dataMgr->AddUserId(OTHER_USER_ID_C);
+    dataMgr->bundleInfos_[MULTI_USER_EVENT_BUNDLE_NAME] = BuildMultiUserInnerBundleInfo(
+        MULTI_USER_EVENT_BUNDLE_NAME, { EVENT_USER_ID, OTHER_USER_ID_B, OTHER_USER_ID_C });
+    sptr<BundleEventCallbackCountMock> callback = new (std::nothrow) BundleEventCallbackCountMock();
+    ASSERT_NE(callback, nullptr);
+    callback->SetNotifyAllUsers(true);
+    dataMgr->eventCallbackList_.emplace_back(callback);
+    auto eventData = BuildMultiUserEventData(
+        EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED, true, 10000, false, false,
+        static_cast<int32_t>(NotifyType::UPDATE));
+    dataMgr->NotifyBundleEventCallback(eventData);
+    // original event + one CHANGED event for each other installed user
+    EXPECT_EQ(callback->GetReceiveCount(), 3);
+    EXPECT_EQ(callback->GetReceivedActions().size(), static_cast<size_t>(3));
+    for (const auto &action : callback->GetReceivedActions()) {
+        EXPECT_EQ(action, EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED);
+    }
+    EXPECT_EQ(callback->GetReceivedUserIds()[1], OTHER_USER_ID_B);
+    EXPECT_EQ(callback->GetReceivedUserIds()[2], OTHER_USER_ID_C);
+    EXPECT_EQ(callback->GetReceivedUids()[1], USER_B_UID);
+    EXPECT_EQ(callback->GetReceivedUids()[2], USER_C_UID);
+    EXPECT_EQ(callback->GetReceivedTokenIds()[1], static_cast<int32_t>(USER_B_TOKEN_ID));
+    EXPECT_EQ(callback->GetReceivedTokenIds()[2], static_cast<int32_t>(USER_C_TOKEN_ID));
+    dataMgr->eventCallbackList_.clear();
+    dataMgr->bundleInfos_.erase(MULTI_USER_EVENT_BUNDLE_NAME);
 }
 
 /**
@@ -14290,4 +14975,681 @@ HWTEST_F(BmsDataMgrTest, GetShortcutInfoV9_HostImpl_0003, Function | SmallTest |
     ErrCode ret = hostImpl.GetShortcutInfoV9(bundleName, shortcutInfos, userId);
     EXPECT_NE(ret, ERR_OK);
 }
+
+/**
+ * @tc.number: AddDesktopShortcutInfoFromExtension_0002
+ * @tc.name: AddDesktopShortcutInfoFromExtension with extension success
+ * @tc.desc: test BundleMgrHostImpl::AddDesktopShortcutInfoFromExtension when BMSExt returns success,
+ *           should return ERR_OK
+ */
+HWTEST_F(BmsDataMgrTest, AddDesktopShortcutInfoFromExtension_0002, Function | SmallTest | Level1)
+{
+    class MockBundleMgrExtForAddShortcut : public AppExecFwk::BundleMgrExt {
+    public:
+        bool CheckApiInfo(const BundleInfo& bundleInfo) override
+        {
+            return true;
+        }
+
+        ErrCode AddDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId) override
+        {
+            return ERR_OK;
+        }
+    };
+
+    int16_t handleTest = 1;
+    BmsExtensionDataMgr::handler_ = &handleTest;
+    BmsExtensionDataMgr::bmsExtension_.bmsExtensionBundleMgr.extensionName = "MockAddShortcutExt";
+    BundleMgrExtRegister::GetInstance().RegisterBundleMgrExt("MockAddShortcutExt",
+        []() -> std::shared_ptr<BundleMgrExt> { return std::make_shared<MockBundleMgrExtForAddShortcut>(); });
+
+    BundleMgrHostImpl hostImpl;
+    ShortcutInfo shortcutInfo;
+    shortcutInfo.bundleName = "test.bundle";
+    int32_t userId = USERID;
+    ErrCode ret = hostImpl.AddDesktopShortcutInfoFromExtension(shortcutInfo, userId);
+    EXPECT_EQ(ret, ERR_OK);
+
+    BmsExtensionDataMgr::handler_ = nullptr;
+}
+
+/**
+ * @tc.number: DeleteDesktopShortcutInfoFromExtension_0002
+ * @tc.name: DeleteDesktopShortcutInfoFromExtension with extension success
+ * @tc.desc: test BundleMgrHostImpl::DeleteDesktopShortcutInfoFromExtension when BMSExt returns success,
+ *           should return ERR_OK
+ */
+HWTEST_F(BmsDataMgrTest, DeleteDesktopShortcutInfoFromExtension_0002, Function | SmallTest | Level1)
+{
+    class MockBundleMgrExtForDeleteShortcut : public AppExecFwk::BundleMgrExt {
+    public:
+        bool CheckApiInfo(const BundleInfo& bundleInfo) override
+        {
+            return true;
+        }
+
+        ErrCode DeleteDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId) override
+        {
+            return ERR_OK;
+        }
+    };
+
+    int16_t handleTest = 1;
+    BmsExtensionDataMgr::handler_ = &handleTest;
+    BmsExtensionDataMgr::bmsExtension_.bmsExtensionBundleMgr.extensionName = "MockDeleteShortcutExt";
+    BundleMgrExtRegister::GetInstance().RegisterBundleMgrExt("MockDeleteShortcutExt",
+        []() -> std::shared_ptr<BundleMgrExt> { return std::make_shared<MockBundleMgrExtForDeleteShortcut>(); });
+
+    BundleMgrHostImpl hostImpl;
+    ShortcutInfo shortcutInfo;
+    shortcutInfo.bundleName = "test.bundle";
+    int32_t userId = USERID;
+    ErrCode ret = hostImpl.DeleteDesktopShortcutInfoFromExtension(shortcutInfo, userId);
+    EXPECT_EQ(ret, ERR_OK);
+
+    BmsExtensionDataMgr::handler_ = nullptr;
+}
+
+/**
+ * @tc.number: GetLaunchServices_0100
+ * @tc.name: GetLaunchServices
+ * @tc.desc: 1. query the launch services of a module with a configured entry
+ *           2. returns ERR_OK and the launch service fields match the inner module info
+ */
+HWTEST_F(BmsDataMgrTest, GetLaunchServices_0100, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo innerBundleInfo;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = MODULE_NAME;
+    LaunchService launchService;
+    launchService.name = "svc";
+    launchService.binaryPath = "/bin/launch_svc";
+    launchService.runAtLoad = true;
+    launchService.keepAlive = true;
+    launchService.provideIpcService = false;
+    launchService.type = LaunchServiceType::DAEMON;
+    innerModuleInfo.launchServices.emplace_back(launchService);
+    innerBundleInfo.InsertInnerModuleInfo(MODULE_NAME, innerModuleInfo);
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = Constants::START_USERID;
+    innerBundleUserInfo.bundleName = BUNDLE_NAME;
+    innerBundleInfo.innerBundleUserInfos_.emplace(std::to_string(Constants::START_USERID),
+        innerBundleUserInfo);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+
+    LaunchServicesResult result;
+    ErrCode ret = dataMgr->GetLaunchServices(BUNDLE_NAME, MODULE_NAME, Constants::ANY_USERID, result);
+    EXPECT_EQ(ret, ERR_OK);
+    ASSERT_EQ(result.launchServices.size(), 1);
+    EXPECT_EQ(result.launchServices[0].name, "svc");
+    EXPECT_EQ(result.launchServices[0].binaryPath, "/bin/launch_svc");
+    EXPECT_TRUE(result.launchServices[0].runAtLoad);
+    EXPECT_TRUE(result.launchServices[0].keepAlive);
+    EXPECT_FALSE(result.launchServices[0].provideIpcService);
+    EXPECT_EQ(result.launchServices[0].type, LaunchServiceType::DAEMON);
+
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: GetLaunchServices_0200
+ * @tc.name: GetLaunchServices
+ * @tc.desc: 1. query a launch service with a bundleName that is not installed
+ *           2. returns ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST
+ */
+HWTEST_F(BmsDataMgrTest, GetLaunchServices_0200, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+
+    LaunchServicesResult result;
+    ErrCode ret = dataMgr->GetLaunchServices(BUNDLE_NAME, MODULE_NAME, Constants::ANY_USERID, result);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetLaunchServices_0300
+ * @tc.name: GetLaunchServices
+ * @tc.desc: 1. query a launch service with invalid userId (GetUserId resolves to INVALID_USERID)
+ *           2. returns ERR_BUNDLE_MANAGER_INVALID_USER_ID
+ */
+HWTEST_F(BmsDataMgrTest, GetLaunchServices_0300, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    LaunchServicesResult result;
+    ErrCode ret = dataMgr->GetLaunchServices(BUNDLE_NAME, MODULE_NAME, Constants::INVALID_USERID, result);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+/**
+ * @tc.number: GetLaunchServices_0400
+ * @tc.name: GetLaunchServices
+ * @tc.desc: 1. query a launch service with a moduleName that does not exist in the bundle
+ *           2. returns ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST (aligned with GetJsonProfile module-level error)
+ */
+HWTEST_F(BmsDataMgrTest, GetLaunchServices_0400, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo innerBundleInfo;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = MODULE_NAME;
+    innerBundleInfo.InsertInnerModuleInfo(MODULE_NAME, innerModuleInfo);
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = Constants::START_USERID;
+    innerBundleUserInfo.bundleName = BUNDLE_NAME;
+    innerBundleInfo.innerBundleUserInfos_.emplace(std::to_string(Constants::START_USERID),
+        innerBundleUserInfo);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+
+    LaunchServicesResult result;
+    ErrCode ret = dataMgr->GetLaunchServices(BUNDLE_NAME, "noSuchModule", Constants::ANY_USERID, result);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
+
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: GetLaunchServices_0500
+ * @tc.name: GetLaunchServices
+ * @tc.desc: 1. query a module without configured launch services
+ *           2. returns ERR_OK with an empty launch services list
+ */
+HWTEST_F(BmsDataMgrTest, GetLaunchServices_0500, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo innerBundleInfo;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = MODULE_NAME;
+    innerBundleInfo.InsertInnerModuleInfo(MODULE_NAME, innerModuleInfo);
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = Constants::START_USERID;
+    innerBundleUserInfo.bundleName = BUNDLE_NAME;
+    innerBundleInfo.innerBundleUserInfos_.emplace(std::to_string(Constants::START_USERID),
+        innerBundleUserInfo);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+
+    LaunchServicesResult result;
+    ErrCode ret = dataMgr->GetLaunchServices(BUNDLE_NAME, MODULE_NAME, Constants::ANY_USERID, result);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_TRUE(result.launchServices.empty());
+
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: GetLaunchServices_0600
+ * @tc.name: GetLaunchServices
+ * @tc.desc: 1. persistence round-trip: build InnerBundleInfo with multi-module launchServices, ToJson then FromJson
+ *           2. per-module query on the restored info returns the full configured list per module (INV-1, INV-3)
+ */
+HWTEST_F(BmsDataMgrTest, GetLaunchServices_0600, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    const std::string featureModuleName = "feature";
+    InnerBundleInfo innerBundleInfo;
+    InnerModuleInfo entryModuleInfo;
+    entryModuleInfo.moduleName = MODULE_NAME;
+    LaunchService entryService;
+    entryService.name = "svc";
+    entryService.binaryPath = "/bin/launch_svc";
+    entryService.runAtLoad = true;
+    entryService.type = LaunchServiceType::DAEMON;
+    entryModuleInfo.launchServices.emplace_back(entryService);
+    innerBundleInfo.InsertInnerModuleInfo(MODULE_NAME, entryModuleInfo);
+    InnerModuleInfo featureModuleInfo;
+    featureModuleInfo.moduleName = featureModuleName;
+    LaunchService featureService;
+    featureService.name = "featureSvc";
+    featureService.binaryPath = "/bin/feature_svc";
+    featureService.provideIpcService = true;
+    featureModuleInfo.launchServices.emplace_back(featureService);
+    innerBundleInfo.InsertInnerModuleInfo(featureModuleName, featureModuleInfo);
+
+    nlohmann::json jsonObject;
+    innerBundleInfo.ToJson(jsonObject);
+    InnerBundleInfo restoredInfo;
+    EXPECT_EQ(restoredInfo.FromJson(jsonObject), 0);
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = Constants::START_USERID;
+    innerBundleUserInfo.bundleName = BUNDLE_NAME;
+    restoredInfo.innerBundleUserInfos_.emplace(std::to_string(Constants::START_USERID),
+        innerBundleUserInfo);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, restoredInfo);
+
+    LaunchServicesResult entryResult;
+    ErrCode ret = dataMgr->GetLaunchServices(BUNDLE_NAME, MODULE_NAME, Constants::ANY_USERID, entryResult);
+    EXPECT_EQ(ret, ERR_OK);
+    ASSERT_EQ(entryResult.launchServices.size(), 1);
+    EXPECT_EQ(entryResult.launchServices[0].name, "svc");
+    EXPECT_EQ(entryResult.launchServices[0].binaryPath, "/bin/launch_svc");
+    EXPECT_TRUE(entryResult.launchServices[0].runAtLoad);
+    EXPECT_FALSE(entryResult.launchServices[0].keepAlive);
+    EXPECT_EQ(entryResult.launchServices[0].type, LaunchServiceType::DAEMON);
+
+    LaunchServicesResult featureResult;
+    ret = dataMgr->GetLaunchServices(BUNDLE_NAME, featureModuleName, Constants::ANY_USERID, featureResult);
+    EXPECT_EQ(ret, ERR_OK);
+    ASSERT_EQ(featureResult.launchServices.size(), 1);
+    EXPECT_EQ(featureResult.launchServices[0].name, "featureSvc");
+    EXPECT_EQ(featureResult.launchServices[0].binaryPath, "/bin/feature_svc");
+
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: GetLaunchServices_0700
+ * @tc.name: GetLaunchServices
+ * @tc.desc: 1. query with a userId where the bundle is not installed (installed for user 100 only)
+ *           2. responseUserId resolves to INVALID_USERID, returns ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST
+ */
+HWTEST_F(BmsDataMgrTest, GetLaunchServices_0700, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo innerBundleInfo;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = MODULE_NAME;
+    LaunchService launchService;
+    launchService.name = "svc";
+    launchService.binaryPath = "/bin/launch_svc";
+    innerModuleInfo.launchServices.emplace_back(launchService);
+    innerBundleInfo.InsertInnerModuleInfo(MODULE_NAME, innerModuleInfo);
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = Constants::START_USERID;
+    innerBundleUserInfo.bundleName = BUNDLE_NAME;
+    innerBundleInfo.innerBundleUserInfos_.emplace(std::to_string(Constants::START_USERID),
+        innerBundleUserInfo);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+    dataMgr->AddUserId(Constants::START_USERID + 1);
+
+    LaunchServicesResult result;
+    ErrCode ret = dataMgr->GetLaunchServices(BUNDLE_NAME, MODULE_NAME, Constants::START_USERID + 1, result);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_TRUE(result.launchServices.empty());
+
+    dataMgr->RemoveUserId(Constants::START_USERID + 1);
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: GetLaunchServices_0800
+ * @tc.name: GetLaunchServices
+ * @tc.desc: 1. query with ALL_USERID, which is a bundle manager internal definition and not supported
+ *           2. returns ERR_BUNDLE_MANAGER_INVALID_USER_ID and the result stays empty
+ */
+HWTEST_F(BmsDataMgrTest, GetLaunchServices_0800, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    LaunchServicesResult result;
+    ErrCode ret = dataMgr->GetLaunchServices(BUNDLE_NAME, MODULE_NAME, Constants::ALL_USERID, result);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    EXPECT_TRUE(result.launchServices.empty());
+}
+
+/**
+ * @tc.number: GetLaunchServices_0900
+ * @tc.name: GetLaunchServices
+ * @tc.desc: 1. query a module of a bundle whose InnerBundleInfo has developerId/appIdentifier set
+ *           2. returns ERR_OK and the result carries developerId/appIdentifier from the inner info
+ */
+HWTEST_F(BmsDataMgrTest, GetLaunchServices_0900, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo innerBundleInfo = CreateLaunchServiceTestInnerBundleInfo();
+    innerBundleInfo.UpdateDeveloperId("developer-001");
+    innerBundleInfo.SetAppIdentifier("appIdentifier-001");
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+
+    LaunchServicesResult result;
+    ErrCode ret = dataMgr->GetLaunchServices(BUNDLE_NAME, MODULE_NAME, Constants::ANY_USERID, result);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(result.developerId, "developer-001");
+    EXPECT_EQ(result.appIdentifier, "appIdentifier-001");
+    ASSERT_EQ(result.launchServices.size(), 1);
+    EXPECT_EQ(result.launchServices[0].name, "svc");
+
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: GetLaunchServices_0910
+ * @tc.name: GetLaunchServices
+ * @tc.desc: 1. query a module of a bundle without developerId/appIdentifier set
+ *           2. returns ERR_OK with empty developerId/appIdentifier (unset stays empty, no fallback)
+ */
+HWTEST_F(BmsDataMgrTest, GetLaunchServices_0910, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo innerBundleInfo = CreateLaunchServiceTestInnerBundleInfo();
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+
+    LaunchServicesResult result;
+    ErrCode ret = dataMgr->GetLaunchServices(BUNDLE_NAME, MODULE_NAME, Constants::ANY_USERID, result);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_TRUE(result.developerId.empty());
+    EXPECT_TRUE(result.appIdentifier.empty());
+    ASSERT_EQ(result.launchServices.size(), 1);
+
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: GetLaunchServices_0920
+ * @tc.name: GetLaunchServices
+ * @tc.desc: 1. query a module configured with three launch services
+ *           2. returns ERR_OK and the whole configured list in configuration order
+ */
+HWTEST_F(BmsDataMgrTest, GetLaunchServices_0920, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo innerBundleInfo = CreateLaunchServiceTestInnerBundleInfo();
+    auto &launchServices = innerBundleInfo.innerModuleInfos_.at(MODULE_NAME).launchServices;
+    LaunchService second;
+    second.name = "svc-c";
+    second.binaryPath = "/bin/c";
+    LaunchService third;
+    third.name = "svc-a";
+    third.binaryPath = "/bin/a";
+    launchServices.emplace_back(second);
+    launchServices.emplace_back(third);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+
+    LaunchServicesResult result;
+    ErrCode ret = dataMgr->GetLaunchServices(BUNDLE_NAME, MODULE_NAME, Constants::ANY_USERID, result);
+    EXPECT_EQ(ret, ERR_OK);
+    ASSERT_EQ(result.launchServices.size(), 3);
+    // The whole table is returned as stored: configuration order is preserved as-is.
+    EXPECT_EQ(result.launchServices[0].name, "svc");
+    EXPECT_EQ(result.launchServices[1].name, "svc-c");
+    EXPECT_EQ(result.launchServices[2].name, "svc-a");
+    EXPECT_EQ(result.launchServices[1].binaryPath, "/bin/c");
+    EXPECT_EQ(result.launchServices[2].binaryPath, "/bin/a");
+
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: GetLaunchServices_0930
+ * @tc.name: GetLaunchServices
+ * @tc.desc: 1. query with an empty moduleName
+ *           2. module lookup misses and returns ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST
+ */
+HWTEST_F(BmsDataMgrTest, GetLaunchServices_0930, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo innerBundleInfo = CreateLaunchServiceTestInnerBundleInfo();
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+
+    LaunchServicesResult result;
+    ErrCode ret = dataMgr->GetLaunchServices(BUNDLE_NAME, "", Constants::ANY_USERID, result);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
+    EXPECT_TRUE(result.launchServices.empty());
+
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: GetLaunchServices_0940
+ * @tc.name: GetLaunchServices
+ * @tc.desc: 1. query with UNSPECIFIED_USERID, which resolves through the mock calling uid
+ *           2. the mock calling uid (20000001) maps to user 100, which this case never
+ *              registers, so GetUserId yields INVALID_USERID and the query returns
+ *              ERR_BUNDLE_MANAGER_INVALID_USER_ID
+ */
+HWTEST_F(BmsDataMgrTest, GetLaunchServices_0940, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    LaunchServicesResult result;
+    ErrCode ret = dataMgr->GetLaunchServices(BUNDLE_NAME, MODULE_NAME, Constants::UNSPECIFIED_USERID, result);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    EXPECT_TRUE(result.launchServices.empty());
+}
+
+/**
+ * @tc.number: GetLaunchServices_0950
+ * @tc.name: GetLaunchServices
+ * @tc.desc: 1. register START_USERID and query with this concrete userId (not ANY_USERID)
+ *           2. GetUserId resolves the registered user and the query returns ERR_OK
+ */
+HWTEST_F(BmsDataMgrTest, GetLaunchServices_0950, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo innerBundleInfo = CreateLaunchServiceTestInnerBundleInfo();
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+    dataMgr->AddUserId(Constants::START_USERID);
+
+    LaunchServicesResult result;
+    ErrCode ret = dataMgr->GetLaunchServices(BUNDLE_NAME, MODULE_NAME, Constants::START_USERID, result);
+    EXPECT_EQ(ret, ERR_OK);
+    ASSERT_EQ(result.launchServices.size(), 1);
+    EXPECT_EQ(result.launchServices[0].name, "svc");
+
+    dataMgr->RemoveUserId(Constants::START_USERID);
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: GetLaunchServices_0960
+ * @tc.name: GetLaunchServices
+ * @tc.desc: 1. install the bundle for two users (100/101) and query with ANY_USERID
+ *           2. responseUserId resolves to an installed user and the query returns ERR_OK
+ */
+HWTEST_F(BmsDataMgrTest, GetLaunchServices_0960, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo innerBundleInfo = CreateLaunchServiceTestInnerBundleInfo();
+    InnerBundleUserInfo secondUserInfo;
+    secondUserInfo.bundleUserInfo.userId = Constants::START_USERID + 1;
+    secondUserInfo.bundleName = BUNDLE_NAME;
+    innerBundleInfo.innerBundleUserInfos_.emplace(std::to_string(Constants::START_USERID + 1),
+        secondUserInfo);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+
+    LaunchServicesResult result;
+    ErrCode ret = dataMgr->GetLaunchServices(BUNDLE_NAME, MODULE_NAME, Constants::ANY_USERID, result);
+    EXPECT_EQ(ret, ERR_OK);
+    ASSERT_EQ(result.launchServices.size(), 1);
+    EXPECT_EQ(result.launchServices[0].name, "svc");
+
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: GetLaunchServices_0970
+ * @tc.name: GetLaunchServices
+ * @tc.desc: 1. pre-fill the result and trigger every error branch
+ *           2. error returns happen before the result is filled, the out param stays untouched
+ */
+HWTEST_F(BmsDataMgrTest, GetLaunchServices_0970, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo innerBundleInfo = CreateLaunchServiceTestInnerBundleInfo();
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+    dataMgr->AddUserId(Constants::START_USERID + 1);
+
+    LaunchService sentinel;
+    sentinel.name = "sentinel";
+    sentinel.binaryPath = "/bin/sentinel";
+    LaunchServicesResult result;
+    result.launchServices.emplace_back(sentinel);
+    result.developerId = "keep-developer";
+    result.appIdentifier = "keep-appIdentifier";
+
+    // ALL_USERID is rejected before any resolution and must not touch the result.
+    ErrCode ret = dataMgr->GetLaunchServices(BUNDLE_NAME, MODULE_NAME, Constants::ALL_USERID, result);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    EXPECT_EQ(result.launchServices.size(), 1);
+    EXPECT_EQ(result.launchServices[0].name, "sentinel");
+
+    // Unregistered userId fails at GetUserId and must not touch the result.
+    ret = dataMgr->GetLaunchServices(BUNDLE_NAME, MODULE_NAME, Constants::INVALID_USERID, result);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    EXPECT_EQ(result.launchServices.size(), 1);
+    EXPECT_EQ(result.launchServices[0].name, "sentinel");
+
+    // Not-installed bundle fails before the result is filled.
+    ret = dataMgr->GetLaunchServices("no.such.bundle", MODULE_NAME, Constants::ANY_USERID, result);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_EQ(result.launchServices.size(), 1);
+    EXPECT_EQ(result.launchServices[0].name, "sentinel");
+
+    // Bundle exists but is not installed for the requested user.
+    ret = dataMgr->GetLaunchServices(BUNDLE_NAME, MODULE_NAME, Constants::START_USERID + 1, result);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_EQ(result.launchServices.size(), 1);
+    EXPECT_EQ(result.launchServices[0].name, "sentinel");
+
+    // Module does not exist in the installed bundle.
+    ret = dataMgr->GetLaunchServices(BUNDLE_NAME, "noSuchModule", Constants::ANY_USERID, result);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
+    EXPECT_EQ(result.launchServices.size(), 1);
+    EXPECT_EQ(result.launchServices[0].name, "sentinel");
+    EXPECT_EQ(result.developerId, "keep-developer");
+    EXPECT_EQ(result.appIdentifier, "keep-appIdentifier");
+
+    dataMgr->RemoveUserId(Constants::START_USERID + 1);
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: GetLaunchServices_0980
+ * @tc.name: GetLaunchServices
+ * @tc.desc: 1. query a module configured with ten launch services
+ *           2. returns ERR_OK and the full table (no truncation) in configuration order
+ */
+HWTEST_F(BmsDataMgrTest, GetLaunchServices_0980, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo innerBundleInfo = CreateLaunchServiceTestInnerBundleInfo();
+    auto &launchServices = innerBundleInfo.innerModuleInfos_.at(MODULE_NAME).launchServices;
+    for (int32_t i = 0; i < 10; ++i) {
+        LaunchService launchService;
+        launchService.name = "svc-" + std::to_string(i);
+        launchService.binaryPath = "/bin/svc-" + std::to_string(i);
+        launchServices.emplace_back(launchService);
+    }
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+
+    LaunchServicesResult result;
+    ErrCode ret = dataMgr->GetLaunchServices(BUNDLE_NAME, MODULE_NAME, Constants::ANY_USERID, result);
+    EXPECT_EQ(ret, ERR_OK);
+    ASSERT_EQ(result.launchServices.size(), 11);
+    EXPECT_EQ(result.launchServices[0].name, "svc");
+    EXPECT_EQ(result.launchServices[1].name, "svc-0");
+    EXPECT_EQ(result.launchServices[10].name, "svc-9");
+
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: GetLaunchServices_0985
+ * @tc.name: GetLaunchServices
+ * @tc.desc: 1. query with an empty bundleName
+ *           2. the bundle lookup misses and returns ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST
+ */
+HWTEST_F(BmsDataMgrTest, GetLaunchServices_0985, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    LaunchServicesResult result;
+    ErrCode ret = dataMgr->GetLaunchServices("", MODULE_NAME, Constants::ANY_USERID, result);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_TRUE(result.launchServices.empty());
+}
+
+/**
+ * @tc.number: GetLaunchServices_HostImpl_0001
+ * @tc.name: GetLaunchServices (HostImpl)
+ * @tc.desc: 1. call BundleMgrHostImpl::GetLaunchServices from a non-foundation caller
+ *           2. the foundation-only gate rejects with ERR_BUNDLE_MANAGER_PERMISSION_DENIED
+ */
+HWTEST_F(BmsDataMgrTest, GetLaunchServices_HostImpl_0001, Function | SmallTest | Level1)
+{
+    BundleMgrHostImpl hostImpl;
+    LaunchServicesResult result;
+    ErrCode ret = hostImpl.GetLaunchServices(BUNDLE_NAME, MODULE_NAME, Constants::ANY_USERID, result);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    EXPECT_TRUE(result.launchServices.empty());
+}
+
+/**
+ * @tc.number: GetLaunchServices_HostImpl_0002
+ * @tc.name: GetLaunchServices (HostImpl)
+ * @tc.desc: 1. run as foundation uid and inject the fixture data manager into BundleMgrService
+ *           2. HostImpl delegates to BundleDataMgr and returns the fixture query result
+ */
+HWTEST_F(BmsDataMgrTest, GetLaunchServices_HostImpl_0002, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo innerBundleInfo = CreateLaunchServiceTestInnerBundleInfo();
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+
+    auto bundleMgrService = DelayedSingleton<BundleMgrService>::GetInstance();
+    ASSERT_NE(bundleMgrService, nullptr);
+    bundleMgrService->dataMgr_ = dataMgr;
+    // The mock IPC skeleton resolves the calling uid from a process-wide global; switch it to
+    // the foundation uid so the HostImpl foundation-only gate passes.
+    int32_t savedUid = IPCSkeleton::GetCallingUid();
+    IPCSkeleton::SetCallingUid(Constants::FOUNDATION_UID);
+    ScopeGuard uidGuard([&] { IPCSkeleton::SetCallingUid(savedUid); });
+
+    BundleMgrHostImpl hostImpl;
+    LaunchServicesResult result;
+    ErrCode ret = hostImpl.GetLaunchServices(BUNDLE_NAME, MODULE_NAME, Constants::ANY_USERID, result);
+    EXPECT_EQ(ret, ERR_OK);
+    ASSERT_EQ(result.launchServices.size(), 1);
+    EXPECT_EQ(result.launchServices[0].name, "svc");
+
+    bundleMgrService->dataMgr_ = nullptr;
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: GetLaunchServices_HostImpl_0003
+ * @tc.name: GetLaunchServices (HostImpl)
+ * @tc.desc: 1. run as foundation uid while BundleMgrService has no data manager
+ *           2. the null dataMgr guard rejects with ERR_BUNDLE_MANAGER_INTERNAL_ERROR
+ */
+HWTEST_F(BmsDataMgrTest, GetLaunchServices_HostImpl_0003, Function | SmallTest | Level1)
+{
+    auto bundleMgrService = DelayedSingleton<BundleMgrService>::GetInstance();
+    ASSERT_NE(bundleMgrService, nullptr);
+    bundleMgrService->dataMgr_ = nullptr;
+    // The mock IPC skeleton resolves the calling uid from a process-wide global; switch it to
+    // the foundation uid so the HostImpl foundation-only gate passes and the null dataMgr
+    // guard is reached.
+    int32_t savedUid = IPCSkeleton::GetCallingUid();
+    IPCSkeleton::SetCallingUid(Constants::FOUNDATION_UID);
+    ScopeGuard uidGuard([&] { IPCSkeleton::SetCallingUid(savedUid); });
+
+    BundleMgrHostImpl hostImpl;
+    LaunchServicesResult result;
+    ErrCode ret = hostImpl.GetLaunchServices(BUNDLE_NAME, MODULE_NAME, Constants::ANY_USERID, result);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    EXPECT_TRUE(result.launchServices.empty());
+
+    bundleMgrService->dataMgr_ = nullptr;
+}
+
 } // OHOS

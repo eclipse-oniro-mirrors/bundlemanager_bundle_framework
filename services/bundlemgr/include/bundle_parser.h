@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,6 +19,7 @@
 #include <set>
 #include <string>
 #include <unordered_set>
+#include <vector>
 
 #include "app_privilege_capability.h"
 #include "appexecfwk_errors.h"
@@ -111,6 +112,15 @@ public:
         const std::string &permissionFile, std::set<DefaultPermission> &defaultPermissions) const;
 
     static std::map<std::string, std::string> ParseAclExtendedMap(const std::string &appServiceCapabilities);
+
+    /**
+     * @brief Parse ipcGroupIds declared in app-services-capabilities, with soft filter.
+     *        Invalid ids (teamId + exactly 4 decimal digits, total length <= 1024) are dropped;
+     *        at most 150 valid ids are kept. Never throws on malformed input.
+     * @param appServiceCapabilities Indicates the app service capabilities json string.
+     * @return Returns the valid ipcGroupIds; empty if not granted or not declared.
+     */
+    static std::vector<std::string> ParseIpcGroupIds(const std::string &appServiceCapabilities);
 
     /**
      * @brief Parse default extension type name file, then save in ParseExtensionTypeConfig info.

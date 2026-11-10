@@ -80,6 +80,7 @@ constexpr const char* CLASSNAME_SKILL_URI_INNER = "bundleManager.SkillInner.Skil
 constexpr const char* CLASSNAME_SHORTCUT_INFO_INNER = "bundleManager.ShortcutInfo.ShortcutInfoInner";
 constexpr const char* CLASSNAME_SHORTCUT_WANT_INNER = "bundleManager.ShortcutInfo.ShortcutWantInner";
 constexpr const char* CLASSNAME_SHORTCUT_PARAMETER_ITEM_INNER = "bundleManager.ShortcutInfo.ParameterItemInner";
+constexpr const char* CLASSNAME_SKILL_INFO_INNER = "bundleManager.SkillInfoInner.SkillInfoInner";
 constexpr const char* CLASSNAME_LAUNCHER_ABILITY_INFO_INNER =
     "bundleManager.LauncherAbilityInfoInner.LauncherAbilityInfoInner";
 constexpr const char* CLASSNAME_BUNDLE_CHANGED_INFO_INNER =
@@ -276,6 +277,63 @@ static ani_method GetCtorMethod(ani_env* env, const std::string& className, ani_
     }
 
     return method;
+}
+
+ani_ref GetOptionalSkillFieldString(ani_env* env, uint32_t flags, SkillInfoFlag flag, const std::string& value)
+{
+    if ((flags & static_cast<uint32_t>(flag)) == static_cast<uint32_t>(flag)) {
+        ani_string aniStr = nullptr;
+        if (!CommonFunAni::StringToAniStr(env, value, aniStr)) {
+            APP_LOGE("StringToAniStr failed, flag: %{public}d", static_cast<int32_t>(flag));
+            return nullptr;
+        }
+        return aniStr;
+    }
+    ani_ref undefinedRef = nullptr;
+    if (env->GetUndefined(&undefinedRef) != ANI_OK) {
+        APP_LOGE("GetUndefined failed, flag: %{public}d", static_cast<int32_t>(flag));
+        return nullptr;
+    }
+    return undefinedRef;
+}
+
+ani_ref GetOptionalSkillFieldStringArray(
+    ani_env* env, uint32_t flags, SkillInfoFlag flag, const std::vector<std::string>& value)
+{
+    if ((flags & static_cast<uint32_t>(flag)) == static_cast<uint32_t>(flag)) {
+        ani_object aniArr = CommonFunAni::ConvertAniArrayString(env, value);
+        if (aniArr == nullptr) {
+            APP_LOGE("ConvertAniArrayString failed, flag: %{public}d", static_cast<int32_t>(flag));
+            return nullptr;
+        }
+        return aniArr;
+    }
+    ani_ref undefinedRef = nullptr;
+    if (env->GetUndefined(&undefinedRef) != ANI_OK) {
+        APP_LOGE("GetUndefined failed, flag: %{public}d", static_cast<int32_t>(flag));
+        return nullptr;
+    }
+    return undefinedRef;
+}
+
+const std::string& GetSkillInfoInnerCtorSig()
+{
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING)   // bundleName: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING)   // moduleName: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING)   // skillName: string
+        .AddClass(CommonFunAniNS::CLASSNAME_SKILLMANAGER_SKILL_TYPE) // skillType: SkillType
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING)   // skillPath: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING)   // abilityName: string
+        .AddLong()                                    // versionCode: long
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING)   // version?: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING)   // visibility?: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING)   // description?: string
+        .AddClass(CommonFunAniNS::CLASSNAME_ARRAY)    // srcEntries?: Array<string>
+        .AddClass(CommonFunAniNS::CLASSNAME_ARRAY)    // permissions?: Array<string>
+        .AddClass(CommonFunAniNS::CLASSNAME_ARRAY)    // requestPermissions?: Array<string>
+        .BuildSignatureDescriptor();
+    return ctorSig;
 }
 } // namespace
 
@@ -2313,6 +2371,64 @@ inline ani_object CommonFunAni::ConvertShortcutIntentParameter(
     ani_env* env, const std::pair<std::string, std::string>& item)
 {
     return ConvertKeyValuePair(env, item, CLASSNAME_SHORTCUT_PARAMETER_ITEM_INNER);
+}
+
+ani_object CommonFunAni::ConvertSkillInfo(ani_env* env, const SkillInfo& skillInfo, uint32_t flags)
+{
+    RETURN_NULL_IF_NULL(env);
+
+    ani_string bundleName = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, skillInfo.bundleName, bundleName));
+    ani_string moduleName = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, skillInfo.moduleName, moduleName));
+    ani_string skillName = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, skillInfo.skillName, skillName));
+    ani_string skillPath = nullptr;
+    std::string sandboxSkillPath = skillInfo.skillPath;
+    if (sandboxSkillPath.compare(0, strlen(Constants::BASE_SKILL_DIR),
+        Constants::BASE_SKILL_DIR) == 0) {
+        sandboxSkillPath.replace(0, strlen(Constants::BASE_SKILL_DIR),
+            Constants::SANDBOX_SKILL_PATH_PREFIX);
+    }
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, sandboxSkillPath, skillPath));
+    ani_string abilityName = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, skillInfo.abilityName, abilityName));
+    ani_string version = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, skillInfo.version, version));
+    ani_string visibility = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, skillInfo.visibility, visibility));
+
+    ani_enum_item skillTypeObj = EnumUtils::EnumNativeToETS_SkillManager_SkillType(
+        env, static_cast<int32_t>(skillInfo.skillType));
+    RETURN_NULL_IF_NULL(skillTypeObj);
+
+    ani_ref descriptionRef = GetOptionalSkillFieldString(env, flags,
+        SkillInfoFlag::GET_SKILL_INFO_WITH_DESCRIPTION, skillInfo.description);
+    RETURN_NULL_IF_NULL(descriptionRef);
+    ani_ref srcEntriesRef = GetOptionalSkillFieldStringArray(env, flags,
+        SkillInfoFlag::GET_SKILL_INFO_WITH_SRC_ENTRIES, skillInfo.srcEntries);
+    RETURN_NULL_IF_NULL(srcEntriesRef);
+    ani_ref permissionsRef = GetOptionalSkillFieldStringArray(env, flags,
+        SkillInfoFlag::GET_SKILL_INFO_WITH_PERMISSIONS, skillInfo.permissions);
+    RETURN_NULL_IF_NULL(permissionsRef);
+    ani_ref requestPermissionsRef = GetOptionalSkillFieldStringArray(env, flags,
+        SkillInfoFlag::GET_SKILL_INFO_WITH_REQUEST_PERMISSIONS, skillInfo.requestPermissions);
+    RETURN_NULL_IF_NULL(requestPermissionsRef);
+
+    ani_value args[] = {
+        { .r = bundleName }, { .r = moduleName }, { .r = skillName }, { .r = skillTypeObj },
+        { .r = skillPath }, { .r = abilityName },
+        { .l = static_cast<ani_long>(skillInfo.versionCode) },
+        { .r = version }, { .r = visibility },
+        { .r = descriptionRef }, { .r = srcEntriesRef },
+        { .r = permissionsRef }, { .r = requestPermissionsRef },
+    };
+    return CreateNewObjectByClassV2(env, CLASSNAME_SKILL_INFO_INNER, GetSkillInfoInnerCtorSig(), args);
+}
+
+ani_object CommonFunAni::ConvertSkillInfos(ani_env* env, const std::vector<SkillInfo>& skillInfos, uint32_t flags)
+{
+    return ConvertAniArray(env, skillInfos, ConvertSkillInfo, flags);
 }
 
 ani_object CommonFunAni::ConvertLauncherAbilityInfo(ani_env* env, const LauncherAbilityInfo& launcherAbility)

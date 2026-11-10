@@ -30,6 +30,7 @@ ohos_unittest("BmsBundleDataMgrDualModeTest") {
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [ "mock/include" ]
+  include_dirs += [ "${services_path}/bundlemgr/test/mock/include/parameter" ]
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/bms_param.cpp" ]
@@ -38,6 +39,13 @@ ohos_unittest("BmsBundleDataMgrDualModeTest") {
     "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp",
     "${services_path}/bundlemgr/test/mock/src/mock_status_receiver.cpp",
     "${services_path}/bundlemgr/test/mock/src/system_ability_helper.cpp",
+  ]
+
+  # Dual-mode injection params (persist.bms.*) must hit the in-memory mock instead of the
+  # real device parameter area, mirroring bms_bundle_installer_manager_test.
+  sources += [
+    "${services_path}/bundlemgr/test/mock/src/parameter/parameter.cpp",
+    "${services_path}/bundlemgr/test/mock/src/parameter/parameters.cpp",
   ]
 
   sources += bundle_install_sources
@@ -101,6 +109,9 @@ ohos_unittest("BmsBundleDataMgrDualModeTest") {
       "syscap_codec:syscap_interface_shared",
     ]
     defines += [ "BUNDLE_FRAMEWORK_FREE_INSTALL" ]
+  }
+  if (check_eldir_enabled) {
+    defines += [ "CHECK_ELDIR_ENABLED" ]
   }
   external_deps += [ "kv_store:distributeddata_inner" ]
   configs += [ "../../../../../services/bundlemgr:rdb_config" ]

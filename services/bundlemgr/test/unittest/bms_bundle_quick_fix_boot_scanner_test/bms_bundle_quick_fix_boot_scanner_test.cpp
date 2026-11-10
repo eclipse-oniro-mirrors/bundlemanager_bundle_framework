@@ -23,7 +23,9 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "accesstoken_kit.h"
 #include "bms_param.h"
+#include "bundle_constants.h"
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
 #include "bundle_util.h"
@@ -52,6 +54,34 @@ const std::string PATCH_PATH = "/data/app/el1/bundle/public/com.example.l3jsdemo
 const int32_t VERSION_CODE = 1000001;
 const int32_t USERID = 100;
 const int32_t WAIT_TIME = 2; // wait for stopping service
+
+constexpr int32_t TEST_SPM_SESSION_ID = 4242;
+constexpr uint64_t TEST_SPM_TOKEN_ID = 101;
+constexpr int32_t TEST_SPM_UID = USERID * Constants::BASE_USER_RANGE + 102;
+
+void SetUpSpmTrustedSignInfoForTest()
+{
+    const std::string provision = Security::AccessToken::MakeSpmReleaseProvisionRawForTest(
+        BUNDLE_NAME, "os_integration", false, "hos_system_app", "system_core", "");
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest("first_right.hap", provision);
+    Security::AccessToken::SetSpmCheckHapSignInfoSessionIdForTest(TEST_SPM_SESSION_ID);
+    Security::AccessToken::SetSpmPrepareIdentityForTest(TEST_SPM_TOKEN_ID, TEST_SPM_UID);
+}
+
+void ClearSpmLeftoverUninstallRecordsForTest()
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        return;
+    }
+    InnerBundleInfo leftoverInfo;
+    if (dataMgr->FetchInnerBundleInfo(BUNDLE_NAME, leftoverInfo)) {
+        dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::INSTALL_START);
+        dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_START);
+        dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_SUCCESS);
+    }
+    dataMgr->DeleteUninstallBundleInfo(BUNDLE_NAME, USERID);
+}
 }
 
 class BmsBundleQuickFixBootScannerTest : public testing::Test {
@@ -98,10 +128,12 @@ BmsBundleQuickFixBootScannerTest::~BmsBundleQuickFixBootScannerTest()
 
 void BmsBundleQuickFixBootScannerTest::SetUpTestCase()
 {
+    SetUpSpmTrustedSignInfoForTest();
     bundleMgrService_->InitBundleInstaller();
     bundleMgrService_->InitBundleDataMgr();
     bundleMgrService_->GetDataMgr()->AddUserId(USERID);
     bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();
+    ClearSpmLeftoverUninstallRecordsForTest();
     bundleMgrService_->ready_ = true;
 }
 
@@ -115,6 +147,9 @@ void BmsBundleQuickFixBootScannerTest::SetUp()
 {
     if (!installdService_->IsServiceReady()) {
         installdService_->Start();
+    }
+    if (installdService_->hostImpl_ != nullptr) {
+        installdService_->hostImpl_->ClearSessionProvisionCache(TEST_SPM_SESSION_ID);
     }
 }
 

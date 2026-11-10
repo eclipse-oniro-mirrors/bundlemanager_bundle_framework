@@ -18,16 +18,15 @@ export interface SkillInfo {
     readonly moduleName: string;
     readonly skillName: string;
     readonly skillType: SkillType;
-    readonly hapPath: string;
     readonly skillPath: string;
-    readonly versionCode: long;
-    readonly version: string;
-    readonly visibility: string;
     readonly abilityName: string;
-    readonly description: string;
-    readonly srcEntries: Array<string>;
-    readonly permissions: Array<string>;
-    readonly requestPermissions: Array<string>;
+    readonly versionCode: long;
+    readonly version?: string;
+    readonly visibility?: string;
+    readonly description?: string;
+    readonly srcEntries?: Array<string>;
+    readonly permissions?: Array<string>;
+    readonly requestPermissions?: Array<string>;
 }
 
 export enum SkillType {

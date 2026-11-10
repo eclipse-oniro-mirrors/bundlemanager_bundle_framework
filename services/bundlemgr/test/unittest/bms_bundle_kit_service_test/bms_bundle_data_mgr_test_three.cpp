@@ -344,6 +344,56 @@ const std::string ENTRY = "entry";
 const std::string FEATURE = "feature";
 constexpr const char* OVERLAY_STATE = "overlayState";
 const std::string CALLER_NAME_UT = "ut";
+
+class ServiceParamGuard {
+public:
+    ServiceParamGuard()
+    {
+        savedHmos_ = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, false);
+        savedFusion_ = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_FUSION, false);
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "false");
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "false");
+    }
+    ~ServiceParamGuard()
+    {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, savedHmos_ ? "true" : "false");
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, savedFusion_ ? "true" : "false");
+    }
+    ServiceParamGuard(const ServiceParamGuard &) = delete;
+    ServiceParamGuard &operator=(const ServiceParamGuard &) = delete;
+private:
+    bool savedHmos_ = false;
+    bool savedFusion_ = false;
+};
+
+// SPM ON: the uid reverse lookup (BundleDataMgr::GetBundleNameAndIndex)
+// cross-checks a bundleIdMap_ hit against the persisted user info before
+// trusting it; a miss degrades to the access-token fallback which the empty
+// default mock does not answer, so the lookup would return INVALID_UID.
+// Register a bundle info whose user info owns the uid (appIndex 0: the main
+// uid; otherwise the clone/sandbox identity of that index — GetUid resolves
+// either through cloneInfos first), mirroring what the ON install flow
+// persists. The OFF path trusts the map alone and is unaffected.
+void RegisterUidOwningBundleInfo(
+    BundleDataMgr& bundleDataMgr, const std::string& bundleName, int32_t uid, int32_t appIndex)
+{
+    InnerBundleInfo info;
+    ApplicationInfo appInfo;
+    appInfo.bundleName = bundleName;
+    info.SetBaseApplicationInfo(appInfo);
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = bundleName;
+    userInfo.bundleUserInfo.userId = USERID;
+    userInfo.uid = uid;
+    if (appIndex != 0) {
+        InnerBundleCloneInfo cloneInfo;
+        cloneInfo.appIndex = appIndex;
+        cloneInfo.uid = uid;
+        userInfo.cloneInfos.emplace(std::to_string(appIndex), cloneInfo);
+    }
+    info.AddInnerBundleUserInfo(userInfo);
+    bundleDataMgr.bundleInfos_.emplace(bundleName, info);
+}
 }  // namespace
 
 struct Param {
@@ -1611,6 +1661,7 @@ HWTEST_F(BmsBundleDataMgrTest3, CheckIsModuleNeedUpdate_0100, Function | MediumT
  */
 HWTEST_F(BmsBundleDataMgrTest3, BundleMgrHostImplAddDesktopShortcutInfo_0001, Function | SmallTest | Level1)
 {
+    ServiceParamGuard paramGuard;
     std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
     ASSERT_NE(localBundleMgrHostImpl, nullptr);
     ShortcutInfo shortcutInfo = BmsBundleDataMgrTest3::InitShortcutInfo();
@@ -1691,6 +1742,7 @@ HWTEST_F(BmsBundleDataMgrTest3, BundleMgrHostImplDeleteDesktopShortcutInfo_0002,
  */
 HWTEST_F(BmsBundleDataMgrTest3, BundleMgrHostImplGetAllDesktopShortcutInfo_0001, Function | SmallTest | Level1)
 {
+    ServiceParamGuard paramGuard;
     std::shared_ptr<BundleMgrHostImpl> lcalBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
     ASSERT_NE(lcalBundleMgrHostImpl, nullptr);
     ShortcutInfo shortcutInfo = BmsBundleDataMgrTest3::InitShortcutInfo();
@@ -1713,6 +1765,7 @@ HWTEST_F(BmsBundleDataMgrTest3, BundleMgrHostImplGetAllDesktopShortcutInfo_0001,
  */
 HWTEST_F(BmsBundleDataMgrTest3, BundleMgrHostImplGetAllDesktopShortcutInfo_0002, Function | MediumTest | Level1)
 {
+    ServiceParamGuard paramGuard;
     std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
     ASSERT_NE(localBundleMgrHostImpl, nullptr);
     ShortcutInfo shortcutInfo = BmsBundleDataMgrTest3::InitShortcutInfo();
@@ -4680,6 +4733,13 @@ HWTEST_F(BmsBundleDataMgrTest3, GenerateUidAndGid_0200, Function | MediumTest | 
     innerBundleUserInfo.bundleUserInfo.userId = USERID;
 
     auto ret = bundleDataMgr->GenerateUidAndGid(innerBundleUserInfo);
+    if (BundleSpmManager::IsEnabled()) {
+        // SPM ON: GenerateUidAndGid no longer allocates locally — an
+        // identity without an AT-allocated uid fails fast instead (the
+        // allocation authority moved to the access token service).
+        EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED);
+        return;
+    }
     EXPECT_EQ(ret, ERR_OK);
 
     int32_t expectedUid = USERID * Constants::BASE_USER_RANGE + bundleDataMgr->baseAppUid_;
@@ -4711,6 +4771,13 @@ HWTEST_F(BmsBundleDataMgrTest3, GenerateUidAndGid_0300, Function | MediumTest | 
     innerBundleUserInfo.bundleUserInfo.userId = USERID;
 
     auto ret = bundleDataMgr->GenerateUidAndGid(innerBundleUserInfo);
+    if (BundleSpmManager::IsEnabled()) {
+        // SPM ON: the bundleId counter is not consulted — the map-full
+        // branch is unreachable; an identity without an AT-allocated uid
+        // fails fast.
+        EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED);
+        return;
+    }
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_BUNDLEID_EXCEED_MAX_NUMBER);
 }
 
@@ -4979,6 +5046,11 @@ HWTEST_F(BmsBundleDataMgrTest3, GetBundleNameAndIndex_0300, Function | MediumTes
     int32_t bundleId = TEST_UID - USERID * Constants::BASE_USER_RANGE;
     // Populate with a plain bundleName (no sandbox/clone prefix)
     bundleDataMgr->bundleIdMap_.emplace(bundleId, BUNDLE_TEST1);
+    // SPM ON: a bundleIdMap_ hit is cross-checked against the persisted user
+    // info before it is trusted — register the uid-owning bundle info so the
+    // cross-check passes (the OFF path trusts the map alone).
+    RegisterUidOwningBundleInfo(*bundleDataMgr, BUNDLE_TEST1, TEST_UID, 0);
+    ScopeGuard bundleInfoGuard([&] { bundleDataMgr->bundleInfos_.erase(BUNDLE_TEST1); });
 
     std::string bundleName;
     int32_t appIndex = -1;
@@ -5134,6 +5206,13 @@ HWTEST_F(BmsBundleDataMgrTest3, GenerateUidAndGid_0400, Function | MediumTest | 
     userInfo1.bundleName = BUNDLE_TEST1;
     userInfo1.bundleUserInfo.userId = USERID;
     auto ret = bundleDataMgr->GenerateUidAndGid(userInfo1);
+    if (BundleSpmManager::IsEnabled()) {
+        // SPM ON: GenerateUidAndGid no longer allocates locally — without an
+        // AT-allocated uid both calls fail fast (the reuse contract moved
+        // to the access token service).
+        EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED);
+        return;
+    }
     EXPECT_EQ(ret, ERR_OK);
     int32_t firstUid = userInfo1.uid;
 
@@ -5163,6 +5242,12 @@ HWTEST_F(BmsBundleDataMgrTest3, GetBundleNameAndIndex_0400, Function | MediumTes
     // Sandbox key format: "123_sandboxBundleName"
     std::string sandboxKey = "123_sandboxBundle";
     bundleDataMgr->bundleIdMap_.emplace(bundleId, sandboxKey);
+    // SPM ON: a bundleIdMap_ hit is cross-checked against the persisted user
+    // info before it is trusted — register the uid-owning bundle info (the
+    // appIndex-123 identity) so the cross-check passes (the OFF path trusts
+    // the map alone).
+    RegisterUidOwningBundleInfo(*bundleDataMgr, "sandboxBundle", sandboxUid, 123);
+    ScopeGuard bundleInfoGuard([&] { bundleDataMgr->bundleInfos_.erase("sandboxBundle"); });
 
     std::string bundleName;
     int32_t appIndex = -1;
@@ -5189,6 +5274,12 @@ HWTEST_F(BmsBundleDataMgrTest3, GetBundleNameAndIndex_0500, Function | MediumTes
     // Clone key format: "\d+clone_\w+" (CLONE_BUNDLE_PREFIX = "clone_")
     std::string cloneKey = "99clone_cloneBundle";
     bundleDataMgr->bundleIdMap_.emplace(bundleId, cloneKey);
+    // SPM ON: a bundleIdMap_ hit is cross-checked against the persisted user
+    // info before it is trusted — register the uid-owning bundle info (the
+    // appIndex-99 clone identity) so the cross-check passes (the OFF path
+    // trusts the map alone).
+    RegisterUidOwningBundleInfo(*bundleDataMgr, "cloneBundle", cloneUid, 99);
+    ScopeGuard bundleInfoGuard([&] { bundleDataMgr->bundleInfos_.erase("cloneBundle"); });
 
     std::string bundleName;
     int32_t appIndex = -1;
@@ -5395,5 +5486,299 @@ HWTEST_F(BmsBundleDataMgrTest3, BmsExtensionClient_GetShortcutInfos_0003, Functi
     std::vector<ShortcutInfo> shortcutInfos;
     ErrCode ret = bmsExtensionClient->GetShortcutInfos(bundleName, userId, shortcutInfos);
     EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsExtensionClient_AddDesktopShortcutInfo_0001
+ * @tc.name: BmsExtensionClient_AddDesktopShortcutInfo
+ * @tc.desc: test BmsExtensionClient::AddDesktopShortcutInfo,
+ *           broker not available in UT environment so should return error
+ */
+HWTEST_F(BmsBundleDataMgrTest3, BmsExtensionClient_AddDesktopShortcutInfo_0001, Function | SmallTest | Level1)
+{
+    int16_t handleTest = 1;
+    BmsExtensionDataMgr::handler_ = &handleTest;
+    BmsExtensionDataMgr::bmsExtension_.bmsExtensionBundleMgr.extensionName = "nonexistent";
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    ASSERT_NE(bmsExtensionClient, nullptr);
+    ShortcutInfo shortcutInfo;
+    shortcutInfo.bundleName = "com.test.bundle";
+    int32_t userId = USERID;
+    ErrCode ret = bmsExtensionClient->AddDesktopShortcutInfo(shortcutInfo, userId);
+    EXPECT_NE(ret, ERR_OK);
+    BmsExtensionDataMgr::handler_ = nullptr;
+    BmsExtensionDataMgr::bmsExtension_.bmsExtensionBundleMgr.extensionName = "";
+}
+
+/**
+ * @tc.number: BmsExtensionClient_DeleteDesktopShortcutInfo_0001
+ * @tc.name: BmsExtensionClient_DeleteDesktopShortcutInfo
+ * @tc.desc: test BmsExtensionClient::DeleteDesktopShortcutInfo,
+ *           broker not available in UT environment so should return error
+ */
+HWTEST_F(BmsBundleDataMgrTest3, BmsExtensionClient_DeleteDesktopShortcutInfo_0001, Function | SmallTest | Level1)
+{
+    int16_t handleTest = 1;
+    BmsExtensionDataMgr::handler_ = &handleTest;
+    BmsExtensionDataMgr::bmsExtension_.bmsExtensionBundleMgr.extensionName = "nonexistent";
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    ASSERT_NE(bmsExtensionClient, nullptr);
+    ShortcutInfo shortcutInfo;
+    shortcutInfo.bundleName = "com.test.bundle";
+    int32_t userId = USERID;
+    ErrCode ret = bmsExtensionClient->DeleteDesktopShortcutInfo(shortcutInfo, userId);
+    EXPECT_NE(ret, ERR_OK);
+    BmsExtensionDataMgr::handler_ = nullptr;
+    BmsExtensionDataMgr::bmsExtension_.bmsExtensionBundleMgr.extensionName = "";
+}
+
+/**
+ * @tc.number: BmsExtensionClient_AddDesktopShortcutInfo_0002
+ * @tc.name: BmsExtensionClient_AddDesktopShortcutInfo with null impl
+ * @tc.desc: test BmsExtensionClient::AddDesktopShortcutInfo when bmsExtensionImpl_ is null,
+ *           should return ERR_BUNDLE_MANAGER_INTERNAL_ERROR
+ */
+HWTEST_F(BmsBundleDataMgrTest3, BmsExtensionClient_AddDesktopShortcutInfo_0002, Function | SmallTest | Level1)
+{
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    ASSERT_NE(bmsExtensionClient, nullptr);
+    bmsExtensionClient->bmsExtensionImpl_ = nullptr;
+    ShortcutInfo shortcutInfo;
+    shortcutInfo.bundleName = "com.test.bundle";
+    int32_t userId = USERID;
+    ErrCode ret = bmsExtensionClient->AddDesktopShortcutInfo(shortcutInfo, userId);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: BmsExtensionClient_DeleteDesktopShortcutInfo_0002
+ * @tc.name: BmsExtensionClient_DeleteDesktopShortcutInfo with null impl
+ * @tc.desc: test BmsExtensionClient::DeleteDesktopShortcutInfo when bmsExtensionImpl_ is null,
+ *           should return ERR_BUNDLE_MANAGER_INTERNAL_ERROR
+ */
+HWTEST_F(BmsBundleDataMgrTest3, BmsExtensionClient_DeleteDesktopShortcutInfo_0002, Function | SmallTest | Level1)
+{
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    ASSERT_NE(bmsExtensionClient, nullptr);
+    bmsExtensionClient->bmsExtensionImpl_ = nullptr;
+    ShortcutInfo shortcutInfo;
+    shortcutInfo.bundleName = "com.test.bundle";
+    int32_t userId = USERID;
+    ErrCode ret = bmsExtensionClient->DeleteDesktopShortcutInfo(shortcutInfo, userId);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: BmsExtensionClient_GetAllDesktopShortcutInfos_0001
+ * @tc.name: BmsExtensionClient_GetAllDesktopShortcutInfos
+ * @tc.desc: test BmsExtensionClient::GetAllDesktopShortcutInfos,
+ *           broker not available in UT environment so should return error
+ */
+HWTEST_F(BmsBundleDataMgrTest3, BmsExtensionClient_GetAllDesktopShortcutInfos_0001, Function | SmallTest | Level1)
+{
+    int16_t handleTest = 1;
+    BmsExtensionDataMgr::handler_ = &handleTest;
+    BmsExtensionDataMgr::bmsExtension_.bmsExtensionBundleMgr.extensionName = "nonexistent";
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    ASSERT_NE(bmsExtensionClient, nullptr);
+    int32_t userId = USERID;
+    std::vector<ShortcutInfo> shortcutInfos;
+    ErrCode ret = bmsExtensionClient->GetAllDesktopShortcutInfos(userId, shortcutInfos);
+    EXPECT_NE(ret, ERR_OK);
+    BmsExtensionDataMgr::handler_ = nullptr;
+    BmsExtensionDataMgr::bmsExtension_.bmsExtensionBundleMgr.extensionName = "";
+}
+
+/**
+ * @tc.number: AddDesktopShortcutInfo_VM_0001
+ * @tc.name: AddDesktopShortcutInfo with VM enabled
+ * @tc.desc: test BundleMgrHostImpl::AddDesktopShortcutInfo when VM mode is enabled
+ *           and dataMgr returns BUNDLE_NOT_EXIST, should trigger extension fallback
+ */
+HWTEST_F(BmsBundleDataMgrTest3, AddDesktopShortcutInfo_VM_0001, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+
+    ServiceParamGuard paramGuard;
+    int16_t handleTest = 1;
+    BmsExtensionDataMgr::handler_ = &handleTest;
+    BmsExtensionDataMgr::bmsExtension_.bmsExtensionBundleMgr.extensionName = "nonexistent";
+    OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "true");
+
+    ShortcutInfo shortcutInfo;
+    shortcutInfo.bundleName = "com.test.vm.bundle";
+    ErrCode ret = hostImpl->AddDesktopShortcutInfo(shortcutInfo, USERID);
+    EXPECT_NE(ret, ERR_OK);
+
+    BmsExtensionDataMgr::handler_ = nullptr;
+    BmsExtensionDataMgr::bmsExtension_.bmsExtensionBundleMgr.extensionName = "";
+}
+
+/**
+ * @tc.number: AddDesktopShortcutInfo_VM_0002
+ * @tc.name: AddDesktopShortcutInfo with VM disabled
+ * @tc.desc: test BundleMgrHostImpl::AddDesktopShortcutInfo when VM mode is disabled,
+ *           should skip extension fallback and return dataMgr result directly
+ */
+HWTEST_F(BmsBundleDataMgrTest3, AddDesktopShortcutInfo_VM_0002, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+
+    ServiceParamGuard paramGuard;
+
+    ShortcutInfo shortcutInfo;
+    shortcutInfo.bundleName = "com.test.bundle";
+    ErrCode ret = hostImpl->AddDesktopShortcutInfo(shortcutInfo, USERID);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: DeleteDesktopShortcutInfo_VM_0001
+ * @tc.name: DeleteDesktopShortcutInfo with VM enabled
+ * @tc.desc: test BundleMgrHostImpl::DeleteDesktopShortcutInfo when VM mode is enabled,
+ *           verifies the delete operation behavior in VM mode environment
+ */
+HWTEST_F(BmsBundleDataMgrTest3, DeleteDesktopShortcutInfo_VM_0001, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+
+    ServiceParamGuard paramGuard;
+    int16_t handleTest = 1;
+    BmsExtensionDataMgr::handler_ = &handleTest;
+    BmsExtensionDataMgr::bmsExtension_.bmsExtensionBundleMgr.extensionName = "nonexistent";
+    OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "true");
+
+    ShortcutInfo shortcutInfo;
+    shortcutInfo.bundleName = "com.test.vm.bundle";
+    ErrCode ret = hostImpl->DeleteDesktopShortcutInfo(shortcutInfo, USERID);
+    EXPECT_NE(ret, ERR_OK);
+
+    BmsExtensionDataMgr::handler_ = nullptr;
+    BmsExtensionDataMgr::bmsExtension_.bmsExtensionBundleMgr.extensionName = "";
+}
+
+/**
+ * @tc.number: DeleteDesktopShortcutInfo_VM_0002
+ * @tc.name: DeleteDesktopShortcutInfo with VM disabled
+ * @tc.desc: test BundleMgrHostImpl::DeleteDesktopShortcutInfo when VM mode is disabled,
+ *           should skip inner layer compensation and return dataMgr result directly
+ */
+HWTEST_F(BmsBundleDataMgrTest3, DeleteDesktopShortcutInfo_VM_0002, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+
+    ServiceParamGuard paramGuard;
+
+    ShortcutInfo shortcutInfo;
+    shortcutInfo.bundleName = "com.test.bundle";
+    ErrCode ret = hostImpl->DeleteDesktopShortcutInfo(shortcutInfo, USERID);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetAllDesktopShortcutInfo_VM_0003
+ * @tc.name: GetAllDesktopShortcutInfo with VM enabled and inner layer failed
+ * @tc.desc: test BundleMgrHostImpl::GetAllDesktopShortcutInfo when VM mode is enabled
+ *           and inner layer query failed (existent not found), should return outer layer result
+ */
+HWTEST_F(BmsBundleDataMgrTest3, GetAllDesktopShortcutInfo_VM_0003, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+
+    ServiceParamGuard paramGuard;
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr != nullptr) {
+        dataMgr->AddUserId(USERID);
+    }
+
+    int16_t handleTest = 1;
+    BmsExtensionDataMgr::handler_ = &handleTest;
+    BmsExtensionDataMgr::bmsExtension_.bmsExtensionBundleMgr.extensionName = "nonexistent";
+    OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "true");
+
+    std::vector<ShortcutInfo> shortcutInfos;
+    ErrCode ret = hostImpl->GetAllDesktopShortcutInfo(USERID, shortcutInfos);
+    EXPECT_EQ(ret, ERR_OK);
+
+    BmsExtensionDataMgr::handler_ = nullptr;
+    BmsExtensionDataMgr::bmsExtension_.bmsExtensionBundleMgr.extensionName = "";
+}
+
+/**
+ * @tc.number: GetAllDesktopShortcutInfo_VM_0004
+ * @tc.name: GetAllDesktopShortcutInfo with VM disabled
+ * @tc.desc: test BundleMgrHostImpl::GetAllDesktopShortcutInfo when VM mode is disabled,
+ *           should skip inner layer query and return outer layer result directly
+ */
+HWTEST_F(BmsBundleDataMgrTest3, GetAllDesktopShortcutInfo_VM_0004, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+
+    ServiceParamGuard paramGuard;
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr != nullptr) {
+        dataMgr->AddUserId(USERID);
+    }
+
+    std::vector<ShortcutInfo> shortcutInfos;
+    ErrCode ret = hostImpl->GetAllDesktopShortcutInfo(USERID, shortcutInfos);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetAllDesktopShortcutInfo_VM_0005
+ * @tc.name: GetAllDesktopShortcutInfo with VM enabled and both layers succeed
+ * @tc.desc: test BundleMgrHostImpl::GetAllDesktopShortcutInfo when VM mode is enabled
+ *           and both outer and inner layer queries succeed, should merge results
+ */
+HWTEST_F(BmsBundleDataMgrTest3, GetAllDesktopShortcutInfo_VM_0005, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+
+    ServiceParamGuard paramGuard;
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr != nullptr) {
+        dataMgr->AddUserId(USERID);
+    }
+
+    int16_t handleTest = 1;
+    BmsExtensionDataMgr::handler_ = &handleTest;
+    BmsExtensionDataMgr::bmsExtension_.bmsExtensionBundleMgr.extensionName = "TestExtension";
+    OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "true");
+
+    class TestBundleMgrExt : public BundleMgrExt {
+    public:
+        bool CheckApiInfo(const BundleInfo& bundleInfo) override
+        {
+            return true;
+        }
+
+        ErrCode GetAllDesktopShortcutInfos(int32_t userId, std::vector<ShortcutInfo> &shortcutInfos) override
+        {
+            ShortcutInfo info;
+            info.bundleName = "test.inner.bundle";
+            shortcutInfos.emplace_back(info);
+            return ERR_OK;
+        }
+    };
+
+    BundleMgrExtRegister::GetInstance().RegisterBundleMgrExt("TestExtension",
+        []() -> std::shared_ptr<BundleMgrExt> {
+            return std::make_shared<TestBundleMgrExt>();
+        });
+
+    std::vector<ShortcutInfo> shortcutInfos;
+    ErrCode ret = hostImpl->GetAllDesktopShortcutInfo(USERID, shortcutInfos);
+    EXPECT_EQ(ret, ERR_OK);
+
+    BmsExtensionDataMgr::handler_ = nullptr;
+    BmsExtensionDataMgr::bmsExtension_.bmsExtensionBundleMgr.extensionName = "";
 }
 } // OHOS

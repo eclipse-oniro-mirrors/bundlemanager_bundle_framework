@@ -905,8 +905,8 @@ ErrCode BmsExtensionDataMgr::ConvertShortcutInfosErrCode(ErrCode ret)
         case ERR_BUNDLE_MANAGER_EXTENSION_INVALID_USER_ID:
             return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
         default:
-            LOG_E(BMS_TAG_EXT, "Unknown extension error code: %{public}d, return extension internal error", ret);
-            return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
+            LOG_E(BMS_TAG_EXT, "Unknown extension error code: %{public}d, return bundle not exist", ret);
+            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
 }
 
@@ -937,6 +937,96 @@ ErrCode BmsExtensionDataMgr::GetShortcutInfos(const std::string &bundleName, int
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_EXT, "GetShortcutInfos from ext failed, bundleName:%{public}s, ret:%{public}d",
             bundleName.c_str(), ret);
+        ret = ConvertShortcutInfosErrCode(ret);
+    }
+    return ret;
+}
+
+ErrCode BmsExtensionDataMgr::GetAllDesktopShortcutInfos(int32_t userId, std::vector<ShortcutInfo> &shortcutInfos)
+{
+    ErrCode initRet = Init();
+    if (initRet != ERR_OK) {
+        LOG_E(BMS_TAG_EXT, "GetAllDesktopShortcutInfos Init failed, initRet:%{public}d", initRet);
+        return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
+    }
+    if (handler_ == nullptr) {
+        LOG_E(BMS_TAG_EXT, "GetAllDesktopShortcutInfos handler_ is null");
+        return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
+    }
+    auto bundleMgrExtPtr =
+        BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
+    if (bundleMgrExtPtr == nullptr) {
+        LOG_E(BMS_TAG_EXT, "GetBundleMgrExt failed");
+        return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
+    }
+    LOG_I(BMS_TAG_EXT, "EXT GetAllDesktopShortcutInfos -u %{public}d", userId);
+    ErrCode ret = bundleMgrExtPtr->GetAllDesktopShortcutInfos(userId, shortcutInfos);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_EXT, "GetAllDesktopShortcutInfos from ext failed, ret:%{public}d", ret);
+        ret = ConvertShortcutInfosErrCode(ret);
+    }
+    return ret;
+}
+
+ErrCode BmsExtensionDataMgr::AddDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId)
+{
+    if (shortcutInfo.bundleName.empty()) {
+        LOG_E(BMS_TAG_EXT, "bundleName is empty");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    ErrCode initRet = Init();
+    if (initRet != ERR_OK) {
+        LOG_E(BMS_TAG_EXT, "AddDesktopShortcutInfo Init failed, initRet:%{public}d", initRet);
+        return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
+    }
+    if (handler_ == nullptr) {
+        LOG_E(BMS_TAG_EXT, "AddDesktopShortcutInfo handler_ is null");
+        return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
+    }
+    auto bundleMgrExtPtr =
+        BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
+    if (bundleMgrExtPtr == nullptr) {
+        LOG_E(BMS_TAG_EXT, "GetBundleMgrExt failed");
+        return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
+    }
+    LOG_I(BMS_TAG_EXT, "EXT AddDesktopShortcutInfo -n %{public}s -u %{public}d",
+        shortcutInfo.bundleName.c_str(), userId);
+    ErrCode ret = bundleMgrExtPtr->AddDesktopShortcutInfo(shortcutInfo, userId);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_EXT, "AddDesktopShortcutInfo from ext failed, bundleName:%{public}s, ret:%{public}d",
+            shortcutInfo.bundleName.c_str(), ret);
+        ret = ConvertShortcutInfosErrCode(ret);
+    }
+    return ret;
+}
+
+ErrCode BmsExtensionDataMgr::DeleteDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId)
+{
+    if (shortcutInfo.bundleName.empty()) {
+        LOG_E(BMS_TAG_EXT, "bundleName is empty");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    ErrCode initRet = Init();
+    if (initRet != ERR_OK) {
+        LOG_E(BMS_TAG_EXT, "DeleteDesktopShortcutInfo Init failed, initRet:%{public}d", initRet);
+        return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
+    }
+    if (handler_ == nullptr) {
+        LOG_E(BMS_TAG_EXT, "DeleteDesktopShortcutInfo handler_ is null");
+        return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
+    }
+    auto bundleMgrExtPtr =
+        BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
+    if (bundleMgrExtPtr == nullptr) {
+        LOG_E(BMS_TAG_EXT, "GetBundleMgrExt failed");
+        return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
+    }
+    LOG_I(BMS_TAG_EXT, "EXT DeleteDesktopShortcutInfo -n %{public}s -u %{public}d",
+        shortcutInfo.bundleName.c_str(), userId);
+    ErrCode ret = bundleMgrExtPtr->DeleteDesktopShortcutInfo(shortcutInfo, userId);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_EXT, "DeleteDesktopShortcutInfo from ext failed, bundleName:%{public}s, ret:%{public}d",
+            shortcutInfo.bundleName.c_str(), ret);
         ret = ConvertShortcutInfosErrCode(ret);
     }
     return ret;

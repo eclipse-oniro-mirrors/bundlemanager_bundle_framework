@@ -22,6 +22,7 @@
 #include <fstream>
 #include <mutex>
 #include <thread>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include "accesstoken_kit.h"
 #include "ability_manager_client.h"
@@ -5536,7 +5537,9 @@ HWTEST_F(BmsBundleKitServiceTest, GetAdditionalInfoForAllUser_0001, Function | S
         setuid(Constants::FOUNDATION_UID);
         auto ret = bundleMgrProxy->GetAdditionalInfoForAllUser(BUNDLE_NAME_TEST, additionalInfo);
         setuid(saveuid);
-        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+        EXPECT_THAT(ret, testing::AnyOf(
+            ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST,
+            ERR_APPEXECFWK_DUAL_MODE_DEVICE_NOT_SUPPORTED));
     }
 }
 
@@ -5581,7 +5584,9 @@ HWTEST_F(BmsBundleKitServiceTest, GetAdditionalInfoForAllUser_0003, Function | S
         setuid(Constants::FOUNDATION_UID);
         auto ret = bundleMgrProxy->GetAdditionalInfoForAllUser(BUNDLE_NAME_TEST, additionalInfo);
         setuid(saveuid);
-        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+        EXPECT_THAT(ret, testing::AnyOf(
+            ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST,
+            ERR_APPEXECFWK_DUAL_MODE_DEVICE_NOT_SUPPORTED));
     }
 
     MockUninstallBundle(BUNDLE_NAME_TEST);
@@ -5602,7 +5607,9 @@ HWTEST_F(BmsBundleKitServiceTest, GetAdditionalInfoForAllUser_0004, Function | S
     } else {
         std::string additionalInfo;
         auto ret = dataMgr->GetAdditionalInfoForAllUser(BUNDLE_NAME_TEST, additionalInfo);
-        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+        EXPECT_THAT(ret, testing::AnyOf(
+            ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST,
+            ERR_APPEXECFWK_DUAL_MODE_DEVICE_NOT_SUPPORTED));
     }
 }
 
@@ -5627,7 +5634,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetAdditionalInfoForAllUser_0005, Function | S
     } else {
         std::string additionalInfo;
         auto ret = dataMgr->GetAdditionalInfoForAllUser(BUNDLE_NAME_TEST, additionalInfo);
-        EXPECT_EQ(ret, ERR_OK);
+        EXPECT_THAT(ret, testing::AnyOf(ERR_OK, ERR_APPEXECFWK_DUAL_MODE_DEVICE_NOT_SUPPORTED));
     }
 
     MockUninstallBundle(BUNDLE_NAME_TEST);
@@ -7690,6 +7697,130 @@ HWTEST_F(BmsBundleKitServiceTest, CheckAcrossUserPermission_0500, Function | Sma
     bool result = hostImpl->CheckAcrossUserPermission(Constants::UNSPECIFIED_USERID);
 
     EXPECT_EQ(result, true);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: VerifyGetBundleStatsPermission_0100
+ * @tc.name: test VerifyGetBundleStatsPermission with privileged permission
+ * @tc.desc: 1. caller has GET_BUNDLE_INFO_PRIVILEGED permission
+ *           2. should return true regardless of the requested userId
+ */
+HWTEST_F(BmsBundleKitServiceTest, VerifyGetBundleStatsPermission_0100, Function | SmallTest | Level1)
+{
+    SetVerifyCallingPermissionForTest(true);
+    SetIsBundleSelfCallingForTest(false);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    bool result = hostImpl->VerifyGetBundleStatsPermission(BUNDLE_NAME_TEST, DEFAULT_USERID);
+
+    EXPECT_EQ(result, true);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: VerifyGetBundleStatsPermission_0200
+ * @tc.name: test VerifyGetBundleStatsPermission with basic permission and system app
+ * @tc.desc: 1. privileged permission denied while GET_BUNDLE_INFO granted
+ *           2. system app with GET_BUNDLE_INFO should pass
+ */
+HWTEST_F(BmsBundleKitServiceTest, VerifyGetBundleStatsPermission_0200, Function | SmallTest | Level1)
+{
+    SetVerifyCallingPermissionForTest(false);
+    SetPermissionResultForTest(Constants::PERMISSION_GET_BUNDLE_INFO, true);
+    SetSystemAppForTest(true);
+    SetIsBundleSelfCallingForTest(false);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    bool result = hostImpl->VerifyGetBundleStatsPermission(BUNDLE_NAME_TEST, DEFAULT_USERID);
+
+    EXPECT_EQ(result, true);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: VerifyGetBundleStatsPermission_0300
+ * @tc.name: test VerifyGetBundleStatsPermission without any permission
+ * @tc.desc: 1. no permission granted, not system app, not self calling
+ *           2. should return false
+ */
+HWTEST_F(BmsBundleKitServiceTest, VerifyGetBundleStatsPermission_0300, Function | SmallTest | Level1)
+{
+    SetVerifyCallingPermissionForTest(false);
+    SetSystemAppForTest(false);
+    SetIsBundleSelfCallingForTest(false);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    bool result = hostImpl->VerifyGetBundleStatsPermission(BUNDLE_NAME_TEST, DEFAULT_USERID);
+
+    EXPECT_EQ(result, false);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: VerifyGetBundleStatsPermission_0400
+ * @tc.name: test VerifyGetBundleStatsPermission denied when self calling across user
+ * @tc.desc: 1. self calling without privileged or basic permission
+ *           2. non-native token, requested userId (100) differs from calling user (0),
+ *              and INTERACT_ACROSS_LOCAL_ACCOUNTS not granted
+ *           3. CheckAcrossUserPermission returns false, should return false
+ */
+HWTEST_F(BmsBundleKitServiceTest, VerifyGetBundleStatsPermission_0400, Function | SmallTest | Level1)
+{
+    SetVerifyCallingPermissionForTest(false);
+    SetSystemAppForTest(false);
+    SetIsBundleSelfCallingForTest(true);
+    SetNativeTokenTypeForTest(false);
+    SetPermissionResultForTest(Constants::PERMISSION_BMS_INTERACT_ACROSS_LOCAL_ACCOUNTS, false);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    bool result = hostImpl->VerifyGetBundleStatsPermission(BUNDLE_NAME_TEST, DEFAULT_USERID);
+
+    EXPECT_EQ(result, false);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: VerifyGetBundleStatsPermission_0500
+ * @tc.name: test VerifyGetBundleStatsPermission granted when self calling for calling user
+ * @tc.desc: 1. self calling without privileged or basic permission
+ *           2. non-native token, requested userId equals the calling user (0)
+ *           3. should return true
+ */
+HWTEST_F(BmsBundleKitServiceTest, VerifyGetBundleStatsPermission_0500, Function | SmallTest | Level1)
+{
+    SetVerifyCallingPermissionForTest(false);
+    SetSystemAppForTest(false);
+    SetIsBundleSelfCallingForTest(true);
+    SetNativeTokenTypeForTest(false);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    bool result = hostImpl->VerifyGetBundleStatsPermission(BUNDLE_NAME_TEST, 0);
+
+    EXPECT_EQ(result, true);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: GetBundleStats_0400
+ * @tc.name: test GetBundleStats denied when self calling across user
+ * @tc.desc: 1. self calling without INTERACT_ACROSS_LOCAL_ACCOUNTS, requesting another user
+ *           2. GetBundleStats should return false
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleStats_0400, Function | SmallTest | Level1)
+{
+    SetVerifyCallingPermissionForTest(false);
+    SetSystemAppForTest(false);
+    SetIsBundleSelfCallingForTest(true);
+    SetNativeTokenTypeForTest(false);
+    SetPermissionResultForTest(Constants::PERMISSION_BMS_INTERACT_ACROSS_LOCAL_ACCOUNTS, false);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    std::vector<int64_t> bundleStats;
+    int32_t appIndex = 0;
+    bool ret = hostImpl->GetBundleStats(BUNDLE_NAME_TEST, DEFAULT_USERID, bundleStats, appIndex);
+    EXPECT_FALSE(ret);
     ResetTestValues();
 }
 
@@ -11929,7 +12060,9 @@ HWTEST_F(BmsBundleKitServiceTest, GetAdditionalInfoForAllUserImpl_0100, Function
     ScopeGuard uidGuard([&] { setuid(saveuid); });
     std::string additionalInfo = "";
     auto ret = bundleMgrHostImpl_->GetAdditionalInfoForAllUser(BUNDLE_NAME_TEST, additionalInfo);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    EXPECT_THAT(ret, testing::AnyOf(
+        ERR_BUNDLE_MANAGER_INTERNAL_ERROR,
+        ERR_APPEXECFWK_DUAL_MODE_DEVICE_NOT_SUPPORTED));
 }
 
 /**

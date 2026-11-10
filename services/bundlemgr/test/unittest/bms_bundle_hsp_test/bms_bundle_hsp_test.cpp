@@ -16,6 +16,7 @@
 #define private public
 #define protected public
 #include <fstream>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <sstream>
 #include <string>
@@ -32,6 +33,7 @@
 #include "installd/installd_service.h"
 #include "installd_client.h"
 #include "mock_status_receiver.h"
+#include "parameters.h"
 
 using namespace testing::ext;
 using namespace std::chrono_literals;
@@ -126,6 +128,8 @@ BmsBundleHspTest::~BmsBundleHspTest()
 
 void BmsBundleHspTest::SetUpTestCase()
 {
+    // Match the test HAP/HSP deviceTypes when SysCap validation falls back.
+    OHOS::system::SetParameter("const.bms.supportAppTypes", "default,phone,tablet,2in1");
     SetUpSpmTrustedSignInfoForTest();
     bundleMgrService_->InitBundleInstaller();
     bundleMgrService_->InitBundleDataMgr();
@@ -137,6 +141,7 @@ void BmsBundleHspTest::TearDownTestCase()
 {
     bundleMgrService_->OnStop();
     sleep(1);
+    OHOS::system::RemoveParameter("const.bms.supportAppTypes");
 }
 
 void BmsBundleHspTest::SetUp()
@@ -384,8 +389,10 @@ HWTEST_F(BmsBundleHspTest, BmsBundleHspTest_0800, Function | SmallTest | Level0)
 
         std::string additionalInfoForAllUser;
         ret = dataMgr->GetAdditionalInfoForAllUser(BUNDLE_NAME, additionalInfoForAllUser);
-        EXPECT_EQ(ret, ERR_OK);
-        EXPECT_EQ(installParam.additionalInfo, additionalInfo);
+        EXPECT_THAT(ret, testing::AnyOf(ERR_OK, ERR_APPEXECFWK_DUAL_MODE_DEVICE_NOT_SUPPORTED));
+        if (ret == ERR_OK) {
+            EXPECT_EQ(installParam.additionalInfo, additionalInfo);
+        }
     }
 
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);

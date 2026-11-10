@@ -95,11 +95,19 @@ int32_t g_spmCheckHapPermissionInfoCallCount = 0;
 // tests pin the dual-mode install contract here — a different-package install
 // verifies its permissions against the SUB-mode identity.
 int32_t g_spmCheckHapPermissionInfoLastMode = -100;
+// Session-policy knob for GetCachePolicyBySessionId (InstallSession::
+// VerifyPermission): the granted-request permission list the session policy
+// serves; default empty = the session grants nothing.
+std::vector<std::string> g_spmCachePolicyReqPermissions;
 int32_t g_spmPrepareHapIdentityRet = 0;
 // Call counter: tests assert the S2 reuse path never reaches PrepareHapIdentity.
 int32_t g_spmPrepareHapIdentityCallCount = 0;
 uint64_t g_spmPrepareIdentityTokenId = 0;
 int32_t g_spmPrepareIdentityUid = 0;
+// Follow-user identity mode (see SetSpmPrepareIdentityUidFollowUserForTest):
+// a fresh uid is allocated inside the requesting user's uid segment instead
+// of the single staged uid.
+bool g_spmPrepareIdentityUidFollowUser = false;
 // Session-id write-back knob for PrepareHapIdentity: mirrors the real AT
 // contract where a deferred caller (session id 0) makes the AT side allocate
 // the session and write the id back. CheckSignAndInitSession rejects an empty
@@ -162,10 +170,12 @@ void ResetSpmKitMockValuesForTest()
     g_spmCheckHapPermissionInfoRet = 0;
     g_spmCheckHapPermissionInfoCallCount = 0;
     g_spmCheckHapPermissionInfoLastMode = -100;
+    g_spmCachePolicyReqPermissions.clear();
     g_spmPrepareHapIdentityRet = 0;
     g_spmPrepareHapIdentityCallCount = 0;
     g_spmPrepareIdentityTokenId = 0;
     g_spmPrepareIdentityUid = 0;
+    g_spmPrepareIdentityUidFollowUser = false;
     g_spmPrepareIdentitySessionId = 0;
     g_spmPrepareIdentityForceReallocate = false;
     g_spmUpdateHapPolicyRet = 0;
@@ -198,6 +208,15 @@ void SetAccessTokenIDForTest(unsigned int value)
 void SetErrCodeForTest(int32_t value)
 {
     g_errCode = value;
+}
+
+void SetPermissionDeniedForTest(const std::string& permissionName, bool denied)
+{
+    if (denied) {
+        g_verifyAccessTokenResults[permissionName] = -1;
+    } else {
+        g_verifyAccessTokenResults.erase(permissionName);
+    }
 }
 
 void PushInitHapTokenResultForTest(int32_t ret)
@@ -271,6 +290,16 @@ void SetSpmPrepareIdentityForTest(uint64_t tokenId, int32_t uid)
 {
     g_spmPrepareIdentityTokenId = tokenId;
     g_spmPrepareIdentityUid = uid;
+}
+
+void SetSpmPrepareIdentityResultForTest(int32_t ret)
+{
+    g_spmPrepareHapIdentityRet = ret;
+}
+
+void SetSpmPrepareIdentityUidFollowUserForTest(bool followUser)
+{
+    g_spmPrepareIdentityUidFollowUser = followUser;
 }
 
 void SetSpmTrustedProvisionForHapFileForTest(const std::string& hapFileName,
@@ -378,6 +407,21 @@ int AccessTokenKit::GetDefPermissions(AccessTokenID tokenID, std::vector<Permiss
 
 
 #ifdef BUNDLE_PERMISSION_DEF_LIST
+int AccessTokenKit::GetReqPermissions(
+    AccessTokenID tokenID, std::vector<PermissionStateFull>& reqPermList, PermissionGrantType filter)
+{
+    #ifdef BUNDLE_PERMISSION_DEF_TRUE
+    PermissionStateFull permissionStateFull;
+    permissionStateFull.permissionName = "testName";
+    permissionStateFull.resDeviceID.push_back("100");
+    permissionStateFull.grantStatus.push_back(GRANT_STATUS);
+    reqPermList.push_back(permissionStateFull);
+    return 0;
+    #else
+    return -1;
+    #endif
+}
+
 int AccessTokenKit::GetReqPermissions(AccessTokenID tokenID, std::vector<PermissionStateFull>& reqPermList,
     bool isSystemGrant)
 {
@@ -425,6 +469,12 @@ ATokenTypeEnum AccessTokenKit::GetTokenTypeFlag(AccessTokenID tokenID)
     return g_tokenTypeFlag;
 }
 #else
+int AccessTokenKit::GetReqPermissions(
+    AccessTokenID tokenID, std::vector<PermissionStateFull>& reqPermList, PermissionGrantType filter)
+{
+    return 0;
+}
+
 int AccessTokenKit::GetReqPermissions(AccessTokenID tokenID, std::vector<PermissionStateFull>& reqPermList,
     bool isSystemGrant)
 {
@@ -635,8 +685,34 @@ int32_t AccessTokenKit::PrepareHapIdentity(int32_t& sessionId, const HapBaseInfo
     if (identity.uid != 0 && !g_spmPrepareIdentityForceReallocate) {
         // Mirrors the AT adopt-or-reallocate contract: a desired uid passed by the
         // caller is adopted and returned unchanged.
+    } else if (g_spmPrepareIdentityUidFollowUser && g_spmPrepareIdentityUid > 0) {
+        // Mirrors the real AT contract: a fresh uid is allocated INSIDE the
+        // uid segment of the user the identity is prepared for (HapBaseInfo.
+        // userID), keeping the bundle-id offset of the staged uid — a single
+        // fixed uid cannot satisfy the per-user uid segment consistency
+        // check when one install fans out to several users. The range value
+        // mirrors Constants::BASE_USER_RANGE (the AT side does not know BMS
+        // constants).
+        constexpr int32_t MOCK_BASE_USER_RANGE = 200000;
+        identity.uid = info.userID * MOCK_BASE_USER_RANGE +
+            g_spmPrepareIdentityUid % MOCK_BASE_USER_RANGE;
     } else {
+        // Mirrors the real AT allocation invariant: the uid always falls
+        // inside the INSTALLING user's uid segment — rebase the configured
+        // mock uid (a single user's segment sample) onto the segment of the
+        // user this call actually runs for (HapBaseInfo.userID; user 0 is a
+        // real installing user, e.g. the OTA all-user loop), so cross-user
+        // installs pass the BMS-side user-segment consistency check like
+        // they do against a real AT side. A non-positive configured uid (the
+        // "AT did not allocate" error injection) is passed through as-is:
+        // rebasing it would fabricate a valid uid and mask the fail-fast
+        // contract the callers test against.
         identity.uid = g_spmPrepareIdentityUid;
+        if (info.userID >= 0 && identity.uid > 0) {
+            constexpr int32_t BASE_USER_RANGE = 200000;
+            identity.uid = info.userID * BASE_USER_RANGE +
+                (identity.uid % BASE_USER_RANGE);
+        }
     }
     identity.tokenId = g_spmPrepareIdentityTokenId;
     return g_spmPrepareHapIdentityRet;
@@ -697,6 +773,10 @@ int32_t AccessTokenKit::GetCacheSignInfoBySessionId(int32_t sessionId, uint32_t 
 int32_t AccessTokenKit::GetCachePolicyBySessionId(int32_t sessionId, const std::string& bundleName,
     BundlePolicyInfo& bundlePolicyInfo)
 {
+    // Serves the mocked session policy: the granted-request permission list
+    // InstallSession::VerifyPermission matches against. Default empty = the
+    // session grants nothing (the deny path), matching the pre-knob stub.
+    bundlePolicyInfo.reqPermissions = g_spmCachePolicyReqPermissions;
     return 0;
 }
 

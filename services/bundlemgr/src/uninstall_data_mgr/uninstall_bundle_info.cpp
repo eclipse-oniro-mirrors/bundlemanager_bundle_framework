@@ -102,8 +102,8 @@ void from_json(const nlohmann::json& jsonObject, UninstallBundleInfo& uninstallB
         uninstallBundleInfo.extensionDirs, JsonType::ARRAY, false, parseResult, ArrayType::STRING);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject, jsonObjectEnd, KEY_MODULE_NAMES,
         uninstallBundleInfo.moduleNames, JsonType::ARRAY, false, parseResult, ArrayType::STRING);
-    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, KEY_CHECK_BY_SPM,
-        uninstallBundleInfo.checkBySpm, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, KEY_CHECK_BY_SPM,
+        uninstallBundleInfo.checkBySpm, false, parseResult);
     if (parseResult != ERR_OK) {
         APP_LOGE("read uninstallBundleInfo from jsonObject error, error code : %{public}d", parseResult);
     }

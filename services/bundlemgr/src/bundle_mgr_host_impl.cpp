@@ -4026,6 +4026,50 @@ ErrCode BundleMgrHostImpl::QueryShortcutInfosFromExtension(const std::string &bu
     return extRet;
 }
 
+ErrCode BundleMgrHostImpl::GetAllDesktopShortcutInfoFromExtension(int32_t userId,
+    std::vector<ShortcutInfo> &shortcutInfos)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    ErrCode extRet = bmsExtensionDataMgr.GetAllDesktopShortcutInfos(userId, shortcutInfos);
+    if (extRet == ERR_OK) {
+        APP_LOGD("GetAllDesktopShortcutInfos from BMSExt success, size:%{public}zu", shortcutInfos.size());
+    } else {
+        APP_LOGE_NOFUNC("GetAllDesktopShortcutInfos from BMSExt failed, extRet:%{public}d", extRet);
+    }
+    return extRet;
+}
+
+ErrCode BundleMgrHostImpl::AddDesktopShortcutInfoFromExtension(const ShortcutInfo &shortcutInfo, int32_t userId)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    ErrCode extRet = bmsExtensionDataMgr.AddDesktopShortcutInfo(shortcutInfo, userId);
+    if (extRet == ERR_OK) {
+        APP_LOGD("AddDesktopShortcutInfo from BMSExt success, bundleName:%{public}s",
+            shortcutInfo.bundleName.c_str());
+    } else {
+        APP_LOGE_NOFUNC("AddDesktopShortcutInfo from BMSExt failed, bundleName:%{public}s, extRet:%{public}d",
+            shortcutInfo.bundleName.c_str(), extRet);
+    }
+    return extRet;
+}
+
+ErrCode BundleMgrHostImpl::DeleteDesktopShortcutInfoFromExtension(const ShortcutInfo &shortcutInfo, int32_t userId)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    ErrCode extRet = bmsExtensionDataMgr.DeleteDesktopShortcutInfo(shortcutInfo, userId);
+    if (extRet == ERR_OK) {
+        APP_LOGD("DeleteDesktopShortcutInfo from BMSExt success, bundleName:%{public}s",
+            shortcutInfo.bundleName.c_str());
+    } else {
+        APP_LOGE_NOFUNC("DeleteDesktopShortcutInfo from BMSExt failed, bundleName:%{public}s, extRet:%{public}d",
+            shortcutInfo.bundleName.c_str(), extRet);
+    }
+    return extRet;
+}
+
 ErrCode BundleMgrHostImpl::GetShortcutInfoByAppIndex(const std::string &bundleName, const int32_t appIndex,
     std::vector<ShortcutInfo> &shortcutInfos)
 {
@@ -4827,25 +4871,32 @@ bool BundleMgrHostImpl::ObtainCallingBundleName(std::string &bundleName)
     return ret;
 }
 
+bool BundleMgrHostImpl::VerifyGetBundleStatsPermission(const std::string &bundleName, int32_t userId)
+{
+    if (BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        return true;
+    }
+    if (BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO) &&
+        BundlePermissionMgr::IsSystemApp()) {
+        return true;
+    }
+    if (BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
+        if (!CheckAcrossUserPermission(userId)) {
+            APP_LOGE_NOFUNC("GetBundleStats across-user denied %{public}d, userId: %{public}d",
+                IPCSkeleton::GetCallingUid(), userId);
+            return false;
+        }
+        return true;
+    }
+    APP_LOGE_NOFUNC("GetBundleStats permission denied %{public}d %{public}d",
+        IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
+    return false;
+}
+
 bool BundleMgrHostImpl::GetBundleStats(const std::string &bundleName, int32_t userId,
     std::vector<int64_t> &bundleStats, int32_t appIndex, uint32_t statFlag)
 {
-    bool permissionVerify = [bundleName]() {
-        if (BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
-            return true;
-        }
-        if (BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO) &&
-            BundlePermissionMgr::IsSystemApp()) {
-            return true;
-        }
-        if (BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
-            return true;
-        }
-        return false;
-    }();
-    if (!permissionVerify) {
-        APP_LOGE_NOFUNC("GetBundleStats permission denied %{public}d %{public}d",
-            IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
+    if (!VerifyGetBundleStatsPermission(bundleName, userId)) {
         return false;
     }
     int32_t activeUserId = AccountHelper::GetUserIdByCallerType();
@@ -6064,6 +6115,30 @@ bool BundleMgrHostImpl::QueryDataGroupInfos(const std::string &bundleName, int32
     return dataMgr->QueryDataGroupInfos(bundleName, userId, infos);
 }
 
+ErrCode BundleMgrHostImpl::QueryIpcGroupInfos(const std::string &bundleName, int32_t userId,
+    std::vector<IpcGroupInfo> &infos)
+{
+    APP_LOGD("QueryIpcGroupInfos bundleName: %{public}s, userId: %{public}d", bundleName.c_str(), userId);
+    // The only consumer runs in the foundation process: verify the caller UID instead of
+    // asking for an extra permission code.
+    int32_t uid = IPCSkeleton::GetCallingUid();
+    if (uid != Constants::FOUNDATION_UID) {
+        APP_LOGE_NOFUNC("QueryIpcGroupInfos caller is not foundation, uid:%{public}d", uid);
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    // Cross-user check: reading another user's group identity requires the across-user permission.
+    if (!BundlePermissionMgr::VerifyAcrossUserPermission(userId)) {
+        APP_LOGE_NOFUNC("QueryIpcGroupInfos cross user denied, userId:%{public}d", userId);
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->QueryIpcGroupInfos(bundleName, userId, infos);
+}
+
 bool BundleMgrHostImpl::GetGroupDir(const std::string &dataGroupId, std::string &dir)
 {
     APP_LOGD("GetGroupDir dataGroupId: %{public}s", dataGroupId.c_str());
@@ -6304,6 +6379,25 @@ ErrCode BundleMgrHostImpl::GetJsonProfile(ProfileType profileType, const std::st
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     return dataMgr->GetJsonProfile(profileType, bundleName, moduleName, profile, userId);
+}
+
+ErrCode BundleMgrHostImpl::GetLaunchServices(const std::string &bundleName, const std::string &moduleName,
+    int32_t userId, LaunchServicesResult &result)
+{
+    APP_LOGD("GetLaunchServices bundleName: %{public}s, moduleName: %{public}s",
+        bundleName.c_str(), moduleName.c_str());
+    // Only allow foundation process to call
+    int32_t uid = IPCSkeleton::GetCallingUid();
+    if (uid != Constants::FOUNDATION_UID) {
+        APP_LOGE("uid: %{public}d not foundation", uid);
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->GetLaunchServices(bundleName, moduleName, userId, result);
 }
 
 ErrCode BundleMgrHostImpl::GetJsonProfileForSelf(ProfileType profileType, const std::string &moduleName,
@@ -7622,6 +7716,7 @@ void BundleMgrHostImpl::SetAtomicServiceRemovable(const ShortcutInfo &shortcutIn
 
 ErrCode BundleMgrHostImpl::AddDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId)
 {
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("Non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
@@ -7637,6 +7732,11 @@ ErrCode BundleMgrHostImpl::AddDesktopShortcutInfo(const ShortcutInfo &shortcutIn
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     ErrCode res = dataMgr->AddDesktopShortcutInfo(shortcutInfo, userId);
+    if (res == ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST && !shortcutInfo.bundleName.empty() &&
+        BundleUtil::IsVmEnabled()) {
+        int32_t resolvedUserId = dataMgr->GetUserId(userId);
+        res = AddDesktopShortcutInfoFromExtension(shortcutInfo, resolvedUserId);
+    }
     EventReport::SendDesktopShortcutEvent(DesktopShortcutOperation::ADD, userId, shortcutInfo.bundleName,
         shortcutInfo.appIndex, shortcutInfo.id, IPCSkeleton::GetCallingUid(), res);
     if (res != ERR_OK) {
@@ -7649,6 +7749,7 @@ ErrCode BundleMgrHostImpl::AddDesktopShortcutInfo(const ShortcutInfo &shortcutIn
 
 ErrCode BundleMgrHostImpl::DeleteDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId)
 {
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("Non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
@@ -7665,6 +7766,15 @@ ErrCode BundleMgrHostImpl::DeleteDesktopShortcutInfo(const ShortcutInfo &shortcu
     }
     SetAtomicServiceRemovable(shortcutInfo, true, userId);
     ErrCode res = dataMgr->DeleteDesktopShortcutInfo(shortcutInfo, userId);
+    if (res == ERR_OK && BundleUtil::IsVmEnabled() && !shortcutInfo.bundleName.empty()) {
+        InnerBundleInfo innerBundleInfo;
+        if (!dataMgr->QueryInnerBundleInfo(shortcutInfo.bundleName, innerBundleInfo)) {
+            APP_LOGD("Bundle not found in outer layer after delete, trying inner layer, bundleName:%{public}s",
+                shortcutInfo.bundleName.c_str());
+            int32_t resolvedUserId = dataMgr->GetUserId(userId);
+            res = DeleteDesktopShortcutInfoFromExtension(shortcutInfo, resolvedUserId);
+        }
+    }
     EventReport::SendDesktopShortcutEvent(DesktopShortcutOperation::DELETE, userId, shortcutInfo.bundleName,
         shortcutInfo.appIndex, shortcutInfo.id, IPCSkeleton::GetCallingUid(), res);
     return res;
@@ -7704,6 +7814,7 @@ ErrCode BundleMgrHostImpl::UpdateDesktopShortcutInfo(const ShortcutInfo &shortcu
 
 ErrCode BundleMgrHostImpl::GetAllDesktopShortcutInfo(int32_t userId, std::vector<ShortcutInfo> &shortcutInfos)
 {
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("Non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
@@ -7718,7 +7829,29 @@ ErrCode BundleMgrHostImpl::GetAllDesktopShortcutInfo(int32_t userId, std::vector
         APP_LOGE("DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    return dataMgr->GetAllDesktopShortcutInfo(userId, shortcutInfos);
+    ErrCode res = dataMgr->GetAllDesktopShortcutInfo(userId, shortcutInfos);
+    if (!BundleUtil::IsVmEnabled()) {
+        return res;
+    }
+    int32_t resolvedUserId = dataMgr->GetUserId(userId);
+    std::vector<ShortcutInfo> extShortcutInfos;
+    ErrCode extRes = GetAllDesktopShortcutInfoFromExtension(resolvedUserId, extShortcutInfos);
+    if (extRes == ERR_OK) {
+        if (res != ERR_OK) {
+            APP_LOGW("Outer layer query failed, returning inner layer results only, res:%{public}d", res);
+            shortcutInfos.clear();
+        }
+        if (!extShortcutInfos.empty()) {
+            shortcutInfos.insert(shortcutInfos.end(), extShortcutInfos.begin(), extShortcutInfos.end());
+        }
+        return ERR_OK;
+    }
+    if (res == ERR_OK) {
+        APP_LOGW("Inner layer query failed, returning outer layer results only, extRes:%{public}d", extRes);
+        return ERR_OK;
+    }
+    APP_LOGE_NOFUNC("Both outer and inner layer queries failed, res:%{public}d, extRes:%{public}d", res, extRes);
+    return res;
 }
 
 bool BundleMgrHostImpl::IsAppLinking(int32_t flags) const

@@ -57,7 +57,6 @@
 #include "mock_clean_cache.h"
 #include "mock_bundle_status.h"
 #include "nlohmann/json.hpp"
-#include "parameters.h"
 #include "perf_profile.h"
 #include "plugin/plugin_bundle_info.h"
 #include "pre_bundle_profile.h"
@@ -488,9 +487,6 @@ void BmsBundleDataMgrTest::TearDownTestCase()
 
 void BmsBundleDataMgrTest::SetUp()
 {
-    OHOS::system::RemoveParameter("persist.bms.test_dual_mode");
-    OHOS::system::RemoveParameter("persist.bms.ispcmode");
-    OHOS::system::RemoveParameter("persist.bms.mainmode");
     installRes_ = {
         .bundleName = HAP_FILE_PATH,
         .modulePackage = HAP_FILE_PATH,
@@ -505,11 +501,7 @@ void BmsBundleDataMgrTest::SetUp()
 }
 
 void BmsBundleDataMgrTest::TearDown()
-{
-    OHOS::system::RemoveParameter("persist.bms.test_dual_mode");
-    OHOS::system::RemoveParameter("persist.bms.ispcmode");
-    OHOS::system::RemoveParameter("persist.bms.mainmode");
-}
+{}
 
 void BmsBundleDataMgrTest::ClearDataMgr()
 {
@@ -520,29 +512,6 @@ void BmsBundleDataMgrTest::ResetDataMgr()
 {
     bundleMgrService_->dataMgr_ = std::make_shared<BundleDataMgr>();
     EXPECT_NE(bundleMgrService_->dataMgr_, nullptr);
-}
-
-void SetDualModeCache(int32_t ispcmode, int32_t mainmode)
-{
-    OHOS::system::SetParameter("persist.bms.test_dual_mode", "true");
-    OHOS::system::SetParameter("persist.bms.ispcmode", std::to_string(ispcmode));
-    OHOS::system::SetParameter("persist.bms.mainmode", std::to_string(mainmode));
-}
-
-InnerBundleInfo CreateTestBundleInfo(const std::string &bundleName,
-    BundleType bundleType, bool isDualModeCloneApp = false, int32_t userId = -1)
-{
-    InnerBundleInfo info;
-    info.baseApplicationInfo_->bundleName = bundleName;
-    info.SetApplicationBundleType(bundleType);
-    info.SetDualModeCloneApp(isDualModeCloneApp);
-    if (userId >= Constants::START_USERID) {
-        InnerBundleUserInfo userInfo;
-        userInfo.bundleName = bundleName;
-        userInfo.bundleUserInfo.userId = userId;
-        info.AddInnerBundleUserInfo(userInfo);
-    }
-    return info;
 }
 
 void BmsBundleDataMgrTest::RemoveBundleinfo(const std::string &bundleName)
@@ -1635,7 +1604,14 @@ HWTEST_F(BmsBundleDataMgrTest, AllowAutoControlIntent_Query, Function | SmallTes
     bundleMgrService_->dataMgr_ = dataMgr;
     dataMgr->AddUserId(USERID);
     const std::string bundleName = "com.example.automation";
-    auto info = CreateTestBundleInfo(bundleName, BundleType::APP, false, USERID);
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = bundleName;
+    info.SetApplicationBundleType(BundleType::APP);
+    info.SetDualModeCloneApp(false);
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = bundleName;
+    userInfo.bundleUserInfo.userId = USERID;
+    info.AddInnerBundleUserInfo(userInfo);
     info.baseBundleInfo_->name = bundleName;
     dataMgr->bundleInfos_.emplace(bundleName, info);
     const int32_t flags = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION);
@@ -1669,7 +1645,14 @@ HWTEST_F(BmsBundleDataMgrTest, AllowAutoControlIntent_QueryErrors, Function | Sm
     dataMgr->AddUserId(USERID);
     dataMgr->AddUserId(USERID + 1);
     const std::string bundleName = "com.example.automation";
-    auto info = CreateTestBundleInfo(bundleName, BundleType::APP, false, USERID);
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = bundleName;
+    info.SetApplicationBundleType(BundleType::APP);
+    info.SetDualModeCloneApp(false);
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = bundleName;
+    userInfo.bundleUserInfo.userId = USERID;
+    info.AddInnerBundleUserInfo(userInfo);
     info.baseBundleInfo_->name = bundleName;
     info.baseApplicationInfo_->allowAutoControlIntent = true;
     dataMgr->bundleInfos_.emplace(bundleName, info);
@@ -3493,87 +3476,6 @@ HWTEST_F(BmsBundleDataMgrTest, GetAppProvisionInfo_0100, Function | SmallTest | 
 }
 
 /**
- * @tc.number: GetAppProvisionInfo_0200
- * @tc.name: test GetAppProvisionInfo
- * @tc.desc: 1.system run normally of dual mode
- */
-HWTEST_F(BmsBundleDataMgrTest, GetAppProvisionInfo_0200, Function | SmallTest | Level1)
-{
-    SetDualModeCache(ServiceConstants::DUAL_MODE_VALUE_2IN1, ServiceConstants::DUAL_MODE_VALUE_TABLET);
-    AppProvisionInfo appProvisionInfo;
-    GetBundleDataMgr()->bundleInfos_["com.test.isshare"] = CreateTestBundleInfo(
-        "com.test.isshare", BundleType::SHARED, false, Constants::START_USERID);
-    GetBundleDataMgr()->multiUserIdsSet_.insert(Constants::START_USERID);
-    ErrCode res = GetBundleDataMgr()->GetAppProvisionInfo(
-        "com.test.isshare", Constants::START_USERID, appProvisionInfo);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
-    GetBundleDataMgr()->multiUserIdsSet_.clear();
-}
-
-/**
- * @tc.number: GetListForBundleInfo_0100
- * @tc.name: Test GetListForBundleInfo
- * @tc.desc: empty bundleInfos_ and tempBundleInfos_ should be return empty list
- */
-HWTEST_F(BmsBundleDataMgrTest, GetListForBundleInfo_0100, Function | SmallTest | Level0)
-{
-    std::vector<std::pair<std::string, bool>> bundleInfoList;
-    GetBundleDataMgr()->GetListForBundleInfo(Constants::START_USERID, true, bundleInfoList);
-    EXPECT_TRUE(bundleInfoList.empty());
-    GetBundleDataMgr()->GetListForBundleInfo(Constants::START_USERID, false, bundleInfoList);
-    EXPECT_TRUE(bundleInfoList.empty());
-}
-
-/**
- * @tc.number: GetListForBundleInfo_0200
- * @tc.name: Test GetListForBundleInfo
- * @tc.desc: BundleType or UserId should be filtered out
- */
-HWTEST_F(BmsBundleDataMgrTest, GetListForBundleInfo_0200, Function | SmallTest | Level1)
-{
-    GetBundleDataMgr()->bundleInfos_["com.test.share"] = CreateTestBundleInfo(
-        "com.test.share", BundleType::SHARED, false, Constants::START_USERID);
-    GetBundleDataMgr()->bundleInfos_["com.test.skill"] = CreateTestBundleInfo(
-        "com.test.skill", BundleType::SKILL, false, Constants::START_USERID);
-    GetBundleDataMgr()->bundleInfos_["com.test.nouser"] = CreateTestBundleInfo(
-        "com.test.nouser", BundleType::APP);
-    std::vector<std::pair<std::string, bool>> bundleInfoList;
-    GetBundleDataMgr()->GetListForBundleInfo(Constants::START_USERID, false, bundleInfoList);
-    EXPECT_TRUE(bundleInfoList.empty());
-}
-
-/**
- * @tc.number: GetListForBundleInfo_0300
- * @tc.name: Test GetListForBundleInfo
- * @tc.desc: BundleType or UserId should be filtered out
- */
-HWTEST_F(BmsBundleDataMgrTest, GetListForBundleInfo_0300, Function | SmallTest | Level1)
-{
-    GetBundleDataMgr()->bundleInfos_["com.test.current"] = CreateTestBundleInfo(
-        "com.test.current", BundleType::APP, false, Constants::START_USERID);
-    GetBundleDataMgr()->bundleInfos_["com.test.temp"] = CreateTestBundleInfo(
-        "com.test.temp", BundleType::APP, true, Constants::START_USERID);
-
-    std::vector<std::pair<std::string, bool>> bundleInfoList;
-    GetBundleDataMgr()->GetListForBundleInfo(Constants::START_USERID, false, bundleInfoList);
-    ASSERT_EQ(bundleInfoList.size(), 2u);
-    bool hasCurrent = false;
-    bool hasTemp = false;
-    for (const auto &[name, isDualModeApp] : bundleInfoList) {
-        if (name == "com.test.current") {
-            hasCurrent = true;
-            EXPECT_FALSE(isDualModeApp);
-        }
-        if (name == "com.test.temp") {
-            hasTemp = true;
-            EXPECT_TRUE(isDualModeApp);
-        }
-    }
-    EXPECT_TRUE(hasCurrent);
-    EXPECT_TRUE(hasTemp);
-}
-
-/**
  * @tc.number: GetSharedBundleInfo_0100
  * @tc.name: Test GetSharedBundleInfo
  * @tc.desc: Test GetSharedBundleInfo with InnerBundleInfo
@@ -3707,124 +3609,6 @@ HWTEST_F(BmsBundleDataMgrTest, GetAdditionalInfo_0100, Function | SmallTest | Le
     ErrCode res = GetBundleDataMgr()->GetAdditionalInfo(
         BUNDLE_TEST1, additionalInfo);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
-}
-
-/**
- * @tc.number: GetAdditionalInfo_0200
- * @tc.name: test GetAdditionalInfo
- * @tc.desc: 1.system run dualmode
- */
-HWTEST_F(BmsBundleDataMgrTest, GetAdditionalInfo_0200, Function | SmallTest | Level1)
-{
-    SetDualModeCache(ServiceConstants::DUAL_MODE_VALUE_2IN1, ServiceConstants::DUAL_MODE_VALUE_TABLET);
-    std::string additionalInfo = "";
-    GetBundleDataMgr()->bundleInfos_["com.addition.isshare"] = CreateTestBundleInfo(
-        "com.addition.isshare", BundleType::SHARED, false, Constants::START_USERID);
-    ErrCode res = GetBundleDataMgr()->GetAdditionalInfo(
-        "com.addition.isshare", additionalInfo);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
-    GetBundleDataMgr()->multiUserIdsSet_.clear();
-    GetBundleDataMgr()->bundleInfos_.erase("com.addition.isshare");
-}
-
-/**
- * @tc.number: GetAdditionalInfoForAllUser_0100
- * @tc.name: test GetAdditionalInfoForAllUser
- * @tc.desc: 1.system run dualmode ERR_BUNDLE_MANAGER_INTERNAL_ERROR
- */
-HWTEST_F(BmsBundleDataMgrTest, GetAdditionalInfoForAllUser_0100, Function | SmallTest | Level1)
-{
-    SetDualModeCache(ServiceConstants::DUAL_MODE_VALUE_2IN1, ServiceConstants::DUAL_MODE_VALUE_TABLET);
-    std::string additionalInfo = "";
-    ErrCode res = GetBundleDataMgr()->GetAdditionalInfoForAllUser(
-        "com.addition.isshare", additionalInfo);
-    EXPECT_EQ(res, ERR_APPEXECFWK_DUAL_MODE_DEVICE_NOT_SUPPORTED);
-}
-
-/**
- * @tc.number: SetAdditionalInfo_0100
- * @tc.name: test SetAdditionalInfoByIndex with bundle not installed
- * @tc.desc: 1.main mode and dual mode clone app are both not installed
- *           2.get ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST
- */
-HWTEST_F(BmsBundleDataMgrTest, SetAdditionalInfo_0100, Function | SmallTest | Level0)
-{
-    SetDualModeCache(ServiceConstants::DUAL_MODE_VALUE_2IN1, ServiceConstants::DUAL_MODE_VALUE_TABLET);
-    GetBundleDataMgr()->bundleInfos_.clear();
-    GetBundleDataMgr()->tempBundleInfos_.clear();
-    std::string bundleName0 = "com.setaddition.current0";
-    std::string bundleName1 = "com.setaddition.current1";
-    std::string additionalInfo = "additionalInfo";
-    ErrCode res = GetBundleDataMgr()->SetAdditionalInfoByIndex(
-        bundleName0, additionalInfo, Constants::DUAL_MODE_CLONE_APP_INDEX);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
-    res = GetBundleDataMgr()->SetAdditionalInfoByIndex(
-        bundleName1, additionalInfo, Constants::DUAL_MODE_CLONE_APP_INDEX);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
-    res = GetBundleDataMgr()->SetAdditionalInfoByIndex(
-        bundleName0, additionalInfo, Constants::DEFAULT_APP_INDEX);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
-}
-
-/**
- * @tc.number: SetAdditionalInfo_0200
- * @tc.name: test SetAdditionalInfoByIndex when the app of appIndex is not installed
- * @tc.desc: 1.only main mode app installed, appIndex is DUAL_MODE_CLONE_APP_INDEX
- *           2.only dual mode clone app installed, appIndex is DEFAULT_APP_INDEX
- *           3.dual mode clone app not installed for any user, appIndex is DUAL_MODE_CLONE_APP_INDEX
- *           4.case 1 and 2 get ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE, case 3 gets
- *             ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST
- */
-HWTEST_F(BmsBundleDataMgrTest, SetAdditionalInfo_0200, Function | SmallTest | Level1)
-{
-    SetDualModeCache(ServiceConstants::DUAL_MODE_VALUE_2IN1, ServiceConstants::DUAL_MODE_VALUE_TABLET);
-    GetBundleDataMgr()->multiUserIdsSet_.insert(Constants::ANY_USERID);
-    std::string bundleName0 = "com.setaddition.current0";
-    GetBundleDataMgr()->bundleInfos_[bundleName0] = CreateTestBundleInfo(
-        bundleName0, BundleType::APP, false, Constants::START_USERID);
-    std::string bundleName1 = "com.setaddition.current1";
-    GetBundleDataMgr()->bundleInfos_[bundleName1] = CreateTestBundleInfo(
-        bundleName1, BundleType::APP, true, Constants::START_USERID);
-    std::string bundleName2 = "com.setaddition.current2";
-    GetBundleDataMgr()->bundleInfos_[bundleName2] = CreateTestBundleInfo(
-        bundleName2, BundleType::APP, true, Constants::INVALID_USERID);
-    std::string additionalInfo = "additionalInfo";
-    ErrCode res = GetBundleDataMgr()->SetAdditionalInfoByIndex(
-        bundleName0, additionalInfo, Constants::DUAL_MODE_CLONE_APP_INDEX);
-    EXPECT_EQ(res, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
-    res = GetBundleDataMgr()->SetAdditionalInfoByIndex(
-        bundleName1, additionalInfo, Constants::DEFAULT_APP_INDEX);
-    EXPECT_EQ(res, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
-    res = GetBundleDataMgr()->SetAdditionalInfoByIndex(
-        bundleName2, additionalInfo, Constants::DUAL_MODE_CLONE_APP_INDEX);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
-    GetBundleDataMgr()->bundleInfos_.clear();
-}
-
-/**
- * @tc.number: SetAdditionalInfo_0300
- * @tc.name: test SetAdditionalInfo
- * @tc.desc: 1.system run dualmode
- */
-HWTEST_F(BmsBundleDataMgrTest, SetAdditionalInfo_0300, Function | SmallTest | Level1)
-{
-    SetDualModeCache(ServiceConstants::DUAL_MODE_VALUE_2IN1, ServiceConstants::DUAL_MODE_VALUE_TABLET);
-    GetBundleDataMgr()->multiUserIdsSet_.insert(Constants::ANY_USERID);
-    GetBundleDataMgr()->bundleInfos_.clear();
-    std::string bundleName0 = "com.setaddition.current0";
-    GetBundleDataMgr()->tempBundleInfos_[bundleName0] = CreateTestBundleInfo(
-        bundleName0, BundleType::SHARED, true, Constants::START_USERID);
-    std::string effectiveBundleName0 = DualModeHelper::GetDualModeBundleName(bundleName0);
-    AppProvisionInfo appProvisionInfo;
-    DelayedSingleton<AppProvisionInfoManager>::GetInstance()->AddAppProvisionInfo(
-        effectiveBundleName0, appProvisionInfo);
-    std::string additionalInfo = "additionalInfo";
-    ErrCode res = GetBundleDataMgr()->SetAdditionalInfoByIndex(
-        bundleName0, additionalInfo, Constants::DUAL_MODE_CLONE_APP_INDEX);
-    EXPECT_EQ(res, ERR_OK);
-    GetBundleDataMgr()->tempBundleInfos_.clear();
-    DelayedSingleton<AppProvisionInfoManager>::GetInstance()->DeleteAppProvisionInfo(
-        effectiveBundleName0);
 }
 
 /**
@@ -6922,34 +6706,6 @@ HWTEST_F(BmsBundleDataMgrTest, GetAllAppProvisionInfo_0600, Function | SmallTest
     std::vector<AppProvisionInfo> appProvisionInfos;
     ErrCode ret = bundleMgrProxy->GetAllAppProvisionInfo(userId, appProvisionInfos);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
-}
-
-/**
- * @tc.number: GetAllAppProvisionInfo_1001
- * @tc.name: test GetAllAppProvisionInfo
- * @tc.desc: 1.Test the GetAllAppProvisionInfo by BundleMgrProxy  failed due to invalid userid
- */
-HWTEST_F(BmsBundleDataMgrTest, GetAllAppProvisionInfo_1001, Function | SmallTest | Level1)
-{
-    SetDualModeCache(ServiceConstants::DUAL_MODE_VALUE_2IN1, ServiceConstants::DUAL_MODE_VALUE_TABLET);
-    GetBundleDataMgr()->multiUserIdsSet_.insert(Constants::ANY_USERID);
-    std::string bundleName0 = "com.test.current0";
-    GetBundleDataMgr()->bundleInfos_[bundleName0] = CreateTestBundleInfo(
-        bundleName0, BundleType::APP, false, Constants::START_USERID);
-    AppProvisionInfo appProvisionInfo;
-    DelayedSingleton<AppProvisionInfoManager>::GetInstance()->AddAppProvisionInfo(bundleName0, appProvisionInfo);
-
-    std::string bundleName1 = "com.test.current1";
-    GetBundleDataMgr()->bundleInfos_[bundleName1] = CreateTestBundleInfo(
-        bundleName1, BundleType::SHARED, false, Constants::START_USERID);
-
-    int32_t userId = Constants::ANY_USERID;
-    std::vector<AppProvisionInfo> appProvisionInfos;
-    ErrCode ret = GetBundleDataMgr()->GetAllAppProvisionInfo(userId, appProvisionInfos);
-    EXPECT_EQ(ret, ERR_OK);
-    EXPECT_EQ(appProvisionInfos.size(), 1u);
-    EXPECT_EQ(appProvisionInfos[0].bundleName, bundleName0);
-    GetBundleDataMgr()->bundleInfos_.clear();
 }
 
 /**

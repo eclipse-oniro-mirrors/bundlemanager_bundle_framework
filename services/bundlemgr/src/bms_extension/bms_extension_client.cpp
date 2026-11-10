@@ -539,6 +539,62 @@ ErrCode BmsExtensionClient::GetShortcutInfos(const std::string &bundleName, int3
     return ret;
 }
 
+ErrCode BmsExtensionClient::GetAllDesktopShortcutInfos(int32_t userId,
+    std::vector<ShortcutInfo> &shortcutInfos) const
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    LOG_D(BMS_TAG_QUERY,
+        "start to get all desktop shortcut infos from bms extension, userId:%{public}d", userId);
+    if (bmsExtensionImpl_ == nullptr) {
+        LOG_E(BMS_TAG_QUERY, "bmsExtensionImpl_ is null");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    ErrCode ret = bmsExtensionImpl_->GetAllDesktopShortcutInfos(userId, shortcutInfos);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_QUERY,
+            "get all desktop shortcut infos from bms extension failed, code:%{public}d", ret);
+    }
+    return ret;
+}
+
+ErrCode BmsExtensionClient::AddDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId) const
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    LOG_D(BMS_TAG_QUERY,
+        "start to add desktop shortcut info from bms extension, bundleName:%{public}s, userId:%{public}d",
+        shortcutInfo.bundleName.c_str(), userId);
+    if (bmsExtensionImpl_ == nullptr) {
+        LOG_E(BMS_TAG_QUERY, "bmsExtensionImpl_ is null");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    ErrCode ret = bmsExtensionImpl_->AddDesktopShortcutInfo(shortcutInfo, userId);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_QUERY,
+            "add desktop shortcut info from bms extension failed, bundleName:%{public}s, code:%{public}d",
+            shortcutInfo.bundleName.c_str(), ret);
+    }
+    return ret;
+}
+
+ErrCode BmsExtensionClient::DeleteDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId) const
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    LOG_D(BMS_TAG_QUERY,
+        "start to delete desktop shortcut info from bms extension, bundleName:%{public}s, userId:%{public}d",
+        shortcutInfo.bundleName.c_str(), userId);
+    if (bmsExtensionImpl_ == nullptr) {
+        LOG_E(BMS_TAG_QUERY, "bmsExtensionImpl_ is null");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    ErrCode ret = bmsExtensionImpl_->DeleteDesktopShortcutInfo(shortcutInfo, userId);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_QUERY,
+            "delete desktop shortcut info from bms extension failed, bundleName:%{public}s, code:%{public}d",
+            shortcutInfo.bundleName.c_str(), ret);
+    }
+    return ret;
+}
+
 const std::shared_ptr<BundleDataMgr> BmsExtensionClient::GetDataMgr() const
 {
     return DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();

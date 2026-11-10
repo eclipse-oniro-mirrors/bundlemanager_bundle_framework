@@ -28,10 +28,13 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "accesstoken_kit.h"
 #include "bundle_info.h"
 #include "bundle_file_util.h"
+#include "bundle_constants.h"
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
+#include "bundle_verify_mgr.h"
 #include "directory_ex.h"
 #include "install_param.h"
 #include "installd/installd_service.h"
@@ -75,6 +78,68 @@ const std::string BUNDLE_BACKUP_NAME = "com.example.backuptest";
 const std::string ABILITY_BACKUP_NAME = "com.example.backuptest.entry.MainAbility";
 const std::string BUNDLE_PREVIEW_NAME = "com.example.previewtest";
 const std::string BUNDLE_THUMBNAIL_NAME = "com.example.thumbnailtest";
+
+// SPM ON prerequisite: the mocked access-token boundary is fed the trusted
+// per-hap sign info for every hap the suite installs. Each provision mirrors
+// the REAL profile the hap is signed with (sceneProject/signature/*.p7b:
+// all are os_integration / system_core / hos_system_app); the appId and
+// appIdentifier are captured from the hap itself (the same local verify the
+// preinstall/keep-data cross-checks use), so the SPM-derived identity matches
+// the locally verified one by construction.
+constexpr int32_t TEST_SPM_SESSION_ID = 4242;
+constexpr uint64_t TEST_SPM_TOKEN_ID = 101;
+// The AT-allocated uid must fall inside USERID's uid segment.
+constexpr int32_t TEST_SPM_UID = USERID * Constants::BASE_USER_RANGE + 102;
+
+void RegisterSpmTrustedProvision(const std::string &hapFileName, const std::string &bundleName)
+{
+    Security::Verify::HapVerifyResult verifyResult;
+    std::string appId;
+    std::string appIdentifier;
+    if (BundleVerifyMgr::HapVerify(RESOURCE_ROOT_PATH + hapFileName, verifyResult, true) == ERR_OK) {
+        appId = verifyResult.GetProvisionInfo().appId;
+        appIdentifier = verifyResult.GetProvisionInfo().bundleInfo.appIdentifier;
+    }
+    const std::string provision = Security::AccessToken::MakeSpmReleaseProvisionRawForTest(
+        bundleName, "os_integration", false, "hos_system_app", "system_core", appIdentifier);
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(hapFileName, provision, appId);
+}
+
+void SetUpSpmTrustedSignInfoForTest()
+{
+    RegisterSpmTrustedProvision(RIGHT_BUNDLE, BUNDLE_NAME);
+    RegisterSpmTrustedProvision(BUNDLE_BACKUP_TEST, BUNDLE_BACKUP_NAME);
+    RegisterSpmTrustedProvision(BUNDLE_PREVIEW_TEST, BUNDLE_PREVIEW_NAME);
+    RegisterSpmTrustedProvision(BUNDLE_THUMBNAIL_TEST, BUNDLE_THUMBNAIL_NAME);
+    RegisterSpmTrustedProvision(SYSTEMFIEID_BUNDLE, SYSTEMFIEID_NAME);
+    Security::AccessToken::SetSpmCheckHapSignInfoSessionIdForTest(TEST_SPM_SESSION_ID);
+    Security::AccessToken::SetSpmPrepareIdentityForTest(TEST_SPM_TOKEN_ID, TEST_SPM_UID);
+}
+
+// Leftover persistent state of this suite's bundles must be wiped before the
+// first install (records persisted by earlier runs store the app id the REAL
+// signature derived — a mocked provision deriving a different one fails the
+// keep-data / app-identifier comparisons with INCONSISTENT_SIGNATURE). The
+// full INSTALL_START -> UNINSTALL_START -> UNINSTALL_SUCCESS chain wipes BOTH
+// the in-memory info and the RDB row; the suite never keeps data, so a clean
+// state is the only behavior it has ever asserted.
+void ClearSpmLeftoverUninstallRecordsForTest()
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        return;
+    }
+    for (const auto &bundleName : std::vector<std::string> {BUNDLE_NAME, BUNDLE_BACKUP_NAME,
+        BUNDLE_PREVIEW_NAME, BUNDLE_THUMBNAIL_NAME, SYSTEMFIEID_NAME}) {
+        InnerBundleInfo leftoverInfo;
+        if (dataMgr->FetchInnerBundleInfo(bundleName, leftoverInfo)) {
+            dataMgr->UpdateBundleInstallState(bundleName, InstallState::INSTALL_START);
+            dataMgr->UpdateBundleInstallState(bundleName, InstallState::UNINSTALL_START);
+            dataMgr->UpdateBundleInstallState(bundleName, InstallState::UNINSTALL_SUCCESS);
+        }
+        dataMgr->DeleteUninstallBundleInfo(bundleName, USERID);
+    }
+}
 const std::string MODULE_NAME = "entry";
 const std::string EXTENSION_ABILITY_NAME = "extensionAbility_A";
 const std::string TYPE_001 = "type001";
@@ -222,11 +287,21 @@ ErrCode BmsBundleManagerTest3::UnInstallBundle(const std::string &bundleName) co
 
 void BmsBundleManagerTest3::SetUpTestCase()
 {
+    // SPM stays ON (its device default): feed the mocked access-token boundary
+    // with the trusted sign answer for every hap the suite installs, so the
+    // installs pass the real SPM verification chain instead of failing closed
+    // on the empty default mock. Nothing in this binary resets the mock
+    // control variables afterwards.
+    SetUpSpmTrustedSignInfoForTest();
     bundleMgrService_->InitBmsParam();
     bundleMgrService_->InitBundleInstaller();
     bundleMgrService_->InitBundleDataMgr();
     bundleMgrService_->GetDataMgr()->AddUserId(USERID);
     bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();
+    // Drop the leftover keep-data uninstall records / stale installed rows of
+    // this suite's bundles before the first install (the persisted data is
+    // loaded above).
+    ClearSpmLeftoverUninstallRecordsForTest();
 }
 
 void BmsBundleManagerTest3::TearDownTestCase()
@@ -239,6 +314,15 @@ void BmsBundleManagerTest3::SetUp()
 {
     if (!installdService_->IsServiceReady()) {
         installdService_->Start();
+    }
+    // The mocked InstalldClient::ClearSessionProvisionCache is a counting
+    // stub, so the real session provision cache inside the process-wide
+    // InstalldHostImpl keeps the entry of the PREVIOUS test case's install
+    // under the same shared session id. The next install of a DIFFERENT
+    // bundle would then hit that stale entry in GetResolvedApl and fail the
+    // apl cross-check — drop the cache entry before every case.
+    if (installdService_->hostImpl_ != nullptr) {
+        installdService_->hostImpl_->ClearSessionProvisionCache(TEST_SPM_SESSION_ID);
     }
 }
 

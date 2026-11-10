@@ -28,6 +28,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "accesstoken_kit.h"
+#include "bundle_constants.h"
 #include "bundle_info.h"
 #include "bundle_file_util.h"
 #include "bundle_installer_host.h"
@@ -92,6 +94,39 @@ const std::string DEVICETYPE = "deviceType";
 const int32_t APPINDEX = 10;
 const std::string OPTIMAL_ACTION = "action.test.optimal";
 const std::string OPTIMAL_ENTITY = "entity.test.optimal";
+
+constexpr int32_t TEST_SPM_SESSION_ID = 4242;
+constexpr uint64_t TEST_SPM_TOKEN_ID = 101;
+constexpr int32_t TEST_SPM_UID = USERID * Constants::BASE_USER_RANGE + 102;
+
+void SetUpSpmTrustedSignInfoForTest()
+{
+    const std::string provisionBackup = Security::AccessToken::MakeSpmReleaseProvisionRawForTest(
+        BUNDLE_BACKUP_NAME, "app_gallery");
+    const std::string provisionPreview = Security::AccessToken::MakeSpmReleaseProvisionRawForTest(
+        BUNDLE_PREVIEW_NAME, "app_gallery");
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(BUNDLE_BACKUP_TEST, provisionBackup);
+    Security::AccessToken::SetSpmTrustedProvisionForHapFileForTest(BUNDLE_PREVIEW_TEST, provisionPreview);
+    Security::AccessToken::SetSpmCheckHapSignInfoSessionIdForTest(TEST_SPM_SESSION_ID);
+    Security::AccessToken::SetSpmPrepareIdentityForTest(TEST_SPM_TOKEN_ID, TEST_SPM_UID);
+}
+
+void ClearSpmLeftoverUninstallRecordsForTest()
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        return;
+    }
+    for (const auto &bundleName : {BUNDLE_BACKUP_NAME, BUNDLE_PREVIEW_NAME}) {
+        InnerBundleInfo leftoverInfo;
+        if (dataMgr->FetchInnerBundleInfo(bundleName, leftoverInfo)) {
+            dataMgr->UpdateBundleInstallState(bundleName, InstallState::INSTALL_START);
+            dataMgr->UpdateBundleInstallState(bundleName, InstallState::UNINSTALL_START);
+            dataMgr->UpdateBundleInstallState(bundleName, InstallState::UNINSTALL_SUCCESS);
+        }
+        dataMgr->DeleteUninstallBundleInfo(bundleName, USERID);
+    }
+}
 
 InnerBundleInfo CreateBundleInfoForOptimalQuery(const std::string &bundleName, bool isSystemApp)
 {
@@ -248,11 +283,13 @@ ErrCode BmsBundleManagerTest2::UnInstallBundle(const std::string &bundleName) co
 
 void BmsBundleManagerTest2::SetUpTestCase()
 {
+    SetUpSpmTrustedSignInfoForTest();
     bundleMgrService_->InitFreeInstall();
     bundleMgrService_->InitBundleInstaller();
     bundleMgrService_->InitBundleDataMgr();
     bundleMgrService_->GetDataMgr()->AddUserId(USERID);
     bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();
+    ClearSpmLeftoverUninstallRecordsForTest();
 }
 
 void BmsBundleManagerTest2::TearDownTestCase()
@@ -406,14 +443,14 @@ HWTEST_F(BmsBundleManagerTest2, BundleMgrHostImpl_GetBundleInfoForException_1100
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
     ErrCode installResult = InstallThirdPartyBundle(bundlePath);
-    EXPECT_EQ(installResult, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
+    EXPECT_EQ(installResult, ERR_OK);
  
     BundleInfoForException bundleInfoForException;
     uint32_t catchSoNum = 10;
     uint64_t catchSoMaxSize = 1024;
     ErrCode getInfoResult = hostImpl->GetBundleInfoForException(BUNDLE_BACKUP_NAME, USERID, catchSoNum,
         catchSoMaxSize, bundleInfoForException);
-    EXPECT_EQ(getInfoResult, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_EQ(getInfoResult, ERR_OK);
  
     UnInstallBundle(BUNDLE_BACKUP_NAME);
 }
@@ -1127,7 +1164,7 @@ HWTEST_F(BmsBundleManagerTest2, TestMgrByUserId_0001, Function | SmallTest | Lev
 {
     std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
     ErrCode installResult = InstallThirdPartyBundle(bundlePath);
-    EXPECT_EQ(installResult, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
+    EXPECT_EQ(installResult, ERR_OK);
 
     AAFwk::Want want;
     want.SetAction("action.system.home");
@@ -1137,7 +1174,7 @@ HWTEST_F(BmsBundleManagerTest2, TestMgrByUserId_0001, Function | SmallTest | Lev
     int32_t appIndex = 1;
     bool testRet = GetBundleDataMgr()->ImplicitQueryAbilityInfos(
         want, 0, 100, abilityInfos, appIndex);
-    EXPECT_EQ(testRet, false);
+    EXPECT_EQ(testRet, true);
     testRet = GetBundleDataMgr()->ImplicitQueryAbilityInfos(
         want, 0, Constants::INVALID_USERID, abilityInfos, appIndex);
     EXPECT_EQ(testRet, false);
@@ -1154,7 +1191,7 @@ HWTEST_F(BmsBundleManagerTest2, TestMgrByUserId_0002, Function | SmallTest | Lev
 {
     std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
     ErrCode installResult = InstallThirdPartyBundle(bundlePath);
-    EXPECT_EQ(installResult, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
+    EXPECT_EQ(installResult, ERR_OK);
 
     AAFwk::Want want;
     want.SetAction("action.system.home");
@@ -1164,7 +1201,7 @@ HWTEST_F(BmsBundleManagerTest2, TestMgrByUserId_0002, Function | SmallTest | Lev
     int32_t appIndex = 1;
     ErrCode testRet = GetBundleDataMgr()->ImplicitQueryAbilityInfosV9(
         want, 0, 100, abilityInfos, appIndex);
-    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_EQ(testRet, ERR_OK);
     testRet = GetBundleDataMgr()->ImplicitQueryAbilityInfosV9(
         want, 0, Constants::INVALID_USERID, abilityInfos, appIndex);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
@@ -1181,7 +1218,7 @@ HWTEST_F(BmsBundleManagerTest2, TestMgrByUserId_0003, Function | SmallTest | Lev
 {
     std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
     ErrCode installResult = InstallThirdPartyBundle(bundlePath);
-    EXPECT_EQ(installResult, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
+    EXPECT_EQ(installResult, ERR_OK);
 
     AAFwk::Want want;
     want.SetAction("action.system.home");
@@ -1189,7 +1226,7 @@ HWTEST_F(BmsBundleManagerTest2, TestMgrByUserId_0003, Function | SmallTest | Lev
     want.SetElementName("", "", "", MODULE_NAME);
     std::vector<AbilityInfo> abilityInfos;
     bool testRet = GetBundleDataMgr()->QueryLauncherAbilityInfos(want, 100, abilityInfos) == ERR_OK;
-    EXPECT_EQ(testRet, false);
+    EXPECT_EQ(testRet, true);
     testRet = GetBundleDataMgr()->QueryLauncherAbilityInfos(want, Constants::INVALID_USERID, abilityInfos) == ERR_OK;
     EXPECT_EQ(testRet, false);
 
@@ -1269,7 +1306,7 @@ HWTEST_F(BmsBundleManagerTest2, TestMgrByUserId_0011, Function | SmallTest | Lev
 {
     std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
     ErrCode installResult = InstallThirdPartyBundle(bundlePath);
-    EXPECT_EQ(installResult, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
+    EXPECT_EQ(installResult, ERR_OK);
 
     ApplicationInfo appInfo;
     GetBundleDataMgr()->UpdateRemovable("", true);
@@ -1497,7 +1534,7 @@ HWTEST_F(BmsBundleManagerTest2, TestMgrByUserId_0024, Function | SmallTest | Lev
 {
     std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
     ErrCode installResult = InstallThirdPartyBundle(bundlePath);
-    EXPECT_EQ(installResult, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
+    EXPECT_EQ(installResult, ERR_OK);
 
     AAFwk::Want want;
     want.SetAction("action.system.home");
@@ -1933,7 +1970,7 @@ HWTEST_F(BmsBundleManagerTest2, GetBundleDataMgr_0004, Function | SmallTest | Le
 {
     std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
     ErrCode installResult = InstallThirdPartyBundle(bundlePath);
-    EXPECT_EQ(installResult, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
+    EXPECT_EQ(installResult, ERR_OK);
 
     AAFwk::Want want;
     want.SetAction("action.system.home");
@@ -1944,7 +1981,7 @@ HWTEST_F(BmsBundleManagerTest2, GetBundleDataMgr_0004, Function | SmallTest | Le
     int32_t appIndex = 0;
     ErrCode res = GetBundleDataMgr()->ImplicitQueryCurAbilityInfosV9(
         want, flags, USERID, abilityInfo, appIndex);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_EQ(res, ERR_OK);
     appIndex = 1;
     res = GetBundleDataMgr()->ImplicitQueryCurAbilityInfosV9(
         want, flags, USERID, abilityInfo, appIndex);
@@ -1966,7 +2003,7 @@ HWTEST_F(BmsBundleManagerTest2, GetBundleDataMgr_0005, Function | SmallTest | Le
 {
     std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
     ErrCode installResult = InstallThirdPartyBundle(bundlePath);
-    EXPECT_EQ(installResult, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
+    EXPECT_EQ(installResult, ERR_OK);
 
     AAFwk::Want want;
     want.SetAction("action.system.home");
@@ -1998,7 +2035,7 @@ HWTEST_F(BmsBundleManagerTest2, GetBundleDataMgr_0006, Function | SmallTest | Le
 {
     std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
     ErrCode installResult = InstallThirdPartyBundle(bundlePath);
-    EXPECT_EQ(installResult, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
+    EXPECT_EQ(installResult, ERR_OK);
 
     AAFwk::Want want;
     want.SetAction("action.system.home");
@@ -2164,7 +2201,7 @@ HWTEST_F(BmsBundleManagerTest2, GetBundleDataMgr_0015, Function | SmallTest | Le
 {
     std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
     ErrCode installResult = InstallThirdPartyBundle(bundlePath);
-    EXPECT_EQ(installResult, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
+    EXPECT_EQ(installResult, ERR_OK);
 
     AAFwk::Want want;
     want.SetAction("action.system.home");
@@ -2174,7 +2211,7 @@ HWTEST_F(BmsBundleManagerTest2, GetBundleDataMgr_0015, Function | SmallTest | Le
     int32_t appIndex = 0;
     bool testRet = GetBundleDataMgr()->ImplicitQueryExtensionInfos(
         want, 0, USERID, extensionInfos, appIndex);
-    EXPECT_EQ(testRet, false);
+    EXPECT_EQ(testRet, true);
     ExtensionAbilityInfo info;
     info.bundleName = BUNDLE_BACKUP_NAME;
     info.moduleName = MODULE_NAME;
@@ -2196,7 +2233,7 @@ HWTEST_F(BmsBundleManagerTest2, GetBundleDataMgr_0016, Function | SmallTest | Le
 {
     std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
     ErrCode installResult = InstallThirdPartyBundle(bundlePath);
-    EXPECT_EQ(installResult, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
+    EXPECT_EQ(installResult, ERR_OK);
 
     AAFwk::Want want;
     want.SetAction("action.system.home");
@@ -2206,7 +2243,7 @@ HWTEST_F(BmsBundleManagerTest2, GetBundleDataMgr_0016, Function | SmallTest | Le
     int32_t appIndex = 0;
     bool testRet = GetBundleDataMgr()->ImplicitQueryCurExtensionInfos(
         want, 0, USERID, extensionInfos, appIndex);
-    EXPECT_EQ(testRet, false);
+    EXPECT_EQ(testRet, true);
     appIndex = Constants::INITIAL_SANDBOX_APP_INDEX + 1;
     testRet = GetBundleDataMgr()->ImplicitQueryCurExtensionInfos(
         want, 0, USERID, extensionInfos, appIndex);
@@ -2247,7 +2284,7 @@ HWTEST_F(BmsBundleManagerTest2, GetBundleDataMgr_0018, Function | SmallTest | Le
 {
     std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
     ErrCode installResult = InstallThirdPartyBundle(bundlePath);
-    EXPECT_EQ(installResult, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
+    EXPECT_EQ(installResult, ERR_OK);
 
     AAFwk::Want want;
     want.SetAction("action.system.home");
@@ -2608,13 +2645,13 @@ HWTEST_F(BmsBundleManagerTest2, HasUserInstallInBundle_0100, Function | SmallTes
 {
     std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_PREVIEW_TEST;
     ErrCode installResult = InstallThirdPartyBundle(bundlePath);
-    EXPECT_EQ(installResult, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
+    EXPECT_EQ(installResult, ERR_OK);
 
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
 
     bool result = dataMgr->HasUserInstallInBundle(BUNDLE_PREVIEW_NAME, USERID);
-    EXPECT_EQ(result, false);
+    EXPECT_EQ(result, true);
 
     UnInstallBundle(BUNDLE_PREVIEW_NAME);
 }
@@ -2646,14 +2683,14 @@ HWTEST_F(BmsBundleManagerTest2, GetBundleStats_0100, Function | SmallTest | Leve
 {
     std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_PREVIEW_TEST;
     ErrCode installResult = InstallThirdPartyBundle(bundlePath);
-    EXPECT_EQ(installResult, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
+    EXPECT_EQ(installResult, ERR_OK);
 
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
     std::vector<int64_t> bundleStats;
 
     bool result = dataMgr->GetBundleStats(BUNDLE_PREVIEW_NAME, USERID, bundleStats);
-    EXPECT_EQ(result, false);
+    EXPECT_EQ(result, true);
 
     result = dataMgr->GetBundleStats(BUNDLE_PREVIEW_NAME, Constants::INVALID_USERID, bundleStats);
     EXPECT_EQ(result, false);
@@ -2722,12 +2759,12 @@ HWTEST_F(BmsBundleManagerTest2, BundleMgrHostImpl_GetAssetGroupsInfo_1100, Funct
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
     ErrCode installResult = InstallThirdPartyBundle(bundlePath);
-    EXPECT_EQ(installResult, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
+    EXPECT_EQ(installResult, ERR_OK);
 
     int32_t uid = GetBundleDataMgr()->GetUidByBundleName(BUNDLE_BACKUP_NAME, 100, 0);
     AssetGroupInfo assetGroupInfo;
     ErrCode getInfoResult = hostImpl->GetAssetGroupsInfo(uid, assetGroupInfo);
-    EXPECT_EQ(getInfoResult, ERR_BUNDLE_MANAGER_INVALID_UID);
+    EXPECT_EQ(getInfoResult, ERR_OK);
 
     UnInstallBundle(BUNDLE_BACKUP_NAME);
 }
@@ -2757,12 +2794,12 @@ HWTEST_F(BmsBundleManagerTest2, BundleDataMgr_GetAssetGroupsInfo_1100, Function 
 {
     std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
     ErrCode installResult = InstallThirdPartyBundle(bundlePath);
-    EXPECT_EQ(installResult, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
+    EXPECT_EQ(installResult, ERR_OK);
 
     int32_t uid = GetBundleDataMgr()->GetUidByBundleName(BUNDLE_BACKUP_NAME, 100, 0);
     AssetGroupInfo assetGroupInfo;
     auto res = GetBundleDataMgr()->GetAssetGroupsInfo(uid, assetGroupInfo);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_UID);
+    EXPECT_EQ(res, ERR_OK);
     UnInstallBundle(BUNDLE_BACKUP_NAME);
 }
 

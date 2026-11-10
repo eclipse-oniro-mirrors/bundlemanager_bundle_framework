@@ -36,6 +36,8 @@
 #include "perf_profile.h"
 #include "scope_guard.h"
 #include "bundle_backup_mgr.h"
+#include "bundle_clean_mgr.h"
+#include "bms_key_event_mgr.h"
 #include "system_ability_definition.h"
 #include "system_ability_helper.h"
 #include "xcollie_helper.h"
@@ -49,6 +51,7 @@ constexpr const char* FUN_BMS_START = "BundleMgrService::Start";
 constexpr unsigned int BMS_START_TIME_OUT_SECONDS = 270;
 const std::string EXTENSION_BACKUP = "backup";
 const std::string EXTENSION_RESTORE = "restore";
+const std::string EXTENSION_CLEAN = "sa_cleanup";
 } // namespace
 
 const bool REGISTER_RESULT =
@@ -599,6 +602,14 @@ void BundleMgrService::RegisterService()
         }
         APP_LOGI("BundleMgrService register to sam success");
         registerToService_ = true;
+        // Cleanup mode: BMS is now visible to samgr (AddSystemAbility succeeded), so send bootevent.bms.register.ready
+        // immediately. The SA clean framework dispatches OnClean (OnExtension "clean") based on this signal. Sent only
+        // in cleanup mode (entering cleanup mode means the signal is ready) and only on first registration (the
+        // registerToService_ guard ensures once). The BOPD check that gates the real cleanup action is at the
+        // OnExtension clean entry; normal boot goes through ProcessMainBundleStatusFinally to set main.bundles.ready.
+        if (dataMgr_ != nullptr && dataMgr_->IsCleanupModeEnabled()) {
+            BmsKeyEventMgr::ProcessRegisterReady();
+        }
     }
 
     PerfProfile::GetInstance().SetBmsLoadEndTime(GetTickCount());
@@ -668,6 +679,24 @@ int32_t BundleMgrService::OnExtension(const std::string& extension, MessageParce
         ret = bundleBackupMgr->OnRestore(data, reply);
         if (ret != ERR_OK) {
             APP_LOGE("OnRestore failed, err is %{public}d.", ret);
+            return ret;
+        }
+    } else if (extension == EXTENSION_CLEAN) {
+        // The cleanup (delete fingerprint + write the bmsCleanRecovery flag) must run only in BOPD mode: outside
+        // BOPD, /data is not masked and the mirror path from BootDetectorReplaceDataPrefix may point at an invalid
+        // or live db, so cleaning would corrupt data. Refuse when not in BOPD mode.
+        if (dataMgr_ == nullptr || !dataMgr_->IsBopdModeEnabled()) {
+            APP_LOGE("OnClean dispatched but not in BOPD mode, refuse to clean");
+            return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+        }
+        auto bundleCleanMgr = DelayedSingleton<BundleCleanMgr>::GetInstance();
+        if (bundleCleanMgr == nullptr) {
+            APP_LOGE("Get BundleCleanMgr failed");
+            return ERR_APPEXECFWK_NULL_PTR;
+        }
+        ret = bundleCleanMgr->OnClean();
+        if (ret != ERR_OK) {
+            APP_LOGE("OnClean failed, err is %{public}d.", ret);
             return ret;
         }
     }
