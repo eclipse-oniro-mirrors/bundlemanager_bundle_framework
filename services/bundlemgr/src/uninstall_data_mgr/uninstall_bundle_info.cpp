@@ -29,7 +29,7 @@ const char* const KEY_APP_PROVISION_TYPE = "appProvisionType";
 const char* const KEY_DEVICE_MODE_DISTRIBUTION_POLICY = "deviceModeDistributionPolicy";
 const char* const KEY_EXTENSION_DIRS = "extensionDirs";
 const char* const KEY_MODULE_NAMES = "moduleNames";
-const char* const KEY_CHECK_BY_SPM = "checkBySpm";
+const char* const KEY_CHECK_BY_SPM = "checkBySpm_";
 } // namespace
 
 void to_json(nlohmann::json& jsonObject, const UninstallDataUserInfo& uninstallDataUserInfo)

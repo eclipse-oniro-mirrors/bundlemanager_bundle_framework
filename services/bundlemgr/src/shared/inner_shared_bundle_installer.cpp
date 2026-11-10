@@ -943,6 +943,7 @@ ErrCode InnerSharedBundleInstaller::MarkInstallFinish()
         return ERR_APPEXECFWK_FETCH_BUNDLE_ERROR;
     }
     info.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
+    info.SetBundleCheckBySpm(true);
     info.SetInstallMark(bundleName_, info.GetCurModuleName(), InstallExceptionStatus::INSTALL_FINISH);
     if (!dataMgr->UpdateInnerBundleInfo(info, true)) {
         if (!dataMgr->UpdateInnerBundleInfo(info, true)) {
