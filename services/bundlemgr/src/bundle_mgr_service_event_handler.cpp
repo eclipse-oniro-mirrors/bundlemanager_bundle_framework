@@ -113,7 +113,7 @@ constexpr const char* MODULE_UPDATE_PARAM_EMPTY = "";
 constexpr const char* FINGERPRINT = "fingerprint";
 constexpr const char* UNKNOWN = "";
 constexpr const char* VALUE_TRUE = "true";
-// BOPD cleanup recovery flag: written to bms_param.bmsCleanRecovery by OnClean. Read only inside the
+// Cleanup recovery flag: written to bms_param.bmsCleanRecovery by OnClean. Read only inside the
 // IsSystemUpgrade() OTA block below; cleared after OnBundleRebootStart completes to avoid re-triggering
 // the same-version reinstall on a later real OTA.
 constexpr const char* CLEANUP_RECOVERY_FLAG = "bmsCleanRecovery";
@@ -331,17 +331,8 @@ void BMSEventHandler::OnBmsStarting()
 {
     LOG_NOFUNC_I(BMS_TAG_DEFAULT, "BMSEventHandler OnBmsStarting start");
     ProcessCheckSystemOptimizeDir();
-    // Cleanup-mode guard: when ohos.boot.cleanup.mode == "true", skip all install/rebuild paths
-    // (LoadInstallInfosFromDb -> BundleRebootStartEvent, GuardAgainstInstallInfosLossedStrategy ->
-    // ReInstallAllInstallDirApps, BundleBootStartEvent). Do not trigger pre-install/system-app install and do not
-    // call InstalldClient. bootevent.bms.register.ready is sent from RegisterService after AddSystemAbility succeeds
-    // (BMS is then visible to samgr, so the SA clean framework can dispatch OnClean based on register.ready).
-    // needNotifyBundleScanStatus_ stays false (set by BeforeBmsStart; cleanup mode does no scan, so no scan-status
-    // notification). dataMgr is obtained via the BundleMgrService singleton (same as AfterBmsStart) rather than the
-    // private static GetDataMgrFromService (which is not visible in some checkouts and breaks the build).
-    // "Cleanup mode entered" (cleanup.mode=true) only skips install/rebuild here; the BOPD-mode check that gates the
-    // real cleanup action (delete fingerprint + write the bmsCleanRecovery flag) is at the OnExtension clean entry
-    // (bundle_mgr_service.cpp), not in this guard.
+    // Cleanup-mode guard: skip install/rebuild paths when ohos.boot.cleanup.mode == "true".
+    // register.ready is sent from RegisterService after AddSystemAbility succeeds.
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr != nullptr && dataMgr->IsCleanupModeEnabled()) {
         LOG_NOFUNC_I(BMS_TAG_DEFAULT, "OnBmsStarting in cleanup mode, skip install/rebuild");
@@ -628,9 +619,7 @@ void BMSEventHandler::BundleRebootStartEvent()
     if (IsSystemUpgrade()) {
         EventReport::SendCpuSceneEvent(FOUNDATION_PROCESS_NAME, SCENE_ID_OTA_INSTALL);
         ProcessAccessTokenMigration();
-        // Read the BOPD cleanup recovery flag. When set, the same-version branch in OnBundleRebootStart below
-        // forces updateBundle=true for pre-install apps to trigger same-version reinstall. Cleared after the scan
-        // completes to avoid re-triggering on a later real OTA.
+        // Read the cleanup recovery flag to force same-version reinstall of pre-install apps.
         cleanupRecoveryFlagSet_ = IsCleanupRecoveryFlagSet();
         OnBundleRebootStart();
         ClearCleanupRecoveryIfNeeded();
@@ -3005,10 +2994,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             if (hasInstalledInfo.versionCode == hapVersionCode) {
                 LOG_NOFUNC_W(BMS_TAG_DEFAULT, "versionCode same -n %{public}s -v %{public}d",
                     bundleName.c_str(), hapVersionCode);
-                // BOPD cleanup recovery: when the flag is set, force a same-version reinstall of pre-install apps.
-                // installMark and installed_bundle are not touched; the existing updateBundle->needInstallSysMap->
-                // OTAInstallSystemBundle chain is reused. A failed reinstall loses no data (the db row and /data
-                // dirs are left intact) and is handled by SavePreInstallException + HandlePreInstallException.
+                // Cleanup recovery: force same-version reinstall of pre-install apps.
                 if (cleanupRecoveryFlagSet_ && hasInstalledInfo.isPreInstallApp) {
                     LOG_NOFUNC_I(BMS_TAG_DEFAULT, "cleanup recovery force update: %{public}s",
                         bundleName.c_str());
