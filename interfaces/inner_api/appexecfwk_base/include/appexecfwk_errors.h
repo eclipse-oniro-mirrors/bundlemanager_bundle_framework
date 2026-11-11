@@ -690,6 +690,8 @@ enum {
     ERR_APPEXECFWK_INSTALL_APP_IN_PRIVATE_SPACE_BLACK_LIST = 8522800,
     // pc sub user black list
     ERR_APPEXECFWK_INSTALL_APP_IN_SUB_USER_BLACK_LIST = 8522801,
+    // install third party bundle not allowed in bopd mode
+    ERR_APPEXECFWK_INSTALL_BOPD_MODE_DISABLED = 8522802,
 
     // insufficient number of system inodes
     ERR_BUNDLE_MANAGER_INSUFFICIENT_NUMBER_OF_SYSTEM_INODES = 8522710,
