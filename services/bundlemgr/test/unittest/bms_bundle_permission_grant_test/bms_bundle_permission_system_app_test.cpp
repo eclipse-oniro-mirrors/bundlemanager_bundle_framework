@@ -2647,6 +2647,42 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_9970
 }
 
 /**
+ * @tc.number: BmsBundleSyetemAppFalseTest_9980
+ * @tc.name: test HandleGetEnterpriseReSignatureCertInfo of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. HandleGetEnterpriseReSignatureCertInfo reads userId from the request
+ *              parcel and writes errcode, size and certInfo list to reply in order
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_9980, Function | SmallTest | Level0)
+{
+    std::vector<EnterpriseCertInfo> certInfos;
+    bundleInstallerHost_->Init();
+    SetVerifyCallingPermissionForTest(true);
+    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "true");
+    std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(USERID);
+    EXPECT_TRUE(WriteEnterpriseCertFile(VM_VALID_CERT_NAME, VM_VALID_CERT_DER, sizeof(VM_VALID_CERT_DER)));
+    MessageParcel data;
+    MessageParcel reply;
+    ASSERT_TRUE(data.WriteInt32(USERID));
+    ErrCode ret = bundleInstallerHost_->HandleGetEnterpriseReSignatureCertInfo(data, reply);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(reply.ReadInt32(), ERR_OK);
+    EXPECT_EQ(reply.ReadInt32(), 1);
+    std::unique_ptr<EnterpriseCertInfo> certInfo(reply.ReadParcelable<EnterpriseCertInfo>());
+    EXPECT_NE(certInfo, nullptr);
+    if (certInfo != nullptr) {
+        EXPECT_EQ(certInfo->certAlias, VM_VALID_CERT_NAME);
+        EXPECT_EQ(certInfo->enterpriseName, VM_VALID_CERT_ORG);
+        EXPECT_EQ(certInfo->notAfter, VM_VALID_CERT_NOT_AFTER_MS);
+    }
+    RemoveEnterpriseCertFile(VM_VALID_CERT_NAME);
+    ResetTestValues();
+    OHOS::system::RemoveParameter(ServiceConstants::IS_ENTERPRISE_DEVICE);
+}
+
+/**
  * @tc.number: BmsBundleSyetemAppFalseTest_0040
  * @tc.name: test DeleteReSignCert of BundleInstallerHost
  * @tc.desc: 1. system running normally

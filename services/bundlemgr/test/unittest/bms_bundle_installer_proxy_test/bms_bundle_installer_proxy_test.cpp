@@ -26,8 +26,10 @@
 
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
+#include "bundle_constants.h"
 #include "mock_status_receiver.h"
 #include "if_system_ability_manager.h"
+#include "ipc_object_stub.h"
 #include "iservice_registry.h"
 #include "system_ability_definition.h"
 
@@ -35,6 +37,28 @@ using namespace testing::ext;
 
 namespace OHOS {
 namespace AppExecFwk {
+
+class MockCertInfoReplyStub : public IPCObjectStub {
+public:
+    explicit MockCertInfoReplyStub(const std::vector<int32_t> &replyInts)
+        : IPCObjectStub(u""), replyInts_(replyInts) {}
+    ~MockCertInfoReplyStub() override = default;
+    int32_t OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply,
+        MessageOption &option) override
+    {
+        (void)code;
+        (void)data;
+        (void)option;
+        for (const int32_t value : replyInts_) {
+            if (!reply.WriteInt32(value)) {
+                return ERR_APPEXECFWK_IPC_REPLY_ERROR;
+            }
+        }
+        return ERR_OK;
+    }
+private:
+    std::vector<int32_t> replyInts_;
+};
 
 class BmsBundleInstallerProxyTest : public testing::Test {
 public:
@@ -1210,6 +1234,72 @@ HWTEST_F(BmsBundleInstallerProxyTest, GetEnterpriseReSignatureCertInfo_0200, Fun
     std::vector<EnterpriseCertInfo> certInfos;
     auto res = bundleInstallerProxy.GetEnterpriseReSignatureCertInfo(userId, certInfos);
     EXPECT_EQ(res, ERR_APPEXECFWK_ENTERPRISE_CERT_SEND_REQUEST_ERROR);
+}
+
+/**
+ * @tc.number: GetEnterpriseReSignatureCertInfo_0300
+ * @tc.name: test the GetEnterpriseReSignatureCertInfo
+ * @tc.desc: 1. reply cert info size exceeds the maximum limit
+ *           2. test GetEnterpriseReSignatureCertInfo
+ */
+HWTEST_F(BmsBundleInstallerProxyTest, GetEnterpriseReSignatureCertInfo_0300, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> object(new MockCertInfoReplyStub(
+        {ERR_OK, Constants::MAX_ENTERPRISE_RESIGN_CERT_NUM + 1}));
+    BundleInstallerProxy bundleInstallerProxy(object);
+    int32_t userId = 100;
+    std::vector<EnterpriseCertInfo> certInfos;
+    auto res = bundleInstallerProxy.GetEnterpriseReSignatureCertInfo(userId, certInfos);
+    EXPECT_EQ(res, ERR_APPEXECFWK_ENTERPRISE_CERT_READ_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: GetEnterpriseReSignatureCertInfo_0400
+ * @tc.name: test the GetEnterpriseReSignatureCertInfo
+ * @tc.desc: 1. reply cert info size is negative
+ *           2. test GetEnterpriseReSignatureCertInfo
+ */
+HWTEST_F(BmsBundleInstallerProxyTest, GetEnterpriseReSignatureCertInfo_0400, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> object(new MockCertInfoReplyStub({ERR_OK, -1}));
+    BundleInstallerProxy bundleInstallerProxy(object);
+    int32_t userId = 100;
+    std::vector<EnterpriseCertInfo> certInfos;
+    auto res = bundleInstallerProxy.GetEnterpriseReSignatureCertInfo(userId, certInfos);
+    EXPECT_EQ(res, ERR_APPEXECFWK_ENTERPRISE_CERT_READ_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: GetEnterpriseReSignatureCertInfo_0500
+ * @tc.name: test the GetEnterpriseReSignatureCertInfo
+ * @tc.desc: 1. reply carries a business errcode
+ *           2. test GetEnterpriseReSignatureCertInfo passes the errcode through
+ */
+HWTEST_F(BmsBundleInstallerProxyTest, GetEnterpriseReSignatureCertInfo_0500, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> object(new MockCertInfoReplyStub(
+        {ERR_APPEXECFWK_ENTERPRISE_CERT_DEVICE_ERROR}));
+    BundleInstallerProxy bundleInstallerProxy(object);
+    int32_t userId = 100;
+    std::vector<EnterpriseCertInfo> certInfos;
+    auto res = bundleInstallerProxy.GetEnterpriseReSignatureCertInfo(userId, certInfos);
+    EXPECT_EQ(res, ERR_APPEXECFWK_ENTERPRISE_CERT_DEVICE_ERROR);
+}
+
+/**
+ * @tc.number: GetEnterpriseReSignatureCertInfo_0600
+ * @tc.name: test the GetEnterpriseReSignatureCertInfo
+ * @tc.desc: 1. reply announces one cert but carries no parcelable payload
+ *           2. test GetEnterpriseReSignatureCertInfo returns read parcel error
+ */
+HWTEST_F(BmsBundleInstallerProxyTest, GetEnterpriseReSignatureCertInfo_0600, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> object(new MockCertInfoReplyStub({ERR_OK, 1}));
+    BundleInstallerProxy bundleInstallerProxy(object);
+    int32_t userId = 100;
+    std::vector<EnterpriseCertInfo> certInfos;
+    auto res = bundleInstallerProxy.GetEnterpriseReSignatureCertInfo(userId, certInfos);
+    EXPECT_EQ(res, ERR_APPEXECFWK_ENTERPRISE_CERT_READ_PARCEL_ERROR);
 }
 
 /**

@@ -1741,9 +1741,6 @@ bool InstalldHost::HandleGetEnterpriseCertInfo(MessageParcel &data, MessageParce
     }
     EnterpriseCertInfo certInfo;
     ErrCode result = GetEnterpriseCertInfo(certPath, certInfo);
-    if (result != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLD, "get enterprise cert info failed, err: %{public}d", result);
-    }
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     if (result == ERR_OK && !reply.WriteParcelable(&certInfo)) {
         LOG_E(BMS_TAG_INSTALLD, "write cert info failed");

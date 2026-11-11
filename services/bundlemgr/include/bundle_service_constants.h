@@ -128,6 +128,9 @@ constexpr int32_t API_VERSION_FIFTEEN = 15;
 constexpr int32_t API_VERSION_MOD = 1000;
 constexpr int32_t API_VERSION_MAX = 999;
 constexpr int32_t BACKUP_DEFAULT_APP_KEY = -2;
+// Intentionally parallel to Constants::MAX_ENTERPRISE_RESIGN_CERT_NUM in inner_api
+// (bundle_constants.h); the two sides are kept in sync by unit test
+// BmsEnterpriseCertBackupTest_ConstantsSync_0100.
 constexpr int32_t MAX_ENTERPRISE_RESIGN_CERT_NUM = 10;
 // native so
 constexpr const char* ABI_DEFAULT = "default";

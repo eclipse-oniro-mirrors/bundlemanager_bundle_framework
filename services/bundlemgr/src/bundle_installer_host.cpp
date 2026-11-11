@@ -1922,9 +1922,9 @@ ErrCode BundleInstallerHost::GetEnterpriseReSignatureCertInfo(
     }
     std::shared_lock<std::shared_mutex> lock(enterpriseCertMutex_);
     std::vector<std::string> certificateAlias;
-    auto certRet = BundleUtil::GetEnterpriseReSignatureCert(userId, certificateAlias);
-    if (certRet != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLER, "get re sign cert failed, errCode: %{public}d", certRet);
+    auto enumRet = BundleUtil::GetEnterpriseReSignatureCert(userId, certificateAlias);
+    if (enumRet != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "get re sign cert failed, errCode: %{public}d", enumRet);
         return ERR_APPEXECFWK_ENTERPRISE_CERT_GET_CERT_ERROR;
     }
     std::string certDir = std::string(ServiceConstants::HAP_COPY_PATH) +

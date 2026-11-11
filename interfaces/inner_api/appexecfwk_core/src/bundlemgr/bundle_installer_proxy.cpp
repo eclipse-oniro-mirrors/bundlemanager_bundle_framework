@@ -37,9 +37,6 @@ namespace AppExecFwk {
 namespace {
 const char* SEPARATOR = "/";
 constexpr const char* ENTERPRISE_MANIFEST = "ohos.bms.param.enterpriseManifest";
-// Aligned with ServiceConstants::MAX_ENTERPRISE_RESIGN_CERT_NUM in services,
-// which inner_api cannot include directly.
-constexpr int32_t MAX_ENTERPRISE_RESIGN_CERT_NUM = 10;
 const std::unordered_map<int32_t, int32_t> IPC_ERR_MAP = {
     {29201, ERR_APPEXECFWK_IPC_REPLY_ERROR},
     {29202, ERR_APPEXECFWK_IPC_REMOTE_FROZEN_ERROR},
@@ -1213,7 +1210,7 @@ ErrCode BundleInstallerProxy::GetEnterpriseReSignatureCertInfo(
         return result;
     }
     int32_t certInfoSize = reply.ReadInt32();
-    if (certInfoSize < 0 || certInfoSize > MAX_ENTERPRISE_RESIGN_CERT_NUM) {
+    if (certInfoSize < 0 || certInfoSize > Constants::MAX_ENTERPRISE_RESIGN_CERT_NUM) {
         LOG_E(BMS_TAG_INSTALLER, "invalid cert info size: %{public}d", certInfoSize);
         return ERR_APPEXECFWK_ENTERPRISE_CERT_READ_PARCEL_ERROR;
     }

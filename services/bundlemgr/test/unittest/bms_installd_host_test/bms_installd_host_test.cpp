@@ -2028,6 +2028,7 @@ HWTEST_F(BmsInstalldHostTest, HandleGetEnterpriseCertInfo_0200, Function | Small
     ASSERT_TRUE(data.WriteString16(Str8ToStr16(certPath)));
     bool res = installdHostImpl.HandleGetEnterpriseCertInfo(data, reply);
     EXPECT_TRUE(res);
+    EXPECT_EQ(reply.ReadInt32(), ERR_APPEXECFWK_ENTERPRISE_CERT_READ_CERT_FAILED);
 }
 
 /**
@@ -2101,6 +2102,57 @@ HWTEST_F(BmsInstalldHostTest, InstalldOperator_ParseEnterpriseCertFile_Failure_0
     int64_t notAfter = 0;
     EXPECT_EQ(InstalldOperator::ParseEnterpriseCertFile(certPath, subjectOrg, notAfter),
         ERR_APPEXECFWK_ENTERPRISE_CERT_READ_CERT_FAILED);
+}
+
+/**
+ * @tc.number: InstalldHostImpl_GetEnterpriseCertInfo_0100
+ * @tc.name: test GetEnterpriseCertInfo of InstalldHostImpl
+ * @tc.desc: 1. cert path containing path traversal is rejected
+ */
+HWTEST_F(BmsInstalldHostTest, InstalldHostImpl_GetEnterpriseCertInfo_0100,
+    Function | SmallTest | Level1)
+{
+    InstalldHostImpl installdHostImpl;
+    EnterpriseCertInfo certInfo;
+    std::string certPath = std::string(ServiceConstants::HAP_COPY_PATH) +
+        ServiceConstants::ENTERPRISE_CERT_PATH + "100/../evil.cer";
+    ErrCode ret = installdHostImpl.GetEnterpriseCertInfo(certPath, certInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: EnterpriseCertInfo_Marshalling_0100
+ * @tc.name: test Marshalling and Unmarshalling of EnterpriseCertInfo
+ * @tc.desc: 1. parcel round trip keeps certAlias, enterpriseName and notAfter
+ */
+HWTEST_F(BmsInstalldHostTest, EnterpriseCertInfo_Marshalling_0100, Function | SmallTest | Level1)
+{
+    EnterpriseCertInfo info;
+    info.certAlias = "alias.cer";
+    info.enterpriseName = "TestEnterpriseOrg";
+    info.notAfter = TEST_CERT_DER_NOT_AFTER_MS;
+    MessageParcel parcel;
+    EXPECT_TRUE(info.Marshalling(parcel));
+    std::unique_ptr<EnterpriseCertInfo> out(EnterpriseCertInfo::Unmarshalling(parcel));
+    EXPECT_NE(out, nullptr);
+    if (out != nullptr) {
+        EXPECT_EQ(out->certAlias, "alias.cer");
+        EXPECT_EQ(out->enterpriseName, "TestEnterpriseOrg");
+        EXPECT_EQ(out->notAfter, TEST_CERT_DER_NOT_AFTER_MS);
+    }
+}
+
+/**
+ * @tc.number: EnterpriseCertInfo_Unmarshalling_Failure_0100
+ * @tc.name: test Unmarshalling of EnterpriseCertInfo
+ * @tc.desc: 1. parcel without the notAfter field fails to unmarshal
+ */
+HWTEST_F(BmsInstalldHostTest, EnterpriseCertInfo_Unmarshalling_Failure_0100, Function | SmallTest | Level1)
+{
+    MessageParcel parcel;
+    EXPECT_TRUE(parcel.WriteString16(Str8ToStr16("alias.cer")));
+    EXPECT_TRUE(parcel.WriteString16(Str8ToStr16("TestEnterpriseOrg")));
+    EXPECT_EQ(EnterpriseCertInfo::Unmarshalling(parcel), nullptr);
 }
 
 } // OHOS
