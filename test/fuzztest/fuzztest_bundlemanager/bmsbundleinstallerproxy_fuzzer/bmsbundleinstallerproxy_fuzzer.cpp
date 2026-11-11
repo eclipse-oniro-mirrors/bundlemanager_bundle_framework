@@ -52,6 +52,8 @@ namespace OHOS {
         int32_t appIndex = fdp.ConsumeIntegral<int32_t>();
         bundleinstallerProxy.InstallSandboxApp(bundleName, dlpType, userId, appIndex);
         bundleinstallerProxy.UninstallSandboxApp(bundleName, appIndex, userId);
+        std::vector<EnterpriseCertInfo> enterpriseCertInfos;
+        bundleinstallerProxy.GetEnterpriseReSignatureCertInfo(userId, enterpriseCertInfos);
         std::vector<std::string> originHapPaths = GenerateStringArray(fdp);
         bundleinstallerProxy.CreateStreamInstaller(installParam, statusReceiver, originHapPaths);
         uint32_t streamInstallerId = fdp.ConsumeIntegral<uint32_t>();

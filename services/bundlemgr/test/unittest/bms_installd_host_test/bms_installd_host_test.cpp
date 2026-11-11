@@ -87,28 +87,17 @@ const unsigned char TEST_CERT_DER[] = {
 };
 // Self-signed EC P-256 certificate in PEM format, subject has no Organization, CN=TestCommonName.
 const char *TEST_CERT_PEM_NO_ORG =
-    "-----BEGIN CERTIFICATE-----
-"
-    "MIIBhzCCAS2gAwIBAgIUL9mq1HyhsrHOcS5zY48o5uPfwcAwCgYIKoZIzj0EAwIw
-"
-    "GTEXMBUGA1UEAwwOVGVzdENvbW1vbk5hbWUwHhcNMjYxMTEwMDg1OTI1WhcNMjcx
-"
-    "MTEwMDg1OTI1WjAZMRcwFQYDVQQDDA5UZXN0Q29tbW9uTmFtZTBZMBMGByqGSM49
-"
-    "AgEGCCqGSM49AwEHA0IABOO15VjxE7FHIs4oGBf80htfXTOMrBPnuH4C9mKpM0EG
-"
-    "S7sz317ng1garLdkpQ2Tyy8n+VQrGDi0FEiFTWg48SijUzBRMB0GA1UdDgQWBBRo
-"
-    "amNZz3mYqr/g+nOaPFLXyLGIPjAfBgNVHSMEGDAWgBRoamNZz3mYqr/g+nOaPFLX
-"
-    "yLGIPjAPBgNVHRMBAf8EBTADAQH/MAoGCCqGSM49BAMCA0gAMEUCIQDCYBYYbYDq
-"
-    "MbO5v4QaCfNaGX71CrVnb8ace2HdnLykjgIgWPVhF47HUpGambd9I4o0J8/N8ffY
-"
-    "rF9QF5jZ2q3Z0Rg=
-"
-    "-----END CERTIFICATE-----
-";
+    "-----BEGIN CERTIFICATE-----\n"
+    "MIIBhzCCAS2gAwIBAgIUL9mq1HyhsrHOcS5zY48o5uPfwcAwCgYIKoZIzj0EAwIw\n"
+    "GTEXMBUGA1UEAwwOVGVzdENvbW1vbk5hbWUwHhcNMjYxMTEwMDg1OTI1WhcNMjcx\n"
+    "MTEwMDg1OTI1WjAZMRcwFQYDVQQDDA5UZXN0Q29tbW9uTmFtZTBZMBMGByqGSM49\n"
+    "AgEGCCqGSM49AwEHA0IABOO15VjxE7FHIs4oGBf80htfXTOMrBPnuH4C9mKpM0EG\n"
+    "S7sz317ng1garLdkpQ2Tyy8n+VQrGDi0FEiFTWg48SijUzBRMB0GA1UdDgQWBBRo\n"
+    "amNZz3mYqr/g+nOaPFLXyLGIPjAfBgNVHSMEGDAWgBRoamNZz3mYqr/g+nOaPFLX\n"
+    "yLGIPjAPBgNVHRMBAf8EBTADAQH/MAoGCCqGSM49BAMCA0gAMEUCIQDCYBYYbYDq\n"
+    "MbO5v4QaCfNaGX71CrVnb8ace2HdnLykjgIgWPVhF47HUpGambd9I4o0J8/N8ffY\n"
+    "rF9QF5jZ2q3Z0Rg=\n"
+    "-----END CERTIFICATE-----\n";
 // TEST_CERT_DER notAfter: 2027-11-10 08:59:24 UTC, in milliseconds.
 const int64_t TEST_CERT_DER_NOT_AFTER_MS = 1825837164000LL;
 // TEST_CERT_PEM_NO_ORG notAfter: 2027-11-10 08:59:25 UTC, in milliseconds.
@@ -2026,17 +2015,18 @@ HWTEST_F(BmsInstalldHostTest, HandleGetEnterpriseCertInfo_0100, Function | Small
 /**
  * @tc.number: HandleGetEnterpriseCertInfo_0200
  * @tc.name: test HandleGetEnterpriseCertInfo
- * @tc.desc: 1.HandleGetEnterpriseCertInfo test with valid path but cert file not exist
+ * @tc.desc: 1.HandleGetEnterpriseCertInfo test with valid path but cert file not exist,
+ *           business layer fails to read cert and writes errcode
  */
 HWTEST_F(BmsInstalldHostTest, HandleGetEnterpriseCertInfo_0200, Function | SmallTest | Level1)
 {
-    InstalldHost installdHost;
+    InstalldHostImpl installdHostImpl;
     MessageParcel data;
     MessageParcel reply;
     std::string certPath = std::string(ServiceConstants::HAP_COPY_PATH) +
         ServiceConstants::ENTERPRISE_CERT_PATH + "100/not_exist.cer";
     ASSERT_TRUE(data.WriteString16(Str8ToStr16(certPath)));
-    bool res = installdHost.HandleGetEnterpriseCertInfo(data, reply);
+    bool res = installdHostImpl.HandleGetEnterpriseCertInfo(data, reply);
     EXPECT_TRUE(res);
 }
 

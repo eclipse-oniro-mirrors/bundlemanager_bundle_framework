@@ -1907,7 +1907,7 @@ ErrCode BundleInstallerHost::GetEnterpriseReSignatureCertInfo(
         return ERR_APPEXECFWK_ENTERPRISE_CERT_DEVICE_ERROR;
     }
     if (userId < Constants::START_USERID) {
-        LOG_E(BMS_TAG_INSTALLER, "userId is invalid");
+        LOG_E(BMS_TAG_INSTALLER, "userId is invalid, userId: %{public}d", userId);
         return ERR_APPEXECFWK_ENTERPRISE_CERT_PARAM_ERROR;
     }
     std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
@@ -1922,8 +1922,9 @@ ErrCode BundleInstallerHost::GetEnterpriseReSignatureCertInfo(
     }
     std::shared_lock<std::shared_mutex> lock(enterpriseCertMutex_);
     std::vector<std::string> certificateAlias;
-    if (BundleUtil::GetEnterpriseReSignatureCert(userId, certificateAlias) != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLER, "get re sign cert failed");
+    auto certRet = BundleUtil::GetEnterpriseReSignatureCert(userId, certificateAlias);
+    if (certRet != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "get re sign cert failed, errCode: %{public}d", certRet);
         return ERR_APPEXECFWK_ENTERPRISE_CERT_GET_CERT_ERROR;
     }
     std::string certDir = std::string(ServiceConstants::HAP_COPY_PATH) +

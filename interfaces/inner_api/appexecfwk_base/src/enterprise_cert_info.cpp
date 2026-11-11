@@ -25,7 +25,7 @@ bool EnterpriseCertInfo::ReadFromParcel(Parcel &parcel)
 {
     certAlias = Str16ToStr8(parcel.ReadString16());
     enterpriseName = Str16ToStr8(parcel.ReadString16());
-    notAfter = parcel.ReadInt64();
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int64, parcel, notAfter);
     return true;
 }
 

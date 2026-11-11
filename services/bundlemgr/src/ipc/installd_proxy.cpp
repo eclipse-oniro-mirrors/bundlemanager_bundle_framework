@@ -1680,7 +1680,7 @@ ErrCode InstalldProxy::GetEnterpriseCertInfo(const std::string &certPath, Enterp
     MessageOption option(MessageOption::TF_SYNC);
     auto ret = TransactInstalldCmd(InstalldInterfaceCode::GET_ENTERPRISE_CERT_INFO, data, reply, option);
     if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLD, "TransactInstalldCmd failed");
+        LOG_E(BMS_TAG_INSTALLD, "TransactInstalldCmd failed, errCode: %{public}d", ret);
         return ret;
     }
     // TransactInstalldCmd has already consumed the errcode written by the host;

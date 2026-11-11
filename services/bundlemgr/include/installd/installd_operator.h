@@ -610,6 +610,18 @@ public:
         const std::string &hapFilePath, int32_t userId);
     static std::string GetAbcRealPath(const std::string &bundleName, int32_t userId,
         const std::string &relativePath);
+    /**
+     * @brief Read an enterprise re-signature certificate file and extract its
+     *        subject organization and expiration.
+     * @param certPath Indicates the certificate file path.
+     * @param subjectOrg Indicates the Organization of the cert subject, falling
+     *        back to CommonName when Organization is absent.
+     * @param notAfter Indicates the notAfter time in milliseconds.
+     * @return Returns ERR_OK on success, or
+     *         ERR_APPEXECFWK_ENTERPRISE_CERT_READ_CERT_FAILED on read/parse
+     *         failure; on builds without code signature the read degrades to
+     *         empty data and parsing fails (RC-3).
+     */
     static ErrCode ParseEnterpriseCertFile(const std::string &certPath,
         std::string &subjectOrg, int64_t &notAfter);
 private:
