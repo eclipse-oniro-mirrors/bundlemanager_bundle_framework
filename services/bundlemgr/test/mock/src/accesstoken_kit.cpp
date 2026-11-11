@@ -119,6 +119,15 @@ int32_t g_spmPrepareIdentitySessionId = 0;
 // a new one" (mismatch) path that the default adopt-or-reallocate mock cannot.
 bool g_spmPrepareIdentityForceReallocate = false;
 int32_t g_spmUpdateHapPolicyRet = 0;
+// Call counter: tests assert whether the drift repair inside InstallSession::
+// UpdateToken re-issued the policy update (first call on the recorded id,
+// retry on the identity's live token).
+int32_t g_spmUpdateHapPolicyCallCount = 0;
+// Optional result sequence for UpdateHapPolicy: when non-empty each call pops
+// the next entry (drives the drift-repair branch — first call 12100004, retry
+// succeeds via the scalar knob); when exhausted or empty the scalar
+// g_spmUpdateHapPolicyRet applies.
+std::vector<int32_t> g_spmUpdateHapPolicyRetSeq;
 // Out-param knob for GetHapBaseInfoByUid (the SPM ON reverse-lookup fallback):
 // default -1 = not found, 0 + filled g_spmGetHapBaseInfo = resolved.
 int32_t g_spmGetHapBaseInfoByUidRet = -1;
@@ -133,6 +142,9 @@ int32_t g_spmFinishInstallRet = 0;
 std::vector<int32_t> g_spmFinishInstallRetSeq;
 int32_t g_spmFinishInstallCallCount = 0;
 bool g_spmFinishInstallLastPersistent = false;
+// Records the entry count of the last FinishInstall module-path map (drives
+// the InstallSession::Commit engaged-path-map fallback assertions).
+int32_t g_spmFinishInstallLastModulePathCount = 0;
 // Return-value knobs for the recovery paths (TryRecoverUidError /
 // TryRecoverAlreadyExistError) and the module-uninstall re-sign flow.
 int32_t g_spmMigrateInstalledBundlesRet = 0;
@@ -179,6 +191,8 @@ void ResetSpmKitMockValuesForTest()
     g_spmPrepareIdentitySessionId = 0;
     g_spmPrepareIdentityForceReallocate = false;
     g_spmUpdateHapPolicyRet = 0;
+    g_spmUpdateHapPolicyCallCount = 0;
+    g_spmUpdateHapPolicyRetSeq.clear();
     g_spmUpdateHapPolicyUidOut = 0;
     g_spmGetHapBaseInfoByUidRet = -1;
     g_spmGetHapBaseInfo = Security::AccessToken::HapBaseInfo();
@@ -186,6 +200,7 @@ void ResetSpmKitMockValuesForTest()
     g_spmFinishInstallRetSeq.clear();
     g_spmFinishInstallCallCount = 0;
     g_spmFinishInstallLastPersistent = false;
+    g_spmFinishInstallLastModulePathCount = 0;
     g_spmMigrateInstalledBundlesRet = 0;
     g_spmMigratePopulateResults = false;
     g_spmFinishMigrationRet = 0;
@@ -724,7 +739,13 @@ int32_t AccessTokenKit::UpdateHapPolicy(int32_t sessionId, AccessTokenIDEx& toke
     // Mirrors the real AT contract (AT PR #5133): the low 32 bits locate the
     // token; the high 32 bits (tokenAttr) are refreshed in place on success and
     // left untouched on the error path. The mock keeps the attr unchanged.
+    ++g_spmUpdateHapPolicyCallCount;
     uid = g_spmUpdateHapPolicyUidOut;
+    if (!g_spmUpdateHapPolicyRetSeq.empty()) {
+        int32_t ret = g_spmUpdateHapPolicyRetSeq.front();
+        g_spmUpdateHapPolicyRetSeq.erase(g_spmUpdateHapPolicyRetSeq.begin());
+        return ret;
+    }
     return g_spmUpdateHapPolicyRet;
 }
 
@@ -733,6 +754,7 @@ int32_t AccessTokenKit::FinishInstall(int32_t sessionId, bool isPersistent,
 {
     ++g_spmFinishInstallCallCount;
     g_spmFinishInstallLastPersistent = isPersistent;
+    g_spmFinishInstallLastModulePathCount = static_cast<int32_t>(modulePathMap.size());
     if (!g_spmFinishInstallRetSeq.empty()) {
         int32_t ret = g_spmFinishInstallRetSeq.front();
         g_spmFinishInstallRetSeq.erase(g_spmFinishInstallRetSeq.begin());
