@@ -78,7 +78,7 @@ struct FormInfo : public Parcelable {
     std::string groupId;
     FormStandby standby;
     bool isColorModeRefreshEnabled = false;
-    bool enableTint = false;
+    BoolEnum enableTint = BoolEnum::BOOL_UNSPECIFIED;
     bool enableReminderAgentRefresh = false;
 
     FormInfo() = default;

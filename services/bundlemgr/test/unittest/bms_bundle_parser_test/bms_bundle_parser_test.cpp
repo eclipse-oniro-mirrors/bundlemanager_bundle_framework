@@ -5546,7 +5546,7 @@ HWTEST_F(BmsBundleParserTest, FormInfo_0300, Function | MediumTest | Level1)
     EXPECT_EQ(formInfo.name, "testName");
     EXPECT_TRUE(formInfo.resizable);
     EXPECT_TRUE(formInfo.isColorModeRefreshEnabled);
-    EXPECT_TRUE(formInfo.enableTint);
+    EXPECT_EQ(formInfo.enableTint, BoolEnum::BOOL_TRUE);
     EXPECT_TRUE(formInfo.enableReminderAgentRefresh);
 }
 
@@ -5562,7 +5562,7 @@ HWTEST_F(BmsBundleParserTest, FormInfo_0400, Function | MediumTest | Level1)
     formInfo.name = "testName";
     formInfo.resizable = true;
     formInfo.isColorModeRefreshEnabled = true;
-    formInfo.enableTint = true;
+    formInfo.enableTint = BoolEnum::BOOL_TRUE;
     formInfo.enableReminderAgentRefresh = true;
     to_json(jsonObject, formInfo);
     EXPECT_TRUE(jsonObject["resizable"]);
@@ -5570,6 +5570,21 @@ HWTEST_F(BmsBundleParserTest, FormInfo_0400, Function | MediumTest | Level1)
     EXPECT_TRUE(jsonObject["isColorModeRefreshEnabled"]);
     EXPECT_TRUE(jsonObject["enableTint"]);
     EXPECT_TRUE(jsonObject["enableReminderAgentRefresh"]);
+}
+
+/**
+ * @tc.number: FormInfo_0450
+ * @tc.name: Test from_json default enableTint
+ * @tc.desc: verify enableTint defaults to BOOL_UNSPECIFIED when not specified in JSON
+ */
+HWTEST_F(BmsBundleParserTest, FormInfo_0450, Function | MediumTest | Level1)
+{
+    nlohmann::json jsonObject;
+    jsonObject["name"] = "testName";
+    FormInfo formInfo;
+    from_json(jsonObject, formInfo);
+    EXPECT_EQ(formInfo.name, "testName");
+    EXPECT_EQ(formInfo.enableTint, BoolEnum::BOOL_UNSPECIFIED);
 }
 
 /**
@@ -5672,6 +5687,114 @@ HWTEST_F(BmsBundleParserTest, FormInfo_0900, Function | MediumTest | Level1)
     EXPECT_EQ(info->updateEnabled, false);
     if (info != nullptr) {
         delete info;
+    }
+}
+
+/**
+ * @tc.number: FormInfo_1000
+ * @tc.name: Test from_json enableTint false
+ * @tc.desc: test enableTint of FormInfo from_json with false value
+ */
+HWTEST_F(BmsBundleParserTest, FormInfo_1000, Function | MediumTest | Level1)
+{
+    nlohmann::json jsonObject;
+    jsonObject["name"] = "testName";
+    jsonObject["enableTint"] = false;
+    FormInfo formInfo;
+    from_json(jsonObject, formInfo);
+    EXPECT_EQ(formInfo.name, "testName");
+    EXPECT_EQ(formInfo.enableTint, BoolEnum::BOOL_FALSE);
+}
+
+/**
+ * @tc.number: FormInfo_1100
+ * @tc.name: Test from_json enableTint type error
+ * @tc.desc: test enableTint of FormInfo from_json with wrong type
+ */
+HWTEST_F(BmsBundleParserTest, FormInfo_1100, Function | MediumTest | Level1)
+{
+    nlohmann::json jsonObject;
+    jsonObject["name"] = "testName";
+    jsonObject["enableTint"] = "not_bool";
+    FormInfo formInfo;
+    from_json(jsonObject, formInfo);
+    EXPECT_EQ(formInfo.enableTint, BoolEnum::BOOL_UNSPECIFIED);
+}
+
+/**
+ * @tc.number: FormInfo_1200
+ * @tc.name: Test to_json enableTint false
+ * @tc.desc: test enableTint of FormInfo to_json with BOOL_FALSE
+ */
+HWTEST_F(BmsBundleParserTest, FormInfo_1200, Function | MediumTest | Level1)
+{
+    nlohmann::json jsonObject;
+    FormInfo formInfo;
+    formInfo.name = "testName";
+    formInfo.enableTint = BoolEnum::BOOL_FALSE;
+    to_json(jsonObject, formInfo);
+    EXPECT_EQ(jsonObject["name"], "testName");
+    EXPECT_FALSE(jsonObject["enableTint"].get<bool>());
+}
+
+/**
+ * @tc.number: FormInfo_1300
+ * @tc.name: Test to_json enableTint unspecified
+ * @tc.desc: test enableTint of FormInfo to_json with BOOL_UNSPECIFIED
+ */
+HWTEST_F(BmsBundleParserTest, FormInfo_1300, Function | MediumTest | Level1)
+{
+    nlohmann::json jsonObject;
+    FormInfo formInfo;
+    formInfo.name = "testName";
+    formInfo.enableTint = BoolEnum::BOOL_UNSPECIFIED;
+    to_json(jsonObject, formInfo);
+    EXPECT_EQ(jsonObject["name"], "testName");
+    EXPECT_FALSE(jsonObject.contains("enableTint"));
+}
+
+/**
+ * @tc.number: FormInfo_1400
+ * @tc.name: Test IPC Marshalling and Unmarshalling enableTint
+ * @tc.desc: test enableTint of FormInfo IPC round-trip
+ */
+HWTEST_F(BmsBundleParserTest, FormInfo_1400, Function | MediumTest | Level1)
+{
+    FormInfo formInfo;
+    formInfo.name = NAME;
+    formInfo.enableTint = BoolEnum::BOOL_TRUE;
+    Parcel parcel;
+    auto ret = formInfo.Marshalling(parcel);
+    EXPECT_TRUE(ret);
+    auto info = formInfo.Unmarshalling(parcel);
+    EXPECT_NE(info, nullptr);
+    EXPECT_EQ(info->enableTint, BoolEnum::BOOL_TRUE);
+    if (info != nullptr) {
+        delete info;
+    }
+
+    FormInfo formInfo2;
+    formInfo2.name = NAME;
+    formInfo2.enableTint = BoolEnum::BOOL_FALSE;
+    Parcel parcel2;
+    EXPECT_TRUE(formInfo2.Marshalling(parcel2));
+    auto info2 = formInfo2.Unmarshalling(parcel2);
+    EXPECT_NE(info2, nullptr);
+    EXPECT_EQ(info2->enableTint, BoolEnum::BOOL_FALSE);
+    if (info2 != nullptr) {
+        delete info2;
+    }
+
+    FormInfo formInfo3;
+    formInfo3.name = NAME;
+    formInfo3.enableTint = BoolEnum::BOOL_UNSPECIFIED;
+    Parcel parcel3;
+    EXPECT_TRUE(formInfo3.Marshalling(parcel3));
+    auto info3 = formInfo3.Unmarshalling(parcel3);
+    EXPECT_NE(info3, nullptr);
+    EXPECT_EQ(info3->enableTint, BoolEnum::BOOL_UNSPECIFIED);
+    if (info3 != nullptr) {
+        delete info3;
     }
 }
 

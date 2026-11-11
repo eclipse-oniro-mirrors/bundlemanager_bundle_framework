@@ -65,6 +65,29 @@ void BMSJsonUtil::GetBoolValueIfFindKey(const nlohmann::json &jsonObject,
     }
 }
 
+void BMSJsonUtil::GetBoolEnumValueIfFindKey(const nlohmann::json &jsonObject,
+    const nlohmann::detail::iter_impl<const nlohmann::json> &end,
+    const std::string &key, BoolEnum &data, bool isNecessary, int32_t &parseResult)
+{
+    if (parseResult) {
+        return;
+    }
+    auto iter = jsonObject.find(key);
+    if (iter != end) {
+        if (!iter->is_boolean()) {
+            APP_LOGE("type error %{public}s not bool", key.c_str());
+            parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
+            return;
+        }
+        data = iter->get<bool>() ? BoolEnum::BOOL_TRUE : BoolEnum::BOOL_FALSE;
+        return;
+    }
+    if (isNecessary) {
+        APP_LOGE("profile prop %{public}s missing", key.c_str());
+        parseResult = ERR_APPEXECFWK_PARSE_PROFILE_MISSING_PROP;
+    }
+}
+
 bool BMSJsonUtil::CheckArrayValueType(const nlohmann::json &value, ArrayType arrayType)
 {
     if (!value.is_array()) {
