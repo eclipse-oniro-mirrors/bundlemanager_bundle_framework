@@ -16,6 +16,7 @@
 #include "module_profile.h"
 
 #include <sstream>
+#include <unordered_map>
 #include <unordered_set>
 
 #include "app_log_tag_wrapper.h"
@@ -43,6 +44,11 @@ const std::unordered_set<std::string> MODULE_TYPE_SET = {
 const std::unordered_set<std::string> VIRTUAL_MACHINE_SET = {
     "ark",
     "default"
+};
+
+const std::unordered_map<std::string, PermissionControlMode> PERMISSION_CONTROL_MODE_MAP = {
+    {"independent", PermissionControlMode::INDEPENDENT},
+    {"inheritParentProcess", PermissionControlMode::INHERIT_PARENT_PROCESS},
 };
 
 constexpr const char* BACKGROUND_MODES_MAP_KEY[] = {
@@ -185,6 +191,7 @@ struct HnpPackage {
 
 struct ExecutableBinaryPath {
     std::string path;
+    std::string permissionControlMode;
 };
 
 struct LaunchService {
@@ -496,6 +503,12 @@ void from_json(const nlohmann::json &jsonObject, ExecutableBinaryPath &executabl
         jsonObjectEnd,
         EXECUTABLE_BINARY_PATH,
         executableBinaryPath.path,
+        false,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        EXECUTABLE_BINARY_PERMISSION_CONTROL_MODE,
+        executableBinaryPath.permissionControlMode,
         false,
         g_parseResult);
 }
@@ -2091,12 +2104,22 @@ void GetHnpPackage(std::vector<HnpPackage> &hnpPackage, const std::vector<Profil
     }
 }
 
+PermissionControlMode GetPermissionControlMode(const std::string &permissionControlMode)
+{
+    auto modeInfo = Profile::PERMISSION_CONTROL_MODE_MAP.find(permissionControlMode);
+    if (modeInfo != Profile::PERMISSION_CONTROL_MODE_MAP.end()) {
+        return modeInfo->second;
+    }
+    return PermissionControlMode::INDEPENDENT;
+}
+
 void GetExecutableBinaryPath(std::vector<ExecutableBinaryPath> &executableBinaryPath,
     const std::vector<Profile::ExecutableBinaryPath> &profileExecutableBinaryPath)
 {
     for (const Profile::ExecutableBinaryPath &item : profileExecutableBinaryPath) {
         ExecutableBinaryPath tmpExecutableBinaryPath;
         tmpExecutableBinaryPath.path = item.path;
+        tmpExecutableBinaryPath.permissionControlMode = GetPermissionControlMode(item.permissionControlMode);
         executableBinaryPath.emplace_back(tmpExecutableBinaryPath);
     }
 }

@@ -17477,6 +17477,153 @@ HWTEST_F(BmsBundleInstallerTest, GetBinFilePaths_005, Function | SmallTest | Lev
 }
 
 /**
+ * @tc.number: GetBinFilePaths_006
+ * @tc.name: test GetBinFilePaths returns absolute path with permissionControlMode
+ * @tc.desc: 1. permissionControlMode is inheritParentProcess
+ *           2. verify absolute path under BUNDLE_CODE_DIR and mode are paired
+ *              (same values LOG_D prints in GetBinFilePaths)
+ */
+ HWTEST_F(BmsBundleInstallerTest, GetBinFilePaths_006, Function | SmallTest | Level0)
+ {
+     BaseBundleInstaller baseBundleInstaller;
+     baseBundleInstaller.bundleName_ = TEST_BIN_BUNDLE_NAME;
+     auto info = CreateBinBundleInfo(Constants::APP_PROVISION_TYPE_RELEASE, MODULE_NAME, {"policy.bin"});
+     auto &moduleInfos = info.FetchInnerModuleInfos();
+     ASSERT_FALSE(moduleInfos.empty());
+     ASSERT_FALSE(moduleInfos.begin()->second.executableBinaryPaths.empty());
+     moduleInfos.begin()->second.executableBinaryPaths[0].permissionControlMode =
+         PermissionControlMode::INHERIT_PARENT_PROCESS;
+ 
+     auto binFilePaths = baseBundleInstaller.GetBinFilePaths(info, TEST_BIN_NATIVE_LIBRARY_PATH);
+     ASSERT_EQ(binFilePaths.size(), 1u);
+     std::string expectedPrefix = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
+         TEST_BIN_BUNDLE_NAME + ServiceConstants::PATH_SEPARATOR + TEST_BIN_NATIVE_LIBRARY_PATH +
+         ServiceConstants::PATH_SEPARATOR;
+     EXPECT_EQ(binFilePaths[0].first.find(expectedPrefix), 0u);
+     EXPECT_NE(binFilePaths[0].first.find("policy.bin"), std::string::npos);
+     EXPECT_EQ(binFilePaths[0].second, PermissionControlMode::INHERIT_PARENT_PROCESS);
+     EXPECT_EQ(static_cast<int32_t>(binFilePaths[0].second), 1);
+ }
+ 
+ /**
+  * @tc.number: GetBinFilePaths_007
+  * @tc.name: test GetBinFilePaths default permissionControlMode is independent
+  * @tc.desc: 1. permissionControlMode is unset
+  *           2. verify default mode is independent (0) with absolute path
+  */
+ HWTEST_F(BmsBundleInstallerTest, GetBinFilePaths_007, Function | SmallTest | Level0)
+ {
+     BaseBundleInstaller baseBundleInstaller;
+     auto info = CreateBinBundleInfo(Constants::APP_PROVISION_TYPE_RELEASE, MODULE_NAME, {"default.bin"});
+     auto binFilePaths = baseBundleInstaller.GetBinFilePaths(info, TEST_BIN_NATIVE_LIBRARY_PATH);
+     ASSERT_EQ(binFilePaths.size(), 1u);
+     EXPECT_NE(binFilePaths[0].first.find("default.bin"), std::string::npos);
+     EXPECT_EQ(binFilePaths[0].second, PermissionControlMode::INDEPENDENT);
+     EXPECT_EQ(static_cast<int32_t>(binFilePaths[0].second), 0);
+ }
+ 
+ /**
+  * @tc.number: GetBinFilePaths_008
+  * @tc.name: test GetBinFilePaths with mixed permissionControlMode
+  * @tc.desc: 1. two bins with independent and inheritParentProcess
+  *           2. verify path and mode pairs are preserved in order
+  */
+ HWTEST_F(BmsBundleInstallerTest, GetBinFilePaths_008, Function | SmallTest | Level0)
+ {
+     BaseBundleInstaller baseBundleInstaller;
+     auto info = CreateBinBundleInfo(Constants::APP_PROVISION_TYPE_RELEASE, MODULE_NAME,
+         {"first.bin", "second.bin"});
+     auto &moduleInfos = info.FetchInnerModuleInfos();
+     ASSERT_FALSE(moduleInfos.empty());
+     ASSERT_EQ(moduleInfos.begin()->second.executableBinaryPaths.size(), 2u);
+     moduleInfos.begin()->second.executableBinaryPaths[0].permissionControlMode =
+         PermissionControlMode::INDEPENDENT;
+     moduleInfos.begin()->second.executableBinaryPaths[1].permissionControlMode =
+         PermissionControlMode::INHERIT_PARENT_PROCESS;
+ 
+     auto binFilePaths = baseBundleInstaller.GetBinFilePaths(info, TEST_BIN_NATIVE_LIBRARY_PATH);
+     ASSERT_EQ(binFilePaths.size(), 2u);
+     EXPECT_NE(binFilePaths[0].first.find("first.bin"), std::string::npos);
+     EXPECT_EQ(binFilePaths[0].second, PermissionControlMode::INDEPENDENT);
+     EXPECT_NE(binFilePaths[1].first.find("second.bin"), std::string::npos);
+     EXPECT_EQ(binFilePaths[1].second, PermissionControlMode::INHERIT_PARENT_PROCESS);
+ }
+ 
+ /**
+  * @tc.number: GetBinFilePaths_009
+  * @tc.name: test GetBinFilePaths skips invalid paths and keeps mode on valid
+  * @tc.desc: 1. mix valid / wrong-prefix / ".." paths
+  *           2. only valid path remains with its permissionControlMode
+  */
+ HWTEST_F(BmsBundleInstallerTest, GetBinFilePaths_009, Function | SmallTest | Level0)
+ {
+     BaseBundleInstaller baseBundleInstaller;
+     InnerBundleInfo info;
+     BundleInfo bundleInfo;
+     bundleInfo.name = TEST_BIN_BUNDLE_NAME;
+     info.SetBaseBundleInfo(bundleInfo);
+     ApplicationInfo applicationInfo;
+     applicationInfo.bundleName = TEST_BIN_BUNDLE_NAME;
+     info.SetBaseApplicationInfo(applicationInfo);
+     info.SetCpuAbi(TEST_BIN_CPU_ABI);
+ 
+     InnerModuleInfo moduleInfo;
+     moduleInfo.name = MODULE_NAME;
+ 
+     ExecutableBinaryPath validPath;
+     validPath.path = "libs/arm64-v8a/valid.bin";
+     validPath.permissionControlMode = PermissionControlMode::INHERIT_PARENT_PROCESS;
+     moduleInfo.executableBinaryPaths.push_back(validPath);
+ 
+     ExecutableBinaryPath wrongPrefix;
+     wrongPrefix.path = "test2.bin";
+     wrongPrefix.permissionControlMode = PermissionControlMode::INDEPENDENT;
+     moduleInfo.executableBinaryPaths.push_back(wrongPrefix);
+ 
+     ExecutableBinaryPath parentPath;
+     parentPath.path = "libs/arm64-v8a/subdir/../test3.bin";
+     parentPath.permissionControlMode = PermissionControlMode::INHERIT_PARENT_PROCESS;
+     moduleInfo.executableBinaryPaths.push_back(parentPath);
+ 
+     std::map<std::string, InnerModuleInfo> moduleInfos;
+     moduleInfos[MODULE_NAME] = moduleInfo;
+     info.AddInnerModuleInfo(moduleInfos);
+ 
+     auto binFilePaths = baseBundleInstaller.GetBinFilePaths(info, TEST_BIN_NATIVE_LIBRARY_PATH);
+     ASSERT_EQ(binFilePaths.size(), 1u);
+     EXPECT_NE(binFilePaths[0].first.find("valid.bin"), std::string::npos);
+     EXPECT_EQ(binFilePaths[0].first.find("test2.bin"), std::string::npos);
+     EXPECT_EQ(binFilePaths[0].first.find("test3.bin"), std::string::npos);
+     EXPECT_EQ(binFilePaths[0].second, PermissionControlMode::INHERIT_PARENT_PROCESS);
+ }
+ 
+ /**
+  * @tc.number: GetBinFilePaths_010
+  * @tc.name: test GetBinFilePaths with trailing slash nativeLibraryPath
+  * @tc.desc: 1. nativeLibraryPath ends with '/'
+  *           2. verify absolute path has no double slash and mode is preserved
+  */
+ HWTEST_F(BmsBundleInstallerTest, GetBinFilePaths_010, Function | SmallTest | Level0)
+ {
+     BaseBundleInstaller baseBundleInstaller;
+     baseBundleInstaller.bundleName_ = TEST_BIN_BUNDLE_NAME;
+     auto info = CreateBinBundleInfo(Constants::APP_PROVISION_TYPE_RELEASE, MODULE_NAME, {"slash.bin"});
+     auto &moduleInfos = info.FetchInnerModuleInfos();
+     ASSERT_FALSE(moduleInfos.empty());
+     ASSERT_FALSE(moduleInfos.begin()->second.executableBinaryPaths.empty());
+     moduleInfos.begin()->second.executableBinaryPaths[0].permissionControlMode =
+         PermissionControlMode::INDEPENDENT;
+ 
+     std::string nativeLibraryPathWithSlash = TEST_BIN_NATIVE_LIBRARY_PATH +
+         std::string(1, ServiceConstants::FILE_SEPARATOR_CHAR);
+     auto binFilePaths = baseBundleInstaller.GetBinFilePaths(info, nativeLibraryPathWithSlash);
+     ASSERT_EQ(binFilePaths.size(), 1u);
+     EXPECT_NE(binFilePaths[0].first.find("slash.bin"), std::string::npos);
+     EXPECT_EQ(binFilePaths[0].first.find("//"), std::string::npos);
+     EXPECT_EQ(binFilePaths[0].second, PermissionControlMode::INDEPENDENT);
+ }
+
+/**
  * @tc.number: ProcessBinFiles_001
  * @tc.name: test ProcessBinFiles with empty infos
  * @tc.desc: verify empty infos return ERR_OK without IPC
@@ -17613,6 +17760,82 @@ HWTEST_F(BmsBundleInstallerTest, ProcessBinFiles_006, Function | SmallTest | Lev
     EXPECT_NE(std::find_if(verifyBinParam.binFilePaths.begin(), verifyBinParam.binFilePaths.end(),
         [](const std::string &path) { return path.find("feature.bin") != std::string::npos; }),
         verifyBinParam.binFilePaths.end());
+}
+
+/**
+ * @tc.number: ProcessBinFiles_007
+ * @tc.name: test permissionControlModes are aligned with binFilePaths
+ * @tc.desc: verify mode of each bin file is sent to installd by index, and isUninstall is false
+ */
+HWTEST_F(BmsBundleInstallerTest, ProcessBinFiles_007, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller baseBundleInstaller;
+    auto info = CreateBinBundleInfo(Constants::APP_PROVISION_TYPE_DEBUG, "entry", {"entry.bin", "inherit.bin"});
+    auto &moduleInfo = info.FetchInnerModuleInfos().begin()->second;
+    ASSERT_EQ(moduleInfo.executableBinaryPaths.size(), 2);
+    moduleInfo.executableBinaryPaths[0].permissionControlMode = PermissionControlMode::INDEPENDENT;
+    moduleInfo.executableBinaryPaths[1].permissionControlMode = PermissionControlMode::INHERIT_PARENT_PROCESS;
+    std::unordered_map<std::string, InnerBundleInfo> infos = {{"test", info}};
+    baseBundleInstaller.bundleName_ = TEST_BIN_BUNDLE_NAME;
+    baseBundleInstaller.appIdentifier_ = "debugAppId";
+    baseBundleInstaller.userId_ = USERID;
+    ResetProcessBinFilesParamForTest();
+
+    (void)baseBundleInstaller.ProcessBinFiles(infos);
+    VerifyBinParam verifyBinParam;
+    ASSERT_TRUE(GetProcessBinFilesParamForTest(verifyBinParam));
+    EXPECT_FALSE(verifyBinParam.isUninstall);
+    ASSERT_EQ(verifyBinParam.binFilePaths.size(), 2);
+    ASSERT_EQ(verifyBinParam.permissionControlModes.size(), 2);
+    EXPECT_EQ(verifyBinParam.permissionControlModes[0],
+        static_cast<int32_t>(PermissionControlMode::INDEPENDENT));
+    EXPECT_EQ(verifyBinParam.permissionControlModes[1],
+        static_cast<int32_t>(PermissionControlMode::INHERIT_PARENT_PROCESS));
+}
+
+/**
+ * @tc.number: ProcessBinUninstall_001
+ * @tc.name: test ProcessBinUninstall sends uninstall param
+ * @tc.desc: verify isUninstall=true and only identity triple is sent to installd
+ */
+HWTEST_F(BmsBundleInstallerTest, ProcessBinUninstall_001, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller baseBundleInstaller;
+    baseBundleInstaller.bundleName_ = TEST_BIN_BUNDLE_NAME;
+    baseBundleInstaller.appIdentifier_ = "uninstallAppId";
+    baseBundleInstaller.userId_ = USERID;
+    ResetProcessBinFilesParamForTest();
+
+    baseBundleInstaller.ProcessBinUninstall();
+    VerifyBinParam verifyBinParam;
+    ASSERT_TRUE(GetProcessBinFilesParamForTest(verifyBinParam));
+    EXPECT_TRUE(verifyBinParam.isUninstall);
+    EXPECT_EQ(verifyBinParam.bundleName, TEST_BIN_BUNDLE_NAME);
+    EXPECT_EQ(verifyBinParam.appIdentifier, "uninstallAppId");
+    EXPECT_EQ(verifyBinParam.userId, USERID);
+    EXPECT_TRUE(verifyBinParam.binFilePaths.empty());
+    EXPECT_TRUE(verifyBinParam.permissionControlModes.empty());
+}
+
+/**
+ * @tc.number: ProcessBinUninstall_002
+ * @tc.name: test ProcessBinUninstall uses dual-mode bundle name
+ * @tc.desc: verify effective bundle name is sent when dualModeBundleName_ is set
+ */
+HWTEST_F(BmsBundleInstallerTest, ProcessBinUninstall_002, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller baseBundleInstaller;
+    baseBundleInstaller.bundleName_ = TEST_BIN_BUNDLE_NAME;
+    baseBundleInstaller.dualModeBundleName_ = TEST_BIN_BUNDLE_NAME + "@hid";
+    baseBundleInstaller.appIdentifier_ = "uninstallAppId";
+    baseBundleInstaller.userId_ = USERID;
+    ResetProcessBinFilesParamForTest();
+
+    baseBundleInstaller.ProcessBinUninstall();
+    VerifyBinParam verifyBinParam;
+    ASSERT_TRUE(GetProcessBinFilesParamForTest(verifyBinParam));
+    EXPECT_TRUE(verifyBinParam.isUninstall);
+    EXPECT_EQ(verifyBinParam.bundleName, TEST_BIN_BUNDLE_NAME + "@hid");
 }
 
 /**

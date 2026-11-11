@@ -5119,6 +5119,22 @@ ErrCode InstalldHostImpl::ProcessBinFiles(const VerifyBinParam &verifyBinParam)
         LOG_E(BMS_TAG_INSTALLD, "invalid bundleName: %{public}s", verifyBinParam.bundleName.c_str());
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
+    if (verifyBinParam.isUninstall) {
+        std::string realName = verifyBinParam.bundleName;
+        int32_t appIndex = InstalldOperator::GetAppIndexByBundleName(realName);
+        LOG_D(BMS_TAG_INSTALLD,
+            "ProcessHapBinUninstall -n %{public}s -u %{public}d appIndex=%{public}d",
+            realName.c_str(), verifyBinParam.userId, appIndex);
+#ifdef SECURITY_PRIVACY_SERVER_ENABLE
+        auto uninstallRet = BinarySecurityWrapper::GetInstance().ProcessHapBinUninstall(realName,
+            verifyBinParam.appIdentifier, verifyBinParam.userId, appIndex);
+        if (uninstallRet != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLD, "ProcessHapBinUninstall failed %{public}d", uninstallRet);
+            return ERR_APPEXECFWK_INSTALL_FAILED_VERIFY_BIN_PERMISSION;
+        }
+#endif
+        return ERR_OK;
+    }
     if (verifyBinParam.binFilePaths.empty()) {
         LOG_D(BMS_TAG_INSTALLD, "binFilePaths is empty");
         return ERR_OK;
@@ -5128,13 +5144,20 @@ ErrCode InstalldHostImpl::ProcessBinFiles(const VerifyBinParam &verifyBinParam)
             verifyBinParam.binFilePaths.size(), MAX_BIN_FILES_COUNT);
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
+    if (verifyBinParam.permissionControlModes.size() != verifyBinParam.binFilePaths.size()) {
+        LOG_E(BMS_TAG_INSTALLD,
+            "binFilePaths and permissionControlModes size mismatch pathCnt=%{public}zu modeCnt=%{public}zu",
+            verifyBinParam.binFilePaths.size(), verifyBinParam.permissionControlModes.size());
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
     std::string prefix = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
         verifyBinParam.bundleName + ServiceConstants::PATH_SEPARATOR;
     mode_t mode = S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
 #ifdef SECURITY_PRIVACY_SERVER_ENABLE
     std::vector<BinFileInfo> infos;
 #endif
-    for (const auto &path : verifyBinParam.binFilePaths) {
+    for (size_t i = 0; i < verifyBinParam.binFilePaths.size(); ++i) {
+        const auto &path = verifyBinParam.binFilePaths[i];
         std::string binFilePath;
         if (!PathToRealPath(path, binFilePath)) {
             LOG_E(BMS_TAG_INSTALLD, "not real path: %{public}s", path.c_str());
@@ -5170,6 +5193,10 @@ ErrCode InstalldHostImpl::ProcessBinFiles(const VerifyBinParam &verifyBinParam)
         }
         BinFileInfo binInfo;
         binInfo.path = binFilePath;
+        binInfo.permissionControlMode = verifyBinParam.permissionControlModes[i];
+        LOG_D(BMS_TAG_INSTALLD,
+            "ProcessHapBinInstall pass to BSS -n %{public}s path=%{private}s mode=%{public}d",
+            verifyBinParam.bundleName.c_str(), binInfo.path.c_str(), binInfo.permissionControlMode);
         infos.emplace_back(binInfo);
 #endif
     }

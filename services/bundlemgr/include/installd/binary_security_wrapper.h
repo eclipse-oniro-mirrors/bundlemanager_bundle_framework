@@ -29,6 +29,7 @@ namespace AppExecFwk {
 
 struct BinFileInfo {
     std::string path;
+    int32_t permissionControlMode = 0;
 };
 
 class BinarySecurityWrapper {
@@ -38,6 +39,9 @@ public:
     ErrCode ProcessHapBinInstall(const std::string &bundleName,
         const std::string &appIdentifier, int32_t userId,
         const std::vector<BinFileInfo> &binFileInfos, int32_t appIndex, int32_t sessionId);
+
+    ErrCode ProcessHapBinUninstall(const std::string &bundleName,
+        const std::string &appIdentifier, int32_t userId, int32_t appIndex);
 
     ErrCode RequestIndependentBinarySwitchAsync(int32_t &outSwitchStatus);
 
@@ -58,6 +62,7 @@ private:
     bool HasNoResolvedSymbolsNoLock() const;
     bool ResolveSymbolNoLock(const char* symbolName, void **func);
     bool ResolveProcessHapBinInstallNoLock();
+    bool ResolveProcessHapBinUninstallNoLock();
     bool ResolveRequestIndependentBinarySwitchAsyncNoLock();
     bool ResolveCheckHspPluginCertValidityNoLock();
     bool ResolveCheckAppSideLoadingAsyncNoLock();
@@ -67,6 +72,8 @@ private:
 
     using ProcessHapBinInstallFunc = int32_t(*)(const std::string&, const std::string&,
         int32_t, int32_t, int32_t, const std::vector<BinFileInfo>&);
+    using ProcessHapBinUninstallFunc = int32_t(*)(const std::string&, const std::string&,
+        int32_t, int32_t);
     using RequestIndependentBinarySwitchAsyncFunc = int32_t(*)(int32_t &);
     using CheckHspPluginCertValidityFunc = int32_t(*)(Security::Verify::HspPlugin &);
     using CheckAppSideLoadingAsyncFunc = bool(*)(int32_t);
@@ -74,6 +81,7 @@ private:
     mutable std::shared_mutex mutex_;
     void* handle_ = nullptr;
     ProcessHapBinInstallFunc processHapBinInstallFunc_ = nullptr;
+    ProcessHapBinUninstallFunc processHapBinUninstallFunc_ = nullptr;
     RequestIndependentBinarySwitchAsyncFunc requestIndependentBinarySwitchAsyncFunc_ = nullptr;
     CheckHspPluginCertValidityFunc checkHspPluginCertValidityFunc_ = nullptr;
     CheckAppSideLoadingAsyncFunc checkAppSideLoadingAsyncFunc_ = nullptr;

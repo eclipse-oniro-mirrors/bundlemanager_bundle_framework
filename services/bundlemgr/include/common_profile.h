@@ -470,6 +470,7 @@ constexpr const char* HNP_TYPE = "type";
 constexpr const char* HNP_INDEPENDENT_SIGN = "independentSign";
 // executableBinaryPath
 constexpr const char* EXECUTABLE_BINARY_PATH = "path";
+constexpr const char* EXECUTABLE_BINARY_PERMISSION_CONTROL_MODE = "permissionControlMode";
 // launchService
 constexpr const char* LAUNCH_SERVICE_NAME = "name";
 constexpr const char* LAUNCH_SERVICE_BINARY_PATH = "binaryPath";
