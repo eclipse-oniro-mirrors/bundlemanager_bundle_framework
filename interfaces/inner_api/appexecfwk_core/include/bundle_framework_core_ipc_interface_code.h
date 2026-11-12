@@ -272,7 +272,6 @@ enum class BundleMgrInterfaceCode : uint32_t {
     UPDATE_DESKTOP_SHORTCUT_INFO = 246,
     START_APP_DETAIL_ABILITY = 247,
     GET_JSON_PROFILE_FOR_SELF = 248,
-    GET_BUNDLE_STATS_ASYNC = 249,
     FILTER_BUNDLE_LIST_BY_DEVICE_MODE_DISTRIBUTION_POLICIES = 250,
     BATCH_SET_CLONE_APPLICATION_ENABLED = 251,
     GET_APP_PROVISION_INFO_IN_DEVICE = 252,
@@ -392,10 +391,6 @@ enum class CleanCacheCallbackInterfaceCode : uint8_t {
 /* SAID: 401-234 Interface No.234 subservice also provides the following interfaces */
 enum class GetLargestItemsCallbackInterfaceCode : uint8_t {
     ON_GET_LARGEST_ITEMS_CALLBACK = 0,
-};
-
-enum class BundleStatsCallbackInterfaceCode : uint8_t {
-    ON_GET_BUNDLE_STATS_CALLBACK = 0,
 };
 
 /* SAID: 401-27 Interface No.26 subservice also provides the following interfaces */

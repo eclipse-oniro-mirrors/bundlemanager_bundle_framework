@@ -6211,8 +6211,7 @@ std::set<int32_t> BundleDataMgr::GetBindingSAUidsByBundleName(const std::string 
 }
 
 bool BundleDataMgr::GetBundleStats(const std::string &bundleName,
-    const int32_t userId, std::vector<int64_t> &bundleStats, const int32_t appIndex, const uint32_t statFlag,
-    int32_t activeUserId) const
+    const int32_t userId, std::vector<int64_t> &bundleStats, const int32_t appIndex, const uint32_t statFlag) const
 {
     int32_t responseUserId = -1;
     int32_t uid = Constants::INVALID_UID;
@@ -6250,9 +6249,7 @@ bool BundleDataMgr::GetBundleStats(const std::string &bundleName,
     }
     std::unordered_set<int32_t> uids;
     uids.emplace(uid);
-    if (activeUserId == Constants::INVALID_USERID) {
-        activeUserId = AccountHelper::GetUserIdByCallerType();
-    }
+    auto activeUserId = AccountHelper::GetUserIdByCallerType();
     if (appIndex == Constants::MAIN_APP_INDEX && activeUserId == userId) {
         std::map<std::string, std::set<int32_t>> saUidMap;
         LoadSaUidMap(saUidMap);
