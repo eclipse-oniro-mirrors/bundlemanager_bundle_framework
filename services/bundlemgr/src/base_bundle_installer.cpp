@@ -1924,6 +1924,18 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     result = ParseHapFiles(bundlePaths, installParam, appType, hapVerifyResults, newInfos);
     CHECK_RESULT(result, "parse haps file failed %{public}d");
 
+    // BOPD mode blocks third-party app install/update; pre-install apps and system apps are allowed.
+    // Gate on the parsed app type (not the caller-supplied type) and the pre-install flag.
+    // Order cheap field checks before the BOPD system-parameter read so allowed installs (pre-install /
+    // system apps) short-circuit without reading ohos.boot.bopd.mode.
+    if (!newInfos.empty() && !installParam.isPreInstallApp &&
+        newInfos.begin()->second.GetAppType() == Constants::AppType::THIRD_PARTY_APP &&
+        dataMgr_->IsBopdModeEnabled()) {
+        LOG_E(BMS_TAG_INSTALLER, "install bundle %{public}s is not allowed in bopd mode",
+            newInfos.begin()->second.GetBundleName().c_str());
+        return ERR_APPEXECFWK_INSTALL_BOPD_MODE_DISABLED;
+    }
+
     result = CheckArkTSMode(newInfos);
     CHECK_RESULT(result, "check arkTS mode failed %{public}d");
 

@@ -124,6 +124,18 @@ HWTEST_F(BmsStatusReceiverProxyTest, TransformResult_NativeInstallFailed_0100, F
 }
 
 /**
+ * @tc.name: TransformResult_InstallBopdModeDisabled_0100
+ * @tc.desc: Test TransformResult with ERR_APPEXECFWK_INSTALL_BOPD_MODE_DISABLED
+ * @tc.type: FUNC
+ */
+HWTEST_F(BmsStatusReceiverProxyTest, TransformResult_InstallBopdModeDisabled_0100, Function | SmallTest | Level0)
+{
+    receiver_->OnFinished(ERR_APPEXECFWK_INSTALL_BOPD_MODE_DISABLED, "");
+    EXPECT_EQ(receiver_->resultCode_, IStatusReceiver::ERR_INSTALL_CODE_APP_CONTROLLED_FAILED);
+    EXPECT_EQ(receiver_->resultMsg_, std::string("[MSG_ERR_INSTALL_CODE_APP_CONTROLLED_FAILED]"));
+}
+
+/**
  * @tc.name: TransformResult_UnknownErrorCode_0100
  * @tc.desc: Test TransformResult with an unknown error code → ERR_UNKNOWN
  * @tc.type: FUNC

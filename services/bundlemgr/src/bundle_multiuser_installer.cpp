@@ -146,6 +146,13 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
         APP_LOGE("the bundle is not installed");
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
+    // BOPD mode blocks install-existed (multi-user) for third-party apps; system/pre-install apps are allowed.
+    // Gate on the fetched app type (not caller-supplied) before any per-user uid/data/token creation.
+    if (info.GetAppType() == Constants::AppType::THIRD_PARTY_APP && dataMgr_->IsBopdModeEnabled()) {
+        LOG_E(BMS_TAG_INSTALLER, "install existed bundle %{public}s is not allowed in bopd mode",
+            bundleName.c_str());
+        return ERR_APPEXECFWK_INSTALL_BOPD_MODE_DISABLED;
+    }
     dataMgr_->DisableBundle(bundleName);
     isBundleCrossAppSharedConfig_ = info.IsBundleCrossAppSharedConfig();
     moduleName_ = info.GetEventModuleName();

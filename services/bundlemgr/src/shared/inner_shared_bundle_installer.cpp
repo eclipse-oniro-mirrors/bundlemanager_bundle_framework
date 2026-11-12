@@ -88,6 +88,19 @@ ErrCode InnerSharedBundleInstaller::ParseFiles(const InstallCheckParam &checkPar
     result = bundleInstallChecker_->ParseHapFiles(bundlePaths, checkParam, hapVerifyResults_, parsedBundles_);
     CHECK_RESULT(result, "parse haps file failed %{public}d");
 
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    // BOPD mode blocks third-party shared bundle install/update; pre-install apps and system apps are allowed.
+    // Cross-app HSP does not support the recover flow, so only the pre-install flag and app type gate it.
+    // Order cheap field checks before the BOPD system-parameter read so allowed installs short-circuit
+    // without reading ohos.boot.bopd.mode.
+    if (dataMgr != nullptr && !parsedBundles_.empty() && !checkParam.isPreInstallApp &&
+        parsedBundles_.begin()->second.GetAppType() == Constants::AppType::THIRD_PARTY_APP &&
+        dataMgr->IsBopdModeEnabled()) {
+        LOG_E(BMS_TAG_INSTALLER, "install shared bundle %{public}s is not allowed in bopd mode",
+            parsedBundles_.begin()->second.GetBundleName().c_str());
+        return ERR_APPEXECFWK_INSTALL_BOPD_MODE_DISABLED;
+    }
+
     // check multiple HSP consistency (bundleName,versionCode, appType, bundleType, isStage)
     result = bundleInstallChecker_->CheckMultipleHspConsistency(parsedBundles_);
     CHECK_RESULT(result, "check multiple hsp consistency failed %{public}d");
