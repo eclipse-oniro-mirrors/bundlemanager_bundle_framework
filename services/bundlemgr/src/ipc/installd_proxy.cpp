@@ -1692,7 +1692,7 @@ ErrCode InstalldProxy::GetEnterpriseCertInfo(const std::string &certPath, Enterp
         LOG_E(BMS_TAG_INSTALLD, "read cert info failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    certInfo = *infoPtr;
+    certInfo = std::move(*infoPtr);
     return ERR_OK;
 }
 

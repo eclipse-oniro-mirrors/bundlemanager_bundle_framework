@@ -1217,10 +1217,10 @@ ErrCode BundleInstallerProxy::GetEnterpriseReSignatureCertInfo(
     for (int32_t i = 0; i < certInfoSize; i++) {
         std::unique_ptr<EnterpriseCertInfo> certInfo(reply.ReadParcelable<EnterpriseCertInfo>());
         if (certInfo == nullptr) {
-            LOG_E(BMS_TAG_INSTALLER, "read cert info failed");
+            LOG_E(BMS_TAG_INSTALLER, "read cert info failed, index: %{public}d", i);
             return ERR_APPEXECFWK_ENTERPRISE_CERT_READ_PARCEL_ERROR;
         }
-        certInfos.emplace_back(*certInfo);
+        certInfos.emplace_back(std::move(*certInfo));
     }
     LOG_I(BMS_TAG_INSTALLER, "get ReSignature Certificate Info size: %{public}zu", certInfos.size());
     return ERR_OK;

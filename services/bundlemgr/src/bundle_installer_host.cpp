@@ -1932,14 +1932,13 @@ ErrCode BundleInstallerHost::GetEnterpriseReSignatureCertInfo(
     for (const auto &alias : certificateAlias) {
         std::string certPath = certDir + ServiceConstants::PATH_SEPARATOR + alias;
         EnterpriseCertInfo info;
-        info.certAlias = alias;
         ErrCode certRet = InstalldClient::GetInstance()->GetEnterpriseCertInfo(certPath, info);
         if (certRet != ERR_OK) {
             LOG_W(BMS_TAG_INSTALLER, "parse cert %{public}s failed, errCode: %{public}d, skip",
                 alias.c_str(), certRet);
             continue;
         }
-        certInfos.emplace_back(info);
+        certInfos.emplace_back(std::move(info));
     }
     LOG_I(BMS_TAG_INSTALLER, "get cert info size: %{public}zu", certInfos.size());
     return ERR_OK;

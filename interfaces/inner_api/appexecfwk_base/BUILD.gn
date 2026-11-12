@@ -81,6 +81,7 @@ ohos_shared_library("appexecfwk_base") {
     "src/distributed_manager/rpc_id_result.cpp",
     "src/distributed_module_info.cpp",
     "src/dynamic_icon_info.cpp",
+    "src/enterprise_cert_info.cpp",
     "src/extension_ability_info.cpp",
     "src/extension_form_info.cpp",
     "src/extension_form_profile.cpp",
@@ -112,7 +113,6 @@ ohos_shared_library("appexecfwk_base") {
     "src/shared/shared_module_info.cpp",
     "src/shortcut_info.cpp",
     "src/skill.cpp",
-    "src/enterprise_cert_info.cpp",
   ]
 
   public_configs = [
