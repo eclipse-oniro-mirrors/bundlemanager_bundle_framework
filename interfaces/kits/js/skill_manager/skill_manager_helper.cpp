@@ -16,6 +16,7 @@
 #include "skill_manager_helper.h"
 
 #include "app_log_wrapper.h"
+#include "bundle_constants.h"
 #include "bundle_errors.h"
 #include "bundle_mgr_interface.h"
 #include "bundle_mgr_proxy.h"
@@ -79,6 +80,36 @@ sptr<IBundleSkillManager> SkillManagerHelper::GetSkillManager()
     return skillManager_;
 }
 
+void SkillManagerHelper::ConvertSkillPath(SkillInfo &skillInfo, bool forSelf)
+{
+    if (forSelf) {
+        const std::string baseSkillDir = std::string(Constants::BASE_SKILL_DIR) + "/";
+        if (skillInfo.skillPath.compare(0, baseSkillDir.size(), baseSkillDir) != 0) {
+            APP_LOGD("forSelf skillPath not under %{public}s, keep as-is", Constants::BASE_SKILL_DIR);
+            return;
+        }
+        const size_t segmentEnd = skillInfo.skillPath.find('/', baseSkillDir.size());
+        if (segmentEnd == std::string::npos) {
+            APP_LOGD("forSelf skillPath has no segment after %{public}s, keep as-is",
+                Constants::BASE_SKILL_DIR);
+            return;
+        }
+        skillInfo.skillPath.replace(0, segmentEnd, Constants::SANDBOX_SKILL_PATH_FOR_SELF_PREFIX);
+        return;
+    }
+    if (skillInfo.skillPath.compare(0, strlen(Constants::BASE_SKILL_DIR),
+        Constants::BASE_SKILL_DIR) == 0) {
+        skillInfo.skillPath.replace(0, strlen(Constants::BASE_SKILL_DIR), Constants::SANDBOX_SKILL_PATH_PREFIX);
+    }
+}
+
+void SkillManagerHelper::ConvertSkillPaths(std::vector<SkillInfo> &skillInfos, bool forSelf)
+{
+    for (size_t index = 0; index < skillInfos.size(); ++index) {
+        ConvertSkillPath(skillInfos[index], forSelf);
+    }
+}
+
 ErrCode SkillManagerHelper::InnerGetSkillInfoForSelf(const std::string &moduleName,
     const std::string &skillName, uint32_t flags, SkillInfo &skillInfo)
 {
@@ -91,6 +122,8 @@ ErrCode SkillManagerHelper::InnerGetSkillInfoForSelf(const std::string &moduleNa
     ErrCode ret = skillManagerProxy->GetSkillInfoForSelf(moduleName, skillName, flags, skillInfo);
     if (ret != ERR_OK) {
         APP_LOGE("failed, moduleName is %{public}s, errCode: %{public}d", moduleName.c_str(), ret);
+    } else {
+        ConvertSkillPath(skillInfo, true);
     }
     return CommonFunc::ConvertErrCode(ret);
 }
@@ -107,6 +140,8 @@ ErrCode SkillManagerHelper::InnerGetSkillInfosForSelf(uint32_t flags,
     ErrCode ret = skillManagerProxy->GetSkillInfosForSelf(flags, skillInfos);
     if (ret != ERR_OK) {
         APP_LOGE("failed, errCode: %{public}d", ret);
+    } else {
+        ConvertSkillPaths(skillInfos, true);
     }
     return CommonFunc::ConvertErrCode(ret);
 }
@@ -123,6 +158,8 @@ ErrCode SkillManagerHelper::InnerGetSkillInfo(const std::string &bundleName, con
     ErrCode ret = skillManagerProxy->GetSkillInfo(bundleName, moduleName, skillName, flags, userId, skillInfo);
     if (ret != ERR_OK) {
         APP_LOGE("failed, bundleName is %{public}s, errCode: %{public}d", bundleName.c_str(), ret);
+    } else {
+        ConvertSkillPath(skillInfo, false);
     }
     return CommonFunc::ConvertErrCode(ret);
 }
@@ -139,6 +176,8 @@ ErrCode SkillManagerHelper::InnerGetSkillInfos(const std::string &bundleName, ui
     ErrCode ret = skillManagerProxy->GetSkillInfos(bundleName, flags, userId, skillInfos);
     if (ret != ERR_OK) {
         APP_LOGE("failed, bundleName is %{public}s, errCode: %{public}d", bundleName.c_str(), ret);
+    } else {
+        ConvertSkillPaths(skillInfos, false);
     }
     return CommonFunc::ConvertErrCode(ret);
 }
@@ -155,6 +194,8 @@ ErrCode SkillManagerHelper::InnerGetAllSkillInfos(uint32_t flags, int32_t userId
     ErrCode ret = skillManagerProxy->GetAllSkillInfos(flags, userId, skillInfos);
     if (ret != ERR_OK) {
         APP_LOGE("failed, errCode: %{public}d", ret);
+    } else {
+        ConvertSkillPaths(skillInfos, false);
     }
     return CommonFunc::ConvertErrCode(ret);
 }
