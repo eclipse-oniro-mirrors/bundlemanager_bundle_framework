@@ -193,8 +193,10 @@ public:
 
     bool IsVerifyRecoverRule() const
     {
-        return parameters.find(Constants::VERIFY_RECOVER_RULE_KEY) != parameters.end() &&
-            parameters.at(Constants::VERIFY_RECOVER_RULE_KEY) == Constants::VERIFY_RECOVER_RULE_VALUE;
+        if (parameters.find(Constants::VERIFY_RECOVER_RULE_KEY) == parameters.end()) {
+            return true;
+        }
+        return parameters.at(Constants::VERIFY_RECOVER_RULE_KEY) == Constants::VERIFY_RECOVER_RULE_VALUE;
     }
 
     // Refresh deviceModeDistributionPolicy from the parameters map entry keyed by

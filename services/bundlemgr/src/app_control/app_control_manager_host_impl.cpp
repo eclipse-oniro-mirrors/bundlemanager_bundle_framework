@@ -1113,7 +1113,7 @@ ErrCode AppControlManagerHostImpl::SetRecoverDisposedRule(const RecoverDisposedR
         LOG_E(BMS_TAG_DEFAULT, "null want");
         return ERR_BUNDLE_MANAGER_INVALID_RECOVER_RULE;
     }
-    if (callerName != rule.want->GetBundle()) {
+    if (!BundlePermissionMgr::IsNativeTokenType() && callerName != rule.want->GetBundle()) {
         LOG_E(BMS_TAG_DEFAULT, "callerName is not equal to bundleName in want");
         return ERR_BUNDLE_MANAGER_INVALID_RECOVER_RULE;
     }

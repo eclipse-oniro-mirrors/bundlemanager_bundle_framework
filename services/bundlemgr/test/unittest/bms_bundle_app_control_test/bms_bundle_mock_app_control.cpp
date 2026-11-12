@@ -951,8 +951,8 @@ HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerHostImpl_0170, Function |
 
 /**
  * @tc.number: AppControlManagerHostImpl_0180
- * @tc.name: test SetRecoverDisposedRule with mismatched bundleName by AppControlManagerHostImpl
- * @tc.desc: 1.SetRecoverDisposedRule test
+ * @tc.name: test SetRecoverDisposedRule with a target bundleName from a native caller
+ * @tc.desc: 1.native callers can set a want whose bundleName differs from the caller name
  */
 HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerHostImpl_0180, Function | SmallTest | Level1)
 {
@@ -963,7 +963,7 @@ HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerHostImpl_0180, Function |
     rule.want = std::make_shared<Want>();
     rule.want->SetBundle(TARGET_BUNDLE_NAME);
     auto res = impl.SetRecoverDisposedRule(rule, USERID);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_RECOVER_RULE);
+    EXPECT_EQ(res, ERR_OK);
 }
 
 /**
