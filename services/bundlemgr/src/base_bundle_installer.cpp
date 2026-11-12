@@ -3253,16 +3253,35 @@ ErrCode BaseBundleInstaller::ProcessRecover(
 {
     LOG_D(BMS_TAG_INSTALLER, "Process Recover Bundle(%{public}s) start", bundleName.c_str());
     int32_t userId = GetUserId(installParam.userId);
-    if (!CheckCanInstallPreBundle(bundleName, userId)) {
+    if (!InitDataMgr()) {
+        return ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR;
+    }
+    // Dual-mode: recovery only targets the app visible in the current mode. In secondary mode
+    // a recover request by the original name (the JS recover API carries no distribution policy)
+    // must be routed to the clone record, so the secondary package is installed and the
+    // force-uninstall marker recorded under the effective (clone) name is honored. Callers that
+    // already carry a different-package policy (UninstallAndRecover) or pass the clone key
+    // themselves (user-100 flow) keep their own routing and are left untouched.
+    std::string recoverBundleName = bundleName;
+    if (DualModeHelper::IsDualModeDevice() && DualModeHelper::IsSecondaryMode() &&
+        !DualModeHelper::IsDualModeCloneKey(bundleName) &&
+        !DualModeHelper::IsDiffPackageCategory(installParam.deviceModeDistributionPolicy) &&
+        IsPreInstallDiffPackage(bundleName)) {
+        recoverBundleName = DualModeHelper::GetDualModeBundleName(bundleName);
+        LOG_I(BMS_TAG_INSTALLER, "Dual mode recover: route %{public}s to clone record %{public}s",
+            bundleName.c_str(), recoverBundleName.c_str());
+    }
+    if (!CheckCanInstallPreBundle(recoverBundleName, userId)) {
         LOG_E(BMS_TAG_INSTALLER, "Bundle(%{public}s) was force uninstalled before, not allow recover",
-            bundleName.c_str());
+            recoverBundleName.c_str());
         return ERR_APPEXECFWK_INSTALL_FORCE_UNINSTALLED_BUNDLE_NOT_ALLOW_RECOVER;
     }
     if (AccountHelper::CheckOsAccountConstraintEnabled(userId, ServiceConstants::CONSTRAINT_APPS_INSTALL)) {
-        LOG_E(BMS_TAG_INSTALLER, "user %{public}d is not allowed to recover %{public}s", userId, bundleName.c_str());
+        LOG_E(BMS_TAG_INSTALLER, "user %{public}d is not allowed to recover %{public}s",
+            userId, recoverBundleName.c_str());
         return ERR_APPEXECFWK_INSTALL_FAILED_ACCOUNT_CONSTRAINT;
     }
-    ErrCode result = InnerProcessInstallByPreInstallInfo(bundleName, installParam, uid);
+    ErrCode result = InnerProcessInstallByPreInstallInfo(recoverBundleName, installParam, uid);
     return result;
 }
 
@@ -3284,7 +3303,20 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
     }
 
     {
-        auto &mtx = dataMgr_->GetBundleMutex(bundleName);
+        // F-001: the per-bundle mutex must key on the canonical (original) name. The
+        // parameter can arrive as a dual-mode clone key (routed by ProcessRecover or passed
+        // by the user-100 flow), but the bundleInfos_ entry this branch read-modify-writes is
+        // keyed by the original name — and so is the mutex key of every other writer of that
+        // entry (the install-by-path upgrade locks on the original bundleName_ in
+        // ProcessBundleInstall; the uninstall paths lock on the original name). Locking on
+        // the clone key would let the isAppExist_ update below race with a same-name upgrade
+        // and lose InnerBundleUserInfo updates. Only the mutex key is normalized: the clone
+        // key still addresses the preinstall record and the user info below.
+        std::string mutexKey = bundleName;
+        if (DualModeHelper::IsDualModeCloneKey(bundleName)) {
+            DualModeHelper::ParseDualModeBundleName(bundleName, mutexKey);
+        }
+        auto &mtx = dataMgr_->GetBundleMutex(mutexKey);
         std::lock_guard lock {mtx};
         InnerBundleInfo oldInfo;
         InitTempBundleFromCache(oldInfo, isAppExist_, bundleName);

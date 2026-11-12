@@ -21,7 +21,9 @@
 #define private public
 #define protected public
 #include <gtest/gtest.h>
+#include <atomic>
 #include <chrono>
+#include <future>
 #include <functional>
 #include <string>
 #include <thread>
@@ -6671,5 +6673,276 @@ HWTEST_F(BmsDualModeInstallTest, UpdateBaseBundleInfo_CarriesDualModeFields_0200
     EXPECT_EQ(info.GetDeviceModeDistributionPolicy(),
         DeviceModeDistributionPolicy::PARTIAL_COMPATIBLE_DIFFERENT_PACKAGE);
     EXPECT_EQ(info.GetAppSandboxPolicy(), AppSandboxPolicy::ISOLATED_SANDBOX);
+}
+
+// ====================== BaseBundleInstaller::ProcessRecover dual-mode routing ======================
+// Recovery only targets the app visible in the current mode. In secondary mode a recover request
+// by the original name (the JS recover API carries no distribution policy) must be routed to the
+// clone record — the secondary package is installed, and the force-uninstall marker recorded
+// under the effective (clone) name is honored. Callers that already carry a different-package
+// policy (UninstallAndRecover) or pass the clone key themselves keep their own routing.
+
+namespace {
+// Count how many storage lookups hit the given key (PreInstallStorageSpy records them).
+static size_t CountSpyQueries(const std::shared_ptr<PreInstallStorageSpy> &spy, const std::string &key)
+{
+    size_t count = 0;
+    for (const auto &query : spy->queriedBundleNames) {
+        if (query == key) {
+            ++count;
+        }
+    }
+    return count;
+}
+
+// Seed the fan-out records of a different-package app into the spy: the primary record (with a
+// bundle path, so the pre-fix primary-record selection would have gone past the paths check into
+// the deep install flow) and the clone record (no paths, so the routed flow stops deterministically
+// at the empty-paths check). Both records carry the original bundle name in the value field.
+// seedPrimaryPath=false drops the primary record's path: use it in cases that (correctly) resolve
+// to the primary record and assert the empty-paths exit — a path there sends the flow into the
+// real install chain, which ends at the host-only stat of /system/app/... (8522644), not at the
+// deterministic RECOVER_INVALID_BUNDLE_NAME the routing group standardizes on.
+static std::shared_ptr<PreInstallStorageSpy> SeedRecoverRecords(
+    const std::shared_ptr<BundleDataMgr> &dataMgr, bool seedPrimaryPath = true)
+{
+    auto spy = InstallPreInstallStorageSpy(dataMgr);
+    PreInstallBundleInfo primary;
+    primary.SetBundleName(BUNDLE_NAME);
+    primary.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE);
+    if (seedPrimaryPath) {
+        primary.AddBundlePath("/system/app/" + BUNDLE_NAME + "/main.hap");
+    }
+    spy->injectedInfos[BUNDLE_NAME] = primary;
+    PreInstallBundleInfo clone;
+    clone.SetBundleName(BUNDLE_NAME);
+    clone.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE);
+    clone.SetIsDualModeCloneApp(true);
+    spy->injectedInfos[PREFIXED_NAME] = clone;
+    return spy;
+}
+}  // namespace
+
+// Secondary mode, no caller policy: routed to the clone record. All storage lookups (the diff-package
+// probe, the force-uninstall check and the preinstall record fetch) address the clone key; the
+// primary record with its bundle path is never consulted (pre-fix: primary haps installed as the
+// clone variant). The clone record carries no paths -> deterministic RECOVER_INVALID_BUNDLE_NAME.
+HWTEST_F(BmsDualModeInstallTest, ProcessRecover_DualMode_0100, Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    dataMgr->multiUserIdsSet_.insert(TEST_USERID);
+    auto spy = SeedRecoverRecords(dataMgr);
+    BaseBundleInstaller installer;
+    installer.dataMgr_ = dataMgr;
+    InstallParam installParam;
+    installParam.userId = TEST_USERID;
+    int32_t uid = Constants::INVALID_UID;
+
+    EXPECT_EQ(installer.ProcessRecover(BUNDLE_NAME, installParam, uid),
+        ERR_APPEXECFWK_RECOVER_INVALID_BUNDLE_NAME);
+    ASSERT_FALSE(spy->queriedBundleNames.empty());
+    EXPECT_EQ(spy->queriedBundleNames.front(), PREFIXED_NAME);
+    EXPECT_EQ(CountSpyQueries(spy, BUNDLE_NAME), static_cast<size_t>(0));
+}
+
+// Primary mode: no routing, the primary record governs; the clone key is never queried.
+// The primary seed carries no path: this case (correctly) resolves to the primary record, so a
+// seeded path would leave the routing group's deterministic empty-paths exit and end at the
+// host-only stat failure inside the real install chain instead.
+HWTEST_F(BmsDualModeInstallTest, ProcessRecover_DualMode_0200, Function | SmallTest | Level0)
+{
+    EnablePrimaryMode();
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    dataMgr->multiUserIdsSet_.insert(TEST_USERID);
+    auto spy = SeedRecoverRecords(dataMgr, false);
+    BaseBundleInstaller installer;
+    installer.dataMgr_ = dataMgr;
+    InstallParam installParam;
+    installParam.userId = TEST_USERID;
+    int32_t uid = Constants::INVALID_UID;
+
+    EXPECT_EQ(installer.ProcessRecover(BUNDLE_NAME, installParam, uid),
+        ERR_APPEXECFWK_RECOVER_INVALID_BUNDLE_NAME);
+    ASSERT_FALSE(spy->queriedBundleNames.empty());
+    EXPECT_EQ(spy->queriedBundleNames.front(), BUNDLE_NAME);
+    EXPECT_EQ(CountSpyQueries(spy, PREFIXED_NAME), static_cast<size_t>(0));
+}
+
+// Secondary mode but the caller carries a different-package policy (UninstallAndRecover shape):
+// ProcessRecover must not pre-route — the force-uninstall check addresses the original name and
+// the inner fresh-install pass does its own clone-key routing.
+HWTEST_F(BmsDualModeInstallTest, ProcessRecover_DualMode_0300, Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    dataMgr->multiUserIdsSet_.insert(TEST_USERID);
+    auto spy = SeedRecoverRecords(dataMgr);
+    BaseBundleInstaller installer;
+    installer.dataMgr_ = dataMgr;
+    InstallParam installParam;
+    installParam.userId = TEST_USERID;
+    installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE;
+    int32_t uid = Constants::INVALID_UID;
+
+    EXPECT_EQ(installer.ProcessRecover(BUNDLE_NAME, installParam, uid),
+        ERR_APPEXECFWK_RECOVER_INVALID_BUNDLE_NAME);
+    ASSERT_FALSE(spy->queriedBundleNames.empty());
+    EXPECT_EQ(spy->queriedBundleNames.front(), BUNDLE_NAME);
+    EXPECT_EQ(CountSpyQueries(spy, PREFIXED_NAME), static_cast<size_t>(1));
+}
+
+// Secondary mode, force-uninstall marker on the clone record: the routed name's marker governs —
+// recover is rejected (pre-fix the check addressed the primary record's marker and passed).
+HWTEST_F(BmsDualModeInstallTest, ProcessRecover_DualMode_0400, Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    dataMgr->multiUserIdsSet_.insert(TEST_USERID);
+    auto spy = SeedRecoverRecords(dataMgr);
+    spy->injectedInfos[PREFIXED_NAME].AddForceUnisntalledUser(TEST_USERID);
+    BaseBundleInstaller installer;
+    installer.dataMgr_ = dataMgr;
+    InstallParam installParam;
+    installParam.userId = TEST_USERID;
+    int32_t uid = Constants::INVALID_UID;
+
+    EXPECT_EQ(installer.ProcessRecover(BUNDLE_NAME, installParam, uid),
+        ERR_APPEXECFWK_INSTALL_FORCE_UNINSTALLED_BUNDLE_NOT_ALLOW_RECOVER);
+    ASSERT_FALSE(spy->queriedBundleNames.empty());
+    EXPECT_EQ(spy->queriedBundleNames.front(), PREFIXED_NAME);
+    EXPECT_EQ(CountSpyQueries(spy, BUNDLE_NAME), static_cast<size_t>(0));
+}
+
+// Secondary mode, clone variant already installed for the user: the isAppExist_ flow must process
+// the CLONE variant (current mode). With routing the clone-key input skips the re-fetch-primary
+// branch (which pre-fix adopted the hidden primary variant and misrouted the new user's data to
+// the primary), so the clone variant's existing user is seen -> RECOVER_INVALID_BUNDLE_NAME.
+HWTEST_F(BmsDualModeInstallTest, ProcessRecover_DualMode_0500, Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    dataMgr->multiUserIdsSet_.insert(TEST_USERID);
+    auto spy = SeedRecoverRecords(dataMgr);
+    // current-mode clone variant (bundleInfos_, keyed by the original name) with the user
+    dataMgr->bundleInfos_[BUNDLE_NAME] = MakeBundleInfoWithUser(
+        DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE);
+    dataMgr->bundleInfos_[BUNDLE_NAME].SetDualModeCloneApp(true);
+    // hidden primary variant without this user — must NOT be adopted as old info
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = BUNDLE_NAME;
+    userInfo.bundleUserInfo.userId = Constants::DEFAULT_USERID;
+    InnerBundleInfo primaryVariant;
+    primaryVariant.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE);
+    primaryVariant.AddInnerBundleUserInfo(userInfo);
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] = primaryVariant;
+    BaseBundleInstaller installer;
+    installer.dataMgr_ = dataMgr;
+    InstallParam installParam;
+    installParam.userId = TEST_USERID;
+    int32_t uid = Constants::INVALID_UID;
+
+    EXPECT_EQ(installer.ProcessRecover(BUNDLE_NAME, installParam, uid),
+        ERR_APPEXECFWK_RECOVER_INVALID_BUNDLE_NAME);
+    ASSERT_FALSE(spy->queriedBundleNames.empty());
+    EXPECT_EQ(spy->queriedBundleNames.front(), PREFIXED_NAME);
+    EXPECT_EQ(CountSpyQueries(spy, BUNDLE_NAME), static_cast<size_t>(0));
+}
+
+// Non-dual-mode device: routing never applies, the original name governs (compatibility guard).
+// Same no-path primary seed as _0200: this case also resolves to the primary record, and the
+// asserted exit is the empty-paths RECOVER_INVALID_BUNDLE_NAME, not the real install chain.
+HWTEST_F(BmsDualModeInstallTest, ProcessRecover_NonDualMode_0600, Function | SmallTest | Level0)
+{
+    SetDualModeCache(ServiceConstants::DUAL_MODE_VALUE_INVALID, ServiceConstants::DUAL_MODE_VALUE_INVALID);
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    dataMgr->multiUserIdsSet_.insert(TEST_USERID);
+    auto spy = SeedRecoverRecords(dataMgr, false);
+    BaseBundleInstaller installer;
+    installer.dataMgr_ = dataMgr;
+    InstallParam installParam;
+    installParam.userId = TEST_USERID;
+    int32_t uid = Constants::INVALID_UID;
+
+    EXPECT_EQ(installer.ProcessRecover(BUNDLE_NAME, installParam, uid),
+        ERR_APPEXECFWK_RECOVER_INVALID_BUNDLE_NAME);
+    ASSERT_FALSE(spy->queriedBundleNames.empty());
+    EXPECT_EQ(spy->queriedBundleNames.front(), BUNDLE_NAME);
+    EXPECT_EQ(CountSpyQueries(spy, PREFIXED_NAME), static_cast<size_t>(0));
+}
+
+// Secondary mode, caller passes the clone key itself (user-100 flow shape): no re-routing —
+// the routing guards skip a clone-key input, so every storage lookup keeps addressing the
+// clone key (never the original name, never a double-prefixed key) and the clone record
+// without paths ends the flow deterministically.
+HWTEST_F(BmsDualModeInstallTest, ProcessRecover_DualMode_0700, Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    dataMgr->multiUserIdsSet_.insert(TEST_USERID);
+    auto spy = SeedRecoverRecords(dataMgr);
+    BaseBundleInstaller installer;
+    installer.dataMgr_ = dataMgr;
+    InstallParam installParam;
+    installParam.userId = TEST_USERID;
+    int32_t uid = Constants::INVALID_UID;
+
+    EXPECT_EQ(installer.ProcessRecover(PREFIXED_NAME, installParam, uid),
+        ERR_APPEXECFWK_RECOVER_INVALID_BUNDLE_NAME);
+    ASSERT_FALSE(spy->queriedBundleNames.empty());
+    EXPECT_EQ(spy->queriedBundleNames.front(), PREFIXED_NAME);
+    EXPECT_EQ(CountSpyQueries(spy, BUNDLE_NAME), static_cast<size_t>(0));
+    EXPECT_EQ(CountSpyQueries(spy, "+clone-10000+" + PREFIXED_NAME), static_cast<size_t>(0));
+}
+
+// F-001: the per-bundle mutex inside InnerProcessInstallByPreInstallInfo must key on the
+// ORIGINAL name, not the routed/passed clone key. While an external writer holds the
+// original-name bundle mutex (the install-by-path upgrade shape, ProcessBundleInstall), a
+// recover-style call addressed by the clone key must block on that same mutex instead of
+// racing the isAppExist_ read-modify-write of bundleInfos_[original] under a different key.
+// Pre-fix the clone-key input locked GetBundleMutex("+clone-10000+X"), did not block, and
+// finished while the upgrade lock was still held.
+HWTEST_F(BmsDualModeInstallTest, ProcessRecover_DualModeMutexKey_0800, Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    dataMgr->multiUserIdsSet_.insert(TEST_USERID);
+    InstallPreInstallStorageSpy(dataMgr);
+    // clone variant installed WITH the request user: once the mutex is acquired the
+    // isAppExist_ branch returns deterministically at the has-user check.
+    dataMgr->bundleInfos_[BUNDLE_NAME] = MakeBundleInfoWithUser(
+        DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE);
+    dataMgr->bundleInfos_[BUNDLE_NAME].SetDualModeCloneApp(true);
+
+    BaseBundleInstaller installer;
+    installer.dataMgr_ = dataMgr;
+    InstallParam installParam;
+    installParam.userId = TEST_USERID;
+    int32_t uid = Constants::INVALID_UID;
+
+    // "Upgrade" thread shape: hold the ORIGINAL-name bundle mutex.
+    auto &mtx = dataMgr->GetBundleMutex(BUNDLE_NAME);
+    std::unique_lock<std::mutex> upgradeLock(mtx);
+    std::atomic<bool> finished {false};
+    ErrCode ret = ERR_OK;
+    std::promise<void> entered;
+    auto enteredFuture = entered.get_future();
+    std::thread recoverThread([&] {
+        entered.set_value();
+        ret = installer.InnerProcessInstallByPreInstallInfo(PREFIXED_NAME, installParam, uid);
+        finished = true;
+    });
+    // F-009: EXPECT (not ASSERT): on a wait timeout this must still fall through to the
+    // join below — an ASSERT early-return would destruct the still-joinable recoverThread
+    // (std::terminate) and abort the whole test binary.
+    EXPECT_EQ(enteredFuture.wait_for(std::chrono::seconds(2)), std::future_status::ready);
+    // The call is pure in-memory work up to its deterministic return, so if it is NOT
+    // blocked on the held original-name mutex it finishes far inside this window.
+    std::this_thread::sleep_for(std::chrono::milliseconds(300));
+    EXPECT_FALSE(finished.load());
+    upgradeLock.unlock();
+    recoverThread.join();
+    EXPECT_TRUE(finished.load());
+    EXPECT_EQ(ret, ERR_APPEXECFWK_RECOVER_INVALID_BUNDLE_NAME);
 }
 } // OHOS
