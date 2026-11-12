@@ -5984,6 +5984,42 @@ ErrCode BundleDataMgr::GetInnerBundleInfoByUid(const int32_t uid, InnerBundleInf
     return GetInnerBundleInfoAndIndexByUid(uid, innerBundleInfo, appIndex);
 }
 
+// Dual-mode: whether the preinstall record describes a package variant visible in the given
+// mode. A different-package app has two fan-out records (primary + clone) and each record
+// belongs to exactly one mode; MAIN_ONLY/SUB_ONLY apps belong to their own mode only.
+// - clone record (different-package secondary variant): secondary mode only
+// - different-package primary record: primary mode only
+// - MAIN_ONLY: primary mode only; SUB_ONLY: secondary mode only
+// - other records (same-package / unspecified): visible in both modes
+static bool IsPreInstallRecordVisibleInMode(const PreInstallBundleInfo &preInstallBundleInfo,
+    bool isSecondaryMode)
+{
+    if (preInstallBundleInfo.IsDualModeCloneApp()) {
+        return isSecondaryMode;
+    }
+    DeviceModeDistributionPolicy policy = preInstallBundleInfo.GetDeviceModeDistributionPolicy();
+    if (DualModeHelper::IsDiffPackageCategory(policy)) {
+        return !isSecondaryMode;
+    }
+    if (policy == DeviceModeDistributionPolicy::MAIN_ONLY) {
+        return !isSecondaryMode;
+    }
+    if (policy == DeviceModeDistributionPolicy::SUB_ONLY) {
+        return isSecondaryMode;
+    }
+    return true;
+}
+
+// Dual-mode: whether the record is one of the two fan-out records of a different-package app.
+// Such a record describes one mode's package only, so its installed-state check must look at
+// the current-mode map (bundleInfos_) exclusively; the tempBundleInfos_ entry under the same
+// name is the OTHER mode's package and must not be consulted.
+static bool IsDualModeVariantRecord(const PreInstallBundleInfo &preInstallBundleInfo)
+{
+    return preInstallBundleInfo.IsDualModeCloneApp() ||
+        DualModeHelper::IsDiffPackageCategory(preInstallBundleInfo.GetDeviceModeDistributionPolicy());
+}
+
 const std::vector<PreInstallBundleInfo> BundleDataMgr::GetRecoverablePreInstallBundleInfos(int32_t userId)
 {
     std::vector<PreInstallBundleInfo> recoverablePreInstallBundleInfos;
@@ -5992,12 +6028,25 @@ const std::vector<PreInstallBundleInfo> BundleDataMgr::GetRecoverablePreInstallB
         return recoverablePreInstallBundleInfos;
     }
     std::vector<PreInstallBundleInfo> preInstallBundleInfos = GetAllPreInstallBundleInfos();
+    // Dual-mode: recovery only targets apps visible in the current mode. Snapshot the mode once
+    // so a mode flip mid-loop cannot make per-record decisions inconsistent.
+    bool isDualModeDevice = DualModeHelper::IsDualModeDevice();
+    bool isSecondaryMode = isDualModeDevice && DualModeHelper::IsSecondaryMode();
     for (auto preInstallBundleInfo: preInstallBundleInfos) {
         if (!preInstallBundleInfo.IsRemovable()) {
             if ((preInstallBundleInfo.GetBundleType() != BundleType::APP) &&
                 (preInstallBundleInfo.GetBundleType() != BundleType::ATOMIC_SERVICE)) {
                 continue;
             }
+        }
+        // Dual-mode: skip records not visible in the current mode — the other mode's variant
+        // record of a different-package app (also removes the duplicate entry the two fan-out
+        // records used to produce), MAIN_ONLY in secondary mode and SUB_ONLY in primary mode.
+        if (isDualModeDevice &&
+            !IsPreInstallRecordVisibleInMode(preInstallBundleInfo, isSecondaryMode)) {
+            APP_LOGD("dual mode: -n %{public}s is not visible in current mode, skip recoverable query",
+                preInstallBundleInfo.GetBundleName().c_str());
+            continue;
         }
         if (preInstallBundleInfo.HasForceUninstalledUser(userId)) {
             APP_LOGW("-n %{public}s is force unisntalled in -u %{public}d",
@@ -6010,6 +6059,15 @@ const std::vector<PreInstallBundleInfo> BundleDataMgr::GetRecoverablePreInstallB
         std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
         auto infoItem = bundleInfos_.find(preInstallBundleInfo.GetBundleName());
         if (infoItem == bundleInfos_.end()) {
+            // Dual-mode: a non-variant app present in tempBundleInfos_ is installed but hidden
+            // in the current mode (single-mode / policy-set hiding). It is not visible, so it
+            // is not recoverable — recovering it would bypass the hiding.
+            if (isDualModeDevice && !IsDualModeVariantRecord(preInstallBundleInfo) &&
+                tempBundleInfos_.find(preInstallBundleInfo.GetBundleName()) != tempBundleInfos_.end()) {
+                APP_LOGD("dual mode: -n %{public}s is hidden in current mode, skip recoverable query",
+                    preInstallBundleInfo.GetBundleName().c_str());
+                continue;
+            }
             recoverablePreInstallBundleInfos.emplace_back(preInstallBundleInfo);
             continue;
         }
