@@ -318,6 +318,8 @@ private:
 
     bool HandleAddCertAndEnableKey(MessageParcel &data, MessageParcel &reply);
 
+    bool HandleGetEnterpriseCertInfo(MessageParcel &data, MessageParcel &reply);
+
     bool HandleSetEncryptionDir(MessageParcel &data, MessageParcel &reply);
 
     bool HandleDeleteEncryptionKeyId(MessageParcel &data, MessageParcel &reply);

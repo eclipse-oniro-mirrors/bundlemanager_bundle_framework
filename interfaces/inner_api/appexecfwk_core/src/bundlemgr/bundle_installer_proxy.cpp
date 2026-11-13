@@ -17,6 +17,7 @@
 
 #include <cerrno>
 #include <fcntl.h>
+#include <memory>
 #include <sys/sendfile.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -1172,6 +1173,56 @@ ErrCode BundleInstallerProxy::GetEnterpriseReSignatureCert(int32_t userId, std::
         return ERR_APPEXECFWK_ENTERPRISE_CERT_READ_PARCEL_ERROR;
     }
     LOG_I(BMS_TAG_INSTALLER, "get sign cert size: %{public}zu", certificateAlias.size());
+    return ERR_OK;
+}
+
+ErrCode BundleInstallerProxy::GetEnterpriseReSignatureCertInfo(
+    int32_t userId, std::vector<EnterpriseCertInfo> &certInfos)
+{
+    LOG_I(BMS_TAG_INSTALLER, "get ReSignature Certificate Info -u:%{public}d", userId);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+
+    if (userId < Constants::START_USERID) {
+        LOG_E(BMS_TAG_INSTALLER, "param error -u:%{public}d", userId);
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_PARAM_ERROR;
+    }
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOG_E(BMS_TAG_INSTALLER, "failed to write descriptor");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_WRITE_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        LOG_E(BMS_TAG_INSTALLER, "failed to write userId");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_WRITE_PARCEL_ERROR;
+    }
+
+    auto ret = SendInstallRequestWithErrCode(
+        BundleInstallerInterfaceCode::GET_ENTERPRISE_RE_SIGNATURE_CERT_INFO, data, reply, option);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "get sign cert info failed due to send request fail, errCode: %{public}d", ret);
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_SEND_REQUEST_ERROR;
+    }
+    ErrCode result = reply.ReadInt32();
+    if (result != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "Reply err : %{public}d", result);
+        return result;
+    }
+    int32_t certInfoSize = reply.ReadInt32();
+    if (certInfoSize < 0 || certInfoSize > Constants::MAX_ENTERPRISE_RESIGN_CERT_NUM) {
+        LOG_E(BMS_TAG_INSTALLER, "invalid cert info size: %{public}d", certInfoSize);
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_READ_PARCEL_ERROR;
+    }
+    for (int32_t i = 0; i < certInfoSize; i++) {
+        std::unique_ptr<EnterpriseCertInfo> certInfo(reply.ReadParcelable<EnterpriseCertInfo>());
+        if (certInfo == nullptr) {
+            LOG_E(BMS_TAG_INSTALLER, "read cert info failed, index: %{public}d", i);
+            return ERR_APPEXECFWK_ENTERPRISE_CERT_READ_PARCEL_ERROR;
+        }
+        certInfos.emplace_back(std::move(*certInfo));
+    }
+    LOG_I(BMS_TAG_INSTALLER, "get ReSignature Certificate Info size: %{public}zu", certInfos.size());
     return ERR_OK;
 }
 

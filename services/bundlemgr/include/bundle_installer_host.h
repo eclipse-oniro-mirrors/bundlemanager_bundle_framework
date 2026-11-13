@@ -170,6 +170,9 @@ public:
 
     virtual ErrCode GetEnterpriseReSignatureCert(int32_t userId, std::vector<std::string> &certificateAlias) override;
 
+    virtual ErrCode GetEnterpriseReSignatureCertInfo(
+        int32_t userId, std::vector<EnterpriseCertInfo> &certInfos) override;
+
     virtual ErrCode UninstallNewPreinstalledApps(const std::vector<std::string> &bundleNames) override;
 
     virtual ErrCode CreateCliSandboxApp(const std::string &creatorBundleName,
@@ -271,6 +274,7 @@ private:
     void HandleAddEnterpriseResignCert(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleDeleteEnterpriseReSignatureCert(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleGetEnterpriseReSignatureCert(MessageParcel &data, MessageParcel &reply);
+    ErrCode HandleGetEnterpriseReSignatureCertInfo(MessageParcel &data, MessageParcel &reply);
 
     // Lets internal modules (backup/restore) share enterpriseCertMutex_ with the EDM cert
     // APIs; returns an owned unique_lock. Not an IPC entry, no permission check.

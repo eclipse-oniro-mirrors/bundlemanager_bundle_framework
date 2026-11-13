@@ -27,6 +27,7 @@
 #include "appexecfwk_errors.h"
 #include "bundle_service_constants.h"
 #include "bundle_storage_stats.h"
+#include "enterprise_cert_info.h"
 #include "ipc/check_encryption_param.h"
 #include "ipc/code_signature_param.h"
 #include "ipc/copy_hap_to_install_path_param.h"
@@ -715,6 +716,11 @@ public:
     }
 
     virtual ErrCode AddCertAndEnableKey(const std::string &certPath, const std::string &certContent)
+    {
+        return ERR_OK;
+    }
+
+    virtual ErrCode GetEnterpriseCertInfo(const std::string &certPath, EnterpriseCertInfo &certInfo)
     {
         return ERR_OK;
     }

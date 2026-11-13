@@ -509,6 +509,11 @@ ErrCode InstalldHostImpl::AddCertAndEnableKey(const std::string &certPath, const
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::GetEnterpriseCertInfo(const std::string &certPath, EnterpriseCertInfo &certInfo)
+{
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::SetEncryptionPolicy(const EncryptionParam &encryptionParam, std::string &keyId)
 {
     return ERR_OK;

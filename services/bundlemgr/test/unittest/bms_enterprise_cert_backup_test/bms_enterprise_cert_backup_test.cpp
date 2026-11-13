@@ -216,6 +216,17 @@ HWTEST_F(BmsEnterpriseCertBackupTest, BmsEnterpriseCertBackupTest_RestoreCheck_0
 }
 
 /**
+ * @tc.number: BmsEnterpriseCertBackupTest_ConstantsSync_0100
+ * @tc.name: enterprise cert limit constants sync check
+ * @tc.desc: ServiceConstants and Constants cert limits must stay equal
+ */
+HWTEST_F(BmsEnterpriseCertBackupTest, BmsEnterpriseCertBackupTest_ConstantsSync_0100, TestSize.Level1)
+{
+    EXPECT_EQ(ServiceConstants::MAX_ENTERPRISE_RESIGN_CERT_NUM,
+        Constants::MAX_ENTERPRISE_RESIGN_CERT_NUM);
+}
+
+/**
  * @tc.number: BmsEnterpriseCertBackupTest_RestoreCheck_0500
  * @tc.name: RestoreFromJson param check
  * @tc.desc: empty array passes validation and no-op restore returns ERR_OK
