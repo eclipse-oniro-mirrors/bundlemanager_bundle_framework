@@ -5899,5 +5899,34 @@ ErrCode InstalldHostImpl::MigrateBundleDirsOwner(const CreateDirParam &createDir
     }
     return result;
 }
+
+ErrCode InstalldHostImpl::LinkDedupedSo(const std::string &bundleName, const std::string &libraryPath,
+    const std::string &sha256, uint32_t &resultCode)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "LinkDedupedSo %{private}s failed for permission denied",
+            libraryPath.c_str());
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    if (bundleName.empty() || libraryPath.empty() || sha256.empty()) {
+        LOG_E(BMS_TAG_INSTALLD, "LinkDedupedSo failed for invalid param");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    if (!InstalldOperator::IsValidBundleName(bundleName)) {
+        LOG_E(BMS_TAG_INSTALLD, "LinkDedupedSo failed for invalid bundleName %{public}s",
+            bundleName.c_str());
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    if (!InstalldOperator::IsValidDedupSoPath(bundleName, libraryPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "LinkDedupedSo failed for invalid libraryPath %{private}s",
+            libraryPath.c_str());
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    if (!InstalldOperator::IsValidDedupSoSha256(sha256)) {
+        LOG_E(BMS_TAG_INSTALLD, "LinkDedupedSo failed for invalid sha256");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return InstalldOperator::LinkDedupedSo(libraryPath, sha256, resultCode);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -15,9 +15,13 @@
 
 #include "bundle_extractor.h"
 
+#include <set>
+#include <sstream>
+
 #include "app_log_wrapper.h"
 #include "bundle_service_constants.h"
 #include "mem_mgr_client.h"
+#include "nlohmann/json.hpp"
 
 namespace {
 constexpr const char* AP_PATH = "ap/";
@@ -46,6 +50,9 @@ namespace {
 constexpr const char* BUNDLE_PROFILE_NAME = "config.json";
 constexpr const char* MODULE_PROFILE_NAME = "module.json";
 constexpr const char* BUNDLE_PACKFILE_NAME = "pack.info";
+constexpr const char* DEDUP_FILES_NAME = "dedupfiles.json";
+constexpr const char* DEDUP_REMOVED_SO_FILES_KEY = "removedSoFiles";
+constexpr const char* DEDUP_ORIGINAL_PATH_KEY = "originalPathInHap";
 constexpr const char* MERGE_ABC_PATH = "ets/modules.abc";
 // The profile is decompressed into the memory and parsed by json, so the extracted size of the
 // profile must be limited to a part of the available memory to avoid the OOM caused by a
@@ -132,6 +139,122 @@ bool BundleExtractor::IsProfileSizeAllowed() const
     }
 
     return true;
+}
+
+uint32_t BundleExtractor::GetDedupFilesUncompressedSize() const
+{
+    ZipEntry zipEntry;
+    if (!zipFile_.GetEntry(DEDUP_FILES_NAME, zipEntry)) {
+        APP_LOGE("dedupfiles.json is not found");
+        return 0;
+    }
+    return zipEntry.uncompressedSize;
+}
+
+bool BundleExtractor::IsDedupFilesSizeAllowed(uint32_t maxSize) const
+{
+    // a HAP without dedupfiles.json keeps the normal install flow
+    uint32_t dedupFilesSize = GetDedupFilesUncompressedSize();
+    if (dedupFilesSize == 0) {
+        return true;
+    }
+    if (dedupFilesSize > maxSize) {
+        APP_LOGE("dedupfiles.json uncompressed size(%{public}u bytes) exceeds the max allowed size"
+            "(%{public}u bytes)", dedupFilesSize, maxSize);
+        return false;
+    }
+
+    return true;
+}
+
+bool BundleExtractor::IsDedupFilesDepthAllowed(const std::string &content)
+{
+    // reject before the DOM building (nlohmann keeps consuming); brackets in strings never count
+    int32_t depth = 0;
+    bool inString = false;
+    bool escaped = false;
+    for (const char ch : content) {
+        if (inString) {
+            if (escaped) {
+                escaped = false;
+            } else if (ch == '\\') {
+                escaped = true;
+            } else if (ch == '"') {
+                inString = false;
+            }
+            continue;
+        }
+        if (ch == '"') {
+            inString = true;
+        } else if (ch == '{' || ch == '[') {
+            ++depth;
+            if (depth >= MAX_DEDUP_FILES_DEPTH) {
+                return false;
+            }
+        } else if (ch == '}' || ch == ']') {
+            --depth;
+        }
+    }
+    return true;
+}
+
+bool BundleExtractor::GetDedupSoAbiPrefixes(std::set<std::string> &abis) const
+{
+    abis.clear();
+    // no manifest: not a dedup package, the abi derivation stays off
+    if (!HasEntry(DEDUP_FILES_NAME)) {
+        return false;
+    }
+    // loose probe: any failure only disables the derivation, ParseDedupFiles stays the gate
+    if (GetDedupFilesUncompressedSize() > MAX_DEDUP_FILES_SIZE) {
+        // WARN, not an install-grade ERROR: query paths must not error on the same manifest
+        APP_LOGW("dedupfiles.json uncompressed size exceeds limit, skip abi derivation");
+        return false;
+    }
+    std::stringstream dedupFilesStream;
+    if (!ExtractByName(DEDUP_FILES_NAME, dedupFilesStream)) {
+        APP_LOGW("extract dedupfiles.json failed, skip abi derivation");
+        return false;
+    }
+    // re-check the real extracted size before the .str() copy: a lying header stays bounded
+    uint64_t extractedSize = static_cast<uint64_t>(dedupFilesStream.tellp());
+    if (extractedSize > MAX_DEDUP_FILES_SIZE) {
+        APP_LOGW("dedupfiles.json extracted size exceeds limit, skip abi derivation");
+        return false;
+    }
+    // loose: the depth scan only skips the derivation here
+    if (!IsDedupFilesDepthAllowed(dedupFilesStream.str())) {
+        APP_LOGW("dedupfiles.json nesting depth exceeds limit, skip abi derivation");
+        return false;
+    }
+    nlohmann::json jsonBuf = nlohmann::json::parse(dedupFilesStream, nullptr, false, true);
+    if (jsonBuf.is_discarded() || !jsonBuf.is_object() ||
+        !jsonBuf.contains(DEDUP_REMOVED_SO_FILES_KEY) ||
+        !jsonBuf[DEDUP_REMOVED_SO_FILES_KEY].is_array()) {
+        APP_LOGW("invalid dedupfiles.json structure, skip abi derivation");
+        return false;
+    }
+    const std::string libsPrefix = ServiceConstants::LIBS;
+    for (const auto &item : jsonBuf[DEDUP_REMOVED_SO_FILES_KEY]) {
+        // loose: malformed entries are left to the strict parser
+        if (!item.is_object() || !item.contains(DEDUP_ORIGINAL_PATH_KEY) ||
+            !item[DEDUP_ORIGINAL_PATH_KEY].is_string()) {
+            continue;
+        }
+        const std::string originalPath = item[DEDUP_ORIGINAL_PATH_KEY].get<std::string>();
+        // collect only the libs/<abi>/ prefixes; the strict parser rejects the rest
+        if (originalPath.size() <= libsPrefix.size() ||
+            originalPath.compare(0, libsPrefix.size(), libsPrefix) != 0) {
+            continue;
+        }
+        const size_t abiEnd = originalPath.find(ServiceConstants::PATH_SEPARATOR, libsPrefix.size());
+        if (abiEnd == std::string::npos || abiEnd == libsPrefix.size()) {
+            continue;
+        }
+        abis.insert(originalPath.substr(libsPrefix.size(), abiEnd - libsPrefix.size()));
+    }
+    APP_LOGD("probe dedupfiles.json abi prefixes, size %{public}zu", abis.size());
+    return !abis.empty();
 }
 
 void BundleExtractor::IsHapCompress(bool &isAbcCompressed) const

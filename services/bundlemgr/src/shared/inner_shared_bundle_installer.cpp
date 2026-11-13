@@ -20,6 +20,7 @@
 
 #include "aot/aot_handler.h"
 #include "app_provision_info_manager.h"
+#include "bundle_dedup_so_helper.h"
 #include "bundle_mgr_service.h"
 #include "bundle_util.h"
 #include "installd_client.h"
@@ -514,6 +515,10 @@ ErrCode InnerSharedBundleInstaller::ExtractSharedBundles(const std::string &bund
     if (alternateModule) {
         isPreInstalledBundle_ = newInfo.IsPreInstallApp();
     }
+    // The dedup step below reads dedupfiles.json from the hsp package: the
+    // preinstall flow keeps the source file at bundlePath, the normal flow
+    // moves the hsp to realHspPath, so read where it actually lives after the save.
+    std::string installedHspPath = bundlePath;
     if (newInfo.IsPreInstallApp()) {
         if (alternateModule) {
             result = VerifyCodeSignatureForHsp(bundlePath, appIdentifier_, isEnterpriseBundle_,
@@ -529,12 +534,28 @@ ErrCode InnerSharedBundleInstaller::ExtractSharedBundles(const std::string &bund
         result = SaveHspToRealInstallationDir(bundlePath, moduleDir, moduleName, realHspPath, versionCode);
         CHECK_RESULT(result, "save hsp file failed %{public}d");
         newInfo.SetModuleHapPath(realHspPath);
+        installedHspPath = realHspPath;
     }
-    if (newInfo.IsCompressNativeLibs(moduleName)) {
+    bool isCompressNativeLibs = newInfo.IsCompressNativeLibs(moduleName);
+    if (isCompressNativeLibs) {
         // move so to real path
         result = MoveSoToRealPath(moduleName, versionDir);
         CHECK_RESULT(result, "move so to real path failed %{public}d");
     }
+    // dedup so: link the so files recorded in the HSP dedupfiles.json into
+    // the real so path, still inside the install transaction (the links live
+    // in the version dir the transaction owns; a failure returns through the
+    // existing rollback). The call runs for the uncompressed form and for an
+    // empty native library path (the abi-derivation-failure fallback) too:
+    // the helper fails both closed with 8519951 instead of installing a
+    // shared bundle whose so is missing at runtime.
+    std::string realSoPath;
+    if (isCompressNativeLibs && !nativeLibraryPath_.empty()) {
+        realSoPath = versionDir + ServiceConstants::PATH_SEPARATOR + nativeLibraryPath_ +
+            ServiceConstants::PATH_SEPARATOR;
+    }
+    result = DedupSoHelper::ProcessDedupSoFiles(installedHspPath, newInfo, realSoPath, cpuAbi_);
+    CHECK_RESULT(result, "fail to ProcessDedupSoFiles, error is %{public}d");
     newInfo.AddModuleSrcDir(moduleDir);
     newInfo.AddModuleResPath(moduleDir);
     newInfo.UpdateSharedModuleInfo();

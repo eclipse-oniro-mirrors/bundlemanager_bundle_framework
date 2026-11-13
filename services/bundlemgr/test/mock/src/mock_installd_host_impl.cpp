@@ -720,5 +720,12 @@ ErrCode InstalldHostImpl::BundleInstallFinished(const std::string &bundleName)
 {
     return ERR_OK;
 }
+
+ErrCode InstalldHostImpl::LinkDedupedSo(const std::string &bundleName, const std::string &libraryPath,
+    const std::string &sha256, uint32_t &resultCode)
+{
+    resultCode = 0;
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

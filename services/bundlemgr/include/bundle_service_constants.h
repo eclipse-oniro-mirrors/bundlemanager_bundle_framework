@@ -86,6 +86,13 @@ constexpr const char* BACKUP_CERT_USER_ID_KEY = "userId";
 constexpr const char* BACKUP_CERT_ALIAS_KEY = "certificateAlias";
 constexpr const char* BACKUP_CERT_CONTENT_KEY = "certificateContent";
 constexpr const char* TMP_SUFFIX = "_tmp";
+// The installd LinkDedupedSo step rotates a stale placeholder at the so link
+// position to <position> + this suffix before calling musl, so a failed link
+// can be restored by renaming the backup back; the parser rejects dedup
+// manifest entries ending with it (an entry must never collide with another
+// entry's backup name). Keep the value in sync with the fixture generator
+// (test/sceneProject/unittest/parse_bundle/dedup_so/gen_dedup_haps.py).
+constexpr const char* DEDUP_SO_BACKUP_SUFFIX = ".bms_dedup_bak";
 constexpr const char* BUNDLE_APP_DATA_BASE_DIR = "/data/app/";
 constexpr const char* BASE = "/base/";
 constexpr const char* CLONE = "clone";

@@ -49,6 +49,7 @@
 #include "bms_update_selinux_mgr.h"
 #include "bundle_cli_sandbox_installer.h"
 #include "bundle_clone_installer.h"
+#include "bundle_dedup_so_helper.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_resource_helper.h"
 #include "bundle_parser.h"
@@ -9145,6 +9146,13 @@ ErrCode BaseBundleInstaller::InnerProcessNativeLibs(InnerBundleInfo &info, const
         CHECK_RESULT(result, "fail to GetNativeLibraryFileNames, error is %{public}d");
         info.SetNativeLibraryFileNames(modulePackage_, fileNames);
     }
+    // dedup so: link the so files recorded in the HAP dedupfiles.json into the
+    // extracted target so dir, still inside the staging transaction and before
+    // the rename commit; a failure returns through the existing rollback. An
+    // empty target so path (the parse-time abi derivation found no intersection)
+    // is passed through on purpose: the helper fails closed inside.
+    auto result = DedupSoHelper::ProcessDedupSoFiles(modulePath_, info, targetSoPath, cpuAbi);
+    CHECK_RESULT(result, "fail to ProcessDedupSoFiles, error is %{public}d");
     return ERR_OK;
 }
 

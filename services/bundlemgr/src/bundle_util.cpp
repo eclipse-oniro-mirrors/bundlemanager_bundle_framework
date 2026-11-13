@@ -930,11 +930,25 @@ bool BundleUtil::CopyFileFast(const std::string &sourcePath, const std::string &
         return CopyFile(sourcePath, destPath);
     }
 
+    // O_NOFOLLOW: a symlink destination must never be followed and truncated
+    // (dedup so links point to the read-only system partition, untouchable)
     int32_t destFd = open(
-        destPath.c_str(), O_WRONLY | O_CREAT | O_TRUNC | O_UNCACHE, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+        destPath.c_str(), O_WRONLY | O_CREAT | O_TRUNC | O_NOFOLLOW | O_UNCACHE,
+        S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     if (destFd == -1) {
-        APP_LOGE("destPath open failed, errno : %{public}d", errno);
+        // save errno first: the log write and the fd close below may clobber it
+        int32_t savedErrno = errno;
+        if (savedErrno == ELOOP) {
+            // ELOOP: destPath is a symlink and the O_NOFOLLOW open was refused
+            APP_LOGE("destPath open failed, errno : %{public}d, destPath is a symlink, refuse to follow",
+                savedErrno);
+        } else {
+            APP_LOGE("destPath open failed, errno : %{public}d", savedErrno);
+        }
         fdsan_close_with_tag(sourceFd, BMS_FDSAN_TEMP_TAG);
+        if (savedErrno == ELOOP) {
+            return false;
+        }
         return CopyFile(sourcePath, destPath);
     }
     fdsan_exchange_owner_tag(destFd, 0, BMS_FDSAN_TEMP_TAG);

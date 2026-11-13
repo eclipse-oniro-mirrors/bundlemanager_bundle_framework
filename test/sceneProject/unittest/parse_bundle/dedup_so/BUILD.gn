@@ -1,0 +1,86 @@
+# Copyright (c) 2026 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Packs the config/ fixture manifests into minimal .hap zip containers:
+# ParseDedupFiles does zip-level reads only, so a plain zip is a valid
+# stand-in for a packaged HAP. Generated at build time, no binary artifacts.
+action("dedup_so") {
+  script = "gen_dedup_haps.py"
+
+  args = [
+    rebase_path("config"),
+    rebase_path("$root_out_dir/tests/unittest/bundle_framework/bundle_framework/resource/parse_bundle/dedup_so"),
+  ]
+
+  inputs = [
+    "config/dedup_cross_conflict.json",
+    "config/dedup_duplicate_entry.json",
+    "config/dedup_fulldedup_keepdir.json",
+    "config/dedup_fulldedup_libsonly.json",
+    "config/dedup_fulldedup_stripped.json",
+    "config/dedup_fulldedup_stripped_mismatch.json",
+    "config/dedup_invalid_json.json",
+    "config/dedup_item_not_object.json",
+    "config/dedup_json_array.json",
+    "config/dedup_no_manifest.json",
+    "config/dedup_no_path.json",
+    "config/dedup_no_removed.json",
+    "config/dedup_no_sha.json",
+    "config/dedup_no_version.json",
+    "config/dedup_path_absolute.json",
+    "config/dedup_path_backup_suffix.json",
+    "config/dedup_path_bad_prefix.json",
+    "config/dedup_path_no_so_suffix.json",
+    "config/dedup_path_not_string.json",
+    "config/dedup_path_traversal.json",
+    "config/dedup_removed_not_array.json",
+    "config/dedup_sha_invalid.json",
+    "config/dedup_valid.json",
+    "config/dedup_valid_alt_sha.json",
+    "config/dedup_valid_multi.json",
+  ]
+
+  outputs = [
+    "$root_out_dir/tests/unittest/bundle_framework/bundle_framework/resource/parse_bundle/dedup_so/dedup_cross_conflict.hap",
+    "$root_out_dir/tests/unittest/bundle_framework/bundle_framework/resource/parse_bundle/dedup_so/dedup_depth_bomb.hap",
+    "$root_out_dir/tests/unittest/bundle_framework/bundle_framework/resource/parse_bundle/dedup_so/dedup_duplicate_entry.hap",
+    "$root_out_dir/tests/unittest/bundle_framework/bundle_framework/resource/parse_bundle/dedup_so/dedup_fulldedup_keepdir.hap",
+    "$root_out_dir/tests/unittest/bundle_framework/bundle_framework/resource/parse_bundle/dedup_so/dedup_fulldedup_libsonly.hap",
+    "$root_out_dir/tests/unittest/bundle_framework/bundle_framework/resource/parse_bundle/dedup_so/dedup_fulldedup_stripped.hap",
+    "$root_out_dir/tests/unittest/bundle_framework/bundle_framework/resource/parse_bundle/dedup_so/dedup_fulldedup_stripped_mismatch.hap",
+    "$root_out_dir/tests/unittest/bundle_framework/bundle_framework/resource/parse_bundle/dedup_so/dedup_invalid_json.hap",
+    "$root_out_dir/tests/unittest/bundle_framework/bundle_framework/resource/parse_bundle/dedup_so/dedup_item_not_object.hap",
+    "$root_out_dir/tests/unittest/bundle_framework/bundle_framework/resource/parse_bundle/dedup_so/dedup_json_array.hap",
+    "$root_out_dir/tests/unittest/bundle_framework/bundle_framework/resource/parse_bundle/dedup_so/dedup_max_valid.hap",
+    "$root_out_dir/tests/unittest/bundle_framework/bundle_framework/resource/parse_bundle/dedup_so/dedup_no_manifest.hap",
+    "$root_out_dir/tests/unittest/bundle_framework/bundle_framework/resource/parse_bundle/dedup_so/dedup_no_path.hap",
+    "$root_out_dir/tests/unittest/bundle_framework/bundle_framework/resource/parse_bundle/dedup_so/dedup_no_removed.hap",
+    "$root_out_dir/tests/unittest/bundle_framework/bundle_framework/resource/parse_bundle/dedup_so/dedup_no_sha.hap",
+    "$root_out_dir/tests/unittest/bundle_framework/bundle_framework/resource/parse_bundle/dedup_so/dedup_no_version.hap",
+    "$root_out_dir/tests/unittest/bundle_framework/bundle_framework/resource/parse_bundle/dedup_so/dedup_over_limit.hap",
+    "$root_out_dir/tests/unittest/bundle_framework/bundle_framework/resource/parse_bundle/dedup_so/dedup_path_absolute.hap",
+    "$root_out_dir/tests/unittest/bundle_framework/bundle_framework/resource/parse_bundle/dedup_so/dedup_path_backup_suffix.hap",
+    "$root_out_dir/tests/unittest/bundle_framework/bundle_framework/resource/parse_bundle/dedup_so/dedup_path_bad_prefix.hap",
+    "$root_out_dir/tests/unittest/bundle_framework/bundle_framework/resource/parse_bundle/dedup_so/dedup_path_no_so_suffix.hap",
+    "$root_out_dir/tests/unittest/bundle_framework/bundle_framework/resource/parse_bundle/dedup_so/dedup_path_not_string.hap",
+    "$root_out_dir/tests/unittest/bundle_framework/bundle_framework/resource/parse_bundle/dedup_so/dedup_path_traversal.hap",
+    "$root_out_dir/tests/unittest/bundle_framework/bundle_framework/resource/parse_bundle/dedup_so/dedup_removed_not_array.hap",
+    "$root_out_dir/tests/unittest/bundle_framework/bundle_framework/resource/parse_bundle/dedup_so/dedup_sha_invalid.hap",
+    "$root_out_dir/tests/unittest/bundle_framework/bundle_framework/resource/parse_bundle/dedup_so/dedup_size_over_limit.hap",
+    "$root_out_dir/tests/unittest/bundle_framework/bundle_framework/resource/parse_bundle/dedup_so/dedup_valid.hap",
+    "$root_out_dir/tests/unittest/bundle_framework/bundle_framework/resource/parse_bundle/dedup_so/dedup_valid_alt_sha.hap",
+    "$root_out_dir/tests/unittest/bundle_framework/bundle_framework/resource/parse_bundle/dedup_so/dedup_valid_multi.hap",
+  ]
+
+  testonly = true
+}

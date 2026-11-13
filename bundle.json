@@ -76,6 +76,7 @@
                 "ipc",
                 "image_framework",
                 "memmgr",
+                "musl",
                 "kv_store",
                 "libpng",
                 "libxml2",

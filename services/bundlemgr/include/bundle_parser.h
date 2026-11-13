@@ -30,6 +30,14 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+// Dedup so info parsed from the dedupfiles.json carried in a HAP; install-time
+// transient data that is not persisted.
+struct DedupSoInfo {
+    std::string originalPathInHap;  // relative path in the HAP, e.g. libs/arm64-v8a/libc++_shared.so
+    std::string originalSha256;     // 64-character (256-bit) hexadecimal string
+};
+using DedupSoInfoList = std::vector<DedupSoInfo>;
+
 class BundleParser {
 private:
     bool CheckRouterData(nlohmann::json data) const;
@@ -59,6 +67,16 @@ public:
      * @return Returns ERR_OK if the bundle successfully parsed; returns ErrCode otherwise.
      */
     ErrCode ParseSysCap(const std::string &pathName, std::vector<std::string> &sysCaps) const;
+    /**
+     * @brief Parse the dedupfiles.json carried in the HAP root, then save in
+     *        dedupSoInfoList. Install-time transient data, not persisted.
+     * @param pathName Indicates the path of the HAP file.
+     * @param dedupSoInfoList Indicates the obtained dedup so info list.
+     * @return Returns ERR_OK with an empty list when the HAP carries no
+     *         dedupfiles.json; PARSE_FAILED when the manifest is invalid;
+     *         PARSE_UNEXPECTED when the HAP container cannot be opened.
+     */
+    ErrCode ParseDedupFiles(const std::string &pathName, DedupSoInfoList &dedupSoInfoList) const;
     /**
      * @brief Parse scanInfos by the configFile.
      * @param configFile Indicates the path of configFile.

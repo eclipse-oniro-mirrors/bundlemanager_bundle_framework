@@ -15,6 +15,7 @@
 
 #include "module_profile.h"
 
+#include <set>
 #include <sstream>
 #include <unordered_map>
 #include <unordered_set>
@@ -2309,9 +2310,41 @@ bool ParserNativeSo(
     APP_LOGD("abi list : %{public}s, isDefault : %{public}d", abis.c_str(), isDefault);
     std::string cpuAbi;
     std::string soRelativePath;
+    bool isLibIsolated = moduleJson.module.isLibIsolated;
+    // A fully deduped (stripped) hap carries no libs/ entry but dedupfiles.json
+    // still declares the so files: probe the manifest abi set (loose by purpose;
+    // ParseDedupFiles stays the fail-closed gate)
+    std::set<std::string> dedupAbis;
+    bundleExtractor.GetDedupSoAbiPrefixes(dedupAbis);
     bool soExist = bundleExtractor.IsDirExist(ServiceConstants::LIBS);
     if (!soExist) {
         APP_LOGD("so not exist");
+        if (!dedupAbis.empty()) {
+            // stripped form: walk the abi candidates in the so-exist order, with
+            // the manifest abi set in place of the zip dir entries
+            std::vector<std::string> dedupAbiCandidates;
+            if (isDefault) {
+                if (isSystemLib64Exist) {
+                    dedupAbiCandidates.push_back(ServiceConstants::ARM64_V8A);
+                } else {
+                    dedupAbiCandidates.push_back(ServiceConstants::ARM_EABI_V7A);
+                    dedupAbiCandidates.push_back(ServiceConstants::ARM_EABI);
+                }
+            } else {
+                dedupAbiCandidates = abiList;
+            }
+            for (const auto &abi : dedupAbiCandidates) {
+                if (ServiceConstants::ABI_MAP.find(abi) != ServiceConstants::ABI_MAP.end() &&
+                    dedupAbis.count(abi) > 0) {
+                    cpuAbi = abi;
+                    soRelativePath = ServiceConstants::LIBS + ServiceConstants::ABI_MAP.at(abi);
+                    UpdateNativeSoAttrs(cpuAbi, soRelativePath, isLibIsolated, innerBundleInfo);
+                    return true;
+                }
+            }
+        }
+        // no derivation hit: keep the existing empty-path behavior; the dedup
+        // helper fails closed later when the manifest is not empty
         if (isDefault) {
             cpuAbi = isSystemLib64Exist ? ServiceConstants::ARM64_V8A : ServiceConstants::ARM_EABI_V7A;
             UpdateNativeSoAttrs(cpuAbi, soRelativePath, false, innerBundleInfo);
@@ -2330,10 +2363,10 @@ bool ParserNativeSo(
     }
 
     APP_LOGD("so exist");
-    bool isLibIsolated = moduleJson.module.isLibIsolated;
     if (isDefault) {
         if (isSystemLib64Exist) {
-            if (bundleExtractor.IsDirExist(std::string(ServiceConstants::LIBS) + ServiceConstants::ARM64_V8A)) {
+            if (bundleExtractor.IsDirExist(std::string(ServiceConstants::LIBS) + ServiceConstants::ARM64_V8A) ||
+                dedupAbis.count(ServiceConstants::ARM64_V8A) > 0) {
                 cpuAbi = ServiceConstants::ARM64_V8A;
                 soRelativePath = ServiceConstants::LIBS + ServiceConstants::ABI_MAP.at(ServiceConstants::ARM64_V8A);
                 UpdateNativeSoAttrs(cpuAbi, soRelativePath, isLibIsolated, innerBundleInfo);
@@ -2343,14 +2376,16 @@ bool ParserNativeSo(
             return false;
         }
 
-        if (bundleExtractor.IsDirExist(std::string(ServiceConstants::LIBS) + ServiceConstants::ARM_EABI_V7A)) {
+        if (bundleExtractor.IsDirExist(std::string(ServiceConstants::LIBS) + ServiceConstants::ARM_EABI_V7A) ||
+            dedupAbis.count(ServiceConstants::ARM_EABI_V7A) > 0) {
             cpuAbi = ServiceConstants::ARM_EABI_V7A;
             soRelativePath = ServiceConstants::LIBS + ServiceConstants::ABI_MAP.at(ServiceConstants::ARM_EABI_V7A);
             UpdateNativeSoAttrs(cpuAbi, soRelativePath, isLibIsolated, innerBundleInfo);
             return true;
         }
 
-        if (bundleExtractor.IsDirExist(std::string(ServiceConstants::LIBS) + ServiceConstants::ARM_EABI)) {
+        if (bundleExtractor.IsDirExist(std::string(ServiceConstants::LIBS) + ServiceConstants::ARM_EABI) ||
+            dedupAbis.count(ServiceConstants::ARM_EABI) > 0) {
             cpuAbi = ServiceConstants::ARM_EABI;
             soRelativePath = ServiceConstants::LIBS + ServiceConstants::ABI_MAP.at(ServiceConstants::ARM_EABI);
             UpdateNativeSoAttrs(cpuAbi, soRelativePath, isLibIsolated, innerBundleInfo);
@@ -2364,7 +2399,7 @@ bool ParserNativeSo(
         std::string libsPath;
         libsPath.append(ServiceConstants::LIBS).append(abi).append(ServiceConstants::PATH_SEPARATOR);
         if (ServiceConstants::ABI_MAP.find(abi) != ServiceConstants::ABI_MAP.end() &&
-            bundleExtractor.IsDirExist(libsPath)) {
+            (bundleExtractor.IsDirExist(libsPath) || dedupAbis.count(abi) > 0)) {
             cpuAbi = abi;
             soRelativePath = ServiceConstants::LIBS + ServiceConstants::ABI_MAP.at(abi);
             UpdateNativeSoAttrs(cpuAbi, soRelativePath, isLibIsolated, innerBundleInfo);

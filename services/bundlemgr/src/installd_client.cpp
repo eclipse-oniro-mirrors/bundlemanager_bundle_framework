@@ -1202,5 +1202,11 @@ ErrCode InstalldClient::MigrateBundleDirsOwner(const CreateDirParam &createDirPa
 {
     return CallService(&IInstalld::MigrateBundleDirsOwner, createDirParam);
 }
+
+ErrCode InstalldClient::LinkDedupedSo(const std::string &bundleName, const std::string &libraryPath,
+    const std::string &sha256, uint32_t &resultCode)
+{
+    return CallService(&IInstalld::LinkDedupedSo, bundleName, libraryPath, sha256, resultCode);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

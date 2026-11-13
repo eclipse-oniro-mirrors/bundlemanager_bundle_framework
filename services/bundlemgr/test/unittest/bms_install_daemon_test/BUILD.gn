@@ -21,10 +21,16 @@ bundle_so_test_path = "${bundle_framework_path}/test/sceneProject/unittest/bundl
 ohos_unittest("BmsInstallDaemonTest") {
   use_exceptions = true
   module_out_path = module_output_path
+  # so_dedup_mock defines the test binary's own extern "C" LinkDedupedSo,
+  # shadowing the libc symbol at static link time: the in-process dispatch
+  # block (LinkDedupedSo_Passthrough_0200) injects the musl result code
+  # deterministically; the real-chain cases are unaffected because their
+  # musl call runs inside the device installd process.
   sources = [
     "${services_path}/bundlemgr/src/system_ability_helper.cpp",
     "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp",
     "${services_path}/bundlemgr/test/mock/src/installd_permission_mgr.cpp",
+    "${services_path}/bundlemgr/test/mock/src/so_dedup_mock.cpp",
   ]
 
   sources += install_daemon_sources

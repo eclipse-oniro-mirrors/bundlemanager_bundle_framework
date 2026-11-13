@@ -1,0 +1,1 @@
+{"version": "1.0", "removedSoFiles": [{"originalPathInHap": "libs/arm64-v8a/libc++_shared.so", "originalSha256": "31b7479487ad9f817f0fd66f6dcb1c2957e7ca68b432b6f95f1f56bfc976bd60"}, {"originalPathInHap": "libs/armeabi-v7a/libc++_shared.so", "originalSha256": "b25679e57ca7ae6713dd68726e1e0e6a91bf558bc699f1fe23b82fb195782592"}]}

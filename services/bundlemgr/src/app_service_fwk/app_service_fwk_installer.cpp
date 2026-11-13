@@ -17,6 +17,7 @@
 
 #include "access_token_error.h"
 #include "app_provision_info_manager.h"
+#include "bundle_dedup_so_helper.h"
 #include "bundle_mgr_service.h"
 #include "bundle_util.h"
 #include "inner_patch_info.h"
@@ -745,6 +746,14 @@ ErrCode AppServiceFwkInstaller::ProcessNativeLibrary(
 {
     APP_LOGI_NOFUNC("ProcessNativeLibrary %{public}s %{public}s", bundlePath.c_str(), moduleDir.c_str());
     if (!newInfo.FetchNativeSoAttrs(moduleName, cpuAbi_, nativeLibraryPath_)) {
+        // the so attrs fetch failed (module missing, or the parse-time abi
+        // derivation left the native library path empty): the dedup manifest must
+        // still be processed, otherwise a dedup package whose abi derivation
+        // missed would silently skip the so link; an empty target so path fails
+        // the helper closed with 8519951 when the manifest is not empty, a hap
+        // without one keeps passing through.
+        auto dedupResult = DedupSoHelper::ProcessDedupSoFiles(bundlePath, newInfo, "", cpuAbi_);
+        CHECK_RESULT(dedupResult, "fail to ProcessDedupSoFiles, error is %{public}d");
         return ERR_OK;
     }
     isCompressNativeLibs_ = newInfo.IsCompressNativeLibs(moduleName);
@@ -795,6 +804,20 @@ ErrCode AppServiceFwkInstaller::ProcessNativeLibrary(
         CHECK_RESULT(result, "Fail to GetNativeLibraryFileNames, error is %{public}d");
         newInfo.SetNativeLibraryFileNames(moduleName, fileNames);
     }
+    // dedup so: link the so files recorded in the HAP dedupfiles.json into the
+    // real so path, written in place by moduleUpdate (no staging rotate here; a
+    // failure is closed by the existing ProcessInstall ScopeGuard state
+    // migration, the still-working old info is never removed). The call runs
+    // for the uncompressed form and for an empty native library path (the
+    // abi-derivation-failure fallback) too: the helper fails both closed with
+    // 8519951 instead of installing a service whose so is missing at runtime.
+    std::string realSoPath;
+    if (isCompressNativeLibs_ && !nativeLibraryPath_.empty()) {
+        realSoPath = versionDir + AppExecFwk::ServiceConstants::PATH_SEPARATOR +
+            nativeLibraryPath_ + AppExecFwk::ServiceConstants::PATH_SEPARATOR;
+    }
+    auto dedupResult = DedupSoHelper::ProcessDedupSoFiles(bundlePath, newInfo, realSoPath, cpuAbi_);
+    CHECK_RESULT(dedupResult, "fail to ProcessDedupSoFiles, error is %{public}d");
     return ERR_OK;
 }
 

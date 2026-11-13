@@ -72,6 +72,7 @@
 #include "bundle_extractor.h"
 #include "ipc/skills_package_param.h"
 #include "inner_bundle_clone_common.h"
+#include "so_dedup/so_dedup.h"
 #ifdef WITH_SELINUX
 #include <selinux/selinux.h>
 #endif
@@ -2936,8 +2937,10 @@ bool InstalldOperator::MoveFiles(const std::string &srcDir, const std::string &d
         std::string curPath = realPath + ServiceConstants::PATH_SEPARATOR + currentName;
         std::string innerDesStr = realDesDir + ServiceConstants::PATH_SEPARATOR + currentName;
         struct stat s;
-        if (stat(curPath.c_str(), &s) != 0) {
-            LOG_D(BMS_TAG_INSTALLD, "MoveFiles stat %{public}s failed, errno:%{public}d", curPath.c_str(), errno);
+        // lstat, never stat: a symlink must not be followed (chmod would go
+        // through a dedup so link to its target, a dangling link would be dropped)
+        if (lstat(curPath.c_str(), &s) != 0) {
+            LOG_D(BMS_TAG_INSTALLD, "MoveFiles lstat %{private}s failed, errno:%{public}d", curPath.c_str(), errno);
             continue;
         }
         if (!MoveFileOrDir(curPath, innerDesStr, s.st_mode)) {
@@ -2951,10 +2954,18 @@ bool InstalldOperator::MoveFiles(const std::string &srcDir, const std::string &d
 
 bool InstalldOperator::MoveFileOrDir(const std::string &srcPath, const std::string &destPath, mode_t mode)
 {
-    if (mode & S_IFREG) {
+    // dispatch order matters: S_ISLNK must run before S_ISREG (S_IFLNK shares
+    // bits with S_IFREG); the S_IS* macros are exact where the legacy bit test
+    // would misclassify a socket/fifo as a file; other types fall through
+    if (S_ISLNK(mode)) {
+        // move the link inode itself, never chmod through it (read-only dedup target)
+        LOG_D(BMS_TAG_INSTALLD, "srcPath(%{private}s) is a symlink", srcPath.c_str());
+        return RenameFile(srcPath, destPath);
+    }
+    if (S_ISREG(mode)) {
         LOG_D(BMS_TAG_INSTALLD, "srcPath(%{public}s) is a file", srcPath.c_str());
         return MoveFile(srcPath, destPath);
-    } else if (mode & S_IFDIR) {
+    } else if (S_ISDIR(mode)) {
         LOG_D(BMS_TAG_INSTALLD, "srcPath(%{public}s) is a dir", srcPath.c_str());
         return MoveFiles(srcPath, destPath, true);
     }
@@ -4348,9 +4359,33 @@ bool InstalldOperator::CopyDir(const std::string &sourceDir, const std::string &
             }
             continue;
         }
+        // lstat, never stat: a dedup so link must be rebuilt as a link, not
+        // copied as the content of its system target
         struct stat fileStat;
-        if (stat(curPath.c_str(), &fileStat) != 0) {
-            LOG_E(BMS_TAG_INSTALLD, "Failed to get file info: %s", curPath.c_str());
+        if (lstat(curPath.c_str(), &fileStat) != 0) {
+            LOG_E(BMS_TAG_INSTALLD, "Failed to get file info: %{private}s", curPath.c_str());
+            return false;
+        }
+        if (S_ISLNK(fileStat.st_mode)) {
+            // rebuild the link itself, never chmod or chown through it (the
+            // MoveFileOrDir symlink branch keeps the same rule)
+            char linkTarget[PATH_MAX] = {0};
+            auto linkSize = readlink(curPath.c_str(), linkTarget, sizeof(linkTarget) - 1);
+            if (linkSize < 0) {
+                LOG_E(BMS_TAG_INSTALLD, "Failed to read link(%{private}s)", curPath.c_str());
+                return false;
+            }
+            linkTarget[linkSize] = '\0';
+            if (symlink(linkTarget, destPath.c_str()) != 0) {
+                LOG_E(BMS_TAG_INSTALLD, "Failed to create link(%{private}s) to (%{private}s)",
+                    destPath.c_str(), linkTarget);
+                return false;
+            }
+            // align the link inode owner without following it; non-fatal on failure
+            if (fchownat(AT_FDCWD, destPath.c_str(), fileStat.st_uid, fileStat.st_gid,
+                AT_SYMLINK_NOFOLLOW) != 0) {
+                LOG_E(BMS_TAG_INSTALLD, "Failed to change link owner(%{private}s)", destPath.c_str());
+            }
             continue;
         }
         if (CopyFile(curPath, destPath)) {
@@ -7040,6 +7075,122 @@ std::string InstalldOperator::GetAbcRealPath(const std::string &bundleName, int3
         .append(ServiceConstants::PATH_SEPARATOR).append(std::to_string(userId)).append(baseType)
         .append(bundleName).append(ServiceConstants::PATH_SEPARATOR).append(suffix);
     return filePath;
+}
+
+// pin the musl so_dedup.h result contract at compile time: this TU consumes
+// the raw uint32_t resultCode over IPC without linking musl
+static_assert(SO_DEDUP_LINKED == 0, "musl so_dedup result contract drifted");
+static_assert(SO_DEDUP_NO_MATCH == 1, "musl so_dedup result contract drifted");
+static_assert(SO_DEDUP_ALREADY_LINKED == 2, "musl so_dedup result contract drifted");
+static_assert(SO_DEDUP_CONFIG_UNAVAILABLE == 3, "musl so_dedup result contract drifted");
+static_assert(SO_DEDUP_VERSION_MISMATCH == 4, "musl so_dedup result contract drifted");
+static_assert(SO_DEDUP_ERROR == UINT32_MAX, "musl so_dedup result contract drifted");
+
+ErrCode InstalldOperator::LinkDedupedSo(const std::string &libraryPath, const std::string &sha256,
+    uint32_t &resultCode)
+{
+    // a fully deduped package extracts no so entries: create the parent dir on demand
+    std::string parentDir = GetPathDir(libraryPath);
+    if (!IsExistDir(parentDir) && !MkRecursiveDir(parentDir, true)) {
+        LOG_E(BMS_TAG_INSTALLD, "LinkDedupedSo create parent dir %{private}s failed", parentDir.c_str());
+        return ERR_APPEXECFWK_INSTALLD_DEDUP_SO_LINK_FAILED;
+    }
+    // musl requires a free link position: a stale placeholder is rotated to
+    // <position> + DEDUP_SO_BACKUP_SUFFIX, restored on an abnormal code and deleted
+    // on success; a leftover backup is adopted, position+backup at once is refused
+    std::string backupPath = libraryPath + ServiceConstants::DEDUP_SO_BACKUP_SUFFIX;
+    bool hasPositionBackup = false;
+    struct stat linkStat = {};
+    if (lstat(libraryPath.c_str(), &linkStat) == 0) {
+        if (S_ISDIR(linkStat.st_mode)) {
+            LOG_E(BMS_TAG_INSTALLD, "LinkDedupedSo path %{private}s is occupied by a directory",
+                libraryPath.c_str());
+            return ERR_APPEXECFWK_INSTALLD_DEDUP_SO_LINK_FAILED;
+        }
+        struct stat backupStat = {};
+        if (lstat(backupPath.c_str(), &backupStat) == 0) {
+            LOG_E(BMS_TAG_INSTALLD, "LinkDedupedSo backup %{private}s already exists, refuse to clobber",
+                backupPath.c_str());
+            return ERR_APPEXECFWK_INSTALLD_DEDUP_SO_LINK_FAILED;
+        }
+        if (rename(libraryPath.c_str(), backupPath.c_str()) != 0) {
+            LOG_E(BMS_TAG_INSTALLD, "LinkDedupedSo rotate stale placeholder %{private}s failed, errno: %{public}d",
+                libraryPath.c_str(), errno);
+            return ERR_APPEXECFWK_INSTALLD_DEDUP_SO_LINK_FAILED;
+        }
+        hasPositionBackup = true;
+    } else if (errno == ENOENT) {
+        struct stat backupStat = {};
+        if (lstat(backupPath.c_str(), &backupStat) == 0) {
+            // interrupted earlier attempt: adopt the leftover backup for the restore
+            hasPositionBackup = true;
+        }
+    } else {
+        LOG_E(BMS_TAG_INSTALLD, "LinkDedupedSo lstat %{private}s failed, errno: %{public}d",
+            libraryPath.c_str(), errno);
+        return ERR_APPEXECFWK_INSTALLD_DEDUP_SO_LINK_FAILED;
+    }
+    resultCode = ::OH_LinkDedupedSo(libraryPath.c_str(), sha256.c_str());
+    if (resultCode == SO_DEDUP_ERROR) {
+        // only the error state carries a meaningful errno, never print it on success
+        LOG_E(BMS_TAG_INSTALLD, "LinkDedupedSo path: %{private}s, ret: %{public}u, errno: %{public}d",
+            libraryPath.c_str(), resultCode, errno);
+    } else {
+        LOG_D(BMS_TAG_INSTALLD, "LinkDedupedSo path: %{private}s, ret: %{public}u",
+            libraryPath.c_str(), resultCode);
+    }
+    if (resultCode == SO_DEDUP_LINKED || resultCode == SO_DEDUP_ALREADY_LINKED) {
+        if (hasPositionBackup && unlink(backupPath.c_str()) != 0 && errno != ENOENT) {
+            // best effort: the next attempt cleans or adopts the leftover backup
+            LOG_W(BMS_TAG_INSTALLD, "LinkDedupedSo unlink backup %{private}s failed, errno: %{public}d",
+                backupPath.c_str(), errno);
+        }
+    } else if (hasPositionBackup) {
+        if (rename(backupPath.c_str(), libraryPath.c_str()) != 0) {
+            // fail-closed through the mapped code; the backup stays for the next attempt
+            LOG_E(BMS_TAG_INSTALLD, "LinkDedupedSo restore backup %{private}s failed, errno: %{public}d",
+                backupPath.c_str(), errno);
+        }
+    }
+    return ERR_OK;
+}
+
+bool InstalldOperator::IsValidDedupSoPath(const std::string &bundleName, const std::string &libraryPath)
+{
+    if (!IsValidBundleName(bundleName)) {
+        return false;
+    }
+    std::string bundlePrefix = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
+        bundleName + ServiceConstants::PATH_SEPARATOR;
+    // the +new- staging rotate dir of the same bundle is an accepted domain
+    std::string stagingPrefix = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
+        ServiceConstants::BUNDLE_NEW_CODE_DIR + bundleName + ServiceConstants::PATH_SEPARATOR;
+    bool inBundleDir = BundleUtil::StartWith(libraryPath, bundlePrefix);
+    bool inStagingDir = BundleUtil::StartWith(libraryPath, stagingPrefix);
+    if (!inBundleDir && !inStagingDir) {
+        return false;
+    }
+    std::string relativePath =
+        libraryPath.substr(inBundleDir ? bundlePrefix.length() : stagingPrefix.length());
+    if (!IsFileNameValid(relativePath)) {
+        return false;
+    }
+    // the domain root must exist; the so dir may be absent (created on demand)
+    struct stat s;
+    // lstat must judge the domain root WITHOUT the trailing separator: with it a
+    // bundleName-level symlink placeholder would pass the S_ISDIR gate through its target
+    std::string domainRoot = OHOS::ExcludeTrailingPathDelimiter(
+        inBundleDir ? bundlePrefix : stagingPrefix);
+    if (lstat(domainRoot.c_str(), &s) != 0 || !S_ISDIR(s.st_mode)) {
+        return false;
+    }
+    return true;
+}
+
+bool InstalldOperator::IsValidDedupSoSha256(const std::string &sha256)
+{
+    static std::regex sha256Pattern("^[0-9a-fA-F]{64}$");
+    return std::regex_match(sha256, sha256Pattern);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

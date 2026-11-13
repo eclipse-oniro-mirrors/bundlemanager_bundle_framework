@@ -16,6 +16,7 @@
 #ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_BUNDLE_EXTRACTOR_H
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_BUNDLE_EXTRACTOR_H
 
+#include <set>
 #include <vector>
 
 #include "application_info.h"
@@ -23,6 +24,14 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+// The max allowed uncompressed size of dedupfiles.json (the legal peak is
+// 65535 entries of ~200 bytes); shared by the strict parser guard and the
+// loose abi-prefix probe.
+constexpr uint32_t MAX_DEDUP_FILES_SIZE = 16 * 1024 * 1024;
+// The bracket nesting depth limit of dedupfiles.json (a legal manifest peaks at
+// depth 3); the string-aware scan is shared by the strict guard and the probe.
+constexpr int32_t MAX_DEDUP_FILES_DEPTH = 4;
+
 class BundleExtractor : public BaseExtractor {
 public:
     explicit BundleExtractor(const std::string &source, bool parallel = false);
@@ -52,6 +61,34 @@ public:
      */
     bool IsProfileSizeAllowed() const;
 
+    /**
+     * @brief Check whether the declared size of dedupfiles.json is allowed to be extracted, so
+     *        that an oversized dedup manifest will not exhaust the memory during install.
+     * @param maxSize The max allowed uncompressed size in bytes.
+     * @return Returns true if the dedup files size is within the limit; returns false otherwise.
+     */
+    bool IsDedupFilesSizeAllowed(uint32_t maxSize) const;
+
+    /**
+     * @brief Check whether the bracket nesting depth of the extracted dedupfiles.json
+     *        payload stays within MAX_DEDUP_FILES_DEPTH; brackets inside quoted
+     *        strings never count.
+     * @param content Indicates the extracted dedupfiles.json payload.
+     * @return Returns true if the depth stays within the limit; false otherwise.
+     */
+    static bool IsDedupFilesDepthAllowed(const std::string &content);
+
+    /**
+     * @brief Loosely probe the ABI directory prefixes (libs/<abi>/) declared by the
+     *        originalPathInHap entries of dedupfiles.json, so the profile parsing can
+     *        derive the target so path for a fully deduplicated hap whose libs/<abi>/
+     *        dir entries are also stripped.
+     * @param abis Indicates the collected ABI directory names.
+     * @return Returns true if at least one prefix was collected; false otherwise —
+     *         the derivation stays off, ParseDedupFiles keeps the fail-closed gate.
+     */
+    bool GetDedupSoAbiPrefixes(std::set<std::string> &abis) const;
+
     void IsHapCompress(bool &isAbcCompressed) const;
 
     /**
@@ -77,6 +114,12 @@ private:
      * @return Returns the declared uncompressed size; returns 0 if the profile is not found.
      */
     uint32_t GetProfileUncompressedSize() const;
+
+    /**
+     * @brief Get the declared uncompressed size of dedupfiles.json in the hap.
+     * @return Returns the declared size; returns 0 if the entry is not found.
+     */
+    uint32_t GetDedupFilesUncompressedSize() const;
 
     /**
      * @brief Get the max allowed uncompressed size of the profile according to the available memory.

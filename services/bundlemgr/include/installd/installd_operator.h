@@ -665,6 +665,10 @@ public:
      */
     static ErrCode ParseEnterpriseCertFile(const std::string &certPath,
         std::string &subjectOrg, int64_t &notAfter);
+    static ErrCode LinkDedupedSo(const std::string &libraryPath, const std::string &sha256,
+        uint32_t &resultCode);
+    static bool IsValidDedupSoPath(const std::string &bundleName, const std::string &libraryPath);
+    static bool IsValidDedupSoSha256(const std::string &sha256);
 private:
     static bool ObtainNativeSoFile(const BundleExtractor &extractor, const std::string &cpuAbi,
         std::vector<std::string> &soEntryFiles);

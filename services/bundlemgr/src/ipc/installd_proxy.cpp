@@ -2296,5 +2296,31 @@ ErrCode InstalldProxy::MigrateBundleDirsOwner(const CreateDirParam &createDirPar
     MessageOption option;
     return TransactInstalldCmd(InstalldInterfaceCode::MIGRATE_BUNDLE_DIRS_OWNER, data, reply, option);
 }
+
+ErrCode InstalldProxy::LinkDedupedSo(const std::string &bundleName, const std::string &libraryPath,
+    const std::string &sha256, uint32_t &resultCode)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(libraryPath));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(sha256));
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    auto ret = TransactInstalldCmd(InstalldInterfaceCode::LINK_DEDUPED_SO, data, reply, option);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "TransactInstalldCmd failed, error is %{public}d", ret);
+        return ret;
+    }
+    if (!reply.ReadUint32(resultCode)) {
+        // a truncated reply (only the errCode field) must not be mistaken
+        // for resultCode 0 (linked); fail closed with the parcel error
+        LOG_E(BMS_TAG_INSTALLD, "read resultCode from reply failed, error is %{public}d",
+            ERR_APPEXECFWK_PARCEL_ERROR);
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
