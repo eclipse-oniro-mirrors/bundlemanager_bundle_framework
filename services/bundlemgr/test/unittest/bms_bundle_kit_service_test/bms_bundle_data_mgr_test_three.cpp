@@ -5226,6 +5226,35 @@ HWTEST_F(BmsBundleDataMgrTest3, GenerateUidAndGid_0400, Function | MediumTest | 
 }
 
 /**
+ * @tc.number: GenerateUidAndGid_0500
+ * @tc.name: GenerateUidAndGid idempotent gids
+ * @tc.desc: Calling GenerateUidAndGid twice on the same userInfo must not
+ *           duplicate the uid entry in gids.
+ */
+HWTEST_F(BmsBundleDataMgrTest3, GenerateUidAndGid_0500, Function | MediumTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = BUNDLE_TEST1;
+    userInfo.bundleUserInfo.userId = USERID;
+    auto ret = bundleDataMgr->GenerateUidAndGid(userInfo);
+    if (BundleSpmManager::IsEnabled()) {
+        EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED);
+        return;
+    }
+    EXPECT_EQ(ret, ERR_OK);
+    ret = bundleDataMgr->GenerateUidAndGid(userInfo);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(static_cast<int32_t>(userInfo.gids.size()), 1);
+    if (!userInfo.gids.empty()) {
+        EXPECT_EQ(userInfo.gids[0], userInfo.uid);
+    }
+}
+
+/**
  * @tc.number: GetBundleNameAndIndex_0400
  * @tc.name: GetBundleNameAndIndex sandbox app lookup
  * @tc.desc: When keyName has "index_bundleName" sandbox format,
