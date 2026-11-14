@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#include <unordered_map>
+
 #include "app_log_wrapper.h"
 #include "bundle_error.h"
 #include "zip_ffi.h"
@@ -23,17 +25,20 @@ using namespace OHOS::CJSystemapi::BundleManager;
 namespace OHOS {
 namespace AppExecFwk {
 namespace LIBZIP {
+// Mapping from zlib return codes to bundle error codes, kept consistent with the errCodeTable
+// in the ArkTS implementation (napi_business_error.h).
+static const std::unordered_map<int32_t, ErrCode> ZLIB_ERR_CODE_MAP = {
+    { Z_ERRNO, ERR_ZLIB_SYSTEM_ERROR },
+    { Z_STREAM_ERROR, ERR_ZLIB_ZSTREAM_ERROR },
+    { Z_DATA_ERROR, ERR_ZLIB_DATA_ERROR },
+    { Z_MEM_ERROR, ERR_ZLIB_MEMORY_ALLOC_FAILED },
+    { Z_BUF_ERROR, ERR_ZLIB_BUFFER_ERROR },
+};
+
 static inline ErrCode ZlibBusinessError(int32_t errCode)
 {
-    if (errCode == Z_STREAM_ERROR) {
-        return ERR_ZLIB_ZSTREAM_ERROR;
-    } else if (errCode == Z_MEM_ERROR) {
-        return ERR_ZLIB_MEMORY_ALLOC_FAILED;
-    } else if (errCode == Z_BUF_ERROR) {
-        return ERR_ZLIB_BUFFER_ERROR;
-    } else {
-        return ERR_ZLIB_INTERNAL_STRUCT_ERROR;
-    }
+    auto it = ZLIB_ERR_CODE_MAP.find(errCode);
+    return (it != ZLIB_ERR_CODE_MAP.end()) ? it->second : ERR_ZLIB_INTERNAL_STRUCT_ERROR;
 }
 
 struct CjGZipEntity {
