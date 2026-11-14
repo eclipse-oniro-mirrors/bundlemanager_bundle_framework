@@ -310,6 +310,7 @@ struct App {
     bool ubsanEnabled = false;
     bool cloudFileSyncEnabled = false;
     bool cloudStructuredDataSyncEnabled = false;
+    bool keepDataOnUninstall = false;
     bool profileable = false;
     bool allowAutoControlIntent = false;
     uint32_t iconId = 0;
@@ -1607,6 +1608,12 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         g_parseResult);
     BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
+        APP_KEEP_DATA_ON_UNINSTALL,
+        app.keepDataOnUninstall,
+        false,
+        g_parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
         APP_UBSAN_ENABLED,
         app.ubsanEnabled,
         false,
@@ -2738,6 +2745,7 @@ bool ToApplicationInfo(
     }
     applicationInfo.cloudFileSyncEnabled = app.cloudFileSyncEnabled;
     applicationInfo.cloudStructuredDataSyncEnabled = app.cloudStructuredDataSyncEnabled;
+    applicationInfo.keepDataOnUninstall = app.keepDataOnUninstall;
     applicationInfo.allowListenBundleChangedEvent = app.allowListenBundleChangedEvent;
     return true;
 }

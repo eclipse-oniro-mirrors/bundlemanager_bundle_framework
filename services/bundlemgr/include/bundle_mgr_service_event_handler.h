@@ -75,6 +75,7 @@ enum OTAFlag : uint32_t {
     CHECK_PRINT_SERVICE_DIR = 0x10000000,
     MIGRATE_SKILL_DIR = 0x20000000,
     MIGRATE_UID_TO_ATM = 0x40000000,
+    UPDATE_KEEP_DATA_ON_UNINSTALL = 0x00000002,
 };
 
 enum class ScanResultCode : uint8_t {

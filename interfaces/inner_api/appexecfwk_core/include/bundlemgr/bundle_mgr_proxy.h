@@ -590,6 +590,17 @@ public:
     virtual ErrCode GetBundleResourceArchiveInfo(const std::string &filePath, const uint32_t flags,
         BundleResourceInfo &bundleResourceInfo) override;
     /**
+     * @brief Checks whether an application exists by developerId, assetAccessGroup and userId
+     *        through the proxy object.
+     * @param developerId Indicates the developer id.
+     * @param assetAccessGroup Indicates the asset access group.
+     * @param userId Indicates the user id.
+     * @param isExist Indicates whether a matching application or retained data exists.
+     * @return Returns ERR_OK if this function is successfully called; returns errCode otherwise.
+     */
+    virtual ErrCode CheckBundleExistByDeveloperIdAndAssetGroup(const std::string &developerId,
+        const std::string &assetAccessGroup, int32_t userId, bool &isExist) override;
+    /**
      * @brief Obtain the HAP module info of a specific ability through the proxy object.
      * @param abilityInfo Indicates the ability.
      * @param hapModuleInfo Indicates the obtained HapModuleInfo object.

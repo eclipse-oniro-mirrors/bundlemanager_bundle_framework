@@ -1183,6 +1183,16 @@ public:
     bool GetInnerBundleInfoUsers(const std::string &bundleName, std::set<int32_t> &userIds);
     bool IsSystemHsp(const std::string &bundleName);
 
+    /**
+     * @brief Checks whether an installed bundle or retained uninstall record matches the identity.
+     * @param developerId Indicates the developer id.
+     * @param assetAccessGroup Indicates the asset access group.
+     * @param userId Indicates the user id.
+     * @param isExist Indicates whether a matching bundle or retained data exists.
+     * @return Returns ERR_OK if the query succeeds; returns an error code otherwise.
+     */
+    ErrCode CheckBundleExistByDeveloperIdAndAssetGroup(const std::string &developerId,
+        const std::string &assetAccessGroup, int32_t userId, bool &isExist) const;
     bool UpdateUninstallBundleInfo(const std::string &bundleName, const UninstallBundleInfo &uninstallBundleInfo);
     bool UpdateUninstallBundleCheckBySpm(const std::string &bundleName, bool checkBySpm);
     bool GetUninstallBundleInfo(const std::string &bundleName, UninstallBundleInfo &uninstallBundleInfo) const;
@@ -1192,6 +1202,7 @@ public:
     bool RemoveUninstalledBundleinfos(int32_t userId);
     bool DeleteUninstallCloneBundleInfo(const std::string &bundleName, int32_t userId, int32_t appIndex);
     bool GetAllUninstallBundleInfo(std::map<std::string, UninstallBundleInfo> &uninstallBundleInfos) const;
+    bool QueryAllUninstallBundleInfo(std::map<std::string, UninstallBundleInfo> &uninstallBundleInfos) const;
 
     bool AddFirstInstallBundleInfo(const std::string &bundleName, const int32_t userId,
         const FirstInstallBundleInfo &firstInstallBundleInfo);
@@ -1672,6 +1683,37 @@ public:
         std::vector<ModuleMetadata> &metadataInfos, int32_t userId) const;
 
 private:
+    /**
+     * @brief Matches an installed bundle in the given cache by developerId, assetAccessGroup and userId.
+     * @param bundleInfos Indicates the bundle info cache to search.
+     * @param developerId Indicates the developer id.
+     * @param assetAccessGroup Indicates the asset access group.
+     * @param userId Indicates the user id.
+     * @return Returns true if a matching installed bundle is found.
+     */
+    bool MatchInstalledBundle(const std::map<std::string, InnerBundleInfo> &bundleInfos,
+        const std::string &developerId, const std::string &assetAccessGroup, int32_t userId) const;
+    /**
+     * @brief Matches a retained uninstall record of the current device mode by developerId,
+     *        assetAccessGroup and userId.
+     * @param uninstallBundleInfos Indicates the uninstall records to search.
+     * @param developerId Indicates the developer id.
+     * @param assetAccessGroup Indicates the asset access group.
+     * @param userId Indicates the user id.
+     * @return Returns true if a matching uninstall record is found.
+     */
+    bool MatchUninstallBundleInfo(const std::map<std::string, UninstallBundleInfo> &uninstallBundleInfos,
+        const std::string &developerId, const std::string &assetAccessGroup, int32_t userId) const;
+    /**
+     * @brief Checks whether an uninstall record is visible in the current mode on a dual-mode device.
+     * @param bundleKey Indicates the uninstall record key.
+     * @param policy Indicates the record's device mode distribution policy.
+     * @param isSecondaryMode Indicates whether the current mode is secondary.
+     * @param policySet Indicates the configured policies, or an empty set for default rules.
+     * @return Returns true if the uninstall record is visible in the current mode.
+     */
+    bool IsUninstallRecordVisible(const std::string &bundleKey, DeviceModeDistributionPolicy policy,
+        bool isSecondaryMode, const std::set<DeviceModeDistributionPolicy> &policySet) const;
     // Caller must hold bundleInfoMutex_. Gives every declared ipc group id the same index for all users.
     void SyncIpcGroupInfos(InnerBundleInfo &info, const std::unordered_set<std::string> &validIds);
     /**

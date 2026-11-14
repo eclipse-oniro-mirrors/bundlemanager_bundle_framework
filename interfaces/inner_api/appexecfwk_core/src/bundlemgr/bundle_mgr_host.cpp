@@ -906,6 +906,10 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_RESOURCE_ARCHIVE_INFO):
             errCode = this->HandleGetBundleResourceArchiveInfo(data, reply);
             break;
+        case static_cast<uint32_t>(
+            BundleMgrInterfaceCode::CHECK_BUNDLE_EXIST_BY_DEVELOPER_ID_AND_ASSET_GROUP):
+            errCode = this->HandleCheckBundleExistByDeveloperIdAndAssetGroup(data, reply);
+            break;
         default :
             APP_LOGW("bundleMgr host receives unknown code %{public}u", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -6496,6 +6500,29 @@ ErrCode BundleMgrHost::HandleGetBundleResourceArchiveInfo(MessageParcel &data, M
     }
     if (ret == ERR_OK) {
         return WriteParcelInfoIntelligent<BundleResourceInfo>(info, reply);
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleCheckBundleExistByDeveloperIdAndAssetGroup(
+    MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    std::string developerId = data.ReadString();
+    std::string assetAccessGroup = data.ReadString();
+    int32_t userId = data.ReadInt32();
+    APP_LOGD("developerId %{private}s, assetAccessGroup %{private}s, userId %{public}d",
+        developerId.c_str(), assetAccessGroup.c_str(), userId);
+
+    bool isExist = false;
+    ErrCode ret = CheckBundleExistByDeveloperIdAndAssetGroup(developerId, assetAccessGroup, userId, isExist);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write errCode failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK && !reply.WriteBool(isExist)) {
+        APP_LOGE("write isExist failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
 }

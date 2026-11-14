@@ -9317,15 +9317,35 @@ HWTEST_F(BmsDataMgrTest, UpdateUninstallBundleInfo_0001, Function | MediumTest |
     UninstallBundleInfo uninstallBundleInfo;
     UninstallDataUserInfo uninstallDataUserInfo;
     uninstallBundleInfo.userInfos.emplace("100", uninstallDataUserInfo);
-    EXPECT_NE(bundleDataMgr.uninstallDataMgr_, nullptr);
-    bundleDataMgr.uninstallDataMgr_->UpdateUninstallBundleInfo(bundleName, uninstallBundleInfo);
+    ASSERT_NE(bundleDataMgr.uninstallDataMgr_, nullptr);
+    EXPECT_TRUE(bundleDataMgr.uninstallDataMgr_->UpdateUninstallBundleInfo(bundleName, uninstallBundleInfo));
+    uninstallBundleInfo.developerId = "updatedDeveloper";
+    uninstallBundleInfo.assetAccessGroups = {"updatedGroup"};
+    uninstallBundleInfo.userInfos.at("100").uid = Constants::START_USERID;
     bool ret = bundleDataMgr.UpdateUninstallBundleInfo(bundleName, uninstallBundleInfo);
     EXPECT_FALSE(ret);
+    UninstallBundleInfo savedInfo;
+    EXPECT_TRUE(bundleDataMgr.GetUninstallBundleInfo(bundleName, savedInfo));
+    EXPECT_TRUE(savedInfo.developerId.empty());
+    EXPECT_TRUE(savedInfo.assetAccessGroups.empty());
+    EXPECT_EQ(savedInfo.userInfos.count("100"), 1U);
+    if (savedInfo.userInfos.count("100") != 0) {
+        EXPECT_EQ(savedInfo.userInfos.at("100").uid, uninstallDataUserInfo.uid);
+    }
     uninstallBundleInfo.userInfos.clear();
     uninstallBundleInfo.userInfos.emplace("101", uninstallDataUserInfo);
     ret = bundleDataMgr.UpdateUninstallBundleInfo(bundleName, uninstallBundleInfo);
     EXPECT_TRUE(ret);
-    bundleDataMgr.uninstallDataMgr_->DeleteUninstallBundleInfo(bundleName);
+    EXPECT_TRUE(bundleDataMgr.GetUninstallBundleInfo(bundleName, savedInfo));
+    EXPECT_EQ(savedInfo.developerId, uninstallBundleInfo.developerId);
+    EXPECT_EQ(savedInfo.assetAccessGroups, uninstallBundleInfo.assetAccessGroups);
+    EXPECT_EQ(savedInfo.userInfos.size(), 2U);
+    EXPECT_EQ(savedInfo.userInfos.count("100"), 1U);
+    EXPECT_EQ(savedInfo.userInfos.count("101"), 1U);
+    if (savedInfo.userInfos.count("100") != 0) {
+        EXPECT_EQ(savedInfo.userInfos.at("100").uid, uninstallDataUserInfo.uid);
+    }
+    EXPECT_TRUE(bundleDataMgr.uninstallDataMgr_->DeleteUninstallBundleInfo(bundleName));
     bundleDataMgr.uninstallDataMgr_ = nullptr;
     ret = bundleDataMgr.UpdateUninstallBundleInfo(bundleName, uninstallBundleInfo);
     EXPECT_FALSE(ret);

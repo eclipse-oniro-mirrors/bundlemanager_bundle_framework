@@ -1530,6 +1530,7 @@ protected:
                 "curAlternateIconModuleName":"",
                 "cloudFileSyncEnabled": false,
                 "cloudStructuredDataSyncEnabled": false,
+                "keepDataOnUninstall": false,
                 "applicationFlags":1,
                 "installedForAllUser": false,
                 "isForceRotate": false,
@@ -2633,6 +2634,15 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, ApplicationInfoJsonSerializer_0100, F
     // serialize fromJsonInfo to json
     nlohmann::json toJsonObject = fromJsonInfo;
     EXPECT_TRUE(toJsonObject.dump() == sourceInfoJson.dump());
+
+    // Old persisted records omit the field and retain the default false value.
+    sourceInfoJson.erase("keepDataOnUninstall");
+    ApplicationInfo oldInfo = sourceInfoJson;
+    EXPECT_FALSE(oldInfo.keepDataOnUninstall);
+    oldInfo.keepDataOnUninstall = true;
+    nlohmann::json updatedJson = oldInfo;
+    ApplicationInfo restoredInfo = updatedJson;
+    EXPECT_TRUE(restoredInfo.keepDataOnUninstall);
 }
 
 /**

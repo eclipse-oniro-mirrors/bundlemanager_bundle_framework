@@ -29,6 +29,7 @@ public:
     bool GetUninstallBundleInfo(const std::string &bundleName, UninstallBundleInfo &uninstallBundleInfo);
     bool DeleteUninstallBundleInfo(const std::string &bundleName);
     bool GetAllUninstallBundleInfo(std::map<std::string, UninstallBundleInfo> &uninstallBundleInfos);
+    bool QueryAllUninstallBundleInfo(std::map<std::string, UninstallBundleInfo> &uninstallBundleInfos);
 private:
     void TransformStrToInfo(const std::map<std::string, std::string> &datas,
         std::map<std::string, UninstallBundleInfo> &uninstallBundleInfos);

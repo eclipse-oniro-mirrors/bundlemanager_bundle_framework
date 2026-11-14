@@ -37,6 +37,8 @@ struct UninstallBundleInfo {
     DeviceModeDistributionPolicy deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNSPECIFIED;
     std::vector<std::string> extensionDirs;
     std::vector<std::string> moduleNames;
+    std::string developerId;
+    std::vector<std::string> assetAccessGroups;
     std::map<std::string, UninstallDataUserInfo> userInfos;
     bool checkBySpm = false;
 

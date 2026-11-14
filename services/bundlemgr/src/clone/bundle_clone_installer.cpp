@@ -588,6 +588,8 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
         uninstallBundleInfo.bundleType = info.GetApplicationBundleType();
         uninstallBundleInfo.checkBySpm = info.IsBundleCheckBySpm();
         uninstallBundleInfo.deviceModeDistributionPolicy = info.GetDeviceModeDistributionPolicy();
+        uninstallBundleInfo.developerId = info.GetDeveloperId();
+        uninstallBundleInfo.assetAccessGroups = info.GetAssetAccessGroups();
         info.GetModuleNames(uninstallBundleInfo.moduleNames);
         std::string key = std::to_string(userId) + "_" + std::to_string(appIndex);
         uninstallBundleInfo.userInfos[key].uid = uid_;
@@ -672,6 +674,8 @@ bool BundleCloneInstaller::DeleteUninstalledCloneData(const std::string &bundleN
         .keepData = false,
     };
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
+    installRes.developerId = uninstallBundleInfo.developerId;
+    installRes.SetAssetAccessGroups(uninstallBundleInfo.assetAccessGroups);
     commonEventMgr->NotifyUninstalledBundleCleared(installRes);
     return true;
 }

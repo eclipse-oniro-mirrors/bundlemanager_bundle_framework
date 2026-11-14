@@ -711,5 +711,57 @@ HWTEST_F(BmsBundleMgrHostImplDualModeTest, BatchSetApplicationEnabled_1100, Func
     ErrCode ret = hostImpl->BatchSetApplicationEnabled(INVALID_USER_ID, 1, 2, false, false);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
+
+HWTEST_F(BmsBundleMgrHostImplDualModeTest, CheckBundleExistByDeveloperIdAndAssetGroup_0100,
+    Function | SmallTest | Level1)
+{
+    SetVerifyCallingPermissionForTest(true);
+    SetPermissionResultForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED, false);
+    auto hostImpl = GetBundleMgrHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    bool isExist = true;
+    EXPECT_EQ(ERR_BUNDLE_MANAGER_PERMISSION_DENIED, hostImpl->CheckBundleExistByDeveloperIdAndAssetGroup(
+        "developerId", "assetGroup", TEST_USER_ID, isExist));
+    EXPECT_FALSE(isExist);
+}
+
+HWTEST_F(BmsBundleMgrHostImplDualModeTest, CheckBundleExistByDeveloperIdAndAssetGroup_0200,
+    Function | SmallTest | Level1)
+{
+    SetVerifyCallingPermissionForTest(true);
+    SetPermissionResultForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED, true);
+    PrepareEmptyDataMgr();
+    auto hostImpl = GetBundleMgrHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    bool isExist = true;
+    EXPECT_EQ(ERR_BUNDLE_MANAGER_PARAM_ERROR, hostImpl->CheckBundleExistByDeveloperIdAndAssetGroup(
+        "", "assetGroup", TEST_USER_ID, isExist));
+    EXPECT_FALSE(isExist);
+    isExist = true;
+    EXPECT_EQ(ERR_BUNDLE_MANAGER_INVALID_USER_ID, hostImpl->CheckBundleExistByDeveloperIdAndAssetGroup(
+        "developerId", "assetGroup", Constants::ALL_USERID, isExist));
+    EXPECT_FALSE(isExist);
+}
+
+HWTEST_F(BmsBundleMgrHostImplDualModeTest, CheckBundleExistByDeveloperIdAndAssetGroup_0300,
+    Function | SmallTest | Level1)
+{
+    SetVerifyCallingPermissionForTest(true);
+    SetPermissionResultForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED, true);
+    auto service = DelayedSingleton<BundleMgrService>::GetInstance();
+    auto oldDataMgr = service->dataMgr_;
+    ClearServiceDataMgr();
+    auto hostImpl = GetBundleMgrHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    bool isExist = true;
+    EXPECT_EQ(ERR_APPEXECFWK_SERVICE_NOT_READY, hostImpl->CheckBundleExistByDeveloperIdAndAssetGroup(
+        "developerId", "assetGroup", TEST_USER_ID, isExist));
+    EXPECT_FALSE(isExist);
+    isExist = true;
+    EXPECT_EQ(ERR_APPEXECFWK_SERVICE_NOT_READY, hostImpl->CheckBundleExistByDeveloperIdAndAssetGroup(
+        "", "assetGroup", Constants::ALL_USERID, isExist));
+    EXPECT_FALSE(isExist);
+    service->dataMgr_ = oldDataMgr;
+}
 }
 }

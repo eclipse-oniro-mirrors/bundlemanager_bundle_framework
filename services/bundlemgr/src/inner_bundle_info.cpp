@@ -2351,6 +2351,7 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const InnerBundleInfo &newInfo)
     baseApplicationInfo_->accessible = applicationInfo.accessible;
     baseApplicationInfo_->cloudFileSyncEnabled = applicationInfo.cloudFileSyncEnabled;
     baseApplicationInfo_->cloudStructuredDataSyncEnabled = applicationInfo.cloudStructuredDataSyncEnabled;
+    baseApplicationInfo_->keepDataOnUninstall = applicationInfo.keepDataOnUninstall;
 
     if (!baseApplicationInfo_->isSystemApp) {
         baseApplicationInfo_->isSystemApp = applicationInfo.isSystemApp;
@@ -2416,6 +2417,7 @@ void InnerBundleInfo::UpdatePartialInnerBundleInfo(const InnerBundleInfo &info)
         }
         baseApplicationInfo_->cloudStructuredDataSyncEnabled =
             info.baseApplicationInfo_->cloudStructuredDataSyncEnabled;
+        baseApplicationInfo_->keepDataOnUninstall = info.baseApplicationInfo_->keepDataOnUninstall;
         baseApplicationInfo_->alternateIcons = info.baseApplicationInfo_->alternateIcons;
         baseApplicationInfo_->curAlternateIconModuleName = info.baseApplicationInfo_->iconResource.moduleName;
         baseApplicationInfo_->profileable = info.baseApplicationInfo_->profileable;

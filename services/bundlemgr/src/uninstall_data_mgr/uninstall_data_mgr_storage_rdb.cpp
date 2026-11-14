@@ -119,6 +119,24 @@ bool UninstallDataMgrStorageRdb::GetAllUninstallBundleInfo(
     return !uninstallBundleInfos.empty();
 }
 
+bool UninstallDataMgrStorageRdb::QueryAllUninstallBundleInfo(
+    std::map<std::string, UninstallBundleInfo> &uninstallBundleInfos)
+{
+    uninstallBundleInfos.clear();
+    if (rdbDataManager_ == nullptr) {
+        APP_LOGE("null rdbDataManager");
+        return false;
+    }
+    std::map<std::string, std::string> datas;
+    if (!rdbDataManager_->QueryAllData(datas, true)) {
+        return false;
+    }
+    if (!datas.empty()) {
+        TransformStrToInfo(datas, uninstallBundleInfos);
+    }
+    return true;
+}
+
 void UninstallDataMgrStorageRdb::TransformStrToInfo(const std::map<std::string, std::string> &datas,
     std::map<std::string, UninstallBundleInfo> &uninstallBundleInfos)
 {
