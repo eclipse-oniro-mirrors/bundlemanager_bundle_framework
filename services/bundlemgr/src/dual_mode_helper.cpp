@@ -377,6 +377,20 @@ bool DualModeHelper::ParseDualModeBundleName(const std::string &name, std::strin
     return true;
 }
 
+std::string DualModeHelper::GetOriginalBundleName(const std::string &name)
+{
+    if (!IsDualModeCloneKey(name)) {
+        return name;
+    }
+    std::string originalName;
+    int32_t appIndex = 0;
+    if (!BundleCloneCommonHelper::ParseCloneDataDir(name, originalName, appIndex)) {
+        // ParseCloneDataDir has already logged the failure; keep the input name as-is.
+        return name;
+    }
+    return originalName;
+}
+
 bool DualModeHelper::IsDualModeCloneKey(const std::string &key)
 {
     // Dual mode keys have format: +clone-10000+{bundleName}
