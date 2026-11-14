@@ -39,6 +39,7 @@
 #include "parameter.h"
 #include "parameters.h"
 #include "permission_define.h"
+#include "scope_guard.h"
 
 using namespace testing::ext;
 using namespace std::chrono_literals;
@@ -5585,5 +5586,58 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_1030
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
     ResetCallingUid();
     ResetTestValues();
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_10400
+ * @tc.name: test SetRecoverDisposedRule bundleName check for a non-native system app
+ * @tc.desc: 1.A non-native system app cannot target another bundle
+ *           2.A matching bundleName passes validation and reaches the manager check
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_10400, Function | SmallTest | Level1)
+{
+    ScopeGuard stateGuard([] {
+        ResetCallingUid();
+        ResetTestValues();
+    });
+    SetSystemAppFalseForTest(true);
+    SetNativeTokenTypeForTest(false);
+    SetGetCallingUid(NON_ADMIN_CALLING_UID);
+    AppControlManagerHostImpl impl;
+    ASSERT_NE(impl.dataMgr_, nullptr);
+    impl.appControlManager_ = nullptr;
+    std::string callerName;
+    impl.GetCallerByUid(NON_ADMIN_CALLING_UID, callerName);
+    EXPECT_NE(callerName, TEST_BUNDLE_NAME);
+    RecoverDisposedRule rule;
+    rule.want = std::make_shared<AAFwk::Want>();
+    rule.want->SetBundle(TEST_BUNDLE_NAME);
+    rule.recoverComponentType = RecoverComponentType::EXTENSION;
+    EXPECT_EQ(impl.SetRecoverDisposedRule(rule, Constants::UNSPECIFIED_USERID),
+        ERR_BUNDLE_MANAGER_INVALID_RECOVER_RULE);
+
+    rule.want->SetBundle(callerName);
+    EXPECT_EQ(impl.SetRecoverDisposedRule(rule, Constants::UNSPECIFIED_USERID), ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_10500
+ * @tc.name: test recover rule permissions for a native caller
+ * @tc.desc: 1.A native caller without disposed-status permissions cannot set, get or delete recover rules
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_10500, Function | SmallTest | Level1)
+{
+    ScopeGuard stateGuard([] { ResetTestValues(); });
+    SetSystemAppFalseForTest(true);
+    SetNativeTokenTypeForTest(true);
+    SetVerifyCallingPermissionForTest(false);
+    AppControlManagerHostImpl impl;
+    RecoverDisposedRule rule;
+    rule.want = std::make_shared<AAFwk::Want>();
+    rule.want->SetBundle(TEST_BUNDLE_NAME);
+    rule.recoverComponentType = RecoverComponentType::EXTENSION;
+    EXPECT_EQ(impl.SetRecoverDisposedRule(rule, USERID), ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    EXPECT_EQ(impl.GetRecoverDisposedRule(USERID, rule), ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    EXPECT_EQ(impl.DeleteRecoverDisposedRule(USERID), ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 } // OHOS

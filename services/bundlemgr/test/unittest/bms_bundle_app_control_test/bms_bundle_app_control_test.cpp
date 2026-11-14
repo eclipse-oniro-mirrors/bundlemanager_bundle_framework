@@ -3304,7 +3304,7 @@ HWTEST_F(BmsBundleAppControlTest, RecoverDisposedRule_2600, Function | SmallTest
     std::string ruleCaller;
     int64_t ruleTime = 0;
     EXPECT_EQ(rdb->GetRecoverDisposedRuleByUserId(USERID, storedRule, ruleCaller, ruleTime), ERR_OK);
-    EXPECT_EQ(storedRule.want, nullptr);
+    ASSERT_EQ(storedRule.want, nullptr);
     BundleInstallerHost bundleInstallerHost;
     EXPECT_FALSE(bundleInstallerHost.CheckRecoverDisposedRule(TARGET_BUNDLE_NAME, USERID));
     EXPECT_EQ(rdb->DeleteRecoverDisposedRule(CALLER_BUNDLE_NAME, USERID), ERR_OK);
@@ -3321,7 +3321,7 @@ HWTEST_F(BmsBundleAppControlTest, RecoverDisposedRule_2700, Function | SmallTest
     ASSERT_NE(rdb, nullptr);
     ASSERT_NE(rdb->rdbDataManager_, nullptr);
     const std::string callerName = "invalidRecoverRuleCaller";
-    ASSERT_EQ(rdb->DeleteRecoverDisposedRule(callerName, TEST_USERID), ERR_OK);
+    EXPECT_EQ(rdb->DeleteRecoverDisposedRule(callerName, TEST_USERID), ERR_OK);
     ScopeGuard ruleGuard([&] { rdb->DeleteRecoverDisposedRule(callerName, TEST_USERID); });
     RecoverDisposedRule rule;
     EXPECT_EQ(rdb->GetRecoverDisposedRule(callerName, TEST_USERID, rule),
@@ -3329,15 +3329,52 @@ HWTEST_F(BmsBundleAppControlTest, RecoverDisposedRule_2700, Function | SmallTest
     rule.want = std::make_shared<Want>();
     rule.want->SetBundle(callerName);
     rule.recoverComponentType = RecoverComponentType::EXTENSION;
-    ASSERT_EQ(rdb->SetRecoverDisposedRule(callerName, rule, TEST_USERID), ERR_OK);
+    EXPECT_EQ(rdb->SetRecoverDisposedRule(callerName, rule, TEST_USERID), ERR_OK);
     NativeRdb::AbsRdbPredicates predicates(rdb->rdbDataManager_->bmsRdbConfig_.tableName);
     predicates.EqualTo("APP_CONTROL_LIST", "RecoverDisposedRule");
     predicates.EqualTo("CALLING_NAME", callerName);
     predicates.EqualTo("USER_ID", std::to_string(TEST_USERID));
     NativeRdb::ValuesBucket values;
     values.PutString("DISPOSED_STATUS", "invalid json");
-    ASSERT_TRUE(rdb->rdbDataManager_->UpdateData(values, predicates));
+    EXPECT_TRUE(rdb->rdbDataManager_->UpdateData(values, predicates));
     EXPECT_EQ(rdb->GetRecoverDisposedRule(callerName, TEST_USERID, rule), ERR_APPEXECFWK_DB_GET_DATA_ERROR);
+}
+
+/**
+ * @tc.number: RecoverDisposedRule_2800
+ * @tc.name: Test recover rule set, get and delete by a native caller
+ * @tc.desc: 1.A native caller can target another bundle and manage the rule under its own caller name
+ */
+HWTEST_F(BmsBundleAppControlTest, RecoverDisposedRule_2800, Function | SmallTest | Level1)
+{
+    EXPECT_TRUE(BundlePermissionMgr::IsNativeTokenTypeOnly());
+    AppControlManagerHostImpl impl;
+    ASSERT_NE(impl.dataMgr_, nullptr);
+    ASSERT_NE(impl.appControlManager_, nullptr);
+    std::string callerName;
+    impl.GetCallerByUid(IPCSkeleton::GetCallingUid(), callerName);
+    EXPECT_NE(callerName, TARGET_BUNDLE_NAME);
+    EXPECT_EQ(impl.DeleteRecoverDisposedRule(TEST_USERID), ERR_OK);
+    ScopeGuard ruleGuard([&] { impl.DeleteRecoverDisposedRule(TEST_USERID); });
+
+    RecoverDisposedRule rule;
+    rule.want = std::make_shared<Want>();
+    rule.want->SetElementName(Constants::EMPTY_STRING, TARGET_BUNDLE_NAME, "RecoverServiceExtension", "entry");
+    rule.priority = 1;
+    rule.recoverComponentType = RecoverComponentType::EXTENSION;
+    EXPECT_EQ(impl.SetRecoverDisposedRule(rule, TEST_USERID), ERR_OK);
+
+    RecoverDisposedRule storedRule;
+    EXPECT_EQ(impl.GetRecoverDisposedRule(TEST_USERID, storedRule), ERR_OK);
+    ASSERT_NE(storedRule.want, nullptr);
+    EXPECT_EQ(storedRule.want->GetElement(), rule.want->GetElement());
+    EXPECT_EQ(storedRule.priority, rule.priority);
+    EXPECT_EQ(storedRule.recoverComponentType, rule.recoverComponentType);
+    EXPECT_EQ(impl.appControlManager_->GetRecoverDisposedRule(callerName, TEST_USERID, storedRule), ERR_OK);
+
+    EXPECT_EQ(impl.DeleteRecoverDisposedRule(TEST_USERID), ERR_OK);
+    EXPECT_EQ(impl.GetRecoverDisposedRule(TEST_USERID, storedRule),
+        ERR_BUNDLE_MANAGER_RECOVER_DISPOSED_RULE_NOT_CONFIGURED);
 }
 
 /**
