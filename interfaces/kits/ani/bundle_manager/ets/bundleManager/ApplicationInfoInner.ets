@@ -54,6 +54,7 @@ export class ApplicationInfoInner implements ApplicationInfo {
   readonly cloudStructuredDataSyncEnabled?: boolean|undefined;
   readonly flags?: int|undefined;
   readonly applicationReservedFlag?: bundleManager.ApplicationReservedFlag|undefined;
+  readonly appUid?: int;
 
   constructor() { }
   constructor(name: string,
@@ -89,7 +90,8 @@ export class ApplicationInfoInner implements ApplicationInfo {
     cloudStructuredDataSyncEnabled?: boolean,
     flags?: int,
     applicationReservedFlag?: bundleManager.ApplicationReservedFlag,
-    keepDataOnUninstall?: boolean) {
+    keepDataOnUninstall?: boolean,
+    appUid?: int) {
       this.name = name;
       this.description = description;
       this.descriptionId = descriptionId;
@@ -124,6 +126,7 @@ export class ApplicationInfoInner implements ApplicationInfo {
       this.flags = flags;
       this.applicationReservedFlag = applicationReservedFlag;
       this.keepDataOnUninstall = keepDataOnUninstall;
+      this.appUid = appUid;
   }
 }
 

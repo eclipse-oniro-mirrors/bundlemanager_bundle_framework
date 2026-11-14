@@ -956,6 +956,7 @@ bool BMSEventHandler::AnalyzeUserData(
     innerBundleUserInfo.bundleName = userDataBundleName;
     innerBundleUserInfo.bundleUserInfo.userId = userId;
     innerBundleUserInfo.uid = fileStat.uid;
+    innerBundleUserInfo.appUid = fileStat.uid;
     innerBundleUserInfo.gids.emplace_back(fileStat.gid);
     innerBundleUserInfo.installTime = fileStat.lastModifyTime;
     innerBundleUserInfo.updateTime = innerBundleUserInfo.installTime;
@@ -980,6 +981,7 @@ bool BMSEventHandler::AnalyzeUserData(
     for (auto &existing : userIter->second) {
         if (existing.bundleUserInfo.userId == userId) {
             existing.uid = innerBundleUserInfo.uid;
+            existing.appUid = innerBundleUserInfo.appUid;
             existing.gids = innerBundleUserInfo.gids;
             existing.installTime = innerBundleUserInfo.installTime;
             existing.updateTime = innerBundleUserInfo.updateTime;
@@ -1041,6 +1043,7 @@ bool BMSEventHandler::AnalyzeCloneUserData(
         .userId = userId,
         .appIndex = appIndex,
         .uid = fileStat.uid,
+        .appUid = fileStat.uid,
         .accessTokenId = accessTokenIdEx.tokenIdExStruct.tokenID,
         .installTime = fileStat.lastModifyTime,
         .accessTokenIdEx = accessTokenIdEx.tokenIDEx,
@@ -8877,6 +8880,7 @@ void UpdateMainUserInfo(InnerBundleUserInfo &userInfo, const UpdatePayload &payl
     if (payload.uidChanged) {
         auto oldUid = userInfo.uid;
         userInfo.uid = payload.resolvedUid;
+        userInfo.appUid = payload.resolvedUid;
         auto gidIt = std::find(userInfo.gids.begin(), userInfo.gids.end(), oldUid);
         if (gidIt != userInfo.gids.end()) {
             *gidIt = payload.resolvedUid;
@@ -8898,6 +8902,7 @@ void UpdateCloneUserInfo(int32_t instIndex,
     if (payload.uidChanged) {
         auto oldUid = cloneIt->second.uid;
         cloneIt->second.uid = payload.resolvedUid;
+        cloneIt->second.appUid = payload.resolvedUid;
         auto gidIt = std::find(cloneIt->second.gids.begin(), cloneIt->second.gids.end(), oldUid);
         if (gidIt != cloneIt->second.gids.end()) {
             *gidIt = payload.resolvedUid;
@@ -8919,6 +8924,7 @@ void UpdateCliSandboxUserInfo(int32_t instIndex,
     if (payload.uidChanged) {
         auto oldUid = sandboxIt->second.uid;
         sandboxIt->second.uid = payload.resolvedUid;
+        sandboxIt->second.appUid = payload.resolvedUid;
         auto gidIt = std::find(sandboxIt->second.gids.begin(),
             sandboxIt->second.gids.end(), oldUid);
         if (gidIt != sandboxIt->second.gids.end()) {
@@ -8936,6 +8942,7 @@ void UpdateSandboxUserInfo(InnerBundleUserInfo &sandboxUserInfo, const UpdatePay
     if (payload.uidChanged) {
         auto oldUid = sandboxUserInfo.uid;
         sandboxUserInfo.uid = payload.resolvedUid;
+        sandboxUserInfo.appUid = payload.resolvedUid;
         auto gidIt = std::find(sandboxUserInfo.gids.begin(), sandboxUserInfo.gids.end(), oldUid);
         if (gidIt != sandboxUserInfo.gids.end()) {
             *gidIt = payload.resolvedUid;

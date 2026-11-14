@@ -313,6 +313,7 @@ struct App {
     bool keepDataOnUninstall = false;
     bool profileable = false;
     bool allowAutoControlIntent = false;
+    bool sharedUID = false;
     uint32_t iconId = 0;
     uint32_t labelId = 0;
     uint32_t descriptionId = 0;
@@ -1664,6 +1665,12 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         app.allowAutoControlIntent,
         false,
         g_parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        APP_SHARED_UID,
+        app.sharedUID,
+        false,
+        g_parseResult);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,
         jsonObjectEnd,
         APP_ALLOW_LISTEN_BUNDLE_CHANGED_EVENT,
@@ -2659,6 +2666,7 @@ bool ToApplicationInfo(
     applicationInfo.asanEnabled = app.asanEnabled;
     applicationInfo.profileable = app.profileable;
     applicationInfo.allowAutoControlIntent = app.allowAutoControlIntent;
+    applicationInfo.sharedUID = app.sharedUID;
     if (app.bundleType == Profile::BUNDLE_TYPE_ATOMIC_SERVICE) {
         applicationInfo.bundleType = BundleType::ATOMIC_SERVICE;
     }

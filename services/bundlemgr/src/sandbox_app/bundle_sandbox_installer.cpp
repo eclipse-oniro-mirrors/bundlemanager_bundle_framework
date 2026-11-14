@@ -148,6 +148,7 @@ ErrCode BundleSandboxInstaller::InstallSandboxApp(const std::string &bundleName,
             return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
         }
         userInfo.uid = identityUid;
+        userInfo.appUid = identityUid;
         userInfo.gids.emplace_back(identityUid);
     }
     BundleUtil::MakeFsConfig(info.GetBundleName(), ServiceConstants::HMDFS_CONFIG_PATH, info.GetAppProvisionType(),

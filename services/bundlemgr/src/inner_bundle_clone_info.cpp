@@ -20,6 +20,7 @@ namespace {
 const std::string BUNDLE_CLONE_INFO_USER_ID = "userId";
 const std::string BUNDLE_CLONE_INFO_APP_INDEX = "appIndex";
 const std::string BUNDLE_CLONE_INFO_UID = "uid";
+const std::string BUNDLE_CLONE_INFO_APP_UID = "appUid";
 const std::string BUNDLE_CLONE_INFO_GIDS = "gids";
 const std::string BUNDLE_CLONE_INFO_ENABLE = "enabled";
 const std::string BUNDLE_CLONE_INFO_IS_BUNDLE_FIRST_LAUNCH = "isBundleFirstLaunched";
@@ -39,6 +40,7 @@ void to_json(nlohmann::json& jsonObject, const InnerBundleCloneInfo& bundleClone
         {BUNDLE_CLONE_INFO_USER_ID, bundleCloneInfo.userId},
         {BUNDLE_CLONE_INFO_APP_INDEX, bundleCloneInfo.appIndex},
         {BUNDLE_CLONE_INFO_UID, bundleCloneInfo.uid},
+        {BUNDLE_CLONE_INFO_APP_UID, bundleCloneInfo.appUid},
         {BUNDLE_CLONE_INFO_GIDS, bundleCloneInfo.gids},
         {BUNDLE_CLONE_INFO_ENABLE, bundleCloneInfo.enabled},
         {BUNDLE_CLONE_INFO_IS_BUNDLE_FIRST_LAUNCH, bundleCloneInfo.isBundleFirstLaunched},
@@ -62,6 +64,8 @@ void from_json(const nlohmann::json& jsonObject, InnerBundleCloneInfo& bundleClo
         bundleCloneInfo.appIndex, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, BUNDLE_CLONE_INFO_UID,
         bundleCloneInfo.uid, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, BUNDLE_CLONE_INFO_APP_UID,
+        bundleCloneInfo.appUid, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::vector<int32_t>>(jsonObject, jsonObjectEnd, BUNDLE_CLONE_INFO_GIDS,
         bundleCloneInfo.gids, JsonType::ARRAY, false, parseResult, ArrayType::NUMBER);
     BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, BUNDLE_CLONE_INFO_ENABLE,
@@ -82,6 +86,11 @@ void from_json(const nlohmann::json& jsonObject, InnerBundleCloneInfo& bundleClo
         bundleCloneInfo.setEnabledCaller, false, parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, INNER_BUNDLE_CLONE_INFO_CUR_DYNAMIC_ICON_MODULE,
         bundleCloneInfo.curDynamicIconModule, false, parseResult);
+    // OTA compat: records persisted before appUid existed have no "appUid" key;
+    // appUid mirrors uid at this stage (the uid-to-userId parent requirement owns later migration).
+    if (bundleCloneInfo.appUid == 0 && bundleCloneInfo.uid != 0) {
+        bundleCloneInfo.appUid = bundleCloneInfo.uid;
+    }
     if (parseResult != ERR_OK) {
         APP_LOGE("read module bundleCloneInfo from jsonObject error, error code : %{public}d", parseResult);
     }

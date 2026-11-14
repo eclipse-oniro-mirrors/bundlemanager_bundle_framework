@@ -2398,6 +2398,7 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const InnerBundleInfo &newInfo)
     baseApplicationInfo_->appSignType = applicationInfo.appSignType;
     baseApplicationInfo_->profileable = applicationInfo.profileable;
     baseApplicationInfo_->allowAutoControlIntent = applicationInfo.allowAutoControlIntent;
+    baseApplicationInfo_->sharedUID = applicationInfo.sharedUID;
     baseApplicationInfo_->allowListenBundleChangedEvent =
         applicationInfo.allowListenBundleChangedEvent;
 }
@@ -2422,6 +2423,7 @@ void InnerBundleInfo::UpdatePartialInnerBundleInfo(const InnerBundleInfo &info)
         baseApplicationInfo_->curAlternateIconModuleName = info.baseApplicationInfo_->iconResource.moduleName;
         baseApplicationInfo_->profileable = info.baseApplicationInfo_->profileable;
         baseApplicationInfo_->allowAutoControlIntent = info.baseApplicationInfo_->allowAutoControlIntent;
+        baseApplicationInfo_->sharedUID = info.baseApplicationInfo_->sharedUID;
         baseApplicationInfo_->compatibleMinorVersion = info.baseApplicationInfo_->compatibleMinorVersion;
         baseApplicationInfo_->compatiblePatchVersion = info.baseApplicationInfo_->compatiblePatchVersion;
     }
@@ -3997,6 +3999,8 @@ void InnerBundleInfo::UpdateCloneUid(const int32_t userId, const int32_t appInde
         return;
     }
     cloneItem->second.uid = uid;
+    // appUid always mirrors uid (uid-to-userId migration owns any future split).
+    cloneItem->second.appUid = uid;
 }
 
 void InnerBundleInfo::SetBundleUpdateTime(const int64_t time, int32_t userId)
@@ -5926,6 +5930,7 @@ ErrCode InnerBundleInfo::AddCloneBundle(const InnerBundleCloneInfo &attr)
     cloneInfo.accessTokenId = attr.accessTokenId;
     cloneInfo.accessTokenIdEx = attr.accessTokenIdEx;
     cloneInfo.uid = attr.uid;
+    cloneInfo.appUid = attr.appUid;
     cloneInfo.gids = attr.gids;
     int64_t now = BundleUtil::GetCurrentTimeMs();
     cloneInfo.installTime = now;
@@ -6107,6 +6112,7 @@ bool InnerBundleInfo::GetApplicationInfoAdaptBundleClone(
         appInfo.enabled = innerBundleUserInfo.bundleUserInfo.enabled;
         appInfo.isBundleFirstLaunched = innerBundleUserInfo.isBundleFirstLaunched;
         appInfo.uid = innerBundleUserInfo.uid;
+        appInfo.appUid = innerBundleUserInfo.appUid;
         // dual-mode: clone app's appIndex is persisted as appIndex_ member (10000)
         if (isDualModeCloneApp_ &&
             (appIndex == Constants::MAIN_APP_INDEX || appIndex == ServiceConstants::DUAL_MODE_CLONE_APP_INDEX)) {
@@ -6125,6 +6131,7 @@ bool InnerBundleInfo::GetApplicationInfoAdaptBundleClone(
     appInfo.enabled = iter->second.enabled;
     appInfo.isBundleFirstLaunched = iter->second.isBundleFirstLaunched;
     appInfo.uid = iter->second.uid;
+    appInfo.appUid = iter->second.appUid;
     appInfo.appIndex = iter->second.appIndex;
     return true;
 }
@@ -6142,6 +6149,7 @@ bool InnerBundleInfo::GetBundleInfoAdaptBundleClone(
     }
     if (appIndex == 0 || appIndex > Constants::INITIAL_SANDBOX_APP_INDEX) {
         bundleInfo.uid = innerBundleUserInfo.uid;
+        bundleInfo.appUid = innerBundleUserInfo.appUid;
         if (!innerBundleUserInfo.gids.empty()) {
             bundleInfo.gid = innerBundleUserInfo.gids[0];
         }
@@ -6157,6 +6165,7 @@ bool InnerBundleInfo::GetBundleInfoAdaptBundleClone(
         return false;
     }
     bundleInfo.uid = iter->second.uid;
+    bundleInfo.appUid = iter->second.appUid;
     bundleInfo.gid = iter->second.uid; // no gids, need add
     bundleInfo.installTime = iter->second.installTime;
     bundleInfo.updateTime = innerBundleUserInfo.updateTime;
@@ -6179,6 +6188,7 @@ bool InnerBundleInfo::GetApplicationInfoAdaptCliSandbox(
     appInfo.accessTokenId = iter->second.accessTokenId;
     appInfo.accessTokenIdEx = iter->second.accessTokenIdEx;
     appInfo.uid = iter->second.uid;
+    appInfo.appUid = iter->second.appUid;
     appInfo.appIndex = appIndex;
     return true;
 }
@@ -6197,6 +6207,7 @@ bool InnerBundleInfo::GetBundleInfoAdaptCliSandbox(
         return false;
     }
     bundleInfo.uid = iter->second.uid;
+    bundleInfo.appUid = iter->second.appUid;
     if (!iter->second.gids.empty()) {
         bundleInfo.gid = iter->second.gids[0];
     }

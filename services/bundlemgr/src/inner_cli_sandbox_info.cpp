@@ -21,6 +21,7 @@ namespace {
 const std::string CLI_SANDBOX_INFO_USER_ID = "userId";
 const std::string CLI_SANDBOX_INFO_APP_INDEX = "appIndex";
 const std::string CLI_SANDBOX_INFO_UID = "uid";
+const std::string CLI_SANDBOX_INFO_APP_UID = "appUid";
 const std::string CLI_SANDBOX_INFO_GIDS = "gids";
 const std::string CLI_SANDBOX_INFO_ACCESS_TOKEN_ID = "accessTokenId";
 const std::string CLI_SANDBOX_INFO_ACCESS_TOKEN_ID_EX = "accessTokenIdEx";
@@ -35,6 +36,7 @@ void to_json(nlohmann::json& jsonObject, const InnerCliSandboxInfo& info)
         {CLI_SANDBOX_INFO_USER_ID, info.userId},
         {CLI_SANDBOX_INFO_APP_INDEX, info.appIndex},
         {CLI_SANDBOX_INFO_UID, info.uid},
+        {CLI_SANDBOX_INFO_APP_UID, info.appUid},
         {CLI_SANDBOX_INFO_GIDS, info.gids},
         {CLI_SANDBOX_INFO_ACCESS_TOKEN_ID, info.accessTokenId},
         {CLI_SANDBOX_INFO_ACCESS_TOKEN_ID_EX, info.accessTokenIdEx},
@@ -54,6 +56,8 @@ void from_json(const nlohmann::json& jsonObject, InnerCliSandboxInfo& info)
         info.appIndex, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, CLI_SANDBOX_INFO_UID,
         info.uid, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, CLI_SANDBOX_INFO_APP_UID,
+        info.appUid, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::vector<int32_t>>(jsonObject, jsonObjectEnd, CLI_SANDBOX_INFO_GIDS,
         info.gids, JsonType::ARRAY, false, parseResult, ArrayType::NUMBER);
     GetValueIfFindKey<uint32_t>(jsonObject, jsonObjectEnd, CLI_SANDBOX_INFO_ACCESS_TOKEN_ID,
@@ -68,6 +72,11 @@ void from_json(const nlohmann::json& jsonObject, InnerCliSandboxInfo& info)
     info.sandboxType = static_cast<SandboxIsolationType>(sandboxType);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject, jsonObjectEnd, CLI_SANDBOX_INFO_CREATOR_BUNDLE_NAMES,
         info.creatorBundleNames, JsonType::ARRAY, false, parseResult, ArrayType::STRING);
+    // OTA compat: records persisted before appUid existed have no "appUid" key;
+    // appUid mirrors uid at this stage (the uid-to-userId parent requirement owns later migration).
+    if (info.appUid == 0 && info.uid != 0) {
+        info.appUid = info.uid;
+    }
     if (parseResult != ERR_OK) {
         APP_LOGE("read module InnerCliSandboxInfo from jsonObject error, error code : %{public}d", parseResult);
     }
