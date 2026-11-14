@@ -541,6 +541,10 @@ void BMSEventHandler::MarkRebuildStart()
     if (!bmsPara->SaveBmsParam(ServiceConstants::DB_REBUILD_MARK,
         ServiceConstants::DB_REBUILD_MARK_DOING)) {
         LOG_E(BMS_TAG_DEFAULT, "save db rebuild mark failed");
+        // SaveBmsParam does not expose the rdb error code, the generic sql error
+        // stands in as the proxy so the failed mark write stays countable
+        EventReport::SendDbErrorEvent(ServiceConstants::BUNDLE_RDB_NAME,
+            static_cast<int32_t>(DB_OPERATION_TYPE::INSERT), NativeRdb::E_SQLITE_ERROR);
     }
 }
 

@@ -173,6 +173,12 @@ ErrCode RdbDataManager::GetRdbStoreFromNative()
         || rebuildType == NativeRdb::RebuiltType::REBUILT) {
         APP_LOGI("rdb: %{public}s is new or buildType: %{public}d, reset rdb", bmsRdbConfig_.dbName.c_str(),
             static_cast<int32_t>(rebuildType));
+        if (!isNewDb) {
+            // the rdb framework rebuilt the db on its own, report the hidden
+            // self-healing so it stays countable in the event stream
+            SendDbErrorEvent(bmsRdbConfig_.dbName,
+                static_cast<int32_t>(DB_OPERATION_TYPE::REBUILD), rebuildCode);
+        }
         InstalldClient::GetInstance()->ResetBmsDBSecurity();
     }
     bool isNeedRebuildDb = false;
@@ -181,9 +187,19 @@ ErrCode RdbDataManager::GetRdbStoreFromNative()
         isNeedRebuildDb = RdbIntegrityCheckNeedRestore();
         isInitial_ = true;
         needIntegrityCheck_ = false;
-        if (isNeedRebuildDb && (rdbStore_->Restore("") == NativeRdb::E_OK)) {
-            APP_LOGI("db %{public}s is restored by backup rdb", bmsRdbConfig_.dbName.c_str());
-            isNeedRebuildDb = false;
+        if (isNeedRebuildDb) {
+            int32_t restoreRet = rdbStore_->Restore("");
+            // both outcomes are recorded through the uniform DB_ERROR channel,
+            // the result code tells the backup restore from the fall to rebuild
+            SendDbErrorEvent(bmsRdbConfig_.dbName,
+                static_cast<int32_t>(DB_OPERATION_TYPE::RESTORE), restoreRet);
+            if (restoreRet == NativeRdb::E_OK) {
+                APP_LOGI("db %{public}s is restored by backup rdb", bmsRdbConfig_.dbName.c_str());
+                isNeedRebuildDb = false;
+            } else {
+                APP_LOGW("db %{public}s restore from backup failed, ret:%{public}d, fall to rebuild",
+                    bmsRdbConfig_.dbName.c_str(), restoreRet);
+            }
         }
         if (!isNeedRebuildDb && RdbRecoverManager::IsCorruptionDetected(bmsRdbConfig_.dbName)) {
             APP_LOGI("db %{public}s is healthy again, resume serving",
@@ -279,6 +295,12 @@ bool RdbDataManager::CheckIsSatisfyTime()
 void RdbDataManager::SendDbErrorEvent(const std::string &dbName, int32_t operationType, int32_t errorCode)
 {
     EventReport::SendDbErrorEvent(dbName, operationType, errorCode);
+}
+
+void RdbDataManager::SendDbHighRiskEvent(const std::string &dbName, int32_t operationType, int32_t errorCode,
+    const std::string &msg)
+{
+    EventReport::SendDbHighRiskEvent(dbName, operationType, errorCode, msg);
 }
 
 bool RdbDataManager::InsertData(const std::string &key, const std::string &value)
@@ -767,15 +789,28 @@ bool RdbDataManager::RdbIntegrityCheckNeedRestore()
         return false;
     }
     auto [ret, outValue] = rdbStore_->Execute(INTEGRITY_CHECK);
-    if (ret == NativeRdb::E_OK) {
-        std::string outputResult;
-        outValue.GetString(outputResult);
-        if (outputResult != CHECK_OK) {
-            APP_LOGW("rdb error need to restore");
-            return true;
-        }
-        APP_LOGI_NOFUNC("integrity check succeed db %{public}s", bmsRdbConfig_.dbName.c_str());
+    if (ret != NativeRdb::E_OK) {
+        // the check itself failed, which usually means the db cannot be read at all;
+        // keep the original healthy verdict, only make the failure visible
+        APP_LOGW("integrity check execute failed db %{public}s, ret:%{public}d",
+            bmsRdbConfig_.dbName.c_str(), ret);
+        SendDbErrorEvent(bmsRdbConfig_.dbName,
+            static_cast<int32_t>(DB_OPERATION_TYPE::INTEGRITY_CHECK), ret);
+        return false;
     }
+    std::string outputResult;
+    outValue.GetString(outputResult);
+    if (outputResult != CHECK_OK) {
+        APP_LOGW("rdb error need to restore, %{public}d, %{public}s", ret, outputResult.c_str());
+        // the corruption detail is reported through the HIGH_RISK_EVENT channel
+        // because the DB_ERROR schema has no field for the free text check result;
+        // use HighRiskOperationType values so they never collide with the ones of
+        // the bundle events sharing the same channel
+        SendDbHighRiskEvent(bmsRdbConfig_.dbName,
+            static_cast<int32_t>(HighRiskOperationType::DB_INTEGRITY_CHECK), ret, outputResult);
+        return true;
+    }
+    APP_LOGI_NOFUNC("integrity check succeed db %{public}s", bmsRdbConfig_.dbName.c_str());
     return false;
 }
 
@@ -825,6 +860,12 @@ int32_t RdbDataManager::InsertWithRetry(std::shared_ptr<NativeRdb::RdbStore> rdb
         }
         APP_LOGW("rdb insert failed, retry count: %{public}d, ret: %{public}d", retryCnt, ret);
     } while (retryCnt < RETRY_TIMES);
+    if (ret != NativeRdb::E_OK && retryCnt >= RETRY_TIMES) {
+        // the retried insert exhausted every attempt, the db is in a persistently
+        // bad state; non-retryable errors stay log-only to avoid event flooding
+        SendDbErrorEvent(bmsRdbConfig_.dbName,
+            static_cast<int32_t>(DB_OPERATION_TYPE::INSERT), ret);
+    }
     auto it = RDB_ERR_MAP.find(ret);
     if (it != RDB_ERR_MAP.end()) {
         ret = it->second;
@@ -878,18 +919,26 @@ void RdbDataManager::CheckDbError()
         }
     }
     if (errCode == NativeRdb::E_SQLITE_CORRUPT) {
+        // this path opens the db directly and bypasses GetRdbStoreFromNative,
+        // so the open failure and the delete-and-rebuild action are reported here
+        SendDbErrorEvent(bmsRdbConfig_.dbName, static_cast<int32_t>(DB_OPERATION_TYPE::OPEN), errCode);
         DeleteDbFiles(bmsRdbConfig_.dbPath + bmsRdbConfig_.dbName);
-        bmsExtensionDataMgr.RebuildBundleResourceTable();
+        ErrCode rebuildRet = bmsExtensionDataMgr.RebuildBundleResourceTable();
+        SendDbErrorEvent(bmsRdbConfig_.dbName,
+            static_cast<int32_t>(DB_OPERATION_TYPE::REBUILD), rebuildRet);
         return;
     }
     if (rdbStore == nullptr) {
         APP_LOGE("GetRdbStore failed, errCode:%{public}d", errCode);
+        SendDbErrorEvent(bmsRdbConfig_.dbName, static_cast<int32_t>(DB_OPERATION_TYPE::OPEN), errCode);
         return;
     }
 
     if (isNeedRebuildDb) {
         DeleteDbFiles(bmsRdbConfig_.dbPath + bmsRdbConfig_.dbName);
-        bmsExtensionDataMgr.RebuildBundleResourceTable();
+        ErrCode rebuildRet = bmsExtensionDataMgr.RebuildBundleResourceTable();
+        SendDbErrorEvent(bmsRdbConfig_.dbName,
+            static_cast<int32_t>(DB_OPERATION_TYPE::REBUILD), rebuildRet);
     }
 }
 
@@ -901,15 +950,20 @@ void RdbDataManager::TriggerRebuild()
         return;
     }
     std::string dbFile = bmsRdbConfig_.dbPath + bmsRdbConfig_.dbName;
+    std::string dbName = bmsRdbConfig_.dbName;
     auto callback = rebuildCallback_;
-    std::thread rebuildThread([this, dbFile, callback]() {
+    std::thread rebuildThread([this, dbFile, callback, dbName]() {
         APP_LOGI("rebuild thread started");
         DeleteDbFiles(dbFile);
         if (callback) {
             callback();
         }
         BmsExtensionDataMgr bmsExtensionDataMgr;
-        bmsExtensionDataMgr.RebuildBundleResourceTable();
+        ErrCode rebuildRet = bmsExtensionDataMgr.RebuildBundleResourceTable();
+        // the detached thread must not touch members beyond the captured values,
+        // so the event goes to EventReport directly with the captured db name
+        EventReport::SendDbErrorEvent(dbName,
+            static_cast<int32_t>(DB_OPERATION_TYPE::REBUILD), rebuildRet);
         isRebuilding_.store(false);
         APP_LOGI("rebuild thread finished");
     });

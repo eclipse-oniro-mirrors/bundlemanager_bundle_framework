@@ -69,6 +69,11 @@ public:
 
     void SendDbErrorEvent(const std::string &dbName, int32_t operationType, int32_t errorCode);
 
+    // only the integrity check corruption detail uses the HIGH_RISK_EVENT
+    // channel; every other db operation reports through SendDbErrorEvent
+    void SendDbHighRiskEvent(const std::string &dbName, int32_t operationType, int32_t errorCode,
+        const std::string &msg);
+
     void ReportRdbLostEvent(HighRiskOperationType operation, int32_t userId);
 
     bool ExecuteSql();

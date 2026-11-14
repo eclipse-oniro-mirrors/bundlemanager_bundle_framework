@@ -16,6 +16,7 @@
 #include "bms_rdb_open_callback.h"
 
 #include "app_log_wrapper.h"
+#include "event_report.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -52,7 +53,11 @@ int32_t BmsRdbOpenCallback::OnOpen(NativeRdb::RdbStore &rdbStore)
 
 int32_t BmsRdbOpenCallback::onCorruption(std::string databaseFile)
 {
-    APP_LOGI("onCorruption");
+    // the rdb framework detected the corruption by itself: this is the earliest
+    // db abnormal signal, report it to the DB_ERROR fault channel
+    APP_LOGW("onCorruption, databaseFile:%{private}s", databaseFile.c_str());
+    EventReport::SendDbErrorEvent(bmsRdbConfig_.dbName,
+        static_cast<int32_t>(DB_OPERATION_TYPE::CORRUPT), NativeRdb::E_SQLITE_CORRUPT);
     return NativeRdb::E_OK;
 }
 }  // namespace AppExecFwk

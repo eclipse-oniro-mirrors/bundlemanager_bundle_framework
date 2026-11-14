@@ -17,9 +17,9 @@ domain: BUNDLE_MANAGER
 #                                   FAULT EVENT                                #
 ################################################################################
 DB_ERROR:
-  __BASE: {type: BEHAVIOR, level: MINOR, desc: db error}
+  __BASE: {type: FAULT, level: CRITICAL, desc: db error}
   DB_NAME: {type: STRING, desc: db name}
-  OPERATION_TYPE: {type: INT32, desc: db operation type}
+  OPERATION_TYPE: {type: STRING, desc: db operation type}
   ERROR_CODE: {type: INT32, desc: db error code}
   REBUILD_TYPE: {type: INT32, desc: db rebuild type}
 
