@@ -13971,7 +13971,8 @@ HWTEST_F(BmsBundleKitServiceTest, SetShortcutsEnabled_0100, Function | SmallTest
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     std::vector<ShortcutInfo> shortcutInfos;
-    auto ret = bundleMgrHostImpl_->SetShortcutsEnabled(shortcutInfos, true);
+    std::map<std::string, std::vector<std::string>> invalidShortcuts;
+    auto ret = bundleMgrHostImpl_->SetShortcutsEnabled(shortcutInfos, true, invalidShortcuts);
     EXPECT_EQ(ret, ERR_OK);
 }
 

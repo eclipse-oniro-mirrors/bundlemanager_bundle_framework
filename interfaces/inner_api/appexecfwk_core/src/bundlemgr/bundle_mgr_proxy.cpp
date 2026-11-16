@@ -17,6 +17,7 @@
 
 #include <chrono>
 #include <cinttypes>
+#include <map>
 #include <memory>
 #include <numeric>
 #include <mutex>
@@ -7994,7 +7995,8 @@ ErrCode BundleMgrProxy::SetShortcutVisibleForSelf(const std::string &shortcutId,
     return reply.ReadInt32();
 }
 
-ErrCode BundleMgrProxy::SetShortcutsEnabled(const std::vector<ShortcutInfo> &shortcutInfos, bool isEnabled)
+ErrCode BundleMgrProxy::SetShortcutsEnabled(const std::vector<ShortcutInfo> &shortcutInfos, bool isEnabled,
+    std::map<std::string, std::vector<std::string>> &invalidShortcuts)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (shortcutInfos.empty() || shortcutInfos.size() > MAX_SHORTCUT_INFO_SIZE) {
@@ -8020,7 +8022,22 @@ ErrCode BundleMgrProxy::SetShortcutsEnabled(const std::vector<ShortcutInfo> &sho
         APP_LOGE("fail to SetShortcutsEnabled from server");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    return reply.ReadInt32();
+    ErrCode result = reply.ReadInt32();
+    int32_t invalidSize = reply.ReadInt32();
+    if (invalidSize < 0 || static_cast<size_t>(invalidSize) > shortcutInfos.size()) {
+        APP_LOGE("SetShortcutsEnabled read invalidShortcuts size failed");
+        return result;
+    }
+    for (int32_t i = 0; i < invalidSize; ++i) {
+        std::string bundleName = reply.ReadString();
+        std::vector<std::string> shortcutIds;
+        if (!reply.ReadStringVector(&shortcutIds)) {
+            APP_LOGE("SetShortcutsEnabled read invalidShortcuts failed");
+            return result;
+        }
+        invalidShortcuts[bundleName] = shortcutIds;
+    }
+    return result;
 }
 
 bool BundleMgrProxy::GreatOrEqualTargetAPIVersion(const int32_t platformVersion, const int32_t minorVersion,

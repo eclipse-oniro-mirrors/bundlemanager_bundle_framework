@@ -16,6 +16,7 @@
 #ifndef FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_CORE_INCLUDE_BUNDLEMGR_BUNDLE_MGR_INTERFACE_H
 #define FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_CORE_INCLUDE_BUNDLEMGR_BUNDLE_MGR_INTERFACE_H
 
+#include <map>
 #include <set>
 
 #include "ability_info.h"
@@ -2278,7 +2279,16 @@ public:
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
-    virtual ErrCode SetShortcutsEnabled(const std::vector<ShortcutInfo> &shortcutInfos, bool isEnabled)
+    /**
+     * @brief Set the enabled status of the shortcuts.
+     * @param shortcutInfos Indicates the shortcut infos.
+     * @param isEnabled Indicates the shortcut is enabled or not.
+     * @param invalidShortcuts Indicates the shortcut ids which do not exist,
+     *                        key is bundle name and value is the illegal shortcut ids.
+     * @return Returns ERR_OK if successful; returns error code otherwise.
+     */
+    virtual ErrCode SetShortcutsEnabled(const std::vector<ShortcutInfo> &shortcutInfos, bool isEnabled,
+        std::map<std::string, std::vector<std::string>> &invalidShortcuts)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }

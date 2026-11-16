@@ -1596,7 +1596,8 @@ public:
         const std::vector<std::string> &ids);
     void UpdateShortcutInfoResId(const std::string &bundleName, const int32_t userId);
     void RemoveInvalidShortcutInfo(std::vector<ShortcutInfo> &shortcutInfos) const;
-    ErrCode SetShortcutsEnabled(const std::vector<ShortcutInfo> &shortcutInfos, bool isEnabled);
+    ErrCode SetShortcutsEnabled(const std::vector<ShortcutInfo> &shortcutInfos, bool isEnabled,
+        std::map<std::string, std::vector<std::string>> &invalidShortcuts);
     ErrCode DeleteShortcutEnabledInfo(const std::string &bundleName);
     /**
      * @brief Delete bundle state for a specific user.

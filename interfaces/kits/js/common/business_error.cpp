@@ -101,7 +101,8 @@ napi_value BusinessError::CreateCommonError(
 }
 
 napi_value BusinessError::CreateNewCommonError(
-    napi_env env, int32_t err, const std::string &functionName, const std::string &permissionName)
+    napi_env env, int32_t err, const std::string &functionName, const std::string &permissionName,
+    const std::string &appendix)
 {
     std::string errMessage = BusinessErrorNS::ERR_MSG_BUSINESS_ERROR;
     auto iter = errMessage.find("$");
@@ -125,6 +126,9 @@ napi_value BusinessError::CreateNewCommonError(
         if (iter != std::string::npos) {
             errMessage = errMessage.replace(iter, 1, permissionName);
         }
+    }
+    if (!appendix.empty()) {
+        errMessage += " " + appendix;
     }
     return CreateError(env, err, errMessage);
 }
