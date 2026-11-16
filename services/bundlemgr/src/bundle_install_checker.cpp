@@ -1176,6 +1176,8 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
     LOG_D(BMS_TAG_INSTALLER, "Check APP label");
     ErrCode ret = ERR_OK;
     std::string bundleName = (infos.begin()->second).GetBundleName();
+    const std::string firstModuleName = (infos.begin()->second).GetCurModuleName();
+    const std::string firstHapPath = infos.begin()->first;
     uint32_t versionCode = GetVersionCode(infos);
     auto [isHsp, moduleName, releaseType] = GetValidReleaseType(infos);
     bool singleton = (infos.begin()->second).IsSingleton();
@@ -1201,7 +1203,11 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
     for (const auto &info : infos) {
         // check bundleName
         if (bundleName != info.second.GetBundleName()) {
-            LOG_E(BMS_TAG_INSTALLER, "bundleName not same");
+            LOG_E(BMS_TAG_INSTALLER, "bundleName not same: %{public}s vs %{public}s, "
+                "moduleName: %{public}s vs %{public}s, hapPath: %{private}s vs %{private}s",
+                bundleName.c_str(), info.second.GetBundleName().c_str(),
+                firstModuleName.c_str(), info.second.GetCurModuleName().c_str(),
+                firstHapPath.c_str(), info.first.c_str());
             return ERR_APPEXECFWK_INSTALL_BUNDLENAME_NOT_SAME;
         }
         // check version
@@ -1209,12 +1215,20 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
             if ((isPreInstallApp ? isPreInstallApp : info.second.IsPreInstallApp()) &&
                 info.second.GetAppType() == Constants::AppType::SYSTEM_APP && info.second.IsHsp()) {
                 if (versionCode < info.second.GetVersionCode()) {
-                    LOG_E(BMS_TAG_INSTALLER, "hsp version higer than entry!");
+                    LOG_E(BMS_TAG_INSTALLER, "hsp version higer than entry!, versionCode: %{public}u vs %{public}u, "
+                        "moduleName: %{public}s vs %{public}s, hapPath: %{private}s vs %{private}s",
+                        versionCode, info.second.GetVersionCode(),
+                        firstModuleName.c_str(), info.second.GetCurModuleName().c_str(),
+                        firstHapPath.c_str(), info.first.c_str());
                     return ERR_APPEXECFWK_INSTALL_VERSIONCODE_NOT_SAME;
                 }
             } else {
                 if (versionCode != info.second.GetVersionCode()) {
-                    LOG_E(BMS_TAG_INSTALLER, "versionCode not same");
+                    LOG_E(BMS_TAG_INSTALLER, "versionCode not same: %{public}u vs %{public}u, "
+                        "moduleName: %{public}s vs %{public}s, hapPath: %{private}s vs %{private}s",
+                        versionCode, info.second.GetVersionCode(),
+                        firstModuleName.c_str(), info.second.GetCurModuleName().c_str(),
+                        firstHapPath.c_str(), info.first.c_str());
                     return ERR_APPEXECFWK_INSTALL_VERSIONCODE_NOT_SAME;
                 }
             }
@@ -1225,41 +1239,78 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
                 moduleName.c_str(), releaseType.c_str(),
                 info.second.GetCurModuleName().c_str(), info.second.GetReleaseType().c_str());
             if (!isHsp && !info.second.IsHsp()) {
-                LOG_E(BMS_TAG_INSTALLER, "releaseType not same");
+                LOG_E(BMS_TAG_INSTALLER, "releaseType not same: %{public}s vs %{public}s, "
+                    "moduleName: %{public}s vs %{public}s, hapPath: %{private}s vs %{private}s",
+                    releaseType.c_str(), info.second.GetReleaseType().c_str(),
+                    firstModuleName.c_str(), info.second.GetCurModuleName().c_str(),
+                    firstHapPath.c_str(), info.first.c_str());
                 return ERR_APPEXECFWK_INSTALL_RELEASETYPE_NOT_SAME;
             }
         }
         if (singleton != info.second.IsSingleton()) {
-            LOG_E(BMS_TAG_INSTALLER, "singleton not same");
+            LOG_E(BMS_TAG_INSTALLER, "singleton not same: %{public}d vs %{public}d, "
+                "moduleName: %{public}s vs %{public}s, hapPath: %{private}s vs %{private}s",
+                singleton, info.second.IsSingleton(),
+                firstModuleName.c_str(), info.second.GetCurModuleName().c_str(),
+                firstHapPath.c_str(), info.first.c_str());
             return ERR_APPEXECFWK_INSTALL_SINGLETON_NOT_SAME;
         }
         if (appType != info.second.GetAppType()) {
-            LOG_E(BMS_TAG_INSTALLER, "appType not same");
+            LOG_E(BMS_TAG_INSTALLER, "appType not same: %{public}d vs %{public}d, "
+                "moduleName: %{public}s vs %{public}s, hapPath: %{private}s vs %{private}s",
+                static_cast<int32_t>(appType), static_cast<int32_t>(info.second.GetAppType()),
+                firstModuleName.c_str(), info.second.GetCurModuleName().c_str(),
+                firstHapPath.c_str(), info.first.c_str());
             return ERR_APPEXECFWK_INSTALL_APPTYPE_NOT_SAME;
         }
         // check model type(FA or stage)
         if (isStage != info.second.GetIsNewVersion()) {
-            LOG_E(BMS_TAG_INSTALLER, "must be all FA model or all stage model");
+            LOG_E(BMS_TAG_INSTALLER, "must be all FA model or all stage model, isStage: %{public}d vs %{public}d, "
+                "moduleName: %{public}s vs %{public}s, hapPath: %{private}s vs %{private}s",
+                isStage, info.second.GetIsNewVersion(),
+                firstModuleName.c_str(), info.second.GetCurModuleName().c_str(),
+                firstHapPath.c_str(), info.first.c_str());
             return ERR_APPEXECFWK_INSTALL_STATE_ERROR;
         }
         if (targetBundleName != info.second.GetTargetBundleName()) {
-            LOG_E(BMS_TAG_INSTALLER, "targetBundleName not same");
+            LOG_E(BMS_TAG_INSTALLER, "targetBundleName not same: %{public}s vs %{public}s, "
+                "moduleName: %{public}s vs %{public}s, hapPath: %{private}s vs %{private}s",
+                targetBundleName.c_str(), info.second.GetTargetBundleName().c_str(),
+                firstModuleName.c_str(), info.second.GetCurModuleName().c_str(),
+                firstHapPath.c_str(), info.first.c_str());
             return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_TARGET_BUNDLE_NAME_NOT_SAME;
         }
         if (targetPriority != info.second.GetTargetPriority()) {
-            LOG_E(BMS_TAG_INSTALLER, "targetPriority not same");
+            LOG_E(BMS_TAG_INSTALLER, "targetPriority not same: %{public}d vs %{public}d, "
+                "moduleName: %{public}s vs %{public}s, hapPath: %{private}s vs %{private}s",
+                targetPriority, info.second.GetTargetPriority(),
+                firstModuleName.c_str(), info.second.GetCurModuleName().c_str(),
+                firstHapPath.c_str(), info.first.c_str());
             return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_TARGET_PRIORITY_NOT_SAME;
         }
         if (bundleType != info.second.GetApplicationBundleType()) {
-            LOG_E(BMS_TAG_INSTALLER, "bundleType not same");
+            LOG_E(BMS_TAG_INSTALLER, "bundleType not same: %{public}d vs %{public}d, "
+                "moduleName: %{public}s vs %{public}s, hapPath: %{private}s vs %{private}s",
+                static_cast<int32_t>(bundleType), static_cast<int32_t>(info.second.GetApplicationBundleType()),
+                firstModuleName.c_str(), info.second.GetCurModuleName().c_str(),
+                firstHapPath.c_str(), info.first.c_str());
             return ERR_APPEXECFWK_BUNDLE_TYPE_NOT_SAME;
         }
         if (isHmService != info.second.GetEntryInstallationFree()) {
-            LOG_E(BMS_TAG_INSTALLER, "application and hm service are not allowed installed simultaneously");
+            LOG_E(BMS_TAG_INSTALLER, "application and hm service are not allowed installed simultaneously, "
+                "isHmService: %{public}d vs %{public}d, moduleName: %{public}s vs %{public}s, "
+                "hapPath: %{private}s vs %{private}s",
+                isHmService, info.second.GetEntryInstallationFree(),
+                firstModuleName.c_str(), info.second.GetCurModuleName().c_str(),
+                firstHapPath.c_str(), info.first.c_str());
             return ERR_APPEXECFWK_INSTALL_TYPE_ERROR;
         }
         if (debug != info.second.GetBaseApplicationInfo().debug) {
-            LOG_E(BMS_TAG_INSTALLER, "debug not same");
+            LOG_E(BMS_TAG_INSTALLER, "debug not same: %{public}d vs %{public}d, "
+                "moduleName: %{public}s vs %{public}s, hapPath: %{private}s vs %{private}s",
+                debug, info.second.GetBaseApplicationInfo().debug,
+                firstModuleName.c_str(), info.second.GetCurModuleName().c_str(),
+                firstHapPath.c_str(), info.first.c_str());
             isSameDebugType = false;
         }
         if (!hasEntry) {

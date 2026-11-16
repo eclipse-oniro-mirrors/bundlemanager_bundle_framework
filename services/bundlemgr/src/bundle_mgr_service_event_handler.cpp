@@ -5583,6 +5583,7 @@ void BMSEventHandler::PatchSystemHspInstall(const std::string &path, bool isOta)
         if ((versionCode <= hasInstalledInfo.GetVersionCode()) && IsHspPathExist(hasInstalledInfo)) {
             LOG_W(BMS_TAG_DEFAULT, "bundleName: %{public}s downgrade",
                 bundleName.c_str());
+            SendBundleUpdateFailedEvent(hasInstalledInfo, ERR_APPEXECFWK_OTA_INSTALL_VERSION_DOWNGRADE, true);
             continue;
         }
         InstallParam installParam;
@@ -5633,6 +5634,7 @@ void BMSEventHandler::PatchSharedHspInstall(const std::string &path)
         if ((versionCode <= hasInstalledInfo.GetVersionCode()) && IsHspPathExist(hasInstalledInfo)) {
             LOG_W(BMS_TAG_DEFAULT, "bundleName: %{public}s downgrade",
                 bundleName.c_str());
+            SendBundleUpdateFailedEvent(hasInstalledInfo, ERR_APPEXECFWK_OTA_INSTALL_VERSION_DOWNGRADE, true);
             continue;
         }
         InstallParam installParam;
@@ -5687,6 +5689,7 @@ void BMSEventHandler::PatchSystemBundleInstall(const std::string &path, bool isO
         if ((hapVersionCode <= hasInstalledInfo.versionCode) && IsHapPathExist(hasInstalledInfo)) {
             LOG_W(BMS_TAG_DEFAULT, "bundleName: %{public}s: hapVersionCode is less than old hap versionCode",
                 bundleName.c_str());
+            SendBundleUpdateFailedEvent(hasInstalledInfo, ERR_APPEXECFWK_OTA_INSTALL_VERSION_DOWNGRADE, true);
             continue;
         } else if (hapVersionCode <= hasInstalledInfo.versionCode) {
             EventReport::SendTriggerFallbackEvent(HighRiskOperationType::PATCH_INSTALL_MISSING_HAP, bundleName,
@@ -5935,6 +5938,12 @@ void BMSEventHandler::SendBundleUpdateFailedEvent(const BundleInfo &bundleInfo)
 
 void BMSEventHandler::SendBundleUpdateFailedEvent(const BundleInfo &bundleInfo, const int32_t errorCode)
 {
+    SendBundleUpdateFailedEvent(bundleInfo, errorCode, false);
+}
+
+void BMSEventHandler::SendBundleUpdateFailedEvent(const BundleInfo &bundleInfo, const int32_t errorCode,
+    bool isPatch)
+{
     LOG_I(BMS_TAG_DEFAULT, "SendBundleUpdateFailedEvent start, bundleName:%{public}s", bundleInfo.name.c_str());
     EventInfo eventInfo;
     eventInfo.userId = Constants::ANY_USERID;
@@ -5942,12 +5951,30 @@ void BMSEventHandler::SendBundleUpdateFailedEvent(const BundleInfo &bundleInfo, 
     eventInfo.versionCode = bundleInfo.versionCode;
     eventInfo.errCode = errorCode;
     eventInfo.isPreInstallApp = bundleInfo.isPreInstallApp;
+    eventInfo.isPatch = isPatch;
     eventInfo.callingUid = IPCSkeleton::GetCallingUid();
+    // Dual-mode fields: CURRENT_MODE (-1 on non-dual-mode devices) plus DEVICE_MODE_DISTRIBUTION_POLICY
+    // and APP_INDEX (DUAL_MODE_CLONE_APP_INDEX=10000 for the secondary clone variant) distinguish the
+    // same-name-different-package app's primary/secondary package body in the UPDATE exception event.
+    eventInfo.currentMode = DualModeHelper::IsDualModeDevice() ? DualModeHelper::GetSysMode() : -1;
+    eventInfo.deviceModeDistributionPolicy = static_cast<int32_t>(bundleInfo.deviceModeDistributionPolicy);
+    eventInfo.appIndex = bundleInfo.applicationInfo.appIndex;
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr != nullptr) {
         dataMgr->GetOdidByBundleName(bundleInfo.name, eventInfo.odid);
     }
     EventReport::SendBundleSystemEvent(BundleEventType::UPDATE, eventInfo);
+}
+
+void BMSEventHandler::SendBundleUpdateFailedEvent(const InnerBundleInfo &innerBundleInfo, const int32_t errorCode,
+    bool isPatch)
+{
+    BundleInfo bundleInfo = innerBundleInfo.GetBaseBundleInfo();
+    // GetBaseBundleInfo does not populate the dual-mode clone appIndex; resolve it from the
+    // InnerBundleInfo so the secondary clone variant is reported with DUAL_MODE_CLONE_APP_INDEX.
+    bundleInfo.applicationInfo.appIndex = innerBundleInfo.IsDualModeCloneApp()
+        ? ServiceConstants::DUAL_MODE_CLONE_APP_INDEX : Constants::INITIAL_APP_INDEX;
+    SendBundleUpdateFailedEvent(bundleInfo, errorCode, isPatch);
 }
 
 void BMSEventHandler::UpdatePreinstallDB(

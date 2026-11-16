@@ -8351,11 +8351,19 @@ HWTEST_F(BmsBundleInstallerTest, GetInstallEventInfo_0100, Function | SmallTest 
     EventInfo eventInfo;
     installer.GetInstallEventInfo(bundleInfo, eventInfo);
     EXPECT_EQ(eventInfo.hideDesktopIcon, bundleInfo.IsHideDesktopIconForEvent());
+    EXPECT_EQ(eventInfo.deviceModeDistributionPolicy,
+        static_cast<int32_t>(bundleInfo.GetDeviceModeDistributionPolicy()));
 
     std::string appDistributionType = "hos_normal_type";
     bundleInfo.SetAppDistributionType(appDistributionType);
     installer.GetInstallEventInfo(bundleInfo, eventInfo);
     EXPECT_EQ(eventInfo.appDistributionType, appDistributionType);
+
+    bundleInfo.SetDeviceModeDistributionPolicy(
+        DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE);
+    installer.GetInstallEventInfo(bundleInfo, eventInfo);
+    EXPECT_EQ(eventInfo.deviceModeDistributionPolicy,
+        static_cast<int32_t>(DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE));
 }
 
 /**

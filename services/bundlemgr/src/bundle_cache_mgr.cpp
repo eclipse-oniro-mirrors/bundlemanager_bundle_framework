@@ -241,6 +241,7 @@ ErrCode BundleCacheMgr::GetAllBundleCacheStat(const sptr<IProcessCacheCallback> 
         uint64_t cacheStat = 0;
         APP_LOGI("thread for GetBundleCacheSize start");
         GetBundleCacheSize(validBundles, userId, cacheStat);
+        APP_LOGI("bms cache size: %{public}" PRIu64, cacheStat);
         // Query in-lake (BMS-ext) cache; best-effort, accumulate only on success
         int64_t extCacheSize = 0;
         auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
@@ -254,6 +255,7 @@ ErrCode BundleCacheMgr::GetAllBundleCacheStat(const sptr<IProcessCacheCallback> 
             LOG_W(BMS_TAG_EXT, "get all bundle cache size from extension failed, ret: %{public}d", extRet);
         }
         processCacheCallback->OnGetAllBundleCacheFinished(cacheStat);
+        APP_LOGI_NOFUNC("GetAllBundleCacheStat size: %{public}" PRIu64, cacheStat);
         auto endTime = BundleUtil::GetCurrentTimeMs();
         auto elapsedTime = endTime - startTime;
         if (elapsedTime >= CACHE_TIMEOUT_MS) {

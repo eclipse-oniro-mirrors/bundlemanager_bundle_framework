@@ -1863,16 +1863,18 @@ private:
         int32_t disableAppIndex, const std::string &caller, int32_t requestUserId,
         bool needSendEvent, bool skipDisableForbidden,
         std::vector<NotifyBundleEvents> &eventsToSend,
-        std::vector<std::tuple<std::string, int32_t, int32_t>> &disabledBundles,
+        std::vector<std::tuple<std::string, int32_t, int32_t, int32_t>> &disabledBundles,
         std::vector<std::tuple<std::string, int32_t, bool, std::string>> &rollbackList,
-        std::vector<std::tuple<std::string, int32_t, bool, int32_t, std::string>> &sysEventsToSend);
+        std::vector<std::tuple<std::string, int32_t, bool, int32_t, std::string, int32_t>> &sysEventsToSend,
+        std::vector<std::tuple<std::string, int32_t, bool, int32_t, std::string, int32_t>> &exceptionEventsToSend);
     ErrCode ProcessEnableForBundle(InnerBundleInfo &innerBundleInfo,
         const InnerBundleUserInfo *innerBundleUserInfoPtr, const std::string &bundleName,
         int32_t enableAppIndex, const std::string &caller, int32_t requestUserId,
         bool needSendEvent,
         std::vector<NotifyBundleEvents> &eventsToSend,
         std::vector<std::tuple<std::string, int32_t, bool, std::string>> &rollbackList,
-        std::vector<std::tuple<std::string, int32_t, bool, int32_t, std::string>> &sysEventsToSend);
+        std::vector<std::tuple<std::string, int32_t, bool, int32_t, std::string, int32_t>> &sysEventsToSend,
+        std::vector<std::tuple<std::string, int32_t, bool, int32_t, std::string, int32_t>> &exceptionEventsToSend);
     ErrCode CheckDisableForbidden(const std::string &bundleName, int32_t requestUserId,
         int32_t disableAppIndex, bool skipDisableForbidden);
     NotifyBundleEvents BuildBatchNotifyEvent(const InnerBundleInfo &innerBundleInfo,
@@ -1880,19 +1882,22 @@ private:
         int32_t appIndex, int32_t userId);
     void RollbackBatchSetEnabled(
         const std::vector<std::tuple<std::string, int32_t, bool, std::string>> &rollbackList,
-        int32_t userId);
+        int32_t userId,
+        std::vector<std::tuple<std::string, int32_t, bool, int32_t, std::string, int32_t>> &exceptionEventsToSend);
     ErrCode ValidateBatchSetAppIndex(int32_t enableAppIndex, int32_t disableAppIndex);
     void ReportErrorAndRollback(const std::string &bundleName, int32_t userId, bool isEnable,
-        int32_t appIndex, const std::string &caller,
-        std::vector<std::tuple<std::string, int32_t, bool, std::string>> &rollbackList);
+        int32_t appIndex, const std::string &caller, int32_t deviceModeDistributionPolicy,
+        std::vector<std::tuple<std::string, int32_t, bool, std::string>> &rollbackList,
+        std::vector<std::tuple<std::string, int32_t, bool, int32_t, std::string, int32_t>> &exceptionEventsToSend);
     ErrCode ProcessBatchForAllBundles(int32_t requestUserId, int32_t enableAppIndex,
         int32_t disableAppIndex, const std::string &caller, bool needSendEvent,
         bool skipDisableForbidden,
         std::vector<NotifyBundleEvents> &eventsToSend,
-        std::vector<std::tuple<std::string, int32_t, int32_t>> &disabledBundles,
-        std::vector<std::tuple<std::string, int32_t, bool, int32_t, std::string>> &sysEventsToSend);
+        std::vector<std::tuple<std::string, int32_t, int32_t, int32_t>> &disabledBundles,
+        std::vector<std::tuple<std::string, int32_t, bool, int32_t, std::string, int32_t>> &sysEventsToSend,
+        std::vector<std::tuple<std::string, int32_t, bool, int32_t, std::string, int32_t>> &exceptionEventsToSend);
     void KillDisabledBundleProcesses(
-        const std::vector<std::tuple<std::string, int32_t, int32_t>> &disabledBundles,
+        const std::vector<std::tuple<std::string, int32_t, int32_t, int32_t>> &disabledBundles,
         const std::string &caller);
     void SendBatchNotifyEventsAsync(std::vector<NotifyBundleEvents> &&eventsToSend);
     void GetCloneAppInfo(const InnerBundleInfo &info, int32_t userId, int32_t flags,

@@ -1492,6 +1492,7 @@ private:
     ErrCode MigrateDataParameterCheck(std::vector<std::string> &sourcePaths, std::string &destinationPath);
     ErrCode CheckSandboxPath(std::vector<std::string> &sourcePaths, std::string &destinationPath);
     const std::shared_ptr<BundleDataMgr> GetDataMgrFromService();
+    int32_t GetDualModePolicyForEvent(const std::string &bundleName);
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
     const std::shared_ptr<BundleConnectAbilityMgr> GetConnectAbilityMgrFromService();
 #endif

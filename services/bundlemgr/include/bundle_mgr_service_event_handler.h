@@ -882,6 +882,9 @@ private:
     // Used to send update failed event
     void SendBundleUpdateFailedEvent(const BundleInfo &bundleInfo);
     void SendBundleUpdateFailedEvent(const BundleInfo &bundleInfo, const int32_t errorCode);
+    static void SendBundleUpdateFailedEvent(const BundleInfo &bundleInfo, const int32_t errorCode, bool isPatch);
+    static void SendBundleUpdateFailedEvent(const InnerBundleInfo &innerBundleInfo, const int32_t errorCode,
+        bool isPatch);
     void ProcessAppTmpPath();
     void UpdatePreinstallDB(
         const std::unordered_map<std::string, std::pair<std::vector<std::string>, bool>> &otaMultiProcessUpgradeMap);

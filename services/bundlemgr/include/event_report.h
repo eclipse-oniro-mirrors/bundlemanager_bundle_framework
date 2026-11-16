@@ -85,6 +85,11 @@ enum class InstallScene : uint8_t {
     REMOVE_USER,
 };
 
+// DeviceModeDistributionPolicy::UNSPECIFIED (bundle_info.h). Duplicated as a plain constant so
+// the DFX header does not pull in the appexecfwk_base data-model header; the event parameters
+// are plain int32_t, so the enum only ever supplied this default value.
+constexpr int32_t DEVICE_MODE_POLICY_UNSPECIFIED = 0;
+
 enum HiSysEventType : uint8_t {
     FAULT     = 1,    // system fault event
     STATISTIC = 2,    // system statistic event
@@ -217,6 +222,12 @@ struct EventInfo {
     uint32_t minAPIVersion = 0;
     int32_t uid = 0;
     int32_t applicationInfoSize = 0;
+    // DeviceModeDistributionPolicy enum value of the installed or updated bundle, 0 means UNSPECIFIED
+    int32_t deviceModeDistributionPolicy = 0;
+    // Dual-mode (PC/PAD) system mode read at event time (0=tablet, 1=2in1, -1=non-dual-mode device).
+    // Together with deviceModeDistributionPolicy / appIndex (dual-mode clone appIndex=10000) it
+    // distinguishes the same-name-different-package app's primary/secondary package body.
+    int32_t currentMode = -1;
 
     // only used in fault event
     ErrCode errCode = ERR_OK;
@@ -363,6 +374,8 @@ struct EventInfo {
         targetAPIVersion = 0;
         minAPIVersion = 0;
         uid = 0;
+        deviceModeDistributionPolicy = 0;
+        currentMode = -1;
         shortcutOperationType.clear();
         shortcutIds.clear();
         isAbcCompressed = false;
@@ -392,9 +405,13 @@ public:
      * @param userId Indicates the userId.
      * @param isEnable Indicates the isEnable.
      * @param appIndex Indicates the app index for clone app.
+     * @param callingName Indicates the name of the caller.
+     * @param deviceModeDistributionPolicy Indicates the device mode distribution policy resolved
+     * from the installed record by the caller; defaults to UNSPECIFIED for non-dual-mode devices.
      */
     static void SendComponentStateSysEventForException(const std::string &bundleName, const std::string &abilityName,
-        int32_t userId, bool isEnable, int32_t appIndex, const std::string &callingName);
+        int32_t userId, bool isEnable, int32_t appIndex, const std::string &callingName,
+        int32_t deviceModeDistributionPolicy = DEVICE_MODE_POLICY_UNSPECIFIED);
     /**
      * @brief Send component diable or enable system events.
      * @param bundleName Indicates the bundleName.
@@ -402,9 +419,13 @@ public:
      * @param userId Indicates the userId.
      * @param isEnable Indicates the isEnable.
      * @param appIndex Indicates the app index for clone app.
+     * @param callingName Indicates the name of the caller.
+     * @param deviceModeDistributionPolicy Indicates the device mode distribution policy resolved
+     * from the installed record by the caller; defaults to UNSPECIFIED for non-dual-mode devices.
      */
     static void SendComponentStateSysEvent(const std::string &bundleName, const std::string &abilityName,
-        int32_t userId, bool isEnable, int32_t appIndex, const std::string &callingName);
+        int32_t userId, bool isEnable, int32_t appIndex, const std::string &callingName,
+        int32_t deviceModeDistributionPolicy = DEVICE_MODE_POLICY_UNSPECIFIED);
     /**
      * @brief Send clean cache system events.
      * @param bundleName Indicates the bundleName.
@@ -514,10 +535,12 @@ public:
      * @param userId Indicates the shortcutIds.
      * @param shortcutIds set default app method type.
      * @param operationType Operation types include Add and Delete.
+     * @param appIndex Indicates the app index for clone app.
      * @param callingUid Indicates method caller uid.
      */
     static void SendDynamicShortcutEvent(const std::string &bundleName, int32_t userId,
-        const std::vector<std::string> &shortcutIds, const std::string &operationType, int32_t callingUid);
+        const std::vector<std::string> &shortcutIds, const std::string &operationType, int32_t appIndex,
+        int32_t callingUid);
     
     /**
      * @brief Send info when add or delete desktop shortcuts.
