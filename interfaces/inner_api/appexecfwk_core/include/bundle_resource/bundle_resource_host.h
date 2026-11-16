@@ -35,6 +35,8 @@ public:
     int32_t OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
 
 private:
+    ErrCode HandleGetThemeTimestamp(MessageParcel &data, MessageParcel &reply);
+
     ErrCode HandleGetBundleResourceInfo(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetLauncherAbilityResourceInfo(MessageParcel &data, MessageParcel &reply);

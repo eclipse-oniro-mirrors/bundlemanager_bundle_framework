@@ -52,6 +52,9 @@ int32_t BundleResourceHost::OnRemoteRequest(uint32_t code, MessageParcel &data,
 
     ErrCode errCode = ERR_OK;
     switch (code) {
+        case static_cast<uint32_t>(BundleResourceInterfaceCode::GET_THEME_TIMESTAMP):
+            errCode = this->HandleGetThemeTimestamp(data, reply);
+            break;
         case static_cast<uint32_t>(BundleResourceInterfaceCode::GET_BUNDLE_RESOURCE_INFO):
             errCode = this->HandleGetBundleResourceInfo(data, reply);
             break;
@@ -289,6 +292,29 @@ ErrCode BundleResourceHost::HandleGetAllUninstallBundleResourceInfo(MessageParce
     }
     if (ret == ERR_OK) {
         return WriteVectorToParcel<BundleResourceInfo>(bundleResourceInfos, reply);
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleResourceHost::HandleGetThemeTimestamp(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t userId;
+    if (!data.ReadInt32(userId)) {
+        APP_LOGE("fail to read userId");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    int64_t timestamp = -1;
+    ErrCode result = GetThemeTimestamp(userId, timestamp);
+    if (result != ERR_OK) {
+        APP_LOGE("GetThemeTimestamp failed, errCode: %{public}d", result);
+    }
+    if (!reply.WriteInt32(result)) {
+        APP_LOGE("fail to write result");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!reply.WriteInt64(timestamp)) {
+        APP_LOGE("fail to write timestamp");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
 }

@@ -15,6 +15,8 @@
 
 #include "bundle_common_event_mgr.h"
 
+#include "bundle_resource_change_type.h"
+
 #include <chrono>
 #include <condition_variable>
 #include <thread>
@@ -520,12 +522,23 @@ void BundleCommonEventMgr::NotifyDynamicIconEvent(
     IPCSkeleton::SetCallingIdentity(identity);
 }
 
-void BundleCommonEventMgr::NotifyBundleResourcesChanged(const int32_t userId, const uint32_t type)
+OHOS::AAFwk::Want BundleCommonEventMgr::CreateBundleResourcesChangedWant(
+    int32_t userId, uint32_t type, int64_t themeTimestamp)
 {
     OHOS::AAFwk::Want want;
     want.SetAction(BUNDLE_RESOURCES_CHANGED);
     want.SetParam(Constants::USER_ID, userId);
     want.SetParam(BUNDLE_RESOURCE_CHANGE_TYPE, static_cast<int32_t>(type));
+    if ((type & static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_THEME_CHANGE)) != 0) {
+        want.SetParam("themeTimestamp", std::to_string(themeTimestamp));
+    }
+    return want;
+}
+
+void BundleCommonEventMgr::NotifyBundleResourcesChanged(
+    const int32_t userId, const uint32_t type, int64_t themeTimestamp)
+{
+    auto want = CreateBundleResourcesChangedWant(userId, type, themeTimestamp);
     EventFwk::CommonEventData commonData { want };
     EventFwk::CommonEventPublishInfo publishInfo;
     std::vector<std::string> permissionVec { ServiceConstants::PERMISSION_GET_BUNDLE_RESOURCES };

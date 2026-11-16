@@ -7399,5 +7399,64 @@ napi_value GetBundleExtensionPolicyInfo(napi_env env, napi_callback_info info)
     CommonFunc::ConvertBundleExtensionPolicy(env, dualModeBundleInfo, nBundleExtensionPolicyInfo);
     return nBundleExtensionPolicyInfo;
 }
+
+void GetThemeRefreshTimeExec(napi_env env, void *data)
+{
+    ThemeRefreshTimeCallbackInfo *asyncCallbackInfo = reinterpret_cast<ThemeRefreshTimeCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+    asyncCallbackInfo->err = BundleManagerHelper::InnerGetThemeRefreshTime(
+        asyncCallbackInfo->userId, asyncCallbackInfo->refreshTime);
+}
+
+void GetThemeRefreshTimeComplete(napi_env env, napi_status status, void *data)
+{
+    ThemeRefreshTimeCallbackInfo *asyncCallbackInfo = reinterpret_cast<ThemeRefreshTimeCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+    std::unique_ptr<ThemeRefreshTimeCallbackInfo> callbackPtr {asyncCallbackInfo};
+    napi_value result[ARGS_SIZE_TWO] = {0};
+    if (asyncCallbackInfo->err == NO_ERROR) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
+        napi_status ret = napi_create_string_utf8(env, asyncCallbackInfo->refreshTime.c_str(),
+            asyncCallbackInfo->refreshTime.size(), &result[ARGS_POS_ONE]);
+        if (ret != napi_ok) {
+            APP_LOGE("create refreshTime string failed, status: %{public}d", ret);
+            asyncCallbackInfo->err = ERROR_BUNDLE_SERVICE_EXCEPTION;
+        }
+    }
+    if (asyncCallbackInfo->err != NO_ERROR) {
+        APP_LOGE("GetThemeRefreshTime failed, errCode: %{public}d", asyncCallbackInfo->err);
+        result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
+            GET_THEME_REFRESH_TIME, GET_THEME_REFRESH_TIME_PERMISSION);
+    }
+    CommonFunc::NapiReturnDeferred<ThemeRefreshTimeCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
+}
+
+napi_value GetThemeRefreshTime(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("begin to GetThemeRefreshTime");
+    ThemeRefreshTimeCallbackInfo *asyncCallbackInfo = new (std::nothrow) ThemeRefreshTimeCallbackInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        BusinessError::ThrowError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION);
+        return nullptr;
+    }
+    std::unique_ptr<ThemeRefreshTimeCallbackInfo> callbackPtr {asyncCallbackInfo};
+    asyncCallbackInfo->userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    auto promise = CommonFunc::AsyncCallNativeMethod<ThemeRefreshTimeCallbackInfo>(env, asyncCallbackInfo,
+        GET_THEME_REFRESH_TIME, GetThemeRefreshTimeExec, GetThemeRefreshTimeComplete);
+    if (promise == nullptr) {
+        APP_LOGE("create GetThemeRefreshTime async work failed");
+        return nullptr;
+    }
+    callbackPtr.release();
+    APP_LOGD("call GetThemeRefreshTime done");
+    return promise;
+}
 } // namespace AppExecFwk
 } // namespace OHOS

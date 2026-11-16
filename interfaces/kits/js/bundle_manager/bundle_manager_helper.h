@@ -26,6 +26,7 @@ namespace OHOS {
 namespace AppExecFwk {
 class BundleManagerHelper {
 public:
+    static ErrCode InnerGetThemeRefreshTime(int32_t userId, std::string &refreshTime);
     static ErrCode InnerBatchQueryAbilityInfos(const std::vector<OHOS::AAFwk::Want>& wants, int32_t flags,
         int32_t userId, std::vector<AbilityInfo>& abilityInfos);
     static ErrCode InnerGetDynamicIcon(const std::string& bundleName, std::string& moduleName);

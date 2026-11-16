@@ -19,6 +19,7 @@
 #include "bundle_mgr_client.h"
 #include "bundle_mgr_interface.h"
 #include "bundle_mgr_proxy.h"
+#include "bundle_resource_interface.h"
 #include "bundle_errors.h"
 #include "business_error.h"
 #include "common_func.h"
@@ -27,6 +28,31 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+
+ErrCode BundleManagerHelper::InnerGetThemeRefreshTime(int32_t userId, std::string &refreshTime)
+{
+    refreshTime.clear();
+    auto bundleMgr = CommonFunc::GetBundleMgr();
+    if (bundleMgr == nullptr) {
+        APP_LOGE("bundleMgr is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    auto resourceMgr = bundleMgr->GetBundleResourceProxy();
+    if (resourceMgr == nullptr) {
+        APP_LOGE("resourceMgr is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    int64_t timestamp = -1;
+    ErrCode result = resourceMgr->GetThemeTimestamp(userId, timestamp);
+    if (result != ERR_OK) {
+        APP_LOGE("GetThemeTimestamp failed, errCode: %{public}d", result);
+        return CommonFunc::ConvertErrCode(result);
+    }
+    if (timestamp >= 0) {
+        refreshTime = std::to_string(timestamp);
+    }
+    return ERR_OK;
+}
 
 ErrCode BundleManagerHelper::InnerBatchQueryAbilityInfos(
     const std::vector<OHOS::AAFwk::Want>& wants, int32_t flags, int32_t userId, std::vector<AbilityInfo>& abilityInfos)

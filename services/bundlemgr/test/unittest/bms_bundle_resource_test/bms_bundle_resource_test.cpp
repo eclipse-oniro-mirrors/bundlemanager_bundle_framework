@@ -16,6 +16,10 @@
 #define private public
 
 #include <fstream>
+#include <cstdlib>
+#include <atomic>
+#include <thread>
+#include <iostream>
 #include <gtest/gtest.h>
 #include <sstream>
 #include <string>
@@ -34,6 +38,8 @@
 #include "bundle_installer_host.h"
 #include "bundle_mgr_proxy.h"
 #include "bundle_mgr_service.h"
+#include "bundle_user_mgr_host_impl.h"
+#include "bms_param.h"
 #include "bundle_mgr_service_event_handler.h"
 #include "bundle_parser.h"
 #include "bundle_permission_mgr.h"
@@ -64,18 +70,30 @@
 
 #include "bundle_verify_mgr.h"
 #include "common_event_support.h"
+#include "common_event_manager.h"
+#include "string_wrapper.h"
+#include <charconv>
 #include "directory_ex.h"
 #include "dual_mode_helper.h"
 #include "inner_bundle_info.h"
 #include "installd/installd_service.h"
 #include "installd_client.h"
 #include "mock_status_receiver.h"
+#include "nativetoken_kit.h"
 #include "parameter.h"
 #include "permission_define.h"
 #include "remote_ability_info.h"
 #include "scope_guard.h"
 #include "system_ability_definition.h"
 #include "system_ability_helper.h"
+#include "token_setproc.h"
+
+bool GetVerifyAcrossUserPermissionForTest();
+void SetVerifyAcrossUserPermissionForTest(bool value);
+bool IsSystemAppForTest();
+bool GetVerifyCallingPermissionForTest();
+void SetSystemAppForTest(bool value);
+void SetVerifyCallingPermissionForTest(bool value);
 
 using namespace testing::ext;
 using namespace std::chrono_literals;
@@ -9424,4 +9442,589 @@ HWTEST_F(BmsBundleResourceTest, BundleUtil_GetDeviceType_0100, Function | SmallT
 {
     EXPECT_EQ(BundleUtil::GetDeviceType(), Global::Resource::DeviceType::DEVICE_PHONE);
 }
+
+#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+HWTEST_F(BmsBundleResourceTest, ThemeTimestamp_PermissionDenied, TestSize.Level1)
+{
+    const bool oldSystemApp = IsSystemAppForTest();
+    const bool oldPermission = GetVerifyCallingPermissionForTest();
+    ScopeGuard restore([oldSystemApp, oldPermission] {
+        SetSystemAppForTest(oldSystemApp);
+        SetVerifyCallingPermissionForTest(oldPermission);
+    });
+    SetSystemAppForTest(true);
+    SetVerifyCallingPermissionForTest(false);
+    BundleResourceHostImpl host;
+    int64_t timestamp = 1234;
+    EXPECT_EQ(host.GetThemeTimestamp(Constants::START_USERID, timestamp), ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    EXPECT_EQ(timestamp, -1);
+}
+
+HWTEST_F(BmsBundleResourceTest, ThemeTimestamp_NonSystemAppDeniedFirst, TestSize.Level1)
+{
+    const bool oldSystemApp = IsSystemAppForTest();
+    const bool oldPermission = GetVerifyCallingPermissionForTest();
+    ScopeGuard restore([oldSystemApp, oldPermission] {
+        SetSystemAppForTest(oldSystemApp);
+        SetVerifyCallingPermissionForTest(oldPermission);
+    });
+    SetSystemAppForTest(false);
+    BundleResourceHostImpl host;
+    for (bool permission : {true, false}) {
+        SetVerifyCallingPermissionForTest(permission);
+        int64_t timestamp = 1234;
+        EXPECT_EQ(host.GetThemeTimestamp(Constants::START_USERID, timestamp),
+            ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+        EXPECT_EQ(timestamp, -1);
+    }
+}
+
+// Keep each service test's timestamp and restore it even if an assertion fails.
+class ThemeTimestampTestRecord {
+public:
+    ThemeTimestampTestRecord(const std::shared_ptr<BundleResourceRdb> &resourceRdb, int32_t userId)
+        : resource(resourceRdb), userId_(userId)
+    {
+        storage = resource->themeTimestampRdbDataManager_;
+        hadRecord_ = resource->GetThemeTimestamp(userId_, previous_) && previous_ >= 0;
+    }
+
+    ~ThemeTimestampTestRecord()
+    {
+        resource->themeTimestampRdbDataManager_ = storage;
+        EXPECT_TRUE(hadRecord_ ? resource->SaveThemeTimestamp(userId_, previous_) : Delete());
+    }
+
+    bool Delete()
+    {
+        NativeRdb::AbsRdbPredicates predicates(BundleResourceConstants::THEME_TIMESTAMP_RDB_TABLE_NAME);
+        predicates.EqualTo(BundleResourceConstants::USER_ID, userId_);
+        return storage->DeleteData(predicates);
+    }
+
+    bool WriteRaw(const std::string &value)
+    {
+        NativeRdb::ValuesBucket record;
+        record.PutInt(BundleResourceConstants::USER_ID, userId_);
+        record.PutString(BundleResourceConstants::TIMESTAMP, value);
+        return storage->InsertData(record);
+    }
+
+    std::shared_ptr<BundleResourceRdb> resource;
+    std::shared_ptr<RdbDataManager> storage;
+
+private:
+    int32_t userId_;
+    int64_t previous_ = 0;
+    bool hadRecord_ = false;
+};
+
+HWTEST_F(BmsBundleResourceTest, ThemeTimestamp_ActiveUserAndStorageFailure, TestSize.Level1)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+    int32_t userId = AccountHelper::GetCurrentActiveUserId();
+    if (userId <= Constants::DEFAULT_USERID) {
+        userId = Constants::START_USERID;
+    }
+    ThemeTimestampTestRecord record(manager->bundleResourceRdb_, userId);
+    const bool oldSystemApp = IsSystemAppForTest();
+    const bool oldPermission = GetVerifyCallingPermissionForTest();
+    ScopeGuard restore([&] {
+        SetSystemAppForTest(oldSystemApp);
+        SetVerifyCallingPermissionForTest(oldPermission);
+    });
+    SetSystemAppForTest(true);
+    SetVerifyCallingPermissionForTest(true);
+    BundleResourceHostImpl host;
+    int64_t timestamp = -1;
+    const int64_t timestamps[] = {0, 1794614400123LL, INT64_MAX};
+    for (const auto value : timestamps) {
+        ASSERT_TRUE(manager->SaveThemeTimestamp(userId, value));
+        ASSERT_EQ(host.GetThemeTimestamp(userId, timestamp), ERR_OK);
+        EXPECT_EQ(timestamp, value);
+    }
+    ASSERT_TRUE(record.Delete());
+    ASSERT_EQ(host.GetThemeTimestamp(userId, timestamp), ERR_OK);
+    EXPECT_EQ(timestamp, -1);
+    ASSERT_TRUE(record.WriteRaw("invalid"));
+    timestamp = 1234;
+    ASSERT_EQ(host.GetThemeTimestamp(userId, timestamp), ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    EXPECT_EQ(timestamp, -1);
+    ASSERT_TRUE(manager->SaveThemeTimestamp(userId, 1250));
+    record.resource->themeTimestampRdbDataManager_.reset();
+    EXPECT_FALSE(manager->SaveThemeTimestamp(userId, 1300));
+    timestamp = 1234;
+    ASSERT_EQ(host.GetThemeTimestamp(userId, timestamp), ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    EXPECT_EQ(timestamp, -1);
+}
+
+HWTEST_F(BmsBundleResourceTest, ThemeTimestamp_RequestedUserAndCrossUserPermission, TestSize.Level1)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+    const int32_t firstUser = Constants::START_USERID;
+    const int32_t secondUser = firstUser + 1;
+    ThemeTimestampTestRecord firstRecord(manager->bundleResourceRdb_, firstUser);
+    ThemeTimestampTestRecord secondRecord(manager->bundleResourceRdb_, secondUser);
+    const bool systemApp = IsSystemAppForTest();
+    const bool permission = GetVerifyCallingPermissionForTest();
+    const bool acrossUserPermission = GetVerifyAcrossUserPermissionForTest();
+    ScopeGuard restore([&] {
+        SetSystemAppForTest(systemApp);
+        SetVerifyCallingPermissionForTest(permission);
+        SetVerifyAcrossUserPermissionForTest(acrossUserPermission);
+    });
+    SetSystemAppForTest(true);
+    SetVerifyCallingPermissionForTest(true);
+    SetVerifyAcrossUserPermissionForTest(true);
+    ASSERT_TRUE(manager->SaveThemeTimestamp(firstUser, 1794614400123LL));
+    ASSERT_TRUE(manager->SaveThemeTimestamp(secondUser, 1794614400456LL));
+    BundleResourceHostImpl host;
+    int64_t timestamp = -1;
+    ASSERT_EQ(host.GetThemeTimestamp(firstUser, timestamp), ERR_OK);
+    EXPECT_EQ(timestamp, 1794614400123LL);
+    ASSERT_EQ(host.GetThemeTimestamp(secondUser, timestamp), ERR_OK);
+    EXPECT_EQ(timestamp, 1794614400456LL);
+    SetVerifyAcrossUserPermissionForTest(false);
+    EXPECT_EQ(host.GetThemeTimestamp(secondUser, timestamp), ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    EXPECT_EQ(timestamp, -1);
+}
+
+HWTEST_F(BmsBundleResourceTest, ThemeTimestamp_NoRefreshPreservesRecord, TestSize.Level1)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+    int32_t userId = AccountHelper::GetCurrentActiveUserId();
+    if (userId <= Constants::DEFAULT_USERID) {
+        userId = Constants::START_USERID;
+    }
+    ThemeTimestampTestRecord record(manager->bundleResourceRdb_, userId);
+    ASSERT_TRUE(manager->SaveThemeTimestamp(userId, 1234));
+    BundleResourceCallback callback;
+    const uint32_t type = static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_THEME_CHANGE);
+    EXPECT_FALSE(callback.OnApplicationThemeChanged("", 1, 1, type));
+    EXPECT_FALSE(callback.OnApplicationThemeChanged("invalid", 1, 1, type));
+    EXPECT_FALSE(callback.OnApplicationThemeChanged(R"({"icons":0})", 1, 1, type));
+    int64_t timestamp = 0;
+    ASSERT_TRUE(manager->GetThemeTimestamp(userId, timestamp));
+    EXPECT_EQ(timestamp, 1234);
+}
+
+bool WaitForThemeFixtureAck(const char *ack)
+{
+    constexpr int timeoutSeconds = 90;
+    for (int i = 0; i < timeoutSeconds; ++i) {
+        if (access(ack, F_OK) == 0) {
+            return true;
+        }
+        sleep(1);
+    }
+    return false;
+}
+
+// Opt-in fixture for the signed test application's real System API calls.
+// Only the active user's timestamp row is changed. ScopeGuard restores it.
+// Each READY line waits for the host to finish an API assertion and acknowledge.
+HWTEST_F(BmsBundleResourceTest, ThemeTimestamp_DeviceRecordFixture, TestSize.Level1)
+{
+    if (std::getenv("THEME_DEVICE_FIXTURE") == nullptr) {
+        GTEST_SKIP() << "Opt-in device fixture; use run-record-fixture.ps1";
+    }
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+    int32_t userId = AccountHelper::GetCurrentActiveUserId();
+    if (userId <= 0) {
+        userId = Constants::START_USERID;
+    }
+    if (const char *requestedUser = std::getenv("THEME_DEVICE_USER_ID")) {
+        const auto parsed = std::from_chars(requestedUser, requestedUser + std::strlen(requestedUser), userId);
+        ASSERT_EQ(parsed.ec, std::errc());
+        ASSERT_EQ(*parsed.ptr, '\0');
+        ASSERT_GE(userId, 0);
+    }
+    const std::string key = "themeTimestamp_" + std::to_string(userId);
+    ThemeTimestampTestRecord record(manager->bundleResourceRdb_, userId);
+    int64_t previous = 0;
+    const bool hadRecord = manager->GetThemeTimestamp(userId, previous) && previous >= 0;
+    const char *backup = "/data/local/tmp/theme-refresh-record-backup.txt";
+    const char *ack = "/data/local/tmp/theme-record-continue";
+    {
+        std::ofstream file(backup);
+        ASSERT_TRUE(file.is_open());
+        file << key << '\n' << hadRecord << '\n' << previous << '\n';
+        ASSERT_TRUE(file.good());
+    }
+    ScopeGuard restore([key, ack] {
+        unlink(ack);
+        std::cout << "FIXTURE RESTORED " << key << std::endl;
+    });
+    const std::vector<std::pair<std::string, std::string>> cases = {
+        {"missing", ""}, {"invalid", "not-a-timestamp"}, {"zero", "0"},
+        {"over-int32", "2147483648"}, {"int64-max", "9223372036854775807"}
+    };
+    for (const auto &[name, value] : cases) {
+        unlink(ack);
+        if (name == "missing") {
+            ASSERT_TRUE(record.Delete());
+        } else {
+            ASSERT_TRUE(record.WriteRaw(value));
+        }
+        std::cout << "FIXTURE READY " << name << " user=" << userId << std::endl;
+        ASSERT_TRUE(WaitForThemeFixtureAck(ack)) << "Host did not acknowledge " << name;
+    }
+}
+
+HWTEST_F(BmsBundleResourceTest, ThemeTimestamp_RemoveUserWithoutBundles, TestSize.Level1)
+{
+    constexpr int32_t retainedUser = 29010;
+    constexpr int32_t removedUser = 29011;
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+    ThemeTimestampTestRecord retained(manager->bundleResourceRdb_, retainedUser);
+    ThemeTimestampTestRecord removed(manager->bundleResourceRdb_, removedUser);
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    ASSERT_FALSE(dataMgr->HasUserId(removedUser));
+    dataMgr->AddUserId(removedUser);
+    ScopeGuard restore([dataMgr] { dataMgr->RemoveUserId(removedUser); });
+    ASSERT_TRUE(manager->SaveThemeTimestamp(retainedUser, 1794614400123LL));
+    ASSERT_TRUE(manager->SaveThemeTimestamp(removedUser, 1794614400456LL));
+    BundleUserMgrHostImpl userMgr;
+    EXPECT_EQ(userMgr.RemoveUser(removedUser), ERR_OK);
+    EXPECT_FALSE(dataMgr->HasUserId(removedUser));
+    int64_t timestamp = 0;
+    ASSERT_TRUE(manager->GetThemeTimestamp(removedUser, timestamp));
+    EXPECT_EQ(timestamp, -1);
+    ASSERT_TRUE(manager->GetThemeTimestamp(retainedUser, timestamp));
+    EXPECT_EQ(timestamp, 1794614400123LL);
+}
+
+HWTEST_F(BmsBundleResourceTest, ThemeTimestamp_RealRdbConcurrency, TestSize.Level1)
+{
+    BundleResourceManager manager;
+    auto param = std::make_shared<BmsParam>();
+    ASSERT_NE(param, nullptr);
+    ThemeTimestampTestRecord record(manager.bundleResourceRdb_, 29003);
+    const std::string otherKey = "theme_refresh_concurrent_fixture";
+    std::string otherPrevious;
+    const bool hadOther = param->GetBmsParam(otherKey, otherPrevious);
+    ScopeGuard restore([param, otherKey, otherPrevious, hadOther] {
+        EXPECT_TRUE(hadOther ? param->SaveBmsParam(otherKey, otherPrevious) : param->DeleteBmsParam(otherKey));
+    });
+    ASSERT_TRUE(manager.SaveThemeTimestamp(29003, 1234));
+    std::atomic<bool> valid {true};
+    std::thread writer([&] {
+        for (int i = 0; i < 100; ++i) {
+            if (!manager.SaveThemeTimestamp(29003, i % 2 == 0 ? 1234 : 2147483648LL)) valid = false;
+        }
+    });
+    std::thread reader([&] {
+        for (int i = 0; i < 100; ++i) {
+            int64_t t = 0;
+            if (!manager.GetThemeTimestamp(29003, t) || (t != 1234 && t != 2147483648LL)) valid = false;
+        }
+    });
+    std::thread other([&] {
+        for (int i = 0; i < 100; ++i) {
+            std::string value;
+            if (!param->SaveBmsParam(otherKey, std::to_string(i)) ||
+                !param->GetBmsParam(otherKey, value) || value != std::to_string(i)) valid = false;
+        }
+    });
+    writer.join();
+    reader.join();
+    other.join();
+    EXPECT_TRUE(valid.load());
+}
+
+// A real callback, real resource processing, and real common-event delivery.
+// Only this test process loses its RDB handle; the device database is untouched.
+class ThemeFaultEventSubscriber : public EventFwk::CommonEventSubscriber {
+public:
+    explicit ThemeFaultEventSubscriber(const EventFwk::CommonEventSubscribeInfo &info, int32_t type = 16)
+        : CommonEventSubscriber(info), expectedType(type) {}
+    void OnReceiveEvent(const EventFwk::CommonEventData &data) override
+    {
+        const auto &want = data.GetWant();
+        if (want.GetIntParam("bundleResourceChangeType", 0) == expectedType) {
+            auto value = AAFwk::IString::Query(want.GetParams().GetParam("themeTimestamp"));
+            if (value == nullptr) {
+                return;
+            }
+            const std::string text = want.GetStringParam("themeTimestamp");
+            int64_t result = -1;
+            const auto parsed = std::from_chars(text.data(), text.data() + text.size(), result);
+            if (parsed.ec != std::errc() || parsed.ptr != text.data() + text.size() || result < 0) {
+                return;
+            }
+            if (verifyStoredTimestamp) {
+                int64_t stored = -1;
+                storedMatchesEvent = DelayedSingleton<BundleResourceManager>::GetInstance()->GetThemeTimestamp(
+                    want.GetIntParam(Constants::USER_ID, Constants::INVALID_USERID), stored) && stored == result;
+            }
+            timestamp = result;
+            received = true;
+        }
+    }
+    bool verifyStoredTimestamp = false;
+    std::atomic<bool> storedMatchesEvent {false};
+    std::atomic<int64_t> timestamp {-1};
+    std::atomic<bool> received {false};
+    const int32_t expectedType;
+};
+
+void RestoreThemeConfigFile(const std::string &fileName, bool hadFile, const std::string &fileContents)
+{
+    if (hadFile) {
+        std::ofstream file(fileName, std::ios::binary | std::ios::trunc);
+        file << fileContents;
+        EXPECT_TRUE(file.good());
+    } else {
+        unlink(fileName.c_str());
+    }
+}
+
+bool SetThemeTimestampTestToken()
+{
+    const char *permissions[] = {"ohos.permission.GET_BUNDLE_RESOURCES"};
+    NativeTokenInfoParams tokenInfo = {};
+    tokenInfo.permsNum = 1;
+    tokenInfo.perms = permissions;
+    tokenInfo.processName = "bms_theme_resource_test";
+    tokenInfo.aplStr = "system_core";
+    tokenInfo.uid = getuid();
+    const uint64_t tokenId = GetAccessTokenId(&tokenInfo);
+    return tokenId != 0 && SetSelfTokenID(tokenId) == 0 &&
+        Security::AccessToken::AccessTokenKit::ReloadNativeTokenInfo() == 0;
+}
+
+std::shared_ptr<ThemeFaultEventSubscriber> CreateThemeFaultSubscriber()
+{
+    EventFwk::MatchingSkills matching;
+    matching.AddEvent("usual.event.BUNDLE_RESOURCES_CHANGED");
+    EventFwk::CommonEventSubscribeInfo info(matching);
+    return std::make_shared<ThemeFaultEventSubscriber>(info);
+}
+
+void CheckThemeQueriesUntilDone(std::atomic<bool> &done, std::atomic<bool> &valid,
+    std::atomic<int> &reads, int64_t startTime, int32_t userId)
+{
+    constexpr int64_t expectedInitialTimestamp = 1234;
+    constexpr int64_t maxRefreshMilliseconds = 120000;
+    constexpr useconds_t queryPollIntervalUs = 1000;
+    BundleResourceHostImpl host;
+    while (!done) {
+        int64_t t = -1;
+        const ErrCode result = host.GetThemeTimestamp(userId, t);
+        if (result != ERR_OK ||
+            (t != expectedInitialTimestamp && (t < startTime || t > startTime + maxRefreshMilliseconds))) {
+            valid = false;
+        }
+        ++reads;
+        usleep(queryPollIntervalUs);
+    }
+}
+
+void CheckOtherParamUntilDone(const std::shared_ptr<BmsParam> &param, const std::string &key,
+    std::atomic<bool> &done, std::atomic<bool> &valid, std::atomic<int> &checks)
+{
+    constexpr useconds_t configPollIntervalUs = 1000;
+    while (!done) {
+        std::string value;
+        if (!param->SaveBmsParam(key, "unchanged") || !param->GetBmsParam(key, value) || value != "unchanged") {
+            valid = false;
+        }
+        ++checks;
+        usleep(configPollIntervalUs);
+    }
+}
+
+void CheckThemeFaultEvent(const std::shared_ptr<ThemeFaultEventSubscriber> &subscriber, int64_t before, int64_t after)
+{
+    constexpr int maxAttempts = 100;
+    constexpr useconds_t eventPollIntervalUs = 100000;
+    for (int i = 0; i < maxAttempts && !subscriber->received; ++i) {
+        usleep(eventPollIntervalUs);
+    }
+    EXPECT_TRUE(subscriber->received);
+    EXPECT_GE(subscriber->timestamp.load(), before);
+    EXPECT_LE(subscriber->timestamp.load(), after);
+}
+
+
+// Verify the completed resource processing saves its timestamp before delivering the event.
+HWTEST_F(BmsBundleResourceTest, ThemeTimestamp_CombinedRefreshStringEvent, TestSize.Level1)
+{
+    const uint64_t originalTokenId = GetSelfTokenID();
+    ScopeGuard restoreToken([originalTokenId] { EXPECT_EQ(SetSelfTokenID(originalTokenId), 0); });
+    ASSERT_TRUE(SetThemeTimestampTestToken());
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+    int32_t userId = AccountHelper::GetCurrentActiveUserId();
+    if (userId <= 0) {
+        userId = Constants::START_USERID;
+    }
+    ThemeTimestampTestRecord record(manager->bundleResourceRdb_, userId);
+    EventFwk::MatchingSkills matching;
+    matching.AddEvent("usual.event.BUNDLE_RESOURCES_CHANGED");
+    EventFwk::CommonEventSubscribeInfo info(matching);
+    auto subscriber = std::make_shared<ThemeFaultEventSubscriber>(info, 17);
+    subscriber->verifyStoredTimestamp = true;
+    ASSERT_TRUE(EventFwk::CommonEventManager::SubscribeCommonEvent(subscriber));
+    ScopeGuard unsubscribe([&] { EventFwk::CommonEventManager::UnSubscribeCommonEvent(subscriber); });
+    const int64_t before = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::system_clock::now().time_since_epoch()).count();
+    ASSERT_TRUE(manager->AddAllResourceInfo(userId, 17));
+    const int64_t after = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::system_clock::now().time_since_epoch()).count();
+    CheckThemeFaultEvent(subscriber, before, after);
+    EXPECT_TRUE(subscriber->storedMatchesEvent.load());
+    std::cout << "COMBINED type=17; event timestamp=" << subscriber->timestamp.load()
+        << "; stored before notification=" << subscriber->storedMatchesEvent.load() << std::endl;
+}
+
+// A refresh that exits before processing resources must not publish a new timestamp.
+HWTEST_F(BmsBundleResourceTest, ThemeTimestamp_ProcessingFailureDoesNotSave, TestSize.Level1)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+    int32_t userId = AccountHelper::GetCurrentActiveUserId();
+    if (userId <= Constants::DEFAULT_USERID) {
+        userId = Constants::START_USERID;
+    }
+    ThemeTimestampTestRecord record(manager->bundleResourceRdb_, userId);
+    ASSERT_TRUE(manager->SaveThemeTimestamp(userId, 1234));
+    auto service = DelayedSingleton<BundleMgrService>::GetInstance();
+    auto dataMgr = service->dataMgr_;
+    const std::string fileName = std::string(BundleResourceConstants::BUNDLE_RESOURCE_RDB_PATH) +
+        BundleResourceConstants::USER_FILE_NAME;
+    std::ifstream input(fileName, std::ios::binary);
+    const bool hadFile = input.is_open();
+    const std::string contents((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
+    ScopeGuard restore([&] {
+        service->dataMgr_ = dataMgr;
+        RestoreThemeConfigFile(fileName, hadFile, contents);
+    });
+    service->dataMgr_.reset();
+    BundleResourceCallback callback;
+    EXPECT_FALSE(callback.OnApplicationThemeChanged(R"({"icons":1})", -1, -1,
+        static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_THEME_CHANGE)));
+    service->dataMgr_ = dataMgr;
+    int64_t timestamp = 0;
+    ASSERT_TRUE(manager->GetThemeTimestamp(userId, timestamp));
+    EXPECT_EQ(timestamp, 1234);
+}
+
+HWTEST_F(BmsBundleResourceTest, ThemeTimestamp_LanguageOnlyDoesNotSave, TestSize.Level1)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+    int32_t userId = AccountHelper::GetCurrentActiveUserId();
+    if (userId <= Constants::DEFAULT_USERID) {
+        userId = Constants::START_USERID;
+    }
+    ThemeTimestampTestRecord record(manager->bundleResourceRdb_, userId);
+    ASSERT_TRUE(manager->SaveThemeTimestamp(userId, 1234));
+    ASSERT_TRUE(manager->AddAllResourceInfo(userId,
+        static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_LANGUE_CHANGE)));
+    int64_t timestamp = 0;
+    ASSERT_TRUE(manager->GetThemeTimestamp(userId, timestamp));
+    EXPECT_EQ(timestamp, 1234);
+}
+
+HWTEST_F(BmsBundleResourceTest, ThemeTimestamp_StorageFailureStillRefreshesAndNotifies, TestSize.Level1)
+{
+    const uint64_t originalTokenId = GetSelfTokenID();
+    ScopeGuard restoreToken([originalTokenId] { EXPECT_EQ(SetSelfTokenID(originalTokenId), 0); });
+    ASSERT_TRUE(SetThemeTimestampTestToken());
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+    int32_t userId = AccountHelper::GetCurrentActiveUserId();
+    if (userId <= 0) userId = Constants::START_USERID;
+    ThemeTimestampTestRecord record(manager->bundleResourceRdb_, userId);
+    const bool oldSystemApp = IsSystemAppForTest(), oldPermission = GetVerifyCallingPermissionForTest();
+    const std::string fileName = std::string(BundleResourceConstants::BUNDLE_RESOURCE_RDB_PATH) +
+        BundleResourceConstants::USER_FILE_NAME;
+    std::ifstream input(fileName, std::ios::binary);
+    const bool hadFile = input.is_open();
+    const std::string fileContents((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
+    ScopeGuard restore([&] {
+        RestoreThemeConfigFile(fileName, hadFile, fileContents);
+        SetSystemAppForTest(oldSystemApp);
+        SetVerifyCallingPermissionForTest(oldPermission);
+    });
+    auto subscriber = CreateThemeFaultSubscriber();
+    ASSERT_TRUE(EventFwk::CommonEventManager::SubscribeCommonEvent(subscriber));
+    ScopeGuard unsubscribe([&] { EventFwk::CommonEventManager::UnSubscribeCommonEvent(subscriber); });
+    SetSystemAppForTest(true);
+    SetVerifyCallingPermissionForTest(true);
+    ASSERT_TRUE(manager->SaveThemeTimestamp(userId, 1250));
+    record.resource->themeTimestampRdbDataManager_.reset();
+    BundleResourceHostImpl host;
+    int64_t timestamp = 1234;
+    ASSERT_EQ(host.GetThemeTimestamp(userId, timestamp), ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    ASSERT_EQ(timestamp, -1);
+    const auto before = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::system_clock::now().time_since_epoch()).count();
+    BundleResourceCallback callback;
+    ASSERT_TRUE(callback.OnApplicationThemeChanged(R"({"icons":1})", -1, -1, 16));
+    const auto after = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::system_clock::now().time_since_epoch()).count();
+    CheckThemeFaultEvent(subscriber, before, after);
+    timestamp = 1234;
+    ASSERT_EQ(host.GetThemeTimestamp(userId, timestamp), ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    EXPECT_EQ(timestamp, -1);
+    std::cout << "FAULT callback completed; query time=\"" << timestamp << "\""
+        << "; event received=" << subscriber->received << "; event T=" << subscriber->timestamp << std::endl;
+}
+
+HWTEST_F(BmsBundleResourceTest, ThemeTimestamp_RefreshQueryAndOtherParamConcurrent, TestSize.Level1)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+    auto param = std::make_shared<BmsParam>();
+    ASSERT_NE(param, nullptr);
+    int32_t userId = AccountHelper::GetCurrentActiveUserId();
+    if (userId <= 0) userId = Constants::START_USERID;
+    ThemeTimestampTestRecord record(manager->bundleResourceRdb_, userId);
+    const std::string otherKey = "theme_refresh_callback_concurrent";
+    std::string otherPrevious;
+    const bool hadOther = param->GetBmsParam(otherKey, otherPrevious);
+    const bool oldSystemApp = IsSystemAppForTest(), oldPermission = GetVerifyCallingPermissionForTest();
+    const std::string fileName = std::string(BundleResourceConstants::BUNDLE_RESOURCE_RDB_PATH) +
+        BundleResourceConstants::USER_FILE_NAME;
+    std::ifstream input(fileName, std::ios::binary);
+    const bool hadFile = input.is_open();
+    const std::string fileContents((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
+    ScopeGuard restore([&] {
+        EXPECT_TRUE(hadOther ? param->SaveBmsParam(otherKey, otherPrevious) : param->DeleteBmsParam(otherKey));
+        RestoreThemeConfigFile(fileName, hadFile, fileContents);
+        SetSystemAppForTest(oldSystemApp);
+        SetVerifyCallingPermissionForTest(oldPermission);
+    });
+    SetSystemAppForTest(true);
+    SetVerifyCallingPermissionForTest(true);
+    ASSERT_TRUE(manager->SaveThemeTimestamp(userId, 1234));
+    const auto startTime = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::system_clock::now().time_since_epoch()).count();
+    std::atomic<bool> done {false}, valid {true};
+    std::atomic<int> reads {0}, configChecks {0};
+    std::thread reader([&] { CheckThemeQueriesUntilDone(done, valid, reads, startTime, userId); });
+    std::thread config([&] { CheckOtherParamUntilDone(param, otherKey, done, valid, configChecks); });
+    BundleResourceCallback callback;
+    for (int i = 0; i < 3; ++i) {
+        if (!callback.OnApplicationThemeChanged(R"({"icons":1})", -1, -1, 16)) valid = false;
+        usleep(200000);
+    }
+    done = true;
+    reader.join();
+    config.join();
+    EXPECT_TRUE(valid);
+    EXPECT_GT(reads, 0);
+    EXPECT_GT(configChecks, 0);
+    std::cout << "CONCURRENT callbacks=3 queries=" << reads << " other-param-checks=" << configChecks << std::endl;
+}
+#endif
+
 } // OHOS

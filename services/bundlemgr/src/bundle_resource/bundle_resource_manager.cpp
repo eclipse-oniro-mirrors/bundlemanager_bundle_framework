@@ -493,11 +493,12 @@ void BundleResourceManager::GetDefaultIcon(ResourceInfo &resourceInfo)
     resourceInfo.background_ = bundleResourceInfo.background;
 }
 
-void BundleResourceManager::SendBundleResourcesChangedEvent(const int32_t userId, const uint32_t type)
+void BundleResourceManager::SendBundleResourcesChangedEvent(
+    const int32_t userId, const uint32_t type, int64_t themeTimestamp)
 {
     APP_LOGI("send bundleResource event, userId:%{public}d type:%{public}u", userId, type);
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
-    commonEventMgr->NotifyBundleResourcesChanged(userId, type);
+    commonEventMgr->NotifyBundleResourcesChanged(userId, type, themeTimestamp);
 }
 
 void BundleResourceManager::GetTargetBundleName(const std::string &bundleName, std::string &targetBundleName)
@@ -1068,7 +1069,8 @@ bool BundleResourceManager::AddAllResourceInfo(
     PrepareSysRes();
     if ((type & static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_THEME_CHANGE)) ==
         static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_THEME_CHANGE)) {
-        if (!AddResourceInfosWhenSystemThemeChanged(resourceInfosMap, userId, tempTaskNum)) {
+        auto themeResourceInfosMap = resourceInfosMap;
+        if (!AddResourceInfosWhenSystemThemeChanged(themeResourceInfosMap, userId, tempTaskNum)) {
             APP_LOGE("add resource failed when theme changed -u %{public}d", userId);
             return false;
         }
@@ -1081,8 +1083,13 @@ bool BundleResourceManager::AddAllResourceInfo(
             return false;
         }
     }
-    SendBundleResourcesChangedEvent(userId, type);
-    APP_LOGI_NOFUNC("add all resource end");
+    const int64_t themeTimestamp = BundleUtil::GetCurrentTimeMs();
+    if (((type & static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_THEME_CHANGE)) != 0) &&
+        !SaveThemeTimestamp(userId, themeTimestamp)) {
+        APP_LOGE("save theme refresh time failed, userId: %{public}d", userId);
+    }
+    SendBundleResourcesChangedEvent(userId, type, themeTimestamp);
+    APP_LOGI_NOFUNC("add all resource end, themeTimestamp: %{public}lld", static_cast<long long>(themeTimestamp));
     return true;
 }
 
@@ -1978,6 +1985,51 @@ bool BundleResourceManager::ParseThemeIconFromThemeDir(const int32_t userId, Res
     }
     resourceInfo = resourceInfos[0];
     return true;
+}
+
+bool BundleResourceManager::SaveThemeTimestamp(int32_t userId, int64_t timestamp)
+{
+    if (userId < 0) {
+        APP_LOGE("invalid userId: %{public}d", userId);
+        return false;
+    }
+    if (timestamp < 0) {
+        APP_LOGE("invalid theme timestamp");
+        return false;
+    }
+    if (bundleResourceRdb_ == nullptr) {
+        APP_LOGE("bundleResourceRdb_ is null");
+        return false;
+    }
+    return bundleResourceRdb_->SaveThemeTimestamp(userId, timestamp);
+}
+
+bool BundleResourceManager::GetThemeTimestamp(int32_t userId, int64_t &timestamp)
+{
+    timestamp = -1;
+    if (userId < 0) {
+        APP_LOGE("invalid userId: %{public}d", userId);
+        return false;
+    }
+    if (bundleResourceRdb_ == nullptr) {
+        APP_LOGE("bundleResourceRdb_ is null");
+        return false;
+    }
+    return bundleResourceRdb_->GetThemeTimestamp(userId, timestamp);
+}
+
+bool BundleResourceManager::DeleteThemeTimestamp(int32_t userId)
+{
+    if (userId < 0) {
+        APP_LOGE("invalid userId: %{public}d", userId);
+        return false;
+    }
+    std::lock_guard<std::mutex> guard(mutex_);
+    if (bundleResourceRdb_ == nullptr) {
+        APP_LOGE("bundleResourceRdb_ is null");
+        return false;
+    }
+    return bundleResourceRdb_->DeleteThemeTimestamp(userId);
 }
 } // AppExecFwk
 } // OHOS

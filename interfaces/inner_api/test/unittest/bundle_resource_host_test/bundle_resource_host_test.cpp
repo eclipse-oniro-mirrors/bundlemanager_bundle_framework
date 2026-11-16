@@ -1259,4 +1259,97 @@ HWTEST_F(BundleResourceHostTest, MimeTypeMgr_IsSpecifiedSuffixNumberExtension_00
     EXPECT_FALSE(result);
 }
 }
+
+namespace AppExecFwk {
+class ThemeTimestampHost : public BundleResourceHost {
+public:
+    ErrCode GetThemeTimestamp(int32_t userId, int64_t &timestamp) override
+    {
+        ++calls_;
+        userId_ = userId;
+        timestamp = result_ == ERR_OK ? timestamp_ : -1;
+        return result_;
+    }
+    int32_t userId_ = Constants::INVALID_USERID;
+    int calls_ = 0;
+    ErrCode result_ = ERR_OK;
+    int64_t timestamp_ = 1794614400123LL;
+};
+
+HWTEST_F(BundleResourceHostTest, ThemeTimestamp_Dispatch, TestSize.Level1)
+{
+    ThemeTimestampHost host;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    ASSERT_TRUE(data.WriteInterfaceToken(IBundleResource::GetDescriptor()));
+    ASSERT_TRUE(data.WriteInt32(Constants::START_USERID));
+    ASSERT_EQ(host.OnRemoteRequest(static_cast<uint32_t>(BundleResourceInterfaceCode::GET_THEME_TIMESTAMP),
+        data, reply, option), ERR_OK);
+    EXPECT_EQ(host.calls_, 1);
+    EXPECT_EQ(host.userId_, Constants::START_USERID);
+    int32_t result = -1;
+    int64_t timestamp = -1;
+    ASSERT_TRUE(reply.ReadInt32(result));
+    ASSERT_TRUE(reply.ReadInt64(timestamp));
+    EXPECT_EQ(result, ERR_OK);
+    EXPECT_EQ(timestamp, host.timestamp_);
+}
+
+HWTEST_F(BundleResourceHostTest, ThemeTimestamp_NoRecordReply, TestSize.Level1)
+{
+    ThemeTimestampHost host;
+    host.timestamp_ = -1;
+    MessageParcel data;
+    MessageParcel reply;
+    ASSERT_TRUE(data.WriteInt32(Constants::START_USERID));
+    ASSERT_EQ(host.HandleGetThemeTimestamp(data, reply), ERR_OK);
+    EXPECT_EQ(reply.ReadInt32(), ERR_OK);
+    int64_t timestamp = 1234;
+    ASSERT_TRUE(reply.ReadInt64(timestamp));
+    EXPECT_EQ(timestamp, -1);
+}
+
+HWTEST_F(BundleResourceHostTest, ThemeTimestamp_PermissionErrorReply, TestSize.Level1)
+{
+    ThemeTimestampHost host;
+    host.result_ = ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    MessageParcel data;
+    MessageParcel reply;
+    ASSERT_TRUE(data.WriteInt32(Constants::START_USERID));
+    ASSERT_EQ(host.HandleGetThemeTimestamp(data, reply), ERR_OK);
+    EXPECT_EQ(reply.ReadInt32(), ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    int64_t timestamp = -1;
+    ASSERT_TRUE(reply.ReadInt64(timestamp));
+    EXPECT_EQ(timestamp, -1);
+}
+
+HWTEST_F(BundleResourceHostTest, ThemeTimestamp_MissingUserId, TestSize.Level1)
+{
+    ThemeTimestampHost host;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    MessageParcel emptyData;
+    EXPECT_EQ(host.HandleGetThemeTimestamp(emptyData, reply), ERR_APPEXECFWK_PARCEL_ERROR);
+    ASSERT_TRUE(data.WriteInterfaceToken(IBundleResource::GetDescriptor()));
+    EXPECT_EQ(host.OnRemoteRequest(static_cast<uint32_t>(BundleResourceInterfaceCode::GET_THEME_TIMESTAMP),
+        data, reply, option), UNKNOWN_ERROR);
+    EXPECT_EQ(host.calls_, 0);
+}
+
+HWTEST_F(BundleResourceHostTest, ThemeTimestamp_InvalidToken, TestSize.Level1)
+{
+    ThemeTimestampHost host;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    ASSERT_TRUE(data.WriteInterfaceToken(u"wrong.descriptor"));
+    EXPECT_EQ(host.OnRemoteRequest(static_cast<uint32_t>(BundleResourceInterfaceCode::GET_THEME_TIMESTAMP),
+        data, reply, option), OBJECT_NULL);
+    EXPECT_EQ(host.calls_, 0);
+}
+
+} // namespace AppExecFwk
+
 }

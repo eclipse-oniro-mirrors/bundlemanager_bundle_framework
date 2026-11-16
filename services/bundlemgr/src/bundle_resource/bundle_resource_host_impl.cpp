@@ -28,6 +28,34 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+
+ErrCode BundleResourceHostImpl::GetThemeTimestamp(int32_t userId, int64_t &timestamp)
+{
+    timestamp = -1;
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app querying theme refresh time");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_GET_BUNDLE_RESOURCES)) {
+        APP_LOGE("theme refresh time permission denied");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    if (manager == nullptr) {
+        APP_LOGE("bundle resource manager is null");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    if (!BundlePermissionMgr::VerifyAcrossUserPermission(userId)) {
+        APP_LOGE("theme refresh time cross-user permission denied, userId: %{public}d", userId);
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (!manager->GetThemeTimestamp(userId, timestamp)) {
+        APP_LOGE("get theme timestamp failed, userId: %{public}d", userId);
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return ERR_OK;
+}
+
 const std::string FUNCATION_GET_BUNDLE_RESOURCE_INFO = "BundleResourceHostImpl::GetBundleResourceInfo";
 
 ErrCode BundleResourceHostImpl::GetBundleResourceInfo(const std::string &bundleName, const uint32_t flags,

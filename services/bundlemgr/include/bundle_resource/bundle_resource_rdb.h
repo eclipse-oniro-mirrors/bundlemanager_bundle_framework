@@ -71,9 +71,17 @@ public:
     bool GetAllExtensionAbilityResourceInfo(const std::string &bundleName, const uint32_t flags,
         std::vector<LauncherAbilityResourceInfo> &extensionAbilityResourceInfo, const int32_t appIndex = 0);
 
+    bool SaveThemeTimestamp(int32_t userId, int64_t timestamp);
+
+    bool GetThemeTimestamp(int32_t userId, int64_t &timestamp);
+
+    bool DeleteThemeTimestamp(int32_t userId);
+
     void CheckDbError(const BmsRdbConfig &bmsRdbConfig);
 
 private:
+    void InitThemeTimestampTable();
+
     bool ConvertToBundleResourceInfo(
         const std::shared_ptr<NativeRdb::ResultSet> &absSharedResultSet,
         const uint32_t flags,
@@ -96,6 +104,7 @@ private:
         BundleResourceInfo &bundleResourceInfo);
 
     std::shared_ptr<RdbDataManager> rdbDataManager_;
+    std::shared_ptr<RdbDataManager> themeTimestampRdbDataManager_;
 };
 } // AppExecFwk
 } // OHOS

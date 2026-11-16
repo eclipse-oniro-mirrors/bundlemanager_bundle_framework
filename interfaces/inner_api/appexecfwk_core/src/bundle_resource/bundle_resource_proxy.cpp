@@ -356,6 +356,42 @@ ErrCode BundleResourceProxy::GetAllUninstallBundleResourceInfo(const int32_t use
         BundleResourceInterfaceCode::GET_ALL_UNINSTALL_BUNDLE_RESOURCE_INFO, data, bundleResourceInfos);
 }
 
+ErrCode BundleResourceProxy::GetThemeTimestamp(int32_t userId, int64_t &timestamp)
+{
+    APP_LOGD("start");
+    timestamp = -1;
+    MessageParcel data;
+    MessageParcel reply;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to write InterfaceToken");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to write userId");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!SendRequest(BundleResourceInterfaceCode::GET_THEME_TIMESTAMP, data, reply)) {
+        APP_LOGE("fail to send GetThemeTimestamp request");
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    int32_t result = ERR_OK;
+    if (!reply.ReadInt32(result)) {
+        APP_LOGE("fail to read result");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (result != ERR_OK) {
+        APP_LOGE("GetThemeTimestamp failed, errCode: %{public}d", result);
+        return result;
+    }
+    int64_t value = -1;
+    if (!reply.ReadInt64(value)) {
+        APP_LOGE("fail to read timestamp");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    timestamp = value;
+    return ERR_OK;
+}
+
 template<typename T>
 ErrCode BundleResourceProxy::GetParcelInfo(BundleResourceInterfaceCode code, MessageParcel &data, T &parcelInfo)
 {

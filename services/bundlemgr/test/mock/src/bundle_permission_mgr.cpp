@@ -20,6 +20,7 @@
 bool g_isSystemApp = true;
 bool g_isNativeTokenType = true;
 bool g_verifyPermission = true;
+bool g_verifyAcrossUserPermission = true;
 bool g_verifyCallingBundleSdkVersion  = true;
 bool g_isBundleSelfCalling = true;
 bool g_checkUserFromShell = true;
@@ -74,9 +75,24 @@ bool GetPermissionsResultForTest(const std::vector<std::string> &permissionNames
 }
 } // namespace
 
+void SetVerifyAcrossUserPermissionForTest(bool value)
+{
+    g_verifyAcrossUserPermission = value;
+}
+
+bool GetVerifyAcrossUserPermissionForTest()
+{
+    return g_verifyAcrossUserPermission;
+}
+
 void SetSystemAppForTest(bool value)
 {
     g_isSystemApp = value;
+}
+
+bool IsSystemAppForTest()
+{
+    return g_isSystemApp;
 }
 
 void SetNativeTokenTypeForTest(bool value)
@@ -87,6 +103,11 @@ void SetNativeTokenTypeForTest(bool value)
 void SetVerifyCallingPermissionForTest(bool value)
 {
     g_verifyPermission = value;
+}
+
+bool GetVerifyCallingPermissionForTest()
+{
+    return g_verifyPermission;
 }
 
 void SetHapApiVersion(int32_t version)
@@ -464,7 +485,7 @@ bool BundlePermissionMgr::IsBundleSelfCalling(const std::string &bundleName, con
 }
 bool BundlePermissionMgr::VerifyAcrossUserPermission(const int32_t userId)
 {
-    return g_verifyPermission;
+    return g_verifyPermission && g_verifyAcrossUserPermission;
 }
 #endif
 
