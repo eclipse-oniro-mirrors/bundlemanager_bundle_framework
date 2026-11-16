@@ -56,6 +56,7 @@
 #include "bundle_resource_rdb.h"
 #include "bundle_resource_register.h"
 #include "bundle_system_state.h"
+#include "bundle_util.h"
 #include "launcher_ability_resource_info.h"
 #include "nlohmann/json.hpp"
 #include "parameters.h"
@@ -9383,5 +9384,44 @@ HWTEST_F(BmsBundleResourceTest, DeleteUninstallBundleResourceForUser_PreCompress
     EXPECT_TRUE(manager->DeleteUninstallBundleResourceForUser(PRE_COMPRESS_DELETE_USERID));
     EXPECT_FALSE(HasPreCompressThemeRow(PRE_COMPRESS_ONE_NAME, PRE_COMPRESS_DELETE_USERID));
     EXPECT_TRUE(HasPreCompressThemeRow(PRE_COMPRESS_ONE_NAME, THEME_TEST_USERID));
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest.BundleUtil_ConvertDeviceTypeStr_0100
+ * @tc.name: Device-type string maps to the resmgr DeviceType enum
+ * @tc.desc: The mapping follows the resmgr string constants (res_common.h):
+ *           default/phone map to PHONE, tablet/car/pad/tv/wearable/2in1 map
+ *           to their enums, and an unknown value stays DEVICE_NOT_SET (no
+ *           fake type). Pure function — order-independent of the
+ *           process-wide device-type cache of BundleUtil::GetDeviceType.
+ */
+HWTEST_F(BmsBundleResourceTest, BundleUtil_ConvertDeviceTypeStr_0100, Function | SmallTest | Level0)
+{
+    using Global::Resource::DeviceType;
+    EXPECT_EQ(BundleUtil::ConvertDeviceTypeStr("default"), DeviceType::DEVICE_PHONE);
+    EXPECT_EQ(BundleUtil::ConvertDeviceTypeStr("phone"), DeviceType::DEVICE_PHONE);
+    EXPECT_EQ(BundleUtil::ConvertDeviceTypeStr("tablet"), DeviceType::DEVICE_TABLET);
+    EXPECT_EQ(BundleUtil::ConvertDeviceTypeStr("car"), DeviceType::DEVICE_CAR);
+    EXPECT_EQ(BundleUtil::ConvertDeviceTypeStr("pad"), DeviceType::DEVICE_PAD);
+    EXPECT_EQ(BundleUtil::ConvertDeviceTypeStr("tv"), DeviceType::DEVICE_TV);
+    EXPECT_EQ(BundleUtil::ConvertDeviceTypeStr("wearable"), DeviceType::DEVICE_WEARABLE);
+    EXPECT_EQ(BundleUtil::ConvertDeviceTypeStr("2in1"), DeviceType::DEVICE_TWOINONE);
+    // An unrecognized value reports no fake type.
+    EXPECT_EQ(BundleUtil::ConvertDeviceTypeStr("foldable"), DeviceType::DEVICE_NOT_SET);
+    EXPECT_EQ(BundleUtil::ConvertDeviceTypeStr(""), DeviceType::DEVICE_NOT_SET);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest.BundleUtil_GetDeviceType_0100
+ * @tc.name: GetDeviceType reads the cached default mapping
+ * @tc.desc: The mock parameter map carries no const.product.devicetype entry,
+ *           so BundleUtil::GetDeviceType falls back to the "default" value and
+ *           maps it to DEVICE_PHONE. The value is process-cached (first call
+ *           wins), so only the default shape is asserted here — the full
+ *           mapping coverage lives in BundleUtil_ConvertDeviceTypeStr_0100.
+ */
+HWTEST_F(BmsBundleResourceTest, BundleUtil_GetDeviceType_0100, Function | SmallTest | Level0)
+{
+    EXPECT_EQ(BundleUtil::GetDeviceType(), Global::Resource::DeviceType::DEVICE_PHONE);
 }
 } // OHOS

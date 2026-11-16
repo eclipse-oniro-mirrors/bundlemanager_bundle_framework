@@ -25,6 +25,9 @@
 #include "appexecfwk_errors.h"
 #include "application_info.h"
 #include "nlohmann/json.hpp"
+#ifdef GLOBAL_RESMGR_ENABLE
+#include "res_common.h"
+#endif
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -295,6 +298,31 @@ public:
         int32_t userId, int32_t appIndex);
     static bool IsExecutableBinaryFile(const std::string &filePath);
     static bool IsVmEnabled();
+#ifdef GLOBAL_RESMGR_ENABLE
+    /**
+     * @brief Get the device type of the CURRENT device for resource
+     *        configuration: reads the const.product.devicetype system
+     *        parameter once per process and maps it to the resource manager
+     *        DeviceType enum. Lives in BundleUtil (not the resource config
+     *        class) so that minimal targets compiling only bundle_data_mgr
+     *        link it without pulling the bundle_resource source set. A
+     *        NON-system ResourceManager never self-fills the device type, so
+     *        every BMS-created manager must set it on the ResConfig before
+     *        UpdateResConfig — device-qualified resources otherwise match
+     *        against DEVICE_NOT_SET.
+     * @return Returns the mapped DeviceType, or DEVICE_NOT_SET for an
+     *         unrecognized parameter value (no fake type is reported).
+     */
+    static Global::Resource::DeviceType GetDeviceType();
+
+    /**
+     * @brief Map a device-type string (the const.product.devicetype value) to
+     *        the resource manager DeviceType enum, through the resmgr-exported
+     *        res_common.h string constants (kept in sync with the resmgr's
+     *        internal ParseDeviceTypeStr). Pure function for testability.
+     */
+    static Global::Resource::DeviceType ConvertDeviceTypeStr(const std::string &deviceTypeStr);
+#endif
 private:
     static std::mutex g_mutex;
     static std::recursive_mutex configXmlMutex_;
