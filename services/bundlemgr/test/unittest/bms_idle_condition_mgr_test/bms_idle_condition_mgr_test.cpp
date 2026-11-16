@@ -16,6 +16,7 @@
 #include <string>
 #include <thread>
 #include <chrono>
+#include <cstdlib>
 #include <fstream>
 #include <gtest/gtest.h>
 #include <filesystem>
@@ -26,6 +27,8 @@
 #include "bundle_constants.h"
 #include "bundle_installer_manager.h"
 #include "bundle_service_constants.h"
+#include "bundle_stats/bundle_stats_cache_mgr.h"
+#include "bundle_util.h"
 #include "common_event_manager.h"
 #include "common_event_subscribe_info.h"
 #include "common_event_subscriber.h"
@@ -46,8 +49,93 @@ namespace OHOS {
 namespace {
 constexpr const char* BMS_PARAM_RELABEL_BATTERY_CAPACITY = "ohos.bms.param.relabelBatteryCapacity";
 constexpr const char* BMS_PARAM_RELABEL_WAIT_TIME = "ohos.bms.param.relabelWaitTimeMinutes";
+constexpr const char* BMS_PARAM_TEST_DUAL_MODE = "persist.bms.test_dual_mode";
+constexpr const char* BMS_PARAM_TEST_ISPCMODE = "persist.bms.ispcmode";
+constexpr const char* BMS_PARAM_TEST_MAINMODE = "persist.bms.mainmode";
+constexpr const char* PRODUCT_DEVICE_TYPE_PARAM = "const.product.devicetype";
 constexpr int32_t WAIT_TIME = 1; // 1 second
 constexpr int32_t TEST_USER_ID = 100;
+
+// Inject the PC-like state through the dual-mode test params: tablet device
+// type + dual-mode device + ispcmode=1 (2in1) makes IsPcLikeDevice() true.
+// The original device type is captured on first use and restored by
+// RestorePcLikeMode so tests do not pollute the shared parameter.
+std::string g_originalDeviceType;
+bool g_deviceTypeSaved = false;
+
+void SetPcLikeMode(bool pcLike)
+{
+    if (!g_deviceTypeSaved) {
+        g_originalDeviceType = OHOS::system::GetDeviceType();
+        g_deviceTypeSaved = true;
+    }
+    OHOS::system::SetParameter(PRODUCT_DEVICE_TYPE_PARAM, "tablet");
+    OHOS::system::SetParameter(BMS_PARAM_TEST_DUAL_MODE, "true");
+    OHOS::system::SetParameter(BMS_PARAM_TEST_MAINMODE, "0");
+    OHOS::system::SetParameter(BMS_PARAM_TEST_ISPCMODE, pcLike ? "1" : "0");
+}
+
+void RestorePcLikeMode()
+{
+    if (g_deviceTypeSaved) {
+        OHOS::system::SetParameter(PRODUCT_DEVICE_TYPE_PARAM, g_originalDeviceType);
+    }
+    OHOS::system::SetParameter(BMS_PARAM_TEST_DUAL_MODE, "false");
+}
+
+// Forget the in-memory last scan time so cooldown checks start from a
+// clean state.
+void ClearStatsPersistedTime()
+{
+    BundleStatsCacheMgr::ResetForTest();
+}
+
+// Open a bundle stats scan window: enable the config switch, inject the
+// PC-like state and clear the cooldown. CloseBundleStatsScanWindow() is the
+// matching teardown.
+void StartBundleStatsScanWindow()
+{
+    OHOS::system::SetParameter(ServiceConstants::BMS_SCAN_BUNDLE_STATS_PARAM, "true");
+    SetPcLikeMode(true);
+    ClearStatsPersistedTime();
+}
+
+void SetIdleConditions(bool satisfied)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    if (idleMgr == nullptr) {
+        return;
+    }
+    idleMgr->userUnlockedMap_[TEST_USER_ID] = satisfied;
+    idleMgr->screenLocked_.store(satisfied);
+    idleMgr->powerConnected_.store(satisfied);
+    idleMgr->batterySatisfied_.store(satisfied);
+}
+
+void EndBundleStatsScanWindow()
+{
+    SetIdleConditions(false);
+    ClearStatsPersistedTime();
+    OHOS::system::SetParameter(ServiceConstants::BMS_SCAN_BUNDLE_STATS_PARAM, "false");
+    RestorePcLikeMode();
+}
+
+// Write the given entry into the cloud switch_off_list (with a higher
+// version.txt so the cloud path wins) and return the version directory.
+// Callers remove the directory when done.
+std::string CreateSwitchOffList(const std::string &entry)
+{
+    std::string versionPath =
+        "/data/service/el1/public/update/param_service/install/system/etc/SwitchOffList/";
+    std::filesystem::create_directories(versionPath);
+    std::ofstream vFile(versionPath + "version.txt");
+    vFile << "version=999.0.0.0";
+    vFile.close();
+    std::ofstream sFile(versionPath + "switch_off_list");
+    sFile << entry << std::endl;
+    sFile.close();
+    return versionPath;
+}
 } // namespace
 
 class BmsIdleConditionMgrTest : public testing::Test {
@@ -75,16 +163,30 @@ void BmsIdleConditionMgrTest::SetUp()
         monitor->stopFileCategoryRequested_.store(false);
         monitor->lastFileCategoryScanTimeNs_.store(0);
     }
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    if (idleMgr != nullptr) {
+        idleMgr->isBundleStatsScanActive_.store(false);
+        idleMgr->bundleStatsScanFeatureEnabled_.store(true);
+    }
+    BundleStatsCacheMgr::SetNeedStop(false);
     OHOS::system::SetParameter(ServiceConstants::BMS_RELABEL_PARAM, "false");
     OHOS::system::SetParameter(ServiceConstants::BMS_SCAN_APP_DATA_PARAM, "false");
     OHOS::system::SetParameter(ServiceConstants::BMS_SCAN_FILE_CATEGORY_PARAM, "false");
+    OHOS::system::SetParameter(ServiceConstants::BMS_SCAN_BUNDLE_STATS_PARAM, "false");
     OHOS::system::SetParameter(ServiceConstants::SCAN_APP_DATA_TEST_PARAM, "false");
     OHOS::system::SetParameter(ServiceConstants::SCAN_FILE_CATEGORY_TEST_PARAM, "false");
     OHOS::system::SetParameter(ServiceConstants::LARGE_FILES_REPORT_COOLDOWN_TEST_PARAM, "false");
+    OHOS::system::SetParameter(ServiceConstants::BMS_TEST_STATS_CACHE_DISABLED_PARAM, "false");
+    OHOS::system::SetParameter(ServiceConstants::BMS_TEST_STATS_SCAN_COOLDOWN_DISABLED_PARAM, "false");
+    OHOS::system::SetParameter(ServiceConstants::BMS_TEST_SHARED_UID_PARAM, "false");
+    RestorePcLikeMode();
 }
 
 void BmsIdleConditionMgrTest::TearDown()
 {
+    // late ffrt tasks from a previous case may stamp the cooldown after its
+    // own teardown; forget it so the next case starts clean
+    BundleStatsCacheMgr::ResetForTest();
     auto monitor = DelayedSingleton<AppDataMonitor>::GetInstance();
     if (monitor != nullptr) {
         monitor->isScanning_.store(false);
@@ -94,12 +196,23 @@ void BmsIdleConditionMgrTest::TearDown()
         monitor->stopFileCategoryRequested_.store(false);
         monitor->lastFileCategoryScanTimeNs_.store(0);
     }
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    if (idleMgr != nullptr) {
+        idleMgr->isBundleStatsScanActive_.store(false);
+        idleMgr->bundleStatsScanFeatureEnabled_.store(true);
+    }
+    BundleStatsCacheMgr::SetNeedStop(false);
     OHOS::system::SetParameter(ServiceConstants::BMS_RELABEL_PARAM, "false");
     OHOS::system::SetParameter(ServiceConstants::BMS_SCAN_APP_DATA_PARAM, "false");
     OHOS::system::SetParameter(ServiceConstants::BMS_SCAN_FILE_CATEGORY_PARAM, "false");
+    OHOS::system::SetParameter(ServiceConstants::BMS_SCAN_BUNDLE_STATS_PARAM, "false");
     OHOS::system::SetParameter(ServiceConstants::SCAN_APP_DATA_TEST_PARAM, "false");
     OHOS::system::SetParameter(ServiceConstants::SCAN_FILE_CATEGORY_TEST_PARAM, "false");
     OHOS::system::SetParameter(ServiceConstants::LARGE_FILES_REPORT_COOLDOWN_TEST_PARAM, "false");
+    OHOS::system::SetParameter(ServiceConstants::BMS_TEST_STATS_CACHE_DISABLED_PARAM, "false");
+    OHOS::system::SetParameter(ServiceConstants::BMS_TEST_STATS_SCAN_COOLDOWN_DISABLED_PARAM, "false");
+    OHOS::system::SetParameter(ServiceConstants::BMS_TEST_SHARED_UID_PARAM, "false");
+    RestorePcLikeMode();
 }
 
 /**
@@ -117,6 +230,41 @@ HWTEST_F(BmsIdleConditionMgrTest, CheckRelabelConditions_0100, Function | SmallT
     idleMgr->screenLocked_ = false;
     bool result = idleMgr->CheckRelabelConditions(100);
     EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: CheckBundleStatsScanConditions_0100
+ * @tc.name: Check bundle stats scan conditions
+ * @tc.desc: 1. With every idle condition satisfied the condition passes even
+ *              while the bundle-stats scan is already active: the condition is
+ *              re-checked INSIDE the scan task after activation, so it must
+ *              not contain the self active flag
+ */
+HWTEST_F(BmsIdleConditionMgrTest, CheckBundleStatsScanConditions_0100, Function | SmallTest | Level0)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    ASSERT_NE(idleMgr, nullptr);
+
+    // force every idle condition for user 100
+    idleMgr->userUnlockedMap_[100] = true;
+    idleMgr->screenLocked_ = true;
+    idleMgr->powerConnected_ = true;
+    idleMgr->batterySatisfied_ = true;
+    bool result = idleMgr->CheckBundleStatsScanConditions(100);
+    EXPECT_TRUE(result);
+
+    // simulate the state right after SetIsBundleStatsScanActive inside the
+    // scan task: the recheck must still pass
+    idleMgr->isBundleStatsScanActive_ = true;
+    result = idleMgr->CheckBundleStatsScanConditions(100);
+    EXPECT_TRUE(result);
+    idleMgr->isBundleStatsScanActive_ = false;
+
+    // restore the shared conditions so sibling idle tasks are unaffected
+    idleMgr->userUnlockedMap_[100] = false;
+    idleMgr->screenLocked_ = false;
+    idleMgr->powerConnected_ = false;
+    idleMgr->batterySatisfied_ = false;
 }
 
 /**
@@ -2710,5 +2858,440 @@ HWTEST_F(BmsIdleConditionMgrTest, OnConfigChanged_0300, Function | SmallTest | L
     EXPECT_TRUE(idleMgr->fileCategoryScanFeatureEnabled_.load());
 
     std::filesystem::remove_all(versionPath);
+}
+
+/**
+ * @tc.number: SetIsBundleStatsScanActive_0100
+ * @tc.name: SetIsBundleStatsScanActive sets the flag and resets a stale NeedStop
+ * @tc.desc: 1. no sibling task active
+ *           2. Returns true and sets isBundleStatsScanActive_
+ *           3. A stale NeedStop left true by a previous (already finished)
+ *              window is cleared inside the activation lock, so the late
+ *              interrupt cannot abort the new scan
+ */
+HWTEST_F(BmsIdleConditionMgrTest, SetIsBundleStatsScanActive_0100, Function | SmallTest | Level0)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    ASSERT_NE(idleMgr, nullptr);
+
+    idleMgr->isRelabeling_.store(false);
+    idleMgr->isScanActive_.store(false);
+    idleMgr->isFileCategoryScanActive_.store(false);
+    idleMgr->isBundleStatsScanActive_.store(false);
+    BundleStatsCacheMgr::SetNeedStop(true);
+
+    EXPECT_TRUE(idleMgr->SetIsBundleStatsScanActive());
+    EXPECT_TRUE(idleMgr->isBundleStatsScanActive_.load());
+    EXPECT_FALSE(BundleStatsCacheMgr::NeedStop());
+    idleMgr->isBundleStatsScanActive_.store(false);
+}
+
+/**
+ * @tc.number: SetIsBundleStatsScanActive_0200
+ * @tc.name: SetIsBundleStatsScanActive returns false when already active
+ * @tc.desc: 1. isBundleStatsScanActive_ = true
+ *           2. Returns false
+ */
+HWTEST_F(BmsIdleConditionMgrTest, SetIsBundleStatsScanActive_0200, Function | SmallTest | Level0)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    ASSERT_NE(idleMgr, nullptr);
+
+    idleMgr->isBundleStatsScanActive_.store(true);
+    EXPECT_FALSE(idleMgr->SetIsBundleStatsScanActive());
+    idleMgr->isBundleStatsScanActive_.store(false);
+}
+
+/**
+ * @tc.number: SetIsBundleStatsScanActive_0300
+ * @tc.name: SetIsBundleStatsScanActive re-checks sibling flags under lock
+ * @tc.desc: 1. one of relabel / appdata scan / file category scan is active
+ *           2. Returns false and isBundleStatsScanActive_ stays false
+ */
+HWTEST_F(BmsIdleConditionMgrTest, SetIsBundleStatsScanActive_0300, Function | SmallTest | Level0)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    ASSERT_NE(idleMgr, nullptr);
+
+    idleMgr->isBundleStatsScanActive_.store(false);
+
+    idleMgr->isRelabeling_.store(true);
+    EXPECT_FALSE(idleMgr->SetIsBundleStatsScanActive());
+    EXPECT_FALSE(idleMgr->isBundleStatsScanActive_.load());
+
+    idleMgr->isRelabeling_.store(false);
+    idleMgr->isScanActive_.store(true);
+    EXPECT_FALSE(idleMgr->SetIsBundleStatsScanActive());
+    EXPECT_FALSE(idleMgr->isBundleStatsScanActive_.load());
+
+    idleMgr->isScanActive_.store(false);
+    idleMgr->isFileCategoryScanActive_.store(true);
+    EXPECT_FALSE(idleMgr->SetIsBundleStatsScanActive());
+    EXPECT_FALSE(idleMgr->isBundleStatsScanActive_.load());
+    idleMgr->isFileCategoryScanActive_.store(false);
+}
+
+/**
+ * @tc.number: InterruptScanBundleStats_0100
+ * @tc.name: InterruptScanBundleStats is a no-op when no scan is active
+ * @tc.desc: 1. isBundleStatsScanActive_ = false
+ *           2. NeedStop stays false
+ */
+HWTEST_F(BmsIdleConditionMgrTest, InterruptScanBundleStats_0100, Function | SmallTest | Level0)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    ASSERT_NE(idleMgr, nullptr);
+
+    BundleStatsCacheMgr::SetNeedStop(false);
+    idleMgr->isBundleStatsScanActive_.store(false);
+    idleMgr->InterruptScanBundleStats("test_noop");
+
+    EXPECT_FALSE(BundleStatsCacheMgr::NeedStop());
+}
+
+/**
+ * @tc.number: InterruptScanBundleStats_0200
+ * @tc.name: InterruptScanBundleStats sets NeedStop when scan is active
+ * @tc.desc: 1. isBundleStatsScanActive_ = true
+ *           2. NeedStop becomes true
+ */
+HWTEST_F(BmsIdleConditionMgrTest, InterruptScanBundleStats_0200, Function | SmallTest | Level0)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    ASSERT_NE(idleMgr, nullptr);
+
+    BundleStatsCacheMgr::SetNeedStop(false);
+    idleMgr->isBundleStatsScanActive_.store(true);
+    idleMgr->InterruptScanBundleStats("test_interrupt");
+
+    EXPECT_TRUE(BundleStatsCacheMgr::NeedStop());
+    idleMgr->isBundleStatsScanActive_.store(false);
+    BundleStatsCacheMgr::SetNeedStop(false);
+}
+
+/**
+ * @tc.number: CheckBundleStatsScanConditions_0200
+ * @tc.name: CheckBundleStatsScanConditions fails on each unsatisfied base condition
+ * @tc.desc: 1. all conditions satisfied as the baseline
+ *           2. Flipping userUnlocked / screenLocked / powerConnected /
+ *              batterySatisfied to false each makes the check fail
+ */
+HWTEST_F(BmsIdleConditionMgrTest, CheckBundleStatsScanConditions_0200, Function | SmallTest | Level0)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    ASSERT_NE(idleMgr, nullptr);
+
+    SetIdleConditions(true);
+    idleMgr->isRelabeling_.store(false);
+    idleMgr->isScanActive_.store(false);
+    idleMgr->isFileCategoryScanActive_.store(false);
+    g_taskCounter.store(0);
+    EXPECT_TRUE(idleMgr->CheckBundleStatsScanConditions(TEST_USER_ID));
+
+    idleMgr->userUnlockedMap_[TEST_USER_ID] = false;
+    EXPECT_FALSE(idleMgr->CheckBundleStatsScanConditions(TEST_USER_ID));
+    idleMgr->userUnlockedMap_[TEST_USER_ID] = true;
+
+    idleMgr->screenLocked_.store(false);
+    EXPECT_FALSE(idleMgr->CheckBundleStatsScanConditions(TEST_USER_ID));
+    idleMgr->screenLocked_.store(true);
+
+    idleMgr->powerConnected_.store(false);
+    EXPECT_FALSE(idleMgr->CheckBundleStatsScanConditions(TEST_USER_ID));
+    idleMgr->powerConnected_.store(true);
+
+    idleMgr->batterySatisfied_.store(false);
+    EXPECT_FALSE(idleMgr->CheckBundleStatsScanConditions(TEST_USER_ID));
+
+    // restore the shared conditions so sibling idle tasks are unaffected
+    SetIdleConditions(false);
+}
+
+/**
+ * @tc.number: CheckBundleStatsScanConditions_0300
+ * @tc.name: CheckBundleStatsScanConditions fails while sibling tasks are busy
+ * @tc.desc: 1. all base conditions satisfied
+ *           2. Each busy sibling dimension (task counter, relabel, appdata
+ *              scan, file category scan) makes the check fail
+ */
+HWTEST_F(BmsIdleConditionMgrTest, CheckBundleStatsScanConditions_0300, Function | SmallTest | Level0)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    ASSERT_NE(idleMgr, nullptr);
+
+    SetIdleConditions(true);
+    idleMgr->isRelabeling_.store(false);
+    idleMgr->isScanActive_.store(false);
+    idleMgr->isFileCategoryScanActive_.store(false);
+    g_taskCounter.store(1);
+    EXPECT_FALSE(idleMgr->CheckBundleStatsScanConditions(TEST_USER_ID));
+    g_taskCounter.store(0);
+
+    idleMgr->isRelabeling_.store(true);
+    EXPECT_FALSE(idleMgr->CheckBundleStatsScanConditions(TEST_USER_ID));
+    idleMgr->isRelabeling_.store(false);
+
+    idleMgr->isScanActive_.store(true);
+    EXPECT_FALSE(idleMgr->CheckBundleStatsScanConditions(TEST_USER_ID));
+    idleMgr->isScanActive_.store(false);
+
+    idleMgr->isFileCategoryScanActive_.store(true);
+    EXPECT_FALSE(idleMgr->CheckBundleStatsScanConditions(TEST_USER_ID));
+    idleMgr->isFileCategoryScanActive_.store(false);
+
+    // restore the shared conditions so sibling idle tasks are unaffected
+    SetIdleConditions(false);
+}
+
+/**
+ * @tc.number: CheckRelabelConditions_BundleStatsActive_0100
+ * @tc.name: CheckRelabelConditions returns false when bundle stats scan is active
+ * @tc.desc: 1. all relabel conditions met but isBundleStatsScanActive_ = true
+ *           2. Should return false (mutual exclusion)
+ */
+HWTEST_F(BmsIdleConditionMgrTest, CheckRelabelConditions_BundleStatsActive_0100, Function | SmallTest | Level0)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    ASSERT_NE(idleMgr, nullptr);
+
+    SetIdleConditions(true);
+    idleMgr->isBundleStatsScanActive_.store(true);
+
+    EXPECT_FALSE(idleMgr->CheckRelabelConditions(TEST_USER_ID));
+    idleMgr->isBundleStatsScanActive_.store(false);
+
+    // restore the shared conditions so sibling idle tasks are unaffected
+    SetIdleConditions(false);
+}
+
+/**
+ * @tc.number: CheckScanConditions_BundleStatsActive_0100
+ * @tc.name: CheckScanConditions returns false when bundle stats scan is active
+ * @tc.desc: 1. all scan conditions met but isBundleStatsScanActive_ = true
+ *           2. Should return false (mutual exclusion)
+ */
+HWTEST_F(BmsIdleConditionMgrTest, CheckScanConditions_BundleStatsActive_0100, Function | SmallTest | Level0)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    ASSERT_NE(idleMgr, nullptr);
+
+    SetIdleConditions(true);
+    idleMgr->isRelabeling_.store(false);
+    idleMgr->isScanActive_.store(false);
+    idleMgr->isFileCategoryScanActive_.store(false);
+    idleMgr->isBundleStatsScanActive_.store(true);
+
+    EXPECT_FALSE(idleMgr->CheckScanConditions(TEST_USER_ID));
+    idleMgr->isBundleStatsScanActive_.store(false);
+
+    // restore the shared conditions so sibling idle tasks are unaffected
+    SetIdleConditions(false);
+}
+
+/**
+ * @tc.number: CheckFileCategoryScanConditions_BundleStatsActive_0100
+ * @tc.name: CheckFileCategoryScanConditions returns false when bundle stats scan is active
+ * @tc.desc: 1. all conditions met but isBundleStatsScanActive_ = true
+ *           2. Should return false (mutual exclusion)
+ */
+HWTEST_F(BmsIdleConditionMgrTest, CheckFileCategoryScanConditions_BundleStatsActive_0100, Function | SmallTest | Level0)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    ASSERT_NE(idleMgr, nullptr);
+
+    SetIdleConditions(true);
+    idleMgr->isRelabeling_.store(false);
+    idleMgr->isScanActive_.store(false);
+    idleMgr->isFileCategoryScanActive_.store(false);
+    idleMgr->isBundleStatsScanActive_.store(true);
+
+    EXPECT_FALSE(idleMgr->CheckFileCategoryScanConditions(TEST_USER_ID));
+    idleMgr->isBundleStatsScanActive_.store(false);
+
+    // restore the shared conditions so sibling idle tasks are unaffected
+    SetIdleConditions(false);
+}
+
+/**
+ * @tc.number: TryStartScanBundleStats_0100
+ * @tc.name: TryStartScanBundleStats skips when config disabled
+ * @tc.desc: 1. const.bms.scan_bundle_stats = false
+ *           2. Should return without setting isBundleStatsScanActive_
+ */
+HWTEST_F(BmsIdleConditionMgrTest, TryStartScanBundleStats_0100, Function | SmallTest | Level0)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    ASSERT_NE(idleMgr, nullptr);
+
+    OHOS::system::SetParameter(ServiceConstants::BMS_SCAN_BUNDLE_STATS_PARAM, "false");
+    idleMgr->isBundleStatsScanActive_.store(false);
+    idleMgr->TryStartScanBundleStats();
+
+    EXPECT_FALSE(idleMgr->isBundleStatsScanActive_.load());
+}
+
+/**
+ * @tc.number: TryStartScanBundleStats_0200
+ * @tc.name: TryStartScanBundleStats skips when conditions not met
+ * @tc.desc: 1. config enabled but screen unlocked
+ *           2. Should return without setting isBundleStatsScanActive_
+ */
+HWTEST_F(BmsIdleConditionMgrTest, TryStartScanBundleStats_0200, Function | SmallTest | Level0)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    ASSERT_NE(idleMgr, nullptr);
+
+    OHOS::system::SetParameter(ServiceConstants::BMS_SCAN_BUNDLE_STATS_PARAM, "true");
+    idleMgr->screenLocked_.store(false);
+    idleMgr->isBundleStatsScanActive_.store(false);
+    idleMgr->TryStartScanBundleStats();
+
+    EXPECT_FALSE(idleMgr->isBundleStatsScanActive_.load());
+    OHOS::system::SetParameter(ServiceConstants::BMS_SCAN_BUNDLE_STATS_PARAM, "false");
+}
+
+/**
+ * @tc.number: TryStartScanBundleStats_0300
+ * @tc.name: TryStartScanBundleStats skips while the cooldown is active
+ * @tc.desc: 1. config enabled, all conditions met, PC-like device
+ *           2. A recent completed scan keeps the scan in cooldown
+ *           3. The cooldown precheck returns early, flag stays false
+ */
+HWTEST_F(BmsIdleConditionMgrTest, TryStartScanBundleStats_0300, Function | SmallTest | Level0)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    ASSERT_NE(idleMgr, nullptr);
+
+    StartBundleStatsScanWindow();
+    BundleStatsCacheMgr::MarkScanCompleted();
+    SetIdleConditions(true);
+    idleMgr->isBundleStatsScanActive_.store(false);
+
+    idleMgr->TryStartScanBundleStats();
+    std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
+
+    EXPECT_FALSE(idleMgr->isBundleStatsScanActive_.load());
+
+    EndBundleStatsScanWindow();
+}
+
+/**
+ * @tc.number: TryStartScanBundleStats_0400
+ * @tc.name: TryStartScanBundleStats skips when SetIsBundleStatsScanActive fails
+ * @tc.desc: 1. config enabled, conditions met, cooldown clear
+ *           2. isBundleStatsScanActive_ already true (does not block
+ *              CheckBundleStatsScanConditions — the self flag is intentionally
+ *              excluded so the in-task recheck passes)
+ *           3. SetIsBundleStatsScanActive returns false, no task launched,
+ *              flag stays true (not reset by ScopeGuard since task never started)
+ */
+HWTEST_F(BmsIdleConditionMgrTest, TryStartScanBundleStats_0400, Function | SmallTest | Level0)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    ASSERT_NE(idleMgr, nullptr);
+
+    StartBundleStatsScanWindow();
+    SetIdleConditions(true);
+    idleMgr->isBundleStatsScanActive_.store(true);
+
+    idleMgr->TryStartScanBundleStats();
+    std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
+
+    EXPECT_TRUE(idleMgr->isBundleStatsScanActive_.load());
+
+    idleMgr->isBundleStatsScanActive_.store(false);
+    EndBundleStatsScanWindow();
+}
+
+/**
+ * @tc.number: TryStartScanBundleStats_0500
+ * @tc.name: TryStartScanBundleStats starts task when all gates pass
+ * @tc.desc: 1. config enabled, conditions forced, PC-like device, cooldown clear
+ *           2. If the task launched: ScopeGuard resets isBundleStatsScanActive_
+ *              to false on completion
+ *           3. If buffer/thermal check failed: SetIsBundleStatsScanActive never
+ *              called, flag stays false. Either way, flag must be false
+ */
+HWTEST_F(BmsIdleConditionMgrTest, TryStartScanBundleStats_0500, Function | SmallTest | Level0)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    ASSERT_NE(idleMgr, nullptr);
+
+    StartBundleStatsScanWindow();
+    SetIdleConditions(true);
+    idleMgr->isBundleStatsScanActive_.store(false);
+
+    idleMgr->TryStartScanBundleStats();
+    std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME * 3));
+
+    EXPECT_FALSE(idleMgr->isBundleStatsScanActive_.load());
+
+    EndBundleStatsScanWindow();
+}
+
+/**
+ * @tc.number: OnConfigChanged_0400
+ * @tc.name: OnConfigChanged disables the bundle stats scan via CCM switch
+ * @tc.desc: 1. switch_off_list contains bundle_stats_scan_feature_off
+ *           2. ReloadParam sets bundleStatsScanFeatureEnabled_ to false
+ */
+HWTEST_F(BmsIdleConditionMgrTest, OnConfigChanged_0400, Function | SmallTest | Level0)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    ASSERT_NE(idleMgr, nullptr);
+
+    std::string versionPath = CreateSwitchOffList("bundle_stats_scan_feature_off");
+
+    idleMgr->OnConfigChanged();
+
+    EXPECT_FALSE(idleMgr->bundleStatsScanFeatureEnabled_.load());
+
+    std::filesystem::remove_all(versionPath);
+}
+
+/**
+ * @tc.number: OnConfigChanged_0500
+ * @tc.name: OnConfigChanged keeps the bundle stats scan enabled without the switch
+ * @tc.desc: 1. switch_off_list does not contain bundle_stats_scan_feature_off
+ *           2. ReloadParam sets bundleStatsScanFeatureEnabled_ to true
+ */
+HWTEST_F(BmsIdleConditionMgrTest, OnConfigChanged_0500, Function | SmallTest | Level0)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    ASSERT_NE(idleMgr, nullptr);
+
+    std::string versionPath = CreateSwitchOffList("other_feature_off");
+
+    idleMgr->bundleStatsScanFeatureEnabled_.store(false);
+    idleMgr->OnConfigChanged();
+
+    EXPECT_TRUE(idleMgr->bundleStatsScanFeatureEnabled_.load());
+
+    std::filesystem::remove_all(versionPath);
+}
+
+/**
+ * @tc.number: TryStartScanBundleStats_0600
+ * @tc.name: TryStartScanBundleStats skips when the CCM switch disabled the feature
+ * @tc.desc: 1. config enabled, conditions forced, PC-like device, cooldown clear
+ *           2. bundleStatsScanFeatureEnabled_ = false
+ *           3. The scan never activates
+ */
+HWTEST_F(BmsIdleConditionMgrTest, TryStartScanBundleStats_0600, Function | SmallTest | Level0)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    ASSERT_NE(idleMgr, nullptr);
+
+    StartBundleStatsScanWindow();
+    SetIdleConditions(true);
+    idleMgr->bundleStatsScanFeatureEnabled_.store(false);
+    idleMgr->isBundleStatsScanActive_.store(false);
+
+    idleMgr->TryStartScanBundleStats();
+    std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
+
+    EXPECT_FALSE(idleMgr->isBundleStatsScanActive_.load());
+
+    EndBundleStatsScanWindow();
 }
 } // namespace OHOS

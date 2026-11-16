@@ -45,7 +45,9 @@ public:
     void InterruptRelabel(const std::string stopReason);
     void TryStartScanAppData();
     void InterruptScanAppData(const std::string &stopReason);
+    void InterruptScanBundleStats(const std::string &stopReason);
     void TryStartScanFileCategory();
+    void TryStartScanBundleStats();
     void InterruptScanFileCategory(const std::string &stopReason);
     void OnConfigChanged();
 
@@ -60,6 +62,10 @@ private:
     bool CheckFileCategoryScanConditions(const int32_t userId);
     bool SetIsFileCategoryScanActive();
     void StartFileCategoryScanTask();
+    bool CheckBundleStatsScanConditions(const int32_t userId);
+    bool SetIsBundleStatsScanActive();
+    void StartBundleStatsScanTask();
+    bool IsBundleStatsScanActive();
     void StartScanAppDataTask();
     void ReloadParam();
 
@@ -71,12 +77,14 @@ private:
     std::atomic<bool> featureEnabled_{true};
     std::atomic<bool> scanFeatureEnabled_{true};
     std::atomic<bool> fileCategoryScanFeatureEnabled_{true};
+    std::atomic<bool> bundleStatsScanFeatureEnabled_{true};
     std::atomic<bool> screenLocked_{false};
     std::atomic<bool> powerConnected_{false};
     std::atomic<bool> batterySatisfied_{false};
     std::atomic<bool> isRelabeling_{false};
     std::atomic<bool> isScanActive_{false};
     std::atomic<bool> isFileCategoryScanActive_{false};
+    std::atomic<bool> isBundleStatsScanActive_{false};
     std::atomic<bool> powerConnectedThreadActive_{false};
     std::shared_ptr<IdleConditionListener> idleConditionListener_;
 };

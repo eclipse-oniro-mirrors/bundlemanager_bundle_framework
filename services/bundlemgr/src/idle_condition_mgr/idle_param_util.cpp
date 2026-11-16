@@ -32,6 +32,7 @@ constexpr const char* SWITCH_OFF_LIST = "switch_off_list";
 constexpr const char* RELABEL_FEATURE_OFF = "relabel_feature_off";
 constexpr const char* APP_DATA_SCAN_FEATURE_OFF = "app_data_scan_feature_off";
 constexpr const char* FILE_CATEGORY_SCAN_FEATURE_OFF = "file_category_scan_feature_off";
+constexpr const char* BUNDLE_STATS_SCAN_FEATURE_OFF = "bundle_stats_scan_feature_off";
 // the number of digits extracted from the fixed format string "x.x.x.x"
 constexpr int32_t VERSION_LEN = 4;
 }
@@ -108,6 +109,31 @@ bool IdleParamUtil::IsFileCategoryScanDisabled()
         }
     }
     APP_LOGI_NOFUNC("AppFileCategory file category scan off switch not found");
+    return false;
+}
+
+bool IdleParamUtil::IsBundleStatsScanDisabled()
+{
+    std::string higherVersionPath = GetHigherVersionPath();
+    if (higherVersionPath.empty()) {
+        APP_LOGE_NOFUNC("BundleStats higherVersionPath is empty");
+        return false;
+    }
+    std::string filePath = higherVersionPath + SWITCH_OFF_LIST;
+    std::ifstream inputFile(filePath);
+    if (!inputFile.is_open()) {
+        APP_LOGE_NOFUNC("BundleStats can not open file: %{public}s", filePath.c_str());
+        return false;
+    }
+    std::string line;
+    while (std::getline(inputFile, line)) {
+        Trim(line);
+        if (line == BUNDLE_STATS_SCAN_FEATURE_OFF) {
+            APP_LOGI_NOFUNC("BundleStats off switch found");
+            return true;
+        }
+    }
+    APP_LOGI_NOFUNC("BundleStats off switch not found");
     return false;
 }
 

@@ -1121,6 +1121,12 @@ public:
     bool GetBundleStats(const std::string &bundleName,
         const int32_t userId, std::vector<int64_t> &bundleStats,
         const int32_t appIndex = 0, const uint32_t statFlag = 0) const;
+    // Scan one bundle's stats for the idle scan; the cache layer persists
+    // what it returns. No cache read/write inside.
+    bool ScanBundleStats(const std::string &bundleName,
+        const int32_t userId, std::vector<int64_t> &bundleStats,
+        const int32_t appIndex, int32_t &uid,
+        int64_t *inodeCount = nullptr) const;
     ErrCode BatchGetBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,
         std::vector<BundleStorageStats> &bundleStats) const;
     void GetBundleModuleNames(const std::string &bundleName, std::vector<std::string> &moduleNameList) const;
