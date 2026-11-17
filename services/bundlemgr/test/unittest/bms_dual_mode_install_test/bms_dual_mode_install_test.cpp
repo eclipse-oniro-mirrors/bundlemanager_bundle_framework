@@ -564,6 +564,41 @@ HWTEST_F(BmsDualModeInstallTest, ParseDualModeBundleName_0300, Function | SmallT
     EXPECT_FALSE(DualModeHelper::ParseDualModeBundleName(BUNDLE_NAME, origin));
 }
 
+// ====================== DualModeHelper::GetOriginalBundleName ======================
+
+HWTEST_F(BmsDualModeInstallTest, GetOriginalBundleName_0100, Function | SmallTest | Level0)
+{
+    // dual-mode clone name: parsed back to the original bundle name
+    std::string cloneName = DualModeHelper::GetDualModeBundleName(BUNDLE_NAME);
+    EXPECT_EQ(DualModeHelper::GetOriginalBundleName(cloneName), BUNDLE_NAME);
+}
+
+HWTEST_F(BmsDualModeInstallTest, GetOriginalBundleName_0200, Function | SmallTest | Level0)
+{
+    // plain bundle name: no dual-mode prefix, returned unchanged
+    EXPECT_EQ(DualModeHelper::GetOriginalBundleName(BUNDLE_NAME), BUNDLE_NAME);
+}
+
+HWTEST_F(BmsDualModeInstallTest, GetOriginalBundleName_0300, Function | SmallTest | Level0)
+{
+    // regular clone name (appIndex 1..5): not a dual-mode name, returned unchanged
+    EXPECT_EQ(DualModeHelper::GetOriginalBundleName(CLONE_APP_NAME), CLONE_APP_NAME);
+}
+
+HWTEST_F(BmsDualModeInstallTest, GetOriginalBundleName_0400, Function | SmallTest | Level0)
+{
+    // malformed dual-mode name without the trailing bundle name part: returned unchanged
+    std::string malformed = std::string(ServiceConstants::CLONE_PREFIX) +
+        std::to_string(ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
+    EXPECT_EQ(DualModeHelper::GetOriginalBundleName(malformed), malformed);
+}
+
+HWTEST_F(BmsDualModeInstallTest, GetOriginalBundleName_0500, Function | SmallTest | Level0)
+{
+    // empty name: returned unchanged
+    EXPECT_EQ(DualModeHelper::GetOriginalBundleName(""), "");
+}
+
 // ====================== DualModeHelper::IsDualModeCloneKey ======================
 
 HWTEST_F(BmsDualModeInstallTest, IsDualModeCloneKey_0100, Function | SmallTest | Level0)

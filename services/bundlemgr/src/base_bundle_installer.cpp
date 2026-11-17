@@ -454,9 +454,13 @@ ErrCode BaseBundleInstaller::InstallBundleByBundleName(
 
     int32_t uid = Constants::INVALID_UID;
     ErrCode result = ProcessInstallBundleByBundleName(bundleName, installParam, uid);
+    std::string originalName = bundleName;
+    if (DualModeHelper::IsDualModeDevice()) {
+        originalName = DualModeHelper::GetOriginalBundleName(bundleName);
+    }
     std::map<std::string, std::string> tokenIdMetadataInfos;
     tokenIdMetadataInfos[ServiceConstants::META_KEEP_TOKEN_ID_KEY] = isKeepTokenId_ ? BMS_TRUE : BMS_FALSE;
-    if (installParam.needSendEvent && dataMgr_ && !bundleName.empty()) {
+    if (installParam.needSendEvent && dataMgr_ && !originalName.empty()) {
         NotifyBundleEvents installRes = {
             .type = NotifyType::INSTALL,
             .resultCode = result,
@@ -465,7 +469,7 @@ ErrCode BaseBundleInstaller::InstallBundleByBundleName(
             .bundleType = static_cast<int32_t>(bundleType_),
             .atomicServiceModuleUpgrade = atomicServiceModuleUpgrade_,
             .userId = userId_,
-            .bundleName = bundleName,
+            .bundleName = originalName,
             .modulePackage = moduleName_,
             .appIdentifier = bundleAppIdentifier_,
             .appDistributionType = appDistributionType_,
