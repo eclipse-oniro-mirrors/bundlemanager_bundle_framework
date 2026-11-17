@@ -516,6 +516,12 @@ ohos_shared_library("libbms") {
     defines += [ "HISYSEVENT_ENABLE" ]
   }
 
+  if (defined(global_parts_info) &&
+      defined(global_parts_info.security_security_guard)) {
+    external_deps += [ "security_guard:libsg_collect_sdk" ]
+    defines += [ "SECURITY_GUARD_ENABLE" ]
+  }
+
   if (current_cpu == "arm64") {
     defines += [ "USE_EXTENSION_DATA" ]
   }

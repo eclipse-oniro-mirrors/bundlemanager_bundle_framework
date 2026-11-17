@@ -90,6 +90,7 @@
                 "resource_schedule_service",
                 "samgr",
                 "sandbox_manager",
+                "security_guard",
                 "selinux",
                 "selinux_adapter",
                 "syscap_codec",

@@ -20,6 +20,7 @@
 #include "app_log_wrapper.h"
 #include "bundle_util.h"
 #include "bundle_file_util.h"
+#include "security_audit_reporter.h"
 #ifdef HISYSEVENT_ENABLE
 #include "inner_event_report.h"
 #endif
@@ -71,6 +72,13 @@ void EventReport::SendBundleSystemEvent(BundleEventType bundleEventType, const E
             }
         }
         EventInfo info = ProcessIsIntercepted(eventInfo);
+        if (info.isIntercepted) {
+            bool auditRet = ReportToSecurityAudit(bundleEventType, info);
+            APP_LOGI("ReportToSecurityAudit %{public}s, bundle=%{public}s errCode=%{public}d "
+                "userId=%{public}d callingUid=%{public}d",
+                auditRet ? "succeeded" : "failed", info.bundleName.c_str(), info.errCode,
+                info.userId, info.callingUid);
+        }
         SendSystemEvent(bmsEventType, info);
         return;
     }
@@ -364,6 +372,11 @@ void EventReport::SendLargeFilesMonitorEvent(const std::string &bundleName,
     eventInfo.filesDataSize = filesDataSize;
     eventInfo.databaseDataSize = databaseDataSize;
     EventReport::SendSystemEvent(BMSEventType::BUNDLE_LARGE_FILES_MONITOR, eventInfo);
+}
+
+bool EventReport::ReportToSecurityAudit(BundleEventType bundleEventType, const EventInfo& eventInfo)
+{
+    return SecurityAuditReporter::Report(bundleEventType, eventInfo);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
