@@ -127,6 +127,14 @@ bool RdbDataManager::QueryAllData(std::map<std::string, std::string> &datas)
     return true;
 }
 
+bool RdbDataManager::QueryAllData(std::map<std::string, std::string> &datas, bool allowEmpty)
+{
+    if (allowEmpty) {
+        datas.clear();
+    }
+    return QueryAllData(datas);
+}
+
 bool RdbDataManager::CreateTable()
 {
     return true;

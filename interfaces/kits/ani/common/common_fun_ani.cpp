@@ -887,6 +887,9 @@ ani_object CommonFunAni::ConvertApplicationInfo(ani_env* env, const ApplicationI
     ani_object flags = BoxValue(env, appInfo.applicationFlags);
     RETURN_NULL_IF_NULL(flags);
 
+    ani_object keepDataOnUninstall = BoxValue(env, BoolToAniBoolean(appInfo.keepDataOnUninstall));
+    RETURN_NULL_IF_NULL(keepDataOnUninstall);
+
     ani_value args[] = {
         { .r = name },
         { .r = description },
@@ -922,6 +925,7 @@ ani_object CommonFunAni::ConvertApplicationInfo(ani_env* env, const ApplicationI
         { .r = flags },
         { .r = EnumUtils::EnumNativeToETS_BundleManager_ApplicationReservedFlag(env,
             static_cast<int32_t>(appInfo.applicationReservedFlag)) },
+        { .r = keepDataOnUninstall },
     };
     static const std::string ctorSig = SignatureBuilder()
         .AddClass(CommonFunAniNS::CLASSNAME_STRING)                    // name: string
@@ -957,6 +961,7 @@ ani_object CommonFunAni::ConvertApplicationInfo(ani_env* env, const ApplicationI
         .AddClass(CommonFunAniNS::CLASSNAME_BOOLEAN)                   // cloudStructuredDataSyncEnabled?: boolean
         .AddClass(CommonFunAniNS::CLASSNAME_INT)                       // flags?: int
         .AddClass(CommonFunAniNS::CLASSNAME_BUNDLEMANAGER_APPLICATIONRESERVEDFLAG)
+        .AddClass(CommonFunAniNS::CLASSNAME_BOOLEAN)                   // keepDataOnUninstall?: boolean
         .BuildSignatureDescriptor();
     return CreateNewObjectByClassV2(env, CLASSNAME_APPLICATION_INFO_INNER, ctorSig, args);
 }
@@ -1802,6 +1807,28 @@ ani_object CommonFunAni::ConvertAppClonePreference(ani_env* env, const AppCloneP
         .AddClass(CommonFunAniNS::CLASSNAME_BUNDLEMANAGER_APP_CLONE_PREFERENCE_MODE)  // mode
         .BuildSignatureDescriptor();
     return CreateNewObjectByClassV2(env, CLASSNAME_APP_CLONE_PREFERENCE_INNER, ctorSig, args);
+}
+
+bool CommonFunAni::IsArray(ani_env* env, ani_object object, bool& isArray)
+{
+    isArray = false;
+    RETURN_FALSE_IF_NULL(env);
+    if (object == nullptr) {
+        APP_LOGE_NOFUNC("object is null");
+        return false;
+    }
+    ani_class arrayCls = nullptr;
+    if (env->FindClass(CommonFunAniNS::CLASSNAME_ARRAY, &arrayCls) != ANI_OK || arrayCls == nullptr) {
+        APP_LOGE_NOFUNC("find array class failed");
+        return false;
+    }
+    ani_boolean isInstance = ANI_FALSE;
+    if (env->Object_InstanceOf(object, arrayCls, &isInstance) != ANI_OK) {
+        APP_LOGE_NOFUNC("check array instance failed");
+        return false;
+    }
+    isArray = isInstance == ANI_TRUE;
+    return true;
 }
 
 bool CommonFunAni::ParseAppClonePreference(ani_env* env, ani_object object, AppClonePreference& preference)

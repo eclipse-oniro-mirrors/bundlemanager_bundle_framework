@@ -199,6 +199,8 @@ public:
             Security::AccessToken::MultipleMode mode
                 = Security::AccessToken::MultipleMode::DEFAULT_OR_MAIN_MODE);
 
+        int32_t CreateSessionByInstalledBundle(const InnerBundleInfo &info, int32_t userId);
+
         int32_t VerifyPermission(const std::string &bundleName, const std::string &permission,
             int32_t userId) const;
 
@@ -231,6 +233,7 @@ public:
         bool committed_ = false;
         bool identityPrepared_ = false;
         std::vector<Security::Verify::HapVerifyResult> hapVerifyResults_;
+        std::map<std::string, std::string> createdHapPathMap_;
     };
 
     enum class TokenDeleteType {

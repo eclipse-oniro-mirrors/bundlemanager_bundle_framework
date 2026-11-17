@@ -94,6 +94,7 @@ const char* JSON_KEY_STANDBY_IS_PRIVACY_SENSITIVE = "isPrivacySensitive";
 const char* JSON_KEY_TRIGGER_TYPES = "triggerTypes";
 const char* JSON_KEY_IS_COLOR_MODE_REFRESH_ENABLED = "isColorModeRefreshEnabled";
 const char* JSON_KEY_TINTING_SUPPORTED = "enableTint";
+const char* JSON_KEY_ENABLE_REMINDER_AGENT_REFRESH = "enableReminderAgentRefresh";
 }  // namespace
 
 FormInfo::FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormInfo &formInfo)
@@ -187,6 +188,7 @@ void FormInfo::SetInfoByFormExt(const ExtensionFormInfo &formInfo)
     standby.isPrivacySensitive = formInfo.standby.isPrivacySensitive;
     isColorModeRefreshEnabled = formInfo.isColorModeRefreshEnabled;
     enableTint = formInfo.enableTint;
+    enableReminderAgentRefresh = formInfo.enableReminderAgentRefresh;
 }
 
 bool FormInfo::ReadCustomizeData(Parcel &parcel)
@@ -338,7 +340,8 @@ bool FormInfo::ReadFromParcel(Parcel &parcel)
     standby.isAdapted = parcel.ReadBool();
     standby.isPrivacySensitive = parcel.ReadBool();
     isColorModeRefreshEnabled = parcel.ReadBool();
-    enableTint = parcel.ReadBool();
+    enableTint = static_cast<BoolEnum>(parcel.ReadInt8());
+    enableReminderAgentRefresh = parcel.ReadBool();
     return true;
 }
 
@@ -466,7 +469,8 @@ bool FormInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, standby.isAdapted);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, standby.isPrivacySensitive);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isColorModeRefreshEnabled);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, enableTint);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int8, parcel, static_cast<int8_t>(enableTint));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, enableReminderAgentRefresh);
     return true;
 }
 
@@ -571,8 +575,11 @@ void to_json(nlohmann::json &jsonObject, const FormInfo &formInfo)
         {JSON_KEY_SUPPORT_DEVICE_PERFORMANCE_CLASSES, formInfo.supportDevicePerformanceClasses},
         {JSON_KEY_STANDBY, formInfo.standby},
         {JSON_KEY_IS_COLOR_MODE_REFRESH_ENABLED, formInfo.isColorModeRefreshEnabled},
-        {JSON_KEY_TINTING_SUPPORTED, formInfo.enableTint}
+        {JSON_KEY_ENABLE_REMINDER_AGENT_REFRESH, formInfo.enableReminderAgentRefresh}
     };
+    if (formInfo.enableTint != BoolEnum::BOOL_UNSPECIFIED) {
+        jsonObject[JSON_KEY_TINTING_SUPPORTED] = (formInfo.enableTint == BoolEnum::BOOL_TRUE);
+    }
 }
 
 void from_json(const nlohmann::json &jsonObject, FormCustomizeData &customizeDatas)
@@ -1080,10 +1087,16 @@ void from_json(const nlohmann::json &jsonObject, FormInfo &formInfo)
         formInfo.isColorModeRefreshEnabled,
         false,
         parseResult);
-    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+    BMSJsonUtil::GetBoolEnumValueIfFindKey(jsonObject,
         jsonObjectEnd,
         JSON_KEY_TINTING_SUPPORTED,
         formInfo.enableTint,
+        false,
+        parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_ENABLE_REMINDER_AGENT_REFRESH,
+        formInfo.enableReminderAgentRefresh,
         false,
         parseResult);
     if (parseResult != ERR_OK) {

@@ -170,7 +170,8 @@ ErrCode RdbDataManager::GetRdbStoreFromNative()
     int32_t rebuildCode = rdbStore_->GetRebuilt(rebuildType);
     if (isNewDb || rebuildType == NativeRdb::RebuiltType::REPAIRED
         || rebuildType == NativeRdb::RebuiltType::REBUILT) {
-        APP_LOGI("rdb repaired or rebuilt, reset rdb file");
+        APP_LOGI("rdb: %{public}s is new or buildType: %{public}d, reset rdb", bmsRdbConfig_.dbName.c_str(),
+            static_cast<int32_t>(rebuildType));
         InstalldClient::GetInstance()->ResetBmsDBSecurity();
     }
     bool isNeedRebuildDb = false;
@@ -179,6 +180,10 @@ ErrCode RdbDataManager::GetRdbStoreFromNative()
         isNeedRebuildDb = RdbIntegrityCheckNeedRestore();
         isInitial_ = true;
         needIntegrityCheck_ = false;
+        if (isNeedRebuildDb && (rdbStore_->Restore("") == NativeRdb::E_OK)) {
+            APP_LOGI("db %{public}s is restored by backup rdb", bmsRdbConfig_.dbName.c_str());
+            isNeedRebuildDb = false;
+        }
         if (!isNeedRebuildDb && RdbRecoverManager::IsCorruptionDetected(bmsRdbConfig_.dbName)) {
             APP_LOGI("db %{public}s is healthy again, resume serving",
                 bmsRdbConfig_.dbName.c_str());
@@ -592,7 +597,15 @@ std::shared_ptr<NativeRdb::ResultSet> RdbDataManager::QueryData(
 
 bool RdbDataManager::QueryAllData(std::map<std::string, std::string> &datas)
 {
+    return QueryAllData(datas, false);
+}
+
+bool RdbDataManager::QueryAllData(std::map<std::string, std::string> &datas, bool allowEmpty)
+{
     APP_LOGD("QueryAllData start");
+    if (allowEmpty) {
+        datas.clear();
+    }
     ErrCode ret = ERR_OK;
     auto rdbStore = GetRdbStore(ret);
     if (rdbStore == nullptr) {
@@ -616,26 +629,42 @@ bool RdbDataManager::QueryAllData(std::map<std::string, std::string> &datas)
     }
     ScopeGuard stateGuard([&] { absSharedResultSet->Close(); });
 
-    if (absSharedResultSet->GoToFirstRow() != NativeRdb::E_OK) {
+    return ReadAllDataFromResultSet(absSharedResultSet, datas, allowEmpty);
+}
+
+bool RdbDataManager::ReadAllDataFromResultSet(const std::shared_ptr<NativeRdb::ResultSet> &resultSet,
+    std::map<std::string, std::string> &datas, bool allowEmpty)
+{
+    auto queryRet = resultSet->GoToFirstRow();
+    if (allowEmpty && queryRet == NativeRdb::E_ROW_OUT_RANGE) {
+        return true;
+    }
+    if (queryRet != NativeRdb::E_OK) {
         APP_LOGE("GoToFirstRow failed");
         return false;
     }
 
     do {
         std::string key;
-        if (absSharedResultSet->GetString(BMS_KEY_INDEX, key) != NativeRdb::E_OK) {
+        if (resultSet->GetString(BMS_KEY_INDEX, key) != NativeRdb::E_OK) {
             APP_LOGE("GetString key failed");
             return false;
         }
 
         std::string value;
-        if (absSharedResultSet->GetString(BMS_VALUE_INDEX, value) != NativeRdb::E_OK) {
+        if (resultSet->GetString(BMS_VALUE_INDEX, value) != NativeRdb::E_OK) {
             APP_LOGE("GetString value failed");
             return false;
         }
 
         datas.emplace(key, value);
-    } while (absSharedResultSet->GoToNextRow() == NativeRdb::E_OK);
+        queryRet = resultSet->GoToNextRow();
+    } while (queryRet == NativeRdb::E_OK);
+    if (allowEmpty && queryRet != NativeRdb::E_ROW_OUT_RANGE) {
+        APP_LOGE("GoToNextRow failed, ret: %{public}d", queryRet);
+        datas.clear();
+        return false;
+    }
     return !datas.empty();
 }
 

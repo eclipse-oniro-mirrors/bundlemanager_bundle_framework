@@ -75,6 +75,7 @@ enum OTAFlag : uint32_t {
     CHECK_PRINT_SERVICE_DIR = 0x10000000,
     MIGRATE_SKILL_DIR = 0x20000000,
     MIGRATE_UID_TO_ATM = 0x40000000,
+    UPDATE_KEEP_DATA_ON_UNINSTALL = 0x00000002,
 };
 
 enum class ScanResultCode : uint8_t {
@@ -781,13 +782,10 @@ private:
     static std::string GetOldSystemFingerprint();
     bool GetSystemParameter(const std::string &key, std::string &value);
     void SaveSystemFingerprint();
-    // BOPD cleanup recovery flag (bms_param.bmsCleanRecovery, written by OnClean). The OTA block reads it into
-    // cleanupRecoveryFlagSet_; the same-version branch uses it to force updateBundle for pre-install apps. The flag
-    // row and the member are reset after OnBundleRebootStart completes.
+    // Cleanup recovery flag (bms_param.bmsCleanRecovery, written by OnClean).
     bool IsCleanupRecoveryFlagSet();
     void ClearCleanupRecoveryFlag();
-    // Resets the in-memory member and clears the DB row when the flag was set, so a later real OTA
-    // does not re-trigger the same-version reinstall.
+    // Clears the DB row and resets the member so a later real OTA does not re-trigger.
     void ClearCleanupRecoveryIfNeeded();
     bool cleanupRecoveryFlagSet_ = false;
     void HandlePreInstallException(bool needDeleteRecord = true);

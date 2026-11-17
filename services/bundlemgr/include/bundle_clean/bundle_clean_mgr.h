@@ -27,30 +27,21 @@ namespace AppExecFwk {
 
 class RdbDataManager;
 
-// Selective BMS data cleanup in BOPD mode.
-// Dispatched via the SA clean framework OnExtension("clean") (see BundleMgrService::OnExtension). It accesses the
-// mirror bmsdb.db under /mnt/data_mirror directly, deletes the bms_param KEY='fingerprint' row so that
-// GetOldSystemFingerprint() returns empty and IsSystemFingerprintChanged() is true on normal boot (entering the
-// existing system-upgrade path), and writes the bms_param flag bmsCleanRecovery=true. The flag is read by
-// bundle_mgr_service_event_handler.cpp in the OTA same-version branch to force pre-install same-version reinstall.
-// Constraints: do not delete the db file, drop tables, delete other KV rows, or modify installed_bundle; do not add
-// privileged raw file operations in the Foundation process.
+// Selective BMS data cleanup in cleanup mode.
+// Deletes the bms_param fingerprint row and writes the bmsCleanRecovery flag on the mirror bmsdb.
 class BundleCleanMgr : public DelayedSingleton<BundleCleanMgr> {
 public:
     BundleCleanMgr();
     ~BundleCleanMgr();
 
-    // SA clean callback entry. The cleanup content is decided by BMS (delete the bms_param.fingerprint row and write
-    // the bmsCleanRecovery flag) and does not depend on caller parcel args. Returns ERR_OK(0) on success.
+    // SA clean callback entry. Returns ERR_OK(0) on success.
     ErrCode OnClean();
 
 private:
-    // Delete the bms_param KEY='fingerprint' row on the mirror bmsdb. The row is deleted (not written empty, since
-    // SaveBmsParam rejects empty values); the table, db file, and other rows are left intact.
+    // Delete the bms_param KEY='fingerprint' row on the mirror bmsdb.
     ErrCode CleanFingerprint();
 
-    // Write KEY='bmsCleanRecovery' VALUE='true' to the bms_param table on the mirror bmsdb. Read by event_handler
-    // on normal boot to force pre-install updateBundle in the same-version branch; cleared after the scan completes.
+    // Write KEY='bmsCleanRecovery' VALUE='true' to the bms_param table on the mirror bmsdb.
     ErrCode SetCleanupRecoveryFlag();
 
     // Build an isolated RdbDataManager instance on the mirror dbPath; tableName selects bms_param.

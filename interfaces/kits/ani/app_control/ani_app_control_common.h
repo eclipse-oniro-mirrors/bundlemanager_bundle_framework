@@ -29,10 +29,13 @@ public:
     static ani_object ConvertDisposedRuleConfiguration(
         ani_env* env, const DisposedRuleConfiguration& disposedRuleConfiguration);
     static ani_object ConvertUninstallDisposedRule(ani_env* env, const UninstallDisposedRule& uninstallDisposedRule);
+    static ani_object ConvertRecoverDisposedRule(ani_env* env, const RecoverDisposedRule& recoverDisposedRule);
     static bool ParseWantWithoutVerification(ani_env* env, ani_object object, Want& want);
     static bool ParseDisposedRule(ani_env* env, ani_object object, DisposedRule& disposedRule);
     static bool ParseUninstallDisposedRule(ani_env* env,
         ani_object object, UninstallDisposedRule& uninstallDisposedRule);
+    static bool ParseRecoverDisposedRule(ani_env* env,
+        ani_object object, RecoverDisposedRule& recoverDisposedRule);
 };
 } // namespace AppExecFwk
 } // namespace OHOS

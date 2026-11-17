@@ -111,6 +111,16 @@ public:
     ErrCode DeleteUninstallDisposedRule(const std::string &callerName, const std::string &appIdentifier,
         int32_t appIndex, int32_t userId);
 
+    ErrCode SetRecoverDisposedRule(const std::string &callerName, const RecoverDisposedRule& rule,
+        int32_t userId);
+
+    ErrCode GetRecoverDisposedRule(const std::string &callingName, int32_t userId, RecoverDisposedRule& rule);
+
+    ErrCode GetRecoverDisposedRuleByUserId(int32_t userId, RecoverDisposedRule& rule,
+        std::string& callerName, int64_t& timeStamp);
+
+    ErrCode DeleteRecoverDisposedRule(const std::string &callingName, int32_t userId);
+
     ErrCode DeleteAllDisposedRulesForUser(int32_t userId);
 
     ErrCode UpdateAppControlAppId(const std::vector<std::string> &oldAppIdList, const std::string &newAppId);

@@ -33,6 +33,12 @@ enum class FormsRenderingMode : int8_t {
     SINGLE_COLOR = 2
 };
 
+enum class BoolEnum : int8_t {
+    BOOL_UNSPECIFIED = -1,
+    BOOL_FALSE = 0,
+    BOOL_TRUE = 1,
+};
+
 struct FormCustomizeData {
     std::string name;
     std::string value;

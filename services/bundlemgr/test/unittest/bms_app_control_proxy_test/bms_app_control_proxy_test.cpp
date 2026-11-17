@@ -1054,6 +1054,97 @@ HWTEST_F(BmsAppControlProxyTest, DeleteUninstallDisposedRule_0200, Function | Me
 }
 
 /**
+ * @tc.number: SetRecoverDisposedRule_0100
+ * @tc.name: test the SetRecoverDisposedRule
+ * @tc.desc: 1. system running normally
+ *           2. test SetRecoverDisposedRule
+ */
+HWTEST_F(BmsAppControlProxyTest, SetRecoverDisposedRule_0100, Function | MediumTest | Level1)
+{
+    AppControlProxy appControlProxy(nullptr);
+    RecoverDisposedRule rule;
+    int32_t userId = 1234;
+    auto result = appControlProxy.SetRecoverDisposedRule(rule, userId);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: SetRecoverDisposedRule_0200
+ * @tc.name: test the SetRecoverDisposedRule
+ * @tc.desc: 1. system running normally
+ *           2. test SetRecoverDisposedRule
+ */
+HWTEST_F(BmsAppControlProxyTest, SetRecoverDisposedRule_0200, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> mockRemoteObject = new MockRemoteObject();
+    AppControlProxy appControlProxy(mockRemoteObject);
+    RecoverDisposedRule rule;
+    int32_t userId = 100;
+    auto result = appControlProxy.SetRecoverDisposedRule(rule, userId);
+    EXPECT_EQ(result, ERR_OK);
+}
+
+/**
+ * @tc.number: GetRecoverDisposedRule_0100
+ * @tc.name: test the GetRecoverDisposedRule
+ * @tc.desc: 1. system running normally
+ *           2. test GetRecoverDisposedRule
+ */
+HWTEST_F(BmsAppControlProxyTest, GetRecoverDisposedRule_0100, Function | MediumTest | Level1)
+{
+    AppControlProxy appControlProxy(nullptr);
+    RecoverDisposedRule rule;
+    int32_t userId = 1234;
+    auto result = appControlProxy.GetRecoverDisposedRule(userId, rule);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: GetRecoverDisposedRule_0200
+ * @tc.name: test the GetRecoverDisposedRule
+ * @tc.desc: 1. system running normally
+ *           2. test GetRecoverDisposedRule with empty reply
+ */
+HWTEST_F(BmsAppControlProxyTest, GetRecoverDisposedRule_0200, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> mockRemoteObject = new MockRemoteObject();
+    AppControlProxy appControlProxy(mockRemoteObject);
+    RecoverDisposedRule rule;
+    int32_t userId = 100;
+    auto result = appControlProxy.GetRecoverDisposedRule(userId, rule);
+    EXPECT_EQ(result, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: DeleteRecoverDisposedRule_0100
+ * @tc.name: test the DeleteRecoverDisposedRule
+ * @tc.desc: 1. system running normally
+ *           2. test DeleteRecoverDisposedRule
+ */
+HWTEST_F(BmsAppControlProxyTest, DeleteRecoverDisposedRule_0100, Function | MediumTest | Level1)
+{
+    AppControlProxy appControlProxy(nullptr);
+    int32_t userId = 1234;
+    auto result = appControlProxy.DeleteRecoverDisposedRule(userId);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: DeleteRecoverDisposedRule_0200
+ * @tc.name: test the DeleteRecoverDisposedRule
+ * @tc.desc: 1. system running normally
+ *           2. test DeleteRecoverDisposedRule
+ */
+HWTEST_F(BmsAppControlProxyTest, DeleteRecoverDisposedRule_0200, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> mockRemoteObject = new MockRemoteObject();
+    AppControlProxy appControlProxy(mockRemoteObject);
+    int32_t userId = 100;
+    auto result = appControlProxy.DeleteRecoverDisposedRule(userId);
+    EXPECT_EQ(result, ERR_OK);
+}
+
+/**
  * @tc.number: SetDisposedRules_0100
  * @tc.name: test the SetDisposedRules
  * @tc.desc: 1. system running normally

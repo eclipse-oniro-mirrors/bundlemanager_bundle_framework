@@ -103,6 +103,25 @@ static void AniDeleteUninstallDisposedRule(ani_env* env, ani_string aniAppIdenti
     BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, DELETE_UNINSTALL_DISPOSED_RULE, "");
 }
 
+static void AniSetRecoverDisposedRule(ani_env* env, ani_object aniRule)
+{
+    APP_LOGI("AppControl not supported");
+    BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, SET_RECOVER_DISPOSED_RULE, "");
+}
+
+static ani_object AniGetRecoverDisposedRule(ani_env* env)
+{
+    APP_LOGI("AppControl not supported");
+    BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, GET_RECOVER_DISPOSED_RULE, "");
+    return nullptr;
+}
+
+static void AniDeleteRecoverDisposedRule(ani_env* env)
+{
+    APP_LOGI("AppControl not supported");
+    BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, DELETE_RECOVER_DISPOSED_RULE, "");
+}
+
 static void SetDisposedRules(ani_env* env, ani_object aniDisposedRuleConfigurations)
 {
     APP_LOGI("AppControl not supported");
@@ -141,6 +160,12 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
             reinterpret_cast<void*>(AniGetUninstallDisposedRule) },
         ani_native_function { "deleteUninstallDisposedRuleNative", nullptr,
             reinterpret_cast<void*>(AniDeleteUninstallDisposedRule) },
+        ani_native_function { "setRecoverDisposedRuleNative", nullptr,
+            reinterpret_cast<void*>(AniSetRecoverDisposedRule) },
+        ani_native_function { "getRecoverDisposedRuleNative", nullptr,
+            reinterpret_cast<void*>(AniGetRecoverDisposedRule) },
+        ani_native_function { "deleteRecoverDisposedRuleNative", nullptr,
+            reinterpret_cast<void*>(AniDeleteRecoverDisposedRule) },
         ani_native_function { "setDisposedRules", nullptr, reinterpret_cast<void*>(SetDisposedRules) },
     };
 

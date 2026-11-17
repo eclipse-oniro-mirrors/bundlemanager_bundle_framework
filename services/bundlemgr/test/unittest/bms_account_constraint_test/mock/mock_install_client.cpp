@@ -519,6 +519,11 @@ ErrCode InstalldClient::AddCertAndEnableKey(const std::string &certPath, const s
     return ERR_OK;
 }
 
+ErrCode InstalldClient::GetEnterpriseCertInfo(const std::string &certPath, EnterpriseCertInfo &certInfo)
+{
+    return ERR_OK;
+}
+
 ErrCode InstalldClient::SetEncryptionPolicy(const EncryptionParam &encryptionParam, std::string &keyId)
 {
     if (retIndex >= 0 && retIndex < static_cast<int32_t>(retList.size())) {

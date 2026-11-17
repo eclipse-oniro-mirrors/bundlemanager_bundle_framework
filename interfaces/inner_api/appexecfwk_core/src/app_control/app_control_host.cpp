@@ -137,6 +137,12 @@ int AppControlHost::OnRemoteRequest(
             return HandleGetUninstallDisposedRule(data, reply);
         case static_cast<uint32_t>(AppControlManagerInterfaceCode::DELETE_UNINSTALL_DISPOSED_RULE):
             return HandleDeleteUninstallDisposedRule(data, reply);
+        case static_cast<uint32_t>(AppControlManagerInterfaceCode::SET_RECOVER_DISPOSED_RULE):
+            return HandleSetRecoverDisposedRule(data, reply);
+        case static_cast<uint32_t>(AppControlManagerInterfaceCode::GET_RECOVER_DISPOSED_RULE):
+            return HandleGetRecoverDisposedRule(data, reply);
+        case static_cast<uint32_t>(AppControlManagerInterfaceCode::DELETE_RECOVER_DISPOSED_RULE):
+            return HandleDeleteRecoverDisposedRule(data, reply);
         case static_cast<uint32_t>(AppControlManagerInterfaceCode::GET_DISPOSED_RULES):
             return HandleGetDisposedRules(data, reply);
         case static_cast<uint32_t>(AppControlManagerInterfaceCode::GET_ALL_DISPOSED_RULES_BY_SETTER):
@@ -709,6 +715,51 @@ ErrCode AppControlHost::HandleDeleteUninstallDisposedRule(MessageParcel& data, M
     int32_t userId = data.ReadInt32();
     int32_t appIndex = data.ReadInt32();
     ErrCode ret = DeleteUninstallDisposedRule(appIdentifier, appIndex, userId);
+    if (!reply.WriteInt32(ret)) {
+        LOG_E(BMS_TAG_DEFAULT, "write ret failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode AppControlHost::HandleSetRecoverDisposedRule(MessageParcel& data, MessageParcel& reply)
+{
+    std::unique_ptr<RecoverDisposedRule> recoverDisposedRule(data.ReadParcelable<RecoverDisposedRule>());
+    if (recoverDisposedRule == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "ReadParcelable<RecoverDisposedRule> failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    int32_t userId = data.ReadInt32();
+    ErrCode ret = SetRecoverDisposedRule(*recoverDisposedRule, userId);
+    if (!reply.WriteInt32(ret)) {
+        LOG_E(BMS_TAG_DEFAULT, "write ret failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode AppControlHost::HandleGetRecoverDisposedRule(MessageParcel& data, MessageParcel& reply)
+{
+    int32_t userId = data.ReadInt32();
+    RecoverDisposedRule rule;
+    ErrCode ret = GetRecoverDisposedRule(userId, rule);
+    if (!reply.WriteInt32(ret)) {
+        LOG_E(BMS_TAG_DEFAULT, "write ret failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
+        if (!reply.WriteParcelable(&rule)) {
+            LOG_E(BMS_TAG_DEFAULT, "write failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode AppControlHost::HandleDeleteRecoverDisposedRule(MessageParcel& data, MessageParcel& reply)
+{
+    int32_t userId = data.ReadInt32();
+    ErrCode ret = DeleteRecoverDisposedRule(userId);
     if (!reply.WriteInt32(ret)) {
         LOG_E(BMS_TAG_DEFAULT, "write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;

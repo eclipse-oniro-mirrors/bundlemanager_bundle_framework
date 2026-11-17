@@ -30,6 +30,8 @@ const char* const KEY_DEVICE_MODE_DISTRIBUTION_POLICY = "deviceModeDistributionP
 const char* const KEY_EXTENSION_DIRS = "extensionDirs";
 const char* const KEY_MODULE_NAMES = "moduleNames";
 const char* const KEY_CHECK_BY_SPM = "checkBySpm_";
+const char* const KEY_DEVELOPER_ID = "developerId";
+const char* const KEY_ASSET_ACCESS_GROUPS = "assetAccessGroups";
 } // namespace
 
 void to_json(nlohmann::json& jsonObject, const UninstallDataUserInfo& uninstallDataUserInfo)
@@ -53,6 +55,8 @@ void to_json(nlohmann::json& jsonObject, const UninstallBundleInfo& uninstallBun
         {KEY_DEVICE_MODE_DISTRIBUTION_POLICY, uninstallBundleInfo.deviceModeDistributionPolicy},
         {KEY_EXTENSION_DIRS, uninstallBundleInfo.extensionDirs},
         {KEY_MODULE_NAMES, uninstallBundleInfo.moduleNames},
+        {KEY_DEVELOPER_ID, uninstallBundleInfo.developerId},
+        {KEY_ASSET_ACCESS_GROUPS, uninstallBundleInfo.assetAccessGroups},
         {KEY_CHECK_BY_SPM, uninstallBundleInfo.checkBySpm}
     };
 }
@@ -104,6 +108,10 @@ void from_json(const nlohmann::json& jsonObject, UninstallBundleInfo& uninstallB
         uninstallBundleInfo.moduleNames, JsonType::ARRAY, false, parseResult, ArrayType::STRING);
     BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, KEY_CHECK_BY_SPM,
         uninstallBundleInfo.checkBySpm, false, parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, KEY_DEVELOPER_ID,
+        uninstallBundleInfo.developerId, false, parseResult);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject, jsonObjectEnd, KEY_ASSET_ACCESS_GROUPS,
+        uninstallBundleInfo.assetAccessGroups, JsonType::ARRAY, false, parseResult, ArrayType::STRING);
     if (parseResult != ERR_OK) {
         APP_LOGE("read uninstallBundleInfo from jsonObject error, error code : %{public}d", parseResult);
     }
@@ -126,6 +134,8 @@ void UninstallBundleInfo::Init()
     deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNSPECIFIED;
     extensionDirs.clear();
     moduleNames.clear();
+    developerId.clear();
+    assetAccessGroups.clear();
     checkBySpm = false;
 }
 

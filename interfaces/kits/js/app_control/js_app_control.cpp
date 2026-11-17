@@ -993,6 +993,23 @@ void ConvertRuleInfo(napi_env env, napi_value nRule, const UninstallDisposedRule
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nRule, "priority", nPriority));
 }
 
+void ConvertRuleInfo(napi_env env, napi_value nRule, const RecoverDisposedRule &rule)
+{
+    napi_value nWant = nullptr;
+    if (rule.want != nullptr) {
+        nWant = CreateJsWant(env, *rule.want);
+    } else {
+        napi_create_object(env, &nWant);
+    }
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nRule, "want", nWant));
+    napi_value recoverComponentType;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_uint32(env, static_cast<int32_t>(rule.recoverComponentType), &recoverComponentType));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nRule, "recoverComponentType", recoverComponentType));
+    napi_value nPriority;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, rule.priority, &nPriority));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nRule, "priority", nPriority));
+}
 
 bool ParseUninstallDisposedRule(napi_env env, napi_value nRule, UninstallDisposedRule &rule)
 {
@@ -1024,6 +1041,58 @@ bool ParseUninstallDisposedRule(napi_env env, napi_value nRule, UninstallDispose
     napi_get_named_property(env, nRule, "priority", &prop);
     if (!CommonFunc::ParseInt(env, prop, rule.priority)) {
         APP_LOGW("priority parseInt failed");
+        return false;
+    }
+    return true;
+}
+
+bool ParseRecoverDisposedRule(napi_env env, napi_value nRule, RecoverDisposedRule &rule)
+{
+    napi_valuetype valueType;
+    NAPI_CALL_BASE(env, napi_typeof(env, nRule, &valueType), false);
+    if (valueType != napi_object) {
+        APP_LOGE("nRule not object type");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR,
+            RECOVER_DISPOSED_RULE, RECOVER_DISPOSED_RULE_TYPE);
+        return false;
+    }
+    bool isArray = false;
+    NAPI_CALL_BASE(env, napi_is_array(env, nRule, &isArray), false);
+    if (isArray) {
+        APP_LOGE("nRule is array type");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR,
+            RECOVER_DISPOSED_RULE, RECOVER_DISPOSED_RULE_TYPE);
+        return false;
+    }
+    napi_value prop = nullptr;
+    napi_get_named_property(env, nRule, TYPE_WANT, &prop);
+    AAFwk::Want want;
+    if (!UnwrapWant(env, prop, want)) {
+        APP_LOGE("parse want failed");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR,
+            TYPE_WANT, RECOVER_WANT_TYPE);
+        return false;
+    }
+    rule.want = std::make_shared<AAFwk::Want>(want);
+    napi_get_named_property(env, nRule, RECOVER_COMPONENT_TYPE, &prop);
+    int32_t recoverComponentType;
+    if (!CommonFunc::ParseInt(env, prop, recoverComponentType)) {
+        APP_LOGE("recoverComponentType parseInt failed");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR,
+            RECOVER_COMPONENT_TYPE, TYPE_NUMBER);
+        return false;
+    }
+    if (RECOVER_COMPONENT_TYPE_LIST.find(recoverComponentType) == RECOVER_COMPONENT_TYPE_LIST.end()) {
+        APP_LOGE("recoverComponentType not valid");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR,
+            RECOVER_COMPONENT_TYPE, RECOVER_COMPONENT_TYPE_TYPE);
+        return false;
+    }
+    rule.recoverComponentType = static_cast<RecoverComponentType>(recoverComponentType);
+    napi_get_named_property(env, nRule, PRIORITY, &prop);
+    if (!CommonFunc::ParseInt(env, prop, rule.priority)) {
+        APP_LOGE("priority parseInt failed");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PRIORITY, TYPE_NUMBER);
         return false;
     }
     return true;
@@ -1231,6 +1300,138 @@ napi_value DeleteUninstallDisposedRule(napi_env env, napi_callback_info info)
     return nRet;
 }
 
+static napi_value CreateRecoverDisposedRuleError(napi_env env, ErrCode err,
+    const std::string &functionName, const std::string &permissionName)
+{
+    if (err == ERROR_BUNDLE_SERVICE_EXCEPTION) {
+        return BusinessError::CreateError(env, err, ERR_MSG_RECOVER_DISPOSED_RULE_SERVICE_EXCEPTION);
+    }
+    return BusinessError::CreateNewCommonError(env, err, functionName, permissionName);
+}
+
+static napi_value InnerGetRecoverDisposedRule(napi_env env)
+{
+    auto appControlProxy = CommonFunc::GetAppControlProxy();
+    if (appControlProxy == nullptr) {
+        APP_LOGE("null appControlProxy");
+        napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
+            GET_RECOVER_DISPOSED_RULE);
+        napi_throw(env, error);
+        return nullptr;
+    }
+    RecoverDisposedRule recoverDisposedRule;
+    int32_t userId = OHOS::IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    ErrCode ret = ERR_OK;
+    ret = appControlProxy->GetRecoverDisposedRule(userId, recoverDisposedRule);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetRecoverDisposedRule failed ret: %{public}d", ret);
+        ret = CommonFunc::ConvertErrCode(ret);
+        napi_value businessError = CreateRecoverDisposedRuleError(
+            env, ret, GET_RECOVER_DISPOSED_RULE, PERMISSION_DISPOSED_APP_STATUS);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    napi_value nRule = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &nRule));
+    ConvertRuleInfo(env, nRule, recoverDisposedRule);
+    return nRule;
+}
+
+napi_value GetRecoverDisposedRule(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("begin");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_ZERO, ARGS_SIZE_ZERO)) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    return InnerGetRecoverDisposedRule(env);
+}
+
+static napi_value InnerSetRecoverDisposedRule(napi_env env, RecoverDisposedRule &rule)
+{
+    napi_value nRet;
+    napi_get_undefined(env, &nRet);
+    auto appControlProxy = CommonFunc::GetAppControlProxy();
+    if (appControlProxy == nullptr) {
+        APP_LOGE("null appControlProxy");
+        napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
+            SET_RECOVER_DISPOSED_RULE);
+        napi_throw(env, error);
+        return nRet;
+    }
+    ErrCode ret = ERR_OK;
+    int32_t userId = OHOS::IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    ret = appControlProxy->SetRecoverDisposedRule(rule, userId);
+    if (ret != NO_ERROR) {
+        APP_LOGE("SetRecoverDisposedRule failed ret: %{public}d", ret);
+        ret = CommonFunc::ConvertErrCode(ret);
+        napi_value businessError = CreateRecoverDisposedRuleError(
+            env, ret, SET_RECOVER_DISPOSED_RULE, PERMISSION_DISPOSED_STATUS);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    return nRet;
+}
+
+napi_value SetRecoverDisposedRule(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("begin");
+    NapiArg args(env, info);
+    napi_value nRet;
+    napi_get_undefined(env, &nRet);
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
+        APP_LOGE("Napi func init failed");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nRet;
+    }
+    RecoverDisposedRule rule;
+    if (!ParseRecoverDisposedRule(env, args[ARGS_POS_ZERO], rule)) {
+        APP_LOGE("rule invalid!");
+        return nRet;
+    }
+    return InnerSetRecoverDisposedRule(env, rule);
+}
+
+static napi_value InnerDeleteRecoverDisposedRule(napi_env env)
+{
+    napi_value nRet;
+    napi_get_undefined(env, &nRet);
+    auto appControlProxy = CommonFunc::GetAppControlProxy();
+    if (appControlProxy == nullptr) {
+        APP_LOGE("null appControlProxy");
+        napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
+            DELETE_RECOVER_DISPOSED_RULE);
+        napi_throw(env, error);
+        return nullptr;
+    }
+    int32_t userId = OHOS::IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    ErrCode ret = ERR_OK;
+    ret = appControlProxy->DeleteRecoverDisposedRule(userId);
+    if (ret != ERR_OK) {
+        APP_LOGE("DeleteRecoverDisposedRule failed ret: %{public}d", ret);
+        ret = CommonFunc::ConvertErrCode(ret);
+        napi_value businessError = CreateRecoverDisposedRuleError(
+            env, ret, DELETE_RECOVER_DISPOSED_RULE, PERMISSION_DISPOSED_STATUS);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    return nRet;
+}
+
+napi_value DeleteRecoverDisposedRule(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("begin");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_ZERO, ARGS_SIZE_ZERO)) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    return InnerDeleteRecoverDisposedRule(env);
+}
+
 void CreateComponentType(napi_env env, napi_value value)
 {
     napi_value nUiAbilityType;
@@ -1254,6 +1455,19 @@ void CreateUninstallComponentType(napi_env env, napi_value value)
         nExtensionAbilityType));
     napi_value nUIExtensionType;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(UninstallComponentType::UI_EXTENSION),
+        &nUIExtensionType));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "UI_EXTENSION", nUIExtensionType));
+}
+
+void CreateRecoverComponentType(napi_env env, napi_value value)
+{
+    napi_value nExtensionAbilityType;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(RecoverComponentType::EXTENSION),
+        &nExtensionAbilityType));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "EXTENSION",
+        nExtensionAbilityType));
+    napi_value nUIExtensionType;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(RecoverComponentType::UI_EXTENSION),
         &nUIExtensionType));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "UI_EXTENSION", nUIExtensionType));
 }

@@ -602,11 +602,7 @@ void BundleMgrService::RegisterService()
         }
         APP_LOGI("BundleMgrService register to sam success");
         registerToService_ = true;
-        // Cleanup mode: BMS is now visible to samgr (AddSystemAbility succeeded), so send bootevent.bms.register.ready
-        // immediately. The SA clean framework dispatches OnClean (OnExtension "clean") based on this signal. Sent only
-        // in cleanup mode (entering cleanup mode means the signal is ready) and only on first registration (the
-        // registerToService_ guard ensures once). The BOPD check that gates the real cleanup action is at the
-        // OnExtension clean entry; normal boot goes through ProcessMainBundleStatusFinally to set main.bundles.ready.
+        // Send register.ready when in cleanup mode (after AddSystemAbility succeeded).
         if (dataMgr_ != nullptr && dataMgr_->IsCleanupModeEnabled()) {
             BmsKeyEventMgr::ProcessRegisterReady();
         }
@@ -682,11 +678,11 @@ int32_t BundleMgrService::OnExtension(const std::string& extension, MessageParce
             return ret;
         }
     } else if (extension == EXTENSION_CLEAN) {
-        // The cleanup (delete fingerprint + write the bmsCleanRecovery flag) must run only in BOPD mode: outside
-        // BOPD, /data is not masked and the mirror path from BootDetectorReplaceDataPrefix may point at an invalid
-        // or live db, so cleaning would corrupt data. Refuse when not in BOPD mode.
-        if (dataMgr_ == nullptr || !dataMgr_->IsBopdModeEnabled()) {
-            APP_LOGE("OnClean dispatched but not in BOPD mode, refuse to clean");
+        // The cleanup (delete fingerprint + write the bmsCleanRecovery flag) must run only in cleanup mode:
+        // outside cleanup mode, BMS is not in the cleanup window and cleaning would corrupt data.
+        // Refuse when not in cleanup mode.
+        if (dataMgr_ == nullptr || !dataMgr_->IsCleanupModeEnabled()) {
+            APP_LOGE("OnClean dispatched but not in cleanup mode, refuse to clean");
             return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
         }
         auto bundleCleanMgr = DelayedSingleton<BundleCleanMgr>::GetInstance();

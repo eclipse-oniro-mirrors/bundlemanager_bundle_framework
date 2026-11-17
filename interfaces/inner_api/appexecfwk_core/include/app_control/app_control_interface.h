@@ -195,6 +195,18 @@ public:
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
+    virtual ErrCode SetRecoverDisposedRule(const RecoverDisposedRule &rule, int32_t userId)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    virtual ErrCode GetRecoverDisposedRule(int32_t userId, RecoverDisposedRule &rule)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    virtual ErrCode DeleteRecoverDisposedRule(int32_t userId)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
 };
 } // namespace AppExecFwk
 } // namespace OHOS

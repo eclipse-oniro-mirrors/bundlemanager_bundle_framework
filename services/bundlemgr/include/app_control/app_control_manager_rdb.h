@@ -72,6 +72,13 @@ public:
         int32_t appIndex, int32_t userId) override;
     virtual ErrCode GetUninstallDisposedRule(const std::string &appIdentifier, int32_t appIndex,
         int32_t userId, UninstallDisposedRule &rule) override;
+    virtual ErrCode SetRecoverDisposedRule(const std::string &callingName,
+        const RecoverDisposedRule &rule, int32_t userId) override;
+    virtual ErrCode DeleteRecoverDisposedRule(const std::string &callingName, int32_t userId) override;
+    virtual ErrCode GetRecoverDisposedRule(const std::string &callingName, int32_t userId,
+        RecoverDisposedRule &rule) override;
+    virtual ErrCode GetRecoverDisposedRuleByUserId(int32_t userId, RecoverDisposedRule &rule,
+        std::string &callerName, int64_t &timeStamp) override;
     virtual ErrCode GetAppRunningControlRuleByUserId(int32_t userId, std::string &appId,
         AppRunningControlRule &controlRuleResult) override;
     virtual ErrCode GetAllUserIdsForRunningControl(std::vector<int32_t> &outUserIds) override;

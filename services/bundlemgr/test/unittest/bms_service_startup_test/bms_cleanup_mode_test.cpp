@@ -26,6 +26,9 @@
 #include "bundle_mgr_service_event_handler.h"
 #include "parameters.h"
 
+#include "appexecfwk_errors.h"
+#include "message_parcel.h"
+
 using namespace testing::ext;
 using namespace OHOS;
 using namespace OHOS::AppExecFwk;
@@ -276,4 +279,60 @@ HWTEST_F(BmsCleanupModeTest, BmsCleanupModeTest_0010, Function | SmallTest | Lev
     auto handler = std::make_shared<BMSEventHandler>();
     ASSERT_NE(handler, nullptr);
     EXPECT_FALSE(handler->cleanupRecoveryFlagSet_) << "member must default to false";
+}
+
+/**
+ * @tc.number: BmsCleanupModeTest_0011
+ * @tc.name: OnExtension sa_cleanup is refused when cleanup mode is disabled
+ * @tc.desc: 1. keep ohos.boot.cleanup.mode empty
+ *           2. call OnExtension("sa_cleanup")
+ *           3. verify returns ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR (the cleanup gate blocks)
+ */
+HWTEST_F(BmsCleanupModeTest, BmsCleanupModeTest_0011, Function | SmallTest | Level0)
+{
+    OHOS::system::SetParameter(CLEANUP_MODE_PARAM, "");
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode result = bundleMgrService_->OnExtension("sa_cleanup", data, reply);
+    EXPECT_EQ(result, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR)
+        << "OnClean must be refused when cleanup mode is disabled";
+}
+
+/**
+ * @tc.number: BmsCleanupModeTest_0012
+ * @tc.name: OnExtension sa_cleanup is refused when BOPD mode is on but cleanup mode is off (independence)
+ * @tc.desc: 1. set ohos.boot.bopd.mode to a valid value but keep ohos.boot.cleanup.mode empty
+ *           2. call OnExtension("sa_cleanup")
+ *           3. verify returns ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR — the gate uses cleanup mode, not BOPD mode;
+ *              BOPD mode alone does not authorize the cleanup action (cleanup mode is independent)
+ */
+HWTEST_F(BmsCleanupModeTest, BmsCleanupModeTest_0012, Function | SmallTest | Level0)
+{
+    OHOS::system::SetParameter(BOPD_MODE_PARAM, "0x2");
+    OHOS::system::SetParameter(CLEANUP_MODE_PARAM, "");
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode result = bundleMgrService_->OnExtension("sa_cleanup", data, reply);
+    EXPECT_EQ(result, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR)
+        << "BOPD mode alone must not pass the cleanup gate; cleanup mode is independent";
+    OHOS::system::SetParameter(BOPD_MODE_PARAM, "");
+}
+
+/**
+ * @tc.number: BmsCleanupModeTest_0013
+ * @tc.name: OnExtension sa_cleanup passes the gate when cleanup mode is enabled
+ * @tc.desc: 1. set ohos.boot.cleanup.mode to "true"
+ *           2. call OnExtension("sa_cleanup")
+ *           3. verify the gate passes (result is NOT ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
+ *              OnClean may fail for other reasons (e.g. mirror path unavailable in the test environment) but the
+ *              cleanup-mode gate itself must not block
+ */
+HWTEST_F(BmsCleanupModeTest, BmsCleanupModeTest_0013, Function | SmallTest | Level0)
+{
+    OHOS::system::SetParameter(CLEANUP_MODE_PARAM, "true");
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode result = bundleMgrService_->OnExtension("sa_cleanup", data, reply);
+    EXPECT_NE(result, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR)
+        << "gate should pass when cleanup mode is enabled";
 }

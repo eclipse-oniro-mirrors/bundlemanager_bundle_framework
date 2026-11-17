@@ -54,6 +54,7 @@ constexpr int8_t DEFAULT_APP_INDEX = 0;
 constexpr int16_t MAX_FILE_NAME_LENGTH = 256;
 constexpr int16_t BMS_MAX_PATH_LENGTH = 4096;
 constexpr int16_t MAX_UNINSTALL_PREINSTALLED_APP_NUM = 200;
+constexpr int32_t MAX_ENTERPRISE_RESIGN_CERT_NUM = 10;
 constexpr int32_t MAX_INSTALL_PARAM_SIZE = 128;
 constexpr int32_t MAX_INSTALL_PARAM_KEY_LENGTH = 128;
 constexpr int32_t MAX_INSTALL_PARAM_VALUE_LENGTH = 1024;
@@ -257,6 +258,8 @@ constexpr int32_t CLI_SANDBOX_APP_INDEX_MAX = 3000;
 //param key-value
 constexpr const char* VERIFY_UNINSTALL_RULE_KEY = "ohos.bms.param.verifyUninstallRule";
 constexpr const char* VERIFY_UNINSTALL_RULE_VALUE = "true";
+constexpr const char* VERIFY_RECOVER_RULE_KEY = "ohos.bms.param.verifyRecoverRule";
+constexpr const char* VERIFY_RECOVER_RULE_VALUE = "true";
 
 constexpr const char* DISABLE_INSTALL_EVENT_REPORT_KEY = "ohos.bms.param.disableInstallEventReport";
 constexpr const char* BUNDLE_ENABLE_STATE_KEY = "ohos.bms.param.bundleEnableState";

@@ -6993,6 +6993,26 @@ ErrCode BundleMgrHostImpl::GetAllBundleInfoByDeveloperId(const std::string &deve
     return dataMgr->GetAllBundleInfoByDeveloperId(developerId, bundleInfos, userId);
 }
 
+ErrCode BundleMgrHostImpl::CheckBundleExistByDeveloperIdAndAssetGroup(
+    const std::string &developerId, const std::string &assetAccessGroup, int32_t userId, bool &isExist)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    isExist = false;
+    APP_LOGD("start CheckBundleExistByDeveloperIdAndAssetGroup, developerId: %{private}s, "
+        "assetAccessGroup: %{private}s, userId: %{public}d", developerId.c_str(), assetAccessGroup.c_str(), userId);
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE_NOFUNC("CheckBundleExistByDeveloperIdAndAssetGroup permission denied %{public}d %{public}d",
+            IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_APPEXECFWK_SERVICE_NOT_READY;
+    }
+    return dataMgr->CheckBundleExistByDeveloperIdAndAssetGroup(developerId, assetAccessGroup, userId, isExist);
+}
+
 ErrCode BundleMgrHostImpl::GetDeveloperIds(const std::string &appDistributionType,
     std::vector<std::string> &developerIdList, int32_t userId)
 {

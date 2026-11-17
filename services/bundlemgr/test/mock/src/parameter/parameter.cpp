@@ -31,7 +31,7 @@ char g_mockParam[MAX_LEN];
 int g_mockRet = 0;
 } // namespace
 
-char *g_testDeviceType = const_cast<char *>(EMPTY_STRING);
+char *g_testDeviceType = const_cast<char *>(DEVICE_TYPE_OF_DEFAULT);
 
 char *GetDeviceType()
 {
@@ -69,10 +69,26 @@ int GetParameter(const char *key, const char *def, char *value, int len)
             return 1;
         }
     }
-    if ((key != nullptr) && (value != nullptr) && strcpy_s(value, len, g_mockParam) == 0) {
+    // When a test has explicitly armed a mock return via SetBMSMockParameter
+    // (g_mockRet != 0), honour it so existing tests that rely on the old
+    // blanket-mock behaviour keep working.
+    if (g_mockRet != 0) {
+        if ((key != nullptr) && (value != nullptr) &&
+            (strcpy_s(value, len, g_mockParam) == 0)) {
+            return g_mockRet;
+        }
         return g_mockRet;
     }
-    return g_mockRet;
+    // Otherwise, for unknown keys, return the default value — matching the
+    // real libbegetutil behaviour where unset parameters resolve to def.
+    // Returning an empty string for every key breaks libhapverify, which
+    // reads system parameters (device type, serial, etc.) via the C API
+    // and fails signature verification when they are all blank.
+    if ((key != nullptr) && (value != nullptr) && (def != nullptr) &&
+        (strcpy_s(value, len, def) == 0)) {
+        return static_cast<int>(std::strlen(def));
+    }
+    return 0;
 }
 
 int GetIntParameter(const char *key, int def)

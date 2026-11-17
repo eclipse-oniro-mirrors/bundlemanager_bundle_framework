@@ -173,6 +173,14 @@ bool CollectAppSkillChangedItems(const InnerBundleInfo &info, std::vector<std::s
     return !skillItems.empty();
 }
 
+bool HasExecutableBinaryPaths(const InnerBundleInfo &info)
+{
+    const auto &modules = info.GetInnerModuleInfos();
+    return std::any_of(modules.begin(), modules.end(), [](const auto &modulePair) {
+        return !modulePair.second.executableBinaryPaths.empty();
+    });
+}
+
 void BuildAppSkillChangedLists(
     const std::vector<std::string> &oldSkills, const std::vector<std::string> &newSkills,
     std::vector<std::string> &addedSkills, std::vector<std::string> &changedSkills,
@@ -1916,6 +1924,18 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     result = ParseHapFiles(bundlePaths, installParam, appType, hapVerifyResults, newInfos);
     CHECK_RESULT(result, "parse haps file failed %{public}d");
 
+    // BOPD mode blocks third-party app install/update; pre-install apps and system apps are allowed.
+    // Gate on the parsed app type (not the caller-supplied type) and the pre-install flag.
+    // Order cheap field checks before the BOPD system-parameter read so allowed installs (pre-install /
+    // system apps) short-circuit without reading ohos.boot.bopd.mode.
+    if (!newInfos.empty() && !installParam.isPreInstallApp &&
+        newInfos.begin()->second.GetAppType() == Constants::AppType::THIRD_PARTY_APP &&
+        dataMgr_->IsBopdModeEnabled()) {
+        LOG_E(BMS_TAG_INSTALLER, "install bundle %{public}s is not allowed in bopd mode",
+            newInfos.begin()->second.GetBundleName().c_str());
+        return ERR_APPEXECFWK_INSTALL_BOPD_MODE_DISABLED;
+    }
+
     result = CheckArkTSMode(newInfos);
     CHECK_RESULT(result, "check arkTS mode failed %{public}d");
 
@@ -2190,7 +2210,19 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
         }
     });
 
-    // process bin file permission
+    // update: soft-uninstall BSS first; on later rollback restore old registration
+    bool restoreBssOnFail = false;
+    if (isAppExist_ && HasExecutableBinaryPaths(oldInfo)) {
+        ProcessBinUninstall();
+        restoreBssOnFail = true;
+    }
+    ScopeGuard bssRestoreGuard([&] {
+        if (!restoreBssOnFail) {
+            return;
+        }
+        (void)ProcessBinFiles({{oldInfo.GetBundleName(), oldInfo}});
+    });
+    // process bin file permission (new install and update)
     result = ProcessBinFiles(newInfos);
     CHECK_RESULT_WITH_ROLLBACK(result, "process bin files failed %{public}d", newInfos, oldInfo);
 
@@ -2202,6 +2234,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     result = driverInstaller->CopyAllDriverFile(newInfos, oldInfo);
     CHECK_RESULT_WITH_ROLLBACK(result, "copy driver files failed due to error %{public}d", newInfos, oldInfo);
 
+    restoreBssOnFail = false;
     UpdateInstallerState(InstallerState::INSTALL_SUCCESS);                         // ---- 100%
 #ifdef WEBVIEW_ENABLE
     RestoreconForArkweb();
@@ -2772,6 +2805,10 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         if (installParam.needSendEvent) {
             PrepareAppSkillStatus(oldInfo, InnerBundleInfo());
         }
+        // unregister BSS bins only after this user's uninstall is committed
+        if (HasExecutableBinaryPaths(oldInfo)) {
+            ProcessBinUninstall();
+        }
         return ERR_OK;
     }
     dataMgr_->DisableBundle(bundleName);
@@ -2872,6 +2909,10 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     }
     if (!installParam.isKeepData) {
         StopRelable(oldInfo);
+    }
+    // unregister BSS bins only after uninstall is committed, so a failed uninstall keeps its registration
+    if (HasExecutableBinaryPaths(oldInfo)) {
+        ProcessBinUninstall();
     }
     return ERR_OK;
 }
@@ -3212,16 +3253,35 @@ ErrCode BaseBundleInstaller::ProcessRecover(
 {
     LOG_D(BMS_TAG_INSTALLER, "Process Recover Bundle(%{public}s) start", bundleName.c_str());
     int32_t userId = GetUserId(installParam.userId);
-    if (!CheckCanInstallPreBundle(bundleName, userId)) {
+    if (!InitDataMgr()) {
+        return ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR;
+    }
+    // Dual-mode: recovery only targets the app visible in the current mode. In secondary mode
+    // a recover request by the original name (the JS recover API carries no distribution policy)
+    // must be routed to the clone record, so the secondary package is installed and the
+    // force-uninstall marker recorded under the effective (clone) name is honored. Callers that
+    // already carry a different-package policy (UninstallAndRecover) or pass the clone key
+    // themselves (user-100 flow) keep their own routing and are left untouched.
+    std::string recoverBundleName = bundleName;
+    if (DualModeHelper::IsDualModeDevice() && DualModeHelper::IsSecondaryMode() &&
+        !DualModeHelper::IsDualModeCloneKey(bundleName) &&
+        !DualModeHelper::IsDiffPackageCategory(installParam.deviceModeDistributionPolicy) &&
+        IsPreInstallDiffPackage(bundleName)) {
+        recoverBundleName = DualModeHelper::GetDualModeBundleName(bundleName);
+        LOG_I(BMS_TAG_INSTALLER, "Dual mode recover: route %{public}s to clone record %{public}s",
+            bundleName.c_str(), recoverBundleName.c_str());
+    }
+    if (!CheckCanInstallPreBundle(recoverBundleName, userId)) {
         LOG_E(BMS_TAG_INSTALLER, "Bundle(%{public}s) was force uninstalled before, not allow recover",
-            bundleName.c_str());
+            recoverBundleName.c_str());
         return ERR_APPEXECFWK_INSTALL_FORCE_UNINSTALLED_BUNDLE_NOT_ALLOW_RECOVER;
     }
     if (AccountHelper::CheckOsAccountConstraintEnabled(userId, ServiceConstants::CONSTRAINT_APPS_INSTALL)) {
-        LOG_E(BMS_TAG_INSTALLER, "user %{public}d is not allowed to recover %{public}s", userId, bundleName.c_str());
+        LOG_E(BMS_TAG_INSTALLER, "user %{public}d is not allowed to recover %{public}s",
+            userId, recoverBundleName.c_str());
         return ERR_APPEXECFWK_INSTALL_FAILED_ACCOUNT_CONSTRAINT;
     }
-    ErrCode result = InnerProcessInstallByPreInstallInfo(bundleName, installParam, uid);
+    ErrCode result = InnerProcessInstallByPreInstallInfo(recoverBundleName, installParam, uid);
     return result;
 }
 
@@ -3243,7 +3303,20 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
     }
 
     {
-        auto &mtx = dataMgr_->GetBundleMutex(bundleName);
+        // F-001: the per-bundle mutex must key on the canonical (original) name. The
+        // parameter can arrive as a dual-mode clone key (routed by ProcessRecover or passed
+        // by the user-100 flow), but the bundleInfos_ entry this branch read-modify-writes is
+        // keyed by the original name — and so is the mutex key of every other writer of that
+        // entry (the install-by-path upgrade locks on the original bundleName_ in
+        // ProcessBundleInstall; the uninstall paths lock on the original name). Locking on
+        // the clone key would let the isAppExist_ update below race with a same-name upgrade
+        // and lose InnerBundleUserInfo updates. Only the mutex key is normalized: the clone
+        // key still addresses the preinstall record and the user info below.
+        std::string mutexKey = bundleName;
+        if (DualModeHelper::IsDualModeCloneKey(bundleName)) {
+            DualModeHelper::ParseDualModeBundleName(bundleName, mutexKey);
+        }
+        auto &mtx = dataMgr_->GetBundleMutex(mutexKey);
         std::lock_guard lock {mtx};
         InnerBundleInfo oldInfo;
         InitTempBundleFromCache(oldInfo, isAppExist_, bundleName);
@@ -4948,6 +5021,8 @@ void BaseBundleInstaller::GetUninstallBundleInfo(bool isKeepData, int32_t userId
     LOG_I(BMS_TAG_INSTALLER, "propagate checkBySpm=%{public}d to uninstall info bundle:%{public}s",
         oldInfo.IsBundleCheckBySpm(), oldInfo.GetBundleName().c_str());
     uninstallBundleInfo.deviceModeDistributionPolicy = oldInfo.GetDeviceModeDistributionPolicy();
+    uninstallBundleInfo.developerId = oldInfo.GetDeveloperId();
+    uninstallBundleInfo.assetAccessGroups = oldInfo.GetAssetAccessGroups();
     oldInfo.GetModuleNames(uninstallBundleInfo.moduleNames);
 }
 
@@ -5064,6 +5139,8 @@ bool BaseBundleInstaller::DeleteUninstallBundleInfoFromDb(const std::string &bun
     };
     installRes.SetMetadataConfigInfos(tokenIdMetadataInfos);
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
+    installRes.developerId = uninstallBundleInfo.developerId;
+    installRes.SetAssetAccessGroups(uninstallBundleInfo.assetAccessGroups);
     commonEventMgr->NotifyUninstalledBundleCleared(installRes);
     return true;
 }
@@ -7459,10 +7536,10 @@ ErrCode BaseBundleInstaller::CheckHapBinInstallCondition(const std::unordered_ma
     return ERR_OK;
 }
 
-std::vector<std::string> BaseBundleInstaller::GetBinFilePaths(const InnerBundleInfo &info,
-    const std::string &nativeLibraryPath) const
+std::vector<std::pair<std::string, PermissionControlMode>> BaseBundleInstaller::GetBinFilePaths(
+    const InnerBundleInfo &info, const std::string &nativeLibraryPath) const
 {
-    std::vector<std::string> binFilePaths;
+    std::vector<std::pair<std::string, PermissionControlMode>> binFilePaths;
     if (nativeLibraryPath.empty()) {
         LOG_E(BMS_TAG_INSTALLER, "nativeLibraryPath is empty");
         return binFilePaths;
@@ -7487,7 +7564,12 @@ std::vector<std::string> BaseBundleInstaller::GetBinFilePaths(const InnerBundleI
                 continue;
             }
             binPath = binPath.substr(libsPrefix.length());
-            binFilePaths.push_back(prefix + binPath);
+            std::string absolutePath = prefix + binPath;
+            binFilePaths.emplace_back(absolutePath, executableBinaryPath.permissionControlMode);
+            LOG_D(BMS_TAG_INSTALLER,
+                "GetBinFilePaths path=%{private}s permissionControlMode=%{public}d",
+                absolutePath.c_str(),
+                static_cast<int32_t>(executableBinaryPath.permissionControlMode));
         }
     }
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "binFilePaths size: %{public}zu", binFilePaths.size());
@@ -7501,13 +7583,17 @@ ErrCode BaseBundleInstaller::ProcessBinFiles(
         return ERR_OK;
     }
     std::vector<std::string> binFilePaths;
+    std::vector<int32_t> permissionControlModes;
     for (const auto &infoPair : infos) {
         const InnerBundleInfo &info = infoPair.second;
         std::string cpuAbi;
         std::string nativeLibraryPath;
         info.FetchNativeSoAttrs(info.GetCurrentModulePackage(), cpuAbi, nativeLibraryPath);
-        auto paths = GetBinFilePaths(info, nativeLibraryPath);
-        binFilePaths.insert(binFilePaths.end(), paths.begin(), paths.end());
+        auto pathsWithMode = GetBinFilePaths(info, nativeLibraryPath);
+        for (const auto &item : pathsWithMode) {
+            binFilePaths.push_back(item.first);
+            permissionControlModes.push_back(static_cast<int32_t>(item.second));
+        }
     }
     if (binFilePaths.empty()) {
         LOG_D(BMS_TAG_INSTALLER, "binFilePaths is empty");
@@ -7520,11 +7606,28 @@ ErrCode BaseBundleInstaller::ProcessBinFiles(
     verifyBinParam.appIdentifier = appIdentifier_;
     verifyBinParam.userId = userId_;
     verifyBinParam.binFilePaths = binFilePaths;
+    verifyBinParam.permissionControlModes = permissionControlModes;
     // The provision type of all input HAPs has been checked for consistency.
     verifyBinParam.isDebug = infos.begin()->second.GetAppProvisionType() == Constants::APP_PROVISION_TYPE_DEBUG;
     spmSession_.FillVerifyBinParam(verifyBinParam);
 
     return InstalldClient::GetInstance()->ProcessBinFiles(verifyBinParam);
+}
+
+void BaseBundleInstaller::ProcessBinUninstall() const
+{
+    VerifyBinParam verifyBinParam;
+    verifyBinParam.bundleName = GetEffectiveBundleName();
+    verifyBinParam.appIdentifier = appIdentifier_;
+    verifyBinParam.userId = userId_;
+    verifyBinParam.isUninstall = true;
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "ProcessBinUninstall start -n %{public}s -u %{public}d",
+        verifyBinParam.bundleName.c_str(), verifyBinParam.userId);
+    ErrCode ret = InstalldClient::GetInstance()->ProcessBinFiles(verifyBinParam);
+    if (ret != ERR_OK) {
+        LOG_W(BMS_TAG_INSTALLER, "ProcessBinUninstall fail %{public}d -n %{public}s",
+            ret, verifyBinParam.bundleName.c_str());
+    }
 }
 
 ErrCode BaseBundleInstaller::CheckInstallPermission(const InstallParam &installParam,
@@ -10044,8 +10147,17 @@ ErrCode BaseBundleInstaller::UpdateHapToken(bool needUpdate, InnerBundleInfo &ne
             }
             return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
         }
-        if (needUpdate) {
+        // A drift repair inside UpdateToken may have re-targeted the policy
+        // update at the identity's live token (ERR_TOKENID_NOT_EXIST on the
+        // BMS-recorded id);
+        uint32_t recordedTokenId = static_cast<uint32_t>(uerInfo.second.accessTokenIdEx);
+        if (needUpdate || accessTokenIdEx.tokenIdExStruct.tokenID != recordedTokenId) {
             newInfo.SetAccessTokenIdEx(accessTokenIdEx, uerInfo.second.bundleUserInfo.userId);
+            if (!needUpdate && !tempInfo_.SetTempBundleInfo(newInfo)) {
+                LOG_NOFUNC_E(BMS_TAG_INSTALLER, "save repaired token id failed %{public}s",
+                    bundleName_.c_str());
+                return ERR_APPEXECFWK_SET_INSTALL_TEMP_BUNDLE_ERROR;
+            }
         }
         if (refreshedUid > 0) {
             // The AT side refreshed the token-bound uid: persist it into the
@@ -10099,9 +10211,19 @@ ErrCode BaseBundleInstaller::UpdateHapToken(bool needUpdate, InnerBundleInfo &ne
                 }
                 return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
             }
-            if (needUpdate) {
+            // Same drift-repair persist as the main identity above (the clone
+            // record keeps its per-appIndex entry; same accessTokenIdEx-based
+            // comparison — the token is built from that field).
+            uint32_t recordedCloneTokenId = static_cast<uint32_t>(cloneInfoPair.second.accessTokenIdEx);
+            if (needUpdate ||
+                cloneAccessTokenIdEx.tokenIdExStruct.tokenID != recordedCloneTokenId) {
                 newInfo.SetAccessTokenIdExWithAppIndex(cloneAccessTokenIdEx,
                     uerInfo.second.bundleUserInfo.userId, cloneInfoPair.second.appIndex);
+                if (!needUpdate && !tempInfo_.SetTempBundleInfo(newInfo)) {
+                    LOG_NOFUNC_E(BMS_TAG_INSTALLER, "save repaired clone token id failed %{public}s",
+                        bundleName_.c_str());
+                    return ERR_APPEXECFWK_SET_INSTALL_TEMP_BUNDLE_ERROR;
+                }
             }
             if (cloneRefreshedUid > 0 && cloneRefreshedUid != cloneInfoPair.second.uid) {
                 // Persist the AT-refreshed clone uid (same pattern as the main

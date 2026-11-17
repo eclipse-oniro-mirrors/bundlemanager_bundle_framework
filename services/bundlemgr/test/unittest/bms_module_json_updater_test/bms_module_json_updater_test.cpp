@@ -27,6 +27,7 @@
 #include "bundle_mgr_service_event_handler.h"
 #include "inner_bundle_info.h"
 #include "module_json_updater.h"
+#include "scope_guard.h"
 
 using namespace testing::ext;
 using namespace OHOS;
@@ -171,9 +172,51 @@ HWTEST_F(BmsModuleJsonUpdaterTest, UpdateModuleJsonAsync_0100, Function | SmallT
     BmsModuleJsonUpdaterTest::UpdateOtaFlag(OTAFlag::UPDATE_MODULE_JSON);
     BmsModuleJsonUpdaterTest::UpdateOtaFlag(OTAFlag::UPDATE_ALTERNATE_ICONS);
     BmsModuleJsonUpdaterTest::UpdateOtaFlag(OTAFlag::UPDATE_MODULE_JSON_EXTEND_FIELDS);
+    BmsModuleJsonUpdaterTest::UpdateOtaFlag(OTAFlag::UPDATE_KEEP_DATA_ON_UNINSTALL);
     ModuleJsonUpdater::UpdateModuleJsonAsync();
     std::set<std::string> ignoredBundles = ModuleJsonUpdater::GetIgnoreBundleNames();
     EXPECT_TRUE(ignoredBundles.empty());
+}
+
+/**
+ * @tc.number: UpdateKeepDataOnUninstallOtaFlag_0100
+ * @tc.name: UpdateKeepDataOnUninstallOtaFlag
+ * @tc.desc: Old migration flags must not mark keepDataOnUninstall as migrated.
+ */
+HWTEST_F(BmsModuleJsonUpdaterTest, UpdateKeepDataOnUninstallOtaFlag_0100, Function | SmallTest | Level1)
+{
+    auto bmsParam = bundleMgrService_->GetBmsParam();
+    ASSERT_NE(bmsParam, nullptr);
+    std::string oldValue;
+    bool hadValue = bmsParam->GetBmsParam(OTA_FLAG, oldValue);
+    ScopeGuard restore([&] {
+        if (hadValue) {
+            EXPECT_TRUE(bmsParam->SaveBmsParam(OTA_FLAG, oldValue));
+        } else {
+            EXPECT_TRUE(bmsParam->DeleteBmsParam(OTA_FLAG));
+        }
+    });
+    uint32_t oldFlags = OTAFlag::UPDATE_MODULE_JSON | OTAFlag::UPDATE_ALTERNATE_ICONS |
+        OTAFlag::UPDATE_MODULE_JSON_EXTEND_FIELDS | OTAFlag::MIGRATE_UID_TO_ATM;
+    EXPECT_TRUE(bmsParam->SaveBmsParam(OTA_FLAG, std::to_string(oldFlags)));
+    bool handled = true;
+    EXPECT_TRUE(BMSEventHandler::CheckOtaFlag(OTAFlag::UPDATE_KEEP_DATA_ON_UNINSTALL, handled));
+    EXPECT_FALSE(handled);
+
+    EXPECT_TRUE(BMSEventHandler::UpdateOtaFlag(OTAFlag::UPDATE_KEEP_DATA_ON_UNINSTALL));
+    EXPECT_TRUE(BMSEventHandler::CheckOtaFlag(OTAFlag::UPDATE_KEEP_DATA_ON_UNINSTALL, handled));
+    EXPECT_TRUE(handled);
+    for (auto flag : {OTAFlag::UPDATE_MODULE_JSON, OTAFlag::UPDATE_ALTERNATE_ICONS,
+        OTAFlag::UPDATE_MODULE_JSON_EXTEND_FIELDS, OTAFlag::MIGRATE_UID_TO_ATM}) {
+        handled = false;
+        EXPECT_TRUE(BMSEventHandler::CheckOtaFlag(flag, handled));
+        EXPECT_TRUE(handled);
+    }
+    // Updating another migration must also preserve the new flag.
+    EXPECT_TRUE(BMSEventHandler::UpdateOtaFlag(OTAFlag::CHECK_ELDIR));
+    handled = false;
+    EXPECT_TRUE(BMSEventHandler::CheckOtaFlag(OTAFlag::UPDATE_KEEP_DATA_ON_UNINSTALL, handled));
+    EXPECT_TRUE(handled);
 }
 
 /**
@@ -510,6 +553,7 @@ HWTEST_F(BmsModuleJsonUpdaterTest, UpdatePartialInnerBundleInfo_0200, Function |
     jsonInfo.baseApplicationInfo_->assetAccessGroups = ASSET_ACCESS_GROUPS;
     jsonInfo.baseApplicationInfo_->appPreloadPhase = APP_PRELOAD_PHASE;
     jsonInfo.baseApplicationInfo_->cloudStructuredDataSyncEnabled = CLOUD_STRUCTURED_DATA_SYNC_ENABLED;
+    jsonInfo.baseApplicationInfo_->keepDataOnUninstall = true;
     jsonInfo.baseApplicationInfo_->profileable = PROFILEABLE;
     jsonInfo.baseApplicationInfo_->compatibleMinorVersion = COMPATIBLE_MINOR_VERSION;
     jsonInfo.baseApplicationInfo_->compatiblePatchVersion = COMPATIBLE_PATCH_VERSION;
@@ -522,6 +566,7 @@ HWTEST_F(BmsModuleJsonUpdaterTest, UpdatePartialInnerBundleInfo_0200, Function |
     EXPECT_TRUE(infoA.baseApplicationInfo_->assetAccessGroups.empty());
     EXPECT_NE(infoA.baseApplicationInfo_->appPreloadPhase, APP_PRELOAD_PHASE);
     EXPECT_EQ(infoA.baseApplicationInfo_->cloudStructuredDataSyncEnabled, CLOUD_STRUCTURED_DATA_SYNC_ENABLED);
+    EXPECT_TRUE(infoA.baseApplicationInfo_->keepDataOnUninstall);
     EXPECT_EQ(infoA.baseApplicationInfo_->profileable, PROFILEABLE);
     EXPECT_EQ(infoA.baseApplicationInfo_->compatibleMinorVersion, COMPATIBLE_MINOR_VERSION);
     EXPECT_EQ(infoA.baseApplicationInfo_->compatiblePatchVersion, COMPATIBLE_PATCH_VERSION);
@@ -542,6 +587,7 @@ HWTEST_F(BmsModuleJsonUpdaterTest, UpdatePartialInnerBundleInfo_0200, Function |
     EXPECT_EQ(infoB.baseApplicationInfo_->assetAccessGroups, ASSET_ACCESS_GROUPS);
     EXPECT_EQ(infoB.baseApplicationInfo_->appPreloadPhase, APP_PRELOAD_PHASE);
     EXPECT_EQ(infoB.baseApplicationInfo_->cloudStructuredDataSyncEnabled, CLOUD_STRUCTURED_DATA_SYNC_ENABLED);
+    EXPECT_TRUE(infoB.baseApplicationInfo_->keepDataOnUninstall);
 }
 
 /**

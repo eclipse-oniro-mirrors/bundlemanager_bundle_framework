@@ -1261,6 +1261,135 @@ bool BundleDataMgr::GetUninstallBundleInfoWithUserAndAppIndex(const std::string 
     return true;
 }
 
+bool BundleDataMgr::MatchInstalledBundle(const std::map<std::string, InnerBundleInfo> &bundleInfos,
+    const std::string &developerId, const std::string &assetAccessGroup, int32_t userId) const
+{
+    for (const auto &item : bundleInfos) {
+        const InnerBundleInfo &info = item.second;
+        if (info.GetDeveloperId() != developerId) {
+            continue;
+        }
+        const auto &assetAccessGroups = info.GetAssetAccessGroups();
+        if (std::find(assetAccessGroups.begin(), assetAccessGroups.end(), assetAccessGroup) ==
+            assetAccessGroups.end()) {
+            continue;
+        }
+        if (info.HasInnerBundleUserInfo(userId)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool BundleDataMgr::IsUninstallRecordVisible(const std::string &bundleKey, DeviceModeDistributionPolicy policy,
+    bool isSecondaryMode, const std::set<DeviceModeDistributionPolicy> &policySet) const
+{
+    const bool isCloneKey = DualModeHelper::IsDualModeCloneKey(bundleKey);
+    // Prefixed records are visible only in secondary mode, including legacy records without a persisted policy.
+    if (isCloneKey) {
+        return isSecondaryMode;
+    }
+    // The key is unprefixed here, so a different-package record is visible only in primary mode.
+    if (DualModeHelper::IsDiffPackageCategory(policy)) {
+        return !isSecondaryMode;
+    }
+    // Records with an unspecified policy remain visible regardless of the policy set.
+    if (policy == DeviceModeDistributionPolicy::UNSPECIFIED) {
+        return true;
+    }
+    // A valid policy set determines visibility and takes precedence over the mode defaults below.
+    if (!policySet.empty()) {
+        return policySet.count(policy) != 0;
+    }
+    // Without a valid policy set, main-only records are visible only in primary mode.
+    if (policy == DeviceModeDistributionPolicy::MAIN_ONLY) {
+        return !isSecondaryMode;
+    }
+    // Without a valid policy set, sub-only records are visible only in secondary mode.
+    if (policy == DeviceModeDistributionPolicy::SUB_ONLY) {
+        return isSecondaryMode;
+    }
+    return true;
+}
+
+bool BundleDataMgr::MatchUninstallBundleInfo(const std::map<std::string, UninstallBundleInfo> &uninstallBundleInfos,
+    const std::string &developerId, const std::string &assetAccessGroup, int32_t userId) const
+{
+    const bool isDualModeDevice = DualModeHelper::IsDualModeDevice();
+    const bool isSecondaryMode = isDualModeDevice && DualModeHelper::IsSecondaryMode();
+    std::set<DeviceModeDistributionPolicy> policySet;
+    if (isDualModeDevice) {
+        auto bmsParam = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+        std::string policiesStr;
+        if (bmsParam != nullptr && bmsParam->GetBmsParam(
+            ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICIES_KEY, policiesStr)) {
+            if (!DualModeHelper::ParsePersistedPolicies(policiesStr, policySet)) {
+                policySet.clear();
+            }
+        }
+    }
+    const std::string userKey = std::to_string(userId);
+    for (const auto &item : uninstallBundleInfos) {
+        const UninstallBundleInfo &uninstallBundleInfo = item.second;
+        if (!isDualModeDevice) {
+            // On non-dual-mode devices, exclude records with the secondary-mode prefix.
+            if (DualModeHelper::IsDualModeCloneKey(item.first)) {
+                continue;
+            }
+        } else if (!IsUninstallRecordVisible(item.first, uninstallBundleInfo.deviceModeDistributionPolicy,
+            isSecondaryMode, policySet)) {
+            continue;
+        }
+        if (uninstallBundleInfo.developerId != developerId) {
+            continue;
+        }
+        if (std::find(uninstallBundleInfo.assetAccessGroups.begin(),
+            uninstallBundleInfo.assetAccessGroups.end(), assetAccessGroup) ==
+            uninstallBundleInfo.assetAccessGroups.end()) {
+            continue;
+        }
+        for (const auto &userInfo : uninstallBundleInfo.userInfos) {
+            const std::string &key = userInfo.first;
+            if (key == userKey ||
+                (key.size() > userKey.size() && key.compare(0, userKey.size(), userKey) == 0 &&
+                key[userKey.size()] == '_')) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+ErrCode BundleDataMgr::CheckBundleExistByDeveloperIdAndAssetGroup(
+    const std::string &developerId, const std::string &assetAccessGroup, int32_t userId, bool &isExist) const
+{
+    isExist = false;
+    if (developerId.empty() || assetAccessGroup.empty()) {
+        APP_LOGE("developerId or assetAccessGroup is empty");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    if (userId < Constants::DEFAULT_USERID) {
+        APP_LOGE("invalid userId %{public}d", userId);
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+
+    {
+        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        if (MatchInstalledBundle(bundleInfos_, developerId, assetAccessGroup, userId)) {
+            isExist = true;
+            return ERR_OK;
+        }
+    }
+
+    std::map<std::string, UninstallBundleInfo> uninstallBundleInfos;
+    if (!QueryAllUninstallBundleInfo(uninstallBundleInfos)) {
+        APP_LOGE("get all uninstall bundle info failed");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    isExist = MatchUninstallBundleInfo(uninstallBundleInfos, developerId, assetAccessGroup, userId);
+    return ERR_OK;
+}
+
 bool BundleDataMgr::UpdateUninstallBundleInfo(const std::string &bundleName,
     const UninstallBundleInfo &uninstallBundleInfo)
 {
@@ -1282,6 +1411,8 @@ bool BundleDataMgr::UpdateUninstallBundleInfo(const std::string &bundleName,
         oldUninstallBundleInfo.userInfos[newUser] = uninstallBundleInfo.userInfos.begin()->second;
         oldUninstallBundleInfo.deviceModeDistributionPolicy = uninstallBundleInfo.deviceModeDistributionPolicy;
         oldUninstallBundleInfo.checkBySpm = uninstallBundleInfo.checkBySpm;
+        oldUninstallBundleInfo.developerId = uninstallBundleInfo.developerId;
+        oldUninstallBundleInfo.assetAccessGroups = uninstallBundleInfo.assetAccessGroups;
         return uninstallDataMgr_->UpdateUninstallBundleInfo(bundleName, oldUninstallBundleInfo);
     }
     return uninstallDataMgr_->UpdateUninstallBundleInfo(bundleName, uninstallBundleInfo);
@@ -1309,6 +1440,17 @@ bool BundleDataMgr::GetAllUninstallBundleInfo(
         return false;
     }
     return uninstallDataMgr_->GetAllUninstallBundleInfo(uninstallBundleInfos);
+}
+
+bool BundleDataMgr::QueryAllUninstallBundleInfo(
+    std::map<std::string, UninstallBundleInfo> &uninstallBundleInfos) const
+{
+    uninstallBundleInfos.clear();
+    if (uninstallDataMgr_ == nullptr) {
+        APP_LOGE("uninstallDataMgr is null");
+        return false;
+    }
+    return uninstallDataMgr_->QueryAllUninstallBundleInfo(uninstallBundleInfos);
 }
 
 bool BundleDataMgr::DeleteUninstallBundleInfo(const std::string &bundleName, int32_t userId)
@@ -5984,6 +6126,42 @@ ErrCode BundleDataMgr::GetInnerBundleInfoByUid(const int32_t uid, InnerBundleInf
     return GetInnerBundleInfoAndIndexByUid(uid, innerBundleInfo, appIndex);
 }
 
+// Dual-mode: whether the preinstall record describes a package variant visible in the given
+// mode. A different-package app has two fan-out records (primary + clone) and each record
+// belongs to exactly one mode; MAIN_ONLY/SUB_ONLY apps belong to their own mode only.
+// - clone record (different-package secondary variant): secondary mode only
+// - different-package primary record: primary mode only
+// - MAIN_ONLY: primary mode only; SUB_ONLY: secondary mode only
+// - other records (same-package / unspecified): visible in both modes
+static bool IsPreInstallRecordVisibleInMode(const PreInstallBundleInfo &preInstallBundleInfo,
+    bool isSecondaryMode)
+{
+    if (preInstallBundleInfo.IsDualModeCloneApp()) {
+        return isSecondaryMode;
+    }
+    DeviceModeDistributionPolicy policy = preInstallBundleInfo.GetDeviceModeDistributionPolicy();
+    if (DualModeHelper::IsDiffPackageCategory(policy)) {
+        return !isSecondaryMode;
+    }
+    if (policy == DeviceModeDistributionPolicy::MAIN_ONLY) {
+        return !isSecondaryMode;
+    }
+    if (policy == DeviceModeDistributionPolicy::SUB_ONLY) {
+        return isSecondaryMode;
+    }
+    return true;
+}
+
+// Dual-mode: whether the record is one of the two fan-out records of a different-package app.
+// Such a record describes one mode's package only, so its installed-state check must look at
+// the current-mode map (bundleInfos_) exclusively; the tempBundleInfos_ entry under the same
+// name is the OTHER mode's package and must not be consulted.
+static bool IsDualModeVariantRecord(const PreInstallBundleInfo &preInstallBundleInfo)
+{
+    return preInstallBundleInfo.IsDualModeCloneApp() ||
+        DualModeHelper::IsDiffPackageCategory(preInstallBundleInfo.GetDeviceModeDistributionPolicy());
+}
+
 const std::vector<PreInstallBundleInfo> BundleDataMgr::GetRecoverablePreInstallBundleInfos(int32_t userId)
 {
     std::vector<PreInstallBundleInfo> recoverablePreInstallBundleInfos;
@@ -5992,12 +6170,25 @@ const std::vector<PreInstallBundleInfo> BundleDataMgr::GetRecoverablePreInstallB
         return recoverablePreInstallBundleInfos;
     }
     std::vector<PreInstallBundleInfo> preInstallBundleInfos = GetAllPreInstallBundleInfos();
+    // Dual-mode: recovery only targets apps visible in the current mode. Snapshot the mode once
+    // so a mode flip mid-loop cannot make per-record decisions inconsistent.
+    bool isDualModeDevice = DualModeHelper::IsDualModeDevice();
+    bool isSecondaryMode = isDualModeDevice && DualModeHelper::IsSecondaryMode();
     for (auto preInstallBundleInfo: preInstallBundleInfos) {
         if (!preInstallBundleInfo.IsRemovable()) {
             if ((preInstallBundleInfo.GetBundleType() != BundleType::APP) &&
                 (preInstallBundleInfo.GetBundleType() != BundleType::ATOMIC_SERVICE)) {
                 continue;
             }
+        }
+        // Dual-mode: skip records not visible in the current mode — the other mode's variant
+        // record of a different-package app (also removes the duplicate entry the two fan-out
+        // records used to produce), MAIN_ONLY in secondary mode and SUB_ONLY in primary mode.
+        if (isDualModeDevice &&
+            !IsPreInstallRecordVisibleInMode(preInstallBundleInfo, isSecondaryMode)) {
+            APP_LOGD("dual mode: -n %{public}s is not visible in current mode, skip recoverable query",
+                preInstallBundleInfo.GetBundleName().c_str());
+            continue;
         }
         if (preInstallBundleInfo.HasForceUninstalledUser(userId)) {
             APP_LOGW("-n %{public}s is force unisntalled in -u %{public}d",
@@ -6010,6 +6201,15 @@ const std::vector<PreInstallBundleInfo> BundleDataMgr::GetRecoverablePreInstallB
         std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
         auto infoItem = bundleInfos_.find(preInstallBundleInfo.GetBundleName());
         if (infoItem == bundleInfos_.end()) {
+            // Dual-mode: a non-variant app present in tempBundleInfos_ is installed but hidden
+            // in the current mode (single-mode / policy-set hiding). It is not visible, so it
+            // is not recoverable — recovering it would bypass the hiding.
+            if (isDualModeDevice && !IsDualModeVariantRecord(preInstallBundleInfo) &&
+                tempBundleInfos_.find(preInstallBundleInfo.GetBundleName()) != tempBundleInfos_.end()) {
+                APP_LOGD("dual mode: -n %{public}s is hidden in current mode, skip recoverable query",
+                    preInstallBundleInfo.GetBundleName().c_str());
+                continue;
+            }
             recoverablePreInstallBundleInfos.emplace_back(preInstallBundleInfo);
             continue;
         }

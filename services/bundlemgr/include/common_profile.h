@@ -383,6 +383,7 @@ constexpr const char* APP_UBSAN_ENABLED = "ubsanEnabled";
 constexpr const char* APP_CONFIGURATION = "configuration";
 constexpr const char* APP_CLOUD_FILE_SYNC_ENABLED = "cloudFileSyncEnabled";
 constexpr const char* APP_CLOUD_STRUCTURED_DATA_SYNC_ENABLED = "cloudStructuredDataSyncEnabled";
+constexpr const char* APP_KEEP_DATA_ON_UNINSTALL = "keepDataOnUninstall";
 constexpr const char* APP_ASSET_ACCESS_GROUPS = "assetAccessGroups";
 constexpr const char* APP_ALLOW_LISTEN_BUNDLE_CHANGED_EVENT = "allowListenBundleChangedEvent";
 constexpr const char* APP_ALTERNATE_ICONS = "alternateIcons";
@@ -470,6 +471,7 @@ constexpr const char* HNP_TYPE = "type";
 constexpr const char* HNP_INDEPENDENT_SIGN = "independentSign";
 // executableBinaryPath
 constexpr const char* EXECUTABLE_BINARY_PATH = "path";
+constexpr const char* EXECUTABLE_BINARY_PERMISSION_CONTROL_MODE = "permissionControlMode";
 // launchService
 constexpr const char* LAUNCH_SERVICE_NAME = "name";
 constexpr const char* LAUNCH_SERVICE_BINARY_PATH = "binaryPath";

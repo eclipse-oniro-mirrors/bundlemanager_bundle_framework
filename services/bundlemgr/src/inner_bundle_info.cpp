@@ -176,6 +176,7 @@ constexpr const char* MODULE_DEBUG = "debug";
 constexpr const char* MODULE_CROS_APP_SHARED_CONFIG = "crossAppSharedConfig";
 constexpr const char* MODULE_ABILITY_SRC_ENTRY_DELEGATOR = "abilitySrcEntryDelegator";
 constexpr const char* EXECUTABLE_BINARY_PATH = "path";
+constexpr const char* EXECUTABLE_BINARY_PERMISSION_CONTROL_MODE = "permissionControlMode";
 constexpr const char* LAUNCH_SERVICE_NAME = "name";
 constexpr const char* LAUNCH_SERVICE_BINARY_PATH = "binaryPath";
 constexpr const char* LAUNCH_SERVICE_RUN_AT_LOAD = "runAtLoad";
@@ -277,6 +278,14 @@ void from_json(const nlohmann::json &jsonObject, ExecutableBinaryPath &executabl
         executableBinaryPath.path,
         false,
         parseResult);
+    GetValueIfFindKey<PermissionControlMode>(jsonObject,
+        jsonObjectEnd,
+        EXECUTABLE_BINARY_PERMISSION_CONTROL_MODE,
+        executableBinaryPath.permissionControlMode,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("read ExecutableBinaryPath from json error, error code : %{public}d", parseResult);
     }
@@ -285,7 +294,8 @@ void from_json(const nlohmann::json &jsonObject, ExecutableBinaryPath &executabl
 void to_json(nlohmann::json &jsonObject, const ExecutableBinaryPath &executableBinaryPath)
 {
     jsonObject = nlohmann::json {
-        {EXECUTABLE_BINARY_PATH, executableBinaryPath.path}
+        {EXECUTABLE_BINARY_PATH, executableBinaryPath.path},
+        {EXECUTABLE_BINARY_PERMISSION_CONTROL_MODE, executableBinaryPath.permissionControlMode}
     };
 }
 
@@ -2342,6 +2352,7 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const InnerBundleInfo &newInfo)
     baseApplicationInfo_->accessible = applicationInfo.accessible;
     baseApplicationInfo_->cloudFileSyncEnabled = applicationInfo.cloudFileSyncEnabled;
     baseApplicationInfo_->cloudStructuredDataSyncEnabled = applicationInfo.cloudStructuredDataSyncEnabled;
+    baseApplicationInfo_->keepDataOnUninstall = applicationInfo.keepDataOnUninstall;
 
     if (!baseApplicationInfo_->isSystemApp) {
         baseApplicationInfo_->isSystemApp = applicationInfo.isSystemApp;
@@ -2407,6 +2418,7 @@ void InnerBundleInfo::UpdatePartialInnerBundleInfo(const InnerBundleInfo &info)
         }
         baseApplicationInfo_->cloudStructuredDataSyncEnabled =
             info.baseApplicationInfo_->cloudStructuredDataSyncEnabled;
+        baseApplicationInfo_->keepDataOnUninstall = info.baseApplicationInfo_->keepDataOnUninstall;
         baseApplicationInfo_->alternateIcons = info.baseApplicationInfo_->alternateIcons;
         baseApplicationInfo_->curAlternateIconModuleName = info.baseApplicationInfo_->iconResource.moduleName;
         baseApplicationInfo_->profileable = info.baseApplicationInfo_->profileable;

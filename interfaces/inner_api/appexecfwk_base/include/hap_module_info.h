@@ -117,8 +117,14 @@ struct AppEnvironment : public Parcelable {
     static AppEnvironment *Unmarshalling(Parcel &parcel);
 };
 
+enum class PermissionControlMode : int32_t {
+    INDEPENDENT = 0,
+    INHERIT_PARENT_PROCESS = 1,
+};
+
 struct ExecutableBinaryPath : public Parcelable {
     std::string path;
+    PermissionControlMode permissionControlMode = PermissionControlMode::INDEPENDENT;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

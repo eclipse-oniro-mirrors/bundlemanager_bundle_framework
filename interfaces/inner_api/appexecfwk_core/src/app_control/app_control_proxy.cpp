@@ -1061,6 +1061,83 @@ ErrCode AppControlProxy::DeleteUninstallDisposedRule(const std::string &appIdent
     return ERR_OK;
 }
 
+ErrCode AppControlProxy::SetRecoverDisposedRule(const RecoverDisposedRule &rule, int32_t userId)
+{
+    LOG_D(BMS_TAG_DEFAULT, "begin");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOG_E(BMS_TAG_DEFAULT, "WriteInterfaceToken failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteParcelable(&rule)) {
+        LOG_E(BMS_TAG_DEFAULT, "write recoverDisposedRule failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        LOG_E(BMS_TAG_DEFAULT, "write userId failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    ErrCode ret = SendRequest(AppControlManagerInterfaceCode::SET_RECOVER_DISPOSED_RULE, data, reply);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "SendRequest failed");
+        return ret;
+    }
+    ret = reply.ReadInt32();
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "host return error : %{public}d", ret);
+        return ret;
+    }
+    return ERR_OK;
+}
+
+ErrCode AppControlProxy::GetRecoverDisposedRule(int32_t userId, RecoverDisposedRule &rule)
+{
+    LOG_D(BMS_TAG_DEFAULT, "begin");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOG_E(BMS_TAG_DEFAULT, "WriteInterfaceToken failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        LOG_E(BMS_TAG_DEFAULT, "write userId failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    ErrCode ret = GetParcelableInfo<RecoverDisposedRule>(
+        AppControlManagerInterfaceCode::GET_RECOVER_DISPOSED_RULE, data, rule);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "host return error : %{public}d", ret);
+        return ret;
+    }
+    return ERR_OK;
+}
+
+ErrCode AppControlProxy::DeleteRecoverDisposedRule(int32_t userId)
+{
+    LOG_D(BMS_TAG_DEFAULT, "begin");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOG_E(BMS_TAG_DEFAULT, "WriteInterfaceToken failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        LOG_E(BMS_TAG_DEFAULT, "write userId failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    ErrCode ret = SendRequest(AppControlManagerInterfaceCode::DELETE_RECOVER_DISPOSED_RULE, data, reply);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "SendRequest failed");
+        return ret;
+    }
+    ret = reply.ReadInt32();
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "host return error : %{public}d", ret);
+        return ret;
+    }
+    return ERR_OK;
+}
+
 template<typename T>
 ErrCode AppControlProxy::WriteVectorToParcel(std::vector<T> &parcelVector, MessageParcel &reply)
 {

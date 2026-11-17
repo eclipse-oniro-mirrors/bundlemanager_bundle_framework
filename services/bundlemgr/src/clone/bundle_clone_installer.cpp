@@ -331,9 +331,33 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
         existBeforeKeepDataApp_ = true;
     }
     if (!tokenRecovered) {
+        // SPM ON: a clone install carries no haps, so its session stays
+        // deferred (id 0) — but the identity-reuse shapes of InitToken run
+        // UpdateToken BEFORE any PrepareHapIdentity, and UpdateHapPolicy needs
+        // a live session (hasPermChecked). Create it with the INSTALLED
+        // main-app hap paths whenever the reuse plan is non-empty (the
+        // migration-failed keep-data record drives the update-interface
+        // fallback with the recorded token id; an S2 live leftover reuses its
+        // live token the same way).
+        if (BundleSpmManager::IsEnabled()) {
+            BundleSpmManager::FreshInstallIdentityPlan identityPlan =
+                BundleSpmManager::CheckNewInstallIdentity(userId, bundleName, appIndex,
+                    dataMgr.get());
+            if (identityPlan.reuseTokenId != 0) {
+                ErrCode createRet = spmSession_.CreateSessionByInstalledBundle(info, userId);
+                if (createRet != ERR_OK) {
+                    APP_LOGE("create spm session failed, bundleName:%{public}s errCode:%{public}d",
+                        bundleName.c_str(), createRet);
+                    return createRet;
+                }
+            }
+        }
         int32_t identityUid = 0;
+        // dataMgr feeds CheckNewInstallIdentity's keep-data record lookup —
+        // pass it under SPM ON only (the OFF path allocates the uid locally
+        // above and InitToken's OFF branch must stay a no-op for the clone).
         if (spmSession_.InitToken(info, userId, 0, newTokenIdEx, checkResult,
-            appProvisionInfo.appServiceCapabilities, nullptr, false, &identityUid) != ERR_OK) {
+            appProvisionInfo.appServiceCapabilities, dataMgr.get(), false, &identityUid) != ERR_OK) {
             auto result = BundlePermissionMgr::GetCheckResultMsg(checkResult);
             APP_LOGE("bundleName:%{public}s InitHapToken failed, %{public}s", bundleName.c_str(), result.c_str());
             return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
@@ -564,6 +588,8 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
         uninstallBundleInfo.bundleType = info.GetApplicationBundleType();
         uninstallBundleInfo.checkBySpm = info.IsBundleCheckBySpm();
         uninstallBundleInfo.deviceModeDistributionPolicy = info.GetDeviceModeDistributionPolicy();
+        uninstallBundleInfo.developerId = info.GetDeveloperId();
+        uninstallBundleInfo.assetAccessGroups = info.GetAssetAccessGroups();
         info.GetModuleNames(uninstallBundleInfo.moduleNames);
         std::string key = std::to_string(userId) + "_" + std::to_string(appIndex);
         uninstallBundleInfo.userInfos[key].uid = uid_;
@@ -648,6 +674,8 @@ bool BundleCloneInstaller::DeleteUninstalledCloneData(const std::string &bundleN
         .keepData = false,
     };
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
+    installRes.developerId = uninstallBundleInfo.developerId;
+    installRes.SetAssetAccessGroups(uninstallBundleInfo.assetAccessGroups);
     commonEventMgr->NotifyUninstalledBundleCleared(installRes);
     return true;
 }

@@ -354,6 +354,8 @@ public:
 
     virtual ErrCode AddCertAndEnableKey(const std::string &certPath, const std::string &certContent) override;
 
+    virtual ErrCode GetEnterpriseCertInfo(const std::string &certPath, EnterpriseCertInfo &certInfo) override;
+
     virtual ErrCode SetEncryptionPolicy(const EncryptionParam &encryptionParam, std::string &keyId) override;
 
     virtual ErrCode DeleteEncryptionKeyId(const EncryptionParam &encryptionParam) override;

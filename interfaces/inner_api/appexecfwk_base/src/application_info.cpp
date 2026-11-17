@@ -153,6 +153,7 @@ const char* APPLICATION_ALTERNATE_ICON_MODULE_NAME = "curAlternateIconModuleName
 const char* APPLICATION_HWASAN_ENABLED = "hwasanEnabled";
 const char* APPLICATION_CLOUD_FILE_SYNC_ENABLED = "cloudFileSyncEnabled";
 const char* APPLICATION_CLOUD_STRUCTURED_DATA_SYNC_ENABLED = "cloudStructuredDataSyncEnabled";
+const char* APPLICATION_KEEP_DATA_ON_UNINSTALL = "keepDataOnUninstall";
 const char* APPLICATION_APPLICATION_FLAGS = "applicationFlags";
 const char* APPLICATION_ALLOW_MULTI_PROCESS = "allowMultiProcess";
 const char* APPLICATION_UBSAN_ENABLED = "ubsanEnabled";
@@ -755,6 +756,7 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     appPreloadPhase = static_cast<AppPreloadPhase>(parcel.ReadUint8());
     appSignType = Str16ToStr8(parcel.ReadString16());
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(StringVector, parcel, &allowListenBundleChangedEvent);
+    keepDataOnUninstall = parcel.ReadBool();
     return true;
 }
 
@@ -957,6 +959,7 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint8, parcel, static_cast<uint8_t>(appPreloadPhase));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appSignType));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(StringVector, parcel, allowListenBundleChangedEvent);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, keepDataOnUninstall);
     return true;
 }
 
@@ -1222,6 +1225,7 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_ALTERNATE_ICON_MODULE_NAME, applicationInfo.curAlternateIconModuleName},
         {APPLICATION_CLOUD_FILE_SYNC_ENABLED, applicationInfo.cloudFileSyncEnabled},
         {APPLICATION_CLOUD_STRUCTURED_DATA_SYNC_ENABLED, applicationInfo.cloudStructuredDataSyncEnabled},
+        {APPLICATION_KEEP_DATA_ON_UNINSTALL, applicationInfo.keepDataOnUninstall},
         {APPLICATION_APPLICATION_FLAGS, applicationInfo.applicationFlags},
         {APPLICATION_UBSAN_ENABLED, applicationInfo.ubsanEnabled},
         {APPLICATION_ALLOW_MULTI_PROCESS, applicationInfo.allowMultiProcess},
@@ -1473,6 +1477,8 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         applicationInfo.cloudFileSyncEnabled, false, parseResult);
     BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_CLOUD_STRUCTURED_DATA_SYNC_ENABLED,
         applicationInfo.cloudStructuredDataSyncEnabled, false, parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_KEEP_DATA_ON_UNINSTALL,
+        applicationInfo.keepDataOnUninstall, false, parseResult);
     GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, APPLICATION_APPLICATION_FLAGS,
         applicationInfo.applicationFlags, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_UBSAN_ENABLED,

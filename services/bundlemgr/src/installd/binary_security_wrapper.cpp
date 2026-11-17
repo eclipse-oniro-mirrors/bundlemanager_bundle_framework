@@ -27,6 +27,7 @@ constexpr uint32_t UNLOAD_DELAY_MS = 3 * 60 * 1000; // 3 minutes
 constexpr const char* UNLOAD_TASK_NAME = "BinarySecurityWrapperUnloadTask";
 constexpr const char* LIB_BINARY_SECURITY_SDK = "/system/lib64/libsps_binary_security_sdk.z.so";
 constexpr const char* PROCESS_HAP_BIN_INSTALL_FUNC = "ProcessHapBinInstall";
+constexpr const char* PROCESS_HAP_BIN_UNINSTALL_FUNC = "ProcessHapBinUninstall";
 constexpr const char* REQUEST_INDEPENDENT_BINARY_SWITCH_ASYNC_FUNC = "RequestIndependentBinarySwitchAsync";
 constexpr const char* CHECK_HSP_PLUGIN_CERT_VALIDITY_FUNC = "CheckHspPluginCertValidity";
 constexpr const char* CHECK_APP_SIDE_LOADING_ASYNC_FUNC = "CheckAppSideLoadingAsync";
@@ -62,6 +63,7 @@ bool BinarySecurityWrapper::LoadLibraryNoLock()
 bool BinarySecurityWrapper::HasNoResolvedSymbolsNoLock() const
 {
     return processHapBinInstallFunc_ == nullptr &&
+        processHapBinUninstallFunc_ == nullptr &&
         requestIndependentBinarySwitchAsyncFunc_ == nullptr &&
         checkHspPluginCertValidityFunc_ == nullptr &&
         checkAppSideLoadingAsyncFunc_ == nullptr;
@@ -103,6 +105,12 @@ bool BinarySecurityWrapper::ResolveProcessHapBinInstallNoLock()
         reinterpret_cast<void **>(&processHapBinInstallFunc_));
 }
 
+bool BinarySecurityWrapper::ResolveProcessHapBinUninstallNoLock()
+{
+    return ResolveSymbolNoLock(PROCESS_HAP_BIN_UNINSTALL_FUNC,
+        reinterpret_cast<void **>(&processHapBinUninstallFunc_));
+}
+
 bool BinarySecurityWrapper::ResolveRequestIndependentBinarySwitchAsyncNoLock()
 {
     return ResolveSymbolNoLock(REQUEST_INDEPENDENT_BINARY_SWITCH_ASYNC_FUNC,
@@ -135,6 +143,7 @@ void BinarySecurityWrapper::UnloadLibraryNoLock()
     dlclose(handle_);
     handle_ = nullptr;
     processHapBinInstallFunc_ = nullptr;
+    processHapBinUninstallFunc_ = nullptr;
     requestIndependentBinarySwitchAsyncFunc_ = nullptr;
     checkHspPluginCertValidityFunc_ = nullptr;
     checkAppSideLoadingAsyncFunc_ = nullptr;
@@ -181,6 +190,36 @@ ErrCode __attribute__((no_sanitize("cfi"))) BinarySecurityWrapper::ProcessHapBin
             sessionId, binFileInfos);
         if (result != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLD, "ProcessHapBinInstall failed %{public}d", result);
+        }
+        ScheduleUnload();
+        return result;
+    }
+}
+
+ErrCode __attribute__((no_sanitize("cfi"))) BinarySecurityWrapper::ProcessHapBinUninstall(
+    const std::string &bundleName, const std::string &appIdentifier, int32_t userId, int32_t appIndex)
+{
+    {
+        std::shared_lock<std::shared_mutex> readLock(mutex_);
+        if (handle_ != nullptr && processHapBinUninstallFunc_ != nullptr) {
+            ErrCode result = processHapBinUninstallFunc_(bundleName, appIdentifier, userId, appIndex);
+            if (result != ERR_OK) {
+                LOG_E(BMS_TAG_INSTALLD, "ProcessHapBinUninstall failed %{public}d", result);
+            }
+            ScheduleUnload();
+            return result;
+        }
+    }
+
+    {
+        std::unique_lock<std::shared_mutex> writeLock(mutex_);
+        if (!LoadLibraryNoLock() || !ResolveProcessHapBinUninstallNoLock()) {
+            LOG_E(BMS_TAG_INSTALLD, "LoadLibrary failed for ProcessHapBinUninstall");
+            return ERR_APPEXECFWK_INSTALL_FAILED_VERIFY_BIN_PERMISSION;
+        }
+        ErrCode result = processHapBinUninstallFunc_(bundleName, appIdentifier, userId, appIndex);
+        if (result != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLD, "ProcessHapBinUninstall failed %{public}d", result);
         }
         ScheduleUnload();
         return result;

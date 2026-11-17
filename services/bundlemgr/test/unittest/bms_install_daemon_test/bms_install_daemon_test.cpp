@@ -2112,6 +2112,7 @@ HWTEST_F(BmsInstallDaemonTest, ProcessBinFiles_InvalidBundleName_0100, Function 
     param.appIdentifier = "test";
     param.userId = 100;
     param.binFilePaths = {"/data/app/el1/bundle/public/com.example.test/bin/test"};
+    param.permissionControlModes = {0};
     param.isDebug = false;
     auto ret = ProcessBinFiles(param);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
@@ -2133,6 +2134,7 @@ HWTEST_F(BmsInstallDaemonTest, ProcessBinFiles_InvalidBinFilePathsSize_0100, Fun
     param.appIdentifier = "test";
     param.userId = 100;
     param.binFilePaths.resize(101, "/data/app/el1/bundle/public/com.example.test/bin/test");
+    param.permissionControlModes.resize(101, 0);
     param.isDebug = false;
     auto ret = ProcessBinFiles(param);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
@@ -2506,6 +2508,50 @@ HWTEST_F(BmsInstallDaemonTest, ProcessBinFiles_EmptyPaths_0100, Function | Small
 }
 
 /**
+ * @tc.number: ProcessBinFiles_Uninstall_0100
+ * @tc.name: test ProcessBinFiles with isUninstall=true
+ * @tc.desc: 1. uninstall request should bypass bin file checks and return OK
+ *           2. binFilePaths are not required
+*/
+HWTEST_F(BmsInstallDaemonTest, ProcessBinFiles_Uninstall_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    VerifyBinParam param;
+    param.bundleName = "com.example.test";
+    param.appIdentifier = "test";
+    param.userId = 100;
+    param.isUninstall = true;
+    auto ret = hostImpl.ProcessBinFiles(param);
+    EXPECT_TRUE(ret == ERR_OK || ret == ERR_APPEXECFWK_INSTALL_FAILED_VERIFY_BIN_PERMISSION);
+}
+
+/**
+ * @tc.number: ProcessBinFiles_ModesSizeMismatch_0100
+ * @tc.name: test ProcessBinFiles with permissionControlModes size mismatch
+ * @tc.desc: 1. binFilePaths and permissionControlModes size differ
+ *           2. return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR
+*/
+HWTEST_F(BmsInstallDaemonTest, ProcessBinFiles_ModesSizeMismatch_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    VerifyBinParam param;
+    param.bundleName = "com.example.test";
+    param.appIdentifier = "test";
+    param.userId = 100;
+    param.binFilePaths = {
+        "/data/app/el1/bundle/public/com.example.test/bin/a",
+        "/data/app/el1/bundle/public/com.example.test/bin/b"};
+    param.permissionControlModes = {0};
+    param.isDebug = false;
+    auto ret = hostImpl.ProcessBinFiles(param);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    param.permissionControlModes = {0, 1, 0};
+    ret = hostImpl.ProcessBinFiles(param);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
  * @tc.number: ProcessBinFiles_FilePathNotMatchBundleName_0100
  * @tc.name: test ProcessBinFiles with file path not matching bundleName via IPC
  * @tc.desc: 1. calling ProcessBinFiles with file path not matching bundleName should return PARAM_ERROR
@@ -2518,6 +2564,7 @@ HWTEST_F(BmsInstallDaemonTest, ProcessBinFiles_FilePathNotMatchBundleName_0100, 
     param.appIdentifier = "test";
     param.userId = 100;
     param.binFilePaths = {"/data/app/el1/bundle/public/com.other.test/bin/test"};
+    param.permissionControlModes = {0};
     param.isDebug = false;
     auto ret = hostImpl.ProcessBinFiles(param);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
@@ -2536,6 +2583,7 @@ HWTEST_F(BmsInstallDaemonTest, ProcessBinFiles_InvalidFilePathWithDotDot_0100, F
     param.appIdentifier = "test";
     param.userId = 100;
     param.binFilePaths = {"/data/app/el1/bundle/public/com.example.test/bin/../test"};
+    param.permissionControlModes = {0};
     param.isDebug = true;
     auto ret = hostImpl.ProcessBinFiles(param);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
@@ -2554,6 +2602,7 @@ HWTEST_F(BmsInstallDaemonTest, ProcessBinFiles_InvalidFilePath_0100, Function | 
     param.appIdentifier = "test";
     param.userId = 100;
     param.binFilePaths = {"/data/app/invalid/path/test"};
+    param.permissionControlModes = {0};
     param.isDebug = false;
     auto ret = hostImpl.ProcessBinFiles(param);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
@@ -2572,6 +2621,7 @@ HWTEST_F(BmsInstallDaemonTest, ProcessBinFiles_InvalidPathPrefix_0100, Function 
     param.appIdentifier = "test";
     param.userId = 100;
     param.binFilePaths = {"/tmp/invalid/bin/test"};
+    param.permissionControlModes = {0};
     param.isDebug = true;
     auto ret = hostImpl.ProcessBinFiles(param);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
@@ -2695,6 +2745,7 @@ HWTEST_F(BmsInstallDaemonTest, ProcessBinFiles_EmptyPathItem_0100, Function | Sm
     param.appIdentifier = "test";
     param.userId = 100;
     param.binFilePaths = {"/data/app/el1/bundle/public/com.example.test/bin/test", ""};
+    param.permissionControlModes = {0, 0};
     param.isDebug = false;
     auto ret = hostImpl.ProcessBinFiles(param);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);

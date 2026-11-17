@@ -48,6 +48,7 @@ export interface ApplicationInfo {
   readonly installSource: string;
   readonly releaseType: string;
   readonly cloudFileSyncEnabled: boolean;
+  readonly keepDataOnUninstall?: boolean;
   readonly cloudStructuredDataSyncEnabled?: boolean;
   readonly flags?: int;
   readonly applicationReservedFlag?: bundleManager.ApplicationReservedFlag;

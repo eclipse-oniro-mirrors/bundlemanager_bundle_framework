@@ -20,6 +20,7 @@
 
 #include "appexecfwk_errors.h"
 #include "app_log_wrapper.h"
+#include "form_info_base.h"
 #include "json_serializer.h"
 
 namespace OHOS {
@@ -48,6 +49,9 @@ public:
     static void GetBoolValueIfFindKey(const nlohmann::json &jsonObject,
         const nlohmann::detail::iter_impl<const nlohmann::json> &end,
         const std::string &key, bool &data, bool isNecessary, int32_t &parseResult);
+    static void GetBoolEnumValueIfFindKey(const nlohmann::json &jsonObject,
+        const nlohmann::detail::iter_impl<const nlohmann::json> &end,
+        const std::string &key, BoolEnum &data, bool isNecessary, int32_t &parseResult);
     static bool CheckArrayValueType(const nlohmann::json &value, ArrayType arrayType);
     static bool CheckMapValueType(const nlohmann::json &value, JsonType valueType, ArrayType arrayType);
     static void GetMapObject(const nlohmann::json &jsonObject,

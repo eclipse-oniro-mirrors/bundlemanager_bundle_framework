@@ -4171,6 +4171,35 @@ ErrCode InstalldHostImpl::AddCertAndEnableKey(const std::string &certPath, const
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::GetEnterpriseCertInfo(const std::string &certPath, EnterpriseCertInfo &certInfo)
+{
+    LOG_I(BMS_TAG_INSTALLD, "start");
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    if (!InstalldOperator::IsValidCertPath(certPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid cert path: %{private}s", certPath.c_str());
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    size_t pos = certPath.find_last_of('/');
+    if (pos != std::string::npos) {
+        certInfo.certAlias = certPath.substr(pos + 1);
+    }
+    std::string subjectOrg;
+    int64_t notAfter = 0;
+    ErrCode parseRet = InstalldOperator::ParseEnterpriseCertFile(certPath, subjectOrg, notAfter);
+    if (parseRet != ERR_OK) {
+        LOG_W(BMS_TAG_INSTALLD, "read or parse cert failed: %{private}s, err: %{public}d",
+            certPath.c_str(), parseRet);
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_READ_CERT_FAILED;
+    }
+    certInfo.enterpriseName = subjectOrg;
+    certInfo.notAfter = notAfter;
+    LOG_I(BMS_TAG_INSTALLD, "end");
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::RemoveSignProfile(const std::string &bundleName)
 {
     LOG_D(BMS_TAG_INSTALLD, "start to remove sign profile");
@@ -5119,6 +5148,22 @@ ErrCode InstalldHostImpl::ProcessBinFiles(const VerifyBinParam &verifyBinParam)
         LOG_E(BMS_TAG_INSTALLD, "invalid bundleName: %{public}s", verifyBinParam.bundleName.c_str());
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
+    if (verifyBinParam.isUninstall) {
+        std::string realName = verifyBinParam.bundleName;
+        int32_t appIndex = InstalldOperator::GetAppIndexByBundleName(realName);
+        LOG_D(BMS_TAG_INSTALLD,
+            "ProcessHapBinUninstall -n %{public}s -u %{public}d appIndex=%{public}d",
+            realName.c_str(), verifyBinParam.userId, appIndex);
+#ifdef SECURITY_PRIVACY_SERVER_ENABLE
+        auto uninstallRet = BinarySecurityWrapper::GetInstance().ProcessHapBinUninstall(realName,
+            verifyBinParam.appIdentifier, verifyBinParam.userId, appIndex);
+        if (uninstallRet != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLD, "ProcessHapBinUninstall failed %{public}d", uninstallRet);
+            return ERR_APPEXECFWK_INSTALL_FAILED_VERIFY_BIN_PERMISSION;
+        }
+#endif
+        return ERR_OK;
+    }
     if (verifyBinParam.binFilePaths.empty()) {
         LOG_D(BMS_TAG_INSTALLD, "binFilePaths is empty");
         return ERR_OK;
@@ -5128,13 +5173,20 @@ ErrCode InstalldHostImpl::ProcessBinFiles(const VerifyBinParam &verifyBinParam)
             verifyBinParam.binFilePaths.size(), MAX_BIN_FILES_COUNT);
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
+    if (verifyBinParam.permissionControlModes.size() != verifyBinParam.binFilePaths.size()) {
+        LOG_E(BMS_TAG_INSTALLD,
+            "binFilePaths and permissionControlModes size mismatch pathCnt=%{public}zu modeCnt=%{public}zu",
+            verifyBinParam.binFilePaths.size(), verifyBinParam.permissionControlModes.size());
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
     std::string prefix = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
         verifyBinParam.bundleName + ServiceConstants::PATH_SEPARATOR;
     mode_t mode = S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
 #ifdef SECURITY_PRIVACY_SERVER_ENABLE
     std::vector<BinFileInfo> infos;
 #endif
-    for (const auto &path : verifyBinParam.binFilePaths) {
+    for (size_t i = 0; i < verifyBinParam.binFilePaths.size(); ++i) {
+        const auto &path = verifyBinParam.binFilePaths[i];
         std::string binFilePath;
         if (!PathToRealPath(path, binFilePath)) {
             LOG_E(BMS_TAG_INSTALLD, "not real path: %{public}s", path.c_str());
@@ -5170,6 +5222,10 @@ ErrCode InstalldHostImpl::ProcessBinFiles(const VerifyBinParam &verifyBinParam)
         }
         BinFileInfo binInfo;
         binInfo.path = binFilePath;
+        binInfo.permissionControlMode = verifyBinParam.permissionControlModes[i];
+        LOG_D(BMS_TAG_INSTALLD,
+            "ProcessHapBinInstall pass to BSS -n %{public}s path=%{private}s mode=%{public}d",
+            verifyBinParam.bundleName.c_str(), binInfo.path.c_str(), binInfo.permissionControlMode);
         infos.emplace_back(binInfo);
 #endif
     }

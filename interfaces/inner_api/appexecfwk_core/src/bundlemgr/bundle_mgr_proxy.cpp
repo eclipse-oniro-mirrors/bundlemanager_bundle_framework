@@ -1905,6 +1905,48 @@ ErrCode BundleMgrProxy::GetBundleResourceArchiveInfo(const std::string &filePath
         BundleMgrInterfaceCode::GET_BUNDLE_RESOURCE_ARCHIVE_INFO, data, bundleResourceInfo);
 }
 
+ErrCode BundleMgrProxy::CheckBundleExistByDeveloperIdAndAssetGroup(
+    const std::string &developerId, const std::string &assetAccessGroup, int32_t userId, bool &isExist)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    isExist = false;
+    APP_LOGD("begin to CheckBundleExistByDeveloperIdAndAssetGroup, developerId: %{private}s, "
+        "assetAccessGroup: %{private}s, userId: %{public}d", developerId.c_str(), assetAccessGroup.c_str(), userId);
+    if (developerId.empty() || assetAccessGroup.empty()) {
+        APP_LOGE("fail to CheckBundleExistByDeveloperIdAndAssetGroup due to params empty");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to CheckBundleExistByDeveloperIdAndAssetGroup due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(developerId)) {
+        APP_LOGE("fail to CheckBundleExistByDeveloperIdAndAssetGroup due to write developerId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(assetAccessGroup)) {
+        APP_LOGE("fail to CheckBundleExistByDeveloperIdAndAssetGroup due to write assetAccessGroup fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to CheckBundleExistByDeveloperIdAndAssetGroup due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    if (!SendTransactCmd(
+        BundleMgrInterfaceCode::CHECK_BUNDLE_EXIST_BY_DEVELOPER_ID_AND_ASSET_GROUP, data, reply)) {
+        APP_LOGE("fail to CheckBundleExistByDeveloperIdAndAssetGroup due to ipc transaction fail");
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
+    }
+    int32_t ret = reply.ReadInt32();
+    if (ret == ERR_OK) {
+        isExist = reply.ReadBool();
+    }
+    return ret;
+}
+
 bool BundleMgrProxy::GetHapModuleInfo(const AbilityInfo &abilityInfo, HapModuleInfo &hapModuleInfo)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);

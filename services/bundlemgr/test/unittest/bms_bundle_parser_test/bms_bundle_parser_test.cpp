@@ -1950,6 +1950,57 @@ const nlohmann::json MODULE_JSON_17 = R"(
     }
 })"_json;
 
+const nlohmann::json MODULE_JSON_18 = R"({
+        "app": {
+            "bundleName": "com.example.permissioncontrolmode",
+            "debug": true,
+            "icon": "$media:app_icon",
+            "iconId": 16777220,
+            "label": "$string:app_name",
+            "labelId": 16777216,
+            "minAPIVersion": 9,
+            "minMinorAPIVersion": 0,
+            "minPatchAPIVersion": 0,
+            "targetAPIVersion": 9,
+            "vendor": "example",
+            "versionCode": 1000000,
+            "versionName": "1.0.0"
+        },
+        "module": {
+            "deliveryWithInstall": true,
+            "description": "$string:entry_desc",
+            "descriptionId": 16777219,
+            "deviceTypes": [ "default" ],
+            "abilities": [
+                {
+                    "description": "$string:MainAbility_desc",
+                    "descriptionId": 16777217,
+                    "icon": "$media:icon",
+                    "iconId": 16777221,
+                    "label": "$string:MainAbility_label",
+                    "labelId": 16777218,
+                    "name": "MainAbility",
+                    "launchType": "standard",
+                    "orientation": "unspecified",
+                    "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                    "visible": true
+                }
+            ],
+            "name": "entry",
+            "installationFree": false,
+            "mainElement": "MainAbility",
+            "pages": "$profile:main_pages",
+            "srcEntrance": "./ets/Application/AbilityStage.ts",
+            "type": "entry",
+            "virtualMachine": "ark0.0.0.3",
+            "executableBinaryPaths": [
+                {
+                    "path": "libs/arm64-v8a/policy.bin"
+                }
+            ]
+        }
+})"_json;
+
 InnerBundleInfo CreateInnerBundleInfoForTest(const std::string &bundleName,
     const std::string &modulePackage, const std::string &moduleName, int32_t userId, int32_t uid)
 {
@@ -3099,6 +3150,159 @@ HWTEST_F(BmsBundleParserTest, TestParse_3300, Function | SmallTest | Level1)
     ErrCode result = moduleProfile.TransformTo(
         profileFileBuffer, bundleExtractor, innerBundleInfo);
     EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
+}
+
+/**
+ * @tc.number: PermissionControlMode_Transform_001
+ * @tc.name: test module.json permissionControlMode=inheritParentProcess
+ * @tc.desc: 1. permissionControlMode is inheritParentProcess
+ *           2. verify TransformTo keeps inheritParentProcess
+ */
+HWTEST_F(BmsBundleParserTest, PermissionControlMode_Transform_001, Function | SmallTest | Level0)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+    nlohmann::json profileJson = MODULE_JSON_18;
+    profileJson["module"]["executableBinaryPaths"][0]["permissionControlMode"] = "inheritParentProcess";
+    profileFileBuffer << profileJson.dump();
+    BundleExtractor bundleExtractor(EMPTY_NAME);
+    ErrCode ret = moduleProfile.TransformTo(profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(ret, ERR_OK);
+    ASSERT_FALSE(innerBundleInfo.innerModuleInfos_.empty());
+    const auto &bins = innerBundleInfo.innerModuleInfos_.begin()->second.executableBinaryPaths;
+    ASSERT_EQ(bins.size(), 1u);
+    EXPECT_EQ(bins[0].permissionControlMode, PermissionControlMode::INHERIT_PARENT_PROCESS);
+}
+
+/**
+ * @tc.number: PermissionControlMode_Transform_002
+ * @tc.name: test module.json without permissionControlMode
+ * @tc.desc: 1. permissionControlMode field is missing
+ *           2. verify default value is independent
+ */
+HWTEST_F(BmsBundleParserTest, PermissionControlMode_Transform_002, Function | SmallTest | Level0)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+    nlohmann::json profileJson = MODULE_JSON_18;
+    profileFileBuffer << profileJson.dump();
+    BundleExtractor bundleExtractor(EMPTY_NAME);
+    ErrCode ret = moduleProfile.TransformTo(profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(ret, ERR_OK);
+    ASSERT_FALSE(innerBundleInfo.innerModuleInfos_.empty());
+    const auto &bins = innerBundleInfo.innerModuleInfos_.begin()->second.executableBinaryPaths;
+    ASSERT_EQ(bins.size(), 1u);
+    EXPECT_EQ(bins[0].permissionControlMode, PermissionControlMode::INDEPENDENT);
+}
+
+/**
+ * @tc.number: PermissionControlMode_Transform_003
+ * @tc.name: test module.json unknown permissionControlMode string
+ * @tc.desc: 1. permissionControlMode is unknown string
+ *           2. verify falls back to independent
+ */
+HWTEST_F(BmsBundleParserTest, PermissionControlMode_Transform_003, Function | SmallTest | Level0)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+    nlohmann::json profileJson = MODULE_JSON_18;
+    profileJson["module"]["executableBinaryPaths"][0]["permissionControlMode"] = "notAValidMode";
+    profileFileBuffer << profileJson.dump();
+    BundleExtractor bundleExtractor(EMPTY_NAME);
+    ErrCode ret = moduleProfile.TransformTo(profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(ret, ERR_OK);
+    ASSERT_FALSE(innerBundleInfo.innerModuleInfos_.empty());
+    const auto &bins = innerBundleInfo.innerModuleInfos_.begin()->second.executableBinaryPaths;
+    ASSERT_EQ(bins.size(), 1u);
+    EXPECT_EQ(bins[0].permissionControlMode, PermissionControlMode::INDEPENDENT);
+    EXPECT_NE(bins[0].permissionControlMode, PermissionControlMode::INHERIT_PARENT_PROCESS);
+}
+
+/**
+ * @tc.number: PermissionControlMode_Transform_004
+ * @tc.name: test module.json permissionControlMode non-string type
+ * @tc.desc: 1. permissionControlMode is bool
+ *           2. verify return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR
+ */
+HWTEST_F(BmsBundleParserTest, PermissionControlMode_Transform_004, Function | SmallTest | Level0)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+    nlohmann::json profileJson = MODULE_JSON_18;
+    profileJson["module"]["executableBinaryPaths"][0]["permissionControlMode"] = true;
+    profileFileBuffer << profileJson.dump();
+    BundleExtractor bundleExtractor(EMPTY_NAME);
+    ErrCode ret = moduleProfile.TransformTo(profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR);
+}
+
+/**
+ * @tc.number: PermissionControlMode_Transform_005
+ * @tc.name: test module.json permissionControlMode numeric type
+ * @tc.desc: 1. permissionControlMode is number
+ *           2. verify return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR
+ */
+HWTEST_F(BmsBundleParserTest, PermissionControlMode_Transform_005, Function | SmallTest | Level0)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+    nlohmann::json profileJson = MODULE_JSON_18;
+    profileJson["module"]["executableBinaryPaths"][0]["permissionControlMode"] = 1;
+    profileFileBuffer << profileJson.dump();
+    BundleExtractor bundleExtractor(EMPTY_NAME);
+    ErrCode ret = moduleProfile.TransformTo(profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR);
+}
+
+/**
+ * @tc.number: PermissionControlMode_Transform_006
+ * @tc.name: test module.json permissionControlMode=independent
+ * @tc.desc: 1. permissionControlMode is independent
+ *           2. verify TransformTo keeps independent
+ */
+HWTEST_F(BmsBundleParserTest, PermissionControlMode_Transform_006, Function | SmallTest | Level0)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+    nlohmann::json profileJson = MODULE_JSON_18;
+    profileJson["module"]["executableBinaryPaths"][0]["permissionControlMode"] = "independent";
+    profileFileBuffer << profileJson.dump();
+    BundleExtractor bundleExtractor(EMPTY_NAME);
+    ErrCode ret = moduleProfile.TransformTo(profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(ret, ERR_OK);
+    ASSERT_FALSE(innerBundleInfo.innerModuleInfos_.empty());
+    const auto &bins = innerBundleInfo.innerModuleInfos_.begin()->second.executableBinaryPaths;
+    ASSERT_EQ(bins.size(), 1u);
+    EXPECT_EQ(bins[0].permissionControlMode, PermissionControlMode::INDEPENDENT);
+}
+
+/**
+ * @tc.number: PermissionControlMode_Transform_007
+ * @tc.name: test module.json permissionControlMode empty string
+ * @tc.desc: 1. permissionControlMode is empty string
+ *           2. verify falls back to independent
+ */
+HWTEST_F(BmsBundleParserTest, PermissionControlMode_Transform_007, Function | SmallTest | Level0)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+    nlohmann::json profileJson = MODULE_JSON_18;
+    profileJson["module"]["executableBinaryPaths"][0]["permissionControlMode"] = "";
+    profileFileBuffer << profileJson.dump();
+    BundleExtractor bundleExtractor(EMPTY_NAME);
+    ErrCode ret = moduleProfile.TransformTo(profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(ret, ERR_OK);
+    ASSERT_FALSE(innerBundleInfo.innerModuleInfos_.empty());
+    const auto &bins = innerBundleInfo.innerModuleInfos_.begin()->second.executableBinaryPaths;
+    ASSERT_EQ(bins.size(), 1u);
+    EXPECT_EQ(bins[0].permissionControlMode, PermissionControlMode::INDEPENDENT);
 }
 
 /**
@@ -5401,6 +5605,93 @@ HWTEST_F(BmsBundleParserTest, ParseAppPreloadPhase_0300, Function | SmallTest | 
 }
 
 /**
+ * @tc.number: ApplicationInfo_KeepDataOnUninstall_0100
+ * @tc.name: parse keepDataOnUninstall
+ * @tc.desc: 1. system running normally
+ *           2. test parsing success when keepDataOnUninstall is true
+ */
+HWTEST_F(BmsBundleParserTest, ApplicationInfo_KeepDataOnUninstall_0100, Function | SmallTest | Level1)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json profileJson = MODULE_JSON_10;
+    profileJson["app"]["keepDataOnUninstall"] = true;
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor(EMPTY_NAME);
+    ErrCode result = moduleProfile.TransformTo(profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK);
+    EXPECT_TRUE(innerBundleInfo.GetBaseApplicationInfo().keepDataOnUninstall);
+}
+
+/**
+ * @tc.number: ApplicationInfo_KeepDataOnUninstall_0200
+ * @tc.name: parse keepDataOnUninstall
+ * @tc.desc: 1. system running normally
+ *           2. test default value is false when keepDataOnUninstall is not configured
+ */
+HWTEST_F(BmsBundleParserTest, ApplicationInfo_KeepDataOnUninstall_0200, Function | SmallTest | Level1)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json profileJson = MODULE_JSON_11;
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor(EMPTY_NAME);
+    ErrCode result = moduleProfile.TransformTo(profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK);
+    EXPECT_FALSE(innerBundleInfo.GetBaseApplicationInfo().keepDataOnUninstall);
+}
+
+/**
+ * @tc.number: ApplicationInfo_KeepDataOnUninstall_0300
+ * @tc.name: parcel keepDataOnUninstall
+ * @tc.desc: 1. system running normally
+ *           2. test keepDataOnUninstall survives ApplicationInfo parcel roundtrip
+ */
+HWTEST_F(BmsBundleParserTest, ApplicationInfo_KeepDataOnUninstall_0300, Function | SmallTest | Level1)
+{
+    ApplicationInfo appInfo;
+    appInfo.name = "com.ohos.test";
+    appInfo.bundleName = "com.ohos.test";
+    appInfo.keepDataOnUninstall = true;
+
+    Parcel parcel;
+    ASSERT_TRUE(appInfo.Marshalling(parcel));
+
+    ApplicationInfo *restoredInfo = ApplicationInfo::Unmarshalling(parcel);
+    ASSERT_NE(restoredInfo, nullptr);
+    EXPECT_TRUE(restoredInfo->keepDataOnUninstall);
+    delete restoredInfo;
+}
+
+/**
+ * @tc.number: ApplicationInfo_KeepDataOnUninstall_0400
+ * @tc.name: update keepDataOnUninstall
+ * @tc.desc: 1. system running normally
+ *           2. test keepDataOnUninstall is synchronized when base application info is updated
+ */
+HWTEST_F(BmsBundleParserTest, ApplicationInfo_KeepDataOnUninstall_0400, Function | SmallTest | Level1)
+{
+    ApplicationInfo oldApplicationInfo;
+    oldApplicationInfo.keepDataOnUninstall = false;
+    InnerBundleInfo oldInnerBundleInfo;
+    oldInnerBundleInfo.SetBaseApplicationInfo(oldApplicationInfo);
+
+    ApplicationInfo newApplicationInfo;
+    newApplicationInfo.keepDataOnUninstall = true;
+    InnerBundleInfo newInnerBundleInfo;
+    newInnerBundleInfo.SetBaseApplicationInfo(newApplicationInfo);
+
+    oldInnerBundleInfo.UpdateBaseApplicationInfo(newInnerBundleInfo);
+    EXPECT_TRUE(oldInnerBundleInfo.GetBaseApplicationInfo().keepDataOnUninstall);
+}
+
+/**
  * @tc.number: ParseBuildVersion_0100
  * @tc.name: parse buildVersion
  * @tc.desc: 1. system running normally
@@ -5540,12 +5831,14 @@ HWTEST_F(BmsBundleParserTest, FormInfo_0300, Function | MediumTest | Level1)
     jsonObject["resizable"] = true;
     jsonObject["isColorModeRefreshEnabled"] = true;
     jsonObject["enableTint"] = true;
+    jsonObject["enableReminderAgentRefresh"] = true;
     FormInfo formInfo;
     from_json(jsonObject, formInfo);
     EXPECT_EQ(formInfo.name, "testName");
     EXPECT_TRUE(formInfo.resizable);
     EXPECT_TRUE(formInfo.isColorModeRefreshEnabled);
-    EXPECT_TRUE(formInfo.enableTint);
+    EXPECT_EQ(formInfo.enableTint, BoolEnum::BOOL_TRUE);
+    EXPECT_TRUE(formInfo.enableReminderAgentRefresh);
 }
 
 /**
@@ -5560,12 +5853,29 @@ HWTEST_F(BmsBundleParserTest, FormInfo_0400, Function | MediumTest | Level1)
     formInfo.name = "testName";
     formInfo.resizable = true;
     formInfo.isColorModeRefreshEnabled = true;
-    formInfo.enableTint = true;
+    formInfo.enableTint = BoolEnum::BOOL_TRUE;
+    formInfo.enableReminderAgentRefresh = true;
     to_json(jsonObject, formInfo);
     EXPECT_TRUE(jsonObject["resizable"]);
     EXPECT_EQ(jsonObject["name"], "testName");
     EXPECT_TRUE(jsonObject["isColorModeRefreshEnabled"]);
     EXPECT_TRUE(jsonObject["enableTint"]);
+    EXPECT_TRUE(jsonObject["enableReminderAgentRefresh"]);
+}
+
+/**
+ * @tc.number: FormInfo_0450
+ * @tc.name: Test from_json default enableTint
+ * @tc.desc: verify enableTint defaults to BOOL_UNSPECIFIED when not specified in JSON
+ */
+HWTEST_F(BmsBundleParserTest, FormInfo_0450, Function | MediumTest | Level1)
+{
+    nlohmann::json jsonObject;
+    jsonObject["name"] = "testName";
+    FormInfo formInfo;
+    from_json(jsonObject, formInfo);
+    EXPECT_EQ(formInfo.name, "testName");
+    EXPECT_EQ(formInfo.enableTint, BoolEnum::BOOL_UNSPECIFIED);
 }
 
 /**
@@ -5668,6 +5978,114 @@ HWTEST_F(BmsBundleParserTest, FormInfo_0900, Function | MediumTest | Level1)
     EXPECT_EQ(info->updateEnabled, false);
     if (info != nullptr) {
         delete info;
+    }
+}
+
+/**
+ * @tc.number: FormInfo_1000
+ * @tc.name: Test from_json enableTint false
+ * @tc.desc: test enableTint of FormInfo from_json with false value
+ */
+HWTEST_F(BmsBundleParserTest, FormInfo_1000, Function | MediumTest | Level1)
+{
+    nlohmann::json jsonObject;
+    jsonObject["name"] = "testName";
+    jsonObject["enableTint"] = false;
+    FormInfo formInfo;
+    from_json(jsonObject, formInfo);
+    EXPECT_EQ(formInfo.name, "testName");
+    EXPECT_EQ(formInfo.enableTint, BoolEnum::BOOL_FALSE);
+}
+
+/**
+ * @tc.number: FormInfo_1100
+ * @tc.name: Test from_json enableTint type error
+ * @tc.desc: test enableTint of FormInfo from_json with wrong type
+ */
+HWTEST_F(BmsBundleParserTest, FormInfo_1100, Function | MediumTest | Level1)
+{
+    nlohmann::json jsonObject;
+    jsonObject["name"] = "testName";
+    jsonObject["enableTint"] = "not_bool";
+    FormInfo formInfo;
+    from_json(jsonObject, formInfo);
+    EXPECT_EQ(formInfo.enableTint, BoolEnum::BOOL_UNSPECIFIED);
+}
+
+/**
+ * @tc.number: FormInfo_1200
+ * @tc.name: Test to_json enableTint false
+ * @tc.desc: test enableTint of FormInfo to_json with BOOL_FALSE
+ */
+HWTEST_F(BmsBundleParserTest, FormInfo_1200, Function | MediumTest | Level1)
+{
+    nlohmann::json jsonObject;
+    FormInfo formInfo;
+    formInfo.name = "testName";
+    formInfo.enableTint = BoolEnum::BOOL_FALSE;
+    to_json(jsonObject, formInfo);
+    EXPECT_EQ(jsonObject["name"], "testName");
+    EXPECT_FALSE(jsonObject["enableTint"].get<bool>());
+}
+
+/**
+ * @tc.number: FormInfo_1300
+ * @tc.name: Test to_json enableTint unspecified
+ * @tc.desc: test enableTint of FormInfo to_json with BOOL_UNSPECIFIED
+ */
+HWTEST_F(BmsBundleParserTest, FormInfo_1300, Function | MediumTest | Level1)
+{
+    nlohmann::json jsonObject;
+    FormInfo formInfo;
+    formInfo.name = "testName";
+    formInfo.enableTint = BoolEnum::BOOL_UNSPECIFIED;
+    to_json(jsonObject, formInfo);
+    EXPECT_EQ(jsonObject["name"], "testName");
+    EXPECT_FALSE(jsonObject.contains("enableTint"));
+}
+
+/**
+ * @tc.number: FormInfo_1400
+ * @tc.name: Test IPC Marshalling and Unmarshalling enableTint
+ * @tc.desc: test enableTint of FormInfo IPC round-trip
+ */
+HWTEST_F(BmsBundleParserTest, FormInfo_1400, Function | MediumTest | Level1)
+{
+    FormInfo formInfo;
+    formInfo.name = NAME;
+    formInfo.enableTint = BoolEnum::BOOL_TRUE;
+    Parcel parcel;
+    auto ret = formInfo.Marshalling(parcel);
+    EXPECT_TRUE(ret);
+    auto info = formInfo.Unmarshalling(parcel);
+    EXPECT_NE(info, nullptr);
+    EXPECT_EQ(info->enableTint, BoolEnum::BOOL_TRUE);
+    if (info != nullptr) {
+        delete info;
+    }
+
+    FormInfo formInfo2;
+    formInfo2.name = NAME;
+    formInfo2.enableTint = BoolEnum::BOOL_FALSE;
+    Parcel parcel2;
+    EXPECT_TRUE(formInfo2.Marshalling(parcel2));
+    auto info2 = formInfo2.Unmarshalling(parcel2);
+    EXPECT_NE(info2, nullptr);
+    EXPECT_EQ(info2->enableTint, BoolEnum::BOOL_FALSE);
+    if (info2 != nullptr) {
+        delete info2;
+    }
+
+    FormInfo formInfo3;
+    formInfo3.name = NAME;
+    formInfo3.enableTint = BoolEnum::BOOL_UNSPECIFIED;
+    Parcel parcel3;
+    EXPECT_TRUE(formInfo3.Marshalling(parcel3));
+    auto info3 = formInfo3.Unmarshalling(parcel3);
+    EXPECT_NE(info3, nullptr);
+    EXPECT_EQ(info3->enableTint, BoolEnum::BOOL_UNSPECIFIED);
+    if (info3 != nullptr) {
+        delete info3;
     }
 }
 

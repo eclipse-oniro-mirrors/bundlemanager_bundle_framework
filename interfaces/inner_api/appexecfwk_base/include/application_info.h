@@ -260,6 +260,7 @@ struct ApplicationInfo : public Parcelable {
     bool needAppDetail = false;
     bool cloudFileSyncEnabled = false;
     bool cloudStructuredDataSyncEnabled = false;
+    bool keepDataOnUninstall = false;
 
     bool hwasanEnabled = false;
     bool ubsanEnabled = false;

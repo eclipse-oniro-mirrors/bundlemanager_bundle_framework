@@ -35,6 +35,11 @@ export default namespace appControl {
     UI_EXTENSION = 2
   }
 
+  export enum RecoverComponentType {
+    EXTENSION = 1,
+    UI_EXTENSION = 2
+  }
+
   export enum DisposedType {
     BLOCK_APPLICATION = 1,
     BLOCK_ABILITY = 2,
@@ -65,6 +70,12 @@ export default namespace appControl {
     want: Want;
     uninstallComponentType: UninstallComponentType;
     priority: int;
+  }
+
+  export interface RecoverDisposedRule {
+    want: Want;
+    priority: int;
+    recoverComponentType: RecoverComponentType;
   }
 
   export interface DisposedRuleConfiguration {
@@ -130,6 +141,23 @@ export default namespace appControl {
     }
   }
 
+  export class RecoverDisposedRuleInner implements RecoverDisposedRule {
+    public want: Want = {};
+    public recoverComponentType: RecoverComponentType = RecoverComponentType.EXTENSION;
+    public priority: int;
+
+    constructor() { }
+    constructor(recoverComponentType: RecoverComponentType, priority: int) {
+        this.recoverComponentType = recoverComponentType;
+        this.priority = priority;
+    }
+    constructor(recoverComponentType: RecoverComponentType, priority: int, want: Want) {
+        this.recoverComponentType = recoverComponentType;
+        this.priority = priority;
+        this.want = want;
+    }
+  }
+
   export class DisposedRuleConfigurationInner implements DisposedRuleConfiguration {
     public appId: string = '';
     public appIndex: int;
@@ -155,6 +183,9 @@ export default namespace appControl {
   native function setUninstallDisposedRuleNative(appIdentifier: string, rule: UninstallDisposedRule, appIndex: int): void;
   native function getUninstallDisposedRuleNative(appIdentifier: string, appIndex: int): UninstallDisposedRule;
   native function deleteUninstallDisposedRuleNative(appIdentifier: string, appIndex: int): void;
+  native function setRecoverDisposedRuleNative(rule: RecoverDisposedRule): void;
+  native function getRecoverDisposedRuleNative(): RecoverDisposedRule;
+  native function deleteRecoverDisposedRuleNative(): void;
   native function setDisposedRules(disposedRuleConfigurations: Array<DisposedRuleConfiguration>): void;
 
 
@@ -290,6 +321,21 @@ export default namespace appControl {
   {
     let appIndexInfo = appIndex ?? 0;
     deleteUninstallDisposedRuleNative(appIdentifier, appIndexInfo);
+  }
+
+  function setRecoverDisposedRule(rule: RecoverDisposedRule): void
+  {
+    setRecoverDisposedRuleNative(rule);
+  }
+
+  function getRecoverDisposedRule(): RecoverDisposedRule
+  {
+    return getRecoverDisposedRuleNative();
+  }
+
+  function deleteRecoverDisposedRule(): void
+  {
+    deleteRecoverDisposedRuleNative();
   }
 
   function getDisposedRulesByBundle(bundleName: string): Array<DisposedRuleConfiguration>

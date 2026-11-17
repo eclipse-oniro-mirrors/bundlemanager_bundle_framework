@@ -286,6 +286,7 @@ enum class BundleMgrInterfaceCode : uint32_t {
     GET_BUNDLE_RESOURCE_ARCHIVE_INFO = 260,
     QUERY_IPC_GROUP_INFOS = 261,
     GET_LAUNCH_SERVICES = 262,
+    CHECK_BUNDLE_EXIST_BY_DEVELOPER_ID_AND_ASSET_GROUP = 263,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */
@@ -321,6 +322,9 @@ enum class AppControlManagerInterfaceCode : uint8_t {
     DELETE_DISPOSED_RULES = 28,
     GET_DISPOSED_RULES = 29,
     GET_ALL_DISPOSED_RULES_BY_SETTER = 30,
+    SET_RECOVER_DISPOSED_RULE = 31,
+    GET_RECOVER_DISPOSED_RULE = 32,
+    DELETE_RECOVER_DISPOSED_RULE = 33,
 };
 
 /* SAID: 401-96 Interface No.96 subservice also provides the following interfaces */
@@ -352,6 +356,7 @@ enum class BundleInstallerInterfaceCode : uint8_t {
     UNINSTALL_NEW_PREINSTALLED_APPS = 19,
     CREATE_CLI_SANDBOX_APP = 20,
     DESTROY_CLI_SANDBOX_APP = 21,
+    GET_ENTERPRISE_RE_SIGNATURE_CERT_INFO = 22,
 };
 
 /* SAID: 401-28 Interface No.28 subservice also provides the following interfaces */

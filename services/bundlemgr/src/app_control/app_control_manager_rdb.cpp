@@ -29,6 +29,7 @@ namespace {
     constexpr const char* RUNNING_CONTROL = "RunningControl";
     constexpr const char* DISPOSED_RULE = "DisposedRule";
     constexpr const char* UNINSTALL_DISPOSED_RULE = "UninstallDisposedRule";
+    constexpr const char* RECOVER_DISPOSED_RULE = "RecoverDisposedRule";
     constexpr const char* APP_CONTROL_EDM_DEFAULT_MESSAGE = "The app has been disabled by EDM";
     constexpr int8_t CALLING_NAME_INDEX = 1;
     constexpr int8_t APP_ID_INDEX = 4;
@@ -1024,6 +1025,139 @@ ErrCode AppControlManagerRdb::GetUninstallDisposedRule(const std::string &appIde
         return ERR_APPEXECFWK_DB_RESULT_SET_OPT_ERROR;
     }
     UninstallDisposedRule::FromString(ruleString, rule);
+    return ERR_OK;
+}
+
+ErrCode AppControlManagerRdb::SetRecoverDisposedRule(const std::string &callingName,
+    const RecoverDisposedRule &rule, int32_t userId)
+{
+    LOG_D(BMS_TAG_DEFAULT, "begin");
+    NativeRdb::AbsRdbPredicates absRdbPredicates(APP_CONTROL_RDB_TABLE_NAME);
+    absRdbPredicates.EqualTo(CALLING_NAME, callingName);
+    absRdbPredicates.EqualTo(APP_CONTROL_LIST, RECOVER_DISPOSED_RULE);
+    absRdbPredicates.EqualTo(USER_ID, std::to_string(userId));
+
+    int64_t timeStamp = BundleUtil::GetCurrentTimeMs();
+    NativeRdb::ValuesBucket valuesBucket;
+    valuesBucket.PutString(CALLING_NAME, callingName);
+    valuesBucket.PutString(APP_CONTROL_LIST, RECOVER_DISPOSED_RULE);
+    valuesBucket.PutString(DISPOSED_STATUS, rule.ToString());
+    valuesBucket.PutInt(PRIORITY, rule.priority);
+    valuesBucket.PutLong(TIME_STAMP, timeStamp);
+    valuesBucket.PutString(USER_ID, std::to_string(userId));
+    bool ret = rdbDataManager_->UpdateOrInsertData(valuesBucket, absRdbPredicates);
+    if (!ret) {
+        return ERR_APPEXECFWK_DB_INSERT_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode AppControlManagerRdb::DeleteRecoverDisposedRule(const std::string &callingName, int32_t userId)
+{
+    LOG_D(BMS_TAG_DEFAULT, "begin");
+    NativeRdb::AbsRdbPredicates absRdbPredicates(APP_CONTROL_RDB_TABLE_NAME);
+    absRdbPredicates.EqualTo(APP_CONTROL_LIST, RECOVER_DISPOSED_RULE);
+    absRdbPredicates.EqualTo(CALLING_NAME, callingName);
+    absRdbPredicates.EqualTo(USER_ID, std::to_string(userId));
+    bool ret = rdbDataManager_->DeleteData(absRdbPredicates);
+    if (!ret) {
+        return ERR_APPEXECFWK_DB_DELETE_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode AppControlManagerRdb::GetRecoverDisposedRule(const std::string &callingName, int32_t userId,
+    RecoverDisposedRule &rule)
+{
+    LOG_D(BMS_TAG_DEFAULT, "begin");
+    NativeRdb::AbsRdbPredicates absRdbPredicates(APP_CONTROL_RDB_TABLE_NAME);
+    absRdbPredicates.EqualTo(APP_CONTROL_LIST, RECOVER_DISPOSED_RULE);
+    absRdbPredicates.EqualTo(CALLING_NAME, callingName);
+    absRdbPredicates.EqualTo(USER_ID, std::to_string(userId));
+    auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
+    if (absSharedResultSet == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "null absSharedResultSet");
+        return ERR_APPEXECFWK_DB_GET_DATA_ERROR;
+    }
+    ScopeGuard stateGuard([&] { absSharedResultSet->Close(); });
+    int32_t count;
+    int ret = absSharedResultSet->GetRowCount(count);
+    if (ret != NativeRdb::E_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "GetRowCount failed, ret: %{public}d", ret);
+        return ERR_APPEXECFWK_DB_GET_DATA_ERROR;
+    }
+    if (count == 0) {
+        LOG_D(BMS_TAG_DEFAULT, "no recover disposed rule for caller");
+        return ERR_BUNDLE_MANAGER_RECOVER_DISPOSED_RULE_NOT_CONFIGURED;
+    }
+    ret = absSharedResultSet->GoToFirstRow();
+    if (ret != NativeRdb::E_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "GoToFirstRow failed, ret: %{public}d", ret);
+        return ERR_APPEXECFWK_DB_GET_DATA_ERROR;
+    }
+    std::string ruleString;
+    ret = absSharedResultSet->GetString(DISPOSED_STATUS_INDEX, ruleString);
+    if (ret != NativeRdb::E_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "GetString failed, ret: %{public}d", ret);
+        return ERR_APPEXECFWK_DB_GET_DATA_ERROR;
+    }
+    if (!RecoverDisposedRule::FromString(ruleString, rule)) {
+        LOG_E(BMS_TAG_DEFAULT, "parse recover disposed rule failed");
+        return ERR_APPEXECFWK_DB_GET_DATA_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode AppControlManagerRdb::GetRecoverDisposedRuleByUserId(int32_t userId, RecoverDisposedRule &rule,
+    std::string &callerName, int64_t &timeStamp)
+{
+    LOG_D(BMS_TAG_DEFAULT, "begin");
+    NativeRdb::AbsRdbPredicates absRdbPredicates(APP_CONTROL_RDB_TABLE_NAME);
+    absRdbPredicates.EqualTo(APP_CONTROL_LIST, RECOVER_DISPOSED_RULE);
+    absRdbPredicates.EqualTo(USER_ID, std::to_string(userId));
+    absRdbPredicates.OrderByAsc(PRIORITY);
+    absRdbPredicates.OrderByAsc(TIME_STAMP);
+    auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
+    if (absSharedResultSet == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "null absSharedResultSet");
+        return ERR_APPEXECFWK_DB_GET_DATA_ERROR;
+    }
+    ScopeGuard stateGuard([&] { absSharedResultSet->Close(); });
+    int32_t count;
+    int ret = absSharedResultSet->GetRowCount(count);
+    if (ret != NativeRdb::E_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "GetRowCount failed, ret: %{public}d", ret);
+        return ERR_APPEXECFWK_DB_GET_DATA_ERROR;
+    }
+    if (count == 0) {
+        LOG_D(BMS_TAG_DEFAULT, "no recover disposed rule for user:%{public}d", userId);
+        return ERR_BUNDLE_MANAGER_RECOVER_DISPOSED_RULE_NOT_CONFIGURED;
+    }
+    ret = absSharedResultSet->GoToFirstRow();
+    if (ret != NativeRdb::E_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "GoToFirstRow failed, ret: %{public}d", ret);
+        return ERR_APPEXECFWK_DB_GET_DATA_ERROR;
+    }
+    std::string ruleString;
+    ret = absSharedResultSet->GetString(DISPOSED_STATUS_INDEX, ruleString);
+    if (ret != NativeRdb::E_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "GetString failed, ret: %{public}d", ret);
+        return ERR_APPEXECFWK_DB_GET_DATA_ERROR;
+    }
+    if (!RecoverDisposedRule::FromString(ruleString, rule)) {
+        LOG_E(BMS_TAG_DEFAULT, "parse recover disposed rule failed");
+        return ERR_APPEXECFWK_DB_GET_DATA_ERROR;
+    }
+    ret = absSharedResultSet->GetString(CALLING_NAME_INDEX, callerName);
+    if (ret != NativeRdb::E_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "get callerName failed, ret: %{public}d", ret);
+        return ERR_APPEXECFWK_DB_GET_DATA_ERROR;
+    }
+    ret = absSharedResultSet->GetLong(TIME_STAMP_INDEX, timeStamp);
+    if (ret != NativeRdb::E_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "get timeStamp failed, ret: %{public}d", ret);
+        return ERR_APPEXECFWK_DB_GET_DATA_ERROR;
+    }
     return ERR_OK;
 }
 }

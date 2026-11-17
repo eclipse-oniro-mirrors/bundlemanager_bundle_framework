@@ -33,6 +33,9 @@ static napi_value AppControlExport(napi_env env, napi_value exports)
     napi_value uninstallComponentType = nullptr;
     NAPI_CALL(env, napi_create_object(env, &uninstallComponentType));
     CreateUninstallComponentType(env, uninstallComponentType);
+    napi_value recoverComponentType = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &recoverComponentType));
+    CreateRecoverComponentType(env, recoverComponentType);
     napi_value disposedType = nullptr;
     NAPI_CALL(env, napi_create_object(env, &disposedType));
     CreateDisposedType(env, disposedType);
@@ -58,8 +61,12 @@ static napi_value AppControlExport(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getUninstallDisposedRule", GetUninstallDisposedRule),
         DECLARE_NAPI_FUNCTION("setUninstallDisposedRule", SetUninstallDisposedRule),
         DECLARE_NAPI_FUNCTION("deleteUninstallDisposedRule", DeleteUninstallDisposedRule),
+        DECLARE_NAPI_FUNCTION("getRecoverDisposedRule", GetRecoverDisposedRule),
+        DECLARE_NAPI_FUNCTION("setRecoverDisposedRule", SetRecoverDisposedRule),
+        DECLARE_NAPI_FUNCTION("deleteRecoverDisposedRule", DeleteRecoverDisposedRule),
         DECLARE_NAPI_PROPERTY("ComponentType", componentType),
         DECLARE_NAPI_PROPERTY("UninstallComponentType", uninstallComponentType),
+        DECLARE_NAPI_PROPERTY("RecoverComponentType", recoverComponentType),
         DECLARE_NAPI_PROPERTY("DisposedType", disposedType),
         DECLARE_NAPI_PROPERTY("ControlType", controlType),
         DECLARE_NAPI_PROPERTY("PageJumpMode", pageJumpMode),

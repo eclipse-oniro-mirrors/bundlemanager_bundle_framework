@@ -1297,6 +1297,9 @@ public:
     virtual ErrCode GetAllBundleInfoByDeveloperId(const std::string &developerId,
         std::vector<BundleInfo> &bundleInfos, int32_t userId) override;
 
+    virtual ErrCode CheckBundleExistByDeveloperIdAndAssetGroup(const std::string &developerId,
+        const std::string &assetAccessGroup, int32_t userId, bool &isExist) override;
+
     virtual ErrCode GetDeveloperIds(const std::string &appDistributionType,
         std::vector<std::string> &developerIdList, int32_t userId) override;
 

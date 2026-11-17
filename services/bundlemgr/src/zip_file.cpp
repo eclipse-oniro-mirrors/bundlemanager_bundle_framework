@@ -638,6 +638,14 @@ bool ZipFile::GetDataOffsetRelative(const std::string &file, ZipPos &offset, uin
 
     offset = GetEntryDataOffset(zipEntry, extraSize);
     length = zipEntry.compressedSize;
+    if (offset + length > fileStartPos_ + fileLength_) {
+        APP_LOGE("check entry data offset failed, offset(%{public}llu) + length(%{public}u) > "
+            "zip content end(%{public}llu)",
+            offset,
+            length,
+            fileStartPos_ + fileLength_);
+        return false;
+    }
     return true;
 }
 

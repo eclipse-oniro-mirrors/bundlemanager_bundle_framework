@@ -160,8 +160,10 @@ constexpr const char* ERR_MSG_SHORTCUT_NOT_EXIST =
 constexpr const char* ERR_MSG_INSTALL_FAILED_INCONSISTENT_SIGNATURE =
     "Failed to install the HAP because an application with the same bundle name "
     "but different signature information exists on the device.";
-constexpr const char* ERR_MSG_INVALID_UNINSTALL_RULE =
+constexpr const char* ERR_MSG_INVALID_DISPOSED_RULE =
     "The specified bundleName of want is not the same with caller.";
+constexpr const char* ERR_MSG_RECOVER_DISPOSED_RULE_NOT_CONFIGURED =
+    "The caller has not configured disposal rules.";
 constexpr const char* ERR_MSG_APP_DISTRIBUTION_TYPE_NOT_ALLOW_INSTALL =
     "Failed to install the HAP or HSP because the app distribution type is not allowed.";
 constexpr const char* ERR_MSG_INSTALL_FAILED_AND_RESTORE_TO_PREINSTALLED =
@@ -299,7 +301,8 @@ static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_SHORTCUT_ID_ILLEGAL_ERROR, ERR_MSG_SHORTCUT_ID_ILLEGAL },
     { ERROR_SHORTCUT_MANAGER_NOT_EXIST, ERR_MSG_SHORTCUT_NOT_EXIST },
     { ERROR_INSTALL_FAILED_INCONSISTENT_SIGNATURE, ERR_MSG_INSTALL_FAILED_INCONSISTENT_SIGNATURE },
-    { ERROR_INVALID_UNINSTALL_RULE, ERR_MSG_INVALID_UNINSTALL_RULE },
+    { ERROR_INVALID_DISPOSED_RULE, ERR_MSG_INVALID_DISPOSED_RULE },
+    { ERROR_RECOVER_DISPOSED_RULE_NOT_CONFIGURED, ERR_MSG_RECOVER_DISPOSED_RULE_NOT_CONFIGURED },
     { ERROR_APP_DISTRIBUTION_TYPE_NOT_ALLOW_INSTALL, ERR_MSG_APP_DISTRIBUTION_TYPE_NOT_ALLOW_INSTALL },
     { ERROR_INSTALL_FAILED_AND_RESTORE_TO_PREINSTALLED, ERR_MSG_INSTALL_FAILED_AND_RESTORE_TO_PREINSTALLED },
     { ERROR_PLUGIN_ID_CHECK_ERROR, ERR_MSG_PLUGIN_ID_CHECK_ERROR},

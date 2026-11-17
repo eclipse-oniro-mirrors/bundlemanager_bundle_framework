@@ -30,6 +30,7 @@
 #include "bundle_dir.h"
 #include "bundle_info.h"
 #include "base_bundle_installer.h"
+#include "bms_param.h"
 #include "bundle_data_mgr.h"
 #include "bundle_data_storage_rdb.h"
 #include "bundle_mgr_service.h"
@@ -42,7 +43,10 @@
 #include "message_parcel.h"
 #include "nlohmann/json.hpp"
 #include "parameters.h"
+#include "pre_install_bundle_info.h"
+#include "preinstall_data_storage_interface.h"
 #include "shortcut_info.h"
+#include "scope_guard.h"
 #include "bundle_resource/bundle_resource_host_impl.h"
 #include "bundle_resource/bundle_resource_manager.h"
 
@@ -119,6 +123,19 @@ static InnerBundleUserInfo MakeUserInfo(const std::string &name, int32_t userId,
     userInfo.bundleUserInfo.userId = userId;
     userInfo.bundleUserInfo.enabled = enabled;
     return userInfo;
+}
+
+static InnerBundleInfo MakeIdentityBundleInfo(const std::string &bundleName, int32_t userId,
+    const std::string &developerId, const std::string &assetAccessGroup)
+{
+    ApplicationInfo appInfo;
+    appInfo.bundleName = bundleName;
+    appInfo.assetAccessGroups.push_back(assetAccessGroup);
+    InnerBundleInfo info;
+    info.SetBaseApplicationInfo(appInfo);
+    info.UpdateDeveloperId(developerId);
+    info.AddInnerBundleUserInfo(MakeUserInfo(bundleName, userId, true));
+    return info;
 }
 
 HWTEST_F(BmsDualModeQueryTest, GetApplicationEnabledV9_DualModeClone_0100, Function | SmallTest | Level0)
@@ -314,6 +331,227 @@ HWTEST_F(BmsDualModeQueryTest, CheckBundleExist_NonCloneAppIndex10000_0200, Func
     auto ret = dataMgr->CheckBundleExist(BUNDLE_NAME, TEST_USERID,
         ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_APPINDEX_NOT_EXIST);
+}
+
+HWTEST_F(BmsDualModeQueryTest, CheckBundleExistByDeveloperIdAndAssetGroup_Hidden_0100,
+    Function | SmallTest | Level0)
+{
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->multiUserIdsSet_.insert(TEST_USERID);
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] = MakeIdentityBundleInfo(
+        BUNDLE_NAME, TEST_USERID, "hiddenDeveloper", "hiddenGroup");
+
+    // Keep the uninstall query independent of an empty database and unrelated installed identities.
+    const std::string keptBundle = "com.example.check.hidden.kept";
+    ASSERT_NE(dataMgr->uninstallDataMgr_, nullptr);
+    ScopeGuard cleanup([&] { dataMgr->uninstallDataMgr_->DeleteUninstallBundleInfo(keptBundle); });
+    UninstallBundleInfo keptInfo;
+    keptInfo.developerId = "unrelatedDeveloper";
+    keptInfo.assetAccessGroups = {"unrelatedGroup"};
+    keptInfo.userInfos[std::to_string(TEST_USERID)] = UninstallDataUserInfo();
+    EXPECT_TRUE(dataMgr->UpdateUninstallBundleInfo(keptBundle, keptInfo));
+
+    bool isExist = true;
+    auto ret = dataMgr->CheckBundleExistByDeveloperIdAndAssetGroup(
+        "hiddenDeveloper", "hiddenGroup", TEST_USERID, isExist);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_FALSE(isExist);
+}
+
+HWTEST_F(BmsDualModeQueryTest, CheckBundleExistByDeveloperIdAndAssetGroup_CurrentModeOnly_0200,
+    Function | SmallTest | Level0)
+{
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->multiUserIdsSet_.insert(TEST_USERID);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = MakeIdentityBundleInfo(
+        BUNDLE_NAME, TEST_USERID, "currentDeveloper", "currentGroup");
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] = MakeIdentityBundleInfo(
+        BUNDLE_NAME, TEST_USERID, "hiddenDeveloper", "hiddenGroup");
+
+    // Keep the uninstall query independent of an empty database and unrelated installed identities.
+    const std::string keptBundle = "com.example.check.currentmode.kept";
+    ASSERT_NE(dataMgr->uninstallDataMgr_, nullptr);
+    ScopeGuard cleanup([&] { dataMgr->uninstallDataMgr_->DeleteUninstallBundleInfo(keptBundle); });
+    UninstallBundleInfo keptInfo;
+    keptInfo.developerId = "unrelatedDeveloper";
+    keptInfo.assetAccessGroups = {"unrelatedGroup"};
+    keptInfo.userInfos[std::to_string(TEST_USERID)] = UninstallDataUserInfo();
+    EXPECT_TRUE(dataMgr->UpdateUninstallBundleInfo(keptBundle, keptInfo));
+
+    bool isExist = false;
+    EXPECT_EQ(ERR_OK, dataMgr->CheckBundleExistByDeveloperIdAndAssetGroup(
+        "currentDeveloper", "currentGroup", TEST_USERID, isExist));
+    EXPECT_TRUE(isExist);
+    isExist = true;
+    EXPECT_EQ(ERR_OK, dataMgr->CheckBundleExistByDeveloperIdAndAssetGroup(
+        "hiddenDeveloper", "hiddenGroup", TEST_USERID, isExist));
+    EXPECT_FALSE(isExist);
+}
+
+class BmsUninstallIdentityQueryTest : public BmsDualModeQueryTest {
+public:
+    void SetUp() override
+    {
+        oldTestMode_ = OHOS::system::GetParameter(TEST_DUAL_MODE_PARAM, "false");
+        oldCurrentMode_ = OHOS::system::GetParameter(TEST_ISPCMODE_PARAM, "-1");
+        oldMainMode_ = OHOS::system::GetParameter(TEST_MAINMODE_PARAM, "-1");
+        BmsDualModeQueryTest::SetUp();
+        auto service = DelayedSingleton<BundleMgrService>::GetInstance();
+        oldBmsParam_ = service->bmsParam_;
+        bmsParam_ = std::make_shared<BmsParam>();
+        ASSERT_NE(bmsParam_, nullptr);
+        hadPolicies_ = bmsParam_->GetBmsParam(
+            ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICIES_KEY, oldPolicies_);
+        EXPECT_TRUE(bmsParam_->DeleteBmsParam(
+            ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICIES_KEY));
+        service->bmsParam_ = bmsParam_;
+        dataMgr_ = std::make_shared<BundleDataMgr>();
+        ASSERT_NE(dataMgr_, nullptr);
+    }
+
+    void TearDown() override
+    {
+        if (bmsParam_ != nullptr) {
+            if (hadPolicies_) {
+                EXPECT_TRUE(bmsParam_->SaveBmsParam(
+                    ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICIES_KEY, oldPolicies_));
+            } else {
+                EXPECT_TRUE(bmsParam_->DeleteBmsParam(
+                    ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICIES_KEY));
+            }
+        }
+        DelayedSingleton<BundleMgrService>::GetInstance()->bmsParam_ = oldBmsParam_;
+        EXPECT_TRUE(OHOS::system::SetParameter(TEST_DUAL_MODE_PARAM, oldTestMode_));
+        EXPECT_TRUE(OHOS::system::SetParameter(TEST_ISPCMODE_PARAM, oldCurrentMode_));
+        EXPECT_TRUE(OHOS::system::SetParameter(TEST_MAINMODE_PARAM, oldMainMode_));
+    }
+
+    void SavePolicies(const std::string &policies)
+    {
+        EXPECT_TRUE(bmsParam_->SaveBmsParam(
+            ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICIES_KEY, policies));
+    }
+
+    bool MatchesPolicy(DeviceModeDistributionPolicy policy, const std::string &bundleKey = BUNDLE_NAME)
+    {
+        UninstallBundleInfo info;
+        info.deviceModeDistributionPolicy = policy;
+        info.developerId = "retainedDeveloper";
+        info.assetAccessGroups = {"retainedGroup"};
+        info.userInfos[std::to_string(TEST_USERID)] = UninstallDataUserInfo();
+        return dataMgr_->MatchUninstallBundleInfo({{bundleKey, info}},
+            info.developerId, info.assetAccessGroups.front(), TEST_USERID);
+    }
+
+protected:
+    std::shared_ptr<BundleDataMgr> dataMgr_;
+    std::shared_ptr<BmsParam> bmsParam_;
+    std::shared_ptr<BmsParam> oldBmsParam_;
+    bool hadPolicies_ = false;
+    std::string oldPolicies_;
+    std::string oldTestMode_;
+    std::string oldCurrentMode_;
+    std::string oldMainMode_;
+};
+
+HWTEST_F(BmsUninstallIdentityQueryTest, MatchUninstallBundleInfo_NonDualMode_0100,
+    Function | SmallTest | Level0)
+{
+    // A saved policy set must not filter ordinary records on a non-dual-mode device.
+    SavePolicies("4,6,8");
+    EXPECT_FALSE(DualModeHelper::IsDualModeDevice());
+    for (auto policy : {DeviceModeDistributionPolicy::UNSPECIFIED, DeviceModeDistributionPolicy::MAIN_ONLY,
+        DeviceModeDistributionPolicy::SUB_ONLY, DeviceModeDistributionPolicy::UNIVERSAL_IDENTICAL_PACKAGE,
+        DeviceModeDistributionPolicy::PARTIAL_COMPATIBLE_IDENTICAL_PACKAGE,
+        DeviceModeDistributionPolicy::FULL_COMPATIBLE_IDENTICAL_PACKAGE,
+        DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE}) {
+        EXPECT_TRUE(MatchesPolicy(policy)) << static_cast<int32_t>(policy);
+    }
+    EXPECT_FALSE(MatchesPolicy(DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE, PREFIXED_NAME));
+}
+
+HWTEST_F(BmsUninstallIdentityQueryTest, MatchUninstallBundleInfo_DefaultModePolicy_0200,
+    Function | SmallTest | Level0)
+{
+    for (bool secondary : {false, true}) {
+        if (secondary) {
+            EnableSecondaryMode();
+        } else {
+            EnablePrimaryMode();
+        }
+        EXPECT_TRUE(DualModeHelper::IsDualModeDevice());
+        EXPECT_EQ(MatchesPolicy(DeviceModeDistributionPolicy::MAIN_ONLY), !secondary);
+        EXPECT_EQ(MatchesPolicy(DeviceModeDistributionPolicy::SUB_ONLY), secondary);
+        for (auto policy : {DeviceModeDistributionPolicy::UNSPECIFIED,
+            DeviceModeDistributionPolicy::UNIVERSAL_IDENTICAL_PACKAGE,
+            DeviceModeDistributionPolicy::PARTIAL_COMPATIBLE_IDENTICAL_PACKAGE,
+            DeviceModeDistributionPolicy::FULL_COMPATIBLE_IDENTICAL_PACKAGE}) {
+            EXPECT_TRUE(MatchesPolicy(policy)) << static_cast<int32_t>(policy);
+        }
+    }
+}
+
+HWTEST_F(BmsUninstallIdentityQueryTest, MatchUninstallBundleInfo_DifferentPackage_0300,
+    Function | SmallTest | Level0)
+{
+    SavePolicies("2,4,6,8");
+    for (auto policy : {DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE,
+        DeviceModeDistributionPolicy::PARTIAL_COMPATIBLE_DIFFERENT_PACKAGE,
+        DeviceModeDistributionPolicy::FULL_COMPATIBLE_DIFFERENT_PACKAGE}) {
+        EnablePrimaryMode();
+        EXPECT_TRUE(MatchesPolicy(policy));
+        EXPECT_FALSE(MatchesPolicy(policy, PREFIXED_NAME));
+        EnableSecondaryMode();
+        EXPECT_FALSE(MatchesPolicy(policy));
+        EXPECT_TRUE(MatchesPolicy(policy, PREFIXED_NAME));
+    }
+    // Old prefixed records without a persisted policy still belong to secondary mode.
+    EnablePrimaryMode();
+    EXPECT_FALSE(MatchesPolicy(DeviceModeDistributionPolicy::UNSPECIFIED, PREFIXED_NAME));
+    EnableSecondaryMode();
+    EXPECT_TRUE(MatchesPolicy(DeviceModeDistributionPolicy::UNSPECIFIED, PREFIXED_NAME));
+}
+
+HWTEST_F(BmsUninstallIdentityQueryTest, MatchUninstallBundleInfo_CurrentPolicySet_0400,
+    Function | SmallTest | Level0)
+{
+    for (bool secondary : {false, true}) {
+        if (secondary) {
+            EnableSecondaryMode();
+        } else {
+            EnablePrimaryMode();
+        }
+        // A valid set takes precedence over MAIN_ONLY/SUB_ONLY mode defaults.
+        SavePolicies("2,4,5,6,8");
+        EXPECT_TRUE(MatchesPolicy(DeviceModeDistributionPolicy::UNSPECIFIED));
+        EXPECT_FALSE(MatchesPolicy(DeviceModeDistributionPolicy::MAIN_ONLY));
+        EXPECT_TRUE(MatchesPolicy(DeviceModeDistributionPolicy::SUB_ONLY));
+        EXPECT_FALSE(MatchesPolicy(DeviceModeDistributionPolicy::UNIVERSAL_IDENTICAL_PACKAGE));
+        EXPECT_TRUE(MatchesPolicy(DeviceModeDistributionPolicy::PARTIAL_COMPATIBLE_IDENTICAL_PACKAGE));
+        EXPECT_FALSE(MatchesPolicy(DeviceModeDistributionPolicy::FULL_COMPATIBLE_IDENTICAL_PACKAGE));
+
+        // The next query must use the updated policy set rather than a cached result.
+        SavePolicies("1,3,4,6,7,8");
+        EXPECT_TRUE(MatchesPolicy(DeviceModeDistributionPolicy::MAIN_ONLY));
+        EXPECT_FALSE(MatchesPolicy(DeviceModeDistributionPolicy::SUB_ONLY));
+        EXPECT_TRUE(MatchesPolicy(DeviceModeDistributionPolicy::UNIVERSAL_IDENTICAL_PACKAGE));
+        EXPECT_FALSE(MatchesPolicy(DeviceModeDistributionPolicy::PARTIAL_COMPATIBLE_IDENTICAL_PACKAGE));
+        EXPECT_TRUE(MatchesPolicy(DeviceModeDistributionPolicy::FULL_COMPATIBLE_IDENTICAL_PACKAGE));
+    }
+}
+
+HWTEST_F(BmsUninstallIdentityQueryTest, MatchUninstallBundleInfo_NullBmsParam_0600,
+    Function | SmallTest | Level0)
+{
+    DelayedSingleton<BundleMgrService>::GetInstance()->bmsParam_ = nullptr;
+    EnablePrimaryMode();
+    EXPECT_TRUE(MatchesPolicy(DeviceModeDistributionPolicy::MAIN_ONLY));
+    EXPECT_FALSE(MatchesPolicy(DeviceModeDistributionPolicy::SUB_ONLY));
+    EnableSecondaryMode();
+    EXPECT_FALSE(MatchesPolicy(DeviceModeDistributionPolicy::MAIN_ONLY));
+    EXPECT_TRUE(MatchesPolicy(DeviceModeDistributionPolicy::SUB_ONLY));
 }
 
 // ====================== BundleDataMgr::IsBundleInstalled dual-mode ======================
@@ -2501,5 +2739,245 @@ HWTEST_F(BmsDualModeQueryTest, GetAllBundleInfoInstances_DualModeReqPermissions_
         EXPECT_EQ(instance.reqPermissionStates.size(), instance.reqPermissions.size());
         EXPECT_FALSE(instance.reqPermissionDetails.empty());
     }
+}
+
+// ====================== BundleDataMgr::GetRecoverablePreInstallBundleInfos dual-mode ======================
+// Recovery only targets apps visible in the current mode. The preinstall fan-out of a
+// different-package app persists two records (primary under the original key, clone under the
+// clone-prefixed key, both carrying the original bundle name in the value), which the legacy
+// loop consulted both by the same name — producing cross-mode false positives and duplicates.
+
+namespace {
+// In-memory stand-in for PreInstallDataStorageRdb so GetAllPreInstallBundleInfos is
+// deterministic without touching the real RDB. Seed via preInstallRecords_ (key = storage key).
+class MockPreInstallDataStorage : public IPreInstallDataStorage {
+public:
+    std::map<std::string, PreInstallBundleInfo> preInstallRecords_;
+
+    bool SavePreInstallStorageBundleInfo(const PreInstallBundleInfo &preInstallBundleInfo) override
+    {
+        preInstallRecords_[preInstallBundleInfo.GetBundleName()] = preInstallBundleInfo;
+        return true;
+    }
+
+    bool LoadAllPreInstallBundleInfos(std::vector<PreInstallBundleInfo> &preInstallBundleInfos) override
+    {
+        for (const auto &item : preInstallRecords_) {
+            preInstallBundleInfos.emplace_back(item.second);
+        }
+        return true;
+    }
+
+    bool DeletePreInstallStorageBundleInfo(const PreInstallBundleInfo &preInstallBundleInfo) override
+    {
+        return preInstallRecords_.erase(preInstallBundleInfo.GetBundleName()) > 0;
+    }
+
+    bool LoadPreInstallBundleInfo(const std::string &bundleName,
+        PreInstallBundleInfo &preInstallBundleInfo) override
+    {
+        auto it = preInstallRecords_.find(bundleName);
+        if (it == preInstallRecords_.end()) {
+            return false;
+        }
+        preInstallBundleInfo = it->second;
+        return true;
+    }
+};
+
+// Count how many recoverable entries reference the given bundle name.
+static size_t CountRecoverableEntries(const std::vector<PreInstallBundleInfo> &infos,
+    const std::string &bundleName)
+{
+    size_t count = 0;
+    for (const auto &info : infos) {
+        if (info.GetBundleName() == bundleName) {
+            ++count;
+        }
+    }
+    return count;
+}
+
+// Seed one different-package app's fan-out records the way the preinstall fan-out persists
+// them: primary record under the original key, clone record under the clone-prefixed key,
+// both records carrying the original bundle name in the value field.
+static std::shared_ptr<MockPreInstallDataStorage> SeedDiffPackageRecords(
+    const std::shared_ptr<BundleDataMgr> &dataMgr)
+{
+    auto storage = std::make_shared<MockPreInstallDataStorage>();
+    PreInstallBundleInfo primary;
+    primary.SetBundleName(BUNDLE_NAME);
+    primary.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE);
+    storage->preInstallRecords_[BUNDLE_NAME] = primary;
+    PreInstallBundleInfo clone = primary;
+    clone.SetIsDualModeCloneApp(true);
+    storage->preInstallRecords_[PREFIXED_NAME] = clone;
+    dataMgr->preInstallDataStorage_ = storage;
+    return storage;
+}
+
+// Seed one single record (key = bundleName) with the given policy.
+static std::shared_ptr<MockPreInstallDataStorage> SeedSingleRecord(
+    const std::shared_ptr<BundleDataMgr> &dataMgr, const std::string &bundleName,
+    DeviceModeDistributionPolicy policy)
+{
+    auto storage = std::make_shared<MockPreInstallDataStorage>();
+    PreInstallBundleInfo record;
+    record.SetBundleName(bundleName);
+    record.SetDeviceModeDistributionPolicy(policy);
+    storage->preInstallRecords_[bundleName] = record;
+    dataMgr->preInstallDataStorage_ = storage;
+    return storage;
+}
+}  // namespace
+
+// Secondary mode: only the clone record is visible; with the app not installed the list keeps
+// exactly one entry for it (the legacy loop returned both records -> duplicate entries).
+HWTEST_F(BmsDualModeQueryTest, GetRecoverablePreInstallBundleInfos_DualMode_0100,
+    Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    SeedDiffPackageRecords(dataMgr);
+    // neither variant installed
+    auto infos = dataMgr->GetRecoverablePreInstallBundleInfos(TEST_USERID);
+    EXPECT_EQ(CountRecoverableEntries(infos, BUNDLE_NAME), static_cast<size_t>(1));
+}
+
+// Primary mode: only the primary record is visible; same deduplication from the other side.
+HWTEST_F(BmsDualModeQueryTest, GetRecoverablePreInstallBundleInfos_DualMode_0200,
+    Function | SmallTest | Level0)
+{
+    EnablePrimaryMode();
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    SeedDiffPackageRecords(dataMgr);
+    auto infos = dataMgr->GetRecoverablePreInstallBundleInfos(TEST_USERID);
+    EXPECT_EQ(CountRecoverableEntries(infos, BUNDLE_NAME), static_cast<size_t>(1));
+}
+
+// MAIN_ONLY: recoverable in its own (primary) mode; not recoverable in secondary mode. In
+// secondary mode the mode filter (IsPreInstallRecordVisibleInMode) skips the record
+// before the installed-state check, so the result does not depend on tempBundleInfos_ (the
+// hidden-state branch itself is covered by _0500 below).
+HWTEST_F(BmsDualModeQueryTest, GetRecoverablePreInstallBundleInfos_DualMode_0300,
+    Function | SmallTest | Level0)
+{
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    SeedSingleRecord(dataMgr, BUNDLE_NAME, DeviceModeDistributionPolicy::MAIN_ONLY);
+    EnablePrimaryMode();
+    // not installed at all: recoverable in primary mode
+    EXPECT_EQ(CountRecoverableEntries(dataMgr->GetRecoverablePreInstallBundleInfos(TEST_USERID),
+        BUNDLE_NAME), static_cast<size_t>(1));
+    // secondary mode: MAIN_ONLY is not visible in the current mode (mode filter short-circuits
+    // before the tempBundleInfos_ hidden check), not recoverable
+    EnableSecondaryMode();
+    EXPECT_EQ(CountRecoverableEntries(dataMgr->GetRecoverablePreInstallBundleInfos(TEST_USERID),
+        BUNDLE_NAME), static_cast<size_t>(0));
+}
+
+// SUB_ONLY: visible (and recoverable) in secondary mode only.
+HWTEST_F(BmsDualModeQueryTest, GetRecoverablePreInstallBundleInfos_DualMode_0400,
+    Function | SmallTest | Level0)
+{
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    SeedSingleRecord(dataMgr, BUNDLE_NAME, DeviceModeDistributionPolicy::SUB_ONLY);
+    EnablePrimaryMode();
+    EXPECT_EQ(CountRecoverableEntries(dataMgr->GetRecoverablePreInstallBundleInfos(TEST_USERID),
+        BUNDLE_NAME), static_cast<size_t>(0));
+    EnableSecondaryMode();
+    EXPECT_EQ(CountRecoverableEntries(dataMgr->GetRecoverablePreInstallBundleInfos(TEST_USERID),
+        BUNDLE_NAME), static_cast<size_t>(1));
+}
+
+// Same-package filterable app (policy 3/5/7) hidden by the policy set: statically visible in
+// both modes (passes the mode filter), but the policy-set classification moved the installed
+// record to tempBundleInfos_ -> installed yet hidden -> not visible, not recoverable (legacy
+// loop reported it; a recover would reinstall it into bundleInfos_ and bypass the hiding).
+HWTEST_F(BmsDualModeQueryTest, GetRecoverablePreInstallBundleInfos_DualMode_0500,
+    Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    SeedSingleRecord(dataMgr, BUNDLE_NAME, DeviceModeDistributionPolicy::UNIVERSAL_IDENTICAL_PACKAGE);
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] = MakeModeInstanceInfo(BUNDLE_NAME, TEST_USERID, false);
+    EXPECT_EQ(CountRecoverableEntries(dataMgr->GetRecoverablePreInstallBundleInfos(TEST_USERID),
+        BUNDLE_NAME), static_cast<size_t>(0));
+}
+
+// Same policy as _0500 but genuinely uninstalled (neither map): still recoverable. The pair
+// guards both bundleInfos_-miss meanings — the only variable is tempBundleInfos_ membership.
+HWTEST_F(BmsDualModeQueryTest, GetRecoverablePreInstallBundleInfos_DualMode_0600,
+    Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    SeedSingleRecord(dataMgr, BUNDLE_NAME, DeviceModeDistributionPolicy::UNIVERSAL_IDENTICAL_PACKAGE);
+    EXPECT_EQ(CountRecoverableEntries(dataMgr->GetRecoverablePreInstallBundleInfos(TEST_USERID),
+        BUNDLE_NAME), static_cast<size_t>(1));
+}
+
+// Variant record must not consult tempBundleInfos_: in secondary mode the temp entry under the
+// same name is the primary (other-mode) package; the secondary variant stays recoverable.
+HWTEST_F(BmsDualModeQueryTest, GetRecoverablePreInstallBundleInfos_DualMode_0700,
+    Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    SeedDiffPackageRecords(dataMgr);
+    // primary variant installed (hidden) with the user; secondary variant not installed
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] = MakeModeInstanceInfo(BUNDLE_NAME, TEST_USERID, false);
+    EXPECT_EQ(CountRecoverableEntries(dataMgr->GetRecoverablePreInstallBundleInfos(TEST_USERID),
+        BUNDLE_NAME), static_cast<size_t>(1));
+}
+
+// Secondary mode, clone variant installed with the request user: not recoverable.
+HWTEST_F(BmsDualModeQueryTest, GetRecoverablePreInstallBundleInfos_DualMode_0800,
+    Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    SeedDiffPackageRecords(dataMgr);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = MakeModeInstanceInfo(BUNDLE_NAME, TEST_USERID, true);
+    EXPECT_EQ(CountRecoverableEntries(dataMgr->GetRecoverablePreInstallBundleInfos(TEST_USERID),
+        BUNDLE_NAME), static_cast<size_t>(0));
+}
+
+// Secondary mode, clone variant present but without any user: recoverable via the existing
+// multi-user predicate, exactly one entry (dedup).
+HWTEST_F(BmsDualModeQueryTest, GetRecoverablePreInstallBundleInfos_DualMode_0900,
+    Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    SeedDiffPackageRecords(dataMgr);
+    InnerBundleInfo cloneVariant;
+    cloneVariant.SetDualModeCloneApp(true);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = cloneVariant;
+    EXPECT_EQ(CountRecoverableEntries(dataMgr->GetRecoverablePreInstallBundleInfos(TEST_USERID),
+        BUNDLE_NAME), static_cast<size_t>(1));
+}
+
+// Force-uninstall marker is per record: in secondary mode the clone record's marker governs
+// (the primary record is invisible and must not surface as recoverable).
+HWTEST_F(BmsDualModeQueryTest, GetRecoverablePreInstallBundleInfos_DualMode_1000,
+    Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    auto storage = SeedDiffPackageRecords(dataMgr);
+    storage->preInstallRecords_[PREFIXED_NAME].AddForceUnisntalledUser(TEST_USERID);
+    EXPECT_EQ(CountRecoverableEntries(dataMgr->GetRecoverablePreInstallBundleInfos(TEST_USERID),
+        BUNDLE_NAME), static_cast<size_t>(0));
+}
+
+// Non-dual-mode device: legacy behavior unchanged (both records are considered).
+HWTEST_F(BmsDualModeQueryTest, GetRecoverablePreInstallBundleInfos_NonDualMode_1100,
+    Function | SmallTest | Level0)
+{
+    SetDualModeCache(ServiceConstants::DUAL_MODE_VALUE_INVALID, ServiceConstants::DUAL_MODE_VALUE_INVALID);
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    SeedDiffPackageRecords(dataMgr);
+    auto infos = dataMgr->GetRecoverablePreInstallBundleInfos(TEST_USERID);
+    EXPECT_EQ(CountRecoverableEntries(infos, BUNDLE_NAME), static_cast<size_t>(2));
 }
 } // OHOS

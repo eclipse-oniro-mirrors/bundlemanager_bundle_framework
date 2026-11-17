@@ -146,6 +146,9 @@ int BundleInstallerHost::OnRemoteRequest(
         case static_cast<uint32_t>(BundleInstallerInterfaceCode::GET_ENTERPRISE_RE_SIGNATURE_CERT):
             HandleGetEnterpriseReSignatureCert(data, reply);
             break;
+        case static_cast<uint32_t>(BundleInstallerInterfaceCode::GET_ENTERPRISE_RE_SIGNATURE_CERT_INFO):
+            HandleGetEnterpriseReSignatureCertInfo(data, reply);
+            break;
         case static_cast<uint32_t>(BundleInstallerInterfaceCode::UNINSTALL_NEW_PREINSTALLED_APPS):
             HandleUninstallNewPreinstalledApps(data, reply);
             break;
@@ -619,6 +622,11 @@ bool BundleInstallerHost::Recover(
     if (!BundlePermissionMgr::VerifyRecoverPermission()) {
         LOG_E(BMS_TAG_INSTALLER, "Recover permission denied");
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
+        return false;
+    }
+    if (installParam.IsVerifyRecoverRule() && CheckRecoverDisposedRule(bundleName, installParam.userId)) {
+        LOG_W(BMS_TAG_INSTALLER, "CheckRecoverDisposedRule failed");
+        statusReceiver->OnFinished(ERR_APPEXECFWK_RECOVER_DISPOSED_RULE_FAILED, "");
         return false;
     }
     manager_->CreateRecoverTask(bundleName, CheckInstallParam(installParam), statusReceiver);
@@ -1602,6 +1610,61 @@ bool BundleInstallerHost::CheckUninstallDisposedRule(
 #endif
 }
 
+bool BundleInstallerHost::CheckRecoverDisposedRule(const std::string &bundleName, int32_t userId)
+{
+#if defined (BUNDLE_FRAMEWORK_APP_CONTROL) && defined (ABILITY_RUNTIME_ENABLE)
+    if (userId == Constants::UNSPECIFIED_USERID) {
+        userId = BundleUtil::GetUserIdByCallingUid();
+    }
+
+    RecoverDisposedRule rule;
+    std::string callerName;
+    int64_t timeStamp = 0;
+    auto ret = DelayedSingleton<AppControlManager>::GetInstance()
+                   ->GetRecoverDisposedRuleByUserId(userId, rule, callerName, timeStamp);
+    if (ret != ERR_OK) {
+        LOG_D(BMS_TAG_INSTALLER, "GetRecoverDisposedRule failed code:%{public}d", ret);
+        return false;
+    }
+    LOG_I(BMS_TAG_INSTALLER, "recover disposed rule set by caller:%{public}s, set time:%{public}lld",
+        callerName.c_str(), static_cast<long long>(timeStamp));
+    if (rule.want == nullptr) {
+        LOG_E(BMS_TAG_INSTALLER, "null rule.want");
+        return false;
+    }
+    rule.want->SetParam(BMS_PARA_BUNDLE_NAME, bundleName);
+    rule.want->SetParam(BMS_PARA_USER_ID, userId);
+
+    if (rule.recoverComponentType == RecoverComponentType::EXTENSION) {
+        std::string identity = IPCSkeleton::ResetCallingIdentity();
+        LOG_I(BMS_TAG_INSTALLER, "recover disposed rule: call StartExtensionAbility");
+        ErrCode err = AAFwk::AbilityManagerClient::GetInstance()->StartExtensionAbility(
+            *rule.want, nullptr, userId, AppExecFwk::ExtensionAbilityType::SERVICE);
+        IPCSkeleton::SetCallingIdentity(identity);
+        if (err != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLER, "start extension ability failed code:%{public}d", err);
+        }
+    } else if (rule.recoverComponentType == RecoverComponentType::UI_EXTENSION) {
+        rule.want->SetParam(UIEXTENSION_MODAL_TYPE, 1);
+        auto connection = std::make_shared<Rosen::ModalSystemUiExtension>();
+        std::string identity = IPCSkeleton::ResetCallingIdentity();
+        LOG_I(BMS_TAG_INSTALLER, "recover disposed rule: call CreateModalUIExtension");
+        bool err = connection->CreateModalUIExtension(*rule.want);
+        IPCSkeleton::SetCallingIdentity(identity);
+        if (!err) {
+            LOG_E(BMS_TAG_INSTALLER, "request modal UI extension failed");
+        }
+    } else {
+        LOG_E(BMS_TAG_INSTALLER, "recoverComponentType wrong type:%{public}d", rule.recoverComponentType);
+    }
+
+    return true;
+#else
+    LOG_I(BMS_TAG_INSTALLER, "BUNDLE_FRAMEWORK_APP_CONTROL or ABILITY_RUNTIME_ENABLE is false");
+    return false;
+#endif
+}
+
 void BundleInstallerHost::HandleAddEnterpriseResignCert(MessageParcel &data, MessageParcel &reply)
 {
     LOG_D(BMS_TAG_INSTALLER, "start");
@@ -1804,6 +1867,80 @@ ErrCode BundleInstallerHost::HandleGetEnterpriseReSignatureCert(MessageParcel &d
         return ERR_APPEXECFWK_ENTERPRISE_CERT_WRITE_PARCEL_ERROR;
     }
     LOG_D(BMS_TAG_INSTALLER, "handle get re sign cert");
+    return ERR_OK;
+}
+
+ErrCode BundleInstallerHost::HandleGetEnterpriseReSignatureCertInfo(MessageParcel &data, MessageParcel &reply)
+{
+    LOG_D(BMS_TAG_INSTALLER, "handle get re sign cert info");
+    int32_t userId = data.ReadInt32();
+    std::vector<EnterpriseCertInfo> certInfos;
+    auto ret = GetEnterpriseReSignatureCertInfo(userId, certInfos);
+    if (!reply.WriteInt32(ret)) {
+        LOG_E(BMS_TAG_INSTALLER, "get re sign cert info write failed");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_WRITE_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
+        if (!reply.WriteInt32(static_cast<int32_t>(certInfos.size()))) {
+            LOG_E(BMS_TAG_INSTALLER, "Write certInfos size failed");
+            return ERR_APPEXECFWK_ENTERPRISE_CERT_WRITE_PARCEL_ERROR;
+        }
+        for (auto &certInfo : certInfos) {
+            if (!reply.WriteParcelable(&certInfo)) {
+                LOG_E(BMS_TAG_INSTALLER, "Write certInfo failed");
+                return ERR_APPEXECFWK_ENTERPRISE_CERT_WRITE_PARCEL_ERROR;
+            }
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleInstallerHost::GetEnterpriseReSignatureCertInfo(
+    int32_t userId, std::vector<EnterpriseCertInfo> &certInfos)
+{
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_MANAGE_EDM_POLICY)) {
+        LOG_E(BMS_TAG_INSTALLER, "verify permission failed");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_PERMISSION_DENIED;
+    }
+    if (!OHOS::system::GetBoolParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, false)) {
+        APP_LOGE("not enterprise device");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_DEVICE_ERROR;
+    }
+    if (userId < Constants::START_USERID) {
+        LOG_E(BMS_TAG_INSTALLER, "userId is invalid, userId: %{public}d", userId);
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_PARAM_ERROR;
+    }
+    std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_INSTALLER, "null dataMgr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    std::set<int32_t> userIds = dataMgr->GetAllUser();
+    if (userIds.find(userId) == userIds.end()) {
+        LOG_E(BMS_TAG_INSTALLER, "userId %{public}d not exist", userId);
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_PARAM_ERROR;
+    }
+    std::shared_lock<std::shared_mutex> lock(enterpriseCertMutex_);
+    std::vector<std::string> certificateAlias;
+    auto enumRet = BundleUtil::GetEnterpriseReSignatureCert(userId, certificateAlias);
+    if (enumRet != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "get re sign cert failed, errCode: %{public}d", enumRet);
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_GET_CERT_ERROR;
+    }
+    std::string certDir = std::string(ServiceConstants::HAP_COPY_PATH) +
+        ServiceConstants::ENTERPRISE_CERT_PATH + std::to_string(userId);
+    for (const auto &alias : certificateAlias) {
+        std::string certPath = certDir + ServiceConstants::PATH_SEPARATOR + alias;
+        EnterpriseCertInfo info;
+        ErrCode certRet = InstalldClient::GetInstance()->GetEnterpriseCertInfo(certPath, info);
+        if (certRet != ERR_OK) {
+            LOG_W(BMS_TAG_INSTALLER, "parse cert %{public}s failed, errCode: %{public}d, skip",
+                alias.c_str(), certRet);
+            continue;
+        }
+        certInfos.emplace_back(std::move(info));
+    }
+    LOG_I(BMS_TAG_INSTALLER, "get cert info size: %{public}zu", certInfos.size());
     return ERR_OK;
 }
 

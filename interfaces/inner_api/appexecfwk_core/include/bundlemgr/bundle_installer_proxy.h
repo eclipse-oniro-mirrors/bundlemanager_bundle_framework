@@ -150,6 +150,9 @@ public:
 
     virtual ErrCode GetEnterpriseReSignatureCert(int32_t userId, std::vector<std::string> &certificateAlias) override;
 
+    virtual ErrCode GetEnterpriseReSignatureCertInfo(
+        int32_t userId, std::vector<EnterpriseCertInfo> &certInfos) override;
+
     virtual ErrCode UninstallNewPreinstalledApps(const std::vector<std::string> &bundleNames) override;
 
     virtual ErrCode CreateCliSandboxApp(const std::string &creatorBundleName,

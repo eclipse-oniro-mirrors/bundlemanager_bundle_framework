@@ -8264,4 +8264,309 @@ HWTEST_F(BmsBundleDataMgrTest, IsCacheClearable_0500, Function | SmallTest | Lev
     EXPECT_TRUE(GetBundleDataMgr()->IsCacheClearable(BUNDLE_TEST1, USERID));
     GetBundleDataMgr()->bundleInfos_.erase(BUNDLE_TEST1);
 }
+
+static InnerBundleInfo MakeIdentityBundleInfoForCheck(const std::string &bundleName, int32_t userId,
+    const std::string &developerId, const std::string &assetAccessGroup)
+{
+    ApplicationInfo appInfo;
+    appInfo.bundleName = bundleName;
+    appInfo.assetAccessGroups.push_back(assetAccessGroup);
+    InnerBundleInfo info;
+    info.SetBaseApplicationInfo(appInfo);
+    info.UpdateDeveloperId(developerId);
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = bundleName;
+    userInfo.bundleUserInfo.userId = userId;
+    info.AddInnerBundleUserInfo(userInfo);
+    return info;
+}
+
+static UninstallBundleInfo MakeUninstallIdentityInfo(const std::string &developerId,
+    const std::string &assetAccessGroup, const std::string &userKey)
+{
+    UninstallBundleInfo info;
+    info.developerId = developerId;
+    info.assetAccessGroups.push_back(assetAccessGroup);
+    info.userInfos[userKey] = UninstallDataUserInfo();
+    return info;
+}
+
+HWTEST_F(BmsBundleDataMgrTest, CheckBundleExist_InstalledKeptCloneDualMode,
+    Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    const std::string installedBundle = "com.example.check.installed";
+    const std::string keptBundle = "com.example.check.kept";
+    const std::string cloneBundle = "com.example.check.clone";
+    const std::string hiddenBundle = "com.example.check.hidden";
+    dataMgr->bundleInfos_[installedBundle] = MakeIdentityBundleInfoForCheck(
+        installedBundle, USERID, "installedDeveloper", "installedGroup");
+    ASSERT_TRUE(dataMgr->UpdateUninstallBundleInfo(keptBundle,
+        MakeUninstallIdentityInfo("keptDeveloper", "keptGroup", std::to_string(USERID))));
+    ASSERT_TRUE(dataMgr->UpdateUninstallBundleInfo(cloneBundle,
+        MakeUninstallIdentityInfo("cloneDeveloper", "cloneGroup", std::to_string(USERID) + "_1")));
+    dataMgr->tempBundleInfos_[hiddenBundle] = MakeIdentityBundleInfoForCheck(
+        hiddenBundle, USERID, "hiddenDeveloper", "hiddenGroup");
+
+    bool isExist = false;
+    EXPECT_EQ(ERR_OK, dataMgr->CheckBundleExistByDeveloperIdAndAssetGroup(
+        "installedDeveloper", "installedGroup", USERID, isExist));
+    EXPECT_TRUE(isExist);
+    EXPECT_EQ(ERR_OK, dataMgr->CheckBundleExistByDeveloperIdAndAssetGroup(
+        "keptDeveloper", "keptGroup", USERID, isExist));
+    EXPECT_TRUE(isExist);
+    EXPECT_EQ(ERR_OK, dataMgr->CheckBundleExistByDeveloperIdAndAssetGroup(
+        "cloneDeveloper", "cloneGroup", USERID, isExist));
+    EXPECT_TRUE(isExist);
+    EXPECT_EQ(ERR_OK, dataMgr->CheckBundleExistByDeveloperIdAndAssetGroup(
+        "hiddenDeveloper", "hiddenGroup", USERID, isExist));
+    EXPECT_FALSE(isExist);
+
+    dataMgr->bundleInfos_.erase(installedBundle);
+    dataMgr->tempBundleInfos_.erase(hiddenBundle);
+    ASSERT_NE(dataMgr->uninstallDataMgr_, nullptr);
+    dataMgr->uninstallDataMgr_->DeleteUninstallBundleInfo(keptBundle);
+    dataMgr->uninstallDataMgr_->DeleteUninstallBundleInfo(cloneBundle);
+}
+
+HWTEST_F(BmsBundleDataMgrTest, CheckBundleExist_ErrorSemantics, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    bool isExist = true;
+    EXPECT_EQ(ERR_BUNDLE_MANAGER_PARAM_ERROR, dataMgr->CheckBundleExistByDeveloperIdAndAssetGroup(
+        "", "assetGroup", USERID, isExist));
+    EXPECT_FALSE(isExist);
+    isExist = true;
+    EXPECT_EQ(ERR_BUNDLE_MANAGER_PARAM_ERROR, dataMgr->CheckBundleExistByDeveloperIdAndAssetGroup(
+        "developerId", "", USERID, isExist));
+    EXPECT_FALSE(isExist);
+    for (int32_t invalidUserId : {Constants::ALL_USERID, Constants::ANY_USERID,
+        Constants::INVALID_USERID, Constants::UNSPECIFIED_USERID}) {
+        EXPECT_EQ(ERR_BUNDLE_MANAGER_INVALID_USER_ID, dataMgr->CheckBundleExistByDeveloperIdAndAssetGroup(
+            "developerId", "assetGroup", invalidUserId, isExist));
+    }
+
+    auto oldUninstallDataMgr = dataMgr->uninstallDataMgr_;
+    dataMgr->uninstallDataMgr_ = nullptr;
+    isExist = true;
+    EXPECT_EQ(ERR_BUNDLE_MANAGER_INTERNAL_ERROR, dataMgr->CheckBundleExistByDeveloperIdAndAssetGroup(
+        "missingDeveloper", "missingGroup", USERID, isExist));
+    EXPECT_FALSE(isExist);
+    dataMgr->uninstallDataMgr_ = oldUninstallDataMgr;
+}
+
+static std::shared_ptr<UninstallDataMgrStorageRdb> CreateUninstallQueryStorage()
+{
+    auto storage = std::make_shared<UninstallDataMgrStorageRdb>();
+    BmsRdbConfig config;
+    config.dbName = "bms_uninstall_query_test.db";
+    config.tableName = "uninstall_bundle_info";
+    config.createTableSql = "CREATE TABLE IF NOT EXISTS uninstall_bundle_info "
+        "(BUNDLENAME TEXT PRIMARY KEY NOT NULL, UNINSTALL_BUNDLE_INFO TEXT NOT NULL);";
+    auto rdb = std::make_shared<RdbDataManager>(config);
+    storage->rdbDataManager_ = rdb;
+    EXPECT_TRUE(rdb->CreateTable());
+    EXPECT_TRUE(rdb->DeleteData(NativeRdb::AbsRdbPredicates(config.tableName)));
+    return storage;
+}
+
+HWTEST_F(BmsBundleDataMgrTest, QueryAllUninstallBundleInfo_Empty, Function | SmallTest | Level1)
+{
+    auto storage = CreateUninstallQueryStorage();
+    ASSERT_NE(storage, nullptr);
+    auto rdb = storage->rdbDataManager_;
+    ASSERT_NE(rdb, nullptr);
+    ScopeGuard cleanup([rdb] {
+        rdb->bmsRdbConfig_.tableName = "uninstall_bundle_info";
+        EXPECT_TRUE(rdb->DeleteData(NativeRdb::AbsRdbPredicates("uninstall_bundle_info")));
+    });
+    std::map<std::string, UninstallBundleInfo> infos;
+    infos["stale"] = UninstallBundleInfo();
+    EXPECT_TRUE(storage->QueryAllUninstallBundleInfo(infos));
+    EXPECT_TRUE(infos.empty());
+    // The existing interface still treats an empty table as failure.
+    EXPECT_FALSE(storage->GetAllUninstallBundleInfo(infos));
+}
+
+HWTEST_F(BmsBundleDataMgrTest, QueryAllUninstallBundleInfo_Records, Function | SmallTest | Level1)
+{
+    auto storage = CreateUninstallQueryStorage();
+    ASSERT_NE(storage, nullptr);
+    auto rdb = storage->rdbDataManager_;
+    ASSERT_NE(rdb, nullptr);
+    ScopeGuard cleanup([rdb] {
+        rdb->bmsRdbConfig_.tableName = "uninstall_bundle_info";
+        EXPECT_TRUE(rdb->DeleteData(NativeRdb::AbsRdbPredicates("uninstall_bundle_info")));
+    });
+    const std::string bundleName = "com.example.query.retained";
+    UninstallBundleInfo info;
+    info.developerId = "retainedDeveloper";
+    info.assetAccessGroups = {"retainedGroup"};
+    const std::string userKey = std::to_string(Constants::START_USERID);
+    info.userInfos[userKey] = UninstallDataUserInfo();
+    EXPECT_TRUE(storage->UpdateUninstallBundleInfo(bundleName, info));
+    EXPECT_TRUE(storage->UpdateUninstallBundleInfo(bundleName + ".second", info));
+
+    std::map<std::string, UninstallBundleInfo> infos;
+    infos["stale"] = UninstallBundleInfo();
+    EXPECT_TRUE(storage->QueryAllUninstallBundleInfo(infos));
+    EXPECT_EQ(infos.size(), 2U);
+    EXPECT_EQ(infos.count("stale"), 0U);
+    for (const auto &name : {bundleName, bundleName + ".second"}) {
+        auto it = infos.find(name);
+        EXPECT_NE(it, infos.end());
+        if (it == infos.end()) {
+            continue;
+        }
+        EXPECT_EQ(it->second.developerId, info.developerId);
+        EXPECT_EQ(it->second.assetAccessGroups, info.assetAccessGroups);
+        EXPECT_EQ(it->second.userInfos.count(userKey), 1U);
+    }
+}
+
+HWTEST_F(BmsBundleDataMgrTest, QueryAllUninstallBundleInfo_QueryFailure, Function | SmallTest | Level1)
+{
+    auto storage = CreateUninstallQueryStorage();
+    ASSERT_NE(storage, nullptr);
+    auto rdb = storage->rdbDataManager_;
+    ASSERT_NE(rdb, nullptr);
+    ScopeGuard cleanup([rdb] {
+        rdb->bmsRdbConfig_.tableName = "uninstall_bundle_info";
+        EXPECT_TRUE(rdb->DeleteData(NativeRdb::AbsRdbPredicates("uninstall_bundle_info")));
+    });
+    // A query against a missing table must fail rather than report an empty result.
+    rdb->bmsRdbConfig_.tableName = "uninstall_query_wrong_table";
+    std::map<std::string, UninstallBundleInfo> infos;
+    infos["stale"] = UninstallBundleInfo();
+    EXPECT_FALSE(storage->QueryAllUninstallBundleInfo(infos));
+    EXPECT_TRUE(infos.empty());
+    rdb->bmsRdbConfig_.tableName = "uninstall_bundle_info";
+}
+
+HWTEST_F(BmsBundleDataMgrTest, QueryAllUninstallBundleInfo_InvalidJson, Function | SmallTest | Level1)
+{
+    auto storage = CreateUninstallQueryStorage();
+    ASSERT_NE(storage, nullptr);
+    auto rdb = storage->rdbDataManager_;
+    ASSERT_NE(rdb, nullptr);
+    ScopeGuard cleanup([rdb] {
+        rdb->bmsRdbConfig_.tableName = "uninstall_bundle_info";
+        EXPECT_TRUE(rdb->DeleteData(NativeRdb::AbsRdbPredicates("uninstall_bundle_info")));
+    });
+    NativeRdb::ValuesBucket values;
+    values.PutString("BUNDLENAME", "com.example.query.invalid");
+    values.PutString("UNINSTALL_BUNDLE_INFO", "invalid-json");
+    EXPECT_TRUE(rdb->InsertData(values));
+    std::map<std::string, UninstallBundleInfo> infos;
+    EXPECT_TRUE(storage->QueryAllUninstallBundleInfo(infos));
+    EXPECT_TRUE(infos.empty());
+
+    // Invalid JSON is skipped without discarding other valid records.
+    const std::string bundleName = "com.example.query.valid";
+    UninstallBundleInfo info;
+    info.developerId = "validDeveloper";
+    EXPECT_TRUE(storage->UpdateUninstallBundleInfo(bundleName, info));
+    EXPECT_TRUE(storage->QueryAllUninstallBundleInfo(infos));
+    EXPECT_EQ(infos.size(), 1U);
+    auto it = infos.find(bundleName);
+    EXPECT_NE(it, infos.end());
+    if (it != infos.end()) {
+        EXPECT_EQ(it->second.developerId, info.developerId);
+    }
+}
+
+HWTEST_F(BmsBundleDataMgrTest, CheckBundleExist_EmptyUninstallRecords, Function | SmallTest | Level1)
+{
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    auto storage = std::make_shared<UninstallDataMgrStorageRdb>();
+    ASSERT_NE(storage, nullptr);
+    BmsRdbConfig config;
+    config.dbName = "bms_identity_empty_uninstall_test.db";
+    config.tableName = "uninstall_bundle_info";
+    config.createTableSql = "CREATE TABLE IF NOT EXISTS uninstall_bundle_info "
+        "(BUNDLENAME TEXT PRIMARY KEY NOT NULL, UNINSTALL_BUNDLE_INFO TEXT NOT NULL);";
+    auto rdb = std::make_shared<RdbDataManager>(config);
+    ASSERT_NE(rdb, nullptr);
+    EXPECT_TRUE(rdb->CreateTable());
+    EXPECT_TRUE(rdb->DeleteData(NativeRdb::AbsRdbPredicates(config.tableName)));
+    ScopeGuard cleanup([&] {
+        EXPECT_TRUE(rdb->DeleteData(NativeRdb::AbsRdbPredicates(config.tableName)));
+    });
+    storage->rdbDataManager_ = rdb;
+    dataMgr->uninstallDataMgr_ = storage;
+
+    bool isExist = true;
+    EXPECT_EQ(ERR_OK, dataMgr->CheckBundleExistByDeveloperIdAndAssetGroup(
+        "emptyRecordDeveloper", "emptyRecordGroup", USERID, isExist));
+    EXPECT_FALSE(isExist);
+}
+
+HWTEST_F(BmsBundleDataMgrTest, CheckBundleExist_OldRecord, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    const std::string oldBundle = "com.example.check.oldrecord";
+    UninstallBundleInfo oldInfo;
+    oldInfo.userInfos[std::to_string(USERID)] = UninstallDataUserInfo();
+    ASSERT_TRUE(dataMgr->UpdateUninstallBundleInfo(oldBundle, oldInfo));
+
+    bool isExist = true;
+    EXPECT_EQ(ERR_OK, dataMgr->CheckBundleExistByDeveloperIdAndAssetGroup(
+        "oldDeveloper", "oldGroup", USERID, isExist));
+    EXPECT_FALSE(isExist);
+
+    ASSERT_NE(dataMgr->uninstallDataMgr_, nullptr);
+    dataMgr->uninstallDataMgr_->DeleteUninstallBundleInfo(oldBundle);
+}
+
+HWTEST_F(BmsBundleDataMgrTest, CheckBundleExist_RejectDuplicateUser, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    ASSERT_NE(dataMgr->uninstallDataMgr_, nullptr);
+    const std::string bundleName = "com.example.check.duplicateuser";
+    dataMgr->uninstallDataMgr_->DeleteUninstallBundleInfo(bundleName);
+    ScopeGuard cleanup([&] {
+        dataMgr->uninstallDataMgr_->DeleteUninstallBundleInfo(bundleName);
+    });
+    EXPECT_TRUE(dataMgr->UpdateUninstallBundleInfo(bundleName,
+        MakeUninstallIdentityInfo("duplicateOldDeveloper", "duplicateOldGroup", std::to_string(USERID))));
+    EXPECT_FALSE(dataMgr->UpdateUninstallBundleInfo(bundleName,
+        MakeUninstallIdentityInfo("duplicateNewDeveloper", "duplicateNewGroup", std::to_string(USERID))));
+
+    bool isExist = false;
+    EXPECT_EQ(ERR_OK, dataMgr->CheckBundleExistByDeveloperIdAndAssetGroup(
+        "duplicateOldDeveloper", "duplicateOldGroup", USERID, isExist));
+    EXPECT_TRUE(isExist);
+    EXPECT_EQ(ERR_OK, dataMgr->CheckBundleExistByDeveloperIdAndAssetGroup(
+        "duplicateNewDeveloper", "duplicateNewGroup", USERID, isExist));
+    EXPECT_FALSE(isExist);
+}
+
+HWTEST_F(BmsBundleDataMgrTest, CheckBundleExist_UserIsolation_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    const std::string bundleName = "com.example.check.userisolation";
+    dataMgr->bundleInfos_[bundleName] = MakeIdentityBundleInfoForCheck(
+        bundleName, USERID, "isolationDeveloper", "isolationGroup");
+
+    // Both installed and kept-data records belong only to USERID, not USERID + 1.
+    const std::string keptBundle = "com.example.check.userisolation.kept";
+    ASSERT_NE(dataMgr->uninstallDataMgr_, nullptr);
+    ScopeGuard cleanup([&] {
+        dataMgr->bundleInfos_.erase(bundleName);
+        dataMgr->uninstallDataMgr_->DeleteUninstallBundleInfo(keptBundle);
+    });
+    EXPECT_TRUE(dataMgr->UpdateUninstallBundleInfo(keptBundle,
+        MakeUninstallIdentityInfo("isolationDeveloper", "isolationGroup", std::to_string(USERID))));
+
+    bool isExist = true;
+    EXPECT_EQ(ERR_OK, dataMgr->CheckBundleExistByDeveloperIdAndAssetGroup(
+        "isolationDeveloper", "isolationGroup", USERID + 1, isExist));
+    EXPECT_FALSE(isExist);
+}
 } // OHOS

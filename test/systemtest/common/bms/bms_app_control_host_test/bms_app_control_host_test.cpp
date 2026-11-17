@@ -421,6 +421,55 @@ HWTEST_F(BmsAppControlHostTest, HandleDeleteUninstallDisposedRule_0100, Function
 }
 
 /**
+ * @tc.number: HandleSetRecoverDisposedRule_0100
+ * @tc.name: Test HandleSetRecoverDisposedRule by AppControlHost
+ * @tc.desc: 1.HandleSetRecoverDisposedRule test
+ */
+HWTEST_F(BmsAppControlHostTest, HandleSetRecoverDisposedRule_0100, Function | MediumTest | Level1)
+{
+    std::shared_ptr<AppControlHost> appControlHost = std::make_shared<AppControlHost>();
+    ASSERT_NE(appControlHost, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    auto res = appControlHost->HandleSetRecoverDisposedRule(data, reply);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: HandleGetRecoverDisposedRule_0100
+ * @tc.name: Test HandleGetRecoverDisposedRule by AppControlHost
+ * @tc.desc: 1.HandleGetRecoverDisposedRule test
+ */
+HWTEST_F(BmsAppControlHostTest, HandleGetRecoverDisposedRule_0100, Function | MediumTest | Level1)
+{
+    std::shared_ptr<AppControlHost> appControlHost = std::make_shared<AppControlHost>();
+    ASSERT_NE(appControlHost, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    auto res = appControlHost->HandleGetRecoverDisposedRule(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+    // when GetRecoverDisposedRule fails, the error code is written into reply
+    EXPECT_EQ(reply.ReadInt32(), ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: HandleDeleteRecoverDisposedRule_0100
+ * @tc.name: Test HandleDeleteRecoverDisposedRule by AppControlHost
+ * @tc.desc: 1.HandleDeleteRecoverDisposedRule test
+ */
+HWTEST_F(BmsAppControlHostTest, HandleDeleteRecoverDisposedRule_0100, Function | MediumTest | Level1)
+{
+    std::shared_ptr<AppControlHost> appControlHost = std::make_shared<AppControlHost>();
+    ASSERT_NE(appControlHost, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    auto res = appControlHost->HandleDeleteRecoverDisposedRule(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+    // when DeleteRecoverDisposedRule fails, the error code is written into reply
+    EXPECT_EQ(reply.ReadInt32(), ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
+}
+
+/**
  * @tc.number: OnRemoteRequest_0100
  * @tc.name: test the OnRemoteRequest
  * @tc.desc: 1. system running normally

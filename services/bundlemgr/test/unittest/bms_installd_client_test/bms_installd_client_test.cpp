@@ -3074,5 +3074,54 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CopyAbcFile_0200, TestSize
     EXPECT_EQ(result, installClient_->CallService(&IInstalld::CopyAbcFile, bundleName, userId, abcRelativePath));
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_CopyAbcFile_0200 end";
 }
+
+/**
+ * @tc.number: BmsInstalldClientTest_GetEnterpriseCertInfo_0100
+ * @tc.name: GetEnterpriseCertInfo
+ * @tc.desc: call GetEnterpriseCertInfo with empty certPath.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetEnterpriseCertInfo_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_GetEnterpriseCertInfo_0100 start";
+    ASSERT_NE(installClient_, nullptr);
+    std::string certPath = "";
+    EnterpriseCertInfo certInfo;
+    ErrCode result = installClient_->GetEnterpriseCertInfo(certPath, certInfo);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_GetEnterpriseCertInfo_0100 end";
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_GetEnterpriseCertInfo_0200
+ * @tc.name: GetEnterpriseCertInfo
+ * @tc.desc: call GetEnterpriseCertInfo with too long certPath.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetEnterpriseCertInfo_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_GetEnterpriseCertInfo_0200 start";
+    ASSERT_NE(installClient_, nullptr);
+    std::string certPath(Constants::BMS_MAX_PATH_LENGTH + 1, 'a');
+    EnterpriseCertInfo certInfo;
+    ErrCode result = installClient_->GetEnterpriseCertInfo(certPath, certInfo);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_GetEnterpriseCertInfo_0200 end";
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_GetEnterpriseCertInfo_0300
+ * @tc.name: GetEnterpriseCertInfo
+ * @tc.desc: call GetEnterpriseCertInfo with valid format certPath which does not exist.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetEnterpriseCertInfo_0300, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_GetEnterpriseCertInfo_0300 start";
+    ASSERT_NE(installClient_, nullptr);
+    std::string certPath =
+        "/data/service/el1/public/bms/bundle_manager_service/certificates/enterprise/100/not_exist.cer";
+    EnterpriseCertInfo certInfo;
+    ErrCode result = installClient_->GetEnterpriseCertInfo(certPath, certInfo);
+    EXPECT_NE(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_GetEnterpriseCertInfo_0300 end";
+}
 } // namespace AppExecFwk
 } // namespace OHOS

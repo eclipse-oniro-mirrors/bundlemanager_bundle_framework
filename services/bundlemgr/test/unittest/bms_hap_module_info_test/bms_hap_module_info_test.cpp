@@ -872,6 +872,7 @@ HWTEST_F(BmsHapModuleInfoTest, ExecutableBinaryPath_Marshalling_001, Function | 
 {
     ExecutableBinaryPath executableBinaryPath;
     executableBinaryPath.path = "/data/app/el1/bundle/public/com.example.app/libs/test.bin";
+    executableBinaryPath.permissionControlMode = PermissionControlMode::INHERIT_PARENT_PROCESS;
 
     Parcel parcel;
     bool result = executableBinaryPath.Marshalling(parcel);
@@ -881,7 +882,7 @@ HWTEST_F(BmsHapModuleInfoTest, ExecutableBinaryPath_Marshalling_001, Function | 
 /**
  * @tc.number: ExecutableBinaryPath_ReadFromParcel_001
  * @tc.name: test ReadFromParcel interface in ExecutableBinaryPath.
- * @tc.desc: 1. write path to parcel
+ * @tc.desc: 1. write path and permissionControlMode to parcel
  *           2. verify ReadFromParcel reads correctly
  */
 HWTEST_F(BmsHapModuleInfoTest, ExecutableBinaryPath_ReadFromParcel_001, Function | SmallTest | Level0)
@@ -890,22 +891,25 @@ HWTEST_F(BmsHapModuleInfoTest, ExecutableBinaryPath_ReadFromParcel_001, Function
     ExecutableBinaryPath executableBinaryPath;
     Parcel parcel;
     parcel.WriteString16(Str8ToStr16(testPath));
+    parcel.WriteInt32(static_cast<int32_t>(PermissionControlMode::INHERIT_PARENT_PROCESS));
 
     bool result = executableBinaryPath.ReadFromParcel(parcel);
     EXPECT_TRUE(result);
     EXPECT_EQ(executableBinaryPath.path, testPath);
+    EXPECT_EQ(executableBinaryPath.permissionControlMode, PermissionControlMode::INHERIT_PARENT_PROCESS);
 }
 
 /**
  * @tc.number: ExecutableBinaryPath_Unmarshalling_001
  * @tc.name: test Unmarshalling interface in ExecutableBinaryPath.
- * @tc.desc: 1. marshal ExecutableBinaryPath
+ * @tc.desc: 1. marshal ExecutableBinaryPath with permissionControlMode
  *           2. verify unmarshalling data matches
  */
 HWTEST_F(BmsHapModuleInfoTest, ExecutableBinaryPath_Unmarshalling_001, Function | SmallTest | Level0)
 {
     ExecutableBinaryPath originalPath;
     originalPath.path = "/data/app/el1/bundle/public/com.example.app/libs/test.bin";
+    originalPath.permissionControlMode = PermissionControlMode::INHERIT_PARENT_PROCESS;
 
     Parcel parcel;
     ASSERT_TRUE(originalPath.Marshalling(parcel));
@@ -914,6 +918,7 @@ HWTEST_F(BmsHapModuleInfoTest, ExecutableBinaryPath_Unmarshalling_001, Function 
     ExecutableBinaryPath* unmarshalledPath = ExecutableBinaryPath::Unmarshalling(parcel);
     ASSERT_NE(unmarshalledPath, nullptr);
     EXPECT_EQ(unmarshalledPath->path, originalPath.path);
+    EXPECT_EQ(unmarshalledPath->permissionControlMode, originalPath.permissionControlMode);
     delete unmarshalledPath;
 }
 
@@ -927,17 +932,21 @@ HWTEST_F(BmsHapModuleInfoTest, ExecutableBinaryPath_to_json_001, Function | Smal
 {
     ExecutableBinaryPath executableBinaryPath;
     executableBinaryPath.path = "/data/app/libs/test.bin";
+    executableBinaryPath.permissionControlMode = PermissionControlMode::INHERIT_PARENT_PROCESS;
 
     nlohmann::json jsonObject;
     to_json(jsonObject, executableBinaryPath);
     EXPECT_EQ(executableBinaryPath.path, "/data/app/libs/test.bin");
+    EXPECT_TRUE(jsonObject.contains("permissionControlMode"));
+    EXPECT_EQ(jsonObject.at("permissionControlMode").get<int32_t>(),
+        static_cast<int32_t>(PermissionControlMode::INHERIT_PARENT_PROCESS));
 }
 
 /**
  * @tc.number: ExecutableBinaryPath_from_json_001
  * @tc.name: test from_json interface in ExecutableBinaryPath.
- * @tc.desc: 1. create json with path
- *           2. verify from_json parses correctly
+ * @tc.desc: 1. create json with path only
+ *           2. verify from_json parses correctly and permissionControlMode defaults to independent
  */
 HWTEST_F(BmsHapModuleInfoTest, ExecutableBinaryPath_from_json_001, Function | SmallTest | Level0)
 {
@@ -947,6 +956,51 @@ HWTEST_F(BmsHapModuleInfoTest, ExecutableBinaryPath_from_json_001, Function | Sm
     ExecutableBinaryPath result;
     from_json(jsonObject, result);
     EXPECT_EQ(result.path, "/data/app/libs/test.bin");
+    EXPECT_EQ(result.permissionControlMode, PermissionControlMode::INDEPENDENT);
+}
+
+/**
+ * @tc.number: ExecutableBinaryPath_from_json_002
+ * @tc.name: test from_json with permissionControlMode numeric values
+ * @tc.desc: 1. parse permissionControlMode as number
+ *           2. verify values match enum
+ */
+HWTEST_F(BmsHapModuleInfoTest, ExecutableBinaryPath_from_json_002, Function | SmallTest | Level0)
+{
+    nlohmann::json jsonInherit;
+    jsonInherit["path"] = "/data/app/libs/a.bin";
+    jsonInherit["permissionControlMode"] =
+        static_cast<int32_t>(PermissionControlMode::INHERIT_PARENT_PROCESS);
+    ExecutableBinaryPath resultInherit;
+    from_json(jsonInherit, resultInherit);
+    EXPECT_EQ(resultInherit.permissionControlMode, PermissionControlMode::INHERIT_PARENT_PROCESS);
+
+    nlohmann::json jsonIndependent;
+    jsonIndependent["path"] = "/data/app/libs/b.bin";
+    jsonIndependent["permissionControlMode"] =
+        static_cast<int32_t>(PermissionControlMode::INDEPENDENT);
+    ExecutableBinaryPath resultIndependent;
+    from_json(jsonIndependent, resultIndependent);
+    EXPECT_EQ(resultIndependent.permissionControlMode, PermissionControlMode::INDEPENDENT);
+}
+
+/**
+ * @tc.number: ExecutableBinaryPath_from_json_003
+ * @tc.name: test from_json with non-number permissionControlMode
+ * @tc.desc: 1. permissionControlMode is string
+ *           2. verify field stays independent
+ */
+HWTEST_F(BmsHapModuleInfoTest, ExecutableBinaryPath_from_json_003, Function | SmallTest | Level0)
+{
+    nlohmann::json jsonObject;
+    jsonObject["path"] = "/data/app/libs/test.bin";
+    jsonObject["permissionControlMode"] = "true";
+
+    ExecutableBinaryPath result;
+    result.permissionControlMode = PermissionControlMode::INDEPENDENT;
+    from_json(jsonObject, result);
+    EXPECT_EQ(result.permissionControlMode, PermissionControlMode::INDEPENDENT);
+    EXPECT_NE(result.permissionControlMode, PermissionControlMode::INHERIT_PARENT_PROCESS);
 }
 
 /**
@@ -1334,8 +1388,12 @@ HWTEST_F(BmsHapModuleInfoTest, VerifyBinParam_Marshalling_001, Function | SmallT
     param.appIdentifier = "testAppId";
     param.userId = 100;
     param.binFilePaths = {"/data/app/libs/test1.bin", "/data/app/libs/test2.bin"};
+    param.permissionControlModes = {
+        static_cast<int32_t>(PermissionControlMode::INHERIT_PARENT_PROCESS),
+        static_cast<int32_t>(PermissionControlMode::INDEPENDENT)};
     param.isDebug = false;
-
+    param.isUninstall = true;
+ 
     Parcel parcel;
     bool result = param.Marshalling(parcel);
     EXPECT_TRUE(result);
@@ -1354,12 +1412,15 @@ HWTEST_F(BmsHapModuleInfoTest, VerifyBinParam_ReadFromParcel_001, Function | Sma
     originalParam.appIdentifier = "testAppId";
     originalParam.userId = 100;
     originalParam.binFilePaths = {"/data/app/libs/test1.bin", "/data/app/libs/test2.bin"};
+    originalParam.permissionControlModes = {
+        static_cast<int32_t>(PermissionControlMode::INHERIT_PARENT_PROCESS),
+        static_cast<int32_t>(PermissionControlMode::INHERIT_PARENT_PROCESS)};
     originalParam.isDebug = false;
-
+    originalParam.isUninstall = true;
+ 
     Parcel parcel;
     ASSERT_TRUE(originalParam.Marshalling(parcel));
     parcel.RewindRead(0);
-
     VerifyBinParam resultParam;
     bool readResult = resultParam.ReadFromParcel(parcel);
     EXPECT_TRUE(readResult);
@@ -1369,7 +1430,11 @@ HWTEST_F(BmsHapModuleInfoTest, VerifyBinParam_ReadFromParcel_001, Function | Sma
     EXPECT_EQ(resultParam.binFilePaths.size(), originalParam.binFilePaths.size());
     EXPECT_EQ(resultParam.binFilePaths[0], originalParam.binFilePaths[0]);
     EXPECT_EQ(resultParam.binFilePaths[1], originalParam.binFilePaths[1]);
+    ASSERT_EQ(resultParam.permissionControlModes.size(), originalParam.permissionControlModes.size());
+    EXPECT_EQ(resultParam.permissionControlModes[0], originalParam.permissionControlModes[0]);
+    EXPECT_EQ(resultParam.permissionControlModes[1], originalParam.permissionControlModes[1]);
     EXPECT_EQ(resultParam.isDebug, originalParam.isDebug);
+    EXPECT_EQ(resultParam.isUninstall, originalParam.isUninstall);
 }
 
 /**
@@ -1385,7 +1450,10 @@ HWTEST_F(BmsHapModuleInfoTest, VerifyBinParam_Unmarshalling_001, Function | Smal
     originalParam.appIdentifier = "testAppId";
     originalParam.userId = 100;
     originalParam.binFilePaths = {"/data/app/libs/test.bin"};
+    originalParam.permissionControlModes = {
+        static_cast<int32_t>(PermissionControlMode::INHERIT_PARENT_PROCESS)};
     originalParam.isDebug = true;
+    originalParam.isUninstall = true;
 
     Parcel parcel;
     ASSERT_TRUE(originalParam.Marshalling(parcel));
@@ -1398,8 +1466,113 @@ HWTEST_F(BmsHapModuleInfoTest, VerifyBinParam_Unmarshalling_001, Function | Smal
     EXPECT_EQ(unmarshalledParam->userId, originalParam.userId);
     EXPECT_EQ(unmarshalledParam->binFilePaths.size(), originalParam.binFilePaths.size());
     EXPECT_EQ(unmarshalledParam->binFilePaths[0], originalParam.binFilePaths[0]);
+    ASSERT_EQ(unmarshalledParam->permissionControlModes.size(), 1);
+    EXPECT_EQ(unmarshalledParam->permissionControlModes[0],
+        static_cast<int32_t>(PermissionControlMode::INHERIT_PARENT_PROCESS));
     EXPECT_EQ(unmarshalledParam->isDebug, originalParam.isDebug);
+    EXPECT_EQ(unmarshalledParam->isUninstall, originalParam.isUninstall);
     delete unmarshalledParam;
+}
+
+/**
+ * @tc.number: ExecutableBinaryPath_Unmarshalling_002
+ * @tc.name: test Unmarshalling interface with independent mode
+ * @tc.desc: 1. marshal ExecutableBinaryPath with independent mode
+ *           2. verify unmarshalling data matches
+ */
+HWTEST_F(BmsHapModuleInfoTest, ExecutableBinaryPath_Unmarshalling_002, Function | SmallTest | Level0)
+{
+    ExecutableBinaryPath originalPath;
+    originalPath.path = "/data/app/el1/bundle/public/com.example.app/libs/indep.bin";
+    EXPECT_EQ(originalPath.permissionControlMode, PermissionControlMode::INDEPENDENT);
+
+    Parcel parcel;
+    ASSERT_TRUE(originalPath.Marshalling(parcel));
+    parcel.RewindRead(0);
+    ExecutableBinaryPath *unmarshalled = ExecutableBinaryPath::Unmarshalling(parcel);
+    ASSERT_NE(unmarshalled, nullptr);
+    EXPECT_EQ(unmarshalled->path, originalPath.path);
+    EXPECT_EQ(unmarshalled->permissionControlMode, PermissionControlMode::INDEPENDENT);
+    delete unmarshalled;
+}
+
+/**
+ * @tc.number: ExecutableBinaryPath_ReadFromParcel_002
+ * @tc.name: test ReadFromParcel clamps out-of-range mode
+ * @tc.desc: 1. write an illegal mode value
+ *           2. verify it falls back to INDEPENDENT instead of failing
+ */
+HWTEST_F(BmsHapModuleInfoTest, ExecutableBinaryPath_ReadFromParcel_002, Function | SmallTest | Level0)
+{
+    Parcel parcel;
+    parcel.WriteString16(Str8ToStr16("/data/app/el1/bundle/public/com.example.app/libs/test.bin"));
+    parcel.WriteInt32(5);
+
+    ExecutableBinaryPath resultPath;
+    ASSERT_TRUE(resultPath.ReadFromParcel(parcel));
+    EXPECT_EQ(resultPath.path, "/data/app/el1/bundle/public/com.example.app/libs/test.bin");
+    EXPECT_EQ(resultPath.permissionControlMode, PermissionControlMode::INDEPENDENT);
+}
+
+/**
+ * @tc.number: ExecutableBinaryPath_ReadFromParcel_003
+ * @tc.name: test ReadFromParcel with truncated parcel
+ * @tc.desc: 1. write only path, mode is missing
+ *           2. verify ReadFromParcel returns false
+ */
+HWTEST_F(BmsHapModuleInfoTest, ExecutableBinaryPath_ReadFromParcel_003, Function | SmallTest | Level0)
+{
+    Parcel parcel;
+    parcel.WriteString16(Str8ToStr16("/data/app/el1/bundle/public/com.example.app/libs/test.bin"));
+
+    ExecutableBinaryPath resultPath;
+    EXPECT_FALSE(resultPath.ReadFromParcel(parcel));
+}
+
+/**
+ * @tc.number: ExecutableBinaryPath_from_json_004
+ * @tc.name: test from_json after to_json with independent mode
+ * @tc.desc: 1. to_json with default independent mode
+ *           2. verify from_json keeps independent
+ */
+HWTEST_F(BmsHapModuleInfoTest, ExecutableBinaryPath_from_json_004, Function | SmallTest | Level0)
+{
+    ExecutableBinaryPath originalPath;
+    originalPath.path = "/data/app/el1/bundle/public/com.example.app/libs/indep.bin";
+
+    nlohmann::json jsonObject;
+    to_json(jsonObject, originalPath);
+    ExecutableBinaryPath fromJsonPath;
+    from_json(jsonObject, fromJsonPath);
+    EXPECT_EQ(fromJsonPath.path, originalPath.path);
+    EXPECT_EQ(fromJsonPath.permissionControlMode, PermissionControlMode::INDEPENDENT);
+}
+
+/**
+ * @tc.number: VerifyBinParam_ReadFromParcel_002
+ * @tc.name: test VerifyBinParam ReadFromParcel with empty permissionControlModes
+ * @tc.desc: 1. permissionControlModes is empty
+ *           2. verify ReadFromParcel keeps userId and empty modes
+ */
+HWTEST_F(BmsHapModuleInfoTest, VerifyBinParam_ReadFromParcel_002, Function | SmallTest | Level0)
+{
+    VerifyBinParam originalParam;
+    originalParam.bundleName = "com.example.test";
+    originalParam.appIdentifier = "testAppId";
+    originalParam.userId = 200;
+    originalParam.binFilePaths = {"/data/app/libs/only-path.bin"};
+    originalParam.permissionControlModes.clear();
+    originalParam.isDebug = false;
+
+    Parcel parcel;
+    ASSERT_TRUE(originalParam.Marshalling(parcel));
+    parcel.RewindRead(0);
+
+    VerifyBinParam resultParam;
+    ASSERT_TRUE(resultParam.ReadFromParcel(parcel));
+    EXPECT_EQ(resultParam.userId, 200);
+    ASSERT_EQ(resultParam.binFilePaths.size(), 1);
+    EXPECT_TRUE(resultParam.permissionControlModes.empty());
 }
 
 /**

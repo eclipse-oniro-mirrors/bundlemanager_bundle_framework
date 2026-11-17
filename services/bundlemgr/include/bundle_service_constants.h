@@ -128,6 +128,9 @@ constexpr int32_t API_VERSION_FIFTEEN = 15;
 constexpr int32_t API_VERSION_MOD = 1000;
 constexpr int32_t API_VERSION_MAX = 999;
 constexpr int32_t BACKUP_DEFAULT_APP_KEY = -2;
+// Intentionally parallel to Constants::MAX_ENTERPRISE_RESIGN_CERT_NUM in inner_api
+// (bundle_constants.h); the two sides are kept in sync by unit test
+// BmsEnterpriseCertBackupTest_ConstantsSync_0100.
 constexpr int32_t MAX_ENTERPRISE_RESIGN_CERT_NUM = 10;
 // native so
 constexpr const char* ABI_DEFAULT = "default";
@@ -431,6 +434,8 @@ const std::set<int32_t> EXPECTED_ERROR = {
     ERR_APPEXECFWK_INSTALL_APP_IN_PRIVATE_SPACE_BLACK_LIST,
     // pc sub user black list
     ERR_APPEXECFWK_INSTALL_APP_IN_SUB_USER_BLACK_LIST,
+    // install third party bundle not allowed in bopd mode
+    ERR_APPEXECFWK_INSTALL_BOPD_MODE_DISABLED,
     ERR_APPEXECFWK_INSTALL_FAILED_AND_RESTORE_TO_PREINSTALLED,
     ERR_APPEXECFWK_CLONE_INSTALL_APP_INDEX_EXISTED,
     ERR_APPEXECFWK_CLONE_INSTALL_APP_NOT_EXISTED,

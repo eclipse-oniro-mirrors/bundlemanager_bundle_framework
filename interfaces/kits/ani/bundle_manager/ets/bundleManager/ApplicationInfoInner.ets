@@ -50,6 +50,7 @@ export class ApplicationInfoInner implements ApplicationInfo {
   readonly installSource: string = "";
   readonly releaseType: string = "";
   readonly cloudFileSyncEnabled: boolean;
+  readonly keepDataOnUninstall?: boolean;
   readonly cloudStructuredDataSyncEnabled?: boolean|undefined;
   readonly flags?: int|undefined;
   readonly applicationReservedFlag?: bundleManager.ApplicationReservedFlag|undefined;
@@ -87,7 +88,8 @@ export class ApplicationInfoInner implements ApplicationInfo {
     cloudFileSyncEnabled: boolean,
     cloudStructuredDataSyncEnabled?: boolean,
     flags?: int,
-    applicationReservedFlag?: bundleManager.ApplicationReservedFlag) {
+    applicationReservedFlag?: bundleManager.ApplicationReservedFlag,
+    keepDataOnUninstall?: boolean) {
       this.name = name;
       this.description = description;
       this.descriptionId = descriptionId;
@@ -121,6 +123,7 @@ export class ApplicationInfoInner implements ApplicationInfo {
       this.cloudStructuredDataSyncEnabled = cloudStructuredDataSyncEnabled;
       this.flags = flags;
       this.applicationReservedFlag = applicationReservedFlag;
+      this.keepDataOnUninstall = keepDataOnUninstall;
   }
 }
 

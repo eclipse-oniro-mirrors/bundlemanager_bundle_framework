@@ -207,7 +207,8 @@ struct ExtensionFormProfileInfo {
     std::string groupId;
     Standby standby;
     bool isColorModeRefreshEnabled = false;
-    bool enableTint = false;
+    BoolEnum enableTint = BoolEnum::BOOL_UNSPECIFIED;
+    bool enableReminderAgentRefresh = false;
 };
 
 struct ExtensionFormProfileInfoStruct {
@@ -569,10 +570,16 @@ void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfo &exten
         extensionFormProfileInfo.isColorModeRefreshEnabled,
         false,
         g_parseResult);
-    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+    BMSJsonUtil::GetBoolEnumValueIfFindKey(jsonObject,
         jsonObjectEnd,
         ExtensionFormProfileReader::TINTING_SUPPORTED,
         extensionFormProfileInfo.enableTint,
+        false,
+        g_parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        ExtensionFormProfileReader::ENABLE_REMINDER_AGENT_REFRESH,
+        extensionFormProfileInfo.enableReminderAgentRefresh,
         false,
         g_parseResult);
 }
@@ -833,6 +840,7 @@ void TransformToFormInfoExt(const ExtensionFormProfileInfo &form, ExtensionFormI
     info.standby.isAdapted = form.standby.isAdapted;
     info.standby.isPrivacySensitive = form.standby.isPrivacySensitive;
     info.isColorModeRefreshEnabled = form.isColorModeRefreshEnabled;
+    info.enableReminderAgentRefresh = form.enableReminderAgentRefresh;
 }
 
 bool TransformToExtensionFormInfo(const ExtensionFormProfileInfo &form, ExtensionFormInfo &info)

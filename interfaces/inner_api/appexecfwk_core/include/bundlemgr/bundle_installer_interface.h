@@ -20,6 +20,7 @@
 
 #include "bundle_stream_installer_interface.h"
 #include "clone_param.h"
+#include "enterprise_cert_info.h"
 #include "status_receiver_interface.h"
 #include "install_param.h"
 #include "plugin/install_plugin_param.h"
@@ -210,6 +211,12 @@ public:
     }
 
     virtual ErrCode DeleteReSignCert(int32_t userId)
+    {
+        return ERR_OK;
+    }
+
+    virtual ErrCode GetEnterpriseReSignatureCertInfo(
+        int32_t userId, std::vector<EnterpriseCertInfo> &certInfos)
     {
         return ERR_OK;
     }
