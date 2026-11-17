@@ -98,10 +98,10 @@ bool SecurityAuditReporter::Report(BundleEventType bundleEventType, const EventI
 
     LOG_I(BMS_TAG_DEFAULT,
         "security audit reported eventId=%{public}s bundle=%{public}s errCode=%{public}d userId=%{public}d "
-        "callingUid=%{public}d callingBundle=%{public}s eventType=%{public}d",
+        "callingUid=%{public}d callingBundle=%{public}s eventType=%{public}d content=%{public}s",
         std::to_string(eventId).c_str(), eventInfo.bundleName.c_str(), eventInfo.errCode, eventInfo.userId,
         eventInfo.callingUid, eventInfo.callingBundleName.c_str(),
-        static_cast<int32_t>(bundleEventType));
+        static_cast<int32_t>(bundleEventType), content.c_str());
     return true;
 #else
     LOG_D(BMS_TAG_DEFAULT, "security guard not enabled, skip audit report bundle=%{public}s errCode=%{public}d",
