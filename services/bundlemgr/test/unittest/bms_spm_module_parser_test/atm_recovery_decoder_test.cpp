@@ -14,6 +14,7 @@
  */
 
 #include <gtest/gtest.h>
+#include <limits>
 #include "atm_recovery_record_decoder.h"
 #include "bundle_constants.h"
 #include "bundle_info.h"
@@ -127,6 +128,43 @@ HWTEST_F(AtmRecoveryDecoderTest, InvalidJsonClearsOutputAndDoesNotAffectNextReco
 }
 
 /**
+ * @tc.name: InvalidUninstallJsonClearsOutput
+ * @tc.desc: Reject malformed JSON and non-object uninstall records, clearing previous results.
+ */
+HWTEST_F(AtmRecoveryDecoderTest, InvalidUninstallJsonClearsOutput, Function | SmallTest | Level1)
+{
+    for (const char *value : {"{", "[]", "null", "false", "1", "\"text\""}) {
+        SCOPED_TRACE(value);
+        std::vector<AtmBundleRecoveryInfo> infos(1);
+        EXPECT_FALSE(ParseUninstallRecord(BUNDLE_NAME, value, infos));
+        EXPECT_TRUE(infos.empty());
+    }
+}
+
+/**
+ * @tc.name: UninstallIdentityPreservesIntegerBounds
+ * @tc.desc: Preserve signed UID and full-width token IDs and discard earlier users on an invalid token.
+ */
+HWTEST_F(AtmRecoveryDecoderTest, UninstallIdentityPreservesIntegerBounds, Function | SmallTest | Level1)
+{
+    const Json identity = {{"uid", -1}, {"accessTokenId", std::numeric_limits<uint32_t>::max()},
+        {"accessTokenIdEx", std::numeric_limits<uint64_t>::max()}};
+    Json record = {{"userInfos", {{std::to_string(Constants::DEFAULT_USERID), identity}}}};
+    std::vector<AtmBundleRecoveryInfo> infos;
+    ASSERT_TRUE(ParseUninstallRecord(BUNDLE_NAME, record.dump(), infos));
+    ASSERT_EQ(infos.size(), 1U);
+    EXPECT_EQ(infos[0].uid, -1);
+    EXPECT_EQ(infos[0].accessTokenId, std::numeric_limits<uint32_t>::max());
+    EXPECT_EQ(infos[0].accessTokenIdEx, std::numeric_limits<uint64_t>::max());
+
+    auto &nextUser = record["userInfos"][std::to_string(Constants::START_USERID)];
+    nextUser = identity;
+    nextUser["accessTokenIdEx"] = "1";
+    EXPECT_FALSE(ParseUninstallRecord(BUNDLE_NAME, record.dump(), infos));
+    EXPECT_TRUE(infos.empty());
+}
+
+/**
  * @tc.name: MissingOrInvalidRequiredObjectsAreRejected
  * @tc.desc: Reject missing or invalid required objects and clear the output without exceptions.
  */
@@ -152,17 +190,35 @@ HWTEST_F(AtmRecoveryDecoderTest, MissingOrInvalidRequiredObjectsAreRejected, Fun
 }
 
 /**
- * @tc.name: RejectsBadTokenTypesAndOverflow
- * @tc.desc: Reject access token IDs with invalid types or values outside uint32_t.
+ * @tc.name: RejectsNonIntegerTokenTypes
+ * @tc.desc: Reject access token IDs that are not JSON integers.
  */
-HWTEST_F(AtmRecoveryDecoderTest, RejectsBadTokenTypesAndOverflow, Function | SmallTest | Level1)
+HWTEST_F(AtmRecoveryDecoderTest, RejectsNonIntegerTokenTypes, Function | SmallTest | Level1)
 {
-    for (const Json &value : std::vector<Json>{-1, 4294967296ULL, 1.5, "1", nullptr, true}) {
+    for (const Json &value : std::vector<Json>{1.5, "1", nullptr, true}) {
         auto record = Record();
         record["innerBundleUserInfos"]["com.example.app_0"]["accessTokenId"] = value;
         std::vector<AtmBundleRecoveryInfo> infos;
         EXPECT_FALSE(ParseAtmRecoveryRecord(BUNDLE_NAME, record.dump(), infos));
         EXPECT_TRUE(infos.empty());
+    }
+}
+
+/**
+ * @tc.name: RecoveryIntegerValuesAreConvertedWithoutRangeValidation
+ * @tc.desc: Read signed and oversized integer values into their destination fields.
+ */
+HWTEST_F(AtmRecoveryDecoderTest, RecoveryIntegerValuesAreConvertedWithoutRangeValidation,
+    Function | SmallTest | Level1)
+{
+    for (const auto &[value, expected] : std::vector<std::pair<Json, uint32_t>>{
+        {-1, static_cast<uint32_t>(-1)}, {4294967296ULL, 0}}) {
+        auto record = Record();
+        record["innerBundleUserInfos"]["com.example.app_0"]["accessTokenId"] = value;
+        std::vector<AtmBundleRecoveryInfo> infos;
+        ASSERT_TRUE(ParseAtmRecoveryRecord(BUNDLE_NAME, record.dump(), infos));
+        ASSERT_EQ(infos.size(), 1U);
+        EXPECT_EQ(infos[0].accessTokenId, expected);
     }
 }
 
@@ -297,14 +353,14 @@ HWTEST_F(AtmRecoveryDecoderTest, MalformedOptionalFieldsDoNotBecomeValidDefaults
 }
 
 /**
- * @tc.name: RecoveryIdentitiesRejectNumericConversion
- * @tc.desc: Reject identity values that would require conversion or overflow int32_t.
+ * @tc.name: RecoveryIdentitiesRejectNonIntegerTypes
+ * @tc.desc: Reject identity values that are not JSON integers.
  */
-HWTEST_F(AtmRecoveryDecoderTest, RecoveryIdentitiesRejectNumericConversion, Function | SmallTest | Level1)
+HWTEST_F(AtmRecoveryDecoderTest, RecoveryIdentitiesRejectNonIntegerTypes, Function | SmallTest | Level1)
 {
     for (const auto &path : {"/appIndex", "/innerBundleUserInfos/com.example.app_0/uid",
         "/innerBundleUserInfos/com.example.app_0/bundleUserInfo/userId"}) {
-        for (const Json &value : std::vector<Json>{-1, 2147483648ULL, 1.5, "1", nullptr, true}) {
+        for (const Json &value : std::vector<Json>{1.5, "1", nullptr, true}) {
             SCOPED_TRACE(path);
             auto record = Record();
             record[Json::json_pointer(path)] = value;
