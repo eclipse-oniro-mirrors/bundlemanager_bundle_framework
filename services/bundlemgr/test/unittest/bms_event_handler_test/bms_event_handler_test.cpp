@@ -66,6 +66,7 @@ namespace AccessToken {
     extern bool g_spmIsMigrationDoneValue;
     extern int32_t g_spmMigrateInstalledBundlesRet;
     extern bool g_spmMigratePopulateResults;
+    extern int32_t g_spmUpdateHapPolicyUidOut;
     void ResetSpmKitMockValuesForTest();
 }
 }
@@ -75,6 +76,7 @@ using OHOS::Security::AccessToken::g_spmIsMigrationDoneRet;
 using OHOS::Security::AccessToken::g_spmIsMigrationDoneValue;
 using OHOS::Security::AccessToken::g_spmMigrateInstalledBundlesRet;
 using OHOS::Security::AccessToken::g_spmMigratePopulateResults;
+using OHOS::Security::AccessToken::g_spmUpdateHapPolicyUidOut;
 
 namespace OHOS {
 namespace {
@@ -5225,6 +5227,81 @@ HWTEST_F(BmsEventHandlerTest, ProcessAccessTokenMigration_1000, Function | Small
     EXPECT_TRUE(after.IsBundleCheckBySpm());
     EXPECT_TRUE(handler->IsAccessTokenMigrationFinished());
     g_spmMigratePopulateResults = false;
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: ProcessAccessTokenMigration_1100
+ * @tc.name: ProcessAccessTokenMigration
+ * @tc.desc: fallback with uid=INVALID_UID and duplicated gids=[-1,-1] ->
+ *           gids deduped and the placeholder replaced by the resolved uid
+ */
+HWTEST_F(BmsEventHandlerTest, ProcessAccessTokenMigration_1100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = BUNDLE_NAME;
+    userInfo.bundleUserInfo.userId = 100;
+    userInfo.uid = Constants::INVALID_UID;
+    userInfo.gids = {Constants::INVALID_UID, Constants::INVALID_UID};
+    userInfo.accessTokenId = 0x12345678;
+    userInfo.accessTokenIdEx = 0x12345678;
+    info.innerBundleUserInfos_[BUNDLE_NAME + Constants::FILE_UNDERLINE + std::to_string(100)] = userInfo;
+    dataMgr->bundleInfos_[BUNDLE_NAME] = info;
+    g_spmUpdateHapPolicyUidOut = 20000100;
+    handler->CheckAndFallbackUnmigratedBundles();
+    g_spmUpdateHapPolicyUidOut = 0;
+    InnerBundleInfo after;
+    EXPECT_TRUE(dataMgr->FetchInnerBundleInfo(BUNDLE_NAME, after));
+    InnerBundleUserInfo afterUserInfo;
+    EXPECT_TRUE(after.GetInnerBundleUserInfo(100, afterUserInfo));
+    EXPECT_EQ(afterUserInfo.uid, 20000100);
+    ASSERT_EQ(afterUserInfo.gids.size(), static_cast<size_t>(1));
+    EXPECT_EQ(afterUserInfo.gids[0], 20000100);
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: ProcessAccessTokenMigration_1200
+ * @tc.name: ProcessAccessTokenMigration
+ * @tc.desc: fallback with uid change and gids=[oldUid, sharedGid] ->
+ *           only the oldUid slot is replaced, the shared gid is preserved
+ */
+HWTEST_F(BmsEventHandlerTest, ProcessAccessTokenMigration_1200, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = BUNDLE_NAME;
+    userInfo.bundleUserInfo.userId = 100;
+    userInfo.uid = 20000101;
+    userInfo.gids = {20000101, 30001};
+    userInfo.accessTokenId = 0x12345678;
+    userInfo.accessTokenIdEx = 0x12345678;
+    info.innerBundleUserInfos_[BUNDLE_NAME + Constants::FILE_UNDERLINE + std::to_string(100)] = userInfo;
+    dataMgr->bundleInfos_[BUNDLE_NAME] = info;
+    g_spmUpdateHapPolicyUidOut = 20000100;
+    handler->CheckAndFallbackUnmigratedBundles();
+    g_spmUpdateHapPolicyUidOut = 0;
+    InnerBundleInfo after;
+    EXPECT_TRUE(dataMgr->FetchInnerBundleInfo(BUNDLE_NAME, after));
+    InnerBundleUserInfo afterUserInfo;
+    EXPECT_TRUE(after.GetInnerBundleUserInfo(100, afterUserInfo));
+    EXPECT_EQ(afterUserInfo.uid, 20000100);
+    ASSERT_EQ(afterUserInfo.gids.size(), static_cast<size_t>(2));
+    EXPECT_EQ(afterUserInfo.gids[0], 20000100);
+    EXPECT_EQ(afterUserInfo.gids[1], 30001);
     dataMgr->bundleInfos_.clear();
 }
 
