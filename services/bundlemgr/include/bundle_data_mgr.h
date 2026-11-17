@@ -140,6 +140,25 @@ public:
     void ClassifyDualModeAppsNoLock();
 
     /**
+     * @brief Seed the default device-mode distribution policies on a dual-mode device when
+     * DualModeDeviceModeDistributionPolicies was never persisted. Reads the system parameter
+     * const.bms.devicemodedistributionpolicy ("pcmode:<policy csv>;padmode:<policy csv>;"),
+     * picks the policy CSV of the current system mode (DualModeHelper::GetSysMode: 0=tablet
+     * -> padmode, 1=2in1 -> pcmode; an unclear mode skips the seeding with a log) and
+     * persists it. An existing persisted value is never overwritten; a missing parameter,
+     * an unparseable format, an unclear mode or an invalid policy CSV only logs and leaves
+     * the key absent, so the boot classification falls back to the mode-based logic and a
+     * later explicit switch works as usual. Called at the START of
+     * LoadDataFromPersistentStorage, before its empty-storage early return, so the default
+     * is seeded from the FIRST boot on (a fresh device has an empty DB and never reaches
+     * the boot classification); on later boots the dual-mode classification in the same
+     * call applies the value. The dual-mode device gate lives in the caller, mirroring the
+     * sibling classification bodies.
+     * Note: This function does not lock bundleInfoMutex_, caller must hold the lock.
+     */
+    void InitDualModeDefaultPoliciesNoLock();
+
+    /**
      * @brief Policy-driven part of dual-mode classification (requirement 2, ADR-7). Reads the
      * persisted DualModeDeviceModeDistributionPolicies; if present and valid, hides
      * filterable-policy (1/2/3/5/7) apps whose policy is NOT in the set. UNSPECIFIED (0) stays

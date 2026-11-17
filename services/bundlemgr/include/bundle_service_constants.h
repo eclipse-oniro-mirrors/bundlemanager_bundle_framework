@@ -327,6 +327,12 @@ constexpr int32_t DUAL_MODE_VALUE_2IN1 = 1;
 // (ascending unique DeviceModeDistributionPolicy values joined by ",", e.g. "1,2,3,4,5,6,7,8").
 constexpr const char* DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICIES_KEY =
     "DualModeDeviceModeDistributionPolicies";
+// System parameter configuring the per-mode DEFAULT policy CSVs of a dual-mode device, in the
+// format "pcmode:0,1,3,4,5,6,7,8;padmode:0,2,3,4,5,6,7,8;" (pcmode=2in1, padmode=tablet).
+// When the key above was never persisted, the current system mode's CSV is seeded from this
+// parameter as the default value of DualModeDeviceModeDistributionPolicies.
+constexpr const char* DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICY_PARAM =
+    "const.bms.devicemodedistributionpolicy";
 constexpr const char* BMS_TRUE = "true";
 // cli sandbox application
 constexpr int32_t CLI_SANDBOX_APP_INDEX_MIN = 2000;
