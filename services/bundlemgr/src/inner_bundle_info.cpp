@@ -29,6 +29,7 @@
 #include "bundle_file_util.h"
 #include "bundle_mgr_client.h"
 #include "bundle_permission_mgr.h"
+#include "bundle_spm_manager.h"
 #include "bundle_util.h"
 #include "common_json_converter.h"
 #include "exception_util.h"
@@ -150,7 +151,7 @@ constexpr const char* UNINSTALL_STATE = "uninstallState";
 constexpr const char* PLUGIN_BUNDLE_INFOS = "pluginBundleInfos";
 constexpr const char* IS_DELAY_AGING = "isDelayAging";
 constexpr const char* IS_DUAL_MODE_CLONE_APP = "isDualModeCloneApp";
-constexpr const char* CHECK_BY_SPM = "checkBySpm";
+constexpr const char* CHECK_BY_SPM = "checkBySpm_";
 constexpr const char* IS_COMPRESSED_PRELOAD = "isCompressedPreload";
 constexpr int8_t SINGLE_HSP_VERSION = 1;
 const std::map<std::string, IsolationMode> ISOLATION_MODE_MAP = {
@@ -6854,6 +6855,13 @@ bool InnerBundleInfo::HasDriverExtension() const
         }
     }
     return false;
+}
+
+void InnerBundleInfo::SetBundleCheckBySpm(bool checked)
+{
+    if (BundleSpmManager::IsEnabled()) {
+        checkBySpm_ = checked;
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -1456,10 +1456,7 @@ public:
     {
         return baseBundleInfo_->isPreInstallApp;
     }
-    void SetBundleCheckBySpm(bool checked)
-    {
-        checkBySpm_ = checked;
-    }
+    void SetBundleCheckBySpm(bool checked);
     bool IsBundleCheckBySpm() const
     {
         return checkBySpm_;
