@@ -263,6 +263,14 @@ void BundleDataMgr::DefragMemory()
 bool BundleDataMgr::LoadDataFromPersistentStorage()
 {
     std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    // === DUAL_MODE: seed the default policy set (const.bms.devicemodedistributionpolicy) when
+    // the key was never persisted. Runs FIRST, before the empty-storage early return below, so
+    // the default is in place from the FIRST boot on (a fresh device has an empty DB and never
+    // reaches the classification path); once the key exists this is a no-op and the dual-mode
+    // classification later in this call applies the value. ===
+    if (DualModeHelper::IsDualModeDevice()) {
+        InitDualModeDefaultPoliciesNoLock();
+    }
     // Judge whether bundleState json db exists.
     // If it does not exist, create it and return the judgment result.
     bool bundleStateDbExist = bundleStateStorage_->HasBundleUserInfoJsonDb();
@@ -461,6 +469,119 @@ void BundleDataMgr::ResetBundleStateData()
             bundleInfoItem.second.ResetBundleState(Constants::ALL_USERID);
         }
     }
+}
+
+namespace {
+// Format tokens of the const.bms.devicemodedistributionpolicy value.
+constexpr const char* DUAL_MODE_PARAM_PC_KEY = "pcmode";
+constexpr const char* DUAL_MODE_PARAM_PAD_KEY = "padmode";
+constexpr char DUAL_MODE_PARAM_SEGMENT_SEP = ';';
+constexpr char DUAL_MODE_PARAM_KEY_VALUE_SEP = ':';
+// Truncated preview length for a malformed parameter on the skip log (the value is device
+// config and normally short, but a corrupted one may be arbitrarily long).
+constexpr size_t DUAL_MODE_PARAM_LOG_PREVIEW_LEN = 50;
+
+// Parse "pcmode:0,1,3,4,5,6,7,8;padmode:0,2,3,4,5,6,7,8;" into the per-mode policy CSVs.
+// Segment order is free, a trailing ';' is optional and empty/unknown segments are skipped.
+// On a duplicate mode key the first occurrence wins. Returns true only when BOTH mode keys
+// were found with a non-empty value; the CSVs themselves are validated by the caller through
+// DualModeHelper::ParsePersistedPolicies (the single validation source for policy CSVs).
+bool ParseDeviceModeDistributionParam(const std::string &param,
+    std::string &pcModePolicies, std::string &padModePolicies)
+{
+    bool hasPcMode = false;
+    bool hasPadMode = false;
+    size_t pos = 0;
+    while (pos < param.size()) {
+        size_t segmentEnd = param.find(DUAL_MODE_PARAM_SEGMENT_SEP, pos);
+        size_t segmentLen = (segmentEnd == std::string::npos) ? (param.size() - pos)
+            : (segmentEnd - pos);
+        std::string segment = param.substr(pos, segmentLen);
+        pos = (segmentEnd == std::string::npos) ? param.size() : segmentEnd + 1;
+        size_t keyValueSep = segment.find(DUAL_MODE_PARAM_KEY_VALUE_SEP);
+        if (keyValueSep == std::string::npos) {
+            continue;  // malformed segment: skip, keep parsing the remaining ones
+        }
+        std::string key = segment.substr(0, keyValueSep);
+        std::string value = segment.substr(keyValueSep + 1);
+        if (key == DUAL_MODE_PARAM_PC_KEY && !hasPcMode) {
+            pcModePolicies = value;
+            hasPcMode = true;
+        } else if (key == DUAL_MODE_PARAM_PAD_KEY && !hasPadMode) {
+            padModePolicies = value;
+            hasPadMode = true;
+        }
+    }
+    return hasPcMode && hasPadMode && !pcModePolicies.empty() && !padModePolicies.empty();
+}
+}  // namespace
+
+// === DUAL_MODE: seed the default device-mode distribution policies ===
+// On a dual-mode device, when DualModeDeviceModeDistributionPolicies was never persisted (no
+// explicit switch has run yet), seed it with the device-configured default: parse
+// const.bms.devicemodedistributionpolicy into the per-mode policy CSVs, pick the current
+// system mode's CSV (GetSysMode: 0=tablet -> padmode, 1=2in1 -> pcmode) and persist it.
+// Called at the start of LoadDataFromPersistentStorage — BEFORE its empty-storage early
+// return — so the default is in place from the FIRST boot on (a fresh device has an empty DB
+// and never reaches the boot classification); on later boots the dual-mode classification in
+// the same call applies the value. Idempotent: an existing key is never touched (an explicit
+// switch result always wins). Every skip path (param missing, unparseable format, unclear
+// mode, invalid policy CSV, save failure) only logs and leaves the key absent, so the boot
+// classification falls back to the mode-based requirement-1 logic and a later explicit switch
+// works as usual. The bms_param RDB access inside the boot bundleInfoMutex_ window follows the
+// switch-path precedent (a low-frequency one-shot management op; see the note in
+// FilterBundleListByDeviceModeDistributionPolicies).
+void BundleDataMgr::InitDualModeDefaultPoliciesNoLock()
+{
+    auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    if (bmsPara == nullptr) {
+        APP_LOGE_NOFUNC("Dual mode: init default policies failed, bmsPara is nullptr");
+        return;
+    }
+    // The requirement: an existing DualModeDeviceModeDistributionPolicies value is left as is.
+    std::string policiesStr;
+    if (bmsPara->GetBmsParam(ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICIES_KEY,
+        policiesStr)) {
+        APP_LOGD("Dual mode: policies already exist, skip default policies init");
+        return;
+    }
+    std::string param = OHOS::system::GetParameter(
+        ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICY_PARAM, "");
+    if (param.empty()) {
+        APP_LOGE_NOFUNC("Dual mode: no default policies param, skip default policies init");
+        return;
+    }
+    std::string pcModePolicies;
+    std::string padModePolicies;
+    if (!ParseDeviceModeDistributionParam(param, pcModePolicies, padModePolicies)) {
+        APP_LOGW_NOFUNC("Dual mode: default policies param malformed, skip: %{public}s",
+            param.substr(0, DUAL_MODE_PARAM_LOG_PREVIEW_LEN).c_str());
+        return;
+    }
+    // The requirement: with an unclear current mode nothing is processed, only a log is left.
+    int32_t sysMode = DualModeHelper::GetSysMode();
+    if (sysMode == ServiceConstants::DUAL_MODE_VALUE_INVALID) {
+        APP_LOGW_NOFUNC("Dual mode: current mode unclear, skip default policies init");
+        return;
+    }
+    std::string defaultPolicies = (sysMode == ServiceConstants::DUAL_MODE_VALUE_2IN1)
+        ? pcModePolicies
+        : padModePolicies;
+    // Only seed a CSV the persisted-value parse accepts (single validation source); an
+    // invalid configured set stays unpersisted so it cannot block a later correct seeding.
+    std::set<DeviceModeDistributionPolicy> policySet;
+    if (!DualModeHelper::ParsePersistedPolicies(defaultPolicies, policySet)) {
+        APP_LOGW_NOFUNC("Dual mode: default policies invalid, mode %{public}d, skip: %{public}s",
+            sysMode, defaultPolicies.c_str());
+        return;
+    }
+    if (!bmsPara->SaveBmsParam(ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICIES_KEY,
+        defaultPolicies)) {
+        APP_LOGE_NOFUNC("Dual mode: save default policies failed");
+        return;
+    }
+    APP_LOGI("Dual mode: default policies saved, mode %{public}d, policies %{public}s",
+        sysMode, defaultPolicies.c_str());
 }
 
 void BundleDataMgr::ClassifyDualModeAppsNoLock()
