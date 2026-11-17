@@ -454,9 +454,13 @@ ErrCode BaseBundleInstaller::InstallBundleByBundleName(
 
     int32_t uid = Constants::INVALID_UID;
     ErrCode result = ProcessInstallBundleByBundleName(bundleName, installParam, uid);
+    std::string originalName = bundleName;
+    if (DualModeHelper::IsDualModeDevice()) {
+        originalName = DualModeHelper::GetOriginalBundleName(bundleName);
+    }
     std::map<std::string, std::string> tokenIdMetadataInfos;
     tokenIdMetadataInfos[ServiceConstants::META_KEEP_TOKEN_ID_KEY] = isKeepTokenId_ ? BMS_TRUE : BMS_FALSE;
-    if (installParam.needSendEvent && dataMgr_ && !bundleName.empty()) {
+    if (installParam.needSendEvent && dataMgr_ && !originalName.empty()) {
         NotifyBundleEvents installRes = {
             .type = NotifyType::INSTALL,
             .resultCode = result,
@@ -465,7 +469,7 @@ ErrCode BaseBundleInstaller::InstallBundleByBundleName(
             .bundleType = static_cast<int32_t>(bundleType_),
             .atomicServiceModuleUpgrade = atomicServiceModuleUpgrade_,
             .userId = userId_,
-            .bundleName = bundleName,
+            .bundleName = originalName,
             .modulePackage = moduleName_,
             .appIdentifier = bundleAppIdentifier_,
             .appDistributionType = appDistributionType_,
@@ -3443,6 +3447,7 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
             }
 
             uid = oldInfo.GetUid(userId_);
+            oldInfo.SetBundleCheckBySpm(true);
             GetInstallEventInfo(oldInfo, sysEventInfo_);
             // Dual-mode: reuse the routing truth captured at fetch so the new user's bundle info
             // and data group infos are written to the map the variant actually lives in.
@@ -10731,6 +10736,9 @@ ErrCode BaseBundleInstaller::MarkInstallFinish(const std::map<std::string, std::
         }
         // Dual-mode: crossModeFetchTruth_ (captured at fetch) keeps the update target map identical
         // to the one the old info was read from, even if mode params flip mid-install.
+        info.SetBundleCheckBySpm(true);
+        LOG_I(BMS_TAG_INSTALLER, "mark checkBySpm=true (update) bundle:%{public}s",
+            bundleName_.c_str());
         if (!dataMgr_->UpdateInnerBundleInfo(info, true, crossModeFetchTruth_)) {
             if (!dataMgr_->UpdateInnerBundleInfo(info, true, crossModeFetchTruth_)) {
                 LOG_W(BMS_TAG_INSTALLER, "save mark failed, -n:%{public}s", bundleName_.c_str());

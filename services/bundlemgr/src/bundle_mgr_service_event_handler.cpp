@@ -7771,6 +7771,26 @@ struct UpdatePayload {
     bool uidChanged;
 };
 
+void DedupGids(std::vector<int32_t> &gids)
+{
+    std::set<int32_t> seen;
+    gids.erase(std::remove_if(gids.begin(), gids.end(),
+        [&seen](int32_t gid) { return !seen.insert(gid).second; }), gids.end());
+}
+
+void UpdateUidAndGids(int32_t &uid, std::vector<int32_t> &gids, const UpdatePayload &payload)
+{
+    auto oldUid = uid;
+    uid = payload.resolvedUid;
+    DedupGids(gids);
+    auto gidIt = std::find(gids.begin(), gids.end(), oldUid);
+    if (gidIt != gids.end()) {
+        *gidIt = payload.resolvedUid;
+    } else {
+        gids.emplace_back(payload.resolvedUid);
+    }
+}
+
 void UpdateSandboxTokenIfChanged(const std::shared_ptr<BundleDataMgr> &dataMgr,
     const Security::AccessToken::HapBaseInfo &hapBaseInfo,
     uint32_t newTokenId, uint64_t newTokenIdEx);
@@ -8878,15 +8898,8 @@ void UpdateSandboxTokenIfChanged(const std::shared_ptr<BundleDataMgr> &dataMgr,
 void UpdateMainUserInfo(InnerBundleUserInfo &userInfo, const UpdatePayload &payload)
 {
     if (payload.uidChanged) {
-        auto oldUid = userInfo.uid;
-        userInfo.uid = payload.resolvedUid;
+        UpdateUidAndGids(userInfo.uid, userInfo.gids, payload);
         userInfo.appUid = payload.resolvedUid;
-        auto gidIt = std::find(userInfo.gids.begin(), userInfo.gids.end(), oldUid);
-        if (gidIt != userInfo.gids.end()) {
-            *gidIt = payload.resolvedUid;
-        } else {
-            userInfo.gids.emplace_back(payload.resolvedUid);
-        }
     }
     userInfo.accessTokenId = payload.existingTokenId;
     userInfo.accessTokenIdEx = payload.existingTokenIdEx;
@@ -8900,15 +8913,8 @@ void UpdateCloneUserInfo(int32_t instIndex,
         return;
     }
     if (payload.uidChanged) {
-        auto oldUid = cloneIt->second.uid;
-        cloneIt->second.uid = payload.resolvedUid;
+        UpdateUidAndGids(cloneIt->second.uid, cloneIt->second.gids, payload);
         cloneIt->second.appUid = payload.resolvedUid;
-        auto gidIt = std::find(cloneIt->second.gids.begin(), cloneIt->second.gids.end(), oldUid);
-        if (gidIt != cloneIt->second.gids.end()) {
-            *gidIt = payload.resolvedUid;
-        } else {
-            cloneIt->second.gids.emplace_back(payload.resolvedUid);
-        }
     }
     cloneIt->second.accessTokenId = payload.existingTokenId;
     cloneIt->second.accessTokenIdEx = payload.existingTokenIdEx;
@@ -8922,16 +8928,8 @@ void UpdateCliSandboxUserInfo(int32_t instIndex,
         return;
     }
     if (payload.uidChanged) {
-        auto oldUid = sandboxIt->second.uid;
-        sandboxIt->second.uid = payload.resolvedUid;
+        UpdateUidAndGids(sandboxIt->second.uid, sandboxIt->second.gids, payload);
         sandboxIt->second.appUid = payload.resolvedUid;
-        auto gidIt = std::find(sandboxIt->second.gids.begin(),
-            sandboxIt->second.gids.end(), oldUid);
-        if (gidIt != sandboxIt->second.gids.end()) {
-            *gidIt = payload.resolvedUid;
-        } else {
-            sandboxIt->second.gids.emplace_back(payload.resolvedUid);
-        }
     }
     sandboxIt->second.accessTokenId = payload.existingTokenId;
     sandboxIt->second.accessTokenIdEx = payload.existingTokenIdEx;
@@ -8940,15 +8938,8 @@ void UpdateCliSandboxUserInfo(int32_t instIndex,
 void UpdateSandboxUserInfo(InnerBundleUserInfo &sandboxUserInfo, const UpdatePayload &payload)
 {
     if (payload.uidChanged) {
-        auto oldUid = sandboxUserInfo.uid;
-        sandboxUserInfo.uid = payload.resolvedUid;
+        UpdateUidAndGids(sandboxUserInfo.uid, sandboxUserInfo.gids, payload);
         sandboxUserInfo.appUid = payload.resolvedUid;
-        auto gidIt = std::find(sandboxUserInfo.gids.begin(), sandboxUserInfo.gids.end(), oldUid);
-        if (gidIt != sandboxUserInfo.gids.end()) {
-            *gidIt = payload.resolvedUid;
-        } else {
-            sandboxUserInfo.gids.emplace_back(payload.resolvedUid);
-        }
     }
     sandboxUserInfo.accessTokenId = payload.existingTokenId;
     sandboxUserInfo.accessTokenIdEx = payload.existingTokenIdEx;

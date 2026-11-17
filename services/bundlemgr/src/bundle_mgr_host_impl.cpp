@@ -7153,7 +7153,8 @@ ErrCode BundleMgrHostImpl::SwitchUninstallStateByUserId(const std::string &bundl
 void BundleMgrHostImpl::SetProvisionInfoToInnerBundleInfo(const std::string &hapPath, InnerBundleInfo &info)
 {
     Security::Verify::HapVerifyResult hapVerifyResult;
-    ErrCode verifyRes = BundleVerifyMgr::HapVerify(hapPath, hapVerifyResult);
+    int32_t userId = AccountHelper::GetUserIdByCallerType();
+    ErrCode verifyRes = BundleVerifyMgr::HapVerify(hapPath, hapVerifyResult, true, userId);
     if (verifyRes != ERR_OK) {
         return;
     }

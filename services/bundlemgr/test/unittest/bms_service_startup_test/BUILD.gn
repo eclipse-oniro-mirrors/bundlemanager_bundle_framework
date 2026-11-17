@@ -117,6 +117,11 @@ ohos_unittest("BmsServiceStartupTest") {
     external_deps += [ "hisysevent:libhisysevent" ]
     defines += [ "HISYSEVENT_ENABLE" ]
   }
+  if (defined(global_parts_info) &&
+      defined(global_parts_info.security_security_guard)) {
+    external_deps += [ "security_guard:libsg_collect_sdk" ]
+    defines += [ "SECURITY_GUARD_ENABLE" ]
+  }
   if (storage_service_enable) {
     external_deps += [ "storage_service:storage_manager_sa_proxy" ]
     defines += [ "STORAGE_SERVICE_ENABLE" ]

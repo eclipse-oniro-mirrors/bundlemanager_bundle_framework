@@ -8641,7 +8641,10 @@ ErrCode BundleDataMgr::GenerateUidAndGid(InnerBundleUserInfo &innerBundleUserInf
     innerBundleUserInfo.uid = innerBundleUserInfo.bundleUserInfo.userId * Constants::BASE_USER_RANGE
         + bundleId % Constants::BASE_USER_RANGE;
     innerBundleUserInfo.appUid = innerBundleUserInfo.uid;
-    innerBundleUserInfo.gids.emplace_back(innerBundleUserInfo.uid);
+    if (std::find(innerBundleUserInfo.gids.begin(), innerBundleUserInfo.gids.end(),
+        innerBundleUserInfo.uid) == innerBundleUserInfo.gids.end()) {
+        innerBundleUserInfo.gids.emplace_back(innerBundleUserInfo.uid);
+    }
     return ERR_OK;
 }
 

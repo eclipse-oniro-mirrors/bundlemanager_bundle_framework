@@ -112,6 +112,11 @@ public:
     // Returns false if the name is not a dual-mode (appIndex==10000) clone name.
     static bool ParseDualModeBundleName(const std::string &name, std::string &bundleName);
 
+    // Get the original bundle name of a dual-mode clone name
+    // ("+clone-10000+{bundleName}" -> {bundleName}) via ParseCloneDataDir.
+    // Names without the dual-mode clone prefix are returned unchanged.
+    static std::string GetOriginalBundleName(const std::string &name);
+
     // Whether the given db/storage key starts with the dual-mode clone prefix "+clone-".
     static bool IsDualModeCloneKey(const std::string &key);
 
