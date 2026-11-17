@@ -459,6 +459,9 @@ ohos_unittest("BmsInstallDaemonOperatorTest") {
   external_deps += bundle_install_external_deps
 
   defines = [ "BUNDLE_FRAMEWORK_RETURN_FALSE" ]
+  if (!is_asan && !use_clang_coverage) {
+    defines += [ "NO_USE_CLANG_COVERAGE" ]
+  }
   if (build_selinux) {
     external_deps += [ "selinux_adapter:libhap_restorecon" ]
     cflags += [ "-DWITH_SELINUX" ]

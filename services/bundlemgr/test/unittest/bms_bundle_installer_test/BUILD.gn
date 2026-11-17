@@ -121,6 +121,9 @@ ohos_unittest("BmsBundleInstallerTest") {
   external_deps += bundle_install_external_deps
 
   defines = []
+  if (!is_asan && !use_clang_coverage) {
+    defines += [ "NO_USE_CLANG_COVERAGE" ]
+  }
   if (code_signature_enable) {
     sources += [
       "${services_path}/bundlemgr/src/aot/aot_sign_data_cache_mgr.cpp",
