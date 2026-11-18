@@ -819,8 +819,6 @@ private:
 
     ErrCode HandleGetBundleStats(MessageParcel &data, MessageParcel &reply);
 
-    ErrCode HandleGetBundleStatsAsync(MessageParcel &data, MessageParcel &reply);
-
     ErrCode HandleBatchGetBundleStats(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetAllBundleStats(MessageParcel &data, MessageParcel &reply);
