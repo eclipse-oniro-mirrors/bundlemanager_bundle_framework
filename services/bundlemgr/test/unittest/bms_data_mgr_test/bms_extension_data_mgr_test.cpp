@@ -133,6 +133,14 @@ public:
     ErrCode DeleteDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId) override;
 };
 
+class DefaultImplBundleMgrExt : public BundleMgrExt {
+public:
+    bool CheckApiInfo(const BundleInfo& bundleInfo) override
+    {
+        return true;
+    }
+};
+
 std::shared_ptr<BundleMgrService> BmsExtensionDataMgrTest::bundleMgrService_ =
     DelayedSingleton<BundleMgrService>::GetInstance();
 
@@ -3034,5 +3042,70 @@ HWTEST_F(BmsExtensionDataMgrTest, BMSExtErrorCodeConsistency_0001, Function | Sm
         bmsExtensionDataMgr.ERR_BUNDLE_MANAGER_EXTENSION_INVALID_USER_ID,
         "ERR_BUNDLE_MANAGER_EXTENSION_INVALID_USER_ID mismatch with production");
     SUCCEED();
+}
+
+/**
+ * @tc.number: BundleMgrExt_CanOpenLink_Default_0001
+ * @tc.name: CanOpenLink default impl returns ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR
+ * @tc.desc: test CanOpenLink default implementation
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_CanOpenLink_Default_0001, Function | SmallTest | Level0)
+{
+    DefaultImplBundleMgrExt defaultBundleMgrExt;
+    bool canOpen = false;
+    ErrCode res = defaultBundleMgrExt.CanOpenLink("test.link", canOpen);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR);
+}
+
+/**
+ * @tc.number: BundleMgrExt_GetShortcutInfos_Default_0001
+ * @tc.name: GetShortcutInfos default impl returns ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR
+ * @tc.desc: test GetShortcutInfos default implementation
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_GetShortcutInfos_Default_0001, Function | SmallTest | Level0)
+{
+    DefaultImplBundleMgrExt defaultBundleMgrExt;
+    std::vector<ShortcutInfo> shortcutInfos;
+    ErrCode res = defaultBundleMgrExt.GetShortcutInfos("test.bundle", USERID, shortcutInfos);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR);
+}
+
+/**
+ * @tc.number: BundleMgrExt_GetAllDesktopShortcutInfos_Default_0001
+ * @tc.name: GetAllDesktopShortcutInfos default impl returns ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR
+ * @tc.desc: test GetAllDesktopShortcutInfos default implementation
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_GetAllDesktopShortcutInfos_Default_0001, Function | SmallTest | Level0)
+{
+    DefaultImplBundleMgrExt defaultBundleMgrExt;
+    std::vector<ShortcutInfo> shortcutInfos;
+    ErrCode res = defaultBundleMgrExt.GetAllDesktopShortcutInfos(USERID, shortcutInfos);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR);
+}
+
+/**
+ * @tc.number: BundleMgrExt_AddDesktopShortcutInfo_Default_0001
+ * @tc.name: AddDesktopShortcutInfo default impl returns ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR
+ * @tc.desc: test AddDesktopShortcutInfo default implementation
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_AddDesktopShortcutInfo_Default_0001, Function | SmallTest | Level0)
+{
+    DefaultImplBundleMgrExt defaultBundleMgrExt;
+    ShortcutInfo shortcutInfo;
+    ErrCode res = defaultBundleMgrExt.AddDesktopShortcutInfo(shortcutInfo, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR);
+}
+
+/**
+ * @tc.number: BundleMgrExt_DeleteDesktopShortcutInfo_Default_0001
+ * @tc.name: DeleteDesktopShortcutInfo default impl returns ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR
+ * @tc.desc: test DeleteDesktopShortcutInfo default implementation
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_DeleteDesktopShortcutInfo_Default_0001, Function | SmallTest | Level0)
+{
+    DefaultImplBundleMgrExt defaultBundleMgrExt;
+    ShortcutInfo shortcutInfo;
+    ErrCode res = defaultBundleMgrExt.DeleteDesktopShortcutInfo(shortcutInfo, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR);
 }
 } // OHOS

@@ -6852,6 +6852,20 @@ HWTEST_F(BmsBundleKitServiceTest, Mgr_Proxy_GetUninstalledBundleInfo_0001, Funct
 }
 
 /**
+ * @tc.number: Mgr_Proxy_GetLaunchServices_0100
+ * @tc.name: test BundleMgrProxy interface GetLaunchServices
+ * @tc.desc: 1.return ERR_BUNDLE_MANAGER_PERMISSION_DENIED for non-foundation caller
+ */
+HWTEST_F(BmsBundleKitServiceTest, Mgr_Proxy_GetLaunchServices_0100, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    LaunchServicesResult result;
+    auto ret = bundleMgrProxy->GetLaunchServices(BUNDLE_NAME_TEST, MODULE_NAME_TEST, DEFAULT_USERID, result);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
  * @tc.number: Mgr_Proxy_AddDesktopShortcutInfo_0100
  * @tc.name: test BundleMgrProxy interface AddDesktopShortcutInfo
  * @tc.desc: 1.return ERR_BUNDLE_MANAGER_PERMISSION_DENIED

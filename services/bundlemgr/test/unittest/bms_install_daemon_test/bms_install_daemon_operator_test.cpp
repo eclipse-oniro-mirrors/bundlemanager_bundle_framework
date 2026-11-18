@@ -2571,7 +2571,11 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_14700, Function | Sm
     chmod(certDir.c_str(), 0755);
     DeleteFile(certPath);
     InstalldOperator::DeleteDir(certDir);
+#ifdef NO_USE_CLANG_COVERAGE
     EXPECT_EQ(ret, ERR_APPEXECFWK_ENTERPRISE_CERT_REMOVE_KEY_ERROR);
+#else
+    EXPECT_EQ(ret, ERR_OK);
+#endif
 }
 
 /**
