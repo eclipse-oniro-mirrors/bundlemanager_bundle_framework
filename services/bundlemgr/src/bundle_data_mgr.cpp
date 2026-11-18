@@ -12869,7 +12869,6 @@ ErrCode BundleDataMgr::GenerateIpcGroupInfos(const std::string &bundleName,
     bool toTempBundle)
 {
     APP_LOGD("called for user: %{public}d", userId);
-    // Callers check ALLOW_CROSS_APP_IPC before parsing the declaration; only the format/count filter is left.
     std::unordered_set<std::string> validIds;
     for (const std::string &groupId : ipcGroupIdList) {
         BundleUtil::TryAddIpcGroupId(validIds, groupId);
@@ -13844,15 +13843,10 @@ void BundleDataMgr::GenerateNewUserIpcGroupInfos(const std::string &bundleName, 
     bool toTempBundle)
 {
     APP_LOGD("called for -b %{public}s, -u %{public}d", bundleName.c_str(), userId);
-    auto permissionResult = BundlePermissionMgr::VerifyPermission(bundleName,
-        ServiceConstants::PERMISSION_ALLOW_CROSS_APP_IPC, userId);
-    APP_LOGI("GenerateNewUserIpcGroupInfos bundleName:%{public}s userId:%{public}d "
-        "ALLOW_CROSS_APP_IPC permissionResult:%{public}d",
-        bundleName.c_str(), userId, permissionResult);
-    if (permissionResult != Security::AccessToken::PermissionState::PERMISSION_GRANTED) {
+    if (!OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_ARCOSS_APP_IPC, false)) {
         APP_LOGW("GenerateNewUserIpcGroupInfos bundleName:%{public}s userId:%{public}d "
-            "ALLOW_CROSS_APP_IPC not granted, skip", bundleName.c_str(), userId);
-        return ;
+            "cross app ipc disabled by system parameter, skip", bundleName.c_str(), userId);
+        return;
     }
     std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
     std::map<std::string, InnerBundleInfo> &targetMap = toTempBundle ? tempBundleInfos_ : bundleInfos_;
@@ -13889,6 +13883,8 @@ void BundleDataMgr::GenerateNewUserIpcGroupInfos(const std::string &bundleName, 
 ErrCode BundleDataMgr::ScanAllBundleIpcGroupInfo()
 {
     APP_LOGI("ScanAllBundleIpcGroupInfo start");
+    const bool ipcGroupEnabled = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_ARCOSS_APP_IPC, false);
+    APP_LOGI("ScanAllBundleIpcGroupInfo enable_arcoss_app_ipc:%{public}d", ipcGroupEnabled);
     struct ScanTarget {
         std::string bundleName;
         int32_t userId;
@@ -13913,14 +13909,8 @@ ErrCode BundleDataMgr::ScanAllBundleIpcGroupInfo()
     // The declaration is app level, so one installed user's provision info is enough.
     ErrCode result = ERR_OK;
     for (const ScanTarget &target : targets) {
-        // Without the permission the declared set is empty, so stale records are cleared.
         std::unordered_set<std::string> ipcGroupIds;
-        auto permissionResult = BundlePermissionMgr::VerifyPermission(target.bundleName,
-            ServiceConstants::PERMISSION_ALLOW_CROSS_APP_IPC, target.userId);
-        APP_LOGI("ScanAllBundleIpcGroupInfo bundleName:%{public}s userId:%{public}d "
-            "ALLOW_CROSS_APP_IPC permissionResult:%{public}d",
-            target.bundleName.c_str(), target.userId, permissionResult);
-        if (permissionResult == Security::AccessToken::PermissionState::PERMISSION_GRANTED) {
+        if (ipcGroupEnabled) {
             AppProvisionInfo appProvisionInfo;
             if (GetAppProvisionInfo(target.bundleName, target.userId, appProvisionInfo) != ERR_OK) {
                 APP_LOGD("get app provision info failed, bundleName:%{public}s", target.bundleName.c_str());
