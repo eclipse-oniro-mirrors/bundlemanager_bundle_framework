@@ -2417,13 +2417,7 @@ ani_object CommonFunAni::ConvertSkillInfo(ani_env* env, const SkillInfo& skillIn
     ani_string skillName = nullptr;
     RETURN_NULL_IF_FALSE(StringToAniStr(env, skillInfo.skillName, skillName));
     ani_string skillPath = nullptr;
-    std::string sandboxSkillPath = skillInfo.skillPath;
-    if (sandboxSkillPath.compare(0, strlen(Constants::BASE_SKILL_DIR),
-        Constants::BASE_SKILL_DIR) == 0) {
-        sandboxSkillPath.replace(0, strlen(Constants::BASE_SKILL_DIR),
-            Constants::SANDBOX_SKILL_PATH_PREFIX);
-    }
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, sandboxSkillPath, skillPath));
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, skillInfo.skillPath, skillPath));
     ani_string abilityName = nullptr;
     RETURN_NULL_IF_FALSE(StringToAniStr(env, skillInfo.abilityName, abilityName));
     ani_string version = nullptr;

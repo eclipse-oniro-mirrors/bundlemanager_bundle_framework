@@ -40,6 +40,10 @@ public:
         std::vector<SkillInfo> &skillInfos);
 
 private:
+    static void ConvertSkillPath(SkillInfo &skillInfo, bool forSelf);
+
+    static void ConvertSkillPaths(std::vector<SkillInfo> &skillInfos, bool forSelf);
+
     class SkillManagerDeathRecipient : public IRemoteObject::DeathRecipient {
         void OnRemoteDied([[maybe_unused]] const wptr<IRemoteObject>& remote) override;
     };
