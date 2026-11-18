@@ -3641,6 +3641,7 @@ void BundleDataMgr::ModifyApplicationInfoByCloneInfo(const InnerBundleCloneInfo 
     applicationInfo.accessTokenIdEx = cloneInfo.accessTokenIdEx;
     applicationInfo.enabled = cloneInfo.enabled;
     applicationInfo.uid = cloneInfo.uid;
+    applicationInfo.appUid = cloneInfo.appUid;
     applicationInfo.appIndex = cloneInfo.appIndex;
 }
 
@@ -3648,6 +3649,7 @@ void BundleDataMgr::ModifyBundleInfoByCloneInfo(const InnerBundleCloneInfo &clon
     BundleInfo &bundleInfo) const
 {
     bundleInfo.uid = cloneInfo.uid;
+    bundleInfo.appUid = cloneInfo.appUid;
     bundleInfo.gid = cloneInfo.uid; // no gids, need add
     bundleInfo.installTime = cloneInfo.installTime;
     bundleInfo.appIndex = cloneInfo.appIndex;
@@ -8738,6 +8740,7 @@ ErrCode BundleDataMgr::GenerateUidAndGid(InnerBundleUserInfo &innerBundleUserInf
         // A zero uid (corrupt record) is rejected as well: it would chown the
         // data dirs to root.
         if (innerBundleUserInfo.uid > 0) {
+            innerBundleUserInfo.appUid = innerBundleUserInfo.uid;
             if (std::find(innerBundleUserInfo.gids.begin(), innerBundleUserInfo.gids.end(),
                 innerBundleUserInfo.uid) == innerBundleUserInfo.gids.end()) {
                 innerBundleUserInfo.gids.emplace_back(innerBundleUserInfo.uid);
@@ -8758,6 +8761,7 @@ ErrCode BundleDataMgr::GenerateUidAndGid(InnerBundleUserInfo &innerBundleUserInf
 
     innerBundleUserInfo.uid = innerBundleUserInfo.bundleUserInfo.userId * Constants::BASE_USER_RANGE
         + bundleId % Constants::BASE_USER_RANGE;
+    innerBundleUserInfo.appUid = innerBundleUserInfo.uid;
     if (std::find(innerBundleUserInfo.gids.begin(), innerBundleUserInfo.gids.end(),
         innerBundleUserInfo.uid) == innerBundleUserInfo.gids.end()) {
         innerBundleUserInfo.gids.emplace_back(innerBundleUserInfo.uid);
@@ -18462,6 +18466,7 @@ ErrCode BundleDataMgr::GetPluginExtensionInfo(
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     extensionInfo.applicationInfo.uid = innerBundleUserInfoPtr->uid;
+    extensionInfo.applicationInfo.appUid = innerBundleUserInfoPtr->appUid;
     return ERR_OK;
 }
 

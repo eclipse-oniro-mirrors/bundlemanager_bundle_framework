@@ -503,6 +503,7 @@ int32_t BundleSpmManager::InstallSession::InitToken(InnerBundleInfo &info, int32
                     bundleUserInfo.bundleName = info.GetBundleName();
                 }
                 bundleUserInfo.uid = refreshedUid;
+                bundleUserInfo.appUid = refreshedUid;
                 bundleUserInfo.gids.clear();
                 bundleUserInfo.gids.emplace_back(refreshedUid);
                 info.AddInnerBundleUserInfo(bundleUserInfo);
@@ -646,6 +647,7 @@ int32_t BundleSpmManager::InstallSession::InitToken(InnerBundleInfo &info, int32
         bundleUserInfo.gids.clear();
     }
     bundleUserInfo.uid = identity.uid;
+    bundleUserInfo.appUid = bundleUserInfo.uid;
     if (std::find(bundleUserInfo.gids.begin(), bundleUserInfo.gids.end(), identity.uid) ==
         bundleUserInfo.gids.end()) {
         bundleUserInfo.gids.emplace_back(identity.uid);

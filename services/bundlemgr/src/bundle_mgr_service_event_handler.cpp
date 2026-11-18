@@ -956,6 +956,7 @@ bool BMSEventHandler::AnalyzeUserData(
     innerBundleUserInfo.bundleName = userDataBundleName;
     innerBundleUserInfo.bundleUserInfo.userId = userId;
     innerBundleUserInfo.uid = fileStat.uid;
+    innerBundleUserInfo.appUid = fileStat.uid;
     innerBundleUserInfo.gids.emplace_back(fileStat.gid);
     innerBundleUserInfo.installTime = fileStat.lastModifyTime;
     innerBundleUserInfo.updateTime = innerBundleUserInfo.installTime;
@@ -980,6 +981,7 @@ bool BMSEventHandler::AnalyzeUserData(
     for (auto &existing : userIter->second) {
         if (existing.bundleUserInfo.userId == userId) {
             existing.uid = innerBundleUserInfo.uid;
+            existing.appUid = innerBundleUserInfo.appUid;
             existing.gids = innerBundleUserInfo.gids;
             existing.installTime = innerBundleUserInfo.installTime;
             existing.updateTime = innerBundleUserInfo.updateTime;
@@ -1041,6 +1043,7 @@ bool BMSEventHandler::AnalyzeCloneUserData(
         .userId = userId,
         .appIndex = appIndex,
         .uid = fileStat.uid,
+        .appUid = fileStat.uid,
         .accessTokenId = accessTokenIdEx.tokenIdExStruct.tokenID,
         .installTime = fileStat.lastModifyTime,
         .accessTokenIdEx = accessTokenIdEx.tokenIDEx,
@@ -8896,6 +8899,7 @@ void UpdateMainUserInfo(InnerBundleUserInfo &userInfo, const UpdatePayload &payl
 {
     if (payload.uidChanged) {
         UpdateUidAndGids(userInfo.uid, userInfo.gids, payload);
+        userInfo.appUid = payload.resolvedUid;
     }
     userInfo.accessTokenId = payload.existingTokenId;
     userInfo.accessTokenIdEx = payload.existingTokenIdEx;
@@ -8910,6 +8914,7 @@ void UpdateCloneUserInfo(int32_t instIndex,
     }
     if (payload.uidChanged) {
         UpdateUidAndGids(cloneIt->second.uid, cloneIt->second.gids, payload);
+        cloneIt->second.appUid = payload.resolvedUid;
     }
     cloneIt->second.accessTokenId = payload.existingTokenId;
     cloneIt->second.accessTokenIdEx = payload.existingTokenIdEx;
@@ -8924,6 +8929,7 @@ void UpdateCliSandboxUserInfo(int32_t instIndex,
     }
     if (payload.uidChanged) {
         UpdateUidAndGids(sandboxIt->second.uid, sandboxIt->second.gids, payload);
+        sandboxIt->second.appUid = payload.resolvedUid;
     }
     sandboxIt->second.accessTokenId = payload.existingTokenId;
     sandboxIt->second.accessTokenIdEx = payload.existingTokenIdEx;
@@ -8933,6 +8939,7 @@ void UpdateSandboxUserInfo(InnerBundleUserInfo &sandboxUserInfo, const UpdatePay
 {
     if (payload.uidChanged) {
         UpdateUidAndGids(sandboxUserInfo.uid, sandboxUserInfo.gids, payload);
+        sandboxUserInfo.appUid = payload.resolvedUid;
     }
     sandboxUserInfo.accessTokenId = payload.existingTokenId;
     sandboxUserInfo.accessTokenIdEx = payload.existingTokenIdEx;

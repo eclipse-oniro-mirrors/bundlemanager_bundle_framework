@@ -254,6 +254,7 @@ ErrCode BundleCliSandboxInstaller::ProcessCreateCliSandbox(const std::string &cr
     sandboxInfo.userId = userId;
     sandboxInfo.appIndex = appIndex;
     sandboxInfo.uid = uid;
+    sandboxInfo.appUid = uid;
     sandboxInfo.accessTokenId = newTokenIdEx.tokenIdExStruct.tokenID;
     sandboxInfo.accessTokenIdEx = newTokenIdEx.tokenIDEx;
     sandboxInfo.gids = gids;

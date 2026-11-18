@@ -32,6 +32,7 @@ struct InnerBundleUserInfo {
     bool isBundleFirstLaunched = false;
 
     int32_t uid = Constants::INVALID_UID;
+    int32_t appUid = Constants::INVALID_UID;
     uint32_t accessTokenId = 0;
     uint64_t accessTokenIdEx = 0;
 

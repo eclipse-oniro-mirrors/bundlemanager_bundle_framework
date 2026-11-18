@@ -10170,6 +10170,7 @@ ErrCode BaseBundleInstaller::UpdateHapToken(bool needUpdate, InnerBundleInfo &ne
             if (newInfo.GetInnerBundleUserInfo(userId, updatedUserInfo) &&
                 updatedUserInfo.uid != refreshedUid) {
                 updatedUserInfo.uid = refreshedUid;
+                updatedUserInfo.appUid = refreshedUid;
                 updatedUserInfo.gids.clear();
                 updatedUserInfo.gids.emplace_back(refreshedUid);
                 newInfo.AddInnerBundleUserInfo(updatedUserInfo);

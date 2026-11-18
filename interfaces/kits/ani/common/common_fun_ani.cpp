@@ -889,6 +889,10 @@ ani_object CommonFunAni::ConvertApplicationInfo(ani_env* env, const ApplicationI
 
     ani_object keepDataOnUninstall = BoxValue(env, BoolToAniBoolean(appInfo.keepDataOnUninstall));
     RETURN_NULL_IF_NULL(keepDataOnUninstall);
+    // appUid?: int — optional params compile to boxed class types (reference
+    // slots), so box the value and pass via .r like the options above.
+    ani_object appUid = BoxValue(env, appInfo.appUid);
+    RETURN_NULL_IF_NULL(appUid);
 
     ani_value args[] = {
         { .r = name },
@@ -926,6 +930,7 @@ ani_object CommonFunAni::ConvertApplicationInfo(ani_env* env, const ApplicationI
         { .r = EnumUtils::EnumNativeToETS_BundleManager_ApplicationReservedFlag(env,
             static_cast<int32_t>(appInfo.applicationReservedFlag)) },
         { .r = keepDataOnUninstall },
+        { .r = appUid },
     };
     static const std::string ctorSig = SignatureBuilder()
         .AddClass(CommonFunAniNS::CLASSNAME_STRING)                    // name: string
@@ -962,6 +967,7 @@ ani_object CommonFunAni::ConvertApplicationInfo(ani_env* env, const ApplicationI
         .AddClass(CommonFunAniNS::CLASSNAME_INT)                       // flags?: int
         .AddClass(CommonFunAniNS::CLASSNAME_BUNDLEMANAGER_APPLICATIONRESERVEDFLAG)
         .AddClass(CommonFunAniNS::CLASSNAME_BOOLEAN)                   // keepDataOnUninstall?: boolean
+        .AddClass(CommonFunAniNS::CLASSNAME_INT)                       // appUid?: int
         .BuildSignatureDescriptor();
     return CreateNewObjectByClassV2(env, CLASSNAME_APPLICATION_INFO_INNER, ctorSig, args);
 }

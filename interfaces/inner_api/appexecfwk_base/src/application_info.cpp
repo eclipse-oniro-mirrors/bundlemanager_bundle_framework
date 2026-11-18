@@ -77,6 +77,7 @@ const char* APPLICATION_INSTALLED_FOR_ALL_USER = "installedForAllUser";
 const char* APPLICATION_IS_FORCE_ROTATE = "isForceRotate";
 const char* APPLICATION_PROFILEABLE = "profileable";
 const char* APPLICATION_ALLOW_AUTO_CONTROL_INTENT = "allowAutoControlIntent";
+const char* APPLICATION_SHARED_UID = "sharedUID";
 const char* APPLICATION_ENTITY_TYPE = "entityType";
 const char* APPLICATION_PROCESS = "process";
 const char* APPLICATION_SUPPORTED_MODES = "supportedModes";
@@ -87,6 +88,7 @@ const char* APPLICATION_ACCESSTOKEN_ID = "accessTokenId";
 const char* APPLICATION_ACCESSTOKEN_ID_EX = "accessTokenIdEx";
 const char* APPLICATION_ENABLED = "enabled";
 const char* APPLICATION_UID = "uid";
+const char* APPLICATION_APP_UID = "appUid";
 const char* APPLICATION_PERMISSIONS = "permissions";
 const char* APPLICATION_MODULE_SOURCE_DIRS = "moduleSourceDirs";
 const char* APPLICATION_HNP_PACKAGES = "hnpPackages";
@@ -570,6 +572,7 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     isForceRotate = parcel.ReadBool();
     profileable = parcel.ReadBool();
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, allowAutoControlIntent);
+    sharedUID = parcel.ReadBool();
     allowEnableNotification = parcel.ReadBool();
     allowArkTsLargeHeap = parcel.ReadBool();
     entityType = Str16ToStr8(parcel.ReadString16());
@@ -757,6 +760,7 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     appSignType = Str16ToStr8(parcel.ReadString16());
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(StringVector, parcel, &allowListenBundleChangedEvent);
     keepDataOnUninstall = parcel.ReadBool();
+    appUid = parcel.ReadInt32();
     return true;
 }
 
@@ -834,6 +838,7 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isForceRotate);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, profileable);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, allowAutoControlIntent);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, sharedUID);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, allowEnableNotification);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, allowArkTsLargeHeap);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(entityType));
@@ -960,6 +965,7 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appSignType));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(StringVector, parcel, allowListenBundleChangedEvent);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, keepDataOnUninstall);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appUid);
     return true;
 }
 
@@ -1161,6 +1167,7 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_IS_FORCE_ROTATE, applicationInfo.isForceRotate},
         {APPLICATION_PROFILEABLE, applicationInfo.profileable},
         {APPLICATION_ALLOW_AUTO_CONTROL_INTENT, applicationInfo.allowAutoControlIntent},
+        {APPLICATION_SHARED_UID, applicationInfo.sharedUID},
         {APPLICATION_ALLOW_ENABLE_NOTIFICATION, applicationInfo.allowEnableNotification},
         {APPLICATION_ALLOW_ARK_TS_LARGE_HEAP, applicationInfo.allowArkTsLargeHeap},
         {APPLICATION_ENTITY_TYPE, applicationInfo.entityType},
@@ -1172,6 +1179,7 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_ACCESSTOKEN_ID_EX, applicationInfo.accessTokenIdEx},
         {APPLICATION_ENABLED, applicationInfo.enabled},
         {APPLICATION_UID, applicationInfo.uid},
+        {APPLICATION_APP_UID, applicationInfo.appUid},
         {APPLICATION_PERMISSIONS, applicationInfo.permissions},
         {APPLICATION_MODULE_SOURCE_DIRS, applicationInfo.moduleSourceDirs},
         {APPLICATION_MODULE_INFOS, applicationInfo.moduleInfos},
@@ -1330,6 +1338,8 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         applicationInfo.profileable, false, parseResult);
     BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_ALLOW_AUTO_CONTROL_INTENT,
         applicationInfo.allowAutoControlIntent, false, parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_SHARED_UID,
+        applicationInfo.sharedUID, false, parseResult);
     BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_ALLOW_ENABLE_NOTIFICATION,
         applicationInfo.allowEnableNotification, false, parseResult);
     BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_ALLOW_ARK_TS_LARGE_HEAP,
@@ -1352,6 +1362,14 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         applicationInfo.enabled, false, parseResult);
     GetValueIfFindKey<int>(jsonObject, jsonObjectEnd, APPLICATION_UID,
         applicationInfo.uid, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int>(jsonObject, jsonObjectEnd, APPLICATION_APP_UID,
+        applicationInfo.appUid, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    // OTA compat: records persisted before the "appUid" key existed mirror
+    // appUid from uid (appUid mirrors uid at this stage; the uid-to-userId
+    // parent requirement owns later migration).
+    if (applicationInfo.appUid == -1 && applicationInfo.uid != -1) {
+        applicationInfo.appUid = applicationInfo.uid;
+    }
     GetValueIfFindKey<std::vector<std::string>>(jsonObject, jsonObjectEnd, APPLICATION_PERMISSIONS,
         applicationInfo.permissions, JsonType::ARRAY, false, parseResult, ArrayType::STRING);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject, jsonObjectEnd, APPLICATION_MODULE_SOURCE_DIRS,

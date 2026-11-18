@@ -30,6 +30,7 @@ struct InnerCliSandboxInfo {
     int32_t userId = Constants::INVALID_USERID;
     int32_t appIndex = 0;
     int32_t uid = 0;
+    int32_t appUid = 0;
     uint32_t accessTokenId = 0;
     uint64_t accessTokenIdEx = 0;
     int64_t installTime = 0;

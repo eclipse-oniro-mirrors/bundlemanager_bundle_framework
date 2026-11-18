@@ -237,6 +237,7 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
     BundleUtil::MakeFsConfig(info.GetBundleName(), ServiceConstants::HMDFS_CONFIG_PATH, info.GetAppProvisionType(),
         Constants::APP_PROVISION_TYPE_FILE_NAME);
     int32_t uid = newUserInfo.uid;
+    int32_t identityUid = 0;
 
     // 4. generate the accesstoken id and inherit original permissions
     Security::AccessToken::AccessTokenIDEx newTokenIdEx;
@@ -250,7 +251,6 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
         if (dataMgr_->GetAppProvisionInfo(bundleName, userId, appProvisionInfo) != ERR_OK) {
             APP_LOGE("GetAppProvisionInfo failed bundleName:%{public}s", bundleName.c_str());
         }
-        int32_t identityUid = 0;
         if (spmSession_.InitToken(info, userId, 0, newTokenIdEx, checkResult,
             appProvisionInfo.appServiceCapabilities, nullptr, false, &identityUid) != ERR_OK) {
             auto result = BundlePermissionMgr::GetCheckResultMsg(checkResult);
@@ -302,6 +302,7 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
     }
     if (BundleSpmManager::IsEnabled()) {
         newUserInfo.uid = uid;
+        newUserInfo.appUid = uid;
         newUserInfo.gids.clear();
         newUserInfo.gids.emplace_back(uid);
     }
