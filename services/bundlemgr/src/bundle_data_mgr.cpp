@@ -9686,6 +9686,9 @@ std::shared_ptr<Global::Resource::ResourceManager> BundleDataMgr::GetResourceMan
         APP_LOGE("resConfig is nullptr");
         return nullptr;
     }
+    // A non-system manager never self-fills the device type: set it before the
+    // first UpdateResConfig so device-qualified resources match correctly.
+    resConfig->SetDeviceType(BundleUtil::GetDeviceType());
     resourceManager->UpdateResConfig(*resConfig);
     if (!resourceManager->AddResource(hapPath.c_str(), Global::Resource::SELECT_STRING)) {
         APP_LOGW("AddResource failed");
@@ -11452,6 +11455,9 @@ std::shared_ptr<Global::Resource::ResourceManager> BundleDataMgr::GetResourceMan
         localeInfo.empty() ? Global::I18n::LocaleConfig::GetEffectiveLanguage() : localeInfo, configs);
     resConfig->SetLocaleInfo(locale.GetLanguage().c_str(), locale.GetScript().c_str(), locale.GetRegion().c_str());
 #endif
+    // A non-system manager never self-fills the device type: set it before the
+    // first UpdateResConfig so device-qualified resources match correctly.
+    resConfig->SetDeviceType(BundleUtil::GetDeviceType());
     resourceManager->UpdateResConfig(*resConfig);
 
     for (auto hapModuleInfo : bundleInfo.hapModuleInfos) {

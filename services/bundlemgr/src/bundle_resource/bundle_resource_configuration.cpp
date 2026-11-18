@@ -16,6 +16,7 @@
 #include "bundle_resource_configuration.h"
 
 #include "app_log_wrapper.h"
+#include "bundle_util.h"
 #ifdef GLOBAL_I18_ENABLE
 #include "locale_config.h"
 #include "locale_info.h"
@@ -49,6 +50,9 @@ bool BundleResourceConfiguration::InitResourceGlobalConfig(
     resConfig->SetLocaleInfo(locale.GetLanguage().c_str(), locale.GetScript().c_str(), locale.GetRegion().c_str());
 #endif
     resConfig->SetScreenDensityDpi(Global::Resource::ScreenDensity::SCREEN_DENSITY_XXXLDPI);
+#ifdef GLOBAL_RESMGR_ENABLE
+    resConfig->SetDeviceType(BundleUtil::GetDeviceType());
+#endif
 
     Global::Resource::RState ret = resourceManager->UpdateResConfig(*resConfig);
     if (ret != Global::Resource::RState::SUCCESS) {
@@ -84,6 +88,9 @@ bool BundleResourceConfiguration::InitResourceGlobalConfig(const std::string &ha
     resConfig->SetLocaleInfo(locale.GetLanguage().c_str(), locale.GetScript().c_str(), locale.GetRegion().c_str());
 #endif
     resConfig->SetScreenDensityDpi(Global::Resource::ScreenDensity::SCREEN_DENSITY_XXXLDPI);
+#ifdef GLOBAL_RESMGR_ENABLE
+    resConfig->SetDeviceType(BundleUtil::GetDeviceType());
+#endif
 
     Global::Resource::RState ret = resourceManager->UpdateResConfig(*resConfig);
     if (ret != Global::Resource::RState::SUCCESS) {
@@ -127,6 +134,9 @@ bool BundleResourceConfiguration::UpdateResourceGlobalConfig(
     resConfig->SetLocaleInfo(locale.GetLanguage().c_str(), locale.GetScript().c_str(), locale.GetRegion().c_str());
 #endif
     resConfig->SetScreenDensityDpi(Global::Resource::ScreenDensity::SCREEN_DENSITY_XXXLDPI);
+#ifdef GLOBAL_RESMGR_ENABLE
+    resConfig->SetDeviceType(BundleUtil::GetDeviceType());
+#endif
 
     Global::Resource::RState ret = resourceManager->UpdateResConfig(*resConfig);
     if (ret != Global::Resource::RState::SUCCESS) {
