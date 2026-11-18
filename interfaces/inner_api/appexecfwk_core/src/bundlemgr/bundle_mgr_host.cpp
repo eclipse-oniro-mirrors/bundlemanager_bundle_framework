@@ -17,6 +17,7 @@
 
 #include <algorithm>
 #include <cinttypes>
+#include <map>
 #include <unistd.h>
 #include <set>
 
@@ -6040,10 +6041,21 @@ ErrCode BundleMgrHost::HandleSetShortcutsEnabled(MessageParcel &data, MessagePar
         return ret;
     }
     bool isEnabled = data.ReadBool();
-    ret = SetShortcutsEnabled(shortcutInfos, isEnabled);
+    std::map<std::string, std::vector<std::string>> invalidShortcuts;
+    ret = SetShortcutsEnabled(shortcutInfos, isEnabled, invalidShortcuts);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("Write result failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!reply.WriteInt32(static_cast<int32_t>(invalidShortcuts.size()))) {
+        APP_LOGE("Write invalidShortcuts size failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    for (const auto &item : invalidShortcuts) {
+        if (!reply.WriteString(item.first) || !reply.WriteStringVector(item.second)) {
+            APP_LOGE("Write invalidShortcuts failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
     }
     return ERR_OK;
 }

@@ -1894,7 +1894,8 @@ HWTEST_F(BmsBundleMgrProxyTest, SetShortcutsEnabled_0001, Function | MediumTest 
     std::vector<ShortcutInfo> shortcutInfos;
     shortcutInfos.push_back(shortcutInfo);
     bool isEnabled = false;
-    auto ret = bundleMgrProxy.SetShortcutsEnabled(shortcutInfos, isEnabled);
+    std::map<std::string, std::vector<std::string>> invalidShortcuts;
+    auto ret = bundleMgrProxy.SetShortcutsEnabled(shortcutInfos, isEnabled, invalidShortcuts);
     EXPECT_NE(ret, ERR_OK);
 }
 
@@ -1910,7 +1911,8 @@ HWTEST_F(BmsBundleMgrProxyTest, SetShortcutsEnabled_0002, Function | MediumTest 
     std::vector<ShortcutInfo> shortcutInfos;
     shortcutInfos.clear();
     bool isEnabled = false;
-    auto ret = bundleMgrProxy.SetShortcutsEnabled(shortcutInfos, isEnabled);
+    std::map<std::string, std::vector<std::string>> invalidShortcuts;
+    auto ret = bundleMgrProxy.SetShortcutsEnabled(shortcutInfos, isEnabled, invalidShortcuts);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
 }
 
@@ -1930,7 +1932,8 @@ HWTEST_F(BmsBundleMgrProxyTest, SetShortcutsEnabled_0003, Function | MediumTest 
         shortcutInfos.push_back(shortcutInfo);
     }
     bool isEnabled = false;
-    auto ret = bundleMgrProxy.SetShortcutsEnabled(shortcutInfos, isEnabled);
+    std::map<std::string, std::vector<std::string>> invalidShortcuts;
+    auto ret = bundleMgrProxy.SetShortcutsEnabled(shortcutInfos, isEnabled, invalidShortcuts);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
 }
 

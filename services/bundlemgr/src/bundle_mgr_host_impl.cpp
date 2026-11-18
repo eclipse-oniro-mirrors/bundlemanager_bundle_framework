@@ -8479,7 +8479,8 @@ ErrCode BundleMgrHostImpl::DeleteDynamicShortcutInfos(const std::string &bundleN
     return dataMgr->DeleteDynamicShortcutInfos(bundleName, appIndex, userId, ids);
 }
 
-ErrCode BundleMgrHostImpl::SetShortcutsEnabled(const std::vector<ShortcutInfo> &shortcutInfos, bool isEnabled)
+ErrCode BundleMgrHostImpl::SetShortcutsEnabled(const std::vector<ShortcutInfo> &shortcutInfos, bool isEnabled,
+    std::map<std::string, std::vector<std::string>> &invalidShortcuts)
 {
     APP_LOGD("SetShortcutsEnabled begin");
     if (!BundlePermissionMgr::IsSystemApp()) {
@@ -8496,7 +8497,7 @@ ErrCode BundleMgrHostImpl::SetShortcutsEnabled(const std::vector<ShortcutInfo> &
         APP_LOGE("DataMgr is nullptr");
         return ERR_APPEXECFWK_NULL_PTR;
     }
-    return dataMgr->SetShortcutsEnabled(shortcutInfos, isEnabled);
+    return dataMgr->SetShortcutsEnabled(shortcutInfos, isEnabled, invalidShortcuts);
 }
 
 bool BundleMgrHostImpl::GetCallingInfo(int32_t callingUid, std::string &callingBundleName, std::string &callingAppId)

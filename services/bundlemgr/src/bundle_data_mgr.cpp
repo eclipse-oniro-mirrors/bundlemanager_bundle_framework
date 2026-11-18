@@ -18047,12 +18047,14 @@ ErrCode BundleDataMgr::GetAllCloneAppIndexesAndUidsByInnerBundleInfo(const int32
     return ERR_OK;
 }
 
-ErrCode BundleDataMgr::SetShortcutsEnabled(const std::vector<ShortcutInfo> &shortcutInfos, bool isEnabled)
+ErrCode BundleDataMgr::SetShortcutsEnabled(const std::vector<ShortcutInfo> &shortcutInfos, bool isEnabled,
+    std::map<std::string, std::vector<std::string>> &invalidShortcuts)
 {
     APP_LOGD("SetShortcutsEnabled begin");
     std::string bundleName;
     std::string shortcutId;
     std::vector<ShortcutInfo> shortcutInfosInBundle;
+    std::vector<ShortcutInfo> validShortcutInfos;
     bool isShortcutIdExist = false;
     for (const auto& shortcutinfo : shortcutInfos) {
         bundleName = shortcutinfo.bundleName;
@@ -18077,16 +18079,23 @@ ErrCode BundleDataMgr::SetShortcutsEnabled(const std::vector<ShortcutInfo> &shor
         }
         if (!isShortcutIdExist) {
             APP_LOGE("shortcut id %{public}s not exist", shortcutId.c_str());
-            return ERR_SHORTCUT_MANAGER_SHORTCUT_ID_ILLEGAL;
+            invalidShortcuts[bundleName].push_back(shortcutId);
+            continue;
         }
+        validShortcutInfos.push_back(shortcutinfo);
     }
 
-    if (!(shortcutEnabledStorage_->SaveStorageShortcutEnabledInfos(shortcutInfos, isEnabled))) {
-        APP_LOGE("SaveStorageShortcutEnabledInfos failed");
-        return ERR_APPEXECFWK_DB_INSERT_ERROR;
+    if (!validShortcutInfos.empty()) {
+        if (!(shortcutEnabledStorage_->SaveStorageShortcutEnabledInfos(validShortcutInfos, isEnabled))) {
+            APP_LOGE("SaveStorageShortcutEnabledInfos failed");
+            return ERR_APPEXECFWK_DB_INSERT_ERROR;
+        }
+        std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
+        commonEventMgr->NotifyShortcutsEnabledChanged(validShortcutInfos, isEnabled);
     }
-    std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
-    commonEventMgr->NotifyShortcutsEnabledChanged(shortcutInfos, isEnabled);
+    if (!invalidShortcuts.empty()) {
+        return ERR_SHORTCUT_MANAGER_SHORTCUT_ID_ILLEGAL;
+    }
     return ERR_OK;
 }
 

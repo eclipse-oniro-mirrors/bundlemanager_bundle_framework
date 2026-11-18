@@ -1488,7 +1488,8 @@ public:
 
     virtual ErrCode SetShortcutVisibleForSelf(const std::string &shortcutId, bool visible) override;
 
-    virtual ErrCode SetShortcutsEnabled(const std::vector<ShortcutInfo> &shortcutInfos, bool isEnabled) override;
+    virtual ErrCode SetShortcutsEnabled(const std::vector<ShortcutInfo> &shortcutInfos, bool isEnabled,
+        std::map<std::string, std::vector<std::string>> &invalidShortcuts) override;
 
     virtual bool GreatOrEqualTargetAPIVersion(const int32_t platformVersion,
         const int32_t minorVersion, const int32_t patchVersion) override;

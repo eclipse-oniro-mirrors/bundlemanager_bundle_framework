@@ -1520,7 +1520,8 @@ HWTEST_F(BmsBundleDataMgrNullptrTest, SetShortcutsEnabled_0001, Function | Small
 
     std::vector<ShortcutInfo> shortcutInfos;
     bool isEnabled = false;
-    auto ret = localBundleMgrHostImpl->SetShortcutsEnabled(shortcutInfos, isEnabled);
+    std::map<std::string, std::vector<std::string>> invalidShortcuts;
+    auto ret = localBundleMgrHostImpl->SetShortcutsEnabled(shortcutInfos, isEnabled, invalidShortcuts);
     EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
 }
 

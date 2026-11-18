@@ -600,6 +600,24 @@ std::string CommonFunc::GetStringFromNAPI(napi_env env, napi_value value)
     return result;
 }
 
+std::string CommonFunc::ConvertInvalidShortcutsToString(
+    const std::map<std::string, std::vector<std::string>> &invalidShortcuts)
+{
+    std::string result;
+    for (const auto &item : invalidShortcuts) {
+        if (!result.empty()) {
+            result += "; ";
+        }
+        result += item.first;
+        result += ":";
+        for (size_t i = 0; i < item.second.size(); ++i) {
+            result += (i == 0) ? " " : ", ";
+            result += item.second[i];
+        }
+    }
+    return result;
+}
+
 napi_value CommonFunc::ParseStringArray(napi_env env, std::vector<std::string> &stringArray, napi_value args)
 {
     APP_LOGD("begin to parse string array");

@@ -1097,7 +1097,8 @@ HWTEST_F(VerifyCallingPermissionsForAllDeniedTest, BundleMgrHostImpl_0062, TestS
 
     std::vector<ShortcutInfo> shortcutInfos;
     bool isEnabled = false;
-    auto ret = localBundleMgrHostImpl->SetShortcutsEnabled(shortcutInfos, isEnabled);
+    std::map<std::string, std::vector<std::string>> invalidShortcuts;
+    auto ret = localBundleMgrHostImpl->SetShortcutsEnabled(shortcutInfos, isEnabled, invalidShortcuts);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 

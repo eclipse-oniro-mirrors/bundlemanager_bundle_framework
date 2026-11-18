@@ -43,6 +43,7 @@
 #include "bundle_stream_installer_host_impl.h"
 #include "bundle_exception_handler.h"
 #include "clean_cache_callback_proxy.h"
+#include "common_func.h"
 #include "directory_ex.h"
 #include "dual_mode_helper.h"
 #include "hidump_helper.h"
@@ -5113,6 +5114,40 @@ HWTEST_F(BmsBundleDataMgrTest, InsertQueryEventInfo_0100, Function | SmallTest |
     test.callingAppId = "asdf123";
     ret = InsertQueryEventInfo(ERR_BUNDLE_MANAGER_INTERNAL_ERROR, test);
     EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: ConvertInvalidShortcutsToString_0100
+ * @tc.name: test ConvertInvalidShortcutsToString with empty boundaries
+ * @tc.desc: empty map converts to empty string, empty id list converts to bundle name with colon only.
+ */
+HWTEST_F(BmsBundleDataMgrTest, ConvertInvalidShortcutsToString_0100, Function | SmallTest | Level1)
+{
+    std::map<std::string, std::vector<std::string>> invalidShortcuts;
+    EXPECT_EQ(CommonFunc::ConvertInvalidShortcutsToString(invalidShortcuts), "");
+    invalidShortcuts["com.ohos.hello"] = {};
+    EXPECT_EQ(CommonFunc::ConvertInvalidShortcutsToString(invalidShortcuts), "com.ohos.hello:");
+    invalidShortcuts["com.ohos.world"] = {"id_test1"};
+    EXPECT_EQ(CommonFunc::ConvertInvalidShortcutsToString(invalidShortcuts),
+        "com.ohos.hello:; com.ohos.world: id_test1");
+}
+ 
+/**
+ * @tc.number: ConvertInvalidShortcutsToString_0200
+ * @tc.name: test ConvertInvalidShortcutsToString with normal items
+ * @tc.desc: shortcut ids are separated by ", " and bundles by "; ".
+ */
+HWTEST_F(BmsBundleDataMgrTest, ConvertInvalidShortcutsToString_0200, Function | SmallTest | Level1)
+{
+    std::map<std::string, std::vector<std::string>> invalidShortcuts;
+    invalidShortcuts["com.ohos.hello"] = {"id_test1", "id_test2"};
+    invalidShortcuts["com.ohos.world"] = {"id_test3"};
+    std::string result = CommonFunc::ConvertInvalidShortcutsToString(invalidShortcuts);
+    EXPECT_EQ(result, "com.ohos.hello: id_test1, id_test2; com.ohos.world: id_test3");
+    EXPECT_NE(result.find("id_test1, id_test2"), std::string::npos);
+    invalidShortcuts["com.ohos.hello"] = {"id_test1"};
+    EXPECT_EQ(CommonFunc::ConvertInvalidShortcutsToString(invalidShortcuts),
+        "com.ohos.hello: id_test1; com.ohos.world: id_test3");
 }
 
 /**

@@ -970,7 +970,8 @@ HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleMgrHostImpl_0054, TestSize.Leve
 
     std::vector<ShortcutInfo> shortcutInfos;
     bool isEnabled = false;
-    auto ret = localBundleMgrHostImpl->SetShortcutsEnabled(shortcutInfos, isEnabled);
+    std::map<std::string, std::vector<std::string>> invalidShortcuts;
+    auto ret = localBundleMgrHostImpl->SetShortcutsEnabled(shortcutInfos, isEnabled, invalidShortcuts);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
 }
 

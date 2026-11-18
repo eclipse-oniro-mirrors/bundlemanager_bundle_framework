@@ -679,14 +679,15 @@ napi_value AddDynamicShortcutInfos(napi_env env, napi_callback_info info)
 }
 
 #ifdef BUNDLE_FRAMEWORK_LAUNCHER
-static ErrCode InnerSetShortcutsEnabled(const std::vector<ShortcutInfo> &shortcutInfos, bool isEnabled)
+static ErrCode InnerSetShortcutsEnabled(const std::vector<ShortcutInfo> &shortcutInfos, bool isEnabled,
+    std::map<std::string, std::vector<std::string>> &invalidShortcuts)
 {
     auto iBundleMgr = CommonFunc::GetBundleMgr();
     if (iBundleMgr == nullptr) {
         APP_LOGE("Can not get iBundleMgr");
         return ERR_APPEXECFWK_SERVICE_NOT_READY;
     }
-    return iBundleMgr->SetShortcutsEnabled(shortcutInfos, isEnabled);
+    return iBundleMgr->SetShortcutsEnabled(shortcutInfos, isEnabled, invalidShortcuts);
 }
 
 void SetShortcutsEnabledExec(napi_env env, void *data)
@@ -697,7 +698,8 @@ void SetShortcutsEnabledExec(napi_env env, void *data)
         APP_LOGE("asyncCallbackInfo is null");
         return;
     }
-    asyncCallbackInfo->err = InnerSetShortcutsEnabled(asyncCallbackInfo->shortcutInfos, asyncCallbackInfo->isEnabled);
+    asyncCallbackInfo->err = InnerSetShortcutsEnabled(asyncCallbackInfo->shortcutInfos,
+        asyncCallbackInfo->isEnabled, asyncCallbackInfo->invalidShortcuts);
     asyncCallbackInfo->err = CommonFunc::ConvertErrCode(asyncCallbackInfo->err);
 }
 
@@ -713,6 +715,11 @@ void SetShortcutsEnabledComplete(napi_env env, napi_status status, void *data)
     napi_value result[ARGS_POS_ONE] = {0};
     if (asyncCallbackInfo->err == SUCCESS) {
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
+    } else if (asyncCallbackInfo->err == ERROR_SHORTCUT_ID_ILLEGAL_ERROR &&
+        !asyncCallbackInfo->invalidShortcuts.empty()) {
+        result[0] = BusinessError::CreateNewCommonError(env, asyncCallbackInfo->err, SET_SHORTCUTS_ENABLED,
+            Constants::PERMISSION_MANAGER_SHORTCUT,
+            CommonFunc::ConvertInvalidShortcutsToString(asyncCallbackInfo->invalidShortcuts));
     } else {
         result[0] = BusinessError::CreateNewCommonError(env, asyncCallbackInfo->err, SET_SHORTCUTS_ENABLED,
             Constants::PERMISSION_MANAGER_SHORTCUT);

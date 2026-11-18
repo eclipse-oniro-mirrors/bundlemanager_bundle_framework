@@ -6975,8 +6975,10 @@ HWTEST_F(BmsDataMgrTest, SetShortcutsEnabled_0001, Function | MediumTest | Level
     ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
     shortcutInfos.push_back(shortcutInfo);
     bool isEnabled = true;
-    auto result = bundleDataMgr.SetShortcutsEnabled(shortcutInfos, isEnabled);
+    std::map<std::string, std::vector<std::string>> invalidShortcuts;
+    auto result = bundleDataMgr.SetShortcutsEnabled(shortcutInfos, isEnabled, invalidShortcuts);
     EXPECT_EQ(result, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_TRUE(invalidShortcuts.empty());
 }
 
 /**
@@ -6999,10 +7001,12 @@ HWTEST_F(BmsDataMgrTest, SetShortcutsEnabled_0002, Function | MediumTest | Level
     AddSelfUidUserInfo(innerBundleInfo, bundleName);
     bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
     bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
-    auto result = bundleDataMgr.SetShortcutsEnabled(shortcutInfos, isEnabled);
+    std::map<std::string, std::vector<std::string>> invalidShortcuts;
+    auto result = bundleDataMgr.SetShortcutsEnabled(shortcutInfos, isEnabled, invalidShortcuts);
     EXPECT_EQ(result, ERR_OK);
+    EXPECT_TRUE(invalidShortcuts.empty());
     bundleDataMgr.shortcutEnabledStorage_->rdbDataManager_ = nullptr;
-    result = bundleDataMgr.SetShortcutsEnabled(shortcutInfos, isEnabled);
+    result = bundleDataMgr.SetShortcutsEnabled(shortcutInfos, isEnabled, invalidShortcuts);
     EXPECT_EQ(result, ERR_APPEXECFWK_DB_INSERT_ERROR);
 }
 
@@ -7027,8 +7031,87 @@ HWTEST_F(BmsDataMgrTest, SetShortcutsEnabled_0003, Function | MediumTest | Level
     std::vector<ShortcutInfo> shortcutInfos;
     shortcutInfo.id = "error_id";
     shortcutInfos.push_back(shortcutInfo);
-    auto result = bundleDataMgr.SetShortcutsEnabled(shortcutInfos, isEnabled);
+    std::map<std::string, std::vector<std::string>> invalidShortcuts;
+    auto result = bundleDataMgr.SetShortcutsEnabled(shortcutInfos, isEnabled, invalidShortcuts);
     EXPECT_EQ(result, ERR_SHORTCUT_MANAGER_SHORTCUT_ID_ILLEGAL);
+    EXPECT_EQ(invalidShortcuts.size(), static_cast<size_t>(1));
+    auto iter = invalidShortcuts.find(bundleName);
+    EXPECT_NE(iter, invalidShortcuts.end());
+    if (iter != invalidShortcuts.end()) {
+        EXPECT_EQ(iter->second.size(), static_cast<size_t>(1));
+        EXPECT_EQ(iter->second[0], "error_id");
+    }
+}
+
+/**
+ * @tc.number: SetShortcutsEnabled_0004
+ * @tc.name: SetShortcutsEnabled
+ * @tc.desc: test SetShortcutsEnabled with both valid and invalid shortcut infos
+ */
+HWTEST_F(BmsDataMgrTest, SetShortcutsEnabled_0004, Function | MediumTest | Level1)
+{
+    std::string bundleName = "com.ohos.hello";
+    std::string shortcutId = "id_test1";
+    bool isEnabled = true;
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    BundleDataMgr bundleDataMgr;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.InsertShortcutInfos(shortcutId, shortcutInfo);
+    innerBundleInfo.SetIsNewVersion(false);
+    AddSelfUidUserInfo(innerBundleInfo, bundleName);
+    bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
+    bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
+    std::vector<ShortcutInfo> shortcutInfos;
+    shortcutInfos.push_back(shortcutInfo);
+    ShortcutInfo invalidShortcutInfo = shortcutInfo;
+    invalidShortcutInfo.id = "error_id";
+    shortcutInfos.push_back(invalidShortcutInfo);
+    std::map<std::string, std::vector<std::string>> invalidShortcuts;
+    auto result = bundleDataMgr.SetShortcutsEnabled(shortcutInfos, isEnabled, invalidShortcuts);
+    EXPECT_EQ(result, ERR_SHORTCUT_MANAGER_SHORTCUT_ID_ILLEGAL);
+    EXPECT_EQ(invalidShortcuts.size(), static_cast<size_t>(1));
+    auto iter = invalidShortcuts.find(bundleName);
+    EXPECT_NE(iter, invalidShortcuts.end());
+    if (iter != invalidShortcuts.end()) {
+        EXPECT_EQ(iter->second.size(), static_cast<size_t>(1));
+        EXPECT_EQ(iter->second[0], "error_id");
+    }
+}
+
+/**
+ * @tc.number: SetShortcutsEnabled_0005
+ * @tc.name: SetShortcutsEnabled with db error and invalid shortcut infos
+ * @tc.desc: db insert error takes priority over shortcut id illegal error, invalidShortcuts is still filled
+ */
+HWTEST_F(BmsDataMgrTest, SetShortcutsEnabled_0005, Function | MediumTest | Level1)
+{
+    std::string bundleName = "com.ohos.hello";
+    std::string shortcutId = "id_test1";
+    bool isEnabled = true;
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    BundleDataMgr bundleDataMgr;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.InsertShortcutInfos(shortcutId, shortcutInfo);
+    innerBundleInfo.SetIsNewVersion(false);
+    AddSelfUidUserInfo(innerBundleInfo, bundleName);
+    bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
+    bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
+    std::vector<ShortcutInfo> shortcutInfos;
+    shortcutInfos.push_back(shortcutInfo);
+    ShortcutInfo invalidShortcutInfo = shortcutInfo;
+    invalidShortcutInfo.id = "error_id";
+    shortcutInfos.push_back(invalidShortcutInfo);
+    std::map<std::string, std::vector<std::string>> invalidShortcuts;
+    bundleDataMgr.shortcutEnabledStorage_->rdbDataManager_ = nullptr;
+    auto result = bundleDataMgr.SetShortcutsEnabled(shortcutInfos, isEnabled, invalidShortcuts);
+    EXPECT_EQ(result, ERR_APPEXECFWK_DB_INSERT_ERROR);
+    EXPECT_EQ(invalidShortcuts.size(), static_cast<size_t>(1));
+    auto iter = invalidShortcuts.find(bundleName);
+    EXPECT_NE(iter, invalidShortcuts.end());
+    if (iter != invalidShortcuts.end()) {
+        EXPECT_EQ(iter->second.size(), static_cast<size_t>(1));
+        EXPECT_EQ(iter->second[0], "error_id");
+    }
 }
 
 /**
@@ -7420,8 +7503,10 @@ HWTEST_F(BmsDataMgrTest, GetTargetShortcutInfo_0001, Function | MediumTest | Lev
     isEnabled = false;
     result = bundleDataMgr.GetTargetShortcutInfo(bundleName, shortcutId, shortcutInfos, targetShortcutInfo);
     EXPECT_EQ(result, ERR_OK);
-    result = bundleDataMgr.SetShortcutsEnabled(shortcutInfos, isEnabled);
+    std::map<std::string, std::vector<std::string>> invalidShortcuts;
+    result = bundleDataMgr.SetShortcutsEnabled(shortcutInfos, isEnabled, invalidShortcuts);
     EXPECT_EQ(result, ERR_OK);
+    EXPECT_TRUE(invalidShortcuts.empty());
     result = bundleDataMgr.GetTargetShortcutInfo(bundleName, shortcutId, shortcutInfos, targetShortcutInfo);
     EXPECT_EQ(result, ERR_SHORTCUT_MANAGER_SHORTCUT_ID_ILLEGAL);
     std::string errorId = "error_id";

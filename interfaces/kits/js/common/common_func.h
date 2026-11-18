@@ -16,6 +16,7 @@
 #ifndef COMMON_FUNC_H
 #define COMMON_FUNC_H
 
+#include <map>
 #include <vector>
 #include <mutex>
 
@@ -52,6 +53,9 @@ static bool ParseUint(napi_env env, napi_value args, uint32_t &param);
 static std::string GetStringFromNAPI(napi_env env, napi_value value);
 
 static sptr<IBundleMgr> GetBundleMgr();
+
+static std::string ConvertInvalidShortcutsToString(
+    const std::map<std::string, std::vector<std::string>> &invalidShortcuts);
 
 static sptr<IBundleInstaller> GetBundleInstaller();
 
