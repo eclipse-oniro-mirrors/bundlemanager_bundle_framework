@@ -385,6 +385,7 @@ struct ApplicationInfo : public Parcelable {
     AppPreloadPhase appPreloadPhase = AppPreloadPhase::DEFAULT;
     std::string appSignType = Constants::APP_SIGN_TYPE_NONE;
     std::vector<std::string> allowListenBundleChangedEvent;
+    std::vector<std::string> nativeChildProcessPreloadSoList;
 
     bool ReadFromParcel(Parcel &parcel);
     bool ReadMetaDataFromParcel(Parcel &parcel);

@@ -2347,6 +2347,16 @@ public:
         return baseApplicationInfo_->allowListenBundleChangedEvent;
     }
 
+    std::vector<std::string> GetNativeChildProcessPreloadSoList() const
+    {
+        return baseApplicationInfo_->nativeChildProcessPreloadSoList;
+    }
+
+    void SetNativeChildProcessPreloadSoList(const std::vector<std::string> &nativeChildProcessPreloadSoList)
+    {
+        baseApplicationInfo_->nativeChildProcessPreloadSoList = nativeChildProcessPreloadSoList;
+    }
+
     std::string GetDeveloperId() const
     {
         return developerId_;

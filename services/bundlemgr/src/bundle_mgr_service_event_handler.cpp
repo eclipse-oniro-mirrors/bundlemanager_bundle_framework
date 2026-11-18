@@ -606,6 +606,7 @@ void BMSEventHandler::BundleBootStartEvent()
     UpdateOtaFlag(OTAFlag::DELETE_RESOURCE_SLAVE_DB);
     UpdateOtaFlag(OTAFlag::MIGRATE_UNINSTALL_BUNDLE_RESOURCE);
     UpdateOtaFlag(OTAFlag::MIGRATE_SKILL_DIR);
+    UpdateOtaFlag(OTAFlag::UPDATE_NATIVE_CHILD_PROCESS_PRELOAD_SO_LIST);
     (void)SaveUpdatePermissionsFlag();
     PerfProfile::GetInstance().Dump();
 }

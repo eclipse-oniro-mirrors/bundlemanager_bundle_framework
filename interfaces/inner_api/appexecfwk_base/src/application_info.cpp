@@ -165,6 +165,7 @@ const char* APPLICATION_START_MODE = "startMode";
 const char* APPLICATION_APP_PRELOAD_PHASE = "appPreloadPhase";
 const char* APPLICATION_APP_SIGN_TYPE = "appSignType";
 const char* APPLICATION_ALLOW_LISTEN_BUNDLE_CHANGED_EVENT = "allowListenBundleChangedEvent";
+const char* APPLICATION_NATIVE_CHILD_PROCESS_PRELOAD_SO_LIST = "nativeChildProcessPreloadSoList";
 }
 
 bool MultiAppModeData::ReadFromParcel(Parcel &parcel)
@@ -761,6 +762,12 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(StringVector, parcel, &allowListenBundleChangedEvent);
     keepDataOnUninstall = parcel.ReadBool();
     appUid = parcel.ReadInt32();
+    int32_t nativeChildProcessPreloadSoListSize = 0;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, nativeChildProcessPreloadSoListSize);
+    CONTAINER_SECURITY_VERIFY(parcel, nativeChildProcessPreloadSoListSize, &nativeChildProcessPreloadSoList);
+    for (auto i = 0; i < nativeChildProcessPreloadSoListSize; i++) {
+        nativeChildProcessPreloadSoList.emplace_back(parcel.ReadString());
+    }
     return true;
 }
 
@@ -966,6 +973,7 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(StringVector, parcel, allowListenBundleChangedEvent);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, keepDataOnUninstall);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appUid);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(StringVector, parcel, nativeChildProcessPreloadSoList);
     return true;
 }
 
@@ -1242,7 +1250,8 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_START_MODE, applicationInfo.startMode},
         {APPLICATION_APP_PRELOAD_PHASE, applicationInfo.appPreloadPhase},
         {APPLICATION_APP_SIGN_TYPE, applicationInfo.appSignType},
-        {APPLICATION_ALLOW_LISTEN_BUNDLE_CHANGED_EVENT, applicationInfo.allowListenBundleChangedEvent}
+        {APPLICATION_ALLOW_LISTEN_BUNDLE_CHANGED_EVENT, applicationInfo.allowListenBundleChangedEvent},
+        {APPLICATION_NATIVE_CHILD_PROCESS_PRELOAD_SO_LIST, applicationInfo.nativeChildProcessPreloadSoList}
     };
 }
 
@@ -1516,6 +1525,9 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
     GetValueIfFindKey<std::vector<std::string>>(jsonObject, jsonObjectEnd,
         APPLICATION_ALLOW_LISTEN_BUNDLE_CHANGED_EVENT,
         applicationInfo.allowListenBundleChangedEvent, JsonType::ARRAY, false, parseResult, ArrayType::STRING);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject, jsonObjectEnd,
+        APPLICATION_NATIVE_CHILD_PROCESS_PRELOAD_SO_LIST, applicationInfo.nativeChildProcessPreloadSoList,
+        JsonType::ARRAY, false, parseResult, ArrayType::STRING);
     if (parseResult != ERR_OK) {
         APP_LOGE("from_json error : %{public}d", parseResult);
     }

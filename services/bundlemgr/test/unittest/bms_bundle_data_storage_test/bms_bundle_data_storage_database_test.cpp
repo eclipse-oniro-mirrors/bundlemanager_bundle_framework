@@ -1540,7 +1540,8 @@ protected:
                 "startMode":1,
                 "appPreloadPhase":0,
                 "appSignType": "none",
-                "allowListenBundleChangedEvent": []
+                "allowListenBundleChangedEvent": [],
+                "nativeChildProcessPreloadSoList": []
             },
             "baseBundleInfo": {
                 "abilityInfos": [
@@ -1949,6 +1950,7 @@ protected:
     const std::string abilityName = "com.ohos.launcher.com.ohos.launcher.com.ohos.launcher.MainAbility";
     const std::string BASE_BUNDLE_INFO = "baseBundleInfo";
     const std::string BASE_APPLICATION_INFO = "baseApplicationInfo";
+    const std::string NATIVE_CHILD_PROCESS_PRELOAD_SO_LIST = "nativeChildProcessPreloadSoList";
     const std::string CALLER_NAME_UT = "ut";
 };
 
@@ -2643,6 +2645,84 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, ApplicationInfoJsonSerializer_0100, F
     nlohmann::json updatedJson = oldInfo;
     ApplicationInfo restoredInfo = updatedJson;
     EXPECT_TRUE(restoredInfo.keepDataOnUninstall);
+}
+
+/**
+ * @tc.number: ApplicationInfoJsonSerializer_0300
+ * @tc.name: serialize and deserialize declared nativeChildProcessPreloadSoList
+ * @tc.desc: 1.applicationInfo json declares nativeChildProcessPreloadSoList
+ *           2.round-trip keeps the same values and order
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, ApplicationInfoJsonSerializer_0300, Function | SmallTest | Level1)
+{
+    const std::vector<std::string> expected = {"libfoo.so", "libbar.so"};
+    nlohmann::json sourceInfoJson = innerBundleInfoJson_.at(BASE_APPLICATION_INFO);
+    sourceInfoJson[NATIVE_CHILD_PROCESS_PRELOAD_SO_LIST] = expected;
+
+    ApplicationInfo fromJsonInfo = sourceInfoJson;
+    EXPECT_EQ(fromJsonInfo.nativeChildProcessPreloadSoList, expected);
+
+    nlohmann::json toJsonObject = fromJsonInfo;
+    EXPECT_EQ(toJsonObject[NATIVE_CHILD_PROCESS_PRELOAD_SO_LIST].get<std::vector<std::string>>(), expected);
+    EXPECT_TRUE(toJsonObject.dump() == sourceInfoJson.dump());
+}
+
+/**
+ * @tc.number: ApplicationInfoJsonSerializer_0400
+ * @tc.name: deserialize application info without nativeChildProcessPreloadSoList
+ * @tc.desc: 1.applicationInfo json does not declare nativeChildProcessPreloadSoList
+ *           2.deserialize succeeds and the field defaults to empty list
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, ApplicationInfoJsonSerializer_0400, Function | SmallTest | Level1)
+{
+    nlohmann::json sourceInfoJson = innerBundleInfoJson_.at(BASE_APPLICATION_INFO);
+    sourceInfoJson.erase(NATIVE_CHILD_PROCESS_PRELOAD_SO_LIST);
+
+    ApplicationInfo fromJsonInfo;
+    ASSERT_NO_THROW(fromJsonInfo = sourceInfoJson);
+    EXPECT_TRUE(fromJsonInfo.nativeChildProcessPreloadSoList.empty());
+
+    nlohmann::json toJsonObject = fromJsonInfo;
+    EXPECT_TRUE(toJsonObject[NATIVE_CHILD_PROCESS_PRELOAD_SO_LIST].is_array());
+    EXPECT_TRUE(toJsonObject[NATIVE_CHILD_PROCESS_PRELOAD_SO_LIST].empty());
+}
+
+/**
+ * @tc.number: ApplicationInfoJsonSerializer_0500
+ * @tc.name: persist nativeChildProcessPreloadSoList through InnerBundleInfo json
+ * @tc.desc: 1.inner bundle info json declares nativeChildProcessPreloadSoList
+ *           2.FromJson keeps the value and ToJson writes it back
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, ApplicationInfoJsonSerializer_0500, Function | SmallTest | Level1)
+{
+    const std::vector<std::string> expected = {"libfoo.so", "libbar.so"};
+    nlohmann::json sourceInfoJson = innerBundleInfoJson_;
+    sourceInfoJson[BASE_APPLICATION_INFO][NATIVE_CHILD_PROCESS_PRELOAD_SO_LIST] = expected;
+
+    InnerBundleInfo innerBundleInfo;
+    EXPECT_EQ(innerBundleInfo.FromJson(sourceInfoJson), OHOS::ERR_OK);
+    EXPECT_EQ(innerBundleInfo.GetBaseApplicationInfo().nativeChildProcessPreloadSoList, expected);
+
+    nlohmann::json toJsonObject;
+    innerBundleInfo.ToJson(toJsonObject);
+    EXPECT_EQ(toJsonObject[BASE_APPLICATION_INFO][NATIVE_CHILD_PROCESS_PRELOAD_SO_LIST].get<std::vector<std::string>>(),
+        expected);
+}
+
+/**
+ * @tc.number: ApplicationInfoJsonSerializer_0600
+ * @tc.name: load old inner bundle info json without nativeChildProcessPreloadSoList
+ * @tc.desc: 1.inner bundle info json does not contain nativeChildProcessPreloadSoList
+ *           2.FromJson succeeds and the field defaults to empty list
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, ApplicationInfoJsonSerializer_0600, Function | SmallTest | Level1)
+{
+    nlohmann::json sourceInfoJson = innerBundleInfoJson_;
+    sourceInfoJson[BASE_APPLICATION_INFO].erase(NATIVE_CHILD_PROCESS_PRELOAD_SO_LIST);
+
+    InnerBundleInfo innerBundleInfo;
+    EXPECT_EQ(innerBundleInfo.FromJson(sourceInfoJson), OHOS::ERR_OK);
+    EXPECT_TRUE(innerBundleInfo.GetBaseApplicationInfo().nativeChildProcessPreloadSoList.empty());
 }
 
 /**
@@ -5844,6 +5924,35 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, GetApplicationInfoV9_0001, Function |
     ApplicationInfo resultAppInfo;
     auto ret = info.GetApplicationInfoV9(flags, Constants::ALL_USERID, applicationInfo);
     EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetApplicationInfoV9_NativeChildProcessPreloadSoList_0100
+ * @tc.name: Test GetApplicationInfoV9 returns nativeChildProcessPreloadSoList
+ * @tc.desc: 1.inner bundle info declares nativeChildProcessPreloadSoList
+ *           2.GetApplicationInfoV9 returns the same values and order
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, GetApplicationInfoV9_NativeChildProcessPreloadSoList_0100,
+    Function | SmallTest | Level1)
+{
+    const std::vector<std::string> expected = {"libfoo.so", "libbar.so"};
+    InnerBundleInfo info;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = TEST_BUNDLE_NAME;
+    userInfo.uid = userId;
+    info.innerBundleUserInfos_.try_emplace(TEST_BUNDLE_NAME, userInfo);
+
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    applicationInfo.nativeChildProcessPreloadSoList = expected;
+    info.SetBaseApplicationInfo(applicationInfo);
+
+    ApplicationInfo resultAppInfo;
+    auto ret = info.GetApplicationInfoV9(
+        static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_DEFAULT),
+        Constants::ALL_USERID, resultAppInfo);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(resultAppInfo.nativeChildProcessPreloadSoList, expected);
 }
 
 /**
