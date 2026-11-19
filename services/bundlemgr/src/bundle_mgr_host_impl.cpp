@@ -8198,6 +8198,31 @@ ErrCode BundleMgrHostImpl::GetAllBundleDirs(int32_t userId, std::vector<BundleDi
     return dataMgr->GetAllBundleDirs(userId, bundleDirs);
 }
 
+ErrCode BundleMgrHostImpl::GetExtensionSandboxDataDir(const std::string &extensionName, int32_t appIndex,
+    std::string &dir)
+{
+    dir.clear();
+    const int32_t callingUid = IPCSkeleton::GetCallingUid();
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE_NOFUNC("GetExtensionSandboxDataDir dataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    std::string bundleName;
+    if (!dataMgr->GetBundleNameForUid(callingUid, bundleName)) {
+        APP_LOGE_NOFUNC("GetExtensionSandboxDataDir invalid calling uid %{public}d", callingUid);
+        return ERR_BUNDLE_MANAGER_INVALID_UID;
+    }
+    if (bundleName.empty() || extensionName.empty()) {
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    int32_t userId = AccountHelper::GetCurrentActiveUserId();
+    if (userId == Constants::INVALID_USERID) {
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    return dataMgr->GetExtensionSandboxDataDir(userId, bundleName, extensionName, appIndex, dir);
+}
+
 ErrCode BundleMgrHostImpl::SetAppDistributionTypes(std::set<AppDistributionTypeEnum> &appDistributionTypeEnums)
 {
     if (!BundlePermissionMgr::IsSystemApp()) {

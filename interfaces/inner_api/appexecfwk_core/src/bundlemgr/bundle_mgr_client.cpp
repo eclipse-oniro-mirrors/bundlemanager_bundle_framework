@@ -249,6 +249,17 @@ ErrCode BundleMgrClient::GetAllBundleDirs(int32_t userId, std::vector<BundleDir>
     return impl_->GetAllBundleDirs(userId, bundleDirs);
 }
 
+ErrCode BundleMgrClient::GetExtensionSandboxDataDir(const std::string &extensionName, int32_t appIndex,
+    std::string &dir)
+{
+    dir.clear();
+    if (impl_ == nullptr) {
+        APP_LOGE("Bundle mgr client impl is nullptr");
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    return impl_->GetExtensionSandboxDataDir(extensionName, appIndex, dir);
+}
+
 ErrCode BundleMgrClient::RegisterPluginEventCallback(const sptr<IBundleEventCallback> pluginEventCallback)
 {
     if (impl_ == nullptr) {

@@ -7766,6 +7766,29 @@ ErrCode BundleMgrProxy::GetAllBundleDirs(int32_t userId, std::vector<BundleDir> 
         BundleMgrInterfaceCode::GET_ALL_BUNDLE_DIRS, data, bundleDirs);
 }
 
+ErrCode BundleMgrProxy::GetExtensionSandboxDataDir(const std::string &extensionName, int32_t appIndex,
+    std::string &dir)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    dir.clear();
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor()) || !data.WriteString(extensionName) ||
+        !data.WriteInt32(appIndex)) {
+        APP_LOGE("Write extension sandbox dir query failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_EXTENSION_SANDBOX_DATA_DIR, data, reply)) {
+        APP_LOGE("Fail to get extension sandbox dir from server");
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
+    }
+    auto ret = reply.ReadInt32();
+    if (ret == ERR_OK) {
+        dir = reply.ReadString();
+    }
+    return ret;
+}
+
 ErrCode BundleMgrProxy::RegisterPluginEventCallback(const sptr<IBundleEventCallback> pluginEventCallback)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);

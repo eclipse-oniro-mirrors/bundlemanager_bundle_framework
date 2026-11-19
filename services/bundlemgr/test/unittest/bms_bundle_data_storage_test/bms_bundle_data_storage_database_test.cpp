@@ -4028,6 +4028,91 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_6300, Function | Smal
 }
 
 /**
+ * @tc.number: InnerBundleInfo_6350
+ * @tc.name: Test GetExtensionSandboxDataDir
+ * @tc.desc: Verify exact extension-name and input-method filtering.
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_6350, Function | SmallTest | Level1)
+{
+    InnerBundleInfo bundleInfo;
+    InnerExtensionInfo inputMethodExtension;
+    inputMethodExtension.moduleName = MODULE_NAME;
+    inputMethodExtension.name = "inputMethodExtAbility";
+    inputMethodExtension.bundleName = BUNDLE_NAME;
+    inputMethodExtension.type = ExtensionAbilityType::INPUTMETHOD;
+    inputMethodExtension.needCreateSandbox = true;
+    bundleInfo.baseExtensionInfos_.emplace("input-method", inputMethodExtension);
+
+    std::string dir;
+    EXPECT_EQ(bundleInfo.GetExtensionSandboxDataDir("inputMethodExtAbility", BUNDLE_NAME, dir), ERR_OK);
+    EXPECT_EQ(dir, "+extension-" + MODULE_NAME + "-inputMethodExtAbility+" + BUNDLE_NAME);
+
+    EXPECT_EQ(bundleInfo.GetExtensionSandboxDataDir("otherExtension", BUNDLE_NAME, dir),
+        ERR_BUNDLE_MANAGER_EXTENSION_SANDBOX_DIR_NOT_EXIST);
+    EXPECT_TRUE(dir.empty());
+}
+
+/**
+ * @tc.number: InnerBundleInfo_6360
+ * @tc.name: Test GetExtensionSandboxDataDir rejects non-sandbox extensions
+ * @tc.desc: Verify extensions without independent sandbox directories are rejected.
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_6360, Function | SmallTest | Level1)
+{
+    InnerBundleInfo bundleInfo;
+    InnerExtensionInfo extensionInfo;
+    extensionInfo.moduleName = MODULE_NAME;
+    extensionInfo.name = "inputMethodExtAbility";
+    extensionInfo.bundleName = BUNDLE_NAME;
+    extensionInfo.type = ExtensionAbilityType::INPUTMETHOD;
+    extensionInfo.needCreateSandbox = false;
+    bundleInfo.baseExtensionInfos_.emplace("input-method", extensionInfo);
+
+    std::string dir = "stale-dir";
+    EXPECT_EQ(bundleInfo.GetExtensionSandboxDataDir("inputMethodExtAbility", BUNDLE_NAME, dir),
+        ERR_BUNDLE_MANAGER_EXTENSION_SANDBOX_DIR_NOT_EXIST);
+    EXPECT_TRUE(dir.empty());
+}
+
+/**
+ * @tc.number: InnerBundleInfo_6370
+ * @tc.name: Test GetExtensionSandboxDataDir filters invalid entries
+ * @tc.desc: Verify empty, non-input-method, incomplete, and mixed extension collections.
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_6370, Function | SmallTest | Level1)
+{
+    InnerBundleInfo bundleInfo;
+    std::string dir = "stale-dir";
+    EXPECT_EQ(bundleInfo.GetExtensionSandboxDataDir("inputMethodExtAbility", BUNDLE_NAME, dir),
+        ERR_BUNDLE_MANAGER_EXTENSION_SANDBOX_DIR_NOT_EXIST);
+    EXPECT_TRUE(dir.empty());
+
+    InnerExtensionInfo invalidExtension;
+    invalidExtension.moduleName = MODULE_NAME;
+    invalidExtension.name = "inputMethodExtAbility";
+    invalidExtension.bundleName = BUNDLE_NAME;
+    invalidExtension.type = ExtensionAbilityType::SERVICE;
+    invalidExtension.needCreateSandbox = true;
+    bundleInfo.baseExtensionInfos_.emplace("a-non-input-method", invalidExtension);
+
+    invalidExtension.type = ExtensionAbilityType::INPUTMETHOD;
+    invalidExtension.moduleName.clear();
+    bundleInfo.baseExtensionInfos_.emplace("b-empty-module", invalidExtension);
+
+    invalidExtension.moduleName = MODULE_NAME;
+    invalidExtension.bundleName.clear();
+    bundleInfo.baseExtensionInfos_.emplace("c-empty-bundle", invalidExtension);
+    EXPECT_EQ(bundleInfo.GetExtensionSandboxDataDir("inputMethodExtAbility", BUNDLE_NAME, dir),
+        ERR_BUNDLE_MANAGER_EXTENSION_SANDBOX_DIR_NOT_EXIST);
+    EXPECT_TRUE(dir.empty());
+
+    invalidExtension.bundleName = BUNDLE_NAME;
+    bundleInfo.baseExtensionInfos_.emplace("z-valid-input-method", invalidExtension);
+    EXPECT_EQ(bundleInfo.GetExtensionSandboxDataDir("inputMethodExtAbility", BUNDLE_NAME, dir), ERR_OK);
+    EXPECT_EQ(dir, "+extension-" + MODULE_NAME + "-inputMethodExtAbility+" + BUNDLE_NAME);
+}
+
+/**
  * @tc.number: InnerBundleInfo_6400
  * @tc.name: Test UpdateExtensionDataGroupInfo
  * @tc.desc: 1.Test the UpdateExtensionDataGroupInfo of InnerBundleInfo

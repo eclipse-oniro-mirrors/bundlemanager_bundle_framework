@@ -5921,6 +5921,119 @@ HWTEST_F(BmsDataMgrTest, GetAllBundleDirs_0001, TestSize.Level1)
 }
 
 /**
+ * @tc.number: GetExtensionSandboxDataDir_0001
+ * @tc.name: GetExtensionSandboxDataDir
+ * @tc.desc: Verify missing bundle and output clearing behavior.
+ */
+HWTEST_F(BmsDataMgrTest, GetExtensionSandboxDataDir_0001, TestSize.Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    bundleDataMgr.AddUserId(Constants::START_USERID);
+    std::string dir = "stale-dir";
+    auto ret = bundleDataMgr.GetExtensionSandboxDataDir(Constants::START_USERID, "not.installed.bundle",
+        "inputMethodExtAbility", Constants::MAIN_APP_INDEX, dir);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_TRUE(dir.empty());
+}
+
+/**
+ * @tc.number: GetExtensionSandboxDataDir_0002
+ * @tc.name: GetExtensionSandboxDataDir
+ * @tc.desc: Reject invalid and nonexistent users and clear the output.
+ */
+HWTEST_F(BmsDataMgrTest, GetExtensionSandboxDataDir_0002, TestSize.Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    const int32_t userIds[] = {Constants::INVALID_USERID, Constants::START_USERID + 1};
+    for (int32_t userId : userIds) {
+        std::string dir = "stale-dir";
+        EXPECT_EQ(bundleDataMgr.GetExtensionSandboxDataDir(userId, BUNDLE_NAME, "inputMethodExtAbility",
+            Constants::MAIN_APP_INDEX, dir),
+            ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+        EXPECT_TRUE(dir.empty());
+    }
+}
+
+/**
+ * @tc.number: GetExtensionSandboxDataDir_0003
+ * @tc.name: GetExtensionSandboxDataDir
+ * @tc.desc: Preserve the base-user fallback used by GetAllBundleDirs.
+ */
+HWTEST_F(BmsDataMgrTest, GetExtensionSandboxDataDir_0003, TestSize.Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    bundleDataMgr.AddUserId(Constants::START_USERID);
+    InnerBundleInfo info;
+    info.baseBundleInfo_->name = BUNDLE_NAME;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = BUNDLE_NAME;
+    userInfo.bundleUserInfo.userId = Constants::DEFAULT_USERID;
+    info.AddInnerBundleUserInfo(userInfo);
+    InnerExtensionInfo extensionInfo;
+    extensionInfo.bundleName = BUNDLE_NAME;
+    extensionInfo.moduleName = MODULE_NAME;
+    extensionInfo.name = "inputMethodExtAbility";
+    extensionInfo.type = ExtensionAbilityType::INPUTMETHOD;
+    extensionInfo.needCreateSandbox = true;
+    info.baseExtensionInfos_.emplace("input-method", extensionInfo);
+    bundleDataMgr.bundleInfos_.emplace(BUNDLE_NAME, info);
+
+    std::string dir;
+    EXPECT_EQ(bundleDataMgr.GetExtensionSandboxDataDir(Constants::START_USERID, BUNDLE_NAME, extensionInfo.name,
+            Constants::MAIN_APP_INDEX, dir),
+        ERR_OK);
+    EXPECT_EQ(dir, "+extension-" + MODULE_NAME + "-inputMethodExtAbility+" + BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: GetExtensionSandboxDataDir_0005
+ * @tc.name: GetExtensionSandboxDataDir
+ * @tc.desc: Apply GetSandboxDataDir instance validation and directory naming.
+ */
+HWTEST_F(BmsDataMgrTest, GetExtensionSandboxDataDir_0005, TestSize.Level1)
+{
+    BundleDataMgr dataMgr;
+    dataMgr.AddUserId(Constants::START_USERID);
+    InnerBundleInfo info;
+    info.baseBundleInfo_->name = BUNDLE_NAME;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = BUNDLE_NAME;
+    userInfo.bundleUserInfo.userId = Constants::START_USERID;
+    InnerBundleCloneInfo cloneInfo;
+    cloneInfo.appIndex = 1;
+    userInfo.cloneInfos.emplace(InnerBundleUserInfo::AppIndexToKey(cloneInfo.appIndex), cloneInfo);
+    info.AddInnerBundleUserInfo(userInfo);
+    InnerExtensionInfo extensionInfo;
+    extensionInfo.bundleName = BUNDLE_NAME;
+    extensionInfo.moduleName = MODULE_NAME;
+    extensionInfo.name = "inputMethodExtAbility";
+    extensionInfo.type = ExtensionAbilityType::INPUTMETHOD;
+    extensionInfo.needCreateSandbox = true;
+    info.baseExtensionInfos_.emplace("input-method", extensionInfo);
+    dataMgr.bundleInfos_.emplace(BUNDLE_NAME, info);
+
+    int32_t savedUid = IPCSkeleton::GetCallingUid();
+    ScopeGuard restoreUid([savedUid] { IPCSkeleton::SetCallingUid(savedUid); });
+    IPCSkeleton::SetCallingUid(Constants::START_USERID * Constants::BASE_USER_RANGE + Constants::BASE_APP_UID);
+    std::string dir;
+    EXPECT_EQ(dataMgr.GetExtensionSandboxDataDir(Constants::START_USERID, BUNDLE_NAME,
+        extensionInfo.name, Constants::MAIN_APP_INDEX, dir), ERR_OK);
+    EXPECT_EQ(dir, "+extension-" + MODULE_NAME + "-inputMethodExtAbility+" + BUNDLE_NAME);
+    EXPECT_EQ(dataMgr.GetExtensionSandboxDataDir(Constants::START_USERID, BUNDLE_NAME,
+        extensionInfo.name, cloneInfo.appIndex, dir), ERR_OK);
+    EXPECT_EQ(dir, "+extension-" + MODULE_NAME + "-inputMethodExtAbility++clone-1+" + BUNDLE_NAME);
+    EXPECT_EQ(dataMgr.GetExtensionSandboxDataDir(Constants::START_USERID, BUNDLE_NAME,
+        extensionInfo.name, -1, dir), ERR_BUNDLE_MANAGER_GET_DIR_INVALID_APP_INDEX);
+    EXPECT_TRUE(dir.empty());
+    EXPECT_EQ(dataMgr.GetExtensionSandboxDataDir(Constants::START_USERID, BUNDLE_NAME,
+        extensionInfo.name, Constants::CLI_SANDBOX_APP_INDEX_MAX + 1, dir),
+        ERR_BUNDLE_MANAGER_GET_DIR_INVALID_APP_INDEX);
+    EXPECT_TRUE(dir.empty());
+}
+
+/**
  * @tc.number: GreatOrEqualTargetAPIVersion_0001
  * @tc.name: GreatOrEqualTargetAPIVersion
  * @tc.desc: test GreatOrEqualTargetAPIVersion

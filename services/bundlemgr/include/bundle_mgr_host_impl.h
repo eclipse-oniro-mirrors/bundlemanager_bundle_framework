@@ -1420,6 +1420,8 @@ public:
     virtual ErrCode GetDirByBundleNameAndAppIndex(const std::string &bundleName, const int32_t appIndex,
         std::string &dataDir) override;
     virtual ErrCode GetAllBundleDirs(int32_t userId, std::vector<BundleDir> &bundleDirs) override;
+    virtual ErrCode GetExtensionSandboxDataDir(const std::string &extensionName, int32_t appIndex,
+        std::string &dir) override;
     virtual ErrCode SetAppDistributionTypes(std::set<AppDistributionTypeEnum> &appDistributionTypeEnums) override;
     virtual ErrCode GetPluginAbilityInfo(const std::string &hostBundleName, const std::string &pluginBundleName,
         const std::string &pluginModuleName, const std::string &pluginAbilityName,

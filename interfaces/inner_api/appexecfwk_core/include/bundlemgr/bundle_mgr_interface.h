@@ -2440,6 +2440,25 @@ public:
     {
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
+
+    /**
+     * @brief Obtains the calling application's extension sandbox directory name for the current foreground user.
+     *
+     * The bundle name is resolved from the calling UID. It returns the directory name only for an
+     * INPUTMETHOD extension that requires an independent sandbox; it does not return an absolute path.
+     * @param extensionName Indicates the extension ability name.
+     * @param appIndex Indicates the application instance index, with the same validation and data
+     * directory naming rules as GetSandboxDataDir. The bundle name is always resolved from the caller.
+     * @param dir Indicates the obtained directory name, not an absolute path. It is cleared when this
+     * method returns an error.
+     * @return Returns ERR_OK on success; returns ERR_BUNDLE_MANAGER_EXTENSION_SANDBOX_DIR_NOT_EXIST if
+     * no matching extension sandbox directory exists; returns an error code otherwise.
+     */
+    virtual ErrCode GetExtensionSandboxDataDir(const std::string &extensionName, int32_t appIndex,
+        std::string &dir)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
 };
 
 #define WRITE_PARCEL(func)                                             \

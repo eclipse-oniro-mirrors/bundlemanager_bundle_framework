@@ -16736,6 +16736,32 @@ ErrCode BundleDataMgr::GetDirByBundleNameAndAppIndex(const std::string &bundleNa
     return ERR_OK;
 }
 
+ErrCode BundleDataMgr::GetExtensionSandboxDataDir(int32_t userId, const std::string &bundleName,
+    const std::string &extensionName, int32_t appIndex, std::string &dir)
+{
+    dir.clear();
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        APP_LOGE("invalid userid :%{public}d", userId);
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    InnerBundleInfo info;
+    if (!FetchInnerBundleInfo(bundleName, info)) {
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    int32_t responseUserId = info.GetResponseUserId(requestUserId);
+    if (responseUserId == Constants::INVALID_USERID) {
+        APP_LOGD("bundle is not installed for request user %{public}d", requestUserId);
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    std::string dataDir;
+    auto ret = GetDirByBundleNameAndAppIndex(bundleName, appIndex, dataDir);
+    if (ret != ERR_OK) {
+        return ret;
+    }
+    return info.GetExtensionSandboxDataDir(extensionName, dataDir, dir);
+}
+
 std::vector<int32_t> BundleDataMgr::GetCloneAppIndexesByInnerBundleInfo(const InnerBundleInfo &innerBundleInfo,
     int32_t userId) const
 {
