@@ -168,12 +168,5 @@ bool BundleStatsCacheRdb::DeleteUser(int32_t userId)
     predicates.EqualTo(USER_ID_COL, userId);
     return rdbDataManager_->DeleteData(predicates);
 }
-
-bool BundleStatsCacheRdb::DeleteAll()
-{
-    // Empty predicates deletes all rows in the table.
-    NativeRdb::AbsRdbPredicates predicates(STATS_RDB_TABLE_NAME);
-    return rdbDataManager_->DeleteData(predicates);
-}
 } // namespace AppExecFwk
 } // namespace OHOS

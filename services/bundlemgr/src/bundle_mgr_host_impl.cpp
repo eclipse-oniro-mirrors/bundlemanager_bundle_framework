@@ -46,6 +46,7 @@
 #endif
 #include "hitrace_meter.h"
 #include "installd_client.h"
+#include "bundle_stats/bundle_stats_cache_mgr.h"
 #include "app_data_monitor/app_data_monitor.h"
 #include "idle_condition_mgr/idle_condition_mgr.h"
 #include "ipc_skeleton.h"
@@ -2212,7 +2213,7 @@ bool BundleMgrHostImpl::CleanBundleCacheByInodeCount(const std::string &bundleNa
     }
 
     uint64_t initialInodeCount = 0;
-    ErrCode ret = BundleCacheMgr::GetBundleInodeCount(uid, initialInodeCount);
+    ErrCode ret = BundleCacheMgr::GetBundleInodeCount(uid, initialInodeCount, bundleName, userId, appIndex);
     if (ret != ERR_OK) {
         APP_LOGE_NOFUNC("can not get initial file count for %{public}s", bundleName.c_str());
         return false;
@@ -2224,7 +2225,7 @@ bool BundleMgrHostImpl::CleanBundleCacheByInodeCount(const std::string &bundleNa
     }
 
     uint64_t inodeCount = 0;
-    ret = BundleCacheMgr::GetBundleInodeCount(uid, inodeCount);
+    ret = BundleCacheMgr::GetBundleInodeCount(uid, inodeCount, bundleName, userId, appIndex);
     if (ret != ERR_OK) {
         APP_LOGE_NOFUNC("can not get file count for %{public}s", bundleName.c_str());
         return false;
@@ -5085,22 +5086,11 @@ bool BundleMgrHostImpl::GetAllBundleStats(int32_t userId, std::vector<int64_t> &
 ErrCode BundleMgrHostImpl::GetBundleInodeCount(const std::string &bundleName, int32_t appIndex, int32_t userId,
     uint64_t &inodeCount)
 {
-    // Permission check
-    bool permissionVerify = [bundleName]() {
-        if (BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
-            return true;
-        }
-        if (BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
-            return true;
-        }
-        return false;
-    }();
-    if (!permissionVerify) {
+    if (!VerifyInodeCountPermission(bundleName)) {
         APP_LOGE_NOFUNC("GetBundleInodeCount permission denied %{public}d %{public}d",
             IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-    // Parameter validation
     if (bundleName.empty()) {
         APP_LOGE_NOFUNC("bundleName empty");
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
@@ -5109,7 +5099,6 @@ ErrCode BundleMgrHostImpl::GetBundleInodeCount(const std::string &bundleName, in
         APP_LOGE_NOFUNC("invalid appIndex: %{public}d", appIndex);
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
-    // Get DataMgr
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE_NOFUNC("DataMgr is nullptr");
@@ -5119,21 +5108,60 @@ ErrCode BundleMgrHostImpl::GetBundleInodeCount(const std::string &bundleName, in
         APP_LOGE("userId is invalid or not exist");
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
-    // Get uid by bundleName, appIndex and userId
     int32_t uid = dataMgr->GetUidByBundleName(bundleName, userId, appIndex);
     if (uid == Constants::INVALID_UID) {
         APP_LOGE_NOFUNC("failed to get uid for bundle: %{public}s, appIndex: %{public}d, userId: %{public}d",
             bundleName.c_str(), appIndex, userId);
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
-
-    // Call BundleCacheMgr to get inode count
-    ErrCode ret = BundleCacheMgr::GetBundleInodeCount(uid, inodeCount);
+    if (ReadInodeCacheOnHit(bundleName, userId, appIndex, inodeCount)) {
+        return ERR_OK;
+    }
+    ErrCode ret = BundleCacheMgr::GetBundleInodeCount(uid, inodeCount, bundleName, userId, appIndex);
     if (ret != ERR_OK) {
         APP_LOGE_NOFUNC("failed for uid %{public}d, ret: %{public}d", uid, ret);
         return ret;
     }
+    WriteInodeCacheAfterMiss(bundleName, userId, appIndex, uid, inodeCount);
     return ERR_OK;
+}
+
+bool BundleMgrHostImpl::VerifyInodeCountPermission(const std::string &bundleName)
+{
+    if (BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        return true;
+    }
+    return BundlePermissionMgr::IsBundleSelfCalling(bundleName);
+}
+
+bool BundleMgrHostImpl::ReadInodeCacheOnHit(const std::string &bundleName, int32_t userId, int32_t appIndex,
+    uint64_t &inodeCount)
+{
+    if (!BundleStatsCacheMgr::IsCacheEnabled()) {
+        return false;
+    }
+    BundleStatsCacheData cacheData;
+    if (!BundleStatsCacheMgr::GetCachedData(bundleName, userId, appIndex, cacheData)
+        || !BundleStatsCacheMgr::IsValidDim(cacheData.inodeCount)) {
+        return false;
+    }
+    inodeCount = static_cast<uint64_t>(cacheData.inodeCount);
+    BundleStatsCacheMgr::RefreshCacheAfterHit(bundleName, userId, appIndex);
+    return true;
+}
+
+void BundleMgrHostImpl::WriteInodeCacheAfterMiss(const std::string &bundleName, int32_t userId, int32_t appIndex,
+    int32_t uid, uint64_t inodeCount)
+{
+    if (!BundleStatsCacheMgr::ShouldWriteCache(uid, userId)) {
+        return;
+    }
+    BundleStatsCacheData cacheData;
+    cacheData.uid = uid;
+    cacheData.scanTime = BundleUtil::GetCurrentTimeMs();
+    cacheData.bundleStats = {-1, -1, -1, -1, -1};
+    cacheData.inodeCount = static_cast<int64_t>(inodeCount);
+    BundleStatsCacheMgr::MergeAndWriteCache(bundleName, userId, appIndex, cacheData);
 }
 
 ErrCode BundleMgrHostImpl::GetAllBundleCacheStat(const sptr<IProcessCacheCallback> processCacheCallback)

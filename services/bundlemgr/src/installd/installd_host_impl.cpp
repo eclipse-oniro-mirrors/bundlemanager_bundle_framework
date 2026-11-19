@@ -2146,11 +2146,21 @@ ErrCode InstalldHostImpl::GetDiskUsageFromPath(const std::vector<std::string> &p
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::GetBundleInodeCount(int32_t uid, uint64_t &inodeCount)
+ErrCode InstalldHostImpl::GetBundleInodeCount(int32_t uid, uint64_t &inodeCount,
+    const std::string &bundleName, const int32_t userId, const int32_t appIndex)
 {
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         APP_LOGE_NOFUNC("installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+
+    // Legacy callers pass only (uid, inodeCount); the new params keep their
+    // defaults and route to the quota path, so validate them only when set.
+    if (!bundleName.empty() && (!InstalldOperator::IsValidBundleName(bundleName) ||
+        !InstalldOperator::IsValidUserId(userId) || !InstalldOperator::IsValidAppIndex(appIndex))) {
+        APP_LOGE_NOFUNC("GetBundleInodeCount param -n %{public}s -u %{public}d -appIndex %{public}d",
+            bundleName.c_str(), userId, appIndex);
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
 
     if (uid < 0) {
@@ -2158,7 +2168,16 @@ ErrCode InstalldHostImpl::GetBundleInodeCount(int32_t uid, uint64_t &inodeCount)
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
 
-    inodeCount = static_cast<uint64_t>(InstalldOperator::GetBundleInodeCount(uid));
+    // Scan-vs-quota routing is centralized in InstalldOperator::GetDiskUsageForUid.
+    // A scan failure propagates the error; the quota path never fails.
+    int64_t dataSize = 0;
+    int64_t inodeCnt = 0;
+    ErrCode ret = InstalldOperator::GetDiskUsageForUid(uid, bundleName, userId, appIndex, dataSize, &inodeCnt);
+    if (ret != ERR_OK) {
+        APP_LOGE_NOFUNC("GetBundleInodeCount scan failed, uid: %{public}d, ret: %{public}d", uid, ret);
+        return ret;
+    }
+    inodeCount = static_cast<uint64_t>(inodeCnt);
     return ERR_OK;
 }
 
@@ -2573,7 +2592,7 @@ ErrCode InstalldHostImpl::GetAppDataDirCategorySizes(const std::string &bundleNa
 
 ErrCode InstalldHostImpl::GetBundleStats(const std::string &bundleName, const int32_t userId,
     std::vector<int64_t> &bundleStats, const std::unordered_set<int32_t> &uids, const int32_t appIndex,
-    const uint32_t statFlag, const std::vector<std::string> &moduleNameList)
+    const uint32_t statFlag, const std::vector<std::string> &moduleNameList, int64_t *inodeCount)
 {
     LOG_D(BMS_TAG_INSTALLD,
         "bundleName = %{public}s, userId = %{public}d, uids size = %{public}zu, appIndex = %{public}d, "
@@ -2588,34 +2607,20 @@ ErrCode InstalldHostImpl::GetBundleStats(const std::string &bundleName, const in
             bundleName.c_str(), userId, appIndex);
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-    for (const auto &uid : uids) {
-        if (!InstalldOperator::IsValidUid(uid)) {
-            LOG_E(BMS_TAG_INSTALLD, "uid %{public}d out of range", uid);
-            return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-        }
+    if (!IsValidUidSet(uids)) {
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     bundleStats = {0, 0, 0, 0, 0};
-    std::vector<std::string> bundlePath;
-    bundlePath.push_back(std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName);
-    bundlePath.push_back(std::string(Constants::BASE_SKILL_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName);
+    if (inodeCount != nullptr) {
+        *inodeCount = -1;
+    }
     int64_t appDataSize = 0;
     int64_t bundleDataSize = 0;
     int64_t bundleCacheSize = 0;
-    if ((statFlag & OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_INSTALL_SIZE) !=
-        OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_INSTALL_SIZE) {
-        appDataSize = appIndex == 0 ? InstalldOperator::GetDiskUsageFromPath(bundlePath) : 0;
-    }
-    if ((statFlag & OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_DATA_SIZE) !=
-        OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_DATA_SIZE) {
-        if (!uids.empty()) {
-            for (const auto &uid : uids) {
-                bundleDataSize += InstalldOperator::GetDiskUsageFromQuota(uid);
-            }
-        }
-    }
-    if ((statFlag & OHOS::AppExecFwk::Constants::GET_BUNDLE_WITHOUT_CACHE_SIZE) !=
-        OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_CACHE_SIZE) {
-        bundleCacheSize = GetAppCacheSize(bundleName, userId, appIndex, moduleNameList);
+    ErrCode ret = CalcStatsByFlag(bundleName, userId, appIndex, uids, statFlag, moduleNameList,
+        inodeCount, appDataSize, bundleDataSize, bundleCacheSize);
+    if (ret != ERR_OK) {
+        return ret;
     }
     // index 0 : bundle data size
     bundleStats[0] = appDataSize;
@@ -2628,9 +2633,71 @@ ErrCode InstalldHostImpl::GetBundleStats(const std::string &bundleName, const in
     return ERR_OK;
 }
 
+bool InstalldHostImpl::IsValidUidSet(const std::unordered_set<int32_t> &uids)
+{
+    for (const auto &uid : uids) {
+        if (!InstalldOperator::IsValidUid(uid)) {
+            LOG_E(BMS_TAG_INSTALLD, "uid %{public}d out of range", uid);
+            return false;
+        }
+    }
+    return true;
+}
+
+ErrCode InstalldHostImpl::CalcStatsByFlag(const std::string &bundleName, const int32_t userId,
+    const int32_t appIndex, const std::unordered_set<int32_t> &uids, const uint32_t statFlag,
+    const std::vector<std::string> &moduleNameList, int64_t *inodeCount,
+    int64_t &appDataSize, int64_t &bundleDataSize, int64_t &bundleCacheSize)
+{
+    std::vector<std::string> bundlePath;
+    bundlePath.push_back(std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName);
+    bundlePath.push_back(std::string(Constants::BASE_SKILL_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName);
+    if ((statFlag & OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_INSTALL_SIZE) !=
+        OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_INSTALL_SIZE) {
+        appDataSize = appIndex == 0 ? InstalldOperator::GetDiskUsageFromPath(bundlePath) : 0;
+    }
+    if ((statFlag & OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_DATA_SIZE) !=
+        OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_DATA_SIZE) {
+        if (!uids.empty()) {
+            ErrCode scanRet = ScanUidsForStats(bundleName, userId, appIndex, uids,
+                bundleDataSize, inodeCount);
+            if (scanRet != ERR_OK) {
+                return scanRet;
+            }
+        }
+    }
+    if ((statFlag & OHOS::AppExecFwk::Constants::GET_BUNDLE_WITHOUT_CACHE_SIZE) !=
+        OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_CACHE_SIZE) {
+        bundleCacheSize = GetAppCacheSize(bundleName, userId, appIndex, moduleNameList);
+    }
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::ScanUidsForStats(const std::string &bundleName, const int32_t userId,
+    const int32_t appIndex, const std::unordered_set<int32_t> &uids,
+    int64_t &bundleDataSize, int64_t *inodeCount)
+{
+    for (const auto &uid : uids) {
+        int64_t uidSize = 0;
+        int64_t uidInode = 0;
+        ErrCode ret = InstalldOperator::GetDiskUsageForUid(uid, bundleName, userId, appIndex,
+            uidSize, (inodeCount != nullptr) ? &uidInode : nullptr);
+        if (ret != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLD, "GetBundleStats scan failed, uid: %{public}d, ret: %{public}d",
+                uid, ret);
+            return ret;
+        }
+        bundleDataSize += uidSize;
+        if (inodeCount != nullptr) {
+            *inodeCount = (*inodeCount < 0) ? uidInode : (*inodeCount + uidInode);
+        }
+    }
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::BatchGetBundleStats(const std::vector<std::string> &bundleNames,
     const std::unordered_map<std::string, std::unordered_set<int32_t>> &uidMap,
-    std::vector<BundleStorageStats> &bundleStats)
+    std::vector<BundleStorageStats> &bundleStats, const int32_t userId)
 {
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
@@ -2659,25 +2726,38 @@ ErrCode InstalldHostImpl::BatchGetBundleStats(const std::vector<std::string> &bu
             std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + stats.bundleName);
         bundlePath.push_back(
             std::string(Constants::BASE_SKILL_DIR) + ServiceConstants::PATH_SEPARATOR + stats.bundleName);
-        int64_t appDataSize = 0;
+        int64_t appDataSize = InstalldOperator::GetDiskUsageFromPath(bundlePath);
         int64_t bundleDataSize = 0;
-        appDataSize = InstalldOperator::GetDiskUsageFromPath(bundlePath);
+        bool scanFailed = false;
         auto uids = uidMap.find(name);
         if (uids != uidMap.end()) {
-            for (const auto &uid : uids->second) {
-                bundleDataSize += InstalldOperator::GetDiskUsageFromQuota(uid);
-            }
+            scanFailed = !ScanBundleUidsForBatch(name, userId, uids->second, bundleDataSize);
         }
-        // index 0 : bundle data size
         stats.bundleStats[APP_DATA_SIZE_INDEX] = appDataSize;
-        // index 1 : local bundle data size
-        stats.bundleStats[BUNDLE_DATA_SIZE_INDEX] = bundleDataSize;
+        stats.bundleStats[BUNDLE_DATA_SIZE_INDEX] = scanFailed ? 0 : bundleDataSize;
         bundleStats.emplace_back(stats);
     }
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::GetAllBundleStats(std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids)
+bool InstalldHostImpl::ScanBundleUidsForBatch(const std::string &name, const int32_t userId,
+    const std::unordered_set<int32_t> &uidSet, int64_t &bundleDataSize)
+{
+    for (const auto &uid : uidSet) {
+        int64_t uidSize = 0;
+        ErrCode ret = InstalldOperator::GetDiskUsageForUid(uid, name, userId, 0, uidSize);
+        if (ret != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLD, "BatchGetBundleStats scan failed, name: %{public}s, ret: %{public}d",
+                name.c_str(), ret);
+            return false;
+        }
+        bundleDataSize += uidSize;
+    }
+    return true;
+}
+
+ErrCode InstalldHostImpl::GetAllBundleStats(std::vector<int64_t> &bundleStats,
+    const std::vector<int32_t> &uids, const std::vector<std::string> &bundleNames, const int32_t userId)
 {
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
@@ -2695,9 +2775,19 @@ ErrCode InstalldHostImpl::GetAllBundleStats(std::vector<int64_t> &bundleStats, c
     }
     int64_t totalFileSize = InstalldOperator::GetDiskUsageFromQuota(INSTALLS_UID);
     int64_t totalDataSize = 0;
+    static const std::string emptyBundleName;
     for (size_t index = 0; index < uids.size(); ++index) {
         const auto &uid = uids[index];
-        int64_t bundleDataSize = InstalldOperator::GetDiskUsageFromQuota(uid);
+        const std::string &bundleName = (index < bundleNames.size()) ? bundleNames[index] : emptyBundleName;
+        // Scan-vs-quota routing is centralized in InstalldOperator::GetDiskUsageForUid.
+        // A scan failure skips this uid only, the rest of the aggregation continues.
+        int64_t bundleDataSize = 0;
+        ErrCode scanRet = InstalldOperator::GetDiskUsageForUid(uid, bundleName, userId, 0, bundleDataSize);
+        if (scanRet != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLD, "GetAllBundleStats scan failed, uid: %{public}d, ret: %{public}d",
+                uid, scanRet);
+            continue;
+        }
         if (bundleDataSize > TEN_GB) {
             LOG_W(BMS_TAG_INSTALLD, "large data size %{public}" PRId64 " uid %{public}d", bundleDataSize, uid);
         }

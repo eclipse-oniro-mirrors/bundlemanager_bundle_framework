@@ -1121,16 +1121,42 @@ public:
     bool GetBundleStats(const std::string &bundleName,
         const int32_t userId, std::vector<int64_t> &bundleStats,
         const int32_t appIndex = 0, const uint32_t statFlag = 0) const;
-    // Scan one bundle's stats for the idle scan; the cache layer persists
-    // what it returns. No cache read/write inside.
     bool ScanBundleStats(const std::string &bundleName,
         const int32_t userId, std::vector<int64_t> &bundleStats,
         const int32_t appIndex, int32_t &uid,
-        int64_t *inodeCount = nullptr) const;
+        int64_t *inodeCount = nullptr, const uint32_t statFlag = 0) const;
+    int32_t ResolveScanTarget(const std::string &bundleName, const int32_t userId,
+        const int32_t appIndex, int32_t &uid, std::string &effectiveName,
+        bool &isDualModeClone, std::vector<std::string> &moduleNameList) const;
+    void CollectSaUidsIfMainApp(const std::string &bundleName, const int32_t userId,
+        const int32_t appIndex, std::unordered_set<int32_t> &uids) const;
+    void ResolveStatsCacheUid(const std::string &bundleName, const int32_t userId,
+        const int32_t appIndex, int32_t &uid) const;
+    bool ReadStatsCacheOnHit(const std::string &bundleName, const int32_t userId,
+        const int32_t appIndex, const uint32_t statFlag, std::vector<int64_t> &bundleStats) const;
+    void WriteStatsCacheAfterMiss(const std::string &bundleName, const int32_t userId,
+        const int32_t appIndex, const int32_t uid, const uint32_t statFlag, const int64_t scannedInode,
+        const std::vector<int64_t> &bundleStats) const;
     ErrCode BatchGetBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,
         std::vector<BundleStorageStats> &bundleStats) const;
     void GetBundleModuleNames(const std::string &bundleName, std::vector<std::string> &moduleNameList) const;
     bool GetAllBundleStats(const int32_t userId, std::vector<int64_t> &bundleStats) const;
+    void CollectAllBundleUids(int32_t userId, int32_t requestUserId,
+        std::unordered_set<int32_t> &uids) const;
+    bool AssembleBatchResult(std::vector<int32_t> &uidVec,
+        std::vector<std::string> &bundleNamesVec, int32_t requestUserId,
+        int64_t cachedAppDataSize, int64_t cachedUserDataSize, bool anyCacheHit,
+        std::vector<int64_t> &bundleStats) const;
+    std::vector<std::string> BuildParallelBundleNames(
+        const std::vector<int32_t> &uidVec, int32_t requestUserId) const;
+    void FilterCachedEntriesFromBatch(std::vector<int32_t> &uidVec,
+        std::vector<std::string> &bundleNamesVec, int32_t requestUserId,
+        int64_t &cachedAppDataSize, int64_t &cachedUserDataSize, bool &anyCacheHit) const;
+    void PopulateCacheAfterBatchMiss(const std::vector<int32_t> &uidVec,
+        const std::vector<std::string> &bundleNamesVec, int32_t requestUserId) const;
+    void PopulateCacheAfterBatchMissWithStats(const std::vector<std::string> &bundleNameList,
+        const std::unordered_map<std::string, int32_t> &mainUidMap, int32_t userId,
+        const std::vector<BundleStorageStats> &bundleStats) const;
     bool GetAllUnisntallBundleUids(const int32_t requestUserId,
         const std::map<std::string, UninstallBundleInfo> &uninstallBundleInfos,
         std::unordered_set<int32_t> &uids) const;
@@ -2089,7 +2115,7 @@ private:
         std::vector<BundleStorageStats> &bundleStats) const;
     ErrCode BatchGetBundleStatsDualMode(const std::vector<std::string> &bundleNames,
         const std::unordered_map<std::string, std::unordered_set<int32_t>> &uidMap,
-        std::vector<BundleStorageStats> &bundleStats) const;
+        std::vector<BundleStorageStats> &bundleStats, const int32_t userId) const;
     void GetAllInstallBundleUids(const int32_t userId, const int32_t requestUserId, int32_t &responseUserId,
         std::unordered_set<int32_t> &uids, std::vector<std::string> &bundleNames) const;
     bool ProcessUninstallBundle(std::vector<BundleOptionInfo> &bundleOptionInfos) const;

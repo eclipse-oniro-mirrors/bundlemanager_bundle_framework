@@ -629,7 +629,8 @@ ErrCode InstalldProxy::GetDiskUsageFromPath(const std::vector<std::string> &path
     return ret;
 }
 
-ErrCode InstalldProxy::GetBundleInodeCount(int32_t uid, uint64_t &inodeCount)
+ErrCode InstalldProxy::GetBundleInodeCount(int32_t uid, uint64_t &inodeCount,
+    const std::string &bundleName, const int32_t userId, const int32_t appIndex)
 {
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -641,6 +642,10 @@ ErrCode InstalldProxy::GetBundleInodeCount(int32_t uid, uint64_t &inodeCount)
         APP_LOGE_NOFUNC("GetBundleInodeCount write uid failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
+
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
+    INSTALLD_PARCEL_WRITE(data, Int32, userId);
+    INSTALLD_PARCEL_WRITE(data, Int32, appIndex);
 
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC, WAIT_TIME);
@@ -705,7 +710,7 @@ ErrCode InstalldProxy::CleanBundleDirs(const std::vector<std::string> &dirs, boo
 
 ErrCode InstalldProxy::GetBundleStats(const std::string &bundleName, const int32_t userId,
     std::vector<int64_t> &bundleStats, const std::unordered_set<int32_t> &uids, const int32_t appIndex,
-    const uint32_t statFlag, const std::vector<std::string> &moduleNameList)
+    const uint32_t statFlag, const std::vector<std::string> &moduleNameList, int64_t *inodeCount)
 {
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
@@ -734,6 +739,10 @@ ErrCode InstalldProxy::GetBundleStats(const std::string &bundleName, const int32
     auto ret = TransactInstalldCmd(InstalldInterfaceCode::GET_BUNDLE_STATS, data, reply, option);
     if (ret == ERR_OK) {
         if (reply.ReadInt64Vector(&bundleStats)) {
+            int64_t inode = reply.ReadInt64();
+            if (inodeCount != nullptr) {
+                *inodeCount = inode;
+            }
             return ERR_OK;
         } else {
             return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -744,7 +753,7 @@ ErrCode InstalldProxy::GetBundleStats(const std::string &bundleName, const int32
 
 ErrCode InstalldProxy::BatchGetBundleStats(const std::vector<std::string> &bundleNames,
     const std::unordered_map<std::string, std::unordered_set<int32_t>> &uidMap,
-    std::vector<BundleStorageStats> &bundleStats)
+    std::vector<BundleStorageStats> &bundleStats, const int32_t userId)
 {
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
@@ -763,6 +772,7 @@ ErrCode InstalldProxy::BatchGetBundleStats(const std::vector<std::string> &bundl
             INSTALLD_PARCEL_WRITE(data, Int32, uid);
         }
     }
+    INSTALLD_PARCEL_WRITE(data, Int32, userId);
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
     auto ret = TransactInstalldCmd(InstalldInterfaceCode::BATCH_GET_BUNDLE_STATS, data, reply, option);
@@ -786,7 +796,8 @@ ErrCode InstalldProxy::BatchGetBundleStats(const std::vector<std::string> &bundl
     return ret;
 }
 
-ErrCode InstalldProxy::GetAllBundleStats(std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids)
+ErrCode InstalldProxy::GetAllBundleStats(std::vector<int64_t> &bundleStats,
+    const std::vector<int32_t> &uids, const std::vector<std::string> &bundleNames, const int32_t userId)
 {
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
@@ -799,6 +810,13 @@ ErrCode InstalldProxy::GetAllBundleStats(std::vector<int64_t> &bundleStats, cons
     for (const auto &uid : uids) {
         INSTALLD_PARCEL_WRITE(data, Int32, uid);
     }
+    // Parallel bundle names vector: empty for non-shared entries
+    int32_t nameSize = static_cast<int32_t>(bundleNames.size());
+    INSTALLD_PARCEL_WRITE(data, Int32, nameSize);
+    for (const auto &name : bundleNames) {
+        INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(name));
+    }
+    INSTALLD_PARCEL_WRITE(data, Int32, userId);
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
     auto ret = TransactInstalldCmd(InstalldInterfaceCode::GET_ALL_BUNDLE_STATS, data, reply, option);

@@ -296,6 +296,35 @@ public:
 
     static int64_t GetBundleInodeCount(int32_t uid);
 
+    /**
+     * @brief Get disk usage for one uid of a bundle.
+     * @param uid Indicates the uid resolved from a bundle entry.
+     * @param bundleName Indicates the bundle name for the data directories;
+     *        an empty name always takes the quota path.
+     * @param userId Indicates the user Id.
+     * @param appIndex Indicates the app index.
+     * @param dataSize Indicates the output disk usage in bytes
+     *        (st_blocks * 512 for scans, dqb_curspace for quota).
+     * @param inodeCount Indicates the optional output entry count: the
+     *        scanned entry count on the scan path, the quota inode count
+     *        (dqb_curinodes) on the quota path.
+     * @return Returns ERR_OK on success; returns
+     *         ERR_APPEXECFWK_INSTALLD_PARAM_ERROR when the data directories
+     *         cannot be resolved.
+     */
+    static ErrCode GetDiskUsageForUid(const int32_t uid, const std::string &bundleName,
+        const int32_t userId, const int32_t appIndex, int64_t &dataSize, int64_t *inodeCount = nullptr);
+
+    /**
+     * @brief Scan the data directories to get the total data size.
+     * @param paths Indicates the data directory paths to scan.
+     * @param dataSize Indicates the output total size in bytes (st_blocks * 512).
+     * @param inodeCount Indicates the output scanned entry count.
+     * @return Returns ERR_OK (walk failures degrade to partial results).
+     */
+    static ErrCode GetBundleDataStatByScan(const std::vector<std::string> &paths,
+        int64_t &dataSize, int64_t &inodeCount);
+
     static bool ScanDir(
         const std::string &dirPath, ScanMode scanMode, ResultMode resultMode, std::vector<std::string> &paths);
 
@@ -495,6 +524,18 @@ public:
      * @return Returns true if successfully; returns false otherwise.
      */
     static bool GetBundleDataDirPaths(const std::string &bundleName, const int32_t appIndex,
+        const int32_t userId, std::vector<std::string> &dataDirPaths);
+
+    /**
+     * @brief Get all app-uid-owned directory paths based on bundleName, appIndex
+     *        and userId.
+     * @param bundleName Indicates the bundle name.
+     * @param appIndex Indicates the app index.
+     * @param userId Indicates the user ID.
+     * @param dataDirPaths Output parameter containing vector of data directory paths.
+     * @return Returns true if successfully; returns false otherwise.
+     */
+    static bool GetBundleUserDataPaths(const std::string &bundleName, const int32_t appIndex,
         const int32_t userId, std::vector<std::string> &dataDirPaths);
 
     /**

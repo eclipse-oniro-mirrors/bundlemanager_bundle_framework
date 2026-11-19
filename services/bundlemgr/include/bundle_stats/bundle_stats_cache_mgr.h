@@ -18,6 +18,7 @@
 #include <atomic>
 #include <memory>
 #include <mutex>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -28,24 +29,27 @@ namespace AppExecFwk {
 
 class BundleStatsCacheMgr {
 public:
-    // Test switch: persist.bms.test.stats_cache_disabled (true = skip cache, always scan)
+    static bool GetCachedData(const std::string &bundleName, int32_t userId,
+        int32_t appIndex, BundleStatsCacheData &data);
     static bool IsCacheEnabled();
-    // Idle scan: scan all shared-uid apps and persist results
     static void ScanAllSharedUidApps(int32_t userId);
-    // Precheck: device gate + cooldown, no side effects
     static bool ShouldStartIdleScan();
-    // Lifecycle: interrupt flag for the idle scan
+    // Lifecycle cleanup
+    static void OnBundleUninstalled(const std::string &bundleName);
+    static void OnUserRemoved(int32_t userId);
     static void SetNeedStop(bool needStop);
     static bool NeedStop();
-    // -1 sentinel validity: a dim value is valid iff >= 0. Single decision
-    // point for all merge checks.
+    static bool ShouldWriteCache(int32_t uid, int32_t userId);
     static bool IsValidDim(int64_t value) { return value >= 0; }
-    // Cooldown state, exposed for unit testing the persisted-time parse
+    static void RefreshCacheAfterHit(const std::string &bundleName, int32_t userId,
+        int32_t appIndex);
+    static void PopulateCacheAfterMiss(const std::string &bundleName, int32_t userId,
+        int32_t appIndex, int32_t uid, const std::vector<int64_t> &partialStats);
     static bool IsInCooldown();
     static void MarkScanCompleted();
-    // Test support: forget the in-memory last scan time so cooldown
-    // checks start from a clean state
     static void ResetForTest();
+    static void MergeAndWriteCache(const std::string &bundleName, int32_t userId,
+        int32_t appIndex, const BundleStatsCacheData &newData);
 
 private:
     BundleStatsCacheMgr() = default;
@@ -53,6 +57,8 @@ private:
     static std::atomic<int64_t> lastScanTimeMs_;
     // protects the merge read-merge-write sequence against concurrent writers
     static std::mutex refreshMutex_;
+    static std::set<std::string> refreshInFlight_;
+    ~BundleStatsCacheMgr() = default;
     struct SharedUidEntry {
         std::string bundleName;
         int32_t appIndex;
@@ -60,14 +66,12 @@ private:
     };
     static std::shared_ptr<BundleStatsCacheRdb> GetRdb();
     static void CollectSharedUidEntries(int32_t userId, std::vector<SharedUidEntry> &entries);
-    // Scan every entry and upsert its stats; returns false when interrupted
-    // (NeedStop). Already-written entries are kept so the next idle window
-    // resumes from where this one stopped.
     static bool ScanAndUpsertEntries(int32_t userId, const std::vector<SharedUidEntry> &entries);
-    static void MergeAndWriteCache(const std::string &bundleName, int32_t userId,
-        int32_t appIndex, const BundleStatsCacheData &newData);
     static bool IsPcLikeDevice();
-    ~BundleStatsCacheMgr() = default;
+    static void RefreshCacheTask(const std::string &bundleName, int32_t userId,
+        int32_t appIndex);
+    static bool MarkRefreshInFlight(const std::string &key);
+    static void UnmarkRefreshInFlight(const std::string &key);
 };
 } // namespace AppExecFwk
 } // namespace OHOS

@@ -44,7 +44,6 @@ public:
         int32_t appIndex, const BundleStatsCacheData &data);
     bool DeleteBundle(const std::string &bundleName);
     bool DeleteUser(int32_t userId);
-    bool DeleteAll();
 
 private:
     std::shared_ptr<RdbDataManager> rdbDataManager_;

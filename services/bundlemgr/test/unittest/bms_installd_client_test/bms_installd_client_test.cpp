@@ -493,7 +493,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetBundleStats_0200, TestS
     std::vector<std::string> moduleNameList = {};
     ErrCode result = installClient_->GetBundleStats(bundleName, userId, bundleStats, uids, 0, 0);
     EXPECT_EQ(result, installClient_->CallService(&IInstalld::GetBundleStats,
-        bundleName, userId, bundleStats, uids, 0, 0, moduleNameList));
+        bundleName, userId, bundleStats, uids, 0, 0, moduleNameList, nullptr));
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_GetBundleStats_0200 end";
 }
 

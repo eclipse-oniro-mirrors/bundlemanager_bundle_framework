@@ -194,7 +194,8 @@ void BundleCacheMgr::GetBundleCacheSizeByAppIndex(const std::string &bundleName,
     return;
 }
 
-ErrCode BundleCacheMgr::GetBundleInodeCount(int32_t uid, uint64_t &inodeCount)
+ErrCode BundleCacheMgr::GetBundleInodeCount(int32_t uid, uint64_t &inodeCount,
+    const std::string &bundleName, int32_t userId, int32_t appIndex)
 {
     if (uid < 0) {
         inodeCount = 0;
@@ -203,7 +204,8 @@ ErrCode BundleCacheMgr::GetBundleInodeCount(int32_t uid, uint64_t &inodeCount)
     }
 
     uint64_t totalInodeCount = 0;
-    ErrCode ret = InstalldClient::GetInstance()->GetBundleInodeCount(uid, totalInodeCount);
+    ErrCode ret = InstalldClient::GetInstance()->GetBundleInodeCount(uid, totalInodeCount,
+        bundleName, userId, appIndex);
     if (ret != ERR_OK) {
         APP_LOGE_NOFUNC("InodeCount failed for uid %{public}d", uid);
         return ret;

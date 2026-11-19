@@ -1103,6 +1103,14 @@ public:
     virtual ErrCode GetBundleInodeCount(const std::string &bundleName, int32_t appIndex, int32_t userId,
         uint64_t &inodeCount) override;
 
+    bool VerifyInodeCountPermission(const std::string &bundleName);
+
+    bool ReadInodeCacheOnHit(const std::string &bundleName, int32_t userId, int32_t appIndex,
+        uint64_t &inodeCount);
+
+    void WriteInodeCacheAfterMiss(const std::string &bundleName, int32_t userId, int32_t appIndex,
+        int32_t uid, uint64_t inodeCount);
+
     virtual ErrCode GetAllBundleCacheStat(const sptr<IProcessCacheCallback> processCacheCallback) override;
 
     virtual ErrCode CleanAllBundleCache(const sptr<IProcessCacheCallback> processCacheCallback) override;

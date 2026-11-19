@@ -307,9 +307,14 @@ public:
      * @brief Get bundle inode count for UID.
      * @param uid The user ID of the application.
      * @param inodeCount Output parameter for inode count.
-     * @return Returns ERR_OK if get bundle inode successfully; returns error code otherwise.
+     * @param bundleName Indicates the bundle name for the scan routing.
+     * @param userId Indicates the user Id for the scan routing.
+     * @param appIndex Indicates the app index for the scan routing.
+     * @return Returns ERR_OK if get bundle inode successfully; on scan
+     *         failure returns the error.
      */
-    virtual ErrCode GetBundleInodeCount(int32_t uid, uint64_t &inodeCount)
+    virtual ErrCode GetBundleInodeCount(int32_t uid, uint64_t &inodeCount,
+        const std::string &bundleName = "", const int32_t userId = -1, const int32_t appIndex = 0)
     {
         return ERR_OK;
     }
@@ -349,19 +354,22 @@ public:
      */
     virtual ErrCode GetBundleStats(const std::string &bundleName, const int32_t userId,
         std::vector<int64_t> &bundleStats, const std::unordered_set<int32_t> &uids, const int32_t appIndex = 0,
-        const uint32_t statFlag = 0, const std::vector<std::string> &moduleNameList = {})
+        const uint32_t statFlag = 0, const std::vector<std::string> &moduleNameList = {},
+        int64_t *inodeCount = nullptr)
     {
         return ERR_OK;
     }
 
     virtual ErrCode BatchGetBundleStats(const std::vector<std::string> &bundleNames,
         const std::unordered_map<std::string, std::unordered_set<int32_t>> &uidMap,
-        std::vector<BundleStorageStats> &bundleStats)
+        std::vector<BundleStorageStats> &bundleStats, const int32_t userId = -1)
     {
         return ERR_OK;
     }
 
-    virtual ErrCode GetAllBundleStats(std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids)
+    virtual ErrCode GetAllBundleStats(std::vector<int64_t> &bundleStats,
+        const std::vector<int32_t> &uids, const std::vector<std::string> &bundleNames = {},
+        const int32_t userId = -1)
     {
         return ERR_OK;
     }
