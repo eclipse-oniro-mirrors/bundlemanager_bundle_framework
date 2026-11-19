@@ -26,6 +26,7 @@ public:
     static bool IsRelabelFeatureDisabled();
     static bool IsAppDataScanDisabled();
     static bool IsFileCategoryScanDisabled();
+    static bool IsBundleStatsScanDisabled();
 private:
     static std::string GetHigherVersionPath();
     static std::vector<int32_t> GetVersionNums(const std::string& filePath);

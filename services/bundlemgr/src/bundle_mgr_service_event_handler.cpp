@@ -458,8 +458,9 @@ void BMSEventHandler::AfterBmsStart()
 #endif
     if (OHOS::system::GetBoolParameter(ServiceConstants::BMS_RELABEL_PARAM, false) ||
         OHOS::system::GetBoolParameter(ServiceConstants::BMS_SCAN_APP_DATA_PARAM, false) ||
-        OHOS::system::GetBoolParameter(ServiceConstants::BMS_SCAN_FILE_CATEGORY_PARAM, false)) {
-        APP_LOGI_NOFUNC("relabel or scan_app_data or scan_file_category is true");
+        OHOS::system::GetBoolParameter(ServiceConstants::BMS_SCAN_FILE_CATEGORY_PARAM, false) ||
+        OHOS::system::GetBoolParameter(ServiceConstants::BMS_SCAN_BUNDLE_STATS_PARAM, false)) {
+        APP_LOGI_NOFUNC("relabel or scan_app_data or scan_file_category or scan_bundle_stats is true");
         RegisterIdleConditionEvent();
     }
     MemoryCompactor::RegisterScreenOffListener();

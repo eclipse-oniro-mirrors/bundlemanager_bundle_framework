@@ -27,6 +27,7 @@
 #include "ffrt.h"
 #include "file_ex.h"
 #include "idle_condition_mgr/idle_condition_mgr.h"
+#include "bundle_stats/bundle_stats_cache_mgr.h"
 #include "idle_condition_mgr/idle_param_util.h"
 #include "mem_mgr_client.h"
 #include "parameter.h"
@@ -74,6 +75,7 @@ void IdleConditionMgr::OnScreenLocked()
     TryStartRelabel();
     TryStartScanAppData();
     TryStartScanFileCategory();
+    TryStartScanBundleStats();
 }
 
 void IdleConditionMgr::OnScreenUnlocked()
@@ -85,6 +87,7 @@ void IdleConditionMgr::OnScreenUnlocked()
     }
     InterruptRelabel("OnScreenUnlocked called");
     InterruptScanAppData("ScanSystemAppSize OnScreenUnlocked called");
+    InterruptScanBundleStats("BundleStats OnScreenUnlocked called");
     InterruptScanFileCategory("AppFileCategory OnScreenUnlocked called");
 }
 
@@ -98,6 +101,7 @@ void IdleConditionMgr::OnUserUnlocked(const int32_t userId)
     TryStartRelabel();
     TryStartScanAppData();
     TryStartScanFileCategory();
+    TryStartScanBundleStats();
 }
 
 void IdleConditionMgr::OnUserStopping(const int32_t userId)
@@ -109,6 +113,7 @@ void IdleConditionMgr::OnUserStopping(const int32_t userId)
     }
     InterruptRelabel("OnUserStopping called");
     InterruptScanAppData("ScanSystemAppSize OnUserStopping called");
+    InterruptScanBundleStats("BundleStats OnUserStopping called");
     InterruptScanFileCategory("AppFileCategory OnUserStopping called");
 }
 
@@ -144,6 +149,7 @@ void IdleConditionMgr::OnPowerConnected()
         sharedPtr->TryStartRelabel();
         sharedPtr->TryStartScanAppData();
         sharedPtr->TryStartScanFileCategory();
+        sharedPtr->TryStartScanBundleStats();
         sharedPtr->powerConnectedThreadActive_ = false;
         APP_LOGI("power connected task done");
     };
@@ -160,6 +166,7 @@ void IdleConditionMgr::OnPowerDisconnected()
     powerConnectedThreadActive_ = false;
     InterruptRelabel("OnPowerDisconnected called");
     InterruptScanAppData("ScanSystemAppSize OnPowerDisconnected called");
+    InterruptScanBundleStats("BundleStats OnPowerDisconnected called");
     InterruptScanFileCategory("AppFileCategory OnPowerDisconnected called");
 }
 
@@ -175,12 +182,14 @@ void IdleConditionMgr::HandleOnTrim(Memory::SystemMemoryLevel level)
             TryStartRelabel();
             TryStartScanAppData();
             TryStartScanFileCategory();
+            TryStartScanBundleStats();
             break;
         case Memory::SystemMemoryLevel::MEMORY_LEVEL_LOW:
             [[fallthrough]];
         case Memory::SystemMemoryLevel::MEMORY_LEVEL_CRITICAL:
             InterruptRelabel("memory level critical");
             InterruptScanAppData("ScanSystemAppSize memory level critical");
+            InterruptScanBundleStats("BundleStats memory level critical");
             InterruptScanFileCategory("AppFileCategory memory level critical");
             break;
         default:
@@ -257,6 +266,7 @@ void IdleConditionMgr::OnBatteryChanged()
         }
         InterruptRelabel("battery capacity low");
         InterruptScanAppData("ScanSystemAppSize battery capacity low");
+        InterruptScanBundleStats("BundleStats battery capacity low");
         InterruptScanFileCategory("AppFileCategory battery capacity low");
     } else {
         {
@@ -266,6 +276,7 @@ void IdleConditionMgr::OnBatteryChanged()
         TryStartRelabel();
         TryStartScanAppData();
         TryStartScanFileCategory();
+        TryStartScanBundleStats();
     }
 }
 
@@ -276,11 +287,13 @@ void IdleConditionMgr::OnThermalLevelChanged(PowerMgr::ThermalLevel level)
         TryStartRelabel();
         TryStartScanAppData();
         TryStartScanFileCategory();
+        TryStartScanBundleStats();
     } else {
         APP_LOGD("thermal level %{public}d greater than %{public}d interrupt relabel",
             level, PowerMgr::ThermalLevel::WARM);
         InterruptRelabel("OnThermalLevelChanged called");
         InterruptScanAppData("ScanSystemAppSize OnThermalLevelChanged called");
+        InterruptScanBundleStats("BundleStats OnThermalLevelChanged called");
         InterruptScanFileCategory("AppFileCategory OnThermalLevelChanged called");
     }
 }
@@ -299,14 +312,15 @@ bool IdleConditionMgr::CheckRelabelConditions(const int32_t userId)
         userUnlocked = true;
     }
     if (userUnlocked && screenLocked_ && powerConnected_ && batterySatisfied_
-        && g_taskCounter.load() == 0 && !isScanActive_ && !isFileCategoryScanActive_) {
+        && g_taskCounter.load() == 0 && !isScanActive_ && !isFileCategoryScanActive_
+        && !isBundleStatsScanActive_) {
         return true;
     }
     APP_LOGI_NOFUNC("relabel state: -u %{public}d, %{public}d, %{public}d, %{public}d, %{public}d, %{public}d, "
-        "isScanActive=%{public}d, isFileCategoryScanActive=%{public}d",
+        "isScanActive=%{public}d, isFileCategoryScanActive=%{public}d, isBundleStatsScanActive=%{public}d",
         userId, userUnlocked, screenLocked_.load(),
         powerConnected_.load(), batterySatisfied_.load(), g_taskCounter.load(),
-        isScanActive_.load(), isFileCategoryScanActive_.load());
+        isScanActive_.load(), isFileCategoryScanActive_.load(), isBundleStatsScanActive_.load());
     return false;
 }
 
@@ -318,9 +332,10 @@ bool IdleConditionMgr::SetIsRelabeling()
         return false;
     }
     // CheckRelabelConditions released mutex_ before this, re-check the mutually exclusive tasks under the same lock
-    if (isScanActive_ || isFileCategoryScanActive_) {
-        APP_LOGI_NOFUNC("scan active, skip relabel: isScanActive=%{public}d, isFileCategoryScanActive=%{public}d",
-            isScanActive_.load(), isFileCategoryScanActive_.load());
+    if (isScanActive_ || isFileCategoryScanActive_ || isBundleStatsScanActive_) {
+        APP_LOGI_NOFUNC("scan active, skip relabel: isScanActive=%{public}d, isFileCategoryScanActive=%{public}d, "
+            "isBundleStatsScanActive=%{public}d",
+            isScanActive_.load(), isFileCategoryScanActive_.load(), isBundleStatsScanActive_.load());
         return false;
     }
     isRelabeling_ = true;
@@ -335,9 +350,10 @@ bool IdleConditionMgr::SetIsScanActive()
         return false;
     }
     // CheckScanConditions released mutex_ before this, re-check the mutually exclusive tasks under the same lock
-    if (isRelabeling_ || isFileCategoryScanActive_) {
-        APP_LOGI_NOFUNC("ScanSystemAppSize skip scan: isRelabeling=%{public}d, isFileCategoryScanActive=%{public}d",
-            isRelabeling_.load(), isFileCategoryScanActive_.load());
+    if (isRelabeling_ || isFileCategoryScanActive_ || isBundleStatsScanActive_) {
+        APP_LOGI_NOFUNC("ScanSystemAppSize skip scan: isRelabeling=%{public}d, isFileCategoryScanActive=%{public}d, "
+            "isBundleStatsScanActive=%{public}d",
+            isRelabeling_.load(), isFileCategoryScanActive_.load(), isBundleStatsScanActive_.load());
         return false;
     }
     isScanActive_ = true;
@@ -449,14 +465,15 @@ bool IdleConditionMgr::CheckScanConditions(const int32_t userId)
     }
     if (userUnlocked && screenLocked_ && powerConnected_ && batterySatisfied_
         && !monitor->IsScanning() && g_taskCounter.load() == 0 && !isRelabeling_
-        && !isFileCategoryScanActive_) {
+        && !isFileCategoryScanActive_ && !isBundleStatsScanActive_) {
         return true;
     }
     APP_LOGI("ScanSystemAppSize scan conditions not met: userId=%{public}d, userUnlocked=%{public}d, "
         "screenLocked=%{public}d, powerConnected=%{public}d, battery=%{public}d, taskCounter=%{public}d, "
-        "isRelabeling=%{public}d, isFileCategoryScanActive=%{public}d",
+        "isRelabeling=%{public}d, isFileCategoryScanActive=%{public}d, isBundleStatsScanActive=%{public}d",
         userId, userUnlocked, screenLocked_.load(), powerConnected_.load(), batterySatisfied_.load(),
-        g_taskCounter.load(), isRelabeling_.load(), isFileCategoryScanActive_.load());
+        g_taskCounter.load(), isRelabeling_.load(), isFileCategoryScanActive_.load(),
+        isBundleStatsScanActive_.load());
     return false;
 }
 
@@ -533,6 +550,21 @@ void IdleConditionMgr::StartScanAppDataTask()
     std::thread(task).detach();
 }
 
+void IdleConditionMgr::InterruptScanBundleStats(const std::string &stopReason)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (isBundleStatsScanActive_) {
+        APP_LOGI_NOFUNC("BundleStats scan interrupted: %{public}s", stopReason.c_str());
+        BundleStatsCacheMgr::SetNeedStop(true);
+    }
+}
+
+bool IdleConditionMgr::IsBundleStatsScanActive()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    return isBundleStatsScanActive_;
+}
+
 void IdleConditionMgr::InterruptScanAppData(const std::string &stopReason)
 {
     {
@@ -566,14 +598,15 @@ bool IdleConditionMgr::CheckFileCategoryScanConditions(const int32_t userId)
     }
     if (userUnlocked && screenLocked_ && powerConnected_ && batterySatisfied_
         && !monitor->IsFileCategoryScanning() && g_taskCounter.load() == 0
-        && !isRelabeling_ && !isScanActive_) {
+        && !isRelabeling_ && !isScanActive_ && !isBundleStatsScanActive_) {
         return true;
     }
     APP_LOGI_NOFUNC("AppFileCategory scan conditions not met: userId=%{public}d, userUnlocked=%{public}d, "
         "screenLocked=%{public}d, powerConnected=%{public}d, battery=%{public}d, taskCounter=%{public}d, "
-        "isRelabeling=%{public}d, isScanActive=%{public}d",
+        "isRelabeling=%{public}d, isScanActive=%{public}d, isBundleStatsScanActive=%{public}d",
         userId, userUnlocked, screenLocked_.load(), powerConnected_.load(), batterySatisfied_.load(),
-        g_taskCounter.load(), isRelabeling_.load(), isScanActive_.load());
+        g_taskCounter.load(), isRelabeling_.load(), isScanActive_.load(),
+        isBundleStatsScanActive_.load());
     return false;
 }
 
@@ -585,13 +618,128 @@ bool IdleConditionMgr::SetIsFileCategoryScanActive()
         return false;
     }
     // CheckFileCategoryScanConditions released mutex_ before this, re-check the mutually exclusive tasks
-    if (isRelabeling_ || isScanActive_) {
-        APP_LOGI_NOFUNC("AppFileCategory skip scan: isRelabeling=%{public}d, isScanActive=%{public}d",
-            isRelabeling_.load(), isScanActive_.load());
+    if (isRelabeling_ || isScanActive_ || isBundleStatsScanActive_) {
+        APP_LOGI_NOFUNC("AppFileCategory skip scan: isRelabeling=%{public}d, isScanActive=%{public}d, "
+            "isBundleStatsScanActive=%{public}d",
+            isRelabeling_.load(), isScanActive_.load(), isBundleStatsScanActive_.load());
         return false;
     }
     isFileCategoryScanActive_ = true;
     return true;
+}
+
+bool IdleConditionMgr::SetIsBundleStatsScanActive()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (isBundleStatsScanActive_) {
+        APP_LOGI_NOFUNC("BundleStats scan already active");
+        return false;
+    }
+    if (isRelabeling_ || isScanActive_ || isFileCategoryScanActive_) {
+        APP_LOGI_NOFUNC("BundleStats skip scan: isRelabeling=%{public}d, isScanActive=%{public}d, "
+            "isFileCategoryScanActive=%{public}d",
+            isRelabeling_.load(), isScanActive_.load(), isFileCategoryScanActive_.load());
+        return false;
+    }
+    // Reset the interrupt flag inside the activation lock: a late NeedStop
+    // from the previous (already finished) window can no longer land between
+    // activation and scan start and spuriously abort the new scan.
+    BundleStatsCacheMgr::SetNeedStop(false);
+    isBundleStatsScanActive_ = true;
+    return true;
+}
+
+bool IdleConditionMgr::CheckBundleStatsScanConditions(const int32_t userId)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    bool userUnlocked = false;
+    auto iter = userUnlockedMap_.find(userId);
+    if (iter != userUnlockedMap_.end() && iter->second) {
+        userUnlocked = true;
+    }
+    // NOTE: this condition is re-checked INSIDE the scan task after the
+    // activation sets isBundleStatsScanActive_ to true, so it must not
+    // contain the self flag — the self exclusion is guaranteed by
+    // SetIsBundleStatsScanActive's atomic check-and-set, the same pattern as
+    // CheckScanConditions / CheckFileCategoryScanConditions.
+    if (userUnlocked && screenLocked_ && powerConnected_ && batterySatisfied_
+        && g_taskCounter.load() == 0
+        && !isRelabeling_ && !isScanActive_ && !isFileCategoryScanActive_) {
+        return true;
+    }
+    APP_LOGI_NOFUNC("BundleStats scan conditions not met: userId=%{public}d, userUnlocked=%{public}d, "
+        "screenLocked=%{public}d, powerConnected=%{public}d, battery=%{public}d, taskCounter=%{public}d, "
+        "isRelabeling=%{public}d, isScanActive=%{public}d, isFileCategoryScanActive=%{public}d",
+        userId, userUnlocked, screenLocked_.load(), powerConnected_.load(), batterySatisfied_.load(),
+        g_taskCounter.load(), isRelabeling_.load(), isScanActive_.load(), isFileCategoryScanActive_.load());
+    return false;
+}
+
+void IdleConditionMgr::StartBundleStatsScanTask()
+{
+    std::weak_ptr<IdleConditionMgr> weakPtr = shared_from_this();
+    auto task = [weakPtr] {
+        APP_LOGI_NOFUNC("BundleStats scan task started");
+        auto sharedPtr = weakPtr.lock();
+        if (sharedPtr == nullptr) {
+            APP_LOGI_NOFUNC("BundleStats stop scan task, mgr destroyed");
+            return;
+        }
+        ScopeGuard scanActiveGuard([sharedPtr] {
+            std::lock_guard<std::mutex> lock(sharedPtr->mutex_);
+            sharedPtr->isBundleStatsScanActive_ = false;
+        });
+        int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
+        if (!sharedPtr->CheckBundleStatsScanConditions(currentUserId)) {
+            APP_LOGI_NOFUNC("BundleStats scan conditions not met in task, skip");
+            return;
+        }
+        if (!sharedPtr->IsBufferSufficient()) {
+            APP_LOGI_NOFUNC("BundleStats Buffer not sufficient in task, skip");
+            return;
+        }
+        if (!sharedPtr->IsThermalSatisfied()) {
+            APP_LOGI_NOFUNC("BundleStats Thermal not satisfied in task, skip");
+            return;
+        }
+        if (BundleStatsCacheMgr::NeedStop()) {
+            APP_LOGI_NOFUNC("BundleStats interrupted before start, skip");
+            return;
+        }
+        BundleStatsCacheMgr::ScanAllSharedUidApps(currentUserId);
+        APP_LOGI_NOFUNC("BundleStats scan task done");
+    };
+    ffrt::submit(task);
+}
+
+void IdleConditionMgr::TryStartScanBundleStats()
+{
+    if (!OHOS::system::GetBoolParameter(ServiceConstants::BMS_SCAN_BUNDLE_STATS_PARAM, false)) {
+        return;
+    }
+    if (!bundleStatsScanFeatureEnabled_.load()) {
+        return;
+    }
+    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
+    if (!CheckBundleStatsScanConditions(currentUserId)) {
+        return;
+    }
+    if (!BundleStatsCacheMgr::ShouldStartIdleScan()) {
+        return;
+    }
+    if (!IsBufferSufficient()) {
+        APP_LOGI_NOFUNC("BundleStats Buffer not sufficient for scan");
+        return;
+    }
+    if (!IsThermalSatisfied()) {
+        APP_LOGI_NOFUNC("BundleStats Thermal not satisfied for scan");
+        return;
+    }
+    if (!SetIsBundleStatsScanActive()) {
+        APP_LOGD("BundleStats SetIsBundleStatsScanActive failed");
+        return;
+    }
+    StartBundleStatsScanTask();
 }
 
 void IdleConditionMgr::TryStartScanFileCategory()
@@ -713,6 +861,13 @@ void IdleConditionMgr::ReloadParam()
     } else {
         fileCategoryScanFeatureEnabled_ = true;
         APP_LOGI_NOFUNC("AppFileCategory Scan file category scan feature enabled");
+    }
+    if (IdleParamUtil::IsBundleStatsScanDisabled()) {
+        bundleStatsScanFeatureEnabled_ = false;
+        APP_LOGI_NOFUNC("BundleStats scan feature disabled");
+    } else {
+        bundleStatsScanFeatureEnabled_ = true;
+        APP_LOGI_NOFUNC("BundleStats scan feature enabled");
     }
 }
 } // namespace AppExecFwk

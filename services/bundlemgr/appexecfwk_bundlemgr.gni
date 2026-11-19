@@ -47,6 +47,8 @@ install_daemon_sources = [
 
 bundle_install_sources = [
   "${services_path}/bundlemgr/src/ability_manager_helper.cpp",
+  "${services_path}/bundlemgr/src/bundle_stats/bundle_stats_cache_mgr.cpp",
+  "${services_path}/bundlemgr/src/bundle_stats/bundle_stats_cache_rdb.cpp",
   "${services_path}/bundlemgr/src/aot/aot_args.cpp",
   "${services_path}/bundlemgr/src/aot/aot_handler.cpp",
   "${services_path}/bundlemgr/src/app_service_fwk/app_service_fwk_installer.cpp",

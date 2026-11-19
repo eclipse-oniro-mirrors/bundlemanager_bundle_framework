@@ -6605,6 +6605,16 @@ void BundleDataMgr::CalculatePreInstalledBundleSize(const std::string& bundleNam
     }
 }
 
+bool BundleDataMgr::ScanBundleStats(const std::string &bundleName,
+    const int32_t userId, std::vector<int64_t> &bundleStats,
+    const int32_t appIndex, int32_t &uid, int64_t *inodeCount) const
+{
+    // Stub until the scan engine is available: the idle scan framework
+    // gets no data and keeps every entry unwritten.
+    uid = Constants::INVALID_UID;
+    return false;
+}
+
 ErrCode BundleDataMgr::BatchGetBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,
     std::unordered_map<std::string, std::unordered_set<int32_t>> &uidMap,
     std::vector<BundleStorageStats> &bundleStats) const
