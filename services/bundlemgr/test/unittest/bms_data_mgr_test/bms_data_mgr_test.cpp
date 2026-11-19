@@ -15757,4 +15757,121 @@ HWTEST_F(BmsDataMgrTest, GetLaunchServices_HostImpl_0003, Function | SmallTest |
     bundleMgrService->dataMgr_ = nullptr;
 }
 
+/**
+ * @tc.number: GenerateUidAndGid_AppUid_0100
+ * @tc.name: GenerateUidAndGid
+ * @tc.desc: 1. app type is system app
+ *           2. generate uid and gid then verify appUid is filled with uid
+ */
+HWTEST_F(BmsDataMgrTest, GenerateUidAndGid_AppUid_0100, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    bundleInfo.applicationInfo.name = APP_NAME;
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = BUNDLE_NAME;
+    applicationInfo.deviceId = DEVICE_ID;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    info.SetBaseBundleInfo(bundleInfo);
+    info.SetBaseApplicationInfo(applicationInfo);
+    info.SetAppType(Constants::AppType::SYSTEM_APP);
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = 0;
+    innerBundleUserInfo.bundleName = BUNDLE_NAME;
+    // Seed an already allocated uid so the SPM ON early-exit branch is covered as well:
+    // the identity keeps this uid instead of allocating from the local counter.
+    innerBundleUserInfo.uid = 20020100;
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    bool ret1 = dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::INSTALL_START);
+    bool ret2 = dataMgr->AddInnerBundleInfo(BUNDLE_NAME, info);
+    ErrCode ret3 = dataMgr->GenerateUidAndGid(innerBundleUserInfo);
+    EXPECT_TRUE(ret1);
+    EXPECT_TRUE(ret2);
+    if (BundleSpmManager::IsEnabled()) {
+        // SPM ON: the identity carries a valid uid, so the early-exit branch
+        // completes it and mirrors uid into appUid.
+        EXPECT_EQ(ret3, ERR_OK);
+    } else {
+        // SPM OFF: uid is allocated from the local counter and appUid is
+        // filled with the same value.
+        EXPECT_EQ(ret3, ERR_OK);
+    }
+    EXPECT_EQ(innerBundleUserInfo.appUid, innerBundleUserInfo.uid);
+    EXPECT_GT(innerBundleUserInfo.appUid, 0);
+
+    dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_START);
+}
+
+/**
+ * @tc.number: GenerateUidAndGid_AppUid_0200
+ * @tc.name: GenerateUidAndGid
+ * @tc.desc: 1. app type is third party app
+ *           2. generate uid and gid then verify appUid is filled with uid
+ */
+HWTEST_F(BmsDataMgrTest, GenerateUidAndGid_AppUid_0200, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    bundleInfo.applicationInfo.name = APP_NAME;
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = BUNDLE_NAME;
+    applicationInfo.deviceId = DEVICE_ID;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = 0;
+    innerBundleUserInfo.bundleName = BUNDLE_NAME;
+    // Seed an already allocated uid so the SPM ON early-exit branch is covered as well:
+    // the identity keeps this uid instead of allocating from the local counter.
+    innerBundleUserInfo.uid = 20020101;
+    info.SetBaseBundleInfo(bundleInfo);
+    info.SetBaseApplicationInfo(applicationInfo);
+    info.SetAppType(Constants::AppType::THIRD_SYSTEM_APP);
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    bool ret1 = dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::INSTALL_START);
+    bool ret2 = dataMgr->AddInnerBundleInfo(BUNDLE_NAME, info);
+    ErrCode ret3 = dataMgr->GenerateUidAndGid(innerBundleUserInfo);
+    EXPECT_TRUE(ret1);
+    EXPECT_TRUE(ret2);
+    if (BundleSpmManager::IsEnabled()) {
+        // SPM ON: the identity carries a valid uid, so the early-exit branch
+        // completes it and mirrors uid into appUid.
+        EXPECT_EQ(ret3, ERR_OK);
+    } else {
+        // SPM OFF: uid is allocated from the local counter and appUid is
+        // filled with the same value.
+        EXPECT_EQ(ret3, ERR_OK);
+    }
+    EXPECT_EQ(innerBundleUserInfo.appUid, innerBundleUserInfo.uid);
+    EXPECT_GT(innerBundleUserInfo.appUid, 0);
+
+    dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_START);
+}
+
+/**
+ * @tc.number: GenerateUidAndGid_AppUid_0400
+ * @tc.name: GenerateUidAndGid
+ * @tc.desc: 1. app type is third party app
+ *           2. test GenerateUidAndGid failed by empty params and appUid untouched
+ */
+HWTEST_F(BmsDataMgrTest, GenerateUidAndGid_AppUid_0400, Function | SmallTest | Level1)
+{
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleName = "";
+
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(USERID);
+
+    ErrCode ret = dataMgr->GenerateUidAndGid(innerBundleUserInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_BUNDLENAME_IS_EMPTY);
+    // The failure path returns before any allocation, so appUid keeps the sentinel.
+    EXPECT_EQ(innerBundleUserInfo.appUid, Constants::INVALID_UID);
+
+    dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_START);
+}
+
 } // OHOS

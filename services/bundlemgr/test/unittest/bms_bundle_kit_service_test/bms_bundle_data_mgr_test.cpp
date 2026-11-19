@@ -8604,4 +8604,53 @@ HWTEST_F(BmsBundleDataMgrTest, CheckBundleExist_UserIsolation_0100, Function | S
         "isolationDeveloper", "isolationGroup", USERID + 1, isExist));
     EXPECT_FALSE(isExist);
 }
+
+/**
+ * @tc.name: AppUid_Query
+ * @tc.desc: The allocated appUid is returned by bundle and application queries.
+ */
+HWTEST_F(BmsBundleDataMgrTest, AppUid_Query, Function | SmallTest | Level1)
+{
+    auto originalDataMgr = GetBundleDataMgr();
+    ScopeGuard restore([originalDataMgr] { bundleMgrService_->dataMgr_ = originalDataMgr; });
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    bundleMgrService_->dataMgr_ = dataMgr;
+    dataMgr->AddUserId(USERID);
+    const std::string bundleName = "com.example.appuid";
+    constexpr int32_t allocatedAppUid = 20020155;
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = bundleName;
+    info.SetApplicationBundleType(BundleType::APP);
+    info.SetDualModeCloneApp(false);
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = bundleName;
+    userInfo.bundleUserInfo.userId = USERID;
+    userInfo.uid = allocatedAppUid;
+    userInfo.appUid = allocatedAppUid;
+    info.AddInnerBundleUserInfo(userInfo);
+    info.baseBundleInfo_->name = bundleName;
+    dataMgr->bundleInfos_.emplace(bundleName, info);
+    const int32_t flags = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION);
+    BundleInfo result;
+    ASSERT_EQ(bundleMgrHostImpl_->GetBundleInfoV9(bundleName, flags, result, USERID), ERR_OK);
+    EXPECT_EQ(result.name, bundleName);
+    EXPECT_EQ(result.appUid, allocatedAppUid);
+    EXPECT_EQ(result.applicationInfo.bundleName, bundleName);
+    EXPECT_EQ(result.applicationInfo.appUid, allocatedAppUid);
+
+    BundleInfo basic;
+    ASSERT_EQ(bundleMgrHostImpl_->GetBundleInfoV9(bundleName, 0, basic, USERID), ERR_OK);
+    EXPECT_EQ(basic.name, bundleName);
+    // The top-level appUid comes from the record without any flag, while the embedded
+    // applicationInfo is only filled when GET_BUNDLE_INFO_WITH_APPLICATION is requested.
+    EXPECT_EQ(basic.appUid, allocatedAppUid);
+    EXPECT_TRUE(basic.applicationInfo.bundleName.empty());
+    EXPECT_EQ(basic.applicationInfo.appUid, Constants::INVALID_UID);
+
+    ApplicationInfo appInfo;
+    ASSERT_EQ(bundleMgrHostImpl_->GetApplicationInfoV9(bundleName,
+        static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_DEFAULT), USERID, appInfo), ERR_OK);
+    EXPECT_EQ(appInfo.bundleName, bundleName);
+    EXPECT_EQ(appInfo.appUid, allocatedAppUid);
+}
 } // OHOS

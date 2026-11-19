@@ -1129,5 +1129,125 @@ HWTEST_F(SpmModuleParserTest, GetSandboxDataDirName_0700, Function | SmallTest |
     }
 }
 
+// ============================================================
+// 10. sharedUID (app section) / deviceTypes (module section)
+// ============================================================
+
+/**
+ * @tc.name: ParseSpmModule_SharedUID_0100
+ * @tc.desc: app-level "sharedUID": true is parsed into info.sharedUID.
+ * @tc.type: FUNC
+ */
+HWTEST_F(SpmModuleParserTest, ParseSpmModule_SharedUID_0100, Function | SmallTest | Level1)
+{
+    InnerModuleInfoForSpm info;
+    ASSERT_TRUE(ParseSpmModule(
+        R"({ "app": { "bundleName": "com.test", "sharedUID": true },
+            "module": { "name": "main" } })",
+        info));
+    EXPECT_TRUE(info.sharedUID);
+}
+
+/**
+ * @tc.name: ParseSpmModule_SharedUID_0200
+ * @tc.desc: app-level "sharedUID": false is parsed into info.sharedUID.
+ * @tc.type: FUNC
+ */
+HWTEST_F(SpmModuleParserTest, ParseSpmModule_SharedUID_0200, Function | SmallTest | Level1)
+{
+    InnerModuleInfoForSpm info;
+    ASSERT_TRUE(ParseSpmModule(
+        R"({ "app": { "bundleName": "com.test", "sharedUID": false },
+            "module": { "name": "main" } })",
+        info));
+    EXPECT_FALSE(info.sharedUID);
+}
+
+/**
+ * @tc.name: ParseSpmModule_SharedUID_0300
+ * @tc.desc: Missing sharedUID resets a reused output object to the default false.
+ * @tc.type: FUNC
+ */
+HWTEST_F(SpmModuleParserTest, ParseSpmModule_SharedUID_0300, Function | SmallTest | Level1)
+{
+    InnerModuleInfoForSpm info;
+    EXPECT_FALSE(info.sharedUID);
+    info.sharedUID = true;
+    ASSERT_TRUE(ParseSpmModule(VALID_MINIMAL_JSON, info));
+    EXPECT_FALSE(info.sharedUID);
+}
+
+/**
+ * @tc.name: ParseSpmModule_SharedUID_0400_NonBoolTolerated
+ * @tc.desc: Non-boolean sharedUID values fall back to false without failing the parse.
+ * @tc.type: FUNC
+ */
+HWTEST_F(SpmModuleParserTest, ParseSpmModule_SharedUID_0400_NonBoolTolerated, Function | SmallTest | Level1)
+{
+    const std::vector<std::string> nonBoolValues = { R"("true")", "1", "null" };
+    for (const auto &value : nonBoolValues) {
+        InnerModuleInfoForSpm info;
+        std::string moduleJson = R"({ "app": { "bundleName": "com.test", "sharedUID": )" +
+            value + R"( }, "module": { "name": "main" } })";
+        EXPECT_TRUE(ParseSpmModule(moduleJson, info)) << value;
+        EXPECT_FALSE(info.sharedUID) << value;
+    }
+}
+
+/**
+ * @tc.name: ParseSpmModule_DeviceTypes_0100
+ * @tc.desc: Missing deviceTypes leaves an empty vector; a valid array is kept item by item.
+ * @tc.type: FUNC
+ */
+HWTEST_F(SpmModuleParserTest, ParseSpmModule_DeviceTypes_0100, Function | SmallTest | Level1)
+{
+    InnerModuleInfoForSpm info1;
+    EXPECT_TRUE(ParseSpmModule(VALID_MINIMAL_JSON, info1));
+    EXPECT_TRUE(info1.deviceTypes.empty());
+
+    InnerModuleInfoForSpm info2;
+    ASSERT_TRUE(ParseSpmModule(
+        R"({ "app": { "bundleName": "com.test" },
+            "module": { "name": "m", "deviceTypes": [ "2in1", "phone" ] } })",
+        info2));
+    ASSERT_EQ(info2.deviceTypes.size(), 2u);
+    EXPECT_EQ(info2.deviceTypes[0], "2in1");
+    EXPECT_EQ(info2.deviceTypes[1], "phone");
+}
+
+/**
+ * @tc.name: ParseSpmModule_DeviceTypes_0200
+ * @tc.desc: deviceTypes that is not an array should fail.
+ * @tc.type: FUNC
+ */
+HWTEST_F(SpmModuleParserTest, ParseSpmModule_DeviceTypes_0200, Function | SmallTest | Level1)
+{
+    InnerModuleInfoForSpm info;
+    EXPECT_FALSE(ParseSpmModule(
+        R"({ "app": { "bundleName": "com.test" },
+            "module": { "name": "m", "deviceTypes": "phone" } })",
+        info));
+}
+
+/**
+ * @tc.name: ParseSpmModule_DeviceTypes_0300
+ * @tc.desc: Non-string or empty deviceTypes items are skipped while valid items are kept.
+ * @tc.type: FUNC
+ */
+HWTEST_F(SpmModuleParserTest, ParseSpmModule_DeviceTypes_0300, Function | SmallTest | Level1)
+{
+    InnerModuleInfoForSpm info;
+    ASSERT_TRUE(ParseSpmModule(
+        R"({ "app": { "bundleName": "com.test" },
+            "module": {
+              "name": "m",
+              "deviceTypes": [ "2in1", 123, "", null, true, "phone" ]
+            } })",
+        info));
+    ASSERT_EQ(info.deviceTypes.size(), 2u);
+    EXPECT_EQ(info.deviceTypes[0], "2in1");
+    EXPECT_EQ(info.deviceTypes[1], "phone");
+}
+
 }  // namespace AppExecFwk
 }  // namespace OHOS
