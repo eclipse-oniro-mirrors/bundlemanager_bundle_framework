@@ -877,7 +877,7 @@ void StatusReceiverProxy::OnStatusNotify(const int32_t progress)
 
     MessageParcel data;
     MessageParcel reply;
-    MessageOption option(MessageOption::TF_SYNC);
+    MessageOption option(MessageOption::TF_ASYNC);
     if (!data.WriteInterfaceToken(StatusReceiverProxy::GetDescriptor())) {
         APP_LOGE("fail to OnStatusNotify due to write MessageParcel fail");
         return;
@@ -912,7 +912,7 @@ void StatusReceiverProxy::OnFinished(const int32_t resultCode, const std::string
     CloseStreamInstaller(streamInstallerId_);
     MessageParcel data;
     MessageParcel reply;
-    MessageOption option(MessageOption::TF_SYNC);
+    MessageOption option(MessageOption::TF_ASYNC);
     if (!data.WriteInterfaceToken(StatusReceiverProxy::GetDescriptor())) {
         APP_LOGE("fail to OnFinished due to write MessageParcel fail");
         return;

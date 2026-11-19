@@ -39,7 +39,7 @@ void GetLargestItemsCallbackProxy::OnGetLargestItemsFinished(ErrCode errCode, co
     LOG_I(BMS_TAG_QUERY, "get largest items result %{public}d", errCode);
     MessageParcel data;
     MessageParcel reply;
-    MessageOption option(MessageOption::TF_SYNC);
+    MessageOption option(MessageOption::TF_ASYNC);
     if (!data.WriteInterfaceToken(GetLargestItemsCallbackProxy::GetDescriptor())) {
         LOG_E(BMS_TAG_QUERY, "fail to OnGetLargestItemsFinished due to write MessageParcel fail");
         return;

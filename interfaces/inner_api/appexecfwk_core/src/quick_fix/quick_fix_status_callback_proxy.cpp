@@ -72,7 +72,7 @@ void QuickFixStatusCallbackProxy::OnPatchDeleted(const std::shared_ptr<QuickFixR
 bool QuickFixStatusCallbackProxy::SendTransactCmd(
     QuickFixStatusCallbackInterfaceCode code, MessageParcel &data, MessageParcel &reply)
 {
-    MessageOption option(MessageOption::TF_SYNC);
+    MessageOption option(MessageOption::TF_ASYNC);
 
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
