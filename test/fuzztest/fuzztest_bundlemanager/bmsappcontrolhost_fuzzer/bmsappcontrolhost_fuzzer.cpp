@@ -26,7 +26,7 @@
 
 using namespace OHOS::AppExecFwk;
 namespace OHOS {
-constexpr uint32_t CODE_MAX = 30;
+constexpr uint32_t CODE_MAX = 33;
 
 bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
 {
@@ -35,6 +35,11 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     MessageParcel reply;
     appControlHost.HandleAddAppInstallControlRule(datas, reply);
     appControlHost.HandleDeleteAppInstallControlRule(datas, reply);
+    appControlHost.HandleCleanAppRunningControlRule(datas, reply);
+    appControlHost.HandleGetAppRunningControlRule(datas, reply);
+    appControlHost.HandleGetAppRunningControlRuleResult(datas, reply);
+    appControlHost.HandleAddAppRunningControlRule(datas, reply);
+    appControlHost.HandleDeleteAppRunningControlRule(datas, reply);
 
     FuzzedDataProvider fdp(data, size);
     uint8_t code = fdp.ConsumeIntegralInRange<uint8_t>(0, CODE_MAX);
