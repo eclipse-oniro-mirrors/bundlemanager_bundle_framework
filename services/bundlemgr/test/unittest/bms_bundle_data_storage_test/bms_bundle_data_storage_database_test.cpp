@@ -1541,6 +1541,8 @@ protected:
                 "appPreloadPhase":0,
                 "appSignType": "none",
                 "allowListenBundleChangedEvent": [],
+                "sharedUID": false,
+                "appUid": -1,
                 "nativeChildProcessPreloadSoList": []
             },
             "baseBundleInfo": {
@@ -1605,6 +1607,7 @@ protected:
                 "targetMinorApiVersion": 1,
                 "targetPatchApiVersion": 1,
                 "uid": -1,
+                "appUid": -1,
                 "updateTime": 0,
                 "appIndex": 0,
                 "vendor": "ohos",
@@ -7674,5 +7677,203 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, AllowAutoControlIntent_PartialUpdate,
     installed.baseApplicationInfo_->allowAutoControlIntent = true;
     installed.UpdatePartialInnerBundleInfo(InnerBundleInfo());
     EXPECT_FALSE(installed.GetBaseApplicationInfo().allowAutoControlIntent);
+}
+
+/**
+ * @tc.name: AppUid_UserInfo_Persistence
+ * @tc.desc: InnerBundleUserInfo persists appUid in stored JSON and restores it on readback.
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, AppUid_UserInfo_Persistence, Function | SmallTest | Level1)
+{
+    nlohmann::json jsonObject;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = TEST_BUNDLE_NAME;
+    userInfo.uid = 12400;
+    userInfo.appUid = 12400;
+    userInfo.accessTokenId = 0;
+    userInfo.gids.push_back(0);
+    userInfo.bundleUserInfo.userId = 100;
+    to_json(jsonObject, userInfo);
+    EXPECT_EQ(jsonObject["appUid"], 12400);
+
+    InnerBundleUserInfo restored;
+    from_json(jsonObject, restored);
+    EXPECT_EQ(restored.appUid, 12400);
+}
+
+/**
+ * @tc.name: AppUid_UserInfo_OtaBackfill
+ * @tc.desc: OTA records without an appUid key mirror uid; an invalid uid keeps the default sentinel.
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, AppUid_UserInfo_OtaBackfill, Function | SmallTest | Level1)
+{
+    nlohmann::json legacyRecord;
+    legacyRecord[TEST_UID] = 12400;
+    InnerBundleUserInfo restored;
+    from_json(legacyRecord, restored);
+    EXPECT_EQ(restored.uid, 12400);
+    EXPECT_EQ(restored.appUid, 12400);
+
+    nlohmann::json invalidUidRecord;
+    invalidUidRecord[TEST_UID] = Constants::INVALID_UID;
+    InnerBundleUserInfo untouched;
+    from_json(invalidUidRecord, untouched);
+    EXPECT_EQ(untouched.uid, Constants::INVALID_UID);
+    EXPECT_EQ(untouched.appUid, Constants::INVALID_UID);
+}
+
+/**
+ * @tc.name: AppUid_InnerBundleInfo_Persistence
+ * @tc.desc: The production storage chain keeps the appUid of innerBundleUserInfos across ToJson/FromJson.
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, AppUid_InnerBundleInfo_Persistence, Function | SmallTest | Level1)
+{
+    const std::string bundleName = "com.example.appuid";
+    InnerBundleInfo source = CreateBundleInfoForBundleInfoV9Test(
+        bundleName, "entry", "entry", Constants::START_USERID, 20010001);
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = bundleName;
+    userInfo.bundleUserInfo.userId = Constants::START_USERID;
+    userInfo.uid = 20010001;
+    userInfo.appUid = 12400;
+    source.AddInnerBundleUserInfo(userInfo);
+
+    nlohmann::json stored;
+    source.ToJson(stored);
+    InnerBundleInfo restored;
+    ASSERT_EQ(restored.FromJson(stored), ERR_OK);
+    const auto &userInfos = restored.GetInnerBundleUserInfos();
+    ASSERT_EQ(userInfos.size(), 1U);
+    EXPECT_EQ(userInfos.begin()->second.appUid, 12400);
+    EXPECT_EQ(userInfos.begin()->second.uid, 20010001);
+}
+
+/**
+ * @tc.name: SharedUID_Persistence
+ * @tc.desc: Preserve the sharedUID declaration in stored JSON and read legacy records as false.
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, SharedUID_Persistence, Function | SmallTest | Level1)
+{
+    const std::string bundleName = "com.example.shareduid";
+    InnerBundleInfo source = CreateBundleInfoForBundleInfoV9Test(
+        bundleName, "entry", "entry", Constants::START_USERID, 20010001);
+    source.baseApplicationInfo_->sharedUID = true;
+    nlohmann::json stored;
+    source.ToJson(stored);
+    ASSERT_TRUE(stored["baseApplicationInfo"]["sharedUID"].get<bool>());
+    InnerBundleInfo restored;
+    ASSERT_EQ(restored.FromJson(stored), ERR_OK);
+    EXPECT_TRUE(restored.GetBaseApplicationInfo().sharedUID);
+
+    stored["baseApplicationInfo"].erase("sharedUID");
+    ASSERT_EQ(restored.FromJson(stored), ERR_OK);
+    EXPECT_FALSE(restored.GetBaseApplicationInfo().sharedUID);
+    EXPECT_EQ(restored.GetBundleName(), bundleName);
+}
+
+/**
+ * @tc.name: SharedUID_Update
+ * @tc.desc: Updating to false or an absent declaration replaces the old true value.
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, SharedUID_Update, Function | SmallTest | Level1)
+{
+    InnerBundleInfo installed;
+    InnerBundleInfo incoming;
+    incoming.baseApplicationInfo_->sharedUID = true;
+    installed.UpdateBaseApplicationInfo(incoming);
+    ASSERT_TRUE(installed.GetBaseApplicationInfo().sharedUID);
+    incoming.baseApplicationInfo_->sharedUID = false;
+    installed.UpdateBaseApplicationInfo(incoming);
+    EXPECT_FALSE(installed.GetBaseApplicationInfo().sharedUID);
+    installed.baseApplicationInfo_->sharedUID = true;
+    installed.UpdateBaseApplicationInfo(InnerBundleInfo());
+    EXPECT_FALSE(installed.GetBaseApplicationInfo().sharedUID);
+}
+
+/**
+ * @tc.name: SharedUID_PartialUpdate
+ * @tc.desc: Partial refresh copies the sharedUID declaration, including the default false.
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, SharedUID_PartialUpdate, Function | SmallTest | Level1)
+{
+    InnerBundleInfo installed;
+    InnerModuleInfo entry;
+    entry.isEntry = true;
+    installed.InsertInnerModuleInfo("entry", entry);
+
+    InnerBundleInfo refreshed;
+    refreshed.baseApplicationInfo_->sharedUID = true;
+    installed.UpdatePartialInnerBundleInfo(refreshed);
+    ASSERT_TRUE(installed.GetBaseApplicationInfo().sharedUID);
+
+    refreshed.baseApplicationInfo_->sharedUID = false;
+    installed.UpdatePartialInnerBundleInfo(refreshed);
+    EXPECT_FALSE(installed.GetBaseApplicationInfo().sharedUID);
+
+    installed.baseApplicationInfo_->sharedUID = true;
+    installed.UpdatePartialInnerBundleInfo(InnerBundleInfo());
+    EXPECT_FALSE(installed.GetBaseApplicationInfo().sharedUID);
+}
+
+/**
+ * @tc.name: AppUid_CloneInfo_RoundTrip
+ * @tc.desc: InnerBundleCloneInfo round-trips appUid with the 0 sentinel and mirrors uid only for legacy records.
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, AppUid_CloneInfo_RoundTrip, Function | SmallTest | Level1)
+{
+    nlohmann::json cloneJson;
+    InnerBundleCloneInfo cloneInfo;
+    cloneInfo.uid = 13500;
+    cloneInfo.appUid = 13500;
+    to_json(cloneJson, cloneInfo);
+    EXPECT_EQ(cloneJson["appUid"], 13500);
+    InnerBundleCloneInfo restored;
+    from_json(cloneJson, restored);
+    EXPECT_EQ(restored.appUid, 13500);
+
+    nlohmann::json legacyCloneJson;
+    legacyCloneJson[TEST_UID] = 13600;
+    InnerBundleCloneInfo backfilled;
+    from_json(legacyCloneJson, backfilled);
+    EXPECT_EQ(backfilled.uid, 13600);
+    EXPECT_EQ(backfilled.appUid, 13600);
+
+    nlohmann::json invalidUidCloneJson;
+    invalidUidCloneJson[TEST_UID] = 0;
+    InnerBundleCloneInfo untouched;
+    from_json(invalidUidCloneJson, untouched);
+    EXPECT_EQ(untouched.uid, 0);
+    EXPECT_EQ(untouched.appUid, 0);
+}
+
+/**
+ * @tc.name: AppUid_CliSandboxInfo_RoundTrip
+ * @tc.desc: InnerCliSandboxInfo round-trips appUid with the 0 sentinel and mirrors uid only for legacy records.
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, AppUid_CliSandboxInfo_RoundTrip, Function | SmallTest | Level1)
+{
+    nlohmann::json sandboxJson;
+    InnerCliSandboxInfo sandboxInfo;
+    sandboxInfo.uid = 14500;
+    sandboxInfo.appUid = 14500;
+    to_json(sandboxJson, sandboxInfo);
+    EXPECT_EQ(sandboxJson["appUid"], 14500);
+    InnerCliSandboxInfo restored;
+    from_json(sandboxJson, restored);
+    EXPECT_EQ(restored.appUid, 14500);
+
+    nlohmann::json legacySandboxJson;
+    legacySandboxJson[TEST_UID] = 14600;
+    InnerCliSandboxInfo backfilled;
+    from_json(legacySandboxJson, backfilled);
+    EXPECT_EQ(backfilled.uid, 14600);
+    EXPECT_EQ(backfilled.appUid, 14600);
+
+    nlohmann::json invalidUidSandboxJson;
+    invalidUidSandboxJson[TEST_UID] = 0;
+    InnerCliSandboxInfo untouched;
+    from_json(invalidUidSandboxJson, untouched);
+    EXPECT_EQ(untouched.uid, 0);
+    EXPECT_EQ(untouched.appUid, 0);
 }
 } // OHOS
