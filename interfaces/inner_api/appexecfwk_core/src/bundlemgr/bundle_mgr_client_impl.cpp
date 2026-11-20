@@ -668,6 +668,10 @@ ErrCode BundleMgrClientImpl::GetAllBundleDirs(int32_t userId, std::vector<Bundle
 
 ErrCode BundleMgrClientImpl::RegisterDeathRecipient()
 {
+    if (bundleMgr_ == nullptr) {
+        APP_LOGE("bundleMgr_ is null");
+        return ERR_APPEXECFWK_SERVICE_NOT_CONNECTED;
+    }
     std::weak_ptr<BundleMgrClientImpl> weakPtr = shared_from_this();
     auto deathCallback = [weakPtr](const wptr<IRemoteObject>& object) {
         auto sharedPtr = weakPtr.lock();
@@ -675,7 +679,8 @@ ErrCode BundleMgrClientImpl::RegisterDeathRecipient()
             sharedPtr->OnDeath();
         }
     };
-    deathRecipient_ = new (std::nothrow) BundleMgrServiceDeathRecipient(deathCallback);
+    deathRecipient_ = sptr<BundleMgrServiceDeathRecipient>(
+        new (std::nothrow) BundleMgrServiceDeathRecipient(deathCallback));
     if (deathRecipient_ == nullptr) {
         APP_LOGE("failed to create death recipient");
         return ERR_APPEXECFWK_SERVICE_NOT_CONNECTED;
