@@ -666,6 +666,30 @@ ErrCode BundleMgrClientImpl::GetAllBundleDirs(int32_t userId, std::vector<Bundle
     return bundleMgr_->GetAllBundleDirs(userId, bundleDirs);
 }
 
+ErrCode BundleMgrClientImpl::RegisterDeathRecipient()
+{
+    std::weak_ptr<BundleMgrClientImpl> weakPtr = shared_from_this();
+    auto deathCallback = [weakPtr](const wptr<IRemoteObject>& object) {
+        auto sharedPtr = weakPtr.lock();
+        if (sharedPtr != nullptr) {
+            sharedPtr->OnDeath();
+        }
+    };
+    deathRecipient_ = new (std::nothrow) BundleMgrServiceDeathRecipient(deathCallback);
+    if (deathRecipient_ == nullptr) {
+        APP_LOGE("failed to create death recipient");
+        return ERR_APPEXECFWK_SERVICE_NOT_CONNECTED;
+    }
+    if ((bundleMgr_->AsObject()->IsProxyObject()) &&
+        (!bundleMgr_->AsObject()->AddDeathRecipient(deathRecipient_))) {
+        APP_LOGE("failed to add death recipient");
+        bundleMgr_ = nullptr;
+        deathRecipient_ = nullptr;
+        return ERR_APPEXECFWK_SERVICE_NOT_CONNECTED;
+    }
+    return ERR_OK;
+}
+
 ErrCode BundleMgrClientImpl::Connect()
 {
     APP_LOGD("connect begin");
@@ -683,15 +707,10 @@ ErrCode BundleMgrClientImpl::Connect()
             APP_LOGE_NOFUNC("get bms sa failed");
             return ERR_APPEXECFWK_SERVICE_NOT_CONNECTED;
         }
-        std::weak_ptr<BundleMgrClientImpl> weakPtr = shared_from_this();
-        auto deathCallback = [weakPtr](const wptr<IRemoteObject>& object) {
-            auto sharedPtr = weakPtr.lock();
-            if (sharedPtr != nullptr) {
-                sharedPtr->OnDeath();
-            }
-        };
-        deathRecipient_ = new (std::nothrow) BundleMgrServiceDeathRecipient(deathCallback);
-        bundleMgr_->AsObject()->AddDeathRecipient(deathRecipient_);
+        ErrCode ret = RegisterDeathRecipient();
+        if (ret != ERR_OK) {
+            return ret;
+        }
     }
     APP_LOGD("connect end");
     return ERR_OK;
@@ -714,15 +733,10 @@ ErrCode BundleMgrClientImpl::ConnectInstaller()
             APP_LOGE_NOFUNC("get bms sa failed");
             return ERR_APPEXECFWK_SERVICE_NOT_CONNECTED;
         }
-        std::weak_ptr<BundleMgrClientImpl> weakPtr = shared_from_this();
-        auto deathCallback = [weakPtr](const wptr<IRemoteObject>& object) {
-            auto sharedPtr = weakPtr.lock();
-            if (sharedPtr != nullptr) {
-                sharedPtr->OnDeath();
-            }
-        };
-        deathRecipient_ = new (std::nothrow) BundleMgrServiceDeathRecipient(deathCallback);
-        bundleMgr_->AsObject()->AddDeathRecipient(deathRecipient_);
+        ErrCode ret = RegisterDeathRecipient();
+        if (ret != ERR_OK) {
+            return ret;
+        }
     }
 
     if (bundleInstaller_ == nullptr) {
