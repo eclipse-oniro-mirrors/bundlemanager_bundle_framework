@@ -910,6 +910,62 @@ ErrCode BmsExtensionDataMgr::ConvertShortcutInfosErrCode(ErrCode ret)
     }
 }
 
+ErrCode BmsExtensionDataMgr::ConvertAddDesktopShortcutErrCode(ErrCode ret)
+{
+    switch (ret) {
+        case ERR_BUNDLE_MANAGER_EXTENSION_PERMISSION_DENIED:
+            return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+        case ERR_BUNDLE_MANAGER_EXTENSION_PARCEL_FAILED:
+        case ERR_BUNDLE_MANAGER_EXTENSION_INVALID_PARAM:
+        case ERR_BUNDLE_MANAGER_EXTENSION_SHORTCUT_UPDATE_FAIL:
+            return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+        case ERR_BUNDLE_MANAGER_EXTENSION_INVALID_USER_ID:
+            return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+        case ERR_BUNDLE_MANAGER_EXTENSION_BUNDLE_NOT_EXIST:
+            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+        default:
+            LOG_E(BMS_TAG_EXT, "Unknown extension error code: %{public}d, return param error", ret);
+            return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+}
+
+ErrCode BmsExtensionDataMgr::ConvertDeleteDesktopShortcutErrCode(ErrCode ret)
+{
+    switch (ret) {
+        case ERR_BUNDLE_MANAGER_EXTENSION_PERMISSION_DENIED:
+            return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+        case ERR_BUNDLE_MANAGER_EXTENSION_PARCEL_FAILED:
+        case ERR_BUNDLE_MANAGER_EXTENSION_INVALID_PARAM:
+        case ERR_BUNDLE_MANAGER_EXTENSION_SHORTCUT_DELETE_FAIL:
+        case ERR_BUNDLE_MANAGER_EXTENSION_SHORTCUT_NOT_EXIST:
+            return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+        case ERR_BUNDLE_MANAGER_EXTENSION_INVALID_USER_ID:
+            return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+        default:
+            LOG_E(BMS_TAG_EXT, "Unknown extension error code: %{public}d, return param error", ret);
+            return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+}
+
+ErrCode BmsExtensionDataMgr::ConvertGetAllDesktopShortcutErrCode(ErrCode ret)
+{
+    switch (ret) {
+        case ERR_BUNDLE_MANAGER_EXTENSION_PERMISSION_DENIED:
+            return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+        case ERR_BUNDLE_MANAGER_EXTENSION_PARCEL_FAILED:
+            return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+        case ERR_BUNDLE_MANAGER_EXTENSION_INVALID_USER_ID:
+            return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+        case ERR_BUNDLE_MANAGER_EXTENSION_QUERY_EMPTY:
+            // BMSExt returns QUERY_EMPTY when the result set is empty.
+            // Convert it to ERR_OK so the result can be merged with the outer query result.
+            return ERR_OK;
+        default:
+            LOG_E(BMS_TAG_EXT, "Unknown extension error code: %{public}d, return param error", ret);
+            return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+}
+
 ErrCode BmsExtensionDataMgr::GetShortcutInfos(const std::string &bundleName, int32_t userId,
     std::vector<ShortcutInfo> &shortcutInfos)
 {
@@ -963,7 +1019,7 @@ ErrCode BmsExtensionDataMgr::GetAllDesktopShortcutInfos(int32_t userId, std::vec
     ErrCode ret = bundleMgrExtPtr->GetAllDesktopShortcutInfos(userId, shortcutInfos);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_EXT, "GetAllDesktopShortcutInfos from ext failed, ret:%{public}d", ret);
-        ret = ConvertShortcutInfosErrCode(ret);
+        ret = ConvertGetAllDesktopShortcutErrCode(ret);
     }
     return ret;
 }
@@ -995,7 +1051,7 @@ ErrCode BmsExtensionDataMgr::AddDesktopShortcutInfo(const ShortcutInfo &shortcut
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_EXT, "AddDesktopShortcutInfo from ext failed, bundleName:%{public}s, ret:%{public}d",
             shortcutInfo.bundleName.c_str(), ret);
-        ret = ConvertShortcutInfosErrCode(ret);
+        ret = ConvertAddDesktopShortcutErrCode(ret);
     }
     return ret;
 }
@@ -1027,7 +1083,7 @@ ErrCode BmsExtensionDataMgr::DeleteDesktopShortcutInfo(const ShortcutInfo &short
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_EXT, "DeleteDesktopShortcutInfo from ext failed, bundleName:%{public}s, ret:%{public}d",
             shortcutInfo.bundleName.c_str(), ret);
-        ret = ConvertShortcutInfosErrCode(ret);
+        ret = ConvertDeleteDesktopShortcutErrCode(ret);
     }
     return ret;
 }

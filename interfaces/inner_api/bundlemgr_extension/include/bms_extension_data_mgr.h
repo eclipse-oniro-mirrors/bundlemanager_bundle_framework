@@ -113,9 +113,21 @@ private:
     // Last synced: 2026-10-20. Contact BMSExt owner before modifying.
     static constexpr ErrCode ERR_BUNDLE_MANAGER_EXTENSION_INVALID_PARAM = 8585217;
     static constexpr ErrCode ERR_BUNDLE_MANAGER_EXTENSION_PERMISSION_DENIED = 8585218;
+    static constexpr ErrCode ERR_BUNDLE_MANAGER_EXTENSION_PARCEL_FAILED = 8585219;
+    static constexpr ErrCode ERR_BUNDLE_MANAGER_EXTENSION_SHORTCUT_DELETE_FAIL = 8585415;
+    static constexpr ErrCode ERR_BUNDLE_MANAGER_EXTENSION_SHORTCUT_UPDATE_FAIL = 8585416;
+    static constexpr ErrCode ERR_BUNDLE_MANAGER_EXTENSION_BUNDLE_NOT_EXIST = 8585601;
+    static constexpr ErrCode ERR_BUNDLE_MANAGER_EXTENSION_QUERY_EMPTY = 8585602;
     static constexpr ErrCode ERR_BUNDLE_MANAGER_EXTENSION_INVALID_USER_ID = 8585605;
+    static constexpr ErrCode ERR_BUNDLE_MANAGER_EXTENSION_SHORTCUT_NOT_EXIST = 8585612;
 
     ErrCode ConvertShortcutInfosErrCode(ErrCode ret);
+
+    // Convert BMSExt error codes to inner error codes for each desktop shortcut interface.
+    // Unknown BMSExt error codes are converted to ERR_BUNDLE_MANAGER_PARAM_ERROR (ets 401).
+    ErrCode ConvertAddDesktopShortcutErrCode(ErrCode ret);
+    ErrCode ConvertDeleteDesktopShortcutErrCode(ErrCode ret);
+    ErrCode ConvertGetAllDesktopShortcutErrCode(ErrCode ret);
 
     bool OpenHandler();
     static void *handler_;
