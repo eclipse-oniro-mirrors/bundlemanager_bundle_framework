@@ -27,6 +27,7 @@ constexpr const char* APP_DISALLOWED_RUN = "AppDisallowedRun";
 
 constexpr const char* EDM_CALLING = "edm";
 constexpr int32_t FOUNDATION_UID = 5523;
+constexpr int32_t SUBFOUNDATION_UID = 6603;
 constexpr int32_t EDM_UID = 3057;
 constexpr int32_t LIST_MAX_SIZE = 1024;
 }

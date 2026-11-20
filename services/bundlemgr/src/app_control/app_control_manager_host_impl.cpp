@@ -808,7 +808,8 @@ ErrCode AppControlManagerHostImpl::GetAbilityRunningControlRule(const std::strin
     std::vector<DisposedRule>& disposedRules, int32_t appIndex)
 {
     int32_t uid = OHOS::IPCSkeleton::GetCallingUid();
-    if (uid != AppControlConstants::FOUNDATION_UID) {
+    if (uid != AppControlConstants::FOUNDATION_UID ||
+        uid != AppControlConstants::SUBFOUNDATION_UID) {
         LOG_E(BMS_TAG_DEFAULT, "uid:%{public}d is forbidden", uid);
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
