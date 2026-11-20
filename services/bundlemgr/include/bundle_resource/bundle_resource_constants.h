@@ -30,6 +30,7 @@ constexpr const char* BUNDLE_RESOURCE_BACKUP_RDB_NAME = "/bundleResource_slave.d
 constexpr const char* BMS_BACKUP_RDB_NAME = "/bms-backup.db";
 // resource table name
 constexpr const char* BUNDLE_RESOURCE_RDB_TABLE_NAME = "bundleResource";
+constexpr const char* THEME_TIMESTAMP_RDB_TABLE_NAME = "themeTimestamp";
 constexpr const char* BUNDLE_ICON_RESOURCE_RDB_TABLE_NAME = "bundleIconResource";
 constexpr const char* UINSTALL_BUNDLE_RESOURCE_RDB = "uninstallBundleResource";
 constexpr const char* PRE_COMPRESS_BUNDLE_RESOURCE_RDB = "preCompressBundleResource";
@@ -41,6 +42,7 @@ constexpr const char* EXTENSION_ABILITY_SEPARATOR = "+";
 constexpr const char* VERSION_CODE = "VERSION_CODE";
 constexpr const char* NAME = "NAME";
 constexpr const char* USER_ID = "USER_ID";
+constexpr const char* TIMESTAMP = "TIMESTAMP";
 constexpr const char* ICON_TYPE = "ICON_TYPE";
 constexpr const char* UPDATE_TIME = "UPDATE_TIME";
 constexpr const char* LABEL = "LABEL";

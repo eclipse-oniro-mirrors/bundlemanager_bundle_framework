@@ -463,4 +463,110 @@ HWTEST_F(BundleResourceProxyTest, GetLauncherAbilityResourceInfoList_0100, Funct
     EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
 }
 }
+
+namespace AppExecFwk {
+namespace {
+constexpr int COMPLETE_REPLY_FIELD_COUNT = 2;
+}
+class ThemeTimestampReplyStub : public IRemoteStub<IBundleResource> {
+public:
+    int OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override
+    {
+        EXPECT_EQ(code, static_cast<uint32_t>(BundleResourceInterfaceCode::GET_THEME_TIMESTAMP));
+        EXPECT_EQ(data.ReadInterfaceToken(), IBundleResource::GetDescriptor());
+        EXPECT_EQ(data.ReadInt32(), userId_);
+        if (transportResult_ != ERR_OK || fields_ == 0) {
+            return transportResult_;
+        }
+        reply.WriteInt32(result_);
+        if (fields_ >= COMPLETE_REPLY_FIELD_COUNT) {
+            if (truncateTimestamp_) {
+                reply.WriteInt32(INT32_MAX);
+            } else {
+                reply.WriteInt64(timestamp_);
+            }
+        }
+        return ERR_OK;
+    }
+
+    int32_t userId_ = Constants::START_USERID;
+    int fields_ = COMPLETE_REPLY_FIELD_COUNT;
+    ErrCode result_ = ERR_OK;
+    ErrCode transportResult_ = ERR_OK;
+    bool truncateTimestamp_ = false;
+    int64_t timestamp_ = 1794614400123LL;
+};
+
+HWTEST_F(BundleResourceProxyTest, ThemeTimestamp_ValidAndNoRecord, TestSize.Level1)
+{
+    sptr<ThemeTimestampReplyStub> stub = new ThemeTimestampReplyStub();
+    BundleResourceProxy proxy(stub->AsObject());
+    const int64_t timestamps[] = {0, 2147483648LL, 1794614400123LL, 9223372036854775807LL, -1};
+    for (const auto &value : timestamps) {
+        stub->timestamp_ = value;
+        int64_t timestamp = 1234;
+        ASSERT_EQ(proxy.GetThemeTimestamp(Constants::START_USERID, timestamp), ERR_OK);
+        EXPECT_EQ(timestamp, value);
+    }
+}
+
+HWTEST_F(BundleResourceProxyTest, ThemeTimestamp_ForwardsUserId, TestSize.Level1)
+{
+    sptr<ThemeTimestampReplyStub> stub = new ThemeTimestampReplyStub();
+    BundleResourceProxy proxy(stub->AsObject());
+    const int32_t userIds[] = {Constants::START_USERID, Constants::START_USERID + 1};
+    for (const int32_t userId : userIds) {
+        stub->userId_ = userId;
+        int64_t timestamp = -1;
+        EXPECT_EQ(proxy.GetThemeTimestamp(userId, timestamp), ERR_OK);
+    }
+}
+
+HWTEST_F(BundleResourceProxyTest, ThemeTimestamp_PermissionErrors, TestSize.Level1)
+{
+    sptr<ThemeTimestampReplyStub> stub = new ThemeTimestampReplyStub();
+    BundleResourceProxy proxy(stub->AsObject());
+    const ErrCode errors[] = {ERR_BUNDLE_MANAGER_PERMISSION_DENIED, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED};
+    for (const auto error : errors) {
+        stub->result_ = error;
+        int64_t timestamp = 1234;
+        EXPECT_EQ(proxy.GetThemeTimestamp(Constants::START_USERID, timestamp), error);
+        EXPECT_EQ(timestamp, -1);
+    }
+}
+
+HWTEST_F(BundleResourceProxyTest, ThemeTimestamp_IncompleteReply, TestSize.Level1)
+{
+    sptr<ThemeTimestampReplyStub> stub = new ThemeTimestampReplyStub();
+    BundleResourceProxy proxy(stub->AsObject());
+    for (int fields = 0; fields < COMPLETE_REPLY_FIELD_COUNT; ++fields) {
+        stub->fields_ = fields;
+        int64_t timestamp = 1234;
+        EXPECT_EQ(proxy.GetThemeTimestamp(Constants::START_USERID, timestamp), ERR_APPEXECFWK_PARCEL_ERROR);
+        EXPECT_EQ(timestamp, -1);
+    }
+}
+
+HWTEST_F(BundleResourceProxyTest, ThemeTimestamp_TruncatedInt64, TestSize.Level1)
+{
+    sptr<ThemeTimestampReplyStub> stub = new ThemeTimestampReplyStub();
+    stub->truncateTimestamp_ = true;
+    BundleResourceProxy proxy(stub->AsObject());
+    int64_t timestamp = 1234;
+    EXPECT_EQ(proxy.GetThemeTimestamp(Constants::START_USERID, timestamp), ERR_APPEXECFWK_PARCEL_ERROR);
+    EXPECT_EQ(timestamp, -1);
+}
+
+HWTEST_F(BundleResourceProxyTest, ThemeTimestamp_TransportError, TestSize.Level1)
+{
+    sptr<ThemeTimestampReplyStub> stub = new ThemeTimestampReplyStub();
+    stub->transportResult_ = ERR_INVALID_OPERATION;
+    BundleResourceProxy proxy(stub->AsObject());
+    int64_t timestamp = 1234;
+    EXPECT_EQ(proxy.GetThemeTimestamp(Constants::START_USERID, timestamp), ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
+    EXPECT_EQ(timestamp, -1);
+}
+
+} // namespace AppExecFwk
+
 }

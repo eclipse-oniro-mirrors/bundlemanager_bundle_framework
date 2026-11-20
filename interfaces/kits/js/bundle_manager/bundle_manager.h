@@ -51,6 +51,14 @@ public:
     void OnReceiveEvent(const EventFwk::CommonEventData &data) override;
     static void HandleCleanEnv(void *data);
 };
+napi_value GetThemeRefreshTime(napi_env env, napi_callback_info info);
+
+struct ThemeRefreshTimeCallbackInfo : public BaseCallbackInfo {
+    explicit ThemeRefreshTimeCallbackInfo(napi_env env) : BaseCallbackInfo(env) {}
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    std::string refreshTime;
+};
+
 struct GetBundleArchiveInfoCallbackInfo : public BaseCallbackInfo {
     explicit GetBundleArchiveInfoCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
 

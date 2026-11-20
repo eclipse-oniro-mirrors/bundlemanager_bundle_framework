@@ -22,6 +22,8 @@ namespace OHOS {
 namespace AppExecFwk {
 class BundleResourceHostImpl : public BundleResourceHost {
 public:
+
+    ErrCode GetThemeTimestamp(int32_t userId, int64_t &timestamp) override;
     BundleResourceHostImpl() = default;
     virtual ~BundleResourceHostImpl() = default;
 

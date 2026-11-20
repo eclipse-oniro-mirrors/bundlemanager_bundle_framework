@@ -449,6 +449,20 @@ void BundleResourceHelper::DeleteUninstallBundleResourceForUser(const int32_t us
 #endif
 }
 
+void BundleResourceHelper::DeleteThemeTimestamp(int32_t userId)
+{
+#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    if (manager == nullptr) {
+        APP_LOGE("failed, manager is nullptr");
+        return;
+    }
+    if (!manager->DeleteThemeTimestamp(userId)) {
+        APP_LOGE("delete theme timestamp failed, userId: %{public}d", userId);
+    }
+#endif
+}
+
 bool BundleResourceHelper::MigrateUninstallBundleResource()
 {
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE

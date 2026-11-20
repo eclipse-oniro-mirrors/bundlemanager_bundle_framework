@@ -54,6 +54,28 @@
 #include "string_wrapper.h"
 namespace OHOS {
 namespace AppExecFwk {
+
+static ani_string GetThemeRefreshTimeNative(ani_env *env)
+{
+    APP_LOGD("ani GetThemeRefreshTimeNative called");
+    std::string refreshTime;
+    int32_t userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    ErrCode result = BundleManagerHelper::InnerGetThemeRefreshTime(userId, refreshTime);
+    if (result != ERR_OK) {
+        APP_LOGE("InnerGetThemeRefreshTime failed, errCode: %{public}d", result);
+        BusinessErrorAni::ThrowCommonError(env, result, GET_THEME_REFRESH_TIME, GET_THEME_REFRESH_TIME_PERMISSION);
+        return nullptr;
+    }
+    ani_string value = nullptr;
+    if (!CommonFunAni::StringToAniStr(env, refreshTime, value)) {
+        APP_LOGE("StringToAniStr failed, errCode: %{public}d", ERROR_BUNDLE_SERVICE_EXCEPTION);
+        BusinessErrorAni::ThrowCommonError(env, ERROR_BUNDLE_SERVICE_EXCEPTION,
+            GET_THEME_REFRESH_TIME, GET_THEME_REFRESH_TIME_PERMISSION);
+        return nullptr;
+    }
+    return value;
+}
+
 namespace {
 static ani_vm* g_vm;
 static std::mutex g_aniClearCacheListenerMutex;
@@ -2900,6 +2922,8 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
             reinterpret_cast<void*>(FilterBundleListByDeviceModeDistributionPoliciesNative) },
         ani_native_function { "getCloneMaxCountNative", nullptr,
             reinterpret_cast<void*>(GetCloneMaxCountNative) },
+        ani_native_function { "getThemeRefreshTimeNative", nullptr,
+            reinterpret_cast<void*>(GetThemeRefreshTimeNative) },
         ani_native_function { "getBundleExtensionPolicyInfoNative", nullptr,
             reinterpret_cast<void*>(GetBundleExtensionPolicyInfoNative) },
     };

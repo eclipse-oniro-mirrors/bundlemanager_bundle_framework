@@ -34,6 +34,8 @@ public:
     explicit BundleResourceProxy(const sptr<IRemoteObject>& object);
     virtual ~BundleResourceProxy() = default;
 
+    ErrCode GetThemeTimestamp(int32_t userId, int64_t &timestamp) override;
+
     virtual ErrCode GetBundleResourceInfo(const std::string &bundleName, const uint32_t flags,
         BundleResourceInfo &bundleResourceInfo, const int32_t appIndex = 0) override;
 

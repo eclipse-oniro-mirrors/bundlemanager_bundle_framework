@@ -464,6 +464,7 @@ enum class BundleResourceInterfaceCode : uint8_t {
     GET_EXTENSION_ABILITY_RESOURCE_INFO = 7,
     GET_ALL_UNINSTALL_BUNDLE_RESOURCE_INFO = 8,
     GET_LAUNCHER_ABILITY_RESOURCE_INFO_LIST = 9,
+    GET_THEME_TIMESTAMP = 10,
 };
 
 /* SAID: 401-233 Interface No.233 subservice also provides the following interfaces */

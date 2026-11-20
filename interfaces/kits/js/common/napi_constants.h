@@ -23,6 +23,8 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
+constexpr const char* GET_THEME_REFRESH_TIME = "getThemeRefreshTime";
+constexpr const char* GET_THEME_REFRESH_TIME_PERMISSION = "ohos.permission.GET_BUNDLE_RESOURCES";
 constexpr size_t ARGS_SIZE_ZERO = 0;
 constexpr size_t ARGS_SIZE_ONE = 1;
 constexpr size_t ARGS_SIZE_TWO = 2;

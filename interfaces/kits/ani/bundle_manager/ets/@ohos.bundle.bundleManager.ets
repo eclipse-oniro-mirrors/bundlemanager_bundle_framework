@@ -2117,6 +2117,23 @@ namespace bundleManager {
   function getBundleExtensionPolicyInfo(bundleName: string, userId: int): BundleExtensionPolicyInfo {
     return getBundleExtensionPolicyInfoNative(bundleName, userId);
   }
+  native function getThemeRefreshTimeNative(): string;
+
+  function getThemeRefreshTime(): Promise<string> {
+    let p = new Promise<string>((resolve: (value: string) => void, reject: (error: BusinessError) => void) => {
+      let execFun = (): string => {
+        return getThemeRefreshTimeNative();
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((e: Any) => {
+        resolve(e as string);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
+      });
+    });
+    return p;
+  }
+
 }
 
 export default bundleManager;

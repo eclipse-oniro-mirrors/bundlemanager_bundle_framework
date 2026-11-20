@@ -156,7 +156,7 @@ public:
         const std::string &bundleName, bool isEnableDynamicIcon, int32_t userId, int32_t appIndex,
         const DynamicIconType type);
     void NotifyUninstalledBundleCleared(const NotifyBundleEvents &installResult);
-    void NotifyBundleResourcesChanged(const int32_t userId, const uint32_t type);
+    void NotifyBundleResourcesChanged(const int32_t userId, const uint32_t type, int64_t themeTimestamp);
     void NotifyDefaultAppChanged(const int32_t userId, std::vector<std::string> &utdIdVec);
     void NotifyPluginEvents(const NotifyBundleEvents &event,
         const std::shared_ptr<BundleDataMgr> &dataMgr, bool isHsp = false);
@@ -183,6 +183,9 @@ public:
         const std::shared_ptr<BundleDataMgr> &dataMgr);
 
 private:
+    static OHOS::AAFwk::Want CreateBundleResourcesChangedWant(
+        int32_t userId, uint32_t type, int64_t themeTimestamp);
+
     // Async notification with rate limiting (15 events per 5ms max)
     using EventPublishFunc = std::function<void()>;
 
