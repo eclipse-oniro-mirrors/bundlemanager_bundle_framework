@@ -581,5 +581,89 @@ HWTEST_F(BundleMgrClientImplTest, Bundle_Mgr_Client_Impl_Test_1000, Function | S
     //    and must reject at the needAppDetail gate with PERMISSION_DENIED
     EXPECT_EQ(ret, ERR_APPEXECFWK_PERMISSION_DENIED);
 }
+
+namespace {
+// Controllable IRemoteObject double for driving RegisterDeathRecipient branches:
+// isProxy selects the IsProxyObject short-circuit, addDeathResult drives AddDeathRecipient.
+class MockDeathRemoteObject : public IRemoteObject {
+public:
+    MockDeathRemoteObject(bool isProxy, bool addDeathResult)
+        : IRemoteObject(u"mock.death.recipient.test"), isProxy_(isProxy), addDeathResult_(addDeathResult) {}
+    ~MockDeathRemoteObject() = default;
+    int SendRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override
+    {
+        return ERR_NONE;
+    }
+    sptr<IRemoteBroker> AsInterface() override { return nullptr; }
+    int32_t GetObjectRefCount() override { return 0; }
+    bool IsProxyObject() const override { return isProxy_; }
+    bool AddDeathRecipient(const sptr<DeathRecipient> &recipient) override { return addDeathResult_; }
+    bool RemoveDeathRecipient(const sptr<DeathRecipient> &recipient) override { return true; }
+    int Dump(int fd, const std::vector<std::u16string> &args) override { return 0; }
+
+private:
+    bool isProxy_;
+    bool addDeathResult_;
+};
+} // namespace
+
+/**
+ * @tc.number: Bundle_Mgr_Client_Impl_Test_2000
+ * @tc.name: test RegisterDeathRecipient when AddDeathRecipient fails on a proxy object
+ * @tc.desc: registration failure must reset bundleMgr_/deathRecipient_, return
+ *           ERR_APPEXECFWK_SERVICE_NOT_CONNECTED, and leave a clean state so a retry
+ *           on a healthy proxy succeeds (recovery after reset).
+ */
+HWTEST_F(BundleMgrClientImplTest, Bundle_Mgr_Client_Impl_Test_2000, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BundleMgrClientImpl> impl = std::make_shared<BundleMgrClientImpl>();
+
+    sptr<IRemoteObject> failingRemote = new MockDeathRemoteObject(true, false);
+    impl->bundleMgr_ = new BundleMgrProxy(failingRemote);
+    auto ret = impl->RegisterDeathRecipient();
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SERVICE_NOT_CONNECTED);
+    EXPECT_EQ(impl->bundleMgr_, nullptr);
+    EXPECT_EQ(impl->deathRecipient_, nullptr);
+
+    // recovery: after the reset, registering on a healthy proxy must succeed
+    sptr<IRemoteObject> healthyRemote = new MockDeathRemoteObject(true, true);
+    impl->bundleMgr_ = new BundleMgrProxy(healthyRemote);
+    ret = impl->RegisterDeathRecipient();
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_NE(impl->deathRecipient_, nullptr);
+}
+
+/**
+ * @tc.number: Bundle_Mgr_Client_Impl_Test_2100
+ * @tc.name: test RegisterDeathRecipient with a non-proxy (in-process) object
+ * @tc.desc: for a local (non-proxy) object the registration step is skipped and ERR_OK
+ *           is returned, matching the in-process short-circuit semantics.
+ */
+HWTEST_F(BundleMgrClientImplTest, Bundle_Mgr_Client_Impl_Test_2100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BundleMgrClientImpl> impl = std::make_shared<BundleMgrClientImpl>();
+
+    sptr<IRemoteObject> localRemote = new MockDeathRemoteObject(false, true);
+    impl->bundleMgr_ = new BundleMgrProxy(localRemote);
+    auto ret = impl->RegisterDeathRecipient();
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_NE(impl->deathRecipient_, nullptr);
+}
+
+/**
+ * @tc.number: Bundle_Mgr_Client_Impl_Test_2200
+ * @tc.name: test RegisterDeathRecipient when bundleMgr_ is null
+ * @tc.desc: a null proxy must fail fast with ERR_APPEXECFWK_SERVICE_NOT_CONNECTED and
+ *           must not create a death recipient.
+ */
+HWTEST_F(BundleMgrClientImplTest, Bundle_Mgr_Client_Impl_Test_2200, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BundleMgrClientImpl> impl = std::make_shared<BundleMgrClientImpl>();
+
+    impl->bundleMgr_ = nullptr;
+    auto ret = impl->RegisterDeathRecipient();
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SERVICE_NOT_CONNECTED);
+    EXPECT_EQ(impl->deathRecipient_, nullptr);
+}
 } // AppExecFwk
 } // OHOS

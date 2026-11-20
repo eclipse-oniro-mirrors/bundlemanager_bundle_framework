@@ -669,7 +669,7 @@ ErrCode BundleMgrClientImpl::GetAllBundleDirs(int32_t userId, std::vector<Bundle
 ErrCode BundleMgrClientImpl::RegisterDeathRecipient()
 {
     if (bundleMgr_ == nullptr) {
-        APP_LOGE("bundleMgr_ is null");
+        APP_LOGE("bundleMgr_ nullptr, errCode:%{public}d", ERR_APPEXECFWK_SERVICE_NOT_CONNECTED);
         return ERR_APPEXECFWK_SERVICE_NOT_CONNECTED;
     }
     std::weak_ptr<BundleMgrClientImpl> weakPtr = shared_from_this();
@@ -682,12 +682,17 @@ ErrCode BundleMgrClientImpl::RegisterDeathRecipient()
     deathRecipient_ = sptr<BundleMgrServiceDeathRecipient>(
         new (std::nothrow) BundleMgrServiceDeathRecipient(deathCallback));
     if (deathRecipient_ == nullptr) {
-        APP_LOGE("failed to create death recipient");
+        APP_LOGE("failed to create death recipient, errCode:%{public}d",
+            ERR_APPEXECFWK_SERVICE_NOT_CONNECTED);
+        // Reset the proxy so the next Connect retries registration instead of short-circuiting
+        // into a connected-but-permanently-unnotified state (same reset as registration failure).
+        bundleMgr_ = nullptr;
         return ERR_APPEXECFWK_SERVICE_NOT_CONNECTED;
     }
     if ((bundleMgr_->AsObject()->IsProxyObject()) &&
         (!bundleMgr_->AsObject()->AddDeathRecipient(deathRecipient_))) {
-        APP_LOGE("failed to add death recipient");
+        APP_LOGE("failed to add death recipient, errCode:%{public}d",
+            ERR_APPEXECFWK_SERVICE_NOT_CONNECTED);
         bundleMgr_ = nullptr;
         deathRecipient_ = nullptr;
         return ERR_APPEXECFWK_SERVICE_NOT_CONNECTED;
@@ -794,6 +799,9 @@ ErrCode BundleMgrClientImpl::RegisterPluginEventCallback(const sptr<IBundleEvent
         ErrCode result = Connect();
         if (result != ERR_OK) {
             APP_LOGE_NOFUNC("connect fail %{public}d", result);
+            // Roll back so a retry re-enters Connect and re-registers server-side instead of
+            // silently succeeding with a callback the service never received.
+            pluginEventCallback_ = nullptr;
             return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
         }
         std::shared_lock<std::shared_mutex> lock(mutex_);
