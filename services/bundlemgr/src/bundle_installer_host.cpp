@@ -1403,6 +1403,12 @@ ErrCode BundleInstallerHost::UninstallCloneApp(const std::string &bundleName, in
         LOG_E(BMS_TAG_INSTALLER, "UninstallCloneApp permission denied");
         return ERR_APPEXECFWK_PERMISSION_DENIED;
     }
+    if (!BundlePermissionMgr::VerifyAcrossUserPermissionEx(userId)) {
+        LOG_E(BMS_TAG_INSTALLER, "UninstallCloneApp permission denied, "
+            "no cross-user permission, userId:%{public}d, uid:%{public}d, pid:%{public}d",
+            userId, IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
     DualModeSwitchGuard dualModeGuard;
     if (dualModeGuard.IsRejected()) {
         return ERR_APPEXECFWK_DUAL_MODE_SWITCH_BUSY;  // r13: switch in flight, fail fast
@@ -1473,6 +1479,12 @@ ErrCode BundleInstallerHost::InstallExisted(const std::string &bundleName, int32
             LOG_E(BMS_TAG_INSTALLER, "InstallExisted permission denied");
             return ERR_APPEXECFWK_PERMISSION_DENIED;
         }
+    }
+    if (!BundlePermissionMgr::VerifyAcrossUserPermissionEx(userId)) {
+        LOG_E(BMS_TAG_INSTALLER, "InstallExisted permission denied, "
+            "no cross-user permission, userId:%{public}d, uid:%{public}d, pid:%{public}d",
+            userId, IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     DualModeSwitchGuard dualModeGuard;
     if (dualModeGuard.IsRejected()) {

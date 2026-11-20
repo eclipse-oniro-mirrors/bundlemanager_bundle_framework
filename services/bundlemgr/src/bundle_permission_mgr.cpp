@@ -750,6 +750,30 @@ bool BundlePermissionMgr::VerifyAcrossUserPermission(const int32_t userId)
     return true;
 }
 
+bool BundlePermissionMgr::VerifyAcrossUserPermissionEx(int32_t userId)
+{
+    if (userId == Constants::DEFAULT_USERID ||
+        userId == Constants::UNSPECIFIED_USERID) {
+        return true;
+    }
+    // sa no need to check across user permission
+    if (BundlePermissionMgr::IsNativeTokenType()) {
+        return true;
+    }
+    int32_t callingUserId = BundleUtil::GetUserIdByCallingUid();
+    if (callingUserId == Constants::DEFAULT_USERID &&
+        userId == AccountHelper::GetCurrentActiveUserId()) {
+        return true;
+    }
+    if (userId == callingUserId) {
+        return true;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_BMS_INTERACT_ACROSS_LOCAL_ACCOUNTS)) {
+        return false;
+    }
+    return true;
+}
+
 bool BundlePermissionMgr::VerifyCallingBundleSdkVersion(int32_t beginApiVersion)
 {
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();

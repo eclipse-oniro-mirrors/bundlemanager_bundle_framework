@@ -270,6 +270,12 @@ ErrCode BundleMgrHostImpl::GetApplicationInfoV9(
             IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
+    if (!BundlePermissionMgr::VerifyAcrossUserPermissionEx(userId)) {
+        APP_LOGE_NOFUNC("GetApplicationInfoV9 permission denied, "
+            "no cross-user permission, userId:%{public}d, uid:%{public}d, pid:%{public}d",
+            userId, IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_QUERY, "DataMgr is nullptr");
@@ -323,6 +329,12 @@ ErrCode BundleMgrHostImpl::GetApplicationInfosV9(
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST)) {
         APP_LOGE_NOFUNC("GetApplicationInfosV9 permission denied %{public}d %{public}d",
             IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyAcrossUserPermissionEx(userId)) {
+        APP_LOGE_NOFUNC("GetApplicationInfosV9 permission denied, "
+            "no cross-user permission, userId:%{public}d, uid:%{public}d, pid:%{public}d",
+            userId, IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     APP_LOGI_NOFUNC("GetApplicationInfosV9 -p:%{public}d, -f:%{public}d, -u:%{public}d",
@@ -711,6 +723,12 @@ ErrCode BundleMgrHostImpl::GetBundleInfosV9(int32_t flags, std::vector<BundleInf
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST)) {
         APP_LOGE_NOFUNC("GetBundleInfosV9 permission denied %{public}d %{public}d",
             IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyAcrossUserPermissionEx(userId)) {
+        APP_LOGE_NOFUNC("GetBundleInfosV9 permission denied, "
+            "no cross-user permission, userId:%{public}d, uid:%{public}d, pid:%{public}d",
+            userId, IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     APP_LOGI_NOFUNC("GetBundleInfosV9 -p:%{public}d, -f:%{public}d, -u:%{public}d",
@@ -1335,6 +1353,12 @@ ErrCode BundleMgrHostImpl::QueryAbilityInfosV9(
             IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
+    if (!BundlePermissionMgr::VerifyAcrossUserPermissionEx(userId)) {
+        APP_LOGE_NOFUNC("QueryAbilityInfosV9 permission denied, "
+            "no cross-user permission, userId:%{public}d, uid:%{public}d, pid:%{public}d",
+            userId, IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_QUERY, "DataMgr is nullptr");
@@ -1395,6 +1419,12 @@ ErrCode BundleMgrHostImpl::BatchQueryAbilityInfos(
             return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
         }
     }
+    if (!BundlePermissionMgr::VerifyAcrossUserPermissionEx(userId)) {
+        APP_LOGE_NOFUNC("BatchQueryAbilityInfos permission denied, "
+            "no cross-user permission, userId:%{public}d, uid:%{public}d, pid:%{public}d",
+            userId, IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
     APP_LOGD("verify permission success, begin to BatchQueryAbilityInfos");
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
@@ -1426,6 +1456,12 @@ ErrCode BundleMgrHostImpl::QueryLauncherAbilityInfos(
             IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
+    if (!BundlePermissionMgr::VerifyAcrossUserPermissionEx(userId)) {
+        APP_LOGE_NOFUNC("QueryLauncherAbilityInfos permission denied, "
+            "no cross-user permission, userId:%{public}d, uid:%{public}d, pid:%{public}d",
+            userId, IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
     APP_LOGD("verify permission success, begin to QueryLauncherAbilityInfos");
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
@@ -1451,6 +1487,12 @@ ErrCode BundleMgrHostImpl::GetLauncherAbilityInfoSync(
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE_NOFUNC("GetLauncherAbilityInfoSync permission denied %{public}d %{public}d",
             IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyAcrossUserPermissionEx(userId)) {
+        APP_LOGE_NOFUNC("GetLauncherAbilityInfoSync permission denied, "
+            "no cross-user permission, userId:%{public}d, uid:%{public}d, pid:%{public}d",
+            userId, IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     APP_LOGD("verify permission success, begin to GetLauncherAbilityInfoSync");
@@ -3996,6 +4038,12 @@ ErrCode BundleMgrHostImpl::GetShortcutInfoV9(const std::string &bundleName,
             IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
+    if (!BundlePermissionMgr::VerifyAcrossUserPermissionEx(userId)) {
+        APP_LOGE_NOFUNC("GetShortcutInfoV9 permission denied, "
+            "no cross-user permission, userId:%{public}d, uid:%{public}d, pid:%{public}d",
+            userId, IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
@@ -4321,6 +4369,12 @@ ErrCode BundleMgrHostImpl::QueryExtensionAbilityInfosV9(const Want &want, int32_
             IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
+    if (!BundlePermissionMgr::VerifyAcrossUserPermissionEx(userId)) {
+        APP_LOGE_NOFUNC("QueryExtensionAbilityInfosV9 permission denied, "
+            "no cross-user permission, userId:%{public}d, uid:%{public}d, pid:%{public}d",
+            userId, IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
     LOG_D(BMS_TAG_QUERY, "want uri is %{private}s", want.GetUriString().c_str());
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
@@ -4396,6 +4450,12 @@ ErrCode BundleMgrHostImpl::QueryExtensionAbilityInfosV9(const Want &want, const 
         !BundlePermissionMgr::IsBundleSelfCalling(want.GetElement().GetBundleName())) {
         APP_LOGE_NOFUNC("QueryExtensionAbilityInfosV9ByWantAndType permission denied %{public}d %{public}d",
             IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyAcrossUserPermissionEx(userId)) {
+        APP_LOGE_NOFUNC("QueryExtensionAbilityInfosV9 permission denied, "
+            "no cross-user permission, userId:%{public}d, uid:%{public}d, pid:%{public}d",
+            userId, IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     auto dataMgr = GetDataMgrFromService();
@@ -5539,6 +5599,12 @@ ErrCode BundleMgrHostImpl::GetAppProvisionInfo(const std::string &bundleName, in
             IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
+    if (!BundlePermissionMgr::VerifyAcrossUserPermissionEx(userId)) {
+        APP_LOGE_NOFUNC("GetAppProvisionInfo permission denied, "
+            "no cross-user permission, userId:%{public}d, uid:%{public}d, pid:%{public}d",
+            userId, IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
     int64_t intervalTime = ONE_DAY;
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
@@ -5635,6 +5701,12 @@ ErrCode BundleMgrHostImpl::GetProvisionMetadata(const std::string &bundleName, i
     if (!permissionVerify) {
         APP_LOGE_NOFUNC("GetProvisionMetadata permission denied %{public}d %{public}d",
             IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyAcrossUserPermissionEx(userId)) {
+        APP_LOGE_NOFUNC("GetProvisionMetadata permission denied, "
+            "no cross-user permission, userId:%{public}d, uid:%{public}d, pid:%{public}d",
+            userId, IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     auto dataMgr = GetDataMgrFromService();
@@ -6298,6 +6370,12 @@ ErrCode BundleMgrHostImpl::GetJsonProfile(ProfileType profileType, const std::st
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyAcrossUserPermissionEx(userId)) {
+        APP_LOGE_NOFUNC("GetJsonProfile permission denied, "
+            "no cross-user permission, userId:%{public}d, uid:%{public}d, pid:%{public}d",
+            userId, IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
@@ -7673,6 +7751,12 @@ ErrCode BundleMgrHostImpl::AddDesktopShortcutInfo(const ShortcutInfo &shortcutIn
             IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
+    if (!BundlePermissionMgr::VerifyAcrossUserPermissionEx(userId)) {
+        APP_LOGE_NOFUNC("AddDesktopShortcutInfo permission denied, "
+            "no cross-user permission, userId:%{public}d, uid:%{public}d, pid:%{public}d",
+            userId, IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
@@ -7704,6 +7788,12 @@ ErrCode BundleMgrHostImpl::DeleteDesktopShortcutInfo(const ShortcutInfo &shortcu
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_MANAGER_SHORTCUT)) {
         APP_LOGE_NOFUNC("DeleteDesktopShortcutInfo permission denied %{public}d %{public}d",
             IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyAcrossUserPermissionEx(userId)) {
+        APP_LOGE_NOFUNC("DeleteDesktopShortcutInfo permission denied, "
+            "no cross-user permission, userId:%{public}d, uid:%{public}d, pid:%{public}d",
+            userId, IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     auto dataMgr = GetDataMgrFromService();
@@ -7769,6 +7859,12 @@ ErrCode BundleMgrHostImpl::GetAllDesktopShortcutInfo(int32_t userId, std::vector
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_MANAGER_SHORTCUT)) {
         APP_LOGE_NOFUNC("GetAllDesktopShortcutInfo permission denied %{public}d %{public}d",
             IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyAcrossUserPermissionEx(userId)) {
+        APP_LOGE_NOFUNC("GetAllDesktopShortcutInfo permission denied, "
+            "no cross-user permission, userId:%{public}d, uid:%{public}d, pid:%{public}d",
+            userId, IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     auto dataMgr = GetDataMgrFromService();
@@ -7978,6 +8074,12 @@ ErrCode BundleMgrHostImpl::GetAllPluginInfo(const std::string &hostBundleName, i
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE_NOFUNC("GetAllPluginInfo permission denied %{public}d %{public}d",
             IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyAcrossUserPermissionEx(userId)) {
+        APP_LOGE_NOFUNC("GetAllPluginInfo permission denied, "
+            "no cross-user permission, userId:%{public}d, uid:%{public}d, pid:%{public}d",
+            userId, IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     auto dataMgr = GetDataMgrFromService();
@@ -8791,6 +8893,13 @@ ErrCode BundleMgrHostImpl::RecoverBackupBundleData(const std::string &bundleName
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
 
+    if (!BundlePermissionMgr::VerifyAcrossUserPermissionEx(userId)) {
+        APP_LOGE_NOFUNC("RecoverBackupBundleData permission denied, "
+            "no cross-user permission, userId:%{public}d, uid:%{public}d, pid:%{public}d",
+            userId, IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+
     if (bundleName.empty() || !IsBundleExist(bundleName)) {
         APP_LOGE("the bundleName empty or bundle not exist");
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
@@ -8833,6 +8942,13 @@ ErrCode BundleMgrHostImpl::RemoveBackupBundleData(const std::string &bundleName,
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_CLEAN_APPLICATION_DATA)) {
         APP_LOGE_NOFUNC("RemoveBackupBundleData permission denied %{public}d %{public}d",
             IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+
+    if (!BundlePermissionMgr::VerifyAcrossUserPermissionEx(userId)) {
+        APP_LOGE_NOFUNC("RemoveBackupBundleData permission denied, "
+            "no cross-user permission, userId:%{public}d, uid:%{public}d, pid:%{public}d",
+            userId, IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
 
@@ -8922,6 +9038,12 @@ ErrCode BundleMgrHostImpl::GetAllJsonProfile(ProfileType profileType, int32_t us
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE_NOFUNC("GetAllJsonProfile permission denied %{public}d %{public}d",
             IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyAcrossUserPermissionEx(userId)) {
+        APP_LOGE_NOFUNC("GetAllJsonProfile permission denied, "
+            "no cross-user permission, userId:%{public}d, uid:%{public}d, pid:%{public}d",
+            userId, IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     auto dataMgr = GetDataMgrFromService();
