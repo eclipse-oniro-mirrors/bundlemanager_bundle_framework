@@ -86,6 +86,9 @@ public:
 private:
     ErrCode Connect();
     ErrCode ConnectInstaller();
+    // Create deathRecipient_ and register it on bundleMgr_; returns an error when bundleMgr_
+    // is null, allocation fails, or registration fails (resetting bundleMgr_/deathRecipient_).
+    ErrCode RegisterDeathRecipient();
     void OnDeath();
     bool ConvertResourcePath(const std::string &bundleName, std::string &resPath, bool isCompressed) const;
     bool GetResProfileByMetadata(const std::vector<Metadata> &metadata, const std::string &metadataName,
