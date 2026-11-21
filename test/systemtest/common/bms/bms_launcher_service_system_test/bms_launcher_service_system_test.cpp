@@ -31,7 +31,6 @@
 #include "launcher_ability_info.h"
 #include "launcher_service.h"
 #include "nativetoken_kit.h"
-#include "operation_builder.h"
 #include "status_receiver_host.h"
 #include "system_ability_definition.h"
 #include "token_setproc.h"
