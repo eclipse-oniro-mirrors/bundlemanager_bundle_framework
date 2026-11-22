@@ -55,7 +55,7 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
         structured.WriteInterfaceToken(BundleMgrHost::GetDescriptor());
         structured.WriteString(fdp.ConsumeRandomLengthString(BMSFuzzTestUtil::STRING_MAX_LENGTH));
         structured.WriteString(fdp.ConsumeRandomLengthString(BMSFuzzTestUtil::STRING_MAX_LENGTH));
-        structured.WriteUint32(fdp.ConsumeIntegral<uint32_t>());
+        structured.WriteInt64(fdp.ConsumeIntegral<int64_t>());
         if (code == BundleMgrInterfaceCode::SET_ALTERNATE_MODULE_ENABLED) {
             structured.WriteBool(fdp.ConsumeBool());
         }

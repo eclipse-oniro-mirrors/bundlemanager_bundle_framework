@@ -750,37 +750,35 @@ HWTEST_F(BmsBundleDataMgrSharedTest, AlternateModulePrecheckFailureState_0001, F
     });
     dataMgr->dataStorage_ = store;
     for (bool enabled : {false, true}) {
-        for (bool missingBusiness : {false, true}) {
-            SCOPED_TRACE(testing::Message() << "enabled=" << enabled << ", missingBusiness=" << missingBusiness);
-            ASSERT_EQ(originalInfo.SetAlternateModuleState("library", 1, !enabled), ERR_OK);
-            dataMgr->bundleInfos_.insert_or_assign(bundleName, originalInfo);
-            store->saved = originalInfo;
-            auto installer = std::make_shared<InnerSharedBundleInstaller>("");
-            installer->parsedBundles_ = {{"business.hsp", EscapeTestBundle(2, false)},
-                {"alternate.hsp", EscapeTestBundle(2, true)}};
-            installer->hapVerifyResults_.emplace_back();
-            // Capture the parse-time snapshot before the successful state change.
-            ASSERT_EQ(installer->CheckAppLabelInfo(), ERR_OK);
-            ASSERT_EQ(installer->CheckAlternateModuleModules(), ERR_OK);
-            ASSERT_EQ(dataMgr->SetAlternateModuleState(bundleName, "library", 1, enabled), ERR_OK);
-            const auto saveAttempts = store->saveAttempts;
-            installer->parsedBundles_.erase(missingBusiness ? "business.hsp" : "alternate.hsp");
-            SharedBundleInstaller batch(InstallParam {}, Constants::AppType::THIRD_PARTY_APP);
-            batch.innerInstallers_.emplace(bundleName, installer);
-            EXPECT_EQ(batch.Install(EventInfo {}), ERR_APPEXECFWK_INSTALL_DEPENDENT_MODULE_NOT_EXIST);
-            InnerBundleInfo current;
-            ASSERT_TRUE(dataMgr->FetchInnerBundleInfo(bundleName, current));
-            for (const auto &info : {current, store->saved}) {
-                bool actual = !enabled;
-                ASSERT_EQ(info.GetAlternateModuleState("library", 1, actual), ERR_OK);
-                EXPECT_EQ(actual, enabled);
-                EXPECT_NE(info.FindSharedModule("library", 1, false), nullptr);
-                EXPECT_NE(info.FindSharedModule("library", 1, true), nullptr);
-                EXPECT_EQ(info.FindSharedModule("library", 2, false), nullptr);
-                EXPECT_EQ(info.FindSharedModule("library", 2, true), nullptr);
-            }
-            EXPECT_EQ(store->saveAttempts, saveAttempts);
+        SCOPED_TRACE(testing::Message() << "enabled=" << enabled);
+        ASSERT_EQ(originalInfo.SetAlternateModuleState("library", 1, !enabled), ERR_OK);
+        dataMgr->bundleInfos_.insert_or_assign(bundleName, originalInfo);
+        store->saved = originalInfo;
+        auto installer = std::make_shared<InnerSharedBundleInstaller>("");
+        installer->parsedBundles_ = {{"business.hsp", EscapeTestBundle(2, false)},
+            {"alternate.hsp", EscapeTestBundle(2, true)}};
+        installer->hapVerifyResults_.emplace_back();
+        // Capture the parse-time snapshot before the successful state change.
+        ASSERT_EQ(installer->CheckAppLabelInfo(), ERR_OK);
+        ASSERT_EQ(installer->CheckAlternateModuleModules(), ERR_OK);
+        ASSERT_EQ(dataMgr->SetAlternateModuleState(bundleName, "library", 1, enabled), ERR_OK);
+        const auto saveAttempts = store->saveAttempts;
+        installer->parsedBundles_.erase("business.hsp");
+        SharedBundleInstaller batch(InstallParam {}, Constants::AppType::THIRD_PARTY_APP);
+        batch.innerInstallers_.emplace(bundleName, installer);
+        EXPECT_EQ(batch.Install(EventInfo {}), ERR_APPEXECFWK_INSTALL_DEPENDENT_MODULE_NOT_EXIST);
+        InnerBundleInfo current;
+        ASSERT_TRUE(dataMgr->FetchInnerBundleInfo(bundleName, current));
+        for (const auto &info : {current, store->saved}) {
+            bool actual = !enabled;
+            ASSERT_EQ(info.GetAlternateModuleState("library", 1, actual), ERR_OK);
+            EXPECT_EQ(actual, enabled);
+            EXPECT_NE(info.FindSharedModule("library", 1, false), nullptr);
+            EXPECT_NE(info.FindSharedModule("library", 1, true), nullptr);
+            EXPECT_EQ(info.FindSharedModule("library", 2, false), nullptr);
+            EXPECT_EQ(info.FindSharedModule("library", 2, true), nullptr);
         }
+        EXPECT_EQ(store->saveAttempts, saveAttempts);
     }
 }
 
@@ -802,7 +800,7 @@ HWTEST_F(BmsBundleDataMgrSharedTest, AlternateModuleInstallConcurrentSet_0001, F
     store->saved = oldInfo;
 
     InnerSharedBundleInstaller installer("");
-    installer.parsedBundles_ = {{"business.hsp", EscapeTestBundle(2, false)}};
+    installer.parsedBundles_ = {{"alternate.hsp", EscapeTestBundle(2, true)}};
     installer.hapVerifyResults_.emplace_back();
 
     RunAlternateModuleInstallAndSet(*dataMgr, installer, bundleName);

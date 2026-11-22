@@ -1706,18 +1706,6 @@ public:
         return ERR_OK;
     }
 
-    virtual ErrCode SetAlternateModuleEnabled(const std::string &bundleName, const std::string &moduleName,
-        int64_t versionCode, bool isEnabled)
-    {
-        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
-    }
-
-    virtual ErrCode GetAlternateModuleState(const std::string &bundleName, const std::string &moduleName,
-        int64_t versionCode, bool &enabled)
-    {
-        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
-    }
-
     virtual ErrCode GetSharedBundleInfo(const std::string &bundleName, const std::string &moduleName,
         std::vector<SharedBundleInfo> &sharedBundles)
     {
@@ -2433,6 +2421,18 @@ public:
         const std::string &assetAccessGroup, int32_t userId, bool &isExist)
     {
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+
+    virtual ErrCode SetAlternateModuleEnabled(const std::string &bundleName, const std::string &moduleName,
+        int64_t versionCode, bool isEnabled)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    virtual ErrCode GetAlternateModuleState(const std::string &bundleName, const std::string &moduleName,
+        int64_t versionCode, bool &enabled)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 };
 

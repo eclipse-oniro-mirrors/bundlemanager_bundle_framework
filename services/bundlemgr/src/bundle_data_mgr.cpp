@@ -9101,18 +9101,22 @@ ErrCode BundleDataMgr::SetAlternateModuleState(const std::string &bundleName,
         APP_LOGW("shared bundle %{private}s not found", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
+    bool currentEnabled = false;
+    ErrCode result = it->second.GetAlternateModuleState(moduleName, versionCode, currentEnabled);
+    if (result != ERR_OK) {
+        APP_LOGE("get alternate module state failed, errCode: %{public}d", result);
+        return result;
+    }
+    if (currentEnabled == enabled) {
+        return ERR_OK;
+    }
     InnerBundleInfo updated = it->second;
-    ErrCode result = updated.SetAlternateModuleState(moduleName, versionCode, enabled);
+    result = updated.SetAlternateModuleState(moduleName, versionCode, enabled);
     if (result != ERR_OK) {
         APP_LOGE("set alternate module state failed, bundleName: %{private}s, moduleName: %{private}s, "
             "versionCode: %{public}lld, errCode: %{public}d",
             bundleName.c_str(), moduleName.c_str(), static_cast<long long>(versionCode), result);
         return result;
-    }
-    bool currentEnabled = false;
-    if (it->second.GetAlternateModuleState(moduleName, versionCode, currentEnabled) == ERR_OK &&
-        currentEnabled == enabled) {
-        return ERR_OK;
     }
     if (dataStorage_ == nullptr || !dataStorage_->SaveStorageBundleInfo(updated)) {
         APP_LOGE("persist alternate module state failed");
