@@ -887,6 +887,9 @@ private:
 
     ErrCode HandleGetAllSharedBundleInfo(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleSetAlternateModuleEnabled(MessageParcel &data, MessageParcel &reply);
+    ErrCode HandleGetAlternateModuleState(MessageParcel &data, MessageParcel &reply);
+
     ErrCode HandleGetSharedBundleInfo(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetSharedBundleInfoBySelf(MessageParcel &data, MessageParcel &reply);

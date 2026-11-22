@@ -1137,6 +1137,11 @@ public:
     bool HasUserInstallInBundle(const std::string &bundleName, const int32_t userId) const;
     bool GetAllDependentModuleNames(const std::string &bundleName, const std::string &moduleName,
         std::vector<std::string> &dependentModuleNames);
+    ErrCode SetAlternateModuleState(const std::string &bundleName, const std::string &moduleName,
+        int64_t versionCode, bool enabled);
+    ErrCode GetAlternateModuleState(const std::string &bundleName, const std::string &moduleName,
+        int64_t versionCode, bool &enabled) const;
+
     ErrCode SetModuleUpgradeFlag(const std::string &bundleName, const std::string &moduleName, int32_t upgradeFlag);
     int32_t GetModuleUpgradeFlag(const std::string &bundleName, const std::string &moduleName) const;
     /**

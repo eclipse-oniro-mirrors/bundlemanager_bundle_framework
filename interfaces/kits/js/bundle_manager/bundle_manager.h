@@ -459,6 +459,9 @@ napi_value GetApplicationInfoSync(napi_env env, napi_callback_info info);
 napi_value GetBundleInfoSync(napi_env env, napi_callback_info info);
 napi_value GetBundleInfoForSelf(napi_env env, napi_callback_info info);
 napi_value GetAllSharedBundleInfo(napi_env env, napi_callback_info info);
+napi_value SetAlternateModuleEnabled(napi_env env, napi_callback_info info);
+napi_value IsAlternateModuleEnabled(napi_env env, napi_callback_info info);
+
 napi_value GetSharedBundleInfo(napi_env env, napi_callback_info info);
 napi_value GetAppProvisionInfo(napi_env env, napi_callback_info info);
 napi_value GetAllAppProvisionInfo(napi_env env, napi_callback_info info);

@@ -5679,6 +5679,49 @@ ErrCode BundleMgrHostImpl::GetAllSharedBundleInfo(std::vector<SharedBundleInfo> 
     return dataMgr->GetAllSharedBundleInfo(sharedBundles);
 }
 
+ErrCode BundleMgrHostImpl::SetAlternateModuleEnabled(const std::string &bundleName, const std::string &moduleName,
+    int64_t versionCode, bool isEnabled)
+{
+    APP_LOGI("bundleName: %{private}s, moduleName: %{private}s, versionCode: %{public}lld, isEnabled: %{public}d",
+        bundleName.c_str(), moduleName.c_str(), static_cast<long long>(versionCode), isEnabled);
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_BUNDLE)) {
+        APP_LOGE_NOFUNC("SetAlternateModuleEnabled permission denied %{public}d %{public}d",
+            IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is nullptr");
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    return dataMgr->SetAlternateModuleState(bundleName, moduleName, versionCode, isEnabled);
+}
+
+ErrCode BundleMgrHostImpl::GetAlternateModuleState(const std::string &bundleName, const std::string &moduleName,
+    int64_t versionCode, bool &enabled)
+{
+    enabled = false;
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE_NOFUNC("GetAlternateModuleState permission denied %{public}d %{public}d",
+            IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is nullptr");
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    return dataMgr->GetAlternateModuleState(bundleName, moduleName, versionCode, enabled);
+}
+
 ErrCode BundleMgrHostImpl::GetSharedBundleInfo(const std::string &bundleName, const std::string &moduleName,
     std::vector<SharedBundleInfo> &sharedBundles)
 {

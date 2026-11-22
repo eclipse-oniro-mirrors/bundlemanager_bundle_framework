@@ -76,6 +76,18 @@ HWTEST_F(BmsStatusReceiverProxyTest, TransformResult_InstallInternalError_0100, 
 }
 
 /**
+ * @tc.name: TransformResult_AlternateModuleInvalid_0100
+ * @tc.desc: Test the alternate module content error uses the existing install result code.
+ * @tc.type: FUNC
+ */
+HWTEST_F(BmsStatusReceiverProxyTest, TransformResult_AlternateModuleInvalid_0100, Function | SmallTest | Level0)
+{
+    receiver_->TransformResult(ERR_APPEXECFWK_INSTALL_ALTERNATE_MODULE_INVALID);
+    EXPECT_EQ(receiver_->resultCode_, IStatusReceiver::ERR_INSTALL_PARAM_ERROR);
+    EXPECT_EQ(receiver_->resultMsg_, std::string("[MSG_ERR_INSTALL_ALTERNATE_MODULE_INVALID]"));
+}
+
+/**
  * @tc.name: TransformResult_ParseUnexpected_0100
  * @tc.desc: Test TransformResult with ERR_APPEXECFWK_PARSE_UNEXPECTED
  * @tc.type: FUNC

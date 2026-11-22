@@ -526,6 +526,12 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_SHARED_BUNDLE_INFO):
             errCode = this->HandleGetAllSharedBundleInfo(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::SET_ALTERNATE_MODULE_ENABLED):
+            errCode = HandleSetAlternateModuleEnabled(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALTERNATE_MODULE_STATE):
+            errCode = HandleGetAlternateModuleState(data, reply);
+            break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_SHARED_BUNDLE_INFO):
             errCode = this->HandleGetSharedBundleInfo(data, reply);
             break;
@@ -4111,6 +4117,43 @@ ErrCode BundleMgrHost::HandleGetAllSharedBundleInfo(MessageParcel &data, Message
     }
     if ((ret == ERR_OK) && !WriteParcelableVector(infos, reply)) {
         APP_LOGE("write infos failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleSetAlternateModuleEnabled(MessageParcel &data, MessageParcel &reply)
+{
+    std::string bundleName;
+    std::string moduleName;
+    int64_t versionCode = 0;
+    bool isEnabled = false;
+    if (!data.ReadString(bundleName) || !data.ReadString(moduleName) ||
+        !data.ReadInt64(versionCode) || !data.ReadBool(isEnabled)) {
+        APP_LOGE("read alternate module request failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    ErrCode result = SetAlternateModuleEnabled(bundleName, moduleName, versionCode, isEnabled);
+    if (!reply.WriteInt32(result)) {
+        APP_LOGE("write alternate module reply failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetAlternateModuleState(MessageParcel &data, MessageParcel &reply)
+{
+    std::string bundleName;
+    std::string moduleName;
+    int64_t versionCode = 0;
+    if (!data.ReadString(bundleName) || !data.ReadString(moduleName) || !data.ReadInt64(versionCode)) {
+        APP_LOGE("read alternate module request failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    bool enabled = false;
+    ErrCode result = GetAlternateModuleState(bundleName, moduleName, versionCode, enabled);
+    if (!reply.WriteInt32(result) || (result == ERR_OK && !reply.WriteBool(enabled))) {
+        APP_LOGE("write alternate module reply failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;

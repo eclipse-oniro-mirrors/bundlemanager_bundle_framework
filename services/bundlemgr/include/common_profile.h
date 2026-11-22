@@ -438,6 +438,7 @@ constexpr const char* MODULE_DEFINE_PERMISSIONS = "definePermissions";
 constexpr const char* MODULE_DEPENDENCIES = "dependencies";
 constexpr const char* MODULE_COMPILE_MODE = "compileMode";
 constexpr const char* MODULE_IS_LIB_ISOLATED = "libIsolation";
+constexpr const char* MODULE_ALTERNATE_MODULE = "alternateModule";
 constexpr const char* MODULE_PROXY_DATAS = "proxyDatas";
 constexpr const char* MODULE_PROXY_DATA = "proxyData";
 constexpr const char* MODULE_BUILD_HASH = "buildHash";

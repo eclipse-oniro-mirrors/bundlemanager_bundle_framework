@@ -16,6 +16,7 @@
 #include "inner_bundle_info.h"
 #include "dual_mode_helper.h"
 
+#include <limits>
 #include <regex>
 
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
@@ -85,6 +86,8 @@ constexpr const char* MODULE_MAIN_ABILITY = "mainAbility";
 constexpr const char* MODULE_ENTRY_ABILITY_KEY = "entryAbilityKey";
 constexpr const char* MODULE_DEPENDENCIES = "dependencies";
 constexpr const char* MODULE_IS_LIB_ISOLATED = "isLibIsolated";
+constexpr const char* MODULE_ALTERNATE_MODULE = "alternateModule";
+constexpr const char* ALTERNATE_MODULE_STATE = "alternateModuleState";
 constexpr const char* MODULE_NATIVE_LIBRARY_PATH = "nativeLibraryPath";
 constexpr const char* MODULE_CPU_ABI = "cpuAbi";
 constexpr const char* MODULE_SRC_PATH = "srcPath";
@@ -153,7 +156,6 @@ constexpr const char* IS_DELAY_AGING = "isDelayAging";
 constexpr const char* IS_DUAL_MODE_CLONE_APP = "isDualModeCloneApp";
 constexpr const char* CHECK_BY_SPM = "checkBySpm_";
 constexpr const char* IS_COMPRESSED_PRELOAD = "isCompressedPreload";
-constexpr int8_t SINGLE_HSP_VERSION = 1;
 const std::map<std::string, IsolationMode> ISOLATION_MODE_MAP = {
     {"isolationOnly", IsolationMode::ISOLATION_ONLY},
     {"nonisolationOnly", IsolationMode::NONISOLATION_ONLY},
@@ -194,6 +196,19 @@ constexpr const char* MODULE_ABILITY_STAGE_SRC_ENTRY_DELEGATOR = "abilityStageSr
 constexpr const char* MODULE_BOOL_SET = "boolSet";
 constexpr uint32_t PREINSTALL_SOURCE_CLEAN_MASK = ~0B1110;
 constexpr int32_t CPM_KEY_NOT_EXIST = 0x7A000005;
+
+bool IsValidAlternateModuleVersions(const nlohmann::json &moduleVersions)
+{
+    for (const auto &versions : moduleVersions) {
+        for (const auto &version : versions) {
+            if (!version.is_number_integer() || version < 0 ||
+                version > std::numeric_limits<uint32_t>::max()) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
 
 inline CompileMode ConvertCompileMode(const std::string& compileMode)
 {
@@ -525,6 +540,7 @@ InnerBundleInfo &InnerBundleInfo::operator=(const InnerBundleInfo &info)
     this->onlyCreateBundleUser_ = info.onlyCreateBundleUser_;
     this->innerModuleInfos_ = info.innerModuleInfos_;
     this->innerSharedModuleInfos_ = info.innerSharedModuleInfos_;
+    this->alternateModuleState_ = info.alternateModuleState_;
     this->formInfos_ = info.formInfos_;
     this->commonEvents_ = info.commonEvents_;
     this->shortcutInfos_ = info.shortcutInfos_;
@@ -660,6 +676,7 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_IS_STAGE_BASED_MODEL, info.isStageBasedModel},
         {MODULE_DEPENDENCIES, info.dependencies},
         {MODULE_IS_LIB_ISOLATED, info.isLibIsolated},
+        {MODULE_ALTERNATE_MODULE, info.alternateModule},
         {MODULE_NATIVE_LIBRARY_PATH, info.nativeLibraryPath},
         {MODULE_CPU_ABI, info.cpuAbi},
         {MODULE_HAP_PATH, info.hapPath},
@@ -723,6 +740,7 @@ void InnerBundleInfo::ToJson(nlohmann::json &jsonObject) const
     jsonObject[BASE_ABILITY_INFO] = baseAbilityInfos_;
     jsonObject[INNER_MODULE_INFO] = innerModuleInfos_;
     jsonObject[INNER_SHARED_MODULE_INFO] = innerSharedModuleInfos_;
+    jsonObject[ALTERNATE_MODULE_STATE] = alternateModuleState_;
     jsonObject[DYNAMIC_SKILLS] = dynamicSkills_;
     jsonObject[USER_ID] = userId_;
     jsonObject[APP_FEATURE] = appFeature_;
@@ -1129,6 +1147,8 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         info.compileMode,
         false,
         parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd,
+        MODULE_ALTERNATE_MODULE, info.alternateModule, false, parseResult);
     BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_IS_LIB_ISOLATED,
@@ -1652,6 +1672,21 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
             }
         }
         {
+            alternateModuleState_.clear();
+            const nlohmann::json *mapPtr = nullptr;
+            BMSJsonUtil::GetMapObject(jsonObject, jsonObjectEnd, ALTERNATE_MODULE_STATE, mapPtr,
+                JsonType::ARRAY, ArrayType::NUMBER, false, parseResult);
+            if (mapPtr != nullptr) {
+                if (!IsValidAlternateModuleVersions(*mapPtr)) {
+                    APP_LOGE("invalid alternate module versionCode");
+                    parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
+                }
+                if (parseResult == ERR_OK) {
+                    alternateModuleState_ = mapPtr->get<std::map<std::string, std::set<uint32_t>>>();
+                }
+            }
+        }
+        {
             const nlohmann::json *mapPtr = nullptr;
             BMSJsonUtil::GetMapObject(jsonObject, jsonObjectEnd, DYNAMIC_SKILLS, mapPtr,
                 JsonType::ARRAY, ArrayType::OBJECT, false, parseResult);
@@ -1905,52 +1940,53 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(
         APP_LOGE("not find module %{public}s", modulePackage.c_str());
         return std::nullopt;
     }
+    const auto &module = *SelectSharedModule(it->second);
     HapModuleInfo hapInfo;
     hapInfo.name = it->second.name;
     hapInfo.package = it->second.modulePackage;
     hapInfo.moduleName = it->second.moduleName;
-    hapInfo.description = it->second.description;
-    hapInfo.descriptionId = it->second.descriptionId;
-    hapInfo.label = it->second.label;
-    hapInfo.labelId = it->second.labelId;
-    hapInfo.iconPath = it->second.icon;
-    hapInfo.iconId = it->second.iconId;
-    hapInfo.mainAbility = it->second.mainAbility;
-    hapInfo.srcPath = it->second.srcPath;
-    hapInfo.hapPath = it->second.hapPath;
+    hapInfo.description = module.description;
+    hapInfo.descriptionId = module.descriptionId;
+    hapInfo.label = module.label;
+    hapInfo.labelId = module.labelId;
+    hapInfo.iconPath = module.icon;
+    hapInfo.iconId = module.iconId;
+    hapInfo.mainAbility = module.mainAbility;
+    hapInfo.srcPath = module.srcPath;
+    hapInfo.hapPath = module.hapPath;
     hapInfo.supportedModes = baseApplicationInfo_->supportedModes;
-    hapInfo.reqCapabilities = it->second.reqCapabilities;
-    hapInfo.colorMode = it->second.colorMode;
-    hapInfo.isRemovable = it->second.isRemovable;
-    hapInfo.isRemovableSet = it->second.isRemovableSet;
-    hapInfo.upgradeFlag = it->second.upgradeFlag;
-    hapInfo.isLibIsolated = it->second.isLibIsolated;
-    hapInfo.nativeLibraryPath = it->second.nativeLibraryPath;
-    hapInfo.cpuAbi = it->second.cpuAbi;
+    hapInfo.reqCapabilities = module.reqCapabilities;
+    hapInfo.colorMode = module.colorMode;
+    hapInfo.isRemovable = module.isRemovable;
+    hapInfo.isRemovableSet = module.isRemovableSet;
+    hapInfo.upgradeFlag = module.upgradeFlag;
+    hapInfo.isLibIsolated = module.isLibIsolated;
+    hapInfo.nativeLibraryPath = module.nativeLibraryPath;
+    hapInfo.cpuAbi = module.cpuAbi;
     hapInfo.versionCode = it->second.versionCode == 0 ? baseBundleInfo_->versionCode : it->second.versionCode;
 
     hapInfo.bundleName = baseApplicationInfo_->bundleName;
-    hapInfo.mainElementName = it->second.mainAbility;
-    hapInfo.pages = it->second.pages;
-    hapInfo.systemTheme = it->second.systemTheme;
-    hapInfo.process = it->second.process;
-    hapInfo.resourcePath = it->second.moduleResPath;
-    hapInfo.srcEntrance = it->second.srcEntrance;
-    hapInfo.uiSyntax = it->second.uiSyntax;
-    hapInfo.virtualMachine = it->second.virtualMachine;
-    hapInfo.deliveryWithInstall = it->second.distro.deliveryWithInstall;
-    hapInfo.installationFree = it->second.distro.installationFree;
-    hapInfo.isModuleJson = it->second.isModuleJson;
-    hapInfo.isStageBasedModel = it->second.isStageBasedModel;
-    hapInfo.deviceTypes = it->second.deviceTypes;
-    hapInfo.requiredDeviceFeatures = it->second.requiredDeviceFeatures;
-    hapInfo.librarySupportDirectory = it->second.librarySupportDirectory;
-    hapInfo.appStartup = it->second.appStartup;
-    hapInfo.formExtensionModule = it->second.formExtensionModule;
-    hapInfo.formWidgetModule = it->second.formWidgetModule;
-    hapInfo.hasIntent = BundleUtil::GetBitValue(it->second.boolSet, InnerModuleInfoBoolFlag::HAS_INTENT);
-    hapInfo.deduplicateHar = BundleUtil::GetBitValue(it->second.boolSet, InnerModuleInfoBoolFlag::HAS_DEDUPLICATE_HAR);
-    std::string moduleType = it->second.distro.moduleType;
+    hapInfo.mainElementName = module.mainAbility;
+    hapInfo.pages = module.pages;
+    hapInfo.systemTheme = module.systemTheme;
+    hapInfo.process = module.process;
+    hapInfo.resourcePath = module.moduleResPath;
+    hapInfo.srcEntrance = module.srcEntrance;
+    hapInfo.uiSyntax = module.uiSyntax;
+    hapInfo.virtualMachine = module.virtualMachine;
+    hapInfo.deliveryWithInstall = module.distro.deliveryWithInstall;
+    hapInfo.installationFree = module.distro.installationFree;
+    hapInfo.isModuleJson = module.isModuleJson;
+    hapInfo.isStageBasedModel = module.isStageBasedModel;
+    hapInfo.deviceTypes = module.deviceTypes;
+    hapInfo.requiredDeviceFeatures = module.requiredDeviceFeatures;
+    hapInfo.librarySupportDirectory = module.librarySupportDirectory;
+    hapInfo.appStartup = module.appStartup;
+    hapInfo.formExtensionModule = module.formExtensionModule;
+    hapInfo.formWidgetModule = module.formWidgetModule;
+    hapInfo.hasIntent = BundleUtil::GetBitValue(module.boolSet, InnerModuleInfoBoolFlag::HAS_INTENT);
+    hapInfo.deduplicateHar = BundleUtil::GetBitValue(module.boolSet, InnerModuleInfoBoolFlag::HAS_DEDUPLICATE_HAR);
+    std::string moduleType = module.distro.moduleType;
     if (moduleType == Profile::MODULE_TYPE_ENTRY) {
         hapInfo.moduleType = ModuleType::ENTRY;
     } else if (moduleType == Profile::MODULE_TYPE_FEATURE) {
@@ -1996,44 +2032,44 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(
             }
         }
     }
-    hapInfo.metadata = it->second.metadata;
-    hapInfo.dependencies = it->second.dependencies;
-    hapInfo.compileMode = ConvertCompileMode(it->second.compileMode);
+    hapInfo.metadata = module.metadata;
+    hapInfo.dependencies = module.dependencies;
+    hapInfo.compileMode = ConvertCompileMode(module.compileMode);
     for (const auto &hqf : hqfInfos_) {
         if (hqf.moduleName == it->second.moduleName) {
             hapInfo.hqfInfo = hqf;
             break;
         }
     }
-    hapInfo.preloads.reserve(it->second.preloads.size());
-    for (const auto &item : it->second.preloads) {
+    hapInfo.preloads.reserve(module.preloads.size());
+    for (const auto &item : module.preloads) {
         PreloadItem preload(item);
         hapInfo.preloads.emplace_back(std::move(preload));
     }
-    hapInfo.resizeable = it->second.resizeable;
-    hapInfo.proxyDatas.reserve(it->second.proxyDatas.size());
-    for (const auto &item : it->second.proxyDatas) {
+    hapInfo.resizeable = module.resizeable;
+    hapInfo.proxyDatas.reserve(module.proxyDatas.size());
+    for (const auto &item : module.proxyDatas) {
         ProxyData proxyData(item);
         hapInfo.proxyDatas.emplace_back(std::move(proxyData));
     }
-    hapInfo.executableBinaryPaths = it->second.executableBinaryPaths;
-    hapInfo.launchServices = it->second.launchServices;
-    hapInfo.buildHash = it->second.buildHash;
-    hapInfo.isolationMode = GetIsolationMode(it->second.isolationMode);
-    hapInfo.compressNativeLibs = it->second.compressNativeLibs;
-    hapInfo.nativeLibraryFileNames = it->second.nativeLibraryFileNames;
-    hapInfo.aotCompileStatus = it->second.aotCompileStatus;
-    hapInfo.fileContextMenu = it->second.fileContextMenu;
-    hapInfo.easyGo = it->second.easyGo;
-    hapInfo.shareFiles = it->second.shareFiles;
-    hapInfo.routerMap = it->second.routerMap;
-    hapInfo.appEnvironments = it->second.appEnvironments;
-    hapInfo.packageName = it->second.packageName;
-    hapInfo.crossAppSharedConfig = it->second.crossAppSharedConfig;
-    hapInfo.abilitySrcEntryDelegator = it->second.abilitySrcEntryDelegator;
-    hapInfo.abilityStageSrcEntryDelegator = it->second.abilityStageSrcEntryDelegator;
-    hapInfo.moduleArkTSMode = it->second.moduleArkTSMode;
-    hapInfo.arkTSMode = it->second.arkTSMode;
+    hapInfo.executableBinaryPaths = module.executableBinaryPaths;
+    hapInfo.launchServices = module.launchServices;
+    hapInfo.buildHash = module.buildHash;
+    hapInfo.isolationMode = GetIsolationMode(module.isolationMode);
+    hapInfo.compressNativeLibs = module.compressNativeLibs;
+    hapInfo.nativeLibraryFileNames = module.nativeLibraryFileNames;
+    hapInfo.aotCompileStatus = module.aotCompileStatus;
+    hapInfo.fileContextMenu = module.fileContextMenu;
+    hapInfo.easyGo = module.easyGo;
+    hapInfo.shareFiles = module.shareFiles;
+    hapInfo.routerMap = module.routerMap;
+    hapInfo.appEnvironments = module.appEnvironments;
+    hapInfo.packageName = module.packageName;
+    hapInfo.crossAppSharedConfig = module.crossAppSharedConfig;
+    hapInfo.abilitySrcEntryDelegator = module.abilitySrcEntryDelegator;
+    hapInfo.abilityStageSrcEntryDelegator = module.abilityStageSrcEntryDelegator;
+    hapInfo.moduleArkTSMode = module.moduleArkTSMode;
+    hapInfo.arkTSMode = module.arkTSMode;
     return std::move(hapInfo);
 }
 
@@ -2467,7 +2503,8 @@ void InnerBundleInfo::UpdatePartialInnerBundleInfo(const InnerBundleInfo &info)
             continue;
         }
         for (auto &innerModuleInfo : innerModuleInfoVector) {
-            if (innerModuleInfo.versionCode != item->second.versionCode) {
+            if (innerModuleInfo.versionCode != item->second.versionCode ||
+                innerModuleInfo.alternateModule != item->second.alternateModule) {
                 continue;
             }
             innerModuleInfo.requiredDeviceFeatures = item->second.requiredDeviceFeatures;
@@ -2715,6 +2752,87 @@ void InnerBundleInfo::UpdateModuleInfo(const InnerBundleInfo &newInfo)
     UpdateIsCompressNativeLibs();
 }
 
+const InnerModuleInfo *InnerBundleInfo::FindSharedModule(const std::string &moduleName,
+    int64_t versionCode, bool alternateModule) const
+{
+    auto modules = innerSharedModuleInfos_.find(moduleName);
+    if (modules == innerSharedModuleInfos_.end()) {
+        return nullptr;
+    }
+    for (const auto &module : modules->second) {
+        if (module.versionCode == versionCode && module.alternateModule == alternateModule) {
+            return &module;
+        }
+    }
+    return nullptr;
+}
+
+const InnerModuleInfo *InnerBundleInfo::SelectSharedModule(const InnerModuleInfo &businessModule) const
+{
+    if (GetApplicationBundleType() != BundleType::SHARED) {
+        return &businessModule;
+    }
+    bool enabled = false;
+    if (GetAlternateModuleState(businessModule.moduleName, businessModule.versionCode, enabled) == ERR_OK &&
+        enabled) {
+        auto escape = FindSharedModule(businessModule.moduleName, businessModule.versionCode, true);
+        if (escape != nullptr) {
+            return escape;
+        }
+    }
+    return &businessModule;
+}
+
+ErrCode InnerBundleInfo::SetAlternateModuleState(const std::string &moduleName,
+    int64_t versionCode, bool enabled)
+{
+    auto modules = innerSharedModuleInfos_.find(moduleName);
+    if (modules == innerSharedModuleInfos_.end() || modules->second.empty()) {
+        return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
+    }
+    if (FindSharedModule(moduleName, versionCode, false) == nullptr) {
+        return ERR_BUNDLE_MANAGER_MODULE_VERSION_NOT_EXIST;
+    }
+    if (enabled && FindSharedModule(moduleName, versionCode, true) == nullptr) {
+        return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
+    }
+    if (enabled) {
+        alternateModuleState_[moduleName].insert(versionCode);
+    } else {
+        ResetAlternateModuleState(moduleName, versionCode);
+    }
+    return ERR_OK;
+}
+
+ErrCode InnerBundleInfo::GetAlternateModuleState(const std::string &moduleName,
+    int64_t versionCode, bool &enabled) const
+{
+    enabled = false;
+    auto modules = innerSharedModuleInfos_.find(moduleName);
+    if (modules == innerSharedModuleInfos_.end() || modules->second.empty()) {
+        return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
+    }
+    if (FindSharedModule(moduleName, versionCode, false) == nullptr) {
+        return ERR_BUNDLE_MANAGER_MODULE_VERSION_NOT_EXIST;
+    }
+    auto state = alternateModuleState_.find(moduleName);
+    enabled = state != alternateModuleState_.end() && state->second.count(versionCode) != 0 &&
+        FindSharedModule(moduleName, versionCode, true) != nullptr;
+    return ERR_OK;
+}
+
+void InnerBundleInfo::ResetAlternateModuleState(const std::string &moduleName, uint32_t versionCode)
+{
+    auto state = alternateModuleState_.find(moduleName);
+    if (state == alternateModuleState_.end()) {
+        return;
+    }
+    state->second.erase(versionCode);
+    if (state->second.empty()) {
+        alternateModuleState_.erase(state);
+    }
+}
+
 bool InnerBundleInfo::GetMaxVerBaseSharedBundleInfo(const std::string &moduleName,
     BaseSharedBundleInfo &baseSharedBundleInfo) const
 {
@@ -2728,7 +2846,13 @@ bool InnerBundleInfo::GetMaxVerBaseSharedBundleInfo(const std::string &moduleNam
         APP_LOGE("No version exists for the shared module(%{public}s)", moduleName.c_str());
         return false;
     }
-    InnerModuleInfo innerModuleInfo = sharedModuleInfoVector.front();
+    auto business = std::find_if(sharedModuleInfoVector.begin(), sharedModuleInfoVector.end(),
+        [](const InnerModuleInfo &module) { return !module.alternateModule; });
+    if (business == sharedModuleInfoVector.end()) {
+        APP_LOGE("No business version exists for the shared module(%{private}s)", moduleName.c_str());
+        return false;
+    }
+    const auto &innerModuleInfo = *SelectSharedModule(*business);
     if (innerModuleInfo.bundleType != BundleType::SHARED) {
         APP_LOGE("GetMaxVerBaseSharedBundleInfo failed, bundleType is invalid");
         return false;
@@ -2763,16 +2887,17 @@ bool InnerBundleInfo::GetBaseSharedBundleInfo(const std::string &moduleName, uin
             APP_LOGE("GetBaseSharedBundleInfo failed, bundleType is invalid");
             return false;
         }
-        if (item.versionCode == versionCode) {
+        if (item.versionCode == versionCode && !item.alternateModule) {
+            const auto &selected = *SelectSharedModule(item);
             baseSharedBundleInfo.bundleName = baseBundleInfo_->name;
             baseSharedBundleInfo.moduleName = item.moduleName;
             baseSharedBundleInfo.versionCode = item.versionCode;
-            baseSharedBundleInfo.nativeLibraryPath = item.nativeLibraryPath;
-            baseSharedBundleInfo.hapPath = item.hapPath;
-            baseSharedBundleInfo.moduleArkTSMode = item.moduleArkTSMode;
-            baseSharedBundleInfo.compressNativeLibs = item.compressNativeLibs;
-            baseSharedBundleInfo.nativeLibraryFileNames = item.nativeLibraryFileNames;
-            baseSharedBundleInfo.librarySupportDirectory = item.librarySupportDirectory;
+            baseSharedBundleInfo.nativeLibraryPath = selected.nativeLibraryPath;
+            baseSharedBundleInfo.hapPath = selected.hapPath;
+            baseSharedBundleInfo.moduleArkTSMode = selected.moduleArkTSMode;
+            baseSharedBundleInfo.compressNativeLibs = selected.compressNativeLibs;
+            baseSharedBundleInfo.nativeLibraryFileNames = selected.nativeLibraryFileNames;
+            baseSharedBundleInfo.librarySupportDirectory = selected.librarySupportDirectory;
             return true;
         }
     }
@@ -2789,12 +2914,15 @@ void InnerBundleInfo::InsertInnerSharedModuleInfo(const std::string &moduleName,
         auto innerModuleInfoVector = iterator->second;
         bool insertFlag = false;
         for (unsigned long i = 0; i < innerModuleInfoVector.size(); i++) {
-            if (innerModuleInfo.versionCode == innerModuleInfoVector.at(i).versionCode) {
+            if (innerModuleInfo.versionCode == innerModuleInfoVector.at(i).versionCode &&
+                innerModuleInfo.alternateModule == innerModuleInfoVector.at(i).alternateModule) {
                 // if the inserted versionCode same as the existing one, replace old innerModuleInfo.
                 innerModuleInfoVector.at(i) = innerModuleInfo;
                 insertFlag = true;
                 break;
-            } else if (innerModuleInfo.versionCode > innerModuleInfoVector.at(i).versionCode) {
+            } else if (innerModuleInfo.versionCode > innerModuleInfoVector.at(i).versionCode ||
+                (innerModuleInfo.versionCode == innerModuleInfoVector.at(i).versionCode &&
+                !innerModuleInfo.alternateModule && innerModuleInfoVector.at(i).alternateModule)) {
                 // if the inserted versionCode bigger then the existing one, insert the specified location.
                 innerModuleInfoVector.emplace(innerModuleInfoVector.begin() + i, innerModuleInfo);
                 insertFlag = true;
@@ -2826,7 +2954,8 @@ void InnerBundleInfo::SetSharedModuleNativeLibraryPath(const std::string &native
     }
     auto &innerModuleInfoVector = sharedModuleInfoIterator->second;
     for (auto iter = innerModuleInfoVector.begin(); iter != innerModuleInfoVector.end(); ++iter) {
-        if (iter->versionCode == moduleInfoIterator->second.versionCode) {
+        if (iter->versionCode == moduleInfoIterator->second.versionCode &&
+            iter->alternateModule == moduleInfoIterator->second.alternateModule) {
             iter->nativeLibraryPath = nativeLibraryPath;
             return;
         }
@@ -2839,7 +2968,11 @@ bool InnerBundleInfo::GetSharedBundleInfo(SharedBundleInfo &sharedBundleInfo) co
     sharedBundleInfo.compatiblePolicy = CompatiblePolicy::BACKWARD_COMPATIBILITY;
     std::vector<SharedModuleInfo> sharedModuleInfos;
     for (const auto &infoVector : innerSharedModuleInfos_) {
-        for (const auto &info : infoVector.second) {
+        for (const auto &business : infoVector.second) {
+            if (business.alternateModule) {
+                continue;
+            }
+            const auto &info = *SelectSharedModule(business);
             SharedModuleInfo sharedModuleInfo;
             sharedModuleInfo.name = info.name;
             sharedModuleInfo.versionCode = info.versionCode;
@@ -3490,7 +3623,7 @@ void InnerBundleInfo::GetModuleWithHashValue(
         return;
     }
 
-    hapModuleInfo.hashValue = it->second.hashValue;
+    hapModuleInfo.hashValue = SelectSharedModule(it->second)->hashValue;
 }
 
 void InnerBundleInfo::ProcessBundleWithHapModuleInfoFlag(
@@ -3517,7 +3650,7 @@ void InnerBundleInfo::ProcessBundleWithHapModuleInfoFlag(
             if (it == innerModuleInfos_.end()) {
                 APP_LOGE("not find module %{public}s", info.second.modulePackage.c_str());
             } else {
-                hapmoduleinfo->hashValue = it->second.hashValue;
+                hapmoduleinfo->hashValue = SelectSharedModule(it->second)->hashValue;
             }
             if (!hasHapModuleFlag && hasEntryModuleFlag && hapmoduleinfo->moduleType != ModuleType::ENTRY) {
                 continue;
@@ -5114,15 +5247,15 @@ std::vector<uint32_t> InnerBundleInfo::GetAllHspVersion() const
 void InnerBundleInfo::DeleteHspModuleByVersion(int32_t versionCode)
 {
     for (auto modulesIt = innerSharedModuleInfos_.begin(); modulesIt != innerSharedModuleInfos_.end();) {
-        if (modulesIt->second.size() == SINGLE_HSP_VERSION &&
-            modulesIt->second.front().versionCode == static_cast<uint32_t>(versionCode)) {
+        auto &modules = modulesIt->second;
+        auto removed = std::remove_if(modules.begin(), modules.end(), [versionCode](const InnerModuleInfo &module) {
+            return module.versionCode == static_cast<uint32_t>(versionCode);
+        });
+        modules.erase(removed, modules.end());
+        ResetAlternateModuleState(modulesIt->first, static_cast<uint32_t>(versionCode));
+        if (modules.empty()) {
             modulesIt = innerSharedModuleInfos_.erase(modulesIt);
         } else {
-            modulesIt->second.erase(
-                std::remove_if(modulesIt->second.begin(), modulesIt->second.end(),
-                    [versionCode] (InnerModuleInfo &module) {
-                        return module.versionCode == static_cast<uint32_t>(versionCode);
-                    }));
             ++modulesIt;
         }
     }
@@ -5238,7 +5371,8 @@ void InnerBundleInfo::UpdateSharedModuleInfo()
     }
     auto &innerModuleInfoVector = sharedModuleInfoIter->second;
     for (auto iter = innerModuleInfoVector.begin(); iter != innerModuleInfoVector.end(); ++iter) {
-        if (iter->versionCode == moduleInfoIter->second.versionCode) {
+        if (iter->versionCode == moduleInfoIter->second.versionCode &&
+            iter->alternateModule == moduleInfoIter->second.alternateModule) {
             iter->hapPath = moduleInfoIter->second.hapPath;
             iter->arkTSMode = moduleInfoIter->second.arkTSMode;
             iter->moduleArkTSMode = moduleInfoIter->second.moduleArkTSMode;
@@ -5247,6 +5381,8 @@ void InnerBundleInfo::UpdateSharedModuleInfo()
             iter->nativeLibraryPath = moduleInfoIter->second.nativeLibraryPath;
             iter->nativeLibraryFileNames = moduleInfoIter->second.nativeLibraryFileNames;
             iter->librarySupportDirectory = moduleInfoIter->second.librarySupportDirectory;
+            iter->modulePath = moduleInfoIter->second.modulePath;
+            iter->moduleResPath = moduleInfoIter->second.moduleResPath;
             return;
         }
     }

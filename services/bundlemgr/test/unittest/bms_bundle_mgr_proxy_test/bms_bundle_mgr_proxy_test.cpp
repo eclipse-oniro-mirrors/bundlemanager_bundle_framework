@@ -19,8 +19,10 @@
 
 #include "bundle_event_callback_host.h"
 #include "bundle_mgr_proxy.h"
+#include "bundle_mgr_host.h"
 #include "get_largest_items_callback_interface.h"
 #include "if_system_ability_manager.h"
+#include "ipc_types.h"
 #include "iremote_stub.h"
 #include "iservice_registry.h"
 #include "process_cache_callback_host.h"
@@ -2767,5 +2769,131 @@ HWTEST_F(BmsBundleMgrProxyTest, CheckBundleExistByDeveloperIdAndAssetGroup_0200,
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
     EXPECT_FALSE(isExist);
 }
+
+namespace {
+class AlternateModuleTestHost : public BundleMgrHost {
+public:
+    bool enabled = false;
+    int64_t lastVersion = 0;
+    ErrCode SetAlternateModuleEnabled(const std::string &bundleName, const std::string &moduleName,
+        int64_t versionCode, bool isEnabled) override
+    {
+        if (bundleName != "provider") {
+            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+        }
+        if (moduleName != "library") {
+            return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
+        }
+        lastVersion = versionCode;
+        enabled = isEnabled;
+        return ERR_OK;
+    }
+    ErrCode GetAlternateModuleState(const std::string &bundleName, const std::string &moduleName,
+        int64_t versionCode, bool &state) override
+    {
+        state = false;
+        if (bundleName != "provider") {
+            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+        }
+        if (moduleName != "library") {
+            return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
+        }
+        lastVersion = versionCode;
+        state = enabled;
+        return ERR_OK;
+    }
+};
+} // namespace
+
+HWTEST_F(BmsBundleMgrProxyTest, AlternateModuleIpc_0001, Function | SmallTest | Level1)
+{
+    sptr<AlternateModuleTestHost> host = new AlternateModuleTestHost();
+    BundleMgrProxy proxy(host->AsObject());
+    bool enabled = true;
+    EXPECT_EQ(proxy.GetAlternateModuleState("provider", "library", 1, enabled), ERR_OK);
+    EXPECT_FALSE(enabled);
+    EXPECT_EQ(proxy.SetAlternateModuleEnabled("provider", "library", 1, true), ERR_OK);
+    EXPECT_EQ(proxy.GetAlternateModuleState("provider", "library", 1, enabled), ERR_OK);
+    EXPECT_TRUE(enabled);
+    EXPECT_EQ(proxy.SetAlternateModuleEnabled("provider", "missing", 1, true), ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
+    EXPECT_EQ(proxy.SetAlternateModuleEnabled("provider", "missing", 1, false), ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
+    EXPECT_TRUE(host->enabled);
+    EXPECT_EQ(proxy.SetAlternateModuleEnabled("provider", "library", 1, false), ERR_OK);
+    EXPECT_EQ(proxy.GetAlternateModuleState("provider", "library", 1, enabled), ERR_OK);
+    EXPECT_FALSE(enabled);
+    for (int64_t versionCode : std::vector<int64_t> {0, 2, 4294967295LL, -1, 4294967297LL, INT64_MIN, INT64_MAX}) {
+        EXPECT_EQ(proxy.SetAlternateModuleEnabled("provider", "library", versionCode, true), ERR_OK);
+        EXPECT_EQ(host->lastVersion, versionCode);
+        host->lastVersion = 1;
+        EXPECT_EQ(proxy.GetAlternateModuleState("provider", "library", versionCode, enabled), ERR_OK);
+        EXPECT_EQ(host->lastVersion, versionCode);
+        EXPECT_TRUE(enabled);
+    }
+    EXPECT_EQ(proxy.SetAlternateModuleEnabled("", "library", 1, true), ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_EQ(proxy.SetAlternateModuleEnabled("provider", "", 1, false), ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
+}
+
+HWTEST_F(BmsBundleMgrProxyTest, AlternateModuleEmptyNames_0001, Function | SmallTest | Level1)
+{
+    sptr<AlternateModuleTestHost> host = new AlternateModuleTestHost();
+    BundleMgrProxy proxy(host->AsObject());
+    ASSERT_EQ(proxy.SetAlternateModuleEnabled("provider", "library", 1, true), ERR_OK);
+    struct ErrorCase {
+        std::string bundleName;
+        std::string moduleName;
+        ErrCode expected;
+    };
+    for (const auto &item : std::vector<ErrorCase> {
+        {"", "library", ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST},
+        {"", "", ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST},
+        {"missing", "", ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST},
+        {"provider", "", ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST},
+        {"provider", "missing", ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST}}) {
+        SCOPED_TRACE(testing::Message() << "bundle=" << item.bundleName << ", module=" << item.moduleName);
+        for (bool enable : {false, true}) {
+            EXPECT_EQ(proxy.SetAlternateModuleEnabled(item.bundleName, item.moduleName, 1, enable), item.expected);
+            EXPECT_TRUE(host->enabled);
+        }
+        bool enabled = true;
+        EXPECT_EQ(proxy.GetAlternateModuleState(item.bundleName, item.moduleName, 1, enabled), item.expected);
+        EXPECT_FALSE(enabled);
+        EXPECT_TRUE(host->enabled);
+    }
+}
+
+HWTEST_F(BmsBundleMgrProxyTest, AlternateModuleIpc_0002, Function | SmallTest | Level1)
+{
+    sptr<AlternateModuleTestHost> host = new AlternateModuleTestHost();
+    for (auto code : {BundleMgrInterfaceCode::SET_ALTERNATE_MODULE_ENABLED,
+        BundleMgrInterfaceCode::GET_ALTERNATE_MODULE_STATE}) {
+        MessageParcel request;
+        MessageParcel reply;
+        MessageOption option;
+        ASSERT_TRUE(request.WriteInterfaceToken(IBundleMgr::GetDescriptor()));
+        ASSERT_TRUE(request.WriteString("provider"));
+        ASSERT_TRUE(request.WriteString("library"));
+        EXPECT_EQ(host->OnRemoteRequest(static_cast<uint32_t>(code), request, reply, option),
+            UNKNOWN_ERROR);
+        EXPECT_FALSE(host->enabled);
+    }
+}
+
+// A truncated setter request must not turn an enabled alternate module off.
+HWTEST_F(BmsBundleMgrProxyTest, AlternateModuleIpc_0003, Function | SmallTest | Level1)
+{
+    sptr<AlternateModuleTestHost> host = new AlternateModuleTestHost();
+    host->enabled = true;
+    MessageParcel request;
+    MessageParcel reply;
+    MessageOption option;
+    ASSERT_TRUE(request.WriteInterfaceToken(IBundleMgr::GetDescriptor()));
+    ASSERT_TRUE(request.WriteString("provider"));
+    ASSERT_TRUE(request.WriteString("library"));
+    ASSERT_TRUE(request.WriteInt64(1));
+    EXPECT_EQ(host->OnRemoteRequest(static_cast<uint32_t>(BundleMgrInterfaceCode::SET_ALTERNATE_MODULE_ENABLED),
+        request, reply, option), UNKNOWN_ERROR);
+    EXPECT_TRUE(host->enabled);
+}
+
 }
 }

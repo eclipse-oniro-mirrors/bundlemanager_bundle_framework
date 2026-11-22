@@ -4822,6 +4822,53 @@ ErrCode BundleMgrProxy::GetAllSharedBundleInfo(std::vector<SharedBundleInfo> &sh
         data, sharedBundles);
 }
 
+ErrCode BundleMgrProxy::SetAlternateModuleEnabled(const std::string &bundleName, const std::string &moduleName,
+    int64_t versionCode, bool isEnabled)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    if (!data.WriteInterfaceToken(GetDescriptor()) || !data.WriteString(bundleName) || !data.WriteString(moduleName) ||
+        !data.WriteInt64(versionCode) || !data.WriteBool(isEnabled)) {
+        APP_LOGE("write alternate module request failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    ErrCode result = SendTransactCmdWithLogErrCode(BundleMgrInterfaceCode::SET_ALTERNATE_MODULE_ENABLED, data, reply);
+    if (result != ERR_OK) {
+        return result;
+    }
+    if (!reply.ReadInt32(result)) {
+        APP_LOGE("read alternate module reply failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return result;
+}
+
+ErrCode BundleMgrProxy::GetAlternateModuleState(const std::string &bundleName, const std::string &moduleName,
+    int64_t versionCode, bool &enabled)
+{
+    enabled = false;
+    MessageParcel data;
+    MessageParcel reply;
+    if (!data.WriteInterfaceToken(GetDescriptor()) || !data.WriteString(bundleName) || !data.WriteString(moduleName) ||
+        !data.WriteInt64(versionCode)) {
+        APP_LOGE("write alternate module request failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    ErrCode result = SendTransactCmdWithLogErrCode(BundleMgrInterfaceCode::GET_ALTERNATE_MODULE_STATE, data, reply);
+    if (result != ERR_OK) {
+        return result;
+    }
+    if (!reply.ReadInt32(result)) {
+        APP_LOGE("read alternate module reply failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (result == ERR_OK && !reply.ReadBool(enabled)) {
+        APP_LOGE("read alternate module reply failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return result;
+}
+
 ErrCode BundleMgrProxy::GetSharedBundleInfo(const std::string &bundleName, const std::string &moduleName,
     std::vector<SharedBundleInfo> &sharedBundles)
 {

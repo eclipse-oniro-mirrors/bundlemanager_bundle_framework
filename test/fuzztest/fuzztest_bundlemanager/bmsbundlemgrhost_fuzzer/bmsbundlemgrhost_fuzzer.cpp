@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,6 +18,7 @@
 #include <cstddef>
 #include <cstdint>
 #define private public
+#include "bundle_framework_core_ipc_interface_code.h"
 #include "bundle_mgr_host.h"
 #include "securec.h"
 #include "bms_fuzztest_util.h"
@@ -38,6 +39,28 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
         MessageOption option;
         BundleMgrHost bundleMgrHost;
         bundleMgrHost.OnRemoteRequest(code, datas, reply, option);
+    }
+    for (auto code : {BundleMgrInterfaceCode::SET_ALTERNATE_MODULE_ENABLED,
+        BundleMgrInterfaceCode::GET_ALTERNATE_MODULE_STATE}) {
+        MessageParcel datas;
+        datas.WriteInterfaceToken(BundleMgrHost::GetDescriptor());
+        datas.WriteBuffer(data, size);
+        datas.RewindRead(0);
+        MessageParcel reply;
+        MessageOption option;
+        BundleMgrHost bundleMgrHost;
+        bundleMgrHost.OnRemoteRequest(static_cast<uint32_t>(code), datas, reply, option);
+        FuzzedDataProvider fdp(data, size);
+        MessageParcel structured;
+        structured.WriteInterfaceToken(BundleMgrHost::GetDescriptor());
+        structured.WriteString(fdp.ConsumeRandomLengthString(BMSFuzzTestUtil::STRING_MAX_LENGTH));
+        structured.WriteString(fdp.ConsumeRandomLengthString(BMSFuzzTestUtil::STRING_MAX_LENGTH));
+        structured.WriteInt64(fdp.ConsumeIntegral<int64_t>());
+        if (code == BundleMgrInterfaceCode::SET_ALTERNATE_MODULE_ENABLED) {
+            structured.WriteBool(fdp.ConsumeBool());
+        }
+        MessageParcel structuredReply;
+        bundleMgrHost.OnRemoteRequest(static_cast<uint32_t>(code), structured, structuredReply, option);
     }
     return true;
 }

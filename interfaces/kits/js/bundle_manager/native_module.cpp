@@ -174,6 +174,8 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
         DECLARE_NAPI_PROPERTY("AppDistributionType", nAppDistributionType),
         DECLARE_NAPI_FUNCTION("getAllSharedBundleInfo", GetAllSharedBundleInfo),
         DECLARE_NAPI_FUNCTION("getSharedBundleInfo", GetSharedBundleInfo),
+        DECLARE_NAPI_FUNCTION("setAlternateModuleEnabled", SetAlternateModuleEnabled),
+        DECLARE_NAPI_FUNCTION("isAlternateModuleEnabled", IsAlternateModuleEnabled),
         DECLARE_NAPI_FUNCTION("getAppProvisionInfo", GetAppProvisionInfo),
         DECLARE_NAPI_FUNCTION("getAppProvisionInfoSync", GetAppProvisionInfoSync),
         DECLARE_NAPI_FUNCTION("getSpecifiedDistributionType", GetSpecifiedDistributionType),

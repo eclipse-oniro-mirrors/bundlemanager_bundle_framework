@@ -1447,19 +1447,23 @@ bool BundleInstallChecker::GetHideDesktopIconByBundlePath(const std::string &bun
 ErrCode BundleInstallChecker::CheckModuleNameForMulitHaps(
     const std::unordered_map<std::string, InnerBundleInfo> &infos)
 {
-    std::set<std::string> moduleSet;
+    std::set<std::pair<std::string, bool>> moduleSet;
     for (const auto &info : infos) {
         std::vector<std::string> moduleVec = info.second.GetDistroModuleName();
         if (moduleVec.empty()) {
             LOG_E(BMS_TAG_INSTALLER, "moduleName vector is empty");
             return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
         }
-        if (moduleSet.count(moduleVec[0])) {
+        const auto &modules = info.second.GetInnerModuleInfos();
+        bool alternateModule = info.second.GetApplicationBundleType() == BundleType::SHARED &&
+            !modules.empty() && modules.begin()->second.alternateModule;
+        const auto key = std::make_pair(moduleVec[0], alternateModule);
+        if (moduleSet.count(key)) {
             LOG_E(BMS_TAG_INSTALLER, "the moduleName: %{public}s is not unique in the haps", moduleVec[0].c_str());
             SetCheckResultMsg("the moduleName: " + moduleVec[0] + " is not unique in the haps");
             return ERR_APPEXECFWK_INSTALL_NOT_UNIQUE_DISTRO_MODULE_NAME;
         }
-        moduleSet.insert(moduleVec[0]);
+        moduleSet.insert(key);
     }
     return ERR_OK;
 }
