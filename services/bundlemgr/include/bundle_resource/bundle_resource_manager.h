@@ -111,6 +111,12 @@ public:
     bool DeleteDynamicIconResource(const std::string &bundleName, const int32_t userId, const int32_t appIndex,
         const IconResourceType type = IconResourceType::UNKNOWN);
 
+    bool SaveThemeTimestamp(int32_t userId, int64_t timestamp);
+
+    bool GetThemeTimestamp(int32_t userId, int64_t &timestamp);
+
+    bool DeleteThemeTimestamp(int32_t userId);
+
     bool AddAllResourceInfo(const int32_t userId, const uint32_t type);
 
     bool AddResourceInfosWhenSystemThemeChanged(
@@ -167,7 +173,7 @@ private:
 
     uint32_t CheckResourceFlags(const uint32_t flags);
 
-    void SendBundleResourcesChangedEvent(const int32_t userId, const uint32_t type);
+    void SendBundleResourcesChangedEvent(const int32_t userId, const uint32_t type, int64_t themeTimestamp);
 
     void InnerProcessResourceInfoBySystemLanguageChanged(
         std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap);

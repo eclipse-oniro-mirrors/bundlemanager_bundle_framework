@@ -33,6 +33,7 @@ constexpr const char* KEY_APP_BUNDLE_NAME = "bundleName";
 constexpr const char* KEY_APP_BUNDLE_TYPE = "bundleType";
 constexpr const char* KEY_APP_TARGET_API_VERSION = "targetAPIVersion";
 constexpr const char* KEY_APP_API_VERSION = "apiVersion";
+constexpr const char* KEY_APP_SHARED_UID = "sharedUID";
 constexpr const char* KEY_APP_ALLOW_AUTO_CONTROL_INTENT = "allowAutoControlIntent";
 // module fields
 constexpr const char* KEY_MODULE_NAME = "name";
@@ -43,6 +44,7 @@ constexpr const char* KEY_MODULE_SKILL_PROFILES = "skillProfiles";
 constexpr const char* KEY_MODULE_REQUEST_PERMISSIONS = "requestPermissions";
 constexpr const char* KEY_MODULE_REQ_PERMISSIONS = "reqPermissions";
 constexpr const char* KEY_MODULE_DEFINE_PERMISSIONS = "definePermissions";
+constexpr const char* KEY_MODULE_DEVICE_TYPES = "deviceTypes";
 // skillProfile fields
 constexpr const char* KEY_SKILL_PROFILE_NAME = "name";
 // requestPermission fields
@@ -213,6 +215,27 @@ bool ParseSkillNames(const nlohmann::json &moduleObj, std::vector<std::string> &
     return true;
 }
 
+bool ParseDeviceTypes(const nlohmann::json &moduleObj, std::vector<std::string> &outDeviceTypes)
+{
+    auto it = moduleObj.find(KEY_MODULE_DEVICE_TYPES);
+    if (it == moduleObj.end()) {
+        return true;
+    }
+    if (!it->is_array()) {
+        return false;
+    }
+    for (const auto &item : *it) {
+        if (!item.is_string()) {
+            continue;
+        }
+        std::string deviceType = item.get<std::string>();
+        if (!deviceType.empty()) {
+            outDeviceTypes.emplace_back(std::move(deviceType));
+        }
+    }
+    return true;
+}
+
 bool ParseApiTargetVersion(const nlohmann::json &appObj, int32_t &apiTargetVersion)
 {
     // Stage model
@@ -253,6 +276,9 @@ bool ParseSpmModule(const std::string &moduleJson, InnerModuleInfoForSpm &module
         return false;
     }
     const auto &appObj = *appIt;
+
+    // sharedUID (optional, app-level)
+    moduleInfo.sharedUID = GetJsonBool(appObj, KEY_APP_SHARED_UID);
 
     // bundleName (required)
     moduleInfo.bundleName = GetJsonString(appObj, KEY_APP_BUNDLE_NAME);
@@ -306,6 +332,11 @@ bool ParseSpmModule(const std::string &moduleJson, InnerModuleInfoForSpm &module
     // skillProfiles -> skillName (optional)
     if (!ParseSkillNames(moduleObj, moduleInfo.skillName)) {
         LOG_NOFUNC_E(BMS_TAG_DEFAULT, "parse module json failed, skillProfiles is invalid");
+        return false;
+    }
+
+    // deviceTypes (optional)
+    if (!ParseDeviceTypes(moduleObj, moduleInfo.deviceTypes)) {
         return false;
     }
 

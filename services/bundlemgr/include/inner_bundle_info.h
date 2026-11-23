@@ -91,6 +91,7 @@ struct InnerModuleInfo {
     bool isModuleJson = false;
     bool isStageBasedModel = false;
     bool isLibIsolated = false;
+    bool alternateModule = false;
     bool compressNativeLibs = true;
     bool isSoStoredCompressed = false;
     bool extractNativeLibs = true;
@@ -1456,10 +1457,7 @@ public:
     {
         return baseBundleInfo_->isPreInstallApp;
     }
-    void SetBundleCheckBySpm(bool checked)
-    {
-        checkBySpm_ = checked;
-    }
+    void SetBundleCheckBySpm(bool checked);
     bool IsBundleCheckBySpm() const
     {
         return checkBySpm_;
@@ -2115,6 +2113,14 @@ public:
         return provisionMetadatas_;
     }
 
+    // Alternate selection is provider/module/version scoped; HSP version selection is unchanged.
+    const InnerModuleInfo *FindSharedModule(const std::string &moduleName, int64_t versionCode,
+        bool alternateModule) const;
+    const InnerModuleInfo *SelectSharedModule(const InnerModuleInfo &businessModule) const;
+    ErrCode SetAlternateModuleState(const std::string &moduleName, int64_t versionCode, bool enabled);
+    ErrCode GetAlternateModuleState(const std::string &moduleName, int64_t versionCode, bool &enabled) const;
+    void ResetAlternateModuleState(const std::string &moduleName, uint32_t versionCode);
+
     const std::map<std::string, std::vector<InnerModuleInfo>> &GetInnerSharedModuleInfos() const
     {
         return innerSharedModuleInfos_;
@@ -2136,7 +2142,8 @@ public:
         std::vector<std::string> hspModuleNames;
         for (const auto &[moduleName, modules] : innerSharedModuleInfos_) {
             for (const auto &item : modules) {
-                if (item.versionCode == versionCode) {
+                if (item.versionCode == versionCode &&
+                    std::find(hspModuleNames.begin(), hspModuleNames.end(), moduleName) == hspModuleNames.end()) {
                     hspModuleNames.emplace_back(moduleName);
                 }
             }
@@ -2348,6 +2355,16 @@ public:
     std::vector<std::string> GetAllowListenBundleChangedEvent() const
     {
         return baseApplicationInfo_->allowListenBundleChangedEvent;
+    }
+
+    std::vector<std::string> GetNativeChildProcessPreloadSoList() const
+    {
+        return baseApplicationInfo_->nativeChildProcessPreloadSoList;
+    }
+
+    void SetNativeChildProcessPreloadSoList(const std::vector<std::string> &nativeChildProcessPreloadSoList)
+    {
+        baseApplicationInfo_->nativeChildProcessPreloadSoList = nativeChildProcessPreloadSoList;
     }
 
     std::string GetDeveloperId() const
@@ -2745,6 +2762,7 @@ private:
 
     // shared module info
     std::map<std::string, std::vector<InnerModuleInfo>> innerSharedModuleInfos_ ;
+    std::map<std::string, std::set<uint32_t>> alternateModuleState_;
 
     // key:moduleName value:ExtendResourceInfo
     std::map<std::string, ExtendResourceInfo> extendResourceInfos_;

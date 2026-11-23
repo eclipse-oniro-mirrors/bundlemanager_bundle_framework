@@ -52,6 +52,7 @@ const char* BUNDLE_INFO_TARGET_MINOR_API_VERSION = "targetMinorApiVersion";
 const char* BUNDLE_INFO_TARGET_PATCH_API_VERSION = "targetPatchApiVersion";
 const char* BUNDLE_INFO_RELEASE_TYPE = "releaseType";
 const char* BUNDLE_INFO_UID = "uid";
+const char* BUNDLE_INFO_APP_UID = "appUid";
 const char* BUNDLE_INFO_GID = "gid";
 const char* BUNDLE_INFO_DEVICE_MODE_DISTRIBUTION_POLICY = "deviceModeDistributionPolicy";
 const char* BUNDLE_INFO_APP_SANDBOX_POLICY = "appSandboxPolicy";
@@ -611,6 +612,7 @@ bool BundleInfo::ReadFromParcel(Parcel &parcel)
     sandboxCreatorBundleName = Str16ToStr8(parcel.ReadString16());
     deviceModeDistributionPolicy = static_cast<DeviceModeDistributionPolicy>(parcel.ReadInt32());
     appSandboxPolicy = static_cast<AppSandboxPolicy>(parcel.ReadInt32());
+    appUid = parcel.ReadInt32();
     return true;
 }
 
@@ -739,6 +741,7 @@ bool BundleInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(sandboxCreatorBundleName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(deviceModeDistributionPolicy));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(appSandboxPolicy));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appUid);
     return true;
 }
 
@@ -927,6 +930,7 @@ void to_json(nlohmann::json &jsonObject, const BundleInfo &bundleInfo)
         {BUNDLE_INFO_TARGET_PATCH_API_VERSION, bundleInfo.targetPatchApiVersion},
         {BUNDLE_INFO_RELEASE_TYPE, bundleInfo.releaseType},
         {BUNDLE_INFO_UID, bundleInfo.uid},
+        {BUNDLE_INFO_APP_UID, bundleInfo.appUid},
         {BUNDLE_INFO_GID, bundleInfo.gid},
         {BUNDLE_INFO_SEINFO, bundleInfo.seInfo},
         {BUNDLE_INFO_INSTALL_TIME, bundleInfo.installTime},
@@ -1150,6 +1154,20 @@ void from_json(const nlohmann::json &jsonObject, BundleInfo &bundleInfo)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int>(jsonObject,
+        jsonObjectEnd,
+        BUNDLE_INFO_APP_UID,
+        bundleInfo.appUid,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    // OTA compat: records persisted before the "appUid" key existed mirror
+    // appUid from uid (appUid mirrors uid at this stage; the uid-to-userId
+    // parent requirement owns later migration).
+    if (bundleInfo.appUid == -1 && bundleInfo.uid != -1) {
+        bundleInfo.appUid = bundleInfo.uid;
+    }
     GetValueIfFindKey<int>(jsonObject,
         jsonObjectEnd,
         BUNDLE_INFO_GID,

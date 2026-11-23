@@ -16,20 +16,26 @@
 #define private public
 #define protected public
 
+#include <atomic>
 #include <fstream>
 #include <gtest/gtest.h>
+#include <limits>
 #include <set>
 #include <sstream>
 #include <string>
+#include <thread>
 #include <unistd.h>
 
 #include "accesstoken_kit.h"
+#include "bms_param.h"
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
+#include "bundle_resource_constants.h"
 #include "bundle_resource_manager.h"
 #include "installd/installd_service.h"
 #include "installd_client.h"
 #include "mock_status_receiver.h"
+#include "scope_guard.h"
 
 using namespace testing::ext;
 using namespace OHOS;
@@ -618,4 +624,218 @@ HWTEST_F(BmsBundleResourceManagerTest, BundleResourceManager_RebuildResourceDb_0
     bundleMgrService->dataMgr_ = savedDataMgr;
 }
 }
+
+// Timestamp storage uses its own table in bundleResource.db; these users are reserved for this fixture.
+class ThemeTimestampStorageTest : public testing::Test {
+protected:
+    void SetUp() override
+    {
+        manager_ = std::make_unique<BundleResourceManager>();
+        storage_ = manager_->bundleResourceRdb_->themeTimestampRdbDataManager_;
+        ASSERT_NE(storage_, nullptr);
+        ClearRecords();
+    }
+
+    void TearDown() override
+    {
+        ClearRecords();
+        BmsParam param;
+        param.DeleteBmsParam("themeTimestamp_29001");
+        param.DeleteBmsParam("themeTimestamp_other_param_test");
+    }
+
+    void ClearRecords()
+    {
+        NativeRdb::AbsRdbPredicates predicates(BundleResourceConstants::THEME_TIMESTAMP_RDB_TABLE_NAME);
+        const std::vector<std::string> users {std::to_string(firstUser), std::to_string(secondUser)};
+        predicates.In(BundleResourceConstants::USER_ID, users);
+        EXPECT_TRUE(storage_->DeleteData(predicates));
+    }
+
+    static constexpr int32_t firstUser = 29001;
+    static constexpr int32_t secondUser = 29002;
+    std::unique_ptr<BundleResourceManager> manager_;
+    std::shared_ptr<RdbDataManager> storage_;
+};
+
+HWTEST_F(ThemeTimestampStorageTest, ThemeTimestamp_NoRecord, TestSize.Level1)
+{
+    int64_t timestamp = 1234;
+    EXPECT_TRUE(manager_->GetThemeTimestamp(firstUser, timestamp));
+    EXPECT_EQ(timestamp, -1);
+    EXPECT_FALSE(manager_->GetThemeTimestamp(Constants::ALL_USERID, timestamp));
+    EXPECT_FALSE(manager_->GetThemeTimestamp(Constants::ANY_USERID, timestamp));
+}
+
+HWTEST_F(ThemeTimestampStorageTest, ThemeTimestamp_UserIsolationAndUpdate, TestSize.Level1)
+{
+    ASSERT_TRUE(manager_->SaveThemeTimestamp(firstUser, 1234));
+    ASSERT_TRUE(manager_->SaveThemeTimestamp(secondUser, 5678));
+    ASSERT_TRUE(manager_->SaveThemeTimestamp(firstUser, 1250));
+    int64_t timestamp = 0;
+    ASSERT_TRUE(manager_->GetThemeTimestamp(firstUser, timestamp));
+    EXPECT_EQ(timestamp, 1250);
+    ASSERT_TRUE(manager_->GetThemeTimestamp(secondUser, timestamp));
+    EXPECT_EQ(timestamp, 5678);
+    EXPECT_EQ(storage_->bmsRdbConfig_.dbName, BundleResourceConstants::BUNDLE_RESOURCE_RDB_NAME);
+    EXPECT_EQ(storage_->bmsRdbConfig_.tableName, BundleResourceConstants::THEME_TIMESTAMP_RDB_TABLE_NAME);
+    NativeRdb::AbsRdbPredicates predicates(BundleResourceConstants::THEME_TIMESTAMP_RDB_TABLE_NAME);
+    predicates.EqualTo(BundleResourceConstants::USER_ID, firstUser);
+    auto rows = storage_->QueryData(predicates);
+    ASSERT_NE(rows, nullptr);
+    ScopeGuard close([rows] { rows->Close(); });
+    int count = 0;
+    ASSERT_EQ(rows->GetRowCount(count), NativeRdb::E_OK);
+    EXPECT_EQ(count, 1);
+}
+
+HWTEST_F(ThemeTimestampStorageTest, ThemeTimestamp_DeleteUserRecord, TestSize.Level1)
+{
+    ASSERT_TRUE(manager_->SaveThemeTimestamp(firstUser, 1794614400123LL));
+    ASSERT_TRUE(manager_->SaveThemeTimestamp(secondUser, 1794614400456LL));
+    ASSERT_TRUE(manager_->DeleteThemeTimestamp(secondUser));
+    int64_t timestamp = 0;
+    ASSERT_TRUE(manager_->GetThemeTimestamp(secondUser, timestamp));
+    EXPECT_EQ(timestamp, -1);
+    ASSERT_TRUE(manager_->GetThemeTimestamp(firstUser, timestamp));
+    EXPECT_EQ(timestamp, 1794614400123LL);
+    EXPECT_TRUE(manager_->DeleteThemeTimestamp(secondUser));
+    ASSERT_TRUE(manager_->SaveThemeTimestamp(firstUser, 1794614400789LL));
+    BundleResourceRdb reopened;
+    ASSERT_TRUE(reopened.GetThemeTimestamp(secondUser, timestamp));
+    EXPECT_EQ(timestamp, -1);
+    ASSERT_TRUE(reopened.GetThemeTimestamp(firstUser, timestamp));
+    EXPECT_EQ(timestamp, 1794614400789LL);
+}
+
+HWTEST_F(ThemeTimestampStorageTest, ThemeTimestamp_DeleteInvalidUser, TestSize.Level1)
+{
+    ASSERT_TRUE(manager_->SaveThemeTimestamp(firstUser, 1234));
+    ASSERT_TRUE(manager_->SaveThemeTimestamp(secondUser, 5678));
+    EXPECT_FALSE(manager_->DeleteThemeTimestamp(Constants::INVALID_USERID));
+    EXPECT_FALSE(manager_->DeleteThemeTimestamp(Constants::ALL_USERID));
+    EXPECT_FALSE(manager_->DeleteThemeTimestamp(Constants::ANY_USERID));
+    EXPECT_FALSE(manager_->bundleResourceRdb_->DeleteThemeTimestamp(Constants::INVALID_USERID));
+    int64_t timestamp = -1;
+    ASSERT_TRUE(manager_->GetThemeTimestamp(firstUser, timestamp));
+    EXPECT_EQ(timestamp, 1234);
+    ASSERT_TRUE(manager_->GetThemeTimestamp(secondUser, timestamp));
+    EXPECT_EQ(timestamp, 5678);
+}
+
+HWTEST_F(ThemeTimestampStorageTest, ThemeTimestamp_DeleteStorageUnavailable, TestSize.Level1)
+{
+    ASSERT_TRUE(manager_->SaveThemeTimestamp(firstUser, 1234));
+    manager_->bundleResourceRdb_->themeTimestampRdbDataManager_.reset();
+    EXPECT_FALSE(manager_->DeleteThemeTimestamp(firstUser));
+    manager_->bundleResourceRdb_.reset();
+    EXPECT_FALSE(manager_->DeleteThemeTimestamp(firstUser));
+}
+
+HWTEST_F(ThemeTimestampStorageTest, ThemeTimestamp_Int64Range, TestSize.Level1)
+{
+    const int64_t values[] = {0, 2147483648LL, 1794614400123LL, std::numeric_limits<int64_t>::max()};
+    for (auto value : values) {
+        ASSERT_TRUE(manager_->SaveThemeTimestamp(firstUser, value));
+        int64_t timestamp = -1;
+        ASSERT_TRUE(manager_->GetThemeTimestamp(firstUser, timestamp));
+        EXPECT_EQ(timestamp, value);
+    }
+    EXPECT_FALSE(manager_->SaveThemeTimestamp(firstUser, -1));
+    EXPECT_FALSE(manager_->SaveThemeTimestamp(Constants::INVALID_USERID, 1234));
+}
+
+HWTEST_F(ThemeTimestampStorageTest, ThemeTimestamp_InvalidRecord, TestSize.Level1)
+{
+    // INTEGER affinity can still contain malformed TEXT or REAL data after corruption/fault injection.
+    const std::vector<std::string> values = {"", "abc", "1234x", "-1234", "9223372036854775808", "1234.5"};
+    for (const auto &value : values) {
+        NativeRdb::ValuesBucket record;
+        record.PutInt(BundleResourceConstants::USER_ID, firstUser);
+        record.PutString(BundleResourceConstants::TIMESTAMP, value);
+        ASSERT_TRUE(storage_->InsertData(record));
+        int64_t timestamp = 5678;
+        EXPECT_FALSE(manager_->GetThemeTimestamp(firstUser, timestamp)) << value;
+        EXPECT_EQ(timestamp, -1) << value;
+    }
+}
+
+HWTEST_F(ThemeTimestampStorageTest, ThemeTimestamp_UnavailableDoesNotReturnOldValue, TestSize.Level1)
+{
+    ASSERT_TRUE(manager_->SaveThemeTimestamp(firstUser, 1234));
+    manager_->bundleResourceRdb_->themeTimestampRdbDataManager_.reset();
+    int64_t timestamp = 1234;
+    EXPECT_FALSE(manager_->SaveThemeTimestamp(firstUser, 1250));
+    EXPECT_FALSE(manager_->GetThemeTimestamp(firstUser, timestamp));
+    EXPECT_EQ(timestamp, -1);
+    manager_->bundleResourceRdb_.reset();
+    EXPECT_FALSE(manager_->SaveThemeTimestamp(firstUser, 1250));
+    EXPECT_FALSE(manager_->GetThemeTimestamp(firstUser, timestamp));
+}
+
+HWTEST_F(ThemeTimestampStorageTest, ThemeTimestamp_OtherParametersRemainUnchanged, TestSize.Level1)
+{
+    BmsParam param;
+    ASSERT_TRUE(param.SaveBmsParam("themeTimestamp_other_param_test", "keep"));
+    ASSERT_TRUE(manager_->SaveThemeTimestamp(firstUser, 1234));
+    int64_t timestamp = 0;
+    ASSERT_TRUE(manager_->GetThemeTimestamp(firstUser, timestamp));
+    std::string value;
+    ASSERT_TRUE(param.GetBmsParam("themeTimestamp_other_param_test", value));
+    EXPECT_EQ(value, "keep");
+}
+
+HWTEST_F(ThemeTimestampStorageTest, ThemeTimestamp_IndependentOfBmsParam, TestSize.Level1)
+{
+    BmsParam param;
+    ASSERT_TRUE(param.SaveBmsParam("themeTimestamp_29001", "9999"));
+    int64_t timestamp = 0;
+    EXPECT_TRUE(manager_->GetThemeTimestamp(firstUser, timestamp));
+    EXPECT_EQ(timestamp, -1);
+    ASSERT_TRUE(manager_->SaveThemeTimestamp(firstUser, 1794614400123LL));
+    std::string value;
+    ASSERT_TRUE(param.GetBmsParam("themeTimestamp_29001", value));
+    EXPECT_EQ(value, "9999");
+    ASSERT_TRUE(manager_->GetThemeTimestamp(firstUser, timestamp));
+    EXPECT_EQ(timestamp, 1794614400123LL);
+}
+
+HWTEST_F(ThemeTimestampStorageTest, ThemeTimestamp_ReopenPreservesRecord, TestSize.Level1)
+{
+    ASSERT_TRUE(manager_->SaveThemeTimestamp(firstUser, 1794614400123LL));
+    BundleResourceRdb reopened;
+    int64_t timestamp = 0;
+    ASSERT_TRUE(reopened.GetThemeTimestamp(firstUser, timestamp));
+    EXPECT_EQ(timestamp, 1794614400123LL);
+}
+
+HWTEST_F(ThemeTimestampStorageTest, ThemeTimestamp_ConcurrentReadWrite, TestSize.Level1)
+{
+    constexpr int64_t first = 1794614400123LL;
+    constexpr int64_t second = 1794614400456LL;
+    ASSERT_TRUE(manager_->SaveThemeTimestamp(firstUser, first));
+    std::atomic<bool> valid {true};
+    auto writer = [this, &valid]() {
+        for (int i = 0; i < 100; ++i) {
+            if (!manager_->SaveThemeTimestamp(firstUser, i % 2 == 0 ? first : second)) {
+                valid = false;
+            }
+        }
+    };
+    auto reader = [this, &valid]() {
+        for (int i = 0; i < 100; ++i) {
+            int64_t timestamp = 0;
+            if (!manager_->GetThemeTimestamp(firstUser, timestamp) ||
+                (timestamp != first && timestamp != second)) {
+                valid = false;
+            }
+        }
+    };
+    std::thread writeThread(writer);
+    std::thread readThread(reader);
+    writeThread.join();
+    readThread.join();
+    EXPECT_TRUE(valid.load());
+}
+
 } // OHOS

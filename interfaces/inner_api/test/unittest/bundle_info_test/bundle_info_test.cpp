@@ -913,5 +913,132 @@ HWTEST_F(BundleInfoTest, AllowAutoControlIntent_Parcel, Function | SmallTest | L
     EXPECT_EQ(parcel.GetReadableBytes(), 0U);
 }
 
+/**
+ * @tc.name: SharedUID_Json
+ * @tc.desc: Persist sharedUID as a boolean, restore it, and default a missing key to false.
+ */
+HWTEST_F(BundleInfoTest, SharedUID_Json, Function | SmallTest | Level1)
+{
+    for (bool shared : {false, true}) {
+        ApplicationInfo source;
+        source.bundleName = "com.example.shareduid";
+        source.sharedUID = shared;
+        nlohmann::json json = source;
+        ASSERT_TRUE(json.at("sharedUID").is_boolean());
+        EXPECT_EQ(json.at("sharedUID").get<bool>(), shared);
+        ApplicationInfo restored = json.get<ApplicationInfo>();
+        EXPECT_EQ(restored.bundleName, source.bundleName);
+        EXPECT_EQ(restored.sharedUID, shared);
+
+        json.erase("sharedUID");
+        restored = json.get<ApplicationInfo>();
+        EXPECT_EQ(restored.bundleName, source.bundleName);
+        EXPECT_FALSE(restored.sharedUID);
+    }
+}
+
+/**
+ * @tc.name: AppUid_Json_ApplicationInfo
+ * @tc.desc: Persist appUid, mirror it from uid when the key is missing, and keep the sentinel
+ *           when uid is invalid as well.
+ */
+HWTEST_F(BundleInfoTest, AppUid_Json_ApplicationInfo, Function | SmallTest | Level1)
+{
+    ApplicationInfo source;
+    source.bundleName = "com.example.appuid";
+    source.uid = 20020155;
+    source.appUid = 20030155;
+    nlohmann::json json = source;
+    ASSERT_TRUE(json.at("appUid").is_number());
+    EXPECT_EQ(json.at("appUid").get<int32_t>(), 20030155);
+    ApplicationInfo restored = json.get<ApplicationInfo>();
+    EXPECT_EQ(restored.bundleName, source.bundleName);
+    EXPECT_EQ(restored.uid, 20020155);
+    EXPECT_EQ(restored.appUid, 20030155);
+
+    json.erase("appUid");
+    restored = json.get<ApplicationInfo>();
+    EXPECT_EQ(restored.uid, 20020155);
+    EXPECT_EQ(restored.appUid, 20020155);
+
+    ApplicationInfo boundary;
+    boundary.bundleName = "com.example.appuid.invalid";
+    boundary.uid = -1;
+    nlohmann::json boundaryJson = boundary;
+    boundaryJson.erase("appUid");
+    ApplicationInfo boundaryRestored = boundaryJson.get<ApplicationInfo>();
+    EXPECT_EQ(boundaryRestored.uid, -1);
+    EXPECT_EQ(boundaryRestored.appUid, -1);
+}
+
+/**
+ * @tc.name: AppUid_Json_BundleInfo
+ * @tc.desc: Persist the top-level appUid of BundleInfo, mirror it from uid when the key is
+ *           missing, and keep the sentinel when uid is invalid as well.
+ */
+HWTEST_F(BundleInfoTest, AppUid_Json_BundleInfo, Function | SmallTest | Level1)
+{
+    BundleInfo source;
+    source.name = "com.example.bundle.appuid";
+    source.uid = 20020156;
+    source.appUid = 20030156;
+    nlohmann::json json = source;
+    ASSERT_TRUE(json.at("appUid").is_number());
+    EXPECT_EQ(json.at("appUid").get<int32_t>(), 20030156);
+    BundleInfo restored = json.get<BundleInfo>();
+    EXPECT_EQ(restored.name, source.name);
+    EXPECT_EQ(restored.uid, 20020156);
+    EXPECT_EQ(restored.appUid, 20030156);
+
+    json.erase("appUid");
+    restored = json.get<BundleInfo>();
+    EXPECT_EQ(restored.uid, 20020156);
+    EXPECT_EQ(restored.appUid, 20020156);
+
+    BundleInfo boundary;
+    boundary.name = "com.example.bundle.appuid.invalid";
+    boundary.uid = -1;
+    nlohmann::json boundaryJson = boundary;
+    boundaryJson.erase("appUid");
+    BundleInfo boundaryRestored = boundaryJson.get<BundleInfo>();
+    EXPECT_EQ(boundaryRestored.uid, -1);
+    EXPECT_EQ(boundaryRestored.appUid, -1);
+}
+
+/**
+ * @tc.name: SharedUID_AppUid_Parcel
+ * @tc.desc: Nested sharedUID and both appUid slots stay aligned across consecutive bundle objects.
+ */
+HWTEST_F(BundleInfoTest, SharedUID_AppUid_Parcel, Function | SmallTest | Level1)
+{
+    Parcel parcel;
+    for (bool shared : {true, false}) {
+        BundleInfo source;
+        source.name = shared ? "com.example.shareduid" : "com.example.exclusiveuid";
+        source.appUid = shared ? 20020155 : 20020156;
+        source.applicationInfo.bundleName = source.name;
+        source.applicationInfo.sharedUID = shared;
+        source.applicationInfo.appUid = shared ? 20030155 : 20030156;
+        source.applicationInfo.allowAutoControlIntent = !shared;
+        source.applicationInfo.allowEnableNotification = !shared;
+        source.reqPermissions = {"ohos.permission.INTERNET"};
+        ASSERT_TRUE(parcel.WriteParcelable(&source));
+    }
+    for (bool shared : {true, false}) {
+        std::unique_ptr<BundleInfo> restored(parcel.ReadParcelable<BundleInfo>());
+        ASSERT_NE(restored, nullptr);
+        EXPECT_EQ(restored->name, shared ? "com.example.shareduid" : "com.example.exclusiveuid");
+        EXPECT_EQ(restored->appUid, shared ? 20020155 : 20020156);
+        EXPECT_EQ(restored->applicationInfo.bundleName, restored->name);
+        EXPECT_EQ(restored->applicationInfo.sharedUID, shared);
+        EXPECT_EQ(restored->applicationInfo.appUid, shared ? 20030155 : 20030156);
+        EXPECT_EQ(restored->applicationInfo.allowAutoControlIntent, !shared);
+        EXPECT_EQ(restored->applicationInfo.allowEnableNotification, !shared);
+        ASSERT_EQ(restored->reqPermissions.size(), 1U);
+        EXPECT_EQ(restored->reqPermissions[0], "ohos.permission.INTERNET");
+    }
+    EXPECT_EQ(parcel.GetReadableBytes(), 0U);
+}
+
 } // AppExecFwk
 } // OHOS

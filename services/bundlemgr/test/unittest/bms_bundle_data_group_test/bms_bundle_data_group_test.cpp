@@ -3574,4 +3574,94 @@ HWTEST_F(BmsBundleDataGroupTest, UpdateBaseBundleInfoIntoOld_CompressedPreload_0
     dataMgr->UpdateBaseBundleInfoIntoOld(newInfo, oldInfo);
     EXPECT_FALSE(oldInfo.IsCompressedPreload());
 }
+
+/**
+ * @tc.number: GetApplicationInfoAdaptClone_AppUid
+ * @tc.name: test appUid of GetApplicationInfoAdaptBundleClone
+ * @tc.desc: 1.the main form (appIndex 0) takes appUid from the main user record
+ *           2.the clone form (appIndex 1) takes appUid from the clone record
+ *           3.a missing clone appIndex keeps the default appUid sentinel
+ *           4.the dual-mode clone appIndex is rejected for a non dual-mode clone app
+ */
+HWTEST_F(BmsBundleDataGroupTest, GetApplicationInfoAdaptClone_AppUid, Function | SmallTest | Level1)
+{
+    InnerBundleInfo bundleInfo;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.uid = 20020155;
+    innerBundleUserInfo.appUid = 20020155;
+    std::map<std::string, InnerBundleCloneInfo> cloneInfos;
+    InnerBundleCloneInfo innerBundleCloneInfo;
+    innerBundleCloneInfo.appIndex = 1;
+    innerBundleCloneInfo.uid = 12501;
+    innerBundleCloneInfo.appUid = 12500;
+    cloneInfos.insert(std::make_pair("1", innerBundleCloneInfo));
+    innerBundleUserInfo.cloneInfos = cloneInfos;
+    bundleInfo.innerBundleUserInfos_.insert(std::make_pair("_1", innerBundleUserInfo));
+
+    ApplicationInfo mainAppInfo;
+    auto ret = bundleInfo.GetApplicationInfoAdaptBundleClone(innerBundleUserInfo, 0, mainAppInfo);
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(mainAppInfo.appUid, 20020155);
+    EXPECT_EQ(mainAppInfo.appUid, mainAppInfo.uid);
+
+    ApplicationInfo cloneAppInfo;
+    ret = bundleInfo.GetApplicationInfoAdaptBundleClone(innerBundleUserInfo, 1, cloneAppInfo);
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(cloneAppInfo.appUid, 12500);
+
+    ApplicationInfo missedAppInfo;
+    ret = bundleInfo.GetApplicationInfoAdaptBundleClone(innerBundleUserInfo, 2, missedAppInfo);
+    EXPECT_EQ(ret, false);
+    EXPECT_EQ(missedAppInfo.appUid, Constants::INVALID_UID);
+
+    ApplicationInfo dualModeAppInfo;
+    ret = bundleInfo.GetApplicationInfoAdaptBundleClone(innerBundleUserInfo, 10000, dualModeAppInfo);
+    EXPECT_EQ(ret, false);
+    EXPECT_EQ(dualModeAppInfo.appUid, Constants::INVALID_UID);
+}
+
+/**
+ * @tc.number: GetBundleInfoAdaptClone_AppUid
+ * @tc.name: test appUid of GetBundleInfoAdaptBundleClone
+ * @tc.desc: 1.the main form (appIndex 0) takes appUid from the main user record
+ *           2.the clone form (appIndex 1) takes appUid from the clone record
+ *           3.a missing clone appIndex keeps the default appUid sentinel
+ *           4.the dual-mode clone appIndex is rejected for a non dual-mode clone app
+ */
+HWTEST_F(BmsBundleDataGroupTest, GetBundleInfoAdaptClone_AppUid, Function | SmallTest | Level1)
+{
+    InnerBundleInfo bundleInfo;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.uid = 20020155;
+    innerBundleUserInfo.appUid = 20020155;
+    std::map<std::string, InnerBundleCloneInfo> cloneInfos;
+    InnerBundleCloneInfo innerBundleCloneInfo;
+    innerBundleCloneInfo.appIndex = 1;
+    innerBundleCloneInfo.uid = 12501;
+    innerBundleCloneInfo.appUid = 12500;
+    cloneInfos.insert(std::make_pair("1", innerBundleCloneInfo));
+    innerBundleUserInfo.cloneInfos = cloneInfos;
+    bundleInfo.innerBundleUserInfos_.insert(std::make_pair("_1", innerBundleUserInfo));
+
+    BundleInfo mainBundleInfo;
+    auto ret = bundleInfo.GetBundleInfoAdaptBundleClone(innerBundleUserInfo, 0, mainBundleInfo);
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(mainBundleInfo.appUid, 20020155);
+    EXPECT_EQ(mainBundleInfo.appUid, mainBundleInfo.uid);
+
+    BundleInfo cloneBundleInfo;
+    ret = bundleInfo.GetBundleInfoAdaptBundleClone(innerBundleUserInfo, 1, cloneBundleInfo);
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(cloneBundleInfo.appUid, 12500);
+
+    BundleInfo missedBundleInfo;
+    ret = bundleInfo.GetBundleInfoAdaptBundleClone(innerBundleUserInfo, 2, missedBundleInfo);
+    EXPECT_EQ(ret, false);
+    EXPECT_EQ(missedBundleInfo.appUid, Constants::INVALID_UID);
+
+    BundleInfo dualModeBundleInfo;
+    ret = bundleInfo.GetBundleInfoAdaptBundleClone(innerBundleUserInfo, 10000, dualModeBundleInfo);
+    EXPECT_EQ(ret, false);
+    EXPECT_EQ(dualModeBundleInfo.appUid, Constants::INVALID_UID);
+}
 } // OHOS

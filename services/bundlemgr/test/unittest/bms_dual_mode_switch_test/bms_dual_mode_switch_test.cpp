@@ -18,8 +18,10 @@
 // BundleDataMgr::FilterBundleListByDeviceModeDistributionPolicies (including the dualModeSwitchMutex_
 // busy/fast-fail semantics — r13: both sides reject immediately, no waiting), the synchronous
 // direct-connection IPC entries in BundleInstallerHost (0991~0993: the host-entry guard over
-// BundleDataMgr::TryLockForBundleOperation), and the reboot-classification policy branch
-// (ClassifyDualModeAppsNoLock).
+// BundleDataMgr::TryLockForBundleOperation), the reboot-classification policy branch
+// (ClassifyDualModeAppsNoLock), and the default policy-set seeding
+// (InitDualModeDefaultPoliciesNoLock: const.bms.devicemodedistributionpolicy seeds the current
+// mode's CSV into the policy key when it was never persisted).
 // Follows the bms_dual_mode_install_test paradigm:
 // #define private public exposes the BundleDataMgr maps. Mode is driven through the test-injection
 // system parameters (SeedModeParams: persist.bms.test_dual_mode switches DualModeHelper to the
@@ -96,6 +98,12 @@ const std::vector<int32_t> POLICIES_VALID_MAIN_SET = {1, 3, 4, 5, 6, 7, 8};  // 
 const std::vector<int32_t> POLICIES_INVALID_MISSING_DIFF = {1, 2, 3, 5, 7};  // missing 4/6/8
 const std::vector<int32_t> POLICIES_INVALID_OUT_OF_RANGE = {4, 6, 8, 9};    // 9 is illegal
 const std::vector<int32_t> POLICIES_INVALID_EMPTY = {};
+// Default-policy parameter examples (const.bms.devicemodedistributionpolicy value format).
+// Both mode CSVs are valid policy sets (contain 4/6/8); they exclude SUB_ONLY(2) and
+// MAIN_ONLY(1) respectively so the seeded side is identifiable.
+const std::string DEFAULT_POLICY_PARAM = "pcmode:0,1,3,4,5,6,7,8;padmode:0,2,3,4,5,6,7,8;";
+const std::string DEFAULT_POLICY_PC_CSV = "0,1,3,4,5,6,7,8";
+const std::string DEFAULT_POLICY_PAD_CSV = "0,2,3,4,5,6,7,8";
 
 }  // namespace
 
@@ -193,6 +201,10 @@ void BmsDualModeSwitchTest::SetUp()
     OHOS::system::RemoveParameter(TEST_DUAL_MODE_PARAM);
     OHOS::system::RemoveParameter(TEST_ISPCMODE_PARAM);
     OHOS::system::RemoveParameter(TEST_MAINMODE_PARAM);
+    // Same leak protection for the default-policies seeding parameter (cases below seed it;
+    // a leftover value would re-seed the policy key on a later boot-classification case).
+    OHOS::system::RemoveParameter(
+        ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICY_PARAM);
 
     // Fresh data manager + mocked BmsParam installed into the global BundleMgrService singleton.
     // The mock's map is static (shared across cases in this binary), so delete the policy key
@@ -1344,6 +1356,240 @@ HWTEST_F(BmsDualModeSwitchTest, ClassifyDualModeAppsByPolicy_0600_FallbackSameNa
     EXPECT_TRUE(dataMgr_->tempBundleInfos_[BUNDLE_NAME_MAIN].IsDualModeCloneApp());
 }
 
+// === Default policies seeding (const.bms.devicemodedistributionpolicy) ===
+// BundleDataMgr::InitDualModeDefaultPoliciesNoLock: on a dual-mode device, when the policy key
+// was never persisted, the current system mode's CSV from the const parameter is seeded. An
+// existing key, a missing/malformed parameter, an unclear mode or an invalid policy CSV leaves
+// the key absent (the boot classification then falls back to the requirement-1 mode-based
+// logic). Production call site: the start of LoadDataFromPersistentStorage, BEFORE its
+// empty-storage early return — a fresh device (first boot, empty DB) seeds the default too,
+// and the dual-mode classification later in the same call applies the value. The parameter is
+// seeded through the mocked parameter map (SetUp removes it), the persisted key through the
+// mocked BmsParam (SetUp deletes it).
+
+// 2in1 (pc) mode -> the pcmode CSV is seeded
+HWTEST_F(BmsDualModeSwitchTest, InitDualModeDefaultPolicies_0100_SeedsPcModePolicies,
+    TestSize.Level0)
+{
+    // Given: dual-mode device with ispcmode=2in1 (mainmode=tablet, only GetSysMode matters
+    //        here); no persisted policy key; the default parameter present
+    SeedModeParams(ServiceConstants::DUAL_MODE_VALUE_2IN1, ServiceConstants::DUAL_MODE_VALUE_TABLET);
+    OHOS::system::SetParameter(
+        ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICY_PARAM, DEFAULT_POLICY_PARAM);
+
+    // When: InitDualModeDefaultPoliciesNoLock()
+    dataMgr_->InitDualModeDefaultPoliciesNoLock();
+
+    // Then: the current (pc) mode's CSV is persisted under the policy key
+    std::string persisted;
+    EXPECT_TRUE(service_->bmsParam_->GetBmsParam(
+        ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICIES_KEY, persisted));
+    EXPECT_EQ(persisted, DEFAULT_POLICY_PC_CSV);
+}
+
+// tablet (pad) mode -> the padmode CSV is seeded
+HWTEST_F(BmsDualModeSwitchTest, InitDualModeDefaultPolicies_0200_SeedsPadModePolicies,
+    TestSize.Level0)
+{
+    // Given: dual-mode device in tablet mode; no persisted policy key; parameter present
+    SeedModeParams(ServiceConstants::DUAL_MODE_VALUE_TABLET, ServiceConstants::DUAL_MODE_VALUE_TABLET);
+    OHOS::system::SetParameter(
+        ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICY_PARAM, DEFAULT_POLICY_PARAM);
+
+    // When: InitDualModeDefaultPoliciesNoLock()
+    dataMgr_->InitDualModeDefaultPoliciesNoLock();
+
+    // Then: the current (pad) mode's CSV is persisted
+    std::string persisted;
+    EXPECT_TRUE(service_->bmsParam_->GetBmsParam(
+        ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICIES_KEY, persisted));
+    EXPECT_EQ(persisted, DEFAULT_POLICY_PAD_CSV);
+}
+
+// Existing persisted key -> untouched (an explicit switch result always wins)
+HWTEST_F(BmsDualModeSwitchTest, InitDualModeDefaultPolicies_0300_ExistingKeyUntouched,
+    TestSize.Level0)
+{
+    // Given: a persisted policy set (e.g. an earlier explicit switch); parameter present
+    EnablePrimaryMode();
+    EXPECT_TRUE(service_->bmsParam_->SaveBmsParam(
+        ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICIES_KEY, "4,6,8"));
+    OHOS::system::SetParameter(
+        ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICY_PARAM, DEFAULT_POLICY_PARAM);
+
+    // When: InitDualModeDefaultPoliciesNoLock()
+    dataMgr_->InitDualModeDefaultPoliciesNoLock();
+
+    // Then: the existing value is left as is
+    std::string persisted;
+    EXPECT_TRUE(service_->bmsParam_->GetBmsParam(
+        ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICIES_KEY, persisted));
+    EXPECT_EQ(persisted, "4,6,8");
+}
+
+// Parameter missing -> nothing seeded (device not configured for a default)
+HWTEST_F(BmsDualModeSwitchTest, InitDualModeDefaultPolicies_0400_MissingParamNoSeed,
+    TestSize.Level1)
+{
+    // Given: dual-mode device; no persisted policy key; parameter absent (SetUp removed it)
+    EnablePrimaryMode();
+
+    // When: InitDualModeDefaultPoliciesNoLock()
+    dataMgr_->InitDualModeDefaultPoliciesNoLock();
+
+    // Then: the key stays absent — the boot classification falls back to requirement-1
+    std::string persisted;
+    EXPECT_FALSE(service_->bmsParam_->GetBmsParam(
+        ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICIES_KEY, persisted));
+}
+
+// Unclear current mode (ispcmode invalid) -> nothing processed, key stays absent
+HWTEST_F(BmsDualModeSwitchTest, InitDualModeDefaultPolicies_0500_UnclearModeNoSeed,
+    TestSize.Level0)
+{
+    // Given: ispcmode unreadable/illegal (GetSysMode returns -1); parameter present
+    SeedModeParams(ServiceConstants::DUAL_MODE_VALUE_INVALID, ServiceConstants::DUAL_MODE_VALUE_TABLET);
+    OHOS::system::SetParameter(
+        ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICY_PARAM, DEFAULT_POLICY_PARAM);
+
+    // When: InitDualModeDefaultPoliciesNoLock()
+    dataMgr_->InitDualModeDefaultPoliciesNoLock();
+
+    // Then: no default is seeded (the mode's side cannot be decided)
+    std::string persisted;
+    EXPECT_FALSE(service_->bmsParam_->GetBmsParam(
+        ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICIES_KEY, persisted));
+}
+
+// Configured CSV violates the policy-set rules (missing different-package 4/6/8) -> not seeded
+HWTEST_F(BmsDualModeSwitchTest, InitDualModeDefaultPolicies_0600_InvalidPoliciesNoSeed,
+    TestSize.Level1)
+{
+    // Given: 2in1 mode; both mode CSVs well-formed but missing 4/6/8
+    SeedModeParams(ServiceConstants::DUAL_MODE_VALUE_2IN1, ServiceConstants::DUAL_MODE_VALUE_TABLET);
+    OHOS::system::SetParameter(
+        ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICY_PARAM,
+        "pcmode:1,2,3;padmode:1,2,3;");
+
+    // When: InitDualModeDefaultPoliciesNoLock()
+    dataMgr_->InitDualModeDefaultPoliciesNoLock();
+
+    // Then: the invalid set is NOT persisted (a bad config cannot block a later correct seeding)
+    std::string persisted;
+    EXPECT_FALSE(service_->bmsParam_->GetBmsParam(
+        ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICIES_KEY, persisted));
+}
+
+// Malformed parameter format (no key:value segments) -> not seeded
+HWTEST_F(BmsDualModeSwitchTest, InitDualModeDefaultPolicies_0700_MalformedParamNoSeed,
+    TestSize.Level1)
+{
+    // Given: 2in1 mode; the parameter is not in the "key:csv;" format at all
+    SeedModeParams(ServiceConstants::DUAL_MODE_VALUE_2IN1, ServiceConstants::DUAL_MODE_VALUE_TABLET);
+    OHOS::system::SetParameter(
+        ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICY_PARAM,
+        "pcmode0,1,3,4,5,6,7,8;padmode0,2,3,4,5,6,7,8;");
+
+    // When: InitDualModeDefaultPoliciesNoLock()
+    dataMgr_->InitDualModeDefaultPoliciesNoLock();
+
+    // Then: nothing seeded
+    std::string persisted;
+    EXPECT_FALSE(service_->bmsParam_->GetBmsParam(
+        ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICIES_KEY, persisted));
+}
+
+// A mode key with an empty value -> the parse fails, nothing seeded
+HWTEST_F(BmsDualModeSwitchTest, InitDualModeDefaultPolicies_0710_EmptyValueNoSeed,
+    TestSize.Level1)
+{
+    // Given: 2in1 mode; pcmode present but empty, padmode well-formed
+    SeedModeParams(ServiceConstants::DUAL_MODE_VALUE_2IN1, ServiceConstants::DUAL_MODE_VALUE_TABLET);
+    OHOS::system::SetParameter(
+        ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICY_PARAM,
+        "pcmode:;padmode:0,2,3,4,5,6,7,8;");
+
+    // When: InitDualModeDefaultPoliciesNoLock()
+    dataMgr_->InitDualModeDefaultPoliciesNoLock();
+
+    // Then: nothing seeded (both mode CSVs are required to parse)
+    std::string persisted;
+    EXPECT_FALSE(service_->bmsParam_->GetBmsParam(
+        ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICIES_KEY, persisted));
+}
+
+// Duplicate mode key -> the first occurrence wins
+HWTEST_F(BmsDualModeSwitchTest, InitDualModeDefaultPolicies_0720_DuplicateKeyFirstWins,
+    TestSize.Level1)
+{
+    // Given: 2in1 mode; pcmode configured twice (first "4,6,8", then a full set)
+    SeedModeParams(ServiceConstants::DUAL_MODE_VALUE_2IN1, ServiceConstants::DUAL_MODE_VALUE_TABLET);
+    OHOS::system::SetParameter(
+        ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICY_PARAM,
+        "pcmode:4,6,8;pcmode:1,3,4,5,6,7,8;padmode:0,2,3,4,5,6,7,8;");
+
+    // When: InitDualModeDefaultPoliciesNoLock()
+    dataMgr_->InitDualModeDefaultPoliciesNoLock();
+
+    // Then: the FIRST pcmode CSV is seeded
+    std::string persisted;
+    EXPECT_TRUE(service_->bmsParam_->GetBmsParam(
+        ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICIES_KEY, persisted));
+    EXPECT_EQ(persisted, "4,6,8");
+}
+
+// Lenient format: free segment order and no trailing ';' still parse
+HWTEST_F(BmsDualModeSwitchTest, InitDualModeDefaultPolicies_0800_SegmentOrderFreeNoTrailingSep,
+    TestSize.Level1)
+{
+    // Given: 2in1 mode; padmode segment first and no trailing ';'
+    SeedModeParams(ServiceConstants::DUAL_MODE_VALUE_2IN1, ServiceConstants::DUAL_MODE_VALUE_TABLET);
+    OHOS::system::SetParameter(
+        ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICY_PARAM,
+        "padmode:0,2,3,4,5,6,7,8;pcmode:0,1,3,4,5,6,7,8");
+
+    // When: InitDualModeDefaultPoliciesNoLock()
+    dataMgr_->InitDualModeDefaultPoliciesNoLock();
+
+    // Then: the pc CSV is still selected and seeded
+    std::string persisted;
+    EXPECT_TRUE(service_->bmsParam_->GetBmsParam(
+        ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICIES_KEY, persisted));
+    EXPECT_EQ(persisted, DEFAULT_POLICY_PC_CSV);
+}
+
+// End-to-end wiring of the boot load: the seeding runs at the START of
+// LoadDataFromPersistentStorage (before the empty-storage early return, so the first boot
+// with an empty DB seeds too) and the dual-mode classification later in the same call applies
+// the seeded default. Pinned here as the two chained steps (seeding cannot go through the
+// real LoadDataFromPersistentStorage in this suite: it would hit the unmocked storages).
+HWTEST_F(BmsDualModeSwitchTest, InitDualModeDefaultPolicies_0900_BootClassificationUsesDefault,
+    TestSize.Level0)
+{
+    // Given: dual-mode device in tablet mode (pad side); no persisted key; a MAIN_ONLY(1) app
+    //        visible; the pad CSV "0,2,3,4,5,6,7,8" excludes MAIN_ONLY
+    EnablePrimaryMode();
+    dataMgr_->bundleInfos_[BUNDLE_NAME_MAIN] = MakePolicyInfo(
+        BUNDLE_NAME_MAIN, DeviceModeDistributionPolicy::MAIN_ONLY);
+    OHOS::system::SetParameter(
+        ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICY_PARAM, DEFAULT_POLICY_PARAM);
+
+    // When: the boot-load sequence — seed (LoadDataFromPersistentStorage start) then classify
+    //       (ClassifyDualModeAppsNoLock, later in the same call)
+    dataMgr_->InitDualModeDefaultPoliciesNoLock();
+    dataMgr_->ClassifyDualModeAppsNoLock();
+
+    // Then: the pad CSV was seeded AND the policy-driven classification hid MAIN_ONLY (not in
+    //       the set) on this boot — without a default the mode-based fallback would have kept
+    //       it visible in primary mode
+    std::string persisted;
+    EXPECT_TRUE(service_->bmsParam_->GetBmsParam(
+        ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICIES_KEY, persisted));
+    EXPECT_EQ(persisted, DEFAULT_POLICY_PAD_CSV);
+    EXPECT_FALSE(IsVisible(*dataMgr_, BUNDLE_NAME_MAIN));
+    EXPECT_TRUE(IsHidden(*dataMgr_, BUNDLE_NAME_MAIN));
+}
+
 // === DualModeHelper public policy utilities (single validation/serialization source) ===
 // Pure static helpers — no device-mode state, no persistence, no maps involved.
 
@@ -1419,6 +1665,42 @@ HWTEST_F(BmsDualModeSwitchTest, FilterBundleListIpcLink_1300_HostImplWithoutData
 
     EXPECT_EQ(hostImpl->FilterBundleListByDeviceModeDistributionPolicies(ToPolicySet(POLICIES_VALID_MINIMAL)),
         ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: GetExtensionSandboxDataDir_DualMode_0001
+ * @tc.name: GetExtensionSandboxDataDir
+ * @tc.desc: Require a dual-mode device and a dual-mode clone for appIndex 10000.
+ */
+HWTEST_F(BmsDualModeSwitchTest, GetExtensionSandboxDataDir_DualMode_0001, TestSize.Level1)
+{
+    auto info = MakePolicyInfo(BUNDLE_NAME_DIFF, DeviceModeDistributionPolicy::FULL_COMPATIBLE_DIFFERENT_PACKAGE);
+    InnerExtensionInfo extensionInfo;
+    extensionInfo.bundleName = BUNDLE_NAME_DIFF;
+    extensionInfo.moduleName = "entry";
+    extensionInfo.name = "inputMethodExtAbility";
+    extensionInfo.type = ExtensionAbilityType::INPUTMETHOD;
+    extensionInfo.needCreateSandbox = true;
+    info.AddModuleExtensionInfos({{"input-method", extensionInfo}});
+    auto &bundleInfo = dataMgr_->bundleInfos_[BUNDLE_NAME_DIFF];
+    bundleInfo = info;
+
+    const int32_t appIndex = ServiceConstants::DUAL_MODE_CLONE_APP_INDEX;
+    std::string dir = "stale-dir";
+    EXPECT_EQ(dataMgr_->GetExtensionSandboxDataDir(BUNDLE_NAME_DIFF, extensionInfo.name, appIndex, dir),
+        ERR_BUNDLE_MANAGER_GET_DIR_INVALID_APP_INDEX);
+    EXPECT_TRUE(dir.empty());
+
+    EnableSecondaryMode();
+    dir = "stale-dir";
+    EXPECT_EQ(dataMgr_->GetExtensionSandboxDataDir(BUNDLE_NAME_DIFF, extensionInfo.name, appIndex, dir),
+        ERR_BUNDLE_MANAGER_GET_DIR_INVALID_APP_INDEX);
+    EXPECT_TRUE(dir.empty());
+
+    bundleInfo.SetDualModeCloneApp(true);
+    bundleInfo.SetAppIndex(appIndex);
+    EXPECT_EQ(dataMgr_->GetExtensionSandboxDataDir(BUNDLE_NAME_DIFF, extensionInfo.name, appIndex, dir), ERR_OK);
+    EXPECT_EQ(dir, "+extension-entry-inputMethodExtAbility++clone-10000+" + BUNDLE_NAME_DIFF);
 }
 
 }  // namespace AppExecFwk

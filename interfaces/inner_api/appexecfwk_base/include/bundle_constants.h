@@ -136,6 +136,7 @@ constexpr const char* PERMISSION_MANAGE_SKILL_AND_INTERACT_ACROSS_LOCAL_ACCOUNTS
     "and ohos.permission.INTERACT_ACROSS_LOCAL_ACCOUNTS)";
 constexpr const char* PERMISSION_ALLOW_USE_BM = "ohos.permission.ALLOW_USE_BM";
 constexpr const char* SANDBOX_SKILL_PATH_PREFIX = "/data/skills";
+constexpr const char* SANDBOX_SKILL_PATH_FOR_SELF_PREFIX = "/data/storage/el1/skills";
 constexpr const char* PERMISSION_GET_BUNDLE_INFO_AND_INTERACT_ACROSS_LOCAL_ACCOUNTS =
     "ohos.permission.GET_BUNDLE_INFO_PRIVILEGED or "
     "(ohos.permission.GET_BUNDLE_INFO_PRIVILEGED and ohos.permission.INTERACT_ACROSS_LOCAL_ACCOUNTS)";

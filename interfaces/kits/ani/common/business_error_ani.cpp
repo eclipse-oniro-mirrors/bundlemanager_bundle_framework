@@ -126,13 +126,13 @@ void BusinessErrorAni::ThrowCommonError(ani_env *env, int32_t err,
 }
 
 void BusinessErrorAni::ThrowCommonNewError(ani_env *env, int32_t err,
-    const std::string &parameter, const std::string &type)
+    const std::string &parameter, const std::string &type, const std::string &appendix)
 {
     if (env == nullptr) {
         APP_LOGE("env is nullptr");
         return;
     }
-    ani_object error = CreateNewCommonError(env, err, parameter, type);
+    ani_object error = CreateNewCommonError(env, err, parameter, type, appendix);
     ThrowError(env, error);
 }
 
@@ -184,8 +184,8 @@ ani_object BusinessErrorAni::CreateCommonError(
     return CreateError(env, err, errMessage);
 }
 
-ani_object BusinessErrorAni::CreateNewCommonError(
-    ani_env *env, int32_t err, const std::string &functionName, const std::string &permissionName)
+ani_object BusinessErrorAni::CreateNewCommonError(ani_env *env, int32_t err,
+    const std::string &functionName, const std::string &permissionName, const std::string &appendix)
 {
     if (env == nullptr) {
         APP_LOGE("env is nullptr");
@@ -214,10 +214,14 @@ ani_object BusinessErrorAni::CreateNewCommonError(
             errMessage = errMessage.replace(iter, 1, permissionName);
         }
     }
+    if (!appendix.empty()) {
+        errMessage += " " + appendix;
+    }
     return CreateError(env, err, errMessage);
 }
 
-ani_object BusinessErrorAni::CreateInstallError(ani_env *env, int32_t err, int32_t innerCode,
+ani_object BusinessErrorAni::CreateInstallError(
+    ani_env *env, int32_t err, int32_t innerCode,
     const std::string &functionName, const std::string &permissionName, bool needSplice)
 {
     if (env == nullptr) {

@@ -20,9 +20,10 @@
 #include "bundle_event_callback_host.h"
 #include "bundle_mgr_host.h"
 #include "bundle_mgr_proxy.h"
-#include "bundle_stats_callback_interface.h"
+#include "bundle_mgr_host.h"
 #include "get_largest_items_callback_interface.h"
 #include "if_system_ability_manager.h"
+#include "ipc_types.h"
 #include "iremote_stub.h"
 #include "iservice_registry.h"
 #include "process_cache_callback_host.h"
@@ -258,21 +259,36 @@ public:
 class MockExtensionSandboxDataDirHost : public BundleMgrHost {
 public:
     std::string receivedExtensionName;
-    int32_t receivedAppIndex = Constants::MAIN_APP_INDEX;
     bool called = false;
     ErrCode result = ERR_OK;
     const std::string sandboxDir = "+extension-entry-inputMethodExtAbility+com.example.sandbox";
 
-    ErrCode GetExtensionSandboxDataDir(const std::string &extensionName, int32_t appIndex,
-        std::string &dir) override
+    ErrCode GetExtensionSandboxDataDir(const std::string &extensionName, std::string &dir) override
     {
         receivedExtensionName = extensionName;
-        receivedAppIndex = appIndex;
         called = true;
         if (result == ERR_OK) {
             dir = sandboxDir;
         }
         return result;
+    }
+};
+
+class MockExtensionSandboxDataDirReplyHost : public BundleMgrHost {
+public:
+    bool writeStatus = false;
+    bool writeEmptyDir = false;
+
+    int OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override
+    {
+        EXPECT_EQ(code, static_cast<uint32_t>(BundleMgrInterfaceCode::GET_EXTENSION_SANDBOX_DATA_DIR));
+        if (writeStatus) {
+            EXPECT_TRUE(reply.WriteInt32(ERR_OK));
+        }
+        if (writeEmptyDir) {
+            EXPECT_TRUE(reply.WriteString(""));
+        }
+        return ERR_OK;
     }
 };
 
@@ -1917,7 +1933,8 @@ HWTEST_F(BmsBundleMgrProxyTest, SetShortcutsEnabled_0001, Function | MediumTest 
     std::vector<ShortcutInfo> shortcutInfos;
     shortcutInfos.push_back(shortcutInfo);
     bool isEnabled = false;
-    auto ret = bundleMgrProxy.SetShortcutsEnabled(shortcutInfos, isEnabled);
+    std::map<std::string, std::vector<std::string>> invalidShortcuts;
+    auto ret = bundleMgrProxy.SetShortcutsEnabled(shortcutInfos, isEnabled, invalidShortcuts);
     EXPECT_NE(ret, ERR_OK);
 }
 
@@ -1933,7 +1950,8 @@ HWTEST_F(BmsBundleMgrProxyTest, SetShortcutsEnabled_0002, Function | MediumTest 
     std::vector<ShortcutInfo> shortcutInfos;
     shortcutInfos.clear();
     bool isEnabled = false;
-    auto ret = bundleMgrProxy.SetShortcutsEnabled(shortcutInfos, isEnabled);
+    std::map<std::string, std::vector<std::string>> invalidShortcuts;
+    auto ret = bundleMgrProxy.SetShortcutsEnabled(shortcutInfos, isEnabled, invalidShortcuts);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
 }
 
@@ -1953,7 +1971,8 @@ HWTEST_F(BmsBundleMgrProxyTest, SetShortcutsEnabled_0003, Function | MediumTest 
         shortcutInfos.push_back(shortcutInfo);
     }
     bool isEnabled = false;
-    auto ret = bundleMgrProxy.SetShortcutsEnabled(shortcutInfos, isEnabled);
+    std::map<std::string, std::vector<std::string>> invalidShortcuts;
+    auto ret = bundleMgrProxy.SetShortcutsEnabled(shortcutInfos, isEnabled, invalidShortcuts);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
 }
 
@@ -2129,87 +2148,6 @@ HWTEST_F(BmsBundleMgrProxyTest, GetTopNLargestItemsInAppDataDir_0100, Function |
 
     ErrCode ret = bundleMgrProxy.GetTopNLargestItemsInAppDataDir(bundleName, appIndex, userId, callback);
     EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
-}
-
-/**
- * @tc.number: GetBundleStatsAsync_0100
- * @tc.name: test GetBundleStatsAsync with null remote object
- * @tc.desc: 1. BundleMgrProxy constructed with null IRemoteObject
- *           2. verify GetBundleStatsAsync returns parcel error when IPC fails
- */
-HWTEST_F(BmsBundleMgrProxyTest, GetBundleStatsAsync_0100, Function | MediumTest | Level1)
-{
-    sptr<IRemoteObject> impl = nullptr;
-    BundleMgrProxy bundleMgrProxy(impl);
-
-    class MockBundleStatsCallback : public IBundleStatsCallback {
-    public:
-        void OnGetBundleStatsFinished(int32_t errCode, const std::vector<int64_t> &bundleStats) override
-        {
-            resultErrCode = errCode;
-            resultStats = bundleStats;
-        }
-        sptr<IRemoteObject> AsObject() override
-        {
-            return nullptr;
-        }
-        ErrCode resultErrCode = ERR_OK;
-        std::vector<int64_t> resultStats;
-    };
-
-    sptr<MockBundleStatsCallback> callback = new (std::nothrow) MockBundleStatsCallback();
-    ASSERT_NE(callback, nullptr);
-
-    std::string bundleName = "com.example.test";
-    int32_t userId = 100;
-    int32_t appIndex = 0;
-    uint32_t statFlag = 0;
-
-    ErrCode ret = bundleMgrProxy.GetBundleStatsAsync(bundleName, userId, appIndex, statFlag, callback);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
-}
-
-/**
- * @tc.number: GetBundleStatsAsync_0200
- * @tc.name: test GetBundleStatsAsync with empty bundleName
- * @tc.desc: 1. call GetBundleStatsAsync with empty bundleName
- *           2. verify returns ERR_BUNDLE_MANAGER_PARAM_ERROR
- */
-HWTEST_F(BmsBundleMgrProxyTest, GetBundleStatsAsync_0200, Function | MediumTest | Level1)
-{
-    sptr<IRemoteObject> impl = nullptr;
-    BundleMgrProxy bundleMgrProxy(impl);
-
-    class MockBundleStatsCallback : public IBundleStatsCallback {
-    public:
-        void OnGetBundleStatsFinished(int32_t errCode, const std::vector<int64_t> &bundleStats) override {}
-        sptr<IRemoteObject> AsObject() override
-        {
-            return nullptr;
-        }
-    };
-
-    sptr<MockBundleStatsCallback> callback = new (std::nothrow) MockBundleStatsCallback();
-    ASSERT_NE(callback, nullptr);
-
-    ErrCode ret = bundleMgrProxy.GetBundleStatsAsync("", 100, 0, 0, callback);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
-}
-
-/**
- * @tc.number: GetBundleStatsAsync_0300
- * @tc.name: test GetBundleStatsAsync with null callback
- * @tc.desc: 1. call GetBundleStatsAsync with null callback
- *           2. verify returns ERR_BUNDLE_MANAGER_PARAM_ERROR
- */
-HWTEST_F(BmsBundleMgrProxyTest, GetBundleStatsAsync_0300, Function | MediumTest | Level1)
-{
-    sptr<IRemoteObject> impl = nullptr;
-    BundleMgrProxy bundleMgrProxy(impl);
-
-    sptr<IBundleStatsCallback> callback = nullptr;
-    ErrCode ret = bundleMgrProxy.GetBundleStatsAsync("com.example.test", 100, 0, 0, callback);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
 }
 
 /**
@@ -2869,20 +2807,144 @@ HWTEST_F(BmsBundleMgrProxyTest, CheckBundleExistByDeveloperIdAndAssetGroup_0200,
     EXPECT_FALSE(isExist);
 }
 
+namespace {
+class AlternateModuleTestHost : public BundleMgrHost {
+public:
+    bool enabled = false;
+    int64_t lastVersion = 0;
+    ErrCode SetAlternateModuleEnabled(const std::string &bundleName, const std::string &moduleName,
+        int64_t versionCode, bool isEnabled) override
+    {
+        if (bundleName != "provider") {
+            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+        }
+        if (moduleName != "library") {
+            return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
+        }
+        lastVersion = versionCode;
+        enabled = isEnabled;
+        return ERR_OK;
+    }
+    ErrCode GetAlternateModuleState(const std::string &bundleName, const std::string &moduleName,
+        int64_t versionCode, bool &state) override
+    {
+        state = false;
+        if (bundleName != "provider") {
+            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+        }
+        if (moduleName != "library") {
+            return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
+        }
+        lastVersion = versionCode;
+        state = enabled;
+        return ERR_OK;
+    }
+};
+} // namespace
+
+HWTEST_F(BmsBundleMgrProxyTest, AlternateModuleIpc_0001, Function | SmallTest | Level1)
+{
+    sptr<AlternateModuleTestHost> host = new AlternateModuleTestHost();
+    BundleMgrProxy proxy(host->AsObject());
+    bool enabled = true;
+    EXPECT_EQ(proxy.GetAlternateModuleState("provider", "library", 1, enabled), ERR_OK);
+    EXPECT_FALSE(enabled);
+    EXPECT_EQ(proxy.SetAlternateModuleEnabled("provider", "library", 1, true), ERR_OK);
+    EXPECT_EQ(proxy.GetAlternateModuleState("provider", "library", 1, enabled), ERR_OK);
+    EXPECT_TRUE(enabled);
+    EXPECT_EQ(proxy.SetAlternateModuleEnabled("provider", "missing", 1, true), ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
+    EXPECT_EQ(proxy.SetAlternateModuleEnabled("provider", "missing", 1, false), ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
+    EXPECT_TRUE(host->enabled);
+    EXPECT_EQ(proxy.SetAlternateModuleEnabled("provider", "library", 1, false), ERR_OK);
+    EXPECT_EQ(proxy.GetAlternateModuleState("provider", "library", 1, enabled), ERR_OK);
+    EXPECT_FALSE(enabled);
+    for (int64_t versionCode : std::vector<int64_t> {0, 2, 4294967295LL, -1, 4294967297LL, INT64_MIN, INT64_MAX}) {
+        EXPECT_EQ(proxy.SetAlternateModuleEnabled("provider", "library", versionCode, true), ERR_OK);
+        EXPECT_EQ(host->lastVersion, versionCode);
+        host->lastVersion = 1;
+        EXPECT_EQ(proxy.GetAlternateModuleState("provider", "library", versionCode, enabled), ERR_OK);
+        EXPECT_EQ(host->lastVersion, versionCode);
+        EXPECT_TRUE(enabled);
+    }
+    EXPECT_EQ(proxy.SetAlternateModuleEnabled("", "library", 1, true), ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_EQ(proxy.SetAlternateModuleEnabled("provider", "", 1, false), ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
+}
+
+HWTEST_F(BmsBundleMgrProxyTest, AlternateModuleEmptyNames_0001, Function | SmallTest | Level1)
+{
+    sptr<AlternateModuleTestHost> host = new AlternateModuleTestHost();
+    BundleMgrProxy proxy(host->AsObject());
+    ASSERT_EQ(proxy.SetAlternateModuleEnabled("provider", "library", 1, true), ERR_OK);
+    struct ErrorCase {
+        std::string bundleName;
+        std::string moduleName;
+        ErrCode expected;
+    };
+    for (const auto &item : std::vector<ErrorCase> {
+        {"", "library", ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST},
+        {"", "", ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST},
+        {"missing", "", ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST},
+        {"provider", "", ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST},
+        {"provider", "missing", ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST}}) {
+        SCOPED_TRACE(testing::Message() << "bundle=" << item.bundleName << ", module=" << item.moduleName);
+        for (bool enable : {false, true}) {
+            EXPECT_EQ(proxy.SetAlternateModuleEnabled(item.bundleName, item.moduleName, 1, enable), item.expected);
+            EXPECT_TRUE(host->enabled);
+        }
+        bool enabled = true;
+        EXPECT_EQ(proxy.GetAlternateModuleState(item.bundleName, item.moduleName, 1, enabled), item.expected);
+        EXPECT_FALSE(enabled);
+        EXPECT_TRUE(host->enabled);
+    }
+}
+
+HWTEST_F(BmsBundleMgrProxyTest, AlternateModuleIpc_0002, Function | SmallTest | Level1)
+{
+    sptr<AlternateModuleTestHost> host = new AlternateModuleTestHost();
+    for (auto code : {BundleMgrInterfaceCode::SET_ALTERNATE_MODULE_ENABLED,
+        BundleMgrInterfaceCode::GET_ALTERNATE_MODULE_STATE}) {
+        MessageParcel request;
+        MessageParcel reply;
+        MessageOption option;
+        ASSERT_TRUE(request.WriteInterfaceToken(IBundleMgr::GetDescriptor()));
+        ASSERT_TRUE(request.WriteString("provider"));
+        ASSERT_TRUE(request.WriteString("library"));
+        EXPECT_EQ(host->OnRemoteRequest(static_cast<uint32_t>(code), request, reply, option),
+            UNKNOWN_ERROR);
+        EXPECT_FALSE(host->enabled);
+    }
+}
+
+// A truncated setter request must not turn an enabled alternate module off.
+HWTEST_F(BmsBundleMgrProxyTest, AlternateModuleIpc_0003, Function | SmallTest | Level1)
+{
+    sptr<AlternateModuleTestHost> host = new AlternateModuleTestHost();
+    host->enabled = true;
+    MessageParcel request;
+    MessageParcel reply;
+    MessageOption option;
+    ASSERT_TRUE(request.WriteInterfaceToken(IBundleMgr::GetDescriptor()));
+    ASSERT_TRUE(request.WriteString("provider"));
+    ASSERT_TRUE(request.WriteString("library"));
+    ASSERT_TRUE(request.WriteInt64(1));
+    EXPECT_EQ(host->OnRemoteRequest(static_cast<uint32_t>(BundleMgrInterfaceCode::SET_ALTERNATE_MODULE_ENABLED),
+        request, reply, option), UNKNOWN_ERROR);
+    EXPECT_TRUE(host->enabled);
+}
+
 /**
  * @tc.number: GetExtensionSandboxDataDir_0100
  * @tc.name: test GetExtensionSandboxDataDir parameter transmission
- * @tc.desc: Verify the proxy and host transmit the extension name and app index.
+ * @tc.desc: Verify the proxy and host transmit only the extension name.
  */
 HWTEST_F(BmsBundleMgrProxyTest, GetExtensionSandboxDataDir_0100, Function | MediumTest | Level1)
 {
     sptr<MockExtensionSandboxDataDirHost> host = new MockExtensionSandboxDataDirHost();
     BundleMgrProxy bundleMgrProxy(host->AsObject());
     std::string dir;
-    EXPECT_EQ(bundleMgrProxy.GetExtensionSandboxDataDir("inputMethodExtAbility", 1, dir), ERR_OK);
+    EXPECT_EQ(bundleMgrProxy.GetExtensionSandboxDataDir("inputMethodExtAbility", dir), ERR_OK);
     EXPECT_TRUE(host->called);
     EXPECT_EQ(host->receivedExtensionName, "inputMethodExtAbility");
-    EXPECT_EQ(host->receivedAppIndex, 1);
     EXPECT_EQ(dir, host->sandboxDir);
 }
 
@@ -2897,7 +2959,7 @@ HWTEST_F(BmsBundleMgrProxyTest, GetExtensionSandboxDataDir_0200, Function | Medi
     host->result = ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     BundleMgrProxy bundleMgrProxy(host->AsObject());
     std::string dir = "stale-dir";
-    EXPECT_EQ(bundleMgrProxy.GetExtensionSandboxDataDir("inputMethodExtAbility", 1, dir),
+    EXPECT_EQ(bundleMgrProxy.GetExtensionSandboxDataDir("inputMethodExtAbility", dir),
         ERR_BUNDLE_MANAGER_INVALID_USER_ID);
     EXPECT_TRUE(host->called);
     EXPECT_TRUE(dir.empty());
@@ -2924,9 +2986,30 @@ HWTEST_F(BmsBundleMgrProxyTest, GetExtensionSandboxDataDir_0300, Function | Medi
 /**
  * @tc.number: GetExtensionSandboxDataDir_0400
  * @tc.name: test GetExtensionSandboxDataDir complete parcel
- * @tc.desc: Accept an extension name and app index without a bundle name or user ID.
+ * @tc.desc: Accept an extension name without a bundle name, app index or user ID.
  */
 HWTEST_F(BmsBundleMgrProxyTest, GetExtensionSandboxDataDir_0400, Function | MediumTest | Level1)
+{
+    MockExtensionSandboxDataDirHost host;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    ASSERT_TRUE(data.WriteInterfaceToken(IBundleMgr::GetDescriptor()));
+    ASSERT_TRUE(data.WriteString("inputMethodExtAbility"));
+    EXPECT_EQ(host.OnRemoteRequest(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_EXTENSION_SANDBOX_DATA_DIR),
+        data, reply, option), ERR_OK);
+    EXPECT_TRUE(host.called);
+    EXPECT_EQ(host.receivedExtensionName, "inputMethodExtAbility");
+    EXPECT_EQ(reply.ReadInt32(), ERR_OK);
+    EXPECT_EQ(reply.ReadString(), host.sandboxDir);
+}
+
+/**
+ * @tc.number: GetExtensionSandboxDataDir_0500
+ * @tc.name: test GetExtensionSandboxDataDir ignores supplied app index
+ * @tc.desc: An extra caller-supplied index is not forwarded to the service.
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetExtensionSandboxDataDir_0500, Function | MediumTest | Level1)
 {
     MockExtensionSandboxDataDirHost host;
     MessageParcel data;
@@ -2938,28 +3021,30 @@ HWTEST_F(BmsBundleMgrProxyTest, GetExtensionSandboxDataDir_0400, Function | Medi
     EXPECT_EQ(host.OnRemoteRequest(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_EXTENSION_SANDBOX_DATA_DIR),
         data, reply, option), ERR_OK);
     EXPECT_TRUE(host.called);
-    EXPECT_EQ(host.receivedExtensionName, "inputMethodExtAbility");
-    EXPECT_EQ(host.receivedAppIndex, 1);
     EXPECT_EQ(reply.ReadInt32(), ERR_OK);
     EXPECT_EQ(reply.ReadString(), host.sandboxDir);
 }
 
 /**
- * @tc.number: GetExtensionSandboxDataDir_0500
- * @tc.name: test GetExtensionSandboxDataDir missing app index
- * @tc.desc: Reject the old one-string parcel instead of silently using index zero.
+ * @tc.number: GetExtensionSandboxDataDir_0600
+ * @tc.name: test GetExtensionSandboxDataDir incomplete reply
+ * @tc.desc: Reject replies with missing status or with a missing or empty directory on success.
  */
-HWTEST_F(BmsBundleMgrProxyTest, GetExtensionSandboxDataDir_0500, Function | MediumTest | Level1)
+HWTEST_F(BmsBundleMgrProxyTest, GetExtensionSandboxDataDir_0600, Function | MediumTest | Level1)
 {
-    MockExtensionSandboxDataDirHost host;
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-    ASSERT_TRUE(data.WriteInterfaceToken(IBundleMgr::GetDescriptor()));
-    ASSERT_TRUE(data.WriteString("inputMethodExtAbility"));
-    EXPECT_EQ(host.OnRemoteRequest(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_EXTENSION_SANDBOX_DATA_DIR),
-        data, reply, option), UNKNOWN_ERROR);
-    EXPECT_FALSE(host.called);
+    sptr<MockExtensionSandboxDataDirReplyHost> host = new MockExtensionSandboxDataDirReplyHost();
+    BundleMgrProxy bundleMgrProxy(host->AsObject());
+    std::string dir = "stale-dir";
+    EXPECT_EQ(bundleMgrProxy.GetExtensionSandboxDataDir("inputMethodExtAbility", dir), ERR_APPEXECFWK_PARCEL_ERROR);
+    EXPECT_TRUE(dir.empty());
+    host->writeStatus = true;
+    dir = "stale-dir";
+    EXPECT_EQ(bundleMgrProxy.GetExtensionSandboxDataDir("inputMethodExtAbility", dir), ERR_APPEXECFWK_PARCEL_ERROR);
+    EXPECT_TRUE(dir.empty());
+    host->writeEmptyDir = true;
+    dir = "stale-dir";
+    EXPECT_EQ(bundleMgrProxy.GetExtensionSandboxDataDir("inputMethodExtAbility", dir), ERR_APPEXECFWK_PARCEL_ERROR);
+    EXPECT_TRUE(dir.empty());
 }
 
 }

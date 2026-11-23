@@ -330,6 +330,7 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
     if (BundleSpmManager::IsEnabled() && keepDataReinstall) {
         existBeforeKeepDataApp_ = true;
     }
+    int32_t identityUid = 0;
     if (!tokenRecovered) {
         // SPM ON: a clone install carries no haps, so its session stays
         // deferred (id 0) — but the identity-reuse shapes of InitToken run
@@ -352,7 +353,6 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
                 }
             }
         }
-        int32_t identityUid = 0;
         // dataMgr feeds CheckNewInstallIdentity's keep-data record lookup —
         // pass it under SPM ON only (the OFF path allocates the uid locally
         // above and InitToken's OFF branch must stay a no-op for the clone).
@@ -407,6 +407,7 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
         .userId = userId,
         .appIndex = appIndex,
         .uid = uid,
+        .appUid = uid,
         .accessTokenId = newTokenIdEx.tokenIdExStruct.tokenID,
         .accessTokenIdEx = newTokenIdEx.tokenIDEx,
         .gids = tmpUserInfo.gids,

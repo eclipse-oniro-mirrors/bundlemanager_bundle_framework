@@ -33,6 +33,7 @@ constexpr const char* ERR_MSG_ABILITY_NOT_SUPPORTED =
     "Capability not supported. Function $ can not work correctly due to limited device capabilities.";
 constexpr const char* ERR_MSG_BUNDLE_NOT_EXIST = "The specified bundle is not found.";
 constexpr const char* ERR_MSG_MODULE_NOT_EXIST = "The specified module is not found.";
+constexpr const char* ERR_MSG_MODULE_VERSION_NOT_EXIST = "The specified version of the module is not found.";
 constexpr const char* ERR_MSG_ABILITY_NOT_EXIST = "The specified ability is not found.";
 constexpr const char* ERR_MSG_INVALID_USER_ID = "The specified user id is not found.";
 constexpr const char* ERR_MSG_APPID_NOT_EXIST = "The specified appId is an empty string.";
@@ -222,6 +223,7 @@ static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_SYSTEM_ABILITY_NOT_FOUND, ERR_MSG_ABILITY_NOT_SUPPORTED },
     { ERROR_BUNDLE_NOT_EXIST, ERR_MSG_BUNDLE_NOT_EXIST },
     { ERROR_MODULE_NOT_EXIST, ERR_MSG_MODULE_NOT_EXIST },
+    { ERROR_MODULE_VERSION_NOT_EXIST, ERR_MSG_MODULE_VERSION_NOT_EXIST },
     { ERROR_ABILITY_NOT_EXIST, ERR_MSG_ABILITY_NOT_EXIST },
     { ERROR_INVALID_USER_ID, ERR_MSG_INVALID_USER_ID },
     { ERROR_INVALID_APPID, ERR_MSG_APPID_NOT_EXIST },

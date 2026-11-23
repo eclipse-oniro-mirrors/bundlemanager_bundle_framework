@@ -15,6 +15,7 @@
 
 #include "inner_shared_bundle_installer.h"
 
+#include <algorithm>
 #include <fcntl.h>
 
 #include "aot/aot_handler.h"
@@ -133,6 +134,10 @@ ErrCode InnerSharedBundleInstaller::ParseFiles(const InstallCheckParam &checkPar
     } else {
         bundleName_ = parsedBundles_.begin()->second.GetBundleName();
     }
+    // Check each escape package before native attributes are merged across packages.
+    result = CheckAlternateModuleContents();
+    CHECK_RESULT(result, "check alternate module contents failed %{public}d");
+
     // check native file
     result = bundleInstallChecker_->CheckMultiNativeFile(parsedBundles_);
     CHECK_RESULT(result, "native so is incompatible in all haps %{public}d");
@@ -155,6 +160,8 @@ ErrCode InnerSharedBundleInstaller::CheckWithInstalledInfo()
     // check label info
     result = CheckAppLabelInfo();
     CHECK_RESULT(result, "check label info failed %{public}d");
+    result = CheckAlternateModuleModules();
+    CHECK_RESULT(result, "check alternate module modules failed %{public}d");
 
     // check AppDistributionType
     result = CheckAppDistributionType(hapVerifyResults_);
@@ -245,6 +252,7 @@ ErrCode InnerSharedBundleInstaller::Install(const InstallParam &installParam)
     result = CheckWithInstalledInfo();
     isSoFakeDecompression_ = false;
     CHECK_RESULT(result, "CheckWithInstalledInfo failed %{public}d");
+    installStarted_ = true;
     AddAppProvisionInfo(bundleName_, hapVerifyResults_[0].GetProvisionInfo());
     for (auto &item : parsedBundles_) {
         result = ExtractSharedBundles(item.first, item.second);
@@ -287,6 +295,9 @@ ErrCode InnerSharedBundleInstaller::Install(const InstallParam &installParam)
 
 void InnerSharedBundleInstaller::RollBack()
 {
+    if (!installStarted_) {
+        return;
+    }
     // delete created directories
     for (auto iter = createdDirs_.crbegin(); iter != createdDirs_.crend(); ++iter) {
         ErrCode err = InstalldClient::GetInstance()->RemoveDir(*iter, BundleDirScene::REMOVE_MODULE_DIR, bundleName_);
@@ -372,6 +383,7 @@ ErrCode InnerSharedBundleInstaller::CheckAppLabelInfo()
         return ERR_APPEXECFWK_NULL_PTR;
     }
 
+    oldBundleInfo_ = InnerBundleInfo {};
     isBundleExist_ = dataMgr->FetchInnerBundleInfo(bundleName_, oldBundleInfo_);
     if (isBundleExist_) {
         ErrCode ret = CheckBundleTypeWithInstalledVersion();
@@ -388,6 +400,51 @@ ErrCode InnerSharedBundleInstaller::CheckAppLabelInfo()
 
     if (isBundleExist_) {
         parsedBundles_.erase(bundleName_);
+    }
+    return ERR_OK;
+}
+
+ErrCode InnerSharedBundleInstaller::CheckAlternateModuleContents() const
+{
+    for (const auto &[path, bundle] : parsedBundles_) {
+        for (const auto &[package, module] : bundle.GetInnerModuleInfos()) {
+            if (!module.alternateModule) {
+                continue;
+            }
+            std::string cpuAbi;
+            std::string nativePath;
+            if (bundle.FetchNativeSoAttrs(package, cpuAbi, nativePath)) {
+                APP_LOGE("alternate module contains unsupported native code");
+                return ERR_APPEXECFWK_INSTALL_ALTERNATE_MODULE_INVALID;
+            }
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode InnerSharedBundleInstaller::CheckAlternateModuleModules() const
+{
+    for (const auto &[path, bundle] : parsedBundles_) {
+        const auto &modules = bundle.GetInnerModuleInfos();
+        if (modules.empty()) {
+            return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
+        }
+        const auto &module = modules.begin()->second;
+        if (!module.alternateModule || (isBundleExist_ &&
+            oldBundleInfo_.FindSharedModule(module.moduleName, module.versionCode, false) != nullptr)) {
+            continue;
+        }
+        bool paired = false;
+        for (const auto &[candidatePath, candidate] : parsedBundles_) {
+            if (candidate.FindSharedModule(module.moduleName, module.versionCode, false) != nullptr) {
+                paired = true;
+                break;
+            }
+        }
+        if (!paired) {
+            APP_LOGE("business and alternate module pairing check failed");
+            return ERR_APPEXECFWK_INSTALL_DEPENDENT_MODULE_NOT_EXIST;
+        }
     }
     return ERR_OK;
 }
@@ -450,16 +507,25 @@ ErrCode InnerSharedBundleInstaller::ExtractSharedBundles(const std::string &bund
     result = MkdirIfNotExist(BundleDirScene::MODULE_DIR, moduleDir);
     CHECK_RESULT(result, "check module dir failed %{public}d");
 
+    const bool alternateModule = newInfo.GetInnerModuleInfos().begin()->second.alternateModule;
     result = ProcessNativeLibrary(bundlePath, moduleDir, moduleName, versionDir, newInfo);
     CHECK_RESULT(result, "ProcessNativeLibrary failed %{public}d");
 
+    if (alternateModule) {
+        isPreInstalledBundle_ = newInfo.IsPreInstallApp();
+    }
     if (newInfo.IsPreInstallApp()) {
+        if (alternateModule) {
+            result = VerifyCodeSignatureForHsp(bundlePath, appIdentifier_, isEnterpriseBundle_,
+                compileSdkType_ == COMPILE_SDK_TYPE_OPEN_HARMONY, bundleName_);
+            CHECK_RESULT(result, "verify preinstalled alternate module HSP code signature failed %{public}d");
+        }
         // preInstallApp does not need to copy hsp
         newInfo.SetModuleHapPath(bundlePath);
     } else {
         // save hsp and so files to installation dir
         std::string realHspPath = moduleDir + ServiceConstants::PATH_SEPARATOR + moduleName +
-            ServiceConstants::HSP_FILE_SUFFIX;
+            (alternateModule ? "_escape" : "") + ServiceConstants::HSP_FILE_SUFFIX;
         result = SaveHspToRealInstallationDir(bundlePath, moduleDir, moduleName, realHspPath, versionCode);
         CHECK_RESULT(result, "save hsp file failed %{public}d");
         newInfo.SetModuleHapPath(realHspPath);
@@ -514,7 +580,10 @@ void InnerSharedBundleInstaller::MergeBundleInfos()
         if (!innerModuleInfos.empty()) {
             const auto& innerModuleInfo = innerModuleInfos.front();
             newBundleInfo_.InsertInnerSharedModuleInfo(innerModuleInfo.modulePackage, innerModuleInfo);
-            UpdateInnerModuleInfo(innerModuleInfo.modulePackage, innerModuleInfo);
+            newBundleInfo_.ResetAlternateModuleState(innerModuleInfo.moduleName, innerModuleInfo.versionCode);
+            if (!innerModuleInfo.alternateModule) {
+                UpdateInnerModuleInfo(innerModuleInfo.modulePackage, innerModuleInfo);
+            }
         }
         // update version
         if (newBundleInfo_.GetBaseBundleInfo().versionCode < currentBundle.GetBaseBundleInfo().versionCode) {
@@ -956,6 +1025,7 @@ ErrCode InnerSharedBundleInstaller::MarkInstallFinish()
         return ERR_APPEXECFWK_FETCH_BUNDLE_ERROR;
     }
     info.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
+    info.SetBundleCheckBySpm(true);
     info.SetInstallMark(bundleName_, info.GetCurModuleName(), InstallExceptionStatus::INSTALL_FINISH);
     if (!dataMgr->UpdateInnerBundleInfo(info, true)) {
         if (!dataMgr->UpdateInnerBundleInfo(info, true)) {

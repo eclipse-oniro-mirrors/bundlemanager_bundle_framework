@@ -292,6 +292,8 @@ struct ApplicationInfo : public Parcelable {
     int32_t supportedModes = 0;  // returns 0 if the application does not support the driving mode
     int32_t appIndex = 0;
     int32_t uid = -1;
+    int32_t appUid = -1;
+    bool sharedUID = false;
 
     int32_t flags = 0;
     int32_t targetPriority = 0;
@@ -383,6 +385,7 @@ struct ApplicationInfo : public Parcelable {
     AppPreloadPhase appPreloadPhase = AppPreloadPhase::DEFAULT;
     std::string appSignType = Constants::APP_SIGN_TYPE_NONE;
     std::vector<std::string> allowListenBundleChangedEvent;
+    std::vector<std::string> nativeChildProcessPreloadSoList;
 
     bool ReadFromParcel(Parcel &parcel);
     bool ReadMetaDataFromParcel(Parcel &parcel);

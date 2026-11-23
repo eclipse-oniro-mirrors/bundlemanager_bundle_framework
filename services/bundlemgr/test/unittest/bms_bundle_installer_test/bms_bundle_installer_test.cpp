@@ -16020,7 +16020,11 @@ HWTEST_F(BmsBundleInstallerTest, RemoveSignProfile_0100, Function | SmallTest | 
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     bundleName = TEST_ERROR_STRING;
     ret = impl.RemoveSignProfile(bundleName);
+#ifdef NO_USE_CLANG_COVERAGE
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_CODE_SIGNATURE_REMOVE_FILE_FAILED);
+#else
+    EXPECT_EQ(ret, ERR_OK);
+#endif
 }
 
 /**

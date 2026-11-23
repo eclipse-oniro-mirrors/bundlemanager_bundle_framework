@@ -60,10 +60,102 @@ BundleResourceRdb::BundleResourceRdb()
         }
     });
     rdbDataManager_->CreateTable();
+    InitThemeTimestampTable();
 }
 
 BundleResourceRdb::~BundleResourceRdb()
 {
+}
+
+void BundleResourceRdb::InitThemeTimestampTable()
+{
+    BmsRdbConfig config;
+    config.dbName = BundleResourceConstants::BUNDLE_RESOURCE_RDB_NAME;
+    config.dbPath = BundleResourceConstants::BUNDLE_RESOURCE_RDB_PATH;
+    config.tableName = BundleResourceConstants::THEME_TIMESTAMP_RDB_TABLE_NAME;
+    config.createTableSql = "CREATE TABLE IF NOT EXISTS " + config.tableName +
+        "(USER_ID INTEGER NOT NULL PRIMARY KEY, TIMESTAMP INTEGER NOT NULL);";
+    themeTimestampRdbDataManager_ = std::make_shared<RdbDataManager>(config);
+    themeTimestampRdbDataManager_->SetRebuildCallback([]() {
+        auto instance = DelayedSingleton<BundleResourceManager>::GetInstance();
+        if (instance) {
+            instance->RebuildResourceDb();
+        }
+    });
+    if (!themeTimestampRdbDataManager_->CreateTable()) {
+        APP_LOGE("create theme timestamp table failed");
+    }
+}
+
+bool BundleResourceRdb::SaveThemeTimestamp(int32_t userId, int64_t timestamp)
+{
+    if (userId < 0 || timestamp < 0) {
+        APP_LOGE("invalid theme timestamp or userId: %{public}d", userId);
+        return false;
+    }
+    if (themeTimestampRdbDataManager_ == nullptr) {
+        APP_LOGE("themeTimestampRdbDataManager_ is null");
+        return false;
+    }
+    NativeRdb::ValuesBucket values;
+    values.PutInt(BundleResourceConstants::USER_ID, userId);
+    values.PutLong(BundleResourceConstants::TIMESTAMP, timestamp);
+    if (!themeTimestampRdbDataManager_->InsertData(values)) {
+        APP_LOGE("save theme timestamp failed, userId: %{public}d", userId);
+        return false;
+    }
+    return true;
+}
+
+bool BundleResourceRdb::GetThemeTimestamp(int32_t userId, int64_t &timestamp)
+{
+    timestamp = -1;
+    if (userId < 0 || themeTimestampRdbDataManager_ == nullptr) {
+        APP_LOGE("invalid userId or theme timestamp storage is null, userId: %{public}d", userId);
+        return false;
+    }
+    NativeRdb::AbsRdbPredicates predicates(BundleResourceConstants::THEME_TIMESTAMP_RDB_TABLE_NAME);
+    predicates.EqualTo(BundleResourceConstants::USER_ID, userId);
+    auto resultSet = themeTimestampRdbDataManager_->QueryData(predicates, {BundleResourceConstants::TIMESTAMP});
+    if (resultSet == nullptr) {
+        APP_LOGE("query theme timestamp failed, userId: %{public}d", userId);
+        return false;
+    }
+    ScopeGuard closeResult([resultSet] { resultSet->Close(); });
+    int32_t ret = resultSet->GoToFirstRow();
+    if (ret == NativeRdb::E_ROW_OUT_RANGE) {
+        APP_LOGD("no theme timestamp record, userId: %{public}d", userId);
+        return true;
+    }
+    if (ret != NativeRdb::E_OK) {
+        APP_LOGE("read theme timestamp row failed, ret: %{public}d", ret);
+        return false;
+    }
+    NativeRdb::ColumnType columnType = NativeRdb::ColumnType::TYPE_NULL;
+    int64_t value = 0;
+    if (resultSet->GetColumnType(0, columnType) != NativeRdb::E_OK ||
+        columnType != NativeRdb::ColumnType::TYPE_INTEGER ||
+        resultSet->GetLong(0, value) != NativeRdb::E_OK || value < 0) {
+        APP_LOGE("invalid theme timestamp record, userId: %{public}d", userId);
+        return false;
+    }
+    timestamp = value;
+    return true;
+}
+
+bool BundleResourceRdb::DeleteThemeTimestamp(int32_t userId)
+{
+    if (userId < 0 || themeTimestampRdbDataManager_ == nullptr) {
+        APP_LOGE("invalid userId or theme timestamp storage is null, userId: %{public}d", userId);
+        return false;
+    }
+    NativeRdb::AbsRdbPredicates predicates(BundleResourceConstants::THEME_TIMESTAMP_RDB_TABLE_NAME);
+    predicates.EqualTo(BundleResourceConstants::USER_ID, userId);
+    if (!themeTimestampRdbDataManager_->DeleteData(predicates)) {
+        APP_LOGE("delete theme timestamp failed, userId: %{public}d", userId);
+        return false;
+    }
+    return true;
 }
 
 bool BundleResourceRdb::AddResourceInfo(const ResourceInfo &resourceInfo)

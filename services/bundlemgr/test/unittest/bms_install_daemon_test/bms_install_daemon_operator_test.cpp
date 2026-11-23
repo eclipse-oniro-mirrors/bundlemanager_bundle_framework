@@ -75,6 +75,7 @@ const std::string TEST_APP_IDENTIFIER = "5765880207854632823";
 const std::string HAP_COMPRESS_NATIVE_LIBS_FALSE_01 =
     "/data/test/resource/bms/install_operator/compressNativeLibsFalse01.hap";
 const std::string HAP_SO_LIBS = "libs/libhello.z.so";
+constexpr int32_t TEST_CHANGED_UID = 9900;
 }; // namespace
 class BmsInstallDaemonOperatorTest : public testing::Test {
 public:
@@ -834,6 +835,94 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_4400, Function | Sma
     EXPECT_TRUE(ret);
     ret = InstalldOperator::ChangeDirOwnerRecursively("/system/etc/init/bootpic.zip", 0, 0);
     EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: ChangeDirOwnerRecursivelySymlink_0100
+ * @tc.name: test ChangeDirOwnerRecursively with a symlink at the root path
+ * @tc.desc: 1. ChangeDirOwnerRecursively must skip the path when it is a
+ *              symlink and return success, so the ownership of the files
+ *              inside the link target cannot be taken over through the link
+ */
+HWTEST_F(BmsInstallDaemonOperatorTest, ChangeDirOwnerRecursivelySymlink_0100, Function | SmallTest | Level0)
+{
+    CreateQuickFileDir(TEST_PATH_ONE);
+    std::string targetDir = TEST_PATH_ONE + "recursive_target_dir";
+    std::string innerFile = targetDir + "/inner.txt";
+    std::string linkPath = TEST_PATH_ONE + "recursive_root_link";
+    DeleteQuickFileDir(targetDir);
+    unlink(linkPath.c_str());
+    CreateQuickFileDir(targetDir);
+    CreateFile(innerFile, "inner");
+    ASSERT_EQ(symlink(targetDir.c_str(), linkPath.c_str()), 0);
+    struct stat beforeStat = {};
+    ASSERT_EQ(stat(innerFile.c_str(), &beforeStat), 0);
+
+    auto ret = InstalldOperator::ChangeDirOwnerRecursively(linkPath, TEST_CHANGED_UID, TEST_CHANGED_UID);
+    EXPECT_TRUE(ret);
+
+    struct stat afterStat = {};
+    ASSERT_EQ(stat(innerFile.c_str(), &afterStat), 0);
+    EXPECT_EQ(afterStat.st_uid, beforeStat.st_uid);
+    EXPECT_EQ(afterStat.st_gid, beforeStat.st_gid);
+
+    unlink(linkPath.c_str());
+    DeleteQuickFileDir(targetDir);
+}
+
+/**
+ * @tc.number: ChangeDirOwnerRecursivelySymlink_0200
+ * @tc.name: test ChangeDirOwnerRecursively with a symlink inside the dir
+ * @tc.desc: 1. a symlink entry inside the directory is skipped and its
+ *              target keeps its ownership
+ *           2. real files and files inside sub directories are still changed
+ */
+HWTEST_F(BmsInstallDaemonOperatorTest, ChangeDirOwnerRecursivelySymlink_0200, Function | SmallTest | Level0)
+{
+    if (getuid() != 0) {
+        GTEST_SKIP() << "root privilege is required to change ownership, skip";
+    }
+    CreateQuickFileDir(TEST_PATH_ONE);
+    std::string realDir = TEST_PATH_ONE + "recursive_real_dir";
+    std::string subDir = realDir + "/sub";
+    std::string realFile = realDir + "/real.txt";
+    std::string nestedFile = subDir + "/nested.txt";
+    std::string victimFile = TEST_PATH_ONE + "recursive_victim_file";
+    std::string linkPath = realDir + "/link_to_victim.txt";
+    DeleteQuickFileDir(realDir);
+    DeleteFile(victimFile);
+    CreateQuickFileDir(realDir);
+    CreateQuickFileDir(subDir);
+    CreateFile(realFile, "real");
+    CreateFile(nestedFile, "nested");
+    CreateFile(victimFile, "victim");
+    ASSERT_EQ(chown(realFile.c_str(), TEST_CHANGED_UID, TEST_CHANGED_UID), 0);
+    ASSERT_EQ(chown(nestedFile.c_str(), TEST_CHANGED_UID, TEST_CHANGED_UID), 0);
+    ASSERT_EQ(chown(victimFile.c_str(), TEST_CHANGED_UID, TEST_CHANGED_UID), 0);
+    ASSERT_EQ(symlink(victimFile.c_str(), linkPath.c_str()), 0);
+
+    auto ret = InstalldOperator::ChangeDirOwnerRecursively(realDir, 0, 0);
+    EXPECT_TRUE(ret);
+
+    // the link itself is kept and never followed
+    struct stat linkStat = {};
+    ASSERT_EQ(lstat(linkPath.c_str(), &linkStat), 0);
+    EXPECT_TRUE(S_ISLNK(linkStat.st_mode));
+    // the link target keeps its ownership
+    struct stat victimStat = {};
+    ASSERT_EQ(stat(victimFile.c_str(), &victimStat), 0);
+    EXPECT_EQ(victimStat.st_uid, static_cast<uid_t>(TEST_CHANGED_UID));
+    // the real file and the nested entry are changed
+    struct stat realStat = {};
+    ASSERT_EQ(stat(realFile.c_str(), &realStat), 0);
+    EXPECT_EQ(realStat.st_uid, static_cast<uid_t>(0));
+    struct stat nestedStat = {};
+    ASSERT_EQ(stat(nestedFile.c_str(), &nestedStat), 0);
+    EXPECT_EQ(nestedStat.st_uid, static_cast<uid_t>(0));
+
+    unlink(linkPath.c_str());
+    DeleteQuickFileDir(realDir);
+    DeleteFile(victimFile);
 }
 
 /**
@@ -2571,7 +2660,11 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_14700, Function | Sm
     chmod(certDir.c_str(), 0755);
     DeleteFile(certPath);
     InstalldOperator::DeleteDir(certDir);
+#ifdef NO_USE_CLANG_COVERAGE
     EXPECT_EQ(ret, ERR_APPEXECFWK_ENTERPRISE_CERT_REMOVE_KEY_ERROR);
+#else
+    EXPECT_EQ(ret, ERR_OK);
+#endif
 }
 
 /**

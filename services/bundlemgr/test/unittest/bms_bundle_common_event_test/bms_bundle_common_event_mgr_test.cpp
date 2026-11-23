@@ -15,6 +15,7 @@
 #define private public
 
 #include <gtest/gtest.h>
+#include "string_wrapper.h"
 #include <chrono>
 #include <condition_variable>
 #include <future>
@@ -25,6 +26,7 @@
 #include <functional>
 
 #include "bundle_common_event_mgr.h"
+#include "bundle_resource_change_type.h"
 #include "app_log_wrapper.h"
 #include "bundle_common_event.h"
 #include "common_event_manager.h"
@@ -776,6 +778,57 @@ HWTEST_F(BmsBundleCommonEventMgrTest, NotifyUninstalledBundleCleared_OldRecord_0
     EXPECT_EQ(want.GetStringParam("assetAccessGroups"), "");
     EXPECT_EQ(want.GetStringParam("appId"), installResult.appId);
     EXPECT_EQ(want.GetIntParam("userId", -1), -1);
+}
+
+HWTEST_F(BmsBundleCommonEventMgrTest, ThemeTimestamp_ThemeWant, TestSize.Level1)
+{
+    const uint32_t type = static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_THEME_CHANGE);
+    const int64_t timestamp = 2147483648LL;
+    const auto want = BundleCommonEventMgr::CreateBundleResourcesChangedWant(TEST_USER_ID, type, timestamp);
+    EXPECT_EQ(want.GetAction(), "usual.event.BUNDLE_RESOURCES_CHANGED");
+    EXPECT_EQ(want.GetIntParam("userId", -1), TEST_USER_ID);
+    EXPECT_EQ(want.GetIntParam("bundleResourceChangeType", -1), static_cast<int32_t>(type));
+    EXPECT_TRUE(want.HasParameter("themeTimestamp"));
+    ASSERT_NE(AAFwk::IString::Query(want.GetParams().GetParam("themeTimestamp")), nullptr);
+    EXPECT_EQ(want.GetStringParam("themeTimestamp"), std::to_string(timestamp));
+}
+
+HWTEST_F(BmsBundleCommonEventMgrTest, ThemeTimestamp_CombinedWant, TestSize.Level1)
+{
+    const uint32_t type = static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_THEME_CHANGE) |
+        static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_LANGUE_CHANGE);
+    const auto want = BundleCommonEventMgr::CreateBundleResourcesChangedWant(TEST_USER_ID, type, 1250);
+    EXPECT_TRUE(want.HasParameter("themeTimestamp"));
+    ASSERT_NE(AAFwk::IString::Query(want.GetParams().GetParam("themeTimestamp")), nullptr);
+    EXPECT_EQ(want.GetStringParam("themeTimestamp"), "1250");
+}
+
+// Exercise the existing public string path on ARM32 without changing Want itself.
+HWTEST_F(BmsBundleCommonEventMgrTest, ThemeTimestamp_StringParcelBoundaries, TestSize.Level1)
+{
+    const uint32_t type = static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_THEME_CHANGE);
+    const int64_t values[] = {0, 2147483648LL, INT64_MAX};
+    for (const int64_t timestamp : values) {
+        const auto want = BundleCommonEventMgr::CreateBundleResourcesChangedWant(TEST_USER_ID, type, timestamp);
+        const AAFwk::Want copy(want);
+        ASSERT_NE(AAFwk::IString::Query(copy.GetParams().GetParam("themeTimestamp")), nullptr);
+        EXPECT_EQ(copy.GetStringParam("themeTimestamp"), std::to_string(timestamp));
+        Parcel parcel;
+        ASSERT_TRUE(copy.Marshalling(parcel));
+        std::unique_ptr<AAFwk::Want> restored(AAFwk::Want::Unmarshalling(parcel));
+        ASSERT_NE(restored, nullptr);
+        ASSERT_NE(AAFwk::IString::Query(restored->GetParams().GetParam("themeTimestamp")), nullptr);
+        EXPECT_EQ(restored->GetStringParam("themeTimestamp"), std::to_string(timestamp));
+    }
+}
+
+HWTEST_F(BmsBundleCommonEventMgrTest, ThemeTimestamp_NonThemeWantOmitsField, TestSize.Level1)
+{
+    const uint32_t type = static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_LANGUE_CHANGE);
+    const auto want = BundleCommonEventMgr::CreateBundleResourcesChangedWant(TEST_USER_ID, type, 1250);
+    EXPECT_FALSE(want.HasParameter("themeTimestamp"));
+    EXPECT_EQ(want.GetIntParam("userId", -1), TEST_USER_ID);
+    EXPECT_EQ(want.GetIntParam("bundleResourceChangeType", -1), static_cast<int32_t>(type));
 }
 
 } // namespace OHOS

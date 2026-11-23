@@ -18,9 +18,7 @@
 #define protected public
 
 #include <chrono>
-#include <condition_variable>
 #include <fstream>
-#include <mutex>
 #include <thread>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -567,34 +565,6 @@ public:
         return nullptr;
     }
     ErrCode errCodeResult = ERR_OK;
-};
-
-class MockBundleStatsCallback : public IBundleStatsCallback {
-public:
-    void OnGetBundleStatsFinished(int32_t errCode, const std::vector<int64_t> &bundleStats) override
-    {
-        {
-            std::lock_guard<std::mutex> lock(mutex_);
-            errCodeResult = errCode;
-            statsResult = bundleStats;
-            called_ = true;
-        }
-        cv_.notify_all();
-    }
-    sptr<IRemoteObject> AsObject() override
-    {
-        return nullptr;
-    }
-    bool WaitForResult(int32_t timeoutMs = 5000)
-    {
-        std::unique_lock<std::mutex> lock(mutex_);
-        return cv_.wait_for(lock, std::chrono::milliseconds(timeoutMs), [this]() { return called_; });
-    }
-    ErrCode errCodeResult = ERR_OK;
-    std::vector<int64_t> statsResult;
-    std::mutex mutex_;
-    std::condition_variable cv_;
-    bool called_ = false;
 };
 
 class IBundleInstallerTest : public IBundleInstaller {
@@ -6882,6 +6852,20 @@ HWTEST_F(BmsBundleKitServiceTest, Mgr_Proxy_GetUninstalledBundleInfo_0001, Funct
 }
 
 /**
+ * @tc.number: Mgr_Proxy_GetLaunchServices_0100
+ * @tc.name: test BundleMgrProxy interface GetLaunchServices
+ * @tc.desc: 1.return ERR_BUNDLE_MANAGER_PERMISSION_DENIED for non-foundation caller
+ */
+HWTEST_F(BmsBundleKitServiceTest, Mgr_Proxy_GetLaunchServices_0100, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    LaunchServicesResult result;
+    auto ret = bundleMgrProxy->GetLaunchServices(BUNDLE_NAME_TEST, MODULE_NAME_TEST, DEFAULT_USERID, result);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
  * @tc.number: Mgr_Proxy_AddDesktopShortcutInfo_0100
  * @tc.name: test BundleMgrProxy interface AddDesktopShortcutInfo
  * @tc.desc: 1.return ERR_BUNDLE_MANAGER_PERMISSION_DENIED
@@ -13028,201 +13012,6 @@ HWTEST_F(BmsBundleKitServiceTest, GetTopNLargestItemsInAppDataDir_0700, Function
 }
 
 /**
- * @tc.number: GetBundleStatsAsync_0100
- * @tc.name: test GetBundleStatsAsync with null callback
- * @tc.desc: 1. Test GetBundleStatsAsync with null callback
- *           2. Should return ERR_BUNDLE_MANAGER_PARAM_ERROR
- */
-HWTEST_F(BmsBundleKitServiceTest, GetBundleStatsAsync_0100, Function | SmallTest | Level1)
-{
-    SetSystemAppForTest(true);
-    SetVerifyCallingPermissionForTest(true);
-
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-    ASSERT_NE(hostImpl, nullptr);
-    sptr<IBundleStatsCallback> callback = nullptr;
-    ErrCode ret = hostImpl->GetBundleStatsAsync(BUNDLE_NAME_TEST, DEFAULT_USERID, 0, 0, callback);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
-
-    ResetTestValues();
-}
-
-/**
- * @tc.number: GetBundleStatsAsync_0200
- * @tc.name: test GetBundleStatsAsync with empty bundle name
- * @tc.desc: 1. Test GetBundleStatsAsync with empty bundle name
- *           2. Should return ERR_BUNDLE_MANAGER_PARAM_ERROR
- */
-HWTEST_F(BmsBundleKitServiceTest, GetBundleStatsAsync_0200, Function | SmallTest | Level1)
-{
-    SetSystemAppForTest(true);
-    SetVerifyCallingPermissionForTest(true);
-
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-    ASSERT_NE(hostImpl, nullptr);
-    sptr<MockBundleStatsCallback> callback = new (std::nothrow) MockBundleStatsCallback();
-    ASSERT_NE(callback, nullptr);
-
-    ErrCode ret = hostImpl->GetBundleStatsAsync("", DEFAULT_USERID, 0, 0, callback);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
-
-    ResetTestValues();
-}
-
-/**
- * @tc.number: GetBundleStatsAsync_0300
- * @tc.name: test GetBundleStatsAsync without permission
- * @tc.desc: 1. Test GetBundleStatsAsync without required permission
- *           2. Should return ERR_BUNDLE_MANAGER_PERMISSION_DENIED
- */
-HWTEST_F(BmsBundleKitServiceTest, GetBundleStatsAsync_0300, Function | SmallTest | Level1)
-{
-    SetSystemAppForTest(false);
-    SetVerifyCallingPermissionForTest(false);
-    SetIsBundleSelfCallingForTest(false);
-
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-    ASSERT_NE(hostImpl, nullptr);
-    sptr<MockBundleStatsCallback> callback = new (std::nothrow) MockBundleStatsCallback();
-    ASSERT_NE(callback, nullptr);
-
-    ErrCode ret = hostImpl->GetBundleStatsAsync(BUNDLE_NAME_TEST, DEFAULT_USERID, 0, 0, callback);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
-
-    ResetTestValues();
-}
-
-/**
- * @tc.number: GetBundleStatsAsync_0400
- * @tc.name: test GetBundleStatsAsync with dataMgr nullptr
- * @tc.desc: 1. Test GetBundleStatsAsync when dataMgr is nullptr
- *           2. Should return ERR_OK and deliver error via callback asynchronously
- */
-HWTEST_F(BmsBundleKitServiceTest, GetBundleStatsAsync_0400, Function | SmallTest | Level1)
-{
-    SetSystemAppForTest(true);
-    SetVerifyCallingPermissionForTest(true);
-
-    DataMgrGuard guard;
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-    ASSERT_NE(hostImpl, nullptr);
-    sptr<MockBundleStatsCallback> callback = new (std::nothrow) MockBundleStatsCallback();
-    ASSERT_NE(callback, nullptr);
-
-    ErrCode ret = hostImpl->GetBundleStatsAsync(BUNDLE_NAME_TEST, DEFAULT_USERID, 0, 0, callback);
-    EXPECT_EQ(ret, ERR_OK);
-    // wait for async task to finish before hostImpl is destroyed to avoid use-after-free
-    EXPECT_TRUE(callback->WaitForResult());
-    EXPECT_EQ(callback->errCodeResult, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
-    EXPECT_TRUE(callback->statsResult.empty());
-
-    ResetTestValues();
-}
-
-/**
- * @tc.number: GetBundleStatsAsync_0500
- * @tc.name: test GetBundleStatsAsync with non-existent bundle
- * @tc.desc: 1. Test GetBundleStatsAsync with non-existent bundle
- *           2. Should return ERR_OK and deliver error via callback asynchronously
- */
-HWTEST_F(BmsBundleKitServiceTest, GetBundleStatsAsync_0500, Function | SmallTest | Level1)
-{
-    auto dataMgr = GetBundleDataMgr();
-    ASSERT_NE(dataMgr, nullptr);
-    dataMgr->AddUserId(DEFAULT_USERID);
-    SetSystemAppForTest(true);
-    SetVerifyCallingPermissionForTest(true);
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-    ASSERT_NE(hostImpl, nullptr);
-    sptr<MockBundleStatsCallback> callback = new (std::nothrow) MockBundleStatsCallback();
-    ASSERT_NE(callback, nullptr);
-
-    std::string nonExistentBundle = "nonexistent.bundle.stats.async";
-    ErrCode ret = hostImpl->GetBundleStatsAsync(nonExistentBundle, DEFAULT_USERID, 0, 0, callback);
-    EXPECT_EQ(ret, ERR_OK);
-    // wait for async task to finish before hostImpl is destroyed to avoid use-after-free
-    EXPECT_TRUE(callback->WaitForResult());
-    EXPECT_EQ(callback->errCodeResult, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
-    EXPECT_TRUE(callback->statsResult.empty());
-
-    ResetTestValues();
-}
-
-/**
- * @tc.number: GetBundleStatsAsync_0600
- * @tc.name: test GetBundleStatsAsync merges callbacks for same key
- * @tc.desc: 1. Two async calls with the same key, both callbacks must receive result
- *           2. Verify dedup/merge path delivers to every merged callback
- */
-HWTEST_F(BmsBundleKitServiceTest, GetBundleStatsAsync_0600, Function | SmallTest | Level1)
-{
-    SetSystemAppForTest(true);
-    SetVerifyCallingPermissionForTest(true);
-
-    DataMgrGuard guard;
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-    ASSERT_NE(hostImpl, nullptr);
-    sptr<MockBundleStatsCallback> callback1 = new (std::nothrow) MockBundleStatsCallback();
-    ASSERT_NE(callback1, nullptr);
-    sptr<MockBundleStatsCallback> callback2 = new (std::nothrow) MockBundleStatsCallback();
-    ASSERT_NE(callback2, nullptr);
-
-    // same bundleName/userId/appIndex/statFlag => same dedup key
-    ErrCode ret1 = hostImpl->GetBundleStatsAsync(BUNDLE_NAME_TEST, DEFAULT_USERID, 0, 0, callback1);
-    ErrCode ret2 = hostImpl->GetBundleStatsAsync(BUNDLE_NAME_TEST, DEFAULT_USERID, 0, 0, callback2);
-    EXPECT_EQ(ret1, ERR_OK);
-    EXPECT_EQ(ret2, ERR_OK);
-    // both callbacks must be invoked (merged into one task or run as separate tasks)
-    EXPECT_TRUE(callback1->WaitForResult());
-    EXPECT_TRUE(callback2->WaitForResult());
-    EXPECT_EQ(callback1->errCodeResult, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
-    EXPECT_EQ(callback2->errCodeResult, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
-
-    ResetTestValues();
-}
-
-/**
- * @tc.number: NormalizeStatFlag_0100
- * @tc.name: test NormalizeStatFlag with valid flags
- * @tc.desc: 1. Valid statFlag values should remain unchanged after normalization
- */
-HWTEST_F(BmsBundleKitServiceTest, NormalizeStatFlag_0100, Function | SmallTest | Level1)
-{
-    EXPECT_EQ(BundleMgrHostImpl::NormalizeStatFlag(0), 0U);
-    EXPECT_EQ(BundleMgrHostImpl::NormalizeStatFlag(
-        Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_INSTALL_SIZE),
-        Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_INSTALL_SIZE);
-    EXPECT_EQ(BundleMgrHostImpl::NormalizeStatFlag(
-        Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_DATA_SIZE),
-        Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_DATA_SIZE);
-    EXPECT_EQ(BundleMgrHostImpl::NormalizeStatFlag(
-        Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_CACHE_SIZE),
-        Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_CACHE_SIZE);
-    constexpr uint32_t ALL_VALID = Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_INSTALL_SIZE
-        | Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_DATA_SIZE
-        | Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_CACHE_SIZE;
-    EXPECT_EQ(BundleMgrHostImpl::NormalizeStatFlag(ALL_VALID), ALL_VALID);
-}
-
-/**
- * @tc.number: NormalizeStatFlag_0200
- * @tc.name: test NormalizeStatFlag with invalid bits
- * @tc.desc: 1. Invalid high bits should be cleared, valid bits preserved
- */
-HWTEST_F(BmsBundleKitServiceTest, NormalizeStatFlag_0200, Function | SmallTest | Level1)
-{
-    constexpr uint32_t ALL_VALID = Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_INSTALL_SIZE
-        | Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_DATA_SIZE
-        | Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_CACHE_SIZE;
-    EXPECT_EQ(BundleMgrHostImpl::NormalizeStatFlag(0x08), 0U);
-    EXPECT_EQ(BundleMgrHostImpl::NormalizeStatFlag(0xFF), ALL_VALID);
-    EXPECT_EQ(BundleMgrHostImpl::NormalizeStatFlag(0xFFFFFFFF), ALL_VALID);
-    EXPECT_EQ(BundleMgrHostImpl::NormalizeStatFlag(
-        Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_INSTALL_SIZE | 0xF0),
-        Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_INSTALL_SIZE);
-}
-
-/**
  * @tc.number: CheckCallingUid_0100
  * @tc.name: Test CheckCallingUid
  * @tc.desc: 1.Test the CheckCallingUid by BundleMgrHostImpl with normal call
@@ -13971,7 +13760,8 @@ HWTEST_F(BmsBundleKitServiceTest, SetShortcutsEnabled_0100, Function | SmallTest
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     std::vector<ShortcutInfo> shortcutInfos;
-    auto ret = bundleMgrHostImpl_->SetShortcutsEnabled(shortcutInfos, true);
+    std::map<std::string, std::vector<std::string>> invalidShortcuts;
+    auto ret = bundleMgrHostImpl_->SetShortcutsEnabled(shortcutInfos, true, invalidShortcuts);
     EXPECT_EQ(ret, ERR_OK);
 }
 

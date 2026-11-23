@@ -17,7 +17,15 @@
 #include <fstream>
 #include <future>
 #include <gtest/gtest.h>
+#include <unistd.h>
+#include "accesstoken_kit.h"
 #include "bundle_resource_host.h"
+#include "bundle_mgr_interface.h"
+#include "iservice_registry.h"
+#include "nativetoken_kit.h"
+#include "scope_guard.h"
+#include "system_ability_definition.h"
+#include "token_setproc.h"
 
 using namespace testing::ext;
 namespace {
@@ -139,4 +147,35 @@ HWTEST_F(BmsBundleResourceHostTest, HandleGetAllLauncherAbilityResourceInfo_0100
     EXPECT_EQ(res, ERR_OK);
 }
 } // AppExecFwk
+
+namespace AppExecFwk {
+/** Requires a running BMS and a native test identity with GET_BUNDLE_RESOURCES. */
+HWTEST_F(BmsBundleResourceHostTest, ThemeTimestamp_LiveServiceQuery, TestSize.Level1)
+{
+    const uint64_t originalTokenId = GetSelfTokenID();
+    ScopeGuard restoreToken([originalTokenId] { EXPECT_EQ(SetSelfTokenID(originalTokenId), 0); });
+    const char *permissions[] = {"ohos.permission.GET_BUNDLE_RESOURCES"};
+    NativeTokenInfoParams tokenInfo = {};
+    tokenInfo.permsNum = 1;
+    tokenInfo.perms = permissions;
+    tokenInfo.processName = "bms_theme_host_test";
+    tokenInfo.aplStr = "system_core";
+    tokenInfo.uid = getuid();
+    const uint64_t tokenId = GetAccessTokenId(&tokenInfo);
+    ASSERT_NE(tokenId, 0);
+    ASSERT_EQ(SetSelfTokenID(tokenId), 0);
+    ASSERT_EQ(Security::AccessToken::AccessTokenKit::ReloadNativeTokenInfo(), 0);
+    auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    ASSERT_NE(samgr, nullptr);
+    auto bundleMgr = iface_cast<IBundleMgr>(samgr->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID));
+    ASSERT_NE(bundleMgr, nullptr);
+    auto resource = bundleMgr->GetBundleResourceProxy();
+    ASSERT_NE(resource, nullptr);
+    int64_t timestamp = -1;
+    ASSERT_EQ(resource->GetThemeTimestamp(Constants::START_USERID, timestamp), ERR_OK);
+    EXPECT_GE(timestamp, -1);
+}
+
+} // namespace AppExecFwk
+
 } // OHOS

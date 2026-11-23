@@ -43,6 +43,7 @@
 #include "bundle_stream_installer_host_impl.h"
 #include "bundle_exception_handler.h"
 #include "clean_cache_callback_proxy.h"
+#include "common_func.h"
 #include "directory_ex.h"
 #include "dual_mode_helper.h"
 #include "hidump_helper.h"
@@ -5116,6 +5117,40 @@ HWTEST_F(BmsBundleDataMgrTest, InsertQueryEventInfo_0100, Function | SmallTest |
 }
 
 /**
+ * @tc.number: ConvertInvalidShortcutsToString_0100
+ * @tc.name: test ConvertInvalidShortcutsToString with empty boundaries
+ * @tc.desc: empty map converts to empty string, empty id list converts to bundle name with colon only.
+ */
+HWTEST_F(BmsBundleDataMgrTest, ConvertInvalidShortcutsToString_0100, Function | SmallTest | Level1)
+{
+    std::map<std::string, std::vector<std::string>> invalidShortcuts;
+    EXPECT_EQ(CommonFunc::ConvertInvalidShortcutsToString(invalidShortcuts), "");
+    invalidShortcuts["com.ohos.hello"] = {};
+    EXPECT_EQ(CommonFunc::ConvertInvalidShortcutsToString(invalidShortcuts), "com.ohos.hello:");
+    invalidShortcuts["com.ohos.world"] = {"id_test1"};
+    EXPECT_EQ(CommonFunc::ConvertInvalidShortcutsToString(invalidShortcuts),
+        "com.ohos.hello:; com.ohos.world: id_test1");
+}
+ 
+/**
+ * @tc.number: ConvertInvalidShortcutsToString_0200
+ * @tc.name: test ConvertInvalidShortcutsToString with normal items
+ * @tc.desc: shortcut ids are separated by ", " and bundles by "; ".
+ */
+HWTEST_F(BmsBundleDataMgrTest, ConvertInvalidShortcutsToString_0200, Function | SmallTest | Level1)
+{
+    std::map<std::string, std::vector<std::string>> invalidShortcuts;
+    invalidShortcuts["com.ohos.hello"] = {"id_test1", "id_test2"};
+    invalidShortcuts["com.ohos.world"] = {"id_test3"};
+    std::string result = CommonFunc::ConvertInvalidShortcutsToString(invalidShortcuts);
+    EXPECT_EQ(result, "com.ohos.hello: id_test1, id_test2; com.ohos.world: id_test3");
+    EXPECT_NE(result.find("id_test1, id_test2"), std::string::npos);
+    invalidShortcuts["com.ohos.hello"] = {"id_test1"};
+    EXPECT_EQ(CommonFunc::ConvertInvalidShortcutsToString(invalidShortcuts),
+        "com.ohos.hello: id_test1; com.ohos.world: id_test3");
+}
+
+/**
  * @tc.number: GetBundleNameForUid_0100
  * @tc.name: test GetBundleNameForUid
  * @tc.desc: 1.Test the GetBundleNameForUid by BundleMgrHostImpl
@@ -8568,5 +8603,54 @@ HWTEST_F(BmsBundleDataMgrTest, CheckBundleExist_UserIsolation_0100, Function | S
     EXPECT_EQ(ERR_OK, dataMgr->CheckBundleExistByDeveloperIdAndAssetGroup(
         "isolationDeveloper", "isolationGroup", USERID + 1, isExist));
     EXPECT_FALSE(isExist);
+}
+
+/**
+ * @tc.name: AppUid_Query
+ * @tc.desc: The allocated appUid is returned by bundle and application queries.
+ */
+HWTEST_F(BmsBundleDataMgrTest, AppUid_Query, Function | SmallTest | Level1)
+{
+    auto originalDataMgr = GetBundleDataMgr();
+    ScopeGuard restore([originalDataMgr] { bundleMgrService_->dataMgr_ = originalDataMgr; });
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    bundleMgrService_->dataMgr_ = dataMgr;
+    dataMgr->AddUserId(USERID);
+    const std::string bundleName = "com.example.appuid";
+    constexpr int32_t allocatedAppUid = 20020155;
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = bundleName;
+    info.SetApplicationBundleType(BundleType::APP);
+    info.SetDualModeCloneApp(false);
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = bundleName;
+    userInfo.bundleUserInfo.userId = USERID;
+    userInfo.uid = allocatedAppUid;
+    userInfo.appUid = allocatedAppUid;
+    info.AddInnerBundleUserInfo(userInfo);
+    info.baseBundleInfo_->name = bundleName;
+    dataMgr->bundleInfos_.emplace(bundleName, info);
+    const int32_t flags = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION);
+    BundleInfo result;
+    ASSERT_EQ(bundleMgrHostImpl_->GetBundleInfoV9(bundleName, flags, result, USERID), ERR_OK);
+    EXPECT_EQ(result.name, bundleName);
+    EXPECT_EQ(result.appUid, allocatedAppUid);
+    EXPECT_EQ(result.applicationInfo.bundleName, bundleName);
+    EXPECT_EQ(result.applicationInfo.appUid, allocatedAppUid);
+
+    BundleInfo basic;
+    ASSERT_EQ(bundleMgrHostImpl_->GetBundleInfoV9(bundleName, 0, basic, USERID), ERR_OK);
+    EXPECT_EQ(basic.name, bundleName);
+    // The top-level appUid comes from the record without any flag, while the embedded
+    // applicationInfo is only filled when GET_BUNDLE_INFO_WITH_APPLICATION is requested.
+    EXPECT_EQ(basic.appUid, allocatedAppUid);
+    EXPECT_TRUE(basic.applicationInfo.bundleName.empty());
+    EXPECT_EQ(basic.applicationInfo.appUid, Constants::INVALID_UID);
+
+    ApplicationInfo appInfo;
+    ASSERT_EQ(bundleMgrHostImpl_->GetApplicationInfoV9(bundleName,
+        static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_DEFAULT), USERID, appInfo), ERR_OK);
+    EXPECT_EQ(appInfo.bundleName, bundleName);
+    EXPECT_EQ(appInfo.appUid, allocatedAppUid);
 }
 } // OHOS

@@ -36,6 +36,7 @@ public:
     static ATokenTypeEnum GetTokenType(AccessTokenID tokenID);
     /* Get token type from flag in tokenId, which doesn't depend on ATM service */
     static ATokenTypeEnum GetTokenTypeFlag(AccessTokenID tokenID);
+    static int32_t ReloadNativeTokenInfo();
     static int VerifyAccessToken(AccessTokenID tokenID, const std::string& permissionName);
     // ---- SPM interfaces mirrored from the real accesstoken_kit.h (test_spm_inter) ----
     static int32_t CheckHapSignInfo(const BundleHapList& list, uint32_t flag, int32_t& sessionId,

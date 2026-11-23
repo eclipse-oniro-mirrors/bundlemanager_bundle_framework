@@ -17,6 +17,7 @@
 
 #include <chrono>
 #include <cinttypes>
+#include <map>
 #include <memory>
 #include <numeric>
 #include <mutex>
@@ -3927,61 +3928,6 @@ bool BundleMgrProxy::GetBundleStats(const std::string &bundleName, int32_t userI
     return true;
 }
 
-ErrCode BundleMgrProxy::GetBundleStatsAsync(const std::string &bundleName, int32_t userId, int32_t appIndex,
-    uint32_t statFlag, const sptr<IBundleStatsCallback> &callback)
-{
-    APP_LOGI_NOFUNC("GetBundleStatsAsync -n %{public}s -u %{public}d -i %{public}d",
-        bundleName.c_str(), userId, appIndex);
-    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
-
-    if (bundleName.empty()) {
-        APP_LOGE("fail to GetBundleStatsAsync due to bundleName empty");
-        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
-    }
-    if (callback == nullptr) {
-        APP_LOGE("fail to GetBundleStatsAsync due to params error");
-        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
-    }
-
-    MessageParcel data;
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("failed to GetBundleStatsAsync due to write MessageParcel fail");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    if (!data.WriteString(bundleName)) {
-        APP_LOGE("fail to GetBundleStatsAsync due to write bundleName fail");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    if (!data.WriteInt32(userId)) {
-        APP_LOGE("fail to GetBundleStatsAsync due to write userId fail");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    if (!data.WriteInt32(appIndex)) {
-        APP_LOGE("fail to GetBundleStatsAsync due to write appIndex fail");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    if (!data.WriteUint32(statFlag)) {
-        APP_LOGE("fail to GetBundleStatsAsync due to write statFlag fail");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    if (!data.WriteRemoteObject(callback->AsObject())) {
-        APP_LOGE("fail to GetBundleStatsAsync, for write parcel failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-
-    MessageParcel reply;
-    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_BUNDLE_STATS_ASYNC, data, reply)) {
-        APP_LOGE("fail to GetBundleStatsAsync from server");
-        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
-    }
-    int32_t ret = 0;
-    if (!reply.ReadInt32(ret)) {
-        APP_LOGE("fail to GetBundleStatsAsync due to read result fail");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    return ret;
-}
-
 ErrCode BundleMgrProxy::GetTopNLargestItemsInAppDataDir(const std::string &bundleName, const int32_t appIndex,
     const int32_t userId, const sptr<IGetLargestItemsCallback> getLargestItemsCallback)
 {
@@ -4874,6 +4820,53 @@ ErrCode BundleMgrProxy::GetAllSharedBundleInfo(std::vector<SharedBundleInfo> &sh
     }
     return GetParcelableInfosWithErrCode<SharedBundleInfo>(BundleMgrInterfaceCode::GET_ALL_SHARED_BUNDLE_INFO,
         data, sharedBundles);
+}
+
+ErrCode BundleMgrProxy::SetAlternateModuleEnabled(const std::string &bundleName, const std::string &moduleName,
+    int64_t versionCode, bool isEnabled)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    if (!data.WriteInterfaceToken(GetDescriptor()) || !data.WriteString(bundleName) || !data.WriteString(moduleName) ||
+        !data.WriteInt64(versionCode) || !data.WriteBool(isEnabled)) {
+        APP_LOGE("write alternate module request failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    ErrCode result = SendTransactCmdWithLogErrCode(BundleMgrInterfaceCode::SET_ALTERNATE_MODULE_ENABLED, data, reply);
+    if (result != ERR_OK) {
+        return result;
+    }
+    if (!reply.ReadInt32(result)) {
+        APP_LOGE("read alternate module reply failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return result;
+}
+
+ErrCode BundleMgrProxy::GetAlternateModuleState(const std::string &bundleName, const std::string &moduleName,
+    int64_t versionCode, bool &enabled)
+{
+    enabled = false;
+    MessageParcel data;
+    MessageParcel reply;
+    if (!data.WriteInterfaceToken(GetDescriptor()) || !data.WriteString(bundleName) || !data.WriteString(moduleName) ||
+        !data.WriteInt64(versionCode)) {
+        APP_LOGE("write alternate module request failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    ErrCode result = SendTransactCmdWithLogErrCode(BundleMgrInterfaceCode::GET_ALTERNATE_MODULE_STATE, data, reply);
+    if (result != ERR_OK) {
+        return result;
+    }
+    if (!reply.ReadInt32(result)) {
+        APP_LOGE("read alternate module reply failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (result == ERR_OK && !reply.ReadBool(enabled)) {
+        APP_LOGE("read alternate module reply failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return result;
 }
 
 ErrCode BundleMgrProxy::GetSharedBundleInfo(const std::string &bundleName, const std::string &moduleName,
@@ -7766,14 +7759,12 @@ ErrCode BundleMgrProxy::GetAllBundleDirs(int32_t userId, std::vector<BundleDir> 
         BundleMgrInterfaceCode::GET_ALL_BUNDLE_DIRS, data, bundleDirs);
 }
 
-ErrCode BundleMgrProxy::GetExtensionSandboxDataDir(const std::string &extensionName, int32_t appIndex,
-    std::string &dir)
+ErrCode BundleMgrProxy::GetExtensionSandboxDataDir(const std::string &extensionName, std::string &dir)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     dir.clear();
     MessageParcel data;
-    if (!data.WriteInterfaceToken(GetDescriptor()) || !data.WriteString(extensionName) ||
-        !data.WriteInt32(appIndex)) {
+    if (!data.WriteInterfaceToken(GetDescriptor()) || !data.WriteString(extensionName)) {
         APP_LOGE("Write extension sandbox dir query failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
@@ -7782,11 +7773,19 @@ ErrCode BundleMgrProxy::GetExtensionSandboxDataDir(const std::string &extensionN
         APP_LOGE("Fail to get extension sandbox dir from server");
         return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
     }
-    auto ret = reply.ReadInt32();
-    if (ret == ERR_OK) {
-        dir = reply.ReadString();
+    int32_t ret = ERR_OK;
+    if (!reply.ReadInt32(ret)) {
+        APP_LOGE("Read extension sandbox dir result failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    return ret;
+    if (ret != ERR_OK) {
+        return ret;
+    }
+    if (!reply.ReadString(dir) || dir.empty()) {
+        APP_LOGE("Read extension sandbox dir failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
 }
 
 ErrCode BundleMgrProxy::RegisterPluginEventCallback(const sptr<IBundleEventCallback> pluginEventCallback)
@@ -8017,7 +8016,8 @@ ErrCode BundleMgrProxy::SetShortcutVisibleForSelf(const std::string &shortcutId,
     return reply.ReadInt32();
 }
 
-ErrCode BundleMgrProxy::SetShortcutsEnabled(const std::vector<ShortcutInfo> &shortcutInfos, bool isEnabled)
+ErrCode BundleMgrProxy::SetShortcutsEnabled(const std::vector<ShortcutInfo> &shortcutInfos, bool isEnabled,
+    std::map<std::string, std::vector<std::string>> &invalidShortcuts)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (shortcutInfos.empty() || shortcutInfos.size() > MAX_SHORTCUT_INFO_SIZE) {
@@ -8043,7 +8043,22 @@ ErrCode BundleMgrProxy::SetShortcutsEnabled(const std::vector<ShortcutInfo> &sho
         APP_LOGE("fail to SetShortcutsEnabled from server");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    return reply.ReadInt32();
+    ErrCode result = reply.ReadInt32();
+    int32_t invalidSize = reply.ReadInt32();
+    if (invalidSize < 0 || static_cast<size_t>(invalidSize) > shortcutInfos.size()) {
+        APP_LOGE("SetShortcutsEnabled read invalidShortcuts size failed");
+        return result;
+    }
+    for (int32_t i = 0; i < invalidSize; ++i) {
+        std::string bundleName = reply.ReadString();
+        std::vector<std::string> shortcutIds;
+        if (!reply.ReadStringVector(&shortcutIds)) {
+            APP_LOGE("SetShortcutsEnabled read invalidShortcuts failed");
+            return result;
+        }
+        invalidShortcuts[bundleName] = shortcutIds;
+    }
+    return result;
 }
 
 bool BundleMgrProxy::GreatOrEqualTargetAPIVersion(const int32_t platformVersion, const int32_t minorVersion,

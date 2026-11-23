@@ -92,7 +92,13 @@ const nlohmann::json EXTENSIONS_JSON_5 = R"(
 enum {
     ERR_BUNDLE_MANAGER_EXTENSION_INVALID_PARAM = 8585217,
     ERR_BUNDLE_MANAGER_EXTENSION_PERMISSION_DENIED = 8585218,
+    ERR_BUNDLE_MANAGER_EXTENSION_PARCEL_FAILED = 8585219,
+    ERR_BUNDLE_MANAGER_EXTENSION_SHORTCUT_DELETE_FAIL = 8585415,
+    ERR_BUNDLE_MANAGER_EXTENSION_SHORTCUT_UPDATE_FAIL = 8585416,
+    ERR_BUNDLE_MANAGER_EXTENSION_BUNDLE_NOT_EXIST = 8585601,
+    ERR_BUNDLE_MANAGER_EXTENSION_QUERY_EMPTY = 8585602,
     ERR_BUNDLE_MANAGER_EXTENSION_INVALID_USER_ID = 8585605,
+    ERR_BUNDLE_MANAGER_EXTENSION_SHORTCUT_NOT_EXIST = 8585612,
 };
 constexpr int32_t MAX_USERID_LIMIT = 1000;
 }  // namespace
@@ -131,6 +137,14 @@ public:
     ErrCode GetAllDesktopShortcutInfos(int32_t userId, std::vector<ShortcutInfo> &shortcutInfos) override;
     ErrCode AddDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId) override;
     ErrCode DeleteDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId) override;
+};
+
+class DefaultImplBundleMgrExt : public BundleMgrExt {
+public:
+    bool CheckApiInfo(const BundleInfo& bundleInfo) override
+    {
+        return true;
+    }
 };
 
 std::shared_ptr<BundleMgrService> BmsExtensionDataMgrTest::bundleMgrService_ =
@@ -3033,6 +3047,168 @@ HWTEST_F(BmsExtensionDataMgrTest, BMSExtErrorCodeConsistency_0001, Function | Sm
     static_assert(ERR_BUNDLE_MANAGER_EXTENSION_INVALID_USER_ID ==
         bmsExtensionDataMgr.ERR_BUNDLE_MANAGER_EXTENSION_INVALID_USER_ID,
         "ERR_BUNDLE_MANAGER_EXTENSION_INVALID_USER_ID mismatch with production");
+    static_assert(ERR_BUNDLE_MANAGER_EXTENSION_PARCEL_FAILED ==
+        bmsExtensionDataMgr.ERR_BUNDLE_MANAGER_EXTENSION_PARCEL_FAILED,
+        "ERR_BUNDLE_MANAGER_EXTENSION_PARCEL_FAILED mismatch with production");
+    static_assert(ERR_BUNDLE_MANAGER_EXTENSION_SHORTCUT_DELETE_FAIL ==
+        bmsExtensionDataMgr.ERR_BUNDLE_MANAGER_EXTENSION_SHORTCUT_DELETE_FAIL,
+        "ERR_BUNDLE_MANAGER_EXTENSION_SHORTCUT_DELETE_FAIL mismatch with production");
+    static_assert(ERR_BUNDLE_MANAGER_EXTENSION_SHORTCUT_UPDATE_FAIL ==
+        bmsExtensionDataMgr.ERR_BUNDLE_MANAGER_EXTENSION_SHORTCUT_UPDATE_FAIL,
+        "ERR_BUNDLE_MANAGER_EXTENSION_SHORTCUT_UPDATE_FAIL mismatch with production");
+    static_assert(ERR_BUNDLE_MANAGER_EXTENSION_BUNDLE_NOT_EXIST ==
+        bmsExtensionDataMgr.ERR_BUNDLE_MANAGER_EXTENSION_BUNDLE_NOT_EXIST,
+        "ERR_BUNDLE_MANAGER_EXTENSION_BUNDLE_NOT_EXIST mismatch with production");
+    static_assert(ERR_BUNDLE_MANAGER_EXTENSION_QUERY_EMPTY ==
+        bmsExtensionDataMgr.ERR_BUNDLE_MANAGER_EXTENSION_QUERY_EMPTY,
+        "ERR_BUNDLE_MANAGER_EXTENSION_QUERY_EMPTY mismatch with production");
+    static_assert(ERR_BUNDLE_MANAGER_EXTENSION_SHORTCUT_NOT_EXIST ==
+        bmsExtensionDataMgr.ERR_BUNDLE_MANAGER_EXTENSION_SHORTCUT_NOT_EXIST,
+        "ERR_BUNDLE_MANAGER_EXTENSION_SHORTCUT_NOT_EXIST mismatch with production");
     SUCCEED();
+}
+
+/**
+ * @tc.number: BundleMgrExt_CanOpenLink_Default_0001
+ * @tc.name: CanOpenLink default impl returns ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR
+ * @tc.desc: test CanOpenLink default implementation
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_CanOpenLink_Default_0001, Function | SmallTest | Level0)
+{
+    DefaultImplBundleMgrExt defaultBundleMgrExt;
+    bool canOpen = false;
+    ErrCode res = defaultBundleMgrExt.CanOpenLink("test.link", canOpen);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR);
+}
+
+/**
+ * @tc.number: BundleMgrExt_GetShortcutInfos_Default_0001
+ * @tc.name: GetShortcutInfos default impl returns ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR
+ * @tc.desc: test GetShortcutInfos default implementation
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_GetShortcutInfos_Default_0001, Function | SmallTest | Level0)
+{
+    DefaultImplBundleMgrExt defaultBundleMgrExt;
+    std::vector<ShortcutInfo> shortcutInfos;
+    ErrCode res = defaultBundleMgrExt.GetShortcutInfos("test.bundle", USERID, shortcutInfos);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR);
+}
+
+/**
+ * @tc.number: BundleMgrExt_GetAllDesktopShortcutInfos_Default_0001
+ * @tc.name: GetAllDesktopShortcutInfos default impl returns ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR
+ * @tc.desc: test GetAllDesktopShortcutInfos default implementation
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_GetAllDesktopShortcutInfos_Default_0001, Function | SmallTest | Level0)
+{
+    DefaultImplBundleMgrExt defaultBundleMgrExt;
+    std::vector<ShortcutInfo> shortcutInfos;
+    ErrCode res = defaultBundleMgrExt.GetAllDesktopShortcutInfos(USERID, shortcutInfos);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR);
+}
+
+/**
+ * @tc.number: BundleMgrExt_AddDesktopShortcutInfo_Default_0001
+ * @tc.name: AddDesktopShortcutInfo default impl returns ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR
+ * @tc.desc: test AddDesktopShortcutInfo default implementation
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_AddDesktopShortcutInfo_Default_0001, Function | SmallTest | Level0)
+{
+    DefaultImplBundleMgrExt defaultBundleMgrExt;
+    ShortcutInfo shortcutInfo;
+    ErrCode res = defaultBundleMgrExt.AddDesktopShortcutInfo(shortcutInfo, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR);
+}
+
+/**
+ * @tc.number: BundleMgrExt_DeleteDesktopShortcutInfo_Default_0001
+ * @tc.name: DeleteDesktopShortcutInfo default impl returns ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR
+ * @tc.desc: test DeleteDesktopShortcutInfo default implementation
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_DeleteDesktopShortcutInfo_Default_0001, Function | SmallTest | Level0)
+{
+    DefaultImplBundleMgrExt defaultBundleMgrExt;
+    ShortcutInfo shortcutInfo;
+    ErrCode res = defaultBundleMgrExt.DeleteDesktopShortcutInfo(shortcutInfo, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR);
+}
+
+/**
+ * @tc.number: ConvertAddDesktopShortcutErrCode_0001
+ * @tc.name: ConvertAddDesktopShortcutErrCode with BMSBroker error codes
+ * @tc.desc: test ConvertAddDesktopShortcutErrCode per BMSBroker error mapping:
+ *           8585218 -> ERR_BUNDLE_MANAGER_PERMISSION_DENIED, 8585219 -> ERR_BUNDLE_MANAGER_PARAM_ERROR,
+ *           8585605 -> ERR_BUNDLE_MANAGER_INVALID_USER_ID, 8585217 -> ERR_BUNDLE_MANAGER_PARAM_ERROR,
+ *           8585601 -> ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST, 8585416 -> ERR_BUNDLE_MANAGER_PARAM_ERROR,
+ *           unknown -> ERR_BUNDLE_MANAGER_PARAM_ERROR
+ */
+HWTEST_F(BmsExtensionDataMgrTest, ConvertAddDesktopShortcutErrCode_0001, Function | SmallTest | Level1)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    EXPECT_EQ(bmsExtensionDataMgr.ConvertAddDesktopShortcutErrCode(ERR_BUNDLE_MANAGER_EXTENSION_PERMISSION_DENIED),
+        ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    EXPECT_EQ(bmsExtensionDataMgr.ConvertAddDesktopShortcutErrCode(ERR_BUNDLE_MANAGER_EXTENSION_PARCEL_FAILED),
+        ERR_BUNDLE_MANAGER_PARAM_ERROR);
+    EXPECT_EQ(bmsExtensionDataMgr.ConvertAddDesktopShortcutErrCode(ERR_BUNDLE_MANAGER_EXTENSION_INVALID_USER_ID),
+        ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    EXPECT_EQ(bmsExtensionDataMgr.ConvertAddDesktopShortcutErrCode(ERR_BUNDLE_MANAGER_EXTENSION_INVALID_PARAM),
+        ERR_BUNDLE_MANAGER_PARAM_ERROR);
+    EXPECT_EQ(bmsExtensionDataMgr.ConvertAddDesktopShortcutErrCode(
+        ERR_BUNDLE_MANAGER_EXTENSION_BUNDLE_NOT_EXIST), ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_EQ(bmsExtensionDataMgr.ConvertAddDesktopShortcutErrCode(
+        ERR_BUNDLE_MANAGER_EXTENSION_SHORTCUT_UPDATE_FAIL), ERR_BUNDLE_MANAGER_PARAM_ERROR);
+    EXPECT_EQ(bmsExtensionDataMgr.ConvertAddDesktopShortcutErrCode(9999999),
+        ERR_BUNDLE_MANAGER_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: ConvertDeleteDesktopShortcutErrCode_0001
+ * @tc.name: ConvertDeleteDesktopShortcutErrCode with BMSBroker error codes
+ * @tc.desc: test ConvertDeleteDesktopShortcutErrCode per BMSBroker error mapping:
+ *           8585218 -> ERR_BUNDLE_MANAGER_PERMISSION_DENIED, 8585219 -> ERR_BUNDLE_MANAGER_PARAM_ERROR,
+ *           8585605 -> ERR_BUNDLE_MANAGER_INVALID_USER_ID, 8585217 -> ERR_BUNDLE_MANAGER_PARAM_ERROR,
+ *           8585612 -> ERR_BUNDLE_MANAGER_PARAM_ERROR, 8585415 -> ERR_BUNDLE_MANAGER_PARAM_ERROR,
+ *           unknown -> ERR_BUNDLE_MANAGER_PARAM_ERROR
+ */
+HWTEST_F(BmsExtensionDataMgrTest, ConvertDeleteDesktopShortcutErrCode_0001, Function | SmallTest | Level1)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    EXPECT_EQ(bmsExtensionDataMgr.ConvertDeleteDesktopShortcutErrCode(ERR_BUNDLE_MANAGER_EXTENSION_PERMISSION_DENIED),
+        ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    EXPECT_EQ(bmsExtensionDataMgr.ConvertDeleteDesktopShortcutErrCode(ERR_BUNDLE_MANAGER_EXTENSION_PARCEL_FAILED),
+        ERR_BUNDLE_MANAGER_PARAM_ERROR);
+    EXPECT_EQ(bmsExtensionDataMgr.ConvertDeleteDesktopShortcutErrCode(ERR_BUNDLE_MANAGER_EXTENSION_INVALID_USER_ID),
+        ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    EXPECT_EQ(bmsExtensionDataMgr.ConvertDeleteDesktopShortcutErrCode(ERR_BUNDLE_MANAGER_EXTENSION_INVALID_PARAM),
+        ERR_BUNDLE_MANAGER_PARAM_ERROR);
+    EXPECT_EQ(bmsExtensionDataMgr.ConvertDeleteDesktopShortcutErrCode(
+        ERR_BUNDLE_MANAGER_EXTENSION_SHORTCUT_NOT_EXIST), ERR_BUNDLE_MANAGER_PARAM_ERROR);
+    EXPECT_EQ(bmsExtensionDataMgr.ConvertDeleteDesktopShortcutErrCode(
+        ERR_BUNDLE_MANAGER_EXTENSION_SHORTCUT_DELETE_FAIL), ERR_BUNDLE_MANAGER_PARAM_ERROR);
+    EXPECT_EQ(bmsExtensionDataMgr.ConvertDeleteDesktopShortcutErrCode(9999999),
+        ERR_BUNDLE_MANAGER_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: ConvertGetAllDesktopShortcutErrCode_0001
+ * @tc.name: ConvertGetAllDesktopShortcutErrCode with BMSBroker error codes
+ * @tc.desc: test ConvertGetAllDesktopShortcutErrCode per BMSBroker error mapping:
+ *           8585218 -> ERR_BUNDLE_MANAGER_PERMISSION_DENIED, 8585219 -> ERR_BUNDLE_MANAGER_PARAM_ERROR,
+ *           8585605 -> ERR_BUNDLE_MANAGER_INVALID_USER_ID, 8585602 (query empty) -> ERR_OK,
+ *           unknown -> ERR_BUNDLE_MANAGER_PARAM_ERROR
+ */
+HWTEST_F(BmsExtensionDataMgrTest, ConvertGetAllDesktopShortcutErrCode_0001, Function | SmallTest | Level1)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    EXPECT_EQ(bmsExtensionDataMgr.ConvertGetAllDesktopShortcutErrCode(ERR_BUNDLE_MANAGER_EXTENSION_PERMISSION_DENIED),
+        ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    EXPECT_EQ(bmsExtensionDataMgr.ConvertGetAllDesktopShortcutErrCode(ERR_BUNDLE_MANAGER_EXTENSION_PARCEL_FAILED),
+        ERR_BUNDLE_MANAGER_PARAM_ERROR);
+    EXPECT_EQ(bmsExtensionDataMgr.ConvertGetAllDesktopShortcutErrCode(ERR_BUNDLE_MANAGER_EXTENSION_INVALID_USER_ID),
+        ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    EXPECT_EQ(bmsExtensionDataMgr.ConvertGetAllDesktopShortcutErrCode(ERR_BUNDLE_MANAGER_EXTENSION_QUERY_EMPTY),
+        ERR_OK);
+    EXPECT_EQ(bmsExtensionDataMgr.ConvertGetAllDesktopShortcutErrCode(9999999),
+        ERR_BUNDLE_MANAGER_PARAM_ERROR);
 }
 } // OHOS

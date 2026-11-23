@@ -58,6 +58,7 @@ const char* MSG_ERR_INSTALL_FAILED_MODULE_NAME_EMPTY = "[MSG_ERR_INSTALL_FAILED_
 const char* MSG_ERR_INSTALL_FAILED_MODULE_NAME_DUPLICATE = "[MSG_ERR_INSTALL_FAILED_MODULE_NAME_DUPLICATE]";
 const char* MSG_ERR_INSTALL_FAILED_CHECK_HAP_HASH_PARAM = "[MSG_ERR_INSTALL_FAILED_CHECK_HAP_HASH_PARAM]";
 const char* MSG_ERR_INSTALL_PARAM_ERROR = "[MSG_ERR_INSTALL_PARAM_ERROR]";
+const char* MSG_ERR_INSTALL_ALTERNATE_MODULE_INVALID = "[MSG_ERR_INSTALL_ALTERNATE_MODULE_INVALID]";
 const char* MSG_ERR_INSTALL_PERMISSION_DENIED = "[MSG_ERR_INSTALL_PERMISSION_DENIED]";
 const char* MSG_ERR_INSTALL_ENTRY_ALREADY_EXIST = "[MSG_ERR_INSTALL_ENTRY_ALREADY_EXIST]";
 const char* MSG_ERR_INSTALL_STATE_ERROR = "[MSG_ERR_INSTALL_STATE_ERROR]";
@@ -360,6 +361,8 @@ const std::unordered_map<int32_t, struct ReceivedResult> MAP_RECEIVED_RESULTS {
         {IStatusReceiver::ERR_INSTALL_FAILED_CHECK_HAP_HASH_PARAM, MSG_ERR_INSTALL_FAILED_CHECK_HAP_HASH_PARAM}},
     {ERR_APPEXECFWK_INSTALL_PARAM_ERROR,
         {IStatusReceiver::ERR_INSTALL_PARAM_ERROR, MSG_ERR_INSTALL_PARAM_ERROR}},
+    {ERR_APPEXECFWK_INSTALL_ALTERNATE_MODULE_INVALID,
+        {IStatusReceiver::ERR_INSTALL_PARAM_ERROR, MSG_ERR_INSTALL_ALTERNATE_MODULE_INVALID}},
     {ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED,
         {IStatusReceiver::ERR_INSTALL_PERMISSION_DENIED, MSG_ERR_INSTALL_PERMISSION_DENIED}},
     {ERR_APPEXECFWK_INSTALL_ENTRY_ALREADY_EXIST,
@@ -877,7 +880,7 @@ void StatusReceiverProxy::OnStatusNotify(const int32_t progress)
 
     MessageParcel data;
     MessageParcel reply;
-    MessageOption option(MessageOption::TF_SYNC);
+    MessageOption option(MessageOption::TF_ASYNC);
     if (!data.WriteInterfaceToken(StatusReceiverProxy::GetDescriptor())) {
         APP_LOGE("fail to OnStatusNotify due to write MessageParcel fail");
         return;
@@ -912,7 +915,7 @@ void StatusReceiverProxy::OnFinished(const int32_t resultCode, const std::string
     CloseStreamInstaller(streamInstallerId_);
     MessageParcel data;
     MessageParcel reply;
-    MessageOption option(MessageOption::TF_SYNC);
+    MessageOption option(MessageOption::TF_ASYNC);
     if (!data.WriteInterfaceToken(StatusReceiverProxy::GetDescriptor())) {
         APP_LOGE("fail to OnFinished due to write MessageParcel fail");
         return;

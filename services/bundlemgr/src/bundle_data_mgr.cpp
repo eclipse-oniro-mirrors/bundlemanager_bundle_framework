@@ -263,6 +263,14 @@ void BundleDataMgr::DefragMemory()
 bool BundleDataMgr::LoadDataFromPersistentStorage()
 {
     std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    // === DUAL_MODE: seed the default policy set (const.bms.devicemodedistributionpolicy) when
+    // the key was never persisted. Runs FIRST, before the empty-storage early return below, so
+    // the default is in place from the FIRST boot on (a fresh device has an empty DB and never
+    // reaches the classification path); once the key exists this is a no-op and the dual-mode
+    // classification later in this call applies the value. ===
+    if (DualModeHelper::IsDualModeDevice()) {
+        InitDualModeDefaultPoliciesNoLock();
+    }
     // Judge whether bundleState json db exists.
     // If it does not exist, create it and return the judgment result.
     bool bundleStateDbExist = bundleStateStorage_->HasBundleUserInfoJsonDb();
@@ -461,6 +469,119 @@ void BundleDataMgr::ResetBundleStateData()
             bundleInfoItem.second.ResetBundleState(Constants::ALL_USERID);
         }
     }
+}
+
+namespace {
+// Format tokens of the const.bms.devicemodedistributionpolicy value.
+constexpr const char* DUAL_MODE_PARAM_PC_KEY = "pcmode";
+constexpr const char* DUAL_MODE_PARAM_PAD_KEY = "padmode";
+constexpr char DUAL_MODE_PARAM_SEGMENT_SEP = ';';
+constexpr char DUAL_MODE_PARAM_KEY_VALUE_SEP = ':';
+// Truncated preview length for a malformed parameter on the skip log (the value is device
+// config and normally short, but a corrupted one may be arbitrarily long).
+constexpr size_t DUAL_MODE_PARAM_LOG_PREVIEW_LEN = 50;
+
+// Parse "pcmode:0,1,3,4,5,6,7,8;padmode:0,2,3,4,5,6,7,8;" into the per-mode policy CSVs.
+// Segment order is free, a trailing ';' is optional and empty/unknown segments are skipped.
+// On a duplicate mode key the first occurrence wins. Returns true only when BOTH mode keys
+// were found with a non-empty value; the CSVs themselves are validated by the caller through
+// DualModeHelper::ParsePersistedPolicies (the single validation source for policy CSVs).
+bool ParseDeviceModeDistributionParam(const std::string &param,
+    std::string &pcModePolicies, std::string &padModePolicies)
+{
+    bool hasPcMode = false;
+    bool hasPadMode = false;
+    size_t pos = 0;
+    while (pos < param.size()) {
+        size_t segmentEnd = param.find(DUAL_MODE_PARAM_SEGMENT_SEP, pos);
+        size_t segmentLen = (segmentEnd == std::string::npos) ? (param.size() - pos)
+            : (segmentEnd - pos);
+        std::string segment = param.substr(pos, segmentLen);
+        pos = (segmentEnd == std::string::npos) ? param.size() : segmentEnd + 1;
+        size_t keyValueSep = segment.find(DUAL_MODE_PARAM_KEY_VALUE_SEP);
+        if (keyValueSep == std::string::npos) {
+            continue;  // malformed segment: skip, keep parsing the remaining ones
+        }
+        std::string key = segment.substr(0, keyValueSep);
+        std::string value = segment.substr(keyValueSep + 1);
+        if (key == DUAL_MODE_PARAM_PC_KEY && !hasPcMode) {
+            pcModePolicies = value;
+            hasPcMode = true;
+        } else if (key == DUAL_MODE_PARAM_PAD_KEY && !hasPadMode) {
+            padModePolicies = value;
+            hasPadMode = true;
+        }
+    }
+    return hasPcMode && hasPadMode && !pcModePolicies.empty() && !padModePolicies.empty();
+}
+}  // namespace
+
+// === DUAL_MODE: seed the default device-mode distribution policies ===
+// On a dual-mode device, when DualModeDeviceModeDistributionPolicies was never persisted (no
+// explicit switch has run yet), seed it with the device-configured default: parse
+// const.bms.devicemodedistributionpolicy into the per-mode policy CSVs, pick the current
+// system mode's CSV (GetSysMode: 0=tablet -> padmode, 1=2in1 -> pcmode) and persist it.
+// Called at the start of LoadDataFromPersistentStorage — BEFORE its empty-storage early
+// return — so the default is in place from the FIRST boot on (a fresh device has an empty DB
+// and never reaches the boot classification); on later boots the dual-mode classification in
+// the same call applies the value. Idempotent: an existing key is never touched (an explicit
+// switch result always wins). Every skip path (param missing, unparseable format, unclear
+// mode, invalid policy CSV, save failure) only logs and leaves the key absent, so the boot
+// classification falls back to the mode-based requirement-1 logic and a later explicit switch
+// works as usual. The bms_param RDB access inside the boot bundleInfoMutex_ window follows the
+// switch-path precedent (a low-frequency one-shot management op; see the note in
+// FilterBundleListByDeviceModeDistributionPolicies).
+void BundleDataMgr::InitDualModeDefaultPoliciesNoLock()
+{
+    auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    if (bmsPara == nullptr) {
+        APP_LOGE_NOFUNC("Dual mode: init default policies failed, bmsPara is nullptr");
+        return;
+    }
+    // The requirement: an existing DualModeDeviceModeDistributionPolicies value is left as is.
+    std::string policiesStr;
+    if (bmsPara->GetBmsParam(ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICIES_KEY,
+        policiesStr)) {
+        APP_LOGD("Dual mode: policies already exist, skip default policies init");
+        return;
+    }
+    std::string param = OHOS::system::GetParameter(
+        ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICY_PARAM, "");
+    if (param.empty()) {
+        APP_LOGE_NOFUNC("Dual mode: no default policies param, skip default policies init");
+        return;
+    }
+    std::string pcModePolicies;
+    std::string padModePolicies;
+    if (!ParseDeviceModeDistributionParam(param, pcModePolicies, padModePolicies)) {
+        APP_LOGW_NOFUNC("Dual mode: default policies param malformed, skip: %{public}s",
+            param.substr(0, DUAL_MODE_PARAM_LOG_PREVIEW_LEN).c_str());
+        return;
+    }
+    // The requirement: with an unclear current mode nothing is processed, only a log is left.
+    int32_t sysMode = DualModeHelper::GetSysMode();
+    if (sysMode == ServiceConstants::DUAL_MODE_VALUE_INVALID) {
+        APP_LOGW_NOFUNC("Dual mode: current mode unclear, skip default policies init");
+        return;
+    }
+    std::string defaultPolicies = (sysMode == ServiceConstants::DUAL_MODE_VALUE_2IN1)
+        ? pcModePolicies
+        : padModePolicies;
+    // Only seed a CSV the persisted-value parse accepts (single validation source); an
+    // invalid configured set stays unpersisted so it cannot block a later correct seeding.
+    std::set<DeviceModeDistributionPolicy> policySet;
+    if (!DualModeHelper::ParsePersistedPolicies(defaultPolicies, policySet)) {
+        APP_LOGW_NOFUNC("Dual mode: default policies invalid, mode %{public}d, skip: %{public}s",
+            sysMode, defaultPolicies.c_str());
+        return;
+    }
+    if (!bmsPara->SaveBmsParam(ServiceConstants::DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICIES_KEY,
+        defaultPolicies)) {
+        APP_LOGE_NOFUNC("Dual mode: save default policies failed");
+        return;
+    }
+    APP_LOGI("Dual mode: default policies saved, mode %{public}d, policies %{public}s",
+        sysMode, defaultPolicies.c_str());
 }
 
 void BundleDataMgr::ClassifyDualModeAppsNoLock()
@@ -3520,6 +3641,7 @@ void BundleDataMgr::ModifyApplicationInfoByCloneInfo(const InnerBundleCloneInfo 
     applicationInfo.accessTokenIdEx = cloneInfo.accessTokenIdEx;
     applicationInfo.enabled = cloneInfo.enabled;
     applicationInfo.uid = cloneInfo.uid;
+    applicationInfo.appUid = cloneInfo.appUid;
     applicationInfo.appIndex = cloneInfo.appIndex;
 }
 
@@ -3527,6 +3649,7 @@ void BundleDataMgr::ModifyBundleInfoByCloneInfo(const InnerBundleCloneInfo &clon
     BundleInfo &bundleInfo) const
 {
     bundleInfo.uid = cloneInfo.uid;
+    bundleInfo.appUid = cloneInfo.appUid;
     bundleInfo.gid = cloneInfo.uid; // no gids, need add
     bundleInfo.installTime = cloneInfo.installTime;
     bundleInfo.appIndex = cloneInfo.appIndex;
@@ -4880,16 +5003,40 @@ void BundleDataMgr::GetRouterInfoForSharedBundle(const InnerBundleInfo &innerBun
         }
     }
 
-    std::vector<RouterItem> tempInfos;
     for (auto &info : baseSharedBundleInfos) {
-        if (!routerStorage_->GetRouterInfo(info.bundleName, info.moduleName,
+        std::vector<RouterItem> tempInfos;
+        auto provider = bundleInfos_.find(info.bundleName);
+        if (provider == bundleInfos_.end()) {
+            continue;
+        }
+        const auto *escape = provider->second.FindSharedModule(info.moduleName, info.versionCode, true);
+        if (escape != nullptr && escape->hapPath == info.hapPath) {
+            // The shared router table has no role key. Read the selected escape HSP instead.
+            auto pos = escape->routerMap.find(PROFILE_PREFIX);
+            if (pos == std::string::npos) {
+                continue;
+            }
+            std::string profilePath = PROFILE_PATH +
+                escape->routerMap.substr(pos + PROFILE_PREFIX_LENGTH) + JSON_SUFFIX;
+            std::string profile;
+            if (GetJsonProfileByExtractor(info.hapPath, profilePath, profile) != ERR_OK) {
+                continue;
+            }
+            BundleParser parser;
+            ErrCode result = parser.ParseRouterArray(profile, tempInfos);
+            if (result != ERR_OK) {
+                APP_LOGE("parse alternate module router failed, bundleName: %{private}s, moduleName: %{private}s, "
+                    "versionCode: %{public}u, errCode: %{public}d",
+                    info.bundleName.c_str(), info.moduleName.c_str(), info.versionCode, result);
+                continue;
+            }
+        } else if (!routerStorage_->GetRouterInfo(info.bundleName, info.moduleName,
             info.versionCode, tempInfos) || tempInfos.empty()) {
             continue;
         }
         routerInfos.insert(routerInfos.end(),
             std::make_move_iterator(tempInfos.begin()),
             std::make_move_iterator(tempInfos.end()));
-        tempInfos.clear();
     }
 }
 
@@ -6411,8 +6558,7 @@ std::set<int32_t> BundleDataMgr::GetBindingSAUidsByBundleName(const std::string 
 }
 
 bool BundleDataMgr::GetBundleStats(const std::string &bundleName,
-    const int32_t userId, std::vector<int64_t> &bundleStats, const int32_t appIndex, const uint32_t statFlag,
-    int32_t activeUserId) const
+    const int32_t userId, std::vector<int64_t> &bundleStats, const int32_t appIndex, const uint32_t statFlag) const
 {
     int32_t responseUserId = -1;
     int32_t uid = Constants::INVALID_UID;
@@ -6450,9 +6596,7 @@ bool BundleDataMgr::GetBundleStats(const std::string &bundleName,
     }
     std::unordered_set<int32_t> uids;
     uids.emplace(uid);
-    if (activeUserId == Constants::INVALID_USERID) {
-        activeUserId = AccountHelper::GetUserIdByCallerType();
-    }
+    auto activeUserId = AccountHelper::GetUserIdByCallerType();
     if (appIndex == Constants::MAIN_APP_INDEX && activeUserId == userId) {
         std::map<std::string, std::set<int32_t>> saUidMap;
         LoadSaUidMap(saUidMap);
@@ -6483,6 +6627,16 @@ void BundleDataMgr::CalculatePreInstalledBundleSize(const std::string& bundleNam
             bundleStats[0] += BundleUtil::GetFileSize(innerModuleInfo.second.hapPath);
         }
     }
+}
+
+bool BundleDataMgr::ScanBundleStats(const std::string &bundleName,
+    const int32_t userId, std::vector<int64_t> &bundleStats,
+    const int32_t appIndex, int32_t &uid, int64_t *inodeCount) const
+{
+    // Stub until the scan engine is available: the idle scan framework
+    // gets no data and keeps every entry unwritten.
+    uid = Constants::INVALID_UID;
+    return false;
 }
 
 ErrCode BundleDataMgr::BatchGetBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,
@@ -8617,6 +8771,7 @@ ErrCode BundleDataMgr::GenerateUidAndGid(InnerBundleUserInfo &innerBundleUserInf
         // A zero uid (corrupt record) is rejected as well: it would chown the
         // data dirs to root.
         if (innerBundleUserInfo.uid > 0) {
+            innerBundleUserInfo.appUid = innerBundleUserInfo.uid;
             if (std::find(innerBundleUserInfo.gids.begin(), innerBundleUserInfo.gids.end(),
                 innerBundleUserInfo.uid) == innerBundleUserInfo.gids.end()) {
                 innerBundleUserInfo.gids.emplace_back(innerBundleUserInfo.uid);
@@ -8637,7 +8792,11 @@ ErrCode BundleDataMgr::GenerateUidAndGid(InnerBundleUserInfo &innerBundleUserInf
 
     innerBundleUserInfo.uid = innerBundleUserInfo.bundleUserInfo.userId * Constants::BASE_USER_RANGE
         + bundleId % Constants::BASE_USER_RANGE;
-    innerBundleUserInfo.gids.emplace_back(innerBundleUserInfo.uid);
+    innerBundleUserInfo.appUid = innerBundleUserInfo.uid;
+    if (std::find(innerBundleUserInfo.gids.begin(), innerBundleUserInfo.gids.end(),
+        innerBundleUserInfo.uid) == innerBundleUserInfo.gids.end()) {
+        innerBundleUserInfo.gids.emplace_back(innerBundleUserInfo.uid);
+    }
     return ERR_OK;
 }
 
@@ -8935,6 +9094,69 @@ void BundleDataMgr::SaveLastAllocatedBundleId()
     if (bmsPara != nullptr) {
         bmsPara->SaveBmsParam(LAST_ALLOCATED_BUNDLE_ID_KEY, std::to_string(lastAllocatedBundleId_));
     }
+}
+
+ErrCode BundleDataMgr::SetAlternateModuleState(const std::string &bundleName,
+    const std::string &moduleName, int64_t versionCode, bool enabled)
+{
+    if (bundleName.empty()) {
+        APP_LOGW("bundleName is empty");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    auto &mutex = GetBundleMutex(bundleName);
+    std::lock_guard bundleLock {mutex};
+    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto it = bundleInfos_.find(bundleName);
+    if (it == bundleInfos_.end() || it->second.GetApplicationBundleType() != BundleType::SHARED) {
+        APP_LOGW("shared bundle %{private}s not found", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    bool currentEnabled = false;
+    ErrCode result = it->second.GetAlternateModuleState(moduleName, versionCode, currentEnabled);
+    if (result != ERR_OK) {
+        APP_LOGE("get alternate module state failed, errCode: %{public}d", result);
+        return result;
+    }
+    if (currentEnabled == enabled) {
+        return ERR_OK;
+    }
+    InnerBundleInfo updated = it->second;
+    result = updated.SetAlternateModuleState(moduleName, versionCode, enabled);
+    if (result != ERR_OK) {
+        APP_LOGE("set alternate module state failed, bundleName: %{private}s, moduleName: %{private}s, "
+            "versionCode: %{public}lld, errCode: %{public}d",
+            bundleName.c_str(), moduleName.c_str(), static_cast<long long>(versionCode), result);
+        return result;
+    }
+    if (dataStorage_ == nullptr || !dataStorage_->SaveStorageBundleInfo(updated)) {
+        APP_LOGE("persist alternate module state failed");
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    it->second = updated;
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::GetAlternateModuleState(const std::string &bundleName,
+    const std::string &moduleName, int64_t versionCode, bool &enabled) const
+{
+    enabled = false;
+    if (bundleName.empty()) {
+        APP_LOGW("bundleName is empty");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto it = bundleInfos_.find(bundleName);
+    if (it == bundleInfos_.end() || it->second.GetApplicationBundleType() != BundleType::SHARED) {
+        APP_LOGW("shared bundle %{private}s not found", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    ErrCode result = it->second.GetAlternateModuleState(moduleName, versionCode, enabled);
+    if (result != ERR_OK) {
+        APP_LOGE("get alternate module state failed, bundleName: %{private}s, moduleName: %{private}s, "
+            "versionCode: %{public}lld, errCode: %{public}d",
+            bundleName.c_str(), moduleName.c_str(), static_cast<long long>(versionCode), result);
+    }
+    return result;
 }
 
 ErrCode BundleDataMgr::SetModuleUpgradeFlag(const std::string &bundleName,
@@ -9561,6 +9783,9 @@ std::shared_ptr<Global::Resource::ResourceManager> BundleDataMgr::GetResourceMan
         APP_LOGE("resConfig is nullptr");
         return nullptr;
     }
+    // A non-system manager never self-fills the device type: set it before the
+    // first UpdateResConfig so device-qualified resources match correctly.
+    resConfig->SetDeviceType(BundleUtil::GetDeviceType());
     resourceManager->UpdateResConfig(*resConfig);
     if (!resourceManager->AddResource(hapPath.c_str(), Global::Resource::SELECT_STRING)) {
         APP_LOGW("AddResource failed");
@@ -11327,6 +11552,9 @@ std::shared_ptr<Global::Resource::ResourceManager> BundleDataMgr::GetResourceMan
         localeInfo.empty() ? Global::I18n::LocaleConfig::GetEffectiveLanguage() : localeInfo, configs);
     resConfig->SetLocaleInfo(locale.GetLanguage().c_str(), locale.GetScript().c_str(), locale.GetRegion().c_str());
 #endif
+    // A non-system manager never self-fills the device type: set it before the
+    // first UpdateResConfig so device-qualified resources match correctly.
+    resConfig->SetDeviceType(BundleUtil::GetDeviceType());
     resourceManager->UpdateResConfig(*resConfig);
 
     for (auto hapModuleInfo : bundleInfo.hapModuleInfos) {
@@ -16736,28 +16964,47 @@ ErrCode BundleDataMgr::GetDirByBundleNameAndAppIndex(const std::string &bundleNa
     return ERR_OK;
 }
 
-ErrCode BundleDataMgr::GetExtensionSandboxDataDir(int32_t userId, const std::string &bundleName,
+ErrCode BundleDataMgr::GetExtensionSandboxDataDir(const std::string &bundleName,
     const std::string &extensionName, int32_t appIndex, std::string &dir)
 {
     dir.clear();
-    int32_t requestUserId = GetUserId(userId);
-    if (requestUserId == Constants::INVALID_USERID) {
-        APP_LOGE("invalid userid :%{public}d", userId);
-        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    const bool isDualModeCloneIndex = (appIndex == ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
+    const bool isCloneIndex = !isDualModeCloneIndex && appIndex >= ServiceConstants::CLONE_APP_INDEX_MIN &&
+        appIndex <= BundleFileUtil::GetCloneMaxCount();
+    const bool isCliSandboxIndex = appIndex >= Constants::CLI_SANDBOX_APP_INDEX_MIN &&
+        appIndex <= Constants::CLI_SANDBOX_APP_INDEX_MAX;
+    const bool isValidAppIndex = appIndex == Constants::MAIN_APP_INDEX || isCloneIndex || isCliSandboxIndex ||
+        (isDualModeCloneIndex && DualModeHelper::IsDualModeDevice());
+    if (!isValidAppIndex) {
+        APP_LOGE("invalid appIndex: %{public}d", appIndex);
+        return ERR_BUNDLE_MANAGER_GET_DIR_INVALID_APP_INDEX;
     }
-    InnerBundleInfo info;
-    if (!FetchInnerBundleInfo(bundleName, info)) {
+    if (isCloneIndex || isCliSandboxIndex) {
+        APP_LOGE("extension sandbox dir unavailable for clone or CLI sandbox appIndex=%{public}d code=%{public}d",
+            appIndex, ERR_BUNDLE_MANAGER_EXTENSION_SANDBOX_DIR_NOT_EXIST);
+        return ERR_BUNDLE_MANAGER_EXTENSION_SANDBOX_DIR_NOT_EXIST;
+    }
+    if (bundleName.empty()) {
+        APP_LOGW("bundleName is empty");
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
-    int32_t responseUserId = info.GetResponseUserId(requestUserId);
-    if (responseUserId == Constants::INVALID_USERID) {
-        APP_LOGD("bundle is not installed for request user %{public}d", requestUserId);
-        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
-    }
+
     std::string dataDir;
-    auto ret = GetDirByBundleNameAndAppIndex(bundleName, appIndex, dataDir);
+    const auto ret = GetDirByBundleNameAndAppIndex(bundleName, appIndex, dataDir);
     if (ret != ERR_OK) {
+        APP_LOGE("GetDirByBundleNameAndAppIndex failed appIndex=%{public}d code=%{public}d", appIndex, ret);
         return ret;
+    }
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    const auto infoItem = bundleInfos_.find(bundleName);
+    // A missing dual-mode bundle can be reported as an invalid index by the directory lookup.
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGW("bundle not found");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    const auto &info = infoItem->second;
+    if (isDualModeCloneIndex && !info.IsDualModeCloneApp()) {
+        return ERR_BUNDLE_MANAGER_GET_DIR_INVALID_APP_INDEX;
     }
     return info.GetExtensionSandboxDataDir(extensionName, dataDir, dir);
 }
@@ -17948,12 +18195,14 @@ ErrCode BundleDataMgr::GetAllCloneAppIndexesAndUidsByInnerBundleInfo(const int32
     return ERR_OK;
 }
 
-ErrCode BundleDataMgr::SetShortcutsEnabled(const std::vector<ShortcutInfo> &shortcutInfos, bool isEnabled)
+ErrCode BundleDataMgr::SetShortcutsEnabled(const std::vector<ShortcutInfo> &shortcutInfos, bool isEnabled,
+    std::map<std::string, std::vector<std::string>> &invalidShortcuts)
 {
     APP_LOGD("SetShortcutsEnabled begin");
     std::string bundleName;
     std::string shortcutId;
     std::vector<ShortcutInfo> shortcutInfosInBundle;
+    std::vector<ShortcutInfo> validShortcutInfos;
     bool isShortcutIdExist = false;
     for (const auto& shortcutinfo : shortcutInfos) {
         bundleName = shortcutinfo.bundleName;
@@ -17978,16 +18227,23 @@ ErrCode BundleDataMgr::SetShortcutsEnabled(const std::vector<ShortcutInfo> &shor
         }
         if (!isShortcutIdExist) {
             APP_LOGE("shortcut id %{public}s not exist", shortcutId.c_str());
-            return ERR_SHORTCUT_MANAGER_SHORTCUT_ID_ILLEGAL;
+            invalidShortcuts[bundleName].push_back(shortcutId);
+            continue;
         }
+        validShortcutInfos.push_back(shortcutinfo);
     }
 
-    if (!(shortcutEnabledStorage_->SaveStorageShortcutEnabledInfos(shortcutInfos, isEnabled))) {
-        APP_LOGE("SaveStorageShortcutEnabledInfos failed");
-        return ERR_APPEXECFWK_DB_INSERT_ERROR;
+    if (!validShortcutInfos.empty()) {
+        if (!(shortcutEnabledStorage_->SaveStorageShortcutEnabledInfos(validShortcutInfos, isEnabled))) {
+            APP_LOGE("SaveStorageShortcutEnabledInfos failed");
+            return ERR_APPEXECFWK_DB_INSERT_ERROR;
+        }
+        std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
+        commonEventMgr->NotifyShortcutsEnabledChanged(validShortcutInfos, isEnabled);
     }
-    std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
-    commonEventMgr->NotifyShortcutsEnabledChanged(shortcutInfos, isEnabled);
+    if (!invalidShortcuts.empty()) {
+        return ERR_SHORTCUT_MANAGER_SHORTCUT_ID_ILLEGAL;
+    }
     return ERR_OK;
 }
 
@@ -18364,6 +18620,7 @@ ErrCode BundleDataMgr::GetPluginExtensionInfo(
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     extensionInfo.applicationInfo.uid = innerBundleUserInfoPtr->uid;
+    extensionInfo.applicationInfo.appUid = innerBundleUserInfoPtr->appUid;
     return ERR_OK;
 }
 

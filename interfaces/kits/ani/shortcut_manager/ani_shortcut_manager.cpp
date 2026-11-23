@@ -269,9 +269,17 @@ static void SetShortcutsEnabledNative(ani_env* env, ani_object aniShortcutInfo, 
         return;
     }
 
-    ErrCode ret = iBundleMgr->SetShortcutsEnabled(shortcutInfos, isEnabled);
+    std::map<std::string, std::vector<std::string>> invalidShortcuts;
+    ErrCode ret = iBundleMgr->SetShortcutsEnabled(shortcutInfos, isEnabled, invalidShortcuts);
     if (ret != ERR_OK) {
         APP_LOGE("SetShortcutsEnabled failed ret:%{public}d", ret);
+        if (CommonFunc::ConvertErrCode(ret) == ERROR_SHORTCUT_ID_ILLEGAL_ERROR &&
+            !invalidShortcuts.empty()) {
+            BusinessErrorAni::ThrowCommonNewError(env, CommonFunc::ConvertErrCode(ret),
+                SET_SHORTCUTS_ENABLED, Constants::PERMISSION_MANAGER_SHORTCUT,
+                CommonFunc::ConvertInvalidShortcutsToString(invalidShortcuts));
+            return;
+        }
         BusinessErrorAni::ThrowCommonNewError(env, CommonFunc::ConvertErrCode(ret),
             SET_SHORTCUTS_ENABLED, Constants::PERMISSION_MANAGER_SHORTCUT);
     }

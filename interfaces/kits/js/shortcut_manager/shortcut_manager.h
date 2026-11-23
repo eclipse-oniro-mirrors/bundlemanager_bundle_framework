@@ -16,6 +16,10 @@
 #ifndef BUNDLE_FRAMEWORK_INTERFACES_KITS_JS_SHORTCUTINFO_MANAGER_H
 #define BUNDLE_FRAMEWORK_INTERFACES_KITS_JS_SHORTCUTINFO_MANAGER_H
 
+#include <map>
+#include <string>
+#include <vector>
+
 #include "base_cb_info.h"
 #include "bundle_constants.h"
 #include "napi/native_api.h"
@@ -83,6 +87,7 @@ struct SetShortcutsEnabledCallbackInfo : public BaseCallbackInfo {
     explicit SetShortcutsEnabledCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
     bool isEnabled = true;
     std::vector<OHOS::AppExecFwk::ShortcutInfo> shortcutInfos;
+    std::map<std::string, std::vector<std::string>> invalidShortcuts;
 };
 
 napi_value AddDesktopShortcutInfo(napi_env env, napi_callback_info info);

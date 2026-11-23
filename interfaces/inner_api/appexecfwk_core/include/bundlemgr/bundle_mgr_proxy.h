@@ -1121,9 +1121,6 @@ public:
     virtual bool GetBundleStats(const std::string &bundleName, int32_t userId,
         std::vector<int64_t> &bundleStats, int32_t appIndex = 0, uint32_t statFlag = 0) override;
 
-    virtual ErrCode GetBundleStatsAsync(const std::string &bundleName, int32_t userId, int32_t appIndex,
-        uint32_t statFlag, const sptr<IBundleStatsCallback> &callback) override;
-
     virtual ErrCode GetTopNLargestItemsInAppDataDir(const std::string &bundleName, const int32_t appIndex,
         const int32_t userId, const sptr<IGetLargestItemsCallback> getLargestItemsCallback) override;
 
@@ -1176,6 +1173,11 @@ public:
         std::vector<AppInstallExtendedInfo> &appInstallExtendedInfos) override;
 
     virtual ErrCode GetAllSharedBundleInfo(std::vector<SharedBundleInfo> &sharedBundles) override;
+    ErrCode SetAlternateModuleEnabled(const std::string &bundleName, const std::string &moduleName,
+        int64_t versionCode, bool isEnabled) override;
+    ErrCode GetAlternateModuleState(const std::string &bundleName, const std::string &moduleName,
+        int64_t versionCode, bool &enabled) override;
+
     virtual ErrCode GetSharedBundleInfo(const std::string &bundleName, const std::string &moduleName,
         std::vector<SharedBundleInfo> &sharedBundles) override;
 
@@ -1479,8 +1481,7 @@ public:
         std::string &dataDir) override;
 
     virtual ErrCode GetAllBundleDirs(int32_t userId, std::vector<BundleDir> &bundleDirs) override;
-    virtual ErrCode GetExtensionSandboxDataDir(const std::string &extensionName, int32_t appIndex,
-        std::string &dir) override;
+    virtual ErrCode GetExtensionSandboxDataDir(const std::string &extensionName, std::string &dir) override;
 
     virtual ErrCode SetAppDistributionTypes(std::set<AppDistributionTypeEnum> &appDistributionTypeEnums) override;
 
@@ -1493,7 +1494,8 @@ public:
 
     virtual ErrCode SetShortcutVisibleForSelf(const std::string &shortcutId, bool visible) override;
 
-    virtual ErrCode SetShortcutsEnabled(const std::vector<ShortcutInfo> &shortcutInfos, bool isEnabled) override;
+    virtual ErrCode SetShortcutsEnabled(const std::vector<ShortcutInfo> &shortcutInfos, bool isEnabled,
+        std::map<std::string, std::vector<std::string>> &invalidShortcuts) override;
 
     virtual bool GreatOrEqualTargetAPIVersion(const int32_t platformVersion,
         const int32_t minorVersion, const int32_t patchVersion) override;

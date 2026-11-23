@@ -23,6 +23,7 @@
 #include <unistd.h>
 
 #include "ability_manager_helper.h"
+#include "account_helper.h"
 #include "access_token.h"
 #include "alternate_icon_info.h"
 #include "app_log_wrapper.h"
@@ -5920,6 +5921,53 @@ HWTEST_F(BmsDataMgrTest, GetAllBundleDirs_0001, TestSize.Level1)
     EXPECT_EQ(ret, ERR_OK);
 }
 
+namespace {
+InnerBundleInfo MakeExtensionSandboxBundleInfo(int32_t userId)
+{
+    InnerBundleInfo info;
+    info.baseBundleInfo_->name = BUNDLE_NAME;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = BUNDLE_NAME;
+    userInfo.bundleUserInfo.userId = userId;
+    userInfo.uid = userId * Constants::BASE_USER_RANGE + Constants::BASE_APP_UID;
+    info.AddInnerBundleUserInfo(userInfo);
+    InnerExtensionInfo extensionInfo;
+    extensionInfo.bundleName = BUNDLE_NAME;
+    extensionInfo.moduleName = MODULE_NAME;
+    extensionInfo.name = "inputMethodExtAbility";
+    extensionInfo.type = ExtensionAbilityType::INPUTMETHOD;
+    extensionInfo.needCreateSandbox = true;
+    info.baseExtensionInfos_.emplace("input-method", extensionInfo);
+    return info;
+}
+
+std::shared_ptr<BundleDataMgr> MakeExtensionSandboxCallerData(int32_t userId)
+{
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    dataMgr->AddUserId(userId);
+    dataMgr->AddUserId(userId + 1);
+    InnerBundleInfo info = MakeExtensionSandboxBundleInfo(userId);
+    InnerBundleUserInfo userInfo;
+    info.GetInnerBundleUserInfo(userId, userInfo);
+    InnerBundleCloneInfo cloneInfo;
+    cloneInfo.appIndex = 1;
+    cloneInfo.userId = userId;
+    cloneInfo.uid = userInfo.uid + 1;
+    userInfo.cloneInfos.emplace(InnerBundleUserInfo::AppIndexToKey(cloneInfo.appIndex), cloneInfo);
+    info.AddInnerBundleUserInfo(userInfo);
+    userInfo.bundleUserInfo.userId = userId + 1;
+    userInfo.uid += Constants::BASE_USER_RANGE;
+    userInfo.cloneInfos.clear();
+    info.AddInnerBundleUserInfo(userInfo);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, info);
+    dataMgr->bundleIdMap_.emplace(Constants::BASE_APP_UID, BUNDLE_NAME);
+    dataMgr->bundleIdMap_.emplace(Constants::BASE_APP_UID + 1,
+        std::to_string(cloneInfo.appIndex) + ServiceConstants::CLONE_BUNDLE_PREFIX + BUNDLE_NAME);
+    return dataMgr;
+}
+} // namespace
+
 /**
  * @tc.number: GetExtensionSandboxDataDir_0001
  * @tc.name: GetExtensionSandboxDataDir
@@ -5928,9 +5976,8 @@ HWTEST_F(BmsDataMgrTest, GetAllBundleDirs_0001, TestSize.Level1)
 HWTEST_F(BmsDataMgrTest, GetExtensionSandboxDataDir_0001, TestSize.Level1)
 {
     BundleDataMgr bundleDataMgr;
-    bundleDataMgr.AddUserId(Constants::START_USERID);
     std::string dir = "stale-dir";
-    auto ret = bundleDataMgr.GetExtensionSandboxDataDir(Constants::START_USERID, "not.installed.bundle",
+    auto ret = bundleDataMgr.GetExtensionSandboxDataDir("not.installed.bundle",
         "inputMethodExtAbility", Constants::MAIN_APP_INDEX, dir);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
     EXPECT_TRUE(dir.empty());
@@ -5939,97 +5986,153 @@ HWTEST_F(BmsDataMgrTest, GetExtensionSandboxDataDir_0001, TestSize.Level1)
 /**
  * @tc.number: GetExtensionSandboxDataDir_0002
  * @tc.name: GetExtensionSandboxDataDir
- * @tc.desc: Reject invalid and nonexistent users and clear the output.
+ * @tc.desc: Reject an unknown extension and clear the output.
  */
 HWTEST_F(BmsDataMgrTest, GetExtensionSandboxDataDir_0002, TestSize.Level1)
 {
-    BundleDataMgr bundleDataMgr;
-    const int32_t userIds[] = {Constants::INVALID_USERID, Constants::START_USERID + 1};
-    for (int32_t userId : userIds) {
-        std::string dir = "stale-dir";
-        EXPECT_EQ(bundleDataMgr.GetExtensionSandboxDataDir(userId, BUNDLE_NAME, "inputMethodExtAbility",
-            Constants::MAIN_APP_INDEX, dir),
-            ERR_BUNDLE_MANAGER_INVALID_USER_ID);
-        EXPECT_TRUE(dir.empty());
-    }
+    auto dataMgr = MakeExtensionSandboxCallerData(Constants::START_USERID);
+    const int32_t savedUid = IPCSkeleton::GetCallingUid();
+    ScopeGuard restoreUid([savedUid] { IPCSkeleton::SetCallingUid(savedUid); });
+    IPCSkeleton::SetCallingUid(Constants::START_USERID * Constants::BASE_USER_RANGE + Constants::BASE_APP_UID);
+    std::string dir = "stale-dir";
+    EXPECT_EQ(dataMgr->GetExtensionSandboxDataDir(BUNDLE_NAME, "otherExtension", Constants::MAIN_APP_INDEX, dir),
+        ERR_BUNDLE_MANAGER_EXTENSION_SANDBOX_DIR_NOT_EXIST);
+    EXPECT_TRUE(dir.empty());
 }
 
 /**
  * @tc.number: GetExtensionSandboxDataDir_0003
  * @tc.name: GetExtensionSandboxDataDir
- * @tc.desc: Preserve the base-user fallback used by GetAllBundleDirs.
+ * @tc.desc: Distinguish invalid indexes from supported instances without an extension directory.
  */
 HWTEST_F(BmsDataMgrTest, GetExtensionSandboxDataDir_0003, TestSize.Level1)
 {
-    BundleDataMgr bundleDataMgr;
-    bundleDataMgr.AddUserId(Constants::START_USERID);
-    InnerBundleInfo info;
-    info.baseBundleInfo_->name = BUNDLE_NAME;
-    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
-    InnerBundleUserInfo userInfo;
-    userInfo.bundleName = BUNDLE_NAME;
-    userInfo.bundleUserInfo.userId = Constants::DEFAULT_USERID;
-    info.AddInnerBundleUserInfo(userInfo);
-    InnerExtensionInfo extensionInfo;
-    extensionInfo.bundleName = BUNDLE_NAME;
-    extensionInfo.moduleName = MODULE_NAME;
-    extensionInfo.name = "inputMethodExtAbility";
-    extensionInfo.type = ExtensionAbilityType::INPUTMETHOD;
-    extensionInfo.needCreateSandbox = true;
-    info.baseExtensionInfos_.emplace("input-method", extensionInfo);
-    bundleDataMgr.bundleInfos_.emplace(BUNDLE_NAME, info);
-
-    std::string dir;
-    EXPECT_EQ(bundleDataMgr.GetExtensionSandboxDataDir(Constants::START_USERID, BUNDLE_NAME, extensionInfo.name,
-            Constants::MAIN_APP_INDEX, dir),
-        ERR_OK);
-    EXPECT_EQ(dir, "+extension-" + MODULE_NAME + "-inputMethodExtAbility+" + BUNDLE_NAME);
-}
-
-/**
- * @tc.number: GetExtensionSandboxDataDir_0005
- * @tc.name: GetExtensionSandboxDataDir
- * @tc.desc: Apply GetSandboxDataDir instance validation and directory naming.
- */
-HWTEST_F(BmsDataMgrTest, GetExtensionSandboxDataDir_0005, TestSize.Level1)
-{
-    BundleDataMgr dataMgr;
-    dataMgr.AddUserId(Constants::START_USERID);
-    InnerBundleInfo info;
-    info.baseBundleInfo_->name = BUNDLE_NAME;
-    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
-    InnerBundleUserInfo userInfo;
-    userInfo.bundleName = BUNDLE_NAME;
-    userInfo.bundleUserInfo.userId = Constants::START_USERID;
-    InnerBundleCloneInfo cloneInfo;
-    cloneInfo.appIndex = 1;
-    userInfo.cloneInfos.emplace(InnerBundleUserInfo::AppIndexToKey(cloneInfo.appIndex), cloneInfo);
-    info.AddInnerBundleUserInfo(userInfo);
-    InnerExtensionInfo extensionInfo;
-    extensionInfo.bundleName = BUNDLE_NAME;
-    extensionInfo.moduleName = MODULE_NAME;
-    extensionInfo.name = "inputMethodExtAbility";
-    extensionInfo.type = ExtensionAbilityType::INPUTMETHOD;
-    extensionInfo.needCreateSandbox = true;
-    info.baseExtensionInfos_.emplace("input-method", extensionInfo);
-    dataMgr.bundleInfos_.emplace(BUNDLE_NAME, info);
-
+    auto dataMgr = MakeExtensionSandboxCallerData(Constants::START_USERID);
     int32_t savedUid = IPCSkeleton::GetCallingUid();
     ScopeGuard restoreUid([savedUid] { IPCSkeleton::SetCallingUid(savedUid); });
     IPCSkeleton::SetCallingUid(Constants::START_USERID * Constants::BASE_USER_RANGE + Constants::BASE_APP_UID);
     std::string dir;
-    EXPECT_EQ(dataMgr.GetExtensionSandboxDataDir(Constants::START_USERID, BUNDLE_NAME,
-        extensionInfo.name, Constants::MAIN_APP_INDEX, dir), ERR_OK);
+    EXPECT_EQ(dataMgr->GetExtensionSandboxDataDir(BUNDLE_NAME,
+        "inputMethodExtAbility", Constants::MAIN_APP_INDEX, dir), ERR_OK);
     EXPECT_EQ(dir, "+extension-" + MODULE_NAME + "-inputMethodExtAbility+" + BUNDLE_NAME);
-    EXPECT_EQ(dataMgr.GetExtensionSandboxDataDir(Constants::START_USERID, BUNDLE_NAME,
-        extensionInfo.name, cloneInfo.appIndex, dir), ERR_OK);
-    EXPECT_EQ(dir, "+extension-" + MODULE_NAME + "-inputMethodExtAbility++clone-1+" + BUNDLE_NAME);
-    EXPECT_EQ(dataMgr.GetExtensionSandboxDataDir(Constants::START_USERID, BUNDLE_NAME,
-        extensionInfo.name, -1, dir), ERR_BUNDLE_MANAGER_GET_DIR_INVALID_APP_INDEX);
+    const int32_t indexesWithoutExtension[] = {ServiceConstants::CLONE_APP_INDEX_MIN,
+        Constants::CLI_SANDBOX_APP_INDEX_MIN, Constants::CLI_SANDBOX_APP_INDEX_MAX};
+    for (int32_t appIndex : indexesWithoutExtension) {
+        dir = "stale-dir";
+        EXPECT_EQ(dataMgr->GetExtensionSandboxDataDir(BUNDLE_NAME, "inputMethodExtAbility", appIndex, dir),
+            ERR_BUNDLE_MANAGER_EXTENSION_SANDBOX_DIR_NOT_EXIST);
+        EXPECT_TRUE(dir.empty());
+    }
+    EXPECT_EQ(dataMgr->GetExtensionSandboxDataDir(BUNDLE_NAME,
+        "inputMethodExtAbility", -1, dir), ERR_BUNDLE_MANAGER_GET_DIR_INVALID_APP_INDEX);
     EXPECT_TRUE(dir.empty());
-    EXPECT_EQ(dataMgr.GetExtensionSandboxDataDir(Constants::START_USERID, BUNDLE_NAME,
-        extensionInfo.name, Constants::CLI_SANDBOX_APP_INDEX_MAX + 1, dir),
+    EXPECT_EQ(dataMgr->GetExtensionSandboxDataDir(BUNDLE_NAME,
+        "inputMethodExtAbility", Constants::CLI_SANDBOX_APP_INDEX_MAX + 1, dir),
         ERR_BUNDLE_MANAGER_GET_DIR_INVALID_APP_INDEX);
+    EXPECT_TRUE(dir.empty());
+}
+
+/**
+ * @tc.number: GetExtensionSandboxDataDir_ForCaller_0001
+ * @tc.name: GetExtensionSandboxDataDir
+ * @tc.desc: Resolve the main and clone callers and reject lookups for clones and empty extension names.
+ */
+HWTEST_F(BmsDataMgrTest, GetExtensionSandboxDataDir_ForCaller_0001, TestSize.Level1)
+{
+    int32_t userId = AccountHelper::GetCurrentActiveUserId();
+    ASSERT_NE(userId, Constants::INVALID_USERID);
+    auto service = DelayedSingleton<BundleMgrService>::GetInstance();
+    auto savedDataMgr = service->dataMgr_;
+    int32_t savedUid = IPCSkeleton::GetCallingUid();
+    ScopeGuard restoreCaller([service, savedDataMgr, savedUid] {
+        service->dataMgr_ = savedDataMgr;
+        IPCSkeleton::SetCallingUid(savedUid);
+    });
+    auto dataMgr = MakeExtensionSandboxCallerData(userId);
+    service->dataMgr_ = dataMgr;
+    BundleMgrHostImpl host;
+    std::string dir;
+    int32_t mainUid = userId * Constants::BASE_USER_RANGE + Constants::BASE_APP_UID;
+    IPCSkeleton::SetCallingUid(mainUid);
+    EXPECT_EQ(host.GetExtensionSandboxDataDir("inputMethodExtAbility", dir), ERR_OK);
+    EXPECT_EQ(dir, "+extension-" + MODULE_NAME + "-inputMethodExtAbility+" + BUNDLE_NAME);
+    IPCSkeleton::SetCallingUid(mainUid + 1);
+    EXPECT_EQ(host.GetExtensionSandboxDataDir("inputMethodExtAbility", dir),
+        ERR_BUNDLE_MANAGER_EXTENSION_SANDBOX_DIR_NOT_EXIST);
+    EXPECT_TRUE(dir.empty());
+    EXPECT_EQ(host.GetExtensionSandboxDataDir("", dir), ERR_BUNDLE_MANAGER_PARAM_ERROR);
+    EXPECT_TRUE(dir.empty());
+}
+
+/**
+ * @tc.number: GetExtensionSandboxDataDir_ForCaller_0002
+ * @tc.name: GetExtensionSandboxDataDir
+ * @tc.desc: Reject an unregistered user, a caller from another user, or an identity hidden in the current mode.
+ */
+HWTEST_F(BmsDataMgrTest, GetExtensionSandboxDataDir_ForCaller_0002, TestSize.Level1)
+{
+    int32_t userId = AccountHelper::GetCurrentActiveUserId();
+    ASSERT_NE(userId, Constants::INVALID_USERID);
+    auto service = DelayedSingleton<BundleMgrService>::GetInstance();
+    auto savedDataMgr = service->dataMgr_;
+    int32_t savedUid = IPCSkeleton::GetCallingUid();
+    ScopeGuard restoreCaller([service, savedDataMgr, savedUid] {
+        service->dataMgr_ = savedDataMgr;
+        IPCSkeleton::SetCallingUid(savedUid);
+    });
+    auto dataMgr = MakeExtensionSandboxCallerData(userId);
+    service->dataMgr_ = dataMgr;
+    BundleMgrHostImpl host;
+    std::string dir;
+    int32_t mainUid = userId * Constants::BASE_USER_RANGE + Constants::BASE_APP_UID;
+    dataMgr->RemoveUserId(userId);
+    IPCSkeleton::SetCallingUid(mainUid);
+    dir = "stale-dir";
+    EXPECT_EQ(host.GetExtensionSandboxDataDir("inputMethodExtAbility", dir), ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    EXPECT_TRUE(dir.empty());
+    dataMgr->AddUserId(userId);
+
+    IPCSkeleton::SetCallingUid(mainUid + Constants::BASE_USER_RANGE);
+    dir = "stale-dir";
+    EXPECT_EQ(host.GetExtensionSandboxDataDir("inputMethodExtAbility", dir), ERR_BUNDLE_MANAGER_INVALID_UID);
+    EXPECT_TRUE(dir.empty());
+    dataMgr->tempBundleInfos_.emplace(BUNDLE_NAME, dataMgr->bundleInfos_.at(BUNDLE_NAME));
+    dataMgr->bundleInfos_.erase(BUNDLE_NAME);
+    IPCSkeleton::SetCallingUid(mainUid);
+    dir = "stale-dir";
+    EXPECT_EQ(host.GetExtensionSandboxDataDir("inputMethodExtAbility", dir), ERR_BUNDLE_MANAGER_INVALID_UID);
+    EXPECT_TRUE(dir.empty());
+}
+
+/**
+ * @tc.number: GetExtensionSandboxDataDir_ForCaller_0003
+ * @tc.name: GetExtensionSandboxDataDir
+ * @tc.desc: Reject the base-user caller even when lookup for the foreground user falls back to it.
+ */
+HWTEST_F(BmsDataMgrTest, GetExtensionSandboxDataDir_ForCaller_0003, TestSize.Level1)
+{
+    const int32_t userId = AccountHelper::GetCurrentActiveUserId();
+    if (userId < Constants::START_USERID) {
+        GTEST_SKIP() << "The base-user fallback requires a foreground application user";
+    }
+    auto service = DelayedSingleton<BundleMgrService>::GetInstance();
+    auto savedDataMgr = service->dataMgr_;
+    const int32_t savedUid = IPCSkeleton::GetCallingUid();
+    ScopeGuard restoreCaller([service, savedDataMgr, savedUid] {
+        service->dataMgr_ = savedDataMgr;
+        IPCSkeleton::SetCallingUid(savedUid);
+    });
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    dataMgr->AddUserId(Constants::DEFAULT_USERID);
+    dataMgr->AddUserId(userId);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, MakeExtensionSandboxBundleInfo(Constants::DEFAULT_USERID));
+    dataMgr->bundleIdMap_.emplace(Constants::BASE_APP_UID, BUNDLE_NAME);
+    service->dataMgr_ = dataMgr;
+    ASSERT_EQ(dataMgr->GetUidByBundleName(BUNDLE_NAME, userId, Constants::MAIN_APP_INDEX), Constants::BASE_APP_UID);
+    IPCSkeleton::SetCallingUid(Constants::BASE_APP_UID);
+    BundleMgrHostImpl host;
+    std::string dir = "stale-dir";
+    EXPECT_EQ(host.GetExtensionSandboxDataDir("inputMethodExtAbility", dir), ERR_BUNDLE_MANAGER_INVALID_UID);
     EXPECT_TRUE(dir.empty());
 }
 
@@ -7088,8 +7191,10 @@ HWTEST_F(BmsDataMgrTest, SetShortcutsEnabled_0001, Function | MediumTest | Level
     ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
     shortcutInfos.push_back(shortcutInfo);
     bool isEnabled = true;
-    auto result = bundleDataMgr.SetShortcutsEnabled(shortcutInfos, isEnabled);
+    std::map<std::string, std::vector<std::string>> invalidShortcuts;
+    auto result = bundleDataMgr.SetShortcutsEnabled(shortcutInfos, isEnabled, invalidShortcuts);
     EXPECT_EQ(result, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_TRUE(invalidShortcuts.empty());
 }
 
 /**
@@ -7112,10 +7217,12 @@ HWTEST_F(BmsDataMgrTest, SetShortcutsEnabled_0002, Function | MediumTest | Level
     AddSelfUidUserInfo(innerBundleInfo, bundleName);
     bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
     bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
-    auto result = bundleDataMgr.SetShortcutsEnabled(shortcutInfos, isEnabled);
+    std::map<std::string, std::vector<std::string>> invalidShortcuts;
+    auto result = bundleDataMgr.SetShortcutsEnabled(shortcutInfos, isEnabled, invalidShortcuts);
     EXPECT_EQ(result, ERR_OK);
+    EXPECT_TRUE(invalidShortcuts.empty());
     bundleDataMgr.shortcutEnabledStorage_->rdbDataManager_ = nullptr;
-    result = bundleDataMgr.SetShortcutsEnabled(shortcutInfos, isEnabled);
+    result = bundleDataMgr.SetShortcutsEnabled(shortcutInfos, isEnabled, invalidShortcuts);
     EXPECT_EQ(result, ERR_APPEXECFWK_DB_INSERT_ERROR);
 }
 
@@ -7140,8 +7247,87 @@ HWTEST_F(BmsDataMgrTest, SetShortcutsEnabled_0003, Function | MediumTest | Level
     std::vector<ShortcutInfo> shortcutInfos;
     shortcutInfo.id = "error_id";
     shortcutInfos.push_back(shortcutInfo);
-    auto result = bundleDataMgr.SetShortcutsEnabled(shortcutInfos, isEnabled);
+    std::map<std::string, std::vector<std::string>> invalidShortcuts;
+    auto result = bundleDataMgr.SetShortcutsEnabled(shortcutInfos, isEnabled, invalidShortcuts);
     EXPECT_EQ(result, ERR_SHORTCUT_MANAGER_SHORTCUT_ID_ILLEGAL);
+    EXPECT_EQ(invalidShortcuts.size(), static_cast<size_t>(1));
+    auto iter = invalidShortcuts.find(bundleName);
+    EXPECT_NE(iter, invalidShortcuts.end());
+    if (iter != invalidShortcuts.end()) {
+        EXPECT_EQ(iter->second.size(), static_cast<size_t>(1));
+        EXPECT_EQ(iter->second[0], "error_id");
+    }
+}
+
+/**
+ * @tc.number: SetShortcutsEnabled_0004
+ * @tc.name: SetShortcutsEnabled
+ * @tc.desc: test SetShortcutsEnabled with both valid and invalid shortcut infos
+ */
+HWTEST_F(BmsDataMgrTest, SetShortcutsEnabled_0004, Function | MediumTest | Level1)
+{
+    std::string bundleName = "com.ohos.hello";
+    std::string shortcutId = "id_test1";
+    bool isEnabled = true;
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    BundleDataMgr bundleDataMgr;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.InsertShortcutInfos(shortcutId, shortcutInfo);
+    innerBundleInfo.SetIsNewVersion(false);
+    AddSelfUidUserInfo(innerBundleInfo, bundleName);
+    bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
+    bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
+    std::vector<ShortcutInfo> shortcutInfos;
+    shortcutInfos.push_back(shortcutInfo);
+    ShortcutInfo invalidShortcutInfo = shortcutInfo;
+    invalidShortcutInfo.id = "error_id";
+    shortcutInfos.push_back(invalidShortcutInfo);
+    std::map<std::string, std::vector<std::string>> invalidShortcuts;
+    auto result = bundleDataMgr.SetShortcutsEnabled(shortcutInfos, isEnabled, invalidShortcuts);
+    EXPECT_EQ(result, ERR_SHORTCUT_MANAGER_SHORTCUT_ID_ILLEGAL);
+    EXPECT_EQ(invalidShortcuts.size(), static_cast<size_t>(1));
+    auto iter = invalidShortcuts.find(bundleName);
+    EXPECT_NE(iter, invalidShortcuts.end());
+    if (iter != invalidShortcuts.end()) {
+        EXPECT_EQ(iter->second.size(), static_cast<size_t>(1));
+        EXPECT_EQ(iter->second[0], "error_id");
+    }
+}
+
+/**
+ * @tc.number: SetShortcutsEnabled_0005
+ * @tc.name: SetShortcutsEnabled with db error and invalid shortcut infos
+ * @tc.desc: db insert error takes priority over shortcut id illegal error, invalidShortcuts is still filled
+ */
+HWTEST_F(BmsDataMgrTest, SetShortcutsEnabled_0005, Function | MediumTest | Level1)
+{
+    std::string bundleName = "com.ohos.hello";
+    std::string shortcutId = "id_test1";
+    bool isEnabled = true;
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    BundleDataMgr bundleDataMgr;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.InsertShortcutInfos(shortcutId, shortcutInfo);
+    innerBundleInfo.SetIsNewVersion(false);
+    AddSelfUidUserInfo(innerBundleInfo, bundleName);
+    bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
+    bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
+    std::vector<ShortcutInfo> shortcutInfos;
+    shortcutInfos.push_back(shortcutInfo);
+    ShortcutInfo invalidShortcutInfo = shortcutInfo;
+    invalidShortcutInfo.id = "error_id";
+    shortcutInfos.push_back(invalidShortcutInfo);
+    std::map<std::string, std::vector<std::string>> invalidShortcuts;
+    bundleDataMgr.shortcutEnabledStorage_->rdbDataManager_ = nullptr;
+    auto result = bundleDataMgr.SetShortcutsEnabled(shortcutInfos, isEnabled, invalidShortcuts);
+    EXPECT_EQ(result, ERR_APPEXECFWK_DB_INSERT_ERROR);
+    EXPECT_EQ(invalidShortcuts.size(), static_cast<size_t>(1));
+    auto iter = invalidShortcuts.find(bundleName);
+    EXPECT_NE(iter, invalidShortcuts.end());
+    if (iter != invalidShortcuts.end()) {
+        EXPECT_EQ(iter->second.size(), static_cast<size_t>(1));
+        EXPECT_EQ(iter->second[0], "error_id");
+    }
 }
 
 /**
@@ -7533,8 +7719,10 @@ HWTEST_F(BmsDataMgrTest, GetTargetShortcutInfo_0001, Function | MediumTest | Lev
     isEnabled = false;
     result = bundleDataMgr.GetTargetShortcutInfo(bundleName, shortcutId, shortcutInfos, targetShortcutInfo);
     EXPECT_EQ(result, ERR_OK);
-    result = bundleDataMgr.SetShortcutsEnabled(shortcutInfos, isEnabled);
+    std::map<std::string, std::vector<std::string>> invalidShortcuts;
+    result = bundleDataMgr.SetShortcutsEnabled(shortcutInfos, isEnabled, invalidShortcuts);
     EXPECT_EQ(result, ERR_OK);
+    EXPECT_TRUE(invalidShortcuts.empty());
     result = bundleDataMgr.GetTargetShortcutInfo(bundleName, shortcutId, shortcutInfos, targetShortcutInfo);
     EXPECT_EQ(result, ERR_SHORTCUT_MANAGER_SHORTCUT_ID_ILLEGAL);
     std::string errorId = "error_id";
@@ -15783,6 +15971,123 @@ HWTEST_F(BmsDataMgrTest, GetLaunchServices_HostImpl_0003, Function | SmallTest |
     EXPECT_TRUE(result.launchServices.empty());
 
     bundleMgrService->dataMgr_ = nullptr;
+}
+
+/**
+ * @tc.number: GenerateUidAndGid_AppUid_0100
+ * @tc.name: GenerateUidAndGid
+ * @tc.desc: 1. app type is system app
+ *           2. generate uid and gid then verify appUid is filled with uid
+ */
+HWTEST_F(BmsDataMgrTest, GenerateUidAndGid_AppUid_0100, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    bundleInfo.applicationInfo.name = APP_NAME;
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = BUNDLE_NAME;
+    applicationInfo.deviceId = DEVICE_ID;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    info.SetBaseBundleInfo(bundleInfo);
+    info.SetBaseApplicationInfo(applicationInfo);
+    info.SetAppType(Constants::AppType::SYSTEM_APP);
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = 0;
+    innerBundleUserInfo.bundleName = BUNDLE_NAME;
+    // Seed an already allocated uid so the SPM ON early-exit branch is covered as well:
+    // the identity keeps this uid instead of allocating from the local counter.
+    innerBundleUserInfo.uid = 20020100;
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    bool ret1 = dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::INSTALL_START);
+    bool ret2 = dataMgr->AddInnerBundleInfo(BUNDLE_NAME, info);
+    ErrCode ret3 = dataMgr->GenerateUidAndGid(innerBundleUserInfo);
+    EXPECT_TRUE(ret1);
+    EXPECT_TRUE(ret2);
+    if (BundleSpmManager::IsEnabled()) {
+        // SPM ON: the identity carries a valid uid, so the early-exit branch
+        // completes it and mirrors uid into appUid.
+        EXPECT_EQ(ret3, ERR_OK);
+    } else {
+        // SPM OFF: uid is allocated from the local counter and appUid is
+        // filled with the same value.
+        EXPECT_EQ(ret3, ERR_OK);
+    }
+    EXPECT_EQ(innerBundleUserInfo.appUid, innerBundleUserInfo.uid);
+    EXPECT_GT(innerBundleUserInfo.appUid, 0);
+
+    dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_START);
+}
+
+/**
+ * @tc.number: GenerateUidAndGid_AppUid_0200
+ * @tc.name: GenerateUidAndGid
+ * @tc.desc: 1. app type is third party app
+ *           2. generate uid and gid then verify appUid is filled with uid
+ */
+HWTEST_F(BmsDataMgrTest, GenerateUidAndGid_AppUid_0200, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    bundleInfo.applicationInfo.name = APP_NAME;
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = BUNDLE_NAME;
+    applicationInfo.deviceId = DEVICE_ID;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = 0;
+    innerBundleUserInfo.bundleName = BUNDLE_NAME;
+    // Seed an already allocated uid so the SPM ON early-exit branch is covered as well:
+    // the identity keeps this uid instead of allocating from the local counter.
+    innerBundleUserInfo.uid = 20020101;
+    info.SetBaseBundleInfo(bundleInfo);
+    info.SetBaseApplicationInfo(applicationInfo);
+    info.SetAppType(Constants::AppType::THIRD_SYSTEM_APP);
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    bool ret1 = dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::INSTALL_START);
+    bool ret2 = dataMgr->AddInnerBundleInfo(BUNDLE_NAME, info);
+    ErrCode ret3 = dataMgr->GenerateUidAndGid(innerBundleUserInfo);
+    EXPECT_TRUE(ret1);
+    EXPECT_TRUE(ret2);
+    if (BundleSpmManager::IsEnabled()) {
+        // SPM ON: the identity carries a valid uid, so the early-exit branch
+        // completes it and mirrors uid into appUid.
+        EXPECT_EQ(ret3, ERR_OK);
+    } else {
+        // SPM OFF: uid is allocated from the local counter and appUid is
+        // filled with the same value.
+        EXPECT_EQ(ret3, ERR_OK);
+    }
+    EXPECT_EQ(innerBundleUserInfo.appUid, innerBundleUserInfo.uid);
+    EXPECT_GT(innerBundleUserInfo.appUid, 0);
+
+    dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_START);
+}
+
+/**
+ * @tc.number: GenerateUidAndGid_AppUid_0400
+ * @tc.name: GenerateUidAndGid
+ * @tc.desc: 1. app type is third party app
+ *           2. test GenerateUidAndGid failed by empty params and appUid untouched
+ */
+HWTEST_F(BmsDataMgrTest, GenerateUidAndGid_AppUid_0400, Function | SmallTest | Level1)
+{
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleName = "";
+
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(USERID);
+
+    ErrCode ret = dataMgr->GenerateUidAndGid(innerBundleUserInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_BUNDLENAME_IS_EMPTY);
+    // The failure path returns before any allocation, so appUid keeps the sentinel.
+    EXPECT_EQ(innerBundleUserInfo.appUid, Constants::INVALID_UID);
+
+    dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_START);
 }
 
 } // OHOS

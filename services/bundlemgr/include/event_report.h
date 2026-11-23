@@ -546,6 +546,9 @@ public:
         int32_t userId, int32_t appIndex, const std::string &largeFiles,
         const std::string &topCategory = "",
         int64_t cacheDataSize = 0, int64_t filesDataSize = 0, int64_t databaseDataSize = 0);
+
+private:
+    static bool ReportToSecurityAudit(BundleEventType bundleEventType, const EventInfo& eventInfo);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

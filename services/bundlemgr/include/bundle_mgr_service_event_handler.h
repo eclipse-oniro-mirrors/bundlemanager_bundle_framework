@@ -51,6 +51,7 @@ enum class ResultCode : uint8_t {
 
 enum OTAFlag : uint32_t {
     CHECK_ELDIR = 0x00000001,
+    UPDATE_NATIVE_CHILD_PROCESS_PRELOAD_SO_LIST = 0x00000002,
     CHECK_LOG_DIR = 0x00000010,
     CHECK_FILE_MANAGER_DIR = 0x00000100,
     CHECK_SHADER_CAHCE_DIR = 0x00000200,  // deprecated: no longer used

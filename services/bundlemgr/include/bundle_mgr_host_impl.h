@@ -18,9 +18,7 @@
 
 #include <atomic>
 #include <chrono>
-#include <map>
 #include <mutex>
-#include <tuple>
 #include "bundle_cache_mgr.h"
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 #include "bundle_connect_ability_mgr.h"
@@ -28,7 +26,6 @@
 #include "bundle_common_event_mgr.h"
 #include "bundle_data_mgr.h"
 #include "bundle_mgr_host.h"
-#include "bundle_stats_callback_interface.h"
 #include "event_report.h"
 #include "inner_bundle_user_info.h"
 #include "resource_info.h"
@@ -1095,9 +1092,6 @@ public:
     virtual bool GetBundleStats(const std::string &bundleName, int32_t userId,
         std::vector<int64_t> &bundleStats, int32_t appIndex = 0, uint32_t statFlag = 0) override;
 
-    virtual ErrCode GetBundleStatsAsync(const std::string &bundleName, int32_t userId, int32_t appIndex,
-        uint32_t statFlag, const sptr<IBundleStatsCallback> &callback) override;
-
     virtual ErrCode GetTopNLargestItemsInAppDataDir(const std::string &bundleName, const int32_t appIndex,
         const int32_t userId, const sptr<IGetLargestItemsCallback> getLargestItemsCallback) override;
 
@@ -1120,7 +1114,8 @@ public:
     virtual ErrCode DeleteDynamicShortcutInfos(const std::string &bundleName, const int32_t appIndex,
         const int32_t userId, const std::vector<std::string> &ids) override;
 
-    virtual ErrCode SetShortcutsEnabled(const std::vector<ShortcutInfo> &shortcutInfos, bool isEnabled) override;
+    virtual ErrCode SetShortcutsEnabled(const std::vector<ShortcutInfo> &shortcutInfos, bool isEnabled,
+        std::map<std::string, std::vector<std::string>> &invalidShortcuts) override;
 
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     virtual sptr<IDefaultApp> GetDefaultAppProxy() override;
@@ -1183,6 +1178,11 @@ public:
         std::vector<BaseSharedBundleInfo> &baseSharedBundleInfos,
         GetDependentBundleInfoFlag flag = GetDependentBundleInfoFlag::GET_APP_CROSS_HSP_BUNDLE_INFO) override;
     virtual ErrCode GetAllSharedBundleInfo(std::vector<SharedBundleInfo> &sharedBundles) override;
+    ErrCode SetAlternateModuleEnabled(const std::string &bundleName, const std::string &moduleName,
+        int64_t versionCode, bool isEnabled) override;
+    ErrCode GetAlternateModuleState(const std::string &bundleName, const std::string &moduleName,
+        int64_t versionCode, bool &enabled) override;
+
     virtual ErrCode GetSharedBundleInfo(const std::string &bundleName, const std::string &moduleName,
         std::vector<SharedBundleInfo> &sharedBundles) override;
     virtual ErrCode GetSharedBundleInfoBySelf(const std::string &bundleName,
@@ -1420,8 +1420,7 @@ public:
     virtual ErrCode GetDirByBundleNameAndAppIndex(const std::string &bundleName, const int32_t appIndex,
         std::string &dataDir) override;
     virtual ErrCode GetAllBundleDirs(int32_t userId, std::vector<BundleDir> &bundleDirs) override;
-    virtual ErrCode GetExtensionSandboxDataDir(const std::string &extensionName, int32_t appIndex,
-        std::string &dir) override;
+    virtual ErrCode GetExtensionSandboxDataDir(const std::string &extensionName, std::string &dir) override;
     virtual ErrCode SetAppDistributionTypes(std::set<AppDistributionTypeEnum> &appDistributionTypeEnums) override;
     virtual ErrCode GetPluginAbilityInfo(const std::string &hostBundleName, const std::string &pluginBundleName,
         const std::string &pluginModuleName, const std::string &pluginAbilityName,
@@ -1530,10 +1529,6 @@ private:
         const int32_t appIndex, const std::string &path, uint64_t &cleanCacheSize);
     void GetTopNLargestItemsTask(const std::string &bundleName, int32_t appIndex, int32_t userId,
         const sptr<IGetLargestItemsCallback> getLargestItemsCallback);
-    bool GetBundleStatsInternal(const std::string &bundleName, int32_t userId,
-        std::vector<int64_t> &bundleStats, int32_t appIndex, uint32_t statFlag,
-        int32_t activeUserId = Constants::INVALID_USERID);
-    static uint32_t NormalizeStatFlag(uint32_t statFlag);
     bool CleanBundleCacheByInodeCount(const std::string &bundleName, int32_t userId,
         int32_t appIndex, const std::vector<std::string> &moduleNames, uint64_t &cleanCacheSize);
     void NotifyBundleStatus(const NotifyBundleEvents &installRes);
@@ -1631,10 +1626,6 @@ private:
     // Frequency limit for GetTopNLargestItemsInAppDataDir
     std::mutex lastSuccessCallTimeMutex_;
     std::chrono::steady_clock::time_point lastSuccessCallTime_ = std::chrono::steady_clock::time_point{};
-
-    std::mutex bundleStatsAsyncMutex_;
-    std::map<std::tuple<std::string, int32_t, int32_t, uint32_t>,
-        std::vector<sptr<IBundleStatsCallback>>> bundleStatsAsyncMap_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

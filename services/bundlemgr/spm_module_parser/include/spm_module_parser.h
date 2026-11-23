@@ -59,8 +59,10 @@ struct RequestPermission {
 struct InnerModuleInfoForSpm {
     BundleType bundleType = BundleType::APP;
     std::vector<std::string> skillName;
+    std::vector<std::string> deviceTypes;
     std::string bundleName;
     std::string moduleName;
+    bool sharedUID = false;
     int32_t apiTargetVersion = 0;
     std::vector<DefinePermission> definePermission;
     std::vector<RequestPermission> requestPermission;

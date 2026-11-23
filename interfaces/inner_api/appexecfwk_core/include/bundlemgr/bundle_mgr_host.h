@@ -819,8 +819,6 @@ private:
 
     ErrCode HandleGetBundleStats(MessageParcel &data, MessageParcel &reply);
 
-    ErrCode HandleGetBundleStatsAsync(MessageParcel &data, MessageParcel &reply);
-
     ErrCode HandleBatchGetBundleStats(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetAllBundleStats(MessageParcel &data, MessageParcel &reply);
@@ -888,6 +886,9 @@ private:
     ErrCode HandleGetBaseSharedBundleInfos(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetAllSharedBundleInfo(MessageParcel &data, MessageParcel &reply);
+
+    ErrCode HandleSetAlternateModuleEnabled(MessageParcel &data, MessageParcel &reply);
+    ErrCode HandleGetAlternateModuleState(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetSharedBundleInfo(MessageParcel &data, MessageParcel &reply);
 

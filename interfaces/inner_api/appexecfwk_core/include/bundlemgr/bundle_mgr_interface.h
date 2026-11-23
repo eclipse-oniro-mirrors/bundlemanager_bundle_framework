@@ -16,6 +16,7 @@
 #ifndef FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_CORE_INCLUDE_BUNDLEMGR_BUNDLE_MGR_INTERFACE_H
 #define FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_CORE_INCLUDE_BUNDLEMGR_BUNDLE_MGR_INTERFACE_H
 
+#include <map>
 #include <set>
 
 #include "ability_info.h"
@@ -34,7 +35,6 @@
 #include "bundle_info.h"
 #include "bundle_pack_info.h"
 #include "bundle_installer_interface.h"
-#include "bundle_stats_callback_interface.h"
 #include "bundle_status_callback_interface.h"
 #include "bundle_storage_stats.h"
 #include "bundle_user_mgr_interface.h"
@@ -1545,23 +1545,6 @@ public:
         return false;
     }
 
-    /**
-     * @brief Obtains the bundle stats asynchronously to avoid blocking IPC channels during
-     *        time-consuming disk usage statistics. The result is returned via the callback.
-     * @param bundleName Indicates the bundle name.
-     * @param userId Indicates the user id.
-     * @param appIndex Indicates the app index.
-     * @param statFlag Indicates the stat flag, see NoGetBundleStatsFlag.
-     * @param callback Indicates the callback to receive the bundle stats result.
-     * @return Returns ERR_OK if the request is accepted; returns error code otherwise.
-     *         The actual stats result is delivered via callback->OnGetBundleStatsFinished.
-     */
-    virtual ErrCode GetBundleStatsAsync(const std::string &bundleName, int32_t userId, int32_t appIndex,
-        uint32_t statFlag, const sptr<IBundleStatsCallback> &callback)
-    {
-        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
-    }
-
     virtual ErrCode GetTopNLargestItemsInAppDataDir(const std::string &bundleName, const int32_t appIndex,
         const int32_t userId, const sptr<IGetLargestItemsCallback> getLargestItemsCallback)
     {
@@ -2278,7 +2261,16 @@ public:
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
-    virtual ErrCode SetShortcutsEnabled(const std::vector<ShortcutInfo> &shortcutInfos, bool isEnabled)
+    /**
+     * @brief Set the enabled status of the shortcuts.
+     * @param shortcutInfos Indicates the shortcut infos.
+     * @param isEnabled Indicates the shortcut is enabled or not.
+     * @param invalidShortcuts Indicates the shortcut ids which do not exist,
+     *                        key is bundle name and value is the illegal shortcut ids.
+     * @return Returns ERR_OK if successful; returns error code otherwise.
+     */
+    virtual ErrCode SetShortcutsEnabled(const std::vector<ShortcutInfo> &shortcutInfos, bool isEnabled,
+        std::map<std::string, std::vector<std::string>> &invalidShortcuts)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
@@ -2441,21 +2433,32 @@ public:
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
 
+    virtual ErrCode SetAlternateModuleEnabled(const std::string &bundleName, const std::string &moduleName,
+        int64_t versionCode, bool isEnabled)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    virtual ErrCode GetAlternateModuleState(const std::string &bundleName, const std::string &moduleName,
+        int64_t versionCode, bool &enabled)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
     /**
      * @brief Obtains the calling application's extension sandbox directory name for the current foreground user.
      *
-     * The bundle name is resolved from the calling UID. It returns the directory name only for an
+     * The bundle name and app index are resolved from the calling UID in the current mode.
+     * Only the caller's own instance installed for the current foreground user can be queried.
+     * It returns the directory name only for an
      * INPUTMETHOD extension that requires an independent sandbox; it does not return an absolute path.
      * @param extensionName Indicates the extension ability name.
-     * @param appIndex Indicates the application instance index, with the same validation and data
-     * directory naming rules as GetSandboxDataDir. The bundle name is always resolved from the caller.
      * @param dir Indicates the obtained directory name, not an absolute path. It is cleared when this
      * method returns an error.
      * @return Returns ERR_OK on success; returns ERR_BUNDLE_MANAGER_EXTENSION_SANDBOX_DIR_NOT_EXIST if
      * no matching extension sandbox directory exists; returns an error code otherwise.
      */
-    virtual ErrCode GetExtensionSandboxDataDir(const std::string &extensionName, int32_t appIndex,
-        std::string &dir)
+    virtual ErrCode GetExtensionSandboxDataDir(const std::string &extensionName, std::string &dir)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }

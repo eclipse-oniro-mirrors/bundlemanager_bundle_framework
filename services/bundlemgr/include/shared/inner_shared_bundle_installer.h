@@ -102,6 +102,8 @@ public:
         const std::vector<Security::Verify::HapVerifyResult> &hapVerifyResults);
 private:
     ErrCode CheckAppLabelInfo();
+    ErrCode CheckAlternateModuleContents() const;
+    ErrCode CheckAlternateModuleModules() const;
     ErrCode CheckBundleTypeWithInstalledVersion();
     ErrCode ExtractSharedBundles(const std::string &bundlePath, InnerBundleInfo &newInfo);
     ErrCode MkdirIfNotExist(BundleDirScene scene, const std::string &dir);
@@ -135,6 +137,7 @@ private:
     bool isPreInstalledBundle_ = false;
     bool isCompressNativeLibs_ = true;
     bool isSoFakeDecompression_ = false;
+    bool installStarted_ = false;
     // the real path or the parent directory of hsp files to be installed.
     std::string sharedBundlePath_;
     std::string bundleName_;

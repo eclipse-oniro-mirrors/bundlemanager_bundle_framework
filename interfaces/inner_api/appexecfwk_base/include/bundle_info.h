@@ -208,6 +208,7 @@ struct BundleInfo : public Parcelable {
 
     // user related fields, assign when calling the get interface
     int uid = -1;
+    int32_t appUid = -1;
     int gid = -1;
     int64_t installTime = 0;
     int64_t updateTime = 0;

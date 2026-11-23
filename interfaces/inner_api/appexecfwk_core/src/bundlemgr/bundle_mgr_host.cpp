@@ -17,6 +17,7 @@
 
 #include <algorithm>
 #include <cinttypes>
+#include <map>
 #include <unistd.h>
 #include <set>
 
@@ -434,9 +435,6 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_STATS):
             errCode = this->HandleGetBundleStats(data, reply);
             break;
-        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_STATS_ASYNC):
-            errCode = this->HandleGetBundleStatsAsync(data, reply);
-            break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::BATCH_GET_BUNDLE_STATS):
             errCode = this->HandleBatchGetBundleStats(data, reply);
             break;
@@ -527,6 +525,12 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
             break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_SHARED_BUNDLE_INFO):
             errCode = this->HandleGetAllSharedBundleInfo(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::SET_ALTERNATE_MODULE_ENABLED):
+            errCode = HandleSetAlternateModuleEnabled(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALTERNATE_MODULE_STATE):
+            errCode = HandleGetAlternateModuleState(data, reply);
             break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_SHARED_BUNDLE_INFO):
             errCode = this->HandleGetSharedBundleInfo(data, reply);
@@ -3795,31 +3799,6 @@ ErrCode BundleMgrHost::HandleGetBundleStats(MessageParcel &data, MessageParcel &
     return ERR_OK;
 }
 
-ErrCode BundleMgrHost::HandleGetBundleStatsAsync(MessageParcel &data, MessageParcel &reply)
-{
-    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
-    std::string bundleName = data.ReadString();
-    int32_t userId = data.ReadInt32();
-    int32_t appIndex = data.ReadInt32();
-    uint32_t statFlag = data.ReadUint32();
-    sptr<IRemoteObject> object = data.ReadRemoteObject();
-    if (object == nullptr) {
-        APP_LOGE("read IBundleStatsCallback failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    sptr<IBundleStatsCallback> callback = iface_cast<IBundleStatsCallback>(object);
-    if (callback == nullptr) {
-        APP_LOGE("iface_cast IBundleStatsCallback failed");
-        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
-    }
-    ErrCode ret = GetBundleStatsAsync(bundleName, userId, appIndex, statFlag, callback);
-    if (!reply.WriteInt32(ret)) {
-        APP_LOGE("write result failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    return ERR_OK;
-}
-
 ErrCode BundleMgrHost::HandleBatchGetBundleStats(MessageParcel &data, MessageParcel &reply)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
@@ -4141,6 +4120,43 @@ ErrCode BundleMgrHost::HandleGetAllSharedBundleInfo(MessageParcel &data, Message
     }
     if ((ret == ERR_OK) && !WriteParcelableVector(infos, reply)) {
         APP_LOGE("write infos failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleSetAlternateModuleEnabled(MessageParcel &data, MessageParcel &reply)
+{
+    std::string bundleName;
+    std::string moduleName;
+    int64_t versionCode = 0;
+    bool isEnabled = false;
+    if (!data.ReadString(bundleName) || !data.ReadString(moduleName) ||
+        !data.ReadInt64(versionCode) || !data.ReadBool(isEnabled)) {
+        APP_LOGE("read alternate module request failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    ErrCode result = SetAlternateModuleEnabled(bundleName, moduleName, versionCode, isEnabled);
+    if (!reply.WriteInt32(result)) {
+        APP_LOGE("write alternate module reply failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetAlternateModuleState(MessageParcel &data, MessageParcel &reply)
+{
+    std::string bundleName;
+    std::string moduleName;
+    int64_t versionCode = 0;
+    if (!data.ReadString(bundleName) || !data.ReadString(moduleName) || !data.ReadInt64(versionCode)) {
+        APP_LOGE("read alternate module request failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    bool enabled = false;
+    ErrCode result = GetAlternateModuleState(bundleName, moduleName, versionCode, enabled);
+    if (!reply.WriteInt32(result) || (result == ERR_OK && !reply.WriteBool(enabled))) {
+        APP_LOGE("write alternate module reply failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
@@ -5850,13 +5866,12 @@ ErrCode BundleMgrHost::HandleGetExtensionSandboxDataDir(MessageParcel &data, Mes
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string extensionName;
-    int32_t appIndex = 0;
-    if (!data.ReadString(extensionName) || !data.ReadInt32(appIndex)) {
+    if (!data.ReadString(extensionName)) {
         APP_LOGE("read extension sandbox dir query failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     std::string dir;
-    auto ret = GetExtensionSandboxDataDir(extensionName, appIndex, dir);
+    auto ret = GetExtensionSandboxDataDir(extensionName, dir);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write result failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -6093,10 +6108,21 @@ ErrCode BundleMgrHost::HandleSetShortcutsEnabled(MessageParcel &data, MessagePar
         return ret;
     }
     bool isEnabled = data.ReadBool();
-    ret = SetShortcutsEnabled(shortcutInfos, isEnabled);
+    std::map<std::string, std::vector<std::string>> invalidShortcuts;
+    ret = SetShortcutsEnabled(shortcutInfos, isEnabled, invalidShortcuts);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("Write result failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!reply.WriteInt32(static_cast<int32_t>(invalidShortcuts.size()))) {
+        APP_LOGE("Write invalidShortcuts size failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    for (const auto &item : invalidShortcuts) {
+        if (!reply.WriteString(item.first) || !reply.WriteStringVector(item.second)) {
+            APP_LOGE("Write invalidShortcuts failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
     }
     return ERR_OK;
 }

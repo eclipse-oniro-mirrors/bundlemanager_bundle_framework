@@ -90,6 +90,7 @@
                 "resource_schedule_service",
                 "samgr",
                 "sandbox_manager",
+                "security_guard",
                 "selinux",
                 "selinux_adapter",
                 "syscap_codec",
@@ -141,7 +142,6 @@
                       "header_files": [
                         "bundlemgr/bundle_installer_interface.h",
                         "bundlemgr/bundle_mgr_interface.h",
-                        "bundlemgr/bundle_stats_callback_interface.h",
                         "bundlemgr/bundle_status_callback_interface.h",
                         "bundlemgr/clean_cache_callback_interface.h",
                         "bundlemgr/process_cache_callback_interface.h",

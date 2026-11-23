@@ -17,6 +17,8 @@
 
 #include <gtest/gtest.h>
 
+#include <cstdlib>
+#include <cstring>
 #include <fstream>
 
 #include "ability_manager_helper.h"
@@ -27,6 +29,7 @@
 #include "event_report.h"
 #include "oobe_preload_uninstall_mgr.h"
 #include "pre_install_bundle_info.h"
+#include "security_audit_reporter.h"
 #include "status_receiver_proxy.h"
 #include "installd/installd_permission_mgr.h"
 
@@ -2097,6 +2100,266 @@ HWTEST_F(BmsServiceStartupTest, EventReport_ProcessIsIntercepted_0200, Function 
     eventInfo.isIntercepted = false;
     EventInfo result = EventReport::ProcessIsIntercepted(eventInfo);
     EXPECT_FALSE(result.isIntercepted);
+}
+
+/**
+ * @tc.number: SecurityAuditReport_InterceptedErrorCodes_0100
+ * @tc.name: test ProcessIsIntercepted with all 8 intercepted error codes
+ * @tc.desc: each error code in INTERCEPTED_ERROR_CODE_SET sets isIntercepted=true
+ */
+HWTEST_F(BmsServiceStartupTest, SecurityAuditReport_InterceptedErrorCodes_0100, Function | SmallTest | Level0)
+{
+    std::vector<ErrCode> interceptedCodes = {
+        ERR_APPEXECFWK_INSTALL_SELF_UPDATE_NOT_MDM,
+        ERR_APP_DISTRIBUTION_TYPE_NOT_ALLOW_INSTALL,
+        ERR_APPEXECFWK_INSTALL_ENTERPRISE_BUNDLE_NOT_ALLOWED,
+        ERR_BUNDLE_MANAGER_CODE_SIGNATURE_DELIVERY_FILE_FAILED,
+        ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED,
+        ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_INSTALL,
+        ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_UNINSTALL,
+        ERR_APPEXECFWK_INSTALL_EXISTED_ENTERPRISE_BUNDLE_NOT_ALLOWED,
+    };
+    for (const auto& code : interceptedCodes) {
+        EventInfo eventInfo;
+        eventInfo.errCode = code;
+        EventInfo result = EventReport::ProcessIsIntercepted(eventInfo);
+        EXPECT_TRUE(result.isIntercepted) << "errCode=" << code << " should be intercepted";
+    }
+}
+
+/**
+ * @tc.number: SecurityAuditReport_SendBundleSystemEvent_Intercepted_0100
+ * @tc.name: test SendBundleSystemEvent with intercepted error code
+ * @tc.desc: intercepted error triggers security audit (best-effort) and completes without crash
+ */
+HWTEST_F(BmsServiceStartupTest, SecurityAuditReport_SendBundleSystemEvent_Intercepted_0100,
+    Function | SmallTest | Level0)
+{
+    EventInfo eventInfo;
+    eventInfo.bundleName = BUNDLE_TEMP_NAME;
+    eventInfo.userId = 100;
+    eventInfo.errCode = ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_INSTALL;
+    eventInfo.startTime = 1000;
+    eventInfo.endTime = 2000;
+    EventReport::SendBundleSystemEvent(BundleEventType::INSTALL, eventInfo);
+    EventInfo result = EventReport::ProcessIsIntercepted(eventInfo);
+    EXPECT_TRUE(result.isIntercepted);
+}
+
+/**
+ * @tc.number: SecurityAuditReport_SendBundleSystemEvent_Intercepted_Uninstall_0100
+ * @tc.name: test SendBundleSystemEvent with uninstall intercepted error code
+ * @tc.desc: uninstall intercepted error triggers security audit and completes without crash
+ */
+HWTEST_F(BmsServiceStartupTest, SecurityAuditReport_SendBundleSystemEvent_Intercepted_Uninstall_0100,
+    Function | SmallTest | Level0)
+{
+    EventInfo eventInfo;
+    eventInfo.bundleName = BUNDLE_TEMP_NAME;
+    eventInfo.userId = 100;
+    eventInfo.errCode = ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_UNINSTALL;
+    eventInfo.startTime = 1000;
+    eventInfo.endTime = 2000;
+    EventReport::SendBundleSystemEvent(BundleEventType::UNINSTALL, eventInfo);
+    EventInfo result = EventReport::ProcessIsIntercepted(eventInfo);
+    EXPECT_TRUE(result.isIntercepted);
+}
+
+/**
+ * @tc.number: SecurityAuditReport_SendBundleSystemEvent_NotIntercepted_0100
+ * @tc.name: test SendBundleSystemEvent with non-intercepted error code
+ * @tc.desc: non-intercepted failure does not trigger security audit, completes without crash
+ */
+HWTEST_F(BmsServiceStartupTest, SecurityAuditReport_SendBundleSystemEvent_NotIntercepted_0100,
+    Function | SmallTest | Level0)
+{
+    EventInfo eventInfo;
+    eventInfo.bundleName = BUNDLE_TEMP_NAME;
+    eventInfo.userId = 100;
+    eventInfo.errCode = ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    EventReport::SendBundleSystemEvent(BundleEventType::INSTALL, eventInfo);
+    EventInfo result = EventReport::ProcessIsIntercepted(eventInfo);
+    EXPECT_FALSE(result.isIntercepted);
+}
+
+/**
+ * @tc.number: SecurityAuditReport_SendBundleSystemEvent_Success_0100
+ * @tc.name: test SendBundleSystemEvent with ERR_OK
+ * @tc.desc: success does not trigger security audit, completes without crash
+ */
+HWTEST_F(BmsServiceStartupTest, SecurityAuditReport_SendBundleSystemEvent_Success_0100,
+    Function | SmallTest | Level0)
+{
+    EventInfo eventInfo;
+    eventInfo.bundleName = BUNDLE_TEMP_NAME;
+    eventInfo.userId = 100;
+    eventInfo.errCode = ERR_OK;
+    EventReport::SendBundleSystemEvent(BundleEventType::INSTALL, eventInfo);
+    EXPECT_EQ(eventInfo.errCode, ERR_OK);
+}
+
+/**
+ * @tc.number: SecurityAuditReport_Report_BestEffort_0100
+ * @tc.name: test SecurityAuditReporter::Report best-effort when security guard unavailable
+ * @tc.desc: ReportSecurityInfoAsync returns non-zero (no permission/SA unavailable) → best-effort, no crash
+ */
+HWTEST_F(BmsServiceStartupTest, SecurityAuditReport_Report_BestEffort_0100,
+    Function | SmallTest | Level0)
+{
+    EventInfo eventInfo;
+    eventInfo.bundleName = BUNDLE_TEMP_NAME;
+    eventInfo.userId = 100;
+    eventInfo.errCode = ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_INSTALL;
+    eventInfo.startTime = 1000;
+    eventInfo.endTime = 2000;
+    SecurityAuditReporter::Report(BundleEventType::INSTALL, eventInfo);
+    SUCCEED();
+}
+
+/**
+ * @tc.number: SecurityAuditReport_ReportToSecurityAudit_Intercepted_0100
+ * @tc.name: test ReportToSecurityAudit with intercepted event via SendBundleSystemEvent
+ * @tc.desc: intercepted install event triggers security audit path and HiSysEvent unchanged
+ */
+HWTEST_F(BmsServiceStartupTest, SecurityAuditReport_ReportToSecurityAudit_Intercepted_0100,
+    Function | SmallTest | Level0)
+{
+    EventInfo eventInfo;
+    eventInfo.bundleName = BUNDLE_TEMP_NAME;
+    eventInfo.userId = 100;
+    eventInfo.errCode = ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED;
+    eventInfo.startTime = 1000;
+    eventInfo.endTime = 2000;
+    EventReport::SendBundleSystemEvent(BundleEventType::INSTALL, eventInfo);
+    EventInfo result = EventReport::ProcessIsIntercepted(eventInfo);
+    EXPECT_TRUE(result.isIntercepted);
+    EXPECT_EQ(result.errCode, ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED);
+    EXPECT_EQ(result.bundleName, BUNDLE_TEMP_NAME);
+    EXPECT_EQ(result.userId, 100);
+}
+
+/**
+ * @tc.number: SecurityAuditReporter_GetEventId_0100
+ * @tc.name: test GetEventId with all four bundle event types
+ * @tc.desc: INSTALL/UNINSTALL/UPDATE/RECOVER each map to the correct eventId
+ */
+HWTEST_F(BmsServiceStartupTest, SecurityAuditReporter_GetEventId_0100, Function | SmallTest | Level0)
+{
+    EXPECT_EQ(SecurityAuditReporter::GetEventId(BundleEventType::INSTALL), 0x18000100);
+    EXPECT_EQ(SecurityAuditReporter::GetEventId(BundleEventType::UNINSTALL), 0x18000101);
+    EXPECT_EQ(SecurityAuditReporter::GetEventId(BundleEventType::UPDATE), 0x18000102);
+    EXPECT_EQ(SecurityAuditReporter::GetEventId(BundleEventType::RECOVER), 0x18000103);
+}
+
+/**
+ * @tc.number: SecurityAuditReporter_GetEventId_0200
+ * @tc.name: test GetEventId default fallback
+ * @tc.desc: UNKNOW and QUICK_FIX fall back to the INSTALL eventId
+ */
+HWTEST_F(BmsServiceStartupTest, SecurityAuditReporter_GetEventId_0200, Function | SmallTest | Level0)
+{
+    EXPECT_EQ(SecurityAuditReporter::GetEventId(BundleEventType::UNKNOW), 0x18000100);
+    EXPECT_EQ(SecurityAuditReporter::GetEventId(BundleEventType::QUICK_FIX), 0x18000100);
+}
+
+/**
+ * @tc.number: SecurityAuditReporter_BuildContent_0100
+ * @tc.name: test BuildContent contains content/eventId/metadata entries
+ * @tc.desc: content has bundleName/callingBundleName/callingUid/timestamp_utc and metadata values are fixed
+ */
+HWTEST_F(BmsServiceStartupTest, SecurityAuditReporter_BuildContent_0100, Function | SmallTest | Level0)
+{
+    EventInfo eventInfo;
+    eventInfo.bundleName = "com.example.test";
+    eventInfo.callingBundleName = "com.caller.test";
+    eventInfo.callingUid = 200;
+    std::string content = SecurityAuditReporter::BuildContent(BundleEventType::INSTALL, eventInfo);
+    EXPECT_NE(content.find("\"content\":"), std::string::npos);
+    EXPECT_NE(content.find("\"bundleName\":\"com.example.test\""), std::string::npos);
+    EXPECT_NE(content.find("\"callingBundleName\":\"com.caller.test\""), std::string::npos);
+    EXPECT_NE(content.find("\"callingUid\":200"), std::string::npos);
+    EXPECT_NE(content.find("\"timestamp_utc\":"), std::string::npos);
+    EXPECT_NE(content.find("\"eventId\":" + std::to_string(0x18000100)), std::string::npos);
+    EXPECT_NE(content.find("\"metadata\":"), std::string::npos);
+    EXPECT_NE(content.find("\"version\":\"\""), std::string::npos);
+    EXPECT_NE(content.find("\"date\":\"\""), std::string::npos);
+    EXPECT_NE(content.find("\"deviceId\":\"\""), std::string::npos);
+    EXPECT_NE(content.find("\"userId\":0"), std::string::npos);
+    EXPECT_NE(content.find("\"eventType\":0"), std::string::npos);
+    EXPECT_EQ(content.find("\"PNAMEID\""), std::string::npos);
+    EXPECT_EQ(content.find("\"ERROR_CODE\""), std::string::npos);
+    EXPECT_EQ(content.find("\"IS_INTERCEPTED\""), std::string::npos);
+}
+
+/**
+ * @tc.number: SecurityAuditReporter_BuildContent_0200
+ * @tc.name: test BuildContent eventId for each bundle event type
+ * @tc.desc: UNINSTALL/UPDATE/RECOVER map to 0x18000101/0x18000102/0x18000103 in the content
+ */
+HWTEST_F(BmsServiceStartupTest, SecurityAuditReporter_BuildContent_0200, Function | SmallTest | Level0)
+{
+    EventInfo eventInfo;
+    eventInfo.bundleName = "com.example.test";
+    std::string content = SecurityAuditReporter::BuildContent(BundleEventType::UNINSTALL, eventInfo);
+    EXPECT_NE(content.find("\"eventId\":" + std::to_string(0x18000101)), std::string::npos);
+    content = SecurityAuditReporter::BuildContent(BundleEventType::UPDATE, eventInfo);
+    EXPECT_NE(content.find("\"eventId\":" + std::to_string(0x18000102)), std::string::npos);
+    content = SecurityAuditReporter::BuildContent(BundleEventType::RECOVER, eventInfo);
+    EXPECT_NE(content.find("\"eventId\":" + std::to_string(0x18000103)), std::string::npos);
+}
+
+/**
+ * @tc.number: SecurityAuditReporter_BuildContent_0300
+ * @tc.name: test BuildContent timestamp_utc is a millisecond timestamp
+ * @tc.desc: timestamp_utc is a positive epoch millisecond value convertible to UTC time
+ */
+HWTEST_F(BmsServiceStartupTest, SecurityAuditReporter_BuildContent_0300, Function | SmallTest | Level0)
+{
+    EventInfo eventInfo;
+    eventInfo.bundleName = "com.example.test";
+    std::string content = SecurityAuditReporter::BuildContent(BundleEventType::INSTALL, eventInfo);
+    size_t pos = content.find("\"timestamp_utc\":");
+    ASSERT_NE(pos, std::string::npos);
+    int64_t timestamp = std::atoll(content.c_str() + pos + strlen("\"timestamp_utc\":"));
+    EXPECT_GT(timestamp, 0);
+}
+
+/**
+ * @tc.number: SecurityAuditReport_SendBundleSystemEvent_Intercepted_Update_0100
+ * @tc.name: test SendBundleSystemEvent with update intercepted error code
+ * @tc.desc: update intercepted error triggers security audit path and completes without crash
+ */
+HWTEST_F(BmsServiceStartupTest, SecurityAuditReport_SendBundleSystemEvent_Intercepted_Update_0100,
+    Function | SmallTest | Level0)
+{
+    EventInfo eventInfo;
+    eventInfo.bundleName = BUNDLE_TEMP_NAME;
+    eventInfo.userId = 100;
+    eventInfo.errCode = ERR_APPEXECFWK_INSTALL_SELF_UPDATE_NOT_MDM;
+    eventInfo.startTime = 1000;
+    eventInfo.endTime = 2000;
+    EventReport::SendBundleSystemEvent(BundleEventType::UPDATE, eventInfo);
+    EventInfo result = EventReport::ProcessIsIntercepted(eventInfo);
+    EXPECT_TRUE(result.isIntercepted);
+}
+
+/**
+ * @tc.number: SecurityAuditReport_SendBundleSystemEvent_Intercepted_Recover_0100
+ * @tc.name: test SendBundleSystemEvent with recover intercepted error code
+ * @tc.desc: recover intercepted error triggers security audit path and completes without crash
+ */
+HWTEST_F(BmsServiceStartupTest, SecurityAuditReport_SendBundleSystemEvent_Intercepted_Recover_0100,
+    Function | SmallTest | Level0)
+{
+    EventInfo eventInfo;
+    eventInfo.bundleName = BUNDLE_TEMP_NAME;
+    eventInfo.userId = 100;
+    eventInfo.errCode = ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_INSTALL;
+    eventInfo.startTime = 1000;
+    eventInfo.endTime = 2000;
+    EventReport::SendBundleSystemEvent(BundleEventType::RECOVER, eventInfo);
+    EventInfo result = EventReport::ProcessIsIntercepted(eventInfo);
+    EXPECT_TRUE(result.isIntercepted);
 }
 
 /**

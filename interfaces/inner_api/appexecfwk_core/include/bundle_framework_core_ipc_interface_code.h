@@ -272,7 +272,6 @@ enum class BundleMgrInterfaceCode : uint32_t {
     UPDATE_DESKTOP_SHORTCUT_INFO = 246,
     START_APP_DETAIL_ABILITY = 247,
     GET_JSON_PROFILE_FOR_SELF = 248,
-    GET_BUNDLE_STATS_ASYNC = 249,
     FILTER_BUNDLE_LIST_BY_DEVICE_MODE_DISTRIBUTION_POLICIES = 250,
     BATCH_SET_CLONE_APPLICATION_ENABLED = 251,
     GET_APP_PROVISION_INFO_IN_DEVICE = 252,
@@ -287,7 +286,9 @@ enum class BundleMgrInterfaceCode : uint32_t {
     QUERY_IPC_GROUP_INFOS = 261,
     GET_LAUNCH_SERVICES = 262,
     CHECK_BUNDLE_EXIST_BY_DEVELOPER_ID_AND_ASSET_GROUP = 263,
-    GET_EXTENSION_SANDBOX_DATA_DIR = 264,
+    SET_ALTERNATE_MODULE_ENABLED = 264,
+    GET_ALTERNATE_MODULE_STATE = 265,
+    GET_EXTENSION_SANDBOX_DATA_DIR = 266,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */
@@ -397,10 +398,6 @@ enum class GetLargestItemsCallbackInterfaceCode : uint8_t {
     ON_GET_LARGEST_ITEMS_CALLBACK = 0,
 };
 
-enum class BundleStatsCallbackInterfaceCode : uint8_t {
-    ON_GET_BUNDLE_STATS_CALLBACK = 0,
-};
-
 /* SAID: 401-27 Interface No.26 subservice also provides the following interfaces */
 enum class ProcessCacheCallbackInterfaceCode : uint8_t {
     GET_ALL_BUNDLE_CACHE = 0,
@@ -470,6 +467,7 @@ enum class BundleResourceInterfaceCode : uint8_t {
     GET_EXTENSION_ABILITY_RESOURCE_INFO = 7,
     GET_ALL_UNINSTALL_BUNDLE_RESOURCE_INFO = 8,
     GET_LAUNCHER_ABILITY_RESOURCE_INFO_LIST = 9,
+    GET_THEME_TIMESTAMP = 10,
 };
 
 /* SAID: 401-233 Interface No.233 subservice also provides the following interfaces */

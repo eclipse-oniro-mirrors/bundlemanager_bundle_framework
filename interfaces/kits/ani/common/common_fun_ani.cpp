@@ -889,6 +889,10 @@ ani_object CommonFunAni::ConvertApplicationInfo(ani_env* env, const ApplicationI
 
     ani_object keepDataOnUninstall = BoxValue(env, BoolToAniBoolean(appInfo.keepDataOnUninstall));
     RETURN_NULL_IF_NULL(keepDataOnUninstall);
+    // appUid?: int — optional params compile to boxed class types (reference
+    // slots), so box the value and pass via .r like the options above.
+    ani_object appUid = BoxValue(env, appInfo.appUid);
+    RETURN_NULL_IF_NULL(appUid);
 
     ani_value args[] = {
         { .r = name },
@@ -926,6 +930,7 @@ ani_object CommonFunAni::ConvertApplicationInfo(ani_env* env, const ApplicationI
         { .r = EnumUtils::EnumNativeToETS_BundleManager_ApplicationReservedFlag(env,
             static_cast<int32_t>(appInfo.applicationReservedFlag)) },
         { .r = keepDataOnUninstall },
+        { .r = appUid },
     };
     static const std::string ctorSig = SignatureBuilder()
         .AddClass(CommonFunAniNS::CLASSNAME_STRING)                    // name: string
@@ -962,6 +967,7 @@ ani_object CommonFunAni::ConvertApplicationInfo(ani_env* env, const ApplicationI
         .AddClass(CommonFunAniNS::CLASSNAME_INT)                       // flags?: int
         .AddClass(CommonFunAniNS::CLASSNAME_BUNDLEMANAGER_APPLICATIONRESERVEDFLAG)
         .AddClass(CommonFunAniNS::CLASSNAME_BOOLEAN)                   // keepDataOnUninstall?: boolean
+        .AddClass(CommonFunAniNS::CLASSNAME_INT)                       // appUid?: int
         .BuildSignatureDescriptor();
     return CreateNewObjectByClassV2(env, CLASSNAME_APPLICATION_INFO_INNER, ctorSig, args);
 }
@@ -2411,13 +2417,7 @@ ani_object CommonFunAni::ConvertSkillInfo(ani_env* env, const SkillInfo& skillIn
     ani_string skillName = nullptr;
     RETURN_NULL_IF_FALSE(StringToAniStr(env, skillInfo.skillName, skillName));
     ani_string skillPath = nullptr;
-    std::string sandboxSkillPath = skillInfo.skillPath;
-    if (sandboxSkillPath.compare(0, strlen(Constants::BASE_SKILL_DIR),
-        Constants::BASE_SKILL_DIR) == 0) {
-        sandboxSkillPath.replace(0, strlen(Constants::BASE_SKILL_DIR),
-            Constants::SANDBOX_SKILL_PATH_PREFIX);
-    }
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, sandboxSkillPath, skillPath));
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, skillInfo.skillPath, skillPath));
     ani_string abilityName = nullptr;
     RETURN_NULL_IF_FALSE(StringToAniStr(env, skillInfo.abilityName, abilityName));
     ani_string version = nullptr;

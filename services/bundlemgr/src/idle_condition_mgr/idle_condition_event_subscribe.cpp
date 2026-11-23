@@ -37,7 +37,8 @@ void IdleConditionEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventDat
 {
     if (!OHOS::system::GetBoolParameter(ServiceConstants::BMS_RELABEL_PARAM, false) &&
         !OHOS::system::GetBoolParameter(ServiceConstants::BMS_SCAN_APP_DATA_PARAM, false) &&
-        !OHOS::system::GetBoolParameter(ServiceConstants::BMS_SCAN_FILE_CATEGORY_PARAM, false)) {
+        !OHOS::system::GetBoolParameter(ServiceConstants::BMS_SCAN_FILE_CATEGORY_PARAM, false) &&
+        !OHOS::system::GetBoolParameter(ServiceConstants::BMS_SCAN_BUNDLE_STATS_PARAM, false)) {
         return;
     }
     APP_LOGD("OnReceiveEvent received idle condition event");

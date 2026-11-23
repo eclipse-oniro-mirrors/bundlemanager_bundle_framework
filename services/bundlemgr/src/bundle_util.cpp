@@ -100,6 +100,10 @@ constexpr const char LIB64_CODE_CRYPTO_SO_PATH[] = "system/lib64/libcode_crypto_
 constexpr const char CHECK_SO_ENCRYPTED_FUNCTION_NAME[] = "_ZN4OHOS8Security10CodeCrypto15CodeCryptoUtils23"
     "HasEncryptedSoLibrariesERKNSt3__h12basic_stringIcNS3_11char_traitsIcEENS3_9allocatorIcEEEERb";
 #endif
+#ifdef GLOBAL_RESMGR_ENABLE
+constexpr const char *DEVICE_TYPE_PARAM = "const.product.devicetype";
+constexpr const char *DEVICE_TYPE_DEFAULT = "default";
+#endif
 
 std::string GetRenameInstallPrefixTag(const std::string &filePath)
 {
@@ -1732,6 +1736,45 @@ bool BundleUtil::IsVmEnabled()
     }
     return false;
 }
+
+#ifdef GLOBAL_RESMGR_ENABLE
+Global::Resource::DeviceType BundleUtil::ConvertDeviceTypeStr(const std::string &deviceTypeStr)
+{
+    if (deviceTypeStr == Global::Resource::DEFAULT_STR || deviceTypeStr == Global::Resource::PHONE_STR) {
+        return Global::Resource::DeviceType::DEVICE_PHONE;
+    }
+    if (deviceTypeStr == Global::Resource::TABLET_STR) {
+        return Global::Resource::DeviceType::DEVICE_TABLET;
+    }
+    if (deviceTypeStr == Global::Resource::CAR_STR) {
+        return Global::Resource::DeviceType::DEVICE_CAR;
+    }
+    if (deviceTypeStr == Global::Resource::PAD_STR) {
+        return Global::Resource::DeviceType::DEVICE_PAD;
+    }
+    if (deviceTypeStr == Global::Resource::TV_STR) {
+        return Global::Resource::DeviceType::DEVICE_TV;
+    }
+    if (deviceTypeStr == Global::Resource::WEARABLE_STR) {
+        return Global::Resource::DeviceType::DEVICE_WEARABLE;
+    }
+    if (deviceTypeStr == Global::Resource::TWOINONE_STR) {
+        return Global::Resource::DeviceType::DEVICE_TWOINONE;
+    }
+    APP_LOGW("unknown device type, keep NOT_SET, value:%{public}s", deviceTypeStr.c_str());
+    return Global::Resource::DeviceType::DEVICE_NOT_SET;
+}
+
+Global::Resource::DeviceType BundleUtil::GetDeviceType()
+{
+    // Cached once per process: the product device type does not change at
+    // runtime, and icon/label parsing creates resource managers at a high
+    // frequency — one system parameter read serves all callers.
+    static Global::Resource::DeviceType deviceType =
+        ConvertDeviceTypeStr(OHOS::system::GetParameter(DEVICE_TYPE_PARAM, DEVICE_TYPE_DEFAULT));
+    return deviceType;
+}
+#endif
 
 #if defined(CODE_ENCRYPTION_ENABLE)
 bool BundleUtil::OpenEncryptionHandle()

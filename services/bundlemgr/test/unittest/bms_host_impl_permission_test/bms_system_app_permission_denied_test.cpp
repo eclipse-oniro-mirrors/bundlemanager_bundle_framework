@@ -972,7 +972,8 @@ HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleMgrHostImpl_0054, TestSize.Leve
 
     std::vector<ShortcutInfo> shortcutInfos;
     bool isEnabled = false;
-    auto ret = localBundleMgrHostImpl->SetShortcutsEnabled(shortcutInfos, isEnabled);
+    std::map<std::string, std::vector<std::string>> invalidShortcuts;
+    auto ret = localBundleMgrHostImpl->SetShortcutsEnabled(shortcutInfos, isEnabled, invalidShortcuts);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
 }
 
@@ -1320,6 +1321,19 @@ HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleMgrHostImpl_0062, TestSize.Leve
     EXPECT_TRUE(info.bundleName.empty());
 }
 
+HWTEST_F(BmsSystemAppPermissionDeniedTest, AlternateModuleDenied_0001, TestSize.Level1)
+{
+    BundleMgrHostImpl host;
+    EXPECT_EQ(host.SetAlternateModuleEnabled("com.example.escape", "library", 1, true),
+        ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+    EXPECT_EQ(host.SetAlternateModuleEnabled("com.example.escape", "library", 1, false),
+        ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+    bool enabled = true;
+    EXPECT_EQ(host.GetAlternateModuleState("com.example.escape", "library", 1, enabled),
+        ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+    EXPECT_FALSE(enabled);
+}
+
 /**
  * @tc.number: GetExtensionSandboxDataDir_NullDataMgr_0100
  * @tc.name: GetExtensionSandboxDataDir
@@ -1333,7 +1347,7 @@ HWTEST_F(BmsSystemAppPermissionDeniedTest, GetExtensionSandboxDataDir_NullDataMg
     service->dataMgr_ = nullptr;
     BundleMgrHostImpl host;
     std::string dir = "stale-dir";
-    EXPECT_EQ(host.GetExtensionSandboxDataDir("inputMethodExtAbility", Constants::MAIN_APP_INDEX, dir),
+    EXPECT_EQ(host.GetExtensionSandboxDataDir("inputMethodExtAbility", dir),
         ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
     EXPECT_TRUE(dir.empty());
 }
@@ -1351,7 +1365,7 @@ HWTEST_F(BmsSystemAppPermissionDeniedTest, GetExtensionSandboxDataDir_InvalidCal
     service->dataMgr_ = std::make_shared<BundleDataMgr>();
     BundleMgrHostImpl host;
     std::string dir = "stale-dir";
-    EXPECT_EQ(host.GetExtensionSandboxDataDir("inputMethodExtAbility", Constants::MAIN_APP_INDEX, dir),
+    EXPECT_EQ(host.GetExtensionSandboxDataDir("inputMethodExtAbility", dir),
         ERR_BUNDLE_MANAGER_INVALID_UID);
     EXPECT_TRUE(dir.empty());
 }

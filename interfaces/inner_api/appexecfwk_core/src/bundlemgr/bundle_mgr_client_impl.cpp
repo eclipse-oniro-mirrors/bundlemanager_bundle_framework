@@ -666,8 +666,41 @@ ErrCode BundleMgrClientImpl::GetAllBundleDirs(int32_t userId, std::vector<Bundle
     return bundleMgr_->GetAllBundleDirs(userId, bundleDirs);
 }
 
-ErrCode BundleMgrClientImpl::GetExtensionSandboxDataDir(const std::string &extensionName, int32_t appIndex,
-    std::string &dir)
+ErrCode BundleMgrClientImpl::RegisterDeathRecipient()
+{
+    if (bundleMgr_ == nullptr) {
+        APP_LOGE("bundleMgr_ nullptr, errCode:%{public}d", ERR_APPEXECFWK_SERVICE_NOT_CONNECTED);
+        return ERR_APPEXECFWK_SERVICE_NOT_CONNECTED;
+    }
+    std::weak_ptr<BundleMgrClientImpl> weakPtr = shared_from_this();
+    auto deathCallback = [weakPtr](const wptr<IRemoteObject>& object) {
+        auto sharedPtr = weakPtr.lock();
+        if (sharedPtr != nullptr) {
+            sharedPtr->OnDeath();
+        }
+    };
+    deathRecipient_ = sptr<BundleMgrServiceDeathRecipient>(
+        new (std::nothrow) BundleMgrServiceDeathRecipient(deathCallback));
+    if (deathRecipient_ == nullptr) {
+        APP_LOGE("failed to create death recipient, errCode:%{public}d",
+            ERR_APPEXECFWK_SERVICE_NOT_CONNECTED);
+        // Reset the proxy so the next Connect retries registration instead of short-circuiting
+        // into a connected-but-permanently-unnotified state (same reset as registration failure).
+        bundleMgr_ = nullptr;
+        return ERR_APPEXECFWK_SERVICE_NOT_CONNECTED;
+    }
+    if ((bundleMgr_->AsObject()->IsProxyObject()) &&
+        (!bundleMgr_->AsObject()->AddDeathRecipient(deathRecipient_))) {
+        APP_LOGE("failed to add death recipient, errCode:%{public}d",
+            ERR_APPEXECFWK_SERVICE_NOT_CONNECTED);
+        bundleMgr_ = nullptr;
+        deathRecipient_ = nullptr;
+        return ERR_APPEXECFWK_SERVICE_NOT_CONNECTED;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrClientImpl::GetExtensionSandboxDataDir(const std::string &extensionName, std::string &dir)
 {
     APP_LOGD("GetExtensionSandboxDataDir begin");
     dir.clear();
@@ -681,7 +714,7 @@ ErrCode BundleMgrClientImpl::GetExtensionSandboxDataDir(const std::string &exten
         APP_LOGE_NOFUNC("GetExtensionSandboxDataDir bundleMgr_ nullptr");
         return ERR_APPEXECFWK_NULL_PTR;
     }
-    return bundleMgr_->GetExtensionSandboxDataDir(extensionName, appIndex, dir);
+    return bundleMgr_->GetExtensionSandboxDataDir(extensionName, dir);
 }
 
 ErrCode BundleMgrClientImpl::Connect()
@@ -701,15 +734,10 @@ ErrCode BundleMgrClientImpl::Connect()
             APP_LOGE_NOFUNC("get bms sa failed");
             return ERR_APPEXECFWK_SERVICE_NOT_CONNECTED;
         }
-        std::weak_ptr<BundleMgrClientImpl> weakPtr = shared_from_this();
-        auto deathCallback = [weakPtr](const wptr<IRemoteObject>& object) {
-            auto sharedPtr = weakPtr.lock();
-            if (sharedPtr != nullptr) {
-                sharedPtr->OnDeath();
-            }
-        };
-        deathRecipient_ = new (std::nothrow) BundleMgrServiceDeathRecipient(deathCallback);
-        bundleMgr_->AsObject()->AddDeathRecipient(deathRecipient_);
+        ErrCode ret = RegisterDeathRecipient();
+        if (ret != ERR_OK) {
+            return ret;
+        }
     }
     APP_LOGD("connect end");
     return ERR_OK;
@@ -732,15 +760,10 @@ ErrCode BundleMgrClientImpl::ConnectInstaller()
             APP_LOGE_NOFUNC("get bms sa failed");
             return ERR_APPEXECFWK_SERVICE_NOT_CONNECTED;
         }
-        std::weak_ptr<BundleMgrClientImpl> weakPtr = shared_from_this();
-        auto deathCallback = [weakPtr](const wptr<IRemoteObject>& object) {
-            auto sharedPtr = weakPtr.lock();
-            if (sharedPtr != nullptr) {
-                sharedPtr->OnDeath();
-            }
-        };
-        deathRecipient_ = new (std::nothrow) BundleMgrServiceDeathRecipient(deathCallback);
-        bundleMgr_->AsObject()->AddDeathRecipient(deathRecipient_);
+        ErrCode ret = RegisterDeathRecipient();
+        if (ret != ERR_OK) {
+            return ret;
+        }
     }
 
     if (bundleInstaller_ == nullptr) {
@@ -793,6 +816,9 @@ ErrCode BundleMgrClientImpl::RegisterPluginEventCallback(const sptr<IBundleEvent
         ErrCode result = Connect();
         if (result != ERR_OK) {
             APP_LOGE_NOFUNC("connect fail %{public}d", result);
+            // Roll back so a retry re-enters Connect and re-registers server-side instead of
+            // silently succeeding with a callback the service never received.
+            pluginEventCallback_ = nullptr;
             return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
         }
         std::shared_lock<std::shared_mutex> lock(mutex_);

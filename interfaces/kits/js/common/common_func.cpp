@@ -96,6 +96,7 @@ static std::unordered_map<int32_t, int32_t> ERR_MAP = {
     { ERR_BUNDLE_MANAGER_PARAM_ERROR, ERROR_PARAM_CHECK_ERROR },
     { ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST, ERROR_BUNDLE_NOT_EXIST },
     { ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST, ERROR_MODULE_NOT_EXIST },
+    { ERR_BUNDLE_MANAGER_MODULE_VERSION_NOT_EXIST, ERROR_MODULE_VERSION_NOT_EXIST },
     { ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST, ERROR_ABILITY_NOT_EXIST },
     { ERR_BUNDLE_MANAGER_APPINDEX_NOT_EXIST, ERROR_INVALID_APPINDEX },
     { ERR_BUNDLE_MANAGER_APP_CLONE_NOT_EXIST, ERROR_APP_CLONE_NOT_EXIST },
@@ -596,6 +597,24 @@ std::string CommonFunc::GetStringFromNAPI(napi_env env, napi_value value)
     result.resize(size);
     if (napi_get_value_string_utf8(env, value, result.data(), (size + NAPI_RETURN_ONE), &size) != napi_ok) {
         return "";
+    }
+    return result;
+}
+
+std::string CommonFunc::ConvertInvalidShortcutsToString(
+    const std::map<std::string, std::vector<std::string>> &invalidShortcuts)
+{
+    std::string result;
+    for (const auto &item : invalidShortcuts) {
+        if (!result.empty()) {
+            result += "; ";
+        }
+        result += item.first;
+        result += ":";
+        for (size_t i = 0; i < item.second.size(); ++i) {
+            result += (i == 0) ? " " : ", ";
+            result += item.second[i];
+        }
     }
     return result;
 }
@@ -1825,6 +1844,10 @@ void CommonFunc::ConvertApplicationInfo(napi_env env, napi_value objAppInfo, con
     napi_value nUid;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, appInfo.uid, &nUid));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "uid", nUid));
+
+    napi_value nAppUid;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, appInfo.appUid, &nAppUid));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "appUid", nAppUid));
 
     napi_value nIconResource;
     NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nIconResource));

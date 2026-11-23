@@ -19,6 +19,7 @@
 #include <string>
 #include <vector>
 
+#include "bundle_constants.h"
 #include "bundle_errors.h"
 #include "bundle_mgr_proxy.h"
 #include "bundle_skill/skill_manager_interface.h"
@@ -120,6 +121,7 @@ public:
         }
         skillInfo.bundleName = "com.example.skill";
         skillInfo.skillName = "testSkill";
+        skillInfo.skillPath = skillPathToFill_;
         return ERR_OK;
     }
 
@@ -130,6 +132,7 @@ public:
         }
         SkillInfo skillInfo;
         skillInfo.bundleName = "com.example.skill";
+        skillInfo.skillPath = skillPathToFill_;
         skillInfos.push_back(skillInfo);
         return ERR_OK;
     }
@@ -138,6 +141,8 @@ public:
     sptr<MockSkillManagerRemote> inner_;
     bool asObjectNull_ = false;
     ErrCode innerErrCode_ = ERR_OK;
+    // host-side skillPath filled into every returned SkillInfo; empty keeps it unset
+    std::string skillPathToFill_;
 };
 
 // Overrides the only two seams the helper uses on IBundleMgr, so the production
@@ -616,4 +621,118 @@ HWTEST_F(BmsSkillManagerHelperTest, InnerGetSkillInfoForSelf_1300, Function | Sm
     EXPECT_EQ(retInfos, ERR_OK);
     ASSERT_EQ(skillInfos.size(), static_cast<size_t>(1));
     EXPECT_EQ(skillInfos[0].bundleName, "com.example.skill");
+}
+
+/**
+ * @tc.number: ConvertSkillPath_1400
+ * @tc.name: Test forSelf skillPath sandbox conversion for a normal app
+ * @tc.desc: 1.forSelf entry strips the bundle segment and rewrites the prefix to
+ *           SANDBOX_SKILL_PATH_FOR_SELF_PREFIX, keeping the rest of the path
+ */
+HWTEST_F(BmsSkillManagerHelperTest, ConvertSkillPath_1400, Function | SmallTest | Level1)
+{
+    skillManagerMock_->skillPathToFill_ = std::string(Constants::BASE_SKILL_DIR) +
+        "/com.example.skill/entry/skills/testSkill";
+    SkillInfo skillInfo;
+    ErrCode ret = SkillManagerHelper::InnerGetSkillInfoForSelf("module", "testSkill", 0, skillInfo);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(skillInfo.skillPath,
+        std::string(Constants::SANDBOX_SKILL_PATH_FOR_SELF_PREFIX) + "/entry/skills/testSkill");
+    // the original bundle name is preserved alongside the rewritten path
+    EXPECT_EQ(skillInfo.bundleName, "com.example.skill");
+}
+
+/**
+ * @tc.number: ConvertSkillPath_1500
+ * @tc.name: Test forSelf skillPath sandbox conversion for a dual-mode clone app
+ * @tc.desc: 1.server fills skillPath with the clone-prefixed effective bundle name
+ *           ("+clone-10000+" + bundleName, see dual_mode_helper.cpp) while bundleName keeps the
+ *           original name; 2.forSelf entry must still strip the effective segment
+ */
+HWTEST_F(BmsSkillManagerHelperTest, ConvertSkillPath_1500, Function | SmallTest | Level1)
+{
+    skillManagerMock_->skillPathToFill_ = std::string(Constants::BASE_SKILL_DIR) +
+        "/+clone-10000+com.example.skill/entry/skills/testSkill";
+    SkillInfo skillInfo;
+    ErrCode ret = SkillManagerHelper::InnerGetSkillInfoForSelf("module", "testSkill", 0, skillInfo);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(skillInfo.skillPath,
+        std::string(Constants::SANDBOX_SKILL_PATH_FOR_SELF_PREFIX) + "/entry/skills/testSkill");
+    EXPECT_EQ(skillInfo.bundleName, "com.example.skill");
+}
+
+/**
+ * @tc.number: ConvertSkillPath_1600
+ * @tc.name: Test forSelf skillPath conversion passthrough cases
+ * @tc.desc: 1.path outside BASE_SKILL_DIR is kept; 2.lookalike prefix without the trailing
+ *           separator is kept; 3.path without a segment after BASE_SKILL_DIR/ is kept;
+ *           4.empty skillPath is kept
+ */
+HWTEST_F(BmsSkillManagerHelperTest, ConvertSkillPath_1600, Function | SmallTest | Level1)
+{
+    SkillInfo skillInfo;
+
+    const std::string outsidePath = "/data/service/el1/profiles/test";
+    skillManagerMock_->skillPathToFill_ = outsidePath;
+    ErrCode ret = SkillManagerHelper::InnerGetSkillInfoForSelf("module", "testSkill", 0, skillInfo);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(skillInfo.skillPath, outsidePath);
+
+    const std::string lookalikePath = std::string(Constants::BASE_SKILL_DIR) + "foo/entry/skills/testSkill";
+    skillManagerMock_->skillPathToFill_ = lookalikePath;
+    ret = SkillManagerHelper::InnerGetSkillInfoForSelf("module", "testSkill", 0, skillInfo);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(skillInfo.skillPath, lookalikePath);
+
+    const std::string noSegmentPath = std::string(Constants::BASE_SKILL_DIR) + "/com.example.skill";
+    skillManagerMock_->skillPathToFill_ = noSegmentPath;
+    ret = SkillManagerHelper::InnerGetSkillInfoForSelf("module", "testSkill", 0, skillInfo);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(skillInfo.skillPath, noSegmentPath);
+
+    skillManagerMock_->skillPathToFill_.clear();
+    ret = SkillManagerHelper::InnerGetSkillInfoForSelf("module", "testSkill", 0, skillInfo);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_TRUE(skillInfo.skillPath.empty());
+}
+
+/**
+ * @tc.number: ConvertSkillPath_1700
+ * @tc.name: Test forSelf conversion applies to every element via getSkillInfosForSelf
+ * @tc.desc: 1.plural forSelf entry converts each skillPath, including the dual-mode clone one
+ */
+HWTEST_F(BmsSkillManagerHelperTest, ConvertSkillPath_1700, Function | SmallTest | Level1)
+{
+    skillManagerMock_->skillPathToFill_ = std::string(Constants::BASE_SKILL_DIR) +
+        "/+clone-10000+com.example.skill/entry/skills/testSkill";
+    std::vector<SkillInfo> skillInfos;
+    ErrCode ret = SkillManagerHelper::InnerGetSkillInfosForSelf(0, skillInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    ASSERT_EQ(skillInfos.size(), static_cast<size_t>(1));
+    EXPECT_EQ(skillInfos[0].skillPath,
+        std::string(Constants::SANDBOX_SKILL_PATH_FOR_SELF_PREFIX) + "/entry/skills/testSkill");
+    EXPECT_EQ(skillInfos[0].bundleName, "com.example.skill");
+}
+
+/**
+ * @tc.number: ConvertSkillPath_1800
+ * @tc.name: Test non-forSelf conversion keeps the bundle segment
+ * @tc.desc: 1.cross-user entry rewrites BASE_SKILL_DIR to SANDBOX_SKILL_PATH_PREFIX and keeps the
+ *           bundle segment; 2.path outside BASE_SKILL_DIR is passed through unchanged
+ */
+HWTEST_F(BmsSkillManagerHelperTest, ConvertSkillPath_1800, Function | SmallTest | Level1)
+{
+    skillManagerMock_->skillPathToFill_ = std::string(Constants::BASE_SKILL_DIR) +
+        "/com.example.skill/entry/skills/testSkill";
+    SkillInfo skillInfo;
+    ErrCode ret = SkillManagerHelper::InnerGetSkillInfo("bundle", "module", "testSkill", 0, 0, skillInfo);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(skillInfo.skillPath,
+        std::string(Constants::SANDBOX_SKILL_PATH_PREFIX) + "/com.example.skill/entry/skills/testSkill");
+
+    const std::string outsidePath = "/data/service/el1/profiles/test";
+    skillManagerMock_->skillPathToFill_ = outsidePath;
+    ret = SkillManagerHelper::InnerGetSkillInfo("bundle", "module", "testSkill", 0, 0, skillInfo);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(skillInfo.skillPath, outsidePath);
 }

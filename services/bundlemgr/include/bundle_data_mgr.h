@@ -140,6 +140,25 @@ public:
     void ClassifyDualModeAppsNoLock();
 
     /**
+     * @brief Seed the default device-mode distribution policies on a dual-mode device when
+     * DualModeDeviceModeDistributionPolicies was never persisted. Reads the system parameter
+     * const.bms.devicemodedistributionpolicy ("pcmode:<policy csv>;padmode:<policy csv>;"),
+     * picks the policy CSV of the current system mode (DualModeHelper::GetSysMode: 0=tablet
+     * -> padmode, 1=2in1 -> pcmode; an unclear mode skips the seeding with a log) and
+     * persists it. An existing persisted value is never overwritten; a missing parameter,
+     * an unparseable format, an unclear mode or an invalid policy CSV only logs and leaves
+     * the key absent, so the boot classification falls back to the mode-based logic and a
+     * later explicit switch works as usual. Called at the START of
+     * LoadDataFromPersistentStorage, before its empty-storage early return, so the default
+     * is seeded from the FIRST boot on (a fresh device has an empty DB and never reaches
+     * the boot classification); on later boots the dual-mode classification in the same
+     * call applies the value. The dual-mode device gate lives in the caller, mirroring the
+     * sibling classification bodies.
+     * Note: This function does not lock bundleInfoMutex_, caller must hold the lock.
+     */
+    void InitDualModeDefaultPoliciesNoLock();
+
+    /**
      * @brief Policy-driven part of dual-mode classification (requirement 2, ADR-7). Reads the
      * persisted DualModeDeviceModeDistributionPolicies; if present and valid, hides
      * filterable-policy (1/2/3/5/7) apps whose policy is NOT in the set. UNSPECIFIED (0) stays
@@ -1101,8 +1120,13 @@ public:
         const int32_t userId, bool isClean) const;
     bool GetBundleStats(const std::string &bundleName,
         const int32_t userId, std::vector<int64_t> &bundleStats,
-        const int32_t appIndex = 0, const uint32_t statFlag = 0,
-        int32_t activeUserId = Constants::INVALID_USERID) const;
+        const int32_t appIndex = 0, const uint32_t statFlag = 0) const;
+    // Scan one bundle's stats for the idle scan; the cache layer persists
+    // what it returns. No cache read/write inside.
+    bool ScanBundleStats(const std::string &bundleName,
+        const int32_t userId, std::vector<int64_t> &bundleStats,
+        const int32_t appIndex, int32_t &uid,
+        int64_t *inodeCount = nullptr) const;
     ErrCode BatchGetBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,
         std::vector<BundleStorageStats> &bundleStats) const;
     void GetBundleModuleNames(const std::string &bundleName, std::vector<std::string> &moduleNameList) const;
@@ -1113,6 +1137,11 @@ public:
     bool HasUserInstallInBundle(const std::string &bundleName, const int32_t userId) const;
     bool GetAllDependentModuleNames(const std::string &bundleName, const std::string &moduleName,
         std::vector<std::string> &dependentModuleNames);
+    ErrCode SetAlternateModuleState(const std::string &bundleName, const std::string &moduleName,
+        int64_t versionCode, bool enabled);
+    ErrCode GetAlternateModuleState(const std::string &bundleName, const std::string &moduleName,
+        int64_t versionCode, bool &enabled) const;
+
     ErrCode SetModuleUpgradeFlag(const std::string &bundleName, const std::string &moduleName, int32_t upgradeFlag);
     int32_t GetModuleUpgradeFlag(const std::string &bundleName, const std::string &moduleName) const;
     /**
@@ -1545,7 +1574,7 @@ public:
     std::string GetDirForApp(const std::string &bundleName, const int32_t appIndex) const;
     ErrCode GetDirByBundleNameAndAppIndex(const std::string &bundleName, const int32_t appIndex,
         std::string &dataDir);
-    ErrCode GetExtensionSandboxDataDir(int32_t userId, const std::string &bundleName,
+    ErrCode GetExtensionSandboxDataDir(const std::string &bundleName,
         const std::string &extensionName, int32_t appIndex, std::string &dir);
     std::vector<int32_t> GetCloneAppIndexesByInnerBundleInfo(const InnerBundleInfo &innerBundleInfo,
         int32_t userId) const;
@@ -1598,7 +1627,8 @@ public:
         const std::vector<std::string> &ids);
     void UpdateShortcutInfoResId(const std::string &bundleName, const int32_t userId);
     void RemoveInvalidShortcutInfo(std::vector<ShortcutInfo> &shortcutInfos) const;
-    ErrCode SetShortcutsEnabled(const std::vector<ShortcutInfo> &shortcutInfos, bool isEnabled);
+    ErrCode SetShortcutsEnabled(const std::vector<ShortcutInfo> &shortcutInfos, bool isEnabled,
+        std::map<std::string, std::vector<std::string>> &invalidShortcuts);
     ErrCode DeleteShortcutEnabledInfo(const std::string &bundleName);
     /**
      * @brief Delete bundle state for a specific user.

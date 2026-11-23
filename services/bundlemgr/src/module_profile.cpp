@@ -313,6 +313,7 @@ struct App {
     bool keepDataOnUninstall = false;
     bool profileable = false;
     bool allowAutoControlIntent = false;
+    bool sharedUID = false;
     uint32_t iconId = 0;
     uint32_t labelId = 0;
     uint32_t descriptionId = 0;
@@ -349,12 +350,14 @@ struct App {
     std::vector<std::string> assetAccessGroups;
     std::string startMode = Profile::START_MODE_MAIN_TASK;
     std::vector<std::string> allowListenBundleChangedEvent;
+    std::vector<std::string> nativeChildProcessPreloadSoList;
 };
 
 struct Module {
     bool deliveryWithInstall = false;
     bool installationFree = false;
     bool isLibIsolated = false;
+    bool alternateModule = false;
     bool compressNativeLibs = true;
     bool isSoStoredCompressed = false;
     bool extractNativeLibs = true;
@@ -1213,6 +1216,47 @@ void from_json(const nlohmann::json &jsonObject, MultiAppMode &multiAppMode)
         ArrayType::NOT_ARRAY);
 }
 
+void CheckNativeChildProcessPreloadSoListSize(const nlohmann::json &jsonObject,
+    const nlohmann::detail::iter_impl<const nlohmann::json> &jsonObjectEnd)
+{
+    if (g_parseResult != ERR_OK) {
+        return;
+    }
+    auto iter = jsonObject.find(APP_NATIVE_CHILD_PROCESS_PRELOAD_SO_LIST);
+    if (iter == jsonObjectEnd || !iter->is_array()) {
+        return;
+    }
+    if (iter->empty() || iter->size() > MAX_NATIVE_CHILD_PROCESS_PRELOAD_SO_COUNT) {
+        APP_LOGE_NOFUNC("nativeChildProcessPreloadSoList count %{public}zu is invalid", iter->size());
+        g_parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_SIZE_CHECK_ERROR;
+        return;
+    }
+    std::unordered_set<std::string> preloadSoNames;
+    for (const auto &soName : *iter) {
+        if (!soName.is_string()) {
+            APP_LOGE_NOFUNC("nativeChildProcessPreloadSoList name type is invalid");
+            g_parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
+            return;
+        }
+        const std::string &name = soName.get<std::string>();
+        if (name.size() > MAX_NATIVE_CHILD_PROCESS_PRELOAD_SO_NAME_LENGTH) {
+            APP_LOGE_NOFUNC("nativeChildProcessPreloadSoList name length is invalid");
+            g_parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_SIZE_CHECK_ERROR;
+            return;
+        }
+        if (name.find(ServiceConstants::RELATIVE_PATH) != std::string::npos) {
+            APP_LOGE_NOFUNC("nativeChildProcessPreloadSoList name is invalid due to path traversal");
+            g_parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR;
+            return;
+        }
+        if (!preloadSoNames.insert(name).second) {
+            APP_LOGE_NOFUNC("nativeChildProcessPreloadSoList name is duplicated");
+            g_parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR;
+            return;
+        }
+    }
+}
+
 void from_json(const nlohmann::json &jsonObject, App &app)
 {
     APP_LOGD("read app tag from module.json");
@@ -1664,6 +1708,12 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         app.allowAutoControlIntent,
         false,
         g_parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        APP_SHARED_UID,
+        app.sharedUID,
+        false,
+        g_parseResult);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,
         jsonObjectEnd,
         APP_ALLOW_LISTEN_BUNDLE_CHANGED_EVENT,
@@ -1672,6 +1722,15 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         false,
         g_parseResult,
         ArrayType::STRING);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        APP_NATIVE_CHILD_PROCESS_PRELOAD_SO_LIST,
+        app.nativeChildProcessPreloadSoList,
+        JsonType::ARRAY,
+        false,
+        g_parseResult,
+        ArrayType::STRING);
+    CheckNativeChildProcessPreloadSoListSize(jsonObject, jsonObjectEnd);
 }
 
 void from_json(const nlohmann::json &jsonObject, Module &module)
@@ -1870,6 +1929,8 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         module.compileMode,
         false,
         g_parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd,
+        MODULE_ALTERNATE_MODULE, module.alternateModule, false, g_parseResult);
     BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_IS_LIB_ISOLATED,
@@ -2659,6 +2720,7 @@ bool ToApplicationInfo(
     applicationInfo.asanEnabled = app.asanEnabled;
     applicationInfo.profileable = app.profileable;
     applicationInfo.allowAutoControlIntent = app.allowAutoControlIntent;
+    applicationInfo.sharedUID = app.sharedUID;
     if (app.bundleType == Profile::BUNDLE_TYPE_ATOMIC_SERVICE) {
         applicationInfo.bundleType = BundleType::ATOMIC_SERVICE;
     }
@@ -2747,6 +2809,7 @@ bool ToApplicationInfo(
     applicationInfo.cloudStructuredDataSyncEnabled = app.cloudStructuredDataSyncEnabled;
     applicationInfo.keepDataOnUninstall = app.keepDataOnUninstall;
     applicationInfo.allowListenBundleChangedEvent = app.allowListenBundleChangedEvent;
+    applicationInfo.nativeChildProcessPreloadSoList = app.nativeChildProcessPreloadSoList;
     return true;
 }
 
@@ -3051,6 +3114,7 @@ bool ToInnerModuleInfo(
     innerModuleInfo.isModuleJson = true;
     innerModuleInfo.isStageBasedModel = true;
     innerModuleInfo.isLibIsolated = moduleJson.module.isLibIsolated;
+    innerModuleInfo.alternateModule = moduleJson.module.alternateModule;
     innerModuleInfo.targetModuleName = moduleJson.module.targetModule;
     if (overlayMsg.type != NON_OVERLAY_TYPE && !overlayMsg.isModulePriorityExisted) {
         innerModuleInfo.targetPriority = ServiceConstants::OVERLAY_MINIMUM_PRIORITY;
@@ -3436,6 +3500,11 @@ ErrCode ModuleProfile::TransformTo(
     }
     if (!ToInnerBundleInfo(
         moduleJson, bundleExtractor, overlayMsg, innerBundleInfo)) {
+        return ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR;
+    }
+    if (moduleJson.module.alternateModule && (innerBundleInfo.GetApplicationBundleType() != BundleType::SHARED ||
+        moduleJson.module.type != Profile::MODULE_TYPE_SHARED)) {
+        APP_LOGE("alternateModule is only supported by cross-app shared bundles");
         return ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR;
     }
     if (!ParserAtomicConfig(jsonObject, innerBundleInfo)) {

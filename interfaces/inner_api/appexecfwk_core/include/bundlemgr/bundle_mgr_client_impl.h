@@ -77,8 +77,7 @@ public:
     ErrCode CreateBundleDataDirWithEl(int32_t userId, DataDirEl dirEl);
     ErrCode GetDirByBundleNameAndAppIndex(const std::string &bundleName, const int32_t appIndex, std::string &dataDir);
     ErrCode GetAllBundleDirs(int32_t userId, std::vector<BundleDir> &bundleDirs);
-    ErrCode GetExtensionSandboxDataDir(const std::string &extensionName, int32_t appIndex,
-        std::string &dir);
+    ErrCode GetExtensionSandboxDataDir(const std::string &extensionName, std::string &dir);
     ErrCode RegisterPluginEventCallback(const sptr<IBundleEventCallback> pluginEventCallback);
     ErrCode UnregisterPluginEventCallback(const sptr<IBundleEventCallback> pluginEventCallback);
     ErrCode GetTopNLargestItemsInAppDataDir(const std::string &bundleName, const int32_t appIndex,
@@ -88,6 +87,9 @@ public:
 private:
     ErrCode Connect();
     ErrCode ConnectInstaller();
+    // Create deathRecipient_ and register it on bundleMgr_; returns an error when bundleMgr_
+    // is null, allocation fails, or registration fails (resetting bundleMgr_/deathRecipient_).
+    ErrCode RegisterDeathRecipient();
     void OnDeath();
     bool ConvertResourcePath(const std::string &bundleName, std::string &resPath, bool isCompressed) const;
     bool GetResProfileByMetadata(const std::vector<Metadata> &metadata, const std::string &metadataName,

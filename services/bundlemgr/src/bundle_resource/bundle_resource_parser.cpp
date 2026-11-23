@@ -69,6 +69,11 @@ bool GetBadgeResource(const std::string &resourceName, std::shared_ptr<Media::Pi
         APP_LOGE("resConfig is nullptr");
         return false;
     }
+    // Device-qualified badge media need the current device type: a non-system
+    // manager never self-fills it (see BundleUtil::GetDeviceType).
+#ifdef GLOBAL_RESMGR_ENABLE
+    resConfig->SetDeviceType(BundleUtil::GetDeviceType());
+#endif
     resMgr->UpdateResConfig(*resConfig);
 
     std::unique_ptr<uint8_t[]> badgeResourceData;

@@ -14,6 +14,7 @@
  */
 #include "bundle_manager.h"
 
+#include <limits>
 #include <shared_mutex>
 #include <string>
 
@@ -4560,6 +4561,128 @@ napi_value GetAllSharedBundleInfo(napi_env env, napi_callback_info info)
     return promise;
 }
 
+namespace {
+enum class AlternateModuleOperation { SET, QUERY };
+
+struct AlternateModuleCallbackInfo : public BaseCallbackInfo {
+    explicit AlternateModuleCallbackInfo(napi_env env) : BaseCallbackInfo(env) {}
+    std::string bundleName;
+    std::string moduleName;
+    int64_t versionCode = 0;
+    AlternateModuleOperation operation = AlternateModuleOperation::QUERY;
+    const char *functionName = "isAlternateModuleEnabled";
+    bool enabled = false;
+};
+
+void AlternateModuleExec(napi_env env, void *data)
+{
+    auto callback = reinterpret_cast<AlternateModuleCallbackInfo *>(data);
+    if (callback == nullptr) {
+        APP_LOGE("callback is null");
+        return;
+    }
+    auto bundleMgr = CommonFunc::GetBundleMgr();
+    if (bundleMgr == nullptr) {
+        callback->err = ERROR_BUNDLE_SERVICE_EXCEPTION;
+        return;
+    }
+    ErrCode result;
+    if (callback->operation == AlternateModuleOperation::QUERY) {
+        result = bundleMgr->GetAlternateModuleState(callback->bundleName, callback->moduleName,
+            callback->versionCode, callback->enabled);
+    } else {
+        result = bundleMgr->SetAlternateModuleEnabled(callback->bundleName, callback->moduleName,
+            callback->versionCode, callback->enabled);
+    }
+    callback->err = CommonFunc::ConvertErrCode(result);
+}
+
+void AlternateModuleComplete(napi_env env, napi_status status, void *data)
+{
+    auto callback = reinterpret_cast<AlternateModuleCallbackInfo *>(data);
+    if (callback == nullptr) {
+        APP_LOGE("callback is null");
+        return;
+    }
+    std::unique_ptr<AlternateModuleCallbackInfo> owner {callback};
+    napi_value result[CALLBACK_PARAM_SIZE] = {0};
+    if (status != napi_ok && callback->err == NO_ERROR) {
+        APP_LOGE("%{public}s async work failed, status: %{public}d", callback->functionName, status);
+        callback->err = ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    if (callback->err == NO_ERROR) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
+        if (callback->operation == AlternateModuleOperation::QUERY) {
+            NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, callback->enabled, &result[ARGS_POS_ONE]));
+        } else {
+            NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &result[ARGS_POS_ONE]));
+        }
+    } else {
+        auto permission = callback->operation == AlternateModuleOperation::QUERY ?
+            Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED : Constants::PERMISSION_INSTALL_BUNDLE;
+        result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, callback->err,
+            callback->functionName, permission);
+    }
+    CommonFunc::NapiReturnDeferred<AlternateModuleCallbackInfo>(env, callback, result, ARGS_SIZE_TWO);
+}
+
+napi_value AlternateModuleAsync(napi_env env, napi_callback_info info,
+    AlternateModuleOperation operation, const char *functionName)
+{
+    NapiArg args(env, info);
+    const size_t argc = operation == AlternateModuleOperation::QUERY ? ARGS_SIZE_THREE : ARGS_SIZE_FOUR;
+    if (!args.Init(argc, argc) || args.GetMaxArgc() != argc) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    auto callback = std::make_unique<AlternateModuleCallbackInfo>(env);
+    if (callback == nullptr) {
+        APP_LOGE("callback is null");
+        return nullptr;
+    }
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], callback->bundleName)) {
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+        return nullptr;
+    }
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ONE], callback->moduleName)) {
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, MODULE_NAME, TYPE_STRING);
+        return nullptr;
+    }
+    if (napi_get_value_int64(env, args[ARGS_POS_TWO], &callback->versionCode) != napi_ok) {
+        APP_LOGE("versionCode is not a number");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, "versionCode", TYPE_NUMBER);
+        return nullptr;
+    }
+    if (operation != AlternateModuleOperation::QUERY) {
+        bool enabled = false;
+        if (!CommonFunc::ParseBool(env, args[ARGS_POS_THREE], enabled)) {
+            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, "isEnabled", TYPE_BOOLEAN);
+            return nullptr;
+        }
+        callback->enabled = enabled;
+    }
+    callback->operation = operation;
+    callback->functionName = functionName;
+    auto promise = CommonFunc::AsyncCallNativeMethod<AlternateModuleCallbackInfo>(env, callback.get(),
+        functionName, AlternateModuleExec, AlternateModuleComplete);
+    if (promise != nullptr) {
+        callback.release();
+    }
+    return promise;
+}
+} // namespace
+
+napi_value SetAlternateModuleEnabled(napi_env env, napi_callback_info info)
+{
+    return AlternateModuleAsync(env, info, AlternateModuleOperation::SET, "setAlternateModuleEnabled");
+}
+
+napi_value IsAlternateModuleEnabled(napi_env env, napi_callback_info info)
+{
+    return AlternateModuleAsync(env, info, AlternateModuleOperation::QUERY, "isAlternateModuleEnabled");
+}
+
 void GetSharedBundleInfoExec(napi_env env, void *data)
 {
     SharedBundleCallbackInfo *asyncCallbackInfo = reinterpret_cast<SharedBundleCallbackInfo *>(data);
@@ -7398,6 +7521,65 @@ napi_value GetBundleExtensionPolicyInfo(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_create_object(env,  &nBundleExtensionPolicyInfo));
     CommonFunc::ConvertBundleExtensionPolicy(env, dualModeBundleInfo, nBundleExtensionPolicyInfo);
     return nBundleExtensionPolicyInfo;
+}
+
+void GetThemeRefreshTimeExec(napi_env env, void *data)
+{
+    ThemeRefreshTimeCallbackInfo *asyncCallbackInfo = reinterpret_cast<ThemeRefreshTimeCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+    asyncCallbackInfo->err = BundleManagerHelper::InnerGetThemeRefreshTime(
+        asyncCallbackInfo->userId, asyncCallbackInfo->refreshTime);
+}
+
+void GetThemeRefreshTimeComplete(napi_env env, napi_status status, void *data)
+{
+    ThemeRefreshTimeCallbackInfo *asyncCallbackInfo = reinterpret_cast<ThemeRefreshTimeCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+    std::unique_ptr<ThemeRefreshTimeCallbackInfo> callbackPtr {asyncCallbackInfo};
+    napi_value result[ARGS_SIZE_TWO] = {0};
+    if (asyncCallbackInfo->err == NO_ERROR) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
+        napi_status ret = napi_create_string_utf8(env, asyncCallbackInfo->refreshTime.c_str(),
+            asyncCallbackInfo->refreshTime.size(), &result[ARGS_POS_ONE]);
+        if (ret != napi_ok) {
+            APP_LOGE("create refreshTime string failed, status: %{public}d", ret);
+            asyncCallbackInfo->err = ERROR_BUNDLE_SERVICE_EXCEPTION;
+        }
+    }
+    if (asyncCallbackInfo->err != NO_ERROR) {
+        APP_LOGE("GetThemeRefreshTime failed, errCode: %{public}d", asyncCallbackInfo->err);
+        result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
+            GET_THEME_REFRESH_TIME, GET_THEME_REFRESH_TIME_PERMISSION);
+    }
+    CommonFunc::NapiReturnDeferred<ThemeRefreshTimeCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
+}
+
+napi_value GetThemeRefreshTime(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("begin to GetThemeRefreshTime");
+    ThemeRefreshTimeCallbackInfo *asyncCallbackInfo = new (std::nothrow) ThemeRefreshTimeCallbackInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        BusinessError::ThrowError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION);
+        return nullptr;
+    }
+    std::unique_ptr<ThemeRefreshTimeCallbackInfo> callbackPtr {asyncCallbackInfo};
+    asyncCallbackInfo->userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    auto promise = CommonFunc::AsyncCallNativeMethod<ThemeRefreshTimeCallbackInfo>(env, asyncCallbackInfo,
+        GET_THEME_REFRESH_TIME, GetThemeRefreshTimeExec, GetThemeRefreshTimeComplete);
+    if (promise == nullptr) {
+        APP_LOGE("create GetThemeRefreshTime async work failed");
+        return nullptr;
+    }
+    callbackPtr.release();
+    APP_LOGD("call GetThemeRefreshTime done");
+    return promise;
 }
 } // namespace AppExecFwk
 } // namespace OHOS

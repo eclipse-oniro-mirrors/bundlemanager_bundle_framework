@@ -60,9 +60,9 @@ ohos_unittest("BmsBundleResourceTest") {
   deps = [
     "${base_path}:appexecfwk_base",
     "${bundle_framework_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
-    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/bmsAccessTokentest1:bmsAccessTokentest1",
-    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/bmsThirdBundle2:bmsThirdBundle2",
-    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/thumbnailTest:thumbnailTest",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/bmsAccessTokentest1",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/bmsThirdBundle2",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/thumbnailTest",
     "${core_path}:appexecfwk_core",
   ]
   deps += bundle_install_deps
@@ -72,7 +72,10 @@ ohos_unittest("BmsBundleResourceTest") {
     "ability_runtime:ability_connect_callback_stub",
     "ability_runtime:app_manager",
     "access_token:el5_filekey_manager_sdk",
+    "access_token:libaccesstoken_sdk",
+    "access_token:libnativetoken",
     "access_token:libprivacy_sdk",
+    "access_token:libtoken_setproc",
     "access_token:libtokenid_sdk",
     "appspawn:hnpapi",
     "appverify:libhapverify",
@@ -237,8 +240,8 @@ ohos_unittest("BmsBundleMgrHostUnitTest") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
   deps = [
-    "${common_path}:libappexecfwk_common",
     "${base_path}:appexecfwk_base",
+    "${common_path}:libappexecfwk_common",
     "${core_path}:appexecfwk_core",
   ]
 
@@ -296,9 +299,9 @@ ohos_unittest("BmsBundleResourceHelperTest") {
   deps = [
     "${base_path}:appexecfwk_base",
     "${bundle_framework_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
-    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/bmsAccessTokentest1:bmsAccessTokentest1",
-    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/bmsThirdBundle2:bmsThirdBundle2",
-    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/thumbnailTest:thumbnailTest",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/bmsAccessTokentest1",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/bmsThirdBundle2",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/thumbnailTest",
     "${core_path}:appexecfwk_core",
   ]
   deps += bundle_install_deps
@@ -431,12 +434,12 @@ ohos_unittest("BmsBundleResourceHelperTest") {
     sources += bundle_resource
     sources += [
       "${kits_path}/js/bundle_resource/bundle_resource.cpp",
-      "${kits_path}/js/bundle_resource/resource_helper.cpp",
       "${kits_path}/js/bundle_resource/bundle_resource_drawable_utils.cpp",
+      "${kits_path}/js/bundle_resource/resource_helper.cpp",
       "${kits_path}/js/common/base_cb_info.cpp",
-      "${kits_path}/js/common/common_func.cpp",
       "${kits_path}/js/common/business_error.cpp",
       "${kits_path}/js/common/business_error_map.cpp",
+      "${kits_path}/js/common/common_func.cpp",
       "${kits_path}/js/common/napi_arg.cpp",
       "${services_path}/bundlemgr/test/mock/src/mock_ipc_skeleton.cpp",
     ]
@@ -683,8 +686,8 @@ group("unittest") {
     deps = [
       ":BmsBundleMgrHostUnitTest",
       ":BmsBundleResourceBopdTest",
-      ":BmsBundleResourceTest",
       ":BmsBundleResourceHelperTest",
+      ":BmsBundleResourceTest",
     ]
   }
 }

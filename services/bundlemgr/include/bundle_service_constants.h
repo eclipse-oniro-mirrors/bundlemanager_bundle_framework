@@ -295,6 +295,10 @@ constexpr const char* BMS_SCAN_FILE_CATEGORY_PARAM = "const.bms.scan_file_catego
 constexpr const char* SCAN_FILE_CATEGORY_TEST_PARAM = "persist.bms.test.scan_file_category";
 constexpr const char* SCAN_DIR_SIZES_FAIL_TEST_PARAM = "persist.bms.test.scan_dir_sizes_fail";
 constexpr const char* LARGE_FILES_REPORT_COOLDOWN_TEST_PARAM = "persist.bms.test.large_files_report_cooldown";
+constexpr const char* BMS_SCAN_BUNDLE_STATS_PARAM = "const.bms.scan_bundle_stats";
+constexpr const char* BMS_TEST_STATS_CACHE_DISABLED_PARAM = "persist.bms.test.stats_cache_disabled";
+constexpr const char* BMS_TEST_STATS_SCAN_COOLDOWN_DISABLED_PARAM = "persist.bms.test.stats_scan_cooldown_disabled";
+constexpr const char* BMS_TEST_SHARED_UID_PARAM = "persist.bms.test.shared_uid";
 constexpr const char* HAP_BIN_INSTALL_ENABLE = "const.bms.bin_install";
 constexpr const char* KEEP_DATA_PRELOAD_HAP = "const.vendor.atcmd.cust_preload_flag";
 constexpr const char* ENABLE_HMOS_SERVICE_BROKER = "persist.hmos_fusion_mgr.ctl.support_hmos";
@@ -327,6 +331,12 @@ constexpr int32_t DUAL_MODE_VALUE_2IN1 = 1;
 // (ascending unique DeviceModeDistributionPolicy values joined by ",", e.g. "1,2,3,4,5,6,7,8").
 constexpr const char* DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICIES_KEY =
     "DualModeDeviceModeDistributionPolicies";
+// System parameter configuring the per-mode DEFAULT policy CSVs of a dual-mode device, in the
+// format "pcmode:0,1,3,4,5,6,7,8;padmode:0,2,3,4,5,6,7,8;" (pcmode=2in1, padmode=tablet).
+// When the key above was never persisted, the current system mode's CSV is seeded from this
+// parameter as the default value of DualModeDeviceModeDistributionPolicies.
+constexpr const char* DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICY_PARAM =
+    "const.bms.devicemodedistributionpolicy";
 constexpr const char* BMS_TRUE = "true";
 // cli sandbox application
 constexpr int32_t CLI_SANDBOX_APP_INDEX_MIN = 2000;

@@ -19,6 +19,7 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr const char* INNER_BUNDLE_USER_INFO_UID = "uid";
+constexpr const char* INNER_BUNDLE_USER_INFO_APP_UID = "appUid";
 constexpr const char* INNER_BUNDLE_USER_INFO_GIDS = "gids";
 constexpr const char* INNER_BUNDLE_USER_INFO_ACCESS_TOKEN_ID = "accessTokenId";
 constexpr const char* INNER_BUNDLE_USER_INFO_ACCESS_TOKEN_ID_EX = "accessTokenIdEx";
@@ -42,6 +43,7 @@ void to_json(nlohmann::json& jsonObject, const InnerBundleUserInfo& innerBundleU
 {
     jsonObject = nlohmann::json {
         {INNER_BUNDLE_USER_INFO_UID, innerBundleUserInfo.uid},
+        {INNER_BUNDLE_USER_INFO_APP_UID, innerBundleUserInfo.appUid},
         {INNER_BUNDLE_USER_INFO_GIDS, innerBundleUserInfo.gids},
         {INNER_BUNDLE_USER_INFO_ACCESS_TOKEN_ID, innerBundleUserInfo.accessTokenId},
         {INNER_BUNDLE_USER_INFO_ACCESS_TOKEN_ID_EX, innerBundleUserInfo.accessTokenIdEx},
@@ -68,6 +70,8 @@ void from_json(const nlohmann::json& jsonObject, InnerBundleUserInfo& innerBundl
     int32_t parseResult = ERR_OK;
     GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, INNER_BUNDLE_USER_INFO_UID,
         innerBundleUserInfo.uid, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, INNER_BUNDLE_USER_INFO_APP_UID,
+        innerBundleUserInfo.appUid, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::vector<int32_t>>(jsonObject, jsonObjectEnd, INNER_BUNDLE_USER_INFO_GIDS,
         innerBundleUserInfo.gids, JsonType::ARRAY, false, parseResult, ArrayType::NUMBER);
     GetValueIfFindKey<uint32_t>(jsonObject, jsonObjectEnd, INNER_BUNDLE_USER_INFO_ACCESS_TOKEN_ID,
@@ -124,6 +128,12 @@ void from_json(const nlohmann::json& jsonObject, InnerBundleUserInfo& innerBundl
             innerBundleUserInfo.ipcGroupInfos =
                 mapPtr->get<std::unordered_map<std::string, IpcGroupInfo>>();
         }
+    }
+    // OTA compat: records persisted before appUid existed have no "appUid" key;
+    // appUid mirrors uid at this stage (the uid-to-userId parent requirement owns later migration).
+    if (innerBundleUserInfo.appUid == Constants::INVALID_UID &&
+        innerBundleUserInfo.uid != Constants::INVALID_UID) {
+        innerBundleUserInfo.appUid = innerBundleUserInfo.uid;
     }
 }
 } // namespace AppExecFwk

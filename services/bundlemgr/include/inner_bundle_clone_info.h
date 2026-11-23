@@ -34,6 +34,7 @@ struct InnerBundleCloneInfo {
     int32_t appIndex = 0;
 
     int32_t uid = 0;
+    int32_t appUid = 0;
 
     uint32_t accessTokenId = 0;
 

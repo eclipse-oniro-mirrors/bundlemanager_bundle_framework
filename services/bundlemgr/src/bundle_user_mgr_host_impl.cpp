@@ -593,6 +593,7 @@ ErrCode BundleUserMgrHostImpl::ProcessRemoveUser(int32_t userId)
         dataMgr->DeleteFirstInstallBundleInfo(userId);
         DeleteAllDisposedRulesForUser(userId);
         DelayedSingleton<BmsUpdateSelinuxMgr>::GetInstance()->DeleteBundleForUser(userId);
+        BundleResourceHelper::DeleteThemeTimestamp(userId);
         return ERR_OK;
     }
 
@@ -609,6 +610,7 @@ ErrCode BundleUserMgrHostImpl::ProcessRemoveUser(int32_t userId)
     DeleteAllDisposedRulesForUser(userId);
     DelayedSingleton<BmsUpdateSelinuxMgr>::GetInstance()->DeleteBundleForUser(userId);
     BundleResourceHelper::DeleteUninstallBundleResourceForUser(userId);
+    BundleResourceHelper::DeleteThemeTimestamp(userId);
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     DefaultAppMgr::GetInstance().HandleRemoveUser(userId);
 #endif
