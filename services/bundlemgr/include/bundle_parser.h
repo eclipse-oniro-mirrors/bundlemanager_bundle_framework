@@ -71,12 +71,19 @@ public:
      * @brief Parse the dedupfiles.json carried in the HAP root, then save in
      *        dedupSoInfoList. Install-time transient data, not persisted.
      * @param pathName Indicates the path of the HAP file.
-     * @param dedupSoInfoList Indicates the obtained dedup so info list.
+     * @param bundleName Indicates the name of the bundle being installed; used
+     *        only to carry the failing bundle in the error logs.
+     * @param dedupSoInfoList Indicates the obtained dedup so info list. The
+     *        list is valid only on an ERR_OK return: on a failure return it is
+     *        not cleared and may hold entries validated before the failure
+     *        point (documented contract), so callers must discard it unless
+     *        ERR_OK is returned.
      * @return Returns ERR_OK with an empty list when the HAP carries no
      *         dedupfiles.json; PARSE_FAILED when the manifest is invalid;
      *         PARSE_UNEXPECTED when the HAP container cannot be opened.
      */
-    ErrCode ParseDedupFiles(const std::string &pathName, DedupSoInfoList &dedupSoInfoList) const;
+    ErrCode ParseDedupFiles(const std::string &pathName, const std::string &bundleName,
+        DedupSoInfoList &dedupSoInfoList) const;
     /**
      * @brief Parse scanInfos by the configFile.
      * @param configFile Indicates the path of configFile.

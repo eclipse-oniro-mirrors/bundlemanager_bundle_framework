@@ -16,6 +16,7 @@
 #ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_BUNDLE_EXTRACTOR_H
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_BUNDLE_EXTRACTOR_H
 
+#include <istream>
 #include <set>
 #include <vector>
 
@@ -24,13 +25,6 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-// The max allowed uncompressed size of dedupfiles.json (the legal peak is
-// 65535 entries of ~200 bytes); shared by the strict parser guard and the
-// loose abi-prefix probe.
-constexpr uint32_t MAX_DEDUP_FILES_SIZE = 16 * 1024 * 1024;
-// The bracket nesting depth limit of dedupfiles.json (a legal manifest peaks at
-// depth 3); the string-aware scan is shared by the strict guard and the probe.
-constexpr int32_t MAX_DEDUP_FILES_DEPTH = 4;
 
 class BundleExtractor : public BaseExtractor {
 public:
@@ -71,12 +65,22 @@ public:
 
     /**
      * @brief Check whether the bracket nesting depth of the extracted dedupfiles.json
-     *        payload stays within MAX_DEDUP_FILES_DEPTH; brackets inside quoted
-     *        strings never count.
+     *        payload stays within the bound; brackets inside quoted strings never
+     *        count.
      * @param content Indicates the extracted dedupfiles.json payload.
      * @return Returns true if the depth stays within the limit; false otherwise.
      */
     static bool IsDedupFilesDepthAllowed(const std::string &content);
+    /**
+     * @brief Streamed variant for an extracted payload stream: scans the stream
+     *        without materializing a full string copy of a size-capped manifest
+     *        (a .str() copy would double the transient memory), and always
+     *        leaves the stream rewound to the beginning for the DOM parse
+     *        reading the same stream right after.
+     * @param content Indicates the extracted dedupfiles.json payload stream.
+     * @return Returns true if the depth stays within the limit; false otherwise.
+     */
+    static bool IsDedupFilesDepthAllowed(std::istream &content);
 
     /**
      * @brief Loosely probe the ABI directory prefixes (libs/<abi>/) declared by the
@@ -133,7 +137,8 @@ class BundleParallelExtractor : public BundleExtractor {
 public:
     explicit BundleParallelExtractor(const std::string &source);
     virtual ~BundleParallelExtractor() override;
-    virtual bool ExtractByName(const std::string &fileName, std::ostream &dest) const override;
+    virtual bool ExtractByName(const std::string &fileName, std::ostream &dest,
+        size_t maxUncompressedSize = 0) const override;
 };
 
 }  // namespace AppExecFwk

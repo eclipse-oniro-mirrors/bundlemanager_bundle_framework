@@ -29,7 +29,11 @@ ohos_unittest("BmsBundleDedupSoTest") {
   }
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = []
+  # the mock parameter headers shadow the real ones so GetAbiList stays a
+  # deterministic arm64-v8a on every host arch (same wiring as
+  # bms_bundle_installer_test); init:libbegetutil stays in external_deps, the
+  # executable's mock definitions win at symbol resolution
+  include_dirs = [ "${services_path}/bundlemgr/test/mock/include/parameter" ]
 
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
@@ -37,6 +41,8 @@ ohos_unittest("BmsBundleDedupSoTest") {
   sources += [
     "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp",
     "${services_path}/bundlemgr/test/mock/src/mock_status_receiver.cpp",
+    "${services_path}/bundlemgr/test/mock/src/parameter/parameter.cpp",
+    "${services_path}/bundlemgr/test/mock/src/parameter/parameters.cpp",
   ]
 
   sources += bundle_install_sources

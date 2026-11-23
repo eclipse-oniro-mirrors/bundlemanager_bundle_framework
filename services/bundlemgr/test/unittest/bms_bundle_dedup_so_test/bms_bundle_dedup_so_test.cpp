@@ -14,6 +14,7 @@
  */
 
 #include <gtest/gtest.h>
+#include <dirent.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/un.h>
@@ -49,12 +50,13 @@ using namespace OHOS::AppExecFwk;
 
 namespace OHOS {
 namespace AppExecFwk {
-// Mock knobs of the installd client LinkDedupedSo stub (test/mock/src/installd_client.cpp).
-extern int32_t g_linkDedupedSoIpcRet;
-extern uint32_t g_linkDedupedSoResultCode;
+// Accessors of the installd client LinkDedupedSo stub knobs
+// (test/mock/src/installd_client.cpp); the knobs themselves are internal-linkage.
 void ResetLinkDedupedSoStateForTest();
 int32_t GetLinkDedupedSoCallCountForTest();
 bool GetLastLinkDedupedSoParamForTest(std::string &bundleName, std::string &libraryPath, std::string &sha256);
+void SetLinkDedupedSoIpcRetForTest(int32_t ipcRet);
+void SetLinkDedupedSoResultCodeForTest(uint32_t resultCode);
 // Mock knobs of the link-time libc OH_LinkDedupedSo stub (test/mock/src/so_dedup_mock.cpp).
 extern uint32_t g_muslLinkDedupedSoResult;
 extern int32_t g_muslLinkDedupedSoCallCount;
@@ -120,6 +122,7 @@ public:
     void DeleteQuickFileDir(const std::string &dir) const;
     void DeleteFile(const std::string &filePath) const;
     std::string ReadFile(const std::string &filePath) const;
+    bool HasDedupBackupResidue(const std::string &dir) const;
 };
 
 BmsBundleDedupSoTest::BmsBundleDedupSoTest()
@@ -157,6 +160,27 @@ std::string BmsBundleDedupSoTest::ReadFile(const std::string &filePath) const
     std::ifstream file(filePath);
     std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
     return content;
+}
+
+// the rotate backup slot name is token-bearing and unpredictable, so the
+// round-trip assertions scan the so dir for the marker family instead of
+// lstat-ing one constructed name
+bool BmsBundleDedupSoTest::HasDedupBackupResidue(const std::string &dir) const
+{
+    DIR *dirPtr = opendir(dir.c_str());
+    if (dirPtr == nullptr) {
+        return false;
+    }
+    struct dirent *entry = nullptr;
+    bool found = false;
+    while ((entry = readdir(dirPtr)) != nullptr) {
+        if (strstr(entry->d_name, ServiceConstants::DEDUP_SO_BACKUP_SUFFIX) != nullptr) {
+            found = true;
+            break;
+        }
+    }
+    closedir(dirPtr);
+    return found;
 }
 
 void BmsBundleDedupSoTest::CreateQuickFileDir(const std::string &dir) const
@@ -298,7 +322,7 @@ HWTEST_F(BmsBundleDedupSoTest, DedupSoHelperTest_1000, Function | SmallTest | Le
     const std::string hapPath = RESOURCE_ROOT_PATH + DEDUP_SO_DIR + "dedup_valid.hap";
     const std::string targetSoPath = OwnTargetSoPath(BUNDLE_NAME);
     auto info = MakeDedupInfo();
-    g_linkDedupedSoIpcRet = ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    SetLinkDedupedSoIpcRetForTest(ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     EXPECT_EQ(DedupSoHelper::ProcessDedupSoFiles(hapPath, info, targetSoPath, CPU_ABI_ARM64),
         ERR_APPEXECFWK_INSTALL_DEDUP_SO_LINK_FAILED);
     EXPECT_EQ(GetLinkDedupedSoCallCountForTest(), 1);
@@ -317,7 +341,7 @@ HWTEST_F(BmsBundleDedupSoTest, DedupSoHelperTest_1000, Function | SmallTest | Le
     };
     for (size_t i = 0; i < sizeof(resultCodes) / sizeof(resultCodes[0]); ++i) {
         ResetLinkDedupedSoStateForTest();
-        g_linkDedupedSoResultCode = resultCodes[i];
+        SetLinkDedupedSoResultCodeForTest(resultCodes[i]);
         EXPECT_EQ(DedupSoHelper::ProcessDedupSoFiles(hapPath, info, targetSoPath, CPU_ABI_ARM64),
             expected[i]) << "result code index " << i;
         EXPECT_EQ(GetLinkDedupedSoCallCountForTest(), 1) << "result code index " << i;
@@ -354,47 +378,50 @@ HWTEST_F(BmsBundleDedupSoTest, TestParse_8400, Function | SmallTest | Level1)
 {
     BundleParser parser;
     DedupSoInfoList dedupSoInfoList;
-    auto result = parser.ParseDedupFiles(RESOURCE_ROOT_PATH + "not_exist.hap", dedupSoInfoList);
+    auto result = parser.ParseDedupFiles(RESOURCE_ROOT_PATH + "not_exist.hap", BUNDLE_NAME, dedupSoInfoList);
     EXPECT_EQ(result, ERR_APPEXECFWK_PARSE_UNEXPECTED);
     EXPECT_TRUE(dedupSoInfoList.empty());
-    result = parser.ParseDedupFiles(RESOURCE_ROOT_PATH + "dedup_so/dedup_valid.hap", dedupSoInfoList);
+    result = parser.ParseDedupFiles(RESOURCE_ROOT_PATH + "dedup_so/dedup_valid.hap", BUNDLE_NAME, dedupSoInfoList);
     EXPECT_EQ(result, ERR_OK);
     ASSERT_EQ(dedupSoInfoList.size(), 1);
     EXPECT_EQ(dedupSoInfoList[0].originalPathInHap, "libs/arm64-v8a/libc++_shared.so");
     EXPECT_EQ(dedupSoInfoList[0].originalSha256, VALID_SHA);
-    result = parser.ParseDedupFiles(RESOURCE_ROOT_PATH + "dedup_so/dedup_valid_multi.hap", dedupSoInfoList);
+    result = parser.ParseDedupFiles(RESOURCE_ROOT_PATH + "dedup_so/dedup_valid_multi.hap",
+        BUNDLE_NAME, dedupSoInfoList);
     EXPECT_EQ(result, ERR_OK);
     EXPECT_EQ(dedupSoInfoList.size(), 2);
-    result = parser.ParseDedupFiles(RESOURCE_ROOT_PATH + "dedup_so/dedup_no_version.hap", dedupSoInfoList);
+    result = parser.ParseDedupFiles(RESOURCE_ROOT_PATH + "dedup_so/dedup_no_version.hap",
+        BUNDLE_NAME, dedupSoInfoList);
     EXPECT_EQ(result, ERR_OK);
     ASSERT_EQ(dedupSoInfoList.size(), 1);
     result = parser.ParseDedupFiles(RESOURCE_ROOT_PATH + "dedup_so/dedup_path_no_so_suffix.hap",
-        dedupSoInfoList);
+        BUNDLE_NAME, dedupSoInfoList);
     EXPECT_EQ(result, ERR_OK);
     ASSERT_EQ(dedupSoInfoList.size(), 1);
     EXPECT_EQ(dedupSoInfoList[0].originalPathInHap, "libs/arm64-v8a/libx.txt");
-    result = parser.ParseDedupFiles(RESOURCE_ROOT_PATH + "dedup_so/dedup_no_manifest.hap", dedupSoInfoList);
+    result = parser.ParseDedupFiles(RESOURCE_ROOT_PATH + "dedup_so/dedup_no_manifest.hap",
+        BUNDLE_NAME, dedupSoInfoList);
     EXPECT_EQ(result, ERR_OK);
     EXPECT_TRUE(dedupSoInfoList.empty());
     // the entry-count and declared-size limits: over either limit is rejected with 8519683,
     // while a manifest of exactly MAX_DEDUP_FILES_SIZE bytes holding 65535 entries parses in full
     result = parser.ParseDedupFiles(RESOURCE_ROOT_PATH + "dedup_so/dedup_over_limit.hap",
-        dedupSoInfoList);
+        BUNDLE_NAME, dedupSoInfoList);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALL_PARSE_FAILED);
     EXPECT_TRUE(dedupSoInfoList.empty());
     result = parser.ParseDedupFiles(RESOURCE_ROOT_PATH + "dedup_so/dedup_size_over_limit.hap",
-        dedupSoInfoList);
+        BUNDLE_NAME, dedupSoInfoList);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALL_PARSE_FAILED);
     EXPECT_TRUE(dedupSoInfoList.empty());
     result = parser.ParseDedupFiles(RESOURCE_ROOT_PATH + "dedup_so/dedup_max_valid.hap",
-        dedupSoInfoList);
+        BUNDLE_NAME, dedupSoInfoList);
     EXPECT_EQ(result, ERR_OK);
     EXPECT_EQ(dedupSoInfoList.size(), static_cast<size_t>(65535));
     // a deep-nesting payload is rejected before the DOM building: ~15MB of bare open brackets
     // stays under the size limit and shrinks under zip compression, yet is unbounded in depth;
     // the loose probe on the same bomb only disables the derivation
     result = parser.ParseDedupFiles(RESOURCE_ROOT_PATH + "dedup_so/dedup_depth_bomb.hap",
-        dedupSoInfoList);
+        BUNDLE_NAME, dedupSoInfoList);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALL_PARSE_FAILED);
     EXPECT_TRUE(dedupSoInfoList.empty());
     BundleExtractor bombExtractor(RESOURCE_ROOT_PATH + "dedup_so/dedup_depth_bomb.hap");
@@ -439,7 +466,7 @@ HWTEST_F(BmsBundleDedupSoTest, TestParse_8410, Function | SmallTest | Level1)
     };
     for (const auto &manifest : invalidManifests) {
         DedupSoInfoList list;
-        auto result = parser.ParseDedupFiles(RESOURCE_ROOT_PATH + manifest, list);
+        auto result = parser.ParseDedupFiles(RESOURCE_ROOT_PATH + manifest, BUNDLE_NAME, list);
         EXPECT_EQ(result, ERR_APPEXECFWK_INSTALL_PARSE_FAILED) << manifest;
         EXPECT_TRUE(list.empty()) << manifest;
     }
@@ -447,12 +474,12 @@ HWTEST_F(BmsBundleDedupSoTest, TestParse_8410, Function | SmallTest | Level1)
     // digests, and an entry still present as a real zip entry in the same container
     DedupSoInfoList dupList;
     auto dupResult = parser.ParseDedupFiles(
-        RESOURCE_ROOT_PATH + "dedup_so/dedup_duplicate_entry.hap", dupList);
+        RESOURCE_ROOT_PATH + "dedup_so/dedup_duplicate_entry.hap", BUNDLE_NAME, dupList);
     EXPECT_EQ(dupResult, ERR_APPEXECFWK_INSTALL_PARSE_FAILED);
     // the list stays an intermediate state the caller must not consume on a failed parse
     EXPECT_EQ(dupList.size(), 1u);
     dupResult = parser.ParseDedupFiles(
-        RESOURCE_ROOT_PATH + "dedup_so/dedup_cross_conflict.hap", dupList);
+        RESOURCE_ROOT_PATH + "dedup_so/dedup_cross_conflict.hap", BUNDLE_NAME, dupList);
     EXPECT_EQ(dupResult, ERR_APPEXECFWK_INSTALL_PARSE_FAILED);
     EXPECT_TRUE(dupList.empty());
 }
@@ -693,8 +720,6 @@ HWTEST_F(BmsBundleDedupSoTest, InstalldOperatorTest_20600, Function | SmallTest 
     const std::string provisionedFile = ownLibsDir + "libprovisioned.so";
     const std::string foreignLink = ownLibsDir + "libforeign.so";
     const std::string foreignTarget = ownLibsDir + "libforeign_target.so";
-    const std::string provisionedBackup = provisionedFile + ServiceConstants::DEDUP_SO_BACKUP_SUFFIX;
-    const std::string foreignBackup = foreignLink + ServiceConstants::DEDUP_SO_BACKUP_SUFFIX;
     CreateQuickFileDir(ownLibsDir);
     CreateFile(foreignTarget, "foreign-target-content");
     // the wrapper passes the remaining result codes through with the path/sha arguments
@@ -737,7 +762,7 @@ HWTEST_F(BmsBundleDedupSoTest, InstalldOperatorTest_20600, Function | SmallTest 
         EXPECT_EQ(lstat(provisionedFile.c_str(), &placeholderStat), 0);
         EXPECT_TRUE(S_ISREG(placeholderStat.st_mode));
         EXPECT_EQ(ReadFile(provisionedFile), "provisioned-content");
-        EXPECT_EQ(lstat(provisionedBackup.c_str(), &placeholderStat), -1);
+        EXPECT_FALSE(HasDedupBackupResidue(ownLibsDir));
         resultCode = SO_DEDUP_ERROR;
         ret = InstalldOperator::LinkDedupedSo(foreignLink, VALID_SHA, resultCode);
         EXPECT_EQ(ret, ERR_OK);
@@ -748,7 +773,7 @@ HWTEST_F(BmsBundleDedupSoTest, InstalldOperatorTest_20600, Function | SmallTest 
         EXPECT_EQ(lstat(foreignLink.c_str(), &placeholderStat), 0);
         EXPECT_TRUE(S_ISLNK(placeholderStat.st_mode));
         EXPECT_EQ(ReadFile(foreignTarget), "foreign-target-content");
-        EXPECT_EQ(lstat(foreignBackup.c_str(), &placeholderStat), -1);
+        EXPECT_FALSE(HasDedupBackupResidue(ownLibsDir));
     }
     DeleteQuickFileDir(std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName);
 }
@@ -969,8 +994,9 @@ HWTEST_F(BmsBundleDedupSoTest, InstalldOperatorTest_20800, Function | SmallTest 
  * @tc.number: InstalldOperatorTest_21100
  * @tc.name: test LinkDedupedSo placeholder rotate, backup cleanup and interrupted recovery
  * @tc.desc: 1. a stale file/symlink, a directory, a leftover backup, position plus backup
- *           2. success deletes the rotated backup; a directory is refused fail-closed; a
- *              leftover backup is adopted; position plus backup at once is refused
+ *           2. success deletes the rotated token backup; a directory is refused
+ *              fail-closed; a leftover backup is an unrecognized inert orphan;
+ *              position plus leftover proceeds with the rotation
  */
 HWTEST_F(BmsBundleDedupSoTest, InstalldOperatorTest_21100, Function | SmallTest | Level0)
 {
@@ -992,7 +1018,7 @@ HWTEST_F(BmsBundleDedupSoTest, InstalldOperatorTest_21100, Function | SmallTest 
     EXPECT_EQ(g_muslLinkDedupedSoLastPath, libPath);
     EXPECT_EQ(g_muslLinkDedupedSoLastSha, VALID_SHA);
     EXPECT_EQ(lstat(libPath.c_str(), &placeholderStat), -1);
-    EXPECT_EQ(lstat(backupPath.c_str(), &placeholderStat), -1);
+    EXPECT_FALSE(HasDedupBackupResidue(libsDir));
     CreateFile(linkTarget, "target-content");
     EXPECT_EQ(symlink("libclear_target.so", libPath.c_str()), 0);
     g_muslLinkDedupedSoCallCount = 0;
@@ -1003,7 +1029,7 @@ HWTEST_F(BmsBundleDedupSoTest, InstalldOperatorTest_21100, Function | SmallTest 
     EXPECT_EQ(g_muslLinkDedupedSoLastPath, libPath);
     EXPECT_EQ(lstat(libPath.c_str(), &placeholderStat), -1);
     EXPECT_EQ(ReadFile(linkTarget), "target-content");
-    EXPECT_EQ(lstat(backupPath.c_str(), &placeholderStat), -1);
+    EXPECT_FALSE(HasDedupBackupResidue(libsDir));
     // a dir placeholder is kept as-is: an unknown tree is never deleted recursively
     CreateQuickFileDir(libPath);
     CreateFile(libPath + "/inner.so", "inner-content");
@@ -1023,7 +1049,9 @@ HWTEST_F(BmsBundleDedupSoTest, InstalldOperatorTest_21100, Function | SmallTest 
     EXPECT_EQ(resultCode, SO_DEDUP_LINKED);
     EXPECT_EQ(g_muslLinkDedupedSoCallCount, 1);
     EXPECT_EQ(g_muslLinkDedupedSoLastPath, libPath);
-    // a leftover backup of an interrupted attempt is adopted, so a failure code restores the old so
+    // a leftover backup of an interrupted attempt: the token scheme cannot
+    // recognize it by name, so nothing is adopted or restored - the position
+    // links fresh and the orphan waits for the directory-level cleanup
     CreateFile(backupPath, "interrupted-old-so");
     g_muslLinkDedupedSoResult = static_cast<uint32_t>(SO_DEDUP_NO_MATCH);
     g_muslLinkDedupedSoCallCount = 0;
@@ -1032,12 +1060,11 @@ HWTEST_F(BmsBundleDedupSoTest, InstalldOperatorTest_21100, Function | SmallTest 
     EXPECT_EQ(resultCode, static_cast<uint32_t>(SO_DEDUP_NO_MATCH));
     EXPECT_EQ(g_muslLinkDedupedSoCallCount, 1);
     EXPECT_EQ(g_muslLinkDedupedSoLastPath, libPath);
-    struct stat adoptStat = {};
-    EXPECT_EQ(lstat(libPath.c_str(), &adoptStat), 0);
-    EXPECT_TRUE(S_ISREG(adoptStat.st_mode));
-    EXPECT_EQ(ReadFile(libPath), "interrupted-old-so");
-    EXPECT_EQ(lstat(backupPath.c_str(), &adoptStat), -1);
-    DeleteFile(libPath);
+    struct stat orphanStat = {};
+    EXPECT_EQ(lstat(libPath.c_str(), &orphanStat), -1);
+    EXPECT_EQ(lstat(backupPath.c_str(), &orphanStat), 0);
+    EXPECT_TRUE(S_ISREG(orphanStat.st_mode));
+    EXPECT_EQ(ReadFile(backupPath), "interrupted-old-so");
     CreateFile(backupPath, "interrupted-old-so");
     g_muslLinkDedupedSoResult = SO_DEDUP_LINKED;
     g_muslLinkDedupedSoCallCount = 0;
@@ -1045,17 +1072,22 @@ HWTEST_F(BmsBundleDedupSoTest, InstalldOperatorTest_21100, Function | SmallTest 
     EXPECT_EQ(InstalldOperator::LinkDedupedSo(libPath, VALID_SHA, resultCode), ERR_OK);
     EXPECT_EQ(resultCode, SO_DEDUP_LINKED);
     EXPECT_EQ(g_muslLinkDedupedSoCallCount, 1);
-    EXPECT_EQ(lstat(libPath.c_str(), &adoptStat), -1);
-    EXPECT_EQ(lstat(backupPath.c_str(), &adoptStat), -1);
-    // position plus stale backup is ambiguous: refused fail-closed, nothing is clobbered
+    EXPECT_EQ(lstat(libPath.c_str(), &orphanStat), -1);
+    // the success path only cleans the backup this call rotated itself: the
+    // unrecognized pre-token orphan is never unlinked
+    EXPECT_EQ(lstat(backupPath.c_str(), &orphanStat), 0);
+    // position plus a pre-token leftover backup is no longer an ambiguous
+    // interruption state: the unrecognized orphan is ignored, the stale
+    // placeholder is rotated away (it yields to the link), and only the
+    // orphan file survives untouched
     CreateFile(libPath, "position-content");
     CreateFile(backupPath, "stale-backup-content");
     g_muslLinkDedupedSoCallCount = 0;
     resultCode = SO_DEDUP_LINKED;
-    EXPECT_EQ(InstalldOperator::LinkDedupedSo(libPath, VALID_SHA, resultCode),
-        ERR_APPEXECFWK_INSTALLD_DEDUP_SO_LINK_FAILED);
-    EXPECT_EQ(g_muslLinkDedupedSoCallCount, 0);
-    EXPECT_EQ(ReadFile(libPath), "position-content");
+    EXPECT_EQ(InstalldOperator::LinkDedupedSo(libPath, VALID_SHA, resultCode), ERR_OK);
+    EXPECT_EQ(resultCode, SO_DEDUP_LINKED);
+    EXPECT_EQ(g_muslLinkDedupedSoCallCount, 1);
+    EXPECT_EQ(lstat(libPath.c_str(), &orphanStat), -1);
     EXPECT_EQ(ReadFile(backupPath), "stale-backup-content");
     DeleteQuickFileDir(std::string(Constants::BUNDLE_CODE_DIR) + "/" + bundleName);
 }

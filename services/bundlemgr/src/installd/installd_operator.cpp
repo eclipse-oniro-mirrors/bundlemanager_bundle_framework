@@ -16,6 +16,7 @@
 #include "installd/installd_operator.h"
 
 #include <algorithm>
+#include <atomic>
 #include <openssl/asn1.h>
 #include <openssl/pem.h>
 #include <openssl/x509.h>
@@ -47,6 +48,7 @@
 #include <sys/quota.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <ctime>
 #include <unistd.h>
 
 #include "app_log_tag_wrapper.h"
@@ -2447,6 +2449,16 @@ bool InstalldOperator::ScanSoFiles(const std::string &newSoPath, const std::stri
                 return false;
             }
         }
+        if (ptr->d_type == DT_LNK) {
+            // a link entry is not a patchable so base: the so dedup flow links
+            // shared so into the bundle libs dir (the linked content belongs to
+            // the dedup store, not this bundle), and the scan must not follow a
+            // link out of the scanned tree; skip the entry explicitly instead
+            // of silently falling through the type dispatch
+            LOG_W(BMS_TAG_INSTALLD, "ScanSoFiles skip link entry(%{private}s)",
+                (filePath + std::string(ptr->d_name)).c_str());
+            continue;
+        }
     }
     closedir(dir);
     return true;
@@ -2956,7 +2968,8 @@ bool InstalldOperator::MoveFileOrDir(const std::string &srcPath, const std::stri
 {
     // dispatch order matters: S_ISLNK must run before S_ISREG (S_IFLNK shares
     // bits with S_IFREG); the S_IS* macros are exact where the legacy bit test
-    // would misclassify a socket/fifo as a file; other types fall through
+    // would misclassify a socket as a file and a block device as a directory;
+    // other types fall through
     if (S_ISLNK(mode)) {
         // move the link inode itself, never chmod through it (read-only dedup target)
         LOG_D(BMS_TAG_INSTALLD, "srcPath(%{private}s) is a symlink", srcPath.c_str());
@@ -4371,11 +4384,25 @@ bool InstalldOperator::CopyDir(const std::string &sourceDir, const std::string &
             // MoveFileOrDir symlink branch keeps the same rule)
             char linkTarget[PATH_MAX] = {0};
             auto linkSize = readlink(curPath.c_str(), linkTarget, sizeof(linkTarget) - 1);
-            if (linkSize < 0) {
+            if (linkSize < 0 || linkSize >= PATH_MAX - 1) {
+                // a buffer filled to the cap means the target may have been
+                // silently truncated, and a truncated rebuild would point
+                // somewhere else: refuse fail-closed (an exactly-max-length
+                // target is rejected with it, a tolerated false positive)
                 LOG_E(BMS_TAG_INSTALLD, "Failed to read link(%{private}s)", curPath.c_str());
                 return false;
             }
             linkTarget[linkSize] = '\0';
+            // an existing dest entry yields to the rebuild, keeping the
+            // overwrite symmetry with the file branch below (its ofstream
+            // truncates an existing dest, while a bare symlink() would fail
+            // with EEXIST); unlink never follows the entry, and a directory
+            // dest fails closed here
+            if (unlink(destPath.c_str()) != 0 && errno != ENOENT) {
+                LOG_E(BMS_TAG_INSTALLD, "Failed to remove dest(%{private}s), errno: %{public}d",
+                    destPath.c_str(), errno);
+                return false;
+            }
             if (symlink(linkTarget, destPath.c_str()) != 0) {
                 LOG_E(BMS_TAG_INSTALLD, "Failed to create link(%{private}s) to (%{private}s)",
                     destPath.c_str(), linkTarget);
@@ -4384,7 +4411,7 @@ bool InstalldOperator::CopyDir(const std::string &sourceDir, const std::string &
             // align the link inode owner without following it; non-fatal on failure
             if (fchownat(AT_FDCWD, destPath.c_str(), fileStat.st_uid, fileStat.st_gid,
                 AT_SYMLINK_NOFOLLOW) != 0) {
-                LOG_E(BMS_TAG_INSTALLD, "Failed to change link owner(%{private}s)", destPath.c_str());
+                LOG_W(BMS_TAG_INSTALLD, "Failed to change link owner(%{private}s)", destPath.c_str());
             }
             continue;
         }
@@ -7086,6 +7113,21 @@ static_assert(SO_DEDUP_CONFIG_UNAVAILABLE == 3, "musl so_dedup result contract d
 static_assert(SO_DEDUP_VERSION_MISMATCH == 4, "musl so_dedup result contract drifted");
 static_assert(SO_DEDUP_ERROR == UINT32_MAX, "musl so_dedup result contract drifted");
 
+// The rotate backup slot token: the pid plus a monotonic nanosecond reading
+// cannot be predicted by a HAP packed before the install (a zip-carried entry
+// cannot occupy the slot by name), and the process-local sequence keeps two
+// rapid calls from sharing a token
+static std::string BuildDedupBackupToken()
+{
+    static std::atomic<uint64_t> sequence = 1;
+    struct timespec ts = {};
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    uint64_t nanoseconds = static_cast<uint64_t>(ts.tv_sec) * 1000000000ULL +
+        static_cast<uint64_t>(ts.tv_nsec);
+    return std::to_string(getpid()) + "-" + std::to_string(nanoseconds) + "-" +
+        std::to_string(sequence.fetch_add(1));
+}
+
 ErrCode InstalldOperator::LinkDedupedSo(const std::string &libraryPath, const std::string &sha256,
     uint32_t &resultCode)
 {
@@ -7096,9 +7138,15 @@ ErrCode InstalldOperator::LinkDedupedSo(const std::string &libraryPath, const st
         return ERR_APPEXECFWK_INSTALLD_DEDUP_SO_LINK_FAILED;
     }
     // musl requires a free link position: a stale placeholder is rotated to
-    // <position> + DEDUP_SO_BACKUP_SUFFIX, restored on an abnormal code and deleted
-    // on success; a leftover backup is adopted, position+backup at once is refused
-    std::string backupPath = libraryPath + ServiceConstants::DEDUP_SO_BACKUP_SUFFIX;
+    // <position> + DEDUP_SO_BACKUP_SUFFIX + "." + an unpredictable token,
+    // restored on an abnormal code and deleted on success. The token makes
+    // the slot name unguessable for a HAP packed before the install (a
+    // zip-carried entry cannot occupy it) and makes a leftover backup of an
+    // interrupted attempt an inert orphan the next attempt cannot recognize:
+    // the position links fresh and the orphan waits for the directory-level
+    // cleanup, so nothing is adopted, clobbered or assumed
+    std::string backupPath = libraryPath + ServiceConstants::DEDUP_SO_BACKUP_SUFFIX + "." +
+        BuildDedupBackupToken();
     bool hasPositionBackup = false;
     struct stat linkStat = {};
     if (lstat(libraryPath.c_str(), &linkStat) == 0) {
@@ -7107,10 +7155,13 @@ ErrCode InstalldOperator::LinkDedupedSo(const std::string &libraryPath, const st
                 libraryPath.c_str());
             return ERR_APPEXECFWK_INSTALLD_DEDUP_SO_LINK_FAILED;
         }
-        struct stat backupStat = {};
-        if (lstat(backupPath.c_str(), &backupStat) == 0) {
-            LOG_E(BMS_TAG_INSTALLD, "LinkDedupedSo backup %{private}s already exists, refuse to clobber",
-                backupPath.c_str());
+        // the backup slot appends the suffix and token to the position path:
+        // a slot at or over PATH_MAX can never be created (the kernel bound
+        // includes the terminator), and the rotate below would only fail with
+        // an opaque ENAMETOOLONG, so reject here with the cause in the log
+        if (backupPath.size() >= PATH_MAX) {
+            LOG_E(BMS_TAG_INSTALLD, "LinkDedupedSo backup slot for %{private}s exceeds PATH_MAX, size: %{public}zu",
+                libraryPath.c_str(), backupPath.size());
             return ERR_APPEXECFWK_INSTALLD_DEDUP_SO_LINK_FAILED;
         }
         if (rename(libraryPath.c_str(), backupPath.c_str()) != 0) {
@@ -7119,13 +7170,7 @@ ErrCode InstalldOperator::LinkDedupedSo(const std::string &libraryPath, const st
             return ERR_APPEXECFWK_INSTALLD_DEDUP_SO_LINK_FAILED;
         }
         hasPositionBackup = true;
-    } else if (errno == ENOENT) {
-        struct stat backupStat = {};
-        if (lstat(backupPath.c_str(), &backupStat) == 0) {
-            // interrupted earlier attempt: adopt the leftover backup for the restore
-            hasPositionBackup = true;
-        }
-    } else {
+    } else if (errno != ENOENT) {
         LOG_E(BMS_TAG_INSTALLD, "LinkDedupedSo lstat %{private}s failed, errno: %{public}d",
             libraryPath.c_str(), errno);
         return ERR_APPEXECFWK_INSTALLD_DEDUP_SO_LINK_FAILED;
@@ -7141,13 +7186,14 @@ ErrCode InstalldOperator::LinkDedupedSo(const std::string &libraryPath, const st
     }
     if (resultCode == SO_DEDUP_LINKED || resultCode == SO_DEDUP_ALREADY_LINKED) {
         if (hasPositionBackup && unlink(backupPath.c_str()) != 0 && errno != ENOENT) {
-            // best effort: the next attempt cleans or adopts the leftover backup
+            // best effort: a leftover backup is an inert orphan for the directory-level cleanup
             LOG_W(BMS_TAG_INSTALLD, "LinkDedupedSo unlink backup %{private}s failed, errno: %{public}d",
                 backupPath.c_str(), errno);
         }
     } else if (hasPositionBackup) {
         if (rename(backupPath.c_str(), libraryPath.c_str()) != 0) {
-            // fail-closed through the mapped code; the backup stays for the next attempt
+            // fail-closed through the mapped code; the backup stays as an inert
+            // orphan for the directory-level cleanup
             LOG_E(BMS_TAG_INSTALLD, "LinkDedupedSo restore backup %{private}s failed, errno: %{public}d",
                 backupPath.c_str(), errno);
         }

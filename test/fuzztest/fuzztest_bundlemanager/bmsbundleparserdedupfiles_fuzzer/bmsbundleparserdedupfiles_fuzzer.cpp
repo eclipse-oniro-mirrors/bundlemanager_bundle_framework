@@ -154,11 +154,11 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, const size_t size)
     // form 1: wrapped as the dedupfiles.json entry of a STORED zip
     const std::string payload = fdp.ConsumeRandomLengthString(DEDUP_PAYLOAD_MAX_LENGTH);
     WriteFuzzDataToFile(FUZZ_TEMP_FILE, BuildStoredDedupZip(payload));
-    parser.ParseDedupFiles(FUZZ_TEMP_FILE, dedupSoInfoList);
+    parser.ParseDedupFiles(FUZZ_TEMP_FILE, "fuzzBundle", dedupSoInfoList);
 
     // form 2: raw bytes as-is, covering the empty/corrupted/non-zip paths
     WriteFuzzDataToFile(FUZZ_TEMP_FILE, fdp.ConsumeRemainingBytesAsString());
-    parser.ParseDedupFiles(FUZZ_TEMP_FILE, dedupSoInfoList);
+    parser.ParseDedupFiles(FUZZ_TEMP_FILE, "fuzzBundle", dedupSoInfoList);
     return true;
 }
 }

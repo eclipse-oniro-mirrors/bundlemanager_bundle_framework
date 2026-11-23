@@ -998,7 +998,9 @@ ErrCode PluginInstaller::ExtractPluginBundles(const std::string &bundlePath, Inn
     // the existing rollback). The call runs for the uncompressed form and for
     // an empty native library path (the abi-derivation-failure fallback) too:
     // the helper fails both closed with 8519951 instead of installing a plugin
-    // whose so is missing at runtime.
+    // whose so is missing at runtime. A manifest with no entry matching the
+    // module abi is the trusted zero-match case: the helper only WARNs and
+    // the install continues.
     std::string soPath;
     if (isCompressNativeLibs_ && !nativeLibraryPath_.empty()) {
         soPath = pluginBundleDir + ServiceConstants::PATH_SEPARATOR + nativeLibraryPath_ +

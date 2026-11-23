@@ -22,6 +22,11 @@ action("dedup_so") {
     rebase_path("$root_out_dir/tests/unittest/bundle_framework/bundle_framework/resource/parse_bundle/dedup_so"),
   ]
 
+  # inputs (25 config manifests) is 4 shorter than outputs (29): the boundary
+  # fixtures dedup_depth_bomb/dedup_max_valid/dedup_over_limit/
+  # dedup_size_over_limit are synthesized inside the script itself and have no
+  # config source; the script is an implicit input of the action, so a stale
+  # output cannot go unnoticed.
   inputs = [
     "config/dedup_cross_conflict.json",
     "config/dedup_duplicate_entry.json",

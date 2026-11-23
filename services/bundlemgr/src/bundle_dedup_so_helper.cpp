@@ -18,7 +18,6 @@
 #include "app_log_tag_wrapper.h"
 #include "bundle_parser.h"
 #include "bundle_util.h"
-#include "hilog/log_c.h"
 #include "installd_client.h"
 
 namespace OHOS {
@@ -81,7 +80,7 @@ ErrCode DedupSoHelper::ProcessDedupSoFiles(const std::string &hapPath, const Inn
     }
 
     DedupSoInfoList dedupSoInfoList;
-    auto result = BundleParser().ParseDedupFiles(hapPath, dedupSoInfoList);
+    auto result = BundleParser().ParseDedupFiles(hapPath, newBundleInfo.GetBundleName(), dedupSoInfoList);
     if (result != ERR_OK) {
         // DEBUG here: the parser already logged one ERROR for this failure
         LOG_D(BMS_TAG_INSTALLER, "parse dedupfiles.json failed, error is %{public}d", result);
@@ -92,14 +91,19 @@ ErrCode DedupSoHelper::ProcessDedupSoFiles(const std::string &hapPath, const Inn
         return ERR_OK;
     }
     if (targetSoPath.empty()) {
-        // fail closed instead of installing with the so missing
-        LOG_E(BMS_TAG_INSTALLER, "dedup manifest is not empty but target so path is empty");
+        // the manifest is not empty, so the so is expected; an empty target
+        // path (the abi derivation failed) fails closed with 8519951 instead
+        // of installing a bundle whose so is missing at runtime
+        LOG_E(BMS_TAG_INSTALLER,
+            "bundleName: %{public}s dedup manifest is not empty but target so path is empty",
+            newBundleInfo.GetBundleName().c_str());
         return ERR_APPEXECFWK_INSTALL_DEDUP_SO_LINK_FAILED;
     }
 
     std::string bundleName = GetEffectiveBundleNameFromSoPath(targetSoPath);
     if (bundleName.empty()) {
-        LOG_E(BMS_TAG_INSTALLER, "invalid target so path %{private}s", targetSoPath.c_str());
+        LOG_E(BMS_TAG_INSTALLER, "bundleName: %{public}s invalid target so path %{private}s",
+            newBundleInfo.GetBundleName().c_str(), targetSoPath.c_str());
         return ERR_APPEXECFWK_INSTALL_DEDUP_SO_LINK_FAILED;
     }
     // only the entries matching the installed module's cpu abi are linked, other
@@ -117,24 +121,30 @@ ErrCode DedupSoHelper::ProcessDedupSoFiles(const std::string &hapPath, const Inn
         auto ipcResult = InstalldClient::GetInstance()->LinkDedupedSo(
             bundleName, libraryPath, dedupSoInfo.originalSha256, resultCode);
         if (ipcResult != ERR_OK) {
-            // the fault event is carried by the BUNDLE_INSTALL_EXCEPTION chain
-            LOG_E(BMS_TAG_INSTALLER, "LinkDedupedSo ipc failed, libraryPath is %{private}s, error is %{public}d",
-                libraryPath.c_str(), ipcResult);
+            // the single ERROR of the ipc failure chain (the proxy layer stays
+            // at DEBUG); the fault event also rides the BUNDLE_INSTALL_EXCEPTION chain
+            LOG_E(BMS_TAG_INSTALLER,
+                "bundleName: %{public}s LinkDedupedSo ipc failed, libraryPath is %{private}s, error is %{public}d",
+                bundleName.c_str(), libraryPath.c_str(), ipcResult);
             return ERR_APPEXECFWK_INSTALL_DEDUP_SO_LINK_FAILED;
         }
         result = MapLinkResultCode(resultCode);
         if (result != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER,
-                "link so failed, libraryPath: %{private}s, resultCode: %{public}u, error is %{public}d",
-                libraryPath.c_str(), resultCode, result);
+                "bundleName: %{public}s link so failed, libraryPath: %{private}s, "
+                "resultCode: %{public}u, error is %{public}d",
+                bundleName.c_str(), libraryPath.c_str(), resultCode, result);
             return result;
         }
         linkedCount++;
     }
     if (linkedCount == 0) {
-        // not a failure, one WARN to surface the manifest/module abi mismatch
-        LOG_W(BMS_TAG_INSTALLER, "no dedup so entry matched the module abi %{public}s, total: %{public}zu",
-            cpuAbi.c_str(), dedupSoInfoList.size());
+        // trusted zero-match: an entry the manifest does not carry for the
+        // installed module abi is a so the hap does not need, so one WARN is
+        // the expected outcome, never an error
+        LOG_W(BMS_TAG_INSTALLER, "bundleName: %{public}s no dedup so entry matched the module abi %{public}s, "
+            "total: %{public}zu",
+            newBundleInfo.GetBundleName().c_str(), cpuAbi.c_str(), dedupSoInfoList.size());
         return ERR_OK;
     }
     // one INFO per install, not a hot path: declared vs abi-matched link count

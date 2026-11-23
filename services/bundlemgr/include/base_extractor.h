@@ -35,9 +35,12 @@ public:
      * @brief Extract to dest stream by file name.
      * @param fileName Indicates the file name.
      * @param dest Indicates the obtained std::ostream object.
+     * @param maxUncompressedSize Indicates the cumulative uncompressed output cap of
+     *        this entry; 0 means unlimited, an output above the cap aborts with false.
      * @return Returns true if the file extracted successfully; returns false otherwise.
      */
-    virtual bool ExtractByName(const std::string &fileName, std::ostream &dest) const;
+    virtual bool ExtractByName(const std::string &fileName, std::ostream &dest,
+        size_t maxUncompressedSize = 0) const;
     /**
      * @brief Extract to dest path on filesystem.
      * @param fileName Indicates the file name.

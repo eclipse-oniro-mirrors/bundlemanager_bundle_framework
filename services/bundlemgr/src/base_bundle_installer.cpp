@@ -9150,9 +9150,16 @@ ErrCode BaseBundleInstaller::InnerProcessNativeLibs(InnerBundleInfo &info, const
     // extracted target so dir, still inside the staging transaction and before
     // the rename commit; a failure returns through the existing rollback. An
     // empty target so path (the parse-time abi derivation found no intersection)
-    // is passed through on purpose: the helper fails closed inside.
+    // is passed through on purpose: the helper fails closed inside. A manifest
+    // with no entry matching the module abi is the trusted zero-match case:
+    // the helper only WARNs and the install continues.
     auto result = DedupSoHelper::ProcessDedupSoFiles(modulePath_, info, targetSoPath, cpuAbi);
-    CHECK_RESULT(result, "fail to ProcessDedupSoFiles, error is %{public}d");
+    // the helper already logged one ERROR with the bundle context for every
+    // failure path; avoid a duplicate ERROR at this boundary
+    if (result != ERR_OK) {
+        LOG_D(BMS_TAG_INSTALLER, "fail to ProcessDedupSoFiles, error is %{public}d", result);
+        return result;
+    }
     return ERR_OK;
 }
 

@@ -548,7 +548,9 @@ ErrCode InnerSharedBundleInstaller::ExtractSharedBundles(const std::string &bund
     // existing rollback). The call runs for the uncompressed form and for an
     // empty native library path (the abi-derivation-failure fallback) too:
     // the helper fails both closed with 8519951 instead of installing a
-    // shared bundle whose so is missing at runtime.
+    // shared bundle whose so is missing at runtime. A manifest with no entry
+    // matching the module abi is the trusted zero-match case: the helper only
+    // WARNs and the install continues.
     std::string realSoPath;
     if (isCompressNativeLibs && !nativeLibraryPath_.empty()) {
         realSoPath = versionDir + ServiceConstants::PATH_SEPARATOR + nativeLibraryPath_ +

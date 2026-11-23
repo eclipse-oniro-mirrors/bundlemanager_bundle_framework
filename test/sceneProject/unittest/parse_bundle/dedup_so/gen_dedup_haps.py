@@ -41,10 +41,10 @@ VARIANTS = [
     "dedup_depth_bomb",
 ]
 
-# Keep in sync with MAX_DEDUP_SO_FILES in services/bundlemgr/src/bundle_parser.cpp.
+# Keep in sync with MAX_DEDUP_SO_FILES in services/bundlemgr/include/bundle_service_constants.h.
 MAX_DEDUP_SO_FILES = 65535
-# Keep in sync with MAX_DEDUP_FILES_SIZE in bundle_extractor.h: the strict
-# parser and the loose abi-prefix probe share the single policy constant.
+# Keep in sync with MAX_DEDUP_FILES_SIZE in services/bundlemgr/include/bundle_service_constants.h:
+# the strict parser and the loose abi-prefix probe share the single policy constant.
 MAX_DEDUP_FILES_SIZE = 16 * 1024 * 1024
 FIXED_SHA256 = "31b7479487ad9f817f0fd66f6dcb1c2957e7ca68b432b6f95f1f56bfc976bd60"
 

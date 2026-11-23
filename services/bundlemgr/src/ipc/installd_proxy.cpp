@@ -2310,13 +2310,15 @@ ErrCode InstalldProxy::LinkDedupedSo(const std::string &bundleName, const std::s
     MessageOption option(MessageOption::TF_SYNC);
     auto ret = TransactInstalldCmd(InstalldInterfaceCode::LINK_DEDUPED_SO, data, reply, option);
     if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLD, "TransactInstalldCmd failed, error is %{public}d", ret);
+        // the caller layer logs the single ERROR of this failure chain
+        LOG_D(BMS_TAG_INSTALLD, "TransactInstalldCmd failed, error is %{public}d", ret);
         return ret;
     }
     if (!reply.ReadUint32(resultCode)) {
         // a truncated reply (only the errCode field) must not be mistaken
-        // for resultCode 0 (linked); fail closed with the parcel error
-        LOG_E(BMS_TAG_INSTALLD, "read resultCode from reply failed, error is %{public}d",
+        // for resultCode 0 (linked); fail closed with the parcel error.
+        // the caller layer keeps the single ERROR of this failure chain
+        LOG_W(BMS_TAG_INSTALLD, "read resultCode from reply failed, error is %{public}d",
             ERR_APPEXECFWK_PARCEL_ERROR);
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }

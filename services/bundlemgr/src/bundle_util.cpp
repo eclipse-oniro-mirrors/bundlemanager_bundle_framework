@@ -912,6 +912,16 @@ bool BundleUtil::CopyFileFast(const std::string &sourcePath, const std::string &
         return false;
     }
 
+    // the fast-path dest open below is O_NOFOLLOW: hold the same rule for the
+    // stream fallback (CopyFile) reachable on every fast-path failure, whose
+    // ofstream would truncate and write through a symlink dest (e.g. a
+    // leftover dedup so link)
+    struct stat destStat = {};
+    if (lstat(destPath.c_str(), &destStat) == 0 && S_ISLNK(destStat.st_mode)) {
+        APP_LOGE("destPath is a symlink, refuse to follow");
+        return false;
+    }
+
     int32_t sourceFd = open(sourcePath.c_str(), O_RDONLY | O_UNCACHE);
     if (sourceFd < 0) {
         APP_LOGE("sourcePath open failed, errno : %{public}d", errno);

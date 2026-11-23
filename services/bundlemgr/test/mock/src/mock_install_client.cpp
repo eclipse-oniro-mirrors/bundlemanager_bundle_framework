@@ -24,10 +24,12 @@ bool g_isDir = false;
 ErrCode g_errCode = ERR_OK;
 bool g_vectorEmpty = true;
 // LinkDedupedSo knobs: call count, captured last params, installd IPC ret
-// and the injected musl result code.
-int32_t g_linkDedupedSoCallCount = 0;
-int32_t g_linkDedupedSoIpcRet = ERR_OK;
-uint32_t g_linkDedupedSoResultCode = 0;
+// and the injected musl result code. Internal linkage: another mock used by
+// other suites defines the same knob names; test files arm them via the
+// *ForTest accessors below, never extern.
+static int32_t g_linkDedupedSoCallCount = 0;
+static int32_t g_linkDedupedSoIpcRet = ERR_OK;
+static uint32_t g_linkDedupedSoResultCode = 0;
 namespace {
 std::string g_lastLinkDedupedSoBundleName;
 std::string g_lastLinkDedupedSoLibraryPath;
@@ -106,6 +108,16 @@ bool GetLastLinkDedupedSoParamForTest(std::string &bundleName, std::string &libr
     libraryPath = g_lastLinkDedupedSoLibraryPath;
     sha256 = g_lastLinkDedupedSoSha256;
     return true;
+}
+
+void SetLinkDedupedSoIpcRetForTest(int32_t ipcRet)
+{
+    g_linkDedupedSoIpcRet = ipcRet;
+}
+
+void SetLinkDedupedSoResultCodeForTest(uint32_t resultCode)
+{
+    g_linkDedupedSoResultCode = resultCode;
 }
 
 ErrCode InstalldClient::CreateBundleDir(

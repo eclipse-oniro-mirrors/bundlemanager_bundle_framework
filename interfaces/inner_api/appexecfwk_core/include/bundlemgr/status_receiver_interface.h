@@ -265,7 +265,10 @@ public:
         // insufficient number of system inodes
         ERR_INSTALL_INSUFFICIENT_NUMBER_OF_SYSTEM_INODES = 9568460,
 
-        // install dedup so
+        // install dedup so: every internal dedup so failure converges to
+        // ERR_INSTALL_DEDUP_SO_LINK_FAILED for bm clients (see
+        // status_receiver_proxy); the other three codes stay reserved for
+        // finer-grained reporting, do not remove or reuse them
         ERR_INSTALL_DEDUP_SO_CONFIG_UNAVAILABLE = 9568461,
         ERR_INSTALL_DEDUP_SO_NO_MATCH = 9568462,
         ERR_INSTALL_DEDUP_SO_LINK_FAILED = 9568463,

@@ -475,7 +475,8 @@ bool ZipFile::SeekToEntryStart(const ZipEntry &zipEntry, const uint16_t extraSiz
     return SeekToEntryStartInternal(zipEntry, extraSize, file_);
 }
 
-bool ZipFile::UnzipWithStore(const ZipEntry &zipEntry, const uint16_t extraSize, std::ostream &dest, FILE *file) const
+bool ZipFile::UnzipWithStore(const ZipEntry &zipEntry, const uint16_t extraSize, std::ostream &dest, FILE *file,
+    size_t maxUncompressedSize) const
 {
     APP_LOGD("unzip with store");
 
@@ -487,6 +488,7 @@ bool ZipFile::UnzipWithStore(const ZipEntry &zipEntry, const uint16_t extraSize,
     uint32_t remainSize = zipEntry.compressedSize;
     std::string readBuffer;
     readBuffer.resize(UNZIP_BUF_OUT_LEN);
+    size_t totalWritten = 0;
     while (remainSize > 0) {
         size_t readBytes;
         size_t readLen = (remainSize > UNZIP_BUF_OUT_LEN) ? UNZIP_BUF_OUT_LEN : remainSize;
@@ -496,6 +498,13 @@ bool ZipFile::UnzipWithStore(const ZipEntry &zipEntry, const uint16_t extraSize,
             return false;
         }
         remainSize -= readBytes;
+        totalWritten += readBytes;
+        // the declared entry size is untrusted metadata: cap the real output
+        // before it reaches the stream (0 keeps the legacy unlimited path)
+        if (maxUncompressedSize > 0 && totalWritten > maxUncompressedSize) {
+            APP_LOGE("unzip store output exceeds limit %{public}zu", maxUncompressedSize);
+            return false;
+        }
         dest.write(&(readBuffer[0]), readBytes);
     }
 
@@ -552,7 +561,7 @@ bool ZipFile::ReadZStream(const BytePtr &buffer, z_stream &zstream, uint32_t &re
 }
 
 bool ZipFile::UnzipWithInflated(const ZipEntry &zipEntry, const uint16_t extraSize, std::ostream &dest,
-    FILE *file) const
+    FILE *file, size_t maxUncompressedSize) const
 {
     APP_LOGD("unzip with inflated");
 
@@ -568,6 +577,7 @@ bool ZipFile::UnzipWithInflated(const ZipEntry &zipEntry, const uint16_t extraSi
     int32_t zlibErr = Z_OK;
     uint32_t remainCompressedSize = zipEntry.compressedSize;
     uint8_t errorTimes = 0;
+    size_t totalInflated = 0;
     while ((remainCompressedSize > 0) || (zstream.avail_in > 0)) {
         if (!ReadZStream(bufIn, zstream, remainCompressedSize, file)) {
             ret = false;
@@ -583,6 +593,15 @@ bool ZipFile::UnzipWithInflated(const ZipEntry &zipEntry, const uint16_t extraSi
 
         size_t inflateLen = UNZIP_BUF_OUT_LEN - zstream.avail_out;
         if (inflateLen > 0) {
+            totalInflated += inflateLen;
+            // the declared entry size is untrusted metadata: a deflate stream
+            // may amplify far beyond it, so cap the real output before it
+            // reaches the stream (0 keeps the legacy unlimited path)
+            if (maxUncompressedSize > 0 && totalInflated > maxUncompressedSize) {
+                APP_LOGE("unzip inflated output exceeds limit %{public}zu", maxUncompressedSize);
+                ret = false;
+                break;
+            }
             dest.write(reinterpret_cast<const char *>(bufOut), inflateLen);
             zstream.next_out = bufOut;
             zstream.avail_out = UNZIP_BUF_OUT_LEN;
@@ -649,7 +668,7 @@ bool ZipFile::GetDataOffsetRelative(const std::string &file, ZipPos &offset, uin
     return true;
 }
 
-bool ZipFile::ExtractFile(const std::string &file, std::ostream &dest) const
+bool ZipFile::ExtractFile(const std::string &file, std::ostream &dest, size_t maxUncompressedSize) const
 {
     APP_LOGD("extract file %{private}s", file.c_str());
 
@@ -667,9 +686,9 @@ bool ZipFile::ExtractFile(const std::string &file, std::ostream &dest) const
 
     bool ret = true;
     if (zipEntry.compressionMethod == 0) {
-        ret = UnzipWithStore(zipEntry, extraSize, dest, file_);
+        ret = UnzipWithStore(zipEntry, extraSize, dest, file_, maxUncompressedSize);
     } else {
-        ret = UnzipWithInflated(zipEntry, extraSize, dest, file_);
+        ret = UnzipWithInflated(zipEntry, extraSize, dest, file_, maxUncompressedSize);
     }
 
     return ret;
@@ -688,7 +707,7 @@ void ZipFile::ReleaseFileHandler(const int32_t resourceId) const
     mtxes_[resourceId].unlock();
 }
 
-bool ZipFile::ExtractFileParallel(const std::string &file, std::ostream &dest) const
+bool ZipFile::ExtractFileParallel(const std::string &file, std::ostream &dest, size_t maxUncompressedSize) const
 {
     APP_LOGD("extract file %{private}s", file.c_str());
 
@@ -712,9 +731,9 @@ bool ZipFile::ExtractFileParallel(const std::string &file, std::ostream &dest) c
 
     bool ret = true;
     if (zipEntry.compressionMethod == 0) {
-        ret = UnzipWithStore(zipEntry, extraSize, dest, files_[resourceId]);
+        ret = UnzipWithStore(zipEntry, extraSize, dest, files_[resourceId], maxUncompressedSize);
     } else {
-        ret = UnzipWithInflated(zipEntry, extraSize, dest, files_[resourceId]);
+        ret = UnzipWithInflated(zipEntry, extraSize, dest, files_[resourceId], maxUncompressedSize);
     }
 
     APP_LOGD("release file handler id %{private}d", resourceId);

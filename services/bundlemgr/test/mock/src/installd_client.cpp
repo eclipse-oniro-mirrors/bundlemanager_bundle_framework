@@ -33,9 +33,11 @@ int32_t g_migrateBundleDirsOwnerCallCount = 0;
 // Failure injection knob for the RefreshBundleDirsAfterUidChange best-effort branch.
 int32_t g_migrateBundleDirsOwnerRet = 0;
 // LinkDedupedSo knobs: call count, captured params, IPC ret, injected musl code.
-int32_t g_linkDedupedSoCallCount = 0;
-int32_t g_linkDedupedSoIpcRet = ERR_OK;
-uint32_t g_linkDedupedSoResultCode = 0;
+// Internal linkage: another mock used by other suites defines the same knob
+// names; test files arm them via the *ForTest accessors below, never extern.
+static int32_t g_linkDedupedSoCallCount = 0;
+static int32_t g_linkDedupedSoIpcRet = ERR_OK;
+static uint32_t g_linkDedupedSoResultCode = 0;
 // Shared-HSP save chain stub knob (MoveSharedHspToCodeDir + VerifyCodeSignatureForHap):
 // an unsigned fixture cannot pass the signature step, so normal-flow tests stub both
 int32_t g_sharedHspSaveStubRet = -1;
@@ -130,6 +132,16 @@ bool GetLastLinkDedupedSoParamForTest(std::string &bundleName, std::string &libr
     libraryPath = g_lastLinkDedupedSoLibraryPath;
     sha256 = g_lastLinkDedupedSoSha256;
     return true;
+}
+
+void SetLinkDedupedSoIpcRetForTest(int32_t ipcRet)
+{
+    g_linkDedupedSoIpcRet = ipcRet;
+}
+
+void SetLinkDedupedSoResultCodeForTest(uint32_t resultCode)
+{
+    g_linkDedupedSoResultCode = resultCode;
 }
 
 void SetSharedHspSaveStubRetForTest(int32_t stubRet)

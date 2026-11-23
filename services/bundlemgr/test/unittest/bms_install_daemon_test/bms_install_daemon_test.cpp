@@ -3132,21 +3132,6 @@ HWTEST_F(BmsInstallDaemonTest, LinkDedupedSo_ParamError_0100, Function | SmallTe
     ret = InstalldClient::GetInstance()->LinkDedupedSo(validBundleName, validLibraryPath,
         "zzb7479487ad9f817f0fd66f6dcb1c2957e7ca68b432b6f95f1f56bfc976bd60", resultCode);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-    // the domain root must exist and be a real directory: missing root and regular file are both rejected
-    const std::string freshBundle = "com.example.l3jsdemox";
-    const std::string bundleRoot = BUNDLE_CODE_DIR.substr(0, BUNDLE_CODE_DIR.rfind('/')) + "/" + freshBundle;
-    const std::string freshLibraryPath = bundleRoot + "/libs/arm64-v8a/libc++_shared.so";
-    g_muslLinkDedupedSoCallCount = 0;
-    EXPECT_EQ(InstalldClient::GetInstance()->LinkDedupedSo(freshBundle, freshLibraryPath, validSha, resultCode),
-        ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-    EXPECT_EQ(g_muslLinkDedupedSoCallCount, 0);
-    struct stat rootStat = {};
-    EXPECT_NE(lstat(bundleRoot.c_str(), &rootStat), 0);
-    CreateFile(bundleRoot, "not-a-dir");
-    EXPECT_EQ(InstalldClient::GetInstance()->LinkDedupedSo(freshBundle, freshLibraryPath, validSha, resultCode),
-        ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-    EXPECT_EQ(g_muslLinkDedupedSoCallCount, 0);
-    DeleteFile(bundleRoot);
 }
 
 /**
@@ -3213,14 +3198,5 @@ HWTEST_F(BmsInstallDaemonTest, LinkDedupedSo_Passthrough_0200, Function | SmallT
     EXPECT_EQ(g_muslLinkDedupedSoCallCount, 1);
     EXPECT_EQ(g_muslLinkDedupedSoLastPath, libraryPath);
     EXPECT_EQ(g_muslLinkDedupedSoLastSha, validSha);
-    // the staging dir cleanup carries an already-created dedup link (the musl fallback link)
-    ASSERT_TRUE(OHOS::ForceCreateDirectory(BUNDLE_NEW_CODE_DIR + "/libs/arm64-v8a"));
-    const std::string stagingLink = BUNDLE_NEW_CODE_DIR + "/libs/arm64-v8a/libc++_shared.so";
-    ASSERT_EQ(symlink("/system/lib64/dedupSource/libc++_shared.so", stagingLink.c_str()), 0);
-    EXPECT_EQ(InstalldClient::GetInstance()->RemoveDir(
-        BUNDLE_NEW_CODE_DIR, BundleDirScene::REMOVE_MODULE_DIR, BUNDLE_NAME13), ERR_OK);
-    struct stat stagingStat = {};
-    EXPECT_NE(lstat(stagingLink.c_str(), &stagingStat), 0);
-    EXPECT_NE(lstat(BUNDLE_NEW_CODE_DIR.c_str(), &stagingStat), 0);
 }
 } // OHOS

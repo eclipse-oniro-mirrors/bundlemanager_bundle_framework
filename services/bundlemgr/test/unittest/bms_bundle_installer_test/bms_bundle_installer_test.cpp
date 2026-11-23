@@ -96,14 +96,15 @@ void ResetMigrateBundleDirsOwnerStateForTest();
 int32_t GetMigrateBundleDirsOwnerCallCountForTest();
 bool GetLastMigrateBundleDirsOwnerParamForTest(CreateDirParam &createDirParam);
 extern int32_t g_migrateBundleDirsOwnerRet;
-// Mock knobs of the installd client LinkDedupedSo stub
-// (test/mock/src/installd_client.cpp), same pattern as the knobs above.
-extern int32_t g_linkDedupedSoIpcRet;
-extern uint32_t g_linkDedupedSoResultCode;
+// Accessors of the installd client LinkDedupedSo stub knobs
+// (test/mock/src/mock_install_client.cpp), same pattern as the knobs above;
+// the knobs themselves are internal-linkage.
 void ResetLinkDedupedSoStateForTest();
 int32_t GetLinkDedupedSoCallCountForTest();
 bool GetLastLinkDedupedSoParamForTest(std::string &bundleName, std::string &libraryPath,
     std::string &sha256);
+void SetLinkDedupedSoIpcRetForTest(int32_t ipcRet);
+void SetLinkDedupedSoResultCodeForTest(uint32_t resultCode);
 // Normal-flow shared-HSP save chain stub (test/mock/src/installd_client.cpp):
 // >= 0 short-circuits MoveSharedHspToCodeDir and VerifyCodeSignatureForHap
 // (the real whole-file code signature can never pass an unsigned fixture);
@@ -21268,7 +21269,7 @@ template <typename MakeInfo, typename Drive>
 void RunLinkFailurePropagation(MakeInfo makeInfo, Drive drive)
 {
     ResetLinkDedupedSoStateForTest();
-    g_linkDedupedSoIpcRet = ERR_APPEXECFWK_INSTALLD_SERVICE_DIED;
+    SetLinkDedupedSoIpcRetForTest(ERR_APPEXECFWK_INSTALLD_SERVICE_DIED);
     auto info = makeInfo();
     EXPECT_EQ(drive(info), ERR_APPEXECFWK_INSTALL_DEDUP_SO_LINK_FAILED);
     EXPECT_EQ(GetLinkDedupedSoCallCountForTest(), 1);
@@ -21282,8 +21283,8 @@ void RunLinkFailurePropagation(MakeInfo makeInfo, Drive drive)
     };
     for (size_t i = 0; i < sizeof(muslFailures) / sizeof(muslFailures[0]); ++i) {
         ResetLinkDedupedSoStateForTest();
-        g_linkDedupedSoIpcRet = ERR_OK;
-        g_linkDedupedSoResultCode = muslFailures[i];
+        SetLinkDedupedSoIpcRetForTest(ERR_OK);
+        SetLinkDedupedSoResultCodeForTest(muslFailures[i]);
         auto freshInfo = makeInfo();
         EXPECT_EQ(drive(freshInfo), expectedCodes[i]) << "musl code index " << i;
         EXPECT_EQ(GetLinkDedupedSoCallCountForTest(), 1) << "musl code index " << i;

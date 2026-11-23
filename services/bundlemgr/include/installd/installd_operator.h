@@ -665,9 +665,36 @@ public:
      */
     static ErrCode ParseEnterpriseCertFile(const std::string &certPath,
         std::string &subjectOrg, int64_t &notAfter);
+    /**
+     * @brief Create one dedup so link in the installs process: rotate a stale
+     *        position placeholder to its backup, delegate to the musl
+     *        OH_LinkDedupedSo, then delete the backup on success or restore
+     *        it on an abnormal result.
+     * @param libraryPath Indicates the so path the link is created at, inside
+     *        the bundle code dir (or its +new- staging dir) of the caller.
+     * @param sha256 Indicates the sha256 of the so removed at build time.
+     * @param resultCode Indicates the musl SO_DEDUP_RESULT_* code of the
+     *        attempt, meaningful on every return path.
+     * @return Returns ERR_OK when musl was invoked whatever the result code
+     *         is; ERR_APPEXECFWK_INSTALLD_DEDUP_SO_LINK_FAILED when the link
+     *         position cannot be prepared or is occupied by a directory.
+     */
     static ErrCode LinkDedupedSo(const std::string &libraryPath, const std::string &sha256,
         uint32_t &resultCode);
+    /**
+     * @brief Check a so path stays inside the bundle code dir (or its +new-
+     *        staging dir) of the named bundle and carries a valid file name.
+     * @param bundleName Indicates the owner bundle of the link domain.
+     * @param libraryPath Indicates the so path to validate.
+     * @return Returns true when the path is a valid file name inside the
+     *         bundle's own existing domain; false otherwise.
+     */
     static bool IsValidDedupSoPath(const std::string &bundleName, const std::string &libraryPath);
+    /**
+     * @brief Check a sha256 value is a 64-character hex digest.
+     * @param sha256 Indicates the value to validate.
+     * @return Returns true for a 64-character hex string; false otherwise.
+     */
     static bool IsValidDedupSoSha256(const std::string &sha256);
 private:
     static bool ObtainNativeSoFile(const BundleExtractor &extractor, const std::string &cpuAbi,
