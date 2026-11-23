@@ -378,7 +378,7 @@ const nlohmann::json *GetIpcCapabilityRoot(const nlohmann::json &jsonBuf)
 
 bool GetIpcPermissionConfig(const nlohmann::json &capabilityRoot, nlohmann::json &permissionConfig)
 {
-    auto permissionIter = capabilityRoot.find(ServiceConstants::PERMISSION_ALLOW_CROSS_APP_IPC);
+    auto permissionIter = capabilityRoot.find(ServiceConstants::ALLOW_CROSS_APP_IPC_CAPABILITY_KEY);
     if (permissionIter == capabilityRoot.end()) {
         APP_LOGD("ALLOW_CROSS_APP_IPC not declared");
         return false;

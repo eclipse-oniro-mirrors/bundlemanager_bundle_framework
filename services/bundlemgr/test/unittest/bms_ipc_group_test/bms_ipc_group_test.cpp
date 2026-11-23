@@ -15,6 +15,7 @@
 
 #include <gtest/gtest.h>
 
+#include <functional>
 #include <memory>
 #include <string>
 #include <unordered_set>
@@ -25,8 +26,10 @@
 #include "bundle_mgr_host_impl.h"
 #include "bundle_mgr_service.h"
 #include "bundle_parser.h"
+#include "bundle_service_constants.h"
 #include "inner_bundle_clone_info.h"
 #include "ipc_group_info.h"
+#include "parameters.h"
 #include "scope_guard.h"
 
 using namespace testing::ext;
@@ -122,7 +125,7 @@ std::shared_ptr<BundleMgrHostImpl> BmsIpcGroupTest::GetBundleMgrHostImpl() const
  */
 HWTEST_F(BmsIpcGroupTest, ParseIpcGroupIds_0001, Function | SmallTest | Level0)
 {
-    std::string capabilities = R"({"app-services-capabilities":{"ohos.permission.ALLOW_CROSS_APP_IPC":)"
+    std::string capabilities = R"({"app-services-capabilities":{"ALLOW_CROSS_APP_IPC":)"
         R"({"ipcGroupIds":["teamA0001","t0000","my-long-team-id-xyz0003","ipc-group-id-1","1234","teamA12"]}}})";
     std::vector<std::string> ids = BundleParser::ParseIpcGroupIds(capabilities);
     ASSERT_EQ(ids.size(), 3u);
@@ -146,7 +149,7 @@ HWTEST_F(BmsIpcGroupTest, ParseIpcGroupIds_0002, Function | SmallTest | Level0)
         idList += "\"teamA" + std::to_string(1000 + i) + "\"";
     }
     idList += "]";
-    std::string capabilities = "{\"app-services-capabilities\":{\"ohos.permission.ALLOW_CROSS_APP_IPC\":"
+    std::string capabilities = "{\"app-services-capabilities\":{\"ALLOW_CROSS_APP_IPC\":"
         "{\"ipcGroupIds\":" + idList + "}}}";
     std::vector<std::string> ids = BundleParser::ParseIpcGroupIds(capabilities);
     EXPECT_EQ(ids.size(), IPC_GROUP_ID_MAX_COUNT);
@@ -164,7 +167,7 @@ HWTEST_F(BmsIpcGroupTest, ParseIpcGroupIds_0003, Function | SmallTest | Level0)
     std::string noGrant = R"({"app-services-capabilities":{"ohos.permission.OTHER":{"ipcGroupIds":)"
         R"(["teamA0001"]}}})";
     EXPECT_TRUE(BundleParser::ParseIpcGroupIds(noGrant).empty());
-    std::string noIds = R"({"app-services-capabilities":{"ohos.permission.ALLOW_CROSS_APP_IPC":{}}})";
+    std::string noIds = R"({"app-services-capabilities":{"ALLOW_CROSS_APP_IPC":{}}})";
     EXPECT_TRUE(BundleParser::ParseIpcGroupIds(noIds).empty());
 }
 
@@ -178,7 +181,7 @@ HWTEST_F(BmsIpcGroupTest, ParseIpcGroupIds_0004, Function | SmallTest | Level0)
     std::string maxLenId = std::string(IPC_GROUP_ID_MAX_LEN - 4, 'a') + "0001";
     ASSERT_EQ(maxLenId.size(), IPC_GROUP_ID_MAX_LEN);
     std::string tooLongId = std::string(IPC_GROUP_ID_MAX_LEN - 3, 'a') + "0001";
-    std::string capabilities = "{\"app-services-capabilities\":{\"ohos.permission.ALLOW_CROSS_APP_IPC\":"
+    std::string capabilities = "{\"app-services-capabilities\":{\"ALLOW_CROSS_APP_IPC\":"
         "{\"ipcGroupIds\":[\"" + maxLenId + "\",\"" + tooLongId + "\"]}}}";
     std::vector<std::string> ids = BundleParser::ParseIpcGroupIds(capabilities);
     ASSERT_EQ(ids.size(), 1u);
@@ -351,10 +354,16 @@ HWTEST_F(BmsIpcGroupTest, GenerateIpcGroupInfos_0004, Function | SmallTest | Lev
 /**
  * @tc.number: GenerateNewUserIpcGroupInfos_0001
  * @tc.name: test GenerateNewUserIpcGroupInfos
- * @tc.desc: 1. a newly added user inherits the existing ipcGroupIds (multi-user parity with DataGroup)
+ * @tc.desc: 1. when cross app ipc is enabled, a newly added user inherits existing ipcGroupIds
  */
 HWTEST_F(BmsIpcGroupTest, GenerateNewUserIpcGroupInfos_0001, Function | SmallTest | Level0)
 {
+    const bool oldEnable = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_ARCOSS_APP_IPC, false);
+    OHOS::system::SetParameter(ServiceConstants::ENABLE_ARCOSS_APP_IPC, "true");
+    ScopeGuard paramGuard([oldEnable]() {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_ARCOSS_APP_IPC, oldEnable ? "true" : "false");
+    });
+
     auto dataMgr = GetBundleDataMgr();
     ASSERT_NE(dataMgr, nullptr);
     constexpr int32_t newUserId = 101;
@@ -365,16 +374,18 @@ HWTEST_F(BmsIpcGroupTest, GenerateNewUserIpcGroupInfos_0001, Function | SmallTes
     innerBundleUserInfo.bundleName = BUNDLE_NAME;
     innerBundleUserInfo.bundleUserInfo.userId = USERID;
     info.innerBundleUserInfos_.emplace(TEST_USER_KEY, innerBundleUserInfo);
-    InnerBundleUserInfo newUserInfo;
-    newUserInfo.uid = TEST_UID + 1;
-    newUserInfo.bundleName = BUNDLE_NAME;
-    newUserInfo.bundleUserInfo.userId = newUserId;
-    info.innerBundleUserInfos_.emplace(BUNDLE_NAME + "_" + std::to_string(newUserId), newUserInfo);
     dataMgr->bundleInfos_.emplace(BUNDLE_NAME, info);
     ScopeGuard bundleInfoGuard([&] { dataMgr->bundleInfos_.erase(BUNDLE_NAME); });
 
     std::unordered_set<std::string> ipcGroupIdList { IPC_GROUP_ID_ONE, IPC_GROUP_ID_TWO };
     dataMgr->GenerateIpcGroupInfos(BUNDLE_NAME, ipcGroupIdList, USERID);
+
+    InnerBundleUserInfo newUserInfo;
+    newUserInfo.uid = TEST_UID + 1;
+    newUserInfo.bundleName = BUNDLE_NAME;
+    newUserInfo.bundleUserInfo.userId = newUserId;
+    dataMgr->bundleInfos_.at(BUNDLE_NAME).innerBundleUserInfos_.emplace(
+        BUNDLE_NAME + "_" + std::to_string(newUserId), newUserInfo);
 
     dataMgr->GenerateNewUserIpcGroupInfos(BUNDLE_NAME, newUserId);
     std::vector<IpcGroupInfo> infos;
@@ -383,6 +394,86 @@ HWTEST_F(BmsIpcGroupTest, GenerateNewUserIpcGroupInfos_0001, Function | SmallTes
     for (const auto &ipcGroupInfo : infos) {
         EXPECT_EQ(ipcGroupInfo.uid, ipcGroupInfo.gid);
     }
+}
+
+/**
+ * @tc.number: GenerateNewUserIpcGroupInfos_0002
+ * @tc.name: test GenerateNewUserIpcGroupInfos
+ * @tc.desc: 1. when cross app ipc is disabled, a newly added user does not inherit existing ipcGroupIds
+ */
+HWTEST_F(BmsIpcGroupTest, GenerateNewUserIpcGroupInfos_0002, Function | SmallTest | Level0)
+{
+    const bool oldEnable = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_ARCOSS_APP_IPC, false);
+    OHOS::system::SetParameter(ServiceConstants::ENABLE_ARCOSS_APP_IPC, "false");
+    ScopeGuard paramGuard([oldEnable]() {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_ARCOSS_APP_IPC, oldEnable ? "true" : "false");
+    });
+
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    constexpr int32_t newUserId = 101;
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.uid = TEST_UID;
+    innerBundleUserInfo.bundleName = BUNDLE_NAME;
+    innerBundleUserInfo.bundleUserInfo.userId = USERID;
+    info.innerBundleUserInfos_.emplace(TEST_USER_KEY, innerBundleUserInfo);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, info);
+    ScopeGuard bundleInfoGuard([&] { dataMgr->bundleInfos_.erase(BUNDLE_NAME); });
+
+    std::unordered_set<std::string> ipcGroupIdList { IPC_GROUP_ID_ONE, IPC_GROUP_ID_TWO };
+    dataMgr->GenerateIpcGroupInfos(BUNDLE_NAME, ipcGroupIdList, USERID);
+
+    InnerBundleUserInfo newUserInfo;
+    newUserInfo.uid = TEST_UID + 1;
+    newUserInfo.bundleName = BUNDLE_NAME;
+    newUserInfo.bundleUserInfo.userId = newUserId;
+    dataMgr->bundleInfos_.at(BUNDLE_NAME).innerBundleUserInfos_.emplace(
+        BUNDLE_NAME + "_" + std::to_string(newUserId), newUserInfo);
+
+    dataMgr->GenerateNewUserIpcGroupInfos(BUNDLE_NAME, newUserId);
+    std::vector<IpcGroupInfo> infos;
+    EXPECT_EQ(dataMgr->QueryIpcGroupInfos(BUNDLE_NAME, newUserId, infos), ERR_OK);
+    EXPECT_TRUE(infos.empty());
+}
+
+/**
+ * @tc.number: ScanAllBundleIpcGroupInfo_0001
+ * @tc.name: test ScanAllBundleIpcGroupInfo
+ * @tc.desc: 1. when cross app ipc is disabled, scan syncs with empty declaration and clears existing records
+ */
+HWTEST_F(BmsIpcGroupTest, ScanAllBundleIpcGroupInfo_0001, Function | SmallTest | Level0)
+{
+    const bool oldEnable = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_ARCOSS_APP_IPC, false);
+    OHOS::system::SetParameter(ServiceConstants::ENABLE_ARCOSS_APP_IPC, "false");
+    ScopeGuard paramGuard([oldEnable]() {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_ARCOSS_APP_IPC, oldEnable ? "true" : "false");
+    });
+
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.uid = TEST_UID;
+    innerBundleUserInfo.bundleName = BUNDLE_NAME;
+    innerBundleUserInfo.bundleUserInfo.userId = USERID;
+    info.innerBundleUserInfos_.emplace(TEST_USER_KEY, innerBundleUserInfo);
+
+    IpcGroupInfo groupInfo;
+    groupInfo.ipcGroupId = IPC_GROUP_ID_ONE;
+    groupInfo.uid = TEST_GROUP_UID_FIRST;
+    groupInfo.gid = TEST_GROUP_UID_FIRST;
+    info.AddIpcGroupInfo(USERID, IPC_GROUP_ID_ONE, groupInfo);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, info);
+    ScopeGuard bundleInfoGuard([&] { dataMgr->bundleInfos_.erase(BUNDLE_NAME); });
+
+    ErrCode ret = dataMgr->ScanAllBundleIpcGroupInfo();
+    EXPECT_EQ(ret, ERR_OK);
+    std::vector<IpcGroupInfo> infos;
+    EXPECT_EQ(dataMgr->QueryIpcGroupInfos(BUNDLE_NAME, USERID, infos), ERR_OK);
+    EXPECT_TRUE(infos.empty());
 }
 
 /**

@@ -4881,17 +4881,11 @@ ErrCode BaseBundleInstaller::PrepareIpcGroupInfos(
         LOG_W(BMS_TAG_INSTALLER, "dataMgr_ null");
         return ERR_APPEXECFWK_NULL_PTR;
     }
-    // Permission first: without ALLOW_CROSS_APP_IPC the provision declarations are not parsed at all.
-    // During install the token is not yet persisted in ATM, so go through the SPM session facade
-    // (it queries the cached session policy when SPM is on, and falls back to BundlePermissionMgr
-    // otherwise).
-    auto permissionResult = spmSession_.VerifyPermission(bundleName_,
-        ServiceConstants::PERMISSION_ALLOW_CROSS_APP_IPC, userId_);
+    const bool ipcGroupEnabled = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_ARCOSS_APP_IPC, false);
     LOG_I(BMS_TAG_INSTALLER, "PrepareIpcGroupInfos bundleName:%{public}s userId:%{public}d "
-        "ALLOW_CROSS_APP_IPC permissionResult:%{public}d",
-        bundleName_.c_str(), userId_, permissionResult);
+        "enable_arcoss_app_ipc:%{public}d", bundleName_.c_str(), userId_, ipcGroupEnabled);
     std::unordered_set<std::string> validIds;
-    if (permissionResult == ERR_OK) {
+    if (ipcGroupEnabled) {
         std::unordered_set<std::string> declaredIds;
         GetIpcGroupIds(hapVerifyResults, declaredIds);
         for (const std::string &groupId : declaredIds) {
@@ -4899,7 +4893,7 @@ ErrCode BaseBundleInstaller::PrepareIpcGroupInfos(
         }
     } else {
         LOG_W(BMS_TAG_INSTALLER, "PrepareIpcGroupInfos bundleName:%{public}s userId:%{public}d "
-            "ALLOW_CROSS_APP_IPC not granted, ipcGroupIds not parsed",
+            "cross app ipc disabled by system parameter, ipcGroupIds not parsed",
             bundleName_.c_str(), userId_);
     }
     InnerBundleInfo tempInfo;
