@@ -124,11 +124,15 @@ public:
         BundleDirScene scene, int64_t &statSize, int64_t timeoutMs = -1);
     /**
      * @brief Get bundle inode count for UID.
-     * @param uid The user ID of the application).
+     * @param uid The uid of the application.
      * @param inodeCount Output parameter for inode count.
-     * @return Returns ERR_OK if successfully; returns false otherwise.
+     * @param bundleName The bundle name for the scan routing.
+     * @param userId The user Id for the scan routing.
+     * @param appIndex The app index for the scan routing.
+     * @return Returns ERR_OK if successfully; on scan failure returns the error.
      */
-    ErrCode GetBundleInodeCount(int32_t uid, uint64_t &inodeCount);
+    ErrCode GetBundleInodeCount(int32_t uid, uint64_t &inodeCount,
+        const std::string &bundleName = "", const int32_t userId = -1, const int32_t appIndex = 0);
 
     /**
      * @brief Clean all files in a bundle data directory.
@@ -155,13 +159,15 @@ public:
     ErrCode GetBundleStats(const std::string &bundleName, const int32_t userId,
         std::vector<int64_t> &bundleStats, const std::unordered_set<int32_t> &uids,
         const int32_t appIndex = 0, const uint32_t statFlag = 0,
-        const std::vector<std::string> &moduleNameList = {});
+        const std::vector<std::string> &moduleNameList = {},
+        int64_t *inodeCount = nullptr);
 
     ErrCode BatchGetBundleStats(const std::vector<std::string> &bundleNames,
         const std::unordered_map<std::string, std::unordered_set<int32_t>> &uidMap,
-        std::vector<BundleStorageStats> &bundleStats);
+        std::vector<BundleStorageStats> &bundleStats, const int32_t userId = -1);
 
-    ErrCode GetAllBundleStats(std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids);
+    ErrCode GetAllBundleStats(std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids,
+        const std::vector<std::string> &bundleNames = {}, const int32_t userId = -1);
 
     ErrCode MigrateData(const std::vector<std::string> &sourcePaths, const std::string &destinationPath);
 

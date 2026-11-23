@@ -208,7 +208,8 @@ std::string InstalldHostImpl::GetBundleDataDir(const std::string &el, const int 
     return "";
 }
 
-ErrCode InstalldHostImpl::GetBundleInodeCount(int32_t uid, uint64_t &inodeCount)
+ErrCode InstalldHostImpl::GetBundleInodeCount(int32_t uid, uint64_t &inodeCount,
+    const std::string &bundleName, const int32_t userId, const int32_t appIndex)
 {
     return ERR_OK;
 }
@@ -216,19 +217,21 @@ ErrCode InstalldHostImpl::GetBundleInodeCount(int32_t uid, uint64_t &inodeCount)
 ErrCode InstalldHostImpl::GetBundleStats(
     const std::string &bundleName, const int32_t userId, std::vector<int64_t> &bundleStats,
     const std::unordered_set<int32_t> &uids, const int32_t appIndex, const uint32_t statFlag,
-    const std::vector<std::string> &moduleNameList)
+    const std::vector<std::string> &moduleNameList, int64_t *inodeCount)
 {
     return ERR_OK;
 }
 
 ErrCode InstalldHostImpl::BatchGetBundleStats(const std::vector<std::string> &bundleNames,
     const std::unordered_map<std::string, std::unordered_set<int32_t>> &uidMap,
-    std::vector<BundleStorageStats> &bundleStats)
+    std::vector<BundleStorageStats> &bundleStats, const int32_t userId)
 {
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::GetAllBundleStats(std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids)
+ErrCode InstalldHostImpl::GetAllBundleStats(std::vector<int64_t> &bundleStats,
+    const std::vector<int32_t> &uids, const std::vector<std::string> &bundleNames,
+    const int32_t userId)
 {
     return ERR_OK;
 }

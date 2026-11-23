@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#include <set>
+
 #include "bundle_stats/bundle_stats_cache_mgr.h"
 
 #include "app_log_wrapper.h"
@@ -21,8 +23,10 @@
 #include "bundle_service_constants.h"
 #include "bundle_util.h"
 #include "dual_mode_helper.h"
+#include "idle_condition_mgr/idle_condition_mgr.h"
 #include "inner_bundle_info.h"
 #include "parameters.h"
+#include "scope_guard.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -48,6 +52,7 @@ bool ShouldCollectScanEntry(int32_t uid, int32_t responseUserId, bool forceScan)
 std::atomic<bool> BundleStatsCacheMgr::needStop_{false};
 std::atomic<int64_t> BundleStatsCacheMgr::lastScanTimeMs_{0};
 std::mutex BundleStatsCacheMgr::refreshMutex_;
+std::set<std::string> BundleStatsCacheMgr::refreshInFlight_;
 
 std::shared_ptr<BundleStatsCacheRdb> BundleStatsCacheMgr::GetRdb()
 {
@@ -160,6 +165,7 @@ bool BundleStatsCacheMgr::IsPcLikeDevice()
 bool BundleStatsCacheMgr::ShouldStartIdleScan()
 {
     if (!IsPcLikeDevice()) {
+        APP_LOGI_NOFUNC("BundleStats skip: not PC device or not in PC mode");
         return false;
     }
     return !IsInCooldown();
@@ -167,11 +173,7 @@ bool BundleStatsCacheMgr::ShouldStartIdleScan()
 
 void BundleStatsCacheMgr::ScanAllSharedUidApps(int32_t userId)
 {
-    if (!IsPcLikeDevice()) {
-        APP_LOGI_NOFUNC("BundleStats skip: not PC device or not in PC mode");
-        return;
-    }
-    if (IsInCooldown()) {
+    if (!ShouldStartIdleScan()) {
         return;
     }
     std::vector<SharedUidEntry> entries;
@@ -256,5 +258,145 @@ void BundleStatsCacheMgr::ResetForTest()
 {
     lastScanTimeMs_.store(0, std::memory_order_release);
 }
+bool BundleStatsCacheMgr::GetCachedData(const std::string &bundleName, int32_t userId,
+    int32_t appIndex, BundleStatsCacheData &data)
+{
+    if (!IsCacheEnabled()) {
+        return false;
+    }
+    return GetRdb()->GetCacheData(bundleName, userId, appIndex, data);
+}
+
+void BundleStatsCacheMgr::OnBundleUninstalled(const std::string &bundleName)
+{
+    GetRdb()->DeleteBundle(bundleName);
+}
+
+void BundleStatsCacheMgr::OnUserRemoved(int32_t userId)
+{
+    GetRdb()->DeleteUser(userId);
+}
+
+bool BundleStatsCacheMgr::ShouldWriteCache(int32_t uid, int32_t userId)
+{
+    if (!IsCacheEnabled()) {
+        return false;
+    }
+    bool forceScan = OHOS::system::GetBoolParameter(
+        ServiceConstants::BMS_TEST_SHARED_UID_PARAM, false);
+    if (forceScan) {
+        return uid >= 0;
+    }
+    return uid == userId && uid >= Constants::START_USERID;
+}
+
+bool BundleStatsCacheMgr::MarkRefreshInFlight(const std::string &key)
+{
+    std::lock_guard<std::mutex> lock(refreshMutex_);
+    if (refreshInFlight_.find(key) != refreshInFlight_.end()) {
+        return false;
+    }
+    refreshInFlight_.insert(key);
+    return true;
+}
+
+void BundleStatsCacheMgr::UnmarkRefreshInFlight(const std::string &key)
+{
+    std::lock_guard<std::mutex> lock(refreshMutex_);
+    refreshInFlight_.erase(key);
+}
+
+void BundleStatsCacheMgr::RefreshCacheTask(const std::string &bundleName, int32_t userId,
+    int32_t appIndex)
+{
+    auto service = DelayedSingleton<BundleMgrService>::GetInstance();
+    auto dataMgr = (service != nullptr) ? service->GetDataMgr() : nullptr;
+    if (dataMgr == nullptr) {
+        APP_LOGE_NOFUNC("DataMgr is null");
+        return;
+    }
+    std::vector<int64_t> stats;
+    int32_t uid = Constants::INVALID_UID;
+    int64_t inodeCount = -1;
+    if (!dataMgr->ScanBundleStats(bundleName, userId, stats, appIndex, uid, &inodeCount)) {
+        APP_LOGD("refresh aborted: scan failed -n:%{public}s",
+            bundleName.c_str());
+        return;
+    }
+    // -1 = scan failed: keep the existing entry as is, it must never be
+    // cached
+    if (!IsValidDim(inodeCount)) {
+        APP_LOGD("refresh skipped: scan unavailable -n:%{public}s",
+            bundleName.c_str());
+        return;
+    }
+    BundleStatsCacheData data;
+    data.uid = uid;
+    data.scanTime = BundleUtil::GetCurrentTimeMs();
+    data.bundleStats = stats;
+    data.inodeCount = inodeCount;
+    MergeAndWriteCache(bundleName, userId, appIndex, data);
+    APP_LOGD("refresh done -n:%{public}s", bundleName.c_str());
+}
+
+void BundleStatsCacheMgr::RefreshCacheAfterHit(const std::string &bundleName, int32_t userId,
+    int32_t appIndex)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    if (idleMgr != nullptr && idleMgr->IsBundleStatsScanActive()) {
+        APP_LOGD("skip refresh: idle scan active -n:%{public}s",
+            bundleName.c_str());
+        return;
+    }
+    std::string key = bundleName + ":" + std::to_string(userId) + ":"
+        + std::to_string(appIndex);
+    if (!MarkRefreshInFlight(key)) {
+        APP_LOGD("skip refresh: already in flight -n:%{public}s",
+            bundleName.c_str());
+        return;
+    }
+    auto task = [bundleName, userId, appIndex, key] {
+        ScopeGuard guard([key] { UnmarkRefreshInFlight(key); });
+        RefreshCacheTask(bundleName, userId, appIndex);
+    };
+    ffrt::submit(task);
+}
+
+void BundleStatsCacheMgr::PopulateCacheAfterMiss(const std::string &bundleName, int32_t userId,
+    int32_t appIndex, int32_t uid, const std::vector<int64_t> &partialStats)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    if (idleMgr != nullptr && idleMgr->IsBundleStatsScanActive()) {
+        APP_LOGD("skip populate: idle scan active -n:%{public}s",
+            bundleName.c_str());
+        return;
+    }
+    std::string key = bundleName + ":" + std::to_string(userId) + ":"
+        + std::to_string(appIndex);
+    if (!MarkRefreshInFlight(key)) {
+        APP_LOGD("skip populate: already in flight -n:%{public}s",
+            bundleName.c_str());
+        return;
+    }
+    auto task = [bundleName, userId, appIndex, uid, partialStats, key] {
+        ScopeGuard guard([key] { UnmarkRefreshInFlight(key); });
+        // Step 1: merge the batch-scanned partial dims first so they serve
+        // aggregate hits while the completing scan runs. The caller marks the
+        // cache size dim -1 (never computed by the batch path).
+        if (partialStats.size() >= 2) {
+            BundleStatsCacheData data;
+            data.uid = uid;
+            data.scanTime = BundleUtil::GetCurrentTimeMs();
+            data.bundleStats = partialStats;
+            data.inodeCount = -1;
+            MergeAndWriteCache(bundleName, userId, appIndex, data);
+        }
+        // Step 2: complete the entry with a full scan (all dims + inode).
+        RefreshCacheTask(bundleName, userId, appIndex);
+        APP_LOGD("populate done -n:%{public}s", bundleName.c_str());
+    };
+    ffrt::submit(task);
+}
+
 } // namespace AppExecFwk
 } // namespace OHOS

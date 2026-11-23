@@ -4810,7 +4810,9 @@ HWTEST_F(BmsBundleDataMgrTest, BatchGetBundleStats_0500, Function | SmallTest | 
     std::vector<BundleStorageStats> bundleStats;
     GetBundleDataMgr()->multiUserIdsSet_.insert(USERID);
     ErrCode res = GetBundleDataMgr()->BatchGetBundleStats(bundleNames, USERID, bundleStats);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    EXPECT_EQ(res, ERR_OK);
+    ASSERT_EQ(bundleStats.size(), static_cast<size_t>(1));
+    EXPECT_EQ(bundleStats[0].errCode, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
     GetBundleDataMgr()->multiUserIdsSet_.erase(USERID);
 }
 
@@ -4851,7 +4853,9 @@ HWTEST_F(BmsBundleDataMgrTest, BatchGetBundleStats_0700, Function | SmallTest | 
     dataMgr->multiUserIdsSet_.insert(ERROR_USERID);
     dataMgr->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
     ErrCode res = dataMgr->BatchGetBundleStats(bundleNames, ERROR_USERID, bundleStats);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    EXPECT_EQ(res, ERR_OK);
+    ASSERT_EQ(bundleStats.size(), static_cast<size_t>(1));
+    EXPECT_EQ(bundleStats[0].errCode, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
     dataMgr->multiUserIdsSet_.erase(USERID);
     dataMgr->multiUserIdsSet_.erase(ERROR_USERID);
     dataMgr->bundleInfos_.clear();
@@ -5204,7 +5208,9 @@ HWTEST_F(BmsBundleDataMgrTest, BundleMgrProxyBatchGetBundleStats_0100, Function 
     std::vector<std::string> bundleNames = {"com.example.bundlekit.test"};
     std::vector<BundleStorageStats> bundleStats;
     ErrCode ret = localBundleMgrProxy->BatchGetBundleStats(bundleNames, USERID, bundleStats);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    EXPECT_EQ(ret, ERR_OK);
+    ASSERT_EQ(bundleStats.size(), static_cast<size_t>(1));
+    EXPECT_EQ(bundleStats[0].errCode, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
 /**

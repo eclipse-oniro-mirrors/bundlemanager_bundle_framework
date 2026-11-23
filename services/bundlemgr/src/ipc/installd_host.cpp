@@ -898,8 +898,11 @@ bool InstalldHost::HandleGetBundleInodeCount(MessageParcel &data, MessageParcel 
 {
     LOG_NOFUNC_D(BMS_TAG_INSTALLD, "HandleGetBundleInodeCount start");
     int32_t uid = data.ReadInt32();
+    std::string bundleName = Str16ToStr8(data.ReadString16());
+    int32_t userId = data.ReadInt32();
+    int32_t appIndex = data.ReadInt32();
     uint64_t inodeCount = 0;
-    ErrCode result = GetBundleInodeCount(uid, inodeCount);
+    ErrCode result = GetBundleInodeCount(uid, inodeCount, bundleName, userId, appIndex);
     if (!reply.WriteInt32(result)) {
         LOG_NOFUNC_E(BMS_TAG_INSTALLD, "Handle Get Inode Count write result failed");
         return false;
@@ -977,10 +980,16 @@ bool InstalldHost::HandleGetBundleStats(MessageParcel &data, MessageParcel &repl
         return false;
     }
     std::vector<int64_t> bundleStats;
-    ErrCode result = GetBundleStats(bundleName, userId, bundleStats, uids, appIndex, statFlag, moduleNameList);
+    int64_t inodeCount = -1;
+    ErrCode result = GetBundleStats(bundleName, userId, bundleStats, uids, appIndex, statFlag,
+        moduleNameList, &inodeCount);
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     if (!reply.WriteInt64Vector(bundleStats)) {
         LOG_E(BMS_TAG_INSTALLD, "HandleGetBundleStats write failed");
+        return false;
+    }
+    if (!reply.WriteInt64(inodeCount)) {
+        LOG_E(BMS_TAG_INSTALLD, "HandleGetBundleStats write inodeCount failed");
         return false;
     }
     return true;
@@ -1020,8 +1029,9 @@ bool InstalldHost::HandleBatchGetBundleStats(MessageParcel &data, MessageParcel 
         }
         uidMap.emplace(bundleName, uidSet);
     }
+    int32_t userId = data.ReadInt32();
     std::vector<BundleStorageStats> bundleStats;
-    ErrCode result = BatchGetBundleStats(bundleNames, uidMap, bundleStats);
+    ErrCode result = BatchGetBundleStats(bundleNames, uidMap, bundleStats, userId);
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     int32_t statsSize = static_cast<int32_t>(bundleStats.size());
     if (!reply.WriteInt32(statsSize)) {
@@ -1049,8 +1059,18 @@ bool InstalldHost::HandleGetAllBundleStats(MessageParcel &data, MessageParcel &r
         int32_t uid = data.ReadInt32();
         uids.emplace_back(uid);
     }
+    std::vector<std::string> bundleNames;
+    int32_t nameSize = data.ReadInt32();
+    if (nameSize < 0 || nameSize > Constants::CAPACITY_SIZE) {
+        LOG_E(BMS_TAG_INSTALLD, "HandleGetAllBundleStats nameSize out of range");
+        return false;
+    }
+    for (int32_t index = 0; index < nameSize; ++index) {
+        bundleNames.push_back(Str16ToStr8(data.ReadString16()));
+    }
+    int32_t userId = data.ReadInt32();
     std::vector<int64_t> bundleStats;
-    ErrCode result = GetAllBundleStats(bundleStats, uids);
+    ErrCode result = GetAllBundleStats(bundleStats, uids, bundleNames, userId);
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     if (!reply.WriteInt64Vector(bundleStats)) {
         LOG_E(BMS_TAG_INSTALLD, "HandleGetAllBundleStats write failed");

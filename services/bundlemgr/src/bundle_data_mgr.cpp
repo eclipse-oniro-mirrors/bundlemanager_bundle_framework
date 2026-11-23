@@ -28,6 +28,7 @@
 #include "ability_manager_helper.h"
 #include "accesstoken_kit.h"
 #include "bundle_spm_manager.h"
+#include "bundle_stats/bundle_stats_cache_mgr.h"
 #include "account_helper.h"
 #include "app_install_extended_info.h"
 #include "app_mgr_client.h"
@@ -5416,6 +5417,7 @@ bool BundleDataMgr::DeleteSharedBundleInfo(const std::string &bundleName)
             APP_LOGW("delete storage error name:%{public}s", bundleName.c_str());
         }
         bundleInfos_.erase(bundleName);
+        BundleStatsCacheMgr::OnBundleUninstalled(bundleName);
     }
     std::lock_guard<std::mutex> stateLock(stateMutex_);
     installStates_.erase(bundleName);
@@ -6557,15 +6559,44 @@ std::set<int32_t> BundleDataMgr::GetBindingSAUidsByBundleName(const std::string 
     return relation->second;
 }
 
-bool BundleDataMgr::GetBundleStats(const std::string &bundleName,
-    const int32_t userId, std::vector<int64_t> &bundleStats, const int32_t appIndex, const uint32_t statFlag) const
+bool BundleDataMgr::ScanBundleStats(const std::string &bundleName,
+    const int32_t userId, std::vector<int64_t> &bundleStats,
+    const int32_t appIndex, int32_t &uid, int64_t *inodeCount,
+    const uint32_t statFlag) const
 {
-    int32_t responseUserId = -1;
-    int32_t uid = Constants::INVALID_UID;
-    std::vector<std::string> moduleNameList;
-    // dual-mode: clone app's code dir is keyed by the effective (prefixed) name.
     std::string effectiveName = bundleName;
     bool isDualModeClone = false;
+    std::vector<std::string> moduleNameList;
+    int32_t responseUserId = ResolveScanTarget(bundleName, userId, appIndex, uid,
+        effectiveName, isDualModeClone, moduleNameList);
+    if (responseUserId == Constants::INVALID_USERID) {
+        APP_LOGD("bundle:%{public}s [%{public}d] is not existed and not uninstalled with keepdata",
+            bundleName.c_str(), appIndex);
+        return false;
+    }
+    std::unordered_set<int32_t> uids;
+    uids.emplace(uid);
+    CollectSaUidsIfMainApp(bundleName, userId, appIndex, uids);
+
+    int32_t installdAppIndex = isDualModeClone ? Constants::MAIN_APP_INDEX : appIndex;
+    // statFlag is passed through: dims whose WITHOUT_* bit is set stay 0.
+    ErrCode ret = InstalldClient::GetInstance()->GetBundleStats(
+        effectiveName, responseUserId, bundleStats, uids, installdAppIndex, statFlag, moduleNameList,
+        inodeCount);
+    if (ret != ERR_OK) {
+        APP_LOGW("%{public}s getStats failed ret: %{public}d", bundleName.c_str(), ret);
+        return false;
+    }
+    CalculatePreInstalledBundleSize(bundleName, appIndex, bundleStats);
+    return true;
+}
+
+int32_t BundleDataMgr::ResolveScanTarget(const std::string &bundleName, const int32_t userId,
+    const int32_t appIndex, int32_t &uid, std::string &effectiveName,
+    bool &isDualModeClone, std::vector<std::string> &moduleNameList) const
+{
+    int32_t responseUserId = -1;
+    uid = Constants::INVALID_UID;
     {
         std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
         const auto infoItem = bundleInfos_.find(bundleName);
@@ -6582,36 +6613,124 @@ bool BundleDataMgr::GetBundleStats(const std::string &bundleName,
     if (uid == Constants::INVALID_UID) {
         UninstallBundleInfo uninstallBundleInfo;
         if (!GetUninstallBundleInfo(bundleName, uninstallBundleInfo)) {
-            APP_LOGD("bundle:%{public}s [%{public}d] is not existed and not uninstalled with keepdata",
-                bundleName.c_str(), appIndex);
-            return false;
+            return Constants::INVALID_USERID;
         }
         responseUserId = userId;
         uid = uninstallBundleInfo.GetUid(responseUserId, appIndex);
         moduleNameList = uninstallBundleInfo.moduleNames;
         if (uid == Constants::INVALID_UID) {
             APP_LOGD("can not found bundle: %{public}s in uninstallBundleInfo for index: %{public}d",
-            bundleName.c_str(), appIndex);
+                bundleName.c_str(), appIndex);
+            return Constants::INVALID_USERID;
         }
     }
-    std::unordered_set<int32_t> uids;
-    uids.emplace(uid);
+    return responseUserId;
+}
+
+void BundleDataMgr::CollectSaUidsIfMainApp(const std::string &bundleName, const int32_t userId,
+    const int32_t appIndex, std::unordered_set<int32_t> &uids) const
+{
     auto activeUserId = AccountHelper::GetUserIdByCallerType();
-    if (appIndex == Constants::MAIN_APP_INDEX && activeUserId == userId) {
-        std::map<std::string, std::set<int32_t>> saUidMap;
-        LoadSaUidMap(saUidMap);
-        auto saUids = GetBindingSAUidsByBundleName(bundleName, saUidMap);
-        uids.insert(saUids.begin(), saUids.end());
+    if (appIndex != Constants::MAIN_APP_INDEX || activeUserId != userId) {
+        return;
     }
-    int32_t installdAppIndex = isDualModeClone ? Constants::MAIN_APP_INDEX : appIndex;
-    ErrCode ret = InstalldClient::GetInstance()->GetBundleStats(
-        effectiveName, responseUserId, bundleStats, uids, installdAppIndex, statFlag, moduleNameList);
-    if (ret != ERR_OK) {
-        APP_LOGW("%{public}s getStats failed", bundleName.c_str());
+    std::map<std::string, std::set<int32_t>> saUidMap;
+    LoadSaUidMap(saUidMap);
+    auto saUids = GetBindingSAUidsByBundleName(bundleName, saUidMap);
+    uids.insert(saUids.begin(), saUids.end());
+}
+
+bool BundleDataMgr::GetBundleStats(const std::string &bundleName,
+    const int32_t userId, std::vector<int64_t> &bundleStats, const int32_t appIndex, const uint32_t statFlag) const
+{
+    int32_t uid = Constants::INVALID_UID;
+    ResolveStatsCacheUid(bundleName, userId, appIndex, uid);
+    if (ReadStatsCacheOnHit(bundleName, userId, appIndex, statFlag, bundleStats)) {
+        return true;
+    }
+    std::vector<int64_t> scanned;
+    int64_t scannedInode = -1;
+    if (!ScanBundleStats(bundleName, userId, scanned, appIndex, uid, &scannedInode, statFlag)) {
         return false;
     }
-    CalculatePreInstalledBundleSize(bundleName, appIndex, bundleStats);
+    bundleStats = scanned;
+    WriteStatsCacheAfterMiss(bundleName, userId, appIndex, uid, statFlag, scannedInode, bundleStats);
     return true;
+}
+
+void BundleDataMgr::ResolveStatsCacheUid(const std::string &bundleName, const int32_t userId,
+    const int32_t appIndex, int32_t &uid) const
+{
+    {
+        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        const auto infoItem = bundleInfos_.find(bundleName);
+        if (infoItem != bundleInfos_.end()) {
+            int32_t responseUserId = infoItem->second.GetResponseUserId(userId);
+            uid = infoItem->second.GetUid(responseUserId, appIndex);
+        }
+    }
+    if (uid == Constants::INVALID_UID) {
+        UninstallBundleInfo uninstallBundleInfo;
+        if (GetUninstallBundleInfo(bundleName, uninstallBundleInfo)) {
+            uid = uninstallBundleInfo.GetUid(userId, appIndex);
+        }
+    }
+}
+
+bool BundleDataMgr::ReadStatsCacheOnHit(const std::string &bundleName, const int32_t userId,
+    const int32_t appIndex, const uint32_t statFlag, std::vector<int64_t> &bundleStats) const
+{
+    if (!BundleStatsCacheMgr::IsCacheEnabled()) {
+        return false;
+    }
+    BundleStatsCacheData cacheData;
+    if (!BundleStatsCacheMgr::GetCachedData(bundleName, userId, appIndex, cacheData)
+        || cacheData.bundleStats.size() < 5
+        || !std::all_of(cacheData.bundleStats.begin(), cacheData.bundleStats.end(),
+            BundleStatsCacheMgr::IsValidDim)) {
+        return false;
+    }
+    bundleStats = cacheData.bundleStats;
+    // Keep public semantics on a hit: dims skipped by statFlag stay 0.
+    if ((statFlag & Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_INSTALL_SIZE) != 0) {
+        bundleStats[0] = 0;
+    }
+    if ((statFlag & Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_DATA_SIZE) != 0) {
+        bundleStats[1] = 0;
+    }
+    if ((statFlag & Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_CACHE_SIZE) != 0) {
+        bundleStats[4] = 0;
+    }
+    APP_LOGD("GetBundleStats cache hit -n:%{public}s -u:%{public}d -i:%{public}d",
+        bundleName.c_str(), userId, appIndex);
+    BundleStatsCacheMgr::RefreshCacheAfterHit(bundleName, userId, appIndex);
+    return true;
+}
+
+void BundleDataMgr::WriteStatsCacheAfterMiss(const std::string &bundleName, const int32_t userId,
+    const int32_t appIndex, const int32_t uid, const uint32_t statFlag, const int64_t scannedInode,
+    const std::vector<int64_t> &bundleStats) const
+{
+    // A failed scan (-1) is never cached; dims skipped by statFlag are marked -1.
+    if (!BundleStatsCacheMgr::ShouldWriteCache(uid, userId)
+        || !BundleStatsCacheMgr::IsValidDim(scannedInode) || bundleStats.size() < 5) {
+        return;
+    }
+    BundleStatsCacheData cacheData;
+    cacheData.uid = uid;
+    cacheData.scanTime = BundleUtil::GetCurrentTimeMs();
+    cacheData.bundleStats = bundleStats;
+    if ((statFlag & Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_INSTALL_SIZE) != 0) {
+        cacheData.bundleStats[0] = -1;
+    }
+    if ((statFlag & Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_DATA_SIZE) != 0) {
+        cacheData.bundleStats[1] = -1;
+    }
+    if ((statFlag & Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_CACHE_SIZE) != 0) {
+        cacheData.bundleStats[4] = -1;
+    }
+    cacheData.inodeCount = scannedInode;
+    BundleStatsCacheMgr::MergeAndWriteCache(bundleName, userId, appIndex, cacheData);
 }
 
 void BundleDataMgr::CalculatePreInstalledBundleSize(const std::string& bundleName, const int32_t appIndex,
@@ -6629,16 +6748,6 @@ void BundleDataMgr::CalculatePreInstalledBundleSize(const std::string& bundleNam
     }
 }
 
-bool BundleDataMgr::ScanBundleStats(const std::string &bundleName,
-    const int32_t userId, std::vector<int64_t> &bundleStats,
-    const int32_t appIndex, int32_t &uid, int64_t *inodeCount) const
-{
-    // Stub until the scan engine is available: the idle scan framework
-    // gets no data and keeps every entry unwritten.
-    uid = Constants::INVALID_UID;
-    return false;
-}
-
 ErrCode BundleDataMgr::BatchGetBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,
     std::unordered_map<std::string, std::unordered_set<int32_t>> &uidMap,
     std::vector<BundleStorageStats> &bundleStats) const
@@ -6646,9 +6755,9 @@ ErrCode BundleDataMgr::BatchGetBundleStats(const std::vector<std::string> &bundl
     auto activeUserId = AccountHelper::GetUserIdByCallerType();
     if (activeUserId != userId) {
         if (DualModeHelper::IsDualModeDevice()) {
-            return BatchGetBundleStatsDualMode(bundleNames, uidMap, bundleStats);
+            return BatchGetBundleStatsDualMode(bundleNames, uidMap, bundleStats, userId);
         } else {
-            return InstalldClient::GetInstance()->BatchGetBundleStats(bundleNames, uidMap, bundleStats);
+            return InstalldClient::GetInstance()->BatchGetBundleStats(bundleNames, uidMap, bundleStats, userId);
         }
     }
     std::map<std::string, std::set<int32_t>> saUidMap;
@@ -6662,15 +6771,15 @@ ErrCode BundleDataMgr::BatchGetBundleStats(const std::vector<std::string> &bundl
         }
     }
     if (DualModeHelper::IsDualModeDevice()) {
-        return BatchGetBundleStatsDualMode(bundleNames, uidMap, bundleStats);
+        return BatchGetBundleStatsDualMode(bundleNames, uidMap, bundleStats, userId);
     } else {
-        return InstalldClient::GetInstance()->BatchGetBundleStats(bundleNames, uidMap, bundleStats);
+        return InstalldClient::GetInstance()->BatchGetBundleStats(bundleNames, uidMap, bundleStats, userId);
     }
 }
 
 ErrCode BundleDataMgr::BatchGetBundleStatsDualMode(const std::vector<std::string> &bundleNames,
     const std::unordered_map<std::string, std::unordered_set<int32_t>> &uidMap,
-    std::vector<BundleStorageStats> &bundleStats) const
+    std::vector<BundleStorageStats> &bundleStats, const int32_t userId) const
 {
     // dual-mode: clone app's code dir is keyed by the effective (prefixed) name.
     std::vector<std::string> effectiveNames;
@@ -6698,8 +6807,9 @@ ErrCode BundleDataMgr::BatchGetBundleStatsDualMode(const std::vector<std::string
             }
         }
     }
+    // The Installd side routes shared-uid apps by uid == userId.
     ErrCode ret = InstalldClient::GetInstance()->BatchGetBundleStats(
-        effectiveNames, effectiveUidMap, bundleStats);
+        effectiveNames, effectiveUidMap, bundleStats, userId);
     if (ret != ERR_OK) {
         APP_LOGW("BatchGetBundleStatsDualMode failed, ret:%{public}d", ret);
         return ret;
@@ -6717,11 +6827,36 @@ ErrCode BundleDataMgr::BatchGetBundleStats(const std::vector<std::string> &bundl
     std::vector<BundleStorageStats> &bundleStats) const
 {
     std::unordered_map<std::string, std::unordered_set<int32_t>> uidMap;
+    // Main uid per bundle (before SA uids are merged into uidMap), used for
+    // the productivity-app (shared-uid) miss write-back gate below.
+    std::unordered_map<std::string, int32_t> mainUidMap;
     std::vector<std::string> bundleNameList = bundleNames;
     std::vector<BundleStorageStats> bundleStatsList;
     if (!HasUserId(userId)) {
         APP_LOGE("userId %{public}d not exist.", userId);
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    // Check cached stats for shared-uid apps; cached entries are served
+    // directly, the rest fall through to the Installd scan path.
+    if (BundleStatsCacheMgr::IsCacheEnabled()) {
+        for (auto bundleName = bundleNameList.begin(); bundleName != bundleNameList.end();) {
+            BundleStatsCacheData cacheData;
+            if (BundleStatsCacheMgr::GetCachedData(*bundleName, userId, 0, cacheData)
+                && cacheData.bundleStats.size() >= 5
+                && std::all_of(cacheData.bundleStats.begin(), cacheData.bundleStats.end(),
+                    BundleStatsCacheMgr::IsValidDim)) {
+                BundleStorageStats stats;
+                stats.bundleName = *bundleName;
+                stats.bundleStats = cacheData.bundleStats;
+                // The batch path never computes cache size.
+                stats.bundleStats[4] = 0;
+                bundleStatsList.push_back(stats);
+                BundleStatsCacheMgr::RefreshCacheAfterHit(*bundleName, userId, 0);
+                bundleName = bundleNameList.erase(bundleName);
+                continue;
+            }
+            ++bundleName;
+        }
     }
     {
         std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
@@ -6743,6 +6878,7 @@ ErrCode BundleDataMgr::BatchGetBundleStats(const std::vector<std::string> &bundl
                     APP_LOGD("bundle: %{public}s is uninstalled with keepdata before, uid: %{public}d",
                         name.c_str(), uninstallBundleInfo.GetUid(userId));
                     uidMap[*bundleName].insert(uninstallBundleInfo.GetUid(userId));
+                    mainUidMap[*bundleName] = uninstallBundleInfo.GetUid(userId);
                     ++bundleName;
                 }
                 continue;
@@ -6750,13 +6886,19 @@ ErrCode BundleDataMgr::BatchGetBundleStats(const std::vector<std::string> &bundl
             APP_LOGD("bundle: %{public}s is installed, uid: %{public}d",
                     name.c_str(), userInfo.uid);
             uidMap[*bundleName].insert(userInfo.uid);
+            mainUidMap[*bundleName] = userInfo.uid;
             ++bundleName;
         }
     }
-    ErrCode ret = BatchGetBundleStats(bundleNameList, userId, uidMap, bundleStats);
-    if (ret != ERR_OK) {
-        APP_LOGE("getStats failed");
-        return ret;
+    // Skip the Installd call when the list was emptied by filtering;
+    // an originally-empty input still goes through (empty-batch rejection).
+    ErrCode ret = ERR_OK;
+    if (!bundleNameList.empty() || bundleNames.empty()) {
+        ret = BatchGetBundleStats(bundleNameList, userId, uidMap, bundleStats);
+        if (ret != ERR_OK) {
+            APP_LOGE("getStats failed ret: %{public}d", ret);
+            return ret;
+        }
     }
     if (!bundleStatsList.empty()) {
         bundleStats.insert(bundleStats.end(), bundleStatsList.begin(), bundleStatsList.end());
@@ -6764,7 +6906,34 @@ ErrCode BundleDataMgr::BatchGetBundleStats(const std::vector<std::string> &bundl
     for (const auto &name : bundleNameList) {
         GetPreBundleSize(name, bundleStats);
     }
+    PopulateCacheAfterBatchMissWithStats(bundleNameList, mainUidMap, userId, bundleStats);
     return ERR_OK;
+}
+
+void BundleDataMgr::PopulateCacheAfterBatchMissWithStats(const std::vector<std::string> &bundleNameList,
+    const std::unordered_map<std::string, int32_t> &mainUidMap, int32_t userId,
+    const std::vector<BundleStorageStats> &bundleStats) const
+{
+    if (!BundleStatsCacheMgr::IsCacheEnabled()) {
+        return;
+    }
+    for (const auto &name : bundleNameList) {
+        auto uidIt = mainUidMap.find(name);
+        if (uidIt == mainUidMap.end() ||
+            !BundleStatsCacheMgr::ShouldWriteCache(uidIt->second, userId)) {
+            continue;
+        }
+        auto statsIter = std::find_if(bundleStats.begin(), bundleStats.end(),
+            [&name](const BundleStorageStats &stats) { return stats.bundleName == name; });
+        if (statsIter == bundleStats.end() || statsIter->errCode != ERR_OK
+            || statsIter->bundleStats.size() < 5) {
+            continue;
+        }
+        std::vector<int64_t> partialStats = statsIter->bundleStats;
+        // index 4 : cache size, never computed by the batch path
+        partialStats[4] = -1;
+        BundleStatsCacheMgr::PopulateCacheAfterMiss(name, userId, 0, uidIt->second, partialStats);
+    }
 }
 
 void BundleDataMgr::GetPreBundleSize(const std::string &name, std::vector<BundleStorageStats> &bundleStats) const
@@ -6878,27 +7047,18 @@ bool BundleDataMgr::GetAllBundleStats(const int32_t userId, std::vector<int64_t>
         APP_LOGE("invalid userid :%{public}d", userId);
         return false;
     }
-    int32_t responseUserId = -1;
-    std::vector<std::string> bundleNames;
-    GetAllInstallBundleUids(userId, requestUserId, responseUserId, uids, bundleNames);
-    if (!bundleNames.empty()) {
-        std::map<std::string, std::set<int32_t>> saUidMap;
-        LoadSaUidMap(saUidMap);
-        for (const auto &bundleName : bundleNames) {
-            auto saUids = GetBindingSAUidsByBundleName(bundleName, saUidMap);
-            if (!saUids.empty()) {
-                uids.insert(saUids.begin(), saUids.end());
-            }
-        }
-    }
-    std::map<std::string, UninstallBundleInfo> uninstallBundleInfos;
-    GetAllUninstallBundleInfo(uninstallBundleInfos);
-    GetAllUnisntallBundleUids(requestUserId, uninstallBundleInfos, uids);
+    CollectAllBundleUids(userId, requestUserId, uids);
     std::vector<int32_t> uidVec(uids.begin(), uids.end());
-    // remove invaild uid
-    uidVec.erase(std::remove_if(uidVec.begin(), uidVec.end(), [](int32_t uid) { return uid < 0; }), uidVec.end());
-    if (InstalldClient::GetInstance()->GetAllBundleStats(bundleStats, uidVec) != ERR_OK) {
-        APP_LOGW("GetAllBundleStats failed, userId: %{public}d", responseUserId);
+    uidVec.erase(std::remove_if(uidVec.begin(), uidVec.end(),
+        [](int32_t uid) { return uid < 0; }), uidVec.end());
+    std::vector<std::string> bundleNamesVec = BuildParallelBundleNames(uidVec, requestUserId);
+    int64_t cachedAppDataSize = 0;
+    int64_t cachedUserDataSize = 0;
+    bool anyCacheHit = false;
+    FilterCachedEntriesFromBatch(uidVec, bundleNamesVec, requestUserId,
+        cachedAppDataSize, cachedUserDataSize, anyCacheHit);
+    if (!AssembleBatchResult(uidVec, bundleNamesVec, requestUserId,
+        cachedAppDataSize, cachedUserDataSize, anyCacheHit, bundleStats)) {
         return false;
     }
     if (bundleStats.empty()) {
@@ -6907,6 +7067,125 @@ bool BundleDataMgr::GetAllBundleStats(const int32_t userId, std::vector<int64_t>
     }
     return true;
 }
+
+void BundleDataMgr::CollectAllBundleUids(int32_t userId, int32_t requestUserId,
+    std::unordered_set<int32_t> &uids) const
+{
+    int32_t responseUserId = -1;
+    std::vector<std::string> bundleNames;
+    GetAllInstallBundleUids(userId, requestUserId, responseUserId, uids, bundleNames);
+    if (!bundleNames.empty()) {
+        std::map<std::string, std::set<int32_t>> saUidMap;
+        LoadSaUidMap(saUidMap);
+        for (const auto &bundleName : bundleNames) {
+            auto saUids = GetBindingSAUidsByBundleName(bundleName, saUidMap);
+            uids.insert(saUids.begin(), saUids.end());
+        }
+    }
+    std::map<std::string, UninstallBundleInfo> uninstallBundleInfos;
+    GetAllUninstallBundleInfo(uninstallBundleInfos);
+    GetAllUnisntallBundleUids(requestUserId, uninstallBundleInfos, uids);
+}
+
+bool BundleDataMgr::AssembleBatchResult(std::vector<int32_t> &uidVec,
+    std::vector<std::string> &bundleNamesVec, int32_t requestUserId,
+    int64_t cachedAppDataSize, int64_t cachedUserDataSize, bool anyCacheHit,
+    std::vector<int64_t> &bundleStats) const
+{
+    if (!uidVec.empty()) {
+        if (InstalldClient::GetInstance()->GetAllBundleStats(bundleStats, uidVec, bundleNamesVec,
+            requestUserId) != ERR_OK) {
+            APP_LOGW("GetAllBundleStats failed, userId: %{public}d", requestUserId);
+            return false;
+        }
+        if (bundleStats.size() > 1) {
+            bundleStats[0] += cachedAppDataSize;
+            bundleStats[1] += cachedUserDataSize;
+        }
+        PopulateCacheAfterBatchMiss(uidVec, bundleNamesVec, requestUserId);
+    } else if (anyCacheHit) {
+        // All shared entries hit the cache: construct entirely from cache.
+        bundleStats.push_back(cachedAppDataSize);
+        bundleStats.push_back(cachedUserDataSize);
+        bundleStats.push_back(0);
+        bundleStats.push_back(0);
+        bundleStats.push_back(0);
+    } else {
+        return false;
+    }
+    return true;
+}
+
+std::vector<std::string> BundleDataMgr::BuildParallelBundleNames(
+    const std::vector<int32_t> &uidVec, int32_t requestUserId) const
+{
+    std::unordered_map<int32_t, std::string> uidToName;
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    for (const auto &item : bundleInfos_) {
+        const InnerBundleInfo &info = item.second;
+        int32_t infoResponseUserId = info.GetResponseUserId(requestUserId);
+        if (infoResponseUserId == Constants::INVALID_USERID) {
+            continue;
+        }
+        int32_t mainUid = info.GetUid(infoResponseUserId, 0);
+        if (mainUid >= 0) {
+            uidToName[mainUid] = info.GetBundleName();
+        }
+    }
+    std::vector<std::string> names;
+    for (const auto &uid : uidVec) {
+        auto iter = uidToName.find(uid);
+        names.push_back(iter != uidToName.end() ? iter->second : "");
+    }
+    return names;
+}
+
+void BundleDataMgr::FilterCachedEntriesFromBatch(std::vector<int32_t> &uidVec,
+    std::vector<std::string> &bundleNamesVec, int32_t requestUserId,
+    int64_t &cachedAppDataSize, int64_t &cachedUserDataSize, bool &anyCacheHit) const
+{
+    if (!BundleStatsCacheMgr::IsCacheEnabled() || bundleNamesVec.empty()) {
+        return;
+    }
+    std::vector<int32_t> scanUids;
+    std::vector<std::string> scanNames;
+    for (size_t i = 0; i < bundleNamesVec.size(); ++i) {
+        const std::string &name = bundleNamesVec[i];
+        if (!name.empty()) {
+            BundleStatsCacheData cacheData;
+            if (BundleStatsCacheMgr::GetCachedData(name, requestUserId, 0, cacheData)
+                && cacheData.bundleStats.size() > 1
+                && BundleStatsCacheMgr::IsValidDim(cacheData.bundleStats[0])
+                && BundleStatsCacheMgr::IsValidDim(cacheData.bundleStats[1])) {
+                cachedAppDataSize += cacheData.bundleStats[0];
+                cachedUserDataSize += cacheData.bundleStats[1];
+                anyCacheHit = true;
+                BundleStatsCacheMgr::RefreshCacheAfterHit(name, requestUserId, 0);
+                continue;
+            }
+        }
+        scanUids.push_back(uidVec[i]);
+        scanNames.push_back(bundleNamesVec[i]);
+    }
+    uidVec = std::move(scanUids);
+    bundleNamesVec = std::move(scanNames);
+}
+
+void BundleDataMgr::PopulateCacheAfterBatchMiss(const std::vector<int32_t> &uidVec,
+    const std::vector<std::string> &bundleNamesVec, int32_t requestUserId) const
+{
+    if (!BundleStatsCacheMgr::IsCacheEnabled()) {
+        return;
+    }
+    for (size_t index = 0; index < bundleNamesVec.size(); ++index) {
+        if (bundleNamesVec[index].empty()
+            || !BundleStatsCacheMgr::ShouldWriteCache(uidVec[index], requestUserId)) {
+            continue;
+        }
+        BundleStatsCacheMgr::RefreshCacheAfterHit(bundleNamesVec[index], requestUserId, 0);
+    }
+}
+
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 int64_t BundleDataMgr::GetBundleSpaceSize(const std::string &bundleName) const
 {
@@ -7476,6 +7755,8 @@ void BundleDataMgr::DeleteBundleInfo(const std::string &bundleName, const Instal
         APP_LOGW("delete storage error name:%{public}s", bundleName.c_str());
     }
     bundleInfos_.erase(bundleName);
+    // Clean up the stats cache on uninstall regardless of keepdata.
+    BundleStatsCacheMgr::OnBundleUninstalled(bundleName);
     if (DeleteShortcutEnabledInfo(bundleName) != ERR_OK) {
         APP_LOGW("DeleteShortcutEnabledInfo failed, bundleName: %{public}s", bundleName.c_str());
     }
@@ -10217,13 +10498,21 @@ void BundleDataMgr::AddUserId(int32_t userId)
 
 void BundleDataMgr::RemoveUserId(int32_t userId)
 {
-    std::lock_guard<std::mutex> lock(multiUserIdSetMutex_);
-    auto item = multiUserIdsSet_.find(userId);
-    if (item == multiUserIdsSet_.end()) {
-        return;
+    bool removed = false;
+    {
+        std::lock_guard<std::mutex> lock(multiUserIdSetMutex_);
+        auto item = multiUserIdsSet_.find(userId);
+        if (item == multiUserIdsSet_.end()) {
+            return;
+        }
+        multiUserIdsSet_.erase(item);
+        removed = true;
     }
-
-    multiUserIdsSet_.erase(item);
+    if (removed) {
+        // Clean up the stats cache for the removed user (RDB delete,
+        // intentionally outside multiUserIdSetMutex_).
+        BundleStatsCacheMgr::OnUserRemoved(userId);
+    }
 }
 
 bool BundleDataMgr::HasUserId(int32_t userId) const

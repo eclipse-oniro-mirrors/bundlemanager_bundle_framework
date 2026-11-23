@@ -46,6 +46,7 @@ public:
     void TryStartScanAppData();
     void InterruptScanAppData(const std::string &stopReason);
     void InterruptScanBundleStats(const std::string &stopReason);
+    bool IsBundleStatsScanActive();
     void TryStartScanFileCategory();
     void TryStartScanBundleStats();
     void InterruptScanFileCategory(const std::string &stopReason);
@@ -65,7 +66,6 @@ private:
     bool CheckBundleStatsScanConditions(const int32_t userId);
     bool SetIsBundleStatsScanActive();
     void StartBundleStatsScanTask();
-    bool IsBundleStatsScanActive();
     void StartScanAppDataTask();
     void ReloadParam();
 

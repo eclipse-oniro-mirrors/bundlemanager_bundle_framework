@@ -207,7 +207,8 @@ ErrCode InstalldClient::RemoveDir(
     return 0;
 }
 
-ErrCode InstalldClient::GetBundleInodeCount(int32_t uid, uint64_t &inodeCount)
+ErrCode InstalldClient::GetBundleInodeCount(int32_t uid, uint64_t &inodeCount,
+    const std::string &bundleName, const int32_t userId, const int32_t appIndex)
 {
     return 0;
 }
@@ -240,19 +241,21 @@ ErrCode InstalldClient::CleanBundleDataDirByName(const std::string &bundleName, 
 
 ErrCode InstalldClient::GetBundleStats(const std::string &bundleName, const int32_t userId,
     std::vector<int64_t> &bundleStats, const std::unordered_set<int32_t> &uids,
-    const int32_t appIndex, const uint32_t statFlag, const std::vector<std::string> &moduleNameList)
+    const int32_t appIndex, const uint32_t statFlag, const std::vector<std::string> &moduleNameList,
+    int64_t *inodeCount)
 {
     return 0;
 }
 
 ErrCode InstalldClient::BatchGetBundleStats(const std::vector<std::string> &bundleNames,
     const std::unordered_map<std::string, std::unordered_set<int32_t>> &uidMap,
-    std::vector<BundleStorageStats> &bundleStats)
+    std::vector<BundleStorageStats> &bundleStats, const int32_t userId)
 {
     return 0;
 }
 
-ErrCode InstalldClient::GetAllBundleStats(std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids)
+ErrCode InstalldClient::GetAllBundleStats(std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids,
+    const std::vector<std::string> &bundleNames, const int32_t userId)
 {
     return 0;
 }

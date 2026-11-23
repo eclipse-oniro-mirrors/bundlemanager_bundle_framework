@@ -26,8 +26,10 @@
 #include "linux/code_decrypt.h"
 #endif
 #include <cerrno>
+#include <chrono>
 #include <cinttypes>
 #include <cstdio>
+#include <cstdint>
 #include <dirent.h>
 #include <dlfcn.h>
 #include <fcntl.h>
@@ -2198,6 +2200,128 @@ int64_t InstalldOperator::GetBundleInodeCount(int32_t uid)
     LOG_NOFUNC_D(BMS_TAG_INSTALLD, "get inodes from quota, uid: %{public}d, inodes: %{public}llu",
         uid, static_cast<unsigned long long>(dq->dqb_curinodes));
     return dq->dqb_curinodes;
+}
+
+namespace {
+// Single-threaded nftw(FTW_PHYS) walk: every entry below the roots counts
+// as one inode (hard links count per name); the roots themselves are not counted.
+/* musl's nftw treats the fd limit as the maximum descent depth; 128 covers
+ * realistic app-data trees while keeping held fds bounded. */
+constexpr int DATA_SCAN_NFTW_FDS = 128;
+constexpr int64_t DATA_SCAN_BLOCK_SIZE = 512;
+
+struct DataScanStat {
+    uint64_t totalBlocks = 0;
+    uint64_t totalEntries = 0;
+};
+
+/* nftw has no user-data parameter: the walk state rides a thread-local
+ * pointer, so concurrent scans on different installd threads stay isolated */
+static thread_local DataScanStat *g_dataScanStat = nullptr;
+
+class DataScanStatGuard {
+public:
+    explicit DataScanStatGuard(DataScanStat *stat)
+    {
+        g_dataScanStat = stat;
+    }
+    ~DataScanStatGuard()
+    {
+        g_dataScanStat = nullptr;
+    }
+    DataScanStatGuard(const DataScanStatGuard &) = delete;
+    DataScanStatGuard &operator=(const DataScanStatGuard &) = delete;
+};
+
+static int DataStatNftwCallback(const char *path, const struct stat *sb, int typeflag, struct FTW *ftwbuf)
+{
+    (void)path;
+    DataScanStat *stat = g_dataScanStat;
+    if (stat == nullptr) {
+        return 1; /* no active walk on this thread: stop traversal */
+    }
+    /* the roots themselves are walked but not counted */
+    if (ftwbuf->level == 0) {
+        return 0;
+    }
+    /* an lstat failure leaves the sb contents unreliable: skip the entry */
+    if (typeflag == FTW_NS || sb == nullptr) {
+        return 0;
+    }
+    stat->totalBlocks += static_cast<uint64_t>(sb->st_blocks);
+    stat->totalEntries++;
+    return 0;
+}
+} // namespace
+
+ErrCode InstalldOperator::GetDiskUsageForUid(const int32_t uid, const std::string &bundleName,
+    const int32_t userId, const int32_t appIndex, int64_t &dataSize, int64_t *inodeCount)
+{
+    dataSize = 0;
+    // Shared-uid app (uid == userId with a real user id): scan the bundle's
+    // own data dirs; other uids (SA binding, nameless, system user) keep the
+    // quota path, matching the ShouldWriteCache gate.
+    bool forceScan = OHOS::system::GetBoolParameter(
+        ServiceConstants::BMS_TEST_SHARED_UID_PARAM, false);
+    if (bundleName.empty() || (!forceScan && (uid != userId ||
+        userId < Constants::START_USERID))) {
+        // quota path: never fails (0 when no quota record), also reports the
+        // quota inode count when requested
+        if (inodeCount != nullptr) {
+            *inodeCount = GetBundleInodeCount(uid);
+        }
+        dataSize = GetDiskUsageFromQuota(uid);
+        return ERR_OK;
+    }
+    std::vector<std::string> dataDirPaths;
+    if (!GetBundleUserDataPaths(bundleName, appIndex, userId, dataDirPaths)) {
+        LOG_NOFUNC_W(BMS_TAG_INSTALLD, "GetDiskUsageForUid get user data paths failed, bundle: %{public}s",
+            bundleName.c_str());
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    int64_t scannedInode = 0;
+    ErrCode ret = GetBundleDataStatByScan(dataDirPaths, dataSize, scannedInode);
+    if (ret != ERR_OK) {
+        LOG_NOFUNC_E(BMS_TAG_INSTALLD, "GetDiskUsageForUid scan failed, bundle: %{public}s, ret: %{public}d",
+            bundleName.c_str(), ret);
+        return ret;
+    }
+    if (inodeCount != nullptr) {
+        *inodeCount = scannedInode;
+    }
+    return ERR_OK;
+}
+
+ErrCode InstalldOperator::GetBundleDataStatByScan(const std::vector<std::string> &paths,
+    int64_t &dataSize, int64_t &inodeCount)
+{
+    dataSize = 0;
+    inodeCount = 0;
+    DataScanStat stat;
+    DataScanStatGuard guard(&stat);
+    for (const auto &path : paths) {
+        if (path.empty()) {
+            continue;
+        }
+        /* a root that cannot be walked (not yet created for an uninstalled
+         * bundle) is skipped; the remaining roots keep scanning */
+        int ret = nftw(path.c_str(), DataStatNftwCallback, DATA_SCAN_NFTW_FDS, FTW_PHYS);
+        if (ret != 0) {
+            if (errno == ENOENT) {
+                LOG_NOFUNC_D(BMS_TAG_INSTALLD, "GetBundleDataStatByScan root not present, path: %{public}s",
+                    path.c_str());
+            } else {
+                LOG_NOFUNC_W(BMS_TAG_INSTALLD,
+                    "GetBundleDataStatByScan nftw stopped, path: %{public}s, errno: %{public}d",
+                    path.c_str(), errno);
+            }
+        }
+    }
+    dataSize = static_cast<int64_t>(stat.totalBlocks) * DATA_SCAN_BLOCK_SIZE;
+    inodeCount = static_cast<int64_t>(stat.totalEntries);
+    LOG_NOFUNC_D(BMS_TAG_INSTALLD, "GetBundleDataStatByScan roots: %{public}zu size: %{public}" PRId64
+        " inode: %{public}" PRId64, paths.size(), dataSize, inodeCount);
+    return ERR_OK;
 }
 
 std::optional<struct dqblk> InstalldOperator::GetQuotaData(int32_t uid)
@@ -5250,12 +5374,12 @@ bool InstalldOperator::GetLargestFilesRecursive(const std::vector<std::string> &
 bool InstalldOperator::GetBundleDataDirPaths(const std::string &bundleName, const int32_t appIndex,
     const int32_t userId, std::vector<std::string> &dataDirPaths)
 {
-    LOG_D(BMS_TAG_INSTALLD, "GetBundleDataDirPaths: bundleName=%{public}s, appIndex=%{public}d, userId=%{public}d",
-        bundleName.c_str(), appIndex, userId);
+    LOG_NOFUNC_D(BMS_TAG_INSTALLD, "GetBundleDataDirPaths: bundleName=%{public}s, "
+        "appIndex=%{public}d, userId=%{public}d", bundleName.c_str(), appIndex, userId);
 
     // Validate input parameters
     if (bundleName.empty() || userId < 0) {
-        LOG_E(BMS_TAG_INSTALLD, "GetBundleDataDirPaths: bundleName is empty or invalid user");
+        LOG_NOFUNC_E(BMS_TAG_INSTALLD, "GetBundleDataDirPaths: bundleName is empty or invalid user");
         return false;
     }
     // Clear output parameter
@@ -5293,8 +5417,10 @@ bool InstalldOperator::GetBundleDataDirPaths(const std::string &bundleName, cons
     // /data/app/el1/<userId>/system_optimize/<bundleName>
     std::string el1ArkStartupCachePath = ServiceConstants::SYSTEM_OPTIMIZE_PATH +
         bundleNameDir + ServiceConstants::ARK_STARTUP_CACHE_DIR;
-    el1ArkStartupCachePath = el1ArkStartupCachePath.replace(el1ArkStartupCachePath.find("%"), 1,
-        std::to_string(userId));
+    size_t arkCachePos = el1ArkStartupCachePath.find("%");
+    if (arkCachePos != std::string::npos) {
+        el1ArkStartupCachePath.replace(arkCachePos, 1, std::to_string(userId));
+    }
     dataDirPaths.push_back(el1ArkStartupCachePath);
     // service
     std::string servicePath = std::string("/data/service/el1/") + std::to_string(userId) +
@@ -5312,7 +5438,38 @@ bool InstalldOperator::GetBundleDataDirPaths(const std::string &bundleName, cons
     servicePath = std::string("/data/service/el2/") + std::to_string(userId) +
         std::string("/backup/bundles/") + bundleNameDir;
     dataDirPaths.emplace_back(servicePath);
-    LOG_D(BMS_TAG_INSTALLD, "GetBundleDataDirPaths: collected %{public}zu data directory paths",
+    LOG_NOFUNC_D(BMS_TAG_INSTALLD, "GetBundleDataDirPaths: collected %{public}zu data directory paths",
+        dataDirPaths.size());
+    return true;
+}
+
+bool InstalldOperator::GetBundleUserDataPaths(const std::string &bundleName, const int32_t appIndex,
+    const int32_t userId, std::vector<std::string> &dataDirPaths)
+{
+    if (!GetBundleDataDirPaths(bundleName, appIndex, userId, dataDirPaths)) {
+        return false;
+    }
+    std::string bundleNameDir = bundleName;
+    if (appIndex > 0) {
+        bundleNameDir = BundleCloneCommonHelper::GetCloneDataDir(bundleName, appIndex);
+    }
+    std::string shaderCachePath = ServiceConstants::SYSTEM_OPTIMIZE_PATH + bundleNameDir +
+        ServiceConstants::SHADER_CACHE_SUBDIR;
+    size_t shaderCachePos = shaderCachePath.find("%");
+    if (shaderCachePos != std::string::npos) {
+        shaderCachePath.replace(shaderCachePos, 1, std::to_string(userId));
+    }
+    dataDirPaths.push_back(shaderCachePath);
+    dataDirPaths.push_back(std::string("/data/app/el1/") + std::to_string(userId) +
+        "/aot_compiler/ark_profile/" + bundleNameDir);
+    dataDirPaths.push_back(std::string("/data/service/el2/") + std::to_string(userId) +
+        "/hmdfs/non_account/data/" + bundleNameDir);
+    dataDirPaths.push_back(std::string("/data/service/el1/") + std::to_string(userId) +
+        "/print_service/data/" + bundleNameDir);
+    dataDirPaths.push_back(std::string(ServiceConstants::BUNDLE_ASAN_LOG_DIR) +
+        ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::PATH_SEPARATOR +
+        bundleNameDir + ServiceConstants::PATH_SEPARATOR + "log");
+    LOG_NOFUNC_D(BMS_TAG_INSTALLD, "GetBundleUserDataPaths: collected %{public}zu user data paths",
         dataDirPaths.size());
     return true;
 }

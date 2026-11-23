@@ -185,11 +185,17 @@ public:
         BundleDirScene scene, int64_t &statSize, int64_t timeoutMs = -1) override;
     /**
      * @brief Get bundle inode count for UID.
-     * @param uid The user ID of the application).
+     * @param uid The uid of the application.
      * @param inodeCount Output parameter for inode count.
-     * @return Returns ERR_OK if get bundle inode successfully; returns error code otherwise.
+     * @param bundleName The bundle name for the scan routing.
+     * @param userId The user Id for the scan routing.
+     * @param appIndex The app index for the scan routing.
+     * @return Returns ERR_OK if get bundle inode successfully; on scan
+     *         failure returns the error.
      */
-    virtual ErrCode GetBundleInodeCount(int32_t uid, uint64_t &inodeCount) override;
+    virtual ErrCode GetBundleInodeCount(int32_t uid, uint64_t &inodeCount,
+        const std::string &bundleName = "", const int32_t userId = -1,
+        const int32_t appIndex = 0) override;
     /**
      * @brief Clean all files in a bundle data directory.
      * @param bundleDir Indicates the data directory path that to be cleaned.
@@ -219,13 +225,30 @@ public:
     virtual ErrCode GetBundleStats(const std::string &bundleName, const int32_t userId,
         std::vector<int64_t> &bundleStats, const std::unordered_set<int32_t> &uids,
         const int32_t appIndex = 0, const uint32_t statFlag = 0,
-        const std::vector<std::string> &moduleNameList = {}) override;
+        const std::vector<std::string> &moduleNameList = {},
+        int64_t *inodeCount = nullptr) override;
+
+    ErrCode ScanUidsForStats(const std::string &bundleName, const int32_t userId,
+        const int32_t appIndex, const std::unordered_set<int32_t> &uids,
+        int64_t &bundleDataSize, int64_t *inodeCount);
+
+    bool IsValidUidSet(const std::unordered_set<int32_t> &uids);
+
+    ErrCode CalcStatsByFlag(const std::string &bundleName, const int32_t userId,
+        const int32_t appIndex, const std::unordered_set<int32_t> &uids, const uint32_t statFlag,
+        const std::vector<std::string> &moduleNameList, int64_t *inodeCount,
+        int64_t &appDataSize, int64_t &bundleDataSize, int64_t &bundleCacheSize);
+
+    bool ScanBundleUidsForBatch(const std::string &name, const int32_t userId,
+        const std::unordered_set<int32_t> &uidSet, int64_t &bundleDataSize);
 
     virtual ErrCode BatchGetBundleStats(const std::vector<std::string> &bundleNames,
         const std::unordered_map<std::string, std::unordered_set<int32_t>> &uidMap,
-        std::vector<BundleStorageStats> &bundleStats) override;
+        std::vector<BundleStorageStats> &bundleStats, const int32_t userId = -1) override;
 
-    virtual ErrCode GetAllBundleStats(std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids) override;
+    virtual ErrCode GetAllBundleStats(std::vector<int64_t> &bundleStats,
+        const std::vector<int32_t> &uids, const std::vector<std::string> &bundleNames = {},
+        const int32_t userId = -1) override;
     /**
      * @brief Set dir apl.
      * @param dir Indicates the data dir.
