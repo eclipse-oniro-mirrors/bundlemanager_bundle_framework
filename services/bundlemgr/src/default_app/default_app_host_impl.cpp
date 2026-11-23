@@ -35,6 +35,12 @@ ErrCode DefaultAppHostImpl::IsDefaultApplication(const std::string& type, bool& 
 ErrCode DefaultAppHostImpl::GetDefaultApplication(int32_t userId, const std::string& type, BundleInfo& bundleInfo)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    if (!BundlePermissionMgr::VerifyAcrossUserPermissionEx(userId)) {
+        LOG_E(BMS_TAG_DEFAULT, "GetDefaultApplication permission denied, "
+            "no cross-user permission, userId:%{public}d, uid:%{public}d, pid:%{public}d",
+            userId, IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
     return DefaultAppMgr::GetInstance().GetDefaultApplication(userId, type, bundleInfo);
 }
 
@@ -65,6 +71,12 @@ ErrCode DefaultAppHostImpl::GetDefaultApplicationCandidates(int32_t userId, cons
 
 ErrCode DefaultAppHostImpl::SetDefaultApplication(int32_t userId, const std::string& type, const Want& want)
 {
+    if (!BundlePermissionMgr::VerifyAcrossUserPermissionEx(userId)) {
+        LOG_E(BMS_TAG_DEFAULT, "SetDefaultApplication permission denied, "
+            "no cross-user permission, userId:%{public}d, uid:%{public}d, pid:%{public}d",
+            userId, IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
     return InnerSetDefaultApplication(userId, Constants::DEFAULT_APP_INDEX, type, want);
 }
 
@@ -148,6 +160,12 @@ ErrCode DefaultAppHostImpl::InnerSetDefaultApplication(int32_t userId, const int
 
 ErrCode DefaultAppHostImpl::ResetDefaultApplication(int32_t userId, const std::string& type)
 {
+    if (!BundlePermissionMgr::VerifyAcrossUserPermissionEx(userId)) {
+        LOG_E(BMS_TAG_DEFAULT, "ResetDefaultApplication permission denied, "
+            "no cross-user permission, userId:%{public}d, uid:%{public}d, pid:%{public}d",
+            userId, IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
     ErrCode result = DefaultAppMgr::GetInstance().ResetDefaultApplication(userId, type);
     if (result == ERR_OK) {
         EventReport::SendDefaultAppEvent(DefaultAppActionType::RESET, userId,

@@ -397,6 +397,13 @@ bool BundlePermissionMgr::VerifyAcrossUserPermission(const int32_t userId)
 {
     return false;
 }
+bool BundlePermissionMgr::VerifyAcrossUserPermissionEx(int32_t userId)
+{
+    if (userId == Constants::DEFAULT_USERID) {
+        return true;
+    }
+    return BundlePermissionMgr::VerifyAcrossUserPermission(userId);
+}
 #else
 int32_t BundlePermissionMgr::DeleteAccessTokenId(const AccessTokenID tokenId, bool isTokenReserved)
 {
@@ -486,6 +493,17 @@ bool BundlePermissionMgr::IsBundleSelfCalling(const std::string &bundleName, con
 bool BundlePermissionMgr::VerifyAcrossUserPermission(const int32_t userId)
 {
     return g_verifyPermission && g_verifyAcrossUserPermission;
+}
+bool BundlePermissionMgr::VerifyAcrossUserPermissionEx(int32_t userId)
+{
+    if (userId == Constants::DEFAULT_USERID) {
+        return true;
+    }
+    if (BundlePermissionMgr::IsNativeTokenType()) {
+        return true;
+    }
+    return BundlePermissionMgr::VerifyCallingPermissionForAll(
+        Constants::PERMISSION_BMS_INTERACT_ACROSS_LOCAL_ACCOUNTS);
 }
 #endif
 

@@ -63,6 +63,8 @@ using OHOS::DelayedSingleton;
 
 void SetSystemAppForTest(bool value);
 void SetVerifyCallingPermissionForTestFalse(bool value);
+void SetVerifyCallingPermissionForTest(bool value);
+void SetPermissionResultForTest(const std::string &permissionName, bool granted);
 
 // Session-policy knob defined in test/mock/src/accesstoken_kit.cpp (see
 // SetUpTestCase): the granted list InstallSession::VerifyPermission matches
@@ -1395,5 +1397,48 @@ HWTEST_F(BmsBundleInstallerPermissionTest, UninstallNewPreinstalledAppsHost_0200
     SetSystemAppForTest(false);
     ErrCode ret = installerHost.UninstallNewPreinstalledApps(bundleNames);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
+
+/**
+ * @tc.number: UninstallCloneApp_AcrossUserDenied_0100
+ * @tc.name: test UninstallCloneApp across user permission denied
+ * @tc.desc: 1. system app with UNINSTALL_CLONE_BUNDLE granted, but cross-account denied
+ *           2. VerifyAcrossUserPermission returns false, expect ERR_BUNDLE_MANAGER_PERMISSION_DENIED
+ */
+HWTEST_F(BmsBundleInstallerPermissionTest, UninstallCloneApp_AcrossUserDenied_0100,
+    Function | SmallTest | Level1)
+{
+    BundleInstallerHost installerHost;
+    SetSystemAppForTest(true);
+    SetVerifyCallingPermissionForTest(false);
+    SetPermissionResultForTest(Constants::PERMISSION_UNINSTALL_CLONE_BUNDLE, true);
+    ScopeGuard guard([] {
+        SetVerifyCallingPermissionForTest(true);
+        SetSystemAppForTest(true);
+    });
+    DestroyAppCloneParam param;
+    ErrCode ret = installerHost.UninstallCloneApp(BUNDLE_NAME, USERID + 1, 1, param);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: InstallExisted_AcrossUserDenied_0100
+ * @tc.name: test InstallExisted across user permission denied
+ * @tc.desc: 1. system app with INSTALL_BUNDLE granted, but cross-account denied
+ *           2. VerifyAcrossUserPermission returns false, expect ERR_BUNDLE_MANAGER_PERMISSION_DENIED
+ */
+HWTEST_F(BmsBundleInstallerPermissionTest, InstallExisted_AcrossUserDenied_0100,
+    Function | SmallTest | Level1)
+{
+    BundleInstallerHost installerHost;
+    SetSystemAppForTest(true);
+    SetVerifyCallingPermissionForTest(false);
+    SetPermissionResultForTest(Constants::PERMISSION_INSTALL_BUNDLE, true);
+    ScopeGuard guard([] {
+        SetVerifyCallingPermissionForTest(true);
+        SetSystemAppForTest(true);
+    });
+    ErrCode ret = installerHost.InstallExisted(BUNDLE_NAME, USERID + 1);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 } // OHOS

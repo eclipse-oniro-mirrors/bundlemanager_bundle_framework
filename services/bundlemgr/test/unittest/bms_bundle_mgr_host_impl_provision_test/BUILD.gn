@@ -87,6 +87,10 @@ ohos_unittest("BmsBundleMgrHostImplProvisionTest") {
     ]
     defines += [ "BUNDLE_FRAMEWORK_FREE_INSTALL" ]
   }
+  if (bundle_framework_default_app) {
+    sources += default_app
+    defines += [ "BUNDLE_FRAMEWORK_DEFAULT_APP" ]
+  }
   external_deps += [ "kv_store:distributeddata_inner" ]
   configs += [ "../../../../../services/bundlemgr:rdb_config" ]
   external_deps += [ "relational_store:native_rdb" ]
