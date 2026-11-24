@@ -7473,7 +7473,8 @@ ErrCode BundleMgrHostImpl::GetAllBundleNames(const uint32_t flags, int32_t userI
         std::vector<BundleInfo> bundleInfos;
         ErrCode res = bmsExtensionClient->GetBundleInfos((flags &
             static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_ONLY_WITH_LAUNCHER_ABILITY)) |
-            static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_FUSION), bundleInfos, userId);
+            static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_FUSION) |
+            static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_VM), bundleInfos, userId);
         if (res == ERR_OK) {
             std::for_each(bundleInfos.begin(), bundleInfos.end(), [&bundleNames](const auto& bundleInfo) {
                 bundleNames.push_back(bundleInfo.name);

@@ -3475,12 +3475,19 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0166, Function | SmallTest
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
     ret = bundleResourceHostImpl->AddResourceInfoByAbility(BUNDLE_NAME, MODULE_NAME, "", USERID);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+    auto isEnableVm = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_VM, false);
+    if (isEnableVm) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_VM, "false");
+    }
     ret = bundleResourceHostImpl->AddResourceInfoByAbility(BUNDLE_NAME, MODULE_NAME, ABILITY_NAME, USERID);
     auto isEnableHmos = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, false);
     if (isEnableHmos) {
         EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
     } else {
         EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    }
+    if (isEnableVm) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_VM, "true");
     }
 }
 
@@ -3498,12 +3505,169 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0167, Function | SmallTest
     std::string key = "test_key";
     auto ret = bundleResourceHostImpl->DeleteResourceInfo("");
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+    auto isEnableVm = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_VM, false);
+    if (isEnableVm) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_VM, "false");
+    }
     ret = bundleResourceHostImpl->DeleteResourceInfo(key);
     auto isEnableHmos = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, false);
     if (isEnableHmos) {
         EXPECT_EQ(ret, ERR_OK);
     } else {
         EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    }
+    if (isEnableVm) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_VM, "true");
+    }
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0168_Vm
+ * Function: AddResourceInfoByAbility
+ * @tc.name: test AddResourceInfoByAbility with VM enabled
+ * @tc.desc: 1. system running normally
+ *           2. test AddResourceInfoByAbility when only VM is true
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0168_Vm, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BundleResourceHostImpl> bundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
+    ASSERT_NE(bundleResourceHostImpl, nullptr);
+    auto isEnableHmos = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, false);
+    if (isEnableHmos) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "false");
+    }
+    auto isEnableVm = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_VM, false);
+    if (!isEnableVm) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_VM, "true");
+    }
+    auto ret = bundleResourceHostImpl->AddResourceInfoByAbility(BUNDLE_NAME, MODULE_NAME, ABILITY_NAME, USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    if (isEnableHmos) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "true");
+    }
+    if (!isEnableVm) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_VM, "false");
+    }
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0169_Vm
+ * Function: DeleteResourceInfo
+ * @tc.name: test DeleteResourceInfo with VM enabled
+ * @tc.desc: 1. system running normally
+ *           2. test DeleteResourceInfo when only VM is true
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0169_Vm, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BundleResourceHostImpl> bundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
+    ASSERT_NE(bundleResourceHostImpl, nullptr);
+    std::string key = "test_key";
+    auto isEnableHmos = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, false);
+    if (isEnableHmos) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "false");
+    }
+    auto isEnableVm = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_VM, false);
+    if (!isEnableVm) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_VM, "true");
+    }
+    auto ret = bundleResourceHostImpl->DeleteResourceInfo(key);
+    EXPECT_EQ(ret, ERR_OK);
+    if (isEnableHmos) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "true");
+    }
+    if (!isEnableVm) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_VM, "false");
+    }
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0170_Vm
+ * Function: AddResourceInfoByBundleName
+ * @tc.name: test AddResourceInfoByBundleName with VM enabled
+ * @tc.desc: 1. system running normally
+ *           2. test AddResourceInfoByBundleName when only VM is true
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0170_Vm, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BundleResourceHostImpl> bundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
+    ASSERT_NE(bundleResourceHostImpl, nullptr);
+    auto isEnableHmos = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, false);
+    if (isEnableHmos) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "false");
+    }
+    auto isEnableVm = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_VM, false);
+    if (!isEnableVm) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_VM, "true");
+    }
+    auto ret = bundleResourceHostImpl->AddResourceInfoByBundleName(BUNDLE_NAME, USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    if (isEnableHmos) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "true");
+    }
+    if (!isEnableVm) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_VM, "false");
+    }
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0171_Vm
+ * Function: AddResourceInfoByBundleName
+ * @tc.name: test AddResourceInfoByBundleName with both brokers disabled
+ * @tc.desc: 1. system running normally
+ *           2. test AddResourceInfoByBundleName when HMOS and VM are both false
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0171_Vm, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BundleResourceHostImpl> bundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
+    ASSERT_NE(bundleResourceHostImpl, nullptr);
+    auto isEnableHmos = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, false);
+    if (isEnableHmos) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "false");
+    }
+    auto isEnableVm = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_VM, false);
+    if (isEnableVm) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_VM, "false");
+    }
+    auto ret = bundleResourceHostImpl->AddResourceInfoByBundleName(BUNDLE_NAME, USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    if (isEnableHmos) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "true");
+    }
+    if (isEnableVm) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_VM, "true");
+    }
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0172_Vm
+ * Function: AddResourceInfoByBundleName / DeleteResourceInfo
+ * @tc.name: test dual mode with HMOS and VM both enabled
+ * @tc.desc: 1. system running normally
+ *           2. test resource interfaces when HMOS and VM are both true
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0172_Vm, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BundleResourceHostImpl> bundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
+    ASSERT_NE(bundleResourceHostImpl, nullptr);
+    auto isEnableHmos = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, false);
+    if (!isEnableHmos) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "true");
+    }
+    auto isEnableVm = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_VM, false);
+    if (!isEnableVm) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_VM, "true");
+    }
+    auto ret = bundleResourceHostImpl->AddResourceInfoByBundleName(BUNDLE_NAME, USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    ret = bundleResourceHostImpl->AddResourceInfoByAbility(BUNDLE_NAME, MODULE_NAME, ABILITY_NAME, USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    ret = bundleResourceHostImpl->DeleteResourceInfo("test_key");
+    EXPECT_EQ(ret, ERR_OK);
+    if (!isEnableHmos) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "false");
+    }
+    if (!isEnableVm) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_VM, "false");
     }
 }
 

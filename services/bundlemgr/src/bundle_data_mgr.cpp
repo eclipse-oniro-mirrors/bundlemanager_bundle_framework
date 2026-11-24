@@ -11399,7 +11399,8 @@ bool BundleDataMgr::GetElement(int32_t userId, const int32_t appIndex, const Ele
     AbilityInfo brokerAbilityInfo;
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
     ErrCode resultCode = bmsExtensionClient->QueryAbilityInfo(
-        want, AbilityInfoFlag::GET_ABILITY_INFO_WITH_FUSION, userId, brokerAbilityInfo, true);
+        want, static_cast<uint32_t>(AbilityInfoFlag::GET_ABILITY_INFO_WITH_FUSION) |
+        static_cast<uint32_t>(AbilityInfoFlag::GET_ABILITY_INFO_WITH_VM), userId, brokerAbilityInfo, true);
     if (resultCode == ERR_OK) {
         APP_LOGI("ElementName is brokerAbility");
         element.bundleName = bundleName;

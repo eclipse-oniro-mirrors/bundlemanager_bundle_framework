@@ -1026,6 +1026,10 @@ HWTEST_F(BundleUtilTest, IsVmEnabled_0100, TestSize.Level2)
     if (isEnableFusion) {
         OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "false");
     }
+    auto isEnableVm = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_VM, false);
+    if (isEnableVm) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_VM, "false");
+    }
     auto ret = BundleUtil::IsVmEnabled();
     EXPECT_FALSE(ret);
     if (isEnableHmos) {
@@ -1033,6 +1037,9 @@ HWTEST_F(BundleUtilTest, IsVmEnabled_0100, TestSize.Level2)
     }
     if (isEnableFusion) {
         OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "true");
+    }
+    if (isEnableVm) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_VM, "true");
     }
 }
 
@@ -1051,6 +1058,10 @@ HWTEST_F(BundleUtilTest, IsVmEnabled_0200, TestSize.Level2)
     if (!isEnableFusion) {
         OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "true");
     }
+    auto isEnableVm = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_VM, false);
+    if (isEnableVm) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_VM, "false");
+    }
     auto ret = BundleUtil::IsVmEnabled();
     EXPECT_TRUE(ret);
     if (isEnableHmos) {
@@ -1058,6 +1069,9 @@ HWTEST_F(BundleUtilTest, IsVmEnabled_0200, TestSize.Level2)
     }
     if (!isEnableFusion) {
         OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "false");
+    }
+    if (isEnableVm) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_VM, "true");
     }
 }
 
@@ -1076,6 +1090,10 @@ HWTEST_F(BundleUtilTest, IsVmEnabled_0300, TestSize.Level2)
     if (isEnableFusion) {
         OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "false");
     }
+    auto isEnableVm = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_VM, false);
+    if (isEnableVm) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_VM, "false");
+    }
     auto ret = BundleUtil::IsVmEnabled();
     EXPECT_TRUE(ret);
     if (!isEnableHmos) {
@@ -1083,6 +1101,9 @@ HWTEST_F(BundleUtilTest, IsVmEnabled_0300, TestSize.Level2)
     }
     if (isEnableFusion) {
         OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "true");
+    }
+    if (isEnableVm) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_VM, "true");
     }
 }
 
@@ -1101,6 +1122,10 @@ HWTEST_F(BundleUtilTest, IsVmEnabled_0400, TestSize.Level2)
     if (!isEnableFusion) {
         OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "true");
     }
+    auto isEnableVm = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_VM, false);
+    if (isEnableVm) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_VM, "false");
+    }
     auto ret = BundleUtil::IsVmEnabled();
     EXPECT_TRUE(ret);
     if (!isEnableHmos) {
@@ -1108,6 +1133,137 @@ HWTEST_F(BundleUtilTest, IsVmEnabled_0400, TestSize.Level2)
     }
     if (!isEnableFusion) {
         OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "false");
+    }
+    if (isEnableVm) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_VM, "true");
+    }
+}
+
+/**
+ * @tc.number: IsVmEnabled_0500
+ * @tc.name: test the IsVmEnabled with VM enabled.
+ * @tc.desc: test the IsVmEnabled when only VM is true.
+ */
+HWTEST_F(BundleUtilTest, IsVmEnabled_0500, TestSize.Level2)
+{
+    auto isEnableHmos = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, false);
+    if (isEnableHmos) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "false");
+    }
+    auto isEnableFusion = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_FUSION, false);
+    if (isEnableFusion) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "false");
+    }
+    auto isEnableVm = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_VM, false);
+    if (!isEnableVm) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_VM, "true");
+    }
+    auto ret = BundleUtil::IsVmEnabled();
+    EXPECT_TRUE(ret);
+    if (isEnableHmos) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "true");
+    }
+    if (isEnableFusion) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "true");
+    }
+    if (!isEnableVm) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_VM, "false");
+    }
+}
+
+/**
+ * @tc.number: IsVmEnabled_0600
+ * @tc.name: test the IsVmEnabled with HMOS and VM both enabled.
+ * @tc.desc: test the IsVmEnabled when HMOS and VM are both true (dual mode).
+ */
+HWTEST_F(BundleUtilTest, IsVmEnabled_0600, TestSize.Level2)
+{
+    auto isEnableHmos = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, false);
+    if (!isEnableHmos) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "true");
+    }
+    auto isEnableFusion = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_FUSION, false);
+    if (isEnableFusion) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "false");
+    }
+    auto isEnableVm = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_VM, false);
+    if (!isEnableVm) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_VM, "true");
+    }
+    auto ret = BundleUtil::IsVmEnabled();
+    EXPECT_TRUE(ret);
+    if (!isEnableHmos) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "false");
+    }
+    if (isEnableFusion) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "true");
+    }
+    if (!isEnableVm) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_VM, "false");
+    }
+}
+
+/**
+ * @tc.number: IsVmEnabled_0700
+ * @tc.name: test the IsVmEnabled with FUSION and VM enabled.
+ * @tc.desc: test the IsVmEnabled when FUSION and VM are true, HMOS is false (FTT).
+ */
+HWTEST_F(BundleUtilTest, IsVmEnabled_0700, TestSize.Level2)
+{
+    auto isEnableHmos = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, false);
+    if (isEnableHmos) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "false");
+    }
+    auto isEnableFusion = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_FUSION, false);
+    if (!isEnableFusion) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "true");
+    }
+    auto isEnableVm = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_VM, false);
+    if (!isEnableVm) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_VM, "true");
+    }
+    auto ret = BundleUtil::IsVmEnabled();
+    EXPECT_TRUE(ret);
+    if (isEnableHmos) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "true");
+    }
+    if (!isEnableFusion) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "false");
+    }
+    if (!isEnableVm) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_VM, "false");
+    }
+}
+
+/**
+ * @tc.number: IsVmEnabled_0800
+ * @tc.name: test the IsVmEnabled with all three enabled.
+ * @tc.desc: test the IsVmEnabled when HMOS, FUSION and VM are all true (TTT).
+ */
+HWTEST_F(BundleUtilTest, IsVmEnabled_0800, TestSize.Level2)
+{
+    auto isEnableHmos = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, false);
+    if (!isEnableHmos) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "true");
+    }
+    auto isEnableFusion = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_FUSION, false);
+    if (!isEnableFusion) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "true");
+    }
+    auto isEnableVm = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_VM, false);
+    if (!isEnableVm) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_VM, "true");
+    }
+    auto ret = BundleUtil::IsVmEnabled();
+    EXPECT_TRUE(ret);
+    if (!isEnableHmos) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "false");
+    }
+    if (!isEnableFusion) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "false");
+    }
+    if (!isEnableVm) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_VM, "false");
     }
 }
 

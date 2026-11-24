@@ -37,6 +37,7 @@ enum AbilityInfoFlag {
     // the flag only for C++ interface passing
     GET_ABILITY_INFO_EXCLUDE_EXT = 0x00020000,
     GET_ABILITY_INFO_WITH_FUSION = 0x00040000,
+    GET_ABILITY_INFO_WITH_VM = 0x00400000,
 };
 
 enum class GetAbilityInfoFlag {
@@ -52,6 +53,7 @@ enum class GetAbilityInfoFlag {
     // the flag only for C++ interface passing
     GET_ABILITY_INFO_EXCLUDE_EXT = 0x00020000,
     GET_ABILITY_INFO_WITH_FUSION = 0x00040000,
+    GET_ABILITY_INFO_WITH_VM = 0x00400000,
 };
 
 enum class AbilityType {

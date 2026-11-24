@@ -9755,7 +9755,8 @@ ErrCode BaseBundleInstaller::CheckBundleInBmsExtension(const std::string &bundle
     BmsExtensionDataMgr bmsExtensionDataMgr;
     BundleInfo extensionBundleInfo;
     auto ret = bmsExtensionDataMgr.GetBundleInfo(
-        bundleName, BundleFlag::GET_BUNDLE_INFO_WITH_FUSION, userId, extensionBundleInfo);
+        bundleName, static_cast<uint32_t>(BundleFlag::GET_BUNDLE_INFO_WITH_FUSION) |
+        static_cast<uint32_t>(BundleFlag::GET_BUNDLE_INFO_WITH_VM), userId, extensionBundleInfo);
     if (ret == ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "the bundle(%{public}s) is already existed in the bms extension", bundleName.c_str());
         return ERR_APPEXECFWK_INSTALL_ALREADY_EXIST;
