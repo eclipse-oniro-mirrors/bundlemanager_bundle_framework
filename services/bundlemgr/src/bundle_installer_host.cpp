@@ -1403,7 +1403,7 @@ ErrCode BundleInstallerHost::UninstallCloneApp(const std::string &bundleName, in
         LOG_E(BMS_TAG_INSTALLER, "UninstallCloneApp permission denied");
         return ERR_APPEXECFWK_PERMISSION_DENIED;
     }
-    if (!BundlePermissionMgr::VerifyAcrossUserPermissionEx(userId)) {
+    if (!BundlePermissionMgr::VerifyExemptedCrossUserPermission(userId)) {
         LOG_E(BMS_TAG_INSTALLER, "UninstallCloneApp permission denied, "
             "no cross-user permission, userId:%{public}d, uid:%{public}d, pid:%{public}d",
             userId, IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
@@ -1480,7 +1480,7 @@ ErrCode BundleInstallerHost::InstallExisted(const std::string &bundleName, int32
             return ERR_APPEXECFWK_PERMISSION_DENIED;
         }
     }
-    if (!BundlePermissionMgr::VerifyAcrossUserPermissionEx(userId)) {
+    if (!BundlePermissionMgr::VerifyExemptedCrossUserPermission(userId)) {
         LOG_E(BMS_TAG_INSTALLER, "InstallExisted permission denied, "
             "no cross-user permission, userId:%{public}d, uid:%{public}d, pid:%{public}d",
             userId, IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());

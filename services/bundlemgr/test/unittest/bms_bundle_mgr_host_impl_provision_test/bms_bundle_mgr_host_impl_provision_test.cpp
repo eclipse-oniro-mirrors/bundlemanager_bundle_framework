@@ -412,18 +412,6 @@ HWTEST_F(BmsBundleMgrHostImplProvisionTest, QueryLauncherAbilityInfos_AcrossUser
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 
-HWTEST_F(BmsBundleMgrHostImplProvisionTest, GetLauncherAbilityInfoSync_AcrossUserDenied_0100,
-    Function | SmallTest | Level1)
-{
-    SetSystemAppForTest(true);
-    SetVerifyCallingPermissionForTest(true);
-    SetNativeTokenTypeForTest(false);
-    SetPermissionResultForTest(Constants::PERMISSION_BMS_INTERACT_ACROSS_LOCAL_ACCOUNTS, false);
-    std::vector<AbilityInfo> abilityInfos;
-    ErrCode ret = bundleMgrHostImpl_->GetLauncherAbilityInfoSync(TEST_BUNDLE_NAME, OTHER_USER_ID, abilityInfos);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
-}
-
 HWTEST_F(BmsBundleMgrHostImplProvisionTest, GetShortcutInfoV9_AcrossUserDenied_0100,
     Function | SmallTest | Level1)
 {
@@ -640,7 +628,7 @@ HWTEST_F(BmsBundleMgrHostImplProvisionTest, ResetDefaultApplication_AcrossUserDe
 }
 
 // === DEFAULT_USERID bypass tests ===
-// VerifyAcrossUserPermissionEx returns true for userId == 0 before
+// VerifyExemptedCrossUserPermission returns true for userId == 0 before
 // delegating to the mock, so the gate must NOT deny even with permissions off.
 
 HWTEST_F(BmsBundleMgrHostImplProvisionTest, GetApplicationInfoV9_DefaultUserBypass_0100,

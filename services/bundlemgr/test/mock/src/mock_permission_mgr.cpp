@@ -317,7 +317,7 @@ bool BundlePermissionMgr::VerifyAcrossUserPermission(const int32_t userId)
     return true;
 }
 
-bool BundlePermissionMgr::VerifyAcrossUserPermissionEx(int32_t userId)
+bool BundlePermissionMgr::VerifyExemptedCrossUserPermission(int32_t userId)
 {
     return true;
 }

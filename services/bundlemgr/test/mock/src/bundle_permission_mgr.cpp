@@ -397,7 +397,7 @@ bool BundlePermissionMgr::VerifyAcrossUserPermission(const int32_t userId)
 {
     return false;
 }
-bool BundlePermissionMgr::VerifyAcrossUserPermissionEx(int32_t userId)
+bool BundlePermissionMgr::VerifyExemptedCrossUserPermission(int32_t userId)
 {
     if (userId == Constants::DEFAULT_USERID) {
         return true;
@@ -494,7 +494,7 @@ bool BundlePermissionMgr::VerifyAcrossUserPermission(const int32_t userId)
 {
     return g_verifyPermission && g_verifyAcrossUserPermission;
 }
-bool BundlePermissionMgr::VerifyAcrossUserPermissionEx(int32_t userId)
+bool BundlePermissionMgr::VerifyExemptedCrossUserPermission(int32_t userId)
 {
     if (userId == Constants::DEFAULT_USERID) {
         return true;

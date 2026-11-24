@@ -150,7 +150,10 @@ public:
     static bool IsBundleSelfCalling(const std::string &bundleName, const int32_t &appIndex);
 
     static bool VerifyAcrossUserPermission(const int32_t userId);
-    static bool VerifyAcrossUserPermissionEx(int32_t userId);
+    // Verify cross-user permission with exemptions for DEFAULT_USERID, UNSPECIFIED_USERID,
+    // and user 0 accessing the current active user. Use this instead of VerifyAcrossUserPermission
+    // when the caller may receive special user IDs that should not be treated as cross-user.
+    static bool VerifyExemptedCrossUserPermission(int32_t userId);
 
     // for old api
     static bool VerifyCallingBundleSdkVersion(int32_t beginApiVersion = Constants::INVALID_API_VERSION);

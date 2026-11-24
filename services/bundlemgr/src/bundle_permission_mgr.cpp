@@ -750,24 +750,40 @@ bool BundlePermissionMgr::VerifyAcrossUserPermission(const int32_t userId)
     return true;
 }
 
-bool BundlePermissionMgr::VerifyAcrossUserPermissionEx(int32_t userId)
+/**
+ * @brief Verify whether the caller is allowed to access data of the target user,
+ *        with exemptions for special user IDs and interconnected user scenarios.
+ *
+ * Compared with VerifyAcrossUserPermission, this method additionally exempts:
+ * - DEFAULT_USERID(0) and UNSPECIFIED_USERID as non-cross-user targets
+ * - User 0 accessing the current active user (interconnected, not cross-user)
+ *
+ * @param userId The target user ID to verify access for.
+ * @return true if access is allowed (exempted or permission granted);
+ *         false if access is denied (cross-user without permission).
+ */
+bool BundlePermissionMgr::VerifyExemptedCrossUserPermission(int32_t userId)
 {
+    // Exempt system default user and unspecified user: these are not real cross-user targets
     if (userId == Constants::DEFAULT_USERID ||
         userId == Constants::UNSPECIFIED_USERID) {
         return true;
     }
-    // sa no need to check across user permission
+    // Native token (system ability) does not have user-scoped restrictions
     if (BundlePermissionMgr::IsNativeTokenType()) {
         return true;
     }
+    // User 0 and the current active user are interconnected, not considered cross-user
     int32_t callingUserId = BundleUtil::GetUserIdByCallingUid();
     if (callingUserId == Constants::DEFAULT_USERID &&
         userId == AccountHelper::GetCurrentActiveUserId()) {
         return true;
     }
+    // Same user accessing own data: no cross-user boundary crossed
     if (userId == callingUserId) {
         return true;
     }
+    // For actual cross-user access, verify the INTERACT_ACROSS_LOCAL_ACCOUNTS permission
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_BMS_INTERACT_ACROSS_LOCAL_ACCOUNTS)) {
         return false;
     }
