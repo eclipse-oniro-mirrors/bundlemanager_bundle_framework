@@ -34,7 +34,7 @@ public:
     void OnConfigurationUpdated(const AppExecFwk::Configuration& configuration) override;
 
     void ProcessResourceChangeByType(const std::string &language, const std::string &theme,
-        const int32_t id, const int32_t themeIcon, const uint32_t type);
+        const int32_t id, const uint32_t themeIcon, const uint32_t type);
 
     static void ReportResourceSwitchEvent(const uint32_t type, int32_t userId, int64_t startTime, int64_t endTime);
 private:
@@ -44,7 +44,7 @@ private:
     static void OnSystemLanguageChange(const std::string &language, const uint32_t type);
 
     static void OnApplicationThemeChanged(const std::string &theme, const int32_t themeId,
-        const int32_t themeIcon, const uint32_t type);
+        const uint32_t themeIcon, const uint32_t type);
 };
 #endif
 } // AppExecFwk

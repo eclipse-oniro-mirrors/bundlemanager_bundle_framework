@@ -42,19 +42,20 @@ public:
         const uint32_t type = static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_LANGUE_CHANGE));
 
     // for application theme changed
-    bool OnApplicationThemeChanged(const std::string &theme, const int32_t themeId = 0, const int32_t themeIcon = 0,
-        const uint32_t type = static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_THEME_CHANGE));
+    bool OnApplicationThemeChanged(const std::string &theme, const int32_t themeId = 0,
+        const uint32_t themeIcon = 0, const uint32_t type =
+        static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_THEME_CHANGE));
 
     // for overlay
     bool OnOverlayStatusChanged(const std::string &bundleName, bool isEnabled, int32_t userId);
 
 private:
-    bool SetThemeParamForThemeChanged(const int32_t themeId, const int32_t themeIcon);
+    bool SetThemeParamForThemeChanged(const int32_t themeId, const uint32_t themeIcon);
 
     void SetUserId(const int32_t userId);
 
     void SetConfigInFile(const std::string &language, const std::string &theme,
-        const int32_t id, const int32_t themeIcon, const uint32_t type, const int32_t userId);
+        const int32_t id, const uint32_t themeIcon, const uint32_t type, const int32_t userId);
 
     void DeleteConfigInFile(const int32_t userId, const uint32_t type);
 

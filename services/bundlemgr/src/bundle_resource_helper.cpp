@@ -364,14 +364,14 @@ void BundleResourceHelper::ProcessBundleResourceChange()
     std::string language;
     std::string theme;
     int32_t id;
-    int32_t themeIcon;
+    uint32_t themeIcon = 0;
     uint32_t type;
     for (const auto &[key, value] : jsonBuf.items()) {
         if (key.find(BundleResourceConstants::THEME) == 0) {
             const auto &jsonBufEnd = value.end();
             GetValueIfFindKey<int32_t>(value, jsonBufEnd, BundleResourceConstants::THEME_ID, id,
                 JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
-            GetValueIfFindKey<int32_t>(value, jsonBufEnd, BundleResourceConstants::THEME_ICON, themeIcon,
+            GetValueIfFindKey<uint32_t>(value, jsonBufEnd, BundleResourceConstants::THEME_ICON, themeIcon,
                 JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
             GetValueIfFindKey<uint32_t>(value, jsonBufEnd, BundleResourceConstants::TYPE, type,
                 JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);

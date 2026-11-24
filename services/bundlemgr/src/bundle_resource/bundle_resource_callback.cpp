@@ -53,7 +53,7 @@ bool BundleResourceCallback::OnSystemLanguageChange(const std::string &language,
     if (currentUserId <= 0) {
         currentUserId = Constants::START_USERID;
     }
-    SetConfigInFile(language, "", -1, -1, type, currentUserId);
+    SetConfigInFile(language, "", -1, 0, type, currentUserId);
     BundleSystemState::GetInstance().SetSystemLanguage(language);
     // need delete all and reload all
     auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
@@ -72,9 +72,10 @@ bool BundleResourceCallback::OnSystemLanguageChange(const std::string &language,
 }
 
 bool BundleResourceCallback::OnApplicationThemeChanged(const std::string &theme,
-    const int32_t themeId, const int32_t themeIcon, const uint32_t type)
+    const int32_t themeId, const uint32_t themeIcon, const uint32_t type)
 {
-    APP_LOGI("start, theme:%{public}s, themeId:%{public}d", theme.c_str(), themeId);
+    APP_LOGI("start, theme:%{public}s, themeId:%{public}d, themeIcon:%{public}u",
+        theme.c_str(), themeId, themeIcon);
     if (theme.empty()) {
         APP_LOGW("theme is empty, no need to change");
         return false;
@@ -85,15 +86,12 @@ bool BundleResourceCallback::OnApplicationThemeChanged(const std::string &theme,
         APP_LOGE("failed parse theme %{public}s", theme.c_str());
         return false;
     }
-    const auto &jsonObjectEnd = jsonObject.end();
-    int32_t parseResult = ERR_OK;
-    int32_t updateIcons = 0;
-    GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, "icons", updateIcons,
-        JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
-    if (updateIcons == 0) {
-        APP_LOGI("icons no need to change, return");
+
+    if (themeIcon == 0) {
+        APP_LOGI("themeIcon no need to change, return");
         return false;
     }
+
     int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
     if (currentUserId <= 0) {
         currentUserId = Constants::START_USERID;
@@ -101,7 +99,7 @@ bool BundleResourceCallback::OnApplicationThemeChanged(const std::string &theme,
     SetConfigInFile("", theme, themeId, themeIcon, type, currentUserId);
 #ifdef GLOBAL_RESMGR_ENABLE
     if (!SetThemeParamForThemeChanged(themeId, themeIcon)) {
-        APP_LOGE("set theme param failed, themeId %{public}d themeIcon %{public}d", themeId, themeIcon);
+        APP_LOGE("set theme param failed, themeId %{public}d themeIcon %{public}u", themeId, themeIcon);
     }
 #endif
 
@@ -116,7 +114,7 @@ bool BundleResourceCallback::OnApplicationThemeChanged(const std::string &theme,
         return false;
     }
     DeleteConfigInFile(currentUserId, type);
-    APP_LOGI("end, theme:%{public}s", theme.c_str());
+    APP_LOGI("end, theme:%{public}s userId:%{public}d", theme.c_str(), currentUserId);
     return true;
 }
 
@@ -150,7 +148,7 @@ bool BundleResourceCallback::OnOverlayStatusChanged(
     return true;
 }
 
-bool BundleResourceCallback::SetThemeParamForThemeChanged(const int32_t themeId, const int32_t themeIcon)
+bool BundleResourceCallback::SetThemeParamForThemeChanged(const int32_t themeId, const uint32_t themeIcon)
 {
     if (themeId <= 0) {
         return false;
@@ -158,7 +156,7 @@ bool BundleResourceCallback::SetThemeParamForThemeChanged(const int32_t themeId,
 #ifdef GLOBAL_RESMGR_ENABLE
     auto resourcePtr = std::shared_ptr<Global::Resource::ResourceManager>(Global::Resource::CreateResourceManager());
     if (resourcePtr == nullptr) {
-        APP_LOGE("resource is nullptr, themeId %{public}d themeIcon %{public}d", themeId, themeIcon);
+        APP_LOGE("resource is nullptr, themeId %{public}d themeIcon %{public}u", themeId, themeIcon);
         return false;
     }
     int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
@@ -167,21 +165,21 @@ bool BundleResourceCallback::SetThemeParamForThemeChanged(const int32_t themeId,
         currentUserId = Constants::START_USERID;
     }
     resourcePtr->userId = currentUserId;
-    APP_LOGI("start set themeId %{public}d userId %{public}d themeIcon %{public}d",
+    APP_LOGI("start set themeId %{public}d userId %{public}d themeIcon %{public}u",
         themeId, currentUserId, themeIcon);
     std::unique_ptr<Global::Resource::ResConfig> resConfig(Global::Resource::CreateResConfig());
     if (resConfig == nullptr) {
-        APP_LOGE("resConfig is nullptr, themeId %{public}d themeIcon %{public}d", themeId, themeIcon);
+        APP_LOGE("resConfig is nullptr, themeId %{public}d themeIcon %{public}u", themeId, themeIcon);
         return false;
     }
     resConfig->SetThemeId(themeId);
-    resConfig->SetThemeIcon(themeIcon > 0 ? true : false);
+    resConfig->SetThemeIcon(themeIcon);
     Global::Resource::RState ret = resourcePtr->UpdateResConfig(*resConfig); // no need to process ret
     if (ret != Global::Resource::RState::SUCCESS) {
-        APP_LOGW("UpdateResConfig ret %{public}d, themeId %{public}d, themeIcon %{public}d",
+        APP_LOGW("UpdateResConfig ret %{public}d, themeId %{public}d, themeIcon %{public}u",
             static_cast<int32_t>(ret), themeId, themeIcon);
     }
-    APP_LOGI("end set themeId %{public}d themeIcon %{public}d", themeId, themeIcon);
+    APP_LOGI("end set themeId %{public}d themeIcon %{public}u", themeId, themeIcon);
 #endif
     return true;
 }
@@ -240,7 +238,7 @@ void BundleResourceCallback::DeleteConfigInFile(const int32_t userId, const uint
 }
 
 void BundleResourceCallback::SetConfigInFile(const std::string &language, const std::string &theme,
-    const int32_t id, const int32_t themeIcon, const uint32_t type, const int32_t userId)
+    const int32_t id, const uint32_t themeIcon, const uint32_t type, const int32_t userId)
 {
     std::string path = std::string(BundleResourceConstants::BUNDLE_RESOURCE_RDB_PATH) +
         std::string(BundleResourceConstants::USER_FILE_NAME);
