@@ -2,7 +2,10 @@
 
 ## 1. 概述
 
-本 AGENTS.md 用于指导开发与应用运行时管理相关特性分析、需求导入、设计、编码及验证各环节。在SDD流程开发各阶段，涉及本代码仓所有修改需要遵从本文档描述及其指向的其他更细则文档的内容，如果本文档指向的其他文档存在与本文档规定冲突内容，以本文档内容为准。本文档描述内容包括代码目录、知识体系、约束与限制三个章节，其中代码目录等内容就在本代码仓中，所引用的详细知识库内容均引自https://gitcode.com/abilitykit_public/abilitykit_sdd，在执行具体要求前请确认该知识库已在本地存在，如不存在，则应代码仓同级目录下执行git clone https://gitcode.com/abilitykit_public/abilitykit_sdd.git 下载代码仓后，在相应的代码仓中查找具体规则。
+本 AGENTS.md 用于指导开发与应用运行时管理相关特性分析、需求导入、设计、编码及验证各环节。在SDD流程开发各阶段，涉及本代码仓所有修改需要遵从本文档描述及其指向的其他更细则文档的内容，如果本文档指向的其他文档存在与本文档规定冲突内容，以本文档内容为准。本文档描述内容包括代码目录、知识体系、约束与限制三个章节，其中代码目录等内容就在本代码仓中，所引用的详细知识库内容均引自abilitykit_sdd，在执行具体要求前请确认该知识库已在本地存在，知识库的检索路径一般满足如下规则:
+    - Windows: %LOCALAPPDATA%\sdd-insight\kb\（即 C:\Users\<工号对应机器用户>\AppData\Local\sdd-insight\kb\）
+    - Linux / macOS（含 WSL 跑 opencode 的情况）:	~/.local/share/sdd-insight/kb/
+如不存在，则应代码仓同级目录下执行git clone https://gitcode.com/abilitykit_public/abilitykit_sdd.git 下载代码仓后，在相应的代码仓中查找具体规则。
 
 本仓库属于 OpenHarmony Bundle Manager Bundle Framework，主要负责应用包管理相关能力，包括应用安装、更新、卸载、查询、资源管理、权限校验以及若干扩展能力。
 工作时请把它视为系统级基础组件：接口稳定性、权限边界、用户隔离、数据一致性和错误码兼容性都很重要。
