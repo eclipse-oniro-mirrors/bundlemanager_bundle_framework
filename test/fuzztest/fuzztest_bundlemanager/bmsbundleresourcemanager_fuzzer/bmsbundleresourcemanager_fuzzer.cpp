@@ -108,7 +108,7 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     manager->ProcessResourceInfoWhenParseFailed(resourceInfo3);
     manager->ProcessResourceInfoWhenParseFailed(resourceInfo4);
     manager->GetDefaultIcon(resourceInfo);
-    manager->SendBundleResourcesChangedEvent(userId, type);
+    manager->SendBundleResourcesChangedEvent(userId, type, fdp.ConsumeIntegral<int64_t>());
     std::string targetBundleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     manager->GetTargetBundleName(bundleName, targetBundleName);
     manager->GetBundleResourceInfoForCloneBundle(bundleName, appIndex,

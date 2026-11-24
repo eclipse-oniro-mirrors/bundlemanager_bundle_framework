@@ -59,7 +59,7 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     manager->GetDefaultIcon(resourceInfo);
     manager->CheckResourceFlags(static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_LANGUE_CHANGE));
     manager->SendBundleResourcesChangedEvent(USERID,
-        static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_LANGUE_CHANGE));
+        static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_LANGUE_CHANGE), 0);
     manager->InnerProcessResourceInfoBySystemLanguageChanged(resourceInfosMap);
     manager->InnerProcessResourceInfoBySystemThemeChanged(resourceInfosMap, USERID);
     std::vector<std::string> existResourceNames;
