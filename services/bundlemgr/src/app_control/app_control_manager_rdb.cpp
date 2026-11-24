@@ -720,7 +720,7 @@ ErrCode AppControlManagerRdb::UpdateAppControlAppId(const std::vector<std::strin
     bool ret = rdbDataManager_->UpdateData(valuesBucket, absRdbPredicates, changedRows);
     if (!ret) {
         changedRows = 0;
-        LOG_NOFUNC_E(BMS_TAG_DEFAULT, "update appId to %{public}s in db failed, idsCount:%{public}zu",
+        LOG_NOFUNC_E(BMS_TAG_DEFAULT, "update appId to %{private}s in db failed, idsCount:%{public}zu",
             newAppId.c_str(), oldAppIdList.size());
         return ERR_APPEXECFWK_DB_UPDATE_ERROR;
     }
