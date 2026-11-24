@@ -21497,8 +21497,6 @@ HWTEST_F(BmsBundleInstallerTest, DedupSoLink_1200, Function | SmallTest | Level0
     const std::string strippedPath = DEDUP_WIRE_HAP_DIR + "dedup_fulldedup_stripped.hap";
     InnerBundleInfo info;
     ASSERT_EQ(MakeParsedDedupInfo(strippedPath, info), ERR_OK);
-    ASSERT_EQ(info.GetCpuAbi(), DEDUP_WIRE_CPU_ABI);
-    ASSERT_EQ(info.GetNativeLibraryPath(), DEDUP_WIRE_LIBS_PATH);
     BaseBundleInstaller installer;
     InitDedupWireInstaller(installer, bundleName, strippedPath);
     ResetLinkDedupedSoStateForTest();

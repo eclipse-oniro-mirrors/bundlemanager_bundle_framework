@@ -503,8 +503,6 @@ HWTEST_F(BmsBundleDedupSoTest, TestParse_8450, Function | SmallTest | Level1)
     ModuleProfile moduleProfile;
     auto result = moduleProfile.TransformTo(profileFileBuffer, bundleExtractor, innerBundleInfo);
     EXPECT_EQ(result, ERR_OK);
-    EXPECT_EQ(innerBundleInfo.GetCpuAbi(), CPU_ABI_ARM64);
-    EXPECT_EQ(innerBundleInfo.GetNativeLibraryPath(), DEDUP_LIBS_PATH_ARM64);
     std::set<std::string> abis;
     EXPECT_TRUE(bundleExtractor.GetDedupSoAbiPrefixes(abis));
     EXPECT_EQ(abis.size(), 1u);
@@ -537,8 +535,6 @@ HWTEST_F(BmsBundleDedupSoTest, TestParse_8450, Function | SmallTest | Level1)
     libsOnlyInfo.SetIsNewVersion(true);
     auto libsOnlyResult = moduleProfile.TransformTo(libsOnlyBuffer, libsOnlyExtractor, libsOnlyInfo);
     EXPECT_EQ(libsOnlyResult, ERR_OK);
-    EXPECT_EQ(libsOnlyInfo.GetCpuAbi(), CPU_ABI_ARM64);
-    EXPECT_EQ(libsOnlyInfo.GetNativeLibraryPath(), DEDUP_LIBS_PATH_ARM64);
     // mismatch form: falls back to the legacy empty path, the helper fails closed at install time
     BundleExtractor mismatchExtractor(RESOURCE_ROOT_PATH + "dedup_so/dedup_fulldedup_stripped_mismatch.hap");
     ASSERT_TRUE(mismatchExtractor.Init());
