@@ -17,6 +17,7 @@
 
 #include <fstream>
 #include <sstream>
+#include <unordered_set>
 
 #include "bundle_profile.h"
 #include "bundle_service_constants.h"
@@ -43,6 +44,8 @@ static constexpr const uint16_t DATA_MAX_LENGTH = 4096;
 constexpr const char* NO_DISABLING_CONFIG_KEY = "residentProcessInExtremeMemory";
 constexpr const char* NO_DISABLING_KEY_BUNDLE_NAME = "bundleName";
 constexpr const char* INSTALL_LIST_KEY = "install_list";
+constexpr size_t DEDUP_SHA256_LENGTH = 64;
+constexpr size_t MIN_DEDUP_SO_PATH_COMPONENTS = 3; // libs/<abi>/<library file>
 
 bool ParseStr(const char *buf, const int itemLen, int totalLen, std::vector<std::string> &sysCaps)
 {
@@ -65,6 +68,62 @@ bool ParseStr(const char *buf, const int itemLen, int totalLen, std::vector<std:
         index += itemLen;
     }
 
+    return true;
+}
+
+bool IsPlainPathComponent(const std::string &component)
+{
+    if (component.empty() || component == "." || component == "..") {
+        return false;
+    }
+    for (char c : component) {
+        if (c == '\\' || static_cast<unsigned char>(c) < 0x20) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool IsValidDedupSoPathInHap(const std::string &path)
+{
+    if (path.empty() || path.size() > static_cast<size_t>(ServiceConstants::PATH_MAX_SIZE)) {
+        return false;
+    }
+    // an entry carrying the DEDUP_SO_BACKUP_SUFFIX marker falls into the link
+    // backup name family (the token-bearing slots and the pre-token legacy
+    // name alike): name hygiene keeps a manifest entry out of it
+    if (path.find(ServiceConstants::DEDUP_SO_BACKUP_SUFFIX) != std::string::npos) {
+        return false;
+    }
+    // relative POSIX path under libs/<abi>/, the library file name may lack the .so suffix
+    if (!BundleUtil::StartWith(path, ServiceConstants::LIBS)) {
+        return false;
+    }
+    size_t componentCount = 0;
+    std::string::size_type begin = 0;
+    while (begin != std::string::npos && begin <= path.size()) {
+        std::string::size_type end = path.find('/', begin);
+        if (!IsPlainPathComponent(path.substr(begin,
+            end == std::string::npos ? std::string::npos : end - begin))) {
+            return false;
+        }
+        ++componentCount;
+        begin = (end == std::string::npos) ? std::string::npos : end + 1;
+    }
+    // at least three components: libs/<abi>/<library file>
+    return componentCount >= MIN_DEDUP_SO_PATH_COMPONENTS;
+}
+
+bool IsValidDedupSha256(const std::string &sha256)
+{
+    if (sha256.size() != DEDUP_SHA256_LENGTH) {
+        return false;
+    }
+    for (char c : sha256) {
+        if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'))) {
+            return false;
+        }
+    }
     return true;
 }
 } // namespace
@@ -254,6 +313,109 @@ ErrCode BundleParser::ParseSysCap(const std::string &pathName, std::vector<std::
 
     APP_LOGD("Parse sysCaps str success");
     free(outBuffer);
+    return ERR_OK;
+}
+
+ErrCode BundleParser::ParseDedupFiles(const std::string &pathName, const std::string &bundleName,
+    DedupSoInfoList &dedupSoInfoList) const
+{
+    dedupSoInfoList.clear();
+    APP_LOGD("parse dedupfiles.json from %{private}s", pathName.c_str());
+    BundleExtractor bundleExtractor(pathName);
+    if (!bundleExtractor.Init()) {
+        APP_LOGE("bundleName: %{public}s bundle extractor init failed", bundleName.c_str());
+        return ERR_APPEXECFWK_PARSE_UNEXPECTED;
+    }
+
+    // a HAP without dedupfiles.json keeps the normal install flow (not an error)
+    if (!bundleExtractor.HasEntry(ServiceConstants::DEDUP_FILES_NAME)) {
+        APP_LOGD("no dedupfiles.json in the hap file");
+        return ERR_OK;
+    }
+
+    // pre-check the declared size before any unbounded stream/DOM work
+    if (!bundleExtractor.IsDedupFilesSizeAllowed(ServiceConstants::MAX_DEDUP_FILES_SIZE)) {
+        // the extractor guard already logged the sizes: no second ERROR here
+        return ERR_APPEXECFWK_INSTALL_PARSE_FAILED;
+    }
+
+    std::stringstream dedupFilesStream;
+    // cap the real inflated output: the zip header size fields are untrusted
+    if (!bundleExtractor.ExtractByName(ServiceConstants::DEDUP_FILES_NAME, dedupFilesStream,
+        ServiceConstants::MAX_DEDUP_FILES_SIZE)) {
+        APP_LOGE("bundleName: %{public}s extract dedupfiles.json failed", bundleName.c_str());
+        return ERR_APPEXECFWK_INSTALL_PARSE_FAILED;
+    }
+    // the extraction above is capped, this re-check stays as a belt-and-braces
+    // guard before the DOM
+    uint64_t extractedSize = static_cast<uint64_t>(dedupFilesStream.tellp());
+    if (extractedSize > ServiceConstants::MAX_DEDUP_FILES_SIZE) {
+        APP_LOGE("bundleName: %{public}s dedupfiles.json extracted size %{public}llu exceeds limit %{public}u",
+            bundleName.c_str(), static_cast<unsigned long long>(extractedSize), ServiceConstants::MAX_DEDUP_FILES_SIZE);
+        return ERR_APPEXECFWK_INSTALL_PARSE_FAILED;
+    }
+
+    // a deep-nesting payload still amplifies the heap through the DOM: reject before the parse
+    if (!BundleExtractor::IsDedupFilesDepthAllowed(dedupFilesStream)) {
+        APP_LOGE("bundleName: %{public}s dedupfiles.json nesting depth exceeds limit %{public}d",
+            bundleName.c_str(), ServiceConstants::MAX_DEDUP_FILES_DEPTH);
+        return ERR_APPEXECFWK_INSTALL_PARSE_FAILED;
+    }
+
+    nlohmann::json jsonBuf = nlohmann::json::parse(dedupFilesStream, nullptr, false, true);
+    if (jsonBuf.is_discarded() || !jsonBuf.is_object()) {
+        APP_LOGE("bundleName: %{public}s invalid dedupfiles.json structure", bundleName.c_str());
+        return ERR_APPEXECFWK_INSTALL_PARSE_FAILED;
+    }
+
+    if (!jsonBuf.contains(ServiceConstants::DEDUP_REMOVED_SO_FILES_KEY) ||
+        !jsonBuf[ServiceConstants::DEDUP_REMOVED_SO_FILES_KEY].is_array()) {
+        APP_LOGE("bundleName: %{public}s no removedSoFiles array in dedupfiles.json", bundleName.c_str());
+        return ERR_APPEXECFWK_INSTALL_PARSE_FAILED;
+    }
+    const auto &removedSoFiles = jsonBuf[ServiceConstants::DEDUP_REMOVED_SO_FILES_KEY];
+    if (removedSoFiles.size() > ServiceConstants::MAX_DEDUP_SO_FILES) {
+        APP_LOGE("bundleName: %{public}s removedSoFiles size %{public}zu exceeds limit %{public}zu",
+            bundleName.c_str(), removedSoFiles.size(), ServiceConstants::MAX_DEDUP_SO_FILES);
+        return ERR_APPEXECFWK_INSTALL_PARSE_FAILED;
+    }
+    // a duplicate originalPathInHap is ambiguous: reject the whole manifest
+    std::unordered_set<std::string> seenOriginalPaths;
+    // the entries validated so far stay in dedupSoInfoList when the loop bails
+    // out mid-way: the output contract is valid-only-on-ERR_OK (see the
+    // header), callers discard the list on a failure return
+    for (const auto &item : removedSoFiles) {
+        if (!item.is_object() || !item.contains(ServiceConstants::DEDUP_ORIGINAL_PATH_KEY) ||
+            !item[ServiceConstants::DEDUP_ORIGINAL_PATH_KEY].is_string() ||
+            !item.contains(ServiceConstants::DEDUP_ORIGINAL_SHA256_KEY) ||
+            !item[ServiceConstants::DEDUP_ORIGINAL_SHA256_KEY].is_string()) {
+            APP_LOGE("bundleName: %{public}s invalid removedSoFiles item", bundleName.c_str());
+            return ERR_APPEXECFWK_INSTALL_PARSE_FAILED;
+        }
+        DedupSoInfo dedupSoInfo;
+        dedupSoInfo.originalPathInHap = item[ServiceConstants::DEDUP_ORIGINAL_PATH_KEY].get<std::string>();
+        dedupSoInfo.originalSha256 = item[ServiceConstants::DEDUP_ORIGINAL_SHA256_KEY].get<std::string>();
+        if (!IsValidDedupSoPathInHap(dedupSoInfo.originalPathInHap) ||
+            !IsValidDedupSha256(dedupSoInfo.originalSha256)) {
+            APP_LOGE("bundleName: %{public}s invalid originalPathInHap or originalSha256 in dedupfiles.json",
+                bundleName.c_str());
+            return ERR_APPEXECFWK_INSTALL_PARSE_FAILED;
+        }
+        if (!seenOriginalPaths.insert(dedupSoInfo.originalPathInHap).second) {
+            APP_LOGE("bundleName: %{public}s duplicate originalPathInHap in dedupfiles.json",
+                bundleName.c_str());
+            return ERR_APPEXECFWK_INSTALL_PARSE_FAILED;
+        }
+        // the removed so must no longer exist: a still-present entry would make the
+        // install-time clearing unlink a real file
+        if (bundleExtractor.HasEntry(dedupSoInfo.originalPathInHap)) {
+            APP_LOGE("bundleName: %{public}s dedupfiles.json entry %{private}s still exists in the hap",
+                bundleName.c_str(), dedupSoInfo.originalPathInHap.c_str());
+            return ERR_APPEXECFWK_INSTALL_PARSE_FAILED;
+        }
+        dedupSoInfoList.emplace_back(dedupSoInfo);
+    }
+    APP_LOGD("parse dedupfiles.json success, size %{public}zu", dedupSoInfoList.size());
     return ERR_OK;
 }
 

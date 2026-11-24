@@ -18,5 +18,6 @@ group("parse_bundle") {
   deps += [
     # deps file
     "new:new",
+    "dedup_so:dedup_so",
   ]
 }

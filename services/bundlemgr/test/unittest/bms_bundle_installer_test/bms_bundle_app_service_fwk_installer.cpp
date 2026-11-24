@@ -42,6 +42,9 @@
 namespace OHOS {
 namespace AppExecFwk {
     std::string ObtainTempSoPath(const std::string &moduleName, const std::string &nativeLibPath);
+    // mock installd client LinkDedupedSo knobs (test/mock/src/installd_client.cpp)
+    void ResetLinkDedupedSoStateForTest();
+    int32_t GetLinkDedupedSoCallCountForTest();
 }
 }
 
@@ -68,6 +71,8 @@ const std::string STRING = "string";
 const std::string HAP_PATH_TEST = "/data/test/resource/bms/app_service_test/right.hap";
 const std::string VERSION_ONE_LIBRARY_ONE_PATH = "/data/test/resource/bms/app_service_test/appService_v1_library1.hsp";
 const std::string VERSION_ONE_LIBRARY_TWO_PATH = "/data/test/resource/bms/app_service_test/appService_v1_library2.hsp";
+// the dedup manifest fixture container of the shared parse_bundle resource
+const std::string DEDUP_VALID_HAP_PATH = "/data/test/resource/bms/parse_bundle/dedup_so/dedup_valid.hap";
 const std::string BUNDLE_DATA_DIR = "/data/app/el2/100/base/com.example.l3jsdemo";
 const std::string BUNDLE_CODE_DIR = "/data/app/el1/bundle/public/com.example.l3jsdemo";
 const std::string BUNDLE_LIBRARY_PATH_DIR = "/data/app/el1/bundle/public/com.example.l3jsdemo/libs/arm";
@@ -964,6 +969,35 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, ProcessNativeLibrary_0020, Functio
     auto res = appServiceFwkInstaller.ProcessNativeLibrary(
         VERSION_ONE_LIBRARY_ONE_PATH, BUNDLE_DATA_DIR, MODULE_NAME_TEST, BUNDLE_DATA_DIR, innerBundleInfo);
     EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: ProcessNativeLibrary_0030
+ * @tc.name: test ProcessNativeLibrary fails closed on a dedup manifest with no so path
+ * @tc.desc: 1. a new-version module with an empty native library path (the
+ *              abi derivation fallback) installed from a hap carrying a
+ *              non-empty dedupfiles.json
+ *           2. verify the fetch-failure early-exit still runs the dedup
+ *              processing: it fails closed with 8519951 and no LinkDedupedSo IPC
+ */
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, ProcessNativeLibrary_0030, Function | SmallTest | Level0)
+{
+    AppServiceFwkInstaller appServiceFwkInstaller;
+    InitAppServiceFwkInstaller(appServiceFwkInstaller);
+
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetIsNewVersion(true);
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.compressNativeLibs = true;
+    innerModuleInfo.nativeLibraryPath = "";
+    innerBundleInfo.innerModuleInfos_.emplace(MODULE_NAME_TEST, innerModuleInfo);
+
+    // one arm64 entry with an empty derived target so path: fail the install closed
+    ResetLinkDedupedSoStateForTest();
+    auto res = appServiceFwkInstaller.ProcessNativeLibrary(
+        DEDUP_VALID_HAP_PATH, BUNDLE_DATA_DIR, MODULE_NAME_TEST, BUNDLE_DATA_DIR, innerBundleInfo);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_DEDUP_SO_LINK_FAILED);
+    EXPECT_EQ(GetLinkDedupedSoCallCountForTest(), 0);
 }
 
 /**

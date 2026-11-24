@@ -86,6 +86,34 @@ constexpr const char* BACKUP_CERT_USER_ID_KEY = "userId";
 constexpr const char* BACKUP_CERT_ALIAS_KEY = "certificateAlias";
 constexpr const char* BACKUP_CERT_CONTENT_KEY = "certificateContent";
 constexpr const char* TMP_SUFFIX = "_tmp";
+// The installd LinkDedupedSo step rotates a stale placeholder at the so link
+// position to <position> + this marker + "." + an unpredictable token before
+// calling musl, so a failed link can be restored by renaming the backup back;
+// the token keeps a zip-carried entry from occupying the slot by name, and a
+// leftover backup of an interrupted attempt stays an inert orphan until the
+// directory-level cleanup. The parser rejects dedup manifest entries carrying
+// the marker (an entry must never fall into another entry's backup name
+// family). Keep the value in sync with the fixture generator
+// (test/sceneProject/unittest/parse_bundle/dedup_so/gen_dedup_haps.py).
+constexpr const char* DEDUP_SO_BACKUP_SUFFIX = ".bms_dedup_bak";
+// The dedup manifest (dedupfiles.json) schema keys and bounds, single-sourced
+// for the strict parser gate and the loose abi-prefix probe: a drift between
+// the two validators silently turns every dedup install into a zero-match
+// skip. Keep the values in sync with the fixture generator
+// (test/sceneProject/unittest/parse_bundle/dedup_so/gen_dedup_haps.py).
+constexpr const char* DEDUP_FILES_NAME = "dedupfiles.json";
+constexpr const char* DEDUP_REMOVED_SO_FILES_KEY = "removedSoFiles";
+constexpr const char* DEDUP_ORIGINAL_PATH_KEY = "originalPathInHap";
+constexpr const char* DEDUP_ORIGINAL_SHA256_KEY = "originalSha256";
+// The max allowed uncompressed manifest size (the legal peak is 65535 entries
+// of ~200 bytes).
+constexpr uint32_t MAX_DEDUP_FILES_SIZE = 16 * 1024 * 1024;
+// The bracket nesting depth limit of the manifest (a legal manifest peaks at
+// depth 3); the string-aware depth scan counts no bracket inside a quoted
+// string.
+constexpr int32_t MAX_DEDUP_FILES_DEPTH = 4;
+// The max allowed removedSoFiles entry count.
+constexpr size_t MAX_DEDUP_SO_FILES = 65535;
 constexpr const char* BUNDLE_APP_DATA_BASE_DIR = "/data/app/";
 constexpr const char* BASE = "/base/";
 constexpr const char* CLONE = "clone";

@@ -32,6 +32,15 @@ int32_t g_clearSessionProvisionCacheRet = 0;
 int32_t g_migrateBundleDirsOwnerCallCount = 0;
 // Failure injection knob for the RefreshBundleDirsAfterUidChange best-effort branch.
 int32_t g_migrateBundleDirsOwnerRet = 0;
+// LinkDedupedSo knobs: call count, captured params, IPC ret, injected musl code.
+// Internal linkage: another mock used by other suites defines the same knob
+// names; test files arm them via the *ForTest accessors below, never extern.
+static int32_t g_linkDedupedSoCallCount = 0;
+static int32_t g_linkDedupedSoIpcRet = ERR_OK;
+static uint32_t g_linkDedupedSoResultCode = 0;
+// Shared-HSP save chain stub knob (MoveSharedHspToCodeDir + VerifyCodeSignatureForHap):
+// an unsigned fixture cannot pass the signature step, so normal-flow tests stub both
+int32_t g_sharedHspSaveStubRet = -1;
 bool g_mockCleanBundleDataDirResult = true;
 
 namespace {
@@ -56,6 +65,9 @@ namespace {
 bool g_processBinFilesCalled = false;
 VerifyBinParam g_lastVerifyBinParam;
 CreateDirParam g_lastMigrateBundleDirsOwnerParam;
+std::string g_lastLinkDedupedSoBundleName;
+std::string g_lastLinkDedupedSoLibraryPath;
+std::string g_lastLinkDedupedSoSha256;
 }
 
 void ResetProcessBinFilesParamForTest()
@@ -94,6 +106,52 @@ bool GetLastMigrateBundleDirsOwnerParamForTest(CreateDirParam &createDirParam)
     }
     createDirParam = g_lastMigrateBundleDirsOwnerParam;
     return true;
+}
+
+void ResetLinkDedupedSoStateForTest()
+{
+    g_linkDedupedSoCallCount = 0;
+    g_linkDedupedSoIpcRet = ERR_OK;
+    g_linkDedupedSoResultCode = 0;
+    g_lastLinkDedupedSoBundleName.clear();
+    g_lastLinkDedupedSoLibraryPath.clear();
+    g_lastLinkDedupedSoSha256.clear();
+}
+
+int32_t GetLinkDedupedSoCallCountForTest()
+{
+    return g_linkDedupedSoCallCount;
+}
+
+bool GetLastLinkDedupedSoParamForTest(std::string &bundleName, std::string &libraryPath, std::string &sha256)
+{
+    if (g_linkDedupedSoCallCount == 0) {
+        return false;
+    }
+    bundleName = g_lastLinkDedupedSoBundleName;
+    libraryPath = g_lastLinkDedupedSoLibraryPath;
+    sha256 = g_lastLinkDedupedSoSha256;
+    return true;
+}
+
+void SetLinkDedupedSoIpcRetForTest(int32_t ipcRet)
+{
+    g_linkDedupedSoIpcRet = ipcRet;
+}
+
+void SetLinkDedupedSoResultCodeForTest(uint32_t resultCode)
+{
+    g_linkDedupedSoResultCode = resultCode;
+}
+
+void SetSharedHspSaveStubRetForTest(int32_t stubRet)
+{
+    g_sharedHspSaveStubRet = stubRet;
+}
+
+void ResetSharedHspSaveStubForTest()
+{
+    g_sharedHspSaveStubRet = -1;
 }
 
 bool GetProcessBinFilesParamForTest(VerifyBinParam &verifyBinParam)
@@ -877,6 +935,10 @@ ErrCode InstalldClient::ExtractEncryptedSoFiles(const std::string &hapPath, cons
 
 ErrCode InstalldClient::VerifyCodeSignatureForHap(const CodeSignatureParam &codeSignatureParam)
 {
+    // stub knob: see g_sharedHspSaveStubRet (normal-flow shared install tests)
+    if (g_sharedHspSaveStubRet >= 0) {
+        return g_sharedHspSaveStubRet;
+    }
     if (codeSignatureParam.modulePath.empty()) {
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
@@ -1045,6 +1107,10 @@ ErrCode InstalldClient::MovePluginHspToCodeDir(const std::string &hostBundleName
 ErrCode InstalldClient::MoveSharedHspToCodeDir(const std::string &bundleName, const std::string &moduleName,
     const std::string &sourceHspPath, uint32_t versionCode)
 {
+    // stub knob: see g_sharedHspSaveStubRet (normal-flow shared install tests)
+    if (g_sharedHspSaveStubRet >= 0) {
+        return g_sharedHspSaveStubRet;
+    }
     if (bundleName.empty() || moduleName.empty() || sourceHspPath.empty()) {
         APP_LOGE("params are invalid");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
@@ -1239,6 +1305,17 @@ ErrCode InstalldClient::MigrateBundleDirsOwner(const CreateDirParam &createDirPa
     g_migrateBundleDirsOwnerCallCount++;
     g_lastMigrateBundleDirsOwnerParam = createDirParam;
     return g_migrateBundleDirsOwnerRet;
+}
+
+ErrCode InstalldClient::LinkDedupedSo(const std::string &bundleName, const std::string &libraryPath,
+    const std::string &sha256, uint32_t &resultCode)
+{
+    g_linkDedupedSoCallCount++;
+    g_lastLinkDedupedSoBundleName = bundleName;
+    g_lastLinkDedupedSoLibraryPath = libraryPath;
+    g_lastLinkDedupedSoSha256 = sha256;
+    resultCode = g_linkDedupedSoResultCode;
+    return g_linkDedupedSoIpcRet;
 }
 
 void InstalldClient::OnLoadSystemAbilityFail() {}

@@ -49,6 +49,7 @@
 #include "bms_update_selinux_mgr.h"
 #include "bundle_cli_sandbox_installer.h"
 #include "bundle_clone_installer.h"
+#include "bundle_dedup_so_helper.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_resource_helper.h"
 #include "bundle_parser.h"
@@ -9218,6 +9219,20 @@ ErrCode BaseBundleInstaller::InnerProcessNativeLibs(InnerBundleInfo &info, const
         result = InstalldClient::GetInstance()->GetNativeLibraryFileNames(modulePath_, cpuAbi, fileNames);
         CHECK_RESULT(result, "fail to GetNativeLibraryFileNames, error is %{public}d");
         info.SetNativeLibraryFileNames(modulePackage_, fileNames);
+    }
+    // dedup so: link the so files recorded in the HAP dedupfiles.json into the
+    // extracted target so dir, still inside the staging transaction and before
+    // the rename commit; a failure returns through the existing rollback. An
+    // empty target so path (the parse-time abi derivation found no intersection)
+    // is passed through on purpose: the helper fails closed inside. A manifest
+    // with no entry matching the module abi is the trusted zero-match case:
+    // the helper only WARNs and the install continues.
+    auto result = DedupSoHelper::ProcessDedupSoFiles(modulePath_, info, targetSoPath, cpuAbi);
+    // the helper already logged one ERROR with the bundle context for every
+    // failure path; avoid a duplicate ERROR at this boundary
+    if (result != ERR_OK) {
+        LOG_D(BMS_TAG_INSTALLER, "fail to ProcessDedupSoFiles, error is %{public}d", result);
+        return result;
     }
     return ERR_OK;
 }

@@ -701,6 +701,7 @@ ohos_shared_library("installs") {
     "init:libbegetutil",
     "ipc:ipc_single",
     "memmgr:memmgrclient",
+    "musl:musl_headers",
     "openssl:libcrypto_shared",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",

@@ -23,6 +23,7 @@ bool g_isDir = false;
 ErrCode g_errCode = ERR_OK;
 bool g_vectorEmpty = true;
 
+
 void SetTestReturnValue(const std::vector<int32_t> &list)
 {
     retList = list;
@@ -721,6 +722,14 @@ ErrCode InstalldClient::ClearSessionProvisionCache(int32_t sessionId)
 
 ErrCode InstalldClient::MigrateBundleDirsOwner(const CreateDirParam &createDirParam)
 {
+    return ERR_OK;
+}
+
+ErrCode InstalldClient::LinkDedupedSo(const std::string &bundleName, const std::string &libraryPath,
+    const std::string &sha256, uint32_t &resultCode)
+{
+    // not reached under account constraints; a plain success stub keeps the
+    // suite linkable without the dedup knobs of the installer/dedup suites
     return ERR_OK;
 }
 }  // namespace AppExecFwk

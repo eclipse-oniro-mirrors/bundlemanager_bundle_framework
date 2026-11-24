@@ -458,6 +458,9 @@ public:
 
     virtual ErrCode MigrateBundleDirsOwner(const CreateDirParam &createDirParam) override;
 
+    virtual ErrCode LinkDedupedSo(const std::string &bundleName, const std::string &libraryPath,
+        const std::string &sha256, uint32_t &resultCode) override;
+
 private:
     ErrCode TransactInstalldCmd(InstalldInterfaceCode code, MessageParcel &data, MessageParcel &reply,
         MessageOption &option);

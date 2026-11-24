@@ -97,6 +97,38 @@
       <option name="push" value="parse_bundle/new.hap -> /data/test/resource/bms/parse_bundle/" src="res" />
     </preparer>
   </target>
+  <target name="BmsBundleDedupSoTest">
+    <preparer>
+      <option name="push" value="parse_bundle/dedup_so/dedup_valid.hap -> /data/test/resource/bms/parse_bundle/dedup_so/" src="res" />
+      <option name="push" value="parse_bundle/dedup_so/dedup_valid_multi.hap -> /data/test/resource/bms/parse_bundle/dedup_so/" src="res" />
+      <option name="push" value="parse_bundle/dedup_so/dedup_no_manifest.hap -> /data/test/resource/bms/parse_bundle/dedup_so/" src="res" />
+      <option name="push" value="parse_bundle/dedup_so/dedup_invalid_json.hap -> /data/test/resource/bms/parse_bundle/dedup_so/" src="res" />
+      <option name="push" value="parse_bundle/dedup_so/dedup_json_array.hap -> /data/test/resource/bms/parse_bundle/dedup_so/" src="res" />
+      <option name="push" value="parse_bundle/dedup_so/dedup_no_version.hap -> /data/test/resource/bms/parse_bundle/dedup_so/" src="res" />
+      <option name="push" value="parse_bundle/dedup_so/dedup_no_removed.hap -> /data/test/resource/bms/parse_bundle/dedup_so/" src="res" />
+      <option name="push" value="parse_bundle/dedup_so/dedup_removed_not_array.hap -> /data/test/resource/bms/parse_bundle/dedup_so/" src="res" />
+      <option name="push" value="parse_bundle/dedup_so/dedup_item_not_object.hap -> /data/test/resource/bms/parse_bundle/dedup_so/" src="res" />
+      <option name="push" value="parse_bundle/dedup_so/dedup_no_path.hap -> /data/test/resource/bms/parse_bundle/dedup_so/" src="res" />
+      <option name="push" value="parse_bundle/dedup_so/dedup_no_sha.hap -> /data/test/resource/bms/parse_bundle/dedup_so/" src="res" />
+      <option name="push" value="parse_bundle/dedup_so/dedup_path_not_string.hap -> /data/test/resource/bms/parse_bundle/dedup_so/" src="res" />
+      <option name="push" value="parse_bundle/dedup_so/dedup_path_traversal.hap -> /data/test/resource/bms/parse_bundle/dedup_so/" src="res" />
+      <option name="push" value="parse_bundle/dedup_so/dedup_path_absolute.hap -> /data/test/resource/bms/parse_bundle/dedup_so/" src="res" />
+      <option name="push" value="parse_bundle/dedup_so/dedup_path_bad_prefix.hap -> /data/test/resource/bms/parse_bundle/dedup_so/" src="res" />
+      <option name="push" value="parse_bundle/dedup_so/dedup_path_no_so_suffix.hap -> /data/test/resource/bms/parse_bundle/dedup_so/" src="res" />
+      <option name="push" value="parse_bundle/dedup_so/dedup_sha_invalid.hap -> /data/test/resource/bms/parse_bundle/dedup_so/" src="res" />
+      <option name="push" value="parse_bundle/dedup_so/dedup_over_limit.hap -> /data/test/resource/bms/parse_bundle/dedup_so/" src="res" />
+      <option name="push" value="parse_bundle/dedup_so/dedup_fulldedup_keepdir.hap -> /data/test/resource/bms/parse_bundle/dedup_so/" src="res" />
+      <option name="push" value="parse_bundle/dedup_so/dedup_max_valid.hap -> /data/test/resource/bms/parse_bundle/dedup_so/" src="res" />
+      <option name="push" value="parse_bundle/dedup_so/dedup_size_over_limit.hap -> /data/test/resource/bms/parse_bundle/dedup_so/" src="res" />
+      <option name="push" value="parse_bundle/dedup_so/dedup_fulldedup_stripped.hap -> /data/test/resource/bms/parse_bundle/dedup_so/" src="res" />
+      <option name="push" value="parse_bundle/dedup_so/dedup_fulldedup_stripped_mismatch.hap -> /data/test/resource/bms/parse_bundle/dedup_so/" src="res" />
+      <option name="push" value="parse_bundle/dedup_so/dedup_duplicate_entry.hap -> /data/test/resource/bms/parse_bundle/dedup_so/" src="res" />
+      <option name="push" value="parse_bundle/dedup_so/dedup_cross_conflict.hap -> /data/test/resource/bms/parse_bundle/dedup_so/" src="res" />
+      <option name="push" value="parse_bundle/dedup_so/dedup_depth_bomb.hap -> /data/test/resource/bms/parse_bundle/dedup_so/" src="res" />
+      <option name="push" value="parse_bundle/dedup_so/dedup_path_backup_suffix.hap -> /data/test/resource/bms/parse_bundle/dedup_so/" src="res" />
+      <option name="push" value="parse_bundle/dedup_so/dedup_fulldedup_libsonly.hap -> /data/test/resource/bms/parse_bundle/dedup_so/" src="res" />
+    </preparer>
+  </target>
   <target name="BmsBundleInstallerTest">
     <preparer>
       <option name="push" value="bundle_hsp/hsp_A.hsp -> /data/test/resource/bms/install_bundle/" src="res" />
@@ -126,6 +158,11 @@
       <option name="push" value="test_bundle/versionUpdateTest/versionUpdateTest5.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
       <option name="push" value="test_bundle/versionUpdateTest/versionUpdateTest6.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
       <option name="push" value="test_bundle/versionUpdateTest/versionUpdateTest7.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
+      <option name="push" value="parse_bundle/dedup_so/dedup_valid.hap -> /data/test/resource/bms/parse_bundle/dedup_so/" src="res"/>
+      <option name="push" value="parse_bundle/dedup_so/dedup_fulldedup_keepdir.hap -> /data/test/resource/bms/parse_bundle/dedup_so/" src="res"/>
+      <option name="push" value="parse_bundle/dedup_so/dedup_fulldedup_stripped.hap -> /data/test/resource/bms/parse_bundle/dedup_so/" src="res"/>
+      <option name="push" value="parse_bundle/dedup_so/dedup_fulldedup_stripped_mismatch.hap -> /data/test/resource/bms/parse_bundle/dedup_so/" src="res"/>
+      <option name="push" value="parse_bundle/dedup_so/dedup_valid_alt_sha.hap -> /data/test/resource/bms/parse_bundle/dedup_so/" src="res"/>
     </preparer>
   </target>
   <target name="BmsBundleInstallerBopdTest">
@@ -473,6 +510,7 @@
       <option name="push" value="bundle_app_service/appService_v1_library2.hsp -> /data/test/resource/bms/app_service_test/" src="res" />
       <option name="push" value="bundle_app_service/appService_v2_library1.hsp -> /data/test/resource/bms/app_service_test/" src="res" />
       <option name="push" value="bundle_app_service/appService_v2_library2.hsp -> /data/test/resource/bms/app_service_test/" src="res" />
+      <option name="push" value="parse_bundle/dedup_so/dedup_valid.hap -> /data/test/resource/bms/parse_bundle/dedup_so/" src="res" />
       </preparer>
   </target>
   <target name="BmsExtendResourceManagerTest">

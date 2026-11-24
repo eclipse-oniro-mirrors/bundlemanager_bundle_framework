@@ -72,13 +72,14 @@ bool BaseExtractor::IsDirExist(const std::string &dir) const
     return zipFile_.IsDirExist(dir);
 }
 
-bool BaseExtractor::ExtractByName(const std::string &fileName, std::ostream &dest) const
+bool BaseExtractor::ExtractByName(const std::string &fileName, std::ostream &dest,
+    size_t maxUncompressedSize) const
 {
     if (!initial_) {
         APP_LOGE("extractor is not initial");
         return false;
     }
-    if (!zipFile_.ExtractFile(fileName, dest)) {
+    if (!zipFile_.ExtractFile(fileName, dest, maxUncompressedSize)) {
         APP_LOGE("extractor is not ExtractFile");
         return false;
     }

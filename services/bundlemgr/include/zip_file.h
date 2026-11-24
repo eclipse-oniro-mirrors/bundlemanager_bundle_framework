@@ -205,17 +205,23 @@ public:
      * @brief Get data relative offset for file.
      * @param file Indicates the entry name.
      * @param dest Indicates the obtained ostream object.
+     * @param maxUncompressedSize Indicates the cumulative uncompressed output cap of
+     *        this entry; 0 means unlimited, an output above the cap aborts with false.
      * @return Returns true if file is successfully extracted; returns false otherwise.
      */
-    bool ExtractFile(const std::string &file, std::ostream &dest) const;
+    bool ExtractFile(const std::string &file, std::ostream &dest,
+        size_t maxUncompressedSize = 0) const;
     /**
      * @brief Extract data from file parallelly.
      * @brief Get data relative offset for file.
      * @param file Indicates the entry name.
      * @param dest Indicates the obtained ostream object.
+     * @param maxUncompressedSize Indicates the cumulative uncompressed output cap of
+     *        this entry; 0 means unlimited, an output above the cap aborts with false.
      * @return Returns true if file is successfully extracted; returns false otherwise.
      */
-    bool ExtractFileParallel(const std::string &file, std::ostream &dest) const;
+    bool ExtractFileParallel(const std::string &file, std::ostream &dest,
+        size_t maxUncompressedSize = 0) const;
 
 private:
     /**
@@ -284,18 +290,24 @@ private:
      * @param extraSize Indicates the size.
      * @param dest Indicates the obtained ostream object.
      * @param file Indicates the file handler used to read data.
+     * @param maxUncompressedSize Indicates the cumulative uncompressed output cap of
+     *        this entry; 0 means unlimited, an output above the cap aborts with false.
      * @return Returns true if successfully Unzip; returns false otherwise.
      */
-    bool UnzipWithStore(const ZipEntry &zipEntry, const uint16_t extraSize, std::ostream &dest, FILE *file) const;
+    bool UnzipWithStore(const ZipEntry &zipEntry, const uint16_t extraSize, std::ostream &dest, FILE *file,
+        size_t maxUncompressedSize = 0) const;
     /**
      * @brief Unzip ZipEntry object to ostream.
      * @param zipEntry Indicates the ZipEntry object.
      * @param extraSize Indicates the size.
      * @param dest Indicates the obtained ostream object.
      * @param file Indicates the file handler used to read data.
+     * @param maxUncompressedSize Indicates the cumulative uncompressed output cap of
+     *        this entry; 0 means unlimited, an output above the cap aborts with false.
      * @return Returns true if successfully Unzip; returns false otherwise.
      */
-    bool UnzipWithInflated(const ZipEntry &zipEntry, const uint16_t extraSize, std::ostream &dest, FILE *file) const;
+    bool UnzipWithInflated(const ZipEntry &zipEntry, const uint16_t extraSize, std::ostream &dest, FILE *file,
+        size_t maxUncompressedSize = 0) const;
     /**
      * @brief Seek to Entry start with specific file handler.
      * @param zipEntry Indicates the ZipEntry object.

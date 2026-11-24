@@ -242,4 +242,26 @@ HWTEST_F(BmsStatusReceiverProxyTest, TransformResult_MultipleCalls_0100, Functio
     EXPECT_EQ(receiver_->resultCode_, IStatusReceiver::ERR_UNKNOWN);
     EXPECT_EQ(receiver_->resultMsg_, std::string("[ERR_UNKNOWN]"));
 }
+
+/**
+ * @tc.name: TransformResult_DedupSoErrors_0100
+ * @tc.desc: Test TransformResult maps every dedup so install error
+ *           (CONFIG_UNAVAILABLE / NO_MATCH / LINK_FAILED / VERSION_MISMATCH)
+ *           to the converged client code ERR_INSTALL_DEDUP_SO_LINK_FAILED.
+ * @tc.type: FUNC
+ */
+HWTEST_F(BmsStatusReceiverProxyTest, TransformResult_DedupSoErrors_0100, Function | SmallTest | Level0)
+{
+    const int32_t dedupSoErrors[] = {
+        ERR_APPEXECFWK_INSTALL_DEDUP_SO_CONFIG_UNAVAILABLE,
+        ERR_APPEXECFWK_INSTALL_DEDUP_SO_NO_MATCH,
+        ERR_APPEXECFWK_INSTALL_DEDUP_SO_LINK_FAILED,
+        ERR_APPEXECFWK_INSTALL_DEDUP_SO_VERSION_MISMATCH,
+    };
+    for (int32_t dedupSoError : dedupSoErrors) {
+        receiver_->OnFinished(dedupSoError, "");
+        EXPECT_EQ(receiver_->resultCode_, IStatusReceiver::ERR_INSTALL_DEDUP_SO_LINK_FAILED);
+        EXPECT_EQ(receiver_->resultMsg_, std::string("[ERR_INSTALL_DEDUP_SO_LINK_FAILED]"));
+    }
+}
 }  // namespace

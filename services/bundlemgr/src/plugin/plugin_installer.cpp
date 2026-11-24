@@ -23,6 +23,7 @@
 #include "app_log_tag_wrapper.h"
 #include "app_provision_info_manager.h"
 #include "bundle_common_event_mgr.h"
+#include "bundle_dedup_so_helper.h"
 #include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_service_constants.h"
@@ -990,6 +991,23 @@ ErrCode PluginInstaller::ExtractPluginBundles(const std::string &bundlePath, Inn
 
     result = ProcessNativeLibrary(bundlePath, moduleDir, moduleName, pluginBundleDir, newInfo);
     CHECK_RESULT(result, "ProcessNativeLibrary failed %{public}d");
+
+    // dedup so: link the so files recorded in the plugin dedupfiles.json into
+    // the extracted so path, still inside the install transaction (the links
+    // live in the plugin dirs the transaction owns; a failure returns through
+    // the existing rollback). The call runs for the uncompressed form and for
+    // an empty native library path (the abi-derivation-failure fallback) too:
+    // the helper fails both closed with 8519951 instead of installing a plugin
+    // whose so is missing at runtime. A manifest with no entry matching the
+    // module abi is the trusted zero-match case: the helper only WARNs and
+    // the install continues.
+    std::string soPath;
+    if (isCompressNativeLibs_ && !nativeLibraryPath_.empty()) {
+        soPath = pluginBundleDir + ServiceConstants::PATH_SEPARATOR + nativeLibraryPath_ +
+            ServiceConstants::PATH_SEPARATOR;
+    }
+    result = DedupSoHelper::ProcessDedupSoFiles(bundlePath, newInfo, soPath, cpuAbi_);
+    CHECK_RESULT(result, "fail to ProcessDedupSoFiles, error is %{public}d");
 
     // save hsp and so files to installation dir
     result = SaveHspToInstallDir(bundlePath, pluginBundleDir, moduleName, hostBundleName, newInfo);

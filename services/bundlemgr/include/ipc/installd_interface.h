@@ -1044,6 +1044,28 @@ public:
     {
         return ERR_OK;
     }
+
+    /**
+     * @brief Links a deduplicated shared library (so) into the bundle code dir:
+     *        installd creates a symbolic link at libraryPath pointing to a system
+     *        provisioned dedup source so selected by sha256.
+     * @param bundleName Indicates the bundle the link is created for; used with
+     *        libraryPath for the path domain validation.
+     * @param libraryPath Indicates the link position inside the bundle code dir.
+     * @param sha256 Indicates the SHA-256 of the original so removed from the
+     *        package at build time.
+     * @param resultCode Indicates the musl result code (the SO_DEDUP_RESULT_*
+     *        contract mirrored in bundle_dedup_so_helper.h).
+     * @return Returns ERR_OK when the musl result code was obtained; an error
+     *         code otherwise (IPC or validation failure).
+     */
+    virtual ErrCode LinkDedupedSo(const std::string &bundleName, const std::string &libraryPath,
+        const std::string &sha256, uint32_t &resultCode)
+    {
+        // fails closed on purpose: ERR_OK with the resultCode untouched
+        // would be misread as "linked" (do not "fix" this back to ERR_OK)
+        return ERR_APPEXECFWK_INSTALLD_DEDUP_SO_LINK_FAILED;
+    }
 };
 
 #define INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(parcel, token)                        \

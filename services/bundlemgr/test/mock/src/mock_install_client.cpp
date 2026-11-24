@@ -23,6 +23,18 @@ std::vector<int32_t> retList = {};
 bool g_isDir = false;
 ErrCode g_errCode = ERR_OK;
 bool g_vectorEmpty = true;
+// LinkDedupedSo knobs: call count, captured last params, installd IPC ret
+// and the injected musl result code. Internal linkage: another mock used by
+// other suites defines the same knob names; test files arm them via the
+// *ForTest accessors below, never extern.
+static int32_t g_linkDedupedSoCallCount = 0;
+static int32_t g_linkDedupedSoIpcRet = ERR_OK;
+static uint32_t g_linkDedupedSoResultCode = 0;
+namespace {
+std::string g_lastLinkDedupedSoBundleName;
+std::string g_lastLinkDedupedSoLibraryPath;
+std::string g_lastLinkDedupedSoSha256;
+}
 ErrCode g_testErrCode = ERR_OK;
 uint64_t g_inodeCount = 0;
 std::vector<std::string> g_addedCertPaths = {};
@@ -70,6 +82,42 @@ void SetErrCodeForTest(ErrCode value)
 void SetVectorEmptyForTest(bool value)
 {
     g_vectorEmpty = value;
+}
+
+void ResetLinkDedupedSoStateForTest()
+{
+    g_linkDedupedSoCallCount = 0;
+    g_linkDedupedSoIpcRet = ERR_OK;
+    g_linkDedupedSoResultCode = 0;
+    g_lastLinkDedupedSoBundleName.clear();
+    g_lastLinkDedupedSoLibraryPath.clear();
+    g_lastLinkDedupedSoSha256.clear();
+}
+
+int32_t GetLinkDedupedSoCallCountForTest()
+{
+    return g_linkDedupedSoCallCount;
+}
+
+bool GetLastLinkDedupedSoParamForTest(std::string &bundleName, std::string &libraryPath, std::string &sha256)
+{
+    if (g_linkDedupedSoCallCount == 0) {
+        return false;
+    }
+    bundleName = g_lastLinkDedupedSoBundleName;
+    libraryPath = g_lastLinkDedupedSoLibraryPath;
+    sha256 = g_lastLinkDedupedSoSha256;
+    return true;
+}
+
+void SetLinkDedupedSoIpcRetForTest(int32_t ipcRet)
+{
+    g_linkDedupedSoIpcRet = ipcRet;
+}
+
+void SetLinkDedupedSoResultCodeForTest(uint32_t resultCode)
+{
+    g_linkDedupedSoResultCode = resultCode;
 }
 
 ErrCode InstalldClient::CreateBundleDir(
@@ -764,6 +812,17 @@ ErrCode InstalldClient::ClearSessionProvisionCache(int32_t sessionId)
 ErrCode InstalldClient::MigrateBundleDirsOwner(const CreateDirParam &createDirParam)
 {
     return ERR_OK;
+}
+
+ErrCode InstalldClient::LinkDedupedSo(const std::string &bundleName, const std::string &libraryPath,
+    const std::string &sha256, uint32_t &resultCode)
+{
+    g_linkDedupedSoCallCount++;
+    g_lastLinkDedupedSoBundleName = bundleName;
+    g_lastLinkDedupedSoLibraryPath = libraryPath;
+    g_lastLinkDedupedSoSha256 = sha256;
+    resultCode = g_linkDedupedSoResultCode;
+    return g_linkDedupedSoIpcRet;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

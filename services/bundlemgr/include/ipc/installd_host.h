@@ -397,6 +397,8 @@ private:
     bool HandleClearSessionProvisionCache(MessageParcel &data, MessageParcel &reply);
 
     bool HandleMigrateBundleDirsOwner(MessageParcel &data, MessageParcel &reply);
+
+    bool HandleLinkDedupedSo(MessageParcel &data, MessageParcel &reply);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

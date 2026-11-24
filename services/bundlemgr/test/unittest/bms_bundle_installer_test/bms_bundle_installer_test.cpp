@@ -26,6 +26,7 @@
 #include <fstream>
 #include <filesystem>
 #include <optional>
+#include <sstream>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -42,6 +43,7 @@
 #include "accesstoken_kit.h"
 #include "app_service_fwk/app_service_fwk_installer.h"
 #include "bundle_constants.h"
+#include "bundle_extractor.h"
 #include "bundle_info.h"
 #include "bundle_installer.h"
 #include "bundle_installer_host.h"
@@ -51,6 +53,7 @@
 #include "bundle_verify_mgr.h"
 #include "bundle_resource_helper.h"
 #include "bundle_resource_manager.h"
+#include "bundle_service_constants.h"
 #include "common_event_data.h"
 #include "common_event_subscriber.h"
 #include "directory_ex.h"
@@ -63,6 +66,7 @@
 #include "ipc/hap_module_extract_param.h"
 #include "install_exception_mgr.h"
 #include "mock_status_receiver.h"
+#include "module_profile.h"
 #include "parameter.h"
 #include "parameters.h"
 #include "plugin_installer.h"
@@ -92,6 +96,21 @@ void ResetMigrateBundleDirsOwnerStateForTest();
 int32_t GetMigrateBundleDirsOwnerCallCountForTest();
 bool GetLastMigrateBundleDirsOwnerParamForTest(CreateDirParam &createDirParam);
 extern int32_t g_migrateBundleDirsOwnerRet;
+// Accessors of the installd client LinkDedupedSo stub knobs
+// (test/mock/src/mock_install_client.cpp), same pattern as the knobs above;
+// the knobs themselves are internal-linkage.
+void ResetLinkDedupedSoStateForTest();
+int32_t GetLinkDedupedSoCallCountForTest();
+bool GetLastLinkDedupedSoParamForTest(std::string &bundleName, std::string &libraryPath,
+    std::string &sha256);
+void SetLinkDedupedSoIpcRetForTest(int32_t ipcRet);
+void SetLinkDedupedSoResultCodeForTest(uint32_t resultCode);
+// Normal-flow shared-HSP save chain stub (test/mock/src/installd_client.cpp):
+// >= 0 short-circuits MoveSharedHspToCodeDir and VerifyCodeSignatureForHap
+// (the real whole-file code signature can never pass an unsigned fixture);
+// -1 keeps the passthrough to the real installd chain (the default).
+void SetSharedHspSaveStubRetForTest(int32_t stubRet);
+void ResetSharedHspSaveStubForTest();
 }
 namespace Security {
 namespace AccessToken {
@@ -805,6 +824,9 @@ void BmsBundleInstallerTest::TearDownTestCase()
 
 void BmsBundleInstallerTest::SetUp()
 {
+    // Isolate every test of this suite from the LinkDedupedSo mock knobs a
+    // dedup so case may have left behind.
+    ResetLinkDedupedSoStateForTest();
     if (!installdService_->IsServiceReady()) {
         installdService_->Start();
     }
@@ -882,6 +904,8 @@ void BmsBundleInstallerTest::TearDown()
     OHOS::ForceRemoveDirectory(BUNDLE_DATA_DIR);
     OHOS::ForceRemoveDirectory(BUNDLE_CODE_DIR);
     OHOS::ForceRemoveDirectory(BUNDLE_LIBRARY_PATH_DIR);
+    // Never leak the LinkDedupedSo mock knobs into the next test.
+    ResetLinkDedupedSoStateForTest();
 }
 
 void BmsBundleInstallerTest::CheckFileExist() const
@@ -21170,5 +21194,389 @@ HWTEST_F(BmsBundleInstallerTest, RefreshBundleDirsAfterUidChange_0005, Function 
     installer.RefreshBundleDirsAfterUidChange(info, USERID, Constants::INITIAL_APP_INDEX, newUid);
     EXPECT_EQ(GetMigrateBundleDirsOwnerCallCountForTest(), 1);
     g_migrateBundleDirsOwnerRet = 0;
+}
+
+namespace {
+// Dedup so wiring fixtures (sceneProject/unittest/parse_bundle/dedup_so/): the hap is a
+// manifest-only zip container, the mocked LinkDedupedSo captures the wiring under test.
+const std::string DEDUP_WIRE_HAP_DIR = "/data/test/resource/bms/parse_bundle/dedup_so/";
+const std::string DEDUP_WIRE_HAP = "dedup_valid.hap";
+const std::string DEDUP_WIRE_SHA = "31b7479487ad9f817f0fd66f6dcb1c2957e7ca68b432b6f95f1f56bfc976bd60";
+// the read-source pinning fixture of DedupSoLink_1500: one hex digit off DEDUP_WIRE_SHA
+const std::string DEDUP_WIRE_ALT_HAP = "dedup_valid_alt_sha.hap";
+const std::string DEDUP_WIRE_ALT_SHA = "31b7479487ad9f817f0fd66f6dcb1c2957e7ca68b432b6f95f1f56bfc976bd61";
+const std::string DEDUP_WIRE_LINKED_SO = "libc++_shared.so";
+const std::string DEDUP_WIRE_MODULE = "entry";
+const std::string DEDUP_WIRE_CPU_ABI = "arm64-v8a";
+const std::string DEDUP_WIRE_LIBS_PATH = "libs/arm64";
+// shared bundle version dir prefix (no shared header definition)
+const std::string DEDUP_WIRE_VERSION_PREFIX = "v";
+
+InnerBundleInfo MakeDedupWireBundleInfo(const std::string &bundleName)
+{
+    InnerBundleInfo info;
+    info.currentPackage_ = DEDUP_WIRE_MODULE;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.name = DEDUP_WIRE_MODULE;
+    moduleInfo.moduleName = DEDUP_WIRE_MODULE;
+    moduleInfo.modulePackage = DEDUP_WIRE_MODULE;
+    // non lib-isolated module: the so lands in <module>_tmp/<libs path>
+    moduleInfo.isLibIsolated = false;
+    moduleInfo.compressNativeLibs = true;
+    moduleInfo.isSoStoredCompressed = true;
+    info.innerModuleInfos_[DEDUP_WIRE_MODULE] = moduleInfo;
+    info.baseApplicationInfo_->bundleName = bundleName;
+    info.baseApplicationInfo_->cpuAbi = DEDUP_WIRE_CPU_ABI;
+    info.baseApplicationInfo_->nativeLibraryPath = DEDUP_WIRE_LIBS_PATH;
+    info.SetIsNewVersion(true);
+    return info;
+}
+
+// Wire a BaseBundleInstaller with the fixture (by member assignment: not copyable)
+void InitDedupWireInstaller(BaseBundleInstaller &installer, const std::string &bundleName,
+    const std::string &hapPath)
+{
+    installer.bundleName_ = bundleName;
+    installer.modulePackage_ = DEDUP_WIRE_MODULE;
+    installer.modulePath_ = hapPath;
+    installer.userId_ = USERID;
+}
+
+// Build the install info through the REAL parse chain: no field is hand-set.
+ErrCode MakeParsedDedupInfo(const std::string &hapPath, InnerBundleInfo &info)
+{
+    BundleExtractor bundleExtractor(hapPath);
+    if (!bundleExtractor.Init()) {
+        return ERR_APPEXECFWK_PARSE_UNEXPECTED;
+    }
+    std::ostringstream profileFileBuffer;
+    if (!bundleExtractor.ExtractProfile(profileFileBuffer)) {
+        return ERR_APPEXECFWK_PARSE_NO_PROFILE;
+    }
+    info.SetIsNewVersion(true);
+    ModuleProfile moduleProfile;
+    return moduleProfile.TransformTo(profileFileBuffer, bundleExtractor, info);
+}
+
+void ExpectDedupLinkCall(const std::string &bundleName, const std::string &libraryPath,
+    const std::string &sha256)
+{
+    std::string linkedName;
+    std::string linkedPath;
+    std::string linkedSha;
+    EXPECT_TRUE(GetLastLinkDedupedSoParamForTest(linkedName, linkedPath, linkedSha));
+    EXPECT_EQ(linkedName, bundleName);
+    EXPECT_EQ(linkedPath, libraryPath);
+    EXPECT_EQ(linkedSha, sha256);
+}
+
+// LinkDedupedSo failure propagation shared by every install chain: an IPC failure
+// collapses to 8519951, every failing musl code maps and propagates; fresh info per
+// drive (musl values spelled out: this suite does not link musl_headers).
+template <typename MakeInfo, typename Drive>
+void RunLinkFailurePropagation(MakeInfo makeInfo, Drive drive)
+{
+    ResetLinkDedupedSoStateForTest();
+    SetLinkDedupedSoIpcRetForTest(ERR_APPEXECFWK_INSTALLD_SERVICE_DIED);
+    auto info = makeInfo();
+    EXPECT_EQ(drive(info), ERR_APPEXECFWK_INSTALL_DEDUP_SO_LINK_FAILED);
+    EXPECT_EQ(GetLinkDedupedSoCallCountForTest(), 1);
+
+    const uint32_t muslFailures[] = {1, 3, 4, UINT32_MAX};
+    const ErrCode expectedCodes[] = {
+        ERR_APPEXECFWK_INSTALL_DEDUP_SO_NO_MATCH,
+        ERR_APPEXECFWK_INSTALL_DEDUP_SO_CONFIG_UNAVAILABLE,
+        ERR_APPEXECFWK_INSTALL_DEDUP_SO_VERSION_MISMATCH,
+        ERR_APPEXECFWK_INSTALL_DEDUP_SO_LINK_FAILED,
+    };
+    for (size_t i = 0; i < sizeof(muslFailures) / sizeof(muslFailures[0]); ++i) {
+        ResetLinkDedupedSoStateForTest();
+        SetLinkDedupedSoIpcRetForTest(ERR_OK);
+        SetLinkDedupedSoResultCodeForTest(muslFailures[i]);
+        auto freshInfo = makeInfo();
+        EXPECT_EQ(drive(freshInfo), expectedCodes[i]) << "musl code index " << i;
+        EXPECT_EQ(GetLinkDedupedSoCallCountForTest(), 1) << "musl code index " << i;
+    }
+}
+}  // namespace
+
+/**
+ * @tc.number: DedupSoLink_0100
+ * @tc.name: normal install and bundle update link the dedup so files
+ * @tc.desc: 1. drive InnerProcessNativeLibs: normal install, +new- rotate update, unset bundleName_
+ *           2. one IPC per run with the right so path and sha256; the IPC name stays stripped;
+ *              a signature failure aborts before any LinkDedupedSo IPC
+ */
+HWTEST_F(BmsBundleInstallerTest, DedupSoLink_0100, Function | SmallTest | Level0)
+{
+    const std::string bundleName = "com.example.dedupwire";
+    const std::string hapPath = DEDUP_WIRE_HAP_DIR + DEDUP_WIRE_HAP;
+    const std::string codeRoot = std::string(Constants::BUNDLE_CODE_DIR) + "/";
+    InnerBundleInfo info = MakeDedupWireBundleInfo(bundleName);
+    BaseBundleInstaller installer;
+    InitDedupWireInstaller(installer, bundleName, hapPath);
+    ResetLinkDedupedSoStateForTest();
+    EXPECT_EQ(installer.InnerProcessNativeLibs(info, hapPath), ERR_OK);
+    EXPECT_EQ(GetLinkDedupedSoCallCountForTest(), 1);
+    // non lib-isolated so target: <code root>/<bundle>/<module>_tmp/<libs path>
+    ExpectDedupLinkCall(bundleName, codeRoot + bundleName + "/" + DEDUP_WIRE_MODULE +
+        ServiceConstants::TMP_SUFFIX + "/" + DEDUP_WIRE_LIBS_PATH + "/" + DEDUP_WIRE_LINKED_SO,
+        DEDUP_WIRE_SHA);
+    // bundle update: so target in the +new- rotate dir, IPC name stays stripped
+    installer.isFeatureNeedUninstall_ = true;
+    ResetLinkDedupedSoStateForTest();
+    InnerBundleInfo updateInfo = MakeDedupWireBundleInfo(bundleName);
+    EXPECT_EQ(installer.InnerProcessNativeLibs(updateInfo, hapPath), ERR_OK);
+    EXPECT_EQ(GetLinkDedupedSoCallCountForTest(), 1);
+    ExpectDedupLinkCall(bundleName, codeRoot + ServiceConstants::BUNDLE_NEW_CODE_DIR + bundleName +
+        "/" + DEDUP_WIRE_MODULE + ServiceConstants::TMP_SUFFIX + "/" + DEDUP_WIRE_LIBS_PATH + "/" +
+        DEDUP_WIRE_LINKED_SO, DEDUP_WIRE_SHA);
+    OHOS::ForceRemoveDirectory(codeRoot + ServiceConstants::BUNDLE_NEW_CODE_DIR + bundleName);
+    // signature verification precedes the dedup link: param error before any IPC
+    installer.isFeatureNeedUninstall_ = false;
+    installer.bundleName_ = "";
+    ResetLinkDedupedSoStateForTest();
+    InnerBundleInfo signInfo = MakeDedupWireBundleInfo(bundleName);
+    EXPECT_EQ(installer.InnerProcessNativeLibs(signInfo, hapPath), ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    EXPECT_EQ(GetLinkDedupedSoCallCountForTest(), 0);
+    OHOS::ForceRemoveDirectory(codeRoot + bundleName);
+}
+
+/**
+ * @tc.number: DedupSoLink_0400
+ * @tc.name: the shared, plugin and system-level HSP chains link the dedup so files
+ * @tc.desc: 1. the shared, plugin and system-level HSP chains with the fixture, the asf chain
+ *              again over a stale so at the position
+ *           2. one IPC per chain with the right so path and sha256; the placeholder survives
+ */
+HWTEST_F(BmsBundleInstallerTest, DedupSoLink_0400, Function | SmallTest | Level0)
+{
+    const std::string hapPath = DEDUP_WIRE_HAP_DIR + DEDUP_WIRE_HAP;
+    const std::string codeRoot = std::string(Constants::BUNDLE_CODE_DIR) + "/";
+    const std::string sharedBundleName = "com.example.deduphsp";
+    InnerBundleInfo sharedInfo = MakeDedupWireBundleInfo(sharedBundleName);
+    sharedInfo.baseBundleInfo_->versionCode = 1;
+    sharedInfo.SetIsPreInstallApp(true);
+    InnerSharedBundleInstaller sharedInstaller(hapPath);
+    sharedInstaller.bundleName_ = sharedBundleName;
+    ResetLinkDedupedSoStateForTest();
+    EXPECT_EQ(sharedInstaller.ExtractSharedBundles(hapPath, sharedInfo), ERR_OK);
+    EXPECT_EQ(GetLinkDedupedSoCallCountForTest(), 1);
+    // shared so target: <code root>/<bundle>/v<versionCode>/<libs path>
+    ExpectDedupLinkCall(sharedBundleName, codeRoot + sharedBundleName + "/" +
+        DEDUP_WIRE_VERSION_PREFIX + "1/" + DEDUP_WIRE_LIBS_PATH + "/" + DEDUP_WIRE_LINKED_SO,
+        DEDUP_WIRE_SHA);
+    OHOS::ForceRemoveDirectory(codeRoot + sharedBundleName);
+    const std::string hostBundleName = "com.example.deduphost";
+    const std::string bundleNameWithTime = hostBundleName + "_1700000000000";
+    InnerBundleInfo pluginInfo = MakeDedupWireBundleInfo(hostBundleName);
+    PluginInstaller pluginInstaller;
+    pluginInstaller.bundleName_ = hostBundleName;
+    pluginInstaller.bundleNameWithTime_ = bundleNameWithTime;
+    pluginInstaller.userId_ = USERID;
+    ResetLinkDedupedSoStateForTest();
+    EXPECT_EQ(pluginInstaller.ExtractPluginBundles(hapPath, pluginInfo,
+        codeRoot + hostBundleName + "/" + ServiceConstants::PLUGIN_FILE_PATH, hostBundleName),
+        ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    EXPECT_EQ(GetLinkDedupedSoCallCountForTest(), 1);
+    // plugin so target: <code root>/<host>/+plugins/<bundleWithTime>/<libs path>
+    ExpectDedupLinkCall(hostBundleName, codeRoot + hostBundleName + "/" +
+        ServiceConstants::PLUGIN_FILE_PATH + "/" + bundleNameWithTime + "/" + DEDUP_WIRE_LIBS_PATH +
+        "/" + DEDUP_WIRE_LINKED_SO, DEDUP_WIRE_SHA);
+    OHOS::ForceRemoveDirectory(codeRoot + hostBundleName);
+    const std::string asfBundleName = "com.example.dedupasf";
+    const std::string versionDir = codeRoot + asfBundleName + "/" + DEDUP_WIRE_VERSION_PREFIX + "1";
+    const std::string linkPath = versionDir + "/" + DEDUP_WIRE_LIBS_PATH + "/" + DEDUP_WIRE_LINKED_SO;
+    InnerBundleInfo asfInfo = MakeDedupWireBundleInfo(asfBundleName);
+    asfInfo.baseBundleInfo_->versionCode = 1;
+    AppServiceFwkInstaller asfInstaller;
+    asfInstaller.bundleName_ = asfBundleName;
+    ResetLinkDedupedSoStateForTest();
+    EXPECT_EQ(asfInstaller.ProcessNativeLibrary(hapPath, versionDir + "/" + DEDUP_WIRE_MODULE,
+        DEDUP_WIRE_MODULE, versionDir, asfInfo, false), ERR_OK);
+    EXPECT_EQ(GetLinkDedupedSoCallCountForTest(), 1);
+    // system-level HSP so target: <code root>/<bundle>/v<versionCode>/<libs path>
+    ExpectDedupLinkCall(asfBundleName, linkPath, DEDUP_WIRE_SHA);
+    OHOS::ForceRemoveDirectory(codeRoot + asfBundleName);
+    // the previous install's stale so: the privileged clearing is the installd-side duty
+    ASSERT_TRUE(OHOS::ForceCreateDirectory(versionDir + "/" + DEDUP_WIRE_LIBS_PATH));
+    {
+        std::ofstream staleStream(linkPath);
+        staleStream << "stale-previous-so-content";
+    }
+    ResetLinkDedupedSoStateForTest();
+    EXPECT_EQ(asfInstaller.ProcessNativeLibrary(hapPath, versionDir + "/" + DEDUP_WIRE_MODULE,
+        DEDUP_WIRE_MODULE, versionDir, asfInfo, false), ERR_OK);
+    EXPECT_EQ(GetLinkDedupedSoCallCountForTest(), 1);
+    ExpectDedupLinkCall(asfBundleName, linkPath, DEDUP_WIRE_SHA);
+    std::ifstream staleCheck(linkPath);
+    std::string staleContent((std::istreambuf_iterator<char>(staleCheck)),
+        std::istreambuf_iterator<char>());
+    EXPECT_EQ(staleContent, "stale-previous-so-content");
+    OHOS::ForceRemoveDirectory(codeRoot + asfBundleName);
+}
+
+/**
+ * @tc.number: DedupSoLink_0800
+ * @tc.name: every install chain maps and propagates every LinkDedupedSo failure
+ * @tc.desc: 1. driving the base, shared, plugin and system-level HSP chains with an injected
+ *              LinkDedupedSo IPC failure and every failing musl result code
+ *           2. each chain aborts fail-closed instead of finishing the install
+ */
+HWTEST_F(BmsBundleInstallerTest, DedupSoLink_0800, Function | SmallTest | Level0)
+{
+    const std::string hapPath = DEDUP_WIRE_HAP_DIR + DEDUP_WIRE_HAP;
+    const std::string codeRoot = std::string(Constants::BUNDLE_CODE_DIR) + "/";
+    const std::string baseBundleName = "com.example.dedupwire";
+    BaseBundleInstaller baseInstaller;
+    InitDedupWireInstaller(baseInstaller, baseBundleName, hapPath);
+    RunLinkFailurePropagation([&baseBundleName]() { return MakeDedupWireBundleInfo(baseBundleName); },
+        [&](InnerBundleInfo &info) { return baseInstaller.InnerProcessNativeLibs(info, hapPath); });
+    OHOS::ForceRemoveDirectory(codeRoot + baseBundleName);
+    const std::string sharedBundleName = "com.example.deduphsp";
+    InnerSharedBundleInstaller sharedInstaller(hapPath);
+    sharedInstaller.bundleName_ = sharedBundleName;
+    RunLinkFailurePropagation([&sharedBundleName]() {
+        InnerBundleInfo info = MakeDedupWireBundleInfo(sharedBundleName);
+        info.baseBundleInfo_->versionCode = 1;
+        info.SetIsPreInstallApp(true);
+        return info;
+    }, [&](InnerBundleInfo &info) {
+        return sharedInstaller.ExtractSharedBundles(hapPath, info);
+    });
+    OHOS::ForceRemoveDirectory(codeRoot + sharedBundleName);
+    const std::string hostBundleName = "com.example.deduphost";
+    const std::string bundleNameWithTime = hostBundleName + "_1700000000000";
+    const std::string pluginDir = codeRoot + hostBundleName + "/" + ServiceConstants::PLUGIN_FILE_PATH;
+    PluginInstaller pluginInstaller;
+    pluginInstaller.bundleName_ = hostBundleName;
+    pluginInstaller.bundleNameWithTime_ = bundleNameWithTime;
+    pluginInstaller.userId_ = USERID;
+    RunLinkFailurePropagation([&hostBundleName]() { return MakeDedupWireBundleInfo(hostBundleName); },
+        [&](InnerBundleInfo &info) {
+            return pluginInstaller.ExtractPluginBundles(hapPath, info, pluginDir, hostBundleName);
+        });
+    OHOS::ForceRemoveDirectory(codeRoot + hostBundleName);
+    const std::string asfBundleName = "com.example.dedupasf";
+    const std::string versionDir = codeRoot + asfBundleName + "/" + DEDUP_WIRE_VERSION_PREFIX + "1";
+    AppServiceFwkInstaller asfInstaller;
+    asfInstaller.bundleName_ = asfBundleName;
+    RunLinkFailurePropagation([&asfBundleName]() {
+        InnerBundleInfo info = MakeDedupWireBundleInfo(asfBundleName);
+        info.baseBundleInfo_->versionCode = 1;
+        return info;
+    }, [&](InnerBundleInfo &info) {
+        return asfInstaller.ProcessNativeLibrary(hapPath, versionDir + "/" + DEDUP_WIRE_MODULE,
+            DEDUP_WIRE_MODULE, versionDir, info, false);
+    });
+    OHOS::ForceRemoveDirectory(codeRoot + asfBundleName);
+}
+
+/**
+ * @tc.number: DedupSoLink_1200
+ * @tc.name: fully deduped packages install via the parse-time abi derivation
+ * @tc.desc: 1. the keepdir fixture with a hand-wired info, then infos via the REAL parse
+ *              chain: stripped derives the keepdir path, the x86_64 mismatch stays off
+ *           2. keepdir and stripped link at the keepdir path; mismatch fails closed, no IPC
+ */
+HWTEST_F(BmsBundleInstallerTest, DedupSoLink_1200, Function | SmallTest | Level0)
+{
+    const std::string bundleName = "com.example.dedupso";
+    const std::string codeRoot = std::string(Constants::BUNDLE_CODE_DIR) + "/";
+    const std::string keepdirSoPath = codeRoot + bundleName + "/" + DEDUP_WIRE_MODULE +
+        ServiceConstants::TMP_SUFFIX + "/" + DEDUP_WIRE_LIBS_PATH + "/" + DEDUP_WIRE_LINKED_SO;
+    const std::string keepdirPath = DEDUP_WIRE_HAP_DIR + "dedup_fulldedup_keepdir.hap";
+    InnerBundleInfo keepdirInfo = MakeDedupWireBundleInfo(bundleName);
+    BaseBundleInstaller keepdirInstaller;
+    InitDedupWireInstaller(keepdirInstaller, bundleName, keepdirPath);
+    ResetLinkDedupedSoStateForTest();
+    EXPECT_EQ(keepdirInstaller.InnerProcessNativeLibs(keepdirInfo, keepdirPath), ERR_OK);
+    EXPECT_EQ(GetLinkDedupedSoCallCountForTest(), 1);
+    ExpectDedupLinkCall(bundleName, keepdirSoPath, DEDUP_WIRE_SHA);
+    OHOS::ForceRemoveDirectory(codeRoot + bundleName);
+    const std::string strippedPath = DEDUP_WIRE_HAP_DIR + "dedup_fulldedup_stripped.hap";
+    InnerBundleInfo info;
+    ASSERT_EQ(MakeParsedDedupInfo(strippedPath, info), ERR_OK);
+    ASSERT_EQ(info.GetCpuAbi(), DEDUP_WIRE_CPU_ABI);
+    ASSERT_EQ(info.GetNativeLibraryPath(), DEDUP_WIRE_LIBS_PATH);
+    BaseBundleInstaller installer;
+    InitDedupWireInstaller(installer, bundleName, strippedPath);
+    ResetLinkDedupedSoStateForTest();
+    EXPECT_EQ(installer.InnerProcessNativeLibs(info, strippedPath), ERR_OK);
+    EXPECT_EQ(GetLinkDedupedSoCallCountForTest(), 1);
+    // the derived path is byte-identical to the keepdir form
+    ExpectDedupLinkCall(bundleName, keepdirSoPath, DEDUP_WIRE_SHA);
+    OHOS::ForceRemoveDirectory(codeRoot + bundleName);
+    // mismatch: no abilist intersection, legacy empty path, the install fails closed
+    const std::string mismatchPath = DEDUP_WIRE_HAP_DIR + "dedup_fulldedup_stripped_mismatch.hap";
+    InnerBundleInfo mismatchInfo;
+    ASSERT_EQ(MakeParsedDedupInfo(mismatchPath, mismatchInfo), ERR_OK);
+    ASSERT_TRUE(mismatchInfo.GetNativeLibraryPath().empty());
+    BaseBundleInstaller mismatchInstaller;
+    InitDedupWireInstaller(mismatchInstaller, bundleName, mismatchPath);
+    ResetLinkDedupedSoStateForTest();
+    EXPECT_EQ(mismatchInstaller.InnerProcessNativeLibs(mismatchInfo, mismatchPath),
+        ERR_APPEXECFWK_INSTALL_DEDUP_SO_LINK_FAILED);
+    EXPECT_EQ(GetLinkDedupedSoCallCountForTest(), 0);
+    OHOS::ForceRemoveDirectory(codeRoot + bundleName);
+}
+
+/**
+ * @tc.number: DedupSoLink_1500
+ * @tc.name: the shared bundle save chain and the uncompressed form of the dedup step
+ * @tc.desc: 1. a normal-flow shared install with the alt-sha hsp, an uncompressed pre-install module
+ *           2. the IPC carries the saved hsp's sha256 (not the source bundle's); the uncompressed
+ *              form aborts fail-closed with 8519951 and no LinkDedupedSo IPC ever fires
+ */
+HWTEST_F(BmsBundleInstallerTest, DedupSoLink_1500, Function | SmallTest | Level0)
+{
+    const std::string sharedBundleName = "com.example.deduphspn";
+    const std::string hapPath = DEDUP_WIRE_HAP_DIR + DEDUP_WIRE_HAP;
+    const std::string codeRoot = std::string(Constants::BUNDLE_CODE_DIR) + "/";
+    const std::string versionDir = codeRoot + sharedBundleName + "/" + DEDUP_WIRE_VERSION_PREFIX + "1";
+    const std::string moduleDir = versionDir + "/" + DEDUP_WIRE_MODULE;
+    // the save chain stages the hsp into <moduleDir>/<module>/ then moves it to .hsp
+    const std::string tempHspDir = moduleDir + "/" + DEDUP_WIRE_MODULE;
+    const std::string tempHspPath = tempHspDir + "/" + DEDUP_WIRE_MODULE +
+        ServiceConstants::HSP_FILE_SUFFIX;
+    const std::string realHspPath = moduleDir + "/" + DEDUP_WIRE_MODULE +
+        ServiceConstants::HSP_FILE_SUFFIX;
+    InnerBundleInfo info = MakeDedupWireBundleInfo(sharedBundleName);
+    info.baseBundleInfo_->versionCode = 1;
+    info.SetIsPreInstallApp(false);
+    InnerSharedBundleInstaller installer(hapPath);
+    installer.bundleName_ = sharedBundleName;
+    // pre-stage the hsp at the staging path: the mock fakes calls an unsigned fixture cannot pass
+    ASSERT_TRUE(OHOS::ForceCreateDirectory(tempHspDir));
+    {
+        std::ifstream srcStream(DEDUP_WIRE_HAP_DIR + DEDUP_WIRE_ALT_HAP, std::ios::binary);
+        ASSERT_TRUE(srcStream.good());
+        std::ofstream dstStream(tempHspPath, std::ios::binary);
+        dstStream << srcStream.rdbuf();
+    }
+    SetSharedHspSaveStubRetForTest(ERR_OK);
+    ResetLinkDedupedSoStateForTest();
+    EXPECT_EQ(installer.ExtractSharedBundles(hapPath, info), ERR_OK);
+    EXPECT_EQ(GetLinkDedupedSoCallCountForTest(), 1);
+    // normal-flow so target: <code root>/<bundle>/v<versionCode>/<libs path>
+    ExpectDedupLinkCall(sharedBundleName, versionDir + "/" + DEDUP_WIRE_LIBS_PATH + "/" +
+        DEDUP_WIRE_LINKED_SO, DEDUP_WIRE_ALT_SHA);
+    // the save chain really ran: the hsp landed at the real hsp path
+    EXPECT_EQ(access(realHspPath.c_str(), F_OK), 0);
+    ResetSharedHspSaveStubForTest();
+    OHOS::ForceRemoveDirectory(codeRoot + sharedBundleName);
+    // an uncompressed module with a non-empty manifest: fail closed, no LinkDedupedSo IPC
+    const std::string uncompressedName = "com.example.deduphspu";
+    InnerBundleInfo uncompressedInfo = MakeDedupWireBundleInfo(uncompressedName);
+    uncompressedInfo.baseBundleInfo_->versionCode = 1;
+    uncompressedInfo.SetIsPreInstallApp(true);
+    uncompressedInfo.innerModuleInfos_[DEDUP_WIRE_MODULE].compressNativeLibs = false;
+    InnerSharedBundleInstaller uncompressedInstaller(hapPath);
+    uncompressedInstaller.bundleName_ = uncompressedName;
+    ResetLinkDedupedSoStateForTest();
+    EXPECT_EQ(uncompressedInstaller.ExtractSharedBundles(hapPath, uncompressedInfo),
+        ERR_APPEXECFWK_INSTALL_DEDUP_SO_LINK_FAILED);
+    EXPECT_EQ(GetLinkDedupedSoCallCountForTest(), 0);
+    OHOS::ForceRemoveDirectory(codeRoot + uncompressedName);
 }
 } // OHOS

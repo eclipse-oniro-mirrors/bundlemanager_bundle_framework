@@ -265,6 +265,15 @@ public:
         // insufficient number of system inodes
         ERR_INSTALL_INSUFFICIENT_NUMBER_OF_SYSTEM_INODES = 9568460,
 
+        // install dedup so: every internal dedup so failure converges to
+        // ERR_INSTALL_DEDUP_SO_LINK_FAILED for bm clients (see
+        // status_receiver_proxy); the other three codes stay reserved for
+        // finer-grained reporting, do not remove or reuse them
+        ERR_INSTALL_DEDUP_SO_CONFIG_UNAVAILABLE = 9568461,
+        ERR_INSTALL_DEDUP_SO_NO_MATCH = 9568462,
+        ERR_INSTALL_DEDUP_SO_LINK_FAILED = 9568463,
+        ERR_INSTALL_DEDUP_SO_VERSION_MISMATCH = 9568464,
+
         ERR_RECOVER_GET_BUNDLEPATH_ERROR = 201,
         ERR_RECOVER_INVALID_BUNDLE_NAME,
         ERR_RECOVER_NOT_ALLOWED,

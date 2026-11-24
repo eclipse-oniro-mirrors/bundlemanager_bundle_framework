@@ -148,6 +148,7 @@ enum class InstalldInterfaceCode : uint32_t {
     DELETE_SANDBOX_DIR = 142,
     DELETE_BACKUP_SANDBOX_DIR = 143,
     GET_ENTERPRISE_CERT_INFO = 144,
+    LINK_DEDUPED_SO = 145,
 };
 
 } // namespace AppExecFwk

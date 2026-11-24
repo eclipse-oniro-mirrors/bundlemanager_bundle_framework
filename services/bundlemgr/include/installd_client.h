@@ -549,6 +549,19 @@ public:
      */
     ErrCode MigrateBundleDirsOwner(const CreateDirParam &createDirParam);
 
+    /**
+     * @brief Link a deduplicated so into the bundle code dir through installd.
+     * @param bundleName Indicates the bundle the link is created for.
+     * @param libraryPath Indicates the link position inside the bundle code dir.
+     * @param sha256 Indicates the SHA-256 of the original so removed at build time.
+     * @param resultCode Indicates the musl result code (the SO_DEDUP_RESULT_* contract
+     *        of bundle_dedup_so_helper.h; 4 means a fallback symlink already exists,
+     *        the caller fails closed and rolls back).
+     * @return Returns ERR_OK when the musl result code was obtained; error otherwise.
+     */
+    ErrCode LinkDedupedSo(const std::string &bundleName, const std::string &libraryPath,
+        const std::string &sha256, uint32_t &resultCode);
+
 private:
     sptr<IInstalld> GetInstalldProxy();
     bool LoadInstalldService();

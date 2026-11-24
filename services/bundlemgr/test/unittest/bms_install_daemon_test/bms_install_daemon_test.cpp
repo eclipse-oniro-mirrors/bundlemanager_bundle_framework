@@ -28,10 +28,20 @@
 #include "ipc/check_encryption_param.h"
 #include "ipc/code_signature_param.h"
 #include "ipc/verify_bin_param.h"
+#include "so_dedup/so_dedup.h"
+#include "bundle_framework_services_ipc_interface_code.h"
+#include "string_ex.h"
 
 using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
 namespace OHOS {
+namespace AppExecFwk {
+// Mock knobs of the link-time libc OH_LinkDedupedSo stub (test/mock/src/so_dedup_mock.cpp).
+extern uint32_t g_muslLinkDedupedSoResult;
+extern int32_t g_muslLinkDedupedSoCallCount;
+extern std::string g_muslLinkDedupedSoLastPath;
+extern std::string g_muslLinkDedupedSoLastSha;
+} // namespace AppExecFwk
 namespace {
 const std::string BUNDLE_NAME13 = "com.example.l3jsdemo";
 const std::string BUNDLE_FILE = "/data/test/resource/bms/install_daemon/right.hap";
@@ -3090,5 +3100,103 @@ HWTEST_F(BmsInstallDaemonTest, MigrateBundleDirsOwner_ParamError_0100, Function 
     param.gid = -1;  // invalid gid
     ret = InstalldClient::GetInstance()->MigrateBundleDirsOwner(param);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: LinkDedupedSo_ParamError_0100
+ * @tc.name: invalid params and domain roots are rejected by the host impl gates
+ * @tc.desc: 1. drive the real installd host impl with empty params, an invalid bundle name,
+ *              an out-of-domain path, a non-hex sha256, a missing and a file-occupied dir
+ *           2. verify each is rejected with PARAM_ERROR before any filesystem work
+ */
+HWTEST_F(BmsInstallDaemonTest, LinkDedupedSo_ParamError_0100, Function | SmallTest | Level0)
+{
+    EXPECT_EQ(CreateBundleDir(BUNDLE_CODE_DIR), 0);
+    ASSERT_TRUE(OHOS::ForceCreateDirectory(BUNDLE_CODE_DIR + "/libs/arm64-v8a"));
+    const std::string validBundleName = BUNDLE_NAME13;
+    const std::string validLibraryPath =
+        BUNDLE_CODE_DIR + "/libs/arm64-v8a/libc++_shared.so";
+    const std::string validSha = "31b7479487ad9f817f0fd66f6dcb1c2957e7ca68b432b6f95f1f56bfc976bd60";
+    uint32_t resultCode = SO_DEDUP_ERROR;
+    auto ret = InstalldClient::GetInstance()->LinkDedupedSo("", validLibraryPath, validSha, resultCode);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    ret = InstalldClient::GetInstance()->LinkDedupedSo(validBundleName, "", validSha, resultCode);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    ret = InstalldClient::GetInstance()->LinkDedupedSo(validBundleName, validLibraryPath, "", resultCode);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    ret = InstalldClient::GetInstance()->LinkDedupedSo("!!", validLibraryPath, validSha, resultCode);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    ret = InstalldClient::GetInstance()->LinkDedupedSo(validBundleName,
+        "/data/app/el1/bundle/public/com.example.other/libs/arm64-v8a/libc++_shared.so", validSha, resultCode);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    ret = InstalldClient::GetInstance()->LinkDedupedSo(validBundleName, validLibraryPath,
+        "zzb7479487ad9f817f0fd66f6dcb1c2957e7ca68b432b6f95f1f56bfc976bd60", resultCode);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: LinkDedupedSo_Passthrough_0200
+ * @tc.name: the real installd chain passes valid domains, dispatches and cleans the staging tree
+ * @tc.desc: 1. the own and +new- staging dirs, an on-demand libs dir, dispatch, rollback
+ *           2. valid domains pass with the injected code, the reply carries [ERR_OK][code],
+ *              the parent dir is created on demand, the rollback removes the tree wholesale
+ */
+HWTEST_F(BmsInstallDaemonTest, LinkDedupedSo_Passthrough_0200, Function | SmallTest | Level0)
+{
+    EXPECT_EQ(CreateBundleDir(BUNDLE_CODE_DIR), 0);
+    const std::string ownLibsDir = BUNDLE_CODE_DIR + "/libs/arm64-v8a/";
+    const std::string stagingLibsDir =
+        BUNDLE_NEW_CODE_DIR + "/libs/arm64-v8a/";
+    const std::string validSha = "31b7479487ad9f817f0fd66f6dcb1c2957e7ca68b432b6f95f1f56bfc976bd60";
+    ASSERT_TRUE(OHOS::ForceCreateDirectory(ownLibsDir));
+    ASSERT_TRUE(OHOS::ForceCreateDirectory(stagingLibsDir));
+    uint32_t resultCode = SO_DEDUP_ERROR;
+    auto ret = InstalldClient::GetInstance()->LinkDedupedSo(
+        BUNDLE_NAME13, ownLibsDir + "libc++_shared.so", validSha, resultCode);
+    EXPECT_EQ(ret, ERR_OK);
+    resultCode = SO_DEDUP_ERROR;
+    ret = InstalldClient::GetInstance()->LinkDedupedSo(
+        BUNDLE_NAME13, stagingLibsDir + "libc++_shared.so", validSha, resultCode);
+    EXPECT_EQ(ret, ERR_OK);
+    // on-demand parent dir: the fully deduped form needs the chain to create the
+    // missing libs dir. Driven in-process on the host impl so the link-time libc
+    // mock is deterministic: a client-chain call reaches the device installd
+    // process, where the mock knobs below can never be observed from here.
+    sptr<InstalldHostImpl> hostImpl = new (std::nothrow) InstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    OHOS::ForceRemoveDirectory(BUNDLE_CODE_DIR + "/libs");
+    const std::string libraryPath = BUNDLE_CODE_DIR + "/libs/arm64-v8a/libc++_shared.so";
+    struct stat libsStat = {};
+    EXPECT_NE(lstat((BUNDLE_CODE_DIR + "/libs/arm64-v8a").c_str(), &libsStat), 0);
+    g_muslLinkDedupedSoCallCount = 0;
+    g_muslLinkDedupedSoResult = static_cast<uint32_t>(SO_DEDUP_LINKED);
+    resultCode = SO_DEDUP_ERROR;
+    EXPECT_EQ(hostImpl->LinkDedupedSo(BUNDLE_NAME13, libraryPath, validSha, resultCode), ERR_OK);
+    EXPECT_EQ(resultCode, static_cast<uint32_t>(SO_DEDUP_LINKED));
+    EXPECT_EQ(g_muslLinkDedupedSoCallCount, 1);
+    EXPECT_EQ(g_muslLinkDedupedSoLastPath, libraryPath);
+    EXPECT_EQ(lstat((BUNDLE_CODE_DIR + "/libs/arm64-v8a").c_str(), &libsStat), 0);
+    EXPECT_TRUE(S_ISDIR(libsStat.st_mode));
+    OHOS::ForceRemoveDirectory(BUNDLE_CODE_DIR + "/libs");
+    // the in-process installd host dispatch (link-time libc mock, no device libc involved)
+    ASSERT_TRUE(OHOS::ForceCreateDirectory(BUNDLE_CODE_DIR + "/libs/arm64-v8a/"));
+    MessageParcel data;
+    ASSERT_TRUE(data.WriteInterfaceToken(InstalldHost::GetDescriptor()));
+    ASSERT_TRUE(data.WriteString16(Str8ToStr16(BUNDLE_NAME13)));
+    ASSERT_TRUE(data.WriteString16(Str8ToStr16(libraryPath)));
+    ASSERT_TRUE(data.WriteString16(Str8ToStr16(validSha)));
+    const uint32_t injected = static_cast<uint32_t>(SO_DEDUP_NO_MATCH);
+    g_muslLinkDedupedSoCallCount = 0;
+    g_muslLinkDedupedSoResult = injected;
+    MessageParcel reply;
+    MessageOption option;
+    ret = hostImpl->OnRemoteRequest(
+        static_cast<uint32_t>(InstalldInterfaceCode::LINK_DEDUPED_SO), data, reply, option);
+    EXPECT_EQ(ret, 0);
+    EXPECT_EQ(reply.ReadInt32(), ERR_OK);
+    EXPECT_EQ(reply.ReadUint32(), injected);
+    EXPECT_EQ(g_muslLinkDedupedSoCallCount, 1);
+    EXPECT_EQ(g_muslLinkDedupedSoLastPath, libraryPath);
+    EXPECT_EQ(g_muslLinkDedupedSoLastSha, validSha);
 }
 } // OHOS
