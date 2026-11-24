@@ -1017,6 +1017,10 @@ ErrCode RdbRecoverManager::RecoverFromLeftoverSnapshot(const BmsRdbConfig &bmsRd
             EventReport::SendDbErrorEvent(bmsRdbConfig.dbName,
                 static_cast<int32_t>(DB_OPERATION_TYPE::REBUILD), NativeRdb::E_SQLITE_CORRUPT);
         }
+        // the downgrade to an empty db discards the salvaged data for good, keep
+        // the guaranteed data loss visible in the event stream
+        EventReport::SendDbErrorEvent(bmsRdbConfig.dbName,
+            static_cast<int32_t>(DB_OPERATION_TYPE::REBUILD), NativeRdb::E_OK);
         InstalldClient::GetInstance()->ResetBmsDBSecurity();
         ClearCorruptionDetected(bmsRdbConfig.dbName);
         return ERR_OK;
@@ -1234,6 +1238,10 @@ int32_t RdbRecoverManager::DeleteAndReopenDb(const BmsRdbConfig &bmsRdbConfig,
     int32_t createRet = rdbStore->ExecuteSql(createTableSql);
     if (createRet != NativeRdb::E_OK) {
         APP_LOGE("re-create table after manual rebuild failed, ret:%{public}d", createRet);
+        // the table is missing while the caller believes the rebuild succeeded,
+        // make the broken post-rebuild state visible in the event stream
+        EventReport::SendDbErrorEvent(bmsRdbConfig.dbName,
+            static_cast<int32_t>(DB_OPERATION_TYPE::CREATE), createRet);
     }
     for (const auto &sql : bmsRdbConfig.insertColumnSql) {
         rdbStore->ExecuteSql(sql);

@@ -129,6 +129,9 @@ enum class DB_OPERATION_TYPE : uint8_t {
     QUERY = 5,
     DELETE = 6,
     REBUILD = 7,
+    INTEGRITY_CHECK = 8,
+    RESTORE = 9,
+    CORRUPT = 10,
 };
 
 enum class DefaultAppActionType : uint8_t {
@@ -141,6 +144,7 @@ enum class HighRiskActionType : uint8_t {
     TRIGGER_FALLBACK = 2,
     RESOURCE_SWITCH_EXCEPTION = 3,
     CACHE_TIMEOUT = 4,
+    TRIGGER_DB_RECOVERY = 5,
 };
 
 enum class HighRiskOperationType: uint8_t {
@@ -157,6 +161,11 @@ enum class HighRiskOperationType: uint8_t {
     USER_DATA_PARSE_FAILED = 11,
     GET_ALL_BUNDLE_CACHE_STAT_TIMEOUT = 12,
     CLEAN_ALL_BUNDLE_CACHE_TIMEOUT = 13,
+    // the integrity check corruption detail is the only db report going through
+    // the HIGH_RISK_EVENT channel (the DB_ERROR schema has no field for the free
+    // text check result); the value must not collide with DB_OPERATION_TYPE
+    // which belongs to the DB_ERROR channel
+    DB_INTEGRITY_CHECK = 14,
 };
 
 struct EventInfo {
@@ -569,6 +578,12 @@ public:
         int32_t userId, int32_t appIndex, const std::string &largeFiles,
         const std::string &topCategory = "",
         int64_t cacheDataSize = 0, int64_t filesDataSize = 0, int64_t databaseDataSize = 0);
+
+    // only the integrity check corruption detail uses the HIGH_RISK_EVENT channel
+    // (it carries the free text check result); every other db operation reports
+    // through SendDbErrorEvent with its result code
+    static void SendDbHighRiskEvent(const std::string &dbName, int32_t operationType, int32_t errorCode,
+        const std::string &msg);
 
 private:
     static bool ReportToSecurityAudit(BundleEventType bundleEventType, const EventInfo& eventInfo);

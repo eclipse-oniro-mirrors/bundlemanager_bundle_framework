@@ -169,8 +169,8 @@ const char* FAILURE_REASON = "FAILURE_REASON";
 const char* FILE_NAME = "FILE_NAME";
 const char* FREE_SIZE = "FREE_SIZE";
 const char* OPERATION_TYPE = "OPERATION_TYPE";
-const char* DB_NAME = "dbName";
-const char* ERROR_CODE = "errorCode";
+const char* DB_NAME = "DB_NAME";
+const char* ERROR_CODE = "ERROR_CODE";
 const char* COMPONENT_NAME = "hisevent";
 const char* PARTITION_NAME = "/data";
 // query event
@@ -852,9 +852,9 @@ void InnerEventReport::InnerSendDbErrorEvent(const EventInfo& eventInfo)
 {
     InnerSystemEventWrite(
         DB_ERROR,
-        HiSysEventType::BEHAVIOR,
+        HiSysEventType::FAULT,
         DB_NAME, eventInfo.dbName,
-        OPERATION_TYPE, eventInfo.operationType,
+        OPERATION_TYPE, std::to_string(eventInfo.operationType),
         ERROR_CODE, eventInfo.errorCode);
 }
 

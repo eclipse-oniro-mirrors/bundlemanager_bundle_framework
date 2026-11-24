@@ -349,6 +349,21 @@ void EventReport::SendHighRiskEvent(const EventInfo& eventInfo)
     EventReport::SendSystemEvent(BMSEventType::HIGH_RISK_EVENT, eventInfo);
 }
 
+// operationType must be a HighRiskOperationType value; only the integrity check
+// corruption detail goes through this channel, every other db operation reports
+// through SendDbErrorEvent
+void EventReport::SendDbHighRiskEvent(const std::string &dbName, int32_t operationType, int32_t errorCode,
+    const std::string &msg)
+{
+    EventInfo eventInfo;
+    eventInfo.actionType = static_cast<int32_t>(HighRiskActionType::TRIGGER_DB_RECOVERY);
+    eventInfo.bundleName = dbName;
+    eventInfo.operationType = operationType;
+    eventInfo.versionCode = errorCode;
+    eventInfo.filePath.push_back(msg);
+    EventReport::SendSystemEvent(BMSEventType::HIGH_RISK_EVENT, eventInfo);
+}
+
 void EventReport::SendTriggerFallbackEvent(HighRiskOperationType operation, const std::string &bundleName,
     int32_t userId, const std::vector<std::string> &path)
 {
