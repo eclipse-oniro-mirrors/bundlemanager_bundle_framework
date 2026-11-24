@@ -163,6 +163,13 @@ public:
         const DestroyAppCloneParam &destroyAppCloneParam) override;
 
     virtual ErrCode InstallExisted(const std::string &bundleName, int32_t userId) override;
+    /**
+     * @brief Reinstall an already installed application by bundleName using its existing HAP paths.
+     * @param bundleName Indicates the bundle name of the application to reinstall.
+     * @param userId Indicates the target user id for target-instance validation/selection.
+     * @return Returns ERR_OK if the application is reinstalled successfully; returns errcode otherwise.
+     */
+    virtual ErrCode InstallExistedBundleByBundleName(const std::string &bundleName, int32_t userId) override;
     virtual ErrCode AddEnterpriseResignCert(
         const std::string &certAlias, const std::string &certContent, int32_t userId) override;
 
@@ -268,6 +275,7 @@ private:
     void HandleInstallCloneApp(MessageParcel &data, MessageParcel &reply);
     void HandleUninstallCloneApp(MessageParcel &data, MessageParcel &reply);
     void HandleInstallExisted(MessageParcel &data, MessageParcel &reply);
+    void HandleInstallExistedBundleByBundleName(MessageParcel &data, MessageParcel &reply);
     void HandleUninstallNewPreinstalledApps(MessageParcel &data, MessageParcel &reply);
     void HandleCreateCliSandboxApp(MessageParcel &data, MessageParcel &reply);
     void HandleDestroyCliSandboxApp(MessageParcel &data, MessageParcel &reply);

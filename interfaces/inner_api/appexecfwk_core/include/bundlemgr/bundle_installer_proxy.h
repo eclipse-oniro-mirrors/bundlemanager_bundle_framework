@@ -141,6 +141,8 @@ public:
 
     virtual ErrCode InstallExisted(const std::string &bundleName, int32_t userId) override;
 
+    virtual ErrCode InstallExistedBundleByBundleName(const std::string &bundleName, int32_t userId) override;
+
     virtual ErrCode InstallEnterpriseReSignatureCert(const std::string &certAlias, int32_t fd, int32_t userId) override;
 
     virtual ErrCode AddEnterpriseResignCert(

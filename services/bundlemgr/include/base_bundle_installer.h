@@ -207,6 +207,13 @@ protected:
      */
     ErrCode InstallBundleByBundleName(const std::string &bundleName, const InstallParam &installParam);
     /**
+     * @brief Reinstall an installed application by bundle name without re-parsing HAP package.
+     * @param bundleName Indicates the bundleName of the installed application.
+     * @param userId Indicates the target user id.
+     * @return Returns ERR_OK on success; returns error code otherwise.
+     */
+    ErrCode InstallExistedBundleByBundleName(const std::string &bundleName, int32_t userId);
+    /**
      * @brief Reset install properties.
      */
     void ResetInstallProperties();
@@ -1129,6 +1136,8 @@ private:
         const InnerBundleInfo &newBundleInfo);
     bool GetTempBundleInfo(InnerBundleInfo &info) const;
     bool InitTempBundleFromCache(InnerBundleInfo &info, bool &isAppExist, std::string bundleName = "");
+    // Requires the bundle mutex and the freshly fetched install state.
+    ErrCode CheckReinstallTarget(const InnerBundleInfo &oldInfo, const InstallParam &installParam) const;
     ErrCode UpdateAppEncryptedStatus(const std::string &bundleName, bool isExisted, int32_t appIndex);
     void CheckPreBundle(const std::unordered_map<std::string, InnerBundleInfo> &newInfos,
         const InstallParam &installParam, bool isRecover);

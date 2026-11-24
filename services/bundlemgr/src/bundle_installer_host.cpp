@@ -131,6 +131,9 @@ int BundleInstallerHost::OnRemoteRequest(
         case static_cast<uint32_t>(BundleInstallerInterfaceCode::INSTALL_EXISTED):
             HandleInstallExisted(data, reply);
             break;
+        case static_cast<uint32_t>(BundleInstallerInterfaceCode::INSTALL_EXISTED_BUNDLE_BY_BUNDLE_NAME):
+            HandleInstallExistedBundleByBundleName(data, reply);
+            break;
         case static_cast<uint32_t>(BundleInstallerInterfaceCode::INSTALL_PLUGIN_APP):
             HandleInstallPlugin(data, reply);
             break;
@@ -1508,6 +1511,49 @@ void BundleInstallerHost::HandleInstallExisted(MessageParcel &data, MessageParce
         LOG_E(BMS_TAG_INSTALLER, "write failed");
     }
     LOG_D(BMS_TAG_INSTALLER, "handle installExisted message finished");
+}
+
+ErrCode BundleInstallerHost::InstallExistedBundleByBundleName(const std::string &bundleName, int32_t userId)
+{
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        LOG_E(BMS_TAG_INSTALLER, "non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_EXISTED_BUNDLE)) {
+        LOG_E(BMS_TAG_INSTALLER, "InstallExistedBundleByBundleName permission denied");
+        return ERR_APPEXECFWK_PERMISSION_DENIED;
+    }
+    if (IsAcrossUser(userId) &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_BMS_INTERACT_ACROSS_LOCAL_ACCOUNTS)) {
+        LOG_E(BMS_TAG_INSTALLER,
+            "InstallExistedBundleByBundleName cross-user permission denied, bundleName: %{public}s, userId: %{public}d",
+            bundleName.c_str(), userId);
+        return ERR_APPEXECFWK_PERMISSION_DENIED;
+    }
+    DualModeSwitchGuard dualModeGuard;
+    if (dualModeGuard.IsRejected()) {
+        return ERR_APPEXECFWK_DUAL_MODE_SWITCH_BUSY;
+    }
+    auto installer = std::make_shared<BundleInstaller>(GetMicroTickCount(), nullptr);
+    installer->SetCallingUid(IPCSkeleton::GetCallingUid());
+    return installer->InstallExistedBundleByBundleName(bundleName, userId);
+}
+
+void BundleInstallerHost::HandleInstallExistedBundleByBundleName(MessageParcel &data, MessageParcel &reply)
+{
+    LOG_D(BMS_TAG_INSTALLER, "handle install existed bundle by bundle name message");
+    std::string bundleName = Str16ToStr8(data.ReadString16());
+    int32_t userId = data.ReadInt32();
+
+    LOG_I(BMS_TAG_INSTALLER,
+        "receive InstallExistedBundleByBundleName Request -n %{public}s -u %{public}d",
+        bundleName.c_str(), userId);
+
+    auto ret = InstallExistedBundleByBundleName(bundleName, userId);
+    if (!reply.WriteInt32(ret)) {
+        LOG_E(BMS_TAG_INSTALLER, "write failed");
+    }
+    LOG_D(BMS_TAG_INSTALLER, "handle InstallExistedBundleByBundleName message finished");
 }
 
 ErrCode BundleInstallerHost::UninstallNewPreinstalledApps(const std::vector<std::string> &bundleNames)

@@ -83,6 +83,10 @@ struct InstallParam : public Parcelable {
     // even though NeedDualModeHandle(policy) would be true. Mutually exclusive with
     // forceCrossModeOTAInstall; in-process only, not marshalled over IPC.
     bool forceCrossModeOTAInstall = false;
+    // Escape reinstall of an already installed application by bundleName (InstallExistedBundleByBundleName).
+    // In-process only, not marshalled over IPC. Used to adapt dual-mode/install flow for replacing an
+    // existing target instance without re-deriving cross-mode counterpart routing.
+    bool isEscapeReinstall = false;
     // allow patch app downgrade install
     bool allowPatchDowngrade = false;
     bool isCheckDebugApp = false;
