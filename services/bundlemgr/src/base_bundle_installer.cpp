@@ -4881,9 +4881,9 @@ ErrCode BaseBundleInstaller::PrepareIpcGroupInfos(
         LOG_W(BMS_TAG_INSTALLER, "dataMgr_ null");
         return ERR_APPEXECFWK_NULL_PTR;
     }
-    const bool ipcGroupEnabled = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_ARCOSS_APP_IPC, false);
+    const bool ipcGroupEnabled = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_ACROSS_APP_IPC, false);
     LOG_I(BMS_TAG_INSTALLER, "PrepareIpcGroupInfos bundleName:%{public}s userId:%{public}d "
-        "enable_arcoss_app_ipc:%{public}d", bundleName_.c_str(), userId_, ipcGroupEnabled);
+        "enable_across_app_ipc:%{public}d", bundleName_.c_str(), userId_, ipcGroupEnabled);
     std::unordered_set<std::string> validIds;
     if (ipcGroupEnabled) {
         std::unordered_set<std::string> declaredIds;

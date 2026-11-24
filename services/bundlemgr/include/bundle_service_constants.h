@@ -192,7 +192,7 @@ constexpr uint32_t MAX_IPC_GROUP_IDS_COUNT = 150;
 constexpr uint32_t IPC_GROUP_ID_DIGIT_SUFFIX_LEN = 4;
 constexpr uint32_t IPC_GROUP_ID_MAX_LEN = 1024;
 // System parameter to enable cross app IPC group feature.
-constexpr const char* ENABLE_ARCOSS_APP_IPC = "persist.bms.enable_arcoss_app_ipc";
+constexpr const char* ENABLE_ACROSS_APP_IPC = "persist.bms.enable_across_app_ipc";
 constexpr const char* PERMISSION_SUPPORT_NP_PLUGIN_FOR_WEB = "ohos.permission.SUPPORT_NP_PLUGIN_FOR_WEB";
 constexpr const char* PERMISSION_MANAGE_STORAGE = "ohos.permission.atomicService.MANAGE_STORAGE";
 constexpr const char* PERMISSION_MANAGE_AGING = "ohos.permission.atomicService.MANAGE_AGING";

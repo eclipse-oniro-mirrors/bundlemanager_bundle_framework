@@ -358,10 +358,10 @@ HWTEST_F(BmsIpcGroupTest, GenerateIpcGroupInfos_0004, Function | SmallTest | Lev
  */
 HWTEST_F(BmsIpcGroupTest, GenerateNewUserIpcGroupInfos_0001, Function | SmallTest | Level0)
 {
-    const bool oldEnable = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_ARCOSS_APP_IPC, false);
-    OHOS::system::SetParameter(ServiceConstants::ENABLE_ARCOSS_APP_IPC, "true");
+    const bool oldEnable = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_ACROSS_APP_IPC, false);
+    OHOS::system::SetParameter(ServiceConstants::ENABLE_ACROSS_APP_IPC, "true");
     ScopeGuard paramGuard([oldEnable]() {
-        OHOS::system::SetParameter(ServiceConstants::ENABLE_ARCOSS_APP_IPC, oldEnable ? "true" : "false");
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_ACROSS_APP_IPC, oldEnable ? "true" : "false");
     });
 
     auto dataMgr = GetBundleDataMgr();
@@ -403,10 +403,10 @@ HWTEST_F(BmsIpcGroupTest, GenerateNewUserIpcGroupInfos_0001, Function | SmallTes
  */
 HWTEST_F(BmsIpcGroupTest, GenerateNewUserIpcGroupInfos_0002, Function | SmallTest | Level0)
 {
-    const bool oldEnable = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_ARCOSS_APP_IPC, false);
-    OHOS::system::SetParameter(ServiceConstants::ENABLE_ARCOSS_APP_IPC, "false");
+    const bool oldEnable = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_ACROSS_APP_IPC, false);
+    OHOS::system::SetParameter(ServiceConstants::ENABLE_ACROSS_APP_IPC, "false");
     ScopeGuard paramGuard([oldEnable]() {
-        OHOS::system::SetParameter(ServiceConstants::ENABLE_ARCOSS_APP_IPC, oldEnable ? "true" : "false");
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_ACROSS_APP_IPC, oldEnable ? "true" : "false");
     });
 
     auto dataMgr = GetBundleDataMgr();
@@ -445,10 +445,10 @@ HWTEST_F(BmsIpcGroupTest, GenerateNewUserIpcGroupInfos_0002, Function | SmallTes
  */
 HWTEST_F(BmsIpcGroupTest, ScanAllBundleIpcGroupInfo_0001, Function | SmallTest | Level0)
 {
-    const bool oldEnable = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_ARCOSS_APP_IPC, false);
-    OHOS::system::SetParameter(ServiceConstants::ENABLE_ARCOSS_APP_IPC, "false");
+    const bool oldEnable = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_ACROSS_APP_IPC, false);
+    OHOS::system::SetParameter(ServiceConstants::ENABLE_ACROSS_APP_IPC, "false");
     ScopeGuard paramGuard([oldEnable]() {
-        OHOS::system::SetParameter(ServiceConstants::ENABLE_ARCOSS_APP_IPC, oldEnable ? "true" : "false");
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_ACROSS_APP_IPC, oldEnable ? "true" : "false");
     });
 
     auto dataMgr = GetBundleDataMgr();

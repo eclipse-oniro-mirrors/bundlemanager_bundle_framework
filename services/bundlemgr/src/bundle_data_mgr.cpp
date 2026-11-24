@@ -14357,7 +14357,7 @@ void BundleDataMgr::GenerateNewUserIpcGroupInfos(const std::string &bundleName, 
     bool toTempBundle)
 {
     APP_LOGD("called for -b %{public}s, -u %{public}d", bundleName.c_str(), userId);
-    if (!OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_ARCOSS_APP_IPC, false)) {
+    if (!OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_ACROSS_APP_IPC, false)) {
         APP_LOGW("GenerateNewUserIpcGroupInfos bundleName:%{public}s userId:%{public}d "
             "cross app ipc disabled by system parameter, skip", bundleName.c_str(), userId);
         return;
@@ -14397,8 +14397,8 @@ void BundleDataMgr::GenerateNewUserIpcGroupInfos(const std::string &bundleName, 
 ErrCode BundleDataMgr::ScanAllBundleIpcGroupInfo()
 {
     APP_LOGI("ScanAllBundleIpcGroupInfo start");
-    const bool ipcGroupEnabled = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_ARCOSS_APP_IPC, false);
-    APP_LOGI("ScanAllBundleIpcGroupInfo enable_arcoss_app_ipc:%{public}d", ipcGroupEnabled);
+    const bool ipcGroupEnabled = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_ACROSS_APP_IPC, false);
+    APP_LOGI("ScanAllBundleIpcGroupInfo enable_across_app_ipc:%{public}d", ipcGroupEnabled);
     struct ScanTarget {
         std::string bundleName;
         int32_t userId;
