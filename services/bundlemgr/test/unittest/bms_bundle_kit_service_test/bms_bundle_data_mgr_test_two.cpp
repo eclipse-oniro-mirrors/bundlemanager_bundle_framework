@@ -46,6 +46,7 @@
 #include "app_disable_forbidden/app_disable_forbidden_mgr.h"
 #include "clean_cache_callback_proxy.h"
 #include "directory_ex.h"
+#include "dual_mode_helper.h"
 #include "hidump_helper.h"
 #include "install_param.h"
 #include "extension_ability_info.h"
@@ -56,6 +57,7 @@
 #include "mock_clean_cache.h"
 #include "mock_bundle_status.h"
 #include "nlohmann/json.hpp"
+#include "parameters.h"
 #include "perf_profile.h"
 #include "plugin/plugin_bundle_info.h"
 #include "pre_bundle_profile.h"
@@ -3702,6 +3704,345 @@ HWTEST_F(BmsBundleDataMgrTest2, BatchSetApplicationEnabled_1900, Function | Smal
     EXPECT_TRUE(enabled);
     // index 3 should remain enabled (bundle was skipped)
     EXPECT_EQ(it->second.GetApplicationEnabledV9(USERID, enabled, 3), ERR_OK);
+    EXPECT_TRUE(enabled);
+}
+
+// Dual-mode test-injection system parameters (same keys DualModeHelper reads in test mode).
+constexpr const char *TEST_DUAL_MODE_PARAM = "persist.bms.test_dual_mode";
+constexpr const char *TEST_ISPCMODE_PARAM = "persist.bms.ispcmode";
+constexpr const char *TEST_MAINMODE_PARAM = "persist.bms.mainmode";
+
+/**
+ * @tc.number: BatchSetApplicationEnabled_2000
+ * @tc.name: test dual-mode exception events are deferred outside the batch lock
+ * @tc.desc: batch events are collected inside the unique_lock on bundleInfoMutex_ (with the
+ *           dual-mode policy captured from the in-memory record at collect time) and flushed
+ *           after the lock is released, keeping HiSysEvent IPC out of the critical section.
+ *           Regression test for the same-thread re-lock deadlock: with a failing storage save
+ *           the batch must complete with rollback instead of hanging.
+ */
+HWTEST_F(BmsBundleDataMgrTest2, BatchSetApplicationEnabled_2000, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    MockInstallBundle(BUNDLE_TEST1, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    ScopeGuard guard([&] { MockUninstallBundle(BUNDLE_TEST1); });
+
+    auto it = dataMgr->bundleInfos_.find(BUNDLE_TEST1);
+    ASSERT_NE(it, dataMgr->bundleInfos_.end());
+    std::string key = BUNDLE_TEST1 + Constants::FILE_UNDERLINE + std::to_string(USERID);
+    auto userIt = it->second.innerBundleUserInfos_.find(key);
+    ASSERT_NE(userIt, it->second.innerBundleUserInfos_.end());
+    InnerBundleCloneInfo cloneInfo;
+    cloneInfo.appIndex = 1;
+    cloneInfo.uid = TEST_UID;
+    cloneInfo.enabled = true;
+    userIt->second.cloneInfos["1"] = cloneInfo;
+
+    auto mockStorage = std::make_shared<MockBundleDataStorage>();
+    auto savedStorage = dataMgr->dataStorage_;
+    dataMgr->dataStorage_ = mockStorage;
+    mockStorage->saveShouldFail = true;
+
+    // Dual-mode on: batch events are collected inside the unique_lock and flushed after its
+    // release; the dual-mode policy is captured from the in-memory record at collect time.
+    ASSERT_TRUE(OHOS::system::SetParameter(TEST_DUAL_MODE_PARAM, "true"));
+    ASSERT_TRUE(OHOS::system::SetParameter(TEST_ISPCMODE_PARAM,
+        std::to_string(ServiceConstants::DUAL_MODE_VALUE_2IN1)));
+    ASSERT_TRUE(OHOS::system::SetParameter(TEST_MAINMODE_PARAM,
+        std::to_string(ServiceConstants::DUAL_MODE_VALUE_TABLET)));
+    ScopeGuard parameterGuard([] {
+        OHOS::system::SetParameter(TEST_DUAL_MODE_PARAM, "false");
+        OHOS::system::SetParameter(TEST_ISPCMODE_PARAM,
+            std::to_string(ServiceConstants::DUAL_MODE_VALUE_INVALID));
+        OHOS::system::SetParameter(TEST_MAINMODE_PARAM,
+            std::to_string(ServiceConstants::DUAL_MODE_VALUE_INVALID));
+    });
+
+    auto ret = dataMgr->BatchSetApplicationEnabled(
+        USERID, 2, 1, "", false, false, false);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+
+    dataMgr->dataStorage_ = savedStorage;
+
+    auto it2 = dataMgr->bundleInfos_.find(BUNDLE_TEST1);
+    ASSERT_NE(it2, dataMgr->bundleInfos_.end());
+    bool enabled = false;
+    EXPECT_EQ(it2->second.GetApplicationEnabledV9(USERID, enabled, 1), ERR_OK);
+    EXPECT_TRUE(enabled);
+}
+
+/**
+ * @tc.number: GetDualModePolicyForEvent_0100
+ * @tc.name: test GetDualModePolicyForEvent branch behavior
+ * @tc.desc: the dual-mode policy resolution for component state events must return UNSPECIFIED
+ *           for an empty bundleName and when the installed record is unavailable, and must
+ *           return the policy stored on the in-memory record otherwise. The non-dual-mode
+ *           "no lookup" branch is asserted when the injected invalid ispcmode actually reaches
+ *           DualModeHelper; when the runtime keeps reporting dual-mode (a test rig that is
+ *           itself a dual-mode device resolving the production sceneboard parameters), the
+ *           same call must return the stored record policy instead, so the case asserts the
+ *           outcome contract of whichever mode is actually in effect.
+ */
+HWTEST_F(BmsBundleDataMgrTest2, GetDualModePolicyForEvent_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    MockInstallBundle(BUNDLE_TEST1, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    ScopeGuard guard([&] { MockUninstallBundle(BUNDLE_TEST1); });
+
+    auto it = dataMgr->bundleInfos_.find(BUNDLE_TEST1);
+    ASSERT_NE(it, dataMgr->bundleInfos_.end());
+    it->second.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE);
+
+    // Dual-mode test injection stays on for the whole case so IsDualModeDevice() reads the
+    // test parameters directly whenever the injection backend is reachable; the production
+    // path (call_once cache over sceneboard parameters) may still be entered on rigs whose
+    // real parameter service keeps reporting dual-mode, so every mode-sensitive expectation
+    // below is guarded by an IsDualModeDevice() probe.
+    ASSERT_TRUE(OHOS::system::SetParameter(TEST_DUAL_MODE_PARAM, "true"));
+    ScopeGuard parameterGuard([] {
+        OHOS::system::SetParameter(TEST_DUAL_MODE_PARAM, "false");
+        OHOS::system::SetParameter(TEST_ISPCMODE_PARAM,
+            std::to_string(ServiceConstants::DUAL_MODE_VALUE_INVALID));
+        OHOS::system::SetParameter(TEST_MAINMODE_PARAM,
+            std::to_string(ServiceConstants::DUAL_MODE_VALUE_INVALID));
+    });
+
+    // Branch 1: drive a non-dual-mode device (invalid ispcmode), where no lookup happens even
+    // though the record carries a policy. Whether the injection reaches DualModeHelper depends
+    // on the parameter backend this test binary binds to (the in-binary mock vs the real
+    // parameter service of a dual-mode test rig), so resolve the effective mode through the
+    // helper itself and assert the contract of that mode: no lookup on non-dual-mode, the
+    // stored record policy on dual-mode.
+    ASSERT_TRUE(OHOS::system::SetParameter(TEST_ISPCMODE_PARAM,
+        std::to_string(ServiceConstants::DUAL_MODE_VALUE_INVALID)));
+    ASSERT_TRUE(OHOS::system::SetParameter(TEST_MAINMODE_PARAM,
+        std::to_string(ServiceConstants::DUAL_MODE_VALUE_TABLET)));
+    if (!DualModeHelper::IsDualModeDevice()) {
+        EXPECT_EQ(bundleMgrHostImpl_->GetDualModePolicyForEvent(BUNDLE_TEST1),
+            static_cast<int32_t>(DeviceModeDistributionPolicy::UNSPECIFIED));
+    } else {
+        EXPECT_EQ(bundleMgrHostImpl_->GetDualModePolicyForEvent(BUNDLE_TEST1),
+            static_cast<int32_t>(DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE));
+    }
+
+    // Dual-mode on for the remaining branches (mainmode already TABLET from branch 1 setup).
+    ASSERT_TRUE(OHOS::system::SetParameter(TEST_ISPCMODE_PARAM,
+        std::to_string(ServiceConstants::DUAL_MODE_VALUE_2IN1)));
+
+    // Branches 2~4 exercise the lookup path, which only runs on a dual-mode device; probe the
+    // helper so the branches are asserted exactly when they are drivable.
+    if (!DualModeHelper::IsDualModeDevice()) {
+        return; // injection ineffective and the rig is not dual-mode: lookup path undrivable.
+    }
+
+    // Branch 2: empty bundleName is rejected before any data manager lookup.
+    EXPECT_EQ(bundleMgrHostImpl_->GetDualModePolicyForEvent(""),
+        static_cast<int32_t>(DeviceModeDistributionPolicy::UNSPECIFIED));
+
+    // Branch 3: dual-mode on but no installed record for the bundle name.
+    EXPECT_EQ(bundleMgrHostImpl_->GetDualModePolicyForEvent("com.example.bundle.not.installed"),
+        static_cast<int32_t>(DeviceModeDistributionPolicy::UNSPECIFIED));
+
+    // Branch 4: dual-mode on and the installed record resolves to its stored policy.
+    EXPECT_EQ(bundleMgrHostImpl_->GetDualModePolicyForEvent(BUNDLE_TEST1),
+        static_cast<int32_t>(DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE));
+}
+
+namespace {
+// Common vectors for the batch enable/disable collect helpers below.
+using BatchSysEvent = std::tuple<std::string, int32_t, bool, int32_t, std::string, int32_t>;
+using BatchDisabledBundle = std::tuple<std::string, int32_t, int32_t, int32_t>;
+using BatchRollbackItem = std::tuple<std::string, int32_t, bool, std::string>;
+constexpr int32_t TEST_CLONE_APP_INDEX = 1;
+const std::string TEST_BATCH_CALLER = "bms_test_batch_caller";
+} // namespace
+
+/**
+ * @tc.number: BatchSetApplicationEnabled_2100
+ * @tc.name: test ProcessEnableForBundle captures the dual-mode policy into the batch sys event
+ * @tc.desc: when batch enabling a clone app, the dual-mode policy captured from the in-memory
+ *           record at collect time must be carried in the deferred sys event tuple, with no
+ *           exception event or disabled-bundle entry produced on the success path.
+ */
+HWTEST_F(BmsBundleDataMgrTest2, BatchSetApplicationEnabled_2100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    MockInstallBundle(BUNDLE_TEST1, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    ScopeGuard guard([&] { MockUninstallBundle(BUNDLE_TEST1); });
+
+    auto it = dataMgr->bundleInfos_.find(BUNDLE_TEST1);
+    ASSERT_NE(it, dataMgr->bundleInfos_.end());
+    std::string key = BUNDLE_TEST1 + Constants::FILE_UNDERLINE + std::to_string(USERID);
+    auto userIt = it->second.innerBundleUserInfos_.find(key);
+    ASSERT_NE(userIt, it->second.innerBundleUserInfos_.end());
+    InnerBundleCloneInfo cloneInfo;
+    cloneInfo.appIndex = TEST_CLONE_APP_INDEX;
+    cloneInfo.uid = TEST_UID;
+    cloneInfo.enabled = false; // currently disabled, so the enable path proceeds
+    userIt->second.cloneInfos["1"] = cloneInfo;
+    it->second.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE);
+
+    auto mockStorage = std::make_shared<MockBundleDataStorage>();
+    auto savedStorage = dataMgr->dataStorage_;
+    dataMgr->dataStorage_ = mockStorage; // saveShouldFail defaults to false
+
+    std::vector<NotifyBundleEvents> eventsToSend;
+    std::vector<BatchDisabledBundle> disabledBundles;
+    std::vector<BatchRollbackItem> rollbackList;
+    std::vector<BatchSysEvent> sysEventsToSend;
+    std::vector<BatchSysEvent> exceptionEventsToSend;
+
+    auto ret = dataMgr->ProcessEnableForBundle(it->second, &userIt->second, BUNDLE_TEST1,
+        TEST_CLONE_APP_INDEX, TEST_BATCH_CALLER, USERID, true, eventsToSend, rollbackList,
+        sysEventsToSend, exceptionEventsToSend);
+    dataMgr->dataStorage_ = savedStorage;
+
+    EXPECT_EQ(ret, ERR_OK);
+    ASSERT_EQ(sysEventsToSend.size(), 1u);
+    EXPECT_EQ(std::get<0>(sysEventsToSend[0]), BUNDLE_TEST1);
+    EXPECT_EQ(std::get<1>(sysEventsToSend[0]), USERID);
+    EXPECT_TRUE(std::get<2>(sysEventsToSend[0]));
+    EXPECT_EQ(std::get<3>(sysEventsToSend[0]), TEST_CLONE_APP_INDEX);
+    EXPECT_EQ(std::get<4>(sysEventsToSend[0]), TEST_BATCH_CALLER);
+    EXPECT_EQ(std::get<5>(sysEventsToSend[0]),
+        static_cast<int32_t>(DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE));
+    EXPECT_TRUE(exceptionEventsToSend.empty());
+    EXPECT_TRUE(disabledBundles.empty());
+    EXPECT_EQ(eventsToSend.size(), 1u);
+    bool enabled = false;
+    EXPECT_EQ(it->second.GetApplicationEnabledV9(USERID, enabled, TEST_CLONE_APP_INDEX), ERR_OK);
+    EXPECT_TRUE(enabled);
+}
+
+/**
+ * @tc.number: BatchSetApplicationEnabled_2200
+ * @tc.name: test ProcessDisableForBundle captures the dual-mode policy into batch collections
+ * @tc.desc: when batch disabling a clone app, the dual-mode policy captured from the in-memory
+ *           record at collect time must be carried both in the disabled-bundle tuple (for
+ *           process killing) and in the deferred sys event tuple, with no exception event on
+ *           the success path.
+ */
+HWTEST_F(BmsBundleDataMgrTest2, BatchSetApplicationEnabled_2200, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    MockInstallBundle(BUNDLE_TEST1, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    ScopeGuard guard([&] { MockUninstallBundle(BUNDLE_TEST1); });
+
+    auto it = dataMgr->bundleInfos_.find(BUNDLE_TEST1);
+    ASSERT_NE(it, dataMgr->bundleInfos_.end());
+    std::string key = BUNDLE_TEST1 + Constants::FILE_UNDERLINE + std::to_string(USERID);
+    auto userIt = it->second.innerBundleUserInfos_.find(key);
+    ASSERT_NE(userIt, it->second.innerBundleUserInfos_.end());
+    InnerBundleCloneInfo cloneInfo;
+    cloneInfo.appIndex = TEST_CLONE_APP_INDEX;
+    cloneInfo.uid = TEST_UID;
+    cloneInfo.enabled = true; // currently enabled, so the disable path proceeds
+    userIt->second.cloneInfos["1"] = cloneInfo;
+    it->second.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE);
+
+    auto mockStorage = std::make_shared<MockBundleDataStorage>();
+    auto savedStorage = dataMgr->dataStorage_;
+    dataMgr->dataStorage_ = mockStorage; // saveShouldFail defaults to false
+
+    std::vector<NotifyBundleEvents> eventsToSend;
+    std::vector<BatchDisabledBundle> disabledBundles;
+    std::vector<BatchRollbackItem> rollbackList;
+    std::vector<BatchSysEvent> sysEventsToSend;
+    std::vector<BatchSysEvent> exceptionEventsToSend;
+
+    auto ret = dataMgr->ProcessDisableForBundle(it->second, &userIt->second, BUNDLE_TEST1,
+        TEST_CLONE_APP_INDEX, TEST_BATCH_CALLER, USERID, true, true, eventsToSend, disabledBundles,
+        rollbackList, sysEventsToSend, exceptionEventsToSend);
+    dataMgr->dataStorage_ = savedStorage;
+
+    EXPECT_EQ(ret, ERR_OK);
+    ASSERT_EQ(disabledBundles.size(), 1u);
+    EXPECT_EQ(std::get<0>(disabledBundles[0]), BUNDLE_TEST1);
+    EXPECT_EQ(std::get<1>(disabledBundles[0]), USERID);
+    EXPECT_EQ(std::get<2>(disabledBundles[0]), TEST_CLONE_APP_INDEX);
+    EXPECT_EQ(std::get<3>(disabledBundles[0]),
+        static_cast<int32_t>(DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE));
+    ASSERT_EQ(sysEventsToSend.size(), 1u);
+    EXPECT_FALSE(std::get<2>(sysEventsToSend[0]));
+    EXPECT_EQ(std::get<5>(sysEventsToSend[0]),
+        static_cast<int32_t>(DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE));
+    EXPECT_TRUE(exceptionEventsToSend.empty());
+    bool enabled = true;
+    EXPECT_EQ(it->second.GetApplicationEnabledV9(USERID, enabled, TEST_CLONE_APP_INDEX), ERR_OK);
+    EXPECT_FALSE(enabled);
+}
+
+/**
+ * @tc.number: BatchSetApplicationEnabled_2300
+ * @tc.name: test the failing batch disable reports the captured policy in exception events
+ * @tc.desc: when the storage save fails during a batch disable, the error event deferred by
+ *           ReportErrorAndRollback must carry the dual-mode policy captured from the in-memory
+ *           record at collect time, the rollback must restore the clone app's enabled state,
+ *           and the rollback save failure must report a second exception event with the same
+ *           policy.
+ */
+HWTEST_F(BmsBundleDataMgrTest2, BatchSetApplicationEnabled_2300, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    MockInstallBundle(BUNDLE_TEST1, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    ScopeGuard guard([&] { MockUninstallBundle(BUNDLE_TEST1); });
+
+    auto it = dataMgr->bundleInfos_.find(BUNDLE_TEST1);
+    ASSERT_NE(it, dataMgr->bundleInfos_.end());
+    std::string key = BUNDLE_TEST1 + Constants::FILE_UNDERLINE + std::to_string(USERID);
+    auto userIt = it->second.innerBundleUserInfos_.find(key);
+    ASSERT_NE(userIt, it->second.innerBundleUserInfos_.end());
+    InnerBundleCloneInfo cloneInfo;
+    cloneInfo.appIndex = TEST_CLONE_APP_INDEX;
+    cloneInfo.uid = TEST_UID;
+    cloneInfo.enabled = true; // currently enabled, so the disable path proceeds
+    userIt->second.cloneInfos["1"] = cloneInfo;
+    it->second.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE);
+
+    auto mockStorage = std::make_shared<MockBundleDataStorage>();
+    auto savedStorage = dataMgr->dataStorage_;
+    dataMgr->dataStorage_ = mockStorage;
+    mockStorage->saveShouldFail = true; // force the save failure -> error + rollback path
+
+    std::vector<NotifyBundleEvents> eventsToSend;
+    std::vector<BatchDisabledBundle> disabledBundles;
+    std::vector<BatchRollbackItem> rollbackList;
+    std::vector<BatchSysEvent> sysEventsToSend;
+    std::vector<BatchSysEvent> exceptionEventsToSend;
+
+    auto ret = dataMgr->ProcessDisableForBundle(it->second, &userIt->second, BUNDLE_TEST1,
+        TEST_CLONE_APP_INDEX, TEST_BATCH_CALLER, USERID, true, true, eventsToSend, disabledBundles,
+        rollbackList, sysEventsToSend, exceptionEventsToSend);
+    dataMgr->dataStorage_ = savedStorage;
+
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    ASSERT_EQ(exceptionEventsToSend.size(), 2u);
+    // First event: the error itself, with the policy captured at collect time.
+    EXPECT_EQ(std::get<0>(exceptionEventsToSend[0]), BUNDLE_TEST1);
+    EXPECT_FALSE(std::get<2>(exceptionEventsToSend[0]));
+    EXPECT_EQ(std::get<4>(exceptionEventsToSend[0]), TEST_BATCH_CALLER);
+    EXPECT_EQ(std::get<5>(exceptionEventsToSend[0]),
+        static_cast<int32_t>(DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE));
+    // Second event: the rollback save failure, re-enabling with the same policy.
+    EXPECT_TRUE(std::get<2>(exceptionEventsToSend[1]));
+    EXPECT_EQ(std::get<4>(exceptionEventsToSend[1]), TEST_BATCH_CALLER + "_rollback_save_fail");
+    EXPECT_EQ(std::get<5>(exceptionEventsToSend[1]),
+        static_cast<int32_t>(DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE));
+    EXPECT_TRUE(sysEventsToSend.empty());
+    EXPECT_TRUE(disabledBundles.empty());
+    // The rollback restored the clone app's enabled state in memory.
+    bool enabled = false;
+    EXPECT_EQ(it->second.GetApplicationEnabledV9(USERID, enabled, TEST_CLONE_APP_INDEX), ERR_OK);
     EXPECT_TRUE(enabled);
 }
 

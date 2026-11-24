@@ -26,6 +26,7 @@
 #include "bundle_resource_constants.h"
 #include "bundle_util.h"
 #include "event_report.h"
+#include "hitrace_meter.h"
 #include "installd_client.h"
 #include "scope_guard.h"
 
@@ -475,6 +476,7 @@ bool RdbDataManager::UpdateOrInsertData(
 
 bool RdbDataManager::DeleteData(const std::string &key)
 {
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("DeleteData start");
     ErrCode ret = ERR_OK;
     auto rdbStore = GetRdbStore(ret);
@@ -495,11 +497,15 @@ bool RdbDataManager::DeleteData(const std::string &key)
     NativeRdb::AbsRdbPredicates absRdbPredicates(bmsRdbConfig_.tableName);
     absRdbPredicates.EqualTo(ServiceConstants::BMS_KEY, key);
     ret = rdbStore->Delete(rowId, absRdbPredicates);
+    APP_LOGD("rdb delete end, db: %{public}s, table: %{public}s, key: %{public}s, ret: %{public}d, "
+        "rowId: %{public}d",
+        bmsRdbConfig_.dbName.c_str(), bmsRdbConfig_.tableName.c_str(), key.c_str(), ret, rowId);
     return ret == NativeRdb::E_OK;
 }
 
 bool RdbDataManager::DeleteData(const NativeRdb::AbsRdbPredicates &absRdbPredicates)
 {
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     ErrCode ret = ERR_OK;
     auto rdbStore = GetRdbStore(ret);
     if (rdbStore == nullptr) {
@@ -520,6 +526,8 @@ bool RdbDataManager::DeleteData(const NativeRdb::AbsRdbPredicates &absRdbPredica
     }
     int32_t rowId = -1;
     ret = rdbStore->Delete(rowId, absRdbPredicates);
+    APP_LOGD("rdb delete end, db: %{public}s, table: %{public}s, ret: %{public}d, rowId: %{public}d",
+        bmsRdbConfig_.dbName.c_str(), bmsRdbConfig_.tableName.c_str(), ret, rowId);
     return ret == NativeRdb::E_OK;
 }
 

@@ -1018,6 +1018,13 @@ private:
     // an UNSPECIFIED policy, so the event must not derive these fields from InstallParam.
     void SaveDualModeUninstallEventFields(const InnerBundleInfo &bundleInfo);
     void FillDualModeUninstallEventFields(NotifyBundleEvents &uninstallRes) const;
+    // Fill dual-mode fields (currentMode / deviceModeDistributionPolicy / clone appIndex) on the
+    // HiSysEvent event info (sysEventInfo_) so install/uninstall/update behavior and fault events
+    // distinguish the secondary (clone) variant from the primary variant; no-op (fields reset to
+    // non-dual-mode defaults) on non-dual-mode devices. Called from the SendBundleSystemEvent
+    // funnel on every report. Install/update/recover take the policy from InstallParam (caller /
+    // ERMS-resolved); uninstall takes it from the record captured by SaveDualModeUninstallEventFields.
+    void FillDualModeSysEventFields(BundleEventType bundleEventType, const InstallParam &installParam);
     void ResolveCrossModeInstall(const InstallParam &installParam);
     void DeleteUseLessSharefilesForDefaultUser(const std::string &bundleName, int32_t userId) const;
     ErrCode CleanShaderCache(const InnerBundleInfo &oldInfo, const std::string &bundleName, int32_t userId) const;

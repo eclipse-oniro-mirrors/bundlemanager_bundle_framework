@@ -27,6 +27,8 @@ BUNDLE_INSTALL_EXCEPTION:
   SCENE: {type: STRING, desc: boot reboot or createUser}
   ERROR_CODE: {type: INT32, desc: error code}
   APP_INDEX: {type: INT32, desc: app index}
+  CURRENT_MODE: {type: INT32, desc: 'current device mode of the failed install, 0 tablet 1 2in1, -1 non-dual-mode device'}
+  DEVICE_MODE_DISTRIBUTION_POLICY: {type: INT32, desc: device mode distribution policy of the bundle}
   CALLING_UID: {type: INT32, desc: calling uid}
   CALLING_BUNDLE_NAME: {type: STRING, desc: calling bundleName}
   IS_INTERCEPTED: {type: BOOL, desc: is intercepted}
@@ -44,6 +46,8 @@ BUNDLE_UNINSTALL_EXCEPTION:
   INSTALL_TYPE: {type: STRING, desc: normal prebundle or freeInstall}
   ERROR_CODE: {type: INT32, desc: error code}
   APP_INDEX: {type: INT32, desc: app index}
+  CURRENT_MODE: {type: INT32, desc: 'current device mode of the failed uninstall, 0 tablet 1 2in1, -1 non-dual-mode device'}
+  DEVICE_MODE_DISTRIBUTION_POLICY: {type: INT32, desc: device mode distribution policy of the bundle}
   CALLING_UID: {type: INT32, desc: calling uid}
   CALLING_BUNDLE_NAME: {type: STRING, desc: calling bundleName}
   IS_INTERCEPTED: {type: BOOL, desc: is intercepted}
@@ -59,6 +63,9 @@ BUNDLE_UPDATE_EXCEPTION:
   VERSION: {type: UINT32, desc: versionCode}
   INSTALL_TYPE: {type: STRING, desc: normal prebundle or freeInstall}
   ERROR_CODE: {type: INT32, desc: error code}
+  APP_INDEX: {type: INT32, desc: 'app index, 10000 means the secondary-mode clone variant of a dual-mode bundle'}
+  CURRENT_MODE: {type: INT32, desc: 'current device mode of the failed update, 0 tablet 1 2in1, -1 non-dual-mode device'}
+  DEVICE_MODE_DISTRIBUTION_POLICY: {type: INT32, desc: device mode distribution policy of the bundle}
   CALLING_UID: {type: INT32, desc: calling uid}
   CALLING_BUNDLE_NAME: {type: STRING, desc: calling bundleName}
   IS_INTERCEPTED: {type: BOOL, desc: is intercepted}
@@ -78,6 +85,9 @@ PRE_BUNDLE_RECOVER_EXCEPTION:
   VERSION: {type: UINT32, desc: versionCode}
   INSTALL_TYPE: {type: STRING, desc: only prebundle}
   ERROR_CODE: {type: INT32, desc: error code}
+  APP_INDEX: {type: INT32, desc: 'app index, 10000 means the secondary-mode clone variant of a dual-mode bundle'}
+  CURRENT_MODE: {type: INT32, desc: 'current device mode of the failed recover, 0 tablet 1 2in1, -1 non-dual-mode device'}
+  DEVICE_MODE_DISTRIBUTION_POLICY: {type: INT32, desc: device mode distribution policy of the bundle}
   CALLING_UID: {type: INT32, desc: calling uid}
   CALLING_BUNDLE_NAME: {type: STRING, desc: calling bundleName}
   IS_INTERCEPTED: {type: BOOL, desc: is intercepted}
@@ -90,6 +100,10 @@ BUNDLE_STATE_CHANGE_EXCEPTION:
   BUNDLE_NAME: {type: STRING, desc: bundleName}
   ABILITY_NAME: {type: STRING, desc: abilityName}
   TYPE: {type: STRING, desc: application or ability}
+  APP_INDEX: {type: INT32, desc: 'app index, 10000 means the secondary-mode clone variant of a dual-mode bundle'}
+  CURRENT_MODE: {type: INT32, desc: 'current device mode of the failed state change, 0 tablet 1 2in1, -1 non-dual-mode device'}
+  DEVICE_MODE_DISTRIBUTION_POLICY: {type: INT32, desc: device mode distribution policy of the bundle}
+  CALLING_BUNDLE_NAME: {type: STRING, desc: calling bundleName}
 
 BUNDLE_CLEAN_CACHE_EXCEPTION:
   __BASE: {type: FAULT, level: MINOR, desc: used to fault happened when clean cache or clean data}
@@ -98,6 +112,8 @@ BUNDLE_CLEAN_CACHE_EXCEPTION:
   USERID: {type: INT32, desc: userId of the bundle}
   BUNDLE_NAME: {type: STRING, desc: bundleName}
   CLEAN_TYPE: {type: STRING, desc: clean cache or clean data}
+  APP_INDEX: {type: INT32, desc: 'app index, 10000 means the secondary-mode clone variant of a dual-mode bundle'}
+  CURRENT_MODE: {type: INT32, desc: 'current device mode of the failed clean, 0 tablet 1 2in1, -1 non-dual-mode device'}
   CALLING_UID: {type: INT32, desc: calling uid}
   CALLING_BUNDLE_NAME: {type: STRING, desc: calling bundleName}
 
@@ -134,7 +150,7 @@ BUNDLE_INSTALL:
   FILE_PATH: {type: STRING, arrsize: 99, desc: the path of the hap file}
   HASH_VALUE: {type: STRING, arrsize: 99, desc: the hash value of the hap file}
   INSTALL_TIME: {type: INT64, desc: the install time or the bundle}
-  APP_INDEX: {type: INT32, desc: app index}
+  APP_INDEX: {type: INT32, desc: 'app index, 10000 means the secondary-mode clone variant of a dual-mode bundle'}
   MIN_API_VERSION: {type: INT32, desc: minApiVersion}
   TARGET_API_VERSION: {type: INT32, desc: targetApiVersion}
   COMPILE_SDK_VERSION: {type: STRING, arrsize: 99, desc: compileSdkVersion}
@@ -148,6 +164,10 @@ BUNDLE_INSTALL:
   HAS_HNP: {type: BOOL, desc: has hnp}
   ODID: {type: STRING, desc: odid}
   APPLICATION_INFO_SIZE: {type: INT32, desc: total number of installed applications}
+  DEVICE_MODE_DISTRIBUTION_POLICY: {type: INT32, desc: device mode distribution policy of the installed bundle}
+  CURRENT_MODE: {type: INT32, desc: 'current device mode of the install, 0 tablet 1 2in1, -1 non-dual-mode device'}
+  IS_RES_FILE_FAKE_DECOMPRESSION: {type: BOOL, desc: whether the resource file is fake decompression}
+  IS_SO_FAKE_DECOMPRESSION: {type: BOOL, desc: whether the so file is fake decompression}
 
 
 BUNDLE_UNINSTALL:
@@ -161,7 +181,7 @@ BUNDLE_UNINSTALL:
   CALLING_UID: {type: INT32, desc: calling uid}
   CALLING_APP_ID: {type: STRING, desc: calling appId}
   CALLING_BUNDLE_NAME: {type: STRING, desc: calling bundleName}
-  APP_INDEX: {type: INT32, desc: app index}
+  APP_INDEX: {type: INT32, desc: 'app index, 10000 means the secondary-mode clone variant of a dual-mode bundle'}
   IS_KEEPDATA: {type: BOOL, desc: is keepdata}
   NPAPI_PLUGIN_STATUS: {type: INT32, desc: npapiPluginStatus}
   SKILL_COUNT: {type: INT32, desc: skillCount}
@@ -169,6 +189,8 @@ BUNDLE_UNINSTALL:
   END_TIME: {type: INT64, desc: bundle uninstallation end time}
   ODID: {type: STRING, desc: odid}
   APPLICATION_INFO_SIZE: {type: INT32, desc: total number of installed applications}
+  DEVICE_MODE_DISTRIBUTION_POLICY: {type: INT32, desc: device mode distribution policy of the uninstalled bundle}
+  CURRENT_MODE: {type: INT32, desc: 'current device mode of the uninstall, 0 tablet 1 2in1, -1 non-dual-mode device'}
 
 BUNDLE_UPDATE:
   __BASE: {type: BEHAVIOR, level: MINOR, desc: bundle update}
@@ -203,6 +225,11 @@ BUNDLE_UPDATE:
   END_TIME: {type: INT64, desc: bundle update end time}
   ODID: {type: STRING, desc: odid}
   APPLICATION_INFO_SIZE: {type: INT32, desc: total number of installed applications}
+  DEVICE_MODE_DISTRIBUTION_POLICY: {type: INT32, desc: device mode distribution policy of the updated bundle}
+  CURRENT_MODE: {type: INT32, desc: 'current device mode of the update, 0 tablet 1 2in1, -1 non-dual-mode device'}
+  APP_INDEX: {type: INT32, desc: 'app index, 10000 means the secondary-mode clone variant of a dual-mode bundle'}
+  IS_RES_FILE_FAKE_DECOMPRESSION: {type: BOOL, desc: whether the resource file is fake decompression}
+  IS_SO_FAKE_DECOMPRESSION: {type: BOOL, desc: whether the so file is fake decompression}
 
 PRE_BUNDLE_RECOVER:
   __BASE: {type: BEHAVIOR, level: MINOR, desc: prebundle recover}
@@ -221,6 +248,9 @@ PRE_BUNDLE_RECOVER:
   HASH_VALUE: {type: STRING, arrsize: 99, desc: the hash value of the hap file}
   INSTALL_TIME: {type: INT64, desc: the install time or the bundle}
   INSTALL_TYPE: {type: STRING, desc: only prebundle}
+  APP_INDEX: {type: INT32, desc: 'app index, 10000 means the secondary-mode clone variant of a dual-mode bundle'}
+  CURRENT_MODE: {type: INT32, desc: 'current device mode of the recover, 0 tablet 1 2in1, -1 non-dual-mode device'}
+  DEVICE_MODE_DISTRIBUTION_POLICY: {type: INT32, desc: device mode distribution policy of the recovered bundle}
   START_TIME: {type: INT64, desc: bundle installation start time}
   END_TIME: {type: INT64, desc: bundle installation end time}
 
@@ -233,8 +263,10 @@ BUNDLE_STATE_CHANGE:
   ABILITY_NAME: {type: STRING, desc: abilityName}
   TYPE: {type: STRING, desc: application or ability}
   STATE: {type: STRING, desc: isEnable}
+  APP_INDEX: {type: INT32, desc: 'app index, 10000 means the secondary-mode clone variant of a dual-mode bundle'}
+  CURRENT_MODE: {type: INT32, desc: 'current device mode of the state change, 0 tablet 1 2in1, -1 non-dual-mode device'}
+  DEVICE_MODE_DISTRIBUTION_POLICY: {type: INT32, desc: device mode distribution policy of the bundle}
   CALLING_BUNDLE_NAME: {type: STRING, desc: calling bundleName}
-  APP_INDEX: {type: INT32, desc: app index}
 
 BUNDLE_CLEAN_CACHE:
   __BASE: {type: BEHAVIOR, level: MINOR, desc: bundle clean cache}
@@ -243,6 +275,8 @@ BUNDLE_CLEAN_CACHE:
   USERID: {type: INT32, desc: userId of the bundle}
   BUNDLE_NAME: {type: STRING, desc: bundleName}
   CLEAN_TYPE: {type: STRING, desc: clean cache or clean data}
+  APP_INDEX: {type: INT32, desc: 'app index, 10000 means the secondary-mode clone variant of a dual-mode bundle'}
+  CURRENT_MODE: {type: INT32, desc: 'current device mode of the clean, 0 tablet 1 2in1, -1 non-dual-mode device'}
   CALLING_UID: {type: INT32, desc: calling uid}
   CALLING_BUNDLE_NAME: {type: STRING, desc: calling bundleName}
 
@@ -341,7 +375,8 @@ APP_CONTROL_RULE:
   OPERATION_TYPE: {type: INT32, desc: operation type}
   ACTION_TYPE: {type: INT32, desc: action type}
   RULE: {type: STRING, desc: rule}
-  APP_INDEX: {type: INT32, desc: app index}
+  APP_INDEX: {type: INT32, desc: 'app index, 10000 means the secondary-mode clone variant of a dual-mode bundle'}
+  CURRENT_MODE: {type: INT32, desc: 'current device mode of the rule operation, 0 tablet 1 2in1, -1 non-dual-mode device'}
 
 DEFAULT_APP:
   __BASE: {type: BEHAVIOR, level: MINOR, desc: default application}
@@ -350,7 +385,8 @@ DEFAULT_APP:
   CALLING_NAME: {type: STRING, desc: calling name}
   WANT: {type: STRING, desc: want}
   UTD: {type: STRING, desc: utd}
-  APP_INDEX: {type: INT32, desc: app index}
+  APP_INDEX: {type: INT32, desc: 'app index, 10000 means the secondary-mode clone variant of a dual-mode bundle'}
+  CURRENT_MODE: {type: INT32, desc: 'current device mode of the default app operation, 0 tablet 1 2in1, -1 non-dual-mode device'}
 
 USER_DATA_SIZE:
    __BASE: {type: STATISTIC, level: MINOR , desc: data partition management}
@@ -366,6 +402,7 @@ BUNDLE_DYNAMIC_SHORTCUTINFO:
   SHORTCUT_ID: {type: STRING, desc: shortcut id}
   BUNDLE_NAME: {type: STRING, desc: bundle name}
   OP_TYPE: {type: STRING, desc: dynamic shortcut operation type}
+  APP_INDEX: {type: INT32, desc: 'app index, 10000 means the secondary-mode clone variant of a dual-mode bundle'}
   CALLING_UID: {type: INT32, desc: calling uid}
 
 DESKTOP_SHORTCUT:

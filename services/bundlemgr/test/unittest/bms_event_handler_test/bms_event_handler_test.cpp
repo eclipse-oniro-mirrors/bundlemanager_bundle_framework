@@ -4595,6 +4595,50 @@ HWTEST_F(BmsEventHandlerTest, SendBundleUpdateFailedEvent_0100, Function | Small
 }
 
 /**
+ * @tc.number: SendBundleUpdateFailedEvent_0200
+ * @tc.name: test SendBundleUpdateFailedEvent with isPatch
+ * @tc.desc: test SendBundleUpdateFailedEvent with isPatch flag for patch downgrade scenario
+ */
+HWTEST_F(BmsEventHandlerTest, SendBundleUpdateFailedEvent_0200, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    bundleInfo.versionCode = 1000000;
+    bundleInfo.isPreInstallApp = true;
+    EXPECT_NO_THROW(BMSEventHandler::SendBundleUpdateFailedEvent(bundleInfo,
+        ERR_APPEXECFWK_OTA_INSTALL_VERSION_DOWNGRADE, true));
+    EXPECT_NO_THROW(BMSEventHandler::SendBundleUpdateFailedEvent(bundleInfo,
+        ERR_APPEXECFWK_OTA_INSTALL_VERSION_DOWNGRADE, false));
+}
+
+/**
+ * @tc.number: SendBundleUpdateFailedEvent_0300
+ * @tc.name: test SendBundleUpdateFailedEvent with InnerBundleInfo
+ * @tc.desc: test SendBundleUpdateFailedEvent with dual-mode clone InnerBundleInfo for patch downgrade scenario
+ */
+HWTEST_F(BmsEventHandlerTest, SendBundleUpdateFailedEvent_0300, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    ApplicationInfo appInfo;
+    appInfo.bundleName = BUNDLE_NAME;
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    bundleInfo.versionCode = 1000000;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetBaseApplicationInfo(appInfo);
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    innerBundleInfo.SetDualModeCloneApp(true);
+    EXPECT_TRUE(innerBundleInfo.IsDualModeCloneApp());
+    EXPECT_NO_THROW(BMSEventHandler::SendBundleUpdateFailedEvent(innerBundleInfo,
+        ERR_APPEXECFWK_OTA_INSTALL_VERSION_DOWNGRADE, true));
+    EXPECT_NO_THROW(BMSEventHandler::SendBundleUpdateFailedEvent(innerBundleInfo,
+        ERR_APPEXECFWK_OTA_INSTALL_VERSION_DOWNGRADE, false));
+}
+
+/**
  * @tc.number: AnalyzeHaps_0100
  * @tc.name: test AnalyzeHaps
  * @tc.desc: test AnalyzeHaps

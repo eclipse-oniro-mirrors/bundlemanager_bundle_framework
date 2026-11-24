@@ -702,8 +702,8 @@ ErrCode BaseBundleInstaller::CheckUninstallInnerBundleInfo(const InnerBundleInfo
         return ERR_APPEXECFWK_UNINSTALL_SYSTEM_APP_ERROR;
     }
     if (!info.GetUninstallState()) {
-        LOG_E(BMS_TAG_INSTALLER, "bundle : %{public}s can not be uninstalled, uninstallState : %{public}d",
-            bundleName.c_str(), info.GetUninstallState());
+        LOG_E(BMS_TAG_INSTALLER, "bundle : %{public}s can not be uninstalled, isRemovable : %{public}d, "
+            "uninstallState : %{public}d", bundleName.c_str(), info.IsRemovable(), info.GetUninstallState());
         return ERR_APPEXECFWK_UNINSTALL_STATE_NOT_ALLOW;
     }
     if (info.GetApplicationBundleType() != BundleType::SHARED) {
@@ -2691,8 +2691,12 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         (!oldInfo.GetUninstallState() || !curInnerBundleUserInfo.canUninstall) && installParam.GetKillProcess() &&
         !installParam.GetIsUninstallAndRecover()) {
         if (!isForcedUninstall) {
-            LOG_E(BMS_TAG_INSTALLER, "bundle : %{public}s can not be uninstalled, uninstallState : %{public}d",
-                bundleName.c_str(), oldInfo.GetUninstallState());
+            LOG_E(BMS_TAG_INSTALLER, "bundle : %{public}s can not be uninstalled, userId : %{public}d, "
+                "uninstallState : %{public}d, canUninstall : %{public}d, forceExecuted : %{public}d, "
+                "killProcess : %{public}d, isUninstallAndRecover : %{public}d, isForcedUninstall : %{public}d",
+                bundleName.c_str(), userId_, oldInfo.GetUninstallState(), curInnerBundleUserInfo.canUninstall,
+                installParam.GetForceExecuted(), installParam.GetKillProcess(),
+                installParam.GetIsUninstallAndRecover(), isForcedUninstall);
             return ERR_APPEXECFWK_UNINSTALL_STATE_NOT_ALLOW;
         }
     }
@@ -3041,8 +3045,11 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
 
     if (!installParam.GetForceExecuted() &&
         !oldInfo.GetUninstallState() && installParam.GetKillProcess() && !installParam.GetIsUninstallAndRecover()) {
-        LOG_E(BMS_TAG_INSTALLER, "bundle : %{public}s can not be uninstalled, uninstallState : %{public}d",
-            bundleName.c_str(), oldInfo.GetUninstallState());
+        LOG_E(BMS_TAG_INSTALLER, "bundle : %{public}s can not be uninstalled, userId : %{public}d, "
+            "uninstallState : %{public}d, forceExecuted : %{public}d, killProcess : %{public}d, "
+            "isUninstallAndRecover : %{public}d",
+            bundleName.c_str(), userId_, oldInfo.GetUninstallState(), installParam.GetForceExecuted(),
+            installParam.GetKillProcess(), installParam.GetIsUninstallAndRecover());
         return ERR_APPEXECFWK_UNINSTALL_STATE_NOT_ALLOW;
     }
 
@@ -6670,6 +6677,46 @@ void BaseBundleInstaller::FillDualModeEventFields(const InstallParam &installPar
     // === DUAL_MODE END ===
 }
 
+void BaseBundleInstaller::FillDualModeSysEventFields(BundleEventType bundleEventType,
+    const InstallParam &installParam)
+{
+    // === DUAL_MODE: Fill mode fields on the HiSysEvent info ===
+    // Same contract as the common-event counterpart FillDualModeEventFields: non-dual-mode devices
+    // reset the fields to the non-dual-mode defaults (currentMode=-1 marks the event as coming from
+    // a non-dual-mode device; the policy resets to UNSPECIFIED(0), matching the EventInfo default)
+    // so a reused installer instance never leaks a previous dual-mode report. On a dual-mode device
+    // CURRENT_MODE (0=tablet/1=2in1) plus DEVICE_MODE_DISTRIBUTION_POLICY plus APP_INDEX
+    // (DUAL_MODE_CLONE_APP_INDEX=10000 for the secondary clone variant, out of the clone-app range
+    // 1~1000) distinguish the same-name-different-package app's primary/secondary package body.
+    // Recover keeps the record-resolved policy filled by GetInstallEventInfo before this call.
+    DeviceModeDistributionPolicy recordPolicy =
+        static_cast<DeviceModeDistributionPolicy>(sysEventInfo_.deviceModeDistributionPolicy);
+    sysEventInfo_.appIndex = Constants::INITIAL_APP_INDEX;
+    sysEventInfo_.currentMode = -1;
+    sysEventInfo_.deviceModeDistributionPolicy =
+        static_cast<int32_t>(DeviceModeDistributionPolicy::UNSPECIFIED);
+    if (!DualModeHelper::IsDualModeDevice()) {
+        return;
+    }
+    sysEventInfo_.currentMode = DualModeHelper::GetSysMode();
+    // Uninstall requests normally carry an UNSPECIFIED policy; use the value captured from
+    // oldInfo by SaveDualModeUninstallEventFields instead of deriving it from InstallParam.
+    // Recover requests normally carry one too; keep the record-resolved value instead (callers
+    // that do carry a policy, e.g. UninstallAndRecover, still win).
+    DeviceModeDistributionPolicy effectivePolicy = (bundleEventType == BundleEventType::UNINSTALL)
+        ? uninstallDeviceModeDistributionPolicy_
+        : GetEffectiveDualModePolicy(installParam);
+    if (bundleEventType == BundleEventType::RECOVER &&
+        effectivePolicy == DeviceModeDistributionPolicy::UNSPECIFIED) {
+        effectivePolicy = recordPolicy;
+    }
+    sysEventInfo_.deviceModeDistributionPolicy = static_cast<int32_t>(effectivePolicy);
+    if (!dualModeBundleName_.empty()) {
+        sysEventInfo_.appIndex = ServiceConstants::DUAL_MODE_CLONE_APP_INDEX;
+    }
+    // === DUAL_MODE END ===
+}
+
 AppSandboxPolicy BaseBundleInstaller::ComputeCurrentAppSandboxPolicy(DeviceModeDistributionPolicy newPolicy) const
 {
     // Sticky isolation (Sync-27): once an app is isolated, an update keeps it isolated regardless of the
@@ -6823,8 +6870,11 @@ void BaseBundleInstaller::InitDualModeBundleName(const InstallParam &installPara
     }
     if (ShouldUseDualModeCloneName(installParam)) {
         dualModeBundleName_ = DualModeHelper::GetDualModeBundleName(bundleName_);
-        LOG_I(BMS_TAG_INSTALLER, "Dual mode install: original=%{public}s -> prefixed=%{public}s",
-            bundleName_.c_str(), dualModeBundleName_.c_str());
+        LOG_I(BMS_TAG_INSTALLER, "Dual mode install: original=%{public}s -> prefixed=%{public}s "
+            "policy=%{public}d isDiffPackage=%{public}d",
+            bundleName_.c_str(), dualModeBundleName_.c_str(),
+            static_cast<int32_t>(GetEffectiveDualModePolicy(installParam)),
+            DualModeHelper::IsDiffPackageCategory(GetEffectiveDualModePolicy(installParam)));
     } else {
         dualModeBundleName_.clear();
     }
@@ -6836,6 +6886,17 @@ void BaseBundleInstaller::InitDualModeBundleName(const InnerBundleInfo &bundleIn
     dualModeBundleName_ = bundleInfo.IsDualModeCloneApp()
         ? DualModeHelper::GetDualModeBundleName(bundleInfo.GetBundleName())
         : Constants::EMPTY_STRING;
+    // Mirror the install-side log (InitDualModeBundleName(InstallParam)): make the
+    // original-name -> clone-name routing visible for uninstall/recover flows, with the
+    // policy and diff-package marker so logs show which modes the app displays in.
+    if (!dualModeBundleName_.empty()) {
+        LOG_I(BMS_TAG_INSTALLER, "Dual mode uninstall/recover: original=%{public}s -> prefixed=%{public}s "
+            "policy=%{public}d isDiffPackage=%{public}d appIndex=%{public}d",
+            bundleName_.c_str(), dualModeBundleName_.c_str(),
+            static_cast<int32_t>(bundleInfo.GetDeviceModeDistributionPolicy()),
+            DualModeHelper::IsDiffPackageCategory(bundleInfo.GetDeviceModeDistributionPolicy()),
+            bundleInfo.GetAppIndex());
+    }
 }
 
 void BaseBundleInstaller::SaveDualModeUninstallEventFields(const InnerBundleInfo &bundleInfo)
@@ -8812,6 +8873,7 @@ void BaseBundleInstaller::SendBundleSystemEvent(const std::string &bundleName, B
         return;
     }
     sysEventInfo_.bundleName = bundleName;
+    FillDualModeSysEventFields(bundleEventType, installParam);
     sysEventInfo_.isPreInstallApp = installParam.isPreInstallApp;
     sysEventInfo_.errCode = errCode;
     sysEventInfo_.isFreeInstallMode = (installParam.installFlag == InstallFlag::FREE_INSTALL);
@@ -8831,6 +8893,23 @@ void BaseBundleInstaller::SendBundleSystemEvent(const std::string &bundleName, B
     if (InitDataMgr()) {
         dataMgr_->GetOdidByBundleName(bundleName, sysEventInfo_.odid);
         sysEventInfo_.applicationInfoSize = static_cast<int32_t>(dataMgr_->GetAllBundleName().size());
+    }
+    // Dual-mode observability: policy tells where the app shows (mode-exclusive /
+    // diff-package categories), isDiffPackage marks same-name-different-package,
+    // currentMode (0=tablet/1=2in1) and appIndex (=10000 for the secondary clone
+    // variant) tell which package body is being operated on. Non-dual-mode devices
+    // are skipped: the CURRENT_MODE=-1 marker in the sys event already covers them.
+    if (DualModeHelper::IsDualModeDevice() &&
+        (bundleEventType == BundleEventType::INSTALL || bundleEventType == BundleEventType::UPDATE ||
+        bundleEventType == BundleEventType::UNINSTALL || bundleEventType == BundleEventType::RECOVER)) {
+        LOG_I(BMS_TAG_INSTALLER,
+            "bundle %{public}s eventType=%{public}d dual-mode: policy=%{public}d isDiffPackage=%{public}d "
+            "currentMode=%{public}d appIndex=%{public}d",
+            bundleName.c_str(), static_cast<int32_t>(bundleEventType),
+            sysEventInfo_.deviceModeDistributionPolicy,
+            DualModeHelper::IsDiffPackageCategory(static_cast<DeviceModeDistributionPolicy>(
+                sysEventInfo_.deviceModeDistributionPolicy)),
+            sysEventInfo_.currentMode, sysEventInfo_.appIndex);
     }
     EventReport::SendBundleSystemEvent(bundleEventType, sysEventInfo_);
 }
@@ -8876,6 +8955,7 @@ void BaseBundleInstaller::GetInstallEventInfo(const InnerBundleInfo &bundleInfo,
     LOG_D(BMS_TAG_INSTALLER, "GetInstallEventInfo start, bundleName:%{public}s", bundleInfo.GetBundleName().c_str());
     eventInfo.fingerprint = bundleInfo.GetCertificateFingerprint();
     eventInfo.appDistributionType = bundleInfo.GetAppDistributionType();
+    eventInfo.deviceModeDistributionPolicy = static_cast<int32_t>(bundleInfo.GetDeviceModeDistributionPolicy());
     eventInfo.hideDesktopIcon = bundleInfo.IsHideDesktopIconForEvent();
     eventInfo.timeStamp = bundleInfo.GetBundleUpdateTime(userId_);
     // report hapPath and hashValue

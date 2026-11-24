@@ -4541,6 +4541,119 @@ HWTEST_F(BmsDualModeInstallTest, FillDualModeEventFields_0500, Function | SmallT
     EXPECT_EQ(installRes.appIndex, 7);
 }
 
+// ====================== BaseBundleInstaller::FillDualModeSysEventFields ======================
+// HiSysEvent counterpart of FillDualModeEventFields: the install/uninstall/update behavior and
+// fault events carry CURRENT_MODE + DEVICE_MODE_DISTRIBUTION_POLICY and mark the secondary (clone)
+// variant with APP_INDEX=10000 so the same-name-different-package app's primary/secondary package
+// body is distinguishable; on a non-dual-mode device the fields reset to the non-dual-mode defaults
+// so a reused installer instance never leaks a previous dual-mode report.
+
+HWTEST_F(BmsDualModeInstallTest, FillDualModeSysEventFields_0100, Function | SmallTest | Level0)
+{
+    // non-dual-mode device (cache invalid) -> reset arm: pre-set markers are cleared, no stale leak
+    SetDualModeCache(ServiceConstants::DUAL_MODE_VALUE_INVALID, ServiceConstants::DUAL_MODE_VALUE_INVALID);
+    BaseBundleInstaller installer;
+    installer.sysEventInfo_.appIndex = 5;
+    installer.sysEventInfo_.currentMode = 9;
+    installer.sysEventInfo_.deviceModeDistributionPolicy = 7;
+    InstallParam installParam;
+    installer.FillDualModeSysEventFields(BundleEventType::INSTALL, installParam);
+    EXPECT_EQ(installer.sysEventInfo_.appIndex, 0);
+    EXPECT_EQ(installer.sysEventInfo_.currentMode, -1);
+    EXPECT_EQ(installer.sysEventInfo_.deviceModeDistributionPolicy,
+        static_cast<int32_t>(DeviceModeDistributionPolicy::UNSPECIFIED));
+}
+
+HWTEST_F(BmsDualModeInstallTest, FillDualModeSysEventFields_0200, Function | SmallTest | Level0)
+{
+    // dual-mode device + install + non-clone (primary pass) -> mode/policy filled, appIndex main (0)
+    EnableSecondaryMode();
+    BaseBundleInstaller installer;
+    InstallParam installParam;
+    installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE;
+    installer.FillDualModeSysEventFields(BundleEventType::INSTALL, installParam);
+    EXPECT_EQ(installer.sysEventInfo_.currentMode, DualModeHelper::GetSysMode());
+    EXPECT_EQ(installer.sysEventInfo_.deviceModeDistributionPolicy,
+        static_cast<int32_t>(DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE));
+    EXPECT_EQ(installer.sysEventInfo_.appIndex, 0);
+}
+
+HWTEST_F(BmsDualModeInstallTest, FillDualModeSysEventFields_0300, Function | SmallTest | Level0)
+{
+    // dual-mode device + clone variant (dualModeBundleName_ set) -> event marks APP_INDEX=10000
+    EnableSecondaryMode();
+    BaseBundleInstaller installer;
+    installer.dualModeBundleName_ = PREFIXED_NAME;  // dual-mode clone variant present
+    InstallParam installParam;
+    installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE;
+    installer.FillDualModeSysEventFields(BundleEventType::UPDATE, installParam);
+    EXPECT_EQ(installer.sysEventInfo_.appIndex, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
+    EXPECT_EQ(installer.sysEventInfo_.currentMode, DualModeHelper::GetSysMode());
+    EXPECT_EQ(installer.sysEventInfo_.deviceModeDistributionPolicy,
+        static_cast<int32_t>(DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE));
+}
+
+HWTEST_F(BmsDualModeInstallTest, FillDualModeSysEventFields_0400, Function | SmallTest | Level0)
+{
+    // uninstall: policy comes from the record captured by SaveDualModeUninstallEventFields,
+    // not from InstallParam (uninstall requests normally carry an UNSPECIFIED policy)
+    EnablePrimaryMode();
+    BaseBundleInstaller installer;
+    installer.uninstallDeviceModeDistributionPolicy_ =
+        DeviceModeDistributionPolicy::FULL_COMPATIBLE_DIFFERENT_PACKAGE;
+    installer.dualModeBundleName_ = PREFIXED_NAME;  // uninstalling the secondary clone variant
+    InstallParam installParam;
+    installer.FillDualModeSysEventFields(BundleEventType::UNINSTALL, installParam);
+    EXPECT_EQ(installer.sysEventInfo_.deviceModeDistributionPolicy,
+        static_cast<int32_t>(DeviceModeDistributionPolicy::FULL_COMPATIBLE_DIFFERENT_PACKAGE));
+    EXPECT_EQ(installer.sysEventInfo_.appIndex, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
+    EXPECT_EQ(installer.sysEventInfo_.currentMode, DualModeHelper::GetSysMode());
+}
+
+HWTEST_F(BmsDualModeInstallTest, FillDualModeSysEventFields_0500, Function | SmallTest | Level0)
+{
+    // preinstall with caller policy UNSPECIFIED -> ERMS-resolved policy is reported
+    // (GetEffectiveDualModePolicy: resolvedDeviceModeDistributionPolicy_ branch)
+    EnableSecondaryMode();
+    BaseBundleInstaller installer;
+    installer.resolvedDeviceModeDistributionPolicy_ =
+        DeviceModeDistributionPolicy::PARTIAL_COMPATIBLE_DIFFERENT_PACKAGE;
+    InstallParam installParam;
+    installParam.isPreInstallApp = true;
+    installer.FillDualModeSysEventFields(BundleEventType::INSTALL, installParam);
+    EXPECT_EQ(installer.sysEventInfo_.deviceModeDistributionPolicy,
+        static_cast<int32_t>(DeviceModeDistributionPolicy::PARTIAL_COMPATIBLE_DIFFERENT_PACKAGE));
+}
+
+HWTEST_F(BmsDualModeInstallTest, FillDualModeSysEventFields_0600, Function | SmallTest | Level0)
+{
+    // recover with request policy UNSPECIFIED -> the record-resolved policy filled by
+    // GetInstallEventInfo is preserved instead of being overwritten with UNSPECIFIED
+    EnableSecondaryMode();
+    BaseBundleInstaller installer;
+    installer.sysEventInfo_.deviceModeDistributionPolicy =
+        static_cast<int32_t>(DeviceModeDistributionPolicy::FULL_COMPATIBLE_DIFFERENT_PACKAGE);
+    InstallParam installParam;
+    installer.FillDualModeSysEventFields(BundleEventType::RECOVER, installParam);
+    EXPECT_EQ(installer.sysEventInfo_.deviceModeDistributionPolicy,
+        static_cast<int32_t>(DeviceModeDistributionPolicy::FULL_COMPATIBLE_DIFFERENT_PACKAGE));
+}
+
+HWTEST_F(BmsDualModeInstallTest, FillDualModeSysEventFields_0700, Function | SmallTest | Level0)
+{
+    // recover with caller-carried policy (e.g. UninstallAndRecover) -> caller policy wins
+    // over the record-resolved value
+    EnableSecondaryMode();
+    BaseBundleInstaller installer;
+    installer.sysEventInfo_.deviceModeDistributionPolicy =
+        static_cast<int32_t>(DeviceModeDistributionPolicy::FULL_COMPATIBLE_DIFFERENT_PACKAGE);
+    InstallParam installParam;
+    installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE;
+    installer.FillDualModeSysEventFields(BundleEventType::RECOVER, installParam);
+    EXPECT_EQ(installer.sysEventInfo_.deviceModeDistributionPolicy,
+        static_cast<int32_t>(DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE));
+}
+
 // ====================== BaseBundleInstaller sandbox policy & reset (Sync-27) ======================
 // ComputeCurrentAppSandboxPolicy applies the sticky-isolation rule: an app that was already isolated
 // stays isolated regardless of the new policy; otherwise the policy is derived (diff-package -> ISOLATED,

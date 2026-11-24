@@ -3451,7 +3451,8 @@ ErrCode BundleMgrHostImpl::SetApplicationEnabled(const std::string &bundleName, 
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_CHANGE_ABILITY_ENABLED_STATE)) {
         APP_LOGE_NOFUNC("SetApplicationEnabled permission denied %{public}d %{public}d",
             IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
-        EventReport::SendComponentStateSysEventForException(bundleName, "", userId, isEnable, 0, caller);
+        EventReport::SendComponentStateSysEventForException(bundleName, "", userId, isEnable, 0, caller,
+            GetDualModePolicyForEvent(bundleName));
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     if (!BundlePermissionMgr::CheckUserFromShell(userId)) {
@@ -3472,22 +3473,25 @@ ErrCode BundleMgrHostImpl::SetApplicationEnabled(const std::string &bundleName, 
         EventReport::SendComponentStateSysEventForException(bundleName, "", userId, isEnable, 0, caller);
         return ERR_APPEXECFWK_SERVICE_NOT_READY;
     }
+    int32_t deviceModeDistributionPolicy = GetDualModePolicyForEvent(bundleName);
 
     bool stateChanged = false;
     auto ret = dataMgr->SetApplicationEnabled(bundleName, 0, isEnable, caller, userId, stateChanged);
     if (ret != ERR_OK) {
         APP_LOGE("Set application(%{public}s) enabled value faile", bundleName.c_str());
-        EventReport::SendComponentStateSysEventForException(bundleName, "", userId, isEnable, 0, caller);
+        EventReport::SendComponentStateSysEventForException(bundleName, "", userId, isEnable, 0, caller,
+            deviceModeDistributionPolicy);
         return ret;
     }
     if (HandleKillProcess(bundleName, userId, 0, isEnable, killProcess) != ERR_OK) {
         APP_LOGE("kill process fail, -n %{public}s -u %{public}d -e %{public}d -k %{public}d",
             bundleName.c_str(), userId, isEnable, killProcess);
         EventReport::SendComponentStateSysEventForException(bundleName, "", userId, isEnable, 0,
-            caller + "_" + KILL_PROCESS_FAILED_MSG);
+            caller + "_" + KILL_PROCESS_FAILED_MSG, deviceModeDistributionPolicy);
     }
 
-    EventReport::SendComponentStateSysEvent(bundleName, "", userId, isEnable, 0, caller);
+    EventReport::SendComponentStateSysEvent(
+        bundleName, "", userId, isEnable, 0, caller, deviceModeDistributionPolicy);
 
     // If state did not change, return directly
     if (!stateChanged) {
@@ -3537,7 +3541,8 @@ ErrCode BundleMgrHostImpl::SetCloneApplicationEnabled(
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_CHANGE_ABILITY_ENABLED_STATE)) {
         APP_LOGE_NOFUNC("SetCloneApplicationEnabled permission denied %{public}d %{public}d",
             IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
-        EventReport::SendComponentStateSysEventForException(bundleName, "", userId, isEnable, appIndex, caller);
+        EventReport::SendComponentStateSysEventForException(bundleName, "", userId, isEnable, appIndex, caller,
+            GetDualModePolicyForEvent(bundleName));
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     if (userId == Constants::UNSPECIFIED_USERID) {
@@ -3554,12 +3559,14 @@ ErrCode BundleMgrHostImpl::SetCloneApplicationEnabled(
         EventReport::SendComponentStateSysEventForException(bundleName, "", userId, isEnable, appIndex, caller);
         return ERR_APPEXECFWK_SERVICE_NOT_READY;
     }
+    int32_t deviceModeDistributionPolicy = GetDualModePolicyForEvent(bundleName);
 
     bool stateChanged = false;
     auto ret = dataMgr->SetApplicationEnabled(bundleName, appIndex, isEnable, caller, userId, stateChanged);
     if (ret != ERR_OK) {
         APP_LOGE("Set application(%{public}s) enabled value fail", bundleName.c_str());
-        EventReport::SendComponentStateSysEventForException(bundleName, "", userId, isEnable, appIndex, caller);
+        EventReport::SendComponentStateSysEventForException(bundleName, "", userId, isEnable, appIndex, caller,
+            deviceModeDistributionPolicy);
         return ret;
     }
 
@@ -3567,10 +3574,11 @@ ErrCode BundleMgrHostImpl::SetCloneApplicationEnabled(
         APP_LOGE("kill process fail, -n %{public}s -u %{public}d -i %{public}d -e %{public}d -k %{public}d",
             bundleName.c_str(), userId, appIndex, isEnable, killProcess);
         EventReport::SendComponentStateSysEventForException(bundleName, "", userId, isEnable, appIndex,
-            caller + "_" + KILL_PROCESS_FAILED_MSG);
+            caller + "_" + KILL_PROCESS_FAILED_MSG, deviceModeDistributionPolicy);
     }
 
-    EventReport::SendComponentStateSysEvent(bundleName, "", userId, isEnable, appIndex, caller);
+    EventReport::SendComponentStateSysEvent(
+        bundleName, "", userId, isEnable, appIndex, caller, deviceModeDistributionPolicy);
 
     // If state did not change, return directly
     if (!stateChanged) {
@@ -3711,7 +3719,7 @@ ErrCode BundleMgrHostImpl::SetAbilityEnabled(const AbilityInfo &abilityInfo, boo
         APP_LOGE_NOFUNC("SetAbilityEnabled permission denied %{public}d %{public}d",
             IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
         EventReport::SendComponentStateSysEventForException(abilityInfo.bundleName, abilityInfo.name,
-            userId, isEnabled, 0, caller);
+            userId, isEnabled, 0, caller, GetDualModePolicyForEvent(abilityInfo.bundleName));
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     if (!BundlePermissionMgr::CheckUserFromShell(userId)) {
@@ -3733,17 +3741,19 @@ ErrCode BundleMgrHostImpl::SetAbilityEnabled(const AbilityInfo &abilityInfo, boo
             userId, isEnabled, 0, caller);
         return ERR_APPEXECFWK_SERVICE_NOT_READY;
     }
+    int32_t deviceModeDistributionPolicy = GetDualModePolicyForEvent(abilityInfo.bundleName);
 
     bool stateChanged = false;
     auto ret = dataMgr->SetAbilityEnabled(abilityInfo, 0, isEnabled, userId, stateChanged);
     if (ret != ERR_OK) {
         APP_LOGE("Set ability(%{public}s) enabled value failed", abilityInfo.bundleName.c_str());
         EventReport::SendComponentStateSysEventForException(abilityInfo.bundleName, abilityInfo.name,
-            userId, isEnabled, 0, caller);
+            userId, isEnabled, 0, caller, deviceModeDistributionPolicy);
         return ret;
     }
 
-    EventReport::SendComponentStateSysEvent(abilityInfo.bundleName, abilityInfo.name, userId, isEnabled, 0, caller);
+    EventReport::SendComponentStateSysEvent(
+        abilityInfo.bundleName, abilityInfo.name, userId, isEnabled, 0, caller, deviceModeDistributionPolicy);
 
     // If state did not change, return directly
     if (!stateChanged) {
@@ -3790,7 +3800,7 @@ ErrCode BundleMgrHostImpl::SetCloneAbilityEnabled(const AbilityInfo &abilityInfo
         APP_LOGE_NOFUNC("SetCloneAbilityEnabled permission denied %{public}d %{public}d",
             IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid());
         EventReport::SendComponentStateSysEventForException(abilityInfo.bundleName, abilityInfo.name,
-            userId, isEnabled, appIndex, caller);
+            userId, isEnabled, appIndex, caller, GetDualModePolicyForEvent(abilityInfo.bundleName));
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     if (userId == Constants::UNSPECIFIED_USERID) {
@@ -3807,18 +3817,20 @@ ErrCode BundleMgrHostImpl::SetCloneAbilityEnabled(const AbilityInfo &abilityInfo
             userId, isEnabled, appIndex, caller);
         return ERR_APPEXECFWK_SERVICE_NOT_READY;
     }
+    int32_t deviceModeDistributionPolicy = GetDualModePolicyForEvent(abilityInfo.bundleName);
 
     bool stateChanged = false;
     auto ret = dataMgr->SetAbilityEnabled(abilityInfo, appIndex, isEnabled, userId, stateChanged);
     if (ret != ERR_OK) {
         APP_LOGE("Set ability(%{public}s) enabled value failed", abilityInfo.bundleName.c_str());
         EventReport::SendComponentStateSysEventForException(abilityInfo.bundleName, abilityInfo.name,
-            userId, isEnabled, appIndex, caller);
+            userId, isEnabled, appIndex, caller, deviceModeDistributionPolicy);
         return ret;
     }
 
     EventReport::SendComponentStateSysEvent(
-        abilityInfo.bundleName, abilityInfo.name, userId, isEnabled, appIndex, caller);
+        abilityInfo.bundleName, abilityInfo.name, userId, isEnabled, appIndex, caller,
+        deviceModeDistributionPolicy);
 
     // If state did not change, return directly
     if (!stateChanged) {
@@ -4522,6 +4534,25 @@ bool BundleMgrHostImpl::QueryExtensionAbilityInfos(const ExtensionAbilityType &e
 const std::shared_ptr<BundleDataMgr> BundleMgrHostImpl::GetDataMgrFromService()
 {
     return DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+}
+
+int32_t BundleMgrHostImpl::GetDualModePolicyForEvent(const std::string &bundleName)
+{
+    // Resolve the dual-mode distribution policy for component state events; the fetch mirrors
+    // the DFX layer's original behavior: no lookup on non-dual-mode devices or empty bundleName,
+    // UNSPECIFIED when the data manager or the installed record is unavailable.
+    if (!DualModeHelper::IsDualModeDevice() || bundleName.empty()) {
+        return static_cast<int32_t>(DeviceModeDistributionPolicy::UNSPECIFIED);
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        return static_cast<int32_t>(DeviceModeDistributionPolicy::UNSPECIFIED);
+    }
+    InnerBundleInfo innerBundleInfo;
+    if (!dataMgr->FetchInnerBundleInfo(bundleName, innerBundleInfo)) {
+        return static_cast<int32_t>(DeviceModeDistributionPolicy::UNSPECIFIED);
+    }
+    return static_cast<int32_t>(innerBundleInfo.GetDeviceModeDistributionPolicy());
 }
 
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL

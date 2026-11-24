@@ -8234,17 +8234,29 @@ ErrCode BundleDataMgr::BatchSetApplicationEnabled(int32_t userId, int32_t enable
     }
 
     std::vector<NotifyBundleEvents> eventsToSend;
-    std::vector<std::tuple<std::string, int32_t, int32_t>> disabledBundles;
-    std::vector<std::tuple<std::string, int32_t, bool, int32_t, std::string>> sysEventsToSend;
+    std::vector<std::tuple<std::string, int32_t, int32_t, int32_t>> disabledBundles;
+    std::vector<std::tuple<std::string, int32_t, bool, int32_t, std::string, int32_t>> sysEventsToSend;
+    std::vector<std::tuple<std::string, int32_t, bool, int32_t, std::string, int32_t>> exceptionEventsToSend;
 
     auto processRet = ProcessBatchForAllBundles(requestUserId, enableAppIndex, disableAppIndex, caller,
-        needSendEvent, skipDisableForbidden, eventsToSend, disabledBundles, sysEventsToSend);
+        needSendEvent, skipDisableForbidden, eventsToSend, disabledBundles, sysEventsToSend,
+        exceptionEventsToSend);
     if (processRet != ERR_OK) {
+        // Exception and rollback events are collected while bundleInfoMutex_ is held (with the
+        // dual-mode policy resolved from the in-memory record at collect time) and flushed here
+        // after the lock is released, keeping the batch critical section free of HiSysEvent IPC.
+        for (const auto &[evtBundleName, evtUserId, evtIsEnable, evtAppIndex, evtCaller, evtPolicy] :
+            exceptionEventsToSend) {
+            EventReport::SendComponentStateSysEventForException(
+                evtBundleName, "", evtUserId, evtIsEnable, evtAppIndex, evtCaller, evtPolicy);
+        }
         return processRet;
     }
 
-    for (const auto &[evtBundleName, evtUserId, evtIsEnable, evtAppIndex, evtCaller] : sysEventsToSend) {
-        EventReport::SendComponentStateSysEvent(evtBundleName, "", evtUserId, evtIsEnable, evtAppIndex, evtCaller);
+    for (const auto &[evtBundleName, evtUserId, evtIsEnable, evtAppIndex, evtCaller, evtPolicy] :
+        sysEventsToSend) {
+        EventReport::SendComponentStateSysEvent(
+            evtBundleName, "", evtUserId, evtIsEnable, evtAppIndex, evtCaller, evtPolicy);
     }
 
     if (killProcess) {
@@ -8262,8 +8274,9 @@ ErrCode BundleDataMgr::ProcessBatchForAllBundles(int32_t requestUserId, int32_t 
     int32_t disableAppIndex, const std::string &caller, bool needSendEvent,
     bool skipDisableForbidden,
     std::vector<NotifyBundleEvents> &eventsToSend,
-    std::vector<std::tuple<std::string, int32_t, int32_t>> &disabledBundles,
-    std::vector<std::tuple<std::string, int32_t, bool, int32_t, std::string>> &sysEventsToSend)
+    std::vector<std::tuple<std::string, int32_t, int32_t, int32_t>> &disabledBundles,
+    std::vector<std::tuple<std::string, int32_t, bool, int32_t, std::string, int32_t>> &sysEventsToSend,
+    std::vector<std::tuple<std::string, int32_t, bool, int32_t, std::string, int32_t>> &exceptionEventsToSend)
 {
     std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
     std::vector<std::tuple<std::string, int32_t, bool, std::string>> rollbackList;
@@ -8291,7 +8304,7 @@ ErrCode BundleDataMgr::ProcessBatchForAllBundles(int32_t requestUserId, int32_t 
                 }
                 auto ret = ProcessDisableForBundle(innerBundleInfo, innerBundleUserInfoPtr, bundleName,
                     cloneAppIndex, caller, requestUserId, needSendEvent, skipDisableForbidden,
-                    eventsToSend, disabledBundles, rollbackList, sysEventsToSend);
+                    eventsToSend, disabledBundles, rollbackList, sysEventsToSend, exceptionEventsToSend);
                 if (ret != ERR_OK) {
                     return ret;
                 }
@@ -8299,14 +8312,14 @@ ErrCode BundleDataMgr::ProcessBatchForAllBundles(int32_t requestUserId, int32_t 
         } else {
             auto ret = ProcessDisableForBundle(innerBundleInfo, innerBundleUserInfoPtr, bundleName,
                 disableAppIndex, caller, requestUserId, needSendEvent, skipDisableForbidden,
-                eventsToSend, disabledBundles, rollbackList, sysEventsToSend);
+                eventsToSend, disabledBundles, rollbackList, sysEventsToSend, exceptionEventsToSend);
             if (ret != ERR_OK) {
                 return ret;
             }
         }
         auto ret = ProcessEnableForBundle(innerBundleInfo, innerBundleUserInfoPtr, bundleName,
             enableAppIndex, caller, requestUserId, needSendEvent,
-            eventsToSend, rollbackList, sysEventsToSend);
+            eventsToSend, rollbackList, sysEventsToSend, exceptionEventsToSend);
         if (ret != ERR_OK) {
             return ret;
         }
@@ -8319,10 +8332,15 @@ ErrCode BundleDataMgr::ProcessDisableForBundle(InnerBundleInfo &innerBundleInfo,
     int32_t disableAppIndex, const std::string &caller, int32_t requestUserId,
     bool needSendEvent, bool skipDisableForbidden,
     std::vector<NotifyBundleEvents> &eventsToSend,
-    std::vector<std::tuple<std::string, int32_t, int32_t>> &disabledBundles,
+    std::vector<std::tuple<std::string, int32_t, int32_t, int32_t>> &disabledBundles,
     std::vector<std::tuple<std::string, int32_t, bool, std::string>> &rollbackList,
-    std::vector<std::tuple<std::string, int32_t, bool, int32_t, std::string>> &sysEventsToSend)
+    std::vector<std::tuple<std::string, int32_t, bool, int32_t, std::string, int32_t>> &sysEventsToSend,
+    std::vector<std::tuple<std::string, int32_t, bool, int32_t, std::string, int32_t>> &exceptionEventsToSend)
 {
+    // Capture the dual-mode policy from the in-memory record while the batch lock is held,
+    // so the deferred event flush needs no FetchInnerBundleInfo after the lock is released.
+    int32_t deviceModeDistributionPolicy =
+        static_cast<int32_t>(innerBundleInfo.GetDeviceModeDistributionPolicy());
     auto cloneIter = innerBundleUserInfoPtr->cloneInfos.find(std::to_string(disableAppIndex));
     if (cloneIter == innerBundleUserInfoPtr->cloneInfos.end()) {
         return ERR_OK;
@@ -8339,29 +8357,33 @@ ErrCode BundleDataMgr::ProcessDisableForBundle(InnerBundleInfo &innerBundleInfo,
     if (forbidRet != ERR_OK) {
         APP_LOGE("CheckDisableForbidden failed for %{public}s appIndex %{public}d, ret=%{public}d",
             bundleName.c_str(), disableAppIndex, forbidRet);
-        ReportErrorAndRollback(bundleName, requestUserId, false, disableAppIndex, caller, rollbackList);
+        ReportErrorAndRollback(bundleName, requestUserId, false, disableAppIndex, caller,
+            deviceModeDistributionPolicy, rollbackList, exceptionEventsToSend);
         return forbidRet;
     }
     auto ret = innerBundleInfo.SetCloneApplicationEnabled(false, disableAppIndex, caller, requestUserId);
     if (ret != ERR_OK) {
         APP_LOGE("disable appIndex %{public}d failed for %{public}s, ret=%{public}d",
             disableAppIndex, bundleName.c_str(), ret);
-        ReportErrorAndRollback(bundleName, requestUserId, false, disableAppIndex, caller, rollbackList);
+        ReportErrorAndRollback(bundleName, requestUserId, false, disableAppIndex, caller,
+            deviceModeDistributionPolicy, rollbackList, exceptionEventsToSend);
         return ret;
     }
     rollbackList.emplace_back(bundleName, disableAppIndex, false, caller);
     if (!dataStorage_->SaveStorageBundleInfo(innerBundleInfo)) {
         APP_LOGE("SaveStorageBundleInfo failed for %{public}s appIndex %{public}d",
             bundleName.c_str(), disableAppIndex);
-        ReportErrorAndRollback(bundleName, requestUserId, false, disableAppIndex, caller, rollbackList);
+        ReportErrorAndRollback(bundleName, requestUserId, false, disableAppIndex, caller,
+            deviceModeDistributionPolicy, rollbackList, exceptionEventsToSend);
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    disabledBundles.emplace_back(bundleName, requestUserId, disableAppIndex);
+    disabledBundles.emplace_back(bundleName, requestUserId, disableAppIndex, deviceModeDistributionPolicy);
     if (needSendEvent) {
         eventsToSend.push_back(BuildBatchNotifyEvent(
             innerBundleInfo, *innerBundleUserInfoPtr, bundleName, disableAppIndex, requestUserId));
     }
-    sysEventsToSend.emplace_back(bundleName, requestUserId, false, disableAppIndex, caller);
+    sysEventsToSend.emplace_back(bundleName, requestUserId, false, disableAppIndex, caller,
+        deviceModeDistributionPolicy);
     return ERR_OK;
 }
 
@@ -8371,8 +8393,13 @@ ErrCode BundleDataMgr::ProcessEnableForBundle(InnerBundleInfo &innerBundleInfo,
     bool needSendEvent,
     std::vector<NotifyBundleEvents> &eventsToSend,
     std::vector<std::tuple<std::string, int32_t, bool, std::string>> &rollbackList,
-    std::vector<std::tuple<std::string, int32_t, bool, int32_t, std::string>> &sysEventsToSend)
+    std::vector<std::tuple<std::string, int32_t, bool, int32_t, std::string, int32_t>> &sysEventsToSend,
+    std::vector<std::tuple<std::string, int32_t, bool, int32_t, std::string, int32_t>> &exceptionEventsToSend)
 {
+    // Capture the dual-mode policy from the in-memory record while the batch lock is held,
+    // so the deferred event flush needs no FetchInnerBundleInfo after the lock is released.
+    int32_t deviceModeDistributionPolicy =
+        static_cast<int32_t>(innerBundleInfo.GetDeviceModeDistributionPolicy());
     auto cloneIter = innerBundleUserInfoPtr->cloneInfos.find(std::to_string(enableAppIndex));
     if (cloneIter == innerBundleUserInfoPtr->cloneInfos.end()) {
         return ERR_OK;
@@ -8386,21 +8413,24 @@ ErrCode BundleDataMgr::ProcessEnableForBundle(InnerBundleInfo &innerBundleInfo,
     if (ret != ERR_OK) {
         APP_LOGE("enable appIndex %{public}d failed for %{public}s, ret=%{public}d",
             enableAppIndex, bundleName.c_str(), ret);
-        ReportErrorAndRollback(bundleName, requestUserId, true, enableAppIndex, caller, rollbackList);
+        ReportErrorAndRollback(bundleName, requestUserId, true, enableAppIndex, caller,
+            deviceModeDistributionPolicy, rollbackList, exceptionEventsToSend);
         return ret;
     }
     rollbackList.emplace_back(bundleName, enableAppIndex, true, caller);
     if (!dataStorage_->SaveStorageBundleInfo(innerBundleInfo)) {
         APP_LOGE("SaveStorageBundleInfo failed for %{public}s appIndex %{public}d",
             bundleName.c_str(), enableAppIndex);
-        ReportErrorAndRollback(bundleName, requestUserId, true, enableAppIndex, caller, rollbackList);
+        ReportErrorAndRollback(bundleName, requestUserId, true, enableAppIndex, caller,
+            deviceModeDistributionPolicy, rollbackList, exceptionEventsToSend);
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     if (needSendEvent) {
         eventsToSend.push_back(BuildBatchNotifyEvent(
             innerBundleInfo, *innerBundleUserInfoPtr, bundleName, enableAppIndex, requestUserId));
     }
-    sysEventsToSend.emplace_back(bundleName, requestUserId, true, enableAppIndex, caller);
+    sysEventsToSend.emplace_back(bundleName, requestUserId, true, enableAppIndex, caller,
+        deviceModeDistributionPolicy);
     return ERR_OK;
 }
 
@@ -8449,16 +8479,21 @@ NotifyBundleEvents BundleDataMgr::BuildBatchNotifyEvent(const InnerBundleInfo &i
 }
 
 void BundleDataMgr::ReportErrorAndRollback(const std::string &bundleName, int32_t userId,
-    bool isEnable, int32_t appIndex, const std::string &caller,
-    std::vector<std::tuple<std::string, int32_t, bool, std::string>> &rollbackList)
+    bool isEnable, int32_t appIndex, const std::string &caller, int32_t deviceModeDistributionPolicy,
+    std::vector<std::tuple<std::string, int32_t, bool, std::string>> &rollbackList,
+    std::vector<std::tuple<std::string, int32_t, bool, int32_t, std::string, int32_t>> &exceptionEventsToSend)
 {
-    EventReport::SendComponentStateSysEventForException(bundleName, "", userId, isEnable, appIndex, caller);
-    RollbackBatchSetEnabled(rollbackList, userId);
+    // Defer the event: this runs inside the batch unique_lock on bundleInfoMutex_; the
+    // dual-mode policy is captured by the caller from the in-memory record at collect time.
+    exceptionEventsToSend.emplace_back(bundleName, userId, isEnable, appIndex, caller,
+        deviceModeDistributionPolicy);
+    RollbackBatchSetEnabled(rollbackList, userId, exceptionEventsToSend);
 }
 
 void BundleDataMgr::RollbackBatchSetEnabled(
     const std::vector<std::tuple<std::string, int32_t, bool, std::string>> &rollbackList,
-    int32_t userId)
+    int32_t userId,
+    std::vector<std::tuple<std::string, int32_t, bool, int32_t, std::string, int32_t>> &exceptionEventsToSend)
 {
     APP_LOGI("RollbackBatchSetEnabled rollback %{public}zu items", rollbackList.size());
     for (auto it = rollbackList.rbegin(); it != rollbackList.rend(); ++it) {
@@ -8471,14 +8506,15 @@ void BundleDataMgr::RollbackBatchSetEnabled(
         if (ret != ERR_OK) {
             APP_LOGE("rollback failed for %{public}s appIndex %{public}d, ret=%{public}d",
                 bundleName.c_str(), appIndex, ret);
-            EventReport::SendComponentStateSysEventForException(
-                bundleName, "", userId, !setEnabled, appIndex, caller + "_rollback_fail");
+            exceptionEventsToSend.emplace_back(bundleName, userId, !setEnabled, appIndex,
+                caller + "_rollback_fail", static_cast<int32_t>(infoItem->second.GetDeviceModeDistributionPolicy()));
             continue;
         }
         if (!dataStorage_->SaveStorageBundleInfo(infoItem->second)) {
             APP_LOGE("rollback SaveStorageBundleInfo failed for %{public}s", bundleName.c_str());
-            EventReport::SendComponentStateSysEventForException(
-                bundleName, "", userId, !setEnabled, appIndex, caller + "_rollback_save_fail");
+            exceptionEventsToSend.emplace_back(bundleName, userId, !setEnabled, appIndex,
+                caller + "_rollback_save_fail",
+                static_cast<int32_t>(infoItem->second.GetDeviceModeDistributionPolicy()));
         }
     }
 }
@@ -8508,7 +8544,7 @@ ErrCode BundleDataMgr::ValidateBatchSetAppIndex(int32_t enableAppIndex, int32_t 
 }
 
 void BundleDataMgr::KillDisabledBundleProcesses(
-    const std::vector<std::tuple<std::string, int32_t, int32_t>> &disabledBundles,
+    const std::vector<std::tuple<std::string, int32_t, int32_t, int32_t>> &disabledBundles,
     const std::string &caller)
 {
     auto appMgrClient = DelayedSingleton<AppMgrClient>::GetInstance();
@@ -8516,7 +8552,7 @@ void BundleDataMgr::KillDisabledBundleProcesses(
         APP_LOGE("AppMgrClient is nullptr, kill app process failed");
         return;
     }
-    for (const auto &[bundleName, userId, appIndex] : disabledBundles) {
+    for (const auto &[bundleName, userId, appIndex, deviceModeDistributionPolicy] : disabledBundles) {
         APP_LOGD("kill process, -n %{public}s -u %{public}d -i %{public}d", bundleName.c_str(), userId, appIndex);
         std::string identity = IPCSkeleton::ResetCallingIdentity();
         auto ret = appMgrClient->KillApplicationWithUserId(bundleName, userId, appIndex);
@@ -8524,7 +8560,8 @@ void BundleDataMgr::KillDisabledBundleProcesses(
         if (ret != ERR_OK) {
             APP_LOGE("kill app process failed for %{public}s", bundleName.c_str());
             EventReport::SendComponentStateSysEventForException(
-                bundleName, "", userId, false, appIndex, caller + "_kill_process_fail");
+                bundleName, "", userId, false, appIndex, caller + "_kill_process_fail",
+                deviceModeDistributionPolicy);
         }
     }
 }
@@ -18351,7 +18388,7 @@ ErrCode BundleDataMgr::AddDynamicShortcutInfos(const std::vector<ShortcutInfo> &
     commonEventMgr->NotifyDynamicShortcutChanged(
         bundleName, ids, userId, appIndex, SHORTCUT_OPERATION_CREATE);
     EventReport::SendDynamicShortcutEvent(
-        bundleName, userId, ids, SHORTCUT_OPERATION_CREATE, IPCSkeleton::GetCallingUid());
+        bundleName, userId, ids, SHORTCUT_OPERATION_CREATE, appIndex, IPCSkeleton::GetCallingUid());
     return ERR_OK;
 }
 
@@ -18400,7 +18437,7 @@ ErrCode BundleDataMgr::DeleteDynamicShortcutInfos(const std::string &bundleName,
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
     commonEventMgr->NotifyDynamicShortcutChanged(bundleName, ids, userId, appIndex, SHORTCUT_OPERATION_DELETE);
     EventReport::SendDynamicShortcutEvent(
-        bundleName, userId, ids, SHORTCUT_OPERATION_DELETE, IPCSkeleton::GetCallingUid());
+        bundleName, userId, ids, SHORTCUT_OPERATION_DELETE, appIndex, IPCSkeleton::GetCallingUid());
     return ERR_OK;
 }
 

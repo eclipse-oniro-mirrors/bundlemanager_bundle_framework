@@ -64,6 +64,7 @@ const char* EVENT_PARAM_BUNDLE_NAME = "BUNDLE_NAME";
 const char* EVENT_PARAM_ERROR_CODE = "ERROR_CODE";
 const char* EVENT_PARAM_ABILITY_NAME = "ABILITY_NAME";
 const char* EVENT_PARAM_TIME = "TIME";
+const char* EVENT_PARAM_TIME_STAMP = "TIME_STAMP";
 const char* EVENT_PARAM_VERSION = "VERSION";
 const char* EVENT_PARAM_SCENE = "SCENE";
 const char* EVENT_PARAM_CLEAN_TYPE = "CLEAN_TYPE";
@@ -71,10 +72,15 @@ const char* EVENT_PARAM_INSTALL_TYPE = "INSTALL_TYPE";
 const char* EVENT_PARAM_STATE = "STATE";
 const char* EVENT_PARAM_CALLING_BUNDLE_NAME = "CALLING_BUNDLE_NAME";
 const char* EVENT_PARAM_CALLING_UID = "CALLING_UID";
-const char* EVENT_PARAM_CALLING_APPID = "CALLING_APPID";
+const char* EVENT_PARAM_CALLING_APPID = "CALLING_APP_ID";
 const char* EVENT_PARAM_FINGERPRINT = "FINGERPRINT";
 const char* EVENT_PARAM_HIDE_DESKTOP_ICON = "HIDE_DESKTOP_ICON";
 const char* EVENT_PARAM_APP_DISTRIBUTION_TYPE = "APP_DISTRIBUTION_TYPE";
+const char* EVENT_PARAM_DEVICE_MODE_DISTRIBUTION_POLICY = "DEVICE_MODE_DISTRIBUTION_POLICY";
+// Dual-mode (PC/PAD) system mode at event time: 0=tablet, 1=2in1, -1=non-dual-mode device.
+// Together with DEVICE_MODE_DISTRIBUTION_POLICY / APP_INDEX (=10000 for the secondary clone
+// variant) it distinguishes the primary/secondary package body in install/uninstall/update events.
+const char* EVENT_PARAM_CURRENT_MODE = "CURRENT_MODE";
 const char* EVENT_PARAM_FILE_PATH = "FILE_PATH";
 const char* EVENT_PARAM_HASH_VALUE = "HASH_VALUE";
 const char* EVENT_PARAM_INSTALL_TIME = "INSTALL_TIME";
@@ -91,7 +97,7 @@ const char* EVENT_PARAM_APP_IDS = "APP_IDS";
 const char* EVENT_PARAM_CALLING_NAME = "CALLING_NAME";
 const char* EVENT_PARAM_OPERATION_TYPE = "OPERATION_TYPE";
 const char* EVENT_PARAM_ACTION_TYPE = "ACTION_TYPE";
-const char* EVENT_PARAM_RULE = "ACTION_RULE";
+const char* EVENT_PARAM_RULE = "RULE";
 const char* EVENT_PARAM_APP_INDEX = "APP_INDEX";
 const char* EVENT_PARAM_IS_PATCH = "IS_PATCH";
 const char* EVENT_PARAM_IS_DOWNGRADE = "IS_DOWNGRADE";
@@ -153,16 +159,16 @@ const char* REMOVE_END = "RemoveUserEnd";
 const char* CREATE_WITH_SKIP_PRE_INSTALL_START = "CreateUserWithSkipPreInstallStart";
 const char* CREATE_WITH_SKIP_PRE_INSTALL_END = "CreateUserWithSkipPreInstallEnd";
 // AOT
-const char* TOTAL_BUNDLE_NAMES = "totalBundleNames";
-const char* TOTAL_SIZE = "totalSize";
-const char* SUCCESS_SIZE = "successSize";
-const char* COST_TIME_SECONDS = "costTimeSeconds";
-const char* COMPILE_MODE = "compileMode";
-const char* COMPILE_RESULT = "compileResult";
-const char* FAILURE_REASON = "failureReason";
-const char* FILE_NAME = "fileName";
-const char* FREE_SIZE = "freeSize";
-const char* OPERATION_TYPE = "operationType";
+const char* TOTAL_BUNDLE_NAMES = "TOTAL_BUNDLE_NAMES";
+const char* TOTAL_SIZE = "TOTAL_SIZE";
+const char* SUCCESS_SIZE = "SUCCESS_SIZE";
+const char* COST_TIME_SECONDS = "COST_TIME_SECONDS";
+const char* COMPILE_MODE = "COMPILE_MODE";
+const char* COMPILE_RESULT = "COMPILE_RESULT";
+const char* FAILURE_REASON = "FAILURE_REASON";
+const char* FILE_NAME = "FILE_NAME";
+const char* FREE_SIZE = "FREE_SIZE";
+const char* OPERATION_TYPE = "OPERATION_TYPE";
 const char* DB_NAME = "dbName";
 const char* ERROR_CODE = "errorCode";
 const char* COMPONENT_NAME = "hisevent";
@@ -416,9 +422,11 @@ void InnerEventReport::InnerSendBundleInstallExceptionEvent(const EventInfo& eve
         EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
         EVENT_PARAM_VERSION, eventInfo.versionCode,
         EVENT_PARAM_INSTALL_TYPE, GetInstallType(eventInfo),
-        EVENT_PARAM_SCENE, std::to_string(eventInfo.callingUid),
+        EVENT_PARAM_SCENE, GetInstallScene(eventInfo),
         EVENT_PARAM_ERROR_CODE, eventInfo.errCode,
         EVENT_PARAM_APP_INDEX, eventInfo.appIndex,
+        EVENT_PARAM_CURRENT_MODE, eventInfo.currentMode,
+        EVENT_PARAM_DEVICE_MODE_DISTRIBUTION_POLICY, eventInfo.deviceModeDistributionPolicy,
         EVENT_PARAM_IS_PATCH, eventInfo.isPatch,
         EVENT_PARAM_HAS_HNP, eventInfo.hasHnp,
         EVENT_PARAM_CALLING_UID, eventInfo.callingUid,
@@ -442,9 +450,11 @@ void InnerEventReport::InnerSendBundleUninstallExceptionEvent(const EventInfo& e
         EVENT_PARAM_USERID, eventInfo.userId,
         EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
         EVENT_PARAM_VERSION, eventInfo.versionCode,
-        EVENT_PARAM_INSTALL_TYPE, std::to_string(eventInfo.callingUid),
+        EVENT_PARAM_INSTALL_TYPE, GetInstallType(eventInfo),
         EVENT_PARAM_ERROR_CODE, eventInfo.errCode,
         EVENT_PARAM_APP_INDEX, eventInfo.appIndex,
+        EVENT_PARAM_CURRENT_MODE, eventInfo.currentMode,
+        EVENT_PARAM_DEVICE_MODE_DISTRIBUTION_POLICY, eventInfo.deviceModeDistributionPolicy,
         EVENT_PARAM_CALLING_UID, eventInfo.callingUid,
         EVENT_PARAM_CALLING_BUNDLE_NAME, eventInfo.callingBundleName,
         EVENT_PARAM_IS_INTERCEPTED, eventInfo.isIntercepted,
@@ -462,8 +472,11 @@ void InnerEventReport::InnerSendBundleUpdateExceptionEvent(const EventInfo& even
         EVENT_PARAM_USERID, eventInfo.userId,
         EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
         EVENT_PARAM_VERSION, eventInfo.versionCode,
-        EVENT_PARAM_INSTALL_TYPE, std::to_string(eventInfo.callingUid),
+        EVENT_PARAM_INSTALL_TYPE, GetInstallType(eventInfo),
         EVENT_PARAM_ERROR_CODE, eventInfo.errCode,
+        EVENT_PARAM_APP_INDEX, eventInfo.appIndex,
+        EVENT_PARAM_CURRENT_MODE, eventInfo.currentMode,
+        EVENT_PARAM_DEVICE_MODE_DISTRIBUTION_POLICY, eventInfo.deviceModeDistributionPolicy,
         EVENT_PARAM_IS_PATCH, eventInfo.isPatch,
         EVENT_PARAM_IS_DOWNGRADE, eventInfo.isDowngrade,
         EVENT_PARAM_HAS_HNP, eventInfo.hasHnp,
@@ -487,6 +500,9 @@ void InnerEventReport::InnerSendPreBundleRecoverExceptionEvent(const EventInfo& 
         EVENT_PARAM_VERSION, eventInfo.versionCode,
         EVENT_PARAM_INSTALL_TYPE, PRE_BUNDLE_INSTALL_TYPE,
         EVENT_PARAM_ERROR_CODE, eventInfo.errCode,
+        EVENT_PARAM_APP_INDEX, eventInfo.appIndex,
+        EVENT_PARAM_CURRENT_MODE, eventInfo.currentMode,
+        EVENT_PARAM_DEVICE_MODE_DISTRIBUTION_POLICY, eventInfo.deviceModeDistributionPolicy,
         EVENT_PARAM_CALLING_UID, eventInfo.callingUid,
         EVENT_PARAM_CALLING_BUNDLE_NAME, eventInfo.callingBundleName,
         EVENT_PARAM_IS_INTERCEPTED, eventInfo.isIntercepted);
@@ -504,8 +520,10 @@ void InnerEventReport::InnerSendBundleStateChangeExceptionEvent(const EventInfo&
         EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
         EVENT_PARAM_ABILITY_NAME, eventInfo.abilityName,
         TYPE, type,
-        EVENT_PARAM_CALLING_BUNDLE_NAME, eventInfo.callingBundleName,
-        EVENT_PARAM_APP_INDEX, eventInfo.appIndex);
+        EVENT_PARAM_APP_INDEX, eventInfo.appIndex,
+        EVENT_PARAM_CURRENT_MODE, eventInfo.currentMode,
+        EVENT_PARAM_DEVICE_MODE_DISTRIBUTION_POLICY, eventInfo.deviceModeDistributionPolicy,
+        EVENT_PARAM_CALLING_BUNDLE_NAME, eventInfo.callingBundleName);
 }
 
 void InnerEventReport::InnerSendBundleCleanCacheExceptionEvent(const EventInfo& eventInfo)
@@ -519,6 +537,8 @@ void InnerEventReport::InnerSendBundleCleanCacheExceptionEvent(const EventInfo& 
         EVENT_PARAM_USERID, eventInfo.userId,
         EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
         EVENT_PARAM_CLEAN_TYPE, cleanType,
+        EVENT_PARAM_APP_INDEX, eventInfo.appIndex,
+        EVENT_PARAM_CURRENT_MODE, eventInfo.currentMode,
         EVENT_PARAM_CALLING_UID, eventInfo.callingUid,
         EVENT_PARAM_CALLING_BUNDLE_NAME, eventInfo.callingBundleName);
 }
@@ -554,6 +574,7 @@ void InnerEventReport::InnerSendBundleInstallEvent(const EventInfo& eventInfo)
         EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
         EVENT_PARAM_VERSION, eventInfo.versionCode,
         EVENT_PARAM_APP_DISTRIBUTION_TYPE, eventInfo.appDistributionType,
+        EVENT_PARAM_DEVICE_MODE_DISTRIBUTION_POLICY, eventInfo.deviceModeDistributionPolicy,
         EVENT_PARAM_INSTALL_TIME, eventInfo.timeStamp,
         EVENT_PARAM_START_TIME, eventInfo.startTime,
         EVENT_PARAM_END_TIME, eventInfo.endTime,
@@ -567,6 +588,7 @@ void InnerEventReport::InnerSendBundleInstallEvent(const EventInfo& eventInfo)
         EVENT_PARAM_INSTALL_TYPE, GetInstallType(eventInfo),
         EVENT_PARAM_SCENE, GetInstallScene(eventInfo),
         EVENT_PARAM_APP_INDEX, eventInfo.appIndex,
+        EVENT_PARAM_CURRENT_MODE, eventInfo.currentMode,
         EVENT_PARAM_IS_PATCH, eventInfo.isPatch,
         EVENT_PARAM_HAS_HNP, eventInfo.hasHnp,
         EVENT_PARAM_MIN_API_VERSION, eventInfo.minAPIVersion,
@@ -597,6 +619,8 @@ void InnerEventReport::InnerSendBundleUninstallEvent(const EventInfo& eventInfo)
         EVENT_PARAM_CALLING_BUNDLE_NAME, eventInfo.callingBundleName,
         EVENT_PARAM_INSTALL_TYPE, GetInstallType(eventInfo),
         EVENT_PARAM_APP_INDEX, eventInfo.appIndex,
+        EVENT_PARAM_CURRENT_MODE, eventInfo.currentMode,
+        EVENT_PARAM_DEVICE_MODE_DISTRIBUTION_POLICY, eventInfo.deviceModeDistributionPolicy,
         EVENT_PARAM_IS_KEEPDATA, eventInfo.isKeepData,
         EVENT_PARAM_START_TIME, eventInfo.startTime,
         EVENT_PARAM_END_TIME, eventInfo.endTime,
@@ -617,6 +641,7 @@ void InnerEventReport::InnerSendBundleUpdateEvent(const EventInfo& eventInfo)
         EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
         EVENT_PARAM_VERSION, eventInfo.versionCode,
         EVENT_PARAM_APP_DISTRIBUTION_TYPE, eventInfo.appDistributionType,
+        EVENT_PARAM_DEVICE_MODE_DISTRIBUTION_POLICY, eventInfo.deviceModeDistributionPolicy,
         EVENT_PARAM_INSTALL_TIME, eventInfo.timeStamp,
         EVENT_PARAM_START_TIME, eventInfo.startTime,
         EVENT_PARAM_END_TIME, eventInfo.endTime,
@@ -628,6 +653,8 @@ void InnerEventReport::InnerSendBundleUpdateEvent(const EventInfo& eventInfo)
         EVENT_PARAM_FINGERPRINT, eventInfo.fingerprint,
         EVENT_PARAM_HIDE_DESKTOP_ICON, eventInfo.hideDesktopIcon,
         EVENT_PARAM_INSTALL_TYPE, GetInstallType(eventInfo),
+        EVENT_PARAM_APP_INDEX, eventInfo.appIndex,
+        EVENT_PARAM_CURRENT_MODE, eventInfo.currentMode,
         EVENT_PARAM_IS_PATCH, eventInfo.isPatch,
         EVENT_PARAM_IS_DOWNGRADE, eventInfo.isDowngrade,
         EVENT_PARAM_HAS_HNP, eventInfo.hasHnp,
@@ -657,6 +684,9 @@ void InnerEventReport::InnerSendPreBundleRecoverEvent(const EventInfo& eventInfo
         EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
         EVENT_PARAM_VERSION, eventInfo.versionCode,
         EVENT_PARAM_APP_DISTRIBUTION_TYPE, eventInfo.appDistributionType,
+        EVENT_PARAM_APP_INDEX, eventInfo.appIndex,
+        EVENT_PARAM_CURRENT_MODE, eventInfo.currentMode,
+        EVENT_PARAM_DEVICE_MODE_DISTRIBUTION_POLICY, eventInfo.deviceModeDistributionPolicy,
         EVENT_PARAM_INSTALL_TIME, eventInfo.timeStamp,
         EVENT_PARAM_START_TIME, eventInfo.startTime,
         EVENT_PARAM_END_TIME, eventInfo.endTime,
@@ -682,8 +712,10 @@ void InnerEventReport::InnerSendBundleStateChangeEvent(const EventInfo& eventInf
         EVENT_PARAM_ABILITY_NAME, eventInfo.abilityName,
         TYPE, type,
         EVENT_PARAM_STATE, state,
-        EVENT_PARAM_CALLING_BUNDLE_NAME, eventInfo.callingBundleName,
-        EVENT_PARAM_APP_INDEX, eventInfo.appIndex);
+        EVENT_PARAM_APP_INDEX, eventInfo.appIndex,
+        EVENT_PARAM_CURRENT_MODE, eventInfo.currentMode,
+        EVENT_PARAM_DEVICE_MODE_DISTRIBUTION_POLICY, eventInfo.deviceModeDistributionPolicy,
+        EVENT_PARAM_CALLING_BUNDLE_NAME, eventInfo.callingBundleName);
 }
 
 void InnerEventReport::InnerSendBundleCleanCacheEvent(const EventInfo& eventInfo)
@@ -697,6 +729,8 @@ void InnerEventReport::InnerSendBundleCleanCacheEvent(const EventInfo& eventInfo
         EVENT_PARAM_USERID, eventInfo.userId,
         EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
         EVENT_PARAM_CLEAN_TYPE, cleanType,
+        EVENT_PARAM_APP_INDEX, eventInfo.appIndex,
+        EVENT_PARAM_CURRENT_MODE, eventInfo.currentMode,
         EVENT_PARAM_CALLING_UID, eventInfo.callingUid,
         EVENT_PARAM_CALLING_BUNDLE_NAME, eventInfo.callingBundleName);
 }
@@ -747,7 +781,7 @@ void InnerEventReport::InnerSendAOTSummaryEvent(const EventInfo& eventInfo)
         TOTAL_SIZE, eventInfo.totalBundleNames.size(),
         SUCCESS_SIZE, eventInfo.successCnt,
         COST_TIME_SECONDS, eventInfo.costTimeSeconds,
-        EVENT_PARAM_TIME, eventInfo.timeStamp);
+        EVENT_PARAM_TIME_STAMP, eventInfo.timeStamp);
 }
 
 void InnerEventReport::InnerSendAOTRecordEvent(const EventInfo& eventInfo)
@@ -760,7 +794,7 @@ void InnerEventReport::InnerSendAOTRecordEvent(const EventInfo& eventInfo)
         FAILURE_REASON, eventInfo.failureReason,
         COST_TIME_SECONDS, eventInfo.costTimeSeconds,
         COMPILE_MODE, eventInfo.compileMode,
-        EVENT_PARAM_TIME, eventInfo.timeStamp);
+        EVENT_PARAM_TIME_STAMP, eventInfo.timeStamp);
 }
 
 void InnerEventReport::InnerSendQueryOfContinueTypeEvent(const EventInfo& eventInfo)
@@ -784,7 +818,7 @@ void InnerEventReport::InnerSendFreeInstallEvent(const EventInfo& eventInfo)
         EVENT_PARAM_ABILITY_NAME, eventInfo.abilityName,
         EVENT_PARAM_MODULE_NAME, eventInfo.moduleName,
         EVENT_PARAM_IS_FREE_INSTALL, eventInfo.isFreeInstall,
-        EVENT_PARAM_TIME, eventInfo.timeStamp);
+        EVENT_PARAM_TIME_STAMP, eventInfo.timeStamp);
 }
 
 void InnerEventReport::InnerSendBmsDiskSpaceEvent(const EventInfo& eventInfo)
@@ -810,7 +844,8 @@ void InnerEventReport::InnerSendAppControlRule(const EventInfo& eventInfo)
         EVENT_PARAM_OPERATION_TYPE, eventInfo.operationType,
         EVENT_PARAM_ACTION_TYPE, eventInfo.actionType,
         EVENT_PARAM_RULE, eventInfo.rule,
-        EVENT_PARAM_APP_INDEX, eventInfo.appIndex);
+        EVENT_PARAM_APP_INDEX, eventInfo.appIndex,
+        EVENT_PARAM_CURRENT_MODE, eventInfo.currentMode);
 }
 
 void InnerEventReport::InnerSendDbErrorEvent(const EventInfo& eventInfo)
@@ -833,7 +868,8 @@ void InnerEventReport::InnerSendDefaultAppEvent(const EventInfo& eventInfo)
         EVENT_PARAM_ACTION_TYPE, eventInfo.actionType,
         EVENT_PARAM_WANT, eventInfo.want,
         EVENT_PARAM_UTD, eventInfo.utd,
-        EVENT_PARAM_APP_INDEX, eventInfo.appIndex);
+        EVENT_PARAM_APP_INDEX, eventInfo.appIndex,
+        EVENT_PARAM_CURRENT_MODE, eventInfo.currentMode);
 }
 
 void InnerEventReport::InnerSendLargeFilesMonitorEvent(const EventInfo& eventInfo)
@@ -920,6 +956,7 @@ void InnerEventReport::InnerSendDynamicShortcutEvent(const EventInfo& eventInfo)
         EVENT_SHORTCUT_ID, eventInfo.shortcutIds,
         EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
         EVENT_OP_TYPE, eventInfo.shortcutOperationType,
+        EVENT_PARAM_APP_INDEX, eventInfo.appIndex,
         EVENT_PARAM_CALLING_UID, eventInfo.callingUid);
 }
 

@@ -20,6 +20,7 @@
 #include "app_log_wrapper.h"
 #include "bundle_util.h"
 #include "bundle_file_util.h"
+#include "dual_mode_helper.h"
 #include "security_audit_reporter.h"
 #ifdef HISYSEVENT_ENABLE
 #include "inner_event_report.h"
@@ -58,6 +59,16 @@ const std::set<int32_t> INTERCEPTED_ERROR_CODE_SET = {
     ERR_APPEXECFWK_INSTALL_EXISTED_ENTERPRISE_BUNDLE_NOT_ALLOWED
 };
 constexpr const char* PARTITION_NAME = "/data";
+
+// Dual-mode fields for non-lifecycle events: CURRENT_MODE (-1 on non-dual-mode devices) marks
+// the device mode the event happened in; DEVICE_MODE_DISTRIBUTION_POLICY is resolved by the
+// caller from the installed record (kept at the original bundle name for both package bodies).
+void FillCurrentModeField(EventInfo &eventInfo)
+{
+    if (DualModeHelper::IsDualModeDevice()) {
+        eventInfo.currentMode = DualModeHelper::GetSysMode();
+    }
+}
 }
 
 void EventReport::SendBundleSystemEvent(BundleEventType bundleEventType, const EventInfo& eventInfo)
@@ -121,7 +132,8 @@ void EventReport::SendUserSysEvent(UserEventType userEventType, int32_t userId)
 }
 
 void EventReport::SendComponentStateSysEventForException(const std::string &bundleName, const std::string &abilityName,
-    int32_t userId, bool isEnable, int32_t appIndex, const std::string &caller)
+    int32_t userId, bool isEnable, int32_t appIndex, const std::string &caller,
+    int32_t deviceModeDistributionPolicy)
 {
     EventInfo eventInfo;
     eventInfo.bundleName = bundleName;
@@ -130,13 +142,16 @@ void EventReport::SendComponentStateSysEventForException(const std::string &bund
     eventInfo.isEnable = isEnable;
     eventInfo.appIndex = appIndex;
     eventInfo.callingBundleName = caller;
+    eventInfo.deviceModeDistributionPolicy = deviceModeDistributionPolicy;
+    FillCurrentModeField(eventInfo);
     BMSEventType bmsEventType = BMSEventType::BUNDLE_STATE_CHANGE_EXCEPTION;
 
     EventReport::SendSystemEvent(bmsEventType, eventInfo);
 }
 
 void EventReport::SendComponentStateSysEvent(const std::string &bundleName, const std::string &abilityName,
-    int32_t userId, bool isEnable, int32_t appIndex, const std::string &caller)
+    int32_t userId, bool isEnable, int32_t appIndex, const std::string &caller,
+    int32_t deviceModeDistributionPolicy)
 {
     EventInfo eventInfo;
     eventInfo.bundleName = bundleName;
@@ -145,6 +160,8 @@ void EventReport::SendComponentStateSysEvent(const std::string &bundleName, cons
     eventInfo.isEnable = isEnable;
     eventInfo.appIndex = appIndex;
     eventInfo.callingBundleName = caller;
+    eventInfo.deviceModeDistributionPolicy = deviceModeDistributionPolicy;
+    FillCurrentModeField(eventInfo);
     BMSEventType bmsEventType = BMSEventType::BUNDLE_STATE_CHANGE;
 
     EventReport::SendSystemEvent(bmsEventType, eventInfo);
@@ -160,6 +177,7 @@ void EventReport::SendCleanCacheSysEvent(
     eventInfo.isCleanCache = isCleanCache;
     eventInfo.callingUid = callingUid;
     eventInfo.callingBundleName = callingBundleName;
+    FillCurrentModeField(eventInfo);
     BMSEventType bmsEventType;
     if (exception) {
         bmsEventType = BMSEventType::BUNDLE_CLEAN_CACHE_EXCEPTION;
@@ -181,6 +199,7 @@ void EventReport::SendCleanCacheSysEventWithIndex(
     eventInfo.isCleanCache = isCleanCache;
     eventInfo.callingUid = callingUid;
     eventInfo.callingBundleName = callingBundleName;
+    FillCurrentModeField(eventInfo);
     BMSEventType bmsEventType;
     if (exception) {
         bmsEventType = BMSEventType::BUNDLE_CLEAN_CACHE_EXCEPTION;
@@ -236,7 +255,9 @@ void EventReport::SendDiskSpaceEvent(const std::string &fileName,
 
 void EventReport::SendAppControlRuleEvent(const EventInfo& eventInfo)
 {
-    EventReport::SendSystemEvent(BMSEventType::APP_CONTROL_RULE, eventInfo);
+    EventInfo info = eventInfo;
+    FillCurrentModeField(info);
+    EventReport::SendSystemEvent(BMSEventType::APP_CONTROL_RULE, info);
 }
 
 void EventReport::SendDbErrorEvent(const std::string &dbName, int32_t operationType, int32_t errorCode)
@@ -259,15 +280,18 @@ void EventReport::SendDefaultAppEvent(DefaultAppActionType actionType, int32_t u
     eventInfo.want = want;
     eventInfo.utd = utd;
     eventInfo.appIndex = appIndex;
+    FillCurrentModeField(eventInfo);
     EventReport::SendSystemEvent(BMSEventType::DEFAULT_APP, eventInfo);
 }
 
 void EventReport::SendDynamicShortcutEvent(const std::string &bundleName,
-    int32_t userId, const std::vector<std::string> &shortcutIds, const std::string &operationType, int32_t callingUid)
+    int32_t userId, const std::vector<std::string> &shortcutIds, const std::string &operationType, int32_t appIndex,
+    int32_t callingUid)
 {
     EventInfo eventInfo;
     eventInfo.bundleName = bundleName;
     eventInfo.userId = userId;
+    eventInfo.appIndex = appIndex;
     std::ostringstream oss;
     for (size_t i = 0; i < shortcutIds.size(); ++i) {
         if (i != 0) {
