@@ -80,6 +80,9 @@ public:
     void SetCallingUid(int32_t callingUid);
     void SetCallingTokenId(const Security::AccessToken::AccessTokenID callerToken);
 
+    static ErrCode InstallNormalAppControl(const std::string& installAppId, const std::string& appIdentifier,
+        int32_t userId, bool isPreInstallApp = false);
+
 protected:
     bool otaInstall_ = false;
     enum class InstallerState : uint8_t {
@@ -631,9 +634,6 @@ private:
 
     bool UninstallAppControl(const std::string &appId, const std::string &appIdentifier, int32_t userId);
 
-    ErrCode InstallNormalAppControl(const std::string &installAppId,
-        const std::string &appIdentifier, int32_t userId, bool isPreInstallApp = false);
-
     ErrCode CreateBundleCodeDir(InnerBundleInfo &info) const;
     ErrCode CreateBundleDataDir(InnerBundleInfo &info) const;
     void RefreshBundleDirsAfterUidChange(const InnerBundleInfo &info,
@@ -1177,7 +1177,7 @@ private:
     void RollbackHnpInstall(const std::string &bundleName, const std::unordered_set<int32_t> &userIds);
     void VerifyDelayedAging(InnerBundleInfo &bundleInfo, int32_t uid);
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
-    ErrCode CheckInstallPermission(const std::string &appId, const std::string &appIdentifier,
+    static ErrCode CheckInstallPermission(const std::string &appId, const std::string &appIdentifier,
         const std::vector<std::string> &allowedAppIds, const std::vector<std::string> &disallowedAppIds);
 #endif
     ErrCode ProcessPluginFilesWhenUpdate(const InnerBundleInfo &oldInfo,

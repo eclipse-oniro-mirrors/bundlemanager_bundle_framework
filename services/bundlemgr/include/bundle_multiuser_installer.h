@@ -45,6 +45,9 @@ public:
 
     void ResetInstallProperties();
 private:
+    static ErrCode CheckInstallExistedEdmPolicy(const InnerBundleInfo &info, int32_t userId,
+        bool isEnterpriseType, bool isEdmCalling, bool hasInstallBundle);
+
     // SPM facade session; inert under SPM OFF (session id 0)
     BundleSpmManager::InstallSession spmSession_;
     ErrCode CreateDataDir(

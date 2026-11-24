@@ -119,6 +119,27 @@ ErrCode BundleMultiUserInstaller::InstallExistedApp(const std::string &bundleNam
     return result;
 }
 
+ErrCode BundleMultiUserInstaller::CheckInstallExistedEdmPolicy(
+    const InnerBundleInfo &info, int32_t userId, bool isEnterpriseType, bool isEdmCalling, bool hasInstallBundle)
+{
+    if (isEnterpriseType) {
+        if (isEdmCalling) {
+            return BaseBundleInstaller::InstallNormalAppControl(info.GetAppId(), info.GetAppIdentifier(), userId);
+        } else {
+            APP_LOGE("the origin application is enterprise, not allow to install here");
+            return ERR_APPEXECFWK_INSTALL_EXISTED_ENTERPRISE_BUNDLE_NOT_ALLOWED;
+        }
+    } else {
+        if (isEdmCalling && !hasInstallBundle) {
+            APP_LOGE("edm calling only allow enterprise distribution type, bundle: %{public}s type: %{public}s",
+                info.GetBundleName().c_str(), info.GetAppDistributionType().c_str());
+            return ERR_APPEXECFWK_PERMISSION_DENIED;
+        } else {
+            return ERR_OK;
+        }
+    }
+}
+
 ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundleName, const int32_t userId,
     bool isEdmCalling, bool hasInstallBundle)
 {
@@ -198,17 +219,10 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
     const bool isEnterpriseType = appDistributionType_ == Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE ||
                                   appDistributionType_ == Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_NORMAL ||
                                   appDistributionType_ == Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_MDM;
-    if (isEnterpriseType) {
-        if (!isEdmCalling) {
-            APP_LOGE("the origin application is enterprise, not allow to install here");
-            return ERR_APPEXECFWK_INSTALL_EXISTED_ENTERPRISE_BUNDLE_NOT_ALLOWED;
-        }
-    } else {
-        if (isEdmCalling && !hasInstallBundle) {
-            APP_LOGE("edm calling only allow enterprise distribution type, bundle: %{public}s type: %{public}s",
-                bundleName.c_str(), appDistributionType_.c_str());
-            return ERR_APPEXECFWK_PERMISSION_DENIED;
-        }
+    const ErrCode policyResult =
+        CheckInstallExistedEdmPolicy(info, userId, isEnterpriseType, isEdmCalling, hasInstallBundle);
+    if (policyResult != ERR_OK) {
+        return policyResult;
     }
 
     if (!BundleInstallChecker::CheckSpaceIsolation(userId, info)) {

@@ -21,7 +21,16 @@
 
 #define private public
 #include "bundle_multiuser_installer.h"
+#ifdef BUNDLE_FRAMEWORK_APP_CONTROL
+#include "app_control_manager.h"
+#endif
 #undef private
+
+#ifdef BUNDLE_FRAMEWORK_APP_CONTROL
+#include "app_control_constants.h"
+#include "app_control_manager_rdb.h"
+#include "scope_guard.h"
+#endif
 
 #include "accesstoken_kit.h"
 #include "bundle_constants.h"
@@ -38,9 +47,30 @@ void ResetCallingUid();
 
 namespace {
 constexpr int32_t TEST_USER_ID = Constants::START_USERID;
+constexpr int32_t TEST_POLICY_USER_ID = TEST_USER_ID + 1;
 constexpr uint64_t TEST_SPM_TOKEN_ID = 101;
 constexpr int32_t TEST_SPM_UID = TEST_USER_ID * Constants::BASE_USER_RANGE + 102;
 const std::string BUNDLE_NAME_PREFIX = "com.example.edm.installexisted.";
+
+#ifdef BUNDLE_FRAMEWORK_APP_CONTROL
+class TestInstallControlRdb final : public AppControlManagerRdb {
+public:
+    ErrCode GetAppInstallControlRule(const std::string &callingName, const std::string &controlRuleType,
+        int32_t userId, std::vector<std::string> &appIds) override
+    {
+        EXPECT_EQ(callingName, AppControlConstants::EDM_CALLING);
+        EXPECT_EQ(userId, TEST_POLICY_USER_ID);
+        if (controlRuleType == AppControlConstants::APP_DISALLOWED_INSTALL) {
+            appIds = disallowedAppIds;
+        }
+        return controlRuleType == failedRuleType ? queryResult : ERR_OK;
+    }
+
+    std::vector<std::string> disallowedAppIds;
+    std::string failedRuleType;
+    ErrCode queryResult = ERR_OK;
+};
+#endif
 } // namespace
 
 class BmsBundleMultiuserInstallEdmTest : public testing::Test {
@@ -114,6 +144,72 @@ protected:
         }
     }
 };
+
+/**
+ * @tc.number: CheckInstallExistedEdmPolicy_CallerMatrix_0100
+ * @tc.name: Check enterprise and non-enterprise caller requirements
+ * @tc.desc: Enterprise types require EDM, and non-enterprise types require INSTALL_BUNDLE from EDM.
+ */
+HWTEST_F(BmsBundleMultiuserInstallEdmTest, CheckInstallExistedEdmPolicy_CallerMatrix_0100,
+    Function | SmallTest | Level0)
+{
+    const InnerBundleInfo info;
+    for (bool hasInstallBundle : {true, false}) {
+        EXPECT_EQ(BundleMultiUserInstaller::CheckInstallExistedEdmPolicy(
+            info, TEST_POLICY_USER_ID, true, false, hasInstallBundle),
+            ERR_APPEXECFWK_INSTALL_EXISTED_ENTERPRISE_BUNDLE_NOT_ALLOWED) << hasInstallBundle;
+        EXPECT_EQ(BundleMultiUserInstaller::CheckInstallExistedEdmPolicy(
+            info, TEST_POLICY_USER_ID, false, false, hasInstallBundle), ERR_OK) << hasInstallBundle;
+    }
+    EXPECT_EQ(BundleMultiUserInstaller::CheckInstallExistedEdmPolicy(
+        info, TEST_POLICY_USER_ID, false, true, true), ERR_OK);
+    EXPECT_EQ(BundleMultiUserInstaller::CheckInstallExistedEdmPolicy(
+        info, TEST_POLICY_USER_ID, false, true, false), ERR_APPEXECFWK_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: CheckInstallExistedEdmPolicy_AppControl_0100
+ * @tc.name: Both EDM authorization paths check the target user's install policy
+ * @tc.desc: Enterprise calls can proceed without rules and propagate app control errors when enabled.
+ */
+HWTEST_F(BmsBundleMultiuserInstallEdmTest, CheckInstallExistedEdmPolicy_AppControl_0100,
+    Function | SmallTest | Level0)
+{
+    InnerBundleInfo info;
+#ifdef BUNDLE_FRAMEWORK_APP_CONTROL
+    BundleInfo bundleInfo;
+    bundleInfo.appId = BUNDLE_NAME_PREFIX + "policy_testSignature";
+    info.SetBaseBundleInfo(bundleInfo);
+
+    auto appControl = DelayedSingleton<AppControlManager>::GetInstance();
+    auto originalRdb = appControl->appControlManagerDb_;
+    auto testRdb = std::make_shared<TestInstallControlRdb>();
+    appControl->appControlManagerDb_ = testRdb;
+    ScopeGuard restoreRdb([&] { appControl->appControlManagerDb_ = originalRdb; });
+#endif
+
+    for (bool hasInstallBundle : {true, false}) {
+        EXPECT_EQ(BundleMultiUserInstaller::CheckInstallExistedEdmPolicy(
+            info, TEST_POLICY_USER_ID, true, true, hasInstallBundle), ERR_OK) << hasInstallBundle;
+    }
+#ifdef BUNDLE_FRAMEWORK_APP_CONTROL
+    testRdb->disallowedAppIds = {bundleInfo.appId};
+    for (bool hasInstallBundle : {true, false}) {
+        EXPECT_EQ(BundleMultiUserInstaller::CheckInstallExistedEdmPolicy(
+            info, TEST_POLICY_USER_ID, true, true, hasInstallBundle), ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_INSTALL)
+            << hasInstallBundle;
+    }
+    testRdb->failedRuleType = AppControlConstants::APP_ALLOWED_INSTALL;
+    testRdb->queryResult = ERR_APPEXECFWK_DB_RESULT_SET_EMPTY;
+    EXPECT_EQ(BundleMultiUserInstaller::CheckInstallExistedEdmPolicy(
+        info, TEST_POLICY_USER_ID, true, true, true), ERR_APPEXECFWK_DB_RESULT_SET_EMPTY);
+
+    testRdb->failedRuleType = AppControlConstants::APP_DISALLOWED_INSTALL;
+    testRdb->queryResult = ERR_APPEXECFWK_DB_RESULT_SET_OPT_ERROR;
+    EXPECT_EQ(BundleMultiUserInstaller::CheckInstallExistedEdmPolicy(
+        info, TEST_POLICY_USER_ID, true, true, false), ERR_APPEXECFWK_DB_RESULT_SET_OPT_ERROR);
+#endif
+}
 
 /**
  * @tc.number: ProcessBundleInstall_NonEdmMatrix_0100
