@@ -229,6 +229,7 @@ constexpr const char* DEDUPLICATEHAR_NOTE =
 constexpr const char* TYPE_PUBLIC = "public";
 constexpr const char* TYPE_PRIVATE = "private";
 constexpr const char* USER_DATA_DIR = "/data";
+constexpr double MIN_FREE_INODE_PERCENT = 0.005; // 0.5%
 constexpr const char* MODULE_NAME_IS_LIBS = "libs";
 constexpr const char* MODULE_DIR_IS_LIBS = "/libs";
 
@@ -261,19 +262,26 @@ std::string BuildTempNativeLibraryPath(const std::string &nativeLibraryPath)
     return prefixPath + ServiceConstants::TMP_SUFFIX + suffixPath;
 }
 
-void PrintDataStat()
+bool CheckSystemInodeSatisfied(const std::string &bundleName)
 {
+    std::string appGalleryName = OHOS::system::GetParameter(ServiceConstants::CLOUD_SHADER_OWNER, "");
+    if (appGalleryName.empty() || appGalleryName != bundleName) {
+        return true;
+    }
     struct statfs stat;
     if (statfs(USER_DATA_DIR, &stat) != 0) {
         LOG_E(BMS_TAG_INSTALLER, "statfs failed for %{public}s, error %{public}d",
             USER_DATA_DIR, errno);
-        return;
+        return false;
     }
-    // Calculate required inodes with 1.2x safety factor (configurable)
-    LOG_D(BMS_TAG_INSTALLER,
-        "systemAvailable=%{public}llu, systemTotal=%{public}llu",
-        static_cast<unsigned long long>(stat.f_ffree),
-        static_cast<unsigned long long>(stat.f_files));
+    uint32_t minFreeInodeNum = static_cast<uint32_t>(stat.f_files * MIN_FREE_INODE_PERCENT);
+    if (stat.f_ffree < minFreeInodeNum) {
+        LOG_E(BMS_TAG_INSTALLER, "free inodes not satisfied");
+        return false;
+    }
+    LOG_D(BMS_TAG_INSTALLER, "total inodes: %{public}llu, free inodes: %{public}llu",
+        static_cast<unsigned long long>(stat.f_files), static_cast<unsigned long long>(stat.f_ffree));
+    return BundleUtil::CheckOrphanNodeUseRateIsSufficient();
 }
 } // namespace
 
@@ -1941,6 +1949,10 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
         return ERR_APPEXECFWK_INSTALL_BOPD_MODE_DISABLED;
     }
 
+    if (!(installParam.isOTA || otaInstall_) && !newInfos.empty() &&
+        !CheckSystemInodeSatisfied(newInfos.begin()->second.GetBundleName())) {
+        return ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT;
+    }
     result = CheckArkTSMode(newInfos);
     CHECK_RESULT(result, "check arkTS mode failed %{public}d");
 
@@ -2142,10 +2154,6 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     // === DUAL_MODE END ===
     UpdateDeveloperIdAndOdid(newInfos, hapVerifyResults);
     sysEventInfo_.oldAppProvisionType = oldInfo.GetAppProvisionType();
-    if (!(installParam.isOTA || otaInstall_) && !newInfos.empty()) {
-        result = bundleInstallChecker_->CalculateInstallInodes(newInfos, !isAppExist_);
-        CHECK_RESULT(result, "check inode requirements failed %{public}d");
-    }
     bool oldAppHasKey = oldInfo.GetApplicationReservedFlag() &
         static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_KEY_EXISTED);
     ScopeGuard encrytedKeyGuard([&] { dataMgr_->UpdateAppEncryptedStatus(bundleName_, oldAppHasKey, 0, false); });
@@ -2160,7 +2168,6 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     ScopeGuard deleteDisposedRuleGuard([&] { (void)DeleteDisposedRuleWhenBundleUpdateEnd(oldInfo); });
     ScopeGuard codePathGuard([&] { RollbackCodePath(GetEffectiveBundleName(), isFeatureNeedUninstall_); });
     result = InnerProcessBundleInstall(newInfos, oldInfo, installParam, uid);
-    PrintDataStat();
     CHECK_RESULT_WITH_ROLLBACK(result, "internal processing failed with result %{public}d", newInfos, oldInfo);
     UpdateInstallerState(InstallerState::INSTALL_INFO_SAVED);                      // ---- 80%
 
@@ -2373,7 +2380,6 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
         }
     }
     CheckAddResultMsg(cacheInfo, isContainEntry_);
-    PrintDataStat();
     ProcessAOT(installParam);
     return result;
 }
