@@ -15,7 +15,6 @@
 
 #include "atm_recovery_record_decoder.h"
 
-#include <limits>
 #include <set>
 #include <utility>
 #include "bundle_constants.h"
@@ -74,9 +73,7 @@ bool ReadInteger(const Json &object, const char *key, T &number, bool required =
     if (it == object.end()) {
         return !required;
     }
-    // BMS's general numeric reader permits conversion; recovery identities must not truncate or wrap.
-    if (!it->is_number_integer() || (!it->is_number_unsigned() && it->get<int64_t>() < 0) ||
-        it->get<uint64_t>() > static_cast<uint64_t>(std::numeric_limits<T>::max())) {
+    if (!it->is_number_integer()) {
         return false;
     }
     number = it->get<T>();
@@ -153,7 +150,6 @@ bool ParseUsers(const Json &root, const AtmBundleRecoveryInfo &base, std::vector
         const auto userInfo = value.find(BUNDLE_USER_INFO);
         if (!ReadIdentity(value, info) || userInfo == value.end() || !userInfo->is_object() ||
             !ReadInteger(*userInfo, USER_ID, info.userId) ||
-            info.userId < Constants::DEFAULT_USERID ||
             user.key() != base.bundleName + Constants::FILE_UNDERLINE + std::to_string(info.userId) ||
             !identities.emplace(info.userId, info.appIndex).second) {
             return false;
@@ -223,6 +219,9 @@ Json ParseRecordJson(const std::string &value)
         return true;
     };
     auto root = Json::parse(value, callback, false);
+    if (root.is_discarded() || !root.is_object()) {
+        return false;
+    }
     if (duplicateKey) {
         return {};
     }
@@ -249,6 +248,9 @@ bool ParseUninstallRecord(const std::string &bundleName, const std::string &valu
 {
     infos.clear();
     auto record = nlohmann::json::parse(value, nullptr, false);
+    if (record.is_discarded() || !record.is_object()) {
+        return false;
+    }
     if (bundleName.empty() || !record.is_object()) {
         return false;
     }
@@ -264,19 +266,8 @@ bool ParseUninstallRecord(const std::string &bundleName, const std::string &valu
             infos.clear();
             return false;
         }
-        auto token = user.find(ACCESS_TOKEN_ID);
-        auto uid = user.find(UID);
-        if (token == user.end() || uid == user.end() || !token->is_number_integer() ||
-            (!token->is_number_unsigned() && token->get<int64_t>() < 0) ||
-            token->get<uint64_t>() > std::numeric_limits<uint32_t>::max() || !uid->is_number_integer() ||
-            (!uid->is_number_unsigned() && uid->get<int64_t>() < 0) ||
-            uid->get<uint64_t>() > std::numeric_limits<int32_t>::max()) {
+        if (!ReadIdentity(user, info)) {
             infos.clear();
-            return false;
-        }
-        info.accessTokenId = token->get<uint32_t>();
-        info.uid = uid->get<int32_t>();
-        if (!ReadInteger(user, ACCESS_TOKEN_ID_EX, info.accessTokenIdEx, false)) {
             return false;
         }
         infos.push_back(std::move(info));
