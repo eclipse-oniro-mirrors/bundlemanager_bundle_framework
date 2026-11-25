@@ -56,7 +56,7 @@ void BundleResourceObserver::OnConfigurationUpdated(const AppExecFwk::Configurat
     }
     std::string theme = configuration.GetItem(AAFwk::GlobalConfigurationKey::THEME);
     int32_t id = 0;
-    int32_t themeIcon = 0;
+    uint32_t themeIcon = 0;
     if (!theme.empty()) {
         std::string themeIconStr = configuration.GetItem(AAFwk::GlobalConfigurationKey::THEME_ICON);
         std::string themeId = configuration.GetItem(AAFwk::GlobalConfigurationKey::THEME_ID);
@@ -65,7 +65,7 @@ void BundleResourceObserver::OnConfigurationUpdated(const AppExecFwk::Configurat
         if (!OHOS::StrToInt(themeId, id)) {
             id = 0;
         }
-        if (!OHOS::StrToInt(themeIconStr, themeIcon)) {
+        if (!BundleUtil::StrToUint32(themeIconStr, themeIcon)) {
             themeIcon = 0;
         }
         type = (type == 0) ? static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_THEME_CHANGE) :
@@ -114,7 +114,7 @@ void BundleResourceObserver::OnSystemLanguageChange(const std::string &language,
 }
 
 void BundleResourceObserver::OnApplicationThemeChanged(const std::string &theme,
-    const int32_t themeId, const int32_t themeIcon, const uint32_t type)
+    const int32_t themeId, const uint32_t themeIcon, const uint32_t type)
 {
     int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
     if (currentUserId <= 0) {
@@ -131,7 +131,7 @@ void BundleResourceObserver::OnApplicationThemeChanged(const std::string &theme,
 }
 
 void BundleResourceObserver::ProcessResourceChangeByType(const std::string &language,
-    const std::string &theme, const int32_t id, const int32_t themeIcon, const uint32_t type)
+    const std::string &theme, const int32_t id, const uint32_t themeIcon, const uint32_t type)
 {
     switch (type) {
         case static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_LANGUE_CHANGE) : {

@@ -2599,7 +2599,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0111, Function | SmallTest
  * Function: BundleResourceManager
  * @tc.name: test BundleResourceManager
  * @tc.desc: 1. system running normally
- *           2. test OnApplicationThemeChanged
+ *           2. test OnApplicationThemeChanged, theme is empty no need to change
  */
 HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0112, Function | SmallTest | Level0)
 {
@@ -2613,7 +2613,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0112, Function | SmallTest
  * Function: BundleResourceManager
  * @tc.name: test BundleResourceManager
  * @tc.desc: 1. system running normally
- *           2. test OnApplicationThemeChanged
+ *           2. test OnApplicationThemeChanged, theme is invalid json no need to change
  */
 HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0113, Function | SmallTest | Level0)
 {
@@ -2627,19 +2627,19 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0113, Function | SmallTest
  * Function: BundleResourceManager
  * @tc.name: test BundleResourceManager
  * @tc.desc: 1. system running normally
- *           2. test OnApplicationThemeChanged
+ *           2. test OnApplicationThemeChanged, themeIcon is 0 no need to change
  */
 HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0114, Function | SmallTest | Level0)
 {
     BundleResourceCallback callback;
     nlohmann::json theme = R"(
         {
-            "icons": 0,
+            "icons": 1,
             "skin": 0,
             "font": 0
         }
     )"_json;
-    bool ans = callback.OnApplicationThemeChanged(theme.dump());
+    bool ans = callback.OnApplicationThemeChanged(theme.dump(), 1, 0);
     EXPECT_FALSE(ans);
 }
 
@@ -2648,7 +2648,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0114, Function | SmallTest
  * Function: BundleResourceManager
  * @tc.name: test BundleResourceManager
  * @tc.desc: 1. system running normally
- *           2. test OnApplicationThemeChanged
+ *           2. test OnApplicationThemeChanged, themeIcon more than 0 need to change
  */
 HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0115, Function | SmallTest | Level0)
 {
@@ -2660,7 +2660,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0115, Function | SmallTest
             "font": 0
         }
     )"_json;
-    bool ans = callback.OnApplicationThemeChanged(theme.dump());
+    bool ans = callback.OnApplicationThemeChanged(theme.dump(), 1, 1);
     EXPECT_TRUE(ans);
 }
 
@@ -2669,7 +2669,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0115, Function | SmallTest
  * Function: BundleResourceManager
  * @tc.name: test BundleResourceManager
  * @tc.desc: 1. system running normally
- *           2. test OnApplicationThemeChanged
+ *           2. test OnApplicationThemeChanged, themeIcon more than 0 need to change
  */
 HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0116, Function | SmallTest | Level0)
 {
@@ -2681,9 +2681,25 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0116, Function | SmallTest
             "font": 1
         }
     )"_json;
-    bool ans = callback.OnApplicationThemeChanged(theme.dump());
+    bool ans = callback.OnApplicationThemeChanged(theme.dump(), 1, 1);
     EXPECT_NO_THROW(BundleResourceRegister::RegisterConfigurationObserver());
     EXPECT_TRUE(ans);
+}
+
+/**
+ * @tc.number: OnApplicationThemeChanged_Uint32ThemeIcon
+ * Function: BundleResourceCallback
+ * @tc.name: test OnApplicationThemeChanged with uint32_t themeIcon
+ * @tc.desc: 1. system running normally
+ *           2. themeIcon is uint32_t, value larger than INT32_MAX also need to change
+ */
+HWTEST_F(BmsBundleResourceTest, OnApplicationThemeChanged_Uint32ThemeIcon, Function | SmallTest | Level0)
+{
+    BundleResourceCallback callback;
+    bool ans = callback.OnApplicationThemeChanged(R"({"icons":1})", 1, 0x80000001);
+    EXPECT_TRUE(ans);
+    bool ansZero = callback.OnApplicationThemeChanged(R"({"icons":1})", 1, 0);
+    EXPECT_FALSE(ansZero);
 }
 
 /**
@@ -3612,7 +3628,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0172, Function | SmallTest
 HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0173, Function | SmallTest | Level0)
 {
     int32_t themeId = 0;
-    int32_t themeIcon = 0;
+    uint32_t themeIcon = 0;
     BundleResourceCallback bundleResourceCallback;
     bool ret = bundleResourceCallback.SetThemeParamForThemeChanged(themeId, themeIcon);
     EXPECT_FALSE(ret);
@@ -9603,9 +9619,9 @@ HWTEST_F(BmsBundleResourceTest, ThemeTimestamp_NoRefreshPreservesRecord, TestSiz
     ASSERT_TRUE(manager->SaveThemeTimestamp(userId, 1234));
     BundleResourceCallback callback;
     const uint32_t type = static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_THEME_CHANGE);
-    EXPECT_FALSE(callback.OnApplicationThemeChanged("", 1, 1, type));
-    EXPECT_FALSE(callback.OnApplicationThemeChanged("invalid", 1, 1, type));
-    EXPECT_FALSE(callback.OnApplicationThemeChanged(R"({"icons":0})", 1, 1, type));
+    EXPECT_FALSE(callback.OnApplicationThemeChanged("", 1, 0, type));
+    EXPECT_FALSE(callback.OnApplicationThemeChanged("invalid", 1, 0, type));
+    EXPECT_FALSE(callback.OnApplicationThemeChanged(R"({"icons":0})", 1, 0, type));
     int64_t timestamp = 0;
     ASSERT_TRUE(manager->GetThemeTimestamp(userId, timestamp));
     EXPECT_EQ(timestamp, 1234);
@@ -9908,7 +9924,7 @@ HWTEST_F(BmsBundleResourceTest, ThemeTimestamp_ProcessingFailureDoesNotSave, Tes
     });
     service->dataMgr_.reset();
     BundleResourceCallback callback;
-    EXPECT_FALSE(callback.OnApplicationThemeChanged(R"({"icons":1})", -1, -1,
+    EXPECT_FALSE(callback.OnApplicationThemeChanged(R"({"icons":1})", -1, 1,
         static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_THEME_CHANGE)));
     service->dataMgr_ = dataMgr;
     int64_t timestamp = 0;
@@ -9968,7 +9984,7 @@ HWTEST_F(BmsBundleResourceTest, ThemeTimestamp_StorageFailureStillRefreshesAndNo
     const auto before = std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::system_clock::now().time_since_epoch()).count();
     BundleResourceCallback callback;
-    ASSERT_TRUE(callback.OnApplicationThemeChanged(R"({"icons":1})", -1, -1, 16));
+    ASSERT_TRUE(callback.OnApplicationThemeChanged(R"({"icons":1})", -1, 1, 16));
     const auto after = std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::system_clock::now().time_since_epoch()).count();
     CheckThemeFaultEvent(subscriber, before, after);
@@ -10014,7 +10030,7 @@ HWTEST_F(BmsBundleResourceTest, ThemeTimestamp_RefreshQueryAndOtherParamConcurre
     std::thread config([&] { CheckOtherParamUntilDone(param, otherKey, done, valid, configChecks); });
     BundleResourceCallback callback;
     for (int i = 0; i < 3; ++i) {
-        if (!callback.OnApplicationThemeChanged(R"({"icons":1})", -1, -1, 16)) valid = false;
+        if (!callback.OnApplicationThemeChanged(R"({"icons":1})", -1, 1, 16)) valid = false;
         usleep(200000);
     }
     done = true;
