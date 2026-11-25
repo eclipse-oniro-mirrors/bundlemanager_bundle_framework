@@ -13,15 +13,20 @@
  * limitations under the License.
  */
 #include <gtest/gtest.h>
+#include <atomic>
+#include <cstdint>
 #include <fstream>
 #include <memory>
+#include <mutex>
 #include <set>
 #include <thread>
+#include <vector>
 
 #include "ani_zlib_callback_info.h"
 #include "zip.h"
 #include "zip_reader.h"
 #include "zlib_callback_info.h"
+#include "../napi/class_gzip/gzip_entity.h"
 namespace OHOS {
 namespace AppExecFwk {
 namespace LIBZIP {
@@ -689,6 +694,457 @@ HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_GetOriginalSize_0400, Function | MediumTest 
     auto ret = GetOriginalSize(src, originalSize);
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_GT(originalSize, 0);
+}
+namespace {
+const std::string GZ_STRESS_PATH = "/data/test/zip_gzip_stress/";
+constexpr int32_t GZ_STRESS_ENTITY_NUM = 500;
+constexpr int32_t GZ_STRESS_WORKER_NUM = 16;
+constexpr int32_t GZ_STRESS_GC_THREAD_NUM = 4;
+constexpr int32_t GZ_STRESS_CHUNK_SIZE = 32 * 1024;
+constexpr int32_t GZ_STRESS_WRITE_ROUNDS = 64;
+constexpr int32_t GZ_STRESS_GC_BATCH = 20;
+constexpr int32_t GZ_STRESS_SMALL_ENTITY_NUM = 50;
+}  // namespace
+
+/**
+ * @tc.number: APPEXECFWK_LIBZIP_GZipEntity_GcDtorStress_0001
+ * @tc.name: GZipEntity_GcDtorStress_0001
+ * @tc.desc: Regression test for GZipEntity batch destruction safety.
+ *           Verifies that the close-without-release leftover state
+ *           (gzclose succeeded but gzs still holds the freed pointer)
+ *           is safe under batch destruction, simulating the taskpool
+ *           GC finalizer scenario (ArkFinalizersPack::ProcessAll).
+ *
+ *           Prerequisite: Deleter<gzFile_s> must be a no-op (HEAD behavior).
+ *           If Deleter calls gzclose, this test will crash by design.
+ *           All counters must hold exactly, and a fresh gzopen/gzclose
+ *           round proves zlib state health after batch destruction.
+ */
+HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_GZipEntity_GcDtorStress_0001, Function | MediumTest | Level1)
+{
+    FilePath::CreateDirectory(FilePath(GZ_STRESS_PATH));
+    // mass compression ops - pile up gzFile objects held by GZipEntity
+    std::vector<std::unique_ptr<GZipEntity>> entities;
+    std::atomic<int32_t> openOk(0);
+    for (int32_t i = 0; i < GZ_STRESS_ENTITY_NUM; ++i) {
+        auto entity = std::make_unique<GZipEntity>();
+        std::string name = GZ_STRESS_PATH + "stress_gc_" + std::to_string(i) + ".gz";
+        gzFile file = gzopen(name.c_str(), "wb");
+        ASSERT_NE(file, nullptr) << "gzopen failed for " << name;
+        std::unique_ptr<gzFile_s, Deleter<gzFile_s>> gzFile(file);
+        entity->gzs.swap(gzFile);
+        openOk++;
+        entities.push_back(std::move(entity));
+    }
+    ASSERT_EQ(openOk.load(), GZ_STRESS_ENTITY_NUM);
+
+    // close every gzFile but deliberately skip gzs.release(), leaving the exact
+    // leftover state of the exporter close-failure path (gzclose succeeded, gzs still
+    // holds the now-freed pointer)
+    std::atomic<int32_t> closeOk(0);
+    for (auto &entity : entities) {
+        int32_t ret = gzclose(entity->gzs.get());
+        if (ret == Z_OK) {
+            closeOk++;
+        }
+    }
+    EXPECT_EQ(closeOk.load(), GZ_STRESS_ENTITY_NUM);
+
+    // batch destruct all GZipEntity, simulating the taskpool GC finalizer
+    // (ArkFinalizersPack::ProcessAll -> unique_ptr reset) on the piled-up objects.
+    // With no-op Deleter, this is safe; with gzclose-calling Deleter, this would crash.
+    entities.clear();
+
+    // zlib state must remain healthy after the batch destruction
+    std::string fresh = GZ_STRESS_PATH + "stress_gc_fresh.gz";
+    gzFile file = gzopen(fresh.c_str(), "wb");
+    ASSERT_NE(file, nullptr);
+    EXPECT_EQ(gzclose(file), Z_OK);
+}
+
+/**
+ * @tc.number: APPEXECFWK_LIBZIP_GZipEntity_GcDtorStress_0002
+ * @tc.name: GZipEntity_GcDtorStress_0002
+ * @tc.desc: Regression test for concurrent GZipEntity destruction safety.
+ *           Simulates async NAPI workers performing gzwrite/gzclose while
+ *           GC finalizer threads concurrently destruct entities. Workers
+ *           close the gzFile but skip gzs.release() (exporter close-failure
+ *           leftover state) and hand entities to a finished queue; GC threads
+ *           destruct finished entities (stale gzs) and pool entities (live gzFile).
+ *
+ *           Prerequisite: Deleter<gzFile_s> must be a no-op (HEAD behavior).
+ *           All counters must hold exactly: every entity is either closed by
+ *           a worker, destructed from the pool, or failed during gzwrite.
+ *           All writes must complete, and zlib state must remain healthy.
+ */
+HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_GZipEntity_GcDtorStress_0002, Function | MediumTest | Level1)
+{
+    FilePath::CreateDirectory(FilePath(GZ_STRESS_PATH));
+    std::mutex poolMutex;
+    std::vector<std::unique_ptr<GZipEntity>> pool;
+    std::vector<char> chunk(GZ_STRESS_CHUNK_SIZE, 'b');
+    for (int32_t i = 0; i < GZ_STRESS_ENTITY_NUM; ++i) {
+        auto entity = std::make_unique<GZipEntity>();
+        std::string name = GZ_STRESS_PATH + "stress_gc_pool_" + std::to_string(i) + ".gz";
+        gzFile file = gzopen(name.c_str(), "wb");
+        ASSERT_NE(file, nullptr) << "gzopen failed for " << name;
+        std::unique_ptr<gzFile_s, Deleter<gzFile_s>> gzFile(file);
+        entity->gzs.swap(gzFile);
+        pool.push_back(std::move(entity));
+    }
+
+    // finished queue: entities already gzclose-d WITHOUT gzs.release() - each gzs is a
+    // stale pointer, the exporter close-failure leftover state handed to GC finalizers
+    std::mutex finishedMutex;
+    std::vector<std::unique_ptr<GZipEntity>> finished;
+    std::atomic<int32_t> closedByWorker(0);
+    std::atomic<int32_t> writeOk(0);
+    std::atomic<int32_t> writeFailed(0);
+    std::atomic<int32_t> destructedFromPool(0);
+    std::atomic<int32_t> destructedFromFinished(0);
+    std::atomic<bool> workersDone(false);
+    // GC threads: prefer destructing finished (stale) entities, otherwise destruct live
+    // pool entities; exit only when workers are done and both sources are drained
+    auto gcThread = [&poolMutex, &pool, &finishedMutex, &finished, &workersDone,
+                     &destructedFromPool, &destructedFromFinished]() {
+        while (true) {
+            std::unique_ptr<GZipEntity> entity;
+            bool fromFinished = false;
+            {
+                std::lock_guard<std::mutex> lock(finishedMutex);
+                if (!finished.empty()) {
+                    entity = std::move(finished.back());
+                    finished.pop_back();
+                    fromFinished = true;
+                }
+            }
+            if (!entity) {
+                std::lock_guard<std::mutex> lock(poolMutex);
+                if (!pool.empty()) {
+                    entity = std::move(pool.back());
+                    pool.pop_back();
+                }
+            }
+            if (!entity) {
+                if (workersDone.load()) {
+                    // re-check both sources under lock, then exit when fully drained
+                    std::lock_guard<std::mutex> lock(finishedMutex);
+                    if (!finished.empty()) {
+                        continue;
+                    }
+                } else {
+                    std::this_thread::yield();
+                    continue;
+                }
+                std::lock_guard<std::mutex> lock(poolMutex);
+                if (!pool.empty()) {
+                    continue;
+                }
+                return;
+            }
+            if (fromFinished) {
+                destructedFromFinished++;
+                // finished-queue entity: destruct directly WITHOUT closing/releasing.
+                // With no-op Deleter this is safe; with gzclose-calling Deleter it would crash.
+            } else {
+                destructedFromPool++;
+                // pool entity holds a LIVE gzFile: close it properly and give the fd
+                // back before destruction, so the case never leaks fds no matter how
+                // the worker/GC race distributes entities (RLIMIT_NOFILE stability on
+                // low-fd devices). After gzs.release() the pointer is null, so Deleter
+                // firing during entity.reset() is safe in both phases
+                gzclose(entity->gzs.get());
+                entity->gzs.release();
+            }
+            entity.reset();
+        }
+    };
+    // worker threads: async-NAPI-worker simulation - multi-round gzwrite then gzclose,
+    // deliberately WITHOUT gzs.release(), then hand the entity to the finished queue
+    auto workerThread = [&poolMutex, &pool, &chunk, &finishedMutex, &finished,
+                         &closedByWorker, &writeOk, &writeFailed]() {
+        while (true) {
+            std::unique_ptr<GZipEntity> entity;
+            {
+                std::lock_guard<std::mutex> lock(poolMutex);
+                if (pool.empty()) {
+                    return;
+                }
+                entity = std::move(pool.back());
+                pool.pop_back();
+            }
+            // multiple gzwrite rounds widen the race window with GC destructors
+            bool allRoundsOk = true;
+            for (int32_t round = 0; round < GZ_STRESS_WRITE_ROUNDS; ++round) {
+                int32_t written = gzwrite(entity->gzs.get(), chunk.data(),
+                    static_cast<uint32_t>(chunk.size()));
+                if (written == static_cast<int32_t>(chunk.size())) {
+                    writeOk++;
+                } else {
+                    allRoundsOk = false;
+                }
+            }
+            if (!allRoundsOk) {
+                gzclose(entity->gzs.get());
+                entity->gzs.release();
+                writeFailed++;
+                return;
+            }
+            if (gzclose(entity->gzs.get()) == Z_OK) {
+                closedByWorker++;
+            }
+            {
+                std::lock_guard<std::mutex> lock(finishedMutex);
+                finished.push_back(std::move(entity));
+            }
+        }
+    };
+
+    std::vector<std::thread> workerThreads;
+    for (int32_t w = 0; w < GZ_STRESS_WORKER_NUM; ++w) {
+        workerThreads.emplace_back(workerThread);
+    }
+    std::vector<std::thread> gcThreads;
+    for (int32_t g = 0; g < GZ_STRESS_GC_THREAD_NUM; ++g) {
+        gcThreads.emplace_back(gcThread);
+    }
+    for (auto &t : workerThreads) {
+        t.join();
+    }
+    workersDone = true;
+    for (auto &t : gcThreads) {
+        t.join();
+    }
+    // pass path counters (deterministic with no-op Deleter):
+    // every entity is either closed by a worker (then destructed from finished queue),
+    // destructed directly from the pool, or failed during gzwrite (closed and released
+    // by the worker before returning)
+    EXPECT_EQ(closedByWorker.load() + destructedFromPool.load() + writeFailed.load(), GZ_STRESS_ENTITY_NUM);
+    // GC threads drain the finished queue completely after workers finish
+    EXPECT_EQ(destructedFromFinished.load(), closedByWorker.load());
+    // every worker-closed entity must have completed all its gzwrite rounds
+    EXPECT_EQ(writeOk.load(), closedByWorker.load() * GZ_STRESS_WRITE_ROUNDS);
+    // gz files written by workers must be valid gzip streams
+    std::string first = GZ_STRESS_PATH + "stress_gc_pool_0.gz";
+    gzFile file = gzopen(first.c_str(), "rb");
+    ASSERT_NE(file, nullptr);
+    EXPECT_EQ(gzclose(file), Z_OK);
+}
+
+/**
+ * @tc.number: APPEXECFWK_LIBZIP_GZipEntity_GcDtorStress_0003
+ * @tc.name: GZipEntity_GcDtorStress_0003
+ * @tc.desc: Regression test for concurrent GZipEntity destruction safety (read side).
+ *           Simulates async NAPI workers performing gzread/gzclose while GC finalizer
+ *           threads concurrently destruct entities. Workers read to EOF, close the gzFile
+ *           without gzs.release() (exporter close-failure leftover state), and hand
+ *           entities to a finished queue; GC threads destruct finished entities (stale
+ *           read-side gzs) and pool entities (live read-side gzFile).
+ *
+ *           Prerequisite: Deleter<gzFile_s> must be a no-op (HEAD behavior).
+ *           All counters must hold exactly, decompressed content must stay intact,
+ *           and zlib state must remain healthy after the stress round.
+ */
+HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_GZipEntity_GcDtorStress_0003, Function | MediumTest | Level1)
+{
+    FilePath::CreateDirectory(FilePath(GZ_STRESS_PATH));
+    // prepare a source gzip stream containing known payload
+    const std::string payload = "gzip gc destructor stress payload line";
+    std::string gzPath = GZ_STRESS_PATH + "stress_gc_read.gz";
+    {
+        gzFile file = gzopen(gzPath.c_str(), "wb");
+        ASSERT_NE(file, nullptr);
+        for (int32_t i = 0; i < GZ_STRESS_WRITE_ROUNDS; ++i) {
+            int32_t written = gzwrite(file, payload.data(), static_cast<uint32_t>(payload.size()));
+            ASSERT_EQ(written, static_cast<int32_t>(payload.size()));
+        }
+        ASSERT_EQ(gzclose(file), Z_OK);
+    }
+    const std::string expected = [payload]() {
+        std::string all;
+        for (int32_t i = 0; i < GZ_STRESS_WRITE_ROUNDS; ++i) {
+            all += payload;
+        }
+        return all;
+    }();
+
+    std::mutex poolMutex;
+    std::vector<std::unique_ptr<GZipEntity>> pool;
+    for (int32_t i = 0; i < GZ_STRESS_ENTITY_NUM; ++i) {
+        auto entity = std::make_unique<GZipEntity>();
+        gzFile file = gzopen(gzPath.c_str(), "rb");
+        ASSERT_NE(file, nullptr) << "gzopen failed for round " << i;
+        std::unique_ptr<gzFile_s, Deleter<gzFile_s>> gzFile(file);
+        entity->gzs.swap(gzFile);
+        pool.push_back(std::move(entity));
+    }
+
+    // finished queue: read-side entities already gzclose-d WITHOUT gzs.release()
+    std::mutex finishedMutex;
+    std::vector<std::unique_ptr<GZipEntity>> finished;
+    std::atomic<int32_t> readDone(0);
+    std::atomic<int32_t> contentOk(1);
+    std::atomic<int32_t> destructedFromPool(0);
+    std::atomic<int32_t> destructedFromFinished(0);
+    std::atomic<bool> workersDone(false);
+    // GC threads: prefer destructing finished (stale) entities, otherwise destruct live
+    // pool entities; exit only when workers are done and both sources are drained
+    auto gcThread = [&poolMutex, &pool, &finishedMutex, &finished, &workersDone,
+                     &destructedFromPool, &destructedFromFinished]() {
+        while (true) {
+            std::unique_ptr<GZipEntity> entity;
+            bool fromFinished = false;
+            {
+                std::lock_guard<std::mutex> lock(finishedMutex);
+                if (!finished.empty()) {
+                    entity = std::move(finished.back());
+                    finished.pop_back();
+                    fromFinished = true;
+                }
+            }
+            if (!entity) {
+                std::lock_guard<std::mutex> lock(poolMutex);
+                if (!pool.empty()) {
+                    entity = std::move(pool.back());
+                    pool.pop_back();
+                }
+            }
+            if (!entity) {
+                if (workersDone.load()) {
+                    // re-check both sources under lock, then exit when fully drained
+                    std::lock_guard<std::mutex> lock(finishedMutex);
+                    if (!finished.empty()) {
+                        continue;
+                    }
+                } else {
+                    std::this_thread::yield();
+                    continue;
+                }
+                std::lock_guard<std::mutex> lock(poolMutex);
+                if (!pool.empty()) {
+                    continue;
+                }
+                return;
+            }
+            if (fromFinished) {
+                destructedFromFinished++;
+                // finished-queue entity: destruct directly WITHOUT closing/releasing.
+                // With no-op Deleter this is safe; with gzclose-calling Deleter it would crash.
+            } else {
+                destructedFromPool++;
+                // pool entity holds a LIVE read-side gzFile: close it properly and give
+                // the fd back before destruction, so the case never leaks fds no matter
+                // how the worker/GC race distributes entities (RLIMIT_NOFILE stability
+                // on low-fd devices). After gzs.release() the pointer is null, so
+                // Deleter firing during entity.reset() is safe in both phases
+                gzclose(entity->gzs.get());
+                entity->gzs.release();
+            }
+            entity.reset();
+        }
+    };
+    // worker threads: decompress to EOF, verify content, close WITHOUT gzs.release()
+    // (exporter close-failure leftover state), then hand the entity to the finished queue
+    auto workerThread = [&poolMutex, &pool, &finishedMutex, &finished, &expected,
+                         &readDone, &contentOk]() {
+        while (true) {
+            std::unique_ptr<GZipEntity> entity;
+            {
+                std::lock_guard<std::mutex> lock(poolMutex);
+                if (pool.empty()) {
+                    return;
+                }
+                entity = std::move(pool.back());
+                pool.pop_back();
+            }
+            std::string content;
+            char buf[GZ_STRESS_CHUNK_SIZE];
+            int32_t len = 0;
+            while ((len = gzread(entity->gzs.get(), buf, sizeof(buf))) > 0) {
+                content.append(buf, static_cast<size_t>(len));
+            }
+            if (content != expected) {
+                contentOk = 0;
+            }
+            gzclose(entity->gzs.get());
+            {
+                std::lock_guard<std::mutex> lock(finishedMutex);
+                finished.push_back(std::move(entity));
+            }
+            readDone++;
+        }
+    };
+
+    std::vector<std::thread> workerThreads;
+    for (int32_t w = 0; w < GZ_STRESS_WORKER_NUM; ++w) {
+        workerThreads.emplace_back(workerThread);
+    }
+    std::vector<std::thread> gcThreads;
+    for (int32_t g = 0; g < GZ_STRESS_GC_THREAD_NUM; ++g) {
+        gcThreads.emplace_back(gcThread);
+    }
+    for (auto &t : workerThreads) {
+        t.join();
+    }
+    workersDone = true;
+    for (auto &t : gcThreads) {
+        t.join();
+    }
+    // pass path counters (deterministic with no-op Deleter):
+    // every entity is either fully read by a worker (then destructed from finished
+    // queue) or destructed directly from the pool; content must be intact every time
+    EXPECT_EQ(readDone.load() + destructedFromPool.load(), GZ_STRESS_ENTITY_NUM);
+    EXPECT_EQ(destructedFromFinished.load(), readDone.load());
+    EXPECT_EQ(contentOk.load(), 1);
+    // source stream must still be consumable after the stress round
+    gzFile file = gzopen(gzPath.c_str(), "rb");
+    ASSERT_NE(file, nullptr);
+    EXPECT_EQ(gzclose(file), Z_OK);
+}
+
+/**
+ * @tc.number: APPEXECFWK_LIBZIP_GZipEntity_GcDtorStress_0004
+ * @tc.name: GZipEntity_GcDtorStress_0004
+ * @tc.desc: Regression test for Deleter<gzFile_s> behavior with live gzFile pointers.
+ *           Verifies that batch destruction of GZipEntity objects with still-live gzFile
+ *           pointers (never explicitly closed) is safe. Simulates JS-side GZipEntity
+ *           objects that skip close() and are reclaimed by the taskpool GC finalizer.
+ *
+ *           Prerequisite: Deleter<gzFile_s> must be a no-op (HEAD behavior).
+ *           Small scale (50 entities) to stay well below RLIMIT_NOFILE. The fresh
+ *           gzopen/gzclose health check at the end proves the fd budget is not exhausted.
+ */
+HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_GZipEntity_GcDtorStress_0004, Function | MediumTest | Level1)
+{
+    FilePath::CreateDirectory(FilePath(GZ_STRESS_PATH));
+    // pile up live gzFile objects held by GZipEntity, then never gzclose and never
+    // release: simulates JS objects that skip close() and are reclaimed by the GC
+    std::vector<std::unique_ptr<GZipEntity>> entities;
+    std::atomic<int32_t> openOk(0);
+    for (int32_t i = 0; i < GZ_STRESS_SMALL_ENTITY_NUM; ++i) {
+        auto entity = std::make_unique<GZipEntity>();
+        std::string name = GZ_STRESS_PATH + "stress_gc_deleter_" + std::to_string(i) + ".gz";
+        gzFile file = gzopen(name.c_str(), "wb");
+        ASSERT_NE(file, nullptr) << "gzopen failed for " << name;
+        std::unique_ptr<gzFile_s, Deleter<gzFile_s>> gzFile(file);
+        entity->gzs.swap(gzFile);
+        openOk++;
+        entities.push_back(std::move(entity));
+    }
+    ASSERT_EQ(openOk.load(), GZ_STRESS_SMALL_ENTITY_NUM);
+
+    // batch destruct all GZipEntity with every gzs still pointing at a LIVE gzFile:
+    // simulates the taskpool GC finalizer (ArkFinalizersPack::ProcessAll -> unique_ptr
+    // reset) reclaiming objects whose close() was never called.
+    // With no-op Deleter, fds are leaked (~50, bounded, expected, see tc.desc).
+    entities.clear();
+
+    // zlib state must remain healthy after the batch destruction - also proves the fd
+    // budget is not exhausted (leaked ~50 fds stay well under limits)
+    std::string fresh = GZ_STRESS_PATH + "stress_gc_deleter_fresh.gz";
+    gzFile file = gzopen(fresh.c_str(), "wb");
+    ASSERT_NE(file, nullptr);
+    EXPECT_EQ(gzclose(file), Z_OK);
 }
 }  // namespace LIBZIP
 }  // namespace AppExecFwk
