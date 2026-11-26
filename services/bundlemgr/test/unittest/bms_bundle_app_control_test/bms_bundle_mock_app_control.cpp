@@ -702,6 +702,9 @@ HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerHostImpl_0120, Function |
     setuid(AppControlConstants::FOUNDATION_UID);
     auto res = impl.GetAbilityRunningControlRule(CALLER_BUNDLE_NAME, Constants::UNSPECIFIED_USERID, disposedRules);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    setuid(AppControlConstants::SUBFOUNDATION_UID);
+    res = impl.GetAbilityRunningControlRule(CALLER_BUNDLE_NAME, Constants::UNSPECIFIED_USERID, disposedRules);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
 /**

@@ -60,6 +60,7 @@ bool DisposedRule::ReadFromParcel(Parcel &parcel)
     priority = parcel.ReadInt32();
     pageJump = static_cast<PageJumpMode>(parcel.ReadInt32());
     isEdm = parcel.ReadBool();
+    callerName = Str16ToStr8(parcel.ReadString16());
     return true;
 }
 
@@ -77,6 +78,7 @@ bool DisposedRule::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, priority);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(pageJump));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isEdm);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(callerName));
 
     return true;
 }
