@@ -21,7 +21,6 @@
 #include "common_event_support.h"
 #include "hitrace_meter.h"
 #include "matching_skills.h"
-#include "operation_builder.h"
 
 namespace OHOS {
 namespace AppExecFwk {
