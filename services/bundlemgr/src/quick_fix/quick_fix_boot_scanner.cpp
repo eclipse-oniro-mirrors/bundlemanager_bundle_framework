@@ -15,6 +15,8 @@
 
 #include "quick_fix_boot_scanner.h"
 
+#include <mutex>
+
 #include "app_log_tag_wrapper.h"
 #include "bundle_mgr_service.h"
 #include "installd_client.h"
@@ -261,8 +263,13 @@ bool QuickFixBootScanner::ProcessWithBundleHasQuickFixInfo(const std::string &bu
     } else {
         invalidQuickFixDir_.emplace_back(hqfPath);
         // remove the quick fix info from memory cache and db
+        if (dataMgr_ == nullptr) {
+            LOG_E(BMS_TAG_DEFAULT, "dataMgr_ is nullptr");
+            return false;
+        }
+        std::lock_guard<std::mutex> lock(dataMgr_->GetBundleMutex(bundleName));
         InnerBundleInfo innerBundleInfo;
-        if ((dataMgr_ == nullptr) || (!dataMgr_->FetchInnerBundleInfo(bundleName, innerBundleInfo))) {
+        if (!dataMgr_->FetchInnerBundleInfo(bundleName, innerBundleInfo)) {
             LOG_E(BMS_TAG_DEFAULT, "cannot obtain the innerbundleInfo from data mgr");
             return false;
         }

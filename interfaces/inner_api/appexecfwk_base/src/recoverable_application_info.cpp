@@ -14,6 +14,7 @@
  */
 
 #include "recoverable_application_info.h"
+#include "bundle_constants.h"
 
 #include "app_log_wrapper.h"
 #include "json_util.h"
@@ -43,6 +44,9 @@ bool RecoverableApplicationInfo::ReadFromParcel(Parcel &parcel)
     bundleType = static_cast<BundleType>(parcel.ReadInt32());
     int32_t codePathsSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, codePathsSize);
+    if (codePathsSize < 0 || codePathsSize > Constants::MAX_JSON_ARRAY_LENGTH) {
+        return false;
+    }
     CONTAINER_SECURITY_VERIFY(parcel, codePathsSize, &codePaths);
     for (auto i = 0; i < codePathsSize; i++) {
         codePaths.emplace_back(Str16ToStr8(parcel.ReadString16()));

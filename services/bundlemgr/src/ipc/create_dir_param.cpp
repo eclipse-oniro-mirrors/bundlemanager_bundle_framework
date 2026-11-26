@@ -14,6 +14,7 @@
  */
 
 #include "ipc/create_dir_param.h"
+#include "bundle_constants.h"
 
 #include "parcel_macro.h"
 #include "string_ex.h"
@@ -25,6 +26,9 @@ bool CreateDirParam::ReadFromParcel(Parcel &parcel)
     bundleName = Str16ToStr8(parcel.ReadString16());
     int32_t extensionDirsSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, extensionDirsSize);
+    if (extensionDirsSize < 0 || extensionDirsSize > Constants::MAX_JSON_ARRAY_LENGTH) {
+        return false;
+    }
     CONTAINER_SECURITY_VERIFY(parcel, extensionDirsSize, &extensionDirs);
     for (int32_t i = 0; i < extensionDirsSize; ++i) {
         std::string extensionDir = Str16ToStr8(parcel.ReadString16());

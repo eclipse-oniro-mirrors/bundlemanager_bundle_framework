@@ -14,6 +14,7 @@
  */
 
 #include "ipc/extract_hnp_files_param.h"
+#include "bundle_constants.h"
 
 #include "parcel_macro.h"
 #include "string_ex.h"
@@ -30,6 +31,9 @@ bool ExtractHnpFilesParam::ReadFromParcel(Parcel &parcel)
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isModuleUpdate);
     int32_t mapSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, mapSize);
+    if (mapSize < 0 || mapSize > Constants::MAX_JSON_ARRAY_LENGTH) {
+        return false;
+    }
     CONTAINER_SECURITY_VERIFY(parcel, mapSize, &hnpPackageMap);
     for (int32_t i = 0; i < mapSize; ++i) {
         std::string package = Str16ToStr8(parcel.ReadString16());

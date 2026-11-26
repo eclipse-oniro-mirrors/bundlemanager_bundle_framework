@@ -524,6 +524,9 @@ bool RouterItem::ReadFromParcel(Parcel &parcel)
 
     int32_t dataSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, dataSize);
+    if (dataSize < 0 || dataSize > Constants::MAX_JSON_ARRAY_LENGTH) {
+        return false;
+    }
     CONTAINER_SECURITY_VERIFY(parcel, dataSize, &data);
     for (int32_t i = 0; i < dataSize; ++i) {
         std::string key = Str16ToStr8(parcel.ReadString16());
