@@ -7434,7 +7434,7 @@ ErrCode BundleDataMgr::GetAbilityLabel(const std::string &bundleName, const std:
         if (enableAppIndex == Constants::ALL_CLONE_APP_INDEX) {
             LOG_NOFUNC_W(BMS_TAG_QUERY, "car mode: maybe all apps are disabled, bundleName:%{public}s",
                 bundleName.c_str());
-            return ERR_BUNDLE_MANAGER_ABILITY_DISABLED;
+            return ERR_BUNDLE_MANAGER_APPLICATION_DISABLED;
         }
         queryAppIndex = enableAppIndex;
         LOG_NOFUNC_D(BMS_TAG_QUERY, "car mode: use appIndex:%{public}d, bundleName:%{public}s",
