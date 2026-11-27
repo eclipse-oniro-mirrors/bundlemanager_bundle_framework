@@ -18,6 +18,7 @@
 #include <gtest/gtest.h>
 
 #include "bundle_event_callback_host.h"
+#include "bundle_mgr_host.h"
 #include "bundle_mgr_proxy.h"
 #include "bundle_mgr_host.h"
 #include "get_largest_items_callback_interface.h"
@@ -38,6 +39,7 @@ namespace AppExecFwk {
 
 namespace {
 const int32_t ERR_CODE = 8388613;
+const int32_t UNKNOWN_ERROR = -31;
 const uint32_t ACCESS_TOKEN_ID = 1765341;
 const int32_t MAX_WAITING_TIME = 600;
 const int32_t MAX_SHORTCUT_INFOS = 101;
@@ -254,6 +256,42 @@ public:
     }
 };
 
+class MockExtensionSandboxDataDirHost : public BundleMgrHost {
+public:
+    std::string receivedExtensionName;
+    bool called = false;
+    ErrCode result = ERR_OK;
+    const std::string sandboxDir = "+extension-entry-inputMethodExtAbility+com.example.sandbox";
+
+    ErrCode GetExtensionSandboxDataDir(const std::string &extensionName, std::string &dir) override
+    {
+        receivedExtensionName = extensionName;
+        called = true;
+        if (result == ERR_OK) {
+            dir = sandboxDir;
+        }
+        return result;
+    }
+};
+
+class MockExtensionSandboxDataDirReplyHost : public BundleMgrHost {
+public:
+    bool writeStatus = false;
+    bool writeEmptyDir = false;
+
+    int OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override
+    {
+        EXPECT_EQ(code, static_cast<uint32_t>(BundleMgrInterfaceCode::GET_EXTENSION_SANDBOX_DATA_DIR));
+        if (writeStatus) {
+            EXPECT_TRUE(reply.WriteInt32(ERR_OK));
+        }
+        if (writeEmptyDir) {
+            EXPECT_TRUE(reply.WriteString(""));
+        }
+        return ERR_OK;
+    }
+};
+
 class BmsBundleMgrProxyTest : public testing::Test {
 public:
     static void SetUpTestCase();
@@ -459,7 +497,6 @@ HWTEST_F(BmsBundleMgrProxyTest, GetBundlePackInfo_0100, Function | MediumTest | 
     res = bundleMgrProxy.GetBundlePackInfo(bundleName, flag, bundlePackInfo, userId);
     EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
 }
-
 
 /**
  * @tc.number: GetBundlePackInfo_0200
@@ -2893,6 +2930,121 @@ HWTEST_F(BmsBundleMgrProxyTest, AlternateModuleIpc_0003, Function | SmallTest | 
     EXPECT_EQ(host->OnRemoteRequest(static_cast<uint32_t>(BundleMgrInterfaceCode::SET_ALTERNATE_MODULE_ENABLED),
         request, reply, option), UNKNOWN_ERROR);
     EXPECT_TRUE(host->enabled);
+}
+
+/**
+ * @tc.number: GetExtensionSandboxDataDir_0100
+ * @tc.name: test GetExtensionSandboxDataDir parameter transmission
+ * @tc.desc: Verify the proxy and host transmit only the extension name.
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetExtensionSandboxDataDir_0100, Function | MediumTest | Level1)
+{
+    sptr<MockExtensionSandboxDataDirHost> host = new MockExtensionSandboxDataDirHost();
+    BundleMgrProxy bundleMgrProxy(host->AsObject());
+    std::string dir;
+    EXPECT_EQ(bundleMgrProxy.GetExtensionSandboxDataDir("inputMethodExtAbility", dir), ERR_OK);
+    EXPECT_TRUE(host->called);
+    EXPECT_EQ(host->receivedExtensionName, "inputMethodExtAbility");
+    EXPECT_EQ(dir, host->sandboxDir);
+}
+
+/**
+ * @tc.number: GetExtensionSandboxDataDir_0200
+ * @tc.name: test GetExtensionSandboxDataDir error reply
+ * @tc.desc: Preserve the service error and clear stale output on failure.
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetExtensionSandboxDataDir_0200, Function | MediumTest | Level1)
+{
+    sptr<MockExtensionSandboxDataDirHost> host = new MockExtensionSandboxDataDirHost();
+    host->result = ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    BundleMgrProxy bundleMgrProxy(host->AsObject());
+    std::string dir = "stale-dir";
+    EXPECT_EQ(bundleMgrProxy.GetExtensionSandboxDataDir("inputMethodExtAbility", dir),
+        ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    EXPECT_TRUE(host->called);
+    EXPECT_TRUE(dir.empty());
+}
+
+/**
+ * @tc.number: GetExtensionSandboxDataDir_0300
+ * @tc.name: test GetExtensionSandboxDataDir missing extension name
+ * @tc.desc: Reject incomplete parcels before calling the service.
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetExtensionSandboxDataDir_0300, Function | MediumTest | Level1)
+{
+    MockExtensionSandboxDataDirHost host;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    ASSERT_TRUE(data.WriteInterfaceToken(IBundleMgr::GetDescriptor()));
+    EXPECT_EQ(host.OnRemoteRequest(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_EXTENSION_SANDBOX_DATA_DIR),
+        data, reply, option), UNKNOWN_ERROR);
+    EXPECT_TRUE(host.receivedExtensionName.empty());
+    EXPECT_FALSE(host.called);
+}
+
+/**
+ * @tc.number: GetExtensionSandboxDataDir_0400
+ * @tc.name: test GetExtensionSandboxDataDir complete parcel
+ * @tc.desc: Accept an extension name without a bundle name, app index or user ID.
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetExtensionSandboxDataDir_0400, Function | MediumTest | Level1)
+{
+    MockExtensionSandboxDataDirHost host;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    ASSERT_TRUE(data.WriteInterfaceToken(IBundleMgr::GetDescriptor()));
+    ASSERT_TRUE(data.WriteString("inputMethodExtAbility"));
+    EXPECT_EQ(host.OnRemoteRequest(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_EXTENSION_SANDBOX_DATA_DIR),
+        data, reply, option), ERR_OK);
+    EXPECT_TRUE(host.called);
+    EXPECT_EQ(host.receivedExtensionName, "inputMethodExtAbility");
+    EXPECT_EQ(reply.ReadInt32(), ERR_OK);
+    EXPECT_EQ(reply.ReadString(), host.sandboxDir);
+}
+
+/**
+ * @tc.number: GetExtensionSandboxDataDir_0500
+ * @tc.name: test GetExtensionSandboxDataDir ignores supplied app index
+ * @tc.desc: An extra caller-supplied index is not forwarded to the service.
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetExtensionSandboxDataDir_0500, Function | MediumTest | Level1)
+{
+    MockExtensionSandboxDataDirHost host;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    ASSERT_TRUE(data.WriteInterfaceToken(IBundleMgr::GetDescriptor()));
+    ASSERT_TRUE(data.WriteString("inputMethodExtAbility"));
+    ASSERT_TRUE(data.WriteInt32(1));
+    EXPECT_EQ(host.OnRemoteRequest(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_EXTENSION_SANDBOX_DATA_DIR),
+        data, reply, option), ERR_OK);
+    EXPECT_TRUE(host.called);
+    EXPECT_EQ(reply.ReadInt32(), ERR_OK);
+    EXPECT_EQ(reply.ReadString(), host.sandboxDir);
+}
+
+/**
+ * @tc.number: GetExtensionSandboxDataDir_0600
+ * @tc.name: test GetExtensionSandboxDataDir incomplete reply
+ * @tc.desc: Reject replies with missing status or with a missing or empty directory on success.
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetExtensionSandboxDataDir_0600, Function | MediumTest | Level1)
+{
+    sptr<MockExtensionSandboxDataDirReplyHost> host = new MockExtensionSandboxDataDirReplyHost();
+    BundleMgrProxy bundleMgrProxy(host->AsObject());
+    std::string dir = "stale-dir";
+    EXPECT_EQ(bundleMgrProxy.GetExtensionSandboxDataDir("inputMethodExtAbility", dir), ERR_APPEXECFWK_PARCEL_ERROR);
+    EXPECT_TRUE(dir.empty());
+    host->writeStatus = true;
+    dir = "stale-dir";
+    EXPECT_EQ(bundleMgrProxy.GetExtensionSandboxDataDir("inputMethodExtAbility", dir), ERR_APPEXECFWK_PARCEL_ERROR);
+    EXPECT_TRUE(dir.empty());
+    host->writeEmptyDir = true;
+    dir = "stale-dir";
+    EXPECT_EQ(bundleMgrProxy.GetExtensionSandboxDataDir("inputMethodExtAbility", dir), ERR_APPEXECFWK_PARCEL_ERROR);
+    EXPECT_TRUE(dir.empty());
 }
 
 }

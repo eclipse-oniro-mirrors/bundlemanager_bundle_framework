@@ -4112,10 +4112,95 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_6300, Function | Smal
 
 /**
  * @tc.number: InnerBundleInfo_6400
+ * @tc.name: Test GetExtensionSandboxDataDir
+ * @tc.desc: Verify exact extension-name and input-method filtering.
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_6400, Function | SmallTest | Level1)
+{
+    InnerBundleInfo bundleInfo;
+    InnerExtensionInfo inputMethodExtension;
+    inputMethodExtension.moduleName = MODULE_NAME;
+    inputMethodExtension.name = "inputMethodExtAbility";
+    inputMethodExtension.bundleName = BUNDLE_NAME;
+    inputMethodExtension.type = ExtensionAbilityType::INPUTMETHOD;
+    inputMethodExtension.needCreateSandbox = true;
+    bundleInfo.baseExtensionInfos_.emplace("input-method", inputMethodExtension);
+
+    std::string dir;
+    EXPECT_EQ(bundleInfo.GetExtensionSandboxDataDir("inputMethodExtAbility", BUNDLE_NAME, dir), ERR_OK);
+    EXPECT_EQ(dir, "+extension-" + MODULE_NAME + "-inputMethodExtAbility+" + BUNDLE_NAME);
+
+    EXPECT_EQ(bundleInfo.GetExtensionSandboxDataDir("otherExtension", BUNDLE_NAME, dir),
+        ERR_BUNDLE_MANAGER_EXTENSION_SANDBOX_DIR_NOT_EXIST);
+    EXPECT_TRUE(dir.empty());
+}
+
+/**
+ * @tc.number: InnerBundleInfo_6500
+ * @tc.name: Test GetExtensionSandboxDataDir rejects non-sandbox extensions
+ * @tc.desc: Verify extensions without independent sandbox directories are rejected.
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_6500, Function | SmallTest | Level1)
+{
+    InnerBundleInfo bundleInfo;
+    InnerExtensionInfo extensionInfo;
+    extensionInfo.moduleName = MODULE_NAME;
+    extensionInfo.name = "inputMethodExtAbility";
+    extensionInfo.bundleName = BUNDLE_NAME;
+    extensionInfo.type = ExtensionAbilityType::INPUTMETHOD;
+    extensionInfo.needCreateSandbox = false;
+    bundleInfo.baseExtensionInfos_.emplace("input-method", extensionInfo);
+
+    std::string dir = "stale-dir";
+    EXPECT_EQ(bundleInfo.GetExtensionSandboxDataDir("inputMethodExtAbility", BUNDLE_NAME, dir),
+        ERR_BUNDLE_MANAGER_EXTENSION_SANDBOX_DIR_NOT_EXIST);
+    EXPECT_TRUE(dir.empty());
+}
+
+/**
+ * @tc.number: InnerBundleInfo_6600
+ * @tc.name: Test GetExtensionSandboxDataDir filters invalid entries
+ * @tc.desc: Verify empty, non-input-method, incomplete, and mixed extension collections.
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_6600, Function | SmallTest | Level1)
+{
+    InnerBundleInfo bundleInfo;
+    std::string dir = "stale-dir";
+    EXPECT_EQ(bundleInfo.GetExtensionSandboxDataDir("inputMethodExtAbility", BUNDLE_NAME, dir),
+        ERR_BUNDLE_MANAGER_EXTENSION_SANDBOX_DIR_NOT_EXIST);
+    EXPECT_TRUE(dir.empty());
+
+    InnerExtensionInfo invalidExtension;
+    invalidExtension.moduleName = MODULE_NAME;
+    invalidExtension.name = "inputMethodExtAbility";
+    invalidExtension.bundleName = BUNDLE_NAME;
+    invalidExtension.type = ExtensionAbilityType::SERVICE;
+    invalidExtension.needCreateSandbox = true;
+    bundleInfo.baseExtensionInfos_.emplace("a-non-input-method", invalidExtension);
+
+    invalidExtension.type = ExtensionAbilityType::INPUTMETHOD;
+    invalidExtension.moduleName.clear();
+    bundleInfo.baseExtensionInfos_.emplace("b-empty-module", invalidExtension);
+
+    invalidExtension.moduleName = MODULE_NAME;
+    invalidExtension.bundleName.clear();
+    bundleInfo.baseExtensionInfos_.emplace("c-empty-bundle", invalidExtension);
+    EXPECT_EQ(bundleInfo.GetExtensionSandboxDataDir("inputMethodExtAbility", BUNDLE_NAME, dir),
+        ERR_BUNDLE_MANAGER_EXTENSION_SANDBOX_DIR_NOT_EXIST);
+    EXPECT_TRUE(dir.empty());
+
+    invalidExtension.bundleName = BUNDLE_NAME;
+    bundleInfo.baseExtensionInfos_.emplace("z-valid-input-method", invalidExtension);
+    EXPECT_EQ(bundleInfo.GetExtensionSandboxDataDir("inputMethodExtAbility", BUNDLE_NAME, dir), ERR_OK);
+    EXPECT_EQ(dir, "+extension-" + MODULE_NAME + "-inputMethodExtAbility+" + BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_6700
  * @tc.name: Test UpdateExtensionDataGroupInfo
  * @tc.desc: 1.Test the UpdateExtensionDataGroupInfo of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_6400, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_6700, Function | SmallTest | Level1)
 {
     InnerBundleInfo bundleInfo;
     InnerExtensionInfo innerExtensionInfo;
@@ -4711,12 +4796,12 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerProcessRequestPermissions_0001, 
 }
 
 /**
- * @tc.number: InnerBundleInfo_6500
+ * @tc.number: InnerBundleInfo_6800
  * @tc.name: Test to_json and from_json
  * @tc.desc: 1.Test convert extendResourceInfo to json
  *           2.Test get extendResourceInfo from json
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_6500, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_6800, Function | SmallTest | Level1)
 {
     ExtendResourceInfo extendResourceInfo;
     extendResourceInfo.moduleName = MODULE_NAME;
@@ -4728,11 +4813,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_6500, Function | Smal
 }
 
 /**
- * @tc.number: InnerBundleInfo_6600
+ * @tc.number: InnerBundleInfo_6900
  * @tc.name: Test innerBundleInfo equal operator
  * @tc.desc: Test the equal operator of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_6600, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_6900, Function | SmallTest | Level1)
 {
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.UpdateOdid("developerId", "odid");
@@ -4745,11 +4830,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_6600, Function | Smal
 }
 
 /**
- * @tc.number: InnerBundleInfo_6700
+ * @tc.number: InnerBundleInfo_7000
  * @tc.name: Test from_json
  * @tc.desc: Test get InnerModuleInfo from json
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_6700, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_7000, Function | SmallTest | Level1)
 {
     InnerModuleInfo result;
     from_json(INNER_MODULE_INFO_ERROR_JSON, result);
@@ -4757,11 +4842,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_6700, Function | Smal
 }
 
 /**
- * @tc.number: InnerBundleInfo_6800
+ * @tc.number: InnerBundleInfo_7100
  * @tc.name: Test from_json
  * @tc.desc: Test get Distro from json
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_6800, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_7100, Function | SmallTest | Level1)
 {
     Distro result;
     from_json(DISTRO_ERROR_JSON, result);
@@ -4769,11 +4854,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_6800, Function | Smal
 }
 
 /**
- * @tc.number: InnerBundleInfo_6900
+ * @tc.number: InnerBundleInfo_7200
  * @tc.name: Test from_json
  * @tc.desc: Test get InstallMark from json
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_6900, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_7200, Function | SmallTest | Level1)
 {
     InstallMark result;
     from_json(INSTALL_MARK_ERROR_JSON, result);
@@ -4781,11 +4866,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_6900, Function | Smal
 }
 
 /**
- * @tc.number: InnerBundleInfo_7000
+ * @tc.number: InnerBundleInfo_7300
  * @tc.name: Test from_json
  * @tc.desc: Test get DefinePermission from json
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_7000, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_7300, Function | SmallTest | Level1)
 {
     DefinePermission result;
     from_json(DEFINE_PERMISSION_ERROR_JSON, result);
@@ -4793,11 +4878,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_7000, Function | Smal
 }
 
 /**
- * @tc.number: InnerBundleInfo_7100
+ * @tc.number: InnerBundleInfo_7400
  * @tc.name: Test from_json
  * @tc.desc: Test get Dependency from json
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_7100, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_7400, Function | SmallTest | Level1)
 {
     Dependency result;
     from_json(DEPENDENCY_ERROR_JSON, result);
@@ -4805,22 +4890,22 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_7100, Function | Smal
 }
 
 /**
- * @tc.number: InnerBundleInfo_7200
+ * @tc.number: InnerBundleInfo_7500
  * @tc.name: Test FromJson
  * @tc.desc: Test get InnerBundleInfo from json
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_7200, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_7500, Function | SmallTest | Level1)
 {
     InnerBundleInfo innerBundleInfo;
     EXPECT_FALSE(innerBundleInfo.FromJson(INNER_BUNDLE_INFO_ERROR_JSON));
 }
 
 /**
- * @tc.number: InnerBundleInfo_7300
+ * @tc.number: InnerBundleInfo_7600
  * @tc.name: Test from_json
  * @tc.desc: Test get ExtendResourceInfo from json
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_7300, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_7600, Function | SmallTest | Level1)
 {
     ExtendResourceInfo result;
     from_json(EXTEND_RESOURCE_INFO_ERROR_JSON, result);
@@ -4828,11 +4913,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_7300, Function | Smal
 }
 
 /**
- * @tc.number: InnerBundleInfo_7400
+ * @tc.number: InnerBundleInfo_7700
  * @tc.name: Test FindHapModuleInfo
  * @tc.desc: Test the FindHapModuleInfo of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_7400, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_7700, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
     std::vector<HqfInfo> hqfInfos;
@@ -4852,11 +4937,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_7400, Function | Smal
 }
 
 /**
- * @tc.number: InnerBundleInfo_7500
+ * @tc.number: InnerBundleInfo_7800
  * @tc.name: Test FindAbilityInfos
  * @tc.desc: Test the FindAbilityInfos of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_7500, Function | MediumTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_7800, Function | MediumTest | Level1)
 {
     InnerBundleInfo info;
     InnerBundleUserInfo userInfo;
@@ -4870,11 +4955,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_7500, Function | Medi
 }
 
 /**
- * @tc.number: InnerBundleInfo_7600
+ * @tc.number: InnerBundleInfo_7900
  * @tc.name: Test AddModuleInfo
  * @tc.desc: Test the AddModuleInfo of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_7600, Function | MediumTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_7900, Function | MediumTest | Level1)
 {
     InnerBundleInfo info;
     InnerBundleInfo newinfo;
@@ -4886,11 +4971,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_7600, Function | Medi
 }
 
 /**
- * @tc.number: InnerBundleInfo_7700
+ * @tc.number: InnerBundleInfo_8000
  * @tc.name: Test GetApplicationEnabledV9
  * @tc.desc: Test the GetApplicationEnabledV9 of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_7700, Function | MediumTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_8000, Function | MediumTest | Level1)
 {
     InnerBundleInfo info;
     bool isEnabled = false;
@@ -4902,12 +4987,12 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_7700, Function | Medi
 }
 
 /**
- * @tc.number: InnerBundleInfo_7703
+ * @tc.number: InnerBundleInfo_8003
  * @tc.name: Test GetApplicationEnabledV9 with CLI sandbox appIndex at max boundary
  * @tc.desc: 1.Set sandboxInfo at appIndex=3000 (CLI_SANDBOX_APP_INDEX_MAX)
  *           2.GetApplicationEnabledV9 with appIndex=3000 returns ERR_OK
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_7703, Function | MediumTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_8003, Function | MediumTest | Level1)
 {
     InnerBundleInfo info;
     bool isEnabled = false;
@@ -4927,11 +5012,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_7703, Function | Medi
 }
 
 /**
- * @tc.number: InnerBundleInfo_7800
+ * @tc.number: InnerBundleInfo_8100
  * @tc.name: Test InsertInnerSharedModuleInfo
  * @tc.desc: Test the InsertInnerSharedModuleInfo of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_7800, Function | MediumTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_8100, Function | MediumTest | Level1)
 {
     InnerBundleInfo info;
     std::vector<InnerModuleInfo> innerModuleInfos;
@@ -4948,11 +5033,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_7800, Function | Medi
 }
 
 /**
- * @tc.number: InnerBundleInfo_7900
+ * @tc.number: InnerBundleInfo_8200
  * @tc.name: Test SetSharedModuleNativeLibraryPath
  * @tc.desc: Test the SetSharedModuleNativeLibraryPath of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_7900, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_8200, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
     info.SetCurrentModulePackage(MODULE_PACKGE);
@@ -4971,11 +5056,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_7900, Function | Smal
 }
 
 /**
- * @tc.number: InnerBundleInfo_8000
+ * @tc.number: InnerBundleInfo_8300
  * @tc.name: Test GetAllSharedDependencies
  * @tc.desc: Test the GetAllSharedDependencies of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_8000, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_8300, Function | SmallTest | Level1)
 {
     InnerBundleInfo bundleInfo;
     InnerModuleInfo moduleInfo;
@@ -4995,11 +5080,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_8000, Function | Smal
 }
 
 /**
- * @tc.number: InnerBundleInfo_8100
+ * @tc.number: InnerBundleInfo_8400
  * @tc.name: Test GetApplicationInfo
  * @tc.desc: Test the GetApplicationInfo of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_8100, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_8400, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
     InnerBundleUserInfo userInfo;
@@ -5014,11 +5099,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_8100, Function | Smal
 }
 
 /**
- * @tc.number: InnerBundleInfo_8200
+ * @tc.number: InnerBundleInfo_8500
  * @tc.name: Test GetApplicationInfo
  * @tc.desc: Test the GetApplicationInfo of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_8200, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_8500, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
     InnerBundleUserInfo userInfo;
@@ -5034,11 +5119,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_8200, Function | Smal
 }
 
 /**
- * @tc.number: InnerBundleInfo_8300
+ * @tc.number: InnerBundleInfo_8600
  * @tc.name: Test GetApplicationInfo
  * @tc.desc: Test the GetApplicationInfo of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_8300, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_8600, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
     InnerBundleUserInfo userInfo;
@@ -5068,11 +5153,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_8300, Function | Smal
 }
 
 /**
- * @tc.number: InnerBundleInfo_8400
+ * @tc.number: InnerBundleInfo_8700
  * @tc.name: Test GetApplicationInfoV9
  * @tc.desc: Test the GetApplicationInfoV9 of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_8400, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_8700, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
     InnerBundleUserInfo userInfo;
@@ -5088,11 +5173,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_8400, Function | Smal
 }
 
 /**
- * @tc.number: InnerBundleInfo_8500
+ * @tc.number: InnerBundleInfo_8800
  * @tc.name: Test GetApplicationInfoV9
  * @tc.desc: Test the GetApplicationInfoV9 of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_8500, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_8800, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
     InnerBundleUserInfo userInfo;
@@ -5129,11 +5214,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_8500, Function | Smal
 }
 
 /**
- * @tc.number: InnerBundleInfo_8600
+ * @tc.number: InnerBundleInfo_8900
  * @tc.name: Test GetBundleInfo
  * @tc.desc: Test the GetBundleInfo of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_8600, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_8900, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
     InnerBundleUserInfo userInfo;
@@ -5146,11 +5231,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_8600, Function | Smal
 }
 
 /**
- * @tc.number: InnerBundleInfo_9000
+ * @tc.number: InnerBundleInfo_9300
  * @tc.name: Test GetBundleInfo
  * @tc.desc: Test the GetBundleInfo of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_9000, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_9300, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
     InnerBundleUserInfo userInfo;
@@ -5165,11 +5250,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_9000, Function | Smal
 }
 
 /**
- * @tc.number: InnerBundleInfo_9100
+ * @tc.number: InnerBundleInfo_9400
  * @tc.name: Test GetBundleWithReqPermissionsV9
  * @tc.desc: Test the GetBundleWithReqPermissionsV9 of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_9100, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_9400, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
     InnerModuleInfo innerModuleInfo;
@@ -5189,11 +5274,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_9100, Function | Smal
 }
 
 /**
- * @tc.number: InnerBundleInfo_9200
+ * @tc.number: InnerBundleInfo_9500
  * @tc.name: Test GetBundleWithReqPermissionsV9
  * @tc.desc: Test the GetBundleWithReqPermissionsV9 of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_9200, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_9500, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
     InnerModuleInfo innerModuleInfo;
@@ -5218,11 +5303,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_9200, Function | Smal
 }
 
 /**
- * @tc.number: InnerBundleInfo_9300
+ * @tc.number: InnerBundleInfo_9600
  * @tc.name: Test GetModuleWithHashValue
  * @tc.desc: Test the GetModuleWithHashValue of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_9300, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_9600, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
     HapModuleInfo hapModuleInfo;
@@ -5231,11 +5316,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_9300, Function | Smal
 }
 
 /**
- * @tc.number: InnerBundleInfo_9400
+ * @tc.number: InnerBundleInfo_9700
  * @tc.name: Test GetBundleWithAbilities
  * @tc.desc: Test the GetBundleWithAbilities of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_9400, Function | MediumTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_9700, Function | MediumTest | Level1)
 {
     InnerBundleInfo info;
     InnerAbilityInfo innerAbilityInfo;
@@ -5249,11 +5334,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_9400, Function | Medi
 }
 
 /**
- * @tc.number: InnerBundleInfo_9500
+ * @tc.number: InnerBundleInfo_9800
  * @tc.name: Test GetBundleWithExtension
  * @tc.desc: Test the GetBundleWithExtension of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_9500, Function | MediumTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_9800, Function | MediumTest | Level1)
 {
     InnerBundleInfo info;
     InnerExtensionInfo innerExtensionInfo;
@@ -5265,11 +5350,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_9500, Function | Medi
 }
 
 /**
- * @tc.number: InnerBundleInfo_9600
+ * @tc.number: InnerBundleInfo_9900
  * @tc.name: Test CheckSpecialMetaData
  * @tc.desc: Test the CheckSpecialMetaData of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_9600, Function | MediumTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_9900, Function | MediumTest | Level1)
 {
     InnerBundleInfo info;
     info.isNewVersion_ = true;
@@ -5285,11 +5370,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_9600, Function | Medi
 }
 
 /**
- * @tc.number: InnerBundleInfo_9700
+ * @tc.number: InnerBundleInfo_10000
  * @tc.name: Test GetInnerModuleInfoHnpPath
  * @tc.desc: Test the GetInnerModuleInfoHnpPath of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_9700, Function | MediumTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_10000, Function | MediumTest | Level1)
 {
     InnerBundleInfo info;
     InnerModuleInfo innerModuleInfo;
@@ -5299,11 +5384,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_9700, Function | Medi
 }
 
 /**
- * @tc.number: InnerBundleInfo_9800
+ * @tc.number: InnerBundleInfo_10100
  * @tc.name: Test GetInnerModuleInfoHnpPath
  * @tc.desc: Test the GetInnerModuleInfoHnpPath of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_9800, Function | MediumTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_10100, Function | MediumTest | Level1)
 {
     InnerBundleInfo info;
     InnerModuleInfo innerModuleInfo;
@@ -5320,11 +5405,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_9800, Function | Medi
 }
 
 /**
- * @tc.number: InnerBundleInfo_9900
+ * @tc.number: InnerBundleInfo_10200
  * @tc.name: Test SetAccessTokenId
  * @tc.desc: Test the SetAccessTokenId of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_9900, Function | MediumTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_10200, Function | MediumTest | Level1)
 {
     InnerBundleInfo info;
     info.baseApplicationInfo_->bundleName = TEST_BUNDLE_NAME;
@@ -5338,11 +5423,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_9900, Function | Medi
 }
 
 /**
- * @tc.number: InnerBundleInfo_10000
+ * @tc.number: InnerBundleInfo_10300
  * @tc.name: Test SetAccessTokenIdExWithAppIndex
  * @tc.desc: Test the SetAccessTokenIdExWithAppIndex of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_10000, Function | MediumTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_10300, Function | MediumTest | Level1)
 {
     InnerBundleInfo info;
     OHOS::Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
@@ -5351,11 +5436,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_10000, Function | Med
 }
 
 /**
- * @tc.number: InnerBundleInfo_10100
+ * @tc.number: InnerBundleInfo_10400
  * @tc.name: Test SetAccessTokenIdExWithAppIndex
  * @tc.desc: Test the SetAccessTokenIdExWithAppIndex of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_10100, Function | MediumTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_10400, Function | MediumTest | Level1)
 {
     InnerBundleInfo info;
     info.baseApplicationInfo_->bundleName = TEST_BUNDLE_NAME;
@@ -5368,11 +5453,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_10100, Function | Med
 }
 
 /**
- * @tc.number: InnerBundleInfo_10200
+ * @tc.number: InnerBundleInfo_10500
  * @tc.name: Test SetAccessTokenIdExWithAppIndex
  * @tc.desc: Test the SetAccessTokenIdExWithAppIndex of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_10200, Function | MediumTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_10500, Function | MediumTest | Level1)
 {
     InnerBundleInfo info;
     info.baseApplicationInfo_->bundleName = TEST_BUNDLE_NAME;
@@ -5390,11 +5475,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_10200, Function | Med
 }
 
 /**
- * @tc.number: InnerBundleInfo_10600
+ * @tc.number: InnerBundleInfo_10900
  * @tc.name: Test IsAbilityEnabled
  * @tc.desc: Test the IsAbilityEnabled of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_10600, Function | MediumTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_10900, Function | MediumTest | Level1)
 {
     InnerBundleInfo info;
     AbilityInfo abilityInfo;
@@ -5407,11 +5492,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_10600, Function | Med
 }
 
 /**
- * @tc.number: InnerBundleInfo_10700
+ * @tc.number: InnerBundleInfo_11000
  * @tc.name: Test IsAbilityEnabled
  * @tc.desc: Test the IsAbilityEnabled of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_10700, Function | MediumTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_11000, Function | MediumTest | Level1)
 {
     InnerBundleInfo info;
     AbilityInfo abilityInfo;
@@ -5430,11 +5515,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_10700, Function | Med
 }
 
 /**
- * @tc.number: InnerBundleInfo_10800
+ * @tc.number: InnerBundleInfo_11100
  * @tc.name: Test SetOverlayModuleState
  * @tc.desc: Test the SetOverlayModuleState of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_10800, Function | MediumTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_11100, Function | MediumTest | Level1)
 {
     InnerBundleInfo info;
     info.overlayType_ = OVERLAY_INTERNAL_BUNDLE;
@@ -5446,11 +5531,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_10800, Function | Med
 }
 
 /**
- * @tc.number: InnerBundleInfo_10900
+ * @tc.number: InnerBundleInfo_11200
  * @tc.name: Test SetOverlayModuleState
  * @tc.desc: Test the SetOverlayModuleState of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_10900, Function | MediumTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_11200, Function | MediumTest | Level1)
 {
     InnerBundleInfo info;
     info.overlayType_ = OVERLAY_INTERNAL_BUNDLE;
@@ -5461,11 +5546,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_10900, Function | Med
 }
 
 /**
- * @tc.number: InnerBundleInfo_11000
+ * @tc.number: InnerBundleInfo_11300
  * @tc.name: Test GetOverlayModuleState
  * @tc.desc: Test the GetOverlayModuleState of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_11000, Function | MediumTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_11300, Function | MediumTest | Level1)
 {
     InnerBundleInfo info;
     info.baseApplicationInfo_->bundleName = TEST_BUNDLE_NAME;
@@ -5478,11 +5563,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_11000, Function | Med
 }
 
 /**
- * @tc.number: InnerBundleInfo_11100
+ * @tc.number: InnerBundleInfo_11400
  * @tc.name: Test IsAbilityEnabledV9
  * @tc.desc: Test the IsAbilityEnabledV9 of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_11100, Function | MediumTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_11400, Function | MediumTest | Level1)
 {
     InnerBundleInfo info;
     AbilityInfo abilityInfo;
@@ -5496,11 +5581,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_11100, Function | Med
 }
 
 /**
- * @tc.number: InnerBundleInfo_11200
+ * @tc.number: InnerBundleInfo_11500
  * @tc.name: Test IsAbilityEnabledV9
  * @tc.desc: Test the IsAbilityEnabledV9 of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_11200, Function | MediumTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_11500, Function | MediumTest | Level1)
 {
     InnerBundleInfo info;
     AbilityInfo abilityInfo;
@@ -5520,11 +5605,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_11200, Function | Med
 }
 
 /**
- * @tc.number: InnerBundleInfo_11300
+ * @tc.number: InnerBundleInfo_11600
  * @tc.name: Test IsAbilityEnabledV9
  * @tc.desc: Test the IsAbilityEnabledV9 of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_11300, Function | MediumTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_11600, Function | MediumTest | Level1)
 {
     InnerBundleInfo info;
     AbilityInfo abilityInfo;
@@ -5543,11 +5628,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_11300, Function | Med
 }
 
 /**
- * @tc.number: InnerBundleInfo_11400
+ * @tc.number: InnerBundleInfo_11700
  * @tc.name: Test SetCloneAbilityEnabled
  * @tc.desc: Test the SetCloneAbilityEnabled of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_11400, Function | MediumTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_11700, Function | MediumTest | Level1)
 {
     InnerBundleInfo info;
     InnerAbilityInfo innerAbilityInfo;
@@ -5565,11 +5650,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_11400, Function | Med
 }
 
 /**
- * @tc.number: InnerBundleInfo_11500
+ * @tc.number: InnerBundleInfo_11800
  * @tc.name: Test SetInnerModuleNeedDelete
  * @tc.desc: Test the SetInnerModuleNeedDelete of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_11500, Function | MediumTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_11800, Function | MediumTest | Level1)
 {
     InnerBundleInfo info;
     info.SetInnerModuleNeedDelete(MODULE_NAME_TEST, false);
@@ -5577,11 +5662,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_11500, Function | Med
 }
 
 /**
- * @tc.number: InnerBundleInfo_11600
+ * @tc.number: InnerBundleInfo_11900
  * @tc.name: Test GetInnerModuleNeedDelete
  * @tc.desc: Test the GetInnerModuleNeedDelete of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_11600, Function | MediumTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_11900, Function | MediumTest | Level1)
 {
     InnerBundleInfo info;
     auto ret = info.GetInnerModuleNeedDelete(MODULE_NAME_TEST);
@@ -5589,11 +5674,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_11600, Function | Med
 }
 
 /**
- * @tc.number: InnerBundleInfo_11700
+ * @tc.number: InnerBundleInfo_12000
  * @tc.name: Test GetInnerModuleNeedDelete
  * @tc.desc: Test the GetInnerModuleNeedDelete of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_11700, Function | MediumTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_12000, Function | MediumTest | Level1)
 {
     InnerBundleInfo info;
     InnerModuleInfo innerModuleInfo;
@@ -5603,11 +5688,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_11700, Function | Med
 }
 
 /**
- * @tc.number: InnerBundleInfo_11800
+ * @tc.number: InnerBundleInfo_12100
  * @tc.name: Test GetAllDefinePermissions
  * @tc.desc: Test the GetAllDefinePermissions of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_11800, Function | MediumTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_12100, Function | MediumTest | Level1)
 {
     InnerBundleInfo info;
     InnerModuleInfo innerModuleInfo;
@@ -5623,11 +5708,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_11800, Function | Med
 }
 
 /**
- * @tc.number: InnerBundleInfo_11900
+ * @tc.number: InnerBundleInfo_12200
  * @tc.name: Test InnerProcessRequestPermissions
  * @tc.desc: Test the InnerProcessRequestPermissions of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_11900, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_12200, Function | SmallTest | Level1)
 {
     std::vector<RequestPermission> requestPermissions;
     RequestPermission firstPermission;
@@ -5648,11 +5733,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_11900, Function | Sma
 }
 
 /**
- * @tc.number: InnerBundleInfo_12000
+ * @tc.number: InnerBundleInfo_12300
  * @tc.name: Test InnerProcessRequestPermissions
  * @tc.desc: Test the InnerProcessRequestPermissions of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_12000, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_12300, Function | SmallTest | Level1)
 {
     std::vector<RequestPermission> requestPermissions;
     RequestPermission firstPermission;
@@ -5673,11 +5758,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_12000, Function | Sma
 }
 
 /**
- * @tc.number: InnerBundleInfo_12100
+ * @tc.number: InnerBundleInfo_12400
  * @tc.name: Test IsBundleRemovable
  * @tc.desc: Test the IsBundleRemovable of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_12100, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_12400, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
     info.SetIsPreInstallApp(true);
@@ -5686,11 +5771,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_12100, Function | Sma
 }
 
 /**
- * @tc.number: InnerBundleInfo_12200
+ * @tc.number: InnerBundleInfo_12500
  * @tc.name: Test IsBundleRemovable
  * @tc.desc: Test the IsBundleRemovable of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_12200, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_12500, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
     info.SetIsPreInstallApp(false);
@@ -5699,11 +5784,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_12200, Function | Sma
 }
 
 /**
- * @tc.number: InnerBundleInfo_12300
+ * @tc.number: InnerBundleInfo_12600
  * @tc.name: Test GetLastInstallationTime
  * @tc.desc: Test the GetLastInstallationTime of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_12300, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_12600, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
     auto ret = info.GetLastInstallationTime();
@@ -5722,11 +5807,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_12300, Function | Sma
 }
 
 /**
- * @tc.number: InnerBundleInfo_12400
+ * @tc.number: InnerBundleInfo_12700
  * @tc.name: Test GetRemovableModules
  * @tc.desc: Test the GetRemovableModules of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_12400, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_12700, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
     InnerModuleInfo innerModuleInfo;
@@ -5739,11 +5824,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_12400, Function | Sma
 }
 
 /**
- * @tc.number: InnerBundleInfo_12500
+ * @tc.number: InnerBundleInfo_12800
  * @tc.name: Test UpdateAppEncryptedStatus
  * @tc.desc: Test the UpdateAppEncryptedStatus of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_12500, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_12800, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
     auto ret = info.UpdateAppEncryptedStatus(BUNDLE_NAME, false, 0);
@@ -5753,11 +5838,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_12500, Function | Sma
 }
 
 /**
- * @tc.number: InnerBundleInfo_12600
+ * @tc.number: InnerBundleInfo_12900
  * @tc.name: Test GetAllDependentModuleNames
  * @tc.desc: Test the GetAllDependentModuleNames of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_12600, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_12900, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
     std::vector<std::string> dependentModuleNames;
@@ -5766,11 +5851,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_12600, Function | Sma
 }
 
 /**
- * @tc.number: InnerBundleInfo_12700
+ * @tc.number: InnerBundleInfo_13000
  * @tc.name: Test DeleteHspModuleByVersion
  * @tc.desc: Test the DeleteHspModuleByVersion of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_12700, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_13000, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
     std::vector<InnerModuleInfo> innerModuleInfos;
@@ -5783,11 +5868,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_12700, Function | Sma
 }
 
 /**
- * @tc.number: InnerBundleInfo_12800
+ * @tc.number: InnerBundleInfo_13100
  * @tc.name: Test ConvertPluginBundleInfo
  * @tc.desc: Test the ConvertPluginBundleInfo of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_12800, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_13100, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
     EXPECT_EQ(info.FromJson(innerBundleInfoJson_), OHOS::ERR_OK);
@@ -5798,11 +5883,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_12800, Function | Sma
 }
 
 /**
- * @tc.number: InnerBundleInfo_12900
+ * @tc.number: InnerBundleInfo_13200
  * @tc.name: Test AddPluginBundleInfo
  * @tc.desc: Test the AddPluginBundleInfo of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_12900, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_13200, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
     PluginBundleInfo pluginBundleInfo;
@@ -5819,11 +5904,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_12900, Function | Sma
 }
 
 /**
- * @tc.number: InnerBundleInfo_13000
+ * @tc.number: InnerBundleInfo_13300
  * @tc.name: Test RemovePluginBundleInfo
  * @tc.desc: Test the RemovePluginBundleInfo of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_13000, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_13300, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
     PluginBundleInfo pluginBundleInfo;
@@ -5844,11 +5929,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_13000, Function | Sma
 }
 
 /**
- * @tc.number: InnerBundleInfo_13100
+ * @tc.number: InnerBundleInfo_13400
  * @tc.name: Test HasMultiUserPlugin
  * @tc.desc: Test the HasMultiUserPlugin of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_13100, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_13400, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
     InnerBundleUserInfo innerBundleUserInfo1;
@@ -5868,11 +5953,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_13100, Function | Sma
 }
 
 /**
- * @tc.number: InnerBundleInfo_13300
+ * @tc.number: InnerBundleInfo_13600
  * @tc.name: Test UpdateHasCloudkitConfig
  * @tc.desc: Test the UpdateHasCloudkitConfig of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_13300, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_13600, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
     info.UpdateHasCloudkitConfig();
@@ -6041,11 +6126,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, GetModuleArkTSMode_0001, Function | S
 }
 
 /**
- * @tc.number: InnerBundleInfo_13200
+ * @tc.number: InnerBundleInfo_13500
  * @tc.name: Test FindHapModuleInfo
  * @tc.desc: Test the FindHapModuleInfo of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_13200, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_13500, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
     std::map<std::string, InnerModuleInfo> innerModuleInfos;
@@ -6067,11 +6152,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_13200, Function | Sma
 }
 
 /**
- * @tc.number: InnerBundleInfo_13400
+ * @tc.number: InnerBundleInfo_13700
  * @tc.name: Test ConvertPluginBundleInfo
  * @tc.desc: Test the ConvertPluginBundleInfo of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_13400, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_13700, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
     InnerModuleInfo moduleInfo;
@@ -6084,11 +6169,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_13400, Function | Sma
 }
 
 /**
- * @tc.number: InnerBundleInfo_13500
+ * @tc.number: InnerBundleInfo_13800
  * @tc.name: Test SetModuleRemovableSet
  * @tc.desc: Test the SetModuleRemovableSet of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_13500, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_13800, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
     EXPECT_TRUE(info.innerModuleInfos_.empty());
@@ -6097,11 +6182,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_13500, Function | Sma
 }
 
 /**
- * @tc.number: InnerBundleInfo_13600
+ * @tc.number: InnerBundleInfo_13900
  * @tc.name: Test SetModuleRemovableSet
  * @tc.desc: Test the SetModuleRemovableSet of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_13600, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_13900, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
     std::string moduleName = MODULE_NAME;
@@ -6113,11 +6198,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_13600, Function | Sma
 }
 
 /**
- * @tc.number: InnerBundleInfo_13700
+ * @tc.number: InnerBundleInfo_14000
  * @tc.name: Test SetModuleRemovableSet
  * @tc.desc: Test the SetModuleRemovableSet of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_13700, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_14000, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
     std::string moduleName = MODULE_NAME;
@@ -6130,11 +6215,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_13700, Function | Sma
 }
 
 /**
- * @tc.number: InnerBundleInfo_13800
+ * @tc.number: InnerBundleInfo_14100
  * @tc.name: Test IsBundleRemovable
  * @tc.desc: Test the IsBundleRemovable of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_13800, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_14100, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
     int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
@@ -6151,11 +6236,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_13800, Function | Sma
 }
 
 /**
- * @tc.number: InnerBundleInfo_13900
+ * @tc.number: InnerBundleInfo_14200
  * @tc.name: Test DeleteModuleRemovableInfo
  * @tc.desc: Test the DeleteModuleRemovableInfo of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_13900, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_14200, Function | SmallTest | Level1)
 {
     const std::string targetUser = "100";
     const std::string otherUser  = "200";
@@ -6175,12 +6260,12 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_13900, Function | Sma
 }
 
 /**
- * @tc.number: InnerBundleInfo_14000
+ * @tc.number: InnerBundleInfo_14300
  * @tc.name: Test DeleteModuleRemovableInfo with bundle name without UID_SEPARATOR
  * @tc.desc: Test deleting removable info when isRemovableSet contains entries
  *           without UID_SEPARATOR along with matching user entry
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_14000, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_14300, Function | SmallTest | Level1)
 {
     const std::string targetUser = "100";
     InnerModuleInfo module;
@@ -6197,11 +6282,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_14000, Function | Sma
 }
 
 /**
- * @tc.number: InnerBundleInfo_14100
+ * @tc.number: InnerBundleInfo_14400
  * @tc.name: Test DeleteModuleRemovableInfo with only entries without UID_SEPARATOR
  * @tc.desc: Test that entries in isRemovableSet without UID_SEPARATOR are preserved after deletion
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_14100, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_14400, Function | SmallTest | Level1)
 {
     const std::string targetUser = "100";
     InnerModuleInfo module;
@@ -6218,11 +6303,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_14100, Function | Sma
 }
 
 /**
- * @tc.number: InnerBundleInfo_14200
+ * @tc.number: InnerBundleInfo_14500
  * @tc.name: Test DeleteModuleRemovableInfo with empty isRemovableSet
  * @tc.desc: Test safety of DeleteModuleRemovableInfo when isRemovableSet is empty
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_14200, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_14500, Function | SmallTest | Level1)
 {
     const std::string targetUser = "100";
     InnerModuleInfo module;
@@ -6236,11 +6321,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_14200, Function | Sma
 }
 
 /**
- * @tc.number: InnerBundleInfo_14300
+ * @tc.number: InnerBundleInfo_14600
  * @tc.name: Test DeleteModuleRemovableInfo with mixed removable set entries
  * @tc.desc: Test deletion when isRemovableSet includes matching, non-matching and no UID_SEPARATOR entries
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_14300, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_14600, Function | SmallTest | Level1)
 {
     const std::string targetUser = "100";
     const std::string otherUser = "200";
@@ -6262,11 +6347,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_14300, Function | Sma
 }
 
 /**
- * @tc.number: InnerBundleInfo_14400
+ * @tc.number: InnerBundleInfo_14700
  * @tc.name: Test DeleteModuleRemovableInfo with empty userId string
  * @tc.desc: Test DeleteModuleRemovableInfo behavior when the userId string is empty
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_14400, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_14700, Function | SmallTest | Level1)
 {
     const std::string targetUser = "";
     InnerModuleInfo module;
@@ -6283,11 +6368,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_14400, Function | Sma
 }
 
 /**
- * @tc.number: InnerBundleInfo_14500
+ * @tc.number: InnerBundleInfo_14800
  * @tc.name: Test UpdateModuleRemovable with empty old innerModuleInfos_
  * @tc.desc: Verify function handles empty oldInfo.innerModuleInfos_ without error (loop not entered)
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_14500, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_14800, Function | SmallTest | Level1)
 {
     InnerBundleInfo oldInfo;
     // oldInfo.innerModuleInfos_ is empty
@@ -6308,12 +6393,12 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_14500, Function | Sma
 }
 
 /**
- * @tc.number: InnerBundleInfo_14600
+ * @tc.number: InnerBundleInfo_14900
  * @tc.name: Test UpdateModuleRemovable with no matching keys in newInfo
  * @tc.desc: Verify that if keys in oldInfo are not present in newInfo,
  *           no update is done and function completes gracefully
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_14600, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_14900, Function | SmallTest | Level1)
 {
     InnerBundleInfo oldInfo;
     InnerModuleInfo oldModule;
@@ -6337,11 +6422,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_14600, Function | Sma
 }
 
 /**
- * @tc.number: InnerBundleInfo_14700
+ * @tc.number: InnerBundleInfo_15000
  * @tc.name: IsRemovableSet returns false on empty set
  * @tc.desc: Test IsRemovableSet returns false when isRemovableSet is empty
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_14700, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_15000, Function | SmallTest | Level1)
 {
     InnerModuleInfo module;
     module.moduleName = "testModule";
@@ -6353,11 +6438,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_14700, Function | Sma
 }
 
 /**
- * @tc.number: InnerBundleInfo_14800
+ * @tc.number: InnerBundleInfo_15100
  * @tc.name: IsRemovableSet returns true when matching userId present
  * @tc.desc: Test IsRemovableSet returns true when isRemovableSet contains entry with matching userId suffix
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_14800, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_15100, Function | SmallTest | Level1)
 {
     InnerModuleInfo module;
     module.moduleName = "testModule";
@@ -6370,11 +6455,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_14800, Function | Sma
 }
 
 /**
- * @tc.number: InnerBundleInfo_14900
+ * @tc.number: InnerBundleInfo_15200
  * @tc.name: IsRemovableSet returns false when no matching userId found
  * @tc.desc: Test IsRemovableSet returns false when isRemovableSet contains entries but none match userId
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_14900, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_15200, Function | SmallTest | Level1)
 {
     InnerModuleInfo module;
     module.moduleName = "testModule";
@@ -6387,11 +6472,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_14900, Function | Sma
 }
 
 /**
- * @tc.number: InnerBundleInfo_15000
+ * @tc.number: InnerBundleInfo_15300
  * @tc.name: IsRemovableSet skips entries without separator
  * @tc.desc: Test IsRemovableSet correctly skips entries that do not contain the UID_SEPARATOR
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_15000, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_15300, Function | SmallTest | Level1)
 {
     InnerModuleInfo module;
     module.moduleName = "testModule";
@@ -6404,11 +6489,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_15000, Function | Sma
 }
 
 /**
- * @tc.number: InnerBundleInfo_15100
+ * @tc.number: InnerBundleInfo_15400
  * @tc.name: Test IsBundleRemovable with IsRemovableSet
  * @tc.desc: Test IsBundleRemovable returns false when IsRemovableSet returns true
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_15100, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_15400, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
     info.SetIsPreInstallApp(false);
@@ -6431,11 +6516,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_15100, Function | Sma
 }
 
 /**
- * @tc.number: InnerBundleInfo_15200
+ * @tc.number: InnerBundleInfo_15500
  * @tc.name: Test IsUserExistModule with IsRemovableSet true
  * @tc.desc: Test IsUserExistModule returns true when IsRemovableSet returns true
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_15200, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_15500, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
     BundleInfo bundleInfo;
@@ -6454,11 +6539,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_15200, Function | Sma
 }
 
 /**
- * @tc.number: InnerBundleInfo_15300
+ * @tc.number: InnerBundleInfo_15600
  * @tc.name: Test GetEventModuleName
  * @tc.desc: Test GetEventModuleName of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_15300, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_15600, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
     std::string eventModuleName = info.GetEventModuleName();
@@ -6466,11 +6551,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_15300, Function | Sma
 }
 
 /**
- * @tc.number: InnerBundleInfo_15400
+ * @tc.number: InnerBundleInfo_15700
  * @tc.name: Test GetEventModuleName
  * @tc.desc: Test GetEventModuleName of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_15400, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_15700, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
     InnerModuleInfo innerModuleInfo;
@@ -6481,11 +6566,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_15400, Function | Sma
 }
 
 /**
- * @tc.number: InnerBundleInfo_15500
+ * @tc.number: InnerBundleInfo_15800
  * @tc.name: Test GetEventModuleName
  * @tc.desc: Test GetEventModuleName of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_15500, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_15800, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
     InnerModuleInfo innerModuleInfo;
@@ -6500,11 +6585,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_15500, Function | Sma
 }
 
 /**
- * @tc.number: InnerBundleInfo_15600
+ * @tc.number: InnerBundleInfo_15900
  * @tc.name: Test GetBundleInfoV9
  * @tc.desc: Test GetBundleInfoV9 only fills hap module info requested by flags
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_15600, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_15900, Function | SmallTest | Level1)
 {
     const std::string bundleName = "com.example.bundleinfo";
     const std::string modulePackage = "entry";
@@ -6543,11 +6628,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_15600, Function | Sma
 }
 
 /**
- * @tc.number: InnerBundleInfo_15700
+ * @tc.number: InnerBundleInfo_16000
  * @tc.name: Test GetBundleInfoV9
  * @tc.desc: Test GetBundleInfoV9 only returns entry module and its abilities with entry module flag
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_15700, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_16000, Function | SmallTest | Level1)
 {
     const int32_t userId = 100;
     InnerBundleInfo info = CreateInnerBundleInfoForBundleInfoV9Test(userId);

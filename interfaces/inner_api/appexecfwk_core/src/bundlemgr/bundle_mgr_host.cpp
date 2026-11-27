@@ -763,6 +763,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_BUNDLE_DIRS):
             errCode = HandleGetAllBundleDirs(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_EXTENSION_SANDBOX_DATA_DIR):
+            errCode = HandleGetExtensionSandboxDataDir(data, reply);
+            break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_BUNDLE_CACHE):
             errCode = HandleGetAllBundleCacheStat(data, reply);
             break;
@@ -5855,6 +5858,27 @@ ErrCode BundleMgrHost::HandleGetAllBundleDirs(MessageParcel &data, MessageParcel
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetExtensionSandboxDataDir(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    std::string extensionName;
+    if (!data.ReadString(extensionName)) {
+        APP_LOGE("read extension sandbox dir query failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    std::string dir;
+    auto ret = GetExtensionSandboxDataDir(extensionName, dir);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write result failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK && !reply.WriteString(dir)) {
+        APP_LOGE("write dir failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
 }

@@ -1071,6 +1071,7 @@ private:
     ErrCode HandleGetAllLocalPluginInfoForSelf(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleGetDirByBundleNameAndAppIndex(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleGetAllBundleDirs(MessageParcel &data, MessageParcel &reply);
+    ErrCode HandleGetExtensionSandboxDataDir(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleRegisterPluginEventCallback(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleUnregisterPluginEventCallback(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleSetAppDistributionTypes(MessageParcel &data, MessageParcel &reply);

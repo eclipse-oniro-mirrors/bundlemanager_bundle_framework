@@ -1481,6 +1481,7 @@ public:
         std::string &dataDir) override;
 
     virtual ErrCode GetAllBundleDirs(int32_t userId, std::vector<BundleDir> &bundleDirs) override;
+    virtual ErrCode GetExtensionSandboxDataDir(const std::string &extensionName, std::string &dir) override;
 
     virtual ErrCode SetAppDistributionTypes(std::set<AppDistributionTypeEnum> &appDistributionTypeEnums) override;
 

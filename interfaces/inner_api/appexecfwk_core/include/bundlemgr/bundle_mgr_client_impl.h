@@ -77,6 +77,7 @@ public:
     ErrCode CreateBundleDataDirWithEl(int32_t userId, DataDirEl dirEl);
     ErrCode GetDirByBundleNameAndAppIndex(const std::string &bundleName, const int32_t appIndex, std::string &dataDir);
     ErrCode GetAllBundleDirs(int32_t userId, std::vector<BundleDir> &bundleDirs);
+    ErrCode GetExtensionSandboxDataDir(const std::string &extensionName, std::string &dir);
     ErrCode RegisterPluginEventCallback(const sptr<IBundleEventCallback> pluginEventCallback);
     ErrCode UnregisterPluginEventCallback(const sptr<IBundleEventCallback> pluginEventCallback);
     ErrCode GetTopNLargestItemsInAppDataDir(const std::string &bundleName, const int32_t appIndex,

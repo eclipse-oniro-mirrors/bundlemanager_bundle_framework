@@ -700,6 +700,23 @@ ErrCode BundleMgrClientImpl::RegisterDeathRecipient()
     return ERR_OK;
 }
 
+ErrCode BundleMgrClientImpl::GetExtensionSandboxDataDir(const std::string &extensionName, std::string &dir)
+{
+    APP_LOGD("GetExtensionSandboxDataDir begin");
+    dir.clear();
+    ErrCode result = Connect();
+    if (result != ERR_OK) {
+        APP_LOGE_NOFUNC("GetExtensionSandboxDataDir connect fail");
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    std::shared_lock<std::shared_mutex> lock(mutex_);
+    if (bundleMgr_ == nullptr) {
+        APP_LOGE_NOFUNC("GetExtensionSandboxDataDir bundleMgr_ nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    return bundleMgr_->GetExtensionSandboxDataDir(extensionName, dir);
+}
+
 ErrCode BundleMgrClientImpl::Connect()
 {
     APP_LOGD("connect begin");

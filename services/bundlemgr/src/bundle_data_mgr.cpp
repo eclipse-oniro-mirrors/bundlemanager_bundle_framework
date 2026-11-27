@@ -17281,6 +17281,51 @@ ErrCode BundleDataMgr::GetDirByBundleNameAndAppIndex(const std::string &bundleNa
     return ERR_OK;
 }
 
+ErrCode BundleDataMgr::GetExtensionSandboxDataDir(const std::string &bundleName,
+    const std::string &extensionName, int32_t appIndex, std::string &dir)
+{
+    dir.clear();
+    const bool isDualModeCloneIndex = (appIndex == ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
+    const bool isCloneIndex = !isDualModeCloneIndex && appIndex >= ServiceConstants::CLONE_APP_INDEX_MIN &&
+        appIndex <= BundleFileUtil::GetCloneMaxCount();
+    const bool isCliSandboxIndex = appIndex >= Constants::CLI_SANDBOX_APP_INDEX_MIN &&
+        appIndex <= Constants::CLI_SANDBOX_APP_INDEX_MAX;
+    const bool isValidAppIndex = appIndex == Constants::MAIN_APP_INDEX || isCloneIndex || isCliSandboxIndex ||
+        (isDualModeCloneIndex && DualModeHelper::IsDualModeDevice());
+    if (!isValidAppIndex) {
+        APP_LOGE("invalid appIndex: %{public}d", appIndex);
+        return ERR_BUNDLE_MANAGER_GET_DIR_INVALID_APP_INDEX;
+    }
+    if (isCloneIndex || isCliSandboxIndex) {
+        APP_LOGE("extension sandbox dir unavailable for clone or CLI sandbox appIndex=%{public}d code=%{public}d",
+            appIndex, ERR_BUNDLE_MANAGER_EXTENSION_SANDBOX_DIR_NOT_EXIST);
+        return ERR_BUNDLE_MANAGER_EXTENSION_SANDBOX_DIR_NOT_EXIST;
+    }
+    if (bundleName.empty()) {
+        APP_LOGW("bundleName is empty");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+
+    std::string dataDir;
+    const auto ret = GetDirByBundleNameAndAppIndex(bundleName, appIndex, dataDir);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetDirByBundleNameAndAppIndex failed appIndex=%{public}d code=%{public}d", appIndex, ret);
+        return ret;
+    }
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    const auto infoItem = bundleInfos_.find(bundleName);
+    // A missing dual-mode bundle can be reported as an invalid index by the directory lookup.
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGW("bundle not found");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    const auto &info = infoItem->second;
+    if (isDualModeCloneIndex && !info.IsDualModeCloneApp()) {
+        return ERR_BUNDLE_MANAGER_GET_DIR_INVALID_APP_INDEX;
+    }
+    return info.GetExtensionSandboxDataDir(extensionName, dataDir, dir);
+}
+
 std::vector<int32_t> BundleDataMgr::GetCloneAppIndexesByInnerBundleInfo(const InnerBundleInfo &innerBundleInfo,
     int32_t userId) const
 {

@@ -8324,6 +8324,42 @@ ErrCode BundleMgrHostImpl::GetAllBundleDirs(int32_t userId, std::vector<BundleDi
     return dataMgr->GetAllBundleDirs(userId, bundleDirs);
 }
 
+ErrCode BundleMgrHostImpl::GetExtensionSandboxDataDir(const std::string &extensionName, std::string &dir)
+{
+    dir.clear();
+    const int32_t callingUid = IPCSkeleton::GetCallingUid();
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE_NOFUNC("GetExtensionSandboxDataDir dataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    std::string bundleName;
+    int32_t appIndex = Constants::MAIN_APP_INDEX;
+    if (dataMgr->GetBundleNameAndIndexForUid(callingUid, bundleName, appIndex) != ERR_OK) {
+        APP_LOGE_NOFUNC("GetExtensionSandboxDataDir invalid calling uid %{public}d", callingUid);
+        return ERR_BUNDLE_MANAGER_INVALID_UID;
+    }
+    if (bundleName.empty() || extensionName.empty()) {
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    int32_t userId = AccountHelper::GetCurrentActiveUserId();
+    if (userId == Constants::INVALID_USERID) {
+        APP_LOGE_NOFUNC("GetExtensionSandboxDataDir GetCurrentActiveUserId failed code=%{public}d",
+            ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    if (BundleUtil::GetUserIdByUid(callingUid) != userId ||
+        dataMgr->GetUidByBundleName(bundleName, userId, appIndex) != callingUid) {
+        APP_LOGE_NOFUNC("GetExtensionSandboxDataDir caller is not installed for current user");
+        return ERR_BUNDLE_MANAGER_INVALID_UID;
+    }
+    if (!dataMgr->HasUserId(userId)) {
+        APP_LOGE_NOFUNC("GetExtensionSandboxDataDir invalid user %{public}d", userId);
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    return dataMgr->GetExtensionSandboxDataDir(bundleName, extensionName, appIndex, dir);
+}
+
 ErrCode BundleMgrHostImpl::SetAppDistributionTypes(std::set<AppDistributionTypeEnum> &appDistributionTypeEnums)
 {
     if (!BundlePermissionMgr::IsSystemApp()) {

@@ -1667,5 +1667,41 @@ HWTEST_F(BmsDualModeSwitchTest, FilterBundleListIpcLink_1300_HostImplWithoutData
         ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 }
 
+/**
+ * @tc.number: GetExtensionSandboxDataDir_DualMode_0001
+ * @tc.name: GetExtensionSandboxDataDir
+ * @tc.desc: Require a dual-mode device and a dual-mode clone for appIndex 10000.
+ */
+HWTEST_F(BmsDualModeSwitchTest, GetExtensionSandboxDataDir_DualMode_0001, TestSize.Level1)
+{
+    auto info = MakePolicyInfo(BUNDLE_NAME_DIFF, DeviceModeDistributionPolicy::FULL_COMPATIBLE_DIFFERENT_PACKAGE);
+    InnerExtensionInfo extensionInfo;
+    extensionInfo.bundleName = BUNDLE_NAME_DIFF;
+    extensionInfo.moduleName = "entry";
+    extensionInfo.name = "inputMethodExtAbility";
+    extensionInfo.type = ExtensionAbilityType::INPUTMETHOD;
+    extensionInfo.needCreateSandbox = true;
+    info.AddModuleExtensionInfos({{"input-method", extensionInfo}});
+    auto &bundleInfo = dataMgr_->bundleInfos_[BUNDLE_NAME_DIFF];
+    bundleInfo = info;
+
+    const int32_t appIndex = ServiceConstants::DUAL_MODE_CLONE_APP_INDEX;
+    std::string dir = "stale-dir";
+    EXPECT_EQ(dataMgr_->GetExtensionSandboxDataDir(BUNDLE_NAME_DIFF, extensionInfo.name, appIndex, dir),
+        ERR_BUNDLE_MANAGER_GET_DIR_INVALID_APP_INDEX);
+    EXPECT_TRUE(dir.empty());
+
+    EnableSecondaryMode();
+    dir = "stale-dir";
+    EXPECT_EQ(dataMgr_->GetExtensionSandboxDataDir(BUNDLE_NAME_DIFF, extensionInfo.name, appIndex, dir),
+        ERR_BUNDLE_MANAGER_GET_DIR_INVALID_APP_INDEX);
+    EXPECT_TRUE(dir.empty());
+
+    bundleInfo.SetDualModeCloneApp(true);
+    bundleInfo.SetAppIndex(appIndex);
+    EXPECT_EQ(dataMgr_->GetExtensionSandboxDataDir(BUNDLE_NAME_DIFF, extensionInfo.name, appIndex, dir), ERR_OK);
+    EXPECT_EQ(dir, "+extension-entry-inputMethodExtAbility++clone-10000+" + BUNDLE_NAME_DIFF);
+}
+
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -5983,6 +5983,24 @@ std::vector<std::string> InnerBundleInfo::GetAllExtensionDirs() const
     return dirVec;
 }
 
+ErrCode InnerBundleInfo::GetExtensionSandboxDataDir(const std::string &extensionName,
+    const std::string &dataDir, std::string &dir) const
+{
+    dir.clear();
+    for (const auto &[key, extensionInfo] : baseExtensionInfos_) {
+        if (extensionInfo.type != ExtensionAbilityType::INPUTMETHOD ||
+            extensionInfo.name != extensionName || !extensionInfo.needCreateSandbox ||
+            extensionInfo.moduleName.empty() || extensionInfo.bundleName.empty()) {
+            continue;
+        }
+        dir = ServiceConstants::EXTENSION_DIR + extensionInfo.moduleName +
+            ServiceConstants::FILE_SEPARATOR_LINE + extensionInfo.name +
+            ServiceConstants::FILE_SEPARATOR_PLUS + dataDir;
+        return ERR_OK;
+    }
+    return ERR_BUNDLE_MANAGER_EXTENSION_SANDBOX_DIR_NOT_EXIST;
+}
+
 void InnerBundleInfo::SetApplicationFlags(ApplicationInfoFlag flag)
 {
     uint32_t applicationFlags = static_cast<uint32_t>(baseApplicationInfo_->applicationFlags);

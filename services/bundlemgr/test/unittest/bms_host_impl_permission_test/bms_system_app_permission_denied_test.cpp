@@ -17,9 +17,11 @@
 
 #include <gtest/gtest.h>
 
+#include "bundle_data_mgr.h"
 #include "bundle_mgr_host_impl.h"
 #include "bundle_mgr_service.h"
 #include "bundle_option.h"
+#include "scope_guard.h"
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
 #include "bundle_resource_host_impl.h"
 #endif
@@ -1330,5 +1332,41 @@ HWTEST_F(BmsSystemAppPermissionDeniedTest, AlternateModuleDenied_0001, TestSize.
     EXPECT_EQ(host.GetAlternateModuleState("com.example.escape", "library", 1, enabled),
         ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
     EXPECT_FALSE(enabled);
+}
+
+/**
+ * @tc.number: GetExtensionSandboxDataDir_NullDataMgr_0100
+ * @tc.name: GetExtensionSandboxDataDir
+ * @tc.desc: Missing service data is reported without a system-app permission rejection.
+ */
+HWTEST_F(BmsSystemAppPermissionDeniedTest, GetExtensionSandboxDataDir_NullDataMgr_0100, TestSize.Level1)
+{
+    auto service = DelayedSingleton<BundleMgrService>::GetInstance();
+    auto savedDataMgr = service->dataMgr_;
+    ScopeGuard restoreDataMgr([service, savedDataMgr] { service->dataMgr_ = savedDataMgr; });
+    service->dataMgr_ = nullptr;
+    BundleMgrHostImpl host;
+    std::string dir = "stale-dir";
+    EXPECT_EQ(host.GetExtensionSandboxDataDir("inputMethodExtAbility", dir),
+        ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    EXPECT_TRUE(dir.empty());
+}
+
+/**
+ * @tc.number: GetExtensionSandboxDataDir_InvalidCaller_0100
+ * @tc.name: GetExtensionSandboxDataDir
+ * @tc.desc: A caller without an installed bundle cannot query extension directories.
+ */
+HWTEST_F(BmsSystemAppPermissionDeniedTest, GetExtensionSandboxDataDir_InvalidCaller_0100, TestSize.Level1)
+{
+    auto service = DelayedSingleton<BundleMgrService>::GetInstance();
+    auto savedDataMgr = service->dataMgr_;
+    ScopeGuard restoreDataMgr([service, savedDataMgr] { service->dataMgr_ = savedDataMgr; });
+    service->dataMgr_ = std::make_shared<BundleDataMgr>();
+    BundleMgrHostImpl host;
+    std::string dir = "stale-dir";
+    EXPECT_EQ(host.GetExtensionSandboxDataDir("inputMethodExtAbility", dir),
+        ERR_BUNDLE_MANAGER_INVALID_UID);
+    EXPECT_TRUE(dir.empty());
 }
 }  // namespace OHOS

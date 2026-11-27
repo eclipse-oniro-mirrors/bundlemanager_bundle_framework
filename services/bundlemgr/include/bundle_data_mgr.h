@@ -1600,6 +1600,8 @@ public:
     std::string GetDirForApp(const std::string &bundleName, const int32_t appIndex) const;
     ErrCode GetDirByBundleNameAndAppIndex(const std::string &bundleName, const int32_t appIndex,
         std::string &dataDir);
+    ErrCode GetExtensionSandboxDataDir(const std::string &bundleName,
+        const std::string &extensionName, int32_t appIndex, std::string &dir);
     std::vector<int32_t> GetCloneAppIndexesByInnerBundleInfo(const InnerBundleInfo &innerBundleInfo,
         int32_t userId) const;
     std::vector<int32_t> GetCliSandboxAppIndexesByInnerBundleInfo(const InnerBundleInfo &innerBundleInfo,
