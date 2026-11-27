@@ -958,6 +958,8 @@ private:
 
     ErrCode HandleCreateBundleDataDirWithEl(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleCreateBundleDataDirByBundleName(MessageParcel &data, MessageParcel &reply);
+
     ErrCode HandleMigrateData(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the GetAllBundleNames function called from a IBundleMgr proxy object.

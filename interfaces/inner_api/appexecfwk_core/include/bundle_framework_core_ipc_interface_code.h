@@ -289,6 +289,7 @@ enum class BundleMgrInterfaceCode : uint32_t {
     SET_ALTERNATE_MODULE_ENABLED = 264,
     GET_ALTERNATE_MODULE_STATE = 265,
     GET_EXTENSION_SANDBOX_DATA_DIR = 266,
+    CREATE_BUNDLE_DATA_DIR_BY_BUNDLE_NAME = 267,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */

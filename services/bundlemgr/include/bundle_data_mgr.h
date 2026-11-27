@@ -1433,6 +1433,7 @@ public:
     ErrCode GetAppServiceHspBundleInfo(const std::string &bundleName, BundleInfo &bundleInfo);
     ErrCode CreateBundleDataDir(int32_t userId);
     ErrCode CreateBundleDataDirWithEl(int32_t userId, DataDirEl dirEl);
+    ErrCode CreateBundleDataDirByBundleName(const std::string &bundleName, int32_t userId, int32_t appIndex);
     void GenerateOdid(const std::string &developerId, std::string &odid) const;
     std::string GenerateOdidNoLock(const std::string &developerId) const;
     ErrCode GetOdid(std::string &odid) const;
@@ -1952,6 +1953,15 @@ private:
     void SetEl5DirPolicy(const CreateDirParam &el5Param, bool needSaveStorage,
         bool toTempBundle = false);
     void SetEl5DirPolicy(const CreateDirParam &el5Param, InnerBundleInfo &info, std::string &keyId);
+
+    // helpers of CreateBundleDataDirByBundleName: validate and fetch the target,
+    // build the dir param, and create the el5 / data group dirs
+    ErrCode GetBundleDataDirInfo(const std::string &bundleName, int32_t userId, int32_t appIndex,
+        InnerBundleInfo &innerBundleInfo, int32_t &uid);
+    CreateDirParam MakeBundleDataDirParam(const InnerBundleInfo &innerBundleInfo, const std::string &bundleName,
+        int32_t userId, int32_t appIndex, int32_t uid);
+    void CreateEl5AndDataGroupDirs(const InnerBundleInfo &innerBundleInfo, const CreateDirParam &createDirParam,
+        int32_t userId, int32_t appIndex, int32_t uid);
 
     void FilterExtensionAbilityInfosByModuleName(const std::string &moduleName,
         std::vector<ExtensionAbilityInfo> &extensionInfos) const;

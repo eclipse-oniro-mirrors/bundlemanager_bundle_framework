@@ -15299,6 +15299,142 @@ ErrCode BundleDataMgr::CreateBundleDataDirWithEl(int32_t userId, DataDirEl dirEl
     return res;
 }
 
+ErrCode BundleDataMgr::CreateBundleDataDirByBundleName(
+    const std::string &bundleName, int32_t userId, int32_t appIndex)
+{
+    LOG_I(BMS_TAG_INSTALLER, "with -n %{public}s -u %{public}d -i %{public}d begin",
+        bundleName.c_str(), userId, appIndex);
+    if (bundleName.empty()) {
+        LOG_E(BMS_TAG_INSTALLER, "bundleName is empty");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    // This is a creation-type interface: only a concrete user id is accepted.
+    // All negative ids (wildcards, UNSPECIFIED, INVALID) are rejected instead
+    // of being resolved to some other user, which would create the dirs for
+    // a user the caller never asked for.
+    if (userId < 0) {
+        LOG_E(BMS_TAG_INSTALLER, "invalid userId %{public}d", userId);
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    if (appIndex < Constants::MAIN_APP_INDEX) {
+        LOG_E(BMS_TAG_INSTALLER, "invalid appIndex %{public}d", appIndex);
+        return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
+    }
+    InnerBundleInfo innerBundleInfo;
+    int32_t uid = 0;
+    ErrCode ret = GetBundleDataDirInfo(bundleName, userId, appIndex, innerBundleInfo, uid);
+    if (ret != ERR_OK) {
+        return ret;
+    }
+
+    CreateDirParam createDirParam = MakeBundleDataDirParam(
+        innerBundleInfo, bundleName, userId, appIndex, uid);
+    auto res = InstalldClient::GetInstance()->CreateBundleDataDir(createDirParam);
+    // el5 (screen lock data) and data group dirs follow the same anchors as
+    // the unlock refresh chain, so the rebuilt bundle gets the full dir set.
+    CreateEl5AndDataGroupDirs(innerBundleInfo, createDirParam, userId, appIndex, uid);
+    LOG_I(BMS_TAG_INSTALLER, "with -n %{public}s -u %{public}d -i %{public}d end, res %{public}d",
+        bundleName.c_str(), userId, appIndex, res);
+    return res;
+}
+
+ErrCode BundleDataMgr::GetBundleDataDirInfo(const std::string &bundleName, int32_t userId,
+    int32_t appIndex, InnerBundleInfo &innerBundleInfo, int32_t &uid)
+{
+    if (!HasUserId(userId)) {
+        LOG_E(BMS_TAG_INSTALLER, "user %{public}d is not existed", userId);
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    if (!FetchInnerBundleInfo(bundleName, innerBundleInfo)) {
+        LOG_E(BMS_TAG_INSTALLER, "bundle %{public}s is not exist", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    // Create the dirs only for the requested user; never fall back to another
+    // installed user (e.g. user 0) silently.
+    if (!innerBundleInfo.HasInnerBundleUserInfo(userId)) {
+        LOG_E(BMS_TAG_INSTALLER, "bundle %{public}s is not installed in user %{public}d",
+            bundleName.c_str(), userId);
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    uid = innerBundleInfo.GetUid(userId, appIndex);
+    // A zero uid means a corrupt record; reject it as well, otherwise installd
+    // would chown the data dirs to root (aligned with the installer-side check).
+    if (uid <= 0) {
+        LOG_E(BMS_TAG_INSTALLER,
+            "bundle %{public}s with appIndex %{public}d in user %{public}d has invalid uid %{public}d",
+            bundleName.c_str(), appIndex, userId, uid);
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    return ERR_OK;
+}
+
+CreateDirParam BundleDataMgr::MakeBundleDataDirParam(const InnerBundleInfo &innerBundleInfo,
+    const std::string &bundleName, int32_t userId, int32_t appIndex, int32_t uid)
+{
+    CreateDirParam createDirParam;
+    if (appIndex == Constants::MAIN_APP_INDEX) {
+        // dual-mode: use the effective (prefixed) name for directories, aligned with the install chain
+        createDirParam.bundleName = innerBundleInfo.IsDualModeCloneApp()
+            ? DualModeHelper::GetDualModeBundleName(innerBundleInfo.GetBundleName())
+            : innerBundleInfo.GetBundleName();
+        createDirParam.extensionDirs = innerBundleInfo.GetAllExtensionDirs();
+    } else {
+        // clone or sandbox app data dir is decorated with the clone prefix
+        createDirParam.bundleName = BundleCloneCommonHelper::GetCloneDataDir(bundleName, appIndex);
+    }
+    createDirParam.userId = userId;
+    createDirParam.uid = uid;
+    createDirParam.gid = uid;
+    createDirParam.apl = innerBundleInfo.GetAppPrivilegeLevel();
+    createDirParam.isPreInstallApp = innerBundleInfo.IsPreInstallApp();
+    createDirParam.debug =
+        innerBundleInfo.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
+    createDirParam.hasDriverExtension = innerBundleInfo.HasDriverExtension();
+    createDirParam.extensionDirs = innerBundleInfo.GetAllExtensionDirs();
+    return createDirParam;
+}
+
+void BundleDataMgr::CreateEl5AndDataGroupDirs(const InnerBundleInfo &innerBundleInfo,
+    const CreateDirParam &createDirParam, int32_t userId, int32_t appIndex, int32_t uid)
+{
+    std::vector<CreateDirParam> el5Params;
+    std::vector<RequestPermission> reqPermissions = innerBundleInfo.GetAllRequestPermissions();
+    auto it = std::find_if(reqPermissions.begin(), reqPermissions.end(), [](const RequestPermission& permission) {
+        return permission.name == ServiceConstants::PERMISSION_PROTECT_SCREEN_LOCK_DATA;
+    });
+    if (it != reqPermissions.end()) {
+        if (appIndex == Constants::MAIN_APP_INDEX) {
+            // main identity reuses the dir param, same as the unlock refresh
+            // (InnerCreateEl5Dir uses the dir name as-is)
+            el5Params.emplace_back(createDirParam);
+        } else {
+            // clones (including dual-mode 10000) use the original name +
+            // appIndex, same as BundleCloneInstaller::CreateEl5Dir;
+            // InnerCreateEl5Dir decorates the name exactly once
+            CreateDirParam el5Param;
+            el5Param.bundleName = innerBundleInfo.GetBundleName();
+            el5Param.userId = userId;
+            el5Param.uid = uid;
+            el5Param.gid = uid;
+            el5Param.apl = innerBundleInfo.GetAppPrivilegeLevel();
+            el5Param.isPreInstallApp = innerBundleInfo.IsPreInstallApp();
+            el5Param.debug =
+                innerBundleInfo.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
+            el5Param.appIndex = appIndex;
+            el5Params.emplace_back(el5Param);
+        }
+    }
+    if (!el5Params.empty()) {
+        CreateEl5Dir(el5Params, true);
+    }
+    if (appIndex == Constants::MAIN_APP_INDEX) {
+        // data group dirs are only created for the main identity, aligned
+        // with the clone chains which never create them
+        (void)CreateAppGroupDir(innerBundleInfo.GetDataGroupInfos(), userId,
+            innerBundleInfo.NeedCreateEl5Dir(), DataDirEl::NONE, innerBundleInfo.HasInputMethodExtension());
+    }
+}
+
 void BundleDataMgr::CreateEl5Dir(const std::vector<CreateDirParam> &el5Params,
     bool needSaveStorage, bool toTempBundle)
 {

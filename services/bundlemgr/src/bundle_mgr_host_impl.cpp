@@ -6633,6 +6633,22 @@ ErrCode BundleMgrHostImpl::CreateBundleDataDirWithEl(int32_t userId, DataDirEl d
     return dataMgr->CreateBundleDataDirWithEl(userId, dirEl);
 }
 
+ErrCode BundleMgrHostImpl::CreateBundleDataDirByBundleName(
+    const std::string &bundleName, int32_t userId, int32_t appIndex)
+{
+    if (!BundlePermissionMgr::IsCallingUidValid(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLER, "IsCallingUidValid failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_INSTALLER, "DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->CreateBundleDataDirByBundleName(bundleName, userId, appIndex);
+}
+
 ErrCode BundleMgrHostImpl::UpdateAppEncryptedStatus(const std::string &bundleName, bool isExisted, int32_t appIndex)
 {
     if (!BundlePermissionMgr::IsCallingUidValid(Constants::CODE_PROTECT_UID)) {

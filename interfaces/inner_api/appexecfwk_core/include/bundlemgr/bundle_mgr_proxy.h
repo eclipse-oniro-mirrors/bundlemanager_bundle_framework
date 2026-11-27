@@ -1318,6 +1318,9 @@ public:
 
     virtual ErrCode CreateBundleDataDirWithEl(int32_t userId, DataDirEl dirEl) override;
 
+    virtual ErrCode CreateBundleDataDirByBundleName(
+        const std::string &bundleName, int32_t userId, int32_t appIndex) override;
+
     virtual ErrCode UpdateAppEncryptedStatus(const std::string &bundleName,
         bool isExisted, int32_t appIndex = 0) override;
 
