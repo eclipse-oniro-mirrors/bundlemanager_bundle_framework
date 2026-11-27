@@ -324,7 +324,8 @@ ErrCode BundleResourceHostImpl::AddResourceInfoByBundleName(const std::string &b
         APP_LOGE("verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-    if (!OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, false)) {
+    if (!OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, false) &&
+        !OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_VM, false)) {
         APP_LOGE("broker is not started");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
@@ -371,7 +372,8 @@ ErrCode BundleResourceHostImpl::AddResourceInfoByAbility(const std::string &bund
         APP_LOGE("verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-    if (!OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, false)) {
+    if (!OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, false) &&
+        !OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_VM, false)) {
         APP_LOGE("broker is not started");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
@@ -399,7 +401,8 @@ ErrCode BundleResourceHostImpl::DeleteResourceInfo(const std::string &key)
         APP_LOGE("verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-    if (!OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, false)) {
+    if (!OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, false) &&
+        !OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_VM, false)) {
         APP_LOGE("broker is not started");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }

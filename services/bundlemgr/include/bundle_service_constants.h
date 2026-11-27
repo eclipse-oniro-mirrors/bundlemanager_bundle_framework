@@ -333,6 +333,7 @@ constexpr const char* HAP_BIN_INSTALL_ENABLE = "const.bms.bin_install";
 constexpr const char* KEEP_DATA_PRELOAD_HAP = "const.vendor.atcmd.cust_preload_flag";
 constexpr const char* ENABLE_HMOS_SERVICE_BROKER = "persist.hmos_fusion_mgr.ctl.support_hmos";
 constexpr const char* ENABLE_FUSION = "persist.win_service_broker.ctl.bms_vm_enable";
+constexpr const char* ENABLE_VM = "persist.linux_fusion_service.ctl.bms_vm_enable";
 constexpr const char* IS_OVERSEA = "const.cust.is_oversea";
 //extResource
 constexpr const char* EXT_RESOURCE_FILE_PATH = "ext_resource";

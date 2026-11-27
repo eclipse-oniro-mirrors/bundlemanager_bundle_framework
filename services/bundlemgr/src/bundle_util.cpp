@@ -1754,8 +1754,10 @@ bool BundleUtil::IsVmEnabled()
 {
     bool isEnableHmos = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, false);
     bool isEnableFusion = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_FUSION, false);
-    APP_LOGD("Get system parameter isEnableHmos: %{public}d, isEnableFusion: %{public}d", isEnableHmos, isEnableFusion);
-    if (isEnableHmos || isEnableFusion) {
+    bool isEnableVm = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_VM, false);
+    APP_LOGD("Get system parameter isEnableHmos: %{public}d, isEnableFusion: %{public}d, isEnableVm: %{public}d",
+        isEnableHmos, isEnableFusion, isEnableVm);
+    if (isEnableHmos || isEnableFusion || isEnableVm) {
         return true;
     }
     return false;

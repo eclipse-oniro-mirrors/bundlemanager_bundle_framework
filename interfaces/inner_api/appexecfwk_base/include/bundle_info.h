@@ -51,6 +51,7 @@ enum BundleFlag {
     // the flag only for C++ interface passing
     GET_BUNDLE_INFO_EXCLUDE_EXT = 0x00020000,
     GET_BUNDLE_INFO_WITH_FUSION = 0x00040000,
+    GET_BUNDLE_INFO_WITH_VM = 0x00400000,
     // get bundle info include request permissions with no detailed info
     GET_BUNDLE_WITH_REQUESTED_PERMISSION_NO_DETAILED = 0x80000000,
 };
@@ -76,6 +77,7 @@ enum class GetBundleInfoFlag {
     // the flag only for C++ interface passing
     GET_BUNDLE_INFO_EXCLUDE_EXT = 0x00020000,
     GET_BUNDLE_INFO_WITH_FUSION = 0x00040000,
+    GET_BUNDLE_INFO_WITH_VM = 0x00400000,
     GET_BUNDLE_INFO_WITH_COMMON_CLONE = 0x00080000,
     GET_BUNDLE_INFO_WITH_SANDBOX_CLONE = 0x00100000,
     // dual-mode: query infos of both device modes; valid only for
