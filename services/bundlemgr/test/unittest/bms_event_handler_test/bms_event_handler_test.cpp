@@ -374,6 +374,41 @@ private:
     std::string bundleDir_;
 };
 
+const std::string OTA_HSP_TEST_DIR = "/data/test/bms_event_handler_test/ota_system_hsp";
+
+// OTAInstallSystemHsp_0100 must not depend on the real /data/app/el1/bundle/public/
+// directory: other cases or a running BMS may leave files there and flip the
+// return code. The guard provides a test-owned directory instead:
+// USE_EXTENSION_DATA builds put a fake .hap in it so the install stops at the
+// hsp suffix check (INVALID_HAP_NAME); other builds keep it empty so the
+// install stops at the empty-paths check (PARAM_ERROR).
+class OtaHspDirGuard {
+public:
+    OtaHspDirGuard() : testDir_(OTA_HSP_TEST_DIR)
+    {
+        (void)OHOS::ForceRemoveDirectory(testDir_);
+        created_ = OHOS::ForceCreateDirectory(testDir_);
+#ifdef USE_EXTENSION_DATA
+        created_ = created_ && CreateEmptyFile(testDir_ + "/fake.hap");
+#endif
+    }
+
+    ~OtaHspDirGuard()
+    {
+        (void)OHOS::ForceRemoveDirectory(testDir_);
+    }
+
+    const std::string &GetDir() const
+    {
+        return testDir_;
+    }
+
+    bool created_ = false;
+
+private:
+    std::string testDir_;
+};
+
 bool WaitUntil(const std::function<bool()> &condition)
 {
     for (int32_t i = 0; i < WAIT_ROUNDS; i++) {
@@ -2211,8 +2246,10 @@ HWTEST_F(BmsEventHandlerTest, OTAInstallSystemHsp_0100, Function | SmallTest | L
 {
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     ASSERT_NE(handler, nullptr);
+    OtaHspDirGuard guard;
+    ASSERT_TRUE(guard.created_);
     std::vector<std::string> filePaths;
-    filePaths.push_back(BUNDLE_PATH);
+    filePaths.push_back(guard.GetDir());
     auto ret = handler->OTAInstallSystemHsp(filePaths);
     #ifdef USE_EXTENSION_DATA
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_INVALID_HAP_NAME);
