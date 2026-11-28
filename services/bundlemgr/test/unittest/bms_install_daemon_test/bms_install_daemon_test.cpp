@@ -1722,6 +1722,36 @@ HWTEST_F(BmsInstallDaemonTest, GetDiskUsageFromPath_0100, Function | SmallTest |
 }
 
 /**
+ * @tc.number: GetDiskUsageFromPath_0200
+ * @tc.name: test cache size is 0 after cache dir contents are cleaned
+ * @tc.desc: 1. create a cache dir with a file and stat it via GET_BUNDLE_CACHE_DISK_USAGE
+ *           2. clean the contents only (dir kept, same as CleanBundleDataDir) and stat again
+ */
+HWTEST_F(BmsInstallDaemonTest, GetDiskUsageFromPath_0200, Function | SmallTest | Level0)
+{
+    const std::string cacheDir = "/data/app/el2/100/base/com.example.l3jsdemo/cache";
+    InstalldHostImpl hostImpl;
+    ASSERT_TRUE(OHOS::ForceCreateDirectory(cacheDir));
+    ASSERT_TRUE(SaveStringToFile(cacheDir + "/cache.tmp", "hello world!"));
+    std::vector<std::string> paths = {cacheDir};
+    int64_t statSize = 0;
+    ErrCode ret =
+        hostImpl.GetDiskUsageFromPath(paths, BUNDLE_NAME13, BundleDirScene::GET_BUNDLE_CACHE_DISK_USAGE, statSize);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_GT(statSize, 0);
+
+    // CleanBundleDataDir deletes the contents and keeps the cache dir itself.
+    EXPECT_TRUE(InstalldOperator::DeleteFiles(cacheDir));
+    statSize = 0;
+    ret = hostImpl.GetDiskUsageFromPath(paths, BUNDLE_NAME13, BundleDirScene::GET_BUNDLE_CACHE_DISK_USAGE, statSize);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(statSize, 0);
+
+    std::error_code ec;
+    std::filesystem::remove_all("/data/app/el2/100/base/com.example.l3jsdemo", ec);
+}
+
+/**
  * @tc.number: GetBundleInodeCount_0100
  * @tc.name: test function of InstallHostImpl
  * @tc.desc: 1. test GetBundleInodeCount
