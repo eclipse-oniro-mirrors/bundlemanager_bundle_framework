@@ -2142,7 +2142,14 @@ ErrCode InstalldHostImpl::GetDiskUsageFromPath(const std::vector<std::string> &p
         }
     }
 
-    statSize = InstalldOperator::GetDiskUsageFromPath(validPath, timeoutMs);
+    if (scene == BundleDirScene::GET_BUNDLE_CACHE_DISK_USAGE) {
+        // Cache size accounts for directory contents only: CleanBundleDataDir keeps the cache
+        // dir itself, so the root dir's own inode usage must not be counted, and an emptied
+        // cache dir reports 0 (consistent with GetCacheDiskUsageFromPath / GetAppCacheSize).
+        statSize = InstalldOperator::GetCacheDiskUsageFromPath(validPath, timeoutMs);
+    } else {
+        statSize = InstalldOperator::GetDiskUsageFromPath(validPath, timeoutMs);
+    }
     return ERR_OK;
 }
 
