@@ -22,6 +22,7 @@
 #include <sys/stat.h>
 #include <sys/statfs.h>
 #include <sstream>
+#include <unistd.h>
 
 #include "access_token_error.h"
 #include "account_helper.h"
@@ -452,6 +453,82 @@ ErrCode BaseBundleInstaller::InstallBundle(
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "InstallBundle finished -n %{public}s -u %{public}d",
         bundleName_.c_str(), installParam.userId);
     return result;
+}
+
+ErrCode BaseBundleInstaller::InstallExistedBundleByBundleName(const std::string &bundleName, int32_t userId)
+{
+    LOG_I(BMS_TAG_INSTALLER, "InstallExistedBundleByBundleName -n %{public}s -u %{public}d", bundleName.c_str(), userId);
+    if (bundleName.empty()) {
+        LOG_E(BMS_TAG_INSTALLER, "install existed bundle by bundle name failed due to empty bundleName");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    if (userId == Constants::ALL_USERID || userId == Constants::ANY_USERID || userId == Constants::UNSPECIFIED_USERID) {
+        LOG_E(BMS_TAG_INSTALLER, "install existed bundle by bundle name failed due to invalid userId");
+        return ERR_APPEXECFWK_USER_NOT_EXIST;
+    }
+    if (!InitDataMgr() || dataMgr_ == nullptr) {
+        LOG_E(BMS_TAG_INSTALLER, "install existed bundle by bundle name failed due to dataMgr is nullptr");
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    }
+    ErrCode userCheck = CheckUserId(userId);
+    if (userCheck != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "install existed bundle by bundle name failed due to invalid userId");
+        return userCheck;
+    }
+
+    InnerBundleInfo info;
+    if (!dataMgr_->FetchInnerBundleInfo(bundleName, info)) {
+        LOG_E(BMS_TAG_INSTALLER, "install existed bundle by bundle name failed due to bundle not exist");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    InnerBundleUserInfo userInfo;
+    if (!info.GetInnerBundleUserInfo(userId, userInfo)) {
+        LOG_E(BMS_TAG_INSTALLER,
+            "install existed bundle by bundle name failed due to bundle not installed for target userId");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    BundleType bundleType = info.GetApplicationBundleType();
+    if (bundleType != BundleType::APP && bundleType != BundleType::ATOMIC_SERVICE) {
+        LOG_E(BMS_TAG_INSTALLER, "install existed bundle by bundle name failed due to invalid bundle type");
+        return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
+    }
+
+    std::vector<std::string> hapPaths;
+    for (const auto &path : info.GetAllHapPaths()) {
+        if (path.empty()) {
+            continue;
+        }
+        if (access(path.c_str(), F_OK) != 0) {
+            LOG_E(BMS_TAG_INSTALLER, "hap file not found, path: %{public}s", path.c_str());
+            return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+        }
+        hapPaths.emplace_back(path);
+    }
+    if (hapPaths.empty()) {
+        LOG_E(BMS_TAG_INSTALLER, "install existed bundle by bundle name failed due to empty hapPaths");
+        return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+    }
+
+    InstallParam installParam;
+    installParam.userId = userId;
+    installParam.installFlag = InstallFlag::REPLACE_EXISTING;
+    installParam.withCopyHaps = true;
+    installParam.deviceModeDistributionPolicy = info.GetDeviceModeDistributionPolicy();
+    installParam.isEscapeReinstall = true;
+    installParam.needSendEvent = true;
+
+    LOG_I(BMS_TAG_INSTALLER,
+        "InstallExistedBundleByBundleName param: bundleName=%{public}s, userId=%{public}d, bundleType=%{public}d, "
+        "hapCount=%{public}zu, policy=%{public}d, isPreInstall=%{public}d, withCopyHaps=%{public}d, "
+        "copyHapToInstallPath=%{public}d, isDualModeClone=%{public}d, forceDualModeCloneInstall=%{public}d, "
+        "dualModeDevice=%{public}d, secondaryMode=%{public}d",
+        bundleName.c_str(), userId, static_cast<int32_t>(bundleType), hapPaths.size(),
+        static_cast<int32_t>(installParam.deviceModeDistributionPolicy), installParam.isPreInstallApp,
+        installParam.withCopyHaps, installParam.copyHapToInstallPath, info.IsDualModeCloneApp(),
+        installParam.forceDualModeCloneInstall, DualModeHelper::IsDualModeDevice(), DualModeHelper::IsSecondaryMode());
+
+    Constants::AppType appType = info.IsSystemApp() ? Constants::AppType::SYSTEM_APP : Constants::AppType::THIRD_PARTY_APP;
+    return InstallBundle(hapPaths, installParam, appType);
 }
 
 ErrCode BaseBundleInstaller::InstallBundleByBundleName(
@@ -2123,6 +2200,10 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     if (!InitTempBundleFromCache(oldInfo, isAppExist_)) {
         return ERR_APPEXECFWK_INIT_INSTALL_TEMP_BUNDLE_ERROR;
     }
+    // The entry snapshot may be stale after a concurrent uninstall. Recheck under the bundle mutex
+    // before adopting hidden records or allowing REPLACE_EXISTING to fall back to a new installation.
+    result = CheckReinstallTarget(oldInfo, installParam);
+    CHECK_RESULT(result, "escape reinstall target is no longer installed, result %{public}d");
     // === DUAL_MODE: same-name update of a hidden single-mode app ===
     // The same-name MAIN_ONLY/SUB_ONLY app is not in bundleInfos_ when the current mode is the
     // one it does not belong to (it lives hidden in tempBundleInfos_). Adopt it as the old info
@@ -7906,6 +7987,16 @@ bool BaseBundleInstaller::InitTempBundleFromCache(InnerBundleInfo &info, bool &i
     }
     bundleName_ = lookupKey;
     return true;
+}
+
+ErrCode BaseBundleInstaller::CheckReinstallTarget(
+    const InnerBundleInfo &oldInfo, const InstallParam &installParam) const
+{
+    if (installParam.isEscapeReinstall &&
+        (!isAppExist_ || userId_ != installParam.userId || !oldInfo.HasInnerBundleUserInfo(userId_))) {
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    return ERR_OK;
 }
 
 bool BaseBundleInstaller::GetTempBundleInfo(InnerBundleInfo &info) const

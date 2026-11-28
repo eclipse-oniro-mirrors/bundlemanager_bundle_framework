@@ -360,6 +360,7 @@ enum class BundleInstallerInterfaceCode : uint8_t {
     CREATE_CLI_SANDBOX_APP = 20,
     DESTROY_CLI_SANDBOX_APP = 21,
     GET_ENTERPRISE_RE_SIGNATURE_CERT_INFO = 22,
+    INSTALL_EXISTED_BUNDLE_BY_BUNDLE_NAME = 23,
 };
 
 /* SAID: 401-28 Interface No.28 subservice also provides the following interfaces */

@@ -181,6 +181,11 @@ void BundleInstaller::InstallByBundleName(const std::string &bundleName, const I
     }
 }
 
+ErrCode BundleInstaller::InstallExistedBundleByBundleName(const std::string &bundleName, int32_t userId)
+{
+    return BaseBundleInstaller::InstallExistedBundleByBundleName(bundleName, userId);
+}
+
 void BundleInstaller::Uninstall(const std::string &bundleName, const InstallParam &installParam)
 {
     ErrCode resultCode = ERR_OK;

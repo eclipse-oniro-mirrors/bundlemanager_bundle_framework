@@ -1399,5 +1399,37 @@ HWTEST_F(BmsBundleInstallerProxyTest, CreateCliSandboxApp_0300, Function | Mediu
         creatorBundleName, envCreatorBundleName, bundleName, userId, appIndex);
     EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
 }
+
+/**
+ * @tc.number: InstallExistedBundleByBundleName_0100
+ * @tc.name: test InstallExistedBundleByBundleName
+ * @tc.desc: 1. remote object is nullptr
+ *           2. test InstallExistedBundleByBundleName returns write/send parcel error
+ */
+HWTEST_F(BmsBundleInstallerProxyTest, InstallExistedBundleByBundleName_0100, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> object;
+    BundleInstallerProxy bundleInstallerProxy(object);
+    std::string bundleName = "com.example.test";
+    int32_t userId = 100;
+    auto res = bundleInstallerProxy.InstallExistedBundleByBundleName(bundleName, userId);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_EXISTED_WRITE_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: InstallExistedBundleByBundleName_0200
+ * @tc.name: test InstallExistedBundleByBundleName
+ * @tc.desc: 1. remote object is nullptr (empty bundleName still written to parcel)
+ *           2. test InstallExistedBundleByBundleName returns write/send parcel error
+ */
+HWTEST_F(BmsBundleInstallerProxyTest, InstallExistedBundleByBundleName_0200, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> object;
+    BundleInstallerProxy bundleInstallerProxy(object);
+    std::string bundleName = "";
+    int32_t userId = 100;
+    auto res = bundleInstallerProxy.InstallExistedBundleByBundleName(bundleName, userId);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_EXISTED_WRITE_PARCEL_ERROR);
+}
 }
 }

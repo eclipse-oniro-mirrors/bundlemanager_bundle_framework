@@ -9897,6 +9897,121 @@ HWTEST_F(BmsBundleInstallerTest, HandleUninstallCloneApp_0100, Function | SmallT
 }
 
 /**
+ * @tc.number: HandleInstallExistedBundleByBundleName_0100
+ * @tc.name: test HandleInstallExistedBundleByBundleName
+ * @tc.desc: 1.Test the HandleInstallExistedBundleByBundleName of BundleInstallerHost
+ */
+HWTEST_F(BmsBundleInstallerTest, HandleInstallExistedBundleByBundleName_0100, Function | SmallTest | Level0)
+{
+    MessageParcel data;
+    MessageParcel reply;
+
+    std::string bundleName;
+    int32_t userId = 100;
+
+    data.WriteString16(Str8ToStr16(bundleName));
+    data.WriteInt32(userId);
+
+    BundleInstallerHost bundleInstallerHost;
+    bundleInstallerHost.HandleInstallExistedBundleByBundleName(data, reply);
+
+    int32_t ret = reply.ReadInt32();
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: HandleInstallExistedBundleByBundleName_0101
+ * @tc.name: test HandleInstallExistedBundleByBundleName
+ * @tc.desc: Test HandleInstallExistedBundleByBundleName with non-existent bundle
+ */
+HWTEST_F(BmsBundleInstallerTest, HandleInstallExistedBundleByBundleName_0101, Function | SmallTest | Level0)
+{
+    MessageParcel data;
+    MessageParcel reply;
+
+    std::string bundleName = "com.example.not.exist";
+    int32_t userId = 100;
+
+    data.WriteString16(Str8ToStr16(bundleName));
+    data.WriteInt32(userId);
+
+    BundleInstallerHost bundleInstallerHost;
+    bundleInstallerHost.HandleInstallExistedBundleByBundleName(data, reply);
+
+    int32_t ret = reply.ReadInt32();
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: HandleInstallExistedBundleByBundleName_0102
+ * @tc.name: test HandleInstallExistedBundleByBundleName
+ * @tc.desc: Test HandleInstallExistedBundleByBundleName with invalid userId
+ */
+HWTEST_F(BmsBundleInstallerTest, HandleInstallExistedBundleByBundleName_0102, Function | SmallTest | Level0)
+{
+    MessageParcel data;
+    MessageParcel reply;
+
+    std::string bundleName = "com.example.test";
+    int32_t userId = Constants::ALL_USERID;
+
+    data.WriteString16(Str8ToStr16(bundleName));
+    data.WriteInt32(userId);
+
+    BundleInstallerHost bundleInstallerHost;
+    bundleInstallerHost.HandleInstallExistedBundleByBundleName(data, reply);
+
+    int32_t ret = reply.ReadInt32();
+    EXPECT_EQ(ret, ERR_APPEXECFWK_USER_NOT_EXIST);
+}
+
+/**
+ * @tc.number: HandleInstallExistedBundleByBundleName_0103
+ * @tc.name: test HandleInstallExistedBundleByBundleName
+ * @tc.desc: Test HandleInstallExistedBundleByBundleName with UNSPECIFIED_USERID
+ */
+HWTEST_F(BmsBundleInstallerTest, HandleInstallExistedBundleByBundleName_0103, Function | SmallTest | Level0)
+{
+    MessageParcel data;
+    MessageParcel reply;
+
+    std::string bundleName = "com.example.test";
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+
+    data.WriteString16(Str8ToStr16(bundleName));
+    data.WriteInt32(userId);
+
+    BundleInstallerHost bundleInstallerHost;
+    bundleInstallerHost.HandleInstallExistedBundleByBundleName(data, reply);
+
+    int32_t ret = reply.ReadInt32();
+    EXPECT_EQ(ret, ERR_APPEXECFWK_USER_NOT_EXIST);
+}
+
+/**
+ * @tc.number: HandleInstallExistedBundleByBundleName_0104
+ * @tc.name: test HandleInstallExistedBundleByBundleName
+ * @tc.desc: Test HandleInstallExistedBundleByBundleName with ANY_USERID
+ */
+HWTEST_F(BmsBundleInstallerTest, HandleInstallExistedBundleByBundleName_0104, Function | SmallTest | Level0)
+{
+    MessageParcel data;
+    MessageParcel reply;
+
+    std::string bundleName = "com.example.test";
+    int32_t userId = Constants::ANY_USERID;
+
+    data.WriteString16(Str8ToStr16(bundleName));
+    data.WriteInt32(userId);
+
+    BundleInstallerHost bundleInstallerHost;
+    bundleInstallerHost.HandleInstallExistedBundleByBundleName(data, reply);
+
+    int32_t ret = reply.ReadInt32();
+    EXPECT_EQ(ret, ERR_APPEXECFWK_USER_NOT_EXIST);
+}
+
+/**
  * @tc.number: InstallExisted_0100
  * @tc.name: test Install
  * @tc.desc: 1.Test the InstallExisted of BundleInstallerHost
@@ -17187,10 +17302,560 @@ HWTEST_F(BmsBundleInstallerTest, InstallExisted_0001, Function | SmallTest | Lev
 }
 
 /**
+ * @tc.number: InstallExistedBundleByBundleName_0001
+ * @tc.name: test InstallExistedBundleByBundleName
+ * @tc.desc: Test InstallExistedBundleByBundleName with empty bundleName
+ */
+HWTEST_F(BmsBundleInstallerTest, InstallExistedBundleByBundleName_0001, Function | SmallTest | Level0)
+{
+    BundleInstallerHost bundleInstallerHost;
+    std::string bundleName = "";
+    int32_t userId = TEST_U100;
+
+    ErrCode ret = bundleInstallerHost.InstallExistedBundleByBundleName(bundleName, userId);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: InstallExistedBundleByBundleName_0002
+ * @tc.name: test InstallExistedBundleByBundleName
+ * @tc.desc: Test InstallExistedBundleByBundleName with non-existent bundleName
+ */
+HWTEST_F(BmsBundleInstallerTest, InstallExistedBundleByBundleName_0002, Function | SmallTest | Level0)
+{
+    BundleInstallerHost bundleInstallerHost;
+    std::string bundleName = "com.example.not.exist";
+    int32_t userId = TEST_U100;
+
+    ErrCode ret = bundleInstallerHost.InstallExistedBundleByBundleName(bundleName, userId);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: InstallExistedBundleByBundleName_0003
+ * @tc.name: test InstallExistedBundleByBundleName
+ * @tc.desc: Test InstallExistedBundleByBundleName with ALL_USERID
+ */
+HWTEST_F(BmsBundleInstallerTest, InstallExistedBundleByBundleName_0003, Function | SmallTest | Level0)
+{
+    BundleInstallerHost bundleInstallerHost;
+    std::string bundleName = "com.example.test";
+    int32_t userId = Constants::ALL_USERID;
+
+    ErrCode ret = bundleInstallerHost.InstallExistedBundleByBundleName(bundleName, userId);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_USER_NOT_EXIST);
+}
+
+/**
+ * @tc.number: InstallExistedBundleByBundleName_0004
+ * @tc.name: test InstallExistedBundleByBundleName
+ * @tc.desc: Test InstallExistedBundleByBundleName with UNSPECIFIED_USERID
+ */
+HWTEST_F(BmsBundleInstallerTest, InstallExistedBundleByBundleName_0004, Function | SmallTest | Level0)
+{
+    BundleInstallerHost bundleInstallerHost;
+    std::string bundleName = "com.example.test";
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+
+    ErrCode ret = bundleInstallerHost.InstallExistedBundleByBundleName(bundleName, userId);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_USER_NOT_EXIST);
+}
+
+/**
+ * @tc.number: InstallExistedBundleByBundleName_0005
+ * @tc.name: test InstallExistedBundleByBundleName
+ * @tc.desc: Test InstallExistedBundleByBundleName with ANY_USERID
+ */
+HWTEST_F(BmsBundleInstallerTest, InstallExistedBundleByBundleName_0005, Function | SmallTest | Level0)
+{
+    BundleInstallerHost bundleInstallerHost;
+    std::string bundleName = "com.example.test";
+    int32_t userId = Constants::ANY_USERID;
+
+    ErrCode ret = bundleInstallerHost.InstallExistedBundleByBundleName(bundleName, userId);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_USER_NOT_EXIST);
+}
+
+/**
+ * @tc.number: InstallExistedBundleByBundleName_0006
+ * @tc.name: test InstallExistedBundleByBundleName
+ * @tc.desc: Test InstallExistedBundleByBundleName with SHARED bundle type returns param error
+ */
+HWTEST_F(BmsBundleInstallerTest, InstallExistedBundleByBundleName_0006, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(USERID);
+    dataMgr->bundleInfos_.erase("com.example.shared_type_test");
+    dataMgr->installStates_.erase("com.example.shared_type_test");
+    dataMgr->UpdateBundleInstallState("com.example.shared_type_test", InstallState::INSTALL_START);
+
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = "com.example.shared_type_test";
+    ApplicationInfo appInfo;
+    appInfo.bundleName = "com.example.shared_type_test";
+    appInfo.bundleType = BundleType::SHARED;
+    info.SetBaseBundleInfo(bundleInfo);
+    info.SetBaseApplicationInfo(appInfo);
+
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = "com.example.shared_type_test";
+    userInfo.bundleUserInfo.userId = USERID;
+    info.AddInnerBundleUserInfo(userInfo);
+
+    EXPECT_TRUE(dataMgr->AddInnerBundleInfo("com.example.shared_type_test", info));
+
+    BaseBundleInstaller installer;
+    ErrCode ret = installer.InstallExistedBundleByBundleName("com.example.shared_type_test", USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
+
+    dataMgr->bundleInfos_.erase("com.example.shared_type_test");
+    dataMgr->installStates_.erase("com.example.shared_type_test");
+}
+
+/**
+ * @tc.number: InstallExistedBundleByBundleName_0007
+ * @tc.name: test InstallExistedBundleByBundleName
+ * @tc.desc: Test InstallExistedBundleByBundleName with empty hap paths
+ */
+HWTEST_F(BmsBundleInstallerTest, InstallExistedBundleByBundleName_0007, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(USERID);
+    dataMgr->bundleInfos_.erase("com.example.empty_hap_test");
+    dataMgr->installStates_.erase("com.example.empty_hap_test");
+    dataMgr->UpdateBundleInstallState("com.example.empty_hap_test", InstallState::INSTALL_START);
+
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = "com.example.empty_hap_test";
+    ApplicationInfo appInfo;
+    appInfo.bundleName = "com.example.empty_hap_test";
+    appInfo.bundleType = BundleType::APP;
+    info.SetBaseBundleInfo(bundleInfo);
+    info.SetBaseApplicationInfo(appInfo);
+
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = "com.example.empty_hap_test";
+    userInfo.bundleUserInfo.userId = USERID;
+    info.AddInnerBundleUserInfo(userInfo);
+
+    EXPECT_TRUE(dataMgr->AddInnerBundleInfo("com.example.empty_hap_test", info));
+
+    BaseBundleInstaller installer;
+    ErrCode ret = installer.InstallExistedBundleByBundleName("com.example.empty_hap_test", USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+
+    dataMgr->bundleInfos_.erase("com.example.empty_hap_test");
+    dataMgr->installStates_.erase("com.example.empty_hap_test");
+}
+
+/**
+ * @tc.number: InstallExistedBundleByBundleName_0008
+ * @tc.name: test InstallExistedBundleByBundleName
+ * @tc.desc: Test InstallExistedBundleByBundleName when bundle not installed for user
+ */
+HWTEST_F(BmsBundleInstallerTest, InstallExistedBundleByBundleName_0008, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(USERID);
+    dataMgr->bundleInfos_.erase("com.example.user_not_installed");
+    dataMgr->installStates_.erase("com.example.user_not_installed");
+    dataMgr->UpdateBundleInstallState("com.example.user_not_installed", InstallState::INSTALL_START);
+
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = "com.example.user_not_installed";
+    ApplicationInfo appInfo;
+    appInfo.bundleName = "com.example.user_not_installed";
+    appInfo.bundleType = BundleType::APP;
+    info.SetBaseBundleInfo(bundleInfo);
+    info.SetBaseApplicationInfo(appInfo);
+
+    EXPECT_TRUE(dataMgr->AddInnerBundleInfo("com.example.user_not_installed", info));
+
+    BaseBundleInstaller installer;
+    ErrCode ret = installer.InstallExistedBundleByBundleName("com.example.user_not_installed", USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    dataMgr->bundleInfos_.erase("com.example.user_not_installed");
+    dataMgr->installStates_.erase("com.example.user_not_installed");
+}
+
+/**
+ * @tc.number: InstallExistedBundleByBundleName_0009
+ * @tc.name: test InstallExistedBundleByBundleName
+ * @tc.desc: Test InstallExistedBundleByBundleName with ATOMIC_SERVICE and empty hap paths
+ */
+HWTEST_F(BmsBundleInstallerTest, InstallExistedBundleByBundleName_0009, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(USERID);
+    dataMgr->bundleInfos_.erase("com.example.atomic_empty_hap");
+    dataMgr->installStates_.erase("com.example.atomic_empty_hap");
+    dataMgr->UpdateBundleInstallState("com.example.atomic_empty_hap", InstallState::INSTALL_START);
+
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = "com.example.atomic_empty_hap";
+    ApplicationInfo appInfo;
+    appInfo.bundleName = "com.example.atomic_empty_hap";
+    appInfo.bundleType = BundleType::ATOMIC_SERVICE;
+    info.SetBaseBundleInfo(bundleInfo);
+    info.SetBaseApplicationInfo(appInfo);
+
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = "com.example.atomic_empty_hap";
+    userInfo.bundleUserInfo.userId = USERID;
+    info.AddInnerBundleUserInfo(userInfo);
+
+    EXPECT_TRUE(dataMgr->AddInnerBundleInfo("com.example.atomic_empty_hap", info));
+
+    BaseBundleInstaller installer;
+    ErrCode ret = installer.InstallExistedBundleByBundleName("com.example.atomic_empty_hap", USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+
+    dataMgr->bundleInfos_.erase("com.example.atomic_empty_hap");
+    dataMgr->installStates_.erase("com.example.atomic_empty_hap");
+}
+
+/**
+ * @tc.number: InstallExistedBundleByBundleName_0010
+ * @tc.name: test InstallExistedBundleByBundleName
+ * @tc.desc: Test InstallExistedBundleByBundleName when hap file path does not exist
+ */
+HWTEST_F(BmsBundleInstallerTest, InstallExistedBundleByBundleName_0010, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(USERID);
+    dataMgr->bundleInfos_.erase("com.example.hap_not_exist");
+    dataMgr->installStates_.erase("com.example.hap_not_exist");
+    dataMgr->UpdateBundleInstallState("com.example.hap_not_exist", InstallState::INSTALL_START);
+
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = "com.example.hap_not_exist";
+    ApplicationInfo appInfo;
+    appInfo.bundleName = "com.example.hap_not_exist";
+    appInfo.bundleType = BundleType::APP;
+    info.SetBaseBundleInfo(bundleInfo);
+    info.SetBaseApplicationInfo(appInfo);
+
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = "com.example.hap_not_exist";
+    userInfo.bundleUserInfo.userId = USERID;
+    info.AddInnerBundleUserInfo(userInfo);
+
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = "entry";
+    moduleInfo.modulePackage = "entry";
+    moduleInfo.hapPath = "/data/app/el1/bundle/public/com.example.hap_not_exist/not_exist.hap";
+    info.InsertInnerModuleInfo("entry", moduleInfo);
+
+    EXPECT_TRUE(dataMgr->AddInnerBundleInfo("com.example.hap_not_exist", info));
+
+    BaseBundleInstaller installer;
+    ErrCode ret = installer.InstallExistedBundleByBundleName("com.example.hap_not_exist", USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+
+    dataMgr->bundleInfos_.erase("com.example.hap_not_exist");
+    dataMgr->installStates_.erase("com.example.hap_not_exist");
+}
+
+/**
+ * @tc.number: InstallExistedBundleByBundleName_0011
+ * @tc.name: test InstallExistedBundleByBundleName
+ * @tc.desc: Test InstallExistedBundleByBundleName with empty module hapPath skipped
+ */
+HWTEST_F(BmsBundleInstallerTest, InstallExistedBundleByBundleName_0011, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(USERID);
+    dataMgr->bundleInfos_.erase("com.example.empty_module_hap");
+    dataMgr->installStates_.erase("com.example.empty_module_hap");
+    dataMgr->UpdateBundleInstallState("com.example.empty_module_hap", InstallState::INSTALL_START);
+
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = "com.example.empty_module_hap";
+    ApplicationInfo appInfo;
+    appInfo.bundleName = "com.example.empty_module_hap";
+    appInfo.bundleType = BundleType::APP;
+    info.SetBaseBundleInfo(bundleInfo);
+    info.SetBaseApplicationInfo(appInfo);
+
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = "com.example.empty_module_hap";
+    userInfo.bundleUserInfo.userId = USERID;
+    info.AddInnerBundleUserInfo(userInfo);
+
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = "entry";
+    moduleInfo.modulePackage = "entry";
+    moduleInfo.hapPath = "";
+    info.InsertInnerModuleInfo("entry", moduleInfo);
+
+    EXPECT_TRUE(dataMgr->AddInnerBundleInfo("com.example.empty_module_hap", info));
+
+    BaseBundleInstaller installer;
+    ErrCode ret = installer.InstallExistedBundleByBundleName("com.example.empty_module_hap", USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+
+    dataMgr->bundleInfos_.erase("com.example.empty_module_hap");
+    dataMgr->installStates_.erase("com.example.empty_module_hap");
+}
+
+/**
+ * @tc.number: InstallExistedBundleByBundleName_0012
+ * @tc.name: test InstallExistedBundleByBundleName
+ * @tc.desc: Test BaseBundleInstaller with empty bundleName
+ */
+HWTEST_F(BmsBundleInstallerTest, InstallExistedBundleByBundleName_0012, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    ErrCode ret = installer.InstallExistedBundleByBundleName("", USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: InstallExistedBundleByBundleName_0013
+ * @tc.name: test InstallExistedBundleByBundleName
+ * @tc.desc: Test InstallExistedBundleByBundleName with APP_PLUGIN type
+ */
+HWTEST_F(BmsBundleInstallerTest, InstallExistedBundleByBundleName_0013, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(USERID);
+    dataMgr->bundleInfos_.erase("com.example.plugin_type_test");
+    dataMgr->installStates_.erase("com.example.plugin_type_test");
+    dataMgr->UpdateBundleInstallState("com.example.plugin_type_test", InstallState::INSTALL_START);
+
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = "com.example.plugin_type_test";
+    ApplicationInfo appInfo;
+    appInfo.bundleName = "com.example.plugin_type_test";
+    appInfo.bundleType = BundleType::APP_PLUGIN;
+    info.SetBaseBundleInfo(bundleInfo);
+    info.SetBaseApplicationInfo(appInfo);
+
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = "com.example.plugin_type_test";
+    userInfo.bundleUserInfo.userId = USERID;
+    info.AddInnerBundleUserInfo(userInfo);
+
+    EXPECT_TRUE(dataMgr->AddInnerBundleInfo("com.example.plugin_type_test", info));
+
+    BaseBundleInstaller installer;
+    ErrCode ret = installer.InstallExistedBundleByBundleName("com.example.plugin_type_test", USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
+
+    dataMgr->bundleInfos_.erase("com.example.plugin_type_test");
+    dataMgr->installStates_.erase("com.example.plugin_type_test");
+}
+
+/**
+ * @tc.number: InstallExistedBundleByBundleName_0014
+ * @tc.name: test InstallExistedBundleByBundleName
+ * @tc.desc: Test InstallExistedBundleByBundleName with multiple non-existent hap paths
+ */
+HWTEST_F(BmsBundleInstallerTest, InstallExistedBundleByBundleName_0014, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(USERID);
+    dataMgr->bundleInfos_.erase("com.example.multi_hap_invalid");
+    dataMgr->installStates_.erase("com.example.multi_hap_invalid");
+    dataMgr->UpdateBundleInstallState("com.example.multi_hap_invalid", InstallState::INSTALL_START);
+
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = "com.example.multi_hap_invalid";
+    ApplicationInfo appInfo;
+    appInfo.bundleName = "com.example.multi_hap_invalid";
+    appInfo.bundleType = BundleType::APP;
+    info.SetBaseBundleInfo(bundleInfo);
+    info.SetBaseApplicationInfo(appInfo);
+
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = "com.example.multi_hap_invalid";
+    userInfo.bundleUserInfo.userId = USERID;
+    info.AddInnerBundleUserInfo(userInfo);
+
+    InnerModuleInfo entryModule;
+    entryModule.moduleName = "entry";
+    entryModule.modulePackage = "entry";
+    entryModule.hapPath = "/data/app/el1/bundle/public/com.example.multi_hap_invalid/entry.hap";
+    info.InsertInnerModuleInfo("entry", entryModule);
+
+    InnerModuleInfo featureModule;
+    featureModule.moduleName = "feature";
+    featureModule.modulePackage = "feature";
+    featureModule.hapPath = "/data/app/el1/bundle/public/com.example.multi_hap_invalid/feature.hap";
+    info.InsertInnerModuleInfo("feature", featureModule);
+
+    EXPECT_TRUE(dataMgr->AddInnerBundleInfo("com.example.multi_hap_invalid", info));
+
+    BaseBundleInstaller installer;
+    ErrCode ret = installer.InstallExistedBundleByBundleName("com.example.multi_hap_invalid", USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+
+    dataMgr->bundleInfos_.erase("com.example.multi_hap_invalid");
+    dataMgr->installStates_.erase("com.example.multi_hap_invalid");
+}
+
+/**
+ * @tc.number: InstallExistedBundleByBundleName_0015
+ * @tc.name: test InstallExistedBundleByBundleName
+ * @tc.desc: Test InstallExistedBundleByBundleName with APP_SERVICE_FWK type
+ */
+HWTEST_F(BmsBundleInstallerTest, InstallExistedBundleByBundleName_0015, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(USERID);
+    dataMgr->bundleInfos_.erase("com.example.service_fwk_type_test");
+    dataMgr->installStates_.erase("com.example.service_fwk_type_test");
+    dataMgr->UpdateBundleInstallState("com.example.service_fwk_type_test", InstallState::INSTALL_START);
+
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = "com.example.service_fwk_type_test";
+    ApplicationInfo appInfo;
+    appInfo.bundleName = "com.example.service_fwk_type_test";
+    appInfo.bundleType = BundleType::APP_SERVICE_FWK;
+    info.SetBaseBundleInfo(bundleInfo);
+    info.SetBaseApplicationInfo(appInfo);
+
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = "com.example.service_fwk_type_test";
+    userInfo.bundleUserInfo.userId = USERID;
+    info.AddInnerBundleUserInfo(userInfo);
+
+    EXPECT_TRUE(dataMgr->AddInnerBundleInfo("com.example.service_fwk_type_test", info));
+
+    BaseBundleInstaller installer;
+    ErrCode ret = installer.InstallExistedBundleByBundleName("com.example.service_fwk_type_test", USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
+
+    dataMgr->bundleInfos_.erase("com.example.service_fwk_type_test");
+    dataMgr->installStates_.erase("com.example.service_fwk_type_test");
+}
+
+/**
+ * @tc.number: InstallExistedBundleByBundleName_0016
+ * @tc.name: test InstallExistedBundleByBundleName
+ * @tc.desc: Test BaseBundleInstaller with ALL_USERID returns user not exist
+ */
+HWTEST_F(BmsBundleInstallerTest, InstallExistedBundleByBundleName_0016, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    ErrCode ret = installer.InstallExistedBundleByBundleName("com.example.test", Constants::ALL_USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_USER_NOT_EXIST);
+}
+
+/**
+ * @tc.number: InstallExistedBundleByBundleName_0017
+ * @tc.name: test InstallExistedBundleByBundleName
+ * @tc.desc: Test BaseBundleInstaller with UNSPECIFIED_USERID returns user not exist
+ */
+HWTEST_F(BmsBundleInstallerTest, InstallExistedBundleByBundleName_0017, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    ErrCode ret = installer.InstallExistedBundleByBundleName("com.example.test", Constants::UNSPECIFIED_USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_USER_NOT_EXIST);
+}
+
+/**
+ * @tc.number: InstallExistedBundleByBundleName_0018
+ * @tc.name: test InstallExistedBundleByBundleName
+ * @tc.desc: Test BaseBundleInstaller with ANY_USERID returns user not exist
+ */
+HWTEST_F(BmsBundleInstallerTest, InstallExistedBundleByBundleName_0018, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    ErrCode ret = installer.InstallExistedBundleByBundleName("com.example.test", Constants::ANY_USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_USER_NOT_EXIST);
+}
+
+/**
+ * @tc.number: InstallExistedBundleByBundleName_0019
+ * @tc.name: test InstallExistedBundleByBundleName
+ * @tc.desc: Test InstallExistedBundleByBundleName when userId is not present in dataMgr
+ */
+HWTEST_F(BmsBundleInstallerTest, InstallExistedBundleByBundleName_0019, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->RemoveUserId(99999);
+
+    BaseBundleInstaller installer;
+    ErrCode ret = installer.InstallExistedBundleByBundleName("com.example.user_not_exist_in_mgr", 99999);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_USER_NOT_EXIST);
+}
+
+/**
+ * @tc.number: InstallExistedBundleByBundleName_0020
+ * @tc.name: test InstallExistedBundleByBundleName
+ * @tc.desc: Test InstallExistedBundleByBundleName with empty hapPath then non-existent hapPath
+ */
+HWTEST_F(BmsBundleInstallerTest, InstallExistedBundleByBundleName_0020, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(USERID);
+    dataMgr->bundleInfos_.erase("com.example.mixed_hap_invalid");
+    dataMgr->installStates_.erase("com.example.mixed_hap_invalid");
+    dataMgr->UpdateBundleInstallState("com.example.mixed_hap_invalid", InstallState::INSTALL_START);
+
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = "com.example.mixed_hap_invalid";
+    ApplicationInfo appInfo;
+    appInfo.bundleName = "com.example.mixed_hap_invalid";
+    appInfo.bundleType = BundleType::APP;
+    info.SetBaseBundleInfo(bundleInfo);
+    info.SetBaseApplicationInfo(appInfo);
+
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = "com.example.mixed_hap_invalid";
+    userInfo.bundleUserInfo.userId = USERID;
+    info.AddInnerBundleUserInfo(userInfo);
+
+    InnerModuleInfo emptyModule;
+    emptyModule.moduleName = "empty";
+    emptyModule.modulePackage = "empty";
+    emptyModule.hapPath = "";
+    info.InsertInnerModuleInfo("empty", emptyModule);
+
+    InnerModuleInfo missingModule;
+    missingModule.moduleName = "missing";
+    missingModule.modulePackage = "missing";
+    missingModule.hapPath = "/data/app/el1/bundle/public/com.example.mixed_hap_invalid/missing.hap";
+    info.InsertInnerModuleInfo("missing", missingModule);
+
+    EXPECT_TRUE(dataMgr->AddInnerBundleInfo("com.example.mixed_hap_invalid", info));
+
+    BaseBundleInstaller installer;
+    ErrCode ret = installer.InstallExistedBundleByBundleName("com.example.mixed_hap_invalid", USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+
+    dataMgr->bundleInfos_.erase("com.example.mixed_hap_invalid");
+    dataMgr->installStates_.erase("com.example.mixed_hap_invalid");
+}
+
+/**
  * @tc.number: InstallExisted_0002
  * @tc.name: test InstallExisted
  * @tc.desc: Test InstallExisted
-*/
+ */
 HWTEST_F(BmsBundleInstallerTest, InstallExisted_0002, Function | SmallTest | Level0)
 {
     BundleMultiUserInstaller bundleMultiUserInstaller;
@@ -21194,6 +21859,110 @@ HWTEST_F(BmsBundleInstallerTest, RefreshBundleDirsAfterUidChange_0005, Function 
     installer.RefreshBundleDirsAfterUidChange(info, USERID, Constants::INITIAL_APP_INDEX, newUid);
     EXPECT_EQ(GetMigrateBundleDirsOwnerCallCountForTest(), 1);
     g_migrateBundleDirsOwnerRet = 0;
+}
+
+/**
+ * @tc.number: CheckReinstallTarget_0001
+ * @tc.name: test CheckReinstallTarget
+ * @tc.desc: Non-escape reinstall should return ERR_OK
+ */
+HWTEST_F(BmsBundleInstallerTest, CheckReinstallTarget_0001, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo oldInfo;
+    InstallParam installParam;
+    installParam.isEscapeReinstall = false;
+
+    ErrCode ret = installer.CheckReinstallTarget(oldInfo, installParam);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckReinstallTarget_0002
+ * @tc.name: test CheckReinstallTarget
+ * @tc.desc: Escape reinstall should fail when app does not exist
+ */
+HWTEST_F(BmsBundleInstallerTest, CheckReinstallTarget_0002, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.isAppExist_ = false;
+    installer.userId_ = USERID;
+
+    InnerBundleInfo oldInfo;
+    InstallParam installParam;
+    installParam.isEscapeReinstall = true;
+    installParam.userId = USERID;
+
+    ErrCode ret = installer.CheckReinstallTarget(oldInfo, installParam);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: CheckReinstallTarget_0003
+ * @tc.name: test CheckReinstallTarget
+ * @tc.desc: Escape reinstall should fail when installer userId mismatches installParam.userId
+ */
+HWTEST_F(BmsBundleInstallerTest, CheckReinstallTarget_0003, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.isAppExist_ = true;
+    installer.userId_ = USERID;
+
+    InnerBundleInfo oldInfo;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = USERID;
+    oldInfo.AddInnerBundleUserInfo(userInfo);
+
+    InstallParam installParam;
+    installParam.isEscapeReinstall = true;
+    installParam.userId = USERID + 1;
+
+    ErrCode ret = installer.CheckReinstallTarget(oldInfo, installParam);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: CheckReinstallTarget_0004
+ * @tc.name: test CheckReinstallTarget
+ * @tc.desc: Escape reinstall should fail when oldInfo has no user info for target user
+ */
+HWTEST_F(BmsBundleInstallerTest, CheckReinstallTarget_0004, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.isAppExist_ = true;
+    installer.userId_ = USERID;
+
+    InnerBundleInfo oldInfo;
+    InstallParam installParam;
+    installParam.isEscapeReinstall = true;
+    installParam.userId = USERID;
+
+    ErrCode ret = installer.CheckReinstallTarget(oldInfo, installParam);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: CheckReinstallTarget_0005
+ * @tc.name: test CheckReinstallTarget
+ * @tc.desc: Escape reinstall should succeed when app exists and user info matches
+ */
+HWTEST_F(BmsBundleInstallerTest, CheckReinstallTarget_0005, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.isAppExist_ = true;
+    installer.userId_ = USERID;
+
+    InnerBundleInfo oldInfo;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = USERID;
+    oldInfo.AddInnerBundleUserInfo(userInfo);
+
+    InstallParam installParam;
+    installParam.isEscapeReinstall = true;
+    installParam.userId = USERID;
+
+    ErrCode ret = installer.CheckReinstallTarget(oldInfo, installParam);
+    EXPECT_EQ(ret, ERR_OK);
 }
 
 namespace {

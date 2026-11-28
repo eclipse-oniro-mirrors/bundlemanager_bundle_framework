@@ -179,6 +179,18 @@ public:
         return ERR_OK;
     }
 
+    /**
+     * @brief Reinstall an already installed application by bundleName using its existing HAP paths.
+     *        This is an escape path for broken installs; it must not change existing InstallExisted semantics.
+     * @param bundleName Indicates the bundle name of the application to reinstall.
+     * @param userId Indicates the target user id for target-instance validation/selection.
+     * @return Returns ERR_OK if the application is reinstalled successfully; returns errcode otherwise.
+     */
+    virtual ErrCode InstallExistedBundleByBundleName(const std::string &bundleName, int32_t userId)
+    {
+        return ERR_OK;
+    }
+
     virtual ErrCode InstallEnterpriseReSignatureCert(const std::string &certAlias, int32_t fd, int32_t userId)
     {
         return ERR_OK;

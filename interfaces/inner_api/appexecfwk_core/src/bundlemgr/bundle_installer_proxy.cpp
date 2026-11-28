@@ -1097,6 +1097,36 @@ ErrCode BundleInstallerProxy::InstallExisted(const std::string &bundleName, int3
     return reply.ReadInt32();
 }
 
+ErrCode BundleInstallerProxy::InstallExistedBundleByBundleName(const std::string &bundleName, int32_t userId)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOG_E(BMS_TAG_INSTALLER, "failed to write descriptor");
+        return ERR_APPEXECFWK_INSTALL_EXISTED_WRITE_PARCEL_ERROR;
+    }
+    if (!data.WriteString16(Str8ToStr16(bundleName))) {
+        LOG_E(BMS_TAG_INSTALLER, "failed to write bundleName");
+        return ERR_APPEXECFWK_INSTALL_EXISTED_WRITE_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        LOG_E(BMS_TAG_INSTALLER, "failed to write userId");
+        return ERR_APPEXECFWK_INSTALL_EXISTED_WRITE_PARCEL_ERROR;
+    }
+
+    auto ret = SendInstallRequest(
+        BundleInstallerInterfaceCode::INSTALL_EXISTED_BUNDLE_BY_BUNDLE_NAME, data, reply, option);
+    if (!ret) {
+        LOG_E(BMS_TAG_INSTALLER, "installExistedBundleByBundleName failed due to send request fail");
+        return ERR_APPEXECFWK_INSTALL_EXISTED_WRITE_PARCEL_ERROR;
+    }
+
+    return reply.ReadInt32();
+}
+
 ErrCode BundleInstallerProxy::UninstallEnterpriseReSignatureCert(const std::string &certificateAlias, int32_t userId)
 {
     LOG_I(BMS_TAG_INSTALLER, "delete enterprise re sign cert -c:%{public}s, -u:%{public}d",

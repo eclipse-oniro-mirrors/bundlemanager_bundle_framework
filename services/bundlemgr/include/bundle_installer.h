@@ -68,6 +68,13 @@ public:
      */
     void InstallByBundleName(const std::string &bundleName, const InstallParam &installParam);
     /**
+     * @brief Reinstall an already installed application by bundleName using existing HAP paths.
+     * @param bundleName Indicates the bundle name of the application to reinstall.
+     * @param userId Indicates the target user id for target-instance validation/selection.
+     * @return Returns ERR_OK if the application is reinstalled successfully; returns errcode otherwise.
+     */
+    ErrCode InstallExistedBundleByBundleName(const std::string &bundleName, int32_t userId);
+    /**
      * @brief Uninstall a bundle using this installer object.
      * @param bundleName Indicates the bundle name of the application to uninstall.
      * @param installParam Indicates the uninstall parameters.
