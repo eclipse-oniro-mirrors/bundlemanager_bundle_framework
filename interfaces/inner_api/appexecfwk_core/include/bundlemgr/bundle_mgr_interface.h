@@ -1915,6 +1915,20 @@ public:
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
+    /**
+     * @brief Create the data directories of a specified application.
+     * @param bundleName Indicates the bundle name of the application.
+     * @param userId Indicates a concrete user ID (negative ids are not
+     *                supported); the directories are created only for this user.
+     * @param appIndex Indicates the app index, 0 for normal app, > 0 for clone app.
+     * @return Returns ERR_OK if the data directories created successfully; returns error code otherwise.
+     */
+    virtual ErrCode CreateBundleDataDirByBundleName(
+        const std::string &bundleName, int32_t userId, int32_t appIndex)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
     virtual ErrCode MigrateData(const std::vector<std::string> &sourcePaths, const std::string &destinationPath)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;

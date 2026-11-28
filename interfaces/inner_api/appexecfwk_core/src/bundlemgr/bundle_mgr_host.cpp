@@ -22,6 +22,7 @@
 #include <set>
 
 #include "app_clone_preference.h"
+#include "app_log_tag_wrapper.h"
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
 #include "bundle_file_util.h"
@@ -284,6 +285,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
             break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::CREATE_BUNDLE_DATA_DIR_WITH_EL):
             errCode = HandleCreateBundleDataDirWithEl(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::CREATE_BUNDLE_DATA_DIR_BY_BUNDLE_NAME):
+            errCode = HandleCreateBundleDataDirByBundleName(data, reply);
             break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::CLEAN_BUNDLE_DATA_FILES):
             errCode = this->HandleCleanBundleDataFiles(data, reply);
@@ -4732,6 +4736,25 @@ ErrCode BundleMgrHost::HandleCreateBundleDataDirWithEl(MessageParcel &data, Mess
     ErrCode ret = CreateBundleDataDirWithEl(userId, dirEl);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("Write reply failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleCreateBundleDataDirByBundleName(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    LOG_I(BMS_TAG_INSTALLER, "CreateBundleDataDirByBundleName called");
+    std::string bundleName = data.ReadString();
+    int32_t userId = data.ReadInt32();
+    int32_t appIndex = data.ReadInt32();
+    if (bundleName.empty()) {
+        LOG_E(BMS_TAG_INSTALLER, "Invalid param, bundleName is empty");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    ErrCode ret = CreateBundleDataDirByBundleName(bundleName, userId, appIndex);
+    if (!reply.WriteInt32(ret)) {
+        LOG_E(BMS_TAG_INSTALLER, "Write reply failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;

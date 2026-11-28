@@ -756,6 +756,36 @@ HWTEST_F(BundleMgrProxyTest, SetBundleFirstLaunch_0200, Function | MediumTest | 
 }
 
 /**
+ * @tc.number: CreateBundleDataDirByBundleName_0100
+ * @tc.name: test the CreateBundleDataDirByBundleName
+ * @tc.desc: 1. CreateBundleDataDirByBundleName with empty bundleName
+ */
+HWTEST_F(BundleMgrProxyTest, CreateBundleDataDirByBundleName_0100, Function | SmallTest | Level0)
+{
+    sptr<IRemoteObject> impl = nullptr;
+    BundleMgrProxy bundleMgrProxy(impl);
+    int32_t userId = 100;
+    int32_t appIndex = 0;
+    auto result = bundleMgrProxy.CreateBundleDataDirByBundleName("", userId, appIndex);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: CreateBundleDataDirByBundleName_0200
+ * @tc.name: test the CreateBundleDataDirByBundleName
+ * @tc.desc: 1. CreateBundleDataDirByBundleName with null remote object
+ */
+HWTEST_F(BundleMgrProxyTest, CreateBundleDataDirByBundleName_0200, Function | SmallTest | Level0)
+{
+    sptr<IRemoteObject> impl = nullptr;
+    BundleMgrProxy bundleMgrProxy(impl);
+    int32_t userId = 100;
+    int32_t appIndex = 0;
+    auto result = bundleMgrProxy.CreateBundleDataDirByBundleName("com.example.test", userId, appIndex);
+    EXPECT_NE(result, ERR_OK);
+}
+
+/**
  * @tc.number: BundleMgrProxy_SendTransactCmdWithOption_0100
  * @tc.name: test SendTransactCmd overload with MessageOption
  * @tc.desc: 1. BundleMgrProxy constructed with null IRemoteObject

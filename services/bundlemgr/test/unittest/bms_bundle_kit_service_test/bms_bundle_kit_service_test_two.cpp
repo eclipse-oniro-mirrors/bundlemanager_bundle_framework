@@ -51,6 +51,9 @@
 #include "installd/installd_service.h"
 #include "installd_client.h"
 #include "inner_bundle_info.h"
+#include "dual_mode_helper.h"
+#include "inner_bundle_clone_common.h"
+#include "bundle_permissions.h"
 #include "launcher_service.h"
 #include "mock_clean_cache.h"
 #include "mock_bundle_status.h"
@@ -12344,6 +12347,413 @@ HWTEST_F(BmsBundleKitServiceTest, CreateBundleDataDirWithElImpl_0200, Function |
     DataDirEl dirEl = DataDirEl::NONE;
     auto ret = hostImpl->CreateBundleDataDirWithEl(DEFAULT_USERID, dirEl);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: CreateBundleDataDirByBundleNameImpl_0100
+ * @tc.name: test CreateBundleDataDirByBundleName with no permission
+ * @tc.desc: 1. test CreateBundleDataDirByBundleName when no permission
+ *           2. should return ERR_BUNDLE_MANAGER_PERMISSION_DENIED
+ */
+HWTEST_F(BmsBundleKitServiceTest, CreateBundleDataDirByBundleNameImpl_0100, Function | SmallTest | Level1)
+{
+    SetIsCallingUidValid(false);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    auto ret = hostImpl->CreateBundleDataDirByBundleName(BUNDLE_NAME_TEST, DEFAULT_USERID, 0);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: CreateBundleDataDirByBundleNameImpl_0200
+ * @tc.name: test CreateBundleDataDirByBundleName with dataMgr nullptr
+ * @tc.desc: 1. test CreateBundleDataDirByBundleName when dataMgr nullptr
+ *           2. should return ERR_BUNDLE_MANAGER_INTERNAL_ERROR
+ */
+HWTEST_F(BmsBundleKitServiceTest, CreateBundleDataDirByBundleNameImpl_0200, Function | SmallTest | Level1)
+{
+    DataMgrGuard guard;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    auto ret = hostImpl->CreateBundleDataDirByBundleName(BUNDLE_NAME_TEST, DEFAULT_USERID, 0);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: CreateBundleDataDirByBundleNameImpl_0300
+ * @tc.name: test CreateBundleDataDirByBundleName with empty bundleName
+ * @tc.desc: 1. test CreateBundleDataDirByBundleName when bundleName is empty
+ *           2. should return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST
+ */
+HWTEST_F(BmsBundleKitServiceTest, CreateBundleDataDirByBundleNameImpl_0300, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    auto ret = hostImpl->CreateBundleDataDirByBundleName("", DEFAULT_USERID, 0);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: CreateBundleDataDirByBundleNameImpl_0400
+ * @tc.name: test CreateBundleDataDirByBundleName with bundle not exist
+ * @tc.desc: 1. test CreateBundleDataDirByBundleName when bundle not exist
+ *           2. should return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST
+ */
+HWTEST_F(BmsBundleKitServiceTest, CreateBundleDataDirByBundleNameImpl_0400, Function | SmallTest | Level1)
+{
+    // isolate from earlier cases: a leftover BUNDLE_NAME_TEST record without
+    // user-100 data (or a dataMgr rebuilt without user 100) would surface as
+    // INVALID_USER_ID here instead of the intended "bundle not exist" branch
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.erase(BUNDLE_NAME_TEST);
+    dataMgr->AddUserId(DEFAULT_USERID);
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    auto ret = hostImpl->CreateBundleDataDirByBundleName(BUNDLE_NAME_TEST, DEFAULT_USERID, 0);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: CreateBundleDataDirByBundleNameImpl_0500
+ * @tc.name: test CreateBundleDataDirByBundleName with invalid appIndex
+ * @tc.desc: 1. test CreateBundleDataDirByBundleName when appIndex is negative
+ *           2. should return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE
+ */
+HWTEST_F(BmsBundleKitServiceTest, CreateBundleDataDirByBundleNameImpl_0500, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    auto ret = hostImpl->CreateBundleDataDirByBundleName(BUNDLE_NAME_TEST, DEFAULT_USERID, -1);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
+}
+
+/**
+ * @tc.number: CreateBundleDataDirByBundleNameImpl_0600
+ * @tc.name: test CreateBundleDataDirByBundleName with ANY_USERID
+ * @tc.desc: 1. test CreateBundleDataDirByBundleName when userId is ANY_USERID
+ *           2. should return ERR_BUNDLE_MANAGER_INVALID_USER_ID
+ */
+HWTEST_F(BmsBundleKitServiceTest, CreateBundleDataDirByBundleNameImpl_0600, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    auto ret = hostImpl->CreateBundleDataDirByBundleName(BUNDLE_NAME_TEST, Constants::ANY_USERID, 0);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+/**
+ * @tc.number: CreateBundleDataDirByBundleNameImpl_0700
+ * @tc.name: test CreateBundleDataDirByBundleName with ALL_USERID
+ * @tc.desc: 1. test CreateBundleDataDirByBundleName when userId is ALL_USERID
+ *           2. should return ERR_BUNDLE_MANAGER_INVALID_USER_ID
+ */
+HWTEST_F(BmsBundleKitServiceTest, CreateBundleDataDirByBundleNameImpl_0700, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    auto ret = hostImpl->CreateBundleDataDirByBundleName(BUNDLE_NAME_TEST, Constants::ALL_USERID, 0);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+/**
+ * @tc.number: CreateBundleDataDirByBundleNameImpl_0800
+ * @tc.name: test CreateBundleDataDirByBundleName with UNSPECIFIED_USERID
+ * @tc.desc: 1. test CreateBundleDataDirByBundleName when userId is negative
+ *           2. should return ERR_BUNDLE_MANAGER_INVALID_USER_ID
+ */
+HWTEST_F(BmsBundleKitServiceTest, CreateBundleDataDirByBundleNameImpl_0800, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    auto ret = hostImpl->CreateBundleDataDirByBundleName(
+        BUNDLE_NAME_TEST, Constants::UNSPECIFIED_USERID, 0);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+namespace {
+InnerBundleInfo MakeBundleDataDirTestInfo(const std::string &bundleName, int32_t userId, int32_t uid)
+{
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo appInfo;
+    appInfo.bundleName = bundleName;
+    innerBundleInfo.SetBaseApplicationInfo(appInfo);
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleName = bundleName;
+    innerBundleUserInfo.bundleUserInfo.enabled = true;
+    innerBundleUserInfo.bundleUserInfo.userId = userId;
+    innerBundleUserInfo.uid = uid;
+    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+    return innerBundleInfo;
+}
+
+// per-user el5 parent dir, same layout as BundleDataMgr::InnerCreateEl5Dir
+const std::string EL5_PARENT_DIR = std::string(ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH) +
+    ServiceConstants::PATH_SEPARATOR + std::to_string(DEFAULT_USERID);
+} // namespace
+
+/**
+ * @tc.number: GetBundleDataDirInfo_0100
+ * @tc.name: test GetBundleDataDirInfo with a user that does not exist
+ * @tc.desc: 1. test GetBundleDataDirInfo when the user is not added
+ *           2. should return ERR_BUNDLE_MANAGER_INVALID_USER_ID
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleDataDirInfo_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo innerBundleInfo;
+    int32_t uid = 0;
+    // user 999 was never added via AddUserId
+    auto ret = dataMgr->GetBundleDataDirInfo(BUNDLE_NAME_TEST, 999, 0, innerBundleInfo, uid);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+/**
+ * @tc.number: GetBundleDataDirInfo_0200
+ * @tc.name: test GetBundleDataDirInfo with bundle not exist
+ * @tc.desc: 1. test GetBundleDataDirInfo when the bundle does not exist
+ *           2. should return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleDataDirInfo_0200, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    // re-assert user 100: some earlier case may have rebuilt the dataMgr
+    dataMgr->AddUserId(DEFAULT_USERID);
+    InnerBundleInfo innerBundleInfo;
+    int32_t uid = 0;
+    auto ret = dataMgr->GetBundleDataDirInfo(
+        "com.example.not.existed.bundle", DEFAULT_USERID, 0, innerBundleInfo, uid);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetBundleDataDirInfo_0300
+ * @tc.name: test GetBundleDataDirInfo with bundle not installed in the user
+ * @tc.desc: 1. test GetBundleDataDirInfo when the bundle is installed for
+ *              another user only
+ *           2. should return ERR_BUNDLE_MANAGER_INVALID_USER_ID
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleDataDirInfo_0300, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    // the record is installed for user 101 only, not for the requested user 100;
+    // erase any leftover first so the emplace below actually inserts
+    dataMgr->AddUserId(DEFAULT_USERID);
+    dataMgr->bundleInfos_.erase(BUNDLE_NAME_TEST);
+    auto innerBundleInfo = MakeBundleDataDirTestInfo(BUNDLE_NAME_TEST, 101, TEST_UID);
+    dataMgr->bundleInfos_.try_emplace(BUNDLE_NAME_TEST, innerBundleInfo);
+    InnerBundleInfo resultInfo;
+    int32_t uid = 0;
+    auto ret = dataMgr->GetBundleDataDirInfo(BUNDLE_NAME_TEST, DEFAULT_USERID, 0, resultInfo, uid);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    dataMgr->bundleInfos_.erase(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetBundleDataDirInfo_0400
+ * @tc.name: test GetBundleDataDirInfo with a corrupt zero uid
+ * @tc.desc: 1. test GetBundleDataDirInfo when the stored uid is zero
+ *           2. should return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleDataDirInfo_0400, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    // erase any leftover first so the emplace below actually inserts
+    dataMgr->AddUserId(DEFAULT_USERID);
+    dataMgr->bundleInfos_.erase(BUNDLE_NAME_TEST);
+    auto innerBundleInfo = MakeBundleDataDirTestInfo(BUNDLE_NAME_TEST, DEFAULT_USERID, 0);
+    dataMgr->bundleInfos_.try_emplace(BUNDLE_NAME_TEST, innerBundleInfo);
+    InnerBundleInfo resultInfo;
+    int32_t uid = 0;
+    auto ret = dataMgr->GetBundleDataDirInfo(BUNDLE_NAME_TEST, DEFAULT_USERID, 0, resultInfo, uid);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    dataMgr->bundleInfos_.erase(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetBundleDataDirInfo_0500
+ * @tc.name: test GetBundleDataDirInfo with a clone index that has no record
+ * @tc.desc: 1. test GetBundleDataDirInfo when appIndex is a clone index
+ *              without any clone record
+ *           2. should return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleDataDirInfo_0500, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    // appIndex 1 with no cloneInfos/sandboxInfos entry: GetUid returns INVALID_UID;
+    // erase any leftover first so the emplace below actually inserts
+    dataMgr->AddUserId(DEFAULT_USERID);
+    dataMgr->bundleInfos_.erase(BUNDLE_NAME_TEST);
+    auto innerBundleInfo = MakeBundleDataDirTestInfo(BUNDLE_NAME_TEST, DEFAULT_USERID, TEST_UID);
+    dataMgr->bundleInfos_.try_emplace(BUNDLE_NAME_TEST, innerBundleInfo);
+    InnerBundleInfo resultInfo;
+    int32_t uid = 0;
+    auto ret = dataMgr->GetBundleDataDirInfo(BUNDLE_NAME_TEST, DEFAULT_USERID, 1, resultInfo, uid);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    dataMgr->bundleInfos_.erase(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetBundleDataDirInfo_0600
+ * @tc.name: test GetBundleDataDirInfo with a valid target
+ * @tc.desc: 1. test GetBundleDataDirInfo when the user, bundle and uid are
+ *              all valid
+ *           2. should return ERR_OK with the uid and info filled
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleDataDirInfo_0600, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    // erase any leftover first so the emplace below actually inserts
+    dataMgr->AddUserId(DEFAULT_USERID);
+    dataMgr->bundleInfos_.erase(BUNDLE_NAME_TEST);
+    auto innerBundleInfo = MakeBundleDataDirTestInfo(BUNDLE_NAME_TEST, DEFAULT_USERID, TEST_UID);
+    dataMgr->bundleInfos_.try_emplace(BUNDLE_NAME_TEST, innerBundleInfo);
+    InnerBundleInfo resultInfo;
+    int32_t uid = 0;
+    auto ret = dataMgr->GetBundleDataDirInfo(BUNDLE_NAME_TEST, DEFAULT_USERID, 0, resultInfo, uid);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(uid, TEST_UID);
+    EXPECT_EQ(resultInfo.GetBundleName(), BUNDLE_NAME_TEST);
+    dataMgr->bundleInfos_.erase(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: MakeBundleDataDirParam_0100
+ * @tc.name: test MakeBundleDataDirParam for the main identity
+ * @tc.desc: 1. test MakeBundleDataDirParam when appIndex is the main index
+ *           2. should map the plain name and the common fields
+ */
+HWTEST_F(BmsBundleKitServiceTest, MakeBundleDataDirParam_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    auto innerBundleInfo = MakeBundleDataDirTestInfo(BUNDLE_NAME_TEST, DEFAULT_USERID, TEST_UID);
+    auto createDirParam = dataMgr->MakeBundleDataDirParam(
+        innerBundleInfo, BUNDLE_NAME_TEST, DEFAULT_USERID, 0, TEST_UID);
+    EXPECT_EQ(createDirParam.bundleName, BUNDLE_NAME_TEST);
+    EXPECT_EQ(createDirParam.userId, DEFAULT_USERID);
+    EXPECT_EQ(createDirParam.uid, TEST_UID);
+    EXPECT_EQ(createDirParam.gid, TEST_UID);
+    EXPECT_EQ(createDirParam.apl, innerBundleInfo.GetAppPrivilegeLevel());
+}
+
+/**
+ * @tc.number: MakeBundleDataDirParam_0200
+ * @tc.name: test MakeBundleDataDirParam for a dual-mode clone app
+ * @tc.desc: 1. test MakeBundleDataDirParam when the record is a dual-mode
+ *              clone app and appIndex is the main index
+ *           2. should decorate the name with the dual-mode prefix
+ */
+HWTEST_F(BmsBundleKitServiceTest, MakeBundleDataDirParam_0200, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    auto innerBundleInfo = MakeBundleDataDirTestInfo(BUNDLE_NAME_TEST, DEFAULT_USERID, TEST_UID);
+    innerBundleInfo.SetDualModeCloneApp(true);
+    auto createDirParam = dataMgr->MakeBundleDataDirParam(
+        innerBundleInfo, BUNDLE_NAME_TEST, DEFAULT_USERID, 0, TEST_UID);
+    EXPECT_EQ(createDirParam.bundleName, DualModeHelper::GetDualModeBundleName(BUNDLE_NAME_TEST));
+    EXPECT_NE(createDirParam.bundleName, BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: MakeBundleDataDirParam_0300
+ * @tc.name: test MakeBundleDataDirParam for a clone index
+ * @tc.desc: 1. test MakeBundleDataDirParam when appIndex is a clone index
+ *           2. should decorate the name with the clone prefix
+ */
+HWTEST_F(BmsBundleKitServiceTest, MakeBundleDataDirParam_0300, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    auto innerBundleInfo = MakeBundleDataDirTestInfo(BUNDLE_NAME_TEST, DEFAULT_USERID, TEST_UID);
+    auto createDirParam = dataMgr->MakeBundleDataDirParam(
+        innerBundleInfo, BUNDLE_NAME_TEST, DEFAULT_USERID, 1, TEST_UID);
+    EXPECT_EQ(createDirParam.bundleName, BundleCloneCommonHelper::GetCloneDataDir(BUNDLE_NAME_TEST, 1));
+    EXPECT_EQ(createDirParam.userId, DEFAULT_USERID);
+    EXPECT_EQ(createDirParam.gid, TEST_UID);
+}
+
+/**
+ * @tc.number: CreateEl5AndDataGroupDirs_0100
+ * @tc.name: test CreateEl5AndDataGroupDirs with el5 permission for the main identity
+ * @tc.desc: 1. test CreateEl5AndDataGroupDirs when the el5 permission is
+ *              requested and appIndex is the main index
+ *           2. the el5 base/database dirs should be created under the parent
+ */
+HWTEST_F(BmsBundleKitServiceTest, CreateEl5AndDataGroupDirs_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    // InnerCreateEl5Dir only creates dirs when the per-user el5 parent exists
+    ASSERT_TRUE(OHOS::ForceCreateDirectory(EL5_PARENT_DIR));
+    auto innerBundleInfo = MakeBundleDataDirTestInfo(BUNDLE_NAME_TEST, DEFAULT_USERID, TEST_UID);
+    InnerModuleInfo moduleInfo;
+    RequestPermission el5Permission;
+    el5Permission.name = ServiceConstants::PERMISSION_PROTECT_SCREEN_LOCK_DATA;
+    moduleInfo.bundlePermissions = ToBundlePermissions({el5Permission});
+    moduleInfo.moduleName = MODULE_NAME_TEST;
+    innerBundleInfo.InsertInnerModuleInfo(MODULE_NAME_TEST, moduleInfo);
+    auto createDirParam = dataMgr->MakeBundleDataDirParam(
+        innerBundleInfo, BUNDLE_NAME_TEST, DEFAULT_USERID, 0, TEST_UID);
+    dataMgr->CreateEl5AndDataGroupDirs(innerBundleInfo, createDirParam, DEFAULT_USERID, 0, TEST_UID);
+    EXPECT_EQ(access((EL5_PARENT_DIR + ServiceConstants::BASE + BUNDLE_NAME_TEST).c_str(), F_OK), 0);
+    EXPECT_EQ(access((EL5_PARENT_DIR + ServiceConstants::DATABASE + BUNDLE_NAME_TEST).c_str(), F_OK), 0);
+    OHOS::ForceRemoveDirectory(EL5_PARENT_DIR);
+}
+
+/**
+ * @tc.number: CreateEl5AndDataGroupDirs_0200
+ * @tc.name: test CreateEl5AndDataGroupDirs with el5 permission for a clone index
+ * @tc.desc: 1. test CreateEl5AndDataGroupDirs when the el5 permission is
+ *              requested and appIndex is a clone index
+ *           2. the el5 base/database dirs should be created with the clone
+ *              decorated name
+ */
+HWTEST_F(BmsBundleKitServiceTest, CreateEl5AndDataGroupDirs_0200, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    // InnerCreateEl5Dir only creates dirs when the per-user el5 parent exists
+    ASSERT_TRUE(OHOS::ForceCreateDirectory(EL5_PARENT_DIR));
+    auto innerBundleInfo = MakeBundleDataDirTestInfo(BUNDLE_NAME_TEST, DEFAULT_USERID, TEST_UID);
+    InnerModuleInfo moduleInfo;
+    RequestPermission el5Permission;
+    el5Permission.name = ServiceConstants::PERMISSION_PROTECT_SCREEN_LOCK_DATA;
+    moduleInfo.bundlePermissions = ToBundlePermissions({el5Permission});
+    moduleInfo.moduleName = MODULE_NAME_TEST;
+    innerBundleInfo.InsertInnerModuleInfo(MODULE_NAME_TEST, moduleInfo);
+    auto createDirParam = dataMgr->MakeBundleDataDirParam(
+        innerBundleInfo, BUNDLE_NAME_TEST, DEFAULT_USERID, 1, TEST_UID);
+    dataMgr->CreateEl5AndDataGroupDirs(innerBundleInfo, createDirParam, DEFAULT_USERID, 1, TEST_UID);
+    // clones reuse the original name in el5Param and InnerCreateEl5Dir decorates it once
+    const std::string cloneDirName = BundleCloneCommonHelper::GetCloneDataDir(BUNDLE_NAME_TEST, 1);
+    EXPECT_EQ(access((EL5_PARENT_DIR + ServiceConstants::BASE + cloneDirName).c_str(), F_OK), 0);
+    EXPECT_EQ(access((EL5_PARENT_DIR + ServiceConstants::DATABASE + cloneDirName).c_str(), F_OK), 0);
+    OHOS::ForceRemoveDirectory(EL5_PARENT_DIR);
+}
+
+/**
+ * @tc.number: CreateEl5AndDataGroupDirs_0300
+ * @tc.name: test CreateEl5AndDataGroupDirs without the el5 permission
+ * @tc.desc: 1. test CreateEl5AndDataGroupDirs when no el5 permission is
+ *              requested and the el5 parent exists
+ *           2. no el5 dir should be created
+ */
+HWTEST_F(BmsBundleKitServiceTest, CreateEl5AndDataGroupDirs_0300, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    // create the parent first: otherwise the negative check below could pass
+    // just because the parent is missing, not because the gate is closed
+    ASSERT_TRUE(OHOS::ForceCreateDirectory(EL5_PARENT_DIR));
+    auto innerBundleInfo = MakeBundleDataDirTestInfo(BUNDLE_NAME_TEST, DEFAULT_USERID, TEST_UID);
+    auto createDirParam = dataMgr->MakeBundleDataDirParam(
+        innerBundleInfo, BUNDLE_NAME_TEST, DEFAULT_USERID, 0, TEST_UID);
+    dataMgr->CreateEl5AndDataGroupDirs(innerBundleInfo, createDirParam, DEFAULT_USERID, 0, TEST_UID);
+    EXPECT_NE(access((EL5_PARENT_DIR + ServiceConstants::BASE + BUNDLE_NAME_TEST).c_str(), F_OK), 0);
+    EXPECT_NE(access((EL5_PARENT_DIR + ServiceConstants::DATABASE + BUNDLE_NAME_TEST).c_str(), F_OK), 0);
+    OHOS::ForceRemoveDirectory(EL5_PARENT_DIR);
 }
 
 /**

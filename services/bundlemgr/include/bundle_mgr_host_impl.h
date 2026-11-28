@@ -1278,6 +1278,9 @@ public:
 
     virtual ErrCode CreateBundleDataDirWithEl(int32_t userId, DataDirEl dirEl) override;
 
+    virtual ErrCode CreateBundleDataDirByBundleName(
+        const std::string &bundleName, int32_t userId, int32_t appIndex) override;
+
     /**
      * @brief Check whether the link can be opened.
      * @param link Indicates the link to be opened.

@@ -5734,6 +5734,43 @@ ErrCode BundleMgrProxy::CreateBundleDataDirWithEl(int32_t userId, DataDirEl dirE
     return reply.ReadInt32();
 }
 
+ErrCode BundleMgrProxy::CreateBundleDataDirByBundleName(
+    const std::string &bundleName, int32_t userId, int32_t appIndex)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    LOG_D(BMS_TAG_QUERY, "CreateBundleDataDirByBundleName Called. "
+        "bundleName: %{public}s, userId: %{public}d, appIndex: %{public}d",
+        bundleName.c_str(), userId, appIndex);
+    if (bundleName.empty()) {
+        LOG_E(BMS_TAG_QUERY, "Invalid param, bundleName is empty");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOG_E(BMS_TAG_QUERY, "Write interfaceToken failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        LOG_E(BMS_TAG_QUERY, "Write bundleName failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        LOG_E(BMS_TAG_QUERY, "Write userId failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(appIndex)) {
+        LOG_E(BMS_TAG_QUERY, "Write appIndex failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::CREATE_BUNDLE_DATA_DIR_BY_BUNDLE_NAME, data, reply)) {
+        LOG_E(BMS_TAG_QUERY, "Call failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return reply.ReadInt32();
+}
+
 ErrCode BundleMgrProxy::MigrateData(const std::vector<std::string> &sourcePaths, const std::string &destinationPath)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
